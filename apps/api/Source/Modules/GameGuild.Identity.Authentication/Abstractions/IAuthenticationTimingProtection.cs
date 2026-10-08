@@ -4,5 +4,5 @@ namespace GameGuild.Identity.Authentication;
 public interface IAuthenticationTimingProtection
 {
     Task CompleteAuthenticationTimingAsync(AuthenticationTimingOrigin origin, bool credentialWorkCompleted,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 }

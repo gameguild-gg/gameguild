@@ -3,6 +3,8 @@ using GameGuild.Assets.Deduplication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Xunit;
 
 namespace GameGuild.Assets.UnitTests.Services;
@@ -106,6 +108,50 @@ public class DeduplicationServiceTests
 
         // Assert
         hash.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ComputePerceptualHashAsync_DecodesBenignPngAndPreservesDeterminismAndStreamPosition()
+    {
+        using var content = CreateBenignPng(false);
+        var first = await _service.ComputePerceptualHashAsync(content, "image/png");
+        first.Should().NotBeNullOrEmpty();
+        first.Should().MatchRegex("^[a-f0-9]{16}$");
+        content.Position.Should().Be(0);
+
+        var repeated = await _service.ComputePerceptualHashAsync(content, "image/png");
+        repeated.Should().Be(first);
+        content.Position.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ComputePerceptualHashAsync_DistinguishesMirroredImagePatterns()
+    {
+        using var left = CreateBenignPng(false);
+        using var right = CreateBenignPng(true);
+        var first = await _service.ComputePerceptualHashAsync(left, "image/png");
+        var second = await _service.ComputePerceptualHashAsync(right, "image/png");
+        first.Should().NotBeNullOrEmpty();
+        second.Should().NotBeNullOrEmpty().And.NotBe(first);
+        left.Position.Should().Be(0);
+        right.Position.Should().Be(0);
+    }
+
+    private static MemoryStream CreateBenignPng(bool mirror)
+    {
+        using var image = new Image<Rgba32>(8, 8);
+        for (var row = 0; row < 8; row++)
+        {
+            for (var column = 0; column < 8; column++)
+            {
+                var value = (column < 4) == mirror ? byte.MaxValue : byte.MinValue;
+                image[column, row] = new Rgba32(value, value, value);
+            }
+        }
+        var stream = new MemoryStream();
+        image.SaveAsPng(stream);
+        stream.Position = 0;
+        return stream;
     }
 
     [Fact]

@@ -13,12 +13,16 @@ public sealed class CredentialWorkTests
     [Theory]
     [InlineData("", "wrong")]
     [InlineData("malformed", "wrong")]
-    [InlineData("$2a$99$abcdefghijklmnopqrstuuabcdefghijklmnopqrstuvwxyzABCDE", "wrong")]
+    [InlineData("unsupported-bcrypt-cost", "wrong")]
     [InlineData("pbkdf2-sha256$1$bad$bad", "wrong")]
     [InlineData("pbkdf2-sha256$600000$invalid$invalid", "wrong")]
     public void RejectedRecordsNeverClaimCompletedCredentialWork(string stored, string password)
     {
         var hasher = Create();
+        if (stored == "unsupported-bcrypt-cost")
+        {
+            stored = Legacy.Value[..4] + "99" + Legacy.Value[6..];
+        }
         Assert.Equal(new PasswordVerificationResult(false, false), hasher.VerifyPasswordWithWork(stored, password));
         Assert.False(hasher.VerifyPassword(stored, password));
     }

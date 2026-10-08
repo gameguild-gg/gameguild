@@ -572,3 +572,185 @@ The separate eleven-selection/cleanup reconciliation SHA256 is
 `411c6e341c79fe9d42e59065a6f480dd1f29244e295b45d7844abf4c5ca34a6b`. Its original failed sequence and cleanup receipts
 remain unchanged. Complete local validation permits review of this increment;
 matching-head native/security and remaining issue acceptance are still pending.
+
+### PR #704 follow-up: shared admission and dependency gates, 2026-10-08
+
+PR #704 is open at published head
+`aa4ccb64da1ad29ae1a9166e215ac6b597263070`. Its API verify, OpenAPI consistency
+and four CodeQL analyses passed. Repository policy failed on six newly reported
+Next advisories, Codacy requested changes, and Copilot identified a real bypass:
+polymorphic password sign-in did not enter the account/IP admission gate.
+These results belong to that published head. The preceding broad local evidence
+does not certify the subsequently modified source.
+
+The follow-up in the same owned checkout introduces a required Authentication
+module admission port implemented by the API. Local MVC and polymorphic
+email/username/phone entry points share the original thresholds, canonical email,
+source-IP normalization and PostgreSQL advisory-lock key scopes. The caller holds
+the lease through credential verification and durable attempt/session recording.
+Admission denial uses the same server-owned timing origin and generic token-free
+error. New unit cases cover canonical identifiers, denial before credential work,
+and lease disposal; twelve new HTTP cases cover account/IP thresholds and held
+account/IP locks for all three polymorphic credential kinds.
+
+Actual-source focused Authentication passed **96/96**, API admission/registration
+passed **23/23**, and complete Assets passed **1,164/1,164**, with zero failures or
+skips. The API and Assets source maps match. The earlier Authentication focused
+map differs only in the two subsequently added Assets image tests; Authentication
+production and test bytes still match. Assets includes actual benign PNG decoding,
+repeatable perceptual hashes, distinct mirrored patterns and stream reset checks.
+These passing selections do not establish the new PostgreSQL HTTP cases.
+
+New execution artifacts are under
+`D:/Codex/work-artifacts/release-2026-11-25/gameguild-issues-01a0d900/`:
+
+| Selection | Log SHA256 | TRX SHA256 |
+|---|---|---|
+| Authentication focused | `1d9bcc5c6601e0e87ce250236b89405404b1344bfe3436c890b17f2525d3e0ee` | `8e551a49dc0085d2efbf23013a8e173ac365e972fafd8468ba5e94bd81e6f3a5` |
+| API admission/registration | `ca1e9b0fbae64e40b110a1741c4e2794f05b1b5d609dd84819a8d6de21873c62` | `dbc47b168ebdb106fd072f80d38e70e8b5cda1438913dca927185355bd0790ef` |
+| Complete Assets | `389f8801e1124802c6ab62b60eddfef5912a822eac7b698bcc4a72182462f622` | `aa44cfff04250ab10f3c523cb9644b4a2be37922e1b864985345a8d988ad269c` |
+
+Three owned PostgreSQL preparation attempts executed **zero functional cases**.
+The first two failed readiness/exec collection; the third timed out collecting
+`docker run` although its labelled container had started. Its retained server log
+shows cluster initialization, but does not establish readiness or the root cause
+of the slow Docker operations. Independent exact-ID/owner inspections confirmed
+all three containers absent after cleanup. The original failed receipts remain
+unchanged. No global Docker restart, prune, timeout extension or test retry change
+was made. The twelve new HTTP cases remain unverified.
+
+Next consumers, eslint configuration and the root override were normally upgraded
+from 16.3.6 to 16.3.8; the frozen install and strict pnpm audit passed. The remaining
+two known advisories still require and passed their existing seventeen patch
+regressions. Security-validator regressions passed 9/9 and dependency-policy cases
+passed 7/7. No audit/security policy was relaxed. The full Web regression is still
+running and has reported two Markdown/VegaLite failures; no current Web acceptance
+or attribution to a particular cause is claimed.
+
+ImageSharp 4.1.2 replaces vulnerable 3.1.11, but requires a configured Six Labors
+license. Debug compilation emitted its two license warnings. The actual Release
+Assets build failed on license validation with unchanged inputs, exit code 1;
+log SHA256 is
+`621d72e2442ac0177b26775a9f851f8b0cf14e9cd4432584c10a57334329500d`.
+The owner must choose a valid configured license or a compatible replacement.
+No purchase/application, warning suppression or license-validation bypass was
+performed. Passing Debug tests do not prove Release readiness.
+
+At 02:37:58 UTC the primary develop checkout still had the same 55 unrelated files,
+with original bytes and Git status, at `d5f417328e9ff9d3fa0517796a623e310aeb1ef0`.
+Only row #288 changed in the 328-ID matrix; all other rows and their original
+requirements were preserved. #288 and #287 remain open. The follow-up is not yet
+committed or pushed; supported hash/profile timing, real admission HTTP tests,
+Release licensing, Web failures and matching-head native/security/review remain
+required before merge or closure.
+
+The subsequently completed full Authentication project passed **2,378/2,378**,
+zero failures/skips, raw `Completed`, exit code 0 and unchanged actual source.
+This includes the seven added shared-admission cases and retains every existing
+case. Its complete source map matches the API/Assets follow-up maps. Log/TRX
+SHA256: `fe67315f36e53d20988ebf8fc897e96ea7e9948d5e6541601fdd66b24a841b4a`
+/ `6638d4a78630359090fe563404a2b81012686e6b80337d461ddba1347dda30b2`.
+This result does not resolve the pending PostgreSQL, Release or Web gates.
+
+The new API Integration test project also compiled from actual unchanged source
+in Debug (exit code 0; retained license warnings), with no functional cases run.
+Compile log SHA256:
+`7536132810de1e7e49d871d5000129fa5f685dc318f696c6cf8e3c3bfe236f63`.
+Short CPU profiles from the exclusively owned Vitest process showed waiting/module
+loading; its active test thread changed from 287 to 329. This establishes continued
+execution despite silent reporting, not the cause of the two failures. The
+temporary loopback inspector and profiling sessions were closed. Full Web results
+remain pending.
+
+The fresh fixed-ID GitHub snapshot at 02:48:47 UTC reports **75 closed / 253 open**:
+28 `COMPLETED`, 46 `DUPLICATE`, one `NOT_PLANNED`. #323 and #328 were closed by a
+separate audit as already implemented on develop, with criterion/source maps and
+reported test evidence in their respective closure comments. This front inspected
+those comments without independently rerunning their closure-specific integration
+or performance cases. Their live state and evidence links were reconciled in the
+matrix without changing their original requirements. No issue was newly closed
+by this continuation, and #288 remains open.
+
+The first full Web run then ended with exit code 1 and no complete suite counters.
+The diagnostic teardown attempted a dynamic import through `Runtime.evaluate`;
+that VM context lacked its import callback, causing
+`ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING` and interrupting Vitest. This is a
+collector-induced failure, not an accepted complete result or a product defect.
+The earlier two Markdown failures precede the diagnostic and remain recorded.
+The original log and failed execution are preserved. A clean focused Markdown
+repetition was started without an inspector, with unchanged source/assertions and
+the existing timeout; full Web acceptance remains pending.
+
+That clean focused repetition passed all **8/8** Markdown cases, including the two
+previous failures, with the existing timeout and no inspector. Inputs were
+unchanged; log SHA256:
+`5cf143b1cb72ddb5166a0e75da9b7668ccdc97f2fce226ae3e6eea3609392406`.
+This narrower repetition does not replace complete Web coverage or establish the
+cause of the earlier failures. A fresh full Web run with default concurrency and
+timeouts, byte guards and a JSON reporter was started separately; its completion
+and final counters remain pending.
+
+A fourth PostgreSQL execution prepared a new, exclusively labelled loopback-only
+container with isolated 512 MiB tmpfs storage. PostgreSQL settings, test assertions,
+collector deadlines and test retries were unchanged. Docker had responded to a
+read-only availability probe in 5.68 seconds; the host sample showed 100% CPU and
+about 19.5 GiB free memory. These observations do not establish the cause of earlier
+startup failures. The new server became ready and the actual-source polymorphic,
+lockout-concurrency and timing HTTP selection started at 03:04:25 UTC. Container
+`281eeaa8cae73362fad68b73d173322099454043ab2fb1b89c57ed6dcad8e4c4`
+belongs exclusively to this execution and is scheduled for exact-ID verified
+removal by its wrapper. Runtime results and cleanup remain pending. This execution
+does not test persistence across server crashes or production timing distributions.
+
+The fourth selection completed with **78/78 passed**, zero failures/skips, raw
+`Completed` and unchanged actual source. It includes all twelve new account/IP and
+held-account/held-IP HTTP cases for email, username and phone. Runtime execution
+IDs are unique and the source map matches complete Authentication, API admission
+and complete Assets. Exclusive container removal returned zero and exact-ID
+inspection confirmed absence. Log/TRX SHA256:
+`5002cac56fb36f1eb764fde39a61c219205ecbbf434a04431cba8e24632356c8`
+/ `6bddf185a0395e2486bc7add3936cee9bdcb182260ad7b606d3d2b936ca997c0`.
+This three-class selection excludes the separate password-hash HTTP class and is
+not a complete Integration project result. Release licensing, clean complete Web,
+matching-head native/security/review and remaining timing-profile acceptance are
+still pending. The earlier three preparation failures remain unchanged.
+
+## Date-clock and native-publication checkpoint — 2026-10-08
+
+The clean complete Web02 run finished with **2,996 passed / 2 failed / 2,998
+total**, zero skipped and unchanged source. Both failures were date-selector
+queries for 8 October: the real calendar prefixes the accessible name with
+`Today, ` when the host date reaches that fixture date. Log SHA256:
+`8771ecef23a9e769b6d7193092b16a5e7e02c0c9364bf9dd82e031613ef7dd94`.
+The earlier interrupted execution and narrower Markdown repetition remain
+separate historical results.
+
+The date test now fixes only `Date`; event, delay and timeout timers remain real.
+All ten original tests, assertions and deadlines are retained. An eleventh case
+explicitly verifies the today-prefixed button and the complete submitted interval.
+Focused execution passed **11/11**, with unchanged test bytes. Log SHA256:
+`a621fb704858a9b06c576afeb9e7cc9199bb75383c9f9dc986eaf32cb515fa2c`.
+The separate complete Web03 run started at 03:53:16 UTC. Its sole guarded source
+delta against Web02 is that test file; default concurrency, isolation and deadlines
+are unchanged and no inspector is attached. An observed Markdown/Mermaid failure
+is retained; final counters are pending. No cause or complete Web acceptance is
+claimed from the partial report.
+
+Current #145 MFA diagnostic failures and its complete original scope are recorded
+separately in `authentication-mfa-policy-reconciliation.md`. Their failed policy
+preconditions do not prove a runtime login bypass. No MFA product code was changed
+in this publication increment.
+
+At 04:11:41 UTC the fixed 328-ID scope still had **75 closed / 253 open**: 28
+completed, 46 duplicates, one owner-cancelled. Only #145/#288 changed in this
+matrix update; the other 326 rows and every original acceptance field were
+preserved. The primary develop checkout's 55 unrelated files and Git status
+were again byte-verified unchanged at `d5f417328e9ff9d3fa0517796a623e310aeb1ef0`.
+No new issue was closed by this front.
+
+The local increment is being published in the same existing PR #704 branch so
+native CI/security/review can examine the actual fixes. Publication is a review
+candidate and does not establish merge readiness. The unresolved Release license,
+complete Web/native/security/review results and remaining timing-profile acceptance
+remain required. No merge waiver, audit relaxation, license suppression, new
+worktree, branch or stash is introduced.

@@ -205,15 +205,15 @@ public sealed class MonotonicTimingTests
     private sealed class CostLogger : ILogger<UserEnumerationProtectionService>
     {
         public List<int> Costs { get; } = [];
-        public IDisposable? BeginScope<TState>(TState state) where TState:notnull => null;
-        public bool IsEnabled(LogLevel logLevel) => true;
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState,Exception?,string> formatter)
+        IDisposable? ILogger.BeginScope<TState>(TState state) => null;
+        bool ILogger.IsEnabled(LogLevel logLevel) => true;
+        void ILogger.Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState,Exception?,string> formatter)
         {
             if (state is IEnumerable<KeyValuePair<string,object?>> values)
             {
                 foreach (var pair in values)
                 {
-                    if (pair.Key == "WorkFactor" && pair.Value is int cost) Costs.Add(cost);
+                    if (pair.Key == "WorkFactor" && pair.Value is int cost) { Costs.Add(cost); }
                 }
             }
         }

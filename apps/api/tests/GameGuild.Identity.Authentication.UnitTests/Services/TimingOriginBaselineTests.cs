@@ -56,7 +56,7 @@ public sealed class TimingOriginBaselineTests
         facade.Setup(service => service.LocalSignInAsync(It.IsAny<LocalSignInRequest>(), It.IsAny<CancellationToken>()))
             .Returns((LocalSignInRequest request, CancellationToken cancellation) => fixture.Service.LocalSignInAsync(request, cancellation));
         var handler = new PolymorphicSignInHandler(facade.Object, fixture.Repository.Object,
-            NullLogger<PolymorphicSignInHandler>.Instance);
+            NullLogger<PolymorphicSignInHandler>.Instance, new PasswordSignInAdmissionStub());
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => handler.Handle(new PolymorphicSignInCommand
         {
             Credential = "synthetic", CredentialType = CredentialType.Username, Password = "Synthetic-Wrong-1!"

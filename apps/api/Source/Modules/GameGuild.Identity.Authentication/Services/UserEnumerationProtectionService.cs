@@ -23,8 +23,11 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
     public Task AddTimingProtectionDelayAsync(bool isValidUser, DateTime startTime) =>
         CompleteAuthenticationTimingAsync(AuthenticationTimingOrigin.FromLegacyWallClock(startTime), isValidUser);
 
+    public Task CompleteAuthenticationTimingAsync(AuthenticationTimingOrigin origin, bool credentialWorkCompleted) =>
+        CompleteAuthenticationTimingAsync(origin, credentialWorkCompleted, CancellationToken.None);
+
     public async Task CompleteAuthenticationTimingAsync(AuthenticationTimingOrigin origin, bool credentialWorkCompleted,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(origin);
         cancellationToken.ThrowIfCancellationRequested();
@@ -154,8 +157,8 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
         cancellationToken.ThrowIfCancellationRequested();
         var workFactor = PasswordHasher.ResolveBCryptWorkFactor(configuration);
         var dummySalt = "$2a$" + workFactor.ToString("00", CultureInfo.InvariantCulture) + "$abcdefghijklmnopqrstuu";
-        // A scheduled BCrypt operation cannot be interrupted mid-hash. Check cancellation on both sides;
-        // never replace a hash failure with a sleep or report it as completed protection.
+        // Check cancellation before and after the synchronous BCrypt operation.
+        // A failed hash must propagate as a failure of timing protection.
         await Task.Run(() => BCrypt.Net.BCrypt.HashPassword(password, dummySalt), cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         logger.LogDebug("Dummy credential work completed (BCrypt work factor: {WorkFactor})", workFactor);

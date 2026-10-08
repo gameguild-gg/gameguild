@@ -15,6 +15,7 @@ public sealed class PolymorphicSignInHandler(
     IAuthService authService,
     IUserRepository userRepository,
     ILogger<PolymorphicSignInHandler> logger,
+    IPasswordSignInAdmissionService admissionService,
     FluentValidation.IValidator<PolymorphicSignInCommand>? validator = null,
     TimeProvider? timeProvider = null,
     IHttpContextAccessor? httpContextAccessor = null
@@ -66,6 +67,10 @@ public sealed class PolymorphicSignInHandler(
             TimingOrigin = timingOrigin
         };
 
+        // Resolve username/phone to the same account key used by email sign-in.
+        // Missing/ambiguous identifiers still consume the source-IP admission budget.
+        await using var admission = await admissionService.AdmitAsync(
+            localSignInRequest.Email, httpContextAccessor?.HttpContext, timingOrigin, cancellationToken).ConfigureAwait(false);
         var domainResult = await authService.LocalSignInAsync(localSignInRequest, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Polymorphic password flow returned; success: {Success}", domainResult.Success);

@@ -183,6 +183,7 @@ public sealed class AuthenticationLockoutConcurrencyPostgreSqlTests(ApiPostgreSq
         services.AddSingleton<AdmissionWorkRecorder>();
         services.AddSingleton<ILogger<UserEnumerationProtectionService>>(provider => provider.GetRequiredService<AdmissionWorkRecorder>());
         services.AddSingleton<IUserEnumerationProtectionService, UserEnumerationProtectionService>();
+        services.AddSingleton<IPasswordSignInAdmissionService, PasswordSignInAdmissionService>();
         return services.BuildServiceProvider();
     }
 
@@ -200,13 +201,15 @@ public sealed class AuthenticationLockoutConcurrencyPostgreSqlTests(ApiPostgreSq
     private sealed class AdmissionWorkRecorder : ILogger<UserEnumerationProtectionService>
     {
         public List<int> Costs { get; } = [];
-        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
-        public bool IsEnabled(LogLevel logLevel) => true;
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        IDisposable? ILogger.BeginScope<TState>(TState state) => null;
+        bool ILogger.IsEnabled(LogLevel logLevel) => true;
+        void ILogger.Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
             if (state is not IEnumerable<KeyValuePair<string, object?>> values) { return; }
             foreach (var value in values)
+            {
                 if (value.Key == "WorkFactor" && value.Value is int cost) { Costs.Add(cost); }
+            }
         }
     }
 

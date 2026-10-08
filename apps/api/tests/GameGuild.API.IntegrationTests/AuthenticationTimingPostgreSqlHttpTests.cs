@@ -70,7 +70,7 @@ public sealed class AuthenticationTimingPostgreSqlHttpTests(ApiPostgreSqlFixture
         };
         using var client = factory.CreateClient();
         await AssertDenialAsync(factory, client, "/v1/auth/polymorphic",
-            new { credential = identifier, credentialType = type, password = "Synthetic-Wrong-1!" },
+            new { credential = identifier, credentialType = type, password = "aA7!" + Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(20)) },
             needsDummyWork, scenario + ":" + type);
     }
 
@@ -129,7 +129,7 @@ public sealed class AuthenticationTimingPostgreSqlHttpTests(ApiPostgreSqlFixture
         try
         {
             await AssertDenialAsync(factory, client, "/v1/auth/sign-in",
-                new { email = account.Email, password = "Synthetic-Wrong-1!" }, needsDummyWork: true, "advisory-lock:" + scenario);
+                new { email = account.Email, password = "aA7!" + Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(20)) }, needsDummyWork: true, "advisory-lock:" + scenario);
         }
         finally
         {
@@ -196,14 +196,14 @@ public sealed class AuthenticationTimingPostgreSqlHttpTests(ApiPostgreSqlFixture
     private sealed class CredentialWorkRecorder : ILogger<UserEnumerationProtectionService>
     {
         public ConcurrentQueue<int> Costs { get; } = new();
-        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
-        public bool IsEnabled(LogLevel logLevel) => true;
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        IDisposable? ILogger.BeginScope<TState>(TState state) => null;
+        bool ILogger.IsEnabled(LogLevel logLevel) => true;
+        void ILogger.Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
-            if (state is not IEnumerable<KeyValuePair<string, object?>> values) return;
+            if (state is not IEnumerable<KeyValuePair<string, object?>> values) { return; }
             foreach (var pair in values)
             {
-                if (pair.Key == "WorkFactor" && pair.Value is int cost) Costs.Enqueue(cost);
+                if (pair.Key == "WorkFactor" && pair.Value is int cost) { Costs.Enqueue(cost); }
             }
         }
     }

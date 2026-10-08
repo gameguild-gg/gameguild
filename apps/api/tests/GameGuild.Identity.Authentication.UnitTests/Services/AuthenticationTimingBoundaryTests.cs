@@ -271,10 +271,10 @@ public sealed class AuthenticationTimingBoundaryTests
             return Completion?.Invoke(origin, cancellationToken) ?? Task.CompletedTask;
         }
 
-        public string GetGenericErrorMessage(string context) => GenericDenial;
-        public Task AddTimingProtectionDelayAsync(bool isValidUser, DateTime startTime) =>
+        string IUserEnumerationProtectionService.GetGenericErrorMessage(string context) => GenericDenial;
+        Task IUserEnumerationProtectionService.AddTimingProtectionDelayAsync(bool isValidUser, DateTime startTime) =>
             throw new InvalidOperationException("The active host must use the monotonic capability.");
-        public Task<ThrottleDecision> ShouldThrottleAsync(string identifier) => Task.FromResult(new ThrottleDecision());
-        public Task RecordEnumerationAttemptAsync(string identifier, string attemptType) => Task.CompletedTask;
+        Task<ThrottleDecision> IUserEnumerationProtectionService.ShouldThrottleAsync(string identifier) => Task.FromResult(new ThrottleDecision());
+        Task IUserEnumerationProtectionService.RecordEnumerationAttemptAsync(string identifier, string attemptType) => Task.CompletedTask;
     }
 }

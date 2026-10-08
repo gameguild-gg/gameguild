@@ -55,7 +55,7 @@ public sealed class AuthenticationDtoHandlerContractTests
                 .Handle(new LocalSignInCommand { Email = user.Email, TenantId = source.TenantId }, cancellation.Token),
             "refresh" => await new RefreshTokenHandler(service.Object, repository.Object, NullLogger<RefreshTokenHandler>.Instance, Validator<RefreshTokenCommand>())
                 .Handle(new RefreshTokenCommand { RefreshToken = "synthetic-input-refresh", TenantId = source.TenantId }, cancellation.Token),
-            "polymorphic" => await new PolymorphicSignInHandler(service.Object, repository.Object, NullLogger<PolymorphicSignInHandler>.Instance, Validator<PolymorphicSignInCommand>())
+            "polymorphic" => await new PolymorphicSignInHandler(service.Object, repository.Object, NullLogger<PolymorphicSignInHandler>.Instance, new PasswordSignInAdmissionStub(), Validator<PolymorphicSignInCommand>())
                 .Handle(new PolymorphicSignInCommand { Credential = user.Email, TenantId = source.TenantId }, cancellation.Token),
             "social" => await new SocialSignInHandler(service.Object, repository.Object, NullLogger<SocialSignInHandler>.Instance, Validator<SocialSignInCommand>())
                 .Handle(new SocialSignInCommand { Provider = SocialProvider.Google, Token = "synthetic-input-oauth", TenantId = source.TenantId }, cancellation.Token),

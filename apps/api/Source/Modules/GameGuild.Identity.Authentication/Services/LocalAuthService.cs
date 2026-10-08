@@ -60,6 +60,16 @@ public class LocalAuthService(
         var authenticationSucceeded = false;
         string? failureReason = null;
 
+        Task CompleteTimingOnceAsync()
+        {
+            if (timingAttempted)
+            {
+                return Task.CompletedTask;
+            }
+            timingAttempted = true;
+            return CompleteAuthenticationTimingAsync(timingOrigin, credentialWorkCompleted, cancellationToken);
+        }
+
         try
         {
             // Lookup user from database
@@ -125,13 +135,11 @@ public class LocalAuthService(
                         failedAttemptAnalysis).ConfigureAwait(false);
                 }
 
-                timingAttempted = true;
-                await CompleteAuthenticationTimingAsync(timingOrigin, credentialWorkCompleted, cancellationToken).ConfigureAwait(false);
+                await CompleteTimingOnceAsync().ConfigureAwait(false);
                 throw new UnauthorizedAccessException(enumerationProtection.GetGenericErrorMessage("login"));
             }
 
-            timingAttempted = true;
-            await CompleteAuthenticationTimingAsync(timingOrigin, credentialWorkCompleted, cancellationToken).ConfigureAwait(false);
+            await CompleteTimingOnceAsync().ConfigureAwait(false);
             var authenticatedUserId = userId ?? throw new InvalidOperationException("A successful authentication must have a user ID.");
 
             // Analyze login attempt for anomalies
@@ -281,10 +289,7 @@ public class LocalAuthService(
             {
                 logger.LogError(exception, "Could not record failed authentication attempt after a system error");
             }
-            if (!timingAttempted)
-            {
-                await CompleteAuthenticationTimingAsync(timingOrigin, credentialWorkCompleted, cancellationToken).ConfigureAwait(false);
-            }
+            await CompleteTimingOnceAsync().ConfigureAwait(false);
 
             throw new UnauthorizedAccessException(enumerationProtection.GetGenericErrorMessage("login"));
         }

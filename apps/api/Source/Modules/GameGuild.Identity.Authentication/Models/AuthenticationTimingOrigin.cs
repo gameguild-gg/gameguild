@@ -10,6 +10,8 @@ public sealed class AuthenticationTimingOrigin
     private readonly long started;
     private readonly TimeSpan elapsedBeforeOrigin;
 
+    public AuthenticationTimingOrigin() : this(TimeProvider.System, TimeSpan.Zero) { }
+
     private AuthenticationTimingOrigin(TimeProvider clock, TimeSpan elapsedBeforeOrigin)
     {
         this.clock = clock;
@@ -24,10 +26,15 @@ public sealed class AuthenticationTimingOrigin
 
     internal TimeProvider Clock => clock;
 
-    public static AuthenticationTimingOrigin Start(TimeProvider? clock = null) => new(clock ?? TimeProvider.System, TimeSpan.Zero);
+    public static AuthenticationTimingOrigin Start() => Start(TimeProvider.System);
+
+    public static AuthenticationTimingOrigin Start(TimeProvider? clock) => new(clock ?? TimeProvider.System, TimeSpan.Zero);
 
     /// <summary>Reuse the server-created request origin across admission filters and command dispatch.</summary>
-    public static AuthenticationTimingOrigin GetOrStartForRequest(HttpContext? context, TimeProvider? clock = null)
+    public static AuthenticationTimingOrigin GetOrStartForRequest(HttpContext? context) =>
+        GetOrStartForRequest(context, TimeProvider.System);
+
+    public static AuthenticationTimingOrigin GetOrStartForRequest(HttpContext? context, TimeProvider? clock)
     {
         if (context is null) { return Start(clock); }
         if (context.Items.TryGetValue(RequestOriginKey, out var existing) && existing is AuthenticationTimingOrigin origin)

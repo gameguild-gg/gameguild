@@ -287,13 +287,15 @@ public sealed class AuthenticationLockoutActionFilterTests
     private sealed class AdmissionWorkLogger : ILogger<UserEnumerationProtectionService>
     {
         public List<int> Costs { get; } = [];
-        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
-        public bool IsEnabled(LogLevel logLevel) => true;
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        IDisposable? ILogger.BeginScope<TState>(TState state) => null;
+        bool ILogger.IsEnabled(LogLevel logLevel) => true;
+        void ILogger.Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
             if (state is not IEnumerable<KeyValuePair<string, object?>> values) { return; }
             foreach (var value in values)
+            {
                 if (value.Key == "WorkFactor" && value.Value is int cost) { Costs.Add(cost); }
+            }
         }
     }
 
@@ -330,6 +332,7 @@ public sealed class AuthenticationLockoutActionFilterTests
             ["PasswordPolicy:BCryptWorkFactor"] = "10"
         }).Build());
         services.AddSingleton<IUserEnumerationProtectionService, UserEnumerationProtectionService>();
+        services.AddSingleton<IPasswordSignInAdmissionService, PasswordSignInAdmissionService>();
         if (logger is not null) { services.AddSingleton(logger); }
         return (new AuthenticationLockoutActionFilter(), services.BuildServiceProvider());
     }
