@@ -1,5 +1,47 @@
 # Authentication configuration and MFA reconciliation — #145
 
+## Native cancellation correction and Code attempt03 — 2026-10-08
+
+The web consumer checkpoint is published in #704 at
+`2bda92a60f4a58a7473b877f02c3fd250f96e39d`. Real Code attempt03 passed its
+28 runtime contracts, trusted runtime build and CDN checks. PostgreSQL became
+ready within the unchanged 60-second budget. The native API and web booted;
+first-factor sign-in and limited authenticator enrollment returned HTTP 200.
+MFA completion then exceeded the unchanged 30-second request deadline, before
+the student submission and instructor grading cycle. Its inherited report from
+an earlier run is excluded from current functional acceptance.
+
+The API recorded session creation, followed by cancellation. The operation
+behavior reused the canceled request token for rollback and masked the original
+exception. Two new tests reproduced this against the original source and the
+qualified native22 API binary: both failed. Their assertions remain unchanged.
+Rollback now uses an independent, uncancelable token; cleanup clears tracked
+writes, pending permission audit snapshots and retry state in a `finally` block.
+A rollback transport failure is logged by error type and the original command
+exception is preserved. Authentication command data is excluded from that log.
+
+The affected host Debug build passed with zero warnings/errors, using the
+unchanged, qualified module references. All **147** host transaction,
+architecture, authentication, security and migration cases passed with no skips
+when provided their supported real PostgreSQL connection. The first run's
+**145 passed / 2 failed** Docker named-pipe connection result is retained.
+The entire authentication (**2,535**) and authorization (**1,667**) projects
+also passed with no skips: **4,349** cases across the three current selections.
+Sources and all 55 unrelated primary-checkout changes were preserved, and the
+exact owned PostgreSQL container was removed. A new complete Code run is still
+required before this checkpoint can support broader acceptance.
+
+Receipts under the existing artifact root include
+`code-mfa-cancellation-baseline-cached-20261008/result.json`,
+`code-mfa-cancellation-api-build-20261008.log`,
+`code-mfa-cancellation-validation-host-20261008/results.trx` and
+`code-mfa-cancellation-validation-host-postgres-20261008/host/results.trx`.
+`code-cycle3-postgres-final-cleanup-reconciliation-20261008.json` independently
+verifies the exact IDs and names of both the attempt03 PostgreSQL container and
+the tmpfs readiness diagnostic absent. Earlier timeout/removing observations
+and failed receipts remain intact. No issue is accepted or closed by this step;
+#145 and #288 retain their full original requirements.
+
 ## Web MFA consumer checkpoint — 2026-10-08
 
 The existing #704 branch incorporates develop merge #705 at

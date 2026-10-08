@@ -1,5 +1,23 @@
 # Web MFA consumer checkpoint — 2026-10-08
 
+## Native operation cancellation correction — 2026-10-08
+
+The host transaction owner rolls back with an independent token when the request
+is canceled. Cleanup always discards pending permission audit snapshots, clears
+tracked writes and resets operation retry state, including when rollback fails.
+The original command failure is preserved; rollback diagnostics contain only
+the exception type. Both unchanged cancellation regressions failed before the
+fix and passed afterward, within the complete 147-case host selection using
+its supported real PostgreSQL connection. The earlier two Docker named-pipe
+failures remain recorded. Code attempt03 reached real limited MFA enrollment
+but timed out at completion before submission/grading acceptance. Complete
+Code and #145 acceptance remain pending; see the reconciliation document and
+source-bound receipts for exact scopes. No issue is closed by this correction.
+The full authentication (2,535) and authorization (1,667) projects also passed;
+the three current selections total 4,349 passes, zero failures/skips. Source
+hashes and all 55 primary-checkout changes were preserved, and the exact owned
+PostgreSQL container was independently verified absent.
+
 The native first-factor challenge now continues through CSRF-protected web enrollment/completion. The verified session is finalized only after completion; recovery codes are one-time response data excluded from JWT/session claims. The existing form and Code runner consume this flow. Combined native selections passed 4,379; client build/typecheck and 1,155 tests and all 21 form tests passed. Local Code attempts stopped at disposable PostgreSQL readiness before functional tests; fresh CI/scanner/license gates and complete #145 acceptance remain pending. Details and unchanged original criteria are in `docs/architecture/authentication-mfa-policy-reconciliation.md`.
 
 # Authorization Architecture Documentation
