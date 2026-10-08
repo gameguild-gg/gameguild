@@ -154,3 +154,56 @@ test("both exact locally verified mitigations pass and an additional advisory st
   combined.metadata.vulnerabilities.low = 1;
   assert.throws(() => validateAuditReport(combined, 1, true, true), /Unmitigated.*GHSA-other/);
 });
+
+test("metadata counts every workspace finding of a verified advisory", () => {
+  const multiple = patchedReport();
+  multiple.advisories["1240992"].findings.push({ version: "3.0.3" });
+  multiple.metadata.vulnerabilities.high = 2;
+  assert.deepEqual(validateAuditReport(multiple, 1, true), {
+    advisories: 1,
+    verifiedLocalPatches: 1,
+  });
+  multiple.metadata.vulnerabilities.high = 1;
+  assert.throws(() => validateAuditReport(multiple, 1, true), /disagree/);
+});
+
+test("multiple findings of both verified patches retain all metadata checks", () => {
+  const multiple = patchedReport();
+  multiple.advisories["1240992"].findings.push({ version: "3.0.3" });
+  multiple.metadata.vulnerabilities.high = 2;
+  multiple.advisories["1241202"] = patchedSprintfReport().advisories["1241202"];
+  multiple.advisories["1241202"].findings.push({ version: "1.1.3" });
+  multiple.metadata.vulnerabilities.moderate = 2;
+  assert.deepEqual(validateAuditReport(multiple, 1, true, true), {
+    advisories: 2,
+    verifiedLocalPatches: 2,
+  });
+  multiple.metadata.vulnerabilities.moderate = 3;
+  assert.throws(() => validateAuditReport(multiple, 1, true, true), /disagree/);
+});
+
+test("a new Next.js advisory fails for every workspace installation", () => {
+  for (const github_advisory_id of [
+    "GHSA-3w37-wq28-93x7",
+    "GHSA-4jqv-mc3x-m676",
+    "GHSA-39w2-rjm5-chcv",
+    "GHSA-f87g-xv8r-7p7x",
+    "GHSA-mcj8-r9mp-w47p",
+    "GHSA-cjq9-62q9-8jv4",
+  ]) {
+    const invalid = patchedReport();
+    invalid.advisories.next = {
+      module_name: "next",
+      github_advisory_id,
+      findings: [
+        { version: "16.3.6", paths: ["apps__web>next"] },
+        { version: "16.3.6", paths: ["demos__emception-ide-next>next"] },
+      ],
+    };
+    invalid.metadata.vulnerabilities.moderate = 2;
+    assert.throws(
+      () => validateAuditReport(invalid, 1, true, true),
+      new RegExp(`Unmitigated.*${github_advisory_id}`),
+    );
+  }
+});

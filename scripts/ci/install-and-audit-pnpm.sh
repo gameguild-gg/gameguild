@@ -50,4 +50,4 @@ lock_hash_after_audit="$(sha256sum "$root_lock" | awk '{print $1}')"
 
 printf '> node scripts/ci/validate-pnpm-audit.mjs\n'
 node "$script_dir/validate-pnpm-audit.mjs" "$audit_report" "$audit_exit_code"
-node --test "$script_dir/tests/dependency-security.test.mjs"
+node --test "$script_dir/tests/dependency-security.test.mjs" "$script_dir/tests/next-dev-origin-security.test.mjs"
