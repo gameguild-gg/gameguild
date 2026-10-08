@@ -113,8 +113,8 @@ export async function fetchViewerReaction(postId: string): Promise<{ reacted: bo
   const { token } = await getRequestAuthContext();
   if (!token) return { reacted: false };
   const response = await fetch(
-    `${apiBaseUrl}/api/social/reactions/me/target/${REACTION_TARGET_TYPE}/${encodeURIComponent(postId)}`,
-    { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' },
+    assertSafeServiceUrl(`${apiBaseUrl}/api/social/reactions/me/target/${REACTION_TARGET_TYPE}/${encodeURIComponent(postId)}`, apiBaseUrl),
+    { redirect: 'error', headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' },
   );
   if (!response.ok) return { reacted: false };
   const body = (await response.json().catch(() => null)) as { type?: string } | null;
@@ -124,7 +124,8 @@ export async function fetchViewerReaction(postId: string): Promise<{ reacted: bo
 export async function setReaction(postId: string, react: boolean): Promise<{ ok: boolean }> {
   const { token, tenantId } = await getRequestAuthContext();
   if (!token || !tenantId) return { ok: false };
-  const response = await fetch(`${apiBaseUrl}/api/social/reactions`, {
+  const response = await fetch(assertSafeServiceUrl(`${apiBaseUrl}/api/social/reactions`, apiBaseUrl), {
+    redirect: 'error',
     method: react ? 'PUT' : 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -155,7 +156,8 @@ async function fetchProfileHandle(userId: string): Promise<string | null> {
   const { token, tenantId } = await getRequestAuthContext();
   if (!token || !tenantId) return null;
 
-  const response = await fetch(`${apiBaseUrl}/api/social/profiles/users/${encodeURIComponent(userId)}/or-create`, {
+  const response = await fetch(assertSafeServiceUrl(`${apiBaseUrl}/api/social/profiles/users/${encodeURIComponent(userId)}/or-create`, apiBaseUrl), {
+    redirect: 'error',
     headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Id': tenantId },
     cache: 'no-store',
   });
@@ -292,7 +294,8 @@ export async function resolveProfileByHandle(handle: string): Promise<
     ...(tenantId ? { 'X-Tenant-Id': tenantId } : {}),
   };
 
-  const response = await fetch(`${apiBaseUrl}/api/social/profiles/@${encodeURIComponent(clean)}`, {
+  const response = await fetch(assertSafeServiceUrl(`${apiBaseUrl}/api/social/profiles/@${encodeURIComponent(clean)}`, apiBaseUrl), {
+    redirect: 'error',
     headers,
     cache: 'no-store',
   });
@@ -316,7 +319,8 @@ export async function getViewerBlogAuthor(): Promise<{ userId: string | null; ha
     ...(tenantId ? { 'X-Tenant-Id': tenantId } : {}),
   };
 
-  const response = await fetch(`${apiBaseUrl}/api/social/profiles/users/${encodeURIComponent(userId)}/or-create`, {
+  const response = await fetch(assertSafeServiceUrl(`${apiBaseUrl}/api/social/profiles/users/${encodeURIComponent(userId)}/or-create`, apiBaseUrl), {
+    redirect: 'error',
     headers,
     cache: 'no-store',
   });
