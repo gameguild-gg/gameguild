@@ -289,17 +289,16 @@ public class SessionManagementServiceTests
     [Fact]
     public async Task GetUserSessionsAsync_WithActiveOnly_ShouldReturnOnlyActiveSessions()
     {
-        // Arrange
+        // Arrange - the expiry-aware active query already excludes inactive and expired rows
         var userId = Guid.NewGuid();
-        var sessions = new List<UserSession>
+        var activeSessions = new List<UserSession>
         {
-            new() { Id = Guid.NewGuid(), UserId = userId, IsActive = true, LastUsedAt = DateTime.UtcNow.AddHours(-1) },
-            new() { Id = Guid.NewGuid(), UserId = userId, IsActive = false, LastUsedAt = DateTime.UtcNow.AddHours(-2) },
-            new() { Id = Guid.NewGuid(), UserId = userId, IsActive = true, LastUsedAt = DateTime.UtcNow }
+            new() { Id = Guid.NewGuid(), UserId = userId, IsActive = true, ExpiresAt = DateTime.UtcNow.AddHours(1), LastUsedAt = DateTime.UtcNow.AddHours(-1) },
+            new() { Id = Guid.NewGuid(), UserId = userId, IsActive = true, ExpiresAt = DateTime.UtcNow.AddHours(1), LastUsedAt = DateTime.UtcNow }
         };
 
-        _sessionRepositoryMock.Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(sessions);
+        _sessionRepositoryMock.Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(activeSessions);
 
         // Act
         var result = await _service.GetUserSessionsAsync(userId, activeOnly: true);
@@ -308,6 +307,8 @@ public class SessionManagementServiceTests
         result.Should().HaveCount(2);
         result.Should().AllSatisfy(s => s.IsActive.Should().BeTrue());
         result[0].LastUsedAt.Should().BeAfter(result[1].LastUsedAt); // Ordered by LastUsedAt descending
+        _sessionRepositoryMock.Verify(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _sessionRepositoryMock.Verify(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
