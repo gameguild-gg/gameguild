@@ -201,10 +201,23 @@ public sealed class AuthenticationLockoutConcurrencyPostgreSqlTests(ApiPostgreSq
     private sealed class AdmissionWorkRecorder : ILogger<UserEnumerationProtectionService>
     {
         public List<int> Costs { get; } = [];
-        IDisposable? ILogger.BeginScope<TState>(TState _) => null;
-        bool ILogger.IsEnabled(LogLevel _) => true;
-        void ILogger.Log<TState>(LogLevel _, EventId _1, TState state, Exception? _2, Func<TState, Exception?, string> _3)
+        IDisposable? ILogger.BeginScope<TState>(TState state)
         {
+            _ = state;
+            return null;
+        }
+        bool ILogger.IsEnabled(LogLevel logLevel)
+        {
+            _ = logLevel;
+            return true;
+        }
+        void ILogger.Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            // The interface requires these arguments; this recorder observes only structured state.
+            _ = logLevel;
+            _ = eventId;
+            _ = exception;
+            _ = formatter;
             if (state is not IEnumerable<KeyValuePair<string, object?>> values) { return; }
             foreach (var value in values)
             {

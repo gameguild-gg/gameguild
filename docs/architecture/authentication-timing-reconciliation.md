@@ -799,3 +799,59 @@ Log/TRX SHA256:
 The complete API Unit project is running separately. Release licensing,
 new-head native/security/review and remaining timing-profile acceptance still
 prevent merge/closure. #288 and #287 remain open.
+
+
+## Explicit interface discard follow-up — 2026-10-08
+
+The actual-head `59fe6b9` Codacy result retained all sixteen required-interface
+parameter warnings. The underscore rename did not resolve them. The five existing
+private test doubles now explicitly discard their unused interface arguments;
+every return value, structured-state observation, assertion, deadline and method
+contract is preserved. No analyzer setting/rule is suppressed and production
+source is unchanged. New-head analyzer acceptance is still pending.
+
+Before this follow-up, the complete API Unit repetition finished at 05:25:31 UTC
+with **1,082/1,082 passed**, zero failures/skips, raw `Completed` and unchanged
+guarded source. Log/TRX: `1af7fefb934bbf42069a4d6d744ace57ec19372b5c63516446895ffb09f40296` /
+`046b1d1142d8ea020b136a5f3128f041f4171a26ba4a5b804fe66770a5639f52`. This complete result precedes the latest test-body
+discards and is not silently relabelled as a complete suite at the newer source.
+
+After the discards, complete Authentication passed **2,378/2,378** and all nine
+API admission/filter cases passed, with zero failures/skips, raw `Completed` and
+unchanged source guards. Authentication log/TRX: `aca1c4bdcbe9c6ab62fb3ae0a5cb1ef5f1e182d92df587e9de7b7c2c1b2f26fc` /
+`0fbeb4bb2c9509387c78364ba1a23fe5ab65a18e11dbb2175d77fa869122077a`. Admission focus log/TRX: `926fc40b306d88635ff304aa465891ef6f2b14cbe4013a04e8ff625d866474b3` /
+`f5c5bb89b1109cffd97ef0b3074a5d785ed8267e51479e851df561844a862e71`. The separate 78-case actual PostgreSQL/HTTP repetition:
+Raw Completed, counters {'total': '78', 'executed': '78', 'passed': '78', 'failed': '0', 'error': '0', 'timeout': '0', 'aborted': '0', 'inconclusive': '0', 'passedButRunAborted': '0', 'notRunnable': '0', 'notExecuted': '0', 'disconnected': '0', 'warning': '0', 'completed': '0', 'inProgress': '0', 'pending': '0'}, exact owned container absent: True. Its original assertions and deadlines are unchanged.
+
+At exact head `59fe6b9`, native Web passed 422 files / **2,999 tests**, generated
+client/runtime dependencies, route types, lint, typecheck and build. All four
+CodeQL language jobs completed successfully; native API/OpenAPI still fail the
+Release ImageSharp license requirement before their functional checks run.
+Earlier `07cc089` Emception completed successfully at 05:27:57 UTC; its source
+scope is retained as that earlier head, not relabelled. GitGuardian still reports
+the two runtime-random test expressions in historical commit `07cc089`; Chrome
+requires human login. No incident disposition, history rewrite or waiver occurred.
+
+Additional supported-hash Kestrel observations retain their initial failures:
+execution01 failed package restore (zero functional cases); execution02 failed
+the missing configuration namespace import (zero functional cases); execution03
+executed four cases, all failed the active-rate-limiter precondition before any
+measured authentication request. Source/primary/actual assemblies remained
+unchanged and each exact owned PostgreSQL was removed with absence verified.
+Those precondition failures do not establish a product timing defect or timing
+distributions. Execution04 activates the originally declared 500/minute,
+zero-queue experimental policy used by the earlier Kestrel observations, retaining
+every original assertion and all account/IP thresholds. Each profile removes
+only its disposable synthetic attempt history after the experiment to preserve
+independence while keeping the actual gates active. Its status:
+Running; no final functional counters claimed. These controlled local observations do not establish
+production indistinguishability or durable crash persistence.
+
+Fixed 328-ID live reconciliation at 2026-10-08T05:43:16.728834+00:00: **75
+closed / 253 open**. This front closed zero additional issues. #288
+and #287 remain open; original criteria and all 328 IDs remain preserved.
+This follow-up is a review candidate in the existing PR/branch/worktree. Release
+licensing, GitGuardian, new-head Codacy/native/review and complete remaining
+timing acceptance prevent merge/closure. No new branch, worktree or stash is
+created. #145's qualified mandatory-MFA defect still needs its complete usable
+pre-login verification/enrollment flow; no MFA product code is changed here.
