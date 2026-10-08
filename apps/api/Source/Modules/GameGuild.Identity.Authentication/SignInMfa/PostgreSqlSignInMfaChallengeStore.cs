@@ -30,7 +30,8 @@ public sealed class PostgreSqlSignInMfaChallengeStore(IApplicationDbContext cont
         RequireDigest(tokenHash);
         ArgumentNullException.ThrowIfNull(binding);
         binding.Validate();
-        if (method is not (MfaMethod.Totp or MfaMethod.BackupCode or MfaMethod.WebAuthn))
+        if (method is not (MfaMethod.Totp or MfaMethod.BackupCode or MfaMethod.WebAuthn) ||
+            binding.Purpose == SignInMfaPurpose.EnrollFactor && method != MfaMethod.Totp)
         {
             throw new ArgumentOutOfRangeException(nameof(method));
         }
@@ -39,9 +40,34 @@ public sealed class PostgreSqlSignInMfaChallengeStore(IApplicationDbContext cont
                 challenge.SubjectTokenVersion == binding.SubjectTokenVersion &&
                 challenge.PolicyFingerprint == binding.PolicyFingerprint && challenge.Purpose == binding.Purpose &&
                 challenge.CreatedAt <= now && challenge.ExpiresAt > now &&
-                challenge.ConsumedAt == null && challenge.RevokedAt == null)
+                challenge.ConsumedAt == null && challenge.RevokedAt == null &&
+                (challenge.Purpose == SignInMfaPurpose.VerifyFactor ||
+                 challenge.EnrollmentConfigurationId != null && challenge.EnrollmentSecretFingerprint != null && challenge.EnrollmentInitializedAt != null))
             .ExecuteUpdateAsync(setters => setters.SetProperty(challenge => challenge.ConsumedAt, now)
                 .SetProperty(challenge => challenge.VerificationMethod, method), cancellationToken).ConfigureAwait(false);
+        return changed == 1;
+    }
+
+    public async Task<bool> TryBindEnrollmentAsync(string tokenHash, SignInMfaChallengeBinding binding, Guid configurationId,
+        string secretFingerprint, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        RequireDigest(tokenHash);
+        ArgumentNullException.ThrowIfNull(binding);
+        binding.Validate();
+        RequireDigest(secretFingerprint);
+        if (configurationId == Guid.Empty || binding.Purpose != SignInMfaPurpose.EnrollFactor || now.Offset != TimeSpan.Zero)
+        {
+            throw new ArgumentException("A current enrollment binding is required.");
+        }
+        var changed = await Challenges.Where(challenge => challenge.TokenHash == tokenHash &&
+                challenge.SubjectId == binding.SubjectId && challenge.TenantId == binding.TenantId &&
+                challenge.SubjectTokenVersion == binding.SubjectTokenVersion && challenge.PolicyFingerprint == binding.PolicyFingerprint &&
+                challenge.Purpose == binding.Purpose && challenge.CreatedAt <= now && challenge.ExpiresAt > now &&
+                challenge.ConsumedAt == null && challenge.RevokedAt == null && challenge.EnrollmentConfigurationId == null &&
+                challenge.EnrollmentSecretFingerprint == null && challenge.EnrollmentInitializedAt == null)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(challenge => challenge.EnrollmentConfigurationId, configurationId)
+                .SetProperty(challenge => challenge.EnrollmentSecretFingerprint, secretFingerprint)
+                .SetProperty(challenge => challenge.EnrollmentInitializedAt, now), cancellationToken).ConfigureAwait(false);
         return changed == 1;
     }
 

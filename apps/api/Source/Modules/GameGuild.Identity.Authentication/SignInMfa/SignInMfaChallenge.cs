@@ -19,6 +19,9 @@ public sealed class SignInMfaChallenge
     public DateTimeOffset? ConsumedAt { get; set; }
     public DateTimeOffset? RevokedAt { get; set; }
     public MfaMethod? VerificationMethod { get; set; }
+    public Guid? EnrollmentConfigurationId { get; set; }
+    public string? EnrollmentSecretFingerprint { get; set; }
+    public DateTimeOffset? EnrollmentInitializedAt { get; set; }
 
     public void ValidateForPersistence()
     {
@@ -27,7 +30,8 @@ public sealed class SignInMfaChallenge
             !Enum.IsDefined(Purpose) || !Enum.IsDefined(FirstFactor) || CreatedAt == default ||
             CreatedAt.Offset != TimeSpan.Zero || ExpiresAt.Offset != TimeSpan.Zero ||
             ExpiresAt <= CreatedAt || ExpiresAt - CreatedAt > TimeSpan.FromMinutes(5) ||
-            ConsumedAt is not null || RevokedAt is not null || VerificationMethod is not null)
+            ConsumedAt is not null || RevokedAt is not null || VerificationMethod is not null ||
+            EnrollmentConfigurationId is not null || EnrollmentSecretFingerprint is not null || EnrollmentInitializedAt is not null)
         {
             throw new ArgumentException("Invalid first-factor challenge state.");
         }

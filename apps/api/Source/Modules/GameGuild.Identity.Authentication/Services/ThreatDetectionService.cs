@@ -31,8 +31,8 @@ public class ThreatDetectionService(
         if (failedCount >= bruteForceThreshold)
         {
             logger.LogWarning(
-                "Brute force attack detected - Identifier: {Identifier}, Failed attempts: {FailedCount} in {TimeWindowMinutes} minutes",
-                identifier, failedCount, timeWindowMinutes);
+                "Brute force attack detected - Failed attempts: {FailedCount} in {TimeWindowMinutes} minutes",
+                failedCount, timeWindowMinutes);
 
             await siemService
                 .SendBruteForceEventAsync(identifier, failedCount, TimeSpan.FromMinutes(timeWindowMinutes), CancellationToken.None)

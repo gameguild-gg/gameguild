@@ -38,7 +38,11 @@ public sealed class SignInMfaProof
     internal static SignInMfaProof FromVerifiedChallenge(SignInMfaChallenge challenge, MfaMethod method, DateTimeOffset verifiedAt)
     {
         ArgumentNullException.ThrowIfNull(challenge);
-        if (challenge.Purpose != SignInMfaPurpose.VerifyFactor || verifiedAt >= challenge.ExpiresAt)
+        var enrolledProof = challenge.Purpose == SignInMfaPurpose.EnrollFactor && method == MfaMethod.Totp &&
+            challenge.EnrollmentConfigurationId is { } configurationId && configurationId != Guid.Empty &&
+            SignInMfaChallengeToken.IsDigest(challenge.EnrollmentSecretFingerprint ?? string.Empty) &&
+            challenge.EnrollmentInitializedAt is { } initialized && initialized >= challenge.CreatedAt && initialized <= verifiedAt;
+        if (challenge.Purpose != SignInMfaPurpose.VerifyFactor && !enrolledProof || verifiedAt >= challenge.ExpiresAt)
         {
             throw new AuthenticationRequiredException("MFA verification evidence is invalid.");
         }

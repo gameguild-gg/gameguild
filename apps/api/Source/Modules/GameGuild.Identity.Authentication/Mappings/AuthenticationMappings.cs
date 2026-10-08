@@ -59,6 +59,7 @@ public static class AuthenticationMappings
             SessionId = domainResponse.SessionId,
             TempToken = domainResponse.TempToken,
             MfaToken = domainResponse.MfaToken,
+            MfaEnrollmentBackupCodes = domainResponse.MfaEnrollmentBackupCodes?.ToArray(),
             User = new UserDto
             {
                 Id = domainResponse.UserId,

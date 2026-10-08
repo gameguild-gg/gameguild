@@ -48,14 +48,6 @@ public sealed class LocalSignInHandler(
         return await domainResult.ToDto(userRepository, cancellationToken).ConfigureAwait(false);
     }
 
-    private static string? GetClientIpAddress(HttpContext? httpContext)
-    {
-        if (httpContext == null) return null;
-
-        var forwarded = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-
-        if (!string.IsNullOrEmpty(forwarded)) { return forwarded.Split(',')[0].Trim(); }
-
-        return httpContext.Connection.RemoteIpAddress?.ToString();
-    }
+    // Forwarded headers are interpreted by the configured trusted-proxy middleware.
+    private static string? GetClientIpAddress(HttpContext? context) => context?.Connection.RemoteIpAddress?.ToString();
 }

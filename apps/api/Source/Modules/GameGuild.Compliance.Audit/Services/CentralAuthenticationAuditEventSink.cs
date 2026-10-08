@@ -41,8 +41,10 @@ public sealed class CentralAuthenticationAuditEventSink(
         }
         catch (Exception exception)
         {
-            // Audit transport must not make a login, MFA, or session operation fail.
             logger.LogError(exception, "Could not forward authentication event {ActionType} to the audit log", auditEvent.ActionType);
+            // Limited challenges and MFA proof must not commit without their required durable audit.
+            if (auditEvent.ActionType is "Authentication.MfaSignInRequired" or "Authentication.MfaSignInDenied" or
+                "Authentication.MfaSignInEnrollmentStarted" or "Authentication.MfaSignInVerified") { throw; }
         }
     }
 }

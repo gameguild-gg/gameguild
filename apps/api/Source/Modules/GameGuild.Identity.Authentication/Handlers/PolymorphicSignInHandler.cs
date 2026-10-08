@@ -41,7 +41,7 @@ public sealed class PolymorphicSignInHandler(
         var identifier = command.Credential?.Trim() ?? string.Empty;
         var credentialType = command.CredentialType ?? DetectCredentialType(identifier);
 
-        logger.LogInformation("Processing polymorphic sign-in for credential type: {CredentialType}", credentialType);
+        logger.LogInformation("Processing polymorphic sign-in");
 
         User? account = null;
         var lookupType = ValidIdentifierType(identifier, credentialType);

@@ -630,6 +630,15 @@ public sealed class AuthenticationCoverageCompletionTests
     }
 
     [Fact]
+    public void LocalSignInPeerAddressDoesNotReadAnUntrustedForwardedHeader()
+    {
+        var context = new DefaultHttpContext();
+        context.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("192.0.2.10");
+        context.Request.Headers["X-Forwarded-For"] = "198.51.100.77, untrusted-client-value";
+        InvokePrivateStatic<string?>(typeof(LocalSignInHandler), "GetClientIpAddress", context).Should().Be("192.0.2.10");
+    }
+
+    [Fact]
     public void PolymorphicCredentialConverter_CoversNullTypeBranch()
     {
         var options = new JsonSerializerOptions();

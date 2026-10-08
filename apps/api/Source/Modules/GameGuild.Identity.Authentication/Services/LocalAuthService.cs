@@ -98,18 +98,18 @@ public class LocalAuthService(
                     authenticationSucceeded = true;
                     userId = user.Id;
                     verifiedTokenVersion = versionAtVerification;
-                    logger.LogInformation("User {Email} authenticated successfully with ID {UserId}", user.Email, userId);
+                    logger.LogInformation("First factor verified for user {UserId}", userId);
                 }
                 else
                 {
                     failureReason = "InvalidCredentials";
-                    logger.LogWarning("Invalid password for user {Email}", request.Email);
+                    logger.LogWarning("Invalid password for user {UserId}", user.Id);
                 }
             }
             else
             {
                 failureReason = "InvalidCredentials";
-                logger.LogWarning("User not found: {Email}", request.Email);
+                logger.LogWarning("Authentication account could not be resolved");
             }
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -278,7 +278,7 @@ public class LocalAuthService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error during authentication for {Email}", request.Email);
+            logger.LogError(ex, "Unexpected error during authentication for user {UserId}", userId);
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
@@ -482,7 +482,7 @@ public class LocalAuthService(
             if (emailExists)
             {
                 await CompleteAuthenticationTimingAsync(timingOrigin, false, cancellationToken).ConfigureAwait(false);
-                logger.LogWarning("Sign-up attempt with existing email: {Email}", request.Email);
+                logger.LogWarning("Sign-up attempted for an existing account");
 
                 throw new InvalidOperationException("User already exists");
             }
@@ -510,7 +510,7 @@ public class LocalAuthService(
             await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             var userId = newUser.Id;
 
-            logger.LogInformation("Created new user with ID: {UserId} and Email: {Email}", userId, newUser.Email);
+            logger.LogInformation("Created new user with ID: {UserId}", userId);
 
             await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId, cancellationToken).ConfigureAwait(false);
 
@@ -547,7 +547,7 @@ public class LocalAuthService(
 
             // Record successful registration
             await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed, "Registration").ConfigureAwait(false);
-            logger.LogInformation("User {Email} successfully signed up", request.Email);
+            logger.LogInformation("User {UserId} successfully signed up", userId);
 
             var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
                                                ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
@@ -571,7 +571,7 @@ public class LocalAuthService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during user registration for {Email}", request.Email);
+            logger.LogError(ex, "Error during user registration");
 
             throw;
         }

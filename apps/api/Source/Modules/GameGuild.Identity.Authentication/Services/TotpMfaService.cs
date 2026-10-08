@@ -219,7 +219,7 @@ public sealed class TotpMfaService(
     /// <summary>
     ///     Generates TOTP URI for QR code (otpauth://totp/...).
     /// </summary>
-    private static string GenerateTotpUri(string userEmail, string secretKey, string issuer, int timeStepSeconds)
+    internal static string GenerateTotpUri(string userEmail, string secretKey, string issuer, int timeStepSeconds)
     {
         var encodedIssuer = Uri.EscapeDataString(issuer);
         var encodedEmail = Uri.EscapeDataString(userEmail);

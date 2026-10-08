@@ -32,7 +32,7 @@ public sealed class SignInMfaMigrationPostgreSqlTests(ApiPostgreSqlFixture fixtu
         db.Set<UserMfaConfiguration>().Add(enrollment);
         await db.SaveChangesAsync();
         await migrator.MigrateAsync(migration);
-        Assert.Empty(await db.Set<SignInMfaChallenge>().AsNoTracking().ToListAsync());
+        Assert.Empty(await db.Set<SignInMfaChallenge>().AsNoTracking().Select(row => row.Id).ToListAsync());
         Assert.Empty(await db.Set<TotpReplayState>().AsNoTracking().ToListAsync());
         Assert.True((await db.Set<UserMfaConfiguration>().AsNoTracking().SingleAsync(value => value.Id == enrollment.Id)).IsSetupComplete);
 
@@ -47,7 +47,7 @@ public sealed class SignInMfaMigrationPostgreSqlTests(ApiPostgreSqlFixture fixtu
 
         await migrator.MigrateAsync(migration);
         Assert.False(db.Database.HasPendingModelChanges());
-        Assert.Empty(await db.Set<SignInMfaChallenge>().AsNoTracking().ToListAsync());
+        Assert.Empty(await db.Set<SignInMfaChallenge>().AsNoTracking().Select(row => row.Id).ToListAsync());
         Assert.Empty(await db.Set<TotpReplayState>().AsNoTracking().ToListAsync());
     }
 }

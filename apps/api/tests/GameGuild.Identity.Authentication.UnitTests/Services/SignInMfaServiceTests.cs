@@ -454,7 +454,7 @@ public sealed class SignInMfaServiceTests
             Service().CompleteCodeAsync(bearer ?? Bearer, code ?? Code, method, Device, cancellationToken);
         public Task<SignInMfaProof?> ReadSessionAsync(DateTimeOffset authenticatedAt) =>
             Service().ReadSessionProofAsync(VerifiedSubjectId, VerifiedVersion, TenantId, Issued.SessionId, authenticatedAt, CancellationToken.None);
-        private SignInMfaService Service() => new(Subjects.Object, Policy.Object, Store.Object, Mfa.Object, Issuer.Object, Audit.Object, SessionEvidence.Object);
+        private SignInMfaService Service() => new(Subjects.Object, Policy.Object, Store.Object, Mfa.Object, Issuer.Object, Audit.Object, SessionEvidence.Object, Mock.Of<ISignInMfaEnrollmentPort>(MockBehavior.Strict));
         public void ApplySubjectFault(string mode)
         {
             switch (mode)

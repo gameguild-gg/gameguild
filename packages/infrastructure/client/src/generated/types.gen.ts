@@ -7082,6 +7082,14 @@ export interface IdentityAuthenticationMfaSetupOutput {
   secretKey?: string | null;
 }
 
+/** Provisioning data only; this response never grants an authenticated session. */
+export interface IdentityAuthenticationMfaSignInEnrollmentOutput {
+  expiresAt?: string;
+  qrCodeUri?: string | null;
+  secretKey?: string | null;
+  success?: boolean;
+}
+
 /** Success response for MFA operations */
 export interface IdentityAuthenticationMfaSuccessOutput {
   /** Success message */
@@ -7334,6 +7342,8 @@ export interface IdentityAuthenticationSignInOutput {
   expiresIn?: number;
   /** Response message */
   message?: string | null;
+  /** Recovery codes returned once, only when a limited enrollment finishes with verified TOTP. */
+  mfaEnrollmentBackupCodes?: Array<string> | null;
   /** MFA session ID if MFA is required */
   mfaSessionId?: string | null;
   /** MFA token */
@@ -7380,6 +7390,11 @@ export interface IdentityAuthenticationSmsMfaSetupOutput {
   message: string | null;
   /** Masked phone number for confirmation */
   phoneNumberMasked: string | null;
+}
+
+/** Data model for Identity Authentication Start Mfa Sign In Enrollment Request. */
+export interface IdentityAuthenticationStartMfaSignInEnrollmentInput {
+  mfaToken: string;
 }
 
 /** Data model for Identity Authentication Step Up Challenge Response. */
@@ -19429,6 +19444,7 @@ export let IdentityAuthenticationMfaMethodSchema: z.ZodType<IdentityAuthenticati
 export let IdentityAuthenticationMfaMethodInfoSchema: z.ZodType<IdentityAuthenticationMfaMethodInfo>;
 export let IdentityAuthenticationMfaMethodsOutputSchema: z.ZodType<IdentityAuthenticationMfaMethodsOutput>;
 export let IdentityAuthenticationMfaSetupOutputSchema: z.ZodType<IdentityAuthenticationMfaSetupOutput>;
+export let IdentityAuthenticationMfaSignInEnrollmentOutputSchema: z.ZodType<IdentityAuthenticationMfaSignInEnrollmentOutput>;
 export let IdentityAuthenticationMfaSuccessOutputSchema: z.ZodType<IdentityAuthenticationMfaSuccessOutput>;
 export let IdentityAuthenticationMfaVerificationOutputSchema: z.ZodType<IdentityAuthenticationMfaVerificationOutput>;
 export let IdentityAuthenticationOAuth2ErrorOutputSchema: z.ZodType<IdentityAuthenticationOAuth2ErrorOutput>;
@@ -19459,6 +19475,7 @@ export let IdentityAuthenticationSessionTerminationOutputSchema: z.ZodType<Ident
 export let IdentityAuthenticationSignInOutputSchema: z.ZodType<IdentityAuthenticationSignInOutput>;
 export let IdentityAuthenticationSmsMfaSetupInputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupInput>;
 export let IdentityAuthenticationSmsMfaSetupOutputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupOutput>;
+export let IdentityAuthenticationStartMfaSignInEnrollmentInputSchema: z.ZodType<IdentityAuthenticationStartMfaSignInEnrollmentInput>;
 export let IdentityAuthenticationStepUpChallengeOutputSchema: z.ZodType<IdentityAuthenticationStepUpChallengeOutput>;
 export let IdentityAuthenticationStepUpReceiptOutputSchema: z.ZodType<IdentityAuthenticationStepUpReceiptOutput>;
 export let IdentityAuthenticationTrustDeviceInputSchema: z.ZodType<IdentityAuthenticationTrustDeviceInput>;
@@ -27486,6 +27503,14 @@ IdentityAuthenticationMfaSetupOutputSchema = z.object({
   secretKey: z.string().nullable().optional(),
 });
 
+/** Zod schema for IdentityAuthenticationMfaSignInEnrollmentOutput. Provisioning data only; this response never grants an authenticated session. */
+IdentityAuthenticationMfaSignInEnrollmentOutputSchema = z.object({
+  expiresAt: z.string().datetime().optional(),
+  qrCodeUri: z.string().nullable().optional(),
+  secretKey: z.string().nullable().optional(),
+  success: z.boolean().optional(),
+});
+
 /** Zod schema for IdentityAuthenticationMfaSuccessOutput. Success response for MFA operations */
 IdentityAuthenticationMfaSuccessOutputSchema = z.object({
   message: z.string().nullable(),
@@ -27713,6 +27738,7 @@ IdentityAuthenticationSignInOutputSchema = z.object({
   expiresAt: z.string().datetime().optional(),
   expiresIn: z.number().int().optional(),
   message: z.string().nullable().optional(),
+  mfaEnrollmentBackupCodes: z.array(z.string()).nullable().optional(),
   mfaSessionId: z.string().nullable().optional(),
   mfaToken: z.string().nullable().optional(),
   refreshToken: z.string().nullable().optional(),
@@ -27741,6 +27767,11 @@ IdentityAuthenticationSmsMfaSetupOutputSchema = z.object({
   expiresInSeconds: z.number().int(),
   message: z.string().nullable(),
   phoneNumberMasked: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationStartMfaSignInEnrollmentInput. Data model for Identity Authentication Start Mfa Sign In Enrollment Request. */
+IdentityAuthenticationStartMfaSignInEnrollmentInputSchema = z.object({
+  mfaToken: z.string().min(43).max(43),
 });
 
 /** Zod schema for IdentityAuthenticationStepUpChallengeOutput. Data model for Identity Authentication Step Up Challenge Response. */

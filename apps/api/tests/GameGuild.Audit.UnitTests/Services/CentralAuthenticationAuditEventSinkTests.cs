@@ -9,6 +9,23 @@ namespace GameGuild.Tests.Audit.Unit.Services;
 
 public sealed class CentralAuthenticationAuditEventSinkTests
 {
+    [Theory]
+    [InlineData("Authentication.MfaSignInRequired")]
+    [InlineData("Authentication.MfaSignInDenied")]
+    [InlineData("Authentication.MfaSignInEnrollmentStarted")]
+    [InlineData("Authentication.MfaSignInVerified")]
+    public async Task RequiredMfaAuditPersistenceFailuresReachTheOwningCommand(string action)
+    {
+        var audit = new Mock<IAuditService>(MockBehavior.Strict);
+        var failure = new InvalidOperationException("Synthetic required audit persistence failure.");
+        audit.Setup(port => port.LogAsync(It.IsAny<CreateAuditLogRequest>())).ThrowsAsync(failure);
+        var sink = new CentralAuthenticationAuditEventSink(audit.Object, NullLogger<CentralAuthenticationAuditEventSink>.Instance);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => sink.RecordAsync(
+            new AuthenticationAuditEvent(action, Guid.NewGuid(), true, "Totp"), CancellationToken.None));
+        Assert.Same(failure, exception);
+        audit.Verify(port => port.LogAsync(It.IsAny<CreateAuditLogRequest>()), Times.Once);
+    }
+
     [Fact]
     public async Task RecordAsync_MapsAuthenticationContextToCentralAuditLog()
     {

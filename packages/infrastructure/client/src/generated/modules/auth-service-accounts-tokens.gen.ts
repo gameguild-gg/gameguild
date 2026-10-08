@@ -27,7 +27,7 @@ export class AuthServiceAccountsTokensModule {
     const result = await this.client.request({
       method: 'POST',
       path: url,
-      requiresAuth: true,
+      requiresAuth: false,
     });
 
     // Validate response

@@ -1,5 +1,28 @@
 # Authorization Architecture Documentation
 
+## 2026-10-08 native limited MFA enrollment checkpoint — #145
+
+The limited enrollment route is bound solely to the persisted first-factor challenge.
+Provisioning returns no ordinary credential/session or recovery code. The challenge
+records configuration identity, canonical-secret fingerprint and initialization time.
+Subject transaction/row locks serialize setup and confirmation; only the same live
+challenge resumes its pending setup. Completion requires real TOTP, revalidates exact
+configuration/account/tenant/version/policy, consumes once and generates recovery
+codes after proof. Required MFA audit failures roll back the owning command. A unique
+user MFA index aborts on duplicate legacy factors without deleting or selecting rows.
+
+The unchanged native regression reproduced 404 before implementation and now passes.
+Native selections passed: authentication 2,528, authorization 1,667, required audit 6,
+host architecture/security 137, PostgreSQL HTTP/migration 34, OpenAPI documentation 8
+and actual document capture 1. The regenerated client passed build/typecheck and
+1,140 tests. Separate reconciliation retains unit17's Integration compile failure
+and native20's cleanup collection timeout; their passing selections are source-bound
+and exact owned-container absence was verified. Primary 55 files are preserved.
+
+This is a validated checkpoint, not complete #145 acceptance or a merged PR. Web MFA
+consumer integration, other schemes, original criteria and Release/scanner gates remain.
+See [MFA policy reconciliation](../../../../../docs/architecture/authentication-mfa-policy-reconciliation.md).
+
 ## 2026-10-08 public MFA completion and session proof checkpoint — #145
 
 `POST /v1/auth/mfa/sign-in/complete` verifies an expiring, server-bound first-factor

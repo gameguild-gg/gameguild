@@ -1,5 +1,90 @@
 # Authentication configuration and MFA reconciliation — #145
 
+## Native limited enrollment checkpoint — 2026-10-08
+
+This follow-up to published PR #704 head `a99605af74bd2a46aa2887e21bd0e0915e6f4394`
+adds a locally validated limited enrollment flow. #145 remains open: its twelve
+original acceptance criteria, technical requirements and fifteen definition-of-done
+items below remain authoritative. Publication/CI and the complete issue are separate gates.
+
+`POST /v1/auth/mfa/sign-in/enrollment` selects identity, tenant, account version and
+policy only through the server's expiring first-factor challenge. It returns TOTP
+provisioning data with an expiry bounded by that five-minute challenge, and creates
+no ordinary token, authenticated session or recovery code. The database records
+configuration identity, a canonical-secret fingerprint and initialization time,
+never the plaintext challenge bearer or provisioning data in the challenge.
+The same live challenge resumes the exact pending configuration. Another challenge
+cannot overwrite a live setup. Subject transaction locks and existing configuration
+row locks remain held through proof verification and credential commit.
+
+Enrollment completion accepts TOTP only, rechecks exact setup/account/tenant/version/
+policy, consumes the challenge once, and persists the existing MFA session proof.
+Recovery codes are generated and returned once, only after verified TOTP. Challenge,
+configuration, replay watermark, session, refresh token, recovery set and required
+MFA audit writes share the owning transaction. Required MFA audit failures now
+propagate through the central audit bridge. Ordinary/signup responses omit the new
+nullable `mfaEnrollmentBackupCodes`. A separate signup-success contract decision
+remains unresolved in this chat; this checkpoint does not change signup behavior.
+
+Native EF Core 10.0.9 generated `20261008125046_BindLimitedMfaEnrollment` and its
+snapshot. It adds challenge binding columns/checks and a unique user MFA index.
+An explicit preflight aborts on duplicate historical configurations while preserving
+every factor row for reconciliation. No factor is automatically chosen or deleted.
+The historical challenge-table emptiness test now projects its existing Id column
+when testing the older migration, preserving both original empty-table assertions.
+
+| Verified selection | Passed | Scope |
+|---|---:|---|
+| Authentication UnitTests | 2,528 | Entire native project, including enrollment proof and trusted remote peer tests. |
+| Authorization UnitTests | 1,667 | Entire native project. |
+| Required MFA audit | 6 | Audit sink success and required-failure propagation. |
+| API architecture/security | 137 | Focused native host selection. |
+| Configured OpenAPI documentation | 8 | Native documentation selection. |
+| MFA PostgreSQL HTTP/migrations | 34 | Original password/completion/replay/refresh cases plus limited enrollment, exact resume, concurrent confirmation, expired/stale/revoked bindings, failed TOTP accounting, backup rejection, audit rollback and migration upgrade/down/duplicate preservation. |
+| Native OpenAPI capture | 1 | Actual host export; completion/enrollment request/response schema independently checked. |
+| Generated TypeScript client | 1,140 | Native-document generation, build, typecheck and complete client tests. |
+
+The module generator now honors the same strict boolean AllowAnonymous metadata as the endpoint generator. Its original regression had one anonymous-marker failure and eight passing protected/empty-security controls; the assertions are retained. Regeneration changes only authentication decisions in affected modules, and the full client build/typecheck/test selection includes those regressions.
+
+These bounded selections passed with zero failures/skips. Unit17's four completed
+groups bind byte-identical production/unit sources; its final Integration compilation
+failure remains recorded. The two subsequently repaired integration test files
+passed in native20. Native20's and capture21's cleanup collection timeouts also remain in its original
+receipt: separate exact-ID/name inspection confirmed absence. No failed receipt is
+rewritten as a successful full run. Baseline10's original required-but-unenrolled
+regression reproduced HTTP 404 and remains byte-for-byte unchanged; it now passes.
+Capture19 failed before tests during Docker startup; capture21 uses the exact owned container after verified recovery. Earlier compiler/restore/precondition failures are retained separately.
+
+Receipts under `D:/Codex/work-artifacts/release-2026-11-25/gameguild-issues-01a0d900/`:
+
+- `native-enrollment-validation20-and-unchanged-unit17-reconciliation-20261008.json`
+- `issue-145-native-repository-enrollment-openapi-capture21-execution01/result.json`
+- `native-openapi-capture21-cleanup-reconciliation-20261008.json`
+- `issue-145-limited-enrollment-anonymous-client-generation-20261008/result.json`
+- `issue-145-limited-enrollment-anonymous-client-validation-20261008/result.json`
+
+The 55 unrelated primary files remain preserved; owned test PostgreSQL containers
+are verified absent. The Debug native host builds; Release/API/OpenAPI CI still
+requires the ImageSharp license decision. GitGuardian's exact a996 occurrence is a
+synthetic per-test generated password, but scanner disposition is still pending.
+Chrome login reached personal workspace 934842; direct navigation to the check's
+incident in workspace 934528 redirects back to the personal workspace without
+integrated sources. No integration/access expansion or scanner waiver was performed.
+The published Code pipeline also needs the administrative credentials consumer to
+complete required MFA instead of attempting course creation with an empty token.
+
+The live fixed-scope refresh records #287 independently closed by merged PR #705
+(`ae4301fa045170e51340f93aa076a93b14963ceb`, 2026-10-08 13:22:44 UTC), for uniform
+email-verification messages and delivery-failure responses. Its timing child #288
+remains open. That develop update has not yet been incorporated into this locally
+validated source; its reported 2,323 unit tests are separate evidence and are not
+attributed to this checkpoint. Every scoped issue ID remains in the matrix.
+
+Remaining #145 work includes complete MFA integration with the web sign-in flow,
+other sign-in schemes, high-risk whole-flow acceptance, ordinary-issuance role/tenant
+races, external-provider sandboxes, legacy/recovery requirements and the remaining
+original criteria. This checkpoint performs no merge or issue closure.
+
 ## Scope and provenance
 
 The original #145 request has twelve acceptance criteria, technical requirements,
