@@ -7,7 +7,7 @@
  * - resolve to a host on the configured allowlist — env
  *   `REMOTE_ASSET_ALLOWED_HOSTS` (comma/space separated; defaults to the
  *   hosts this codebase already talks to),
- * - not use a private or loopback address literal.
+ * - not use a private, loopback, link-local or unspecified address literal.
  *
  * `ALLOW_UNSAFE_REMOTE_URL=true` bypasses every check (local development only,
  * e.g. for a `http://localhost:8080` API base). Test runs (`NODE_ENV=test`)
@@ -49,6 +49,7 @@ function isPrivateIpv4(host: string): boolean {
   const [a, b] = octets.map(Number) as [number, number, number, number];
   if (octets.some((part) => Number(part) > 255)) return false;
   return (
+    a === 0 || // 0.0.0.0/8 this network / unspecified
     a === 127 || // 127.0.0.0/8 loopback
     a === 10 || // 10.0.0.0/8 private
     (a === 172 && b >= 16 && b <= 31) || // 172.16.0.0/12 private
@@ -57,12 +58,24 @@ function isPrivateIpv4(host: string): boolean {
   );
 }
 
+function isPrivateIpv6(host: string): boolean {
+  if (host === "::" || host === "::1") return true;
+  // fc00::/7 unique-local, fe80::/10 link-local, fec0::/10 legacy site-local.
+  if (/^(?:f[cd][0-9a-f]{2}|fe[89a-f][0-9a-f]):/.test(host)) return true;
+  // WHATWG URL serialization expresses an IPv4-mapped tail as two hex words.
+  const mapped = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(host);
+  if (!mapped) return false;
+  const upper = Number.parseInt(mapped[1], 16);
+  const lower = Number.parseInt(mapped[2], 16);
+  return isPrivateIpv4(
+    [upper >>> 8, upper & 255, lower >>> 8, lower & 255].join("."),
+  );
+}
+
 function isPrivateHost(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/^\[|\]$/g, "");
   if (host === "localhost" || host.endsWith(".localhost")) return true;
-  if (host === "::1" || host === "0:0:0:0:0:0:0:1") return true;
-  if (/^f[cd][0-9a-f]{2}:/.test(host)) return true; // fc00::/7 unique-local
-  return isPrivateIpv4(host.startsWith("::ffff:") ? host.slice(7) : host);
+  return isPrivateIpv6(host) || isPrivateIpv4(host);
 }
 
 function bypassEnabled(): boolean {
