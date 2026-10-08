@@ -32,14 +32,6 @@ export function validateAuditReport(
     (sum, level) => sum + counts[level],
     0,
   );
-  if (reportedCount !== items.length) {
-    throw new Error("pnpm audit metadata and advisory details disagree");
-  }
-  if (exitCode !== (items.length === 0 ? 0 : 1)) {
-    throw new Error(
-      `pnpm audit failed or returned an inconsistent exit code: ${exitCode}`,
-    );
-  }
   for (const advisory of items) {
     const knownPatchedBracesAdvisory =
       verifiedBracesPatch &&
@@ -68,6 +60,20 @@ export function validateAuditReport(
         `Unmitigated dependency advisory: ${advisory.github_advisory_id ?? advisory.id ?? "unknown"}`,
       );
     }
+  }
+  // pnpm counts each workspace finding, while advisories are deduplicated.
+  // Only verified advisories reach this point, so every findings array exists.
+  const findingCount = items.reduce(
+    (sum, advisory) => sum + advisory.findings.length,
+    0,
+  );
+  if (reportedCount !== findingCount) {
+    throw new Error("pnpm audit metadata and advisory details disagree");
+  }
+  if (exitCode !== (items.length === 0 ? 0 : 1)) {
+    throw new Error(
+      `pnpm audit failed or returned an inconsistent exit code: ${exitCode}`,
+    );
   }
   return { advisories: items.length, verifiedLocalPatches: items.length };
 }
