@@ -15,8 +15,10 @@ Regras globais: [`08-implementation-sequence.md`](../08-implementation-sequence.
 - primeira implementação da Parte 2 concluída e o plano de
   [`fechamento da Parte 2`](./02a-core-grading-e2e-closeout.md) integralmente
   aprovado;
-- [`Parte 3`](./03-contextual-access-and-personas.md) concluída, com sessões
-  reais e matriz de acesso contextual aprovada;
+- caminho crítico da
+  [`Parte 3`](./03-contextual-access-and-personas.md) concluído, com
+  `ACCESS-03A`, `ACCESS-04` e `ACCESS-05` aprovados; a delegação operacional de
+  equipe em `ACCESS-03B` não bloqueia esta parte;
 - fluxo oficial individual e coletivo sem autoridade paralela;
 - gradebook mínimo, release e auditoria básica funcionando de forma
   idempotente.
@@ -24,10 +26,10 @@ Regras globais: [`08-implementation-sequence.md`](../08-implementation-sequence.
 ## Gate de entrada `04-0`
 
 Gate pendente: `CLOSE-01` a `CLOSE-04` estão concluídos, mas `SEQ-12` só pode
-começar depois de `ACCESS-01` a `ACCESS-05`. O fechamento da Parte 2 resolveu
-somente o delta do runtime principal; a Parte 3 deve provar os atores reais sem
-antecipar `SelfReview`, o handler canônico de `PeerReview`, a porta de
-`AIReview` ou a operação avançada desta parte.
+começar depois de `ACCESS-03A`, `ACCESS-04` e `ACCESS-05`. O fechamento da
+Parte 2 resolveu somente o delta do runtime principal; a Parte 3 deve provar os
+atores reais sem antecipar `SelfReview`, o handler canônico de `PeerReview`, a
+porta de `AIReview` ou a operação avançada desta parte.
 
 O gate deve trazer como evidência:
 
@@ -38,8 +40,10 @@ O gate deve trazer como evidência:
 - E2Es oficiais individual e coletivo via HTTP + PostgreSQL;
 - criação limpa e upgrade populado pela cadeia real, sem editar migrations
   históricas;
-- owner, learner, collaborator, reviewer e outsider comprovados por sessões e
+- owner, ao menos dois learners e outsider comprovados por sessões e
   autorização contextuais, sem role de produto ou bypass administrativo;
+- `StaffReview` restrito à equipe e ausente da autorização contextual de
+  `SelfReview` e `PeerReview`;
 - suíte acumulada aprovada.
 
 ## Fora do escopo
@@ -321,8 +325,9 @@ suporta `ScheduledFor` em UTC, versão de concorrência e índice eficiente por
   tardia ou cast para tipos fracionários;
 - manter projeções agregadas precomputadas sem aritmética decimal em SQL;
 - construir filas docentes por estado de review;
-- autorizar filas e operações docentes pela capability `Review` aprovada na
-  Parte 3; edição ou publicação continuam exigindo suas próprias capabilities;
+- autorizar filas e operações docentes pela capability `StaffReview` aprovada
+  na Parte 3; edição ou publicação continuam exigindo suas próprias
+  capabilities;
 - implementar os consumers de notificação e passback, que permaneceram
   deliberadamente desligados na Parte 2, consumindo somente os eventos
   canônicos adequados e nunca comandos ou services de grading diretamente;
@@ -373,8 +378,11 @@ restaram autoridades concorrentes, referências obsoletas ou lacunas na matriz.
 - atualizar mapas de serialização e documentação arquitetural;
 - executar a matriz dos nove workflows no test run;
 - executar todos os workflows oficialmente implementados na jornada de aluno;
-- repetir a matriz contextual de owner, learner, collaborator, reviewer e
+- repetir a matriz contextual obrigatória de owner, ao menos dois learners e
   outsider com sessões separadas;
+- quando `ACCESS-03B` estiver disponível, repetir adicionalmente os cenários de
+  collaborator e reviewer da equipe sem torná-los autoridade de `SelfReview`
+  ou `PeerReview`;
 - confirmar bloqueio de `AIReview` sem provider real;
 - confirmar bloqueio de automated-only parcial enquanto a decisão de produto
   permanecer pendente;
@@ -417,7 +425,7 @@ restaram autoridades concorrentes, referências obsoletas ou lacunas na matriz.
 
 | Marco | Status | Evidência |
 | --- | --- | --- |
-| gate `04-0` | pendente | `ACCESS-01` a `ACCESS-05` aprovados; Parte 4 liberada |
+| gate `04-0` | pendente | `ACCESS-03A`, `ACCESS-04` e `ACCESS-05` aprovados; `ACCESS-03B` não bloqueante |
 | `SEQ-12` | pendente | `SelfReview` individual e coletivo |
 | `SEQ-13` | pendente | `PeerReview` individual e coletivo |
 | `SEQ-14` | pendente | contract test de provider e gate condicional |

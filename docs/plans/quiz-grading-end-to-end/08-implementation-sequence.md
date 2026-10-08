@@ -18,16 +18,17 @@ não representa a ordem em que seus conteúdos devem ser codificados.
 | 1 | `SEQ-00` a `SEQ-06` | fundação, autoria, segurança e publicação fail-closed | [Fundação e autoria](./implementation-sequence/01-foundation-and-authoring.md) |
 | 2 | `SEQ-07` a `SEQ-11` | test run e E2E oficial individual e coletivo | [E2E principal](./implementation-sequence/02-core-grading-e2e.md) |
 | Gate 2 → 3 | `CLOSE-01` a `CLOSE-04` | fechar somente lacunas encontradas após a primeira execução da Parte 2 | [Fechamento da Parte 2](./implementation-sequence/02a-core-grading-e2e-closeout.md) |
-| 3 | `ACCESS-01` a `ACCESS-05` | acesso contextual, personas reais e revalidação do E2E principal | [Acesso contextual](./implementation-sequence/03-contextual-access-and-personas.md) |
+| 3 | `ACCESS-01`, `ACCESS-02`, `ACCESS-03A`, `ACCESS-04` e `ACCESS-05` | acesso contextual, sessões reais e revalidação do E2E principal; `ACCESS-03B` é operacional e não bloqueante | [Acesso contextual](./implementation-sequence/03-contextual-access-and-personas.md) |
 | 4 | `SEQ-12` a `SEQ-16` | reviews adicionais, operação e auditoria final | [Expansão e operação](./implementation-sequence/04-review-expansion-and-operations.md) |
 
 A Parte 2 não começa até a Parte 1 estar concluída e testada. A Parte 3 não
 começa até a Parte 2 e seu fechamento `CLOSE-01` a `CLOSE-04` estarem concluídos
-e testados. A Parte 4 não começa até `ACCESS-01` a `ACCESS-05` comprovarem o
-fluxo com sessões e permissões contextuais reais. O fechamento não repete
-`SEQ-07` a `SEQ-11`: executa apenas o delta registrado após a auditoria. Cada
-documento possui pré-requisitos, definição de pronto, acompanhamento e gate de
-passagem próprios.
+e testados. A Parte 4 não começa até `ACCESS-03A`, `ACCESS-04` e `ACCESS-05`
+comprovarem o fluxo com owner, ao menos dois learners e outsider em sessões
+reais. A delegação de equipe em `ACCESS-03B` não bloqueia esse gate. O
+fechamento não repete `SEQ-07` a `SEQ-11`: executa apenas o delta registrado
+após a auditoria. Cada documento possui pré-requisitos, definição de pronto,
+acompanhamento e gate de passagem próprios.
 
 ## Ordem global
 
@@ -38,7 +39,7 @@ flowchart LR
     P2["Parte 2<br/>E2E principal<br/>SEQ-07 a SEQ-11"]
     C2["Fechamento da Parte 2<br/>CLOSE-01 a CLOSE-04"]
     G2{"Gate da Parte 2<br/>aprovado?"}
-    P3["Parte 3<br/>Acesso contextual<br/>ACCESS-01 a ACCESS-05"]
+    P3["Parte 3<br/>Acesso contextual<br/>ACCESS-01, 02, 03A, 04 e 05"]
     G3{"Gate de personas<br/>aprovado?"}
     P4["Parte 4<br/>Expansão e operação<br/>SEQ-12 a SEQ-16"]
     DONE["Grading E2E concluído"]
@@ -240,8 +241,9 @@ artefatos SQL fora do IModel afetados e seus testes
 | Gate 2 → 3 | `CLOSE-04` | suíte acumulada e aprovação do gate | `CLOSE-03` | não |
 | 3 | `ACCESS-01` | contrato e matriz contextual de capacidades | fechamento da Parte 2 aprovado | não |
 | 3 | `ACCESS-02` | autorização uniforme na API de Learning | `ACCESS-01` | não; interromper se surgir necessidade |
-| 3 | `ACCESS-03` | gates e atribuições contextuais na web | `ACCESS-02` | não |
-| 3 | `ACCESS-04` | fixture de owner, learner, collaborator, reviewer e outsider com sessões reais | `ACCESS-03` | não |
+| 3 | `ACCESS-03A` | gates contextuais na web e nomenclatura `StaffReview` | `ACCESS-02` | não |
+| 3 | `ACCESS-03B` | delegação operacional para collaborator e reviewer da equipe | `ACCESS-02`; não bloqueia `ACCESS-04` | não; aguarda contrato de Authorization |
+| 3 | `ACCESS-04` | fixture de owner, dois learners e outsider com sessões reais | `ACCESS-03A` | não |
 | 3 | `ACCESS-05` | E2E principal revalidado por persona | `ACCESS-04` | não |
 | 4 | `SEQ-12` | `SelfReview` em teste e oficial | Parte 3 aprovada | `SCHEMA-GATE` |
 | 4 | `SEQ-13` | `PeerReview` em teste e oficial | `SEQ-12` | `SCHEMA-GATE` |
@@ -396,10 +398,10 @@ A implementação deve parar e retornar ao planejamento quando:
     actor ou criar resolver paralelo para contornar o contrato de Authorization;
 55. frontend liberar ação protegida sem confirmação equivalente na API, ou
     considerar elemento oculto como autorização suficiente;
-56. teste positivo de owner, learner, collaborator ou reviewer depender de
-    `SystemAdmin`;
-57. `Edit`, `Publish`, `Review` ou enrollment promover implicitamente outra
-    capacidade sem regra aprovada e teste explícito;
+56. teste positivo de owner, learner, collaborator ou reviewer da equipe
+    depender de `SystemAdmin`;
+57. `Edit`, `Publish`, `StaffReview` ou enrollment promover implicitamente
+    outra capacidade sem regra aprovada e teste explícito;
 58. `SEQ-12` começar antes de `ACCESS-05` comprovar as sessões e a matriz de
     acesso contextuais.
 
@@ -410,7 +412,7 @@ A implementação deve parar e retornar ao planejamento quando:
 | 1. Fundação e autoria | concluída | base contratual, relacional, segura e autoral aprovada |
 | 2. E2E principal | concluída | test run e fluxo oficial individual/coletivo aprovados |
 | Fechamento 2 → 3 | concluído | `CLOSE-01` a `CLOSE-04` aprovados sem reexecutar toda a Parte 2 |
-| 3. Acesso contextual | pendente | `ACCESS-01` a `ACCESS-05` aprovados com sessões e personas reais |
+| 3. Acesso contextual | pendente | `ACCESS-03A`, `ACCESS-04` e `ACCESS-05` aprovados com owner, dois learners e outsider; `ACCESS-03B` não bloqueante |
 | 4. Expansão e operação | bloqueada pela Parte 3 | reviews adicionais, operação e auditoria aprovados |
 
 O detalhe de cada marco é atualizado somente no documento da parte
