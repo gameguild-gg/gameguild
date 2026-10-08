@@ -1,5 +1,24 @@
 # Authorization Architecture Documentation
 
+## 2026-10-08 password MFA preparation checkpoint — #145
+
+Local password sign-in captures the account version observed before first-factor
+verification and requires a current subject/tenant MFA preparation before ordinary
+credential issuance. Required, enrolled or high-risk cases persist a five-minute
+opaque challenge and return only its limited bearer; the database stores its hash.
+Server-owned pending outcomes retain the command's successful challenge/audit
+writes through mapping without representing an authenticated session. A pending
+response is not logged as a successful sign-in.
+
+TOTP acceptance persists an atomic time-step watermark bound to the enrollment
+and canonical secret fingerprint, with caller-transaction/savepoint rollback.
+The two added tables have a native migration and upgrade/rollback/model checks.
+The selected 4,295 native tests passed, including mandatory and optional anonymous
+password HTTP against migrated PostgreSQL. Public completion/enrollment, MFA
+credential/session evidence and enforcement across other schemes remain pending;
+this checkpoint does not close #145. Scope, results and limits are recorded in
+[MFA policy reconciliation](../../../../../docs/architecture/authentication-mfa-policy-reconciliation.md).
+
 ## 2026-10-05 Web3 backend identity and session boundary — #292 / #291
 
 Web3 nonce generation now accounts for the actual bounded host cache and requires

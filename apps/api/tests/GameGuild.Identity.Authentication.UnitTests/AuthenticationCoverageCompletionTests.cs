@@ -791,10 +791,11 @@ public sealed class AuthenticationCoverageCompletionTests
             new[] { "openid", "email", "calendar.read" }).Should().Contain("calendar.read");
 
         const string secret = "JBSWY3DPEHPK3PXP";
-        var timeStep = DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 30;
+        var totpInstant = DateTimeOffset.UtcNow;
+        var timeStep = totpInstant.ToUnixTimeSeconds() / 30;
         var code = InvokePrivateStatic<string>(typeof(TotpMfaService), "GenerateTotpCode", secret, timeStep);
 
-        InvokePrivateStatic<bool>(typeof(TotpMfaService), "VerifyTotpCode", secret, code, 0, 30).Should().BeTrue();
+        InvokePrivateStatic<long?>(typeof(TotpMfaService), "FindMatchingTotpStep", secret, code, 0, 30, totpInstant).Should().Be(timeStep);
 
         var act = () => InvokePrivateStatic<byte[]>(typeof(TotpMfaService), "Base32Decode", "INVALID!");
         act.Should().Throw<TargetInvocationException>()

@@ -1007,7 +1007,7 @@ public class OAuthAuthServiceTests
             httpCtx.Object,
             NullLogger<LocalAuthService>.Instance,
             sender.Object,
-            sessions.Object);
+            sessions.Object, SignInMfaPreparationStub.Create());
 
         await sut.LocalSignUpAsync(new LocalSignUpRequest
         {

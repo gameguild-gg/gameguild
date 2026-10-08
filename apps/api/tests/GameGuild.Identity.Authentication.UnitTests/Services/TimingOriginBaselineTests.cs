@@ -117,7 +117,7 @@ public sealed class TimingOriginBaselineTests
                 Mock.Of<IRefreshTokenLineageRepository>(), Mock.Of<IJwtTokenService>(), Mock.Of<IRefreshTokenHasher>(),
                 configuration, attempts.Object, new PasswordHasher(NullLogger<PasswordHasher>.Instance, configuration),
                 Mock.Of<IAuthenticationAnomalyDetectionService>(), protection.Object, context.Object,
-                NullLogger<LocalAuthService>.Instance, Mock.Of<ISender>(), Mock.Of<ISessionManagementService>());
+                NullLogger<LocalAuthService>.Instance, Mock.Of<ISender>(), Mock.Of<ISessionManagementService>(), SignInMfaPreparationStub.Create());
         }
 
         private async Task<User?> Lookup()

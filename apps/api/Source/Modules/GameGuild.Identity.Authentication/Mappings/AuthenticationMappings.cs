@@ -20,6 +20,13 @@ public static class AuthenticationMappings
     {
         ArgumentNullException.ThrowIfNull(domainResponse);
         ArgumentNullException.ThrowIfNull(userRepository);
+        // These outcomes are created only after their trusted persistence/audit succeeds.
+        // Replacing them with a DTO would make the command owner roll back that durable state.
+        if (domainResponse is SignInMfaPendingResponse or SignInMfaCommittedDenial)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return domainResponse;
+        }
 
         // Try to fetch user details from repository
         // Note: In some scenarios (e.g., tests with separate DbContext scopes), the user might not be available yet

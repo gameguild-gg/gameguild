@@ -138,3 +138,76 @@ This is retained defect evidence, not a passing acceptance result. The complete
 flow above still needs implementation and verification. Its completion should
 reuse `IAuthenticatedSessionIssuer` and the existing MFA providers while
 preserving accepted session/root-refresh binding and command transactions.
+
+## Native password preparation and persistence checkpoint — 2026-10-08
+
+The validated challenge, subject-policy, TOTP replay-store and internal response
+mapping sources are now applied to the existing authentication worktree.
+Password sign-in captures the account token version before password verification,
+checks the current account against that evidence, and calls the mandatory MFA
+preparation service before its existing credential and session issuance path.
+Required, enrolled and high-risk cases produce a persisted limited challenge.
+The earlier unpersisted high-risk GUID has been removed from this path. A pending
+outcome is retained through the mapper and command transaction; it contains no
+ordinary access/refresh credentials or authenticated session.
+
+Ordinary preparation carries its verified subject and policy decision so the
+coordinator does not repeat the same reads. The original ordering assertion was
+retained: the first native run exposed the extra reads, and the second run passed
+all 2,488 authentication unit cases after correcting the implementation. The local
+handler records a successful sign-in only when the response is successful.
+
+The native migration `20261008091741_AddSignInMfaChallengesAndTotpReplayState`
+adds only `sign_in_mfa_challenges`, `totp_replay_state` and the challenge indexes.
+It stores challenge hashes and per-enrollment/key TOTP time-step watermarks;
+challenge bearers, TOTP secrets and supplied codes are not added to these tables.
+The native migration test checks upgrade, rollback, retention of an existing MFA
+enrollment, and `HasPendingModelChanges() == false` without adding a warning
+suppression to its database context.
+
+The retained external regression execution ran the original two baseline07 HTTP
+cases byte-for-byte plus the native migration case: **3/3 passed**, zero skipped.
+Mandatory low-risk sign-in emitted no ordinary credentials, refresh row or session;
+the optional policy control retained its normal token/session result. This fixes
+the previously qualified password-sign-in defect under the same options seam.
+
+The subsequent execution used the actual repository test projects:
+
+| Native selection | Executed / passed | Scope |
+|---|---:|---|
+| Authentication UnitTests | 2,488 / 2,488 | Entire authentication unit project. |
+| Authorization UnitTests | 1,667 / 1,667 | Entire authorization unit project. |
+| API UnitTests architecture/security | 137 / 137 | Focused host architecture, authentication, security and migration-deployment selection. |
+| API IntegrationTests MFA policy/migration | 3 / 3 | Native mandatory/optional HTTP cases and migration upgrade/rollback/model consistency. |
+
+All **4,295** selected cases passed with zero skipped. The native HTTP coverage
+also requires the real local-authentication implementation and checks the pending
+response, persisted bearer hash, subject version, tenant, first factor, enrollment
+purpose and five-minute expiry. This selection does not represent the entire API
+UnitTests or IntegrationTests projects.
+
+Receipts under the artifact root above:
+
+- `issue-145-native-password-preparation-unit01-execution01/result.json` retains
+  the original failed ordering assertion; unit02 retains its passing correction.
+- `issue-145-native-migration-scaffold01-execution01/result.json` records the
+  offline EF Core 10.0.9 scaffold and its exact generated files.
+- `issue-145-mfa-policy-http-native-execution08/result.json` records the unchanged
+  original HTTP requirements and the additional migration case.
+- `issue-145-native-repository-validation03-execution01/result.json` records the
+  four native selections, commands, source binding and log/TRX hashes.
+
+Every execution preserved all 55 unrelated primary-checkout changes. Both owned
+PostgreSQL containers were removed and their exact identities verified absent.
+The full Debug API build had no errors and retained the existing ImageSharp
+license warning; Release/CI license acceptance is unresolved.
+
+**This is an implementation checkpoint, not complete #145 acceptance.** The
+public challenge-completion and limited enrollment/recovery flows, MFA evidence
+in issued credentials and sessions, completion/risk HTTP acceptance, concurrent
+whole-command failure handling, and enforcement across other sign-in schemes
+still require work. Account, tenant and role changes across preparation and
+ordinary credential issuance also need explicit acceptance. Signup contract
+changes remain dependent on the pending #287 product decision. All original
+#145 acceptance criteria, technical requirements and definition-of-done items
+remain authoritative; the issue is open.

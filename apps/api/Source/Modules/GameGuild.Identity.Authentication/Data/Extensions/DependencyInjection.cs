@@ -131,12 +131,17 @@ public static class DataDependencyInjection
             ?? throw new InvalidOperationException("The token revocation store must support persisted user token versions."));
 
         // MFA services - focused sub-services
+        services.AddScoped<ITotpReplayStore, PostgreSqlTotpReplayStore>();
         services.AddScoped<ITotpMfaService, TotpMfaService>();
         services.AddScoped<IBackupCodeMfaService, BackupCodeMfaService>();
         services.AddScoped<IMfaAttemptTrackingService, MfaAttemptTrackingService>();
 
         // Composite MFA service for backward compatibility
         services.AddScoped<IMfaService, MfaService>();
+        services.AddScoped<IMfaSubjectRequirementPolicy, MfaSubjectRequirementPolicy>();
+        services.AddScoped<ISignInMfaSubjectReader, PostgreSqlSignInMfaSubjectReader>();
+        services.AddScoped<ISignInMfaChallengeStore, PostgreSqlSignInMfaChallengeStore>();
+        services.AddScoped<ISignInMfaService, SignInMfaService>();
         services.AddScoped<IStepUpChallengeStore, PostgreSqlStepUpChallengeStore>();
         services.AddScoped<IStepUpReceiptService, StepUpReceiptService>();
         services.TryAddSingleton(TimeProvider.System);

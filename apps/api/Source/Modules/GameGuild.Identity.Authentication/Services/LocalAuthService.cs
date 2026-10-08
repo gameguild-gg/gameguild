@@ -31,6 +31,7 @@ public class LocalAuthService(
     ILogger<LocalAuthService> logger,
     ISender sender,
     ISessionManagementService sessionManagementService,
+    ISignInMfaService signInMfa,
     IOptions<JwtOptions>? jwtOptions = null,
     IAuthenticationAuditEventSink? auditEventSink = null,
     IRefreshTokenLifecycleRecorder? lifecycleRecorder = null,
@@ -58,6 +59,7 @@ public class LocalAuthService(
         var credentialWorkCompleted = false;
         var timingAttempted = false;
         var authenticationSucceeded = false;
+        int? verifiedTokenVersion = null;
         string? failureReason = null;
 
         Task CompleteTimingOnceAsync()
@@ -83,6 +85,7 @@ public class LocalAuthService(
             // Verify password if user exists
             if (user != null)
             {
+                var versionAtVerification = user.TokenVersion;
                 var verification = !user.HasPassword ? default
                     : passwordHasher is IPasswordVerificationWork workAwareHasher
                         ? workAwareHasher.VerifyPasswordWithWork(user.PasswordHash!, request.Password)
@@ -94,6 +97,7 @@ public class LocalAuthService(
                 {
                     authenticationSucceeded = true;
                     userId = user.Id;
+                    verifiedTokenVersion = versionAtVerification;
                     logger.LogInformation("User {Email} authenticated successfully with ID {UserId}", user.Email, userId);
                 }
                 else
@@ -163,40 +167,39 @@ public class LocalAuthService(
                     behavioralAnalysis: behavioralAnalysis).ConfigureAwait(false);
             }
 
-            // Require step-up authentication for high-risk logins
-            if (anomalyResult.RiskLevel >= RiskLevel.High)
+            var deviceInfo = new DeviceInfo
             {
-                logger.LogWarning("High-risk login attempt detected: UserId={UserId}, RiskLevel={RiskLevel}, Anomalies={Anomalies}",
-                    authenticatedUserId, anomalyResult.RiskLevel, string.Join(", ", anomalyResult.DetectedAnomalies));
-
-                var stepUpToken = Guid.NewGuid().ToString("N");
-                var stepUpExpiresAt = SystemClock.UtcNow.AddMinutes(5);
-
-                return new SignInResponse
-                {
-                    Success = false,
-                    Message = "Additional verification required",
-                    RequiresStepUp = true,
-                    StepUpToken = stepUpToken,
-                    StepUpExpiresAt = stepUpExpiresAt,
-                    RiskLevel = anomalyResult.RiskLevel,
-                    RiskFactors = anomalyResult.DetectedAnomalies.ToList(),
-                    AvailableMethods = ["TOTP", "Email"],
-                    UserId = authenticatedUserId,
-                    Email = request.Email,
-                    TenantId = request.TenantId
-                };
-            }
-
-            // Create device info for refresh token
-            var deviceInfo = new DeviceInfo { Fingerprint = string.IsNullOrWhiteSpace(deviceFingerprint) ? Guid.NewGuid().ToString() : deviceFingerprint, IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
-
-            // Fetch user again to get token version
+                Fingerprint = string.IsNullOrWhiteSpace(deviceFingerprint) ? Guid.NewGuid().ToString() : deviceFingerprint,
+                IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web"
+            };
+            var authenticatedVersion = verifiedTokenVersion
+                ?? throw new InvalidOperationException("The first factor must capture an account version.");
             var authenticatedUser = await userRepository.GetByIdAsync(authenticatedUserId, cancellationToken).ConfigureAwait(false);
-            var tokenVersion = authenticatedUser?.TokenVersion ?? 1;
+            if (authenticatedUser is null || authenticatedUser.IsDeleted || !authenticatedUser.ValidateForAuthentication(authenticatedVersion).IsSuccess)
+            {
+                throw new UnauthorizedAccessException(enumerationProtection.GetGenericErrorMessage("login"));
+            }
             await DefaultTenantMembershipProvisioner.EnsureAsync(sender, authenticatedUserId, cancellationToken).ConfigureAwait(false);
             var tenantAccessContext = await ResolveTenantAccessContextAsync(authenticatedUserId, request.TenantId, cancellationToken).ConfigureAwait(false);
             RequireActiveTenantAccess(tenantAccessContext);
+            var preparation = await signInMfa.PrepareAsync(authenticatedUserId, authenticatedVersion, request.TenantId,
+                deviceInfo, SignInFirstFactor.Password, requiresStepUp, cancellationToken).ConfigureAwait(false)
+                ?? throw new InvalidOperationException("MFA credential preparation is unavailable.");
+            cancellationToken.ThrowIfCancellationRequested();
+            if (preparation.Outcome is { } outcome)
+            {
+                if (outcome.RequiresMfa || outcome.RequiresStepUp)
+                {
+                    outcome.RiskLevel = anomalyResult.RiskLevel;
+                    outcome.RiskFactors = anomalyResult.DetectedAnomalies.ToList();
+                }
+                return outcome;
+            }
+            if (!preparation.MayIssueOrdinaryCredentials || requiresStepUp)
+            {
+                throw new InvalidOperationException("Required MFA cannot be skipped during credential issuance.");
+            }
+            var tokenVersion = authenticatedVersion;
 
             var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
                                          ?? int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);

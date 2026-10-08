@@ -234,7 +234,7 @@ public sealed class AuthenticationTimingBoundaryTests
             Service = new LocalAuthService(Users.Object, Mock.Of<IRefreshTokenRepository>(), Mock.Of<IRefreshTokenLineageRepository>(),
                 Mock.Of<IJwtTokenService>(), Mock.Of<IRefreshTokenHasher>(), new ConfigurationBuilder().Build(), Attempts.Object,
                 passwordProvider ?? Hasher.Object, Risk.Object, Protection, context, NullLogger<LocalAuthService>.Instance,
-                Mock.Of<ISender>(), Mock.Of<ISessionManagementService>(), auditEventSink: audit.Object);
+                Mock.Of<ISender>(), Mock.Of<ISessionManagementService>(), SignInMfaPreparationStub.Create(), auditEventSink: audit.Object);
         }
     }
 
