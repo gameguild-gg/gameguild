@@ -18,7 +18,8 @@ internal static class SignInMfaPreparationStub
                 cancellationToken.ThrowIfCancellationRequested();
                 return Task.FromResult(risk
                     ? SignInMfaPreparation.WithOutcome(new SignInMfaPendingResponse(SignInMfaChallengeToken.Create(),
-                        DateTimeOffset.UtcNow.AddMinutes(5), SignInMfaPurpose.VerifyFactor, true))
+                        DateTimeOffset.UtcNow.AddMinutes(5), SignInMfaPurpose.VerifyFactor, true,
+                        new User { Id = subjectId, TokenVersion = tokenVersion }, tenantId ?? Guid.NewGuid()))
                     : SignInMfaPreparation.PermitWithoutMfa(new User { Id = subjectId, TokenVersion = tokenVersion },
                         new MfaRequirementDecision(subjectId, tenantId ?? Guid.NewGuid(), false, [], new string('0', 64))));
             });

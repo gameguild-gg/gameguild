@@ -2256,6 +2256,13 @@ are projected without changing the entity. A stored phone is disclosed only when
 authentication succeeds with a nonempty access token and neither MFA nor step-up
 is still required. Phone possession is not inferred as phone verification.
 
+Server-owned MFA pending outcomes preserve the verified first-factor subject ID,
+resolved tenant and a detached profile projection under the same phone-redaction
+rule. They remain failed/pending authentication outcomes with no ordinary tokens
+or session. The projection uses the current subject already verified by the MFA
+gate and does not replace the internal transaction outcome marker or fetch a
+request-supplied identity. Committed denials remain anonymous and profile-free.
+
 The public legacy refresh converter preserves supplied expiry/duration/profile;
 it never extends a supplied expired timestamp. Only a genuinely missing expiry
 may be derived from a positive duration. Conversion copies mutable containers and

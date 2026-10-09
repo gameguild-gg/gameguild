@@ -66,7 +66,8 @@ public sealed class SignInMfaService(
             null, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         // This marker is created only after challenge persistence and audit both succeed.
-        return SignInMfaPreparation.WithOutcome(new SignInMfaPendingResponse(token, challenge.ExpiresAt, challenge.Purpose, requiresRiskStepUp));
+        return SignInMfaPreparation.WithOutcome(new SignInMfaPendingResponse(token, challenge.ExpiresAt, challenge.Purpose,
+            requiresRiskStepUp, current.User, decision.TenantId));
     }
 
     public async Task<MfaSignInEnrollmentResponse> StartEnrollmentAsync(string bearer, DeviceInfo deviceInfo, CancellationToken cancellationToken)
@@ -249,8 +250,14 @@ public sealed class SignInMfaService(
 /// <summary>Server-only transaction outcome; the bearer is not an ordinary access or refresh credential.</summary>
 internal sealed class SignInMfaPendingResponse : SignInResponse, ICommitOnFailureOutcome
 {
-    public SignInMfaPendingResponse(string bearer, DateTimeOffset expiresAt, SignInMfaPurpose purpose, bool requiresRiskStepUp)
+    public SignInMfaPendingResponse(string bearer, DateTimeOffset expiresAt, SignInMfaPurpose purpose, bool requiresRiskStepUp,
+        User verifiedSubject, Guid tenantId)
     {
+        ArgumentNullException.ThrowIfNull(verifiedSubject);
+        if (verifiedSubject.Id == Guid.Empty || tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("A pending MFA response requires a verified subject and resolved tenant.");
+        }
         Success = false;
         Message = purpose == SignInMfaPurpose.EnrollFactor ? "MFA enrollment required" : "Additional verification required";
         RequiresMfa = true;
@@ -259,6 +266,12 @@ internal sealed class SignInMfaPendingResponse : SignInResponse, ICommitOnFailur
         StepUpToken = requiresRiskStepUp ? bearer : null;
         StepUpExpiresAt = expiresAt.UtcDateTime;
         AvailableMethods = purpose == SignInMfaPurpose.VerifyFactor ? ["TOTP", "BackupCode"] : ["TOTP"];
+        UserId = verifiedSubject.Id;
+        Email = verifiedSubject.Email;
+        TenantId = tenantId;
+        // Preserve the first-factor response contract without granting a session or disclosing the stored phone.
+        User = AuthenticationMappings.CreateUserProfile(verifiedSubject, verifiedSubject.Id, verifiedSubject.Email,
+            authenticationComplete: false, fallbackCreatedAt: verifiedSubject.CreatedAt);
     }
 }
 

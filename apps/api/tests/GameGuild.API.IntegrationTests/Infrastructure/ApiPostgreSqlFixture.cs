@@ -32,6 +32,8 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
 
     public WebApplicationFactory<Program> Factory { get; private set; } = null!;
 
+    public WebApplicationFactory<Program> RealAuthenticationFactory { get; private set; } = null!;
+
     public string ConnectionString => _container.ConnectionString;
 
     public WebApplicationFactory<Program> CreateFactory(Action<IWebHostBuilder> configuration)
@@ -39,7 +41,7 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
         ArgumentNullException.ThrowIfNull(configuration);
         // The caller owns this factory. A collection-lived parent retains derived
         // WithWebHostBuilder factories even after they have been disposed.
-        return new ApiPostgreSqlWebApplicationFactory(ConnectionString, configuration);
+        return new ApiPostgreSqlWebApplicationFactory(ConnectionString, configuration: configuration);
     }
 
     public HttpClient CreateAuthenticatedClient(Guid userId, Guid tenantId, bool isSystemAdmin = false)
@@ -63,12 +65,18 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
     {
         _container = await EconomyPostgreSqlTestDatabase.CreateAsync("api_integration");
         await ApplyMigrationsAsync(_container.ConnectionString);
-        Factory = new ApiPostgreSqlWebApplicationFactory(_container.ConnectionString);
+        Factory = new ApiPostgreSqlWebApplicationFactory(
+            _container.ConnectionString,
+            useSyntheticAuthentication: true);
+        RealAuthenticationFactory = new ApiPostgreSqlWebApplicationFactory(
+            _container.ConnectionString,
+            useSyntheticAuthentication: false);
     }
 
     public async Task DisposeAsync()
     {
         Factory?.Dispose();
+        RealAuthenticationFactory?.Dispose();
         if (_container is not null)
         {
             await _container.DisposeAsync();
@@ -90,6 +98,7 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
 
     private sealed class ApiPostgreSqlWebApplicationFactory(
         string connectionString,
+        bool useSyntheticAuthentication = true,
         Action<IWebHostBuilder>? configuration = null)
         : WebApplicationFactory<Program>
     {
@@ -131,14 +140,18 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
                         npgsql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
                 });
                 services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-                services.AddAuthentication(options =>
-                    {
-                        options.DefaultAuthenticateScheme = ApiPostgreSqlTestAuthHandler.SchemeName;
-                        options.DefaultChallengeScheme = ApiPostgreSqlTestAuthHandler.SchemeName;
-                    })
-                    .AddScheme<AuthenticationSchemeOptions, ApiPostgreSqlTestAuthHandler>(
-                        ApiPostgreSqlTestAuthHandler.SchemeName,
-                        _ => { });
+                if (useSyntheticAuthentication)
+                {
+                    services.AddAuthentication(options =>
+                        {
+                            options.DefaultAuthenticateScheme = ApiPostgreSqlTestAuthHandler.SchemeName;
+                            options.DefaultChallengeScheme = ApiPostgreSqlTestAuthHandler.SchemeName;
+                        })
+                        .AddScheme<AuthenticationSchemeOptions, ApiPostgreSqlTestAuthHandler>(
+                            ApiPostgreSqlTestAuthHandler.SchemeName,
+                            _ => { });
+                }
+
                 services.AddHttpLogging(_ => { });
             });
             configuration?.Invoke(builder);

@@ -10,11 +10,21 @@ public sealed class SignInMfaMappingOutcomeTests
     [InlineData(SignInMfaPurpose.VerifyFactor, false)]
     [InlineData(SignInMfaPurpose.EnrollFactor, false)]
     [InlineData(SignInMfaPurpose.VerifyFactor, true)]
-    public async Task PendingMappingPreservesTheServerOutcomeAndExposesOnlyTheLimitedChallenge(SignInMfaPurpose purpose, bool risk)
+    [InlineData(SignInMfaPurpose.EnrollFactor, true)]
+    public async Task PendingMappingPreservesTheServerOutcomeAndVerifiedProfileWithoutPhoneOrCredentials(SignInMfaPurpose purpose, bool risk)
     {
         var bearer = SignInMfaChallengeToken.Create();
         var expiry = DateTimeOffset.UtcNow.AddMinutes(5);
-        var pending = new SignInMfaPendingResponse(bearer, expiry, purpose, risk);
+        var user = new User
+        {
+            Id = Guid.NewGuid(), Email = "verified-mfa@example.test", Username = "verified-mfa",
+            Name = "Ana Maria Silva", PhoneNumber = "+15550001000",
+            CreatedAt = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc),
+            LastLoginAt = new DateTime(2026, 1, 3, 4, 5, 6, DateTimeKind.Utc)
+        };
+        user.VerifyEmail();
+        var tenantId = Guid.NewGuid();
+        var pending = new SignInMfaPendingResponse(bearer, expiry, purpose, risk, user, tenantId);
         var repository = new Mock<IUserRepository>(MockBehavior.Strict);
         var mapped = await pending.ToDto(repository.Object, default);
         Assert.Same(pending, mapped);
@@ -28,12 +38,28 @@ public sealed class SignInMfaMappingOutcomeTests
         Assert.Equal(expiry.UtcDateTime, mapped.StepUpExpiresAt);
         Assert.Empty(mapped.AccessToken);
         Assert.Empty(mapped.RefreshToken);
-        Assert.Equal(Guid.Empty, mapped.UserId);
+        Assert.Equal(user.Id, mapped.UserId);
+        Assert.Equal(user.Email, mapped.Email);
         Assert.Equal(Guid.Empty, mapped.SessionId);
-        AssertNoAuthenticatedProfile(mapped);
-        Assert.Null(mapped.TenantId);
+        Assert.Equal(user.Id, mapped.User.Id);
+        Assert.Equal(user.Email, mapped.User.Email);
+        Assert.Equal(user.Username, mapped.User.Username);
+        Assert.Equal("Ana", mapped.User.FirstName);
+        Assert.Equal("Maria Silva", mapped.User.LastName);
+        Assert.Equal(user.CreatedAt, mapped.User.CreatedAt);
+        Assert.Equal(user.LastLoginAt, mapped.User.LastLoginAt);
+        Assert.True(mapped.User.EmailVerified);
+        Assert.Null(mapped.User.PhoneNumber);
+        Assert.False(mapped.User.PhoneNumberVerified);
+        Assert.Equal(tenantId, mapped.TenantId);
         Assert.Null(mapped.AvailableTenants);
         repository.VerifyNoOtherCalls();
+        user.Email = "changed-mfa@example.test";
+        user.UpdateName("Changed Name");
+        user.UpdatePhoneNumber("+15550002000");
+        Assert.Equal("verified-mfa@example.test", mapped.User.Email);
+        Assert.Equal("Ana", mapped.User.FirstName);
+        Assert.Null(mapped.User.PhoneNumber);
     }
 
     [Fact]
@@ -72,13 +98,27 @@ public sealed class SignInMfaMappingOutcomeTests
     [Fact]
     public async Task CancellationIsObservedBeforeReturningThePreservedPendingOutcome()
     {
-        var pending = new SignInMfaPendingResponse(SignInMfaChallengeToken.Create(), DateTimeOffset.UtcNow.AddMinutes(5), SignInMfaPurpose.VerifyFactor, false);
+        var pending = new SignInMfaPendingResponse(SignInMfaChallengeToken.Create(), DateTimeOffset.UtcNow.AddMinutes(5),
+            SignInMfaPurpose.VerifyFactor, false, new User { Id = Guid.NewGuid() }, Guid.NewGuid());
         var repository = new Mock<IUserRepository>(MockBehavior.Strict);
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending.ToDto(repository.Object, cancellation.Token));
         repository.VerifyNoOtherCalls();
     }
+
+    [Theory]
+    [InlineData("null-subject")]
+    [InlineData("empty-subject")]
+    [InlineData("empty-tenant")]
+    public void PendingResponseRequiresBoundSubjectAndTenant(string fault)
+    {
+        var user = fault == "null-subject" ? null : new User { Id = fault == "empty-subject" ? Guid.Empty : Guid.NewGuid() };
+        var tenantId = fault == "empty-tenant" ? Guid.Empty : Guid.NewGuid();
+        Assert.ThrowsAny<ArgumentException>(() => new SignInMfaPendingResponse(SignInMfaChallengeToken.Create(),
+            DateTimeOffset.UtcNow.AddMinutes(5), SignInMfaPurpose.VerifyFactor, false, user!, tenantId));
+    }
+
     private static void AssertNoAuthenticatedProfile(SignInResponse response)
     {
         // The existing public contract requires User; preserve it with only the empty DTO.

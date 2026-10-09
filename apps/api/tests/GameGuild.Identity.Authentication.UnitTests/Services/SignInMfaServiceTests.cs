@@ -18,7 +18,7 @@ public sealed class SignInMfaServiceTests
     {
         var fixture = new FlowFixture();
         var result = await fixture.BeginAsync(factor);
-        AssertLimited(result);
+        AssertLimited(result, fixture.User, fixture.TenantId);
         Assert.False(CommandOutcome.ShouldRollback(result));
         Assert.True(SignInMfaChallengeToken.TryHash(result.MfaToken, out var hash));
         var stored = Assert.Single(fixture.Stored);
@@ -56,7 +56,7 @@ public sealed class SignInMfaServiceTests
         var fixture = new FlowFixture { Enrolled = mode == "enrolled" };
         fixture.Decision = fixture.Decision with { RequiresMfa = false };
         var result = await fixture.BeginAsync(risk: mode == "risk");
-        AssertLimited(result);
+        AssertLimited(result, fixture.User, fixture.TenantId);
         Assert.Equal(mode == "risk", result.RequiresStepUp);
         fixture.Issuer.VerifyNoOtherCalls();
     }
@@ -66,7 +66,7 @@ public sealed class SignInMfaServiceTests
     {
         var fixture = new FlowFixture { Enrolled = false };
         var result = await fixture.BeginAsync();
-        AssertLimited(result);
+        AssertLimited(result, fixture.User, fixture.TenantId);
         var stored = Assert.Single(fixture.Stored);
         Assert.Equal(SignInMfaPurpose.EnrollFactor, stored.Purpose);
         Assert.Contains("enrollment", result.Message, StringComparison.OrdinalIgnoreCase);
@@ -326,15 +326,19 @@ public sealed class SignInMfaServiceTests
         Assert.Null(await fixture.ReadSessionAsync(DateTimeOffset.UtcNow.AddMinutes(-1)));
     }
 
-    private static void AssertLimited(SignInResponse result)
+    private static void AssertLimited(SignInResponse result, User verifiedSubject, Guid tenantId)
     {
         Assert.False(result.Success);
         Assert.True(result.RequiresMfa);
         Assert.Empty(result.AccessToken);
         Assert.Empty(result.RefreshToken);
         Assert.Equal(Guid.Empty, result.SessionId);
-        Assert.Equal(Guid.Empty, result.UserId);
-        Assert.Empty(result.Email);
+        Assert.Equal(verifiedSubject.Id, result.UserId);
+        Assert.Equal(verifiedSubject.Email, result.Email);
+        Assert.Equal(verifiedSubject.Id, result.User.Id);
+        Assert.Equal(tenantId, result.TenantId);
+        Assert.Null(result.User.PhoneNumber);
+        Assert.False(result.User.PhoneNumberVerified);
         Assert.Null(result.AvailableTenants);
         Assert.NotNull(result.MfaToken);
     }

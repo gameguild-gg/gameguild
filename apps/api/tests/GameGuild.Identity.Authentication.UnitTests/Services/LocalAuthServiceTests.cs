@@ -127,7 +127,8 @@ public class LocalAuthServiceTests
         _userRepoMock.Setup(port => port.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
         _anomalyDetectionMock.Setup(port => port.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
             .ReturnsAsync(new AuthenticationAnomalyResult { RiskLevel = RiskLevel.Low });
-        var pending = new SignInMfaPendingResponse(SignInMfaChallengeToken.Create(), DateTimeOffset.UtcNow.AddMinutes(5), SignInMfaPurpose.VerifyFactor, false);
+        var pending = new SignInMfaPendingResponse(SignInMfaChallengeToken.Create(), DateTimeOffset.UtcNow.AddMinutes(5),
+            SignInMfaPurpose.VerifyFactor, false, user, Guid.NewGuid());
         _signInMfaMock.Setup(port => port.PrepareAsync(user.Id, user.TokenVersion, null, It.IsAny<DeviceInfo>(),
             SignInFirstFactor.Password, false, It.IsAny<CancellationToken>())).ReturnsAsync(SignInMfaPreparation.WithOutcome(pending));
 

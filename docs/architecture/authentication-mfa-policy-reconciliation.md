@@ -641,3 +641,60 @@ branch will preserve its real-authentication fixture and this PR's bounded
 per-test factory while regenerating the combined API client. Fresh integrated
 qualification and current PR checks are still required before merge. This
 checkpoint closes no issue.
+
+
+## Verified pending MFA identity projection and coordinated PG pause — 2026-10-09
+
+The integrated `5ffbc0f82e348b6cc17dc90e94add7d668b1df78` plus develop
+`2124a610b01d8e850a10c1a4da6b2dc555f5d368` qualification29 exposed one real
+failure: `HighRiskLoginKeepsChallengeMetadataAndWithholdsPhone` expected the
+verified user ID and received `Guid.Empty`. The private pending transaction
+marker bypassed ordinary response mapping and lost the established profile
+projection. Its original HTTP regression test is unchanged.
+
+The pending response now requires the verified subject and resolved tenant,
+returns a detached first-factor profile using the ordinary pure projection,
+and still withholds the stored phone, access/refresh credentials and session.
+Its commit-on-failure marker survives mapping so the challenge and audit persist.
+Invalid bindings, denial outcomes, cancellation and credential-issuance guards
+remain covered. No public constructor was added to `SignInMfaPreparation`.
+
+Both focused Release builds passed with warnings as errors and NuGet audit.
+The completed TRX files contain **131 authentication and 73 real PostgreSQL
+HTTP cases passed, zero failures and zero skips**, including the unchanged
+original regression, enrollment/policy/completion/security and migration cases.
+This is focused qualification, not a fresh full-suite result. The original
+collector was suspended and then stopped after the tests completed, to honor
+the coordinated local PostgreSQL intervention and prevent automatic teardown.
+The integration process exit code was not collected; the unchanged original
+runner result is not represented as a terminal successful/cleanup receipt.
+A separate read-only receipt verifies both complete TRX files, the frozen source
+hashes, actual captured OpenAPI and all 55 preserved primary-checkout changes.
+
+The owned `gg-145-mfa-profile-validation31-20261009` container (PG17) is preserved
+for the coordinator. It has no persistent volume: data uses a 512 MiB tmpfs.
+No new local PostgreSQL instance or heavy PG proof will start until the shared
+configuration/window is released. No real database reset or infrastructure
+restart/removal is authorized by this checkpoint.
+
+Codacy's specific S3453 finding on `SignInMfaPreparation.cs:6` was classified as
+false positive with the validated factories and the official private-constructor
+exception documented. Reanalysis is requested; current scanner acceptance is
+still pending. The constructor and rule remain unchanged.
+
+The fixed scope remains 328 IDs. The live snapshot at 2026-10-09 08:40 UTC is
+145 closed and 183 open; original criteria/evidence are preserved. This
+checkpoint closes no issue and does not attribute external closures to itself.
+Latest develop `4a917fe176be4531ed246ee207e031c08d4025f1` still needs integration,
+combined-client regeneration and fresh candidate checks before PR #704 merge.
+Issues #145 and #288 remain open for their complete original requirements.
+
+Evidence under the artifact root:
+
+- `mfa-pending-profile-validation31-20261009` (unchanged runner/logs/TRX).
+- `mfa-profile-validation31-recovered-trx-20261009.json` (separate verification).
+- `mfa-profile-validation31-coordinated-pause-20261009.json`.
+- `mfa-profile-validation31-owned-collector-stop-20261009.json`.
+- `postgres-coordination-owned-resource31-20261009.json`.
+- `mfa-profile-resume-matrix-reconciliation-20261009/result.json`.
+- `pr704-codacy-false-positive-reanalysis-requested-20261009.png`.
