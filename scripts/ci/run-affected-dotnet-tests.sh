@@ -6,7 +6,7 @@ repository_root="$(cd "$script_dir/../.." && pwd)"
 # shellcheck source=disposable-postgres.sh
 source "$script_dir/disposable-postgres.sh"
 cd "$repository_root"
-postgres_image="${GAMEGUILD_TEST_POSTGRES_17_IMAGE:-postgres:17-alpine}"
+postgres_image="${GAMEGUILD_TEST_POSTGRES_17_IMAGE:-public.ecr.aws/docker/library/postgres:17-alpine}"
 
 # Capture selection before starting infrastructure; a failed selector must fail
 # the job, rather than silently falling back through a process substitution.

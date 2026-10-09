@@ -24,7 +24,7 @@ test('migration and OpenAPI services use the same pinned PostgreSQL 17 index', (
 for (const path of ['scripts/ci/run-affected-dotnet-tests.sh', 'scripts/ci/verify-economy.sh']) {
   test(path + ' preserves its manual default and quotes the configured image', () => {
     const source = read(path);
-    assert.ok(source.includes('postgres_image="' + '$' + '{GAMEGUILD_TEST_POSTGRES_17_IMAGE:-postgres:17-alpine}"'));
+    assert.ok(source.includes('postgres_image="' + '$' + '{GAMEGUILD_TEST_POSTGRES_17_IMAGE:-public.ecr.aws/docker/library/postgres:17-alpine}"'));
     assert.ok(source.includes('"$' + 'postgres_image" -c max_locks_per_transaction=512'));
     assert.ok(!source.includes('    postgres:17-alpine'));
   });
