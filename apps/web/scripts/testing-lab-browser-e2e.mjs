@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
+import { createTestingLabMfaSignIn } from "./testing-lab-mfa-support.mjs";
 import {
   buildTestingLabFixtureUsername,
   cleanupTestingLabFixture,
@@ -42,6 +43,7 @@ const quality = {
 };
 let activePage;
 let activePageLabel = "initial browser session";
+const mfaSignIn = createTestingLabMfaSignIn();
 
 function unique() {
   return `${Date.now()}-${randomUUID().slice(0, 8)}`;
@@ -113,10 +115,11 @@ async function warmTestingLabEventSsr(eventId) {
 }
 
 async function bootstrap() {
-  const auth = await apiRequest("/v1/auth/sign-in", {
+  const adminFirstFactor = await apiRequest("/v1/auth/sign-in", {
     method: "POST",
     body: JSON.stringify({ email: adminEmail, password: adminPassword }),
   });
+  const auth = await mfaSignIn.api(adminFirstFactor, apiRequest, adminEmail);
   if (!auth.accessToken || !auth.tenantId) {
     throw new Error(
       "The system administrator session did not expose accessToken and tenantId.",
@@ -173,10 +176,11 @@ async function bootstrap() {
         auth.tenantId,
       );
     }
-    const tenantAuth = await apiRequest("/v1/auth/sign-in", {
+    const tenantFirstFactor = await apiRequest("/v1/auth/sign-in", {
       method: "POST",
       body: JSON.stringify({ email, password, tenantId: auth.tenantId }),
     });
+    const tenantAuth = await mfaSignIn.api(tenantFirstFactor, apiRequest, email);
     if (!tenantAuth.accessToken)
       throw new Error(
         `The ${kind} tenant sign-in did not expose an access token.`,
@@ -516,9 +520,17 @@ async function signIn(page, email = adminEmail, password = adminPassword) {
   await form.waitFor({ state: "visible", timeout: 60_000 });
   await form.locator('input[name="email"]').fill(email);
   await form.locator('input[name="password"]').fill(password);
+  const firstFactorResponse = page.waitForResponse(response =>
+    new URL(response.url()).pathname === "/api/auth/signin/credentials" && response.request().method() === "POST");
   await form
     .getByRole("button", { name: "Sign in", exact: true })
     .click({ noWaitAfter: true });
+  const submitted = await firstFactorResponse;
+  const firstFactor = await submitted.json();
+  if (!submitted.ok() && firstFactor.error !== "MfaRequired") {
+    throw new Error(`Testing Lab browser sign-in failed (HTTP ${submitted.status()})`);
+  }
+  await mfaSignIn.browser(firstFactor, page, email);
   await page.waitForURL(
     (url) => url.pathname.endsWith("/workspace"),
     { timeout: 60_000 },
