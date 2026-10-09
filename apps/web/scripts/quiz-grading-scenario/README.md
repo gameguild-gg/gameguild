@@ -24,13 +24,20 @@ pnpm grading:scenario prepare \
   --checkpoint review-ready
 ```
 
-The result includes disposable credentials and links for the instructor,
+The result includes reserved local credentials and links for the instructor,
 learner, SpeedGrader, assessment editor, and learner gradebook. Prepared data
 remains available after the process exits.
 
-New scenarios use compact emails and usernames plus one short, shared password
-per run so switching personas is quick. Sign in with `email` and `password`;
-the UUID shown as `userId` is the API identity and is not a login field.
+Scenarios reuse reserved local personas so switching accounts stays quick:
+
+- instructor: `instructor1@qgs.test` / `Qgs!1234` (`instructor-1`)
+- learner A: `learner1@qgs.test` / `Qgs!1234` (`learner-a`)
+- learner B: `learner2@qgs.test` / `Qgs!1234` (`learner-b`)
+- outsider: `outsider1@qgs.test` / `Qgs!1234` (`outsider-1`)
+
+`reset` removes scenario-owned resources and local session files, but retains
+these identity accounts for reuse. The UUID shown as `userId` remains the API
+identity and is not a login field. The runner refuses non-local environments.
 
 `prepare` is a one-shot provisioning command; it does not open a browser. Wait
 until it prints `Scenario is ready`, then open one of the returned URLs and log

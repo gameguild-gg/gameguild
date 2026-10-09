@@ -100,7 +100,7 @@ export function createManifest({
     },
     checkpoint: "empty",
     personas: Object.fromEntries(
-      personaKeys.map((key) => [key, createPersona(key, marker)]),
+      personaKeys.map((key) => [key, createPersona(key)]),
     ),
     resources: {
       courseId: null,
@@ -126,19 +126,20 @@ export function createManifest({
   };
 }
 
-function createPersona(key, marker) {
-  const role = {
-    instructor: "i",
-    learnerA: "a",
-    learnerB: "b",
-    outsider: "o",
+function createPersona(key) {
+  const identity = {
+    instructor: {
+      email: "instructor1@qgs.test",
+      username: "instructor-1",
+    },
+    learnerA: { email: "learner1@qgs.test", username: "learner-a" },
+    learnerB: { email: "learner2@qgs.test", username: "learner-b" },
+    outsider: { email: "outsider1@qgs.test", username: "outsider-1" },
   }[key];
-  if (!role) throw new Error(`Unsupported scenario persona "${key}".`);
-  const runSegment = marker.split("-").at(-1).slice(0, 8);
+  if (!identity) throw new Error(`Unsupported scenario persona "${key}".`);
   return {
-    email: `${role}.${runSegment}@qgs.test`,
-    username: `qgs_${role}_${runSegment}`,
-    password: `Qgs!1${runSegment}`,
+    ...identity,
+    password: "Qgs!1234",
     userId: null,
     enrollmentId: null,
   };

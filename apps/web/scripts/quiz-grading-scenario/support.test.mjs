@@ -108,7 +108,7 @@ test("manifest validation fails closed for unknown versions and ownership", () =
   );
 });
 
-test("persona credentials are compact, valid, and unique where required", () => {
+test("persona credentials are stable, compact, and unique where required", () => {
   const manifest = createManifest({
     definitionKey: "collective-automated-instructor",
     apiBaseUrl: "http://localhost:8080",
@@ -127,13 +127,20 @@ test("persona credentials are compact, valid, and unique where required", () => 
   assert.equal(new Set(usernames).size, usernames.length);
   assert.equal(new Set(emails).size, emails.length);
   assert.equal(new Set(passwords).size, 1);
-  assert.ok(usernames.every((username) => username.length <= 16));
-  assert.ok(emails.every((email) => email.length <= 22));
-  assert.ok(passwords.every((password) => password.length <= 13));
+  assert.ok(usernames.every((username) => username.length <= 12));
+  assert.ok(emails.every((email) => email.length <= 20));
+  assert.ok(passwords.every((password) => password === "Qgs!1234"));
   assert.deepEqual(manifest.personas.instructor, {
-    email: "i.11111111@qgs.test",
-    username: "qgs_i_11111111",
-    password: "Qgs!111111111",
+    email: "instructor1@qgs.test",
+    username: "instructor-1",
+    password: "Qgs!1234",
+    userId: null,
+    enrollmentId: null,
+  });
+  assert.deepEqual(manifest.personas.learnerA, {
+    email: "learner1@qgs.test",
+    username: "learner-a",
+    password: "Qgs!1234",
     userId: null,
     enrollmentId: null,
   });
