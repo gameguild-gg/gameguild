@@ -80,7 +80,7 @@ if (CODE_GRADING_BROWSER_CHANNEL !== undefined && CODE_GRADING_BROWSER_CHANNEL !
 const PG_USER = "gameguild_e2e";
 const PG_PASSWORD = "gameguild_e2e_password";
 const PG_DB = "gameguild_e2e";
-const PG_IMAGE = "postgres:17-alpine";
+const PG_IMAGE = process.env.GAMEGUILD_TEST_POSTGRES_17_IMAGE || "postgres:17-alpine";
 const PG_CONTAINER = `gg-e2e-pg-coding-${process.pid}-${Date.now()}`;
 
 // Concurrent-run lock: mkdir is atomic, so EEXIST means another run holds it.

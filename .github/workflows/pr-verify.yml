@@ -8,6 +8,11 @@ on:
 permissions:
   contents: read
 
+# Official PostgreSQL indexes; see scripts/ci/postgres-test-images.md.
+env:
+  GAMEGUILD_TEST_POSTGRES_17_IMAGE: "public.ecr.aws/docker/library/postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24"
+  GAMEGUILD_TEST_POSTGRES_16_IMAGE: "public.ecr.aws/docker/library/postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea"
+
 concurrency:
   group: pr-verify-${{ github.event.pull_request.number }}
   cancel-in-progress: true
@@ -50,7 +55,7 @@ jobs:
         id: identity
         run: echo "treeSha=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
       - name: Test classifier contract
-        run: node --test scripts/ci/tests/classify-release-changes.test.mjs scripts/ci/tests/select-affected-dotnet-tests.test.mjs
+        run: node --test scripts/ci/tests/classify-release-changes.test.mjs scripts/ci/tests/select-affected-dotnet-tests.test.mjs scripts/ci/tests/postgres-images.test.mjs
 
   repository-policy:
     name: Repository policy
@@ -190,7 +195,7 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:17-alpine
+        image: public.ecr.aws/docker/library/postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
         env:
           POSTGRES_DB: gameguild
           POSTGRES_USER: postgres
@@ -227,7 +232,7 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:17-alpine
+        image: public.ecr.aws/docker/library/postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
         env:
           POSTGRES_DB: gameguild
           POSTGRES_USER: postgres

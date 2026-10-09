@@ -6,6 +6,7 @@ repository_root="$(cd "$script_dir/../.." && pwd)"
 # shellcheck source=disposable-postgres.sh
 source "$script_dir/disposable-postgres.sh"
 cd "$repository_root"
+postgres_image="${GAMEGUILD_TEST_POSTGRES_17_IMAGE:-postgres:17-alpine}"
 
 # Capture selection before starting infrastructure; a failed selector must fail
 # the job, rather than silently falling back through a process substitution.
@@ -50,7 +51,7 @@ prepare_economy_template() {
     --env POSTGRES_USER=postgres --env "POSTGRES_PASSWORD=$password" \
     --env POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 \
     --publish 127.0.0.1::5432 \
-    postgres:17-alpine -c max_locks_per_transaction=512)"
+    "$postgres_image" -c max_locks_per_transaction=512)"
   [[ "$candidate_id" =~ ^[a-f0-9]{12,64}$ ]] || {
     printf 'Docker did not return a valid owned container ID\n' >&2
     return 1

@@ -284,7 +284,7 @@ test("sequences fixture sign-ins that share the source-IP lockout budget", async
 
   assert.match(
     journey,
-    /const owner = await createFixtureIdentity\("owner"\);\s+const reviewer = await createFixtureIdentity\("reviewer"\);\s+const tester = await createFixtureIdentity\("tester"\);/,
+    /const \[owner, reviewer, tester\] =\s+await createTestingLabFixtureIdentities\(createFixtureIdentity\);/,
   );
   assert.doesNotMatch(journey, /Promise\.all\(\[\s*createFixtureIdentity/);
 });

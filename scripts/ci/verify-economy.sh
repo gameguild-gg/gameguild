@@ -8,6 +8,7 @@ manifest_path="$script_dir/economy-projects.json"
 summary_path="$artifact_root/preflight-summary.txt"
 timings_path="$artifact_root/timings.jsonl"
 gate_stage='initializing'
+postgres_image="${GAMEGUILD_TEST_POSTGRES_17_IMAGE:-postgres:17-alpine}"
 run_sequence=0
 gate_started_epoch="$(date +%s)"
 gate_profile="${ECONOMY_GATE_PROFILE:-full}"
@@ -405,7 +406,7 @@ run docker run --detach --rm --name "$postgres_container" \
   --env "POSTGRES_PASSWORD=$app_postgres_password" \
   --env POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 \
   --publish 127.0.0.1::5432 \
-  postgres:17-alpine >/dev/null
+  "$postgres_image" >/dev/null
 
 app_postgres_probe() {
   docker exec --env "PGPASSWORD=$app_postgres_password" "$postgres_container" \
@@ -429,7 +430,7 @@ run docker run --detach --rm --name "$economy_postgres_container" \
   --env POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 \
   --tmpfs /var/lib/postgresql/data:rw \
   --publish 127.0.0.1::5432 \
-  postgres:17-alpine -c max_locks_per_transaction=512 >/dev/null
+  "$postgres_image" -c max_locks_per_transaction=512 >/dev/null
 
 economy_postgres_probe() {
   docker exec --env "PGPASSWORD=$economy_postgres_password" "$economy_postgres_container" \
@@ -461,7 +462,7 @@ if [[ "$gate_profile" == full ]]; then
     --env POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 \
     --tmpfs /var/lib/postgresql/data:rw \
     --publish 127.0.0.1::5432 \
-    postgres:17-alpine >/dev/null
+    "$postgres_image" >/dev/null
 
   whole_solution_postgres_probe() {
     docker exec --env "PGPASSWORD=$whole_solution_postgres_password" "$whole_solution_postgres_container" \
