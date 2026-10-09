@@ -7812,7 +7812,7 @@ export interface IdentityAuthenticationSignInOutput {
   /** Response message */
   message?: string | null;
   /** Recovery codes returned once, only when a limited enrollment finishes with verified TOTP. */
-  mfaEnrollmentBackupCodes?: Array<string> | null;
+  mfaEnrollmentBackupCodes?: string[] | null;
   /** MFA session ID if MFA is required */
   mfaSessionId?: string | null;
   /** MFA token */

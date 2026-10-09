@@ -125,7 +125,7 @@ public sealed class AuthenticationTimingPostgreSqlHttpTests(ApiPostgreSqlFixture
         await heldConnection.OpenAsync();
         await using var acquire = new NpgsqlCommand("SELECT pg_try_advisory_lock(@key)", heldConnection);
         acquire.Parameters.AddWithValue("key", lockKey);
-        Assert.Equal(true, await acquire.ExecuteScalarAsync());
+        Assert.True(Assert.IsType<bool>(await acquire.ExecuteScalarAsync()));
         try
         {
             await AssertDenialAsync(factory, client, "/v1/auth/sign-in",
@@ -135,7 +135,7 @@ public sealed class AuthenticationTimingPostgreSqlHttpTests(ApiPostgreSqlFixture
         {
             await using var release = new NpgsqlCommand("SELECT pg_advisory_unlock(@key)", heldConnection);
             release.Parameters.AddWithValue("key", lockKey);
-            Assert.Equal(true, await release.ExecuteScalarAsync());
+            Assert.True(Assert.IsType<bool>(await release.ExecuteScalarAsync()));
         }
     }
 
