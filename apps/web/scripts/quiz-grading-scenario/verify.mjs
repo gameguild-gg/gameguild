@@ -149,6 +149,14 @@ export async function verifyScenario(scenarioKey, { strict = true } = {}) {
       Boolean(manifest.personas.learnerA.enrollmentId);
 
     if (learnerReady && learner && outsider) {
+      const learnerDashboard = await request(
+        learner.client,
+        "Verify learner dashboard",
+        {
+          method: "GET",
+          path: "/v1/learning/me/dashboard",
+        },
+      );
       const learnerAccess = unwrap(
         await learner.client.request({
           method: "GET",
@@ -169,6 +177,16 @@ export async function verifyScenario(scenarioKey, { strict = true } = {}) {
         learnerAccess.canLearn === true,
         "learner enrollment access",
         checks,
+      );
+      expect(
+        learnerDashboard.courses?.some(
+          (entry) =>
+            entry.courseId === resources.courseId &&
+            entry.enrollmentStatus === "Active",
+        ),
+        "learner dashboard membership",
+        checks,
+        "active course is missing from /v1/learning/me/dashboard",
       );
       expect(learnerAccess.canEdit === false, "learner cannot edit", checks);
       expect(
