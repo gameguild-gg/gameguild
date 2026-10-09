@@ -217,3 +217,10 @@ deliverable; it does not by itself close the complete authentication issue.
 - [Authentication and pending-MFA endpoints](../../apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/AuthController.cs).
 - [OAuth configuration and callback handling](../../apps/api/Source/Modules/GameGuild.Identity.Authentication/Services/OAuthService.cs).
 - [Authentication/MFA evidence and outstanding acceptance](../architecture/authentication-mfa-policy-reconciliation.md).
+
+## Source-system mapping supplement
+
+[Source-system migration mappings](authentication-migration-source-systems.md) preserves the
+ASP.NET Core Identity, NextAuth/Auth.js, raw JWT and credential-import guidance delivered
+by PR #742. Use this guide for the current MFA challenge, session and token contracts.
+No legacy-format importer, live cutover or provider sandbox execution is implied.
