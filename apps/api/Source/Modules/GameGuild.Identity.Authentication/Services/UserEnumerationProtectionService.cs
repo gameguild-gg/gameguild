@@ -137,7 +137,7 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
             {
                 logger.LogDebug(
                     "Authentication timing: EmailHash={EmailHash}, UserExists={UserExists}, ProcessingTime={ProcessingTimeMs}ms, TargetTime={TargetTimeMs}ms",
-                    HashEmail(email),
+                    LogRedaction.RedactSecret(HashEmail(email)),
                     userExists,
                     origin.Elapsed.TotalMilliseconds,
                     TargetProcessingTime.TotalMilliseconds

@@ -46,7 +46,9 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
             {
                 await EnsureOperationEventStoredAsync(request, operationContext, cancellationToken).ConfigureAwait(false);
                 if (contract is not null && eventVerifier is not null)
+                {
                     await eventVerifier.VerifyAsync(contract, operationContext, cancellationToken).ConfigureAwait(false);
+                }
 
                 // Nested commands leave their audit snapshots for the outer transaction owner.
                 // An outer command or a non-relational test host can flush after successful handling.
@@ -80,7 +82,9 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
 
                 await EnsureOperationEventStoredAsync(request, operationContext, cancellationToken).ConfigureAwait(false);
                 if (contract is not null && eventVerifier is not null)
+                {
                     await eventVerifier.VerifyAsync(contract, operationContext, cancellationToken).ConfigureAwait(false);
+                }
 
                 await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
                 await context.FlushPendingPermissionAuditChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -116,7 +120,9 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
         CancellationToken cancellationToken)
     {
         if (!operationContext.BusinessMutationObserved || operationContext.OperationEventCaptured)
+        {
             return;
+        }
 
         var aggregateId = typeof(TRequest).GetProperties(BindingFlags.Instance | BindingFlags.Public)
             .Where(property => property.Name.EndsWith("Id", StringComparison.Ordinal))

@@ -37,11 +37,11 @@ public sealed class LocalSignInHandler(
 
         if (domainResult.Success)
         {
-            logger.LogInformation("User successfully signed in via local authentication from IP {IpAddress}", ipAddress);
+            logger.LogInformation("User successfully signed in via local authentication from IP {IpAddress}", LogRedaction.Sanitize(ipAddress));
         }
         else if (domainResult.RequiresMfa || domainResult.RequiresStepUp)
         {
-            logger.LogInformation("Local authentication requires additional verification from IP {IpAddress}", ipAddress);
+            logger.LogInformation("Local authentication requires additional verification from IP {IpAddress}", LogRedaction.Sanitize(ipAddress));
         }
 
         // Map from Domain response to Application DTO
