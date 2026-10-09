@@ -108,6 +108,14 @@ export function SignInForm({
     }
   }
 
+  async function handleMfaEnrollment() {
+    try {
+      setEnrollment(await startMfaEnrollment());
+    } catch {
+      /* Error shown below. */
+    }
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="border-white/10 bg-slate-900/85 text-white shadow-2xl shadow-sky-950/30 backdrop-blur">
@@ -155,7 +163,9 @@ export function SignInForm({
           ) : mfaChallenge ? (
             <form
               method="post"
-              onSubmit={handleMfaSubmit}
+              onSubmit={(event) => {
+                void handleMfaSubmit(event);
+              }}
               data-auth-ready={isHydrated ? "true" : "false"}
             >
               <FieldGroup>
@@ -182,12 +192,8 @@ export function SignInForm({
                     type="button"
                     variant="outline"
                     disabled={isLoading}
-                    onClick={async () => {
-                      try {
-                        setEnrollment(await startMfaEnrollment());
-                      } catch {
-                        /* Error shown below. */
-                      }
+                    onClick={() => {
+                      void handleMfaEnrollment();
                     }}
                   >
                     Set up authenticator
@@ -247,7 +253,9 @@ export function SignInForm({
           ) : (
             <form
               method="post"
-              onSubmit={handleSubmit}
+              onSubmit={(event) => {
+                void handleSubmit(event);
+              }}
               noValidate
               data-auth-ready={isHydrated ? "true" : "false"}
             >
