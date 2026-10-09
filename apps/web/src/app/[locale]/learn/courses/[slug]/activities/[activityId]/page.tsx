@@ -21,7 +21,9 @@ import { CodingActivityClient } from '@/components/learning/coding-activity-clie
 import { LearnerQuizActivity } from '@/components/learning/learner-quiz-activity';
 import {
   parseQuizContentDocument,
+  parseQuizLearnerContentDocument,
   prepareQuizContentForRuntime,
+  prepareQuizLearnerContentForRuntime,
   type QuizRuntimeContentDocument,
 } from '@game-guild/quiz-content';
 
@@ -90,6 +92,31 @@ function allowsCodeModality(modalities: string | undefined): boolean {
     .split(',')
     .map((entry) => entry.trim())
     .includes('Code');
+}
+
+function parseServerGradedQuizContent(value: unknown): {
+  content: QuizRuntimeContentDocument | null;
+  issues: ReturnType<typeof parseQuizLearnerContentDocument>['issues'];
+} {
+  const learner = parseQuizLearnerContentDocument(value);
+  if (learner.issues.length === 0) {
+    return {
+      content: prepareQuizLearnerContentForRuntime(learner.document),
+      issues: [],
+    };
+  }
+
+  // Defense in depth for callers that still return an authoring-shaped
+  // document: redact it on the server before crossing the client boundary.
+  const authoring = parseQuizContentDocument(value);
+  if (authoring.issues.length === 0) {
+    return {
+      content: prepareQuizContentForRuntime(authoring.document, 'server-graded'),
+      issues: [],
+    };
+  }
+
+  return { content: null, issues: learner.issues };
 }
 
 export default async function LearnerActivityPage({
@@ -169,12 +196,9 @@ export default async function LearnerActivityPage({
         .flatMap((module) => module.items)
         .find((candidate) => candidate.id === assessment.contentId);
       if (linkedContent) {
-        const parsed = parseQuizContentDocument(linkedContent.content);
-        if (parsed.issues.length === 0) {
-          quizContent = prepareQuizContentForRuntime(
-            parsed.document,
-            'server-graded',
-          );
+        const parsed = parseServerGradedQuizContent(linkedContent.content);
+        if (parsed.content) {
+          quizContent = parsed.content;
           quizContentItem = {
             id: linkedContent.id,
             title: linkedContent.title,
@@ -201,18 +225,15 @@ export default async function LearnerActivityPage({
     }
 
     if (item.contentType === 'Questionnaire') {
-      const parsed = parseQuizContentDocument(item.content);
-      if (parsed.issues.length > 0) {
+      const parsed = parseServerGradedQuizContent(item.content);
+      if (!parsed.content) {
         console.error(
           'LearnerActivityPage: invalid published quiz content',
           parsed.issues,
         );
         quizUnavailable = true;
       } else {
-        quizContent = prepareQuizContentForRuntime(
-          parsed.document,
-          'server-graded',
-        );
+        quizContent = parsed.content;
         quizContentItem = {
           id: item.id,
           title: item.title,

@@ -33,6 +33,7 @@
     "test:coverage": "turbo run test:coverage",
     "test:e2e": "turbo run test:e2e",
     "e2e": "playwright test",
+    "grading:scenario": "node apps/web/scripts/quiz-grading-scenario/cli.mjs",
     "e2e:record": "node scripts/e2e-record.mjs",
     "e2e:record:continue": "node scripts/e2e-record-continue.mjs",
     "typecheck": "turbo run typecheck",
