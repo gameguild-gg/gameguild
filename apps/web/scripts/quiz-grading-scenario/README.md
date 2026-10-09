@@ -28,10 +28,24 @@ The result includes disposable credentials and links for the instructor,
 learner, SpeedGrader, assessment editor, and learner gradebook. Prepared data
 remains available after the process exits.
 
+New scenarios use compact emails and usernames plus one short, shared password
+per run so switching personas is quick. Sign in with `email` and `password`;
+the UUID shown as `userId` is the API identity and is not a login field.
+
 `prepare` is a one-shot provisioning command; it does not open a browser. Wait
 until it prints `Scenario is ready`, then open one of the returned URLs and log
 in with the matching persona. Use a private window or a separate browser
 profile when switching between instructor and learner sessions.
+
+For assessments configured with manual result release, completing the review
+does not expose the score yet. In SpeedGrader, use **Release to learner** after
+finalizing; until then the learner gradebook reports **Graded, awaiting
+release** without revealing the retained result.
+
+Learners use `urls.learnerHome`, `urls.learnerCourses`, or
+`urls.learnerActivity`. The generic `/workspace` route is the projects and
+teams hub; it is not the learner dashboard and does not display course
+enrollments.
 
 If provisioning is interrupted, running the same command resumes from the last
 persisted checkpoint. A lock owned by a process that no longer exists is

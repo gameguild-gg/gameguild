@@ -169,6 +169,7 @@ async function list() {
       urls: manifest
         ? {
             assessmentEditor: manifest.urls.assessmentEditor,
+            learnerCourses: manifest.urls.learnerCourses,
             learnerActivity: manifest.urls.learnerActivity,
             speedGrader: manifest.urls.speedGrader,
           }
@@ -195,6 +196,7 @@ function outputScenario(manifest, report, { credentials }) {
               key,
               {
                 email: persona.email,
+                username: persona.username,
                 password: persona.password,
                 userId: persona.userId,
               },

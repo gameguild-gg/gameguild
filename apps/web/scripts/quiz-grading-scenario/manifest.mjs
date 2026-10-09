@@ -127,12 +127,18 @@ export function createManifest({
 }
 
 function createPersona(key, marker) {
-  const normalized = key.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
-  const runSegment = marker.split("-").at(-1);
+  const role = {
+    instructor: "i",
+    learnerA: "a",
+    learnerB: "b",
+    outsider: "o",
+  }[key];
+  if (!role) throw new Error(`Unsupported scenario persona "${key}".`);
+  const runSegment = marker.split("-").at(-1).slice(0, 8);
   return {
-    email: `${marker}-${normalized}@grading.test`,
-    username: `qgs_${runSegment}_${normalized}`.replaceAll("-", "_"),
-    password: `Qgs!${randomUUID()}aA1`,
+    email: `${role}.${runSegment}@qgs.test`,
+    username: `qgs_${role}_${runSegment}`,
+    password: `Qgs!1${runSegment}`,
     userId: null,
     enrollmentId: null,
   };

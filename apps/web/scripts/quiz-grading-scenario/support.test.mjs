@@ -108,7 +108,7 @@ test("manifest validation fails closed for unknown versions and ownership", () =
   );
 });
 
-test("persona usernames remain unique and within the authentication limit", () => {
+test("persona credentials are compact, valid, and unique where required", () => {
   const manifest = createManifest({
     definitionKey: "collective-automated-instructor",
     apiBaseUrl: "http://localhost:8080",
@@ -118,8 +118,25 @@ test("persona usernames remain unique and within the authentication limit", () =
   const usernames = Object.values(manifest.personas).map(
     (persona) => persona.username,
   );
+  const emails = Object.values(manifest.personas).map(
+    (persona) => persona.email,
+  );
+  const passwords = Object.values(manifest.personas).map(
+    (persona) => persona.password,
+  );
   assert.equal(new Set(usernames).size, usernames.length);
-  assert.ok(usernames.every((username) => username.length <= 50));
+  assert.equal(new Set(emails).size, emails.length);
+  assert.equal(new Set(passwords).size, 1);
+  assert.ok(usernames.every((username) => username.length <= 16));
+  assert.ok(emails.every((email) => email.length <= 22));
+  assert.ok(passwords.every((password) => password.length <= 13));
+  assert.deepEqual(manifest.personas.instructor, {
+    email: "i.11111111@qgs.test",
+    username: "qgs_i_11111111",
+    password: "Qgs!111111111",
+    userId: null,
+    enrollmentId: null,
+  });
 });
 
 test("atomic JSON writer replaces the target and restricts file permissions", async () => {
@@ -199,6 +216,15 @@ test("all browser URLs come from the centralized manifest builder", () => {
     submissionId: "submission-id",
   });
   const urls = buildScenarioUrls(manifest);
+  assert.equal(urls.learnerHome, "http://localhost:3000/en-US/learn");
+  assert.equal(
+    urls.learnerCourses,
+    "http://localhost:3000/en-US/learn/courses",
+  );
+  assert.equal(
+    urls.learnerCourse,
+    "http://localhost:3000/en-US/learn/courses/scenario-course",
+  );
   assert.equal(
     urls.learnerActivity,
     "http://localhost:3000/en-US/learn/courses/scenario-course/activities/assessment-assessment-id",

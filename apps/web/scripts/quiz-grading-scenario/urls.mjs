@@ -6,11 +6,16 @@ export function buildScenarioUrls(manifest) {
 
   const locale = "en-US";
   const workspace = `${webBaseUrl}/${locale}/workspace/learning/courses/${encodeURIComponent(courseSlug)}`;
-  const learner = `${webBaseUrl}/${locale}/learn/courses/${encodeURIComponent(courseSlug)}`;
+  const learnerHome = `${webBaseUrl}/${locale}/learn`;
+  const learnerCourses = `${learnerHome}/courses`;
+  const learner = `${learnerCourses}/${encodeURIComponent(courseSlug)}`;
   const urls = {
     course: workspace,
     contentList: `${workspace}/content`,
     assessmentList: `${workspace}/assessments`,
+    learnerHome,
+    learnerCourses,
+    learnerCourse: learner,
     learnerActivities: `${learner}/activities`,
     learnerGrades: `${learner}/grades`,
   };
