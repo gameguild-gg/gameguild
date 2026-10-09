@@ -280,6 +280,7 @@ test_full_gate_isolates_api_migration_tests_from_the_economy_template() {
   grep -Fq 'project_timeout="$api_test_timeout"' <<< "$runner" || return 1
   grep -Fq 'timeout --kill-after=30s "$project_timeout"' <<< "$runner" || return 1
   grep -Fq 'api_test_timeout="${ECONOMY_API_TEST_TIMEOUT:-12m}"' "$gate" || return 1
+  grep -Fq 'api_integration_test_timeout="${ECONOMY_API_INTEGRATION_TEST_TIMEOUT:-20m}"' "$gate" || return 1
   ! grep -Fq -- '--settings' <<< "$runner" || return 1
   ! grep -Fq 'xunit-postgres-serial.runsettings' "$gate"
 }
@@ -291,25 +292,36 @@ test_full_gate_bounds_complete_api_suites() {
   cat >> "$runner" <<'SCRIPT'
 test_hang_timeout=5m
 api_test_timeout=12m
+api_integration_test_timeout=20m
 whole_solution_connection_string=isolated-test-database
 test_hang_arguments=(--blame-hang-timeout 5m)
 economy_gate_error() { return 1; }
 run_logged() {
   shift
   [[ "$1" == timeout && "$2" == --kill-after=30s && "$3" == "$expected_timeout" ]] || return 1
+  [[ " $* " == *' --blame-hang-timeout 5m '* ]] || return 1
+  [[ " $* " != *' --filter '* ]] || return 1
   local results="${@: -1}" name
   name="$(basename "$results")"
   mkdir -p "$results"
   : > "$results/$name.trx"
 }
-expected_timeout=12m
+expected_timeout=20m
 run_whole_solution_test_project \
   apps/api/tests/GameGuild.API.IntegrationTests/GameGuild.API.IntegrationTests.csproj "$1" || exit 1
+expected_timeout=12m
 run_whole_solution_test_project \
   apps/api/tests/GameGuild.API.UnitTests/GameGuild.API.UnitTests.csproj "$1" || exit 1
 expected_timeout=5m
 run_whole_solution_test_project \
   apps/api/tests/GameGuild.Identity.Authentication.UnitTests/GameGuild.Identity.Authentication.UnitTests.csproj "$1" || exit 1
+api_integration_test_timeout=23m
+expected_timeout=23m
+run_whole_solution_test_project \
+  apps/api/tests/GameGuild.API.IntegrationTests/GameGuild.API.IntegrationTests.csproj "$1" || exit 1
+expected_timeout=12m
+run_whole_solution_test_project \
+  apps/api/tests/GameGuild.API.UnitTests/GameGuild.API.UnitTests.csproj "$1" || exit 1
 SCRIPT
   bash "$runner" "$fixture_root/api-suite-deadlines"
 }

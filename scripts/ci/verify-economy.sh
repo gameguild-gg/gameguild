@@ -13,6 +13,9 @@ gate_started_epoch="$(date +%s)"
 gate_profile="${ECONOMY_GATE_PROFILE:-full}"
 test_hang_timeout="${ECONOMY_TEST_HANG_TIMEOUT:-5m}"
 api_test_timeout="${ECONOMY_API_TEST_TIMEOUT:-12m}"
+# The complete HTTP suite passed 477 cases in 13m32s on hosted CI. Keep its
+# overall budget separate from the per-test hang detector and migration suite.
+api_integration_test_timeout="${ECONOMY_API_INTEGRATION_TEST_TIMEOUT:-20m}"
 whole_solution_jobs="${ECONOMY_WHOLE_SOLUTION_JOBS:-}"
 
 # shellcheck source=economy-gate.sh
@@ -602,7 +605,7 @@ run_whole_solution_test_project() {
     project_timeout="$api_test_timeout"
   fi
   if [[ "$test_name" == 'GameGuild.API.IntegrationTests' ]]; then
-    project_timeout="$api_test_timeout"
+    project_timeout="$api_integration_test_timeout"
   fi
   run_logged "$project_log" timeout --kill-after=30s "$project_timeout" \
     "${test_environment[@]}" \

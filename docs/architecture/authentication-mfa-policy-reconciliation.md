@@ -1,5 +1,26 @@
 # Authentication configuration and MFA reconciliation — #145
 
+## Complete HTTP regression budget — 2026-10-09
+
+At signed head `d3eba856e8ddda89451650b5c5093e8211fa1c65`, hosted API Verify
+job `113807112417` passed all 477 API integration tests in 13 minutes 32 seconds,
+all 1,090 API unit tests, and all 15 full-application OpenAPI HTTP tests. The
+Economy job `113807112317` built the complete Release solution without warnings
+or errors and passed its Economy suites and the 1,090 API unit tests. Its full
+API integration process was interrupted after exactly 720 seconds with status
+124. The immutable Economy artifact `11615227174` contains that timing and no
+completed integration TRX; this interruption is not a successful test result.
+
+The complete HTTP suite therefore receives a separate 20-minute process budget,
+with margin above the independently observed 13m32s passing run. API unit tests
+retain their 12-minute budget; other projects and the per-test hang detector
+retain five minutes. `ECONOMY_API_INTEGRATION_TEST_TIMEOUT` can override only the
+HTTP suite's process budget. No test is filtered or skipped and no acceptance
+criterion is relaxed. The mocked runner regression checks each default budget,
+the dedicated override, the unchanged hang detector, and absence of a filter.
+Fresh hosted Economy and instructor/learner Code acceptance remain required.
+This correction runs no local database, container, or SQL and closes no issue.
+
 ## Economy analyzer gate compatibility — 2026-10-09
 
 The Economy Release Gate for published head `8fa5106ad5026d01faa02cbd063bec96b2060471`
