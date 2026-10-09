@@ -19,7 +19,7 @@ AWS documents the `public.ecr.aws/docker/library` namespace as [Docker Official 
 - `GAMEGUILD_TEST_POSTGRES_16_IMAGE`: the Testing Lab browser runner.
 - Migration and OpenAPI job services use the same pinned PostgreSQL 17 URI literally, because services are created before steps run.
 
-Both workflows set the image variables explicitly. Manual API and Economy invocations retain the ECR PostgreSQL 17 tag introduced in develop by commit 61e0e868b. The Code and Testing Lab browser runners retain their previous manual tags when the variables are absent or empty. Container ownership, passwords, readiness probes, storage, migration and cleanup rules are unchanged. Production Compose files and unrelated Testcontainers images are outside this configuration.
+Both workflows set the image variables explicitly. Manual API and Economy invocations retain the ECR PostgreSQL 17 tag introduced in develop by commit 61e0e868b. Testing Lab uses the ECR PostgreSQL 16 tag introduced in develop by commit 01d08da6a as its manual fallback. The Code browser runner retains its previous Docker Hub tag for manual runs. Hosted workflows override these defaults with the pinned digests. Container ownership, passwords, readiness probes, storage, migration and cleanup rules are unchanged. Production Compose files and unrelated Testcontainers images are outside this configuration.
 
 ## Updating a pin
 

@@ -95,7 +95,10 @@ public sealed class AuthenticationTimingPostgreSqlHttpTests(ApiPostgreSqlFixture
         output.WriteLine("AUTHENTICATION_TIMING_OBSERVATION=" + JsonSerializer.Serialize(new
         {
             Scenario = scenario, Endpoint = endpoint, ElapsedMilliseconds = elapsed.Elapsed.TotalMilliseconds,
-            CompletedDummyCosts = costs, Transport = "in-process TestServer and real migrated PostgreSQL",
+            CompletedDummyCosts = costs,
+            Transport = factory.Services.GetRequiredService<IServer>().GetType().Namespace?.StartsWith("Microsoft.AspNetCore.Server.Kestrel", StringComparison.Ordinal) == true
+                ? "Actual Kestrel loopback HTTP and real migrated PostgreSQL"
+                : "in-process TestServer and real migrated PostgreSQL",
             UniversalConstantTimeClaim = false
         }));
     }

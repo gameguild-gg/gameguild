@@ -36,7 +36,7 @@ test('the Code runner supports the CI image without changing its PostgreSQL majo
 
 test('Testing Lab keeps PostgreSQL 16 and quotes its configured image', () => {
   const source = read('apps/web/scripts/testing-lab-browser-e2e.sh');
-  assert.ok(source.includes('POSTGRES_IMAGE="' + '$' + '{GAMEGUILD_TEST_POSTGRES_16_IMAGE:-postgres:16-alpine}"'));
+  assert.ok(source.includes('POSTGRES_IMAGE="' + '$' + '{GAMEGUILD_TEST_POSTGRES_16_IMAGE:-public.ecr.aws/docker/library/postgres:16-alpine}"'));
   assert.ok(source.includes('"$' + '{POSTGRES_IMAGE}" >/dev/null'));
 });
 

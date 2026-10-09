@@ -6,13 +6,29 @@ WEB_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 REPO_ROOT="$(cd -- "${WEB_DIR}/../.." && pwd)"
 ARTIFACTS_DIR="${TESTING_LAB_E2E_ARTIFACTS:-${REPO_ROOT}/artifacts/test-results/testing-lab}"
 RUNTIME_DIR="${TESTING_LAB_E2E_RUNTIME_DIR:-${ARTIFACTS_DIR}/runtime}"
-POSTGRES_PORT="${TESTING_LAB_E2E_POSTGRES_PORT:-$((43000 + RANDOM % 1000))}"
-API_PORT="${TESTING_LAB_E2E_API_PORT:-$((42000 + RANDOM % 1000))}"
-WEB_PORT="${TESTING_LAB_E2E_WEB_PORT:-$((44000 + RANDOM % 1000))}"
+# The 42xxx-44xxx bands fall inside Linux's default ephemeral port range
+# (32768-60999), so the runner's own outbound sockets can already hold a
+# candidate. Probe until one is actually free instead of failing the run.
+pick_default_port() {
+  local base="$1" port attempt
+  for ((attempt = 1; attempt <= 10; attempt += 1)); do
+    port=$((base + RANDOM % 1000))
+    if node -e 'const net = require("node:net"); const port = Number(process.argv[1]); const server = net.createServer(); server.once("error", () => process.exit(1)); server.listen(port, "0.0.0.0", () => server.close());' "${port}"; then
+      printf '%s\n' "${port}"
+      return 0
+    fi
+  done
+  echo "testing-lab-browser-e2e: no free port in the ${base} band after 10 attempts" >&2
+  return 1
+}
+
+POSTGRES_PORT="${TESTING_LAB_E2E_POSTGRES_PORT:-$(pick_default_port 43000)}"
+API_PORT="${TESTING_LAB_E2E_API_PORT:-$(pick_default_port 42000)}"
+WEB_PORT="${TESTING_LAB_E2E_WEB_PORT:-$(pick_default_port 44000)}"
 POSTGRES_USER="gameguild_e2e"
 POSTGRES_PASSWORD="gameguild_e2e_password"
 POSTGRES_DATABASE="gameguild_e2e"
-POSTGRES_IMAGE="${GAMEGUILD_TEST_POSTGRES_16_IMAGE:-postgres:16-alpine}"
+POSTGRES_IMAGE="${GAMEGUILD_TEST_POSTGRES_16_IMAGE:-public.ecr.aws/docker/library/postgres:16-alpine}"
 ADMIN_PASSWORD="${E2E_SYSTEM_ADMIN_PASSWORD:-Admin123!}"
 RUN_ID="${TESTING_LAB_E2E_RUN_ID:-$(date +%s)-$$}"
 LOCK_DIR="${TESTING_LAB_E2E_LOCK_DIR:-${REPO_ROOT}/.tmp/testing-lab-browser-e2e.lock}"
