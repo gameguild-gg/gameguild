@@ -152,7 +152,7 @@ public class DeduplicationServiceTests
             for (var column = 0; column < size; column++)
             {
                 var value = (column < size / 2) == mirror ? byte.MaxValue : byte.MinValue;
-                pixels.SetPixel(column, row, new byte[] { value, value, value });
+                pixels.SetPixel(column, row, new[] { value, value, value });
             }
         }
         var stream = new MemoryStream();
@@ -278,10 +278,19 @@ public class DeduplicationServiceTests
             [255, 0, 255], [255, 255, 0], [0, 0, 0], [255, 255, 255]
         ];
         using (var pixels = image.GetPixels())
+        {
             for (var row = 0; row < 8; row++)
+            {
                 for (var column = 0; column < 8; column++)
+                {
                     pixels.SetPixel(column, row, colors[column]);
-        if (cmyk) image.ColorSpace = ColorSpace.CMYK;
+                }
+            }
+        }
+        if (cmyk)
+        {
+            image.ColorSpace = ColorSpace.CMYK;
+        }
         var content = new MemoryStream();
         image.Write(content, format);
         content.Position = 0;

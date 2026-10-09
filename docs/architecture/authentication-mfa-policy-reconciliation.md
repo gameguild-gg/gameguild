@@ -698,3 +698,83 @@ Evidence under the artifact root:
 - `postgres-coordination-owned-resource31-20261009.json`.
 - `mfa-profile-resume-matrix-reconciliation-20261009/result.json`.
 - `pr704-codacy-false-positive-reanalysis-requested-20261009.png`.
+
+
+## Integrated develop offline qualification and scanner corrections - 2026-10-09
+
+The pending identity fix is signed in `b6c74ef3a65b8dd965da59ec83c3a7370bb16f34`.
+The next combined candidate incorporates develop
+`4a917fe176be4531ed246ee207e031c08d4025f1`. All five ordinary Release builds
+passed with warnings as errors and NuGet audit enabled. The combined-source
+selection passed 2,652 authentication, 2,014 authorization, 133 host
+architecture/security/OpenAPI and 1,189 Assets cases, with zero failures or
+skips. These are 5,988 cases across those selections, not full API HTTP/Code
+acceptance. No local PostgreSQL or container was created or started.
+
+Sixteen Codacy style findings were corrected with braces and inferred byte-array
+typing, without changing decoder limits, format ordering, expected hashes or
+test assertions. The complete 1,189-case Assets suite passed again after the
+changes. The existing presentation-only exporter generated the actual combined
+compiled OpenAPI: 1,345 paths and 1,709 schemas, SHA256
+`d1afa753a5b99887a80d8ebf6a0feff8657331ae6fa4151b4d5772dc13ea86d2`.
+This offline contract capture starts no hosted service or database. Fresh hosted
+API HTTP and Code checks remain required on the published candidate.
+
+Codacy's S3453 finding on the private preparation constructor disappeared after
+its specific false-positive reanalysis. S1172 finding
+`46570d42460ab8ef4716b6faed39eaff` on the test `Stream.Seek` override was also
+classified specifically as false positive: both parameters are required by the
+base signature, and SonarSource's documented rule exceptions exclude overrides.
+The UI confirms pending reanalysis. Neither rule nor file was disabled; scanner
+acceptance of the new combined candidate remains pending.
+
+The coordinator stopped the owned PG17 fixture after zero clients and no
+mandatory consumer had been confirmed. Its pre-stop receipt records
+`AutoRemove=true`, no persistent mounts and 512 MiB tmpfs. Stopping that fixture
+therefore removes the container and its ephemeral data. Logs, complete TRX and
+captured OpenAPI remain outside it. The interrupted collector's missing process
+exit code is still not fabricated. Persistent databases remain untouched, and
+no heavy local PostgreSQL or Code proof resumes until the coordinated window
+is released.
+
+Evidence under the artifact root:
+
+- `final-develop-offline-validation32-20261009/result.json`.
+- `codacy-assets-style-proposal33-20261009/proposal.diff`.
+- `codacy-assets-style-validation34-20261009/result.json`.
+- `postgres-coordination-final-owned-state31-20261009.json` (pre-stop state).
+- `pr704-codacy-stream-override-pending-reanalysis-20261009.png`.
+
+The fixed 328-ID matrix and all 55 primary-checkout changes remain preserved.
+This checkpoint closes no issue; #145 and #288 retain their original criteria.
+
+
+### Combined client generation and separate UTF-8 receipt
+
+The client was regenerated from the combined compiled OpenAPI. Generation,
+ordinary build including declarations, typecheck and the complete client test
+command all returned exit code zero. All 1,155 assertions passed, with no failed
+or pending tests. The original collector then failed while decoding the JSON
+report with Windows' default code page; its failed receipt remains unchanged.
+A separate UTF-8 reconciliation verifies all four command exits, every assertion,
+API and non-generated client source hashes, all generated files and the 55
+primary-checkout changes. No second test run or rewritten original result is
+represented as acceptance.
+
+The metadata hash was verified through the actual generator's `normalizeSpec`
+and SHA256 pipeline, not by assuming the raw OpenAPI JSON byte hash matches it.
+Normalized contract hash:
+`c4b5c07d5e43bbc73013956f3f34b9b624fcfdff272acac9e22aa5d97dcbd81b`.
+The generated metadata resolves the only remaining integration conflict.
+
+The 15 existing MFA/Code-support tests and 12 advisory regressions also passed,
+without failures or skips. These are support checks, not the real student and
+instructor Code cycle. Fresh hosted API HTTP/Code and security gates remain
+required before merge; #145 and #288 are not automatically closed.
+
+Additional evidence:
+
+- `final-develop-client-regeneration35-20261009` (unchanged original receipt/logs).
+- `final-develop-client35-utf8-reconciliation-20261009.json`.
+- `code-support-advisory-validation36-20261009/result.json`.
+- `postgres-coordinated-stop-autoremove-reconciliation31-20261009.json`.
