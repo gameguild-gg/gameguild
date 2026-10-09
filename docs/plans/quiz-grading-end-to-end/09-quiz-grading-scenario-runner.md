@@ -317,7 +317,8 @@ Regras:
 
 - diretório inteiro ignorado pelo Git;
 - arquivo com permissão local restrita quando suportado;
-- e-mail e senha de contas descartáveis podem ser mantidos para o teste humano;
+- e-mail e senha das personas locais reservadas podem ser mantidos para o teste
+  humano; `reset` remove os recursos do cenário, mas reutiliza essas contas;
 - access tokens, cookies e secrets da aplicação nunca são persistidos;
 - manifesto registra um marcador de ownership criado também no título/slug dos
   recursos, permitindo confirmar que `reset` não está apagando recurso alheio;
@@ -354,7 +355,7 @@ Para browser:
 - cria ou retoma o cenário;
 - avança até `--checkpoint`;
 - executa `verify` ao terminar;
-- imprime resumo, credenciais descartáveis e links por persona;
+- imprime resumo, credenciais locais reservadas e links por persona;
 - não abre browser nem remove dados automaticamente.
 
 ### `status`
@@ -457,8 +458,8 @@ pode ser adicionado depois sem alterar definições ou provisionador.
 - chamadas HTTP registram método, rota sanitizada, status e correlation ID, mas
   nunca authorization header, cookie ou senha;
 - erros de quota e permission são exibidos integralmente como falha do cenário;
-- credenciais descartáveis são diferentes por execução e não reutilizam
-  usuário humano;
+- credenciais locais são estáveis por persona, nunca reutilizam usuário humano
+  e só podem operar contra ambiente local;
 - a proteção de endpoints continua sendo responsabilidade da API; o runner não
   considera gate visual como autorização;
 - recursos parciais permanecem listados no manifesto até remoção confirmada.
@@ -484,7 +485,7 @@ Gate:
 
 ### Fase 2. Provisionamento de autoria
 
-- autenticar instrutor e criar contas descartáveis;
+- autenticar instrutor e criar ou reutilizar as contas locais reservadas;
 - criar curso, grading group, conteúdo de quiz e assessment vinculado;
 - salvar definição de quiz pela rota oficial de content authoring;
 - configurar workflow, score, peso e release pela rota oficial do assessment;
