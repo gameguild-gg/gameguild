@@ -146,6 +146,7 @@ export default async function LearnerActivityPage({
       }
     | null = null;
   let quizUnavailable = false;
+  let quizSubmissionId: string | null = null;
   let submissionFiles: SubmissionFile[] | null = null;
   let userId: string | null = null;
   let description = '';
@@ -159,6 +160,7 @@ export default async function LearnerActivityPage({
     const submission = context.submissions.find(
       (candidate) => candidate.assessmentId === assessmentId,
     );
+    quizSubmissionId = submission?.id ?? null;
     // Unconditional: the coding experience needs a user id for its
     // user-scoped draft token, not just Project-type project listings.
     const session = await auth();
@@ -359,6 +361,7 @@ export default async function LearnerActivityPage({
         <LearnerQuizActivity
           contentId={quizContentItem.id}
           courseId={access.course.id}
+          existingSubmissionId={quizSubmissionId}
           title={quizContentItem.title}
           description={quizContentItem.description}
           content={quizContent}
