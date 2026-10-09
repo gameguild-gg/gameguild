@@ -71,9 +71,13 @@ function isPrivateIpv6(host: string): boolean {
 }
 
 function isPrivateHost(hostname: string): boolean {
+  // A DNS root dot must not hide localhost or its subdomains from this check.
   const host = hostname.toLowerCase().replace(/^\[|\]$/g, '');
-  if (host === 'localhost' || host.endsWith('.localhost')) return true;
-  return isPrivateIpv6(host) || isPrivateIpv4(host);
+  let hostEnd = host.length;
+  while (hostEnd > 0 && host[hostEnd - 1] === '.') hostEnd--;
+  const localHost = host.slice(0, hostEnd);
+  if (localHost === 'localhost' || localHost.endsWith('.localhost')) return true;
+  return isPrivateIpv6(localHost) || isPrivateIpv4(localHost);
 }
 
 function bypassEnabled(): boolean {
