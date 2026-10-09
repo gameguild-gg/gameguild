@@ -1,5 +1,34 @@
 # Authentication configuration and MFA reconciliation — #145
 
+## Tenant-login contract and hosted Code evidence — 2026-10-09
+
+At signed head `278d67e81d4d0ad2b80bf344eb392ee47a6377cc`, Economy job
+`113825631339` completed all 477 API integration and 1,090 API unit cases without
+failures or skips. The complete HTTP budget correction therefore ran successfully.
+The subsequent Authentication integration suite passed 47 of 48 cases; its one
+failure expected `AvailableTenants` from a password-only login with `Owner`
+memberships. Current elevated-role policy correctly returned a limited MFA
+enrollment challenge, preserving the selected tenant but withholding ordinary
+credentials and the complete tenant list until the second factor succeeds.
+
+The existing tenant-login test now covers three real service paths: `Member`
+must receive successful credentials and all three memberships; `Owner` and
+`Admin` must receive a bound MFA challenge, no ordinary tokens or session, no
+complete tenant list, and no additional persisted session. Production policy,
+credential issuance and response projection are unchanged. No MFA requirement
+is disabled to satisfy an outdated password-only expectation. This source
+correction requires fresh hosted execution; no local SQL or full-suite run is
+claimed. The original failed log, artifact and TRX are retained under
+`pr704-278-economy-failure92-20261009`.
+
+The earlier Emception job `113782448171` for head `8fa5106a` completed its actual
+learner submission and instructor grading cycle: 36 functional checks passed,
+zero hard failures, zero known-red failures and two console observations.
+Persisted typed code, all three grading results, final grade, feedback and SQL
+rubric payload passed. Its unchanged job log is
+`pr704-8fa-code-completed93-20261009.log`. This historical result does not replace
+the current candidate's Code, Economy or security gates, and closes no issue.
+
 ## Migration-guide deliverable — 2026-10-09
 
 The live #145 audit reopened the issue at develop `e6fc4a0b` for its original
