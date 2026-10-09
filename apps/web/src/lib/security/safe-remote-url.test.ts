@@ -194,3 +194,79 @@ describe("remote asset literal addresses", () => {
     expect(assertSafeRemoteUrl(canonical).toString()).toBe(canonical.href);
   });
 });
+
+describe("remote asset localhost DNS spellings", () => {
+  it.each([
+    "https://localhost./x",
+    "https://service.localhost./x",
+    "https://LOCALHOST./x",
+    "https://LoCaLhOsT./x",
+    "https://sub.service.localhost./x",
+    "https://localhost../x",
+    "https://service.localhost../x",
+    "https://localhost.../x",
+    "https://service.localhost.../x",
+    "https://localhost\u3002/x",
+    "https://localhost\uff0e/x",
+    "https://localhost\uff61/x",
+    "https://service\u3002localhost\u3002/x",
+    "https://service\uff0elocalhost\uff61/x",
+    "https://%6cocalhost%2e/x",
+    "https://service%2elocalhost%2e/x",
+    "https://local\thost./x",
+    "https://local\nhost./x",
+    "https://local\rhost./x",
+    "https://localhost.:443/x",
+    "https://service.localhost.:8443/x",
+    "https://%4c%4f%43%41%4c%48%4f%53%54%2e/x",
+    "https://ｌｏｃａｌｈｏｓｔ．/x",
+    "https://localhost\u3002\u3002/x",
+  ])("rejects allowlisted localhost spelling: %s", (raw) => {
+    const canonical = new URL(raw);
+    env.REMOTE_ASSET_ALLOWED_HOSTS = canonical.hostname;
+    env.ALLOW_UNSAFE_REMOTE_URL = "true";
+    expect(() => assertSafeRemoteUrl(raw)).toThrow(
+      /private or loopback address/,
+    );
+    expect(() => assertSafeRemoteUrl(canonical)).toThrow(
+      /private or loopback address/,
+    );
+  });
+
+  it.each([
+    "https://localhost.example./x",
+    "https://service.localhost.example./x",
+    "https://notlocalhost./x",
+    "https://localhosts./x",
+    "https://local-host./x",
+    "https://example.localhost-safe./x",
+    "https://cdn.gameguild.gg./x",
+    "https://127.0.0.1.example./x",
+    "https://éxample.org./x",
+    "https://example.com../x",
+  ])("preserves explicitly allowlisted non-local DNS host: %s", (raw) => {
+    const canonical = new URL(raw);
+    env.REMOTE_ASSET_ALLOWED_HOSTS = canonical.hostname;
+    expect(assertSafeRemoteUrl(raw).toString()).toBe(canonical.href);
+    expect(assertSafeRemoteUrl(canonical).toString()).toBe(canonical.href);
+  });
+
+  it.each(["https://cdn.gameguild.gg./x", "https://api.gameguild.gg./x"])(
+    "does not expand the default allowlist for DNS spelling: %s",
+    (raw) => {
+      expect(() => assertSafeRemoteUrl(raw)).toThrow(/allowlist/);
+      expect(() => assertSafeRemoteUrl(new URL(raw))).toThrow(/allowlist/);
+    },
+  );
+
+  it.each(["http://localhost.:8080/x", "http://service.localhost.:8080/x"])(
+    "retains the explicit development bypass: %s",
+    (raw) => {
+      env.NODE_ENV = "development";
+      env.ALLOW_UNSAFE_REMOTE_URL = "true";
+      const canonical = new URL(raw);
+      expect(assertSafeRemoteUrl(raw)).toBe(raw);
+      expect(assertSafeRemoteUrl(canonical)).toBe(canonical);
+    },
+  );
+});
