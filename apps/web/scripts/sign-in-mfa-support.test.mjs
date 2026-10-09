@@ -94,3 +94,18 @@ test("denied enrollment or completion never returns an authenticated response", 
     ),
   );
 });
+
+test("SignInForm keeps void callbacks without obsolete promise suppressions", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [baselineText, form] = await Promise.all([
+    readFile(new URL("../eslint-suppressions.json", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/sign-in-form.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.equal(
+    Object.hasOwn(JSON.parse(baselineText), "src/components/sign-in-form.tsx"),
+    false,
+  );
+  assert.match(form, /onSubmit=\{\(event\) => \{\s+void handleMfaSubmit\(event\);\s+\}\}/);
+  assert.match(form, /onSubmit=\{\(event\) => \{\s+void handleSubmit\(event\);\s+\}\}/);
+  assert.match(form, /onClick=\{\(\) => \{\s+void handleMfaEnrollment\(\);\s+\}\}/);
+});
