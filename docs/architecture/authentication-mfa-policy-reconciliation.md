@@ -1,5 +1,55 @@
 # Authentication configuration and MFA reconciliation — #145
 
+## Economy analyzer gate compatibility — 2026-10-09
+
+The Economy Release Gate for published head `8fa5106ad5026d01faa02cbd063bec96b2060471`
+checked out merge ref `a8c12999ce0af5b05f9e3ba9e45992d3350aa183`, including newer
+develop `e6fc4a0b5c15e922cbdb7ad05711119efcbcc003`. Its ordinary whole-solution
+Release build failed with two `xUnit1030` errors in the API key rotation grace
+test at lines 602 and 609. This source was introduced by the newer develop;
+the original failed CI log is retained as `pr704-8fa-economy-job-download47-20261009.log`.
+
+The same develop revision is now integrated in the existing worktree. The two
+awaits retain the xUnit synchronization context by removing `ConfigureAwait(false)`.
+The grace-period authentication, rejection and lazy-revocation assertions are
+unchanged. No analyzer is suppressed, and the CI warnings-as-errors requirement
+is unchanged. Offline qualification is recorded in
+`economy-analyzer-offline-validation50-20261009`; the combined compiled OpenAPI
+and generated consumer are qualified separately in `economy-fix-client52-20261009`.
+Neither receipt substitutes for the fresh hosted Economy and real learner/instructor
+Code cycle required before merging #704.
+
+The four ordinary Release builds and all 4,861 selected native tests passed
+(2,714 Authentication, 2,014 Authorization, 133 host architecture/security/OpenAPI),
+with no test failures or skips. The original collector nevertheless exited one:
+Git's default abbreviated index hashes changed from nine to ten characters during
+validation. `economy-validation50-qualified-diff-reconciliation57-20261009.json`
+reproduces the original frozen diff SHA256 exactly with explicit nine-character
+abbreviations, checks every command exit and individual TRX case, and confirms
+the original receipt and all 55 primary changes unchanged. Subsequent guards use
+full Git index hashes. The original failed collector is preserved separately.
+The compiled presentation export contains 1,346 paths and 1,711 schemas; it
+does not replace HTTP acceptance.
+
+The client was regenerated from that compiled contract. Ordinary build including
+declarations, typecheck and all 1,155 tests passed with zero failures or pending
+cases. Its source, individual assertions and generated hashes are recorded in
+`economy-fix-client52-20261009/result.json`; its normalized metadata hash is
+`374f585c8e87363a1450c0de57fd39910080a1900ea4e5459ad817bda3b63877`.
+
+At the prior published head, API, Web, OpenAPI consistency, migration compatibility,
+CodeQL and Codacy passed. The GitGuardian check's only two findings were verified
+against their original commits: a runtime-generated synthetic fixture password
+and the public RFC 6238 Appendix B key. Its supported false-positive action
+recorded the specific classification; the check conclusion is `skipped`, not a
+clean scan. Receipt and screenshot `pr704-8fa-gitguardian-false-positive-confirmed54-20261009`
+preserve that disposition. No file/rule exclusion or history rewrite was added.
+
+The PostgreSQL containment hold remains in force: this qualification creates no
+local database or container and performs no SQL. All 55 unrelated primary-checkout
+changes remain protected. This checkpoint accepts or closes no issue; #145 and
+#288 retain their complete original criteria.
+
 ## Native cancellation correction and Code attempt03 — 2026-10-08
 
 The web consumer checkpoint is published in #704 at
