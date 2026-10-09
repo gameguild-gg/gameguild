@@ -1,5 +1,21 @@
 # Authentication configuration and MFA reconciliation — #145
 
+## Migration-guide deliverable — 2026-10-09
+
+The live #145 audit reopened the issue at develop `e6fc4a0b` for its original
+Definition of Done requirement, "Migration guide for existing authentication systems."
+The [new guide](../api/authentication-migration-guide.md) maps actual legacy aliases
+to the host's nested typed sections, explains the separate security/MFA/session
+sections, preserves credential and JWT/session/tenant compatibility, adapts pending
+MFA consumers, specifies rehearsal evidence, staged cutover and rollback. It identifies
+unsupported credential imports and external-provider checks instead of asserting
+automatic compatibility. The options reference links to the guide.
+
+This is a documentation delivery. No production migration or external-provider
+sandbox execution is claimed. #145/#288 and the complete original criteria remain
+open until applicable execution and integration evidence is accepted. Hosted Economy
+and the real instructor/learner Code cycle remain required for #704.
+
 ## Complete HTTP regression budget — 2026-10-09
 
 At signed head `d3eba856e8ddda89451650b5c5093e8211fa1c65`, hosted API Verify
