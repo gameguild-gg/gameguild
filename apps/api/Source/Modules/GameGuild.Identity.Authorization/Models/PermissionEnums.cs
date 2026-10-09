@@ -42,7 +42,15 @@ public enum PermissionOperationType
     // ReSharper disable once InconsistentNaming - JIT is a standard abbreviation for Just-In-Time
     ElevateJIT = 6,
     Review = 7,
-    Deny = 8
+    Deny = 8,
+
+    /// <summary>
+    ///     A permission evaluation/decision (as opposed to a permission mutation).
+    ///     Recorded when an endpoint-level permission attribute is checked, so that
+    ///     sensitive permission-gated operations (e.g. monetization) leave a durable
+    ///     decision trail (issue #346).
+    /// </summary>
+    Check = 9
 }
 
 /// <summary>
