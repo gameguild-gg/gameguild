@@ -94,7 +94,14 @@ internal sealed class PermissionExpirationAlertHandler(
             {
                 logger.LogWarning(
                     "Failed to queue {Kind} permission-expiration alert on channel {Channel}: {Outcome}.",
-                    notification.Kind, channel, result is null ? "no result" : "failure");
+                    notification.Kind,
+                    channel switch
+                    {
+                        NotificationChannel.InApp => "InApp",
+                        NotificationChannel.Email => "Email",
+                        _ => "Other"
+                    },
+                    result is null ? "no result" : "failure");
             }
         }
     }
