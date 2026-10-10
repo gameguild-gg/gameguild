@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuth } from "@game-guild/client/react";
 import { Link } from "@/i18n/navigation";
 import { requestMagicLink } from "@/lib/auth/magic-link-request";
-import { SignInForm } from "@/components/sign-in-form";
 import { Button } from "@game-guild/ui/components/button";
 import {
   Card,
@@ -22,6 +21,7 @@ import {
 } from "@game-guild/ui/components/field";
 import { Input } from "@game-guild/ui/components/input";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { SignInForm } from "./sign-in-form";
 
 export interface MagicLinkMessages {
   request: {

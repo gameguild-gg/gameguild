@@ -90,8 +90,18 @@ public sealed class ConsumeMagicLinkCommandHandler : ICommandHandler<ConsumeMagi
         IConfiguration configuration,
         ILogger<ConsumeMagicLinkCommandHandler> logger,
         IOptions<JwtOptions>? jwtOptions,
+        IAuthenticatedSessionIssuer? sessionIssuer)
+        : this(userRepository, emailVerificationService, jwtTokenService, configuration, logger, jwtOptions, sessionIssuer, null) { }
+
+    public ConsumeMagicLinkCommandHandler(
+        IUserRepository userRepository,
+        IEmailVerificationService emailVerificationService,
+        IJwtTokenService jwtTokenService,
+        IConfiguration configuration,
+        ILogger<ConsumeMagicLinkCommandHandler> logger,
+        IOptions<JwtOptions>? jwtOptions,
         IAuthenticatedSessionIssuer? sessionIssuer,
-        ISignInMfaService? signInMfa = null)
+        ISignInMfaService? signInMfa)
     {
         this.userRepository = userRepository;
         this.emailVerificationService = emailVerificationService;
