@@ -87,6 +87,20 @@ public interface IHybridPermissionCache
     Task SetValueAsync<T>(string key, T value, string cacheType, CancellationToken cancellationToken = default) where T : struct;
 
     /// <summary>
+    ///     Sets a value type in the cache with an explicit TTL that caps both the L1 and the L2 lifetime.
+    /// </summary>
+    /// <typeparam name="T">The type of value to store (must be a value type).</typeparam>
+    /// <param name="key">The cache key.</param>
+    /// <param name="value">The value to cache.</param>
+    /// <param name="cacheType">The cache type for metrics.</param>
+    /// <param name="ttlSeconds">
+    ///     TTL override in seconds; it never extends the configured TTLs, it only shortens them.
+    ///     Used to clamp cached ACL decisions to their earliest effective grant expiration.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task SetValueAsync<T>(string key, T value, string cacheType, int ttlSeconds, CancellationToken cancellationToken = default) where T : struct;
+
+    /// <summary>
     ///     Removes a value from the cache.
     /// </summary>
     /// <param name="key">The cache key.</param>
@@ -228,6 +242,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
 
             if (foundInL1)
             {
+                _keyTracker.Touch(key);
                 _metrics.RecordHit(CacheLevel.L1, cacheType);
                 return l1Value;
             }
@@ -238,9 +253,9 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
                 try
                 {
                     var l2Bytes = await _l2Cache!.GetAsync(key, cancellationToken).ConfigureAwait(false);
-                    if (l2Bytes != null && l2Bytes.Length > 0)
+                    if (l2Bytes != null && l2Bytes.Length > 0 && TryDecodeL2Payload(key, l2Bytes, out var plain))
                     {
-                        var l2Value = JsonSerializer.Deserialize<T>(l2Bytes);
+                        var l2Value = JsonSerializer.Deserialize<T>(plain);
                         if (l2Value != null)
                         {
                             _metrics.RecordHit(CacheLevel.L2, cacheType);
@@ -303,6 +318,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
 
                 if (foundInL1)
                 {
+                    _keyTracker.Touch(key);
                     _metrics.RecordHit(CacheLevel.L1, cacheType);
                     return CacheResult<T>.Hit(l1Value);
                 }
@@ -314,9 +330,9 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
                 try
                 {
                     var l2Bytes = await _l2Cache!.GetAsync(key, cancellationToken).ConfigureAwait(false);
-                    if (l2Bytes != null && l2Bytes.Length > 0)
+                    if (l2Bytes != null && l2Bytes.Length > 0 && TryDecodeL2Payload(key, l2Bytes, out var plain))
                     {
-                        var l2Value = JsonSerializer.Deserialize<T>(l2Bytes);
+                        var l2Value = JsonSerializer.Deserialize<T>(plain);
                         _metrics.RecordHit(CacheLevel.L2, cacheType);
 
                         // Promote to L1
@@ -387,6 +403,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
 
             if (foundInL1)
             {
+                _keyTracker.Touch(distinctKeys[index]);
                 _metrics.RecordHit(CacheLevel.L1, cacheType);
                 results[index] = CacheResult<T>.Hit(l1Value);
                 _metrics.RecordLookupDuration(Stopwatch.GetElapsedTime(startedAt), cacheType);
@@ -442,6 +459,12 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     public Task SetValueAsync<T>(string key, T value, string cacheType, CancellationToken cancellationToken = default) where T : struct
     {
         return SetAsyncCore(key, value, cacheType, null, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SetValueAsync<T>(string key, T value, string cacheType, int ttlSeconds, CancellationToken cancellationToken = default) where T : struct
+    {
+        return SetAsyncCore(key, value, cacheType, ttlSeconds, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -506,7 +529,14 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     private async Task SetAsyncCore<T>(string key, T value, string cacheType, int? ttlSeconds, CancellationToken cancellationToken)
     {
         var l1Ttl = TimeSpan.FromSeconds(ttlSeconds ?? GetL1TtlSeconds(cacheType));
-        var l2Ttl = TimeSpan.FromSeconds(_options.DistributedCacheTtlSeconds);
+
+        // An explicit TTL only shortens the configured L2 lifetime; it never extends it. This lets
+        // callers clamp time-bound entries (for example ACL decisions bounded by grant expiration)
+        // so neither cache level can outlive the data the entry was derived from.
+        var l2Ttl = TimeSpan.FromSeconds(
+            ttlSeconds is { } explicitTtl
+                ? Math.Min(explicitTtl, _options.DistributedCacheTtlSeconds)
+                : _options.DistributedCacheTtlSeconds);
 
         // Set in L1
         SetL1(key, value, cacheType, l1Ttl);
@@ -517,6 +547,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
             try
             {
                 var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
+                bytes = EncodeL2Payload(key, bytes);
                 var distributedOptions = new DistributedCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = l2Ttl
@@ -617,5 +648,57 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
         }
 
         return _options.PermissionTtlSeconds;
+    }
+
+    /// <summary>
+    ///     Compresses an L2 payload when compression is enabled, the algorithm is set, and the
+    ///     serialized value meets the configured threshold. Values below the threshold (and all
+    ///     values when compression is off) are stored as raw JSON, which stays readable across
+    ///     mixed-version fleets through <see cref="TryDecodeL2Payload"/>.
+    /// </summary>
+    private byte[] EncodeL2Payload(string key, byte[] serialized)
+    {
+        if (!_options.L2CompressionEnabled ||
+            _options.L2CompressionAlgorithm == L2CompressionAlgorithm.None ||
+            serialized.Length < _options.L2CompressionThresholdBytes)
+        {
+            return serialized;
+        }
+
+        try
+        {
+            var wrapped = PermissionCacheL2Payload.Wrap(serialized, _options.L2CompressionAlgorithm);
+            _logger.LogDebug(
+                "Compressed L2 cache payload for key {Key} from {RawBytes} to {StoredBytes} bytes using {Algorithm}",
+                key,
+                serialized.Length,
+                wrapped.Length,
+                _options.L2CompressionAlgorithm);
+            return wrapped;
+        }
+        catch (Exception ex)
+        {
+            // Compression is an optimization: fall back to the raw payload rather than failing the write.
+            _logger.LogWarning(ex, "L2 cache payload compression failed for key {Key}; storing the value uncompressed", key);
+            return serialized;
+        }
+    }
+
+    /// <summary>
+    ///     Decodes an L2 payload, transparently handling both compressed envelopes and raw JSON
+    ///     written by deployments predating compression.
+    /// </summary>
+    /// <returns><c>false</c> when the payload is enveloped but undecodable; the caller then treats the entry as a miss.</returns>
+    private bool TryDecodeL2Payload(string key, byte[] stored, out byte[] plain)
+    {
+        if (PermissionCacheL2Payload.TryUnwrap(stored, out plain))
+        {
+            return true;
+        }
+
+        _logger.LogWarning(
+            "L2 cache entry for key {Key} carries an unsupported or corrupted compression envelope; treating it as a miss",
+            key);
+        return false;
     }
 }

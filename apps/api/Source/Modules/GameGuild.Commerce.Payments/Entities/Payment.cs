@@ -14,6 +14,10 @@ namespace GameGuild.Commerce.Payments;
 [Index(nameof(IdempotencyKey), IsUnique = true)]
 public class Payment : EntityBase
 {
+    private const int DefaultMaxRetries = 3;
+    private const double DefaultBackoffBaseMinutes = 1.0;
+    private const double DefaultBackoffMultiplier = 5.0;
+
     private static readonly Dictionary<PaymentStatus, HashSet<PaymentStatus>> ValidTransitions = new()
     {
         { PaymentStatus.Pending, new() { PaymentStatus.Processing, PaymentStatus.Cancelled, PaymentStatus.Failed } },
@@ -130,8 +134,8 @@ public class Payment : EntityBase
     /// <summary>Number of retry attempts</summary>
     public int RetryCount { get; private set; }
 
-    /// <summary>Maximum retry attempts allowed</summary>
-    public int MaxRetries { get; private set; } = 3;
+    /// <summary>Maximum retry attempts allowed; sourced from <c>Payments:Retry</c> at creation, legacy default as fallback</summary>
+    public int MaxRetries { get; private set; } = DefaultMaxRetries;
 
     /// <summary>Next retry date if failed</summary>
     public DateTime? NextRetryAt { get; private set; }
@@ -167,16 +171,23 @@ public class Payment : EntityBase
         Guid? invoiceId = null,
         string? externalCustomerId = null,
         string? paymentMethodId = null,
-        string? description = null)
+        string? description = null,
+        int? maxRetries = null)
     {
         if (tenantId == Guid.Empty)
+        {
             throw new ArgumentException("TenantId is required for payment entities", nameof(tenantId));
+        }
 
         if (amount <= 0)
+        {
             throw new ArgumentException("Amount must be positive", nameof(amount));
+        }
 
         if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
             throw new ArgumentException("Idempotency key is required", nameof(idempotencyKey));
+        }
 
         return new Payment
         {
@@ -191,6 +202,7 @@ public class Payment : EntityBase
             ExternalCustomerId = externalCustomerId,
             PaymentMethodId = paymentMethodId,
             Description = description,
+            MaxRetries = maxRetries ?? DefaultMaxRetries,
             Status = PaymentStatus.Pending
         };
     }
@@ -236,7 +248,9 @@ public class Payment : EntityBase
                           && string.Equals(ProviderMonetaryLeg, providerMonetaryLeg, StringComparison.Ordinal);
 
         if (!isIdentical)
+        {
             throw new InvalidOperationException("Payment provider mapping is already bound to a different identity");
+        }
     }
 
     /// <summary>Validates cumulative provider amounts without changing payment state.</summary>
@@ -250,16 +264,24 @@ public class Payment : EntityBase
         ArgumentOutOfRangeException.ThrowIfNegative(cumulativeDisputedAmount);
 
         if (cumulativeConfirmedAmount > Amount)
+        {
             throw new InvalidOperationException("Cumulative provider confirmed amount cannot exceed payment amount");
+        }
 
         if (cumulativeRefundedAmount > cumulativeConfirmedAmount)
+        {
             throw new InvalidOperationException("Cumulative provider refunded amount cannot exceed confirmed amount");
+        }
 
         if (cumulativeDisputedAmount > cumulativeConfirmedAmount)
+        {
             throw new InvalidOperationException("Cumulative provider disputed amount cannot exceed confirmed amount");
+        }
 
         if (cumulativeRefundedAmount + cumulativeDisputedAmount > cumulativeConfirmedAmount)
+        {
             throw new InvalidOperationException("Combined provider refunded and disputed amounts cannot exceed confirmed amount");
+        }
     }
 
     /// <summary>Checks if transition to the specified status is valid</summary>
@@ -272,7 +294,9 @@ public class Payment : EntityBase
     private void TransitionTo(PaymentStatus newStatus)
     {
         if (!CanTransitionTo(newStatus))
+        {
             throw new InvalidOperationException($"Cannot transition payment from {Status} to {newStatus}");
+        }
 
         Status = newStatus;
         Touch();
@@ -302,8 +326,17 @@ public class Payment : EntityBase
             ProcessedAt.Value));
     }
 
-    /// <summary>Marks the payment as failed</summary>
-    public void MarkAsFailed(string failureReason, string? errorCode = null)
+    /// <summary>
+    ///     Marks the payment as failed. Retry-policy parameters may be supplied by the caller from
+    ///     <c>Payments:Retry</c> options (issue #403); when omitted the legacy entity defaults apply
+    ///     (max 3 retries, exponential backoff of <c>Math.Pow(5, RetryCount)</c> minutes).
+    /// </summary>
+    public void MarkAsFailed(
+        string failureReason,
+        string? errorCode = null,
+        int? maxRetries = null,
+        double? backoffBaseMinutes = null,
+        double? backoffMultiplier = null)
     {
         TransitionTo(PaymentStatus.Failed);
         FailureReason = failureReason;
@@ -311,10 +344,18 @@ public class Payment : EntityBase
         ProcessedAt = SystemClock.UtcNow;
 
         // Calculate next retry if retries remaining
-        if (RetryCount < MaxRetries)
+        var effectiveMaxRetries = maxRetries ?? MaxRetries;
+        if (maxRetries.HasValue && maxRetries.Value != MaxRetries)
         {
-            // Exponential backoff: 1 min, 5 min, 30 min, etc.
-            var delayMinutes = Math.Pow(5, RetryCount) * 1;
+            MaxRetries = maxRetries.Value;
+        }
+
+        if (RetryCount < effectiveMaxRetries)
+        {
+            // Exponential backoff: legacy default is 1 min, 5 min, 25 min, etc.
+            var baseMinutes = backoffBaseMinutes ?? DefaultBackoffBaseMinutes;
+            var multiplier = backoffMultiplier ?? DefaultBackoffMultiplier;
+            var delayMinutes = baseMinutes * Math.Pow(multiplier, RetryCount);
             NextRetryAt = SystemClock.UtcNow.AddMinutes(delayMinutes);
         }
     }
@@ -330,7 +371,9 @@ public class Payment : EntityBase
     public bool BindExternalTransactionId(string? externalTransactionId)
     {
         if (string.IsNullOrWhiteSpace(externalTransactionId))
+        {
             return false;
+        }
 
         if (ExternalTransactionId is null)
         {
@@ -340,7 +383,9 @@ public class Payment : EntityBase
         }
 
         if (string.Equals(ExternalTransactionId, externalTransactionId, StringComparison.Ordinal))
+        {
             return false;
+        }
 
         throw new InvalidOperationException("A payment cannot be rebound to a different provider transaction.");
     }
@@ -358,10 +403,14 @@ public class Payment : EntityBase
     public void PrepareForRetry(string? paymentMethodId = null)
     {
         if (Status != PaymentStatus.Failed)
+        {
             throw new InvalidOperationException("Can only retry failed payments");
+        }
 
         if (RetryCount >= MaxRetries)
+        {
             throw new InvalidOperationException($"Maximum retry attempts ({MaxRetries}) reached");
+        }
 
         RetryCount++;
         Status = PaymentStatus.Pending;
@@ -370,7 +419,10 @@ public class Payment : EntityBase
         NextRetryAt = null;
         ExternalTransactionId = null;
         if (!string.IsNullOrWhiteSpace(paymentMethodId))
+        {
             PaymentMethodId = paymentMethodId;
+        }
+
         Touch();
     }
 
@@ -378,13 +430,19 @@ public class Payment : EntityBase
     public void ProcessRefund(decimal refundAmount, string refundId, string reason)
     {
         if (Status != PaymentStatus.Succeeded && Status != PaymentStatus.Disputed)
+        {
             throw new InvalidOperationException($"Can only refund succeeded or disputed payments, current status: {Status}");
+        }
 
         if (refundAmount <= 0)
+        {
             throw new ArgumentException("Refund amount must be positive", nameof(refundAmount));
+        }
 
         if (RefundedAmount + refundAmount > Amount)
+        {
             throw new InvalidOperationException("Total refund amount cannot exceed payment amount");
+        }
 
         RefundedAmount += refundAmount;
         RefundId = refundId;

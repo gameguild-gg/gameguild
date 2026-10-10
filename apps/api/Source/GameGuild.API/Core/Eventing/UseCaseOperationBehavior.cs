@@ -27,6 +27,7 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
         }
 
         var contract = eventContractRegistry?.GetRequired(typeof(TRequest));
+        var parentOperation = operationContextAccessor.Current;
         var actor = actorContextAccessor.ActorContext;
         var operationContext = new UseCaseOperationContext(
             contract?.OperationCode ?? ResolveOperationCode(),
@@ -40,11 +41,24 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
         if (!context.Database.IsRelational() || context.Database.CurrentTransaction is not null)
         {
             var response = await next().ConfigureAwait(false);
-            if (!CommandOutcome.IsFailure(response))
+            if (!CommandOutcome.ShouldRollback(response))
             {
                 await EnsureOperationEventStoredAsync(request, operationContext, cancellationToken).ConfigureAwait(false);
                 if (contract is not null && eventVerifier is not null)
+                {
                     await eventVerifier.VerifyAsync(contract, operationContext, cancellationToken).ConfigureAwait(false);
+                }
+
+                // Nested commands leave their audit snapshots for the outer transaction owner.
+                // An outer command or a non-relational test host can flush after successful handling.
+                if (parentOperation is null)
+                {
+                    await context.FlushPendingPermissionAuditChangesAsync(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            else if (parentOperation is null)
+            {
+                context.DiscardPendingPermissionAuditChanges();
             }
             return response;
         }
@@ -56,7 +70,7 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
             try
             {
                 var response = await next().ConfigureAwait(false);
-                if (CommandOutcome.IsFailure(response))
+                if (CommandOutcome.ShouldRollback(response))
                 {
                     await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
                     context.ChangeTracker.Clear();
@@ -65,14 +79,18 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
 
                 await EnsureOperationEventStoredAsync(request, operationContext, cancellationToken).ConfigureAwait(false);
                 if (contract is not null && eventVerifier is not null)
+                {
                     await eventVerifier.VerifyAsync(contract, operationContext, cancellationToken).ConfigureAwait(false);
+                }
 
                 await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+                await context.FlushPendingPermissionAuditChangesAsync(cancellationToken).ConfigureAwait(false);
                 return response;
             }
             catch
             {
                 await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                context.DiscardPendingPermissionAuditChanges();
                 context.ChangeTracker.Clear();
                 operationContext.ResetForRetry();
                 throw;
@@ -86,7 +104,9 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
         CancellationToken cancellationToken)
     {
         if (!operationContext.BusinessMutationObserved || operationContext.OperationEventCaptured)
+        {
             return;
+        }
 
         var aggregateId = typeof(TRequest).GetProperties(BindingFlags.Instance | BindingFlags.Public)
             .Where(property => property.Name.EndsWith("Id", StringComparison.Ordinal))

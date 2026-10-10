@@ -1,9 +1,13 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization.Caching;
 using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Identity.Authentication;
@@ -25,7 +29,8 @@ public class PermissionService(
     IApplicationDbContext context,
     ITenantSecurityVersionStore? securityVersionStore = null,
     IPermissionAuditService? auditService = null,
-    IActorContextAccessor? actorContextAccessor = null) : IPermissionService
+    IActorContextAccessor? actorContextAccessor = null,
+    IHybridPermissionCache? hybridPermissionCache = null) : IPermissionService
 {
     private static readonly Meter BulkPermissionCheckMeter = new("GameGuild.Identity.Authentication.PermissionBulkCheck", "1.0.0");
     private static readonly Counter<long> BulkPermissionCheckBatchCounter = BulkPermissionCheckMeter.CreateCounter<long>(
@@ -48,6 +53,8 @@ public class PermissionService(
     private const int MaximumBulkPermissionCheckBatchSize = 256;
     private const int MinimumParallelBulkPermissionCheckBatchSize = 32;
     private const int MaximumParallelBulkPermissionChecks = 4;
+    private const int MaximumBulkPermissionCacheVersionRetries = 3;
+    private const string BulkPermissionCacheType = "permission";
 
     public async Task<TenantPermission> GrantTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions)
     {
@@ -119,7 +126,10 @@ public class PermissionService(
     public async Task RevokeTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions)
     {
         var grant = await GetTenantGrantAsync(userId, tenantId).ConfigureAwait(false);
-        if (grant == null) return;
+        if (grant == null)
+        {
+            return;
+        }
 
         grant.RemovePermissions(ToPermissionNames(permissions));
         if (grant.Permissions.Length == 0)
@@ -232,7 +242,10 @@ public class PermissionService(
     public async Task RevokeContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType[] permissions)
     {
         var grant = await GetContentTypeGrantAsync(userId, tenantId, contentTypeName).ConfigureAwait(false);
-        if (grant == null) return;
+        if (grant == null)
+        {
+            return;
+        }
 
         grant.RemovePermissions(permissions);
         if (!grant.GetPermissionsAsEnum().Any())
@@ -354,7 +367,10 @@ public class PermissionService(
         where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
     {
         var grant = await GetResourceGrantAsync<TPermission, TResource>(userId, tenantId, resourceId).ConfigureAwait(false);
-        if (grant == null) return;
+        if (grant == null)
+        {
+            return;
+        }
 
         context.Set<TPermission>().Remove(grant);
         await context.SaveChangesAsync().ConfigureAwait(false);
@@ -425,22 +441,34 @@ public class PermissionService(
         if (userId.HasValue && resourceId.HasValue)
         {
             var resourcePermissions = await GetResourcePermissionsAsync<GenericResourcePermission, EntityBase>(userId, tenantId, resourceId.Value).ConfigureAwait(false);
-            if (resourcePermissions.Contains(permission)) return "Resource";
+            if (resourcePermissions.Contains(permission))
+            {
+                return "Resource";
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(contentTypeName))
         {
             var contentPermissions = await GetContentTypePermissionsAsync(userId, tenantId, contentTypeName).ConfigureAwait(false);
-            if (contentPermissions.Contains(permission)) return "ContentType";
+            if (contentPermissions.Contains(permission))
+            {
+                return "ContentType";
+            }
         }
 
         var tenantPermissions = await GetTenantPermissionsAsync(userId, tenantId).ConfigureAwait(false);
-        if (tenantPermissions.Contains(permission)) return "Tenant";
+        if (tenantPermissions.Contains(permission))
+        {
+            return "Tenant";
+        }
 
         if (tenantId.HasValue)
         {
             var tenantDefaults = await GetTenantDefaultPermissionsAsync(tenantId.Value).ConfigureAwait(false);
-            if (tenantDefaults.Contains(permission)) return "TenantDefault";
+            if (tenantDefaults.Contains(permission))
+            {
+                return "TenantDefault";
+            }
         }
 
         var globalDefaults = await GetGlobalDefaultPermissionsAsync().ConfigureAwait(false);
@@ -493,6 +521,18 @@ public class PermissionService(
 
         if (distinctUserIds.Length == 0 || distinctPermissions.Length == 0)
         {
+            return results;
+        }
+
+        if (securityVersionStore is not null && hybridPermissionCache is not null)
+        {
+            await foreach (var result in StreamBulkCheckPermissionsAsync(
+                               EnumerateBulkPermissionRequests(distinctUserIds, tenantId, distinctPermissions, CancellationToken.None),
+                               cancellationToken: CancellationToken.None).ConfigureAwait(false))
+            {
+                results[result.Request.UserId][result.Request.Permission] = result.IsGranted;
+            }
+
             return results;
         }
 
@@ -641,6 +681,158 @@ public class PermissionService(
     {
         var startedAt = Stopwatch.GetTimestamp();
 
+        var result = securityVersionStore is not null && hybridPermissionCache is not null
+            ? await EvaluateBulkPermissionCheckBatchWithCacheAsync(requests, cancellationToken).ConfigureAwait(false)
+            : await EvaluateBulkPermissionCheckBatchFromDatabaseAsync(requests, cancellationToken).ConfigureAwait(false);
+
+        if (recordMetrics)
+        {
+            BulkPermissionCheckBatchCounter.Add(1);
+            BulkPermissionCheckRequestCounter.Add(requests.Count);
+            BulkPermissionCheckUniqueRequestCounter.Add(requests.Distinct().Count());
+            BulkPermissionCheckDuration.Record(Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds);
+        }
+
+        return result;
+    }
+
+    private async Task<IReadOnlyList<BulkPermissionCheckResult>> EvaluateBulkPermissionCheckBatchWithCacheAsync(
+        IReadOnlyList<BulkPermissionCheckRequest> requests,
+        CancellationToken cancellationToken)
+    {
+        var distinctRequests = requests.Distinct().ToArray();
+        var tenantIds = distinctRequests
+            .Select(request => request.TenantId ?? Guid.Empty)
+            .Distinct()
+            .ToArray();
+
+        for (var attempt = 0; attempt < MaximumBulkPermissionCacheVersionRetries; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var versionSnapshot = await securityVersionStore!
+                .GetTenantAndGlobalVersionsAsync(tenantIds, cancellationToken)
+                .ConfigureAwait(false);
+            var cacheKeys = new Dictionary<BulkPermissionCheckRequest, string>(distinctRequests.Length);
+            foreach (var request in distinctRequests)
+            {
+                var scopeId = request.TenantId ?? Guid.Empty;
+                var versions = versionSnapshot.GetValueOrDefault(scopeId);
+                cacheKeys.Add(request, BuildBulkPermissionCacheKey(request, versions));
+            }
+
+            var cacheResults = await hybridPermissionCache!
+                .GetManyValuesAsync<bool>(cacheKeys.Values.ToArray(), BulkPermissionCacheType, cancellationToken)
+                .ConfigureAwait(false);
+            var decisions = new Dictionary<BulkPermissionCheckRequest, bool>(distinctRequests.Length);
+            var cacheMisses = new List<BulkPermissionCheckRequest>();
+
+            foreach (var request in distinctRequests)
+            {
+                var cacheKey = cacheKeys[request];
+                if (cacheResults.TryGetValue(cacheKey, out var cached) && cached.Found)
+                {
+                    decisions[request] = cached.Value;
+                }
+                else
+                {
+                    cacheMisses.Add(request);
+                }
+            }
+
+            IReadOnlyList<BulkPermissionCheckResult> databaseResults = [];
+            if (cacheMisses.Count > 0)
+            {
+                databaseResults = await EvaluateBulkPermissionCheckBatchFromDatabaseAsync(cacheMisses, cancellationToken)
+                    .ConfigureAwait(false);
+                foreach (var result in databaseResults)
+                {
+                    decisions[result.Request] = result.IsGranted;
+                }
+            }
+
+            var currentVersions = await securityVersionStore
+                .GetTenantAndGlobalVersionsAsync(tenantIds, cancellationToken)
+                .ConfigureAwait(false);
+            if (!AreBulkPermissionVersionsCurrent(tenantIds, versionSnapshot, currentVersions))
+            {
+                continue;
+            }
+
+            if (databaseResults.Count > 0)
+            {
+                var valuesToCache = new Dictionary<string, bool>(databaseResults.Count, StringComparer.Ordinal);
+                foreach (var result in databaseResults)
+                {
+                    valuesToCache[cacheKeys[result.Request]] = result.IsGranted;
+                }
+
+                await hybridPermissionCache.SetManyValuesAsync(valuesToCache, BulkPermissionCacheType, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            return requests
+                .Select(request => new BulkPermissionCheckResult(request, decisions[request]))
+                .ToArray();
+        }
+
+        throw new InvalidOperationException(
+            $"Could not obtain stable permission versions for a bulk authorization batch after {MaximumBulkPermissionCacheVersionRetries} attempts.");
+    }
+
+    private static bool AreBulkPermissionVersionsCurrent(
+        IReadOnlyCollection<Guid> tenantIds,
+        IReadOnlyDictionary<Guid, (long TenantVersion, long GlobalVersion)> expectedVersions,
+        IReadOnlyDictionary<Guid, (long TenantVersion, long GlobalVersion)> currentVersions)
+    {
+        foreach (var tenantId in tenantIds)
+        {
+            if (expectedVersions.GetValueOrDefault(tenantId) != currentVersions.GetValueOrDefault(tenantId))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static string BuildBulkPermissionCacheKey(
+        BulkPermissionCheckRequest request,
+        (long TenantVersion, long GlobalVersion) versions)
+    {
+        var tenantKey = request.TenantId?.ToString("D") ?? "global";
+        var resourceKey = request.ResourceId?.ToString("D") ?? "none";
+        var tenantVersion = versions.TenantVersion.ToString(CultureInfo.InvariantCulture);
+        var globalVersion = versions.GlobalVersion.ToString(CultureInfo.InvariantCulture);
+        var permission = ((int)request.Permission).ToString(CultureInfo.InvariantCulture);
+
+        return $"perm:{tenantKey}:{request.UserId:D}:bulk:v1:{tenantVersion}:{globalVersion}:{permission}:{FingerprintCacheKeyPart(request.ContentTypeName)}:{resourceKey}:{FingerprintCacheKeyPart(request.ResourceTypeName)}";
+    }
+
+    private static string FingerprintCacheKeyPart(string? value) =>
+        value is null ? "none" : Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
+
+    private static async IAsyncEnumerable<BulkPermissionCheckRequest> EnumerateBulkPermissionRequests(
+        IReadOnlyList<Guid> userIds,
+        Guid? tenantId,
+        IReadOnlyList<PermissionType> permissions,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        foreach (var userId in userIds)
+        {
+            foreach (var permission in permissions)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return new BulkPermissionCheckRequest(userId, tenantId, permission);
+                await Task.CompletedTask.ConfigureAwait(false);
+            }
+        }
+    }
+
+    private async Task<IReadOnlyList<BulkPermissionCheckResult>> EvaluateBulkPermissionCheckBatchFromDatabaseAsync(
+        IReadOnlyList<BulkPermissionCheckRequest> requests,
+        CancellationToken cancellationToken)
+    {
         var tenantGrants = await context.Set<TenantPermission>()
             .AsNoTracking()
             .Where(BuildPermissionGrantScopePredicate<TenantPermission>(requests))
@@ -723,14 +915,6 @@ public class PermissionService(
         for (var index = 0; index < requests.Count; index++)
         {
             result.Add(new BulkPermissionCheckResult(requests[index], decisions[resultIndexes[index]]));
-        }
-
-        if (recordMetrics)
-        {
-            BulkPermissionCheckBatchCounter.Add(1);
-            BulkPermissionCheckRequestCounter.Add(requests.Count);
-            BulkPermissionCheckUniqueRequestCounter.Add(distinctRequests.Count);
-            BulkPermissionCheckDuration.Record(Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds);
         }
 
         return result;

@@ -132,7 +132,7 @@ export class SocialProfilesModule {
 
   /**
    */
-  async getApiSocialProfilesSearch(query?: { query?: string; take?: number }): Promise<Result<Array<Types.SocialProfilesSocialProfileDto>, ApiError>> {
+  async getApiSocialProfilesSearch(query?: { query?: string; take?: number }): Promise<Result<Types.SocialProfilesSocialProfileDto[], ApiError>> {
     const url = '/api/social/profiles/search';
 
     const result = await this.client.request({
@@ -142,7 +142,7 @@ export class SocialProfilesModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.SocialProfilesSocialProfileDto>, ApiError>;
+    return result as Result<Types.SocialProfilesSocialProfileDto[], ApiError>;
   }
 
   /**

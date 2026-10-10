@@ -17,6 +17,11 @@ public class StripeBillingWebhookService : BillingWebhookService
     private readonly IReadOnlyList<IStripeVerifiedEventConsumer> _verifiedEventConsumers;
     private readonly ISubscriptionQueryService _subscriptionQueryService;
     private readonly WebhookSettings _webhookSettings;
+    private readonly IWebhookSecurityEventPublisher? _securityEvents;
+    private readonly IBillingIntegrationEventPublisher? _billingEvents;
+
+    /// <inheritdoc />
+    protected override string ProviderName => PaymentProviders.Stripe;
 
     public StripeBillingWebhookService(
         IBillingWebhookRepository webhookRepository,
@@ -28,8 +33,10 @@ public class StripeBillingWebhookService : BillingWebhookService
         ISubscriptionBillingService billingService,
         ISubscriptionExternalIdService externalIdService,
         IOptions<BillingConfiguration>? configuration = null,
-        IEnumerable<IStripeVerifiedEventConsumer>? verifiedEventConsumers = null)
-        : base(logger, lifecycleService, queryService, billingService, externalIdService)
+        IEnumerable<IStripeVerifiedEventConsumer>? verifiedEventConsumers = null,
+        IWebhookSecurityEventPublisher? securityEvents = null,
+        IBillingIntegrationEventPublisher? billingEvents = null)
+        : base(logger, lifecycleService, queryService, billingService, externalIdService, billingEvents)
     {
         _webhookRepository = webhookRepository;
         _webhookVerifier = webhookVerifier;
@@ -38,6 +45,8 @@ public class StripeBillingWebhookService : BillingWebhookService
         _subscriptionQueryService = queryService;
         _logger = logger;
         _webhookSettings = configuration?.Value.Webhook ?? new WebhookSettings();
+        _securityEvents = securityEvents;
+        _billingEvents = billingEvents;
     }
 
     /// <summary>
@@ -52,7 +61,23 @@ public class StripeBillingWebhookService : BillingWebhookService
         string signature,
         CancellationToken cancellationToken = default)
     {
-        var verifiedEvent = _webhookVerifier.Verify(payload, signature);
+        VerifiedStripeWebhookEvent verifiedEvent;
+        try
+        {
+            verifiedEvent = _webhookVerifier.Verify(payload, signature);
+        }
+        catch (InvalidWebhookSignatureException exception)
+        {
+            _logger.LogWarning("Stripe webhook signature verification failed: {Message}", exception.Message);
+            await PublishSecurityEventAsync(
+                    WebhookSecurityEventKind.SignatureFailed,
+                    exception.Message,
+                    eventId: null,
+                    cancellationToken)
+                .ConfigureAwait(false);
+            throw;
+        }
+
         _logger.LogInformation(
             "Processing verified Stripe webhook: {EventType} with ID {EventId}",
             verifiedEvent.EventType,
@@ -69,6 +94,12 @@ public class StripeBillingWebhookService : BillingWebhookService
         if (existingEvent?.IsProcessed == true)
         {
             _logger.LogInformation("Duplicate Stripe webhook detected: {EventId}. Returning success.", verifiedEvent.EventId);
+            await PublishSecurityEventAsync(
+                    WebhookSecurityEventKind.ReplayDetected,
+                    "Duplicate Stripe webhook delivery acknowledged by the idempotent inbox.",
+                    verifiedEvent.EventId,
+                    cancellationToken)
+                .ConfigureAwait(false);
             return WebhookProcessingResult.AlreadyProcessed(verifiedEvent.EventId, existingEvent.ProcessedAt);
         }
 
@@ -142,6 +173,7 @@ public class StripeBillingWebhookService : BillingWebhookService
 
             webhookEvent.MarkAsProcessed();
             await _webhookRepository.UpdateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
+            await PublishBillingEventAsync(webhookEvent, processed: true, cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Successfully processed Stripe webhook: {EventId}", verifiedEvent.EventId);
             return WebhookProcessingResult.Success(verifiedEvent.EventId);
@@ -152,9 +184,55 @@ public class StripeBillingWebhookService : BillingWebhookService
 
             webhookEvent.MarkAsFailed(ex.Message);
             await _webhookRepository.UpdateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
+            await PublishBillingEventAsync(webhookEvent, processed: false, cancellationToken).ConfigureAwait(false);
 
             return WebhookProcessingResult.Failed(verifiedEvent.EventId, ex.Message);
         }
+    }
+
+    /// <summary>
+    ///     Publishes the named inbox-transition event for the processed/failed outcome.
+    ///     Best-effort: a publication failure never changes the processing result.
+    /// </summary>
+    private async Task PublishBillingEventAsync(
+        BillingWebhookEvent webhookEvent,
+        bool processed,
+        CancellationToken cancellationToken)
+    {
+        if (_billingEvents is null)
+        {
+            return;
+        }
+
+        if (processed)
+        {
+            await _billingEvents.PublishWebhookProcessedAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await _billingEvents.PublishWebhookFailedAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private async Task PublishSecurityEventAsync(
+        WebhookSecurityEventKind kind,
+        string detail,
+        string? eventId,
+        CancellationToken cancellationToken)
+    {
+        if (_securityEvents is null)
+        {
+            return;
+        }
+
+        await _securityEvents.PublishAsync(
+                kind,
+                PaymentProviders.Stripe,
+                sourceIpAddress: null,
+                detail,
+                eventId,
+                cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private async Task<StripeWebhookSubscriptionBinding?> ValidateSubscriptionBindingAsync(
@@ -268,41 +346,61 @@ public class StripeBillingWebhookService : BillingWebhookService
             {
                 // Extract subscription-related fields
                 if (objectElement.TryGetProperty("id", out var idElement))
+                {
                     result.ExternalSubscriptionId = idElement.GetString();
+                }
 
                 if (objectElement.TryGetProperty("customer", out var customerElement))
+                {
                     result.CustomerId = customerElement.GetString();
+                }
 
                 if (objectElement.TryGetProperty("status", out var statusElement))
+                {
                     result.Status = statusElement.GetString();
+                }
 
                 // Extract metadata for TenantId and PlanId
                 if (objectElement.TryGetProperty("metadata", out var metadataElement))
                 {
                     if (metadataElement.TryGetProperty("tenant_id", out var tenantIdElement) &&
                         Guid.TryParse(tenantIdElement.GetString(), out var tenantId))
+                    {
                         result.TenantId = tenantId;
+                    }
 
                     if (metadataElement.TryGetProperty("plan_id", out var planIdElement) &&
                         Guid.TryParse(planIdElement.GetString(), out var planId))
+                    {
                         result.PlanId = planId;
+                    }
                 }
 
                 // Extract subscription/invoice specific fields
                 if (objectElement.TryGetProperty("subscription", out var subscriptionElement))
+                {
                     result.ExternalSubscriptionId = subscriptionElement.GetString();
+                }
 
                 if (objectElement.TryGetProperty("amount_paid", out var amountPaidElement))
+                {
                     result.Amount = amountPaidElement.GetDecimal() / 100m; // Stripe uses cents
+                }
 
                 if (objectElement.TryGetProperty("amount_due", out var amountDueElement) && !result.Amount.HasValue)
+                {
                     result.Amount = amountDueElement.GetDecimal() / 100m;
+                }
 
                 if (objectElement.TryGetProperty("currency", out var currencyElement))
+                {
                     result.Currency = currencyElement.GetString()?.ToUpperInvariant();
+                }
 
                 if (objectElement.TryGetProperty("invoice", out var invoiceElement))
+                {
                     result.InvoiceId = invoiceElement.GetString();
+                }
 
                 // Extract plan/price info
                 if (objectElement.TryGetProperty("items", out var itemsElement) &&
@@ -313,22 +411,32 @@ public class StripeBillingWebhookService : BillingWebhookService
                     if (firstItem.TryGetProperty("price", out var priceElement))
                     {
                         if (priceElement.TryGetProperty("id", out var priceIdElement))
+                        {
                             result.PriceId = priceIdElement.GetString();
+                        }
 
                         if (priceElement.TryGetProperty("product", out var productElement))
+                        {
                             result.ProductId = productElement.GetString();
+                        }
                     }
                 }
 
                 // Extract dates
                 if (objectElement.TryGetProperty("current_period_start", out var periodStartElement))
+                {
                     result.StartDate = DateTimeOffset.FromUnixTimeSeconds(periodStartElement.GetInt64()).UtcDateTime;
+                }
 
                 if (objectElement.TryGetProperty("current_period_end", out var periodEndElement))
+                {
                     result.EndDate = DateTimeOffset.FromUnixTimeSeconds(periodEndElement.GetInt64()).UtcDateTime;
+                }
 
                 if (objectElement.TryGetProperty("billing_cycle_anchor", out var anchorElement))
+                {
                     result.NextBillingDate = DateTimeOffset.FromUnixTimeSeconds(anchorElement.GetInt64()).UtcDateTime;
+                }
             }
         }
         catch (System.Text.Json.JsonException)

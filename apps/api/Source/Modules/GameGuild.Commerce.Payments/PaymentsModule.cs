@@ -28,6 +28,27 @@ public static class PaymentsModule
         services.AddScoped<IRevenueEventRepository, RevenueEventRepository>();
         services.AddScoped<IWalletRepository, WalletRepository>();
 
+        // Revenue auditing (issue #404): external statement reconciliation, anomaly
+        // detection, compliance reporting and CSV/JSON exports.
+        services.AddScoped<IRevenueReconciliationRepository, RevenueReconciliationRepository>();
+        services.AddScoped<IRevenueAnomalyAlertRepository, RevenueReconciliationRepository>();
+        services.AddScoped<IExternalRevenueStatementSource, ConfigurationExternalRevenueStatementSource>();
+        services.AddScoped<IRevenueReconciliationService, RevenueReconciliationService>();
+        services.AddScoped<IRevenueAnomalyService, RevenueAnomalyService>();
+        services.AddScoped<IRevenueReportService, RevenueReportService>();
+        services.AddSingleton<IValidateOptions<RevenueAuditingOptions>, RevenueAuditingOptionsValidator>();
+        services.AddOptions<RevenueAuditingOptions>()
+            .Bind(configuration.GetSection(RevenueAuditingOptions.SectionName))
+            .ValidateOnStart();
+        services.AddHostedService<RevenueAnomalyDetectionBackgroundService>();
+
+        // Configurable retry schedule (issue #403): max retries + exponential backoff
+        // parameters, previously hardcoded in the Payment entity.
+        services.AddSingleton<IValidateOptions<PaymentRetryOptions>, PaymentRetryOptionsValidator>();
+        services.AddOptions<PaymentRetryOptions>()
+            .Bind(configuration.GetSection(PaymentRetryOptions.SectionName))
+            .ValidateOnStart();
+
         // Register services
         services.AddScoped<IDisputeService, DisputeService>();
         services.AddScoped<IRevenueAuditService, RevenueAuditService>();

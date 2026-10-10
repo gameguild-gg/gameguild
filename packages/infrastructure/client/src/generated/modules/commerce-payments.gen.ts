@@ -46,7 +46,7 @@ export class CommercePaymentsModule {
     endDate?: string;
     page?: number;
     pageSize?: number;
-  }): Promise<Result<Array<Types.CommercePaymentsPaymentResult>, ApiError>> {
+  }): Promise<Result<Types.CommercePaymentsPaymentResult[], ApiError>> {
     const url = '/api/v1/payments';
 
     const result = await this.client.request({
@@ -56,7 +56,7 @@ export class CommercePaymentsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.CommercePaymentsPaymentResult>, ApiError>;
+    return result as Result<Types.CommercePaymentsPaymentResult[], ApiError>;
   }
 
   /**
@@ -268,6 +268,58 @@ export class CommercePaymentsModule {
     }
 
     return result;
+  }
+
+  /**
+   * Payment success and failed-payment recovery metrics for an inclusive window.
+   *
+   * Aggregates the recovery analytics that billing administrators need to steer retry and
+   * dunning strategy (issue #403): first-attempt success rate, retry-recovery rate, recovered
+   * amounts grouped by currency, and dunning outcome counters (pending retry, due for retry,
+   * exhausted). Non-admin actors are scoped to their own tenant.
+   */
+  async getPaymentsRecoveryMetrics(query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    tenantId?: string;
+  }): Promise<Result<Types.CommercePaymentsPaymentRecoveryMetrics, ApiError>> {
+    const url = '/api/v1/payments/recovery-metrics';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsPaymentRecoveryMetricsSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Failed payments that are due for a retry right now (retry-queue candidates).
+   *
+   * Returns the candidate set an automated retry queue would consume (issue #403; the queue
+   * itself is tracked in #415): failed payments with retry budget left whose configured
+   * backoff has elapsed, ordered by the scheduled next-retry time. Non-admin actors are
+   * scoped to their own tenant.
+   */
+  async getPaymentsRetryingCandidates(query?: { tenantId?: string; take?: number }): Promise<Result<Types.CommercePaymentsPaymentResult[], ApiError>> {
+    const url = '/api/v1/payments/retrying-candidates';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Types.CommercePaymentsPaymentResult[], ApiError>;
   }
 
   /**

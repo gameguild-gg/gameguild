@@ -27,7 +27,7 @@ export class ContentPagesResourcesModule {
     q?: string;
     skip?: number;
     take?: number;
-  }): Promise<Result<Array<Types.ContentPagesContentResourceDto>, ApiError>> {
+  }): Promise<Result<Types.ContentPagesContentResourceDto[], ApiError>> {
     const url = '/v1/content-resources';
 
     const result = await this.client.request({
@@ -37,7 +37,7 @@ export class ContentPagesResourcesModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ContentPagesContentResourceDto>, ApiError>;
+    return result as Result<Types.ContentPagesContentResourceDto[], ApiError>;
   }
 
   /**

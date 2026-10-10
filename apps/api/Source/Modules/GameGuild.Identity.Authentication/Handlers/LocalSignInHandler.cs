@@ -31,11 +31,11 @@ public sealed class LocalSignInHandler(
         var httpContext = httpContextAccessor.HttpContext;
         var ipAddress = GetClientIpAddress(httpContext);
 
-        var signInRequest = new LocalSignInRequest { Email = command.Email, Password = command.Password, TenantId = command.TenantId, DeviceFingerprint = command.DeviceFingerprint };
+        var signInRequest = new LocalSignInRequest { Email = command.Email, Password = command.Password, TenantId = command.TenantId, DeviceFingerprint = command.DeviceFingerprint, RememberMe = command.RememberMe };
 
         var domainResult = await authService.LocalSignInAsync(signInRequest, cancellationToken).ConfigureAwait(false);
 
-        logger.LogInformation("User successfully signed in via local authentication from IP {IpAddress}", ipAddress);
+        logger.LogInformation("User successfully signed in via local authentication from IP {IpAddress}", LogRedaction.Sanitize(ipAddress));
 
         // Map from Domain response to Application DTO
         return await domainResult.ToDto(userRepository, cancellationToken).ConfigureAwait(false);
@@ -43,7 +43,10 @@ public sealed class LocalSignInHandler(
 
     private static string? GetClientIpAddress(HttpContext? httpContext)
     {
-        if (httpContext == null) return null;
+        if (httpContext == null)
+        {
+            return null;
+        }
 
         var forwarded = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
 
