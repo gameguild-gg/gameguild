@@ -111,6 +111,7 @@ public static class DataDependencyInjection
             ?? throw new InvalidOperationException("The session store must support bounded retention cleanup."));
         services.AddScoped<IUserMfaConfigurationRepository, UserMfaConfigurationRepository>();
         services.AddScoped<IAuthenticationAttemptRepository, AuthenticationAttemptRepository>();
+        services.AddScoped<IAdaptiveBehaviorBaselineRepository, AdaptiveBehaviorBaselineRepository>();
         services.AddScoped<IAuthenticationFlowStateRepository, AuthenticationFlowStateRepository>();
         services.AddScoped<IAuthenticationOrchestrationService, AuthenticationOrchestrationService>();
         services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
@@ -123,6 +124,7 @@ public static class DataDependencyInjection
 
         // Core authentication services - focused sub-services
         services.AddScoped<IAuthAttemptService, AuthAttemptService>();
+        services.AddScoped<ISuspiciousLoginAlertPublisher, SuspiciousLoginAlertPublisher>();
         services.AddScoped<ILocalAuthService, LocalAuthService>();
         services.AddScoped<IOAuthAuthService, OAuthAuthService>();
         services.AddScoped<IPasswordService, PasswordService>();
@@ -226,6 +228,10 @@ public static class DataDependencyInjection
         services.AddScoped<IBehavioralAnalysisService, BehavioralAnalysisService>();
         services.AddScoped<ILoginAttemptAnalysisService, LoginAttemptAnalysisService>();
 
+        // Adaptive (online statistical learning) anomaly detection: EWMA baselines per subject
+        // scored alongside the fixed-weight heuristics above. Fails open and abstains on cold start.
+        RegisterAdaptiveAnomalyDetection(services, configuration);
+
         // Credential-stuffing threat intelligence (safe default: local operator-supplied feed)
         RegisterThreatIntelligence(services, configuration);
 
@@ -271,6 +277,38 @@ public static class DataDependencyInjection
                 provider.GetRequiredService<TimeProvider>(),
                 provider.GetRequiredService<ILogger<LocalFileThreatIntelligenceProvider>>(),
                 provider.GetService<IServiceScopeFactory>()));
+    }
+
+    /// <summary>
+    ///     Registers the adaptive anomaly detection options and service. The learned model is
+    ///     enabled by default; disabling it via configuration keeps only the heuristic scorer.
+    /// </summary>
+    private static void RegisterAdaptiveAnomalyDetection(IServiceCollection services, IConfiguration configuration)
+    {
+        var adaptiveOptions = OptionBuilderUtilities.CreateAndBind(
+            configuration,
+            AdaptiveAnomalyDetectionOptions.SectionName,
+            static () => new AdaptiveAnomalyDetectionOptions());
+        if (adaptiveOptions.EwmaAlpha is <= 0 or > 1)
+        {
+            throw new InvalidOperationException(
+                $"Invalid {AdaptiveAnomalyDetectionOptions.SectionName} configuration: EwmaAlpha must be in (0, 1].");
+        }
+
+        if (adaptiveOptions.ZScoreThreshold <= 0)
+        {
+            throw new InvalidOperationException(
+                $"Invalid {AdaptiveAnomalyDetectionOptions.SectionName} configuration: ZScoreThreshold must be positive.");
+        }
+
+        if (adaptiveOptions.MinimumObservations < 2)
+        {
+            throw new InvalidOperationException(
+                $"Invalid {AdaptiveAnomalyDetectionOptions.SectionName} configuration: MinimumObservations must be at least 2.");
+        }
+
+        services.AddSingleton(adaptiveOptions);
+        services.AddScoped<IAdaptiveAnomalyDetectionService, AdaptiveAnomalyDetectionService>();
     }
 
     private static void ValidateThreatIntelligenceOptions(ThreatIntelligenceOptions options)

@@ -77,7 +77,8 @@ public sealed class AuthController(ISender sender) : BaseApiController
             Email = body.Email,
             Password = body.Password,
             TenantId = body.TenantId,
-            DeviceFingerprint = body.DeviceFingerprint
+            DeviceFingerprint = body.DeviceFingerprint,
+            RememberMe = body.RememberMe
         };
 
         return await ExecuteAuthCommandAsync(command, ct).ConfigureAwait(false);
@@ -142,7 +143,8 @@ public sealed class AuthController(ISender sender) : BaseApiController
             CredentialType = body.CredentialType,
             Password = body.Password,
             TenantId = body.TenantId,
-            DeviceFingerprint = body.DeviceFingerprint
+            DeviceFingerprint = body.DeviceFingerprint,
+            RememberMe = body.RememberMe
         }, ct);
     }
 
@@ -165,7 +167,8 @@ public sealed class AuthController(ISender sender) : BaseApiController
         var command = new GoogleIdTokenSignInCommand
         {
             IdToken = body.IdToken,
-            TenantId = body.TenantId
+            TenantId = body.TenantId,
+            RememberMe = body.RememberMe
         };
 
         return await ExecuteAuthCommandAsync(command, ct).ConfigureAwait(false);
@@ -303,7 +306,8 @@ public sealed class AuthController(ISender sender) : BaseApiController
             Code = body.Code,
             State = body.State,
             RedirectUri = body.RedirectUri,
-            TenantId = body.TenantId
+            TenantId = body.TenantId,
+            RememberMe = body.RememberMe
         };
 
         try
@@ -684,7 +688,8 @@ public sealed class AuthController(ISender sender) : BaseApiController
             Nonce = body.Nonce,
             ChainId = body.ChainId,
             TenantId = body.TenantId,
-            DeviceFingerprint = body.DeviceFingerprint
+            DeviceFingerprint = body.DeviceFingerprint,
+            RememberMe = body.RememberMe
         };
 
         var result = await sender.Send(command, ct).ConfigureAwait(false);

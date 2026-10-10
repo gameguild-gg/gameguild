@@ -160,6 +160,36 @@ describe('CredentialsProvider', () => {
     expect(body.tenantId).toBe('tenant-1');
   });
 
+  it('should include rememberMe=true in request body when requested', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ accessToken: 'token', userId: 'user-1' }),
+    });
+    globalThis.fetch = mockFetch;
+
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
+    const result = await provider.authorize({ email: 'a@b.com', password: 'pass', rememberMe: true }, undefined as any);
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(body.rememberMe).toBe(true);
+    expect(result?.rememberMe).toBe(true);
+  });
+
+  it('should omit rememberMe from the request body when not requested', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ accessToken: 'token', userId: 'user-1' }),
+    });
+    globalThis.fetch = mockFetch;
+
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
+    const result = await provider.authorize({ email: 'a@b.com', password: 'pass', rememberMe: false }, undefined as any);
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(body.rememberMe).toBeUndefined();
+    expect(result?.rememberMe).toBe(false);
+  });
+
   it('should throw AccountLockedError on 423 response', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
@@ -252,12 +282,14 @@ describe('CredentialsProvider', () => {
       email: 'untrusted@example.com',
       password: 'must-not-be-forwarded',
       tenantId: 'untrusted-tenant',
+      rememberMe: true,
     });
     expect(mockFetch.mock.calls[0][0]).toBe('http://localhost:8080/v1/auth/mfa/sign-in/complete');
     expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({ mfaToken: 'x'.repeat(43), method: 'Totp', code: '123456' });
     expect(result?.user.email).toBe('server@example.com');
     expect(result?.tokens.accessToken).toBe('verified-access');
     expect(result).toHaveProperty('mfaEnrollmentBackupCodes', ['one-time-code']);
+    expect(result?.rememberMe).toBe(true);
     expect(result?.tokens).not.toHaveProperty('mfaEnrollmentBackupCodes');
   });
 

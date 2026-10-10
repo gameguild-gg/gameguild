@@ -41,7 +41,8 @@ public class OAuthAuthService(
             () => oauthService.GetUserProfileAsync("github", request.AccessToken)).ConfigureAwait(false);
 
         var email = githubUser.Email ?? throw new UnauthorizedAccessException("Email not available from GitHub profile");
-        var user = await ResolveExternalUserAsync("github", email, githubUser.ProviderId, githubUser.Name, githubUser.EmailVerified, cancellationToken).ConfigureAwait(false);
+        var grantedScopes = oauthService.ResolveAuthorizationScopes("github");
+        var user = await ResolveExternalUserAsync("github", email, githubUser.ProviderId, githubUser.Name, githubUser.EmailVerified, grantedScopes, cancellationToken).ConfigureAwait(false);
         await DefaultTenantMembershipProvisioner.EnsureAsync(sender, user.Id, cancellationToken).ConfigureAwait(false);
         var tenantAccessContext = await ResolveTenantAccessContextAsync(user.Id, request.TenantId, cancellationToken).ConfigureAwait(false);
 
@@ -53,7 +54,7 @@ public class OAuthAuthService(
 
         logger.LogInformation("GitHub OAuth sign-in successful for {Email}", LogRedaction.MaskEmail(email));
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "GitHub sign-in successful", "GitHub", stopwatch, cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "GitHub sign-in successful", "GitHub", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> GoogleSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
@@ -67,7 +68,8 @@ public class OAuthAuthService(
             () => oauthService.GetUserProfileAsync("google", request.AccessToken)).ConfigureAwait(false);
 
         var email = googleUser.Email ?? throw new UnauthorizedAccessException("Email not available from Google profile");
-        var user = await ResolveExternalUserAsync("google", email, googleUser.ProviderId, googleUser.Name, googleUser.EmailVerified, cancellationToken).ConfigureAwait(false);
+        var grantedScopes = oauthService.ResolveAuthorizationScopes("google");
+        var user = await ResolveExternalUserAsync("google", email, googleUser.ProviderId, googleUser.Name, googleUser.EmailVerified, grantedScopes, cancellationToken).ConfigureAwait(false);
         await DefaultTenantMembershipProvisioner.EnsureAsync(sender, user.Id, cancellationToken).ConfigureAwait(false);
         var tenantAccessContext = await ResolveTenantAccessContextAsync(user.Id, request.TenantId, cancellationToken).ConfigureAwait(false);
 
@@ -79,7 +81,7 @@ public class OAuthAuthService(
 
         logger.LogInformation("Google OAuth sign-in successful for {Email}", LogRedaction.MaskEmail(email));
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google sign-in successful", "Google", stopwatch, cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google sign-in successful", "Google", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> MicrosoftSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
@@ -92,8 +94,9 @@ public class OAuthAuthService(
             stopwatch,
             () => oauthService.GetUserProfileAsync("microsoft", request.AccessToken)).ConfigureAwait(false);
         var email = microsoftUser.Email ?? throw new UnauthorizedAccessException("Email not available from Microsoft profile");
+        var grantedScopes = oauthService.ResolveAuthorizationScopes("microsoft");
         var user = await ResolveExternalUserAsync(
-            "microsoft", email, microsoftUser.ProviderId, microsoftUser.Name, microsoftUser.EmailVerified, cancellationToken)
+            "microsoft", email, microsoftUser.ProviderId, microsoftUser.Name, microsoftUser.EmailVerified, grantedScopes, cancellationToken)
             .ConfigureAwait(false);
         await DefaultTenantMembershipProvisioner.EnsureAsync(sender, user.Id, cancellationToken).ConfigureAwait(false);
         var tenantAccessContext = await ResolveTenantAccessContextAsync(user.Id, request.TenantId, cancellationToken).ConfigureAwait(false);
@@ -113,7 +116,7 @@ public class OAuthAuthService(
         logger.LogInformation("Microsoft OAuth sign-in successful for {Email}", LogRedaction.MaskEmail(email));
 
         return await CompleteSignInAsync(
-            user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Microsoft sign-in successful", "Microsoft", stopwatch, cancellationToken)
+            user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Microsoft sign-in successful", "Microsoft", stopwatch, request.RememberMe == true, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -136,8 +139,9 @@ public class OAuthAuthService(
 
         var email = googleUser.Email;
         var providerKey = googleUser.Sub;
+        var grantedScopes = oauthService.ResolveAuthorizationScopes("google");
 
-        var user = await ResolveExternalUserAsync("google", email, providerKey, googleUser.Name, googleUser.EmailVerified, cancellationToken).ConfigureAwait(false);
+        var user = await ResolveExternalUserAsync("google", email, providerKey, googleUser.Name, googleUser.EmailVerified, grantedScopes, cancellationToken).ConfigureAwait(false);
         var userId = user.Id;
 
         await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId, cancellationToken).ConfigureAwait(false);
@@ -151,7 +155,7 @@ public class OAuthAuthService(
 
         logger.LogInformation("Google ID token sign-in successful for {Email}", LogRedaction.MaskEmail(email));
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google ID token sign-in successful", "GoogleIdToken", stopwatch, cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google ID token sign-in successful", "GoogleIdToken", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> DiscordSignInAsync(DiscordSignInRequest request, CancellationToken cancellationToken = default)
@@ -169,7 +173,8 @@ public class OAuthAuthService(
 
         var email = discordUser.Email ?? throw new UnauthorizedAccessException("Discord account has no email");
 
-        var user = await ResolveExternalUserAsync("discord", email, discordUser.ProviderId, discordUser.Name, discordUser.EmailVerified, cancellationToken).ConfigureAwait(false);
+        var grantedScopes = oauthService.ResolveAuthorizationScopes("discord");
+        var user = await ResolveExternalUserAsync("discord", email, discordUser.ProviderId, discordUser.Name, discordUser.EmailVerified, grantedScopes, cancellationToken).ConfigureAwait(false);
         var userId = user.Id;
 
         await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId, cancellationToken).ConfigureAwait(false);
@@ -183,7 +188,7 @@ public class OAuthAuthService(
 
         logger.LogInformation("Discord OAuth sign-in successful for {Email}", LogRedaction.MaskEmail(email));
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Discord sign-in successful", "Discord", stopwatch, cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Discord sign-in successful", "Discord", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<SignInResponse> CompleteSignInAsync(
@@ -195,15 +200,19 @@ public class OAuthAuthService(
         string successMessage,
         string authenticationMethod,
         Stopwatch stopwatch,
+        bool rememberMe,
         CancellationToken cancellationToken)
     {
-        var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
-                                     ?? int.Parse(
-                                         configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7",
-                                         CultureInfo.InvariantCulture);
+        var refreshTokenExpiryDays = RefreshTokenLifetimeResolver.ResolveExpirationDays(
+            jwtOptions, configuration, rememberMe);
         var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
         var sessionId = Guid.NewGuid();
-        var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(user.Id, deviceInfo, cancellationToken).ConfigureAwait(false);
+        var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(
+            user.Id,
+            deviceInfo,
+            new DateTimeOffset(DateTime.SpecifyKind(SystemClock.UtcNow, DateTimeKind.Utc)),
+            refreshTokenExpiresAt,
+            cancellationToken).ConfigureAwait(false);
         var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
             user.Id,
             user.Email,
@@ -296,8 +305,10 @@ public class OAuthAuthService(
     ///     the existing user; else a brand-new OAuth user is created. Concurrent sign-ins for
     ///     the same identity race the unique (Provider, ProviderKey) index — on collision the
     ///     losing insert is caught and the winning rows are refetched (idempotent resume).
+    ///     The granted scope list (issue #250) is recorded with a consent stamp when the link
+    ///     is created, and re-recorded on later sign-ins only when the scope set changed.
     /// </summary>
-    private async Task<User> ResolveExternalUserAsync(string provider, string email, string providerKey, string? name, bool emailVerified, CancellationToken cancellationToken)
+    private async Task<User> ResolveExternalUserAsync(string provider, string email, string providerKey, string? name, bool emailVerified, string[] grantedScopes, CancellationToken cancellationToken)
     {
         var existingLink = await externalLoginRepository
             .GetByProviderKeyAsync(provider, providerKey, cancellationToken)
@@ -305,6 +316,14 @@ public class OAuthAuthService(
 
         if (existingLink != null)
         {
+            var recordedScopes = ExternalLoginGrants.Deserialize(existingLink.GrantedScopes);
+            if (existingLink.ConsentedAt is null || !ExternalLoginGrants.SameScopeSet(recordedScopes, grantedScopes))
+            {
+                // Scope set changed since the recorded consent — the user just re-authorized
+                // a different set at the provider, so refresh the consent record.
+                await externalLoginRepository.RecordConsentAsync(provider, existingLink.UserId, grantedScopes, cancellationToken).ConfigureAwait(false);
+            }
+
             return await userRepository.GetByIdAsync(existingLink.UserId, cancellationToken).ConfigureAwait(false)
                 ?? throw new UnauthorizedAccessException("Linked user not found");
         }
@@ -335,7 +354,15 @@ public class OAuthAuthService(
             }
 
             await externalLoginRepository.UpsertAsync(
-                new ExternalLogin { UserId = user.Id, Provider = provider, ProviderKey = providerKey },
+                new ExternalLogin
+                {
+                    UserId = user.Id,
+                    Provider = provider,
+                    ProviderKey = providerKey,
+                    GrantedScopes = ExternalLoginGrants.Serialize(grantedScopes),
+                    ConsentedAt = SystemClock.UtcNow,
+                    ConsentVersion = OAuthConsentVersions.Current
+                },
                 cancellationToken).ConfigureAwait(false);
 
             return user;
@@ -359,7 +386,15 @@ public class OAuthAuthService(
                 ?? throw new UnauthorizedAccessException("User not found after race");
 
             await externalLoginRepository.UpsertAsync(
-                new ExternalLogin { UserId = user.Id, Provider = provider, ProviderKey = providerKey },
+                new ExternalLogin
+                {
+                    UserId = user.Id,
+                    Provider = provider,
+                    ProviderKey = providerKey,
+                    GrantedScopes = ExternalLoginGrants.Serialize(grantedScopes),
+                    ConsentedAt = SystemClock.UtcNow,
+                    ConsentVersion = OAuthConsentVersions.Current
+                },
                 cancellationToken).ConfigureAwait(false);
 
             return user;

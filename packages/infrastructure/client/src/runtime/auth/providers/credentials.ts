@@ -73,6 +73,9 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
         const email = credentials.email as string;
         const password = credentials.password as string;
         const tenantId = credentials.tenantId as string | undefined;
+        // "Remember me" opt-in from the sign-in form: drives the backend's persistent
+        // refresh-token lifetime and this client's cookie storage policy.
+        const rememberMe = credentials.rememberMe === true;
 
         const completingMfa = Object.hasOwn(credentials, 'mfaToken');
         if (!completingMfa && (!email || !password)) {
@@ -97,6 +100,7 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
         } else {
           body = { email, password };
           if (tenantId) body.tenantId = tenantId;
+          if (rememberMe) body.rememberMe = true;
         }
 
         let response: Response;
@@ -169,6 +173,7 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
           sessionId: data.sessionId as string | undefined,
           tenantId: data.tenantId as string | undefined,
           availableTenants: data.availableTenants as Array<{ id: string; name: string }> | undefined,
+          rememberMe,
           ...(completingMfa && Array.isArray(data.mfaEnrollmentBackupCodes)
             ? { mfaEnrollmentBackupCodes: data.mfaEnrollmentBackupCodes.filter((c): c is string => typeof c === 'string') }
             : {}),
