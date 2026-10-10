@@ -304,13 +304,15 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
                 // OperationalStartupConfiguration requires deployment-grade values for
                 // Production even though nothing under test connects to them.
                 configuration["Jwt:SecretKey"] = "security-headers-http-tests-jwt-secret-with-at-least-32-characters";
-                // HSTS fires on Request.IsHttps. The in-memory test host does not
-                // terminate TLS itself, so the production case signals HTTPS the way
-                // production deployments do: through the app's own trusted-proxy
-                // forwarded-headers wiring (X-Forwarded-Proto from the loopback test
-                // proxy), which runs before UseHsts in the pipeline.
+                // The forwarded-headers (X-Forwarded-Proto) wiring lives in
+                // SetupRateLimiting, which is only registered when presentation-layer
+                // rate limiting is enabled — the HSTS case therefore runs the
+                // production host with rate limiting on and the loopback test proxy
+                // trusted, exactly as a production deployment behind a TLS terminator.
+                configuration["PresentationLayer:EnableRateLimiting"] = "true";
                 configuration["RateLimiting:TrustedProxyAddresses:0"] = "127.0.0.1";
                 configuration["RateLimiting:TrustedProxyAddresses:1"] = "::1";
+                configuration["RateLimiting:TrustedProxyAddresses:2"] = "::ffff:127.0.0.1";
                 configuration["RateLimiting:TrustedProxyForwardLimit"] = "1";
                 configuration["Encryption:EncryptionKey"] = Convert.ToBase64String(new byte[32]);
                 configuration["Redis:Enabled"] = "true";
