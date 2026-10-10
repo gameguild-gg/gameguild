@@ -9583,7 +9583,10 @@ export interface IdentityProvisioningScimScimGroupResource {
 /** RFC 7644 §3.4.2.3 ListResponse envelope. `startIndex` is 1-based. */
 export interface IdentityProvisioningScimScimListResponseScimGroupResource {
   itemsPerPage?: number;
-  resources?: IdentityProvisioningScimScimGroupResource[] | null;
+  /** RFC 7644 §3.4.2.3 spells this member `Resources` with a capital R while
+every other member is camelCase, so the name is pinned explicitly instead of
+following the host's camelCase policy (which would emit "resources"). */
+  Resources?: IdentityProvisioningScimScimGroupResource[] | null;
   schemas?: string[] | null;
   startIndex?: number;
   totalResults?: number;
@@ -9592,7 +9595,10 @@ export interface IdentityProvisioningScimScimListResponseScimGroupResource {
 /** RFC 7644 §3.4.2.3 ListResponse envelope. `startIndex` is 1-based. */
 export interface IdentityProvisioningScimScimListResponseScimUserResource {
   itemsPerPage?: number;
-  resources?: IdentityProvisioningScimScimUserResource[] | null;
+  /** RFC 7644 §3.4.2.3 spells this member `Resources` with a capital R while
+every other member is camelCase, so the name is pinned explicitly instead of
+following the host's camelCase policy (which would emit "resources"). */
+  Resources?: IdentityProvisioningScimScimUserResource[] | null;
   schemas?: string[] | null;
   startIndex?: number;
   totalResults?: number;
@@ -31194,7 +31200,7 @@ IdentityProvisioningScimScimGroupResourceSchema = z.object({
 /** Zod schema for IdentityProvisioningScimScimListResponseScimGroupResource. RFC 7644 §3.4.2.3 ListResponse envelope. `startIndex` is 1-based. */
 IdentityProvisioningScimScimListResponseScimGroupResourceSchema = z.object({
   itemsPerPage: z.number().int().optional(),
-  resources: z
+  Resources: z
     .array(z.lazy(() => IdentityProvisioningScimScimGroupResourceSchema))
     .nullable()
     .optional(),
@@ -31206,7 +31212,7 @@ IdentityProvisioningScimScimListResponseScimGroupResourceSchema = z.object({
 /** Zod schema for IdentityProvisioningScimScimListResponseScimUserResource. RFC 7644 §3.4.2.3 ListResponse envelope. `startIndex` is 1-based. */
 IdentityProvisioningScimScimListResponseScimUserResourceSchema = z.object({
   itemsPerPage: z.number().int().optional(),
-  resources: z
+  Resources: z
     .array(z.lazy(() => IdentityProvisioningScimScimUserResourceSchema))
     .nullable()
     .optional(),
