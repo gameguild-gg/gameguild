@@ -6296,97 +6296,85 @@ export const postBillingChargesRetryEndpoint = {
 } as const;
 
 /**
- * List the configured external billing providers with health and enabled state
+ * List billing webhook inbox events
  *
- * Returns one entry per supported external billing provider (stripe, paypal, applepay,
- * apple_app_store, googlepay, google_play_store) with read-only configuration health
- * (credentials configured, configuration valid, webhook endpoint verification material
- * present) and the runtime enabled state (defaults to enabled; an explicit administrator
- * disable persists a management override).
+ * Pages through the durable billing webhook inbox: provider events accepted from Stripe, PayPal, Apple App Store and Google Pay, with their processing status, attempt counters and error details. Supports filtering by status (processed/failed/pending), provider, provider event type and acceptance date range. Payload bodies are never returned.
  */
-export type GetBillingExternalProvidersForGetBillingExternalProvidersInput = void;
-export type GetBillingExternalProvidersForGetBillingExternalProvidersOutput = Types.CommerceBillingExternalBillingProviderStatusDto[];
-export const getBillingExternalProvidersForGetBillingExternalProvidersEndpoint = {
-  operationId: 'getBillingExternalProvidersForGetBillingExternalProviders' as const,
+export interface GetBillingEventsForGetBillingEventsInput {
+  query?: {
+    status?: string;
+    provider?: string;
+    eventType?: string;
+    fromUtc?: string;
+    toUtc?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetBillingEventsForGetBillingEventsOutput = Types.PagedResultBillingWebhookEventListItemDto;
+export const getBillingEventsForGetBillingEventsEndpoint = {
+  operationId: 'getBillingEventsForGetBillingEvents' as const,
   method: 'GET' as const,
-  path: '/api/v1/billing/external-providers' as const,
-  tags: ['CommerceBillingExternalProviders'] as const,
+  path: '/api/v1/billing/events' as const,
+  tags: ['CommerceBillingEvents'] as const,
   requiresAuth: true,
 } as const;
 
 /**
- * Get the health and enabled state of a single external billing provider
+ * Get a billing webhook inbox event by id
  *
- * Fails closed with 404 for unknown provider keys.
+ * Retrieves one durable webhook inbox event by its local identifier, including processing status, attempt count, error message and tenant/subscription references.
  */
-export interface GetBillingExternalProvidersForGetBillingExternalProvidersByProviderKeyInput {
-  providerKey: string;
+export interface GetBillingEventsForGetBillingEventsByEventIdInput {
+  eventId: string;
 }
-export type GetBillingExternalProvidersForGetBillingExternalProvidersByProviderKeyOutput = Types.CommerceBillingExternalBillingProviderStatusDto;
-export const getBillingExternalProvidersForGetBillingExternalProvidersByProviderKeyEndpoint = {
-  operationId: 'getBillingExternalProvidersForGetBillingExternalProvidersByProviderKey' as const,
+export type GetBillingEventsForGetBillingEventsByEventIdOutput = Types.CommerceBillingBillingWebhookEventDto;
+export const getBillingEventsForGetBillingEventsByEventIdEndpoint = {
+  operationId: 'getBillingEventsForGetBillingEventsByEventId' as const,
   method: 'GET' as const,
-  path: '/api/v1/billing/external-providers/{providerKey}' as const,
-  tags: ['CommerceBillingExternalProviders'] as const,
+  path: '/api/v1/billing/events/{eventId}' as const,
+  tags: ['CommerceBillingEvents'] as const,
   requiresAuth: true,
 } as const;
 
 /**
- * Disable an external billing provider at runtime
+ * List durable billing integration events from the platform outbox
  *
- * Persists an explicit disable decision (idempotent) and writes an audit event.
- * Fails closed with 404 for unknown provider keys.
+ * Pages through the named billing integration events (webhook processed/failed, invoice paid, subscription renewed/cancelled) recorded in the platform durable outbox, with their delivery status. Dead-lettered events can be replayed through the platform admin event transport endpoints.
  */
-export interface PostBillingExternalProvidersDisableInput {
-  providerKey: string;
+export interface GetBillingEventsOutboxForGetBillingEventsOutboxInput {
+  query?: {
+    eventName?: string;
+    status?: string;
+    fromUtc?: string;
+    toUtc?: string;
+    skip?: number;
+    take?: number;
+  };
 }
-export type PostBillingExternalProvidersDisableOutput = Types.CommerceBillingExternalBillingProviderStatusDto;
-export const postBillingExternalProvidersDisableEndpoint = {
-  operationId: 'postBillingExternalProvidersDisable' as const,
-  method: 'POST' as const,
-  path: '/api/v1/billing/external-providers/{providerKey}:disable' as const,
-  tags: ['CommerceBillingExternalProviders'] as const,
+export type GetBillingEventsOutboxForGetBillingEventsOutboxOutput = Types.PagedResultBillingOutboxEventDto;
+export const getBillingEventsOutboxForGetBillingEventsOutboxEndpoint = {
+  operationId: 'getBillingEventsOutboxForGetBillingEventsOutbox' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/events/outbox' as const,
+  tags: ['CommerceBillingEvents'] as const,
   requiresAuth: true,
 } as const;
 
 /**
- * Enable an external billing provider at runtime
+ * Get one durable billing integration event by id
  *
- * Persists an explicit enable decision (idempotent) and writes an audit event.
- * Fails closed with 404 for unknown provider keys. Availability still requires
- * valid provider configuration.
+ * Retrieves a single named billing integration event from the platform outbox read model by its durable event identifier.
  */
-export interface PostBillingExternalProvidersEnableInput {
-  providerKey: string;
+export interface GetBillingEventsOutboxForGetBillingEventsOutboxByEventIdInput {
+  eventId: string;
 }
-export type PostBillingExternalProvidersEnableOutput = Types.CommerceBillingExternalBillingProviderStatusDto;
-export const postBillingExternalProvidersEnableEndpoint = {
-  operationId: 'postBillingExternalProvidersEnable' as const,
-  method: 'POST' as const,
-  path: '/api/v1/billing/external-providers/{providerKey}:enable' as const,
-  tags: ['CommerceBillingExternalProviders'] as const,
-  requiresAuth: true,
-} as const;
-
-/**
- * Produce a report-only migration dry-run between two external billing providers
- *
- * Scans subscriptions and classifies each by its external-provider binding: bound to the
- * source provider while lacking a target-provider external identifier (the migration work
- * list), already on the target provider, unattributable external identifiers (manual
- * review), and subscriptions without external identifiers. The report never mutates
- * state; executing provider switching is out of scope and gateway routing/failover is
- * tracked in issue #413. Fails closed with 400 for unknown or identical provider keys.
- */
-export interface PostBillingExternalProvidersMigrationDryRunInput {
-  body?: Types.CommerceBillingBillingExternalProvidersControllerMigrationDryRunInput;
-}
-export type PostBillingExternalProvidersMigrationDryRunOutput = Types.CommerceBillingBillingProviderMigrationReport;
-export const postBillingExternalProvidersMigrationDryRunEndpoint = {
-  operationId: 'postBillingExternalProvidersMigrationDryRun' as const,
-  method: 'POST' as const,
-  path: '/api/v1/billing/external-providers/migration:dry-run' as const,
-  tags: ['CommerceBillingExternalProviders'] as const,
+export type GetBillingEventsOutboxForGetBillingEventsOutboxByEventIdOutput = Types.CommerceBillingBillingOutboxEventDto;
+export const getBillingEventsOutboxForGetBillingEventsOutboxByEventIdEndpoint = {
+  operationId: 'getBillingEventsOutboxForGetBillingEventsOutboxByEventId' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/events/outbox/{eventId}' as const,
+  tags: ['CommerceBillingEvents'] as const,
   requiresAuth: true,
 } as const;
 
@@ -13180,6 +13168,81 @@ export const postAuthMfaVerifyEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/mfa/verify' as const,
   tags: ['AuthMultiFactor'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Discover federation providers for an email domain
+ *
+ * Lists the enabled enterprise OIDC federation providers whose configured EmailDomains include the requested address's domain, so the login page can route users before any session exists.
+ */
+export interface GetAuthOidcDiscoverProviderInput {
+  query?: {
+    email?: string;
+  };
+}
+export type GetAuthOidcDiscoverProviderOutput = Types.IdentityAuthenticationOidcDiscoverProviderOutput;
+export const getAuthOidcDiscoverProviderEndpoint = {
+  operationId: 'getAuthOidcDiscoverProvider' as const,
+  method: 'GET' as const,
+  path: '/v1/auth/oidc:discover-provider' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Resolve the provider's front-channel logout URL
+ *
+ * Returns the provider's discovered end_session_endpoint with the post-logout redirect applied, for front-channel logout forwarding. Local refresh-token revocation is unchanged and remains the caller's responsibility.
+ */
+export interface GetAuthOidcEndSessionUrlInput {
+  slug: string;
+  query?: {
+    postLogoutRedirectUri?: string;
+  };
+}
+export type GetAuthOidcEndSessionUrlOutput = Types.IdentityAuthenticationOidcEndSessionUrlOutput;
+export const getAuthOidcEndSessionUrlEndpoint = {
+  operationId: 'getAuthOidcEndSessionUrl' as const,
+  method: 'GET' as const,
+  path: '/v1/auth/oidc/{slug}:end-session-url' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Initiate OIDC federation provider sign-in
+ *
+ * Initiates the authorization-code sign-in flow with a configured enterprise OIDC federation provider (Authentication:ExternalProviders:Oidc:<slug>), returning the discovered authorization URL with the CSRF state parameter.
+ */
+export interface PostAuthOidcSignInAuthorizeInput {
+  slug: string;
+  body?: Types.IdentityAuthenticationOidcAuthorizeRequestDto;
+}
+export type PostAuthOidcSignInAuthorizeOutput = Types.IdentityAuthenticationOidcSignInOutput;
+export const postAuthOidcSignInAuthorizeEndpoint = {
+  operationId: 'postAuthOidcSignInAuthorize' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/oidc/{slug}:sign-in-authorize' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Handle OIDC federation provider callback
+ *
+ * Exchanges the OIDC authorization code at the provider's discovered token endpoint, validates the returned ID token (issuer, audience, lifetime, RS256 signature via JWKS), and applies the same account matching and auto-link policy as the social providers. Fail closed when the platform MFA policy is not attested by the provider (amr).
+ */
+export interface PostAuthOidcSignInCallbackInput {
+  slug: string;
+  body?: Types.IdentityAuthenticationOidcCallbackRequestDto;
+}
+export type PostAuthOidcSignInCallbackOutput = Types.IdentityAuthenticationSignInOutput;
+export const postAuthOidcSignInCallbackEndpoint = {
+  operationId: 'postAuthOidcSignInCallback' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/oidc/{slug}:sign-in-callback' as const,
+  tags: ['Auth'] as const,
   requiresAuth: false,
 } as const;
 
@@ -26538,11 +26601,10 @@ export const endpoints = {
   postBillingChargesCancel: postBillingChargesCancelEndpoint,
   postBillingChargesRefund: postBillingChargesRefundEndpoint,
   postBillingChargesRetry: postBillingChargesRetryEndpoint,
-  getBillingExternalProvidersForGetBillingExternalProviders: getBillingExternalProvidersForGetBillingExternalProvidersEndpoint,
-  getBillingExternalProvidersForGetBillingExternalProvidersByProviderKey: getBillingExternalProvidersForGetBillingExternalProvidersByProviderKeyEndpoint,
-  postBillingExternalProvidersDisable: postBillingExternalProvidersDisableEndpoint,
-  postBillingExternalProvidersEnable: postBillingExternalProvidersEnableEndpoint,
-  postBillingExternalProvidersMigrationDryRun: postBillingExternalProvidersMigrationDryRunEndpoint,
+  getBillingEventsForGetBillingEvents: getBillingEventsForGetBillingEventsEndpoint,
+  getBillingEventsForGetBillingEventsByEventId: getBillingEventsForGetBillingEventsByEventIdEndpoint,
+  getBillingEventsOutboxForGetBillingEventsOutbox: getBillingEventsOutboxForGetBillingEventsOutboxEndpoint,
+  getBillingEventsOutboxForGetBillingEventsOutboxByEventId: getBillingEventsOutboxForGetBillingEventsOutboxByEventIdEndpoint,
   postBillingInvoicesRetry: postBillingInvoicesRetryEndpoint,
   getBillingRevenueAuditing: getBillingRevenueAuditingEndpoint,
   postBillingRevenueAuditing: postBillingRevenueAuditingEndpoint,
@@ -26953,6 +27015,10 @@ export const endpoints = {
   postAuthMfaTotpComplete: postAuthMfaTotpCompleteEndpoint,
   postAuthMfaTotpSetup: postAuthMfaTotpSetupEndpoint,
   postAuthMfaVerify: postAuthMfaVerifyEndpoint,
+  getAuthOidcDiscoverProvider: getAuthOidcDiscoverProviderEndpoint,
+  getAuthOidcEndSessionUrl: getAuthOidcEndSessionUrlEndpoint,
+  postAuthOidcSignInAuthorize: postAuthOidcSignInAuthorizeEndpoint,
+  postAuthOidcSignInCallback: postAuthOidcSignInCallbackEndpoint,
   postAuthPasswordChange: postAuthPasswordChangeEndpoint,
   postAuthPasswordReset: postAuthPasswordResetEndpoint,
   postAuthPasswordResetRequest: postAuthPasswordResetRequestEndpoint,
