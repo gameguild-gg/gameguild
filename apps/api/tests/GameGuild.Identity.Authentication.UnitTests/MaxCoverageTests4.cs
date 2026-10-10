@@ -23,6 +23,14 @@ namespace GameGuild.Identity.Authentication.UnitTests;
 // ════════════════════════════════════════════════════════════════════════════
 public sealed class UserEnumProtectionExtraTests
 {
+    internal static IConfiguration TestPasswordPolicyConfiguration =>
+        new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["PresentationLayer:Authentication:PasswordPolicy:BCryptWorkFactor"] = "10"
+            })
+            .Build();
+
     private readonly MemoryCache _cache;
     private readonly UserEnumerationProtectionService _sut;
 
