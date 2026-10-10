@@ -28,7 +28,10 @@ public interface IPasswordHasher
         new PasswordVerificationResult(VerifyPassword(hashedPassword, providedPassword), false);
 
     /// <summary>Native providers perform verification-equivalent work at their configured factor.</summary>
-    Task PerformDummyVerificationAsync(CancellationToken cancellationToken = default) =>
+    Task PerformDummyVerificationAsync() => PerformDummyVerificationAsync(CancellationToken.None);
+
+    /// <summary>Native providers perform cancellable verification-equivalent work at their configured factor.</summary>
+    Task PerformDummyVerificationAsync(CancellationToken cancellationToken) =>
         throw new NotSupportedException("This password provider does not expose dummy credential work.");
 
     /// <summary>

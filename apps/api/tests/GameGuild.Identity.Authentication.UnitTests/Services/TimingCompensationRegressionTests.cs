@@ -344,7 +344,7 @@ public sealed class CredentialTimingCompensationRegressionTests
 
         public PasswordStrengthResult ValidatePasswordStrength(string password) => inner.ValidatePasswordStrength(password);
 
-        public Task PerformDummyVerificationAsync(CancellationToken cancellationToken = default) => inner.PerformDummyVerificationAsync(cancellationToken);
+        public Task PerformDummyVerificationAsync(CancellationToken cancellationToken) => inner.PerformDummyVerificationAsync(cancellationToken);
     }
 }
 
@@ -552,5 +552,25 @@ public sealed class PasswordVerificationWorkClassificationTests
 
         // Bounded below by real bcrypt work at factor 10 (tens of milliseconds on any supported host).
         stopwatch.Elapsed.Should().BeGreaterThanOrEqualTo(TimeSpan.FromMilliseconds(15));
+    }
+
+    [Fact]
+    public async Task PerformDummyVerification_ExplicitCancellationPreventsWork()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        var sut = CreateSut(workFactor: 10);
+
+        Func<Task> performWork = () => sut.PerformDummyVerificationAsync(cancellation.Token);
+
+        await performWork.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task PerformDummyVerification_ConcreteNoArgumentOverloadCompletes()
+    {
+        var sut = (PasswordHasher)CreateSut(workFactor: 10);
+
+        await sut.PerformDummyVerificationAsync();
     }
 }

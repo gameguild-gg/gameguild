@@ -81,7 +81,10 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     internal const string DummyCredentialMaterial = "dummy";
 
     /// <summary>Uses the same reload-aware work factor as real BCrypt verification.</summary>
-    public async Task PerformDummyVerificationAsync(CancellationToken cancellationToken = default)
+    public Task PerformDummyVerificationAsync() => PerformDummyVerificationAsync(CancellationToken.None);
+
+    /// <summary>Uses the same reload-aware work factor as real BCrypt verification, with caller cancellation.</summary>
+    public async Task PerformDummyVerificationAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var workFactor = GetBCryptWorkFactor();
