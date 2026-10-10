@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Reflection;
+using System.Text;
 using FluentAssertions;
 using GameGuild.API.Core.Security;
 using GameGuild.API.Database;
@@ -14,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace GameGuild.API.IntegrationTests;
@@ -46,7 +49,6 @@ namespace GameGuild.API.IntegrationTests;
 public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
 {
     private const string RestrictiveContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
-
     private const string DocumentationContentSecurityPolicy =
         "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; " +
         "img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'";
@@ -158,6 +160,12 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
         using var response = await client.GetAsync("/health");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+        // Diagnostics are reflected from the live host so a failure names the broken
+        // link (environment name, HstsOptions exclusions, forwarded-headers wiring)
+        // instead of only reporting the absent header.
+        var hostDiagnostics = DescribeHostSecurityConfiguration(factory.Services);
+        HasHeader(response, "Strict-Transport-Security").Should().BeTrue(
+            $"HSTS is production-only and must be present on HTTPS responses. Host: {hostDiagnostics}");
         var strictTransportSecurity = SingleHeader(response, "Strict-Transport-Security");
         strictTransportSecurity.Should().StartWith("max-age=",
             "HSTS is production-only and must be present on HTTPS responses");
@@ -191,6 +199,52 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
 
     private static bool HasHeader(HttpResponseMessage response, string name) =>
         response.Headers.Contains(name) || response.Content.Headers.Contains(name);
+
+    /// <summary>
+    ///     Reflects the security-relevant host configuration (environment name,
+    ///     HSTS exclusions, forwarded-headers proxy wiring) for assertion
+    ///     diagnostics. Reflection avoids coupling this test project to framework
+    ///     option types that resolve inconsistently at compile time here.
+    /// </summary>
+    private static string DescribeHostSecurityConfiguration(IServiceProvider services)
+    {
+        var builder = new StringBuilder();
+        var environment = services.GetService(typeof(Microsoft.AspNetCore.Hosting.IHostingEnvironment));
+        builder.Append("environment=")
+            .Append(environment?.GetType().GetProperty("EnvironmentName")?.GetValue(environment) ?? "<unresolved>");
+        AppendOptionsDiagnostics(builder, services, "Microsoft.AspNetCore.HttpsPolicy.HstsOptions, Microsoft.AspNetCore.HttpsPolicy", "hsts");
+        AppendOptionsDiagnostics(builder, services, "Microsoft.AspNetCore.HttpOverrides.ForwardedHeadersOptions, Microsoft.AspNetCore.HttpOverrides", "forwarded");
+        return builder.ToString();
+    }
+
+    private static void AppendOptionsDiagnostics(StringBuilder builder, IServiceProvider services, string typeName, string label)
+    {
+        var type = Type.GetType(typeName);
+        if (type is null)
+        {
+            builder.Append($"; {label}=type-unresolved");
+            return;
+        }
+
+        var optionsInterface = typeof(IOptions<>).MakeGenericType(type);
+        var options = services.GetService(optionsInterface);
+        if (options is null)
+        {
+            builder.Append($"; {label}=no-ioptions");
+            return;
+        }
+
+        var value = optionsInterface.GetProperty("Value")!.GetValue(options);
+        builder.Append($"; {label}=");
+        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (property.Name is "ForwardedHeaders" or "ExcludedHosts" or "KnownProxies"
+                or "KnownNetworks" or "KnownIPNetworks" or "ForwardLimit" or "MaxAge" or "IncludeSubDomains")
+            {
+                builder.Append(property.Name).Append(':').Append(property.GetValue(value)).Append(' ');
+            }
+        }
+    }
 
     private static IEnumerable<string> CacheControlDirectives(HttpResponseMessage response) =>
         SingleHeader(response, "Cache-Control")
