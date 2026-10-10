@@ -210,12 +210,37 @@ public sealed class ScimProvisioningPostgreSqlHttpTests(ApiPostgreSqlFixture fix
         var all = await ListUsersAsync(client, "userName sw \"scim.page\"");
         all["totalResults"]!.GetValue<int>().Should().Be(3);
 
+        // RFC 7644 §3.4.2.4: startIndex is the 1-based index of the FIRST result on
+        // the page, so startIndex=2&count=2 over three matches returns results 2 and 3
+        // (not a single trailing item). The server's ordering key is an implementation
+        // detail, so pages are asserted as a sliding window rather than fixed users.
+        static List<string> PageIds(JsonNode body)
+            => body["Resources"]!.AsArray().Select(resource => resource!["id"]!.GetValue<string>()).ToList();
+
+        var firstPageBody = JsonNode.Parse(await (
+            await client.GetAsync("/scim/v2/Users?filter=" + Uri.EscapeDataString("userName sw \"scim.page\"") + "&startIndex=1&count=2")
+            ).Content.ReadAsStringAsync())!;
+        firstPageBody["startIndex"]!.GetValue<int>().Should().Be(1);
+        firstPageBody["itemsPerPage"]!.GetValue<int>().Should().Be(2);
+        firstPageBody["totalResults"]!.GetValue<int>().Should().Be(3);
+        var firstPageIds = PageIds(firstPageBody);
+        firstPageIds.Should().HaveCount(2);
+
         var page = await client.GetAsync("/scim/v2/Users?filter=" + Uri.EscapeDataString("userName sw \"scim.page\"") + "&startIndex=2&count=2");
         var pageBody = JsonNode.Parse(await page.Content.ReadAsStringAsync())!;
         pageBody["startIndex"]!.GetValue<int>().Should().Be(2);
         pageBody["itemsPerPage"]!.GetValue<int>().Should().Be(2);
         pageBody["totalResults"]!.GetValue<int>().Should().Be(3);
-        pageBody["Resources"]!.AsArray().Should().HaveCount(1, "only the third user fits after index 2 with count 2");
+        var secondPageIds = PageIds(pageBody);
+        secondPageIds.Should().HaveCount(2, "startIndex=2&count=2 returns the second and third of the three matches");
+        secondPageIds[0].Should().Be(firstPageIds[1], "the second page starts at the second result of the first page");
+        secondPageIds.Should().NotContain(firstPageIds[0], "the first page's leading result is not repeated");
+
+        var tailBody = JsonNode.Parse(await (
+            await client.GetAsync("/scim/v2/Users?filter=" + Uri.EscapeDataString("userName sw \"scim.page\"") + "&startIndex=4&count=2")
+            ).Content.ReadAsStringAsync())!;
+        tailBody["totalResults"]!.GetValue<int>().Should().Be(3);
+        PageIds(tailBody).Should().BeEmpty("a start index past the last result yields an empty page, not an error");
     }
 
     [Fact]
