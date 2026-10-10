@@ -23,11 +23,9 @@ public interface IPasswordHasher
     /// <returns>True if password matches</returns>
     bool VerifyPassword(string hashedPassword, string providedPassword);
 
-    /// <summary>Reports completed work when the provider supports it; opaque providers remain conservative.</summary>
+    /// <summary>Opaque providers remain conservative; work-aware implementations override this operation.</summary>
     PasswordVerificationResult VerifyPasswordWithWorkClassification(string hashedPassword, string providedPassword) =>
-        this is IPasswordVerificationWork workAware
-            ? workAware.VerifyPasswordWithWork(hashedPassword, providedPassword)
-            : new PasswordVerificationResult(VerifyPassword(hashedPassword, providedPassword), false);
+        new PasswordVerificationResult(VerifyPassword(hashedPassword, providedPassword), false);
 
     /// <summary>Native providers perform verification-equivalent work at their configured factor.</summary>
     Task PerformDummyVerificationAsync(CancellationToken cancellationToken = default) =>
