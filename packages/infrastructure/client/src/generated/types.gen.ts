@@ -1895,6 +1895,18 @@ export interface CommercePaymentsPatchTaxRuleInput {
   rate?: number | null;
 }
 
+/** First-attempt outcome counters for payments created in the window. */
+export interface CommercePaymentsPaymentAttemptMetrics {
+  /** Payments currently in GameGuild.Commerce.Payments.PaymentStatus.Failed. */
+  failedPayments?: number;
+  /** Payments that reached GameGuild.Commerce.Payments.PaymentStatus.Succeeded (including later refunded/disputed). */
+  succeededPayments?: number;
+  /** Succeeded / total as a percentage (0–100); 0 when there are no payments. */
+  successRate?: number;
+  /** Payments created in the window. */
+  totalPayments?: number;
+}
+
 /** Result of a payment cancellation operation */
 export interface CommercePaymentsPaymentCancellationResult {
   /** When the payment was canceled */
@@ -1915,6 +1927,37 @@ export interface CommercePaymentsPaymentCancellationResult {
   success: boolean;
 }
 
+/** An amount total for one currency; currency totals are kept separate (issue #404 mixed-currency rule). */
+export interface CommercePaymentsPaymentCurrencyAmount {
+  amount?: number;
+  currency?: string | null;
+  paymentCount?: number;
+}
+
+/** Dunning outcomes for failed payments in the window, as of the query execution time. */
+export interface CommercePaymentsPaymentDunningOutcomeMetrics {
+  /** Failed payments with retries remaining whose next-retry time has passed (retry-queue candidates). */
+  dueForRetryPayments?: number;
+  /** Failed payments with no retries left (dunning escalation terminal). */
+  exhaustedPayments?: number;
+  /** Failed payments with retries remaining and a future next-retry time (recovery in flight). */
+  pendingRetryPayments?: number;
+}
+
+/** Payment success and failed-payment recovery metrics for an inclusive window (issue #403).
+Powers `GET api/v{v}/payments/recovery-metrics`. */
+export interface CommercePaymentsPaymentRecoveryMetrics {
+  attempts?: CommercePaymentsPaymentAttemptMetrics;
+  dunning?: CommercePaymentsPaymentDunningOutcomeMetrics;
+  /** Inclusive window start. */
+  fromUtc?: string;
+  retries?: CommercePaymentsPaymentRetryRecoveryMetrics;
+  /** Tenant the metrics were scoped to, or null for all tenants. */
+  tenantId?: string | null;
+  /** Inclusive window end. */
+  toUtc?: string;
+}
+
 /** Result of payment processing */
 export interface CommercePaymentsPaymentResult {
   amount?: Money;
@@ -1931,6 +1974,20 @@ Links payment to specific invoice for audit trail and preventing duplicate appli
   /** Tenant that owns the payment. Required for authorization at API boundaries. */
   tenantId?: string;
   transactionId?: string | null;
+}
+
+/** Retry-recovery counters for payments that failed at least once. */
+export interface CommercePaymentsPaymentRetryRecoveryMetrics {
+  /** Payments that failed at least once (currently failed or with retry history). */
+  everFailedPayments?: number;
+  /** Recovered charge amounts grouped by currency (mixed currencies are never summed into one figure). */
+  recoveredAmounts?: CommercePaymentsPaymentCurrencyAmount[] | null;
+  /** Payments that failed at least once and eventually succeeded. */
+  recoveredPayments?: number;
+  /** Payments with at least one retry attempt. */
+  retriedPayments?: number;
+  /** Recovered / ever-failed as a percentage (0–100); 0 when none ever failed. */
+  retryRecoveryRate?: number;
 }
 
 /** Result of payment retry */
@@ -9488,6 +9545,233 @@ export interface IdentityAuthorizationUserActivitySummary {
   userId?: string;
 }
 
+/** Data model for Identity Provisioning Create Scim Provisioning Token Request. */
+export interface IdentityProvisioningCreateScimProvisioningTokenInput {
+  expiresAt?: string | null;
+  name: string | null;
+  /** Token scopes; defaults to scim:read + scim:write. */
+  scopes?: string[] | null;
+}
+
+/** Data model for Identity Provisioning Create Scim Provisioning Token Response. */
+export interface IdentityProvisioningCreateScimProvisioningTokenOutput {
+  id?: string;
+  createdAt?: string;
+  expiresAt?: string | null;
+  name?: string | null;
+  scopes?: string[] | null;
+  tenantId?: string;
+  /** The only time the plaintext token is returned. */
+  token?: string | null;
+}
+
+/** Data model for Identity Provisioning Revoke Scim Provisioning Token Request. */
+export interface IdentityProvisioningRevokeScimProvisioningTokenInput {
+  reason?: string | null;
+}
+
+/** Data model for Identity Provisioning Rotate Scim Provisioning Token Request. */
+export interface IdentityProvisioningRotateScimProvisioningTokenInput {
+  expiresAt?: string | null;
+  /** Overlap window in minutes; defaults to the configured rotation grace period. Zero revokes immediately. */
+  gracePeriodMinutes?: number | null;
+  name?: string | null;
+  scopes?: string[] | null;
+}
+
+/** Data model for Identity Provisioning Rotate Scim Provisioning Token Response. */
+export interface IdentityProvisioningRotateScimProvisioningTokenOutput {
+  id?: string;
+  expiresAt?: string | null;
+  oldTokenGraceEndsAt?: string | null;
+  replacesTokenId?: string | null;
+  scopes?: string[] | null;
+  token?: string | null;
+}
+
+/** RFC 7644 §3.12 error body: `{schemas, status, scimType?, detail}`. */
+export interface IdentityProvisioningScimErrorBody {
+  detail?: string | null;
+  schemas?: string[] | null;
+  scimType?: string | null;
+  status?: number;
+}
+
+/** Data model for Identity Provisioning Scim Provisioning Token Dto. */
+export interface IdentityProvisioningScimProvisioningTokenDto {
+  id?: string;
+  createdAt?: string;
+  expiresAt?: string | null;
+  isActive?: boolean;
+  lastUsedAt?: string | null;
+  name?: string | null;
+  replacesTokenId?: string | null;
+  rotationGraceEndsAt?: string | null;
+  scopes?: string[] | null;
+  usageCount?: number;
+}
+
+/** RFC 7644 §3.7 BulkRequest body. */
+export interface IdentityProvisioningScimScimBulkInput {
+  failOnErrors?: number | null;
+  Operations?: IdentityProvisioningScimScimBulkOperation[] | null;
+  schemas?: string[] | null;
+}
+
+/** One bulk operation. */
+export interface IdentityProvisioningScimScimBulkOperation {
+  bulkId?: string | null;
+  data?: NodesJsonNode;
+  method?: string | null;
+  path?: string | null;
+  version?: string | null;
+}
+
+/** RFC 7644 §3.7 BulkResponse body. */
+export interface IdentityProvisioningScimScimBulkOutput {
+  Operations?: IdentityProvisioningScimScimBulkResponseOperation[] | null;
+  schemas?: string[] | null;
+}
+
+/** One bulk response operation. */
+export interface IdentityProvisioningScimScimBulkResponseOperation {
+  bulkId?: string | null;
+  location?: string | null;
+  method?: string | null;
+  status?: IdentityProvisioningScimScimBulkStatus;
+  version?: string | null;
+}
+
+/** Bulk operation status envelope. */
+export interface IdentityProvisioningScimScimBulkStatus {
+  code?: number;
+  detail?: string | null;
+  scimType?: string | null;
+}
+
+/** RFC 7643 §8.2 email sub-attribute. The provider stores one primary e-mail. */
+export interface IdentityProvisioningScimScimEmail {
+  display?: string | null;
+  primary?: boolean | null;
+  type?: string | null;
+  value?: string | null;
+}
+
+/** Inbound SCIM Group payload for POST (create) and PUT (replace). */
+export interface IdentityProvisioningScimScimGroupInput {
+  displayName?: string | null;
+  externalId?: string | null;
+  members?: IdentityProvisioningScimScimMember[] | null;
+  schemas?: string[] | null;
+}
+
+/** SCIM Group resource rendered by this provider (backed by a tenant role). */
+export interface IdentityProvisioningScimScimGroupResource {
+  id?: string | null;
+  displayName?: string | null;
+  externalId?: string | null;
+  members?: IdentityProvisioningScimScimMember[] | null;
+  meta?: IdentityProvisioningScimScimMeta;
+  schemas?: string[] | null;
+}
+
+/** RFC 7644 §3.4.2.3 ListResponse envelope. `startIndex` is 1-based. */
+export interface IdentityProvisioningScimScimListResponseScimGroupResource {
+  itemsPerPage?: number;
+  /** RFC 7644 §3.4.2.3 spells this member `Resources` with a capital R while
+every other member is camelCase, so the name is pinned explicitly instead of
+following the host's camelCase policy (which would emit "resources"). */
+  Resources?: IdentityProvisioningScimScimGroupResource[] | null;
+  schemas?: string[] | null;
+  startIndex?: number;
+  totalResults?: number;
+}
+
+/** RFC 7644 §3.4.2.3 ListResponse envelope. `startIndex` is 1-based. */
+export interface IdentityProvisioningScimScimListResponseScimUserResource {
+  itemsPerPage?: number;
+  /** RFC 7644 §3.4.2.3 spells this member `Resources` with a capital R while
+every other member is camelCase, so the name is pinned explicitly instead of
+following the host's camelCase policy (which would emit "resources"). */
+  Resources?: IdentityProvisioningScimScimUserResource[] | null;
+  schemas?: string[] | null;
+  startIndex?: number;
+  totalResults?: number;
+}
+
+/** RFC 7643 §8.4 group member reference. */
+export interface IdentityProvisioningScimScimMember {
+  $ref?: string | null;
+  display?: string | null;
+  value?: string | null;
+}
+
+/** RFC 7643 §3.1 meta attribute. */
+export interface IdentityProvisioningScimScimMeta {
+  created?: string | null;
+  lastModified?: string | null;
+  location?: string | null;
+  resourceType?: string | null;
+}
+
+/** RFC 7643 §8.1 name sub-attribute as represented by this provider. */
+export interface IdentityProvisioningScimScimName {
+  familyName?: string | null;
+  formatted?: string | null;
+  givenName?: string | null;
+}
+
+/** RFC 7644 §3.5.2 PatchOp request body. */
+export interface IdentityProvisioningScimScimPatchInput {
+  Operations?: IdentityProvisioningScimScimPatchOperation[] | null;
+  schemas?: string[] | null;
+}
+
+/** One PATCH operation. `op` is add/remove/replace (case-insensitive);
+`value` is preserved as a raw JSON node because PATCH values are
+attribute-dependent. */
+export interface IdentityProvisioningScimScimPatchOperation {
+  op?: string | null;
+  path?: string | null;
+  value?: NodesJsonNode;
+}
+
+/** RFC 7643 §8.3 phone number sub-attribute. The provider stores one number. */
+export interface IdentityProvisioningScimScimPhoneNumber {
+  type?: string | null;
+  value?: string | null;
+}
+
+/**     Inbound SCIM User payload for POST (create) and PUT (replace). Unknown
+attributes (including extension schemas) are ignored rather than rejected. */
+export interface IdentityProvisioningScimScimUserInput {
+  active?: boolean | null;
+  displayName?: string | null;
+  emails?: IdentityProvisioningScimScimEmail[] | null;
+  externalId?: string | null;
+  name?: IdentityProvisioningScimScimName;
+  password?: string | null;
+  phoneNumbers?: IdentityProvisioningScimScimPhoneNumber[] | null;
+  schemas?: string[] | null;
+  userName?: string | null;
+}
+
+/** SCIM User resource rendered by this provider. Only implemented attributes are
+exposed; the full core schema advertisement lives in
+GameGuild.Identity.Provisioning.Scim.ScimDiscoveryDocuments. */
+export interface IdentityProvisioningScimScimUserResource {
+  id?: string | null;
+  active?: boolean;
+  displayName?: string | null;
+  emails?: IdentityProvisioningScimScimEmail[] | null;
+  externalId?: string | null;
+  meta?: IdentityProvisioningScimScimMeta;
+  name?: IdentityProvisioningScimScimName;
+  phoneNumbers?: IdentityProvisioningScimScimPhoneNumber[] | null;
+  schemas?: string[] | null;
+  userName?: string | null;
+}
+
 /** Response for adding a tenant member */
 export interface IdentityTenantsAddTenantMemberOutput {
   memberId?: string | null;
@@ -14860,6 +15144,18 @@ export interface MvcValidationProblemDetails {
   [key: string]: any;
 }
 
+/** Data model for Nodes Json Node. */
+export interface NodesJsonNode {
+  options?: NodesJsonNodeOptions;
+  parent?: NodesJsonNode;
+  root?: NodesJsonNode;
+}
+
+/** Data model for Nodes Json Node Options. */
+export interface NodesJsonNodeOptions {
+  propertyNameCaseInsensitive?: boolean;
+}
+
 /** Data model for Notifications Controllers Dead Letter Dto. */
 export interface NotificationsControllersDeadLetterDto {
   id?: string;
@@ -20182,8 +20478,13 @@ export let CommercePaymentsModelsFreezeWalletInputSchema: z.ZodType<CommercePaym
 export let CommercePaymentsModelsPatchWalletInputSchema: z.ZodType<CommercePaymentsModelsPatchWalletInput>;
 export let CommercePaymentsPatchTaxJurisdictionInputSchema: z.ZodType<CommercePaymentsPatchTaxJurisdictionInput>;
 export let CommercePaymentsPatchTaxRuleInputSchema: z.ZodType<CommercePaymentsPatchTaxRuleInput>;
+export let CommercePaymentsPaymentAttemptMetricsSchema: z.ZodType<CommercePaymentsPaymentAttemptMetrics>;
 export let CommercePaymentsPaymentCancellationResultSchema: z.ZodType<CommercePaymentsPaymentCancellationResult>;
+export let CommercePaymentsPaymentCurrencyAmountSchema: z.ZodType<CommercePaymentsPaymentCurrencyAmount>;
+export let CommercePaymentsPaymentDunningOutcomeMetricsSchema: z.ZodType<CommercePaymentsPaymentDunningOutcomeMetrics>;
+export let CommercePaymentsPaymentRecoveryMetricsSchema: z.ZodType<CommercePaymentsPaymentRecoveryMetrics>;
 export let CommercePaymentsPaymentResultSchema: z.ZodType<CommercePaymentsPaymentResult>;
+export let CommercePaymentsPaymentRetryRecoveryMetricsSchema: z.ZodType<CommercePaymentsPaymentRetryRecoveryMetrics>;
 export let CommercePaymentsPaymentRetryResultSchema: z.ZodType<CommercePaymentsPaymentRetryResult>;
 export let CommercePaymentsPaymentsControllerCancelPaymentInputSchema: z.ZodType<CommercePaymentsPaymentsControllerCancelPaymentInput>;
 export let CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInputSchema: z.ZodType<CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput>;
@@ -20869,6 +21170,31 @@ export let IdentityAuthorizationSoDViolationSchema: z.ZodType<IdentityAuthorizat
 export let IdentityAuthorizationSoDViolationStatusSchema: z.ZodType<IdentityAuthorizationSoDViolationStatus>;
 export let IdentityAuthorizationUpdateUserPermissionsCommandSchema: z.ZodType<IdentityAuthorizationUpdateUserPermissionsCommand>;
 export let IdentityAuthorizationUserActivitySummarySchema: z.ZodType<IdentityAuthorizationUserActivitySummary>;
+export let IdentityProvisioningCreateScimProvisioningTokenInputSchema: z.ZodType<IdentityProvisioningCreateScimProvisioningTokenInput>;
+export let IdentityProvisioningCreateScimProvisioningTokenOutputSchema: z.ZodType<IdentityProvisioningCreateScimProvisioningTokenOutput>;
+export let IdentityProvisioningRevokeScimProvisioningTokenInputSchema: z.ZodType<IdentityProvisioningRevokeScimProvisioningTokenInput>;
+export let IdentityProvisioningRotateScimProvisioningTokenInputSchema: z.ZodType<IdentityProvisioningRotateScimProvisioningTokenInput>;
+export let IdentityProvisioningRotateScimProvisioningTokenOutputSchema: z.ZodType<IdentityProvisioningRotateScimProvisioningTokenOutput>;
+export let IdentityProvisioningScimErrorBodySchema: z.ZodType<IdentityProvisioningScimErrorBody>;
+export let IdentityProvisioningScimProvisioningTokenDtoSchema: z.ZodType<IdentityProvisioningScimProvisioningTokenDto>;
+export let IdentityProvisioningScimScimBulkInputSchema: z.ZodType<IdentityProvisioningScimScimBulkInput>;
+export let IdentityProvisioningScimScimBulkOperationSchema: z.ZodType<IdentityProvisioningScimScimBulkOperation>;
+export let IdentityProvisioningScimScimBulkOutputSchema: z.ZodType<IdentityProvisioningScimScimBulkOutput>;
+export let IdentityProvisioningScimScimBulkResponseOperationSchema: z.ZodType<IdentityProvisioningScimScimBulkResponseOperation>;
+export let IdentityProvisioningScimScimBulkStatusSchema: z.ZodType<IdentityProvisioningScimScimBulkStatus>;
+export let IdentityProvisioningScimScimEmailSchema: z.ZodType<IdentityProvisioningScimScimEmail>;
+export let IdentityProvisioningScimScimGroupInputSchema: z.ZodType<IdentityProvisioningScimScimGroupInput>;
+export let IdentityProvisioningScimScimGroupResourceSchema: z.ZodType<IdentityProvisioningScimScimGroupResource>;
+export let IdentityProvisioningScimScimListResponseScimGroupResourceSchema: z.ZodType<IdentityProvisioningScimScimListResponseScimGroupResource>;
+export let IdentityProvisioningScimScimListResponseScimUserResourceSchema: z.ZodType<IdentityProvisioningScimScimListResponseScimUserResource>;
+export let IdentityProvisioningScimScimMemberSchema: z.ZodType<IdentityProvisioningScimScimMember>;
+export let IdentityProvisioningScimScimMetaSchema: z.ZodType<IdentityProvisioningScimScimMeta>;
+export let IdentityProvisioningScimScimNameSchema: z.ZodType<IdentityProvisioningScimScimName>;
+export let IdentityProvisioningScimScimPatchInputSchema: z.ZodType<IdentityProvisioningScimScimPatchInput>;
+export let IdentityProvisioningScimScimPatchOperationSchema: z.ZodType<IdentityProvisioningScimScimPatchOperation>;
+export let IdentityProvisioningScimScimPhoneNumberSchema: z.ZodType<IdentityProvisioningScimScimPhoneNumber>;
+export let IdentityProvisioningScimScimUserInputSchema: z.ZodType<IdentityProvisioningScimScimUserInput>;
+export let IdentityProvisioningScimScimUserResourceSchema: z.ZodType<IdentityProvisioningScimScimUserResource>;
 export let IdentityTenantsAddTenantMemberOutputSchema: z.ZodType<IdentityTenantsAddTenantMemberOutput>;
 export let IdentityTenantsAddUserMembershipInputSchema: z.ZodType<IdentityTenantsAddUserMembershipInput>;
 export let IdentityTenantsArchiveInputSchema: z.ZodType<IdentityTenantsArchiveInput>;
@@ -21333,6 +21659,8 @@ export let MonitoringSLAUpdateSloCommandSchema: z.ZodType<MonitoringSLAUpdateSlo
 export let MonitoringSLAViolationSeveritySchema: z.ZodType<MonitoringSLAViolationSeverity>;
 export let MvcProblemDetailsSchema: z.ZodType<MvcProblemDetails>;
 export let MvcValidationProblemDetailsSchema: z.ZodType<MvcValidationProblemDetails>;
+export let NodesJsonNodeSchema: z.ZodType<NodesJsonNode>;
+export let NodesJsonNodeOptionsSchema: z.ZodType<NodesJsonNodeOptions>;
 export let NotificationsControllersDeadLetterDtoSchema: z.ZodType<NotificationsControllersDeadLetterDto>;
 export let NotificationsControllersDeletedCountOutputSchema: z.ZodType<NotificationsControllersDeletedCountOutput>;
 export let NotificationsControllersDigestFrequencyOutputSchema: z.ZodType<NotificationsControllersDigestFrequencyOutput>;
@@ -23675,6 +24003,14 @@ CommercePaymentsPatchTaxRuleInputSchema = z.object({
   rate: z.number().nullable().optional(),
 });
 
+/** Zod schema for CommercePaymentsPaymentAttemptMetrics. First-attempt outcome counters for payments created in the window. */
+CommercePaymentsPaymentAttemptMetricsSchema = z.object({
+  failedPayments: z.number().int().optional(),
+  succeededPayments: z.number().int().optional(),
+  successRate: z.number().optional(),
+  totalPayments: z.number().int().optional(),
+});
+
 /** Zod schema for CommercePaymentsPaymentCancellationResult. Result of a payment cancellation operation */
 CommercePaymentsPaymentCancellationResultSchema = z.object({
   canceledAt: z.string().datetime(),
@@ -23685,6 +24021,31 @@ CommercePaymentsPaymentCancellationResultSchema = z.object({
   refundAmount: z.number().nullable().optional(),
   refundProcessed: z.boolean().optional(),
   success: z.boolean(),
+});
+
+/** Zod schema for CommercePaymentsPaymentCurrencyAmount. An amount total for one currency; currency totals are kept separate (issue #404 mixed-currency rule). */
+CommercePaymentsPaymentCurrencyAmountSchema = z.object({
+  amount: z.number().optional(),
+  currency: z.string().nullable().optional(),
+  paymentCount: z.number().int().optional(),
+});
+
+/** Zod schema for CommercePaymentsPaymentDunningOutcomeMetrics. Dunning outcomes for failed payments in the window, as of the query execution time. */
+CommercePaymentsPaymentDunningOutcomeMetricsSchema = z.object({
+  dueForRetryPayments: z.number().int().optional(),
+  exhaustedPayments: z.number().int().optional(),
+  pendingRetryPayments: z.number().int().optional(),
+});
+
+/** Zod schema for CommercePaymentsPaymentRecoveryMetrics. Payment success and failed-payment recovery metrics for an inclusive window (issue #403).
+Powers `GET api/v{v}/payments/recovery-metrics`. */
+CommercePaymentsPaymentRecoveryMetricsSchema = z.object({
+  attempts: z.lazy(() => CommercePaymentsPaymentAttemptMetricsSchema).optional(),
+  dunning: z.lazy(() => CommercePaymentsPaymentDunningOutcomeMetricsSchema).optional(),
+  fromUtc: z.string().datetime().optional(),
+  retries: z.lazy(() => CommercePaymentsPaymentRetryRecoveryMetricsSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  toUtc: z.string().datetime().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentResult. Result of payment processing */
@@ -23699,6 +24060,18 @@ CommercePaymentsPaymentResultSchema = z.object({
   success: z.boolean().optional(),
   tenantId: z.string().uuid().optional(),
   transactionId: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsPaymentRetryRecoveryMetrics. Retry-recovery counters for payments that failed at least once. */
+CommercePaymentsPaymentRetryRecoveryMetricsSchema = z.object({
+  everFailedPayments: z.number().int().optional(),
+  recoveredAmounts: z
+    .array(z.lazy(() => CommercePaymentsPaymentCurrencyAmountSchema))
+    .nullable()
+    .optional(),
+  recoveredPayments: z.number().int().optional(),
+  retriedPayments: z.number().int().optional(),
+  retryRecoveryRate: z.number().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentRetryResult. Result of payment retry */
@@ -30869,6 +31242,257 @@ IdentityAuthorizationUserActivitySummarySchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
+/** Zod schema for IdentityProvisioningCreateScimProvisioningTokenInput. Data model for Identity Provisioning Create Scim Provisioning Token Request. */
+IdentityProvisioningCreateScimProvisioningTokenInputSchema = z.object({
+  expiresAt: z.string().datetime().nullable().optional(),
+  name: z.string().nullable(),
+  scopes: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningCreateScimProvisioningTokenOutput. Data model for Identity Provisioning Create Scim Provisioning Token Response. */
+IdentityProvisioningCreateScimProvisioningTokenOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  name: z.string().nullable().optional(),
+  scopes: z.array(z.string()).nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  token: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningRevokeScimProvisioningTokenInput. Data model for Identity Provisioning Revoke Scim Provisioning Token Request. */
+IdentityProvisioningRevokeScimProvisioningTokenInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningRotateScimProvisioningTokenInput. Data model for Identity Provisioning Rotate Scim Provisioning Token Request. */
+IdentityProvisioningRotateScimProvisioningTokenInputSchema = z.object({
+  expiresAt: z.string().datetime().nullable().optional(),
+  gracePeriodMinutes: z.number().int().nullable().optional(),
+  name: z.string().nullable().optional(),
+  scopes: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningRotateScimProvisioningTokenOutput. Data model for Identity Provisioning Rotate Scim Provisioning Token Response. */
+IdentityProvisioningRotateScimProvisioningTokenOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  oldTokenGraceEndsAt: z.string().datetime().nullable().optional(),
+  replacesTokenId: z.string().uuid().nullable().optional(),
+  scopes: z.array(z.string()).nullable().optional(),
+  token: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimErrorBody. RFC 7644 §3.12 error body: `{schemas, status, scimType?, detail}`. */
+IdentityProvisioningScimErrorBodySchema = z.object({
+  detail: z.string().nullable().optional(),
+  schemas: z.array(z.string()).nullable().optional(),
+  scimType: z.string().nullable().optional(),
+  status: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimProvisioningTokenDto. Data model for Identity Provisioning Scim Provisioning Token Dto. */
+IdentityProvisioningScimProvisioningTokenDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  isActive: z.boolean().optional(),
+  lastUsedAt: z.string().datetime().nullable().optional(),
+  name: z.string().nullable().optional(),
+  replacesTokenId: z.string().uuid().nullable().optional(),
+  rotationGraceEndsAt: z.string().datetime().nullable().optional(),
+  scopes: z.array(z.string()).nullable().optional(),
+  usageCount: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimBulkInput. RFC 7644 §3.7 BulkRequest body. */
+IdentityProvisioningScimScimBulkInputSchema = z.object({
+  failOnErrors: z.number().int().nullable().optional(),
+  Operations: z
+    .array(z.lazy(() => IdentityProvisioningScimScimBulkOperationSchema))
+    .nullable()
+    .optional(),
+  schemas: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimBulkOperation. One bulk operation. */
+IdentityProvisioningScimScimBulkOperationSchema = z.object({
+  bulkId: z.string().nullable().optional(),
+  data: z.lazy(() => NodesJsonNodeSchema).optional(),
+  method: z.string().nullable().optional(),
+  path: z.string().nullable().optional(),
+  version: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimBulkOutput. RFC 7644 §3.7 BulkResponse body. */
+IdentityProvisioningScimScimBulkOutputSchema = z.object({
+  Operations: z
+    .array(z.lazy(() => IdentityProvisioningScimScimBulkResponseOperationSchema))
+    .nullable()
+    .optional(),
+  schemas: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimBulkResponseOperation. One bulk response operation. */
+IdentityProvisioningScimScimBulkResponseOperationSchema = z.object({
+  bulkId: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  method: z.string().nullable().optional(),
+  status: z.lazy(() => IdentityProvisioningScimScimBulkStatusSchema).optional(),
+  version: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimBulkStatus. Bulk operation status envelope. */
+IdentityProvisioningScimScimBulkStatusSchema = z.object({
+  code: z.number().int().optional(),
+  detail: z.string().nullable().optional(),
+  scimType: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimEmail. RFC 7643 §8.2 email sub-attribute. The provider stores one primary e-mail. */
+IdentityProvisioningScimScimEmailSchema = z.object({
+  display: z.string().nullable().optional(),
+  primary: z.boolean().nullable().optional(),
+  type: z.string().nullable().optional(),
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimGroupInput. Inbound SCIM Group payload for POST (create) and PUT (replace). */
+IdentityProvisioningScimScimGroupInputSchema = z.object({
+  displayName: z.string().nullable().optional(),
+  externalId: z.string().nullable().optional(),
+  members: z
+    .array(z.lazy(() => IdentityProvisioningScimScimMemberSchema))
+    .nullable()
+    .optional(),
+  schemas: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimGroupResource. SCIM Group resource rendered by this provider (backed by a tenant role). */
+IdentityProvisioningScimScimGroupResourceSchema = z.object({
+  id: z.string().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+  externalId: z.string().nullable().optional(),
+  members: z
+    .array(z.lazy(() => IdentityProvisioningScimScimMemberSchema))
+    .nullable()
+    .optional(),
+  meta: z.lazy(() => IdentityProvisioningScimScimMetaSchema).optional(),
+  schemas: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimListResponseScimGroupResource. RFC 7644 §3.4.2.3 ListResponse envelope. `startIndex` is 1-based. */
+IdentityProvisioningScimScimListResponseScimGroupResourceSchema = z.object({
+  itemsPerPage: z.number().int().optional(),
+  Resources: z
+    .array(z.lazy(() => IdentityProvisioningScimScimGroupResourceSchema))
+    .nullable()
+    .optional(),
+  schemas: z.array(z.string()).nullable().optional(),
+  startIndex: z.number().int().optional(),
+  totalResults: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimListResponseScimUserResource. RFC 7644 §3.4.2.3 ListResponse envelope. `startIndex` is 1-based. */
+IdentityProvisioningScimScimListResponseScimUserResourceSchema = z.object({
+  itemsPerPage: z.number().int().optional(),
+  Resources: z
+    .array(z.lazy(() => IdentityProvisioningScimScimUserResourceSchema))
+    .nullable()
+    .optional(),
+  schemas: z.array(z.string()).nullable().optional(),
+  startIndex: z.number().int().optional(),
+  totalResults: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimMember. RFC 7643 §8.4 group member reference. */
+IdentityProvisioningScimScimMemberSchema = z.object({
+  $ref: z.string().nullable().optional(),
+  display: z.string().nullable().optional(),
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimMeta. RFC 7643 §3.1 meta attribute. */
+IdentityProvisioningScimScimMetaSchema = z.object({
+  created: z.string().datetime().nullable().optional(),
+  lastModified: z.string().datetime().nullable().optional(),
+  location: z.string().nullable().optional(),
+  resourceType: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimName. RFC 7643 §8.1 name sub-attribute as represented by this provider. */
+IdentityProvisioningScimScimNameSchema = z.object({
+  familyName: z.string().nullable().optional(),
+  formatted: z.string().nullable().optional(),
+  givenName: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimPatchInput. RFC 7644 §3.5.2 PatchOp request body. */
+IdentityProvisioningScimScimPatchInputSchema = z.object({
+  Operations: z
+    .array(z.lazy(() => IdentityProvisioningScimScimPatchOperationSchema))
+    .nullable()
+    .optional(),
+  schemas: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimPatchOperation. One PATCH operation. `op` is add/remove/replace (case-insensitive);
+`value` is preserved as a raw JSON node because PATCH values are
+attribute-dependent. */
+IdentityProvisioningScimScimPatchOperationSchema = z.object({
+  op: z.string().nullable().optional(),
+  path: z.string().nullable().optional(),
+  value: z.lazy(() => NodesJsonNodeSchema).optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimPhoneNumber. RFC 7643 §8.3 phone number sub-attribute. The provider stores one number. */
+IdentityProvisioningScimScimPhoneNumberSchema = z.object({
+  type: z.string().nullable().optional(),
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimUserInput.     Inbound SCIM User payload for POST (create) and PUT (replace). Unknown
+attributes (including extension schemas) are ignored rather than rejected. */
+IdentityProvisioningScimScimUserInputSchema = z.object({
+  active: z.boolean().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+  emails: z
+    .array(z.lazy(() => IdentityProvisioningScimScimEmailSchema))
+    .nullable()
+    .optional(),
+  externalId: z.string().nullable().optional(),
+  name: z.lazy(() => IdentityProvisioningScimScimNameSchema).optional(),
+  password: z.string().nullable().optional(),
+  phoneNumbers: z
+    .array(z.lazy(() => IdentityProvisioningScimScimPhoneNumberSchema))
+    .nullable()
+    .optional(),
+  schemas: z.array(z.string()).nullable().optional(),
+  userName: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityProvisioningScimScimUserResource. SCIM User resource rendered by this provider. Only implemented attributes are
+exposed; the full core schema advertisement lives in
+GameGuild.Identity.Provisioning.Scim.ScimDiscoveryDocuments. */
+IdentityProvisioningScimScimUserResourceSchema = z.object({
+  id: z.string().nullable().optional(),
+  active: z.boolean().optional(),
+  displayName: z.string().nullable().optional(),
+  emails: z
+    .array(z.lazy(() => IdentityProvisioningScimScimEmailSchema))
+    .nullable()
+    .optional(),
+  externalId: z.string().nullable().optional(),
+  meta: z.lazy(() => IdentityProvisioningScimScimMetaSchema).optional(),
+  name: z.lazy(() => IdentityProvisioningScimScimNameSchema).optional(),
+  phoneNumbers: z
+    .array(z.lazy(() => IdentityProvisioningScimScimPhoneNumberSchema))
+    .nullable()
+    .optional(),
+  schemas: z.array(z.string()).nullable().optional(),
+  userName: z.string().nullable().optional(),
+});
+
 /** Zod schema for IdentityTenantsAddTenantMemberOutput. Response for adding a tenant member */
 IdentityTenantsAddTenantMemberOutputSchema = z.object({
   memberId: z.string().uuid().nullable().optional(),
@@ -35988,6 +36612,18 @@ MvcValidationProblemDetailsSchema = z
   })
   .catchall(z.record(z.string(), z.unknown()));
 
+/** Zod schema for NodesJsonNode. Data model for Nodes Json Node. */
+NodesJsonNodeSchema = z.object({
+  options: z.lazy(() => NodesJsonNodeOptionsSchema).optional(),
+  parent: z.lazy(() => NodesJsonNodeSchema).optional(),
+  root: z.lazy(() => NodesJsonNodeSchema).optional(),
+});
+
+/** Zod schema for NodesJsonNodeOptions. Data model for Nodes Json Node Options. */
+NodesJsonNodeOptionsSchema = z.object({
+  propertyNameCaseInsensitive: z.boolean().optional(),
+});
+
 /** Zod schema for NotificationsControllersDeadLetterDto. Data model for Notifications Controllers Dead Letter Dto. */
 NotificationsControllersDeadLetterDtoSchema = z.object({
   id: z.string().uuid().optional(),
@@ -40775,6 +41411,8 @@ export type IdentityAuthorizationEffectivePermission = IdentityAuthorizationEffe
 export { IdentityAuthorizationEffectivePermissionDtoSchema as IdentityAuthorizationEffectivePermissionSchema };
 export type IdentityAuthorizationResourceInvitation = IdentityAuthorizationResourceInvitationDto;
 export { IdentityAuthorizationResourceInvitationDtoSchema as IdentityAuthorizationResourceInvitationSchema };
+export type IdentityProvisioningScimProvisioningToken = IdentityProvisioningScimProvisioningTokenDto;
+export { IdentityProvisioningScimProvisioningTokenDtoSchema as IdentityProvisioningScimProvisioningTokenSchema };
 export type IdentityTenantsTenantAddress = IdentityTenantsTenantAddressDto;
 export { IdentityTenantsTenantAddressDtoSchema as IdentityTenantsTenantAddressSchema };
 export type IdentityTenantsTenantBranding = IdentityTenantsTenantBrandingDto;
