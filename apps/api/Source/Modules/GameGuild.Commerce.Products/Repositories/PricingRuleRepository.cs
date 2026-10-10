@@ -119,22 +119,27 @@ public class PricingRuleRepository(IApplicationDbContext context)
     {
         rule.Touch();
 
-        // Replacement tiers (see PricingRuleMutationHelpers.ApplyTiers) are brand-new rows.
-        // They must be attached as Added: DbSet.Update on the root would walk the graph and
-        // mark every not-yet-tracked reachable tier as Modified, emitting UPDATEs for rows
-        // that do not exist — the concurrency-checked statement then affects 0 rows and
-        // SaveChanges throws DbUpdateConcurrencyException on relational providers.
-        var trackedTiers = Context.Set<PricingRuleTier>().Local;
-        foreach (var tier in rule.PricingTiers.Where(tier => !trackedTiers.Contains(tier)))
+        // Replacement tiers (see PricingRuleMutationHelpers.ApplyTiers) are brand-new rows and
+        // must be tracked as Added. Anything that runs change detection first (DbSet.Local,
+        // SaveChanges, DbSet.Update on the graph) discovers them through the tracked rule's
+        // collection and tracks them as Modified, emitting concurrency-checked UPDATEs for
+        // rows that do not exist — relational providers then fail the save with
+        // DbUpdateConcurrencyException. DbContext.Entry does not run change detection, so the
+        // check below still sees a not-yet-persisted tier as Detached. IApplicationDbContext
+        // intentionally exposes only Set/SaveChanges/BeginTransaction, hence the cast.
+        var dbContext = (DbContext)Context;
+        foreach (var tier in rule.PricingTiers)
         {
-            Context.Set<PricingRuleTier>().Add(tier);
+            if (dbContext.Entry(tier).State == EntityState.Detached)
+            {
+                Context.Set<PricingRuleTier>().Add(tier);
+            }
         }
 
-        // Command handlers load the rule through this repository (same context), so the
-        // root is already tracked and DetectChanges picks up its mutations. Update() is
-        // kept only for a detached root; a detached caller is still responsible for having
-        // attached its children explicitly (as done above for replacement tiers).
-        if (!Entities.Local.Contains(rule))
+        // Command handlers load the rule through this repository (same context), so the root
+        // is already tracked and DetectChanges at save picks up its mutations. Update() is
+        // kept for a detached root, preserving the previous behavior for direct callers.
+        if (dbContext.Entry(rule).State == EntityState.Detached)
         {
             Entities.Update(rule);
         }
