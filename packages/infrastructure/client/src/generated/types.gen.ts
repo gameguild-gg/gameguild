@@ -1483,6 +1483,32 @@ export interface BulkOperationOutput {
   totalRequested?: number;
 }
 
+/** Read model over a durable billing integration event published through the platform outbox. */
+export interface CommerceBillingBillingOutboxEventDto {
+  /** Aggregate identifier the event refers to. */
+  aggregateId?: string | null;
+  /** Aggregate the event refers to. */
+  aggregateType?: string | null;
+  /** Correlation identifier of the emitting operation. */
+  correlationId?: string;
+  /** Durable event identifier. */
+  eventId?: string;
+  /** Stable event name, e.g. commerce.billing.invoice-paid.v1. */
+  eventName?: string | null;
+  /** Stable CLR type name of the event payload. */
+  eventType?: string | null;
+  /** When the event occurred. */
+  occurredAtUtc?: string;
+  /** Schema version of the event payload. */
+  schemaVersion?: number;
+  status?: CommerceBillingBillingOutboxEventStatus;
+  /** Tenant scope of the event. */
+  tenantId?: string;
+}
+
+/** Delivery status of a durable billing event in the platform outbox. */
+export type CommerceBillingBillingOutboxEventStatus = 'Pending' | 'Completed' | 'DeadLettered';
+
 /** State of the CIDR source allowlist enforced on the provider callback endpoints. */
 export interface CommerceBillingBillingWebhookAllowlistStatusDto {
   /** Number of configured CIDR entries. */
@@ -1498,6 +1524,50 @@ export interface CommerceBillingBillingWebhookBlockedSourceDto {
   blockedUntilUtc?: string;
   failureCount?: number;
   sourceKey?: string | null;
+}
+
+/** DTO for webhook event response */
+export interface CommerceBillingBillingWebhookEventDto {
+  id?: string;
+  createdAt?: string;
+  errorMessage?: string | null;
+  eventType?: string | null;
+  externalEventId?: string | null;
+  isFailed?: boolean;
+  isProcessed?: boolean;
+  processedAt?: string | null;
+  processingAttempts?: number;
+  provider?: string | null;
+  subscriptionId?: string | null;
+  tenantId?: string | null;
+}
+
+/** List item of the billing webhook inbox event feed (issue #396). Payloads are excluded. */
+export interface CommerceBillingBillingWebhookEventListItemDto {
+  /** Local inbox row identifier. */
+  id?: string;
+  /** When the event was accepted into the inbox. */
+  createdAt?: string;
+  /** Error of the last failed attempt, when present. */
+  errorMessage?: string | null;
+  /** Provider event type, e.g. invoice.payment_succeeded. */
+  eventType?: string | null;
+  /** Provider-scoped event identifier. */
+  externalEventId?: string | null;
+  /** Whether the last attempt failed. */
+  isFailed?: boolean;
+  /** Whether processing completed. */
+  isProcessed?: boolean;
+  /** When processing completed. */
+  processedAt?: string | null;
+  /** Number of processing attempts. */
+  processingAttempts?: number;
+  /** Payment provider that emitted the webhook. */
+  provider?: string | null;
+  /** Related subscription, when known. */
+  subscriptionId?: string | null;
+  /** Related tenant, when known. */
+  tenantId?: string | null;
 }
 
 /** A security alert surfaced from the Compliance.Audit pipeline. */
@@ -7268,6 +7338,18 @@ export interface IdentityAuthenticationCompleteWebAuthnRegistrationInput {
   isPasswordless?: boolean;
 }
 
+/** Request to consume a one-time email sign-in code. */
+export interface IdentityAuthenticationConsumeEmailCodeInput {
+  /** Six-digit one-time code received by email. */
+  code: string;
+  /** Optional device fingerprint for refresh-token session tracking. */
+  deviceFingerprint?: string | null;
+  /** Email address the code belongs to. */
+  email: string;
+  /** Optional tenant context. */
+  tenantId?: string | null;
+}
+
 /** Request to consume a passwordless magic sign-in link. */
 export interface IdentityAuthenticationConsumeMagicLinkInput {
   /** Optional device fingerprint for refresh-token session tracking. */
@@ -7411,6 +7493,13 @@ export interface IdentityAuthenticationDiscordSignInOutput {
   /** CSRF state parameter embedded in the authorization URL (also returned separately
 so the caller can stash it in its state cookie) */
   state: string | null;
+}
+
+/** Data model for Identity Authentication Email Code Request Result. */
+export interface IdentityAuthenticationEmailCodeRequestResult {
+  expiresInMinutes?: number;
+  message?: string | null;
+  success?: boolean;
 }
 
 /** Response for email verification request */
@@ -7616,6 +7705,54 @@ export interface IdentityAuthenticationOAuth2ErrorOutput {
   errorDescription?: string | null;
 }
 
+/** Request to initiate an OIDC federation provider sign-in */
+export interface IdentityAuthenticationOidcAuthorizeRequestDto {
+  /** The redirect URI registered with the federation provider */
+  redirectUri: string;
+}
+
+/** Request body for the OIDC federation callback endpoint */
+export interface IdentityAuthenticationOidcCallbackRequestDto {
+  /** OAuth authorization code returned by the federation provider */
+  code: string;
+  /** The same redirect URI used in the authorization request */
+  redirectUri: string;
+  /** Whether the caller asked for a persistent ("remember me") refresh-token lifetime */
+  rememberMe?: boolean | null;
+  /** OAuth state parameter for CSRF protection (validated web-side against the signed state cookie) */
+  state: string;
+  /** Optional tenant context */
+  tenantId?: string | null;
+}
+
+/** A discovered federation provider serving one email domain. */
+export interface IdentityAuthenticationOidcDiscoveredProvider {
+  displayName: string | null;
+  slug: string | null;
+}
+
+/** Response for domain-to-provider discovery */
+export interface IdentityAuthenticationOidcDiscoverProviderOutput {
+  /** Federation providers whose configured email domains match the requested address */
+  providers: IdentityAuthenticationOidcDiscoveredProvider[] | null;
+}
+
+/** Response for OIDC logout forwarding */
+export interface IdentityAuthenticationOidcEndSessionUrlOutput {
+  /** The provider's end-session URL with the post-logout redirect applied; null when the
+provider's discovery document does not advertise an end_session_endpoint. */
+  endSessionUrl?: string | null;
+}
+
+/** Response for OIDC federation sign-in initiation */
+export interface IdentityAuthenticationOidcSignInOutput {
+  /** The provider's authorization URL with client, redirect, scope, and state parameters applied */
+  authUrl: string | null;
+  /** CSRF state parameter embedded in the authorization URL (also returned separately
+so the caller can stash it in its state cookie) */
+  state: string | null;
+}
+
 /** Request to change password for authenticated user */
 export interface IdentityAuthenticationPasswordChangeInput {
   /** Password confirmation */
@@ -7689,6 +7826,14 @@ export interface IdentityAuthenticationRefreshTokenInput {
 export interface IdentityAuthenticationRemoveRoleFromUserInput {
   roleId?: string;
   userId?: string;
+}
+
+/** Request to send a one-time email sign-in code. */
+export interface IdentityAuthenticationRequestEmailCodeInput {
+  /** Email address to send the sign-in code to. */
+  email: string;
+  /** Optional tenant context. */
+  tenantId?: string | null;
 }
 
 /** Request to send a passwordless magic sign-in link. */
@@ -7881,6 +8026,12 @@ export interface IdentityAuthenticationSignInOutput {
   accessToken?: string | null;
   /** When the access token expires (short-lived) */
   accessTokenExpiresAt?: string;
+  /**     Authentication context class reference (OIDC `acr`) attested by the federated
+identity provider for this sign-in. Null for non-federated flows. */
+  authenticationContextClassReference?: string | null;
+  /**     Authentication method references (OIDC `amr`) attested by the federated
+identity provider for this sign-in. Null for non-federated flows. */
+  authenticationMethodReferences?: string[] | null;
   /** Available step-up authentication methods */
   availableMethods?: string[] | null;
   /** List of tenants the user has access to */
@@ -7897,6 +8048,9 @@ export interface IdentityAuthenticationSignInOutput {
   mfaSessionId?: string | null;
   /** MFA token */
   mfaToken?: string | null;
+  /**     Whether the federated identity provider attested multi-factor authentication
+(`amr` containing "mfa") for this sign-in. */
+  mfaVerifiedByProvider?: boolean;
   /** Refresh token */
   refreshToken?: string | null;
   /** When the refresh token expires (long-lived) */
@@ -15134,6 +15288,52 @@ export type ObjectsUserVerificationRequirement = 'Required' | 'Preferred' | 'Dis
 
 /** Represents a paginated result set with full pagination metadata.
 This is the single canonical pagination type — use it everywhere. */
+export interface PagedResultBillingOutboxEventDto {
+  /** Whether there are more items after this page. */
+  hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
+  hasPreviousPage?: boolean;
+  /** The items in the current page. */
+  items?: CommerceBillingBillingOutboxEventDto[] | null;
+  /** Current page number (1-based). */
+  pageNumber?: number;
+  /** Number of items per page. */
+  pageSize?: number;
+  /** Number of items skipped (offset). */
+  skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
+  take?: number;
+  /** Total number of items across all pages. */
+  totalCount?: number;
+  /** Total number of pages. */
+  totalPages?: number;
+}
+
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+export interface PagedResultBillingWebhookEventListItemDto {
+  /** Whether there are more items after this page. */
+  hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
+  hasPreviousPage?: boolean;
+  /** The items in the current page. */
+  items?: CommerceBillingBillingWebhookEventListItemDto[] | null;
+  /** Current page number (1-based). */
+  pageNumber?: number;
+  /** Number of items per page. */
+  pageSize?: number;
+  /** Number of items skipped (offset). */
+  skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
+  take?: number;
+  /** Total number of items across all pages. */
+  totalCount?: number;
+  /** Total number of pages. */
+  totalPages?: number;
+}
+
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultDeadLetterDto {
   /** Whether there are more items after this page. */
   hasNextPage?: boolean;
@@ -20133,8 +20333,12 @@ export let AssetsVirusScanStatusSchema: z.ZodType<AssetsVirusScanStatus>;
 export let BillingCycleSchema: z.ZodType<BillingCycle>;
 export let BulkOperationErrorSchema: z.ZodType<BulkOperationError>;
 export let BulkOperationOutputSchema: z.ZodType<BulkOperationOutput>;
+export let CommerceBillingBillingOutboxEventDtoSchema: z.ZodType<CommerceBillingBillingOutboxEventDto>;
+export let CommerceBillingBillingOutboxEventStatusSchema: z.ZodType<CommerceBillingBillingOutboxEventStatus>;
 export let CommerceBillingBillingWebhookAllowlistStatusDtoSchema: z.ZodType<CommerceBillingBillingWebhookAllowlistStatusDto>;
 export let CommerceBillingBillingWebhookBlockedSourceDtoSchema: z.ZodType<CommerceBillingBillingWebhookBlockedSourceDto>;
+export let CommerceBillingBillingWebhookEventDtoSchema: z.ZodType<CommerceBillingBillingWebhookEventDto>;
+export let CommerceBillingBillingWebhookEventListItemDtoSchema: z.ZodType<CommerceBillingBillingWebhookEventListItemDto>;
 export let CommerceBillingBillingWebhookSecurityAlertDtoSchema: z.ZodType<CommerceBillingBillingWebhookSecurityAlertDto>;
 export let CommerceBillingBillingWebhookSecuritySummaryDtoSchema: z.ZodType<CommerceBillingBillingWebhookSecuritySummaryDto>;
 export let CommerceBillingBillingWebhookSuspiciousActivityStatusDtoSchema: z.ZodType<CommerceBillingBillingWebhookSuspiciousActivityStatusDto>;
@@ -20670,6 +20874,7 @@ export let IdentityAuthenticationCompleteMfaSetupInputSchema: z.ZodType<Identity
 export let IdentityAuthenticationCompletePasswordResetInputSchema: z.ZodType<IdentityAuthenticationCompletePasswordResetInput>;
 export let IdentityAuthenticationCompleteWebAuthnAuthenticationInputSchema: z.ZodType<IdentityAuthenticationCompleteWebAuthnAuthenticationInput>;
 export let IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema: z.ZodType<IdentityAuthenticationCompleteWebAuthnRegistrationInput>;
+export let IdentityAuthenticationConsumeEmailCodeInputSchema: z.ZodType<IdentityAuthenticationConsumeEmailCodeInput>;
 export let IdentityAuthenticationConsumeMagicLinkInputSchema: z.ZodType<IdentityAuthenticationConsumeMagicLinkInput>;
 export let IdentityAuthenticationCreateApiKeyCommandSchema: z.ZodType<IdentityAuthenticationCreateApiKeyCommand>;
 export let IdentityAuthenticationCreateApiKeyOutputSchema: z.ZodType<IdentityAuthenticationCreateApiKeyOutput>;
@@ -20685,6 +20890,7 @@ export let IdentityAuthenticationDiscordLinkAuthorizeInputSchema: z.ZodType<Iden
 export let IdentityAuthenticationDiscordLinkAuthorizeOutputSchema: z.ZodType<IdentityAuthenticationDiscordLinkAuthorizeOutput>;
 export let IdentityAuthenticationDiscordLinkCallbackInputSchema: z.ZodType<IdentityAuthenticationDiscordLinkCallbackInput>;
 export let IdentityAuthenticationDiscordSignInOutputSchema: z.ZodType<IdentityAuthenticationDiscordSignInOutput>;
+export let IdentityAuthenticationEmailCodeRequestResultSchema: z.ZodType<IdentityAuthenticationEmailCodeRequestResult>;
 export let IdentityAuthenticationEmailVerificationOutputSchema: z.ZodType<IdentityAuthenticationEmailVerificationOutput>;
 export let IdentityAuthenticationEmailVerificationResultSchema: z.ZodType<IdentityAuthenticationEmailVerificationResult>;
 export let IdentityAuthenticationExternalLoginLinkPreviewOutputSchema: z.ZodType<IdentityAuthenticationExternalLoginLinkPreviewOutput>;
@@ -20706,6 +20912,12 @@ export let IdentityAuthenticationMfaSetupOutputSchema: z.ZodType<IdentityAuthent
 export let IdentityAuthenticationMfaSuccessOutputSchema: z.ZodType<IdentityAuthenticationMfaSuccessOutput>;
 export let IdentityAuthenticationMfaVerificationOutputSchema: z.ZodType<IdentityAuthenticationMfaVerificationOutput>;
 export let IdentityAuthenticationOAuth2ErrorOutputSchema: z.ZodType<IdentityAuthenticationOAuth2ErrorOutput>;
+export let IdentityAuthenticationOidcAuthorizeRequestDtoSchema: z.ZodType<IdentityAuthenticationOidcAuthorizeRequestDto>;
+export let IdentityAuthenticationOidcCallbackRequestDtoSchema: z.ZodType<IdentityAuthenticationOidcCallbackRequestDto>;
+export let IdentityAuthenticationOidcDiscoveredProviderSchema: z.ZodType<IdentityAuthenticationOidcDiscoveredProvider>;
+export let IdentityAuthenticationOidcDiscoverProviderOutputSchema: z.ZodType<IdentityAuthenticationOidcDiscoverProviderOutput>;
+export let IdentityAuthenticationOidcEndSessionUrlOutputSchema: z.ZodType<IdentityAuthenticationOidcEndSessionUrlOutput>;
+export let IdentityAuthenticationOidcSignInOutputSchema: z.ZodType<IdentityAuthenticationOidcSignInOutput>;
 export let IdentityAuthenticationPasswordChangeInputSchema: z.ZodType<IdentityAuthenticationPasswordChangeInput>;
 export let IdentityAuthenticationPasswordChangeResultSchema: z.ZodType<IdentityAuthenticationPasswordChangeResult>;
 export let IdentityAuthenticationPasswordResetRequestResultSchema: z.ZodType<IdentityAuthenticationPasswordResetRequestResult>;
@@ -20714,6 +20926,7 @@ export let IdentityAuthenticationPatchServiceAccountInputSchema: z.ZodType<Ident
 export let IdentityAuthenticationPolymorphicSignInInputSchema: z.ZodType<IdentityAuthenticationPolymorphicSignInInput>;
 export let IdentityAuthenticationRefreshTokenInputSchema: z.ZodType<IdentityAuthenticationRefreshTokenInput>;
 export let IdentityAuthenticationRemoveRoleFromUserInputSchema: z.ZodType<IdentityAuthenticationRemoveRoleFromUserInput>;
+export let IdentityAuthenticationRequestEmailCodeInputSchema: z.ZodType<IdentityAuthenticationRequestEmailCodeInput>;
 export let IdentityAuthenticationRequestMagicLinkInputSchema: z.ZodType<IdentityAuthenticationRequestMagicLinkInput>;
 export let IdentityAuthenticationRequestPasswordResetInputSchema: z.ZodType<IdentityAuthenticationRequestPasswordResetInput>;
 export let IdentityAuthenticationRevokeApiKeyInputSchema: z.ZodType<IdentityAuthenticationRevokeApiKeyInput>;
@@ -21373,6 +21586,8 @@ export let ObjectsPublicKeyCredentialHintSchema: z.ZodType<ObjectsPublicKeyCrede
 export let ObjectsPublicKeyCredentialTypeSchema: z.ZodType<ObjectsPublicKeyCredentialType>;
 export let ObjectsResidentKeyRequirementSchema: z.ZodType<ObjectsResidentKeyRequirement>;
 export let ObjectsUserVerificationRequirementSchema: z.ZodType<ObjectsUserVerificationRequirement>;
+export let PagedResultBillingOutboxEventDtoSchema: z.ZodType<PagedResultBillingOutboxEventDto>;
+export let PagedResultBillingWebhookEventListItemDtoSchema: z.ZodType<PagedResultBillingWebhookEventListItemDto>;
 export let PagedResultDeadLetterDtoSchema: z.ZodType<PagedResultDeadLetterDto>;
 export let PagedResultEmailDeliveryEventDtoSchema: z.ZodType<PagedResultEmailDeliveryEventDto>;
 export let PagedResultEmailSuppressionDtoSchema: z.ZodType<PagedResultEmailSuppressionDto>;
@@ -23271,6 +23486,23 @@ BulkOperationOutputSchema = z.object({
   totalRequested: z.number().int().optional(),
 });
 
+/** Zod schema for CommerceBillingBillingOutboxEventDto. Read model over a durable billing integration event published through the platform outbox. */
+CommerceBillingBillingOutboxEventDtoSchema = z.object({
+  aggregateId: z.string().nullable().optional(),
+  aggregateType: z.string().nullable().optional(),
+  correlationId: z.string().uuid().optional(),
+  eventId: z.string().uuid().optional(),
+  eventName: z.string().nullable().optional(),
+  eventType: z.string().nullable().optional(),
+  occurredAtUtc: z.string().datetime().optional(),
+  schemaVersion: z.number().int().optional(),
+  status: z.lazy(() => CommerceBillingBillingOutboxEventStatusSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for CommerceBillingBillingOutboxEventStatus. Delivery status of a durable billing event in the platform outbox. */
+CommerceBillingBillingOutboxEventStatusSchema = z.enum(['Pending', 'Completed', 'DeadLettered']);
+
 /** Zod schema for CommerceBillingBillingWebhookAllowlistStatusDto. State of the CIDR source allowlist enforced on the provider callback endpoints. */
 CommerceBillingBillingWebhookAllowlistStatusDtoSchema = z.object({
   configuredNetworkCount: z.number().int().optional(),
@@ -23283,6 +23515,38 @@ CommerceBillingBillingWebhookBlockedSourceDtoSchema = z.object({
   blockedUntilUtc: z.string().datetime().optional(),
   failureCount: z.number().int().optional(),
   sourceKey: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceBillingBillingWebhookEventDto. DTO for webhook event response */
+CommerceBillingBillingWebhookEventDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  errorMessage: z.string().nullable().optional(),
+  eventType: z.string().nullable().optional(),
+  externalEventId: z.string().nullable().optional(),
+  isFailed: z.boolean().optional(),
+  isProcessed: z.boolean().optional(),
+  processedAt: z.string().datetime().nullable().optional(),
+  processingAttempts: z.number().int().optional(),
+  provider: z.string().nullable().optional(),
+  subscriptionId: z.string().uuid().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for CommerceBillingBillingWebhookEventListItemDto. List item of the billing webhook inbox event feed (issue #396). Payloads are excluded. */
+CommerceBillingBillingWebhookEventListItemDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  errorMessage: z.string().nullable().optional(),
+  eventType: z.string().nullable().optional(),
+  externalEventId: z.string().nullable().optional(),
+  isFailed: z.boolean().optional(),
+  isProcessed: z.boolean().optional(),
+  processedAt: z.string().datetime().nullable().optional(),
+  processingAttempts: z.number().int().optional(),
+  provider: z.string().nullable().optional(),
+  subscriptionId: z.string().uuid().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for CommerceBillingBillingWebhookSecurityAlertDto. A security alert surfaced from the Compliance.Audit pipeline. */
@@ -28987,6 +29251,17 @@ IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema = z.object({
   isPasswordless: z.boolean().optional(),
 });
 
+/** Zod schema for IdentityAuthenticationConsumeEmailCodeInput. Request to consume a one-time email sign-in code. */
+IdentityAuthenticationConsumeEmailCodeInputSchema = z.object({
+  code: z
+    .string()
+    .min(1)
+    .regex(/^[0-9]{6}$/),
+  deviceFingerprint: z.string().nullable().optional(),
+  email: z.string().email().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
 /** Zod schema for IdentityAuthenticationConsumeMagicLinkInput. Request to consume a passwordless magic sign-in link. */
 IdentityAuthenticationConsumeMagicLinkInputSchema = z.object({
   deviceFingerprint: z.string().nullable().optional(),
@@ -29101,6 +29376,13 @@ IdentityAuthenticationDiscordLinkCallbackInputSchema = z.object({
 IdentityAuthenticationDiscordSignInOutputSchema = z.object({
   authUrl: z.string().nullable(),
   state: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationEmailCodeRequestResult. Data model for Identity Authentication Email Code Request Result. */
+IdentityAuthenticationEmailCodeRequestResultSchema = z.object({
+  expiresInMinutes: z.number().int().optional(),
+  message: z.string().nullable().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationEmailVerificationOutput. Response for email verification request */
@@ -29267,6 +29549,42 @@ IdentityAuthenticationOAuth2ErrorOutputSchema = z.object({
   errorDescription: z.string().nullable().optional(),
 });
 
+/** Zod schema for IdentityAuthenticationOidcAuthorizeRequestDto. Request to initiate an OIDC federation provider sign-in */
+IdentityAuthenticationOidcAuthorizeRequestDtoSchema = z.object({
+  redirectUri: z.string().min(1),
+});
+
+/** Zod schema for IdentityAuthenticationOidcCallbackRequestDto. Request body for the OIDC federation callback endpoint */
+IdentityAuthenticationOidcCallbackRequestDtoSchema = z.object({
+  code: z.string().min(1),
+  redirectUri: z.string().min(1),
+  rememberMe: z.boolean().nullable().optional(),
+  state: z.string().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationOidcDiscoveredProvider. A discovered federation provider serving one email domain. */
+IdentityAuthenticationOidcDiscoveredProviderSchema = z.object({
+  displayName: z.string().nullable(),
+  slug: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationOidcDiscoverProviderOutput. Response for domain-to-provider discovery */
+IdentityAuthenticationOidcDiscoverProviderOutputSchema = z.object({
+  providers: z.array(z.lazy(() => IdentityAuthenticationOidcDiscoveredProviderSchema)).nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationOidcEndSessionUrlOutput. Response for OIDC logout forwarding */
+IdentityAuthenticationOidcEndSessionUrlOutputSchema = z.object({
+  endSessionUrl: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationOidcSignInOutput. Response for OIDC federation sign-in initiation */
+IdentityAuthenticationOidcSignInOutputSchema = z.object({
+  authUrl: z.string().nullable(),
+  state: z.string().nullable(),
+});
+
 /** Zod schema for IdentityAuthenticationPasswordChangeInput. Request to change password for authenticated user */
 IdentityAuthenticationPasswordChangeInputSchema = z.object({
   confirmPassword: z.string().min(1),
@@ -29324,6 +29642,12 @@ IdentityAuthenticationRefreshTokenInputSchema = z.object({
 IdentityAuthenticationRemoveRoleFromUserInputSchema = z.object({
   roleId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationRequestEmailCodeInput. Request to send a one-time email sign-in code. */
+IdentityAuthenticationRequestEmailCodeInputSchema = z.object({
+  email: z.string().email().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationRequestMagicLinkInput. Request to send a passwordless magic sign-in link. */
@@ -29499,6 +29823,8 @@ IdentityAuthenticationSessionTerminationOutputSchema = z.object({
 IdentityAuthenticationSignInOutputSchema = z.object({
   accessToken: z.string().nullable().optional(),
   accessTokenExpiresAt: z.string().datetime().optional(),
+  authenticationContextClassReference: z.string().nullable().optional(),
+  authenticationMethodReferences: z.array(z.string()).nullable().optional(),
   availableMethods: z.array(z.string()).nullable().optional(),
   availableTenants: z
     .array(z.lazy(() => TenantInfoSchema))
@@ -29510,6 +29836,7 @@ IdentityAuthenticationSignInOutputSchema = z.object({
   message: z.string().nullable().optional(),
   mfaSessionId: z.string().nullable().optional(),
   mfaToken: z.string().nullable().optional(),
+  mfaVerifiedByProvider: z.boolean().optional(),
   refreshToken: z.string().nullable().optional(),
   refreshTokenExpiresAt: z.string().datetime().optional(),
   requiresMfa: z.boolean().optional(),
@@ -36344,6 +36671,40 @@ ObjectsResidentKeyRequirementSchema = z.enum(['Required', 'Preferred', 'Discoura
 /** Zod schema for ObjectsUserVerificationRequirement. OpenAPI schema for Objects User Verification Requirement. */
 ObjectsUserVerificationRequirementSchema = z.enum(['Required', 'Preferred', 'Discouraged']);
 
+/** Zod schema for PagedResultBillingOutboxEventDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+PagedResultBillingOutboxEventDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => CommerceBillingBillingOutboxEventDtoSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultBillingWebhookEventListItemDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+PagedResultBillingWebhookEventListItemDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => CommerceBillingBillingWebhookEventListItemDtoSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
 /** Zod schema for PagedResultDeadLetterDto. Represents a paginated result set with full pagination metadata.
 This is the single canonical pagination type — use it everywhere. */
 PagedResultDeadLetterDtoSchema = z.object({
@@ -40716,10 +41077,16 @@ export type APITeamsTeamInvitation = APITeamsTeamInvitationDto;
 export { APITeamsTeamInvitationDtoSchema as APITeamsTeamInvitationSchema };
 export type APITeamsTeamMember = APITeamsTeamMemberDto;
 export { APITeamsTeamMemberDtoSchema as APITeamsTeamMemberSchema };
+export type CommerceBillingBillingOutboxEvent = CommerceBillingBillingOutboxEventDto;
+export { CommerceBillingBillingOutboxEventDtoSchema as CommerceBillingBillingOutboxEventSchema };
 export type CommerceBillingBillingWebhookAllowlistStatus = CommerceBillingBillingWebhookAllowlistStatusDto;
 export { CommerceBillingBillingWebhookAllowlistStatusDtoSchema as CommerceBillingBillingWebhookAllowlistStatusSchema };
 export type CommerceBillingBillingWebhookBlockedSource = CommerceBillingBillingWebhookBlockedSourceDto;
 export { CommerceBillingBillingWebhookBlockedSourceDtoSchema as CommerceBillingBillingWebhookBlockedSourceSchema };
+export type CommerceBillingBillingWebhookEvent = CommerceBillingBillingWebhookEventDto;
+export { CommerceBillingBillingWebhookEventDtoSchema as CommerceBillingBillingWebhookEventSchema };
+export type CommerceBillingBillingWebhookEventListItem = CommerceBillingBillingWebhookEventListItemDto;
+export { CommerceBillingBillingWebhookEventListItemDtoSchema as CommerceBillingBillingWebhookEventListItemSchema };
 export type CommerceBillingBillingWebhookSecurityAlert = CommerceBillingBillingWebhookSecurityAlertDto;
 export { CommerceBillingBillingWebhookSecurityAlertDtoSchema as CommerceBillingBillingWebhookSecurityAlertSchema };
 export type CommerceBillingBillingWebhookSecuritySummary = CommerceBillingBillingWebhookSecuritySummaryDto;
@@ -40844,6 +41211,10 @@ export type IdentityAuthenticationGoogleIdTokenRequest = IdentityAuthenticationG
 export { IdentityAuthenticationGoogleIdTokenRequestDtoSchema as IdentityAuthenticationGoogleIdTokenRequestSchema };
 export type IdentityAuthenticationJwtKeyInfo = IdentityAuthenticationJwtKeyInfoDto;
 export { IdentityAuthenticationJwtKeyInfoDtoSchema as IdentityAuthenticationJwtKeyInfoSchema };
+export type IdentityAuthenticationOidcAuthorizeRequest = IdentityAuthenticationOidcAuthorizeRequestDto;
+export { IdentityAuthenticationOidcAuthorizeRequestDtoSchema as IdentityAuthenticationOidcAuthorizeRequestSchema };
+export type IdentityAuthenticationOidcCallbackRequest = IdentityAuthenticationOidcCallbackRequestDto;
+export { IdentityAuthenticationOidcCallbackRequestDtoSchema as IdentityAuthenticationOidcCallbackRequestSchema };
 export type IdentityAuthenticationUser = IdentityAuthenticationUserDto;
 export { IdentityAuthenticationUserDtoSchema as IdentityAuthenticationUserSchema };
 export type IdentityAuthorizationEffectivePermission = IdentityAuthorizationEffectivePermissionDto;
@@ -41198,6 +41569,10 @@ export type NotificationsControllersNotificationPreference = NotificationsContro
 export { NotificationsControllersNotificationPreferenceDtoSchema as NotificationsControllersNotificationPreferenceSchema };
 export type NotificationsControllersNotificationTimeline = NotificationsControllersNotificationTimelineDto;
 export { NotificationsControllersNotificationTimelineDtoSchema as NotificationsControllersNotificationTimelineSchema };
+export type PagedResultBillingOutboxEvent = PagedResultBillingOutboxEventDto;
+export { PagedResultBillingOutboxEventDtoSchema as PagedResultBillingOutboxEventSchema };
+export type PagedResultBillingWebhookEventListItem = PagedResultBillingWebhookEventListItemDto;
+export { PagedResultBillingWebhookEventListItemDtoSchema as PagedResultBillingWebhookEventListItemSchema };
 export type PagedResultDeadLetter = PagedResultDeadLetterDto;
 export { PagedResultDeadLetterDtoSchema as PagedResultDeadLetterSchema };
 export type PagedResultEmailDeliveryEvent = PagedResultEmailDeliveryEventDto;
