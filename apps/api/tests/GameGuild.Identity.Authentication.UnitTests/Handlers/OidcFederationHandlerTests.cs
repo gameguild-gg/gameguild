@@ -76,7 +76,8 @@ public class OidcSignInCommandHandlerTests
         var response = await handler.Handle(new OidcSignInCommand { Slug = "corp-idp", RedirectUri = "https://web.example.test/cb" }, CancellationToken.None);
 
         response.AuthUrl.Should().Contain("login.corp.example.test");
-        response.State.Should().Be("incoming-state");
+        // The handler owns CSRF state generation (Guid "N"), not the federation challenge.
+        response.State.Should().MatchRegex("^[0-9a-f]{32}$");
     }
 }
 

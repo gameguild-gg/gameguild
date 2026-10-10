@@ -101,9 +101,8 @@ public class OidcAuthControllerTests
             },
             CancellationToken.None);
 
-        var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
-        objectResult.StatusCode.Should().Be(401);
-        var problem = objectResult.Value.Should().BeOfType<ProblemDetails>().Subject;
+        var unauthorized = result.Should().BeOfType<UnauthorizedObjectResult>().Subject;
+        var problem = unauthorized.Value.Should().BeOfType<ProblemDetails>().Subject;
         problem.Status.Should().Be(401);
     }
 

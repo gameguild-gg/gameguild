@@ -411,7 +411,8 @@ public class OidcFederationServiceTests : IDisposable
         {
             _jwksKey = jwksKey;
             _handler = new InlineHandler(this);
-            _factory.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(new HttpClient(_handler, disposeHandler: false));
+            // A fresh HttpClient per CreateClient call — the service disposes each client it creates.
+            _factory.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(() => new HttpClient(_handler, disposeHandler: false));
         }
 
         public string Issuer { get; set; } = Authority;
