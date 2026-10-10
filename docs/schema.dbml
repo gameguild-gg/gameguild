@@ -646,6 +646,7 @@ Table "AuditRetentionSimulationRuns" {
   }
 }
 
+<<<<<<< HEAD
 Table "billing_provider_states" {
   "Id" uuid [not null]
   "ProviderKey" "character varying(50)" [not null]
@@ -663,6 +664,8 @@ Table "billing_provider_states" {
   }
 }
 
+=======
+>>>>>>> origin/develop
 Table "billing_webhook_events" {
   "Id" uuid [not null]
   "Provider" "character varying(50)" [not null]
@@ -4250,9 +4253,12 @@ Table "SecurityAlerts" {
   "AcknowledgedByUserId" uuid
   "AcknowledgedAtUtc" timestamp
   "AcknowledgementNotes" "character varying(1000)"
+<<<<<<< HEAD
   "ResolvedByUserId" uuid
   "ResolvedAtUtc" timestamp
   "ResolutionNotes" "character varying(1000)"
+=======
+>>>>>>> origin/develop
   "Version" integer [not null]
   "CreatedAt" timestamp [not null]
   "UpdatedAt" timestamp [not null]

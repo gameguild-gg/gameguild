@@ -47,6 +47,13 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBillingWebhookRetryWorker, BillingWebhookRetryWorker>();
         services.AddHostedService<BillingWebhookRetryBackgroundService>();
 
+        // Named billing integration events (issue #396): publish through the durable transport.
+        services.AddScoped<IBillingIntegrationEventPublisher, BillingIntegrationEventPublisher>();
+
+        // Hosted asynchronous retry of failed webhook inbox events (issue #396).
+        services.AddScoped<IBillingWebhookRetryWorker, BillingWebhookRetryWorker>();
+        services.AddHostedService<BillingWebhookRetryBackgroundService>();
+
         // Register Apple sub-services
         services.AddSingleton<IAppleJwsVerificationService, AppleJwsVerificationService>();
         services.AddSingleton<IAppleStoreAuthService, AppleStoreAuthService>();
