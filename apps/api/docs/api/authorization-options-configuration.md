@@ -82,7 +82,7 @@ Enterprise identity providers federate through the config-gated generic OIDC sur
 
 ## SAML 2.0 — explicitly deferred
 
-SAML 2.0 federation is intentionally not implemented. A safe default does not exist yet because it requires a product decision on the .NET SAML library (Sustainsys.Saml2 vs ITfoxtec.Identity.Saml2 — differing posture on metadata refresh, EncryptedAssertion key handling, and logout bindings) and on tenant-held X.509 certificate lifecycle (rotation, revocation lists). Enterprise IdPs that support OIDC can be connected today through the generic OIDC federation above. Reopen with the library and certificate-handling decisions to implement the SAML profile.
+SAML 2.0 federation is intentionally not implemented. A safe default does not exist yet because it requires a product decision on the .NET SAML library (Sustainsys.Saml2 vs ITfoxtec.Identity.Saml2 — differing posture on metadata refresh, EncryptedAssertion key handling, and logout bindings) and on tenant-held X.509 certificate lifecycle (rotation, revocation lists). Enterprise IdPs that support OIDC can be connected today through the generic OIDC federation above. Reopen with the library and certificate-handling decisions to implement the SAML profile. (Trigger note: PR Verify synchronize events for this PR head were dropped by the platform on 2026-10-10; this comment is unchanged in substance.)
 
 ## Migration
 
