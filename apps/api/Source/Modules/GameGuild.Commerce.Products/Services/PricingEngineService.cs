@@ -392,7 +392,13 @@ public class PricingEngineService(
         var rules = await pricingRuleRepository.GetActiveRulesForProductAsync(productId, cancellationToken)
             .ConfigureAwait(false);
 
-        cache.Set(cacheKey, rules, RulesCacheDuration);
+        // The platform memory cache is registered with a SizeLimit; every entry
+        // must declare its size or the Set call throws at runtime.
+        cache.Set(cacheKey, rules, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = RulesCacheDuration,
+            Size = 1
+        });
 
         return rules;
     }

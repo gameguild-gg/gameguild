@@ -54,6 +54,11 @@ public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplication
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
                     options.UseInMemoryDatabase(DatabaseName);
+                    // The command pipeline wraps mutations in a transaction; the in-memory
+                    // provider raises TransactionIgnoredWarning at error severity by default,
+                    // which would fail every pricing mutation before authorization even runs.
+                    options.ConfigureWarnings(warnings =>
+                        warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning));
                 });
                 services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
                 services.AddDefaultTenantMembership();
