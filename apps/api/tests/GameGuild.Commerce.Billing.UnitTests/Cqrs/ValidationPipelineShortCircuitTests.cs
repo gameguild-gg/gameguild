@@ -67,6 +67,9 @@ public class ValidationPipelineShortCircuitTests
         services.AddScoped<IValidator<ProcessStripeWebhookCommand>, ProcessStripeWebhookCommandValidator>();
 
         var handler = new SpyCommandHandler();
+        // AddCqrs registers concrete handlers under both IRequestHandler<,> and ICommandHandler<,>;
+        // the mediator resolves IRequestHandler<,>, so the spy registers under that contract too.
+        services.AddSingleton<IRequestHandler<ProcessStripeWebhookCommand, WebhookProcessingResult>>(handler);
         services.AddSingleton<ICommandHandler<ProcessStripeWebhookCommand, WebhookProcessingResult>>(handler);
 
         var counter = new Counter();
