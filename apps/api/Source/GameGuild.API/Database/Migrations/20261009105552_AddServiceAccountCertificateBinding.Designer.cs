@@ -3,6 +3,7 @@ using System;
 using GameGuild.API.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameGuild.API.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261009105552_AddServiceAccountCertificateBinding")]
+    partial class AddServiceAccountCertificateBinding
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4624,16 +4627,6 @@ namespace GameGuild.API.Database.Migrations
 
                     b.Property<int>("OccurrenceCount")
                         .HasColumnType("integer");
-
-                    b.Property<string>("ResolutionNotes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<DateTime?>("ResolvedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("ResolvedByUserId")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("RuleId")
                         .IsRequired()
@@ -13654,79 +13647,6 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("game_jam_submissions", (string)null);
                 });
 
-            modelBuilder.Entity("GameGuild.Identity.Authentication.AdaptiveBehaviorBaseline", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<double>("CadenceLogSecondsMean")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("CadenceLogSecondsMeanSquaredDeviation")
-                        .HasColumnType("double precision");
-
-                    b.Property<int>("CadenceObservationCount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<double>("HourMeanSquaredDeviation")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("HourMeanX")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("HourMeanY")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("IpSurpriseMean")
-                        .HasColumnType("double precision");
-
-                    b.Property<double>("IpSurpriseMeanSquaredDeviation")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("IpWeightsJson")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<DateTime?>("LastObservedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("ObservationCount")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SubjectKey")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LastObservedAtUtc")
-                        .HasDatabaseName("ix_adaptivebehaviorbaseline_last_observed_at");
-
-                    b.HasIndex("SubjectKey")
-                        .IsUnique()
-                        .HasDatabaseName("ix_adaptivebehaviorbaseline_subject_key");
-
-                    b.HasIndex("TenantId")
-                        .HasDatabaseName("ix_adaptivebehaviorbaseline_tenant_id");
-
-                    b.ToTable("adaptivebehaviorbaseline", "gameguild.authentication");
-                });
-
             modelBuilder.Entity("GameGuild.Identity.Authentication.ApiKey", b =>
                 {
                     b.Property<Guid>("Id")
@@ -13779,10 +13699,6 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
-                    b.Property<Guid?>("ReplacesKeyId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("replaces_key_id");
-
                     b.Property<string>("RevocationReason")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
@@ -13791,10 +13707,6 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("revoked_at");
-
-                    b.Property<DateTime?>("RotationGraceEndsAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("rotation_grace_ends_at");
 
                     b.Property<string>("Scopes")
                         .IsRequired()
@@ -13836,9 +13748,6 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("KeyHash")
                         .IsUnique()
                         .HasDatabaseName("ix_api_keys_key_hash");
-
-                    b.HasIndex("ReplacesKeyId")
-                        .HasDatabaseName("ix_api_keys_replaces_key_id");
 
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_api_keys_tenant_id");
@@ -13938,88 +13847,6 @@ namespace GameGuild.API.Database.Migrations
                         .HasDatabaseName("ix_authenticationattempt_user_id");
 
                     b.ToTable("authenticationattempt", "gameguild.authentication");
-                });
-
-            modelBuilder.Entity("GameGuild.Identity.Authentication.AuthenticationFlowStateRecord", b =>
-                {
-                    b.Property<Guid>("FlowId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("flow_id");
-
-                    b.Property<DateTime?>("AbandonedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("abandoned_at");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("completed_at");
-
-                    b.Property<string>("CompletedStepsJson")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("completed_steps");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("CurrentStep")
-                        .HasColumnType("integer")
-                        .HasColumnName("current_step");
-
-                    b.Property<string>("DeviceFingerprint")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)")
-                        .HasColumnName("device_fingerprint");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<DateTime>("InitiatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("initiated_at");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("ip_address");
-
-                    b.Property<bool>("IsComplete")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_complete");
-
-                    b.Property<string>("RequiredStepsJson")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("required_steps");
-
-                    b.Property<double?>("RiskScore")
-                        .HasColumnType("double precision")
-                        .HasColumnName("risk_score");
-
-                    b.Property<string>("StepDataJson")
-                        .HasColumnType("text")
-                        .HasColumnName("step_data");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("FlowId");
-
-                    b.HasIndex("ExpiresAt")
-                        .HasDatabaseName("ix_authentication_flow_states_expires_at");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_authentication_flow_states_user_id");
-
-                    b.ToTable("authentication_flow_states", "gameguild.authentication");
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authentication.BlockchainCertificateAnchor", b =>
@@ -14175,20 +14002,8 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<int>("ConsentVersion")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("ConsentedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("GrantedScopes")
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
 
                     b.Property<string>("Provider")
                         .IsRequired()
@@ -14216,81 +14031,6 @@ namespace GameGuild.API.Database.Migrations
                         .HasDatabaseName("ix_externallogin_provider_provider_key");
 
                     b.ToTable("externallogin", "gameguild.authentication");
-                });
-
-            modelBuilder.Entity("GameGuild.Identity.Authentication.GenericResourcePermission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("GrantedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("GrantedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Permissions")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<Guid>("ResourceId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ResourceTitle")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
-                    b.Property<string>("ResourceType")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ResourceType")
-                        .HasDatabaseName("ix_genericresourcepermission_resource_type");
-
-                    b.HasIndex("TenantId")
-                        .HasDatabaseName("ix_genericresourcepermission_tenant_id");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_genericresourcepermission_user_id");
-
-                    b.HasIndex("TenantId", "ResourceType", "ResourceId")
-                        .HasDatabaseName("ix_genericresourcepermission_tenant_resource");
-
-                    b.ToTable("genericresourcepermission", "gameguild.authentication");
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authentication.IdentityVerification", b =>
@@ -16015,83 +15755,6 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("JitElevationRequest");
                 });
 
-            modelBuilder.Entity("GameGuild.Identity.Authorization.PermissionAuditLog", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("NewValue")
-                        .HasColumnType("text");
-
-                    b.Property<string>("OldValue")
-                        .HasColumnType("text");
-
-                    b.Property<int>("OperationType")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("PerformedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("PermissionDetails")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PermissionType")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("Reason")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<Guid?>("ResourceId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ResourceType")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<bool>("Success")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OperationType")
-                        .HasDatabaseName("IX_PermissionAuditLogs_OperationType");
-
-                    b.HasIndex("Timestamp")
-                        .HasDatabaseName("IX_PermissionAuditLogs_Time");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("IX_PermissionAuditLogs_UserId");
-
-                    b.HasIndex("TenantId", "Timestamp")
-                        .HasDatabaseName("IX_PermissionAuditLogs_Tenant_Time");
-
-                    b.ToTable("PermissionAuditLogs", (string)null);
-                });
-
             modelBuilder.Entity("GameGuild.Identity.Authorization.PermissionDelegation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -16192,10 +15855,6 @@ namespace GameGuild.API.Database.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
-
-                    b.PrimitiveCollection<string[]>("Roles")
-                        .IsRequired()
-                        .HasColumnType("text[]");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -23351,7 +23010,8 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("character varying(2000)");
 
                     b.Property<string>("Metadata")
-                        .HasColumnType("text");
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
 
                     b.Property<DateTime?>("NextAttemptAt")
                         .HasColumnType("timestamp with time zone");
