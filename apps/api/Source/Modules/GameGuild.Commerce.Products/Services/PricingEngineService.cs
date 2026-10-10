@@ -389,8 +389,12 @@ public class PricingEngineService(
             return cached;
         }
 
+        // Guard against a repository (or test double) returning null instead of an empty
+        // list: a null rule set must be treated as "no rules apply", never propagated to
+        // callers that iterate it, and never cached as a null entry.
         var rules = await pricingRuleRepository.GetActiveRulesForProductAsync(productId, cancellationToken)
-            .ConfigureAwait(false);
+            .ConfigureAwait(false)
+            ?? Array.Empty<PricingRule>();
 
         // The platform memory cache is registered with a SizeLimit; every entry
         // must declare its size or the Set call throws at runtime.
