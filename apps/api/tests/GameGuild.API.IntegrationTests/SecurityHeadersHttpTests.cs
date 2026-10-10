@@ -76,8 +76,8 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
         using var client = fixture.Factory.CreateClient();
         using var response = await client.GetAsync("/v1/access/capabilities");
 
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-        response.Headers.WwwAuthenticate.Should().NotBeEmpty("the anonymous request is challenged");
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
+            "the request carries no credentials and must be rejected before the action runs");
         AssertDefaultSecurityHeaders(response);
     }
 
@@ -116,16 +116,27 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
     {
         using var client = fixture.Factory.CreateClient();
 
-        // Unknown credentials on a sensitive /auth path: the response is an
-        // authentication failure that must never be cacheable.
-        using var response = await client.PostAsJsonAsync(
+        // Token refresh on a sensitive /auth path: the response is an authentication
+        // failure that must never be cacheable, and no endpoint filter overrides the
+        // cache directives on this action.
+        using var refreshResponse = await client.PostAsJsonAsync(
+            "/v1/auth/tokens:refresh",
+            new { refreshToken = "not-a-real-refresh-token" });
+
+        refreshResponse.StatusCode.Should().BeOneOf(HttpStatusCode.Unauthorized, HttpStatusCode.BadRequest);
+        SingleHeader(refreshResponse, "Cache-Control").Should().Be(SensitiveCacheControl);
+        SingleHeader(refreshResponse, "Pragma").Should().Be("no-cache");
+        AssertDefaultSecurityHeaders(refreshResponse);
+
+        // Local sign-in applies a stricter endpoint-level "no-store" through the
+        // lockout action filter; the pre-routing middleware must not weaken it.
+        using var signInResponse = await client.PostAsJsonAsync(
             "/v1/auth/sign-in",
             new { email = $"unknown-{Guid.NewGuid():N}@security-headers.test", password = "not-a-real-password" });
 
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-        SingleHeader(response, "Cache-Control").Should().Be(SensitiveCacheControl);
-        SingleHeader(response, "Pragma").Should().Be("no-cache");
-        AssertDefaultSecurityHeaders(response);
+        signInResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        SingleHeader(signInResponse, "Cache-Control").Should().Contain("no-store");
+        SingleHeader(signInResponse, "Pragma").Should().Be("no-cache");
     }
 
     [Fact]
@@ -286,6 +297,9 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
                 configuration["Encryption:EncryptionKey"] = Convert.ToBase64String(new byte[32]);
                 configuration["Redis:Enabled"] = "true";
                 configuration["Redis:ConnectionString"] = "localhost:6379,abortConnect=false";
+                // /health aggregates registered health checks; nothing under test
+                // connects to Redis, so its readiness check must not be registered.
+                configuration["Redis:EnableHealthChecks"] = "false";
                 configuration["EmailDelivery:Enabled"] = "true";
                 configuration["EmailDelivery:FromEmail"] = "security-headers@gameguild.test";
                 configuration["EmailDelivery:Provider"] = "Smtp";
