@@ -472,12 +472,12 @@ public sealed class UserEnumerationProtectionCompensationTests
 /// </summary>
 public sealed class PasswordVerificationWorkClassificationTests
 {
-    private static IPasswordHasher CreateSut(int workFactor = 10)
+    private static IPasswordHasher CreateSut()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["PresentationLayer:Authentication:PasswordPolicy:BCryptWorkFactor"] = workFactor.ToString()
+                ["PresentationLayer:Authentication:PasswordPolicy:BCryptWorkFactor"] = "10"
             })
             .Build();
         return new PasswordHasher(NullLogger<PasswordHasher>.Instance, configuration);
@@ -544,7 +544,7 @@ public sealed class PasswordVerificationWorkClassificationTests
     [Fact]
     public async Task PerformDummyVerification_CompletesAtTheConfiguredWorkFactor()
     {
-        var sut = CreateSut(workFactor: 10);
+        var sut = CreateSut();
 
         var stopwatch = Stopwatch.StartNew();
         await sut.PerformDummyVerificationAsync();
@@ -559,7 +559,7 @@ public sealed class PasswordVerificationWorkClassificationTests
     {
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
-        var sut = CreateSut(workFactor: 10);
+        var sut = CreateSut();
 
         Func<Task> performWork = () => sut.PerformDummyVerificationAsync(cancellation.Token);
 
@@ -569,7 +569,7 @@ public sealed class PasswordVerificationWorkClassificationTests
     [Fact]
     public async Task PerformDummyVerification_ConcreteNoArgumentOverloadCompletes()
     {
-        var sut = (PasswordHasher)CreateSut(workFactor: 10);
+        var sut = (PasswordHasher)CreateSut();
 
         await sut.PerformDummyVerificationAsync();
     }
