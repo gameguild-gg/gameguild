@@ -95,7 +95,9 @@ public class ExternalBillingProviderEndpointsIntegrationTests
     private HttpClient CreateClient(string? role)
     {
         var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("TestScheme", "provider-test-user");
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            ProviderTestAuthHandler.SchemeName,
+            "provider-test-user");
         if (role is not null)
         {
             client.DefaultRequestHeaders.Add("X-Test-Role", role);
