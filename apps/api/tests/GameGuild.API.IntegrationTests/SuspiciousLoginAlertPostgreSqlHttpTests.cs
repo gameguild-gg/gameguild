@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text.Json;
 using GameGuild.API.Database;
 using GameGuild.API.Eventing;
@@ -33,7 +34,6 @@ public sealed class SuspiciousLoginAlertPostgreSqlHttpTests(ApiPostgreSqlFixture
 {
     private const string EventName = "identity.authentication.suspicious-login-detected.v1";
     private const string Endpoint = "/v1/auth/sign-in";
-    private const string Password = "S3cure-Alert-Password!";
 
     [Fact]
     public async Task HighRiskStepUpSignInProducesRedactedOwnerAlertsOnceThroughActualInbox()
@@ -45,7 +45,7 @@ public sealed class SuspiciousLoginAlertPostgreSqlHttpTests(ApiPostgreSqlFixture
         SetStableClientIdentity(client);
 
         using var response = await client.PostAsJsonAsync(Endpoint,
-            new { email = account.Email, password = Password, account.TenantId, deviceFingerprint = "current-request-fingerprint" });
+            new { email = account.Email, password = account.Password, account.TenantId, deviceFingerprint = "current-request-fingerprint" });
 
         await AssertPendingMfaAsync(factory, account, response);
 
@@ -166,7 +166,7 @@ public sealed class SuspiciousLoginAlertPostgreSqlHttpTests(ApiPostgreSqlFixture
         SetStableClientIdentity(client);
 
         using var response = await client.PostAsJsonAsync(Endpoint,
-            new { email = account.Email, password = Password, account.TenantId, deviceFingerprint = "current-request-fingerprint" });
+            new { email = account.Email, password = account.Password, account.TenantId, deviceFingerprint = "current-request-fingerprint" });
 
         await AssertPendingMfaAsync(factory, account, response);
         using var scope = factory.Services.CreateScope();
@@ -184,7 +184,7 @@ public sealed class SuspiciousLoginAlertPostgreSqlHttpTests(ApiPostgreSqlFixture
         SetStableClientIdentity(client);
 
         using var response = await client.PostAsJsonAsync(Endpoint,
-            new { email = account.Email, password = Password, account.TenantId, deviceFingerprint = "current-request-fingerprint" });
+            new { email = account.Email, password = account.Password, account.TenantId, deviceFingerprint = "current-request-fingerprint" });
 
         await AssertPendingMfaAsync(factory, account, response);
         using var scope = factory.Services.CreateScope();
@@ -202,7 +202,7 @@ public sealed class SuspiciousLoginAlertPostgreSqlHttpTests(ApiPostgreSqlFixture
         SetStableClientIdentity(client);
 
         using var response = await client.PostAsJsonAsync(Endpoint,
-            new { email = account.Email, password = Password, account.TenantId, deviceFingerprint = "current-request-fingerprint" });
+            new { email = account.Email, password = account.Password, account.TenantId, deviceFingerprint = "current-request-fingerprint" });
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -301,7 +301,8 @@ public sealed class SuspiciousLoginAlertPostgreSqlHttpTests(ApiPostgreSqlFixture
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
-        var user = User.CreateWithPassword(email, "Synthetic suspicious login owner", hasher.HashPassword(Password), $"suspicious-login-{marker}");
+        var password = "aA7!" + Convert.ToHexString(RandomNumberGenerator.GetBytes(20));
+        var user = User.CreateWithPassword(email, "Synthetic suspicious login owner", hasher.HashPassword(password), $"suspicious-login-{marker}");
         db.Set<User>().Add(user);
         var tenantId = Guid.NewGuid();
         db.Set<Tenant>().Add(new Tenant
@@ -360,7 +361,7 @@ public sealed class SuspiciousLoginAlertPostgreSqlHttpTests(ApiPostgreSqlFixture
         }
 
         await db.SaveChangesAsync();
-        return new Account(user.Id, email, tenantId);
+        return new Account(user.Id, email, tenantId, password);
     }
 
     private static async Task<OutboxMessage> AlertEventAsync(WebApplicationFactory<Program> factory, Guid userId)
@@ -449,7 +450,7 @@ public sealed class SuspiciousLoginAlertPostgreSqlHttpTests(ApiPostgreSqlFixture
         throw new InvalidOperationException("Synthetic suspicious-login outbox did not settle within ten dispatch cycles.");
     }
 
-    private sealed record Account(Guid UserId, string Email, Guid TenantId);
+    private sealed record Account(Guid UserId, string Email, Guid TenantId, string Password);
 
     /// <summary>Captures host log output so failing assertions can embed the pipeline's own diagnostics.</summary>
     private sealed class RecordingLoggerProvider : ILoggerProvider

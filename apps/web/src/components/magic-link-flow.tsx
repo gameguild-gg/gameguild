@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuth } from "@game-guild/client/react";
 import { Link } from "@/i18n/navigation";
 import { requestMagicLink } from "@/lib/auth/magic-link-request";
+import { SignInForm } from "@/components/sign-in-form";
 import { Button } from "@game-guild/ui/components/button";
 import {
   Card,
@@ -203,7 +204,7 @@ function MagicLinkConsumer({
   redirectTo: string;
   messages: MagicLinkMessages;
 }) {
-  const { signIn } = useAuth();
+  const { signIn, mfaChallenge, mfaEnrollmentBackupCodes } = useAuth();
   const attemptedToken = useRef<string | null>(null);
   const [status, setStatus] = useState<"pending" | "complete" | "failed">(
     "pending",
@@ -226,6 +227,10 @@ function MagicLinkConsumer({
       active = false;
     };
   }, [redirectTo, signIn, token]);
+
+  if (mfaChallenge || mfaEnrollmentBackupCodes?.length) {
+    return <SignInForm redirectTo={redirectTo} />;
+  }
 
   return (
     <Card className="border-white/10 bg-slate-900/85 text-white shadow-2xl shadow-sky-950/30 backdrop-blur">

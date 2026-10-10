@@ -1,3 +1,23 @@
+# Passwordless first-factor MFA policy integration — 2026-10-10
+
+Email-code and magic-link consumption apply `ISignInMfaService.BeginAsync` after
+verifying their single-use first factor and loading the current eligible account.
+They supply the verified subject and token version, requested tenant and device
+context. The real policy service resolves tenant eligibility and either issues
+credentials or persists an expiring, limited MFA challenge. A pending response
+retains its enrollment/completion message and contains no ordinary credentials.
+The legacy magic-link constructor fails closed if its MFA policy service is missing;
+an injected session issuer cannot provide a fallback around that policy.
+
+`EmailCode` joins the persisted first-factor enum. Its existing string conversion
+and column length support this value without a database shape change. The web
+authorizers preserve typed MFA challenges, prioritize challenge completion over
+stale first-factor fields, and reuse the existing enrollment/completion form.
+
+Focused mocked web checks passed 50 cases. Real HTTP/PostgreSQL policy and replay
+regressions for all three first factors are included for hosted CI; those new native
+checks have not yet run. This checkpoint does not close an issue or accept PR #704.
+
 # Web MFA consumer checkpoint — 2026-10-08
 
 ## Required MFA audit and the security-event pipeline — 2026-10-08

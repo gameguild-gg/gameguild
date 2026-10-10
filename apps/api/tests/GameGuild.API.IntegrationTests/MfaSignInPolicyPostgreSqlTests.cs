@@ -29,6 +29,21 @@ public sealed class MfaSignInPolicyPostgreSqlTests(ApiPostgreSqlFixture fixture,
     [InlineData(false)]
     [InlineData(true)]
     public async Task ConfiguredMfaPolicyControlsLowRiskAnonymousPasswordSignIn(bool requireMfa)
+        => await VerifyFirstFactorPolicyAsync(requireMfa, SignInFirstFactor.Password);
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ConfiguredMfaPolicyControlsAnonymousEmailCodeSignIn(bool requireMfa)
+        => await VerifyFirstFactorPolicyAsync(requireMfa, SignInFirstFactor.EmailCode);
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ConfiguredMfaPolicyControlsAnonymousMagicLinkSignIn(bool requireMfa)
+        => await VerifyFirstFactorPolicyAsync(requireMfa, SignInFirstFactor.MagicLink);
+
+    private async Task VerifyFirstFactorPolicyAsync(bool requireMfa, SignInFirstFactor firstFactor)
     {
         var expectedAssembly = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(typeof(LocalAuthService).Assembly.Location))).ToLowerInvariant();
         var risk = new Mock<IAuthenticationAnomalyDetectionService>(MockBehavior.Strict);
@@ -70,6 +85,8 @@ public sealed class MfaSignInPolicyPostgreSqlTests(ApiPostgreSqlFixture fixture,
         var marker = Guid.NewGuid().ToString("N");
         var password = "aA7!" + Convert.ToHexString(RandomNumberGenerator.GetBytes(20));
         User user;
+        string? code = null;
+        string? magicLinkToken = null;
         var tenantId = Guid.NewGuid();
         using (var scope = factory.Services.CreateScope())
         {
@@ -110,9 +127,24 @@ public sealed class MfaSignInPolicyPostgreSqlTests(ApiPostgreSqlFixture fixture,
             Assert.Equal(requireMfa, await provider.GetRequiredService<IMfaService>().IsMfaRequiredAsync(user.Id));
             Assert.Equal(0, await context.Set<RefreshToken>().CountAsync(token => token.UserId == user.Id));
             Assert.Equal(0, await context.Set<UserSession>().CountAsync(session => session.UserId == user.Id));
+            if (firstFactor == SignInFirstFactor.EmailCode)
+            {
+                code = await provider.GetRequiredService<IEmailCodeService>().GenerateEmailCodeAsync(user.Id, user.Email);
+                Assert.Matches("^[0-9]{6}$", code!);
+            }
+            else if (firstFactor == SignInFirstFactor.MagicLink)
+            {
+                magicLinkToken = await provider.GetRequiredService<IEmailVerificationService>().GenerateMagicLinkTokenAsync(user.Id, user.Email);
+                Assert.False(string.IsNullOrWhiteSpace(magicLinkToken));
+            }
         }
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
-        using var response = await client.PostAsJsonAsync("/v1/auth/sign-in", new { user.Email, password, tenantId });
+        using var response = firstFactor switch
+        {
+            SignInFirstFactor.EmailCode => await client.PostAsJsonAsync("/v1/auth/email-code:consume", new { user.Email, code, tenantId }),
+            SignInFirstFactor.MagicLink => await client.PostAsJsonAsync("/v1/auth/magic-link:consume", new { token = magicLinkToken, tenantId }),
+            _ => await client.PostAsJsonAsync("/v1/auth/sign-in", new { user.Email, password, tenantId })
+        };
         var body = await response.Content.ReadAsStringAsync();
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var payload = JsonDocument.Parse(body);
@@ -125,7 +157,8 @@ public sealed class MfaSignInPolicyPostgreSqlTests(ApiPostgreSqlFixture fixture,
         var sessionCount = await database.Set<UserSession>().CountAsync(session => session.UserId == user.Id);
         output.WriteLine("ISSUE145_MFA_POLICY_OBSERVATION=" + JsonSerializer.Serialize(new
         {
-            RequireMfa = requireMfa, RiskClassifier = "controlled low risk", Transport = "actual anonymous TestServer HTTP and migrated PostgreSQL",
+            RequireMfa = requireMfa, FirstFactor = firstFactor.ToString(),
+            RiskClassifier = "controlled low risk", Transport = "actual anonymous TestServer HTTP and migrated PostgreSQL",
             OrdinaryAccessTokenPresent = ordinaryAccess, OrdinaryRefreshTokenPresent = ordinaryRefresh,
             RefreshTokenCount = tokenCount, SessionCount = sessionCount, SubjectId = user.Id, TenantId = tenantId,
             AuthenticationAssemblySHA256 = expectedAssembly, Acceptance = false
@@ -146,7 +179,7 @@ public sealed class MfaSignInPolicyPostgreSqlTests(ApiPostgreSqlFixture fixture,
             Assert.NotEqual(bearer, challenge.TokenHash);
             Assert.Equal(tenantId, challenge.TenantId);
             Assert.Equal(user.TokenVersion, challenge.SubjectTokenVersion);
-            Assert.Equal(SignInFirstFactor.Password, challenge.FirstFactor);
+            Assert.Equal(firstFactor, challenge.FirstFactor);
             Assert.Equal(SignInMfaPurpose.EnrollFactor, challenge.Purpose);
             Assert.Equal(TimeSpan.FromMinutes(5), challenge.ExpiresAt - challenge.CreatedAt);
             Assert.Null(challenge.ConsumedAt);
@@ -156,6 +189,16 @@ public sealed class MfaSignInPolicyPostgreSqlTests(ApiPostgreSqlFixture fixture,
         {
             Assert.True(value.GetProperty("success").GetBoolean());
             Assert.Empty(challenges);
+        }
+        if (firstFactor is SignInFirstFactor.EmailCode or SignInFirstFactor.MagicLink)
+        {
+            using var replay = firstFactor == SignInFirstFactor.EmailCode
+                ? await client.PostAsJsonAsync("/v1/auth/email-code:consume", new { user.Email, code, tenantId })
+                : await client.PostAsJsonAsync("/v1/auth/magic-link:consume", new { token = magicLinkToken, tenantId });
+            Assert.Equal(HttpStatusCode.Unauthorized, replay.StatusCode);
+            Assert.Equal(tokenCount, await database.Set<RefreshToken>().CountAsync(token => token.UserId == user.Id));
+            Assert.Equal(sessionCount, await database.Set<UserSession>().CountAsync(session => session.UserId == user.Id));
+            Assert.Equal(challenges.Count, await database.Set<SignInMfaChallenge>().CountAsync(challenge => challenge.SubjectId == user.Id));
         }
     }
 }

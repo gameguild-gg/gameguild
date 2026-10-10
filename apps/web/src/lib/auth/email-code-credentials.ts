@@ -8,30 +8,41 @@ import {
 
 type CredentialsAuthorize = CredentialsProviderConfig["authorize"];
 
-const MAGIC_LINK_CONSUME_PATH = "/v1/auth/magic-link:consume";
+const EMAIL_CODE_CONSUME_PATH = "/v1/auth/email-code:consume";
 
 /**
- * Extend the existing credentials provider with the one-time magic-link flow
- * while keeping email/password authentication on its existing implementation.
+ * Extend the credentials provider with the one-time email-code flow while
+ * keeping other credentials (magic link, email/password) on their existing
+ * implementations. The API verifies the first factor and applies current MFA
+ * policy before issuing an ordinary session.
  */
-export function createMagicLinkCredentialsAuthorize(
-  passwordAuthorize: CredentialsAuthorize,
+export function createEmailCodeCredentialsAuthorize(
+  fallbackAuthorize: CredentialsAuthorize,
   apiUrl: string,
 ): CredentialsAuthorize {
   return async (credentials, request) => {
-    const rawToken = credentials.magicLinkToken;
-    if (Object.hasOwn(credentials, "mfaToken") || rawToken === undefined) {
-      return passwordAuthorize(credentials, request);
+    const rawCode = credentials.emailCode;
+    if (Object.hasOwn(credentials, "mfaToken") || rawCode === undefined) {
+      return fallbackAuthorize(credentials, request);
     }
 
-    if (typeof rawToken !== "string" || rawToken.trim().length === 0) {
+    const email = credentials.emailCodeEmail;
+    if (
+      typeof rawCode !== "string" ||
+      rawCode.trim().length === 0 ||
+      typeof email !== "string" ||
+      email.trim().length === 0
+    ) {
       throw new CredentialsSignInError(
-        "This sign-in link is invalid or has expired.",
+        "This sign-in code is invalid or has expired.",
       );
     }
 
+    const body: Record<string, string> = {
+      email: email.trim(),
+      code: rawCode.trim(),
+    };
     const tenantId = credentials.tenantId;
-    const body: Record<string, string> = { token: rawToken.trim() };
     if (typeof tenantId === "string" && tenantId.trim().length > 0) {
       body.tenantId = tenantId.trim();
     }
@@ -44,16 +55,13 @@ export function createMagicLinkCredentialsAuthorize(
 
     let response: Response;
     try {
-      response = await fetch(
-        new URL(MAGIC_LINK_CONSUME_PATH, apiUrl),
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify(body),
-          cache: "no-store",
-          credentials: "omit",
-        },
-      );
+      response = await fetch(new URL(EMAIL_CODE_CONSUME_PATH, apiUrl), {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        cache: "no-store",
+        credentials: "omit",
+      });
     } catch (error) {
       throw new AuthServiceUnavailableError(
         "Authentication service is unreachable. Please try again.",
@@ -64,7 +72,7 @@ export function createMagicLinkCredentialsAuthorize(
     if (!response.ok) {
       if (response.status >= 500) throw new AuthServiceUnavailableError();
       throw new CredentialsSignInError(
-        "This sign-in link is invalid or has expired.",
+        "This sign-in code is invalid or has expired.",
       );
     }
 

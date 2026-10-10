@@ -1,7 +1,7 @@
 namespace GameGuild.Identity.Authentication;
 
 public enum SignInMfaPurpose { VerifyFactor = 1, EnrollFactor = 2 }
-public enum SignInFirstFactor { Password = 1, Federated = 2, Wallet = 3, MagicLink = 4, Passkey = 5 }
+public enum SignInFirstFactor { Password = 1, Federated = 2, Wallet = 3, MagicLink = 4, Passkey = 5, EmailCode = 6 }
 
 /// <summary>Persisted first-factor evidence. No password, MFA code or raw bearer is retained.</summary>
 public sealed class SignInMfaChallenge
