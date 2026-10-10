@@ -47,14 +47,16 @@ public class ScimGroupMappingRepository(IApplicationDbContext context) : IScimGr
                 mapping => mapping.RoleId,
                 role => role.Id,
                 (mapping, role) => new { Mapping = mapping, Role = role })
-            .Select(joined => new ScimGroupView(
-                joined.Role.Id,
-                joined.Mapping.ExternalId,
-                joined.Role.Name,
-                joined.Role.Description,
-                joined.Role.IsActive && joined.Role.DeletedAt == null,
-                joined.Role.CreatedAt,
-                joined.Role.UpdatedAt));
+            .Select(joined => new ScimGroupView
+            {
+                RoleId = joined.Role.Id,
+                ExternalId = joined.Mapping.ExternalId,
+                DisplayName = joined.Role.Name,
+                Description = joined.Role.Description,
+                Active = joined.Role.IsActive && joined.Role.DeletedAt == null,
+                CreatedAt = joined.Role.CreatedAt,
+                UpdatedAt = joined.Role.UpdatedAt
+            });
     }
 
     public void Add(ScimGroupMapping mapping) => Mappings.Add(mapping);

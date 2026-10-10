@@ -128,16 +128,18 @@ public sealed class ScimUserService(
         await mappingRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         var view = await mappingRepository.GetViewAsync(actor.TenantId, user.Id, cancellationToken).ConfigureAwait(false)
-                   ?? new ScimUserView(
-                       user.Id,
-                       mapping?.ExternalId,
-                       user.Username,
-                       user.Email,
-                       user.Name,
-                       user.PhoneNumber,
-                       user.IsActive && !user.IsSuspended,
-                       user.CreatedAt,
-                       user.UpdatedAt);
+                   ?? new ScimUserView
+                   {
+                       UserId = user.Id,
+                       ExternalId = mapping?.ExternalId,
+                       UserName = user.Username,
+                       Email = user.Email,
+                       DisplayName = user.Name,
+                       PhoneNumber = user.PhoneNumber,
+                       Active = user.IsActive && !user.IsSuspended,
+                       CreatedAt = user.CreatedAt,
+                       UpdatedAt = user.UpdatedAt
+                   };
 
         await ScimProvisioningAudit.RecordAsync(
             auditSink,

@@ -12,16 +12,18 @@ namespace GameGuild.Identity.Provisioning.UnitTests.Filtering;
 /// </summary>
 public sealed class ScimFilterEvaluatorTests
 {
-    private static readonly ScimUserView Sample = new(
-        Guid.Parse("11111111-1111-1111-1111-111111111111"),
-        "ext-42",
-        "bjensen",
-        "bjensen@example.com",
-        "Barbara Jensen",
-        "+15551234",
-        Active: true,
-        CreatedAt: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-        UpdatedAt: new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc));
+    private static readonly ScimUserView Sample = new()
+    {
+        UserId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+        ExternalId = "ext-42",
+        UserName = "bjensen",
+        Email = "bjensen@example.com",
+        DisplayName = "Barbara Jensen",
+        PhoneNumber = "+15551234",
+        Active = true,
+        CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+        UpdatedAt = new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc)
+    };
 
     [Theory]
     [InlineData("userName eq \"bjensen\"", true)]
@@ -80,14 +82,17 @@ public sealed class ScimFilterEvaluatorTests
     [Fact]
     public void GroupPredicates_MatchDisplayNameAndExternalId()
     {
-        var view = new ScimGroupView(
-            Guid.Parse("33333333-3333-3333-3333-333333333333"),
-            "grp-1",
-            "Engineering",
-            "desc",
-            Active: true,
-            DateTime.UtcNow,
-            DateTime.UtcNow);
+        var now = DateTime.UtcNow;
+        var view = new ScimGroupView
+        {
+            RoleId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+            ExternalId = "grp-1",
+            DisplayName = "Engineering",
+            Description = "desc",
+            Active = true,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
 
         CompileGroup("displayName sw \"eng\"")(view).Should().BeTrue();
         CompileGroup("displayName sw \"sales\"")(view).Should().BeFalse();

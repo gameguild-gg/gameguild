@@ -177,5 +177,5 @@ public static class ScimFilterEvaluator
         typeof(string).GetMethod(nameof(string.EndsWith), [typeof(string)])!;
 
     private static readonly MethodInfo StringToLowerMethod =
-        typeof(string).GetMethod(nameof(string.ToLowerInvariant), Type.EmptyTypes)!;
+        typeof(string).GetMethod(nameof(string.ToLower), Type.EmptyTypes)!;
 }

@@ -49,16 +49,18 @@ public class ScimUserMappingRepository(IApplicationDbContext context) : IScimUse
                 mapping => mapping.UserId,
                 user => user.Id,
                 (mapping, user) => new { Mapping = mapping, User = user })
-            .Select(joined => new ScimUserView(
-                joined.User.Id,
-                joined.Mapping.ExternalId,
-                joined.User.Username,
-                joined.User.Email,
-                joined.User.Name,
-                joined.User.PhoneNumber,
-                joined.User.IsActive && !joined.User.IsSuspended && joined.User.DeletedAt == null,
-                joined.User.CreatedAt,
-                joined.User.UpdatedAt));
+            .Select(joined => new ScimUserView
+            {
+                UserId = joined.User.Id,
+                ExternalId = joined.Mapping.ExternalId,
+                UserName = joined.User.Username,
+                Email = joined.User.Email,
+                DisplayName = joined.User.Name,
+                PhoneNumber = joined.User.PhoneNumber,
+                Active = joined.User.IsActive && !joined.User.IsSuspended && joined.User.DeletedAt == null,
+                CreatedAt = joined.User.CreatedAt,
+                UpdatedAt = joined.User.UpdatedAt
+            });
     }
 
     public void Add(ScimUserMapping mapping) => Mappings.Add(mapping);
