@@ -55,8 +55,8 @@ public sealed class ScimProvisioningPostgreSqlHttpTests(ApiPostgreSqlFixture fix
         {
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             context.Set<Tenant>().AddRange(
-                new Tenant { Id = _tenantA, Name = "SCIM Tenant A", Slug = $"scim-a-{Guid.NewGuid():N}" },
-                new Tenant { Id = _tenantB, Name = "SCIM Tenant B", Slug = $"scim-b-{Guid.NewGuid():N}" });
+                new Tenant { Id = _tenantA, Name = "SCIM Tenant A", Slug = $"scim-a-{Guid.NewGuid():N}", AdminEmail = $"admin-{_tenantA:N}@scim.test", IsActive = true },
+                new Tenant { Id = _tenantB, Name = "SCIM Tenant B", Slug = $"scim-b-{Guid.NewGuid():N}", AdminEmail = $"admin-{_tenantB:N}@scim.test", IsActive = true });
             await context.SaveChangesAsync();
 
             // The admin surface is policy-guarded; policies resolve from the store and
