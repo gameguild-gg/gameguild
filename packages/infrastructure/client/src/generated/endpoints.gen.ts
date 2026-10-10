@@ -582,6 +582,24 @@ export const getApiAuditSecurityEventsAlertsEndpoint = {
 } as const;
 
 /**
+ * Resolves a security alert, completing the incident lifecycle (detection → acknowledgement →
+ * resolution). The acting administrator is derived from the request context and recorded together
+ * with the resolution instant and note; the resolution is audited as a security event.
+ */
+export interface PostApiAuditSecurityEventsAlertsResolveInput {
+  alertId: string;
+  body?: Types.ComplianceAuditResolveSecurityAlertInput;
+}
+export type PostApiAuditSecurityEventsAlertsResolveOutput = Types.ComplianceAuditSecurityAlertOutput;
+export const postApiAuditSecurityEventsAlertsResolveEndpoint = {
+  operationId: 'postApiAuditSecurityEventsAlertsResolve' as const,
+  method: 'POST' as const,
+  path: '/api/audit/security-events/alerts/{alertId}:resolve' as const,
+  tags: ['ComplianceAuditSecurityEvents'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Acknowledges an open security alert. The acting administrator is derived from the request context.
  */
 export interface PostApiAuditSecurityEventsAlertsAcknowledgeInput {
@@ -12418,6 +12436,24 @@ export const getAuditSecurityEventsAlertsEndpoint = {
 } as const;
 
 /**
+ * Resolves a security alert, completing the incident lifecycle (detection → acknowledgement →
+ * resolution). The acting administrator is derived from the request context and recorded together
+ * with the resolution instant and note; the resolution is audited as a security event.
+ */
+export interface PostAuditSecurityEventsAlertsResolveInput {
+  alertId: string;
+  body?: Types.ComplianceAuditResolveSecurityAlertInput;
+}
+export type PostAuditSecurityEventsAlertsResolveOutput = Types.ComplianceAuditSecurityAlertOutput;
+export const postAuditSecurityEventsAlertsResolveEndpoint = {
+  operationId: 'postAuditSecurityEventsAlertsResolve' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/security-events/alerts/{alertId}:resolve' as const,
+  tags: ['ComplianceAuditSecurityEvents'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Acknowledges an open security alert. The acting administrator is derived from the request context.
  */
 export interface PostAuditSecurityEventsAlertsAcknowledgeInput {
@@ -17858,6 +17894,8 @@ export const getMeTasksEndpoint = {
  * OAuth2 client_credentials grant - authenticates a service account and returns a JWT token.
  *
  * This endpoint implements the OAuth2 client_credentials flow for machine-to-machine authentication.
+ * Authentication uses the `client_secret` form field, or an X.509 client certificate
+ * negotiated over TLS in lieu of the secret when one is bound to the service account.
  * The returned access token can be used to authenticate API requests.
  */
 export interface PostOauthTokenInput {
@@ -26041,6 +26079,7 @@ export const endpoints = {
   putApiAuditRetentionSimulationConfiguration: putApiAuditRetentionSimulationConfigurationEndpoint,
   getApiAuditRetentionSimulationTemplates: getApiAuditRetentionSimulationTemplatesEndpoint,
   getApiAuditSecurityEventsAlerts: getApiAuditSecurityEventsAlertsEndpoint,
+  postApiAuditSecurityEventsAlertsResolve: postApiAuditSecurityEventsAlertsResolveEndpoint,
   postApiAuditSecurityEventsAlertsAcknowledge: postApiAuditSecurityEventsAlertsAcknowledgeEndpoint,
   getApiAuditSecurityEventsDeliveryStatus: getApiAuditSecurityEventsDeliveryStatusEndpoint,
   postApiAuditSecurityEventsRetentionEnforce: postApiAuditSecurityEventsRetentionEnforceEndpoint,
@@ -26815,6 +26854,7 @@ export const endpoints = {
   putAuditRetentionSimulationConfiguration: putAuditRetentionSimulationConfigurationEndpoint,
   getAuditRetentionSimulationTemplates: getAuditRetentionSimulationTemplatesEndpoint,
   getAuditSecurityEventsAlerts: getAuditSecurityEventsAlertsEndpoint,
+  postAuditSecurityEventsAlertsResolve: postAuditSecurityEventsAlertsResolveEndpoint,
   postAuditSecurityEventsAlertsAcknowledge: postAuditSecurityEventsAlertsAcknowledgeEndpoint,
   getAuditSecurityEventsDeliveryStatus: getAuditSecurityEventsDeliveryStatusEndpoint,
   postAuditSecurityEventsRetentionEnforce: postAuditSecurityEventsRetentionEnforceEndpoint,

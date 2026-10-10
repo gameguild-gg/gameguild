@@ -4299,6 +4299,12 @@ export interface ComplianceAuditPermissionAuditOutput {
   totalCount?: number;
 }
 
+/** Body of `POST /api/audit/security-events/alerts/{id}:resolve`. */
+export interface ComplianceAuditResolveSecurityAlertInput {
+  /** Resolution note recorded on the alert and in the resolution audit event. */
+  notes?: string | null;
+}
+
 /** Data model for Compliance Audit Review Compliance Document Request. */
 export interface ComplianceAuditReviewComplianceDocumentInput {
   decision?: ComplianceAuditComplianceDocumentReview;
@@ -4346,6 +4352,9 @@ export interface ComplianceAuditSecurityAlertOutput {
   kind?: ComplianceAuditSecurityEventKind;
   lastSeenAtUtc?: string;
   occurrenceCount?: number;
+  resolutionNotes?: string | null;
+  resolvedAtUtc?: string | null;
+  resolvedByUserId?: string | null;
   ruleId?: string | null;
   severity?: ComplianceAuditAuditRiskLevel;
   sourceActionType?: string | null;
@@ -7314,7 +7323,7 @@ export interface IdentityAuthenticationCreateStepUpChallengeInput {
 }
 
 /** Credential type detection */
-export type IdentityAuthenticationCredentialType = 'Email' | 'Username' | 'Phone' | 'WalletAddress';
+export type IdentityAuthenticationCredentialType = 'Email' | 'Username' | 'Phone' | 'WalletAddress' | 'Certificate';
 
 /** Represents detailed device information for security tracking. */
 export interface IdentityAuthenticationDeviceInfo {
@@ -20193,6 +20202,7 @@ export let ComplianceAuditExportStatusSchema: z.ZodType<ComplianceAuditExportSta
 export let ComplianceAuditFailureReasonCountSchema: z.ZodType<ComplianceAuditFailureReasonCount>;
 export let ComplianceAuditPermissionAuditEntrySchema: z.ZodType<ComplianceAuditPermissionAuditEntry>;
 export let ComplianceAuditPermissionAuditOutputSchema: z.ZodType<ComplianceAuditPermissionAuditOutput>;
+export let ComplianceAuditResolveSecurityAlertInputSchema: z.ZodType<ComplianceAuditResolveSecurityAlertInput>;
 export let ComplianceAuditReviewComplianceDocumentInputSchema: z.ZodType<ComplianceAuditReviewComplianceDocumentInput>;
 export let ComplianceAuditRunAuditRetentionSimulationInputSchema: z.ZodType<ComplianceAuditRunAuditRetentionSimulationInput>;
 export let ComplianceAuditScheduledAuditExportOutputSchema: z.ZodType<ComplianceAuditScheduledAuditExportOutput>;
@@ -25683,6 +25693,11 @@ ComplianceAuditPermissionAuditOutputSchema = z.object({
   totalCount: z.number().int().optional(),
 });
 
+/** Zod schema for ComplianceAuditResolveSecurityAlertInput. Body of `POST /api/audit/security-events/alerts/{id}:resolve`. */
+ComplianceAuditResolveSecurityAlertInputSchema = z.object({
+  notes: z.string().max(1000).nullable().optional(),
+});
+
 /** Zod schema for ComplianceAuditReviewComplianceDocumentInput. Data model for Compliance Audit Review Compliance Document Request. */
 ComplianceAuditReviewComplianceDocumentInputSchema = z.object({
   decision: z.lazy(() => ComplianceAuditComplianceDocumentReviewSchema).optional(),
@@ -25733,6 +25748,9 @@ ComplianceAuditSecurityAlertOutputSchema = z.object({
   kind: z.lazy(() => ComplianceAuditSecurityEventKindSchema).optional(),
   lastSeenAtUtc: z.string().datetime().optional(),
   occurrenceCount: z.number().int().optional(),
+  resolutionNotes: z.string().nullable().optional(),
+  resolvedAtUtc: z.string().datetime().nullable().optional(),
+  resolvedByUserId: z.string().uuid().nullable().optional(),
   ruleId: z.string().nullable().optional(),
   severity: z.lazy(() => ComplianceAuditAuditRiskLevelSchema).optional(),
   sourceActionType: z.string().nullable().optional(),
@@ -28822,7 +28840,7 @@ IdentityAuthenticationCreateStepUpChallengeInputSchema = z.object({
 });
 
 /** Zod schema for IdentityAuthenticationCredentialType. Credential type detection */
-IdentityAuthenticationCredentialTypeSchema = z.enum(['Email', 'Username', 'Phone', 'WalletAddress']);
+IdentityAuthenticationCredentialTypeSchema = z.enum(['Email', 'Username', 'Phone', 'WalletAddress', 'Certificate']);
 
 /** Zod schema for IdentityAuthenticationDeviceInfo. Represents detailed device information for security tracking. */
 IdentityAuthenticationDeviceInfoSchema = z.object({
