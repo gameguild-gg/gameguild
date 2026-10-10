@@ -78,6 +78,17 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
         return Task.FromResult(result);
     }
 
+    internal const string DummyCredentialMaterial = "dummy";
+
+    /// <summary>Uses the same reload-aware work factor as real BCrypt verification.</summary>
+    public async Task PerformDummyVerificationAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var workFactor = GetBCryptWorkFactor();
+        await Task.Run(() => BCrypt.Net.BCrypt.HashPassword(DummyCredentialMaterial, workFactor), cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+    }
+
     /// <summary>
     ///     Validates password strength against policy requirements.
     /// </summary>
@@ -198,6 +209,9 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     /// </summary>
     public bool VerifyPassword(string hashedPassword, string providedPassword) =>
         VerifyPasswordWithWork(hashedPassword, providedPassword).IsValid;
+
+    public PasswordVerificationResult VerifyPasswordWithWorkClassification(string hashedPassword, string providedPassword) =>
+        VerifyPasswordWithWork(hashedPassword, providedPassword);
 
     /// <summary>Reports only credential work that actually completed, never merely account existence.</summary>
     public PasswordVerificationResult VerifyPasswordWithWork(string hashedPassword, string providedPassword)

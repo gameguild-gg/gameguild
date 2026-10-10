@@ -51,7 +51,8 @@ public class LocalAuthService(
         ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
         var httpContext = httpContextAccessor.HttpContext;
-        var timingOrigin = request.TimingOrigin ?? AuthenticationTimingOrigin.GetOrStartForRequest(httpContext, timeProvider);
+        var timingOrigin = request.TimingOrigin ?? request.TimingWindow?.Origin
+            ?? AuthenticationTimingOrigin.GetOrStartForRequest(httpContext, timeProvider);
         var stopwatch = Stopwatch.StartNew();
         var ipAddress = authAttemptService.GetClientIpAddress(httpContext);
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString() ?? string.Empty;

@@ -11,8 +11,11 @@ namespace GameGuild.Identity.Authentication;
 ///     Service to protect against user enumeration attacks by ensuring consistent timing and responses
 /// </summary>
 public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionService> logger, IMemoryCache memoryCache,
-    IConfiguration? configuration = null) : IUserEnumerationProtectionService, IAuthenticationTimingProtection
+    IConfiguration? configuration = null, IPasswordHasher? passwordHasher = null) : IUserEnumerationProtectionService, IAuthenticationTimingProtection
 {
+    public UserEnumerationProtectionService(ILogger<UserEnumerationProtectionService> logger, IMemoryCache memoryCache,
+        IPasswordHasher passwordHasher) : this(logger, memoryCache, null, passwordHasher) { }
+
     // Consistent error message to prevent user enumeration
     private const string ConsistentErrorMessage = "Invalid credentials. Please check your email and password.";
 
@@ -29,6 +32,14 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
     public Task AddTimingProtectionDelayAsync(bool isValidUser, DateTime startTime) =>
         CompleteAuthenticationTimingAsync(AuthenticationTimingOrigin.FromLegacyWallClock(startTime), isValidUser);
 
+    public AuthenticationTimingScope BeginAuthenticationTiming() => new();
+
+    public Task AddTimingProtectionDelayAsync(AuthenticationTimingScope timingScope, CredentialWorkClassification credentialWork)
+    {
+        ArgumentNullException.ThrowIfNull(timingScope);
+        return CompleteAuthenticationTimingAsync(timingScope.Origin, credentialWork == CredentialWorkClassification.Completed);
+    }
+
     public Task CompleteAuthenticationTimingAsync(AuthenticationTimingOrigin origin, bool credentialWorkCompleted) =>
         CompleteAuthenticationTimingAsync(origin, credentialWorkCompleted, CancellationToken.None);
 
@@ -40,7 +51,14 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
 
         if (!credentialWorkCompleted)
         {
-            await PerformDummyPasswordHashAsync("dummy_password_for_timing", cancellationToken).ConfigureAwait(false);
+            if (passwordHasher is null)
+            {
+                await PerformDummyPasswordHashAsync("dummy_password_for_timing", cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await passwordHasher.PerformDummyVerificationAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
 
         while (true)
