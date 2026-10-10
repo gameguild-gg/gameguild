@@ -293,9 +293,8 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
         CancellationToken cancellationToken)
     {
         logger.LogInformation(
-            "Setting expiration for {Count} permission grants in tenant {TenantId}",
-            command.PermissionIds.Length,
-            command.TenantId);
+            "Setting expiration for {Count} permission grants",
+            command.PermissionIds.Length);
 
         var updated = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 
@@ -322,9 +321,8 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
         CancellationToken cancellationToken)
     {
         logger.LogInformation(
-            "Extending expiration for {Count} permission grants in tenant {TenantId}",
-            command.PermissionIds.Length,
-            command.TenantId);
+            "Extending expiration for {Count} permission grants",
+            command.PermissionIds.Length);
 
         var extended = await sender.Send(command, cancellationToken).ConfigureAwait(false);
 

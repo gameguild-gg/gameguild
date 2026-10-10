@@ -122,7 +122,7 @@ public sealed class JwtTokenService(
     {
         if (roles == null) throw new ArgumentNullException(nameof(roles));
 
-        logger.LogInformation("Generating access token for user: {UserId}", userId);
+        logger.LogInformation("Generating access token");
 
         try
         {
@@ -173,13 +173,13 @@ public sealed class JwtTokenService(
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            logger.LogInformation("Access token generated for user: {UserId}, Expires: {Expires}", userId, token.ValidTo);
+            logger.LogInformation("Access token generated, Expires: {Expires}", token.ValidTo);
 
             return tokenString;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            logger.LogError(ex, "Error generating access token for user: {UserId}", userId);
+            logger.LogError("Error generating access token");
 
             throw;
         }
@@ -217,7 +217,7 @@ public sealed class JwtTokenService(
         cancellationToken.ThrowIfCancellationRequested();
         RefreshTokenLifecycleMetrics.RecordAttempt(RefreshTokenLifecycleOperation.Issued);
 
-        logger.LogInformation("Generating refresh token for user: {UserId}, Device: {DeviceId}", userId, deviceInfo.DeviceId);
+        logger.LogInformation("Generating refresh token");
 
         try
         {
@@ -267,7 +267,7 @@ public sealed class JwtTokenService(
                             userId, refreshToken.Id), cancellationToken).ConfigureAwait(false);
                     }
 
-                    logger.LogInformation("Refresh token generated and stored: {TokenId}, Expires: {ExpiresAt}", refreshToken.Id, refreshToken.ExpiresAt);
+                    logger.LogInformation("Refresh token generated and stored, Expires: {ExpiresAt}", refreshToken.ExpiresAt);
 
                     return tokenString; // Success, return token
                 }
@@ -282,9 +282,9 @@ public sealed class JwtTokenService(
             // If we get here, all retries failed
             throw new InvalidOperationException($"Failed to generate unique refresh token after {maxRetries} attempts");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            logger.LogError(ex, "Error generating refresh token for user: {UserId}", userId);
+            logger.LogError("Error generating refresh token");
 
             throw;
         }
@@ -304,21 +304,21 @@ public sealed class JwtTokenService(
 
             return Task.FromResult(true);
         }
-        catch (SecurityTokenExpiredException ex)
+        catch (SecurityTokenExpiredException)
         {
-            logger.LogWarning(ex, "Token validation failed: Token expired");
+            logger.LogWarning("Token validation failed: Token expired");
 
             return Task.FromResult(false);
         }
-        catch (SecurityTokenException ex)
+        catch (SecurityTokenException)
         {
-            logger.LogWarning(ex, "Token validation failed: {Message}", ex.Message);
+            logger.LogWarning("Token validation failed: Token rejected");
 
             return Task.FromResult(false);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            logger.LogError(ex, "Error validating token");
+            logger.LogError("Error validating token");
 
             return Task.FromResult(false);
         }
@@ -370,9 +370,9 @@ public sealed class JwtTokenService(
 
             return Task.FromResult<TokenPayload?>(payload);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            logger.LogError(ex, "Error extracting token payload");
+            logger.LogError("Error extracting token payload");
 
             return Task.FromResult<TokenPayload?>(null);
         }
@@ -402,7 +402,7 @@ public sealed class JwtTokenService(
 
             if (refreshToken.IsRevoked)
             {
-                logger.LogInformation("Refresh token already revoked: {TokenId}", refreshToken.Id);
+                logger.LogInformation("Refresh token already revoked");
 
                 return true;
             }
@@ -417,13 +417,13 @@ public sealed class JwtTokenService(
                     refreshToken.UserId, refreshToken.Id, refreshToken.SessionId), cancellationToken).ConfigureAwait(false);
             }
 
-            logger.LogInformation("Refresh token revoked: {TokenId}", refreshToken.Id);
+            logger.LogInformation("Refresh token revoked");
 
             return true;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            logger.LogError(ex, "Error revoking refresh token");
+            logger.LogError("Error revoking refresh token");
 
             return false;
         }
@@ -440,9 +440,7 @@ public sealed class JwtTokenService(
         Guid? tenantId,
         CancellationToken cancellationToken = default)
     {
-        logger.LogInformation(
-            "Generating service account token for: {ServiceAccountId}, ClientId: {ClientId}",
-            serviceAccountId, clientId);
+        logger.LogInformation("Generating service account token");
 
         try
         {
@@ -496,17 +494,13 @@ public sealed class JwtTokenService(
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            logger.LogInformation(
-                "Service account token generated for: {ServiceAccountId}, Expires: {ExpiresAt}",
-                serviceAccountId, expiresAt);
+            logger.LogInformation("Service account token generated, Expires: {ExpiresAt}", expiresAt);
 
             return Task.FromResult((tokenString, expiresAt));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            logger.LogError(ex,
-                "Error generating service account token for: {ServiceAccountId}",
-                serviceAccountId);
+            logger.LogError("Error generating service account token");
 
             throw;
         }
