@@ -59,8 +59,8 @@ public sealed class InvoiceGenerationService(
             throw new ArgumentException("Provider invoice id is required to derive a payment id", nameof(providerInvoiceId));
         }
 
-        var hash = MD5.HashData(Encoding.UTF8.GetBytes($"gameguild:provider-invoice:{providerInvoiceId}"));
-        return new Guid(hash);
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes($"gameguild:provider-invoice:{providerInvoiceId}"));
+        return new Guid(hash.AsSpan(0, 16));
     }
 
     /// <inheritdoc />
