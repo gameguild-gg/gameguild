@@ -40,6 +40,25 @@ test('Testing Lab keeps PostgreSQL 16 and quotes its configured image', () => {
   assert.ok(source.includes('"$' + '{POSTGRES_IMAGE}" >/dev/null'));
 });
 
+test('image retries pull the exact configured digest used by the API and Economy containers', () => {
+  for (const [path, expected] of [
+    ['scripts/ci/run-affected-dotnet-tests.sh', 1],
+    ['scripts/ci/verify-economy.sh', 3],
+  ]) {
+    const source = read(path);
+    assert.equal((source.match(/pull_ci_image "\$postgres_image"/g) || []).length, expected);
+    assert.ok(!source.includes('pull_ci_image public.ecr.aws/docker/library/postgres:17-alpine'));
+    assert.ok(source.includes('source "$script_dir/pull-ci-image.sh"'));
+  }
+});
+
+test('Testing Lab retries its configured PostgreSQL 16 digest', () => {
+  const source = read('apps/web/scripts/testing-lab-browser-e2e.sh');
+  assert.ok(source.includes('pull_ci_image "${POSTGRES_IMAGE}"'));
+  assert.ok(!source.includes('pull_ci_image public.ecr.aws/docker/library/postgres:16-alpine'));
+  assert.ok(source.includes('source "${REPO_ROOT}/scripts/ci/pull-ci-image.sh"'));
+});
+
 test('the image contract runs in the lightweight PR classifier gate', () => {
   assert.ok(read('.github/workflows/pr-verify.yml').includes('node --test scripts/ci/tests/classify-release-changes.test.mjs scripts/ci/tests/select-affected-dotnet-tests.test.mjs scripts/ci/tests/postgres-images.test.mjs'));
 });

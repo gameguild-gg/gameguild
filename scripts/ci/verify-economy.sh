@@ -21,6 +21,8 @@ whole_solution_jobs="${ECONOMY_WHOLE_SOLUTION_JOBS:-}"
 source "$script_dir/economy-gate.sh"
 # shellcheck source=disposable-postgres.sh
 source "$script_dir/disposable-postgres.sh"
+# shellcheck source=pull-ci-image.sh
+source "$script_dir/pull-ci-image.sh"
 
 whole_solution_scaffold_project() {
   case "$1" in
@@ -400,6 +402,7 @@ economy_postgres_password="$(new_disposable_postgres_password)"
 register_disposable_postgres_password "$app_postgres_password"
 register_disposable_postgres_password "$economy_postgres_password"
 gate_stage='postgres-app'
+pull_ci_image "$postgres_image"
 run docker run --detach --rm --name "$postgres_container" \
   --env POSTGRES_DB=economy_ci \
   --env POSTGRES_USER=postgres \
@@ -423,6 +426,7 @@ connection_string="Host=127.0.0.1;Port=$postgres_port;Database=economy_ci;Userna
 gate_stage='postgres-economy-tests'
 # Full-schema resets across isolated test databases share PostgreSQL's lock table.
 # Keep the two test workers while sizing their disposable server for both resets.
+pull_ci_image "$postgres_image"
 run docker run --detach --rm --name "$economy_postgres_container" \
   --env POSTGRES_DB=economy_tests \
   --env POSTGRES_USER=postgres \
@@ -455,6 +459,7 @@ if [[ "$gate_profile" == full ]]; then
   whole_solution_postgres_container="gameguild-economy-ci-whole-solution-$$-$RANDOM"
   whole_solution_postgres_password="$(new_disposable_postgres_password)"
   register_disposable_postgres_password "$whole_solution_postgres_password"
+  pull_ci_image "$postgres_image"
   run docker run --detach --rm --name "$whole_solution_postgres_container" \
     --env POSTGRES_DB=whole_solution_tests \
     --env POSTGRES_USER=postgres \
@@ -492,6 +497,7 @@ fi
 {
   garage_container='gameguild-economy-ci-garage-'$$-$RANDOM
   garage_config="$(native_path "$repository_root/scripts/garage/garage.toml")"
+  pull_ci_image dxflrs/garage:v2.3.0
   run env MSYS_NO_PATHCONV=1 docker run --detach --rm --name "$garage_container" \
     --env GARAGE_CONFIG_FILE=/etc/garage/garage.toml \
     --volume "$garage_config:/etc/garage/garage.toml:ro" \
