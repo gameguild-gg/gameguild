@@ -6,10 +6,12 @@ namespace GameGuild.Commerce.Products.IntegrationTests.Infrastructure;
 
 /// <summary>
 /// Header-driven permission service for pricing-engine endpoint tests: the caller declares
-/// granted permissions via the <c>X-Test-Permissions</c> header.
+/// granted permissions via the <c>X-Test-Permissions</c> header. Implements both the CQRS
+/// pipeline service and the endpoint permission-query service (Orders integration-test
+/// precedent) so controller-level <c>[RequirePermission]</c> gates resolve deterministically.
 /// </summary>
 internal sealed class PricingRulesTestAuthorizationPermissionService(IHttpContextAccessor httpContextAccessor)
-    : IAuthorizationPermissionService
+    : IAuthorizationPermissionService, IPermissionQueryService
 {
     public Task<bool> HasPermissionAsync(
         Guid userId,
@@ -17,7 +19,7 @@ internal sealed class PricingRulesTestAuthorizationPermissionService(IHttpContex
         string permission,
         CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(GetPermissions().Contains(permission, StringComparer.OrdinalIgnoreCase));
+        return Task.FromResult(Has(permission));
     }
 
     public Task<IReadOnlyList<string>> GetPermissionsAsync(
@@ -36,7 +38,7 @@ internal sealed class PricingRulesTestAuthorizationPermissionService(IHttpContex
     {
         var requested = permissions.ToList();
         var granted = GetPermissions();
-        var present = requested.Where(permission => granted.Contains(permission, StringComparer.OrdinalIgnoreCase)).ToList();
+        var present = requested.Where(Has).ToList();
         var missing = requested.Except(present, StringComparer.OrdinalIgnoreCase).ToList();
         return Task.FromResult(missing.Count == 0
             ? PermissionCheckResult.AllPresent(present)
@@ -50,12 +52,58 @@ internal sealed class PricingRulesTestAuthorizationPermissionService(IHttpContex
         CancellationToken cancellationToken = default)
     {
         var requested = permissions.ToList();
-        var granted = GetPermissions();
-        var present = requested.Where(permission => granted.Contains(permission, StringComparer.OrdinalIgnoreCase)).ToList();
+        var present = requested.Where(Has).ToList();
         return Task.FromResult(present.Count > 0
             ? PermissionCheckResult.Partial(present, requested.Except(present, StringComparer.OrdinalIgnoreCase))
             : PermissionCheckResult.NonePresent(requested));
     }
+
+    public Task<bool> HasTenantPermissionAsync(
+        Guid? userId,
+        Guid? tenantId,
+        string permission,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(Has(permission));
+    }
+
+    public Task<List<string>> GetTenantPermissionsAsync(
+        Guid? userId,
+        Guid? tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(GetPermissions().ToList());
+    }
+
+    public Task<List<string>> GetEffectivePermissionsAsync(
+        Guid userId,
+        Guid? tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(GetPermissions().ToList());
+    }
+
+    public Task<List<string>> GetGlobalDefaultPermissionsAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(new List<string>());
+    }
+
+    public Task<List<string>> GetTenantDefaultPermissionsAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(new List<string>());
+    }
+
+    public Task<bool> IsUserInTenantAsync(
+        Guid userId,
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(true);
+    }
+
+    private bool Has(string permission) => GetPermissions().Contains(permission, StringComparer.OrdinalIgnoreCase);
 
     private IReadOnlyList<string> GetPermissions()
     {

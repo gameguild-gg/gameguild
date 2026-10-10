@@ -58,9 +58,13 @@ public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplication
                 services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
                 services.AddDefaultTenantMembership();
 
-                // Authorization checks read permissions from the X-Test-Permissions header.
+                // Authorization checks (controller gates and the CQRS pipeline) read permissions
+                // from the X-Test-Permissions header.
                 services.RemoveAll<IAuthorizationPermissionService>();
-                services.AddScoped<IAuthorizationPermissionService, PricingRulesTestAuthorizationPermissionService>();
+                services.RemoveAll<IPermissionQueryService>();
+                services.AddSingleton<PricingRulesTestAuthorizationPermissionService>();
+                services.AddSingleton<IAuthorizationPermissionService>(provider => provider.GetRequiredService<PricingRulesTestAuthorizationPermissionService>());
+                services.AddSingleton<IPermissionQueryService>(provider => provider.GetRequiredService<PricingRulesTestAuthorizationPermissionService>());
                 services.RemoveAll<IAuthorizationTenantResolver>();
                 services.AddScoped<IAuthorizationTenantResolver, PricingRulesTestAuthorizationTenantResolver>();
 
@@ -94,7 +98,7 @@ public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplication
             {
                 productId,
                 name = "Integration volume tiers",
-                ruleType = 13, // TieredPricing
+                ruleType = "TieredPricing",
                 priority = 5,
                 isActive = true,
                 tiers = new object[]
@@ -131,7 +135,7 @@ public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplication
                 {
                     productId,
                     name = "Integration volume tiers v2",
-                    ruleType = 13,
+                    ruleType = "TieredPricing",
                     priority = 9,
                     isActive = true,
                     tiers = new object[] { new { minQuantity = 20, discountPercentage = 15m } }
@@ -178,7 +182,7 @@ public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplication
             {
                 productId,
                 name = "Checkout volume discount",
-                ruleType = 13, // TieredPricing
+                ruleType = "TieredPricing",
                 tiers = new object[] { new { minQuantity = 10, discountPercentage = 10m } }
             });
 
@@ -207,7 +211,7 @@ public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplication
             {
                 productId,
                 name = "VIP segment price",
-                ruleType = 4, // SegmentBased
+                ruleType = "SegmentBased",
                 discountPercentage = 25m,
                 customerSegment = "vip"
             });
@@ -243,7 +247,7 @@ public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplication
     public async Task Mutations_RequirePricingManagePermission()
     {
         using var request = AuthenticatedRequest(HttpMethod.Post, BasePath, ReadPermissions);
-        request.Content = JsonContent.Create(new { name = "nope", ruleType = 10 });
+        request.Content = JsonContent.Create(new { name = "nope", ruleType = "Percentage" });
 
         var response = await _client.SendAsync(request);
 
@@ -254,7 +258,7 @@ public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplication
     public async Task Mutations_RequireAuthentication()
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, BasePath);
-        request.Content = JsonContent.Create(new { name = "nope", ruleType = 10 });
+        request.Content = JsonContent.Create(new { name = "nope", ruleType = "Percentage" });
         request.Headers.Add("X-Test-Unauthenticated", "true");
 
         var response = await _client.SendAsync(request);
@@ -272,7 +276,7 @@ public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplication
 
     private async Task<PricingCalculationContract?> CalculateAsync(Guid productId, int quantity, string? customerSegment = null)
     {
-        using var request = AuthenticatedRequest(HttpMethod.Post, $"{BasePath}:calculate", ReadPermissions);
+        using var request = AuthenticatedRequest(HttpMethod.Post, $"{BasePath}/:calculate", ReadPermissions);
         request.Content = JsonContent.Create(new { productId, quantity, customerSegment });
 
         var response = await _client.SendAsync(request);
@@ -307,7 +311,7 @@ public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplication
         Guid Id,
         Guid? ProductId,
         string Name,
-        int? RuleType,
+        string? RuleType,
         int Priority,
         bool IsActive,
         IReadOnlyList<PricingRuleTierContract>? Tiers,
