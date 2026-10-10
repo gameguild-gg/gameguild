@@ -8,6 +8,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// </summary>
 public sealed class PaymentSubscriptionSyncService(
     ISubscriptionRepository subscriptionRepository,
+    ISubscriptionInvoiceMaterializer invoiceMaterializer,
     ILogger<PaymentSubscriptionSyncService> logger) : IPaymentSubscriptionSyncService
 {
     public Task SyncSuccessfulPaymentAsync(
@@ -84,6 +85,15 @@ public sealed class PaymentSubscriptionSyncService(
                 "Payment {PaymentId} synced to subscription {SubscriptionId}",
                 paymentId,
                 subscriptionId.Value);
+
+            await MaterializeInvoiceAsync(
+                subscription.Id,
+                billingCycleNumber.Value,
+                amount,
+                currency,
+                processedAt,
+                paymentId,
+                cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -93,6 +103,17 @@ public sealed class PaymentSubscriptionSyncService(
                 "Payment {PaymentId} was already synced to subscription {SubscriptionId}",
                 paymentId,
                 subscriptionId.Value);
+
+            // Idempotent replays re-attempt materialization: a cycle can be payment-synced before its
+            // invoice write succeeds, and the materializer itself is keyed per cycle.
+            await MaterializeInvoiceAsync(
+                subscription.Id,
+                billingCycleNumber.Value,
+                amount,
+                currency,
+                processedAt,
+                paymentId,
+                cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -102,4 +123,22 @@ public sealed class PaymentSubscriptionSyncService(
             subscriptionId.Value,
             result.Message);
     }
+
+    private Task MaterializeInvoiceAsync(
+        Guid subscriptionId,
+        int billingCycleNumber,
+        decimal amount,
+        string currency,
+        DateTime processedAt,
+        Guid paymentId,
+        CancellationToken cancellationToken)
+        => invoiceMaterializer.MaterializeForConfirmedCycleAsync(
+            subscriptionId,
+            billingCycleNumber,
+            amount,
+            currency,
+            processedAt,
+            paymentId,
+            providerInvoiceId: null,
+            cancellationToken);
 }
