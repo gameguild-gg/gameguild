@@ -300,6 +300,7 @@ public class OidcFederationServiceTests : IDisposable
         var act = () => sut.AuthenticateCallbackAsync(Slug, "auth-code", "state-1", "https://web.example.test/cb");
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*malformed*");
+        stub.JwksHits.Should().Be(0, "a structurally malformed token is rejected before the JWKS round-trip");
     }
 
     [Fact]
@@ -516,7 +517,9 @@ public class OidcFederationServiceTests : IDisposable
         {
             var issuer = TokenIssuerOverride ?? Issuer;
             var audience = TokenAudienceOverride ?? ClientId;
-            var notBefore = DateTimeOffset.UtcNow.AddMinutes(-5);
+            // An expired token still needs a well-formed lifetime window (nbf < exp):
+            // JwtPayload refuses to construct when expires precedes notBefore.
+            var notBefore = TokenExpired ? DateTimeOffset.UtcNow.AddMinutes(-30) : DateTimeOffset.UtcNow.AddMinutes(-5);
             var expires = TokenExpired ? DateTimeOffset.UtcNow.AddMinutes(-10) : DateTimeOffset.UtcNow.AddMinutes(10);
 
             List<Claim> claims;

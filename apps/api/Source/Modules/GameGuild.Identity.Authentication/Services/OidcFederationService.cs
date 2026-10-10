@@ -222,6 +222,24 @@ public sealed class OidcFederationService(
 
     private async Task<ClaimsPrincipal> ValidateIdTokenAsync(OidcProviderOptions options, OidcProviderMetadata metadata, string slug, string idToken, CancellationToken cancellationToken)
     {
+        // Structural rejection happens before any JWKS round-trip: a token that cannot be
+        // parsed at all is malformed no matter which key would have signed it, so there is
+        // no reason to touch the provider's key set (or trust its availability) first.
+        if (!_tokenHandler.CanReadToken(idToken))
+        {
+            throw new UnauthorizedAccessException($"OIDC ID token for provider '{slug}' is malformed.");
+        }
+
+        try
+        {
+            _ = _tokenHandler.ReadToken(idToken);
+        }
+        catch (Exception ex) when (ex is SecurityTokenException or ArgumentException or System.Text.Json.JsonException)
+        {
+            logger?.LogWarning(ex, "OIDC: id_token for provider {Slug} could not be parsed", slug);
+            throw new UnauthorizedAccessException($"OIDC ID token for provider '{slug}' is malformed.");
+        }
+
         List<SecurityKey> keys;
         try
         {
@@ -235,11 +253,6 @@ public sealed class OidcFederationService(
         {
             logger?.LogError(ex, "OIDC: failed to fetch provider JWKS from {JwksUri}", metadata.JwksUri);
             throw new UnauthorizedAccessException($"OIDC signing keys for provider '{slug}' are unavailable.");
-        }
-
-        if (!_tokenHandler.CanReadToken(idToken))
-        {
-            throw new UnauthorizedAccessException($"OIDC ID token for provider '{slug}' is malformed.");
         }
 
         var parameters = new TokenValidationParameters
