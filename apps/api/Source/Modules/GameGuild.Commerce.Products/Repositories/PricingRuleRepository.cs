@@ -118,7 +118,27 @@ public class PricingRuleRepository(IApplicationDbContext context)
     public new async Task<PricingRule> UpdateAsync(PricingRule rule, CancellationToken cancellationToken = default)
     {
         rule.Touch();
-        Entities.Update(rule);
+
+        // Replacement tiers (see PricingRuleMutationHelpers.ApplyTiers) are brand-new rows.
+        // They must be attached as Added: DbSet.Update on the root would walk the graph and
+        // mark every not-yet-tracked reachable tier as Modified, emitting UPDATEs for rows
+        // that do not exist — the concurrency-checked statement then affects 0 rows and
+        // SaveChanges throws DbUpdateConcurrencyException on relational providers.
+        var trackedTiers = Context.Set<PricingRuleTier>().Local;
+        foreach (var tier in rule.PricingTiers.Where(tier => !trackedTiers.Contains(tier)))
+        {
+            Context.Set<PricingRuleTier>().Add(tier);
+        }
+
+        // Command handlers load the rule through this repository (same context), so the
+        // root is already tracked and DetectChanges picks up its mutations. Update() is
+        // kept only for a detached root; a detached caller is still responsible for having
+        // attached its children explicitly (as done above for replacement tiers).
+        if (!Entities.Local.Contains(rule))
+        {
+            Entities.Update(rule);
+        }
+
         await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return rule;
     }

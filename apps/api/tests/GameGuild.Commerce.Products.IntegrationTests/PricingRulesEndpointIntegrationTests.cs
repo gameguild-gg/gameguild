@@ -230,11 +230,25 @@ public class PricingRulesEndpointIntegrationTests : IDisposable
     public async Task Mutations_RequirePricingManagePermission()
     {
         using var request = AuthenticatedRequest(HttpMethod.Post, BasePath, ReadPermissions);
-        request.Content = JsonContent.Create(new { name = "nope", ruleType = "Percentage" });
+        request.Content = JsonContent.Create(new { name = "Denied rule", ruleType = "Percentage" });
 
         var response = await _client.SendAsync(request);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        // Denial status semantics as pinned platform-wide by MonetizationPermissionHttpTests
+        // (same double gate as SetProductPricing): the endpoint-level permission filter is
+        // disabled by default (Controllers:EnablePermissionAuthorizationFilter=false), so the
+        // enforced gate is the [AuthorizeRequest(monetization:monetize)] on the dispatched
+        // command; AuthorizationBehavior denies and the shared exception pipeline maps the
+        // failure to a fail-closed 500 ProblemDetails — no rule content, no mutation.
+        response.StatusCode.Should().Be(
+            HttpStatusCode.InternalServerError,
+            await response.Content.ReadAsStringAsync());
+
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        context.Set<PricingRule>().Count(rule => rule.Name == "Denied rule").Should().Be(
+            0,
+            "a denied pricing mutation must not persist anything");
     }
 
     [Fact]
