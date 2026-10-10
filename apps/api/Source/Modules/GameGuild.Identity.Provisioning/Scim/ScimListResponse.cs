@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace GameGuild.Identity.Provisioning.Scim;
 
 /// <summary>
@@ -13,6 +15,12 @@ public sealed record ScimListResponse<TResource>
 
     public int ItemsPerPage { get; init; }
 
+    /// <summary>
+    ///     RFC 7644 §3.4.2.3 spells this member <c>Resources</c> with a capital R while
+    ///     every other member is camelCase, so the name is pinned explicitly instead of
+    ///     following the host's camelCase policy (which would emit "resources").
+    /// </summary>
+    [JsonPropertyName("Resources")]
     public IReadOnlyList<TResource> Resources { get; init; } = Array.Empty<TResource>();
 }
 

@@ -43,6 +43,41 @@ public sealed class ScimUserPatchApplierTests
     }
 
     [Fact]
+    public void DisplayNamePatch_MarksTheValueExplicit()
+    {
+        // Captured state derives display value and name parts from the stored name, so
+        // without the explicit flag a patched displayName would be recomposed from the
+        // stale parts on materialization and the patch would silently not apply.
+        var state = new ScimUserMutableState { DisplayName = "Barbara Jensen", GivenName = "Barbara", FamilyName = "Jensen" };
+
+        ScimUserPatchApplier.Apply(state, [Operation("replace", "displayName", JsonValue.Create("Barbara J. Jensen"))]);
+
+        state.DisplayName.Should().Be("Barbara J. Jensen");
+        state.DisplayNameExplicit.Should().BeTrue("an explicitly patched displayName must survive recomposition from name parts");
+    }
+
+    [Fact]
+    public void NameFormattedPatch_MarksTheValueExplicit()
+    {
+        var state = new ScimUserMutableState { DisplayName = "Barbara Jensen", GivenName = "Barbara", FamilyName = "Jensen" };
+
+        ScimUserPatchApplier.Apply(state, [Operation("replace", "name.formatted", JsonValue.Create("Babs J"))]);
+
+        state.DisplayName.Should().Be("Babs J");
+        state.DisplayNameExplicit.Should().BeTrue();
+    }
+
+    [Fact]
+    public void NamePartsPatch_DoesNotMarkDisplayNameExplicit()
+    {
+        var state = new ScimUserMutableState { DisplayName = "Barbara Jensen", GivenName = "Barbara", FamilyName = "Jensen" };
+
+        ScimUserPatchApplier.Apply(state, [Operation("replace", "name.givenName", JsonValue.Create("Babs"))]);
+
+        state.DisplayNameExplicit.Should().BeFalse("patching name parts composes the display value instead");
+    }
+
+    [Fact]
     public void PathlessObject_AppliesEveryAttribute()
     {
         var value = new JsonObject

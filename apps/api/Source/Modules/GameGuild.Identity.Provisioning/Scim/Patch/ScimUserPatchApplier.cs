@@ -12,6 +12,13 @@ public sealed class ScimUserMutableState
 
     public string? DisplayName { get; set; }
 
+    /// <summary>
+    ///     Whether displayName (or name.formatted) was explicitly provided by the current
+    ///     request/patch. An explicit displayName wins over composing from name parts;
+    ///     without this flag the stored parts would silently overwrite a patched value.
+    /// </summary>
+    public bool DisplayNameExplicit { get; set; }
+
     public string? GivenName { get; set; }
 
     public string? FamilyName { get; set; }
@@ -112,6 +119,7 @@ public static class ScimUserPatchApplier
                 break;
             case "displayname":
                 state.DisplayName = ReadString(value, "displayName");
+                state.DisplayNameExplicit = true;
                 break;
             case "externalid":
                 state.ExternalId = ReadString(value, "externalId");
@@ -130,6 +138,7 @@ public static class ScimUserPatchApplier
                 break;
             case "name.formatted":
                 state.DisplayName = ReadString(value, "name.formatted");
+                state.DisplayNameExplicit = true;
                 break;
             case "emails":
             case "emails.value":
@@ -198,6 +207,7 @@ public static class ScimUserPatchApplier
                     break;
                 case "formatted":
                     state.DisplayName = partValue is null ? null : ReadString(partValue, "name.formatted");
+                    state.DisplayNameExplicit = true;
                     break;
                 case "middlename":
                 case "honorificprefix":

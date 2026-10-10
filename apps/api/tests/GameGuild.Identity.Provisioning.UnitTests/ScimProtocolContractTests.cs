@@ -114,6 +114,36 @@ public sealed class ScimProtocolContractTests
     }
 
     [Fact]
+    public void ListResponse_SerializesResourcesMemberWithRfcCapitalR()
+    {
+        // RFC 7644 §3.4.2.3 spells this member "Resources" while every other member is
+        // camelCase; the host's camelCase naming policy must not rename it.
+        var payload = new ScimListResponse<ScimUserResource>
+        {
+            TotalResults = 1,
+            StartIndex = 1,
+            ItemsPerPage = 1,
+            Resources = Array.Empty<ScimUserResource>()
+        };
+
+        var serialized = System.Text.Json.JsonSerializer.Serialize(
+            payload,
+            new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+                DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            });
+
+        using var document = System.Text.Json.JsonDocument.Parse(serialized);
+        document.RootElement.TryGetProperty("Resources", out var resources).Should().BeTrue(
+            "RFC 7644 §3.4.2.3 requires the member spelled 'Resources' regardless of the host naming policy");
+        resources.GetArrayLength().Should().Be(0);
+        document.RootElement.TryGetProperty("totalResults", out _).Should().BeTrue();
+        document.RootElement.TryGetProperty("itemsPerPage", out _).Should().BeTrue();
+        document.RootElement.TryGetProperty("startIndex", out _).Should().BeTrue();
+    }
+
+    [Fact]
     public void ScimProvisioningOptions_Validation_GuardsPageSizes()
     {
         var act = () => new ScimProvisioningOptions { DefaultPageSize = 500, MaxPageSize = 100 }.Validate();

@@ -373,6 +373,7 @@ public sealed class ScimUserService(
         if (request.DisplayName is not null)
         {
             state.DisplayName = request.DisplayName.Trim();
+            state.DisplayNameExplicit = true;
         }
 
         if (request.ExternalId is not null)
@@ -387,6 +388,7 @@ public sealed class ScimUserService(
             if (request.Name.Formatted is not null)
             {
                 state.DisplayName = request.Name.Formatted.Trim();
+                state.DisplayNameExplicit = true;
             }
         }
 
@@ -490,6 +492,13 @@ public sealed class ScimUserService(
 
     private static string ComposeName(ScimUserMutableState state)
     {
+        // An explicit displayName (or name.formatted) from the current request wins;
+        // name parts only compose the stored display value when it was not provided.
+        if (!string.IsNullOrWhiteSpace(state.DisplayName) && state.DisplayNameExplicit)
+        {
+            return state.DisplayName;
+        }
+
         var hasParts = !string.IsNullOrWhiteSpace(state.GivenName) || !string.IsNullOrWhiteSpace(state.FamilyName);
         return hasParts
             ? $"{state.GivenName} {state.FamilyName}".Trim()
