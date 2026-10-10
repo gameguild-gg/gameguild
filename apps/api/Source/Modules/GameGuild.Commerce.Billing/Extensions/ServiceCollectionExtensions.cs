@@ -29,6 +29,11 @@ public static class ServiceCollectionExtensions
 
         // Register repositories
         services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
+        services.AddScoped<IBillingProviderStateRepository, BillingProviderStateRepository>();
+
+        // Register external provider management (issue #397): the registry merges
+        // per-provider configuration health with the persisted enable/disable overrides.
+        services.AddScoped<IExternalBillingProviderRegistry, ExternalBillingProviderRegistry>();
 
         // Register Apple sub-services
         services.AddSingleton<IAppleJwsVerificationService, AppleJwsVerificationService>();
