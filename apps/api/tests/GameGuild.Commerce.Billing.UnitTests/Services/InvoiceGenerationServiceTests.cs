@@ -66,7 +66,11 @@ public sealed class InvoiceGenerationServiceTests
         return (subscription, user);
     }
 
-    private void ArrangeHappyPath(decimal amount = 29.99m)
+    /// <summary>
+    ///     Creates one subscription + recipient pair, wires the repositories to resolve them, and
+    ///     returns the pair so tests build requests against the SAME subscription the mocks answer for.
+    /// </summary>
+    private (Subscription Subscription, User User) ArrangeHappyPath(decimal amount = 29.99m)
     {
         var (subscription, user) = ArrangeSubscriptionAndRecipient(amount);
         _subscriptionRepository
@@ -75,6 +79,7 @@ public sealed class InvoiceGenerationServiceTests
         _userRepository
             .Setup(repository => repository.GetByIdAsync(subscription.CreatedByUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
+        return (subscription, user);
     }
 
     private ConfirmedCycleInvoiceRequest CreateRequest(
@@ -116,8 +121,7 @@ public sealed class InvoiceGenerationServiceTests
     [Fact]
     public async Task Materialize_CreatesIssuedPaidInvoice_WhenPaymentIsConfirmed()
     {
-        var (subscription, _) = ArrangeSubscriptionAndRecipient();
-        ArrangeHappyPath();
+        var (subscription, _) = ArrangeHappyPath();
         var paymentId = Guid.NewGuid();
         var request = CreateRequest(subscription.Id, 1, paymentId: paymentId);
 
@@ -145,8 +149,7 @@ public sealed class InvoiceGenerationServiceTests
     [Fact]
     public async Task Materialize_IsIdempotent_DoubleConfirmationYieldsOneInvoice()
     {
-        var (subscription, _) = ArrangeSubscriptionAndRecipient();
-        ArrangeHappyPath();
+        var (subscription, _) = ArrangeHappyPath();
         var paymentId = Guid.NewGuid();
         var request = CreateRequest(subscription.Id, 1, paymentId: paymentId);
 
@@ -161,8 +164,7 @@ public sealed class InvoiceGenerationServiceTests
     [Fact]
     public async Task Materialize_IsIdempotent_WhenProviderPaymentKeyRepeats()
     {
-        var (subscription, _) = ArrangeSubscriptionAndRecipient();
-        ArrangeHappyPath();
+        var (subscription, _) = ArrangeHappyPath();
         var request = CreateRequest(subscription.Id, 1, providerInvoiceId: "in_repeat");
 
         var first = await _service.MaterializeForConfirmedCycleAsync(request);
@@ -176,8 +178,7 @@ public sealed class InvoiceGenerationServiceTests
     [Fact]
     public async Task Materialize_DistinctCycles_ProduceDistinctInvoices()
     {
-        var (subscription, _) = ArrangeSubscriptionAndRecipient();
-        ArrangeHappyPath();
+        var (subscription, _) = ArrangeHappyPath();
         var paymentId = Guid.NewGuid();
 
         var cycle1 = await _service.MaterializeForConfirmedCycleAsync(CreateRequest(subscription.Id, 1, paymentId: paymentId));
@@ -193,8 +194,7 @@ public sealed class InvoiceGenerationServiceTests
     [Fact]
     public async Task Materialize_StampsProviderExternalId_AndRecordsDerivedPayment()
     {
-        var (subscription, _) = ArrangeSubscriptionAndRecipient();
-        ArrangeHappyPath();
+        var (subscription, _) = ArrangeHappyPath();
         var request = CreateRequest(subscription.Id, 1, providerInvoiceId: "in_provider123");
 
         var result = await _service.MaterializeForConfirmedCycleAsync(request);
@@ -207,8 +207,7 @@ public sealed class InvoiceGenerationServiceTests
     [Fact]
     public async Task Materialize_OnReplay_StampsProviderExternalIdWhenMissing()
     {
-        var (subscription, _) = ArrangeSubscriptionAndRecipient();
-        ArrangeHappyPath();
+        var (subscription, _) = ArrangeHappyPath();
         var withoutProvider = CreateRequest(subscription.Id, 1, providerInvoiceId: "in_late");
         var first = await _service.MaterializeForConfirmedCycleAsync(withoutProvider);
         first.Invoice.ExternalId.Should().Be("in_late");
@@ -254,8 +253,7 @@ public sealed class InvoiceGenerationServiceTests
         // SubscriptionInvoiceReadModel is a keyless SQL projection over the invoices table, so the
         // columns the GET subscriptions/{id}/invoices endpoint returns are exactly the persisted
         // invoice columns asserted here (see SubscriptionInvoiceReadModelConfiguration.ToSqlQuery).
-        var (subscription, _) = ArrangeSubscriptionAndRecipient();
-        ArrangeHappyPath();
+        var (subscription, _) = ArrangeHappyPath();
         var paymentId = Guid.NewGuid();
 
         var result = await _service.MaterializeForConfirmedCycleAsync(CreateRequest(subscription.Id, 1, paymentId: paymentId));
@@ -278,8 +276,7 @@ public sealed class InvoiceGenerationServiceTests
     [Fact]
     public async Task Materialize_DispatchesInvoiceIssuedEmailNotification()
     {
-        var (subscription, user) = ArrangeSubscriptionAndRecipient();
-        ArrangeHappyPath();
+        var (subscription, user) = ArrangeHappyPath();
         var paymentId = Guid.NewGuid();
 
         var result = await _service.MaterializeForConfirmedCycleAsync(CreateRequest(subscription.Id, 1, paymentId: paymentId));
@@ -306,8 +303,7 @@ public sealed class InvoiceGenerationServiceTests
     [Fact]
     public async Task Materialize_DoesNotRedispatchEmail_OnIdempotentReplay()
     {
-        var (subscription, _) = ArrangeSubscriptionAndRecipient();
-        ArrangeHappyPath();
+        var (subscription, _) = ArrangeHappyPath();
         var request = CreateRequest(subscription.Id, 1, paymentId: Guid.NewGuid());
 
         await _service.MaterializeForConfirmedCycleAsync(request);
@@ -332,8 +328,7 @@ public sealed class InvoiceGenerationServiceTests
     [Fact]
     public async Task Materialize_EmailDispatchFailure_DoesNotFailMaterialization()
     {
-        var (subscription, _) = ArrangeSubscriptionAndRecipient();
-        ArrangeHappyPath();
+        var (subscription, _) = ArrangeHappyPath();
         _notificationService
             .Setup(service => service.SendAsync(
                 It.IsAny<Guid?>(),
@@ -381,8 +376,7 @@ public sealed class InvoiceGenerationServiceTests
         // The unique IX_invoices_IdempotencyKey index is the concurrency backstop: a racing insert
         // loses with a 23505, detaches, re-fetches by key and reports an idempotent replay instead
         // of surfacing the constraint violation.
-        var (subscription, _) = ArrangeSubscriptionAndRecipient();
-        ArrangeHappyPath();
+        var (subscription, _) = ArrangeHappyPath();
 
         _context
             .SetupSequence(context => context.SaveChangesAsync(It.IsAny<CancellationToken>()))
