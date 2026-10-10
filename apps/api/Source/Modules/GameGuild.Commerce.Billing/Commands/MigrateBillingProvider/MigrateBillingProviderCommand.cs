@@ -135,6 +135,7 @@ public sealed class MigrateBillingProviderCommandHandler(
                 .Take(MaxReportEntries)
                 .Concat(unattributed.Take(MaxReportEntries))
                 .Concat(alreadyOnTarget.Take(MaxReportEntries))
+                .Concat(notExternallyBound.Take(MaxReportEntries))
                 .ToList()
         };
 
