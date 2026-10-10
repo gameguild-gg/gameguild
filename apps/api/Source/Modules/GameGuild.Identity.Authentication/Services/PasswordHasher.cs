@@ -90,6 +90,7 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
         var workFactor = GetBCryptWorkFactor();
         await Task.Run(() => BCrypt.Net.BCrypt.HashPassword(DummyCredentialMaterial, workFactor), cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
+        logger.LogDebug("Dummy credential work completed (BCrypt work factor: {WorkFactor})", workFactor);
     }
 
     /// <summary>

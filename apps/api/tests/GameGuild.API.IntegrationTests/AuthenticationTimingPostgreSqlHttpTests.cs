@@ -160,6 +160,8 @@ public sealed class AuthenticationTimingPostgreSqlHttpTests(ApiPostgreSqlFixture
                 services.AddSingleton<CredentialWorkRecorder>();
                 services.RemoveAll<ILogger<UserEnumerationProtectionService>>();
                 services.AddSingleton<ILogger<UserEnumerationProtectionService>>(provider => provider.GetRequiredService<CredentialWorkRecorder>());
+                services.RemoveAll<ILogger<PasswordHasher>>();
+                services.AddSingleton<ILogger<PasswordHasher>>(provider => provider.GetRequiredService<CredentialWorkRecorder>());
                 services.RemoveAll<IAuthenticationAnomalyDetectionService>();
                 services.AddSingleton(risk.Object);
             });
@@ -196,7 +198,7 @@ public sealed class AuthenticationTimingPostgreSqlHttpTests(ApiPostgreSqlFixture
         return user;
     }
 
-    private sealed class CredentialWorkRecorder : ILogger<UserEnumerationProtectionService>
+    private sealed class CredentialWorkRecorder : ILogger<UserEnumerationProtectionService>, ILogger<PasswordHasher>
     {
         public ConcurrentQueue<int> Costs { get; } = new();
         IDisposable? ILogger.BeginScope<TState>(TState state)
