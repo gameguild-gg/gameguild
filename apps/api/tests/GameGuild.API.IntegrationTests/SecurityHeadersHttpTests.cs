@@ -209,7 +209,7 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
     private static string DescribeHostSecurityConfiguration(IServiceProvider services)
     {
         var builder = new StringBuilder();
-        var environment = services.GetService(typeof(Microsoft.AspNetCore.Hosting.IHostingEnvironment));
+        var environment = services.GetService(typeof(Microsoft.AspNetCore.Hosting.IWebHostEnvironment));
         builder.Append("environment=")
             .Append(environment?.GetType().GetProperty("EnvironmentName")?.GetValue(environment) ?? "<unresolved>");
         AppendOptionsDiagnostics(builder, services, "Microsoft.AspNetCore.HttpsPolicy.HstsOptions, Microsoft.AspNetCore.HttpsPolicy", "hsts");
