@@ -1,0 +1,123 @@
+using FluentAssertions;
+using GameGuild.Identity.Provisioning.Scim;
+using Xunit;
+
+namespace GameGuild.Identity.Provisioning.UnitTests;
+
+/// <summary>
+///     Protocol contract units: pagination parsing, ServiceProviderConfig advertisement,
+/// and discovery document shapes.
+/// </summary>
+public sealed class ScimProtocolContractTests
+{
+    private static readonly ScimProvisioningOptions Options = new()
+    {
+        Enabled = true,
+        DefaultPageSize = 100,
+        MaxPageSize = 200
+    };
+
+    [Fact]
+    public void PageRequest_DefaultsToOneBasedStartAndDefaultCount()
+    {
+        var page = ScimPageRequest.Parse(null, null, Options);
+
+        page.StartIndex.Should().Be(1);
+        page.Count.Should().Be(100);
+    }
+
+    [Theory]
+    [InlineData("2", "25", 2, 25)]
+    [InlineData("1", "0", 1, 0)]
+    public void PageRequest_ParsesExplicitValues(string startIndex, string count, int expectedStart, int expectedCount)
+    {
+        var page = ScimPageRequest.Parse(startIndex, count, Options);
+
+        page.StartIndex.Should().Be(expectedStart);
+        page.Count.Should().Be(expectedCount);
+    }
+
+    [Fact]
+    public void PageRequest_ClampsCountToTheConfiguredMaximum()
+    {
+        var page = ScimPageRequest.Parse("1", "5000", Options);
+
+        page.Count.Should().Be(200);
+    }
+
+    [Theory]
+    [InlineData("0", null)]
+    [InlineData("-1", null)]
+    [InlineData("abc", null)]
+    [InlineData(null, "-3")]
+    [InlineData(null, "nope")]
+    public void PageRequest_RejectsInvalidValues(string? startIndex, string? count)
+    {
+        var act = () => ScimPageRequest.Parse(startIndex, count, Options);
+
+        act.Should().Throw<ScimException>().Which.Status.Should().Be(400);
+    }
+
+    [Fact]
+    public void ServiceProviderConfig_AdvertisesExactlyWhatIsImplemented()
+    {
+        var config = ScimDiscoveryDocuments.BuildServiceProviderConfig(Options)
+            as Dictionary<string, object?>;
+        config.Should().NotBeNull();
+
+        dynamic patch = config!["patch"]!;
+        ((bool)patch.supported).Should().BeTrue();
+
+        dynamic filter = config["filter"]!;
+        ((bool)filter.supported).Should().BeTrue();
+        ((int)filter.maxResults).Should().Be(200);
+
+        dynamic bulk = config["bulk"]!;
+        ((bool)bulk.supported).Should().BeTrue();
+        ((int)bulk.maxOperations).Should().BeGreaterThan(0);
+
+        dynamic sort = config["sort"]!;
+        ((bool)sort.supported).Should().BeFalse("sorting is not implemented");
+
+        dynamic etag = config["etag"]!;
+        ((bool)etag.supported).Should().BeFalse("ETags are not implemented");
+
+        dynamic changeLog = config["changeLog"]!;
+        ((bool)changeLog.supported).Should().BeFalse("change log is not implemented");
+    }
+
+    [Fact]
+    public void ResourceTypes_AdvertiseUsersAndGroups()
+    {
+        var document = ScimDiscoveryDocuments.BuildResourceTypes() as Dictionary<string, object?>;
+
+        document!["Resources"].Should().BeAssignableTo<IEnumerable<object>>().Which.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void Schemas_ResolveByUrn_AndUnknownUrnsReturnNull()
+    {
+        ScimDiscoveryDocuments.BuildSchema(ScimConstants.UserSchemaUrn).Should().NotBeNull();
+        ScimDiscoveryDocuments.BuildSchema(ScimConstants.GroupSchemaUrn).Should().NotBeNull();
+        ScimDiscoveryDocuments.BuildSchema("urn:unknown").Should().BeNull();
+    }
+
+    [Fact]
+    public void ScimErrorBody_CarriesSchemaStatusTypeAndDetail()
+    {
+        var body = ScimErrorBody.From(ScimException.InvalidFilter("nope"));
+
+        body.Schemas.Should().BeEquivalentTo([ScimConstants.ErrorSchema]);
+        body.Status.Should().Be(400);
+        body.ScimType.Should().Be("invalidFilter");
+        body.Detail.Should().Be("nope");
+    }
+
+    [Fact]
+    public void ScimProvisioningOptions_Validation_GuardsPageSizes()
+    {
+        var act = () => new ScimProvisioningOptions { DefaultPageSize = 500, MaxPageSize = 100 }.Validate();
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+}
