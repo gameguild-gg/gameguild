@@ -152,11 +152,11 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
         using var factory = new SecurityHeadersEnvironmentFactory(fixture.ConnectionString, "Production");
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
         {
-            BaseAddress = new Uri("https://localhost")
+            // Non-loopback host: the in-memory host accepts any authority, and a
+            // public host name avoids every loopback special case in the HTTPS
+            // redirection and forwarded-headers handling.
+            BaseAddress = new Uri("https://hsts-check.gameguild.test")
         });
-        // TLS terminates upstream of the app in production; the forwarded proto
-        // header is what marks the request as HTTPS to the HSTS middleware.
-        client.DefaultRequestHeaders.Add("X-Forwarded-Proto", "https");
         using var response = await client.GetAsync("/health");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -358,16 +358,6 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
                 // OperationalStartupConfiguration requires deployment-grade values for
                 // Production even though nothing under test connects to them.
                 configuration["Jwt:SecretKey"] = "security-headers-http-tests-jwt-secret-with-at-least-32-characters";
-                // The forwarded-headers (X-Forwarded-Proto) wiring lives in
-                // SetupRateLimiting, which is only registered when presentation-layer
-                // rate limiting is enabled — the HSTS case therefore runs the
-                // production host with rate limiting on and the loopback test proxy
-                // trusted, exactly as a production deployment behind a TLS terminator.
-                configuration["PresentationLayer:EnableRateLimiting"] = "true";
-                configuration["RateLimiting:TrustedProxyAddresses:0"] = "127.0.0.1";
-                configuration["RateLimiting:TrustedProxyAddresses:1"] = "::1";
-                configuration["RateLimiting:TrustedProxyAddresses:2"] = "::ffff:127.0.0.1";
-                configuration["RateLimiting:TrustedProxyForwardLimit"] = "1";
                 configuration["Encryption:EncryptionKey"] = Convert.ToBase64String(new byte[32]);
                 configuration["Redis:Enabled"] = "true";
                 configuration["Redis:ConnectionString"] = "localhost:6379,abortConnect=false";
