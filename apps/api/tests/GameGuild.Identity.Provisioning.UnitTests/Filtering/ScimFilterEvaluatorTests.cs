@@ -56,13 +56,22 @@ public sealed class ScimFilterEvaluatorTests
     }
 
     [Theory]
-    [InlineData("phoneNumbers pr")]
+    [InlineData("phoneNumbers pr", true)]
     [InlineData("phoneNumbers.value co \"555\"", true)]
     public void OptionalAttributes_HandlePresence(string filter, bool expected = false)
     {
         var predicate = CompileUser(filter);
 
         predicate(Sample).Should().Be(expected);
+    }
+
+    [Fact]
+    public void Presence_IsFalseWhenTheOptionalAttributeIsAbsent()
+    {
+        var noPhone = Sample with { PhoneNumber = null };
+
+        CompileUser("phoneNumbers pr")(noPhone).Should().BeFalse(
+            "pr must not match when the optional attribute is missing");
     }
 
     [Theory]

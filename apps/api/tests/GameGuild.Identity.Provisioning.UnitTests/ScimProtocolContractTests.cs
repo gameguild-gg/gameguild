@@ -61,29 +61,28 @@ public sealed class ScimProtocolContractTests
     [Fact]
     public void ServiceProviderConfig_AdvertisesExactlyWhatIsImplemented()
     {
-        var config = ScimDiscoveryDocuments.BuildServiceProviderConfig(Options)
-            as Dictionary<string, object?>;
-        config.Should().NotBeNull();
+        // The discovery document nests anonymous types, which are internal to the
+        // producing assembly and cannot be reached through dynamic binding from the
+        // test assembly — assert on the serialized JSON shape instead.
+        var serialized = System.Text.Json.JsonSerializer.Serialize(
+            ScimDiscoveryDocuments.BuildServiceProviderConfig(Options));
 
-        dynamic patch = config!["patch"]!;
-        ((bool)patch.supported).Should().BeTrue();
+        using var document = System.Text.Json.JsonDocument.Parse(serialized);
+        var config = document.RootElement;
 
-        dynamic filter = config["filter"]!;
-        ((bool)filter.supported).Should().BeTrue();
-        ((int)filter.maxResults).Should().Be(200);
+        config.GetProperty("patch").GetProperty("supported").GetBoolean().Should().BeTrue();
 
-        dynamic bulk = config["bulk"]!;
-        ((bool)bulk.supported).Should().BeTrue();
-        ((int)bulk.maxOperations).Should().BeGreaterThan(0);
+        var filter = config.GetProperty("filter");
+        filter.GetProperty("supported").GetBoolean().Should().BeTrue();
+        filter.GetProperty("maxResults").GetInt32().Should().Be(200);
 
-        dynamic sort = config["sort"]!;
-        ((bool)sort.supported).Should().BeFalse("sorting is not implemented");
+        var bulk = config.GetProperty("bulk");
+        bulk.GetProperty("supported").GetBoolean().Should().BeTrue();
+        bulk.GetProperty("maxOperations").GetInt32().Should().BeGreaterThan(0);
 
-        dynamic etag = config["etag"]!;
-        ((bool)etag.supported).Should().BeFalse("ETags are not implemented");
-
-        dynamic changeLog = config["changeLog"]!;
-        ((bool)changeLog.supported).Should().BeFalse("change log is not implemented");
+        config.GetProperty("sort").GetProperty("supported").GetBoolean().Should().BeFalse("sorting is not implemented");
+        config.GetProperty("etag").GetProperty("supported").GetBoolean().Should().BeFalse("ETags are not implemented");
+        config.GetProperty("changeLog").GetProperty("supported").GetBoolean().Should().BeFalse("change log is not implemented");
     }
 
     [Fact]

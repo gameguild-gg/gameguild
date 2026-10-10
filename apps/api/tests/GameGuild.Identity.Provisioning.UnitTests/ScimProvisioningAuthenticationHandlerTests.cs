@@ -162,6 +162,11 @@ public sealed class ScimProvisioningAuthenticationHandlerTests
     private sealed class TestProvisioningDbContext(DbContextOptions<TestProvisioningDbContext> options)
         : DbContext(options), IApplicationDbContext
     {
+        // The repository reaches the tokens through Set<ScimProvisioningToken>(),
+        // so the InMemory model must carry the module's entity configurations.
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+            => new ProvisioningModelConfiguration().Configure(modelBuilder);
+
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
     }

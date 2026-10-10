@@ -84,14 +84,17 @@ public static class ScimUserPatchApplier
 
     private static void ApplyPathlessOperation(ScimUserMutableState state, string op, JsonNode? value)
     {
-        if (value is not JsonObject attributes)
-        {
-            throw ScimException.InvalidValue("A patch operation without a path requires an object value.");
-        }
-
+        // RFC 7644 §3.5.2.2: the path is REQUIRED for remove, so a pathless remove is
+        // invalidPath regardless of the value shape (this guard must precede the
+        // object-value requirement, mirroring the group applier).
         if (op == "remove")
         {
             throw ScimException.InvalidPath("The remove operation requires a path.");
+        }
+
+        if (value is not JsonObject attributes)
+        {
+            throw ScimException.InvalidValue("A patch operation without a path requires an object value.");
         }
 
         foreach (var (attributeName, attributeValue) in attributes)

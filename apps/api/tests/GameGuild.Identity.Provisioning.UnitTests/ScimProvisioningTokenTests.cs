@@ -157,6 +157,9 @@ public sealed class ScimUserMapperTests
     public void ToResource_SoftDeletedUser_IsInactive()
     {
         var user = User.CreateOAuthUser("x@example.com", "X Y", emailVerified: false);
+        // SoftDelete refuses unpersisted entities (Version == 0); simulate a stored row
+        // the same way the sibling Users.UnitTests suites do.
+        user.Version = 1;
         user.MarkDeleted();
 
         var resource = Scim.ScimUserMapper.ToResource(user, null);
