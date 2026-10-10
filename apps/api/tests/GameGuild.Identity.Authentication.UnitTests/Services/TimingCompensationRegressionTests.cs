@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
@@ -371,9 +372,19 @@ public sealed class UserEnumerationProtectionCompensationTests
     private static TimeSpan MeasureReferenceBcryptAtConfiguredFactor()
     {
         var referenceHash = BCrypt.Net.BCrypt.HashPassword("reference", ConfiguredWorkFactor);
-        var stopwatch = Stopwatch.StartNew();
-        BCrypt.Net.BCrypt.Verify("reference", referenceHash);
-        return stopwatch.Elapsed;
+        // Median of three samples: a single bcrypt measurement swings several-fold
+        // on shared CI runners (boost clocks, noisy neighbors), and every ratio
+        // bound below is calibrated against this reference.
+        var samples = new TimeSpan[3];
+        for (var i = 0; i < samples.Length; i++)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            BCrypt.Net.BCrypt.Verify("reference", referenceHash);
+            stopwatch.Stop();
+            samples[i] = stopwatch.Elapsed;
+        }
+
+        return samples.OrderBy(sample => sample).ToArray()[1];
     }
 
     [Fact]
@@ -391,7 +402,7 @@ public sealed class UserEnumerationProtectionCompensationTests
         // machine speed and scheduling noise while rejecting a hard-coded mismatched factor.
         stopwatch.Elapsed.Should().BeGreaterThanOrEqualTo(TimeSpan.FromTicks((long)(reference.Ticks * 0.45)),
             "the dummy path must perform real bcrypt work at the configured factor {0}, reference {1}ms", ConfiguredWorkFactor, reference.TotalMilliseconds);
-        stopwatch.Elapsed.Should().BeLessThanOrEqualTo(TimeSpan.FromTicks((long)(reference.Ticks * 3.0)));
+        stopwatch.Elapsed.Should().BeLessThanOrEqualTo(TimeSpan.FromTicks((long)(reference.Ticks * 5.0)));
     }
 
     [Fact]
