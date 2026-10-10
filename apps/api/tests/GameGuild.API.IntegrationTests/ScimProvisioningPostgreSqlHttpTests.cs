@@ -43,11 +43,21 @@ public sealed class ScimProvisioningPostgreSqlHttpTests(ApiPostgreSqlFixture fix
     private readonly Guid _adminA = Guid.NewGuid();
     private readonly Guid _adminB = Guid.NewGuid();
 
+    /// <summary>
+    ///     The PostgreSQL collection shares one database across every test method with no
+    ///     per-test reset, while <c>Users.Email</c>/<c>Users.Username</c> and
+    ///     <c>Tenants.Name</c> are globally unique. Each test instance (xUnit constructs
+    ///     one per method) therefore stamps its fixture user names/emails with this marker
+    ///     and names its tenants uniquely, exactly like the sibling marker-based suites.
+    /// </summary>
+    private readonly string _marker = Guid.NewGuid().ToString("N")[..8];
+
     private string _tokenA = string.Empty;
     private string _tokenB = string.Empty;
 
-    private static string Fixture(string name)
-        => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Scim", name));
+    private string Fixture(string name)
+        => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Scim", name))
+            .Replace("scim.", $"scim.{_marker}.", StringComparison.Ordinal);
 
     public async Task InitializeAsync()
     {
@@ -55,8 +65,8 @@ public sealed class ScimProvisioningPostgreSqlHttpTests(ApiPostgreSqlFixture fix
         {
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             context.Set<Tenant>().AddRange(
-                new Tenant { Id = _tenantA, Name = "SCIM Tenant A", Slug = $"scim-a-{Guid.NewGuid():N}", AdminEmail = $"admin-{_tenantA:N}@scim.test", IsActive = true },
-                new Tenant { Id = _tenantB, Name = "SCIM Tenant B", Slug = $"scim-b-{Guid.NewGuid():N}", AdminEmail = $"admin-{_tenantB:N}@scim.test", IsActive = true });
+                new Tenant { Id = _tenantA, Name = $"SCIM Tenant A {_marker}", Slug = $"scim-a-{Guid.NewGuid():N}", AdminEmail = $"admin-{_tenantA:N}@scim.test", IsActive = true },
+                new Tenant { Id = _tenantB, Name = $"SCIM Tenant B {_marker}", Slug = $"scim-b-{Guid.NewGuid():N}", AdminEmail = $"admin-{_tenantB:N}@scim.test", IsActive = true });
             await context.SaveChangesAsync();
 
             // The admin surface is policy-guarded; policies resolve from the store and
@@ -484,7 +494,7 @@ public sealed class ScimProvisioningPostgreSqlHttpTests(ApiPostgreSqlFixture fix
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private static HttpContent FixtureContent(string name)
+    private HttpContent FixtureContent(string name)
         => new StringContent(Fixture(name), MediaTypeHeaderValue.Parse("application/json"));
 
     private static HttpContent JsonContent(object payload)
@@ -505,23 +515,23 @@ public sealed class ScimProvisioningPostgreSqlHttpTests(ApiPostgreSqlFixture fix
             {
                 schemas = new[] { "urn:ietf:params:scim:schemas:core:2.0:User" },
                 externalId = $"00u_page_{index}",
-                userName = $"scim.page{index}",
+                userName = $"scim.page{index}{_marker}",
                 displayName = $"Page User {index}",
-                emails = new[] { new { value = $"scim.page{index}@example.com", primary = true } }
+                emails = new[] { new { value = $"scim.page{index}{_marker}@example.com", primary = true } }
             }));
             response.StatusCode.Should().Be(HttpStatusCode.Created);
         }
     }
 
-    private static async Task<string> CreateMemberUserAsync(HttpClient client)
+    private async Task<string> CreateMemberUserAsync(HttpClient client)
     {
         var response = await client.PostAsync("/scim/v2/Users", JsonContent(new
         {
             schemas = new[] { "urn:ietf:params:scim:schemas:core:2.0:User" },
             externalId = "00u_group_member",
-            userName = "scim.group.member",
+            userName = $"scim.group.member{_marker}",
             displayName = "Group Member",
-            emails = new[] { new { value = "scim.group.member@example.com", primary = true } }
+            emails = new[] { new { value = $"scim.group.member{_marker}@example.com", primary = true } }
         }));
         return JsonNode.Parse(await response.Content.ReadAsStringAsync())!["id"]!.GetValue<string>();
     }
