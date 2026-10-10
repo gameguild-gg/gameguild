@@ -51,28 +51,7 @@ public sealed class CredentialTimingCompensationRegressionTests
         _httpContextAccessor.Setup(accessor => accessor.HttpContext).Returns(httpContext);
         _authAttemptService.Setup(service => service.GetClientIpAddress(It.IsAny<HttpContext>())).Returns("127.0.0.1");
 
-        _enumerationProtection
-            .Setup(protection => protection.BeginAuthenticationTiming())
-            .Callback(() => _order.Add("origin"))
-            .Returns(() =>
-            {
-                // A real server-owned scope: the elapsed measurement later in the test proves
-                // the origin precedes the instrumented lookup delay.
-                _originReturnedToCaller = new AuthenticationTimingScope();
-                return _originReturnedToCaller;
-            });
-        _enumerationProtection
-            .Setup(protection => protection.AddTimingProtectionDelayAsync(It.IsAny<AuthenticationTimingScope>(), It.IsAny<CredentialWorkClassification>()))
-            .Callback<AuthenticationTimingScope, CredentialWorkClassification>((scope, classification) =>
-            {
-                _order.Add("compensate");
-                _compensatedScope = scope;
-                _compensatedClassification = classification;
-            })
-            .Returns(Task.CompletedTask);
-        _enumerationProtection
-            .Setup(protection => protection.GetGenericErrorMessage(It.IsAny<string>()))
-            .Returns("Invalid credentials. Please check your email and password.");
+        SetupInstrumentedTimingProtection();
 
         _anomalyDetection
             .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
@@ -105,6 +84,32 @@ public sealed class CredentialTimingCompensationRegressionTests
                 await Task.Delay(LookupDelayMs);
                 return user;
             });
+    }
+
+    private void SetupInstrumentedTimingProtection()
+    {
+        _enumerationProtection
+            .Setup(protection => protection.BeginAuthenticationTiming())
+            .Callback(() => _order.Add("origin"))
+            .Returns(() =>
+            {
+                // A real server-owned scope: the elapsed measurement later in the test proves
+                // the origin precedes the instrumented lookup delay.
+                _originReturnedToCaller = new AuthenticationTimingScope();
+                return _originReturnedToCaller;
+            });
+        _enumerationProtection
+            .Setup(protection => protection.AddTimingProtectionDelayAsync(It.IsAny<AuthenticationTimingScope>(), It.IsAny<CredentialWorkClassification>()))
+            .Callback<AuthenticationTimingScope, CredentialWorkClassification>((scope, classification) =>
+            {
+                _order.Add("compensate");
+                _compensatedScope = scope;
+                _compensatedClassification = classification;
+            })
+            .Returns(Task.CompletedTask);
+        _enumerationProtection
+            .Setup(protection => protection.GetGenericErrorMessage(It.IsAny<string>()))
+            .Returns("Invalid credentials. Please check your email and password.");
     }
 
     private static User CreatePasswordAccount(IPasswordHasher hasher, string password = "CorrectPassword1!")
@@ -168,6 +173,7 @@ public sealed class CredentialTimingCompensationRegressionTests
     public async Task PolymorphicSignIn_CandidateResolutionRunsAfterTheServerOwnedOrigin()
     {
         var account = User.CreateWithPassword("poly@example.test", "poly-account", CreateRealHasher().HashPassword("CorrectPassword1!"));
+        SetupInstrumentedTimingProtection();
         var userRepository = new Mock<IUserRepository>();
         userRepository
             .Setup(repository => repository.FindSignInCandidatesAsync(It.IsAny<string>(), It.IsAny<SignInIdentifierType>(), It.IsAny<CancellationToken>()))
@@ -250,7 +256,8 @@ public sealed class CredentialTimingCompensationRegressionTests
     {
         var account = User.CreateWithPassword("malformed@example.test", "malformed-account", "not-a-valid-bcrypt-hash");
         SetupInstrumentedLookup(account);
-        var sut = CreateSut();
+        var instrumented = new OrderedHasherDecorator(CreateRealHasher(), _order);
+        var sut = CreateSut(instrumented);
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
             sut.LocalSignInAsync(new LocalSignInRequest { Email = account.Email, Password = "WrongPassword1!" }));
