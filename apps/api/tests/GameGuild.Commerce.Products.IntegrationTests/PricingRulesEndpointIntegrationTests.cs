@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -18,8 +17,12 @@ namespace GameGuild.Commerce.Products.IntegrationTests;
 /// Issue #395: end-to-end coverage for the pricing rules management API
 /// (<c>/api/v{version}/billing/pricing-engine</c>) and the calculate endpoint that
 /// applies volume tiers and customer segments at checkout calculation.
+/// The host runs against real PostgreSQL (see <see cref="PricingRulesPostgreSqlFixture"/>)
+/// because pricing mutations execute in transactions and write compliance evidence
+/// through PostgreSQL-specific data sources.
 /// </summary>
-public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
+[Collection(PricingRulesPostgreSqlCollection.Name)]
+public class PricingRulesEndpointIntegrationTests : IDisposable
 {
     private const string BasePath = "/api/v1/billing/pricing-engine";
     private const string ManagePermissions = "products:read,products:pricing:manage,monetization:monetize";
@@ -27,40 +30,16 @@ public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplication
 
     private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
     private readonly HttpClient _client;
-    private static readonly string DatabaseName = $"PricingRulesTestDb_{Guid.NewGuid()}";
 
-    public PricingRulesEndpointIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory)
+    public PricingRulesEndpointIntegrationTests(PricingRulesPostgreSqlFixture fixture)
     {
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
 
-        _factory = factory.WithWebHostBuilder(builder =>
+        _factory = fixture.Factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
             builder.ConfigureTestServices(services =>
             {
-                // Remove all EF Core and Npgsql service registrations
-                var descriptorsToRemove = services
-                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
-                                d.ServiceType == typeof(ApplicationDbContext) ||
-                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
-                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
-                    .ToList();
-
-                foreach (var descriptor in descriptorsToRemove)
-                {
-                    services.Remove(descriptor);
-                }
-
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase(DatabaseName);
-                    // The command pipeline wraps mutations in a transaction; the in-memory
-                    // provider raises TransactionIgnoredWarning at error severity by default,
-                    // which would fail every pricing mutation before authorization even runs.
-                    options.ConfigureWarnings(warnings =>
-                        warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning));
-                });
-                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
                 services.AddDefaultTenantMembership();
 
                 // Authorization checks (controller gates and the CQRS pipeline) read permissions
@@ -81,7 +60,6 @@ public class PricingRulesEndpointIntegrationTests : IClassFixture<WebApplication
             });
         });
 
-        PricingRulesTestTenantServices.SeedDefaultTenant(_factory.Services);
         _client = _factory.CreateClient();
     }
 
