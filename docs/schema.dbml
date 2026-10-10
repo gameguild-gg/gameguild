@@ -3400,6 +3400,34 @@ Table "payments" {
   }
 }
 
+Table "PermissionAuditLogs" {
+  "Id" uuid [not null]
+  "TenantId" uuid
+  "OperationType" integer [not null]
+  "UserId" uuid
+  "ResourceId" uuid
+  "ResourceType" "character varying(200)"
+  "PermissionType" "character varying(256)"
+  "PermissionDetails" text
+  "OldValue" text
+  "NewValue" text
+  "PerformedBy" uuid [not null]
+  "IpAddress" "character varying(64)"
+  "UserAgent" "character varying(512)"
+  "Reason" "character varying(2000)"
+  "Success" boolean [not null]
+  "ErrorMessage" "character varying(2000)"
+  "Timestamp" timestamp [not null]
+
+  Indexes {
+    Id [pk, name: "PK_PermissionAuditLogs"]
+    OperationType [name: "IX_PermissionAuditLogs_OperationType"]
+    (TenantId, Timestamp) [name: "IX_PermissionAuditLogs_Tenant_Time"]
+    Timestamp [name: "IX_PermissionAuditLogs_Time"]
+    UserId [name: "IX_PermissionAuditLogs_UserId"]
+  }
+}
+
 Table "PermissionDelegation" {
   "Id" uuid [not null]
   "DelegatorUserId" uuid [not null]
@@ -3432,6 +3460,7 @@ Table "PermissionEvaluationLogs" {
   "Id" uuid [not null]
   "TenantId" uuid
   "UserId" uuid
+  "Roles" "text[]" [not null]
   "ResourceType" "character varying(200)" [not null]
   "ResourceId" "character varying(200)"
   "RequiredPermissions" "text[]" [not null]
@@ -4001,10 +4030,8 @@ Table "ResourceUserPermission" {
   "ResourceType" "character varying(256)" [not null]
   "ResourceId" "character varying(256)" [not null]
   "Permissions" "text[]" [not null]
-  "GrantedAt" timestamp [not null]
   "GrantedByUserId" uuid [not null]
   "GrantedByUserName" "character varying(256)"
-  "ExpiresAt" timestamp
   "RevokedAt" timestamp
   "RevokedByUserId" uuid
   "RevokedByUserName" "character varying(256)"
@@ -4015,6 +4042,8 @@ Table "ResourceUserPermission" {
   "CreatedAt" timestamp [not null]
   "UpdatedAt" timestamp [not null]
   "DeletedAt" timestamp
+  "ExpiresAt" timestamp
+  "GrantedAt" timestamp [not null]
 
   Indexes {
     Id [pk, name: "PK_ResourceUserPermission"]
@@ -4876,20 +4905,20 @@ Table "tenant_capabilities" {
 
 Table "TenantPermissions" {
   "Id" uuid [not null]
-  "UserId" uuid
   "TenantId" uuid
   "Permissions" "text[]" [not null]
   "DenyPermissions" "text[]" [not null]
-  "ExpiresAt" timestamp
-  "IsActive" boolean [not null]
   "GrantedBy" uuid
-  "GrantedAt" timestamp [not null]
   "Reason" "character varying(500)"
   "Metadata" jsonb
   "Version" integer [not null]
   "CreatedAt" timestamp [not null]
   "UpdatedAt" timestamp [not null]
   "DeletedAt" timestamp
+  "UserId" uuid
+  "ExpiresAt" timestamp
+  "IsActive" boolean [not null]
+  "GrantedAt" timestamp [not null]
 
   Indexes {
     Id [pk, name: "PK_TenantPermissions"]
@@ -6728,7 +6757,7 @@ Table "Notifications" {
   "Priority" "character varying(20)" [not null]
   "ReferenceEntityId" uuid
   "ReferenceEntityType" "character varying(100)"
-  "Metadata" "character varying(4000)"
+  "Metadata" text
   "TemplateId" uuid
   "Version" integer [not null]
   "CreatedAt" timestamp [not null]
@@ -11561,12 +11590,12 @@ Table "gameguild.authentication"."contenttypepermission" {
   "DeletedAt" timestamp
   "TenantId" uuid
   "UserId" uuid
-  "Permissions" "character varying(500)" [not null]
   "ExpiresAt" timestamp
   "IsActive" boolean [not null]
+  "GrantedAt" timestamp [not null]
+  "Permissions" "character varying(500)" [not null]
   "Notes" text
   "GrantedBy" uuid
-  "GrantedAt" timestamp [not null]
 
   Indexes {
     id [pk, name: "PK_contenttypepermission"]
@@ -11583,11 +11612,41 @@ Table "gameguild.authentication"."externallogin" {
   "ProviderKey" "character varying(256)" [not null]
   "CreatedAt" timestamp [not null]
   "UpdatedAt" timestamp [not null]
+  "GrantedScopes" "character varying(1024)"
+  "ConsentedAt" timestamp
+  "ConsentVersion" integer [not null, default: 0]
 
   Indexes {
     id [pk, name: "PK_externallogin"]
     (Provider, ProviderKey) [unique, name: "ix_externallogin_provider_provider_key"]
     UserId [name: "ix_externallogin_user_id"]
+  }
+}
+
+Table "gameguild.authentication"."genericresourcepermission" {
+  "id" uuid [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+  "UserId" uuid
+  "ExpiresAt" timestamp
+  "IsActive" boolean [not null]
+  "GrantedAt" timestamp [not null]
+  "Permissions" "character varying(500)" [not null]
+  "Notes" text
+  "GrantedBy" uuid
+  "ResourceId" uuid [not null]
+  "ResourceType" "character varying(256)" [not null]
+  "ResourceTitle" "character varying(512)"
+
+  Indexes {
+    id [pk, name: "PK_genericresourcepermission"]
+    ResourceType [name: "ix_genericresourcepermission_resource_type"]
+    TenantId [name: "ix_genericresourcepermission_tenant_id"]
+    (TenantId, ResourceType, ResourceId) [name: "ix_genericresourcepermission_tenant_resource"]
+    UserId [name: "ix_genericresourcepermission_user_id"]
   }
 }
 
@@ -11660,6 +11719,71 @@ Table "gameguild.authentication"."role" {
     name [name: "idx_role_name"]
     (name, tenant_id) [unique, name: "idx_role_name_tenant_id"]
     tenant_id [name: "idx_role_tenant_id"]
+  }
+}
+
+Table "gameguild.authentication"."scim_group_mappings" {
+  "id" uuid [not null]
+  "tenant_id" uuid [not null]
+  "external_id" "character varying(256)" [not null]
+  "role_id" uuid [not null]
+  "version" integer [not null]
+  "created_at" timestamp [not null]
+  "updated_at" timestamp [not null]
+  "deleted_at" timestamp
+
+  Indexes {
+    id [pk, name: "PK_scim_group_mappings"]
+    role_id [name: "ix_scim_group_mappings_role_id"]
+    (tenant_id, external_id) [unique, name: "ix_scim_group_mappings_tenant_id_external_id"]
+  }
+}
+
+Table "gameguild.authentication"."scim_provisioning_tokens" {
+  "id" uuid [not null]
+  "tenant_id" uuid [not null]
+  "created_by_user_id" uuid [not null]
+  "name" "character varying(100)" [not null]
+  "key_hash" "character varying(64)" [not null]
+  "key_prefix" "character varying(20)" [not null]
+  "scopes" "character varying(1000)" [not null]
+  "is_active" boolean [not null, default: true]
+  "expires_at" timestamp
+  "last_used_at" timestamp
+  "usage_count" bigint [not null, default: 0]
+  "revoked_at" timestamp
+  "revocation_reason" "character varying(200)"
+  "replaces_token_id" uuid
+  "rotation_grace_ends_at" timestamp
+  "version" integer [not null]
+  "created_at" timestamp [not null]
+  "updated_at" timestamp [not null]
+  "deleted_at" timestamp
+
+  Indexes {
+    id [pk, name: "PK_scim_provisioning_tokens"]
+    expires_at [name: "ix_scim_provisioning_tokens_expires_at"]
+    is_active [name: "ix_scim_provisioning_tokens_is_active"]
+    key_hash [unique, name: "ix_scim_provisioning_tokens_key_hash"]
+    replaces_token_id [name: "ix_scim_provisioning_tokens_replaces_token_id"]
+    tenant_id [name: "ix_scim_provisioning_tokens_tenant_id"]
+  }
+}
+
+Table "gameguild.authentication"."scim_user_mappings" {
+  "id" uuid [not null]
+  "tenant_id" uuid [not null]
+  "external_id" "character varying(256)" [not null]
+  "user_id" uuid [not null]
+  "version" integer [not null]
+  "created_at" timestamp [not null]
+  "updated_at" timestamp [not null]
+  "deleted_at" timestamp
+
+  Indexes {
+    id [pk, name: "PK_scim_user_mappings"]
+    (tenant_id, external_id) [unique, name: "ix_scim_user_mappings_tenant_id_external_id"]
+    user_id [name: "ix_scim_user_mappings_user_id"]
   }
 }
 

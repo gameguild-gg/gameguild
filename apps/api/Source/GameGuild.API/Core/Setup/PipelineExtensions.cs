@@ -2,6 +2,7 @@ using System.Net;
 using Asp.Versioning.ApiExplorer;
 using GameGuild.Configuration.PresentationLayer.GraphQL;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Provisioning;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Tenants;
 using GameGuild.API.Core.ApiVersioning;
@@ -36,6 +37,9 @@ public static class PipelineExtensions
 
         // 01. Exception Handling (consistent RFC 7807 error responses in all environments)
         app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+        // 01a. SCIM feature gate: /scim routes answer 404 unless Scim:Enabled is true.
+        app.UseScimProvisioningFeatureGate();
 
         // 02. Forwarded Headers (proxy/load balancer support, must be early)
         app.UseForwardedHeaders();
@@ -270,7 +274,10 @@ public static class PipelineExtensions
 
     internal static void ConfigureHsts(WebApplication app)
     {
-        if (app.Environment.IsProduction()) app.UseHsts();
+        if (app.Environment.IsProduction())
+        {
+            app.UseHsts();
+        }
     }
 
     private static bool IsHealthRequest(HttpContext context)

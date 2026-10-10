@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Provisioning;
 
 namespace GameGuild.Compliance.Audit;
 
@@ -51,6 +52,19 @@ public static class AuditModule
                 options.RetryDelayMilliseconds = configuredOptions.RetryDelayMilliseconds;
                 options.TimeoutSeconds = configuredOptions.TimeoutSeconds;
             });
+        services.AddOptions<AuditScheduledExportOptions>()
+            .Configure<IConfiguration>((options, configuration) =>
+            {
+                var section = configuration.GetSection(AuditScheduledExportOptions.ConfigurationSection);
+                if (int.TryParse(section[AuditScheduledExportOptions.StaleClaimThresholdMinutesKey], out var staleMinutes))
+                {
+                    options.StaleClaimThreshold = TimeSpan.FromMinutes(staleMinutes);
+                }
+            })
+            .Validate(
+                options => options.StaleClaimThreshold > TimeSpan.Zero,
+                $"{AuditScheduledExportOptions.ConfigurationSection}:{AuditScheduledExportOptions.StaleClaimThresholdMinutesKey} " +
+                "must be a positive number of minutes; a zero or negative threshold would mark every in-progress claim stale.");
         services.AddHttpClient<IAuditExportWebhookNotifier, AuditExportWebhookNotifier>()
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 
@@ -101,6 +115,7 @@ public static class AuditModule
         services.AddScoped<IAuditDataAccessRecorder, AuditDataAccessRecorder>();
         services.AddScoped<IAuthenticationAuditEventSink, CentralAuthenticationAuditEventSink>();
         services.AddScoped<IApiKeyAuditEventSink, CentralApiKeyAuditEventSink>();
+        services.AddScoped<IScimProvisioningAuditSink, CentralScimProvisioningAuditEventSink>();
         services.AddScoped<IAuditActionTypeSearchService, AuditActionTypeSearchService>();
         services.AddSingleton<IAuditExportProgressTracker, DistributedAuditExportProgressTracker>();
         services.AddScoped<IAuditExportCronSchedule, AuditExportCronSchedule>();
