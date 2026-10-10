@@ -140,6 +140,10 @@ public static class DataDependencyInjection
         // Google ID token verifier — cryptographic signature + iss/aud/exp via Google.Apis.Auth.
         // Supersedes OAuthService.ValidateGoogleIdTokenInternalAsync (Todo 3 swaps the only caller).
         services.AddScoped<IGoogleIdTokenVerifier, GoogleIdTokenVerifier>();
+        // Generic OIDC federation (enterprise IdPs) — discovery + authorization-code + JWKS ID-token
+        // validation, config-gated per Authentication:ExternalProviders:Oidc:<slug> (fail closed).
+        services.AddHttpClient(OidcFederationService.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(10));
+        services.AddScoped<IOidcFederationService, OidcFederationService>();
         services.AddScoped<IWeb3Service, Web3Service>();
         services.AddScoped<IServiceAccountService, ServiceAccountService>();
 
@@ -231,6 +235,7 @@ public static class DataDependencyInjection
         // Facade that preserves the original IAuthenticationAnomalyDetectionService contract
         services.AddScoped<AuthenticationAnomalyDetectionService>();
         services.AddScoped<IEmailVerificationService, EmailVerificationService>();
+        services.AddScoped<IEmailCodeService, EmailCodeService>();
         services.AddScoped<IAuthenticationAnomalyDetectionService, AuthenticationAnomalyDetectionService>();
         services.AddScoped<IUserEnumerationProtectionService, UserEnumerationProtectionService>();
         services.AddScoped<IEncryptionService, EncryptionService>();
@@ -374,6 +379,8 @@ public static class DataDependencyInjection
         services.AddScoped<IRequestHandler<ChangePasswordCommand, PasswordChangeResult>, ChangePasswordCommandHandler>();
         services.AddScoped<IRequestHandler<RequestMagicLinkCommand, MagicLinkRequestResult>, RequestMagicLinkCommandHandler>();
         services.AddScoped<IRequestHandler<ConsumeMagicLinkCommand, SignInResponse>, ConsumeMagicLinkCommandHandler>();
+        services.AddScoped<IRequestHandler<RequestEmailCodeCommand, EmailCodeRequestResult>, RequestEmailCodeCommandHandler>();
+        services.AddScoped<IRequestHandler<ConsumeEmailCodeCommand, SignInResponse>, ConsumeEmailCodeCommandHandler>();
         
         // Logout handler with immediate token revocation
         services.AddScoped<IRequestHandler<LogoutCommand, LogoutResponse>, LogoutHandler>();

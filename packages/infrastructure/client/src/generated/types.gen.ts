@@ -7444,6 +7444,18 @@ export interface IdentityAuthenticationCompleteWebAuthnRegistrationInput {
   isPasswordless?: boolean;
 }
 
+/** Request to consume a one-time email sign-in code. */
+export interface IdentityAuthenticationConsumeEmailCodeInput {
+  /** Six-digit one-time code received by email. */
+  code: string;
+  /** Optional device fingerprint for refresh-token session tracking. */
+  deviceFingerprint?: string | null;
+  /** Email address the code belongs to. */
+  email: string;
+  /** Optional tenant context. */
+  tenantId?: string | null;
+}
+
 /** Request to consume a passwordless magic sign-in link. */
 export interface IdentityAuthenticationConsumeMagicLinkInput {
   /** Optional device fingerprint for refresh-token session tracking. */
@@ -7587,6 +7599,13 @@ export interface IdentityAuthenticationDiscordSignInOutput {
   /** CSRF state parameter embedded in the authorization URL (also returned separately
 so the caller can stash it in its state cookie) */
   state: string | null;
+}
+
+/** Data model for Identity Authentication Email Code Request Result. */
+export interface IdentityAuthenticationEmailCodeRequestResult {
+  expiresInMinutes?: number;
+  message?: string | null;
+  success?: boolean;
 }
 
 /** Response for email verification request */
@@ -7792,6 +7811,54 @@ export interface IdentityAuthenticationOAuth2ErrorOutput {
   errorDescription?: string | null;
 }
 
+/** Request to initiate an OIDC federation provider sign-in */
+export interface IdentityAuthenticationOidcAuthorizeRequestDto {
+  /** The redirect URI registered with the federation provider */
+  redirectUri: string;
+}
+
+/** Request body for the OIDC federation callback endpoint */
+export interface IdentityAuthenticationOidcCallbackRequestDto {
+  /** OAuth authorization code returned by the federation provider */
+  code: string;
+  /** The same redirect URI used in the authorization request */
+  redirectUri: string;
+  /** Whether the caller asked for a persistent ("remember me") refresh-token lifetime */
+  rememberMe?: boolean | null;
+  /** OAuth state parameter for CSRF protection (validated web-side against the signed state cookie) */
+  state: string;
+  /** Optional tenant context */
+  tenantId?: string | null;
+}
+
+/** A discovered federation provider serving one email domain. */
+export interface IdentityAuthenticationOidcDiscoveredProvider {
+  displayName: string | null;
+  slug: string | null;
+}
+
+/** Response for domain-to-provider discovery */
+export interface IdentityAuthenticationOidcDiscoverProviderOutput {
+  /** Federation providers whose configured email domains match the requested address */
+  providers: IdentityAuthenticationOidcDiscoveredProvider[] | null;
+}
+
+/** Response for OIDC logout forwarding */
+export interface IdentityAuthenticationOidcEndSessionUrlOutput {
+  /** The provider's end-session URL with the post-logout redirect applied; null when the
+provider's discovery document does not advertise an end_session_endpoint. */
+  endSessionUrl?: string | null;
+}
+
+/** Response for OIDC federation sign-in initiation */
+export interface IdentityAuthenticationOidcSignInOutput {
+  /** The provider's authorization URL with client, redirect, scope, and state parameters applied */
+  authUrl: string | null;
+  /** CSRF state parameter embedded in the authorization URL (also returned separately
+so the caller can stash it in its state cookie) */
+  state: string | null;
+}
+
 /** Request to change password for authenticated user */
 export interface IdentityAuthenticationPasswordChangeInput {
   /** Password confirmation */
@@ -7865,6 +7932,14 @@ export interface IdentityAuthenticationRefreshTokenInput {
 export interface IdentityAuthenticationRemoveRoleFromUserInput {
   roleId?: string;
   userId?: string;
+}
+
+/** Request to send a one-time email sign-in code. */
+export interface IdentityAuthenticationRequestEmailCodeInput {
+  /** Email address to send the sign-in code to. */
+  email: string;
+  /** Optional tenant context. */
+  tenantId?: string | null;
 }
 
 /** Request to send a passwordless magic sign-in link. */
@@ -8057,6 +8132,12 @@ export interface IdentityAuthenticationSignInOutput {
   accessToken?: string | null;
   /** When the access token expires (short-lived) */
   accessTokenExpiresAt?: string;
+  /**     Authentication context class reference (OIDC `acr`) attested by the federated
+identity provider for this sign-in. Null for non-federated flows. */
+  authenticationContextClassReference?: string | null;
+  /**     Authentication method references (OIDC `amr`) attested by the federated
+identity provider for this sign-in. Null for non-federated flows. */
+  authenticationMethodReferences?: string[] | null;
   /** Available step-up authentication methods */
   availableMethods?: string[] | null;
   /** List of tenants the user has access to */
@@ -8073,6 +8154,9 @@ export interface IdentityAuthenticationSignInOutput {
   mfaSessionId?: string | null;
   /** MFA token */
   mfaToken?: string | null;
+  /**     Whether the federated identity provider attested multi-factor authentication
+(`amr` containing "mfa") for this sign-in. */
+  mfaVerifiedByProvider?: boolean;
   /** Refresh token */
   refreshToken?: string | null;
   /** When the refresh token expires (long-lived) */
@@ -20644,6 +20728,7 @@ export let IdentityAuthenticationCompleteMfaSetupInputSchema: z.ZodType<Identity
 export let IdentityAuthenticationCompletePasswordResetInputSchema: z.ZodType<IdentityAuthenticationCompletePasswordResetInput>;
 export let IdentityAuthenticationCompleteWebAuthnAuthenticationInputSchema: z.ZodType<IdentityAuthenticationCompleteWebAuthnAuthenticationInput>;
 export let IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema: z.ZodType<IdentityAuthenticationCompleteWebAuthnRegistrationInput>;
+export let IdentityAuthenticationConsumeEmailCodeInputSchema: z.ZodType<IdentityAuthenticationConsumeEmailCodeInput>;
 export let IdentityAuthenticationConsumeMagicLinkInputSchema: z.ZodType<IdentityAuthenticationConsumeMagicLinkInput>;
 export let IdentityAuthenticationCreateApiKeyCommandSchema: z.ZodType<IdentityAuthenticationCreateApiKeyCommand>;
 export let IdentityAuthenticationCreateApiKeyOutputSchema: z.ZodType<IdentityAuthenticationCreateApiKeyOutput>;
@@ -20659,6 +20744,7 @@ export let IdentityAuthenticationDiscordLinkAuthorizeInputSchema: z.ZodType<Iden
 export let IdentityAuthenticationDiscordLinkAuthorizeOutputSchema: z.ZodType<IdentityAuthenticationDiscordLinkAuthorizeOutput>;
 export let IdentityAuthenticationDiscordLinkCallbackInputSchema: z.ZodType<IdentityAuthenticationDiscordLinkCallbackInput>;
 export let IdentityAuthenticationDiscordSignInOutputSchema: z.ZodType<IdentityAuthenticationDiscordSignInOutput>;
+export let IdentityAuthenticationEmailCodeRequestResultSchema: z.ZodType<IdentityAuthenticationEmailCodeRequestResult>;
 export let IdentityAuthenticationEmailVerificationOutputSchema: z.ZodType<IdentityAuthenticationEmailVerificationOutput>;
 export let IdentityAuthenticationEmailVerificationResultSchema: z.ZodType<IdentityAuthenticationEmailVerificationResult>;
 export let IdentityAuthenticationExternalLoginLinkPreviewOutputSchema: z.ZodType<IdentityAuthenticationExternalLoginLinkPreviewOutput>;
@@ -20680,6 +20766,12 @@ export let IdentityAuthenticationMfaSetupOutputSchema: z.ZodType<IdentityAuthent
 export let IdentityAuthenticationMfaSuccessOutputSchema: z.ZodType<IdentityAuthenticationMfaSuccessOutput>;
 export let IdentityAuthenticationMfaVerificationOutputSchema: z.ZodType<IdentityAuthenticationMfaVerificationOutput>;
 export let IdentityAuthenticationOAuth2ErrorOutputSchema: z.ZodType<IdentityAuthenticationOAuth2ErrorOutput>;
+export let IdentityAuthenticationOidcAuthorizeRequestDtoSchema: z.ZodType<IdentityAuthenticationOidcAuthorizeRequestDto>;
+export let IdentityAuthenticationOidcCallbackRequestDtoSchema: z.ZodType<IdentityAuthenticationOidcCallbackRequestDto>;
+export let IdentityAuthenticationOidcDiscoveredProviderSchema: z.ZodType<IdentityAuthenticationOidcDiscoveredProvider>;
+export let IdentityAuthenticationOidcDiscoverProviderOutputSchema: z.ZodType<IdentityAuthenticationOidcDiscoverProviderOutput>;
+export let IdentityAuthenticationOidcEndSessionUrlOutputSchema: z.ZodType<IdentityAuthenticationOidcEndSessionUrlOutput>;
+export let IdentityAuthenticationOidcSignInOutputSchema: z.ZodType<IdentityAuthenticationOidcSignInOutput>;
 export let IdentityAuthenticationPasswordChangeInputSchema: z.ZodType<IdentityAuthenticationPasswordChangeInput>;
 export let IdentityAuthenticationPasswordChangeResultSchema: z.ZodType<IdentityAuthenticationPasswordChangeResult>;
 export let IdentityAuthenticationPasswordResetRequestResultSchema: z.ZodType<IdentityAuthenticationPasswordResetRequestResult>;
@@ -20688,6 +20780,7 @@ export let IdentityAuthenticationPatchServiceAccountInputSchema: z.ZodType<Ident
 export let IdentityAuthenticationPolymorphicSignInInputSchema: z.ZodType<IdentityAuthenticationPolymorphicSignInInput>;
 export let IdentityAuthenticationRefreshTokenInputSchema: z.ZodType<IdentityAuthenticationRefreshTokenInput>;
 export let IdentityAuthenticationRemoveRoleFromUserInputSchema: z.ZodType<IdentityAuthenticationRemoveRoleFromUserInput>;
+export let IdentityAuthenticationRequestEmailCodeInputSchema: z.ZodType<IdentityAuthenticationRequestEmailCodeInput>;
 export let IdentityAuthenticationRequestMagicLinkInputSchema: z.ZodType<IdentityAuthenticationRequestMagicLinkInput>;
 export let IdentityAuthenticationRequestPasswordResetInputSchema: z.ZodType<IdentityAuthenticationRequestPasswordResetInput>;
 export let IdentityAuthenticationRevokeApiKeyInputSchema: z.ZodType<IdentityAuthenticationRevokeApiKeyInput>;
@@ -29078,6 +29171,17 @@ IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema = z.object({
   isPasswordless: z.boolean().optional(),
 });
 
+/** Zod schema for IdentityAuthenticationConsumeEmailCodeInput. Request to consume a one-time email sign-in code. */
+IdentityAuthenticationConsumeEmailCodeInputSchema = z.object({
+  code: z
+    .string()
+    .min(1)
+    .regex(/^[0-9]{6}$/),
+  deviceFingerprint: z.string().nullable().optional(),
+  email: z.string().email().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
 /** Zod schema for IdentityAuthenticationConsumeMagicLinkInput. Request to consume a passwordless magic sign-in link. */
 IdentityAuthenticationConsumeMagicLinkInputSchema = z.object({
   deviceFingerprint: z.string().nullable().optional(),
@@ -29192,6 +29296,13 @@ IdentityAuthenticationDiscordLinkCallbackInputSchema = z.object({
 IdentityAuthenticationDiscordSignInOutputSchema = z.object({
   authUrl: z.string().nullable(),
   state: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationEmailCodeRequestResult. Data model for Identity Authentication Email Code Request Result. */
+IdentityAuthenticationEmailCodeRequestResultSchema = z.object({
+  expiresInMinutes: z.number().int().optional(),
+  message: z.string().nullable().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationEmailVerificationOutput. Response for email verification request */
@@ -29358,6 +29469,42 @@ IdentityAuthenticationOAuth2ErrorOutputSchema = z.object({
   errorDescription: z.string().nullable().optional(),
 });
 
+/** Zod schema for IdentityAuthenticationOidcAuthorizeRequestDto. Request to initiate an OIDC federation provider sign-in */
+IdentityAuthenticationOidcAuthorizeRequestDtoSchema = z.object({
+  redirectUri: z.string().min(1),
+});
+
+/** Zod schema for IdentityAuthenticationOidcCallbackRequestDto. Request body for the OIDC federation callback endpoint */
+IdentityAuthenticationOidcCallbackRequestDtoSchema = z.object({
+  code: z.string().min(1),
+  redirectUri: z.string().min(1),
+  rememberMe: z.boolean().nullable().optional(),
+  state: z.string().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationOidcDiscoveredProvider. A discovered federation provider serving one email domain. */
+IdentityAuthenticationOidcDiscoveredProviderSchema = z.object({
+  displayName: z.string().nullable(),
+  slug: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationOidcDiscoverProviderOutput. Response for domain-to-provider discovery */
+IdentityAuthenticationOidcDiscoverProviderOutputSchema = z.object({
+  providers: z.array(z.lazy(() => IdentityAuthenticationOidcDiscoveredProviderSchema)).nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationOidcEndSessionUrlOutput. Response for OIDC logout forwarding */
+IdentityAuthenticationOidcEndSessionUrlOutputSchema = z.object({
+  endSessionUrl: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationOidcSignInOutput. Response for OIDC federation sign-in initiation */
+IdentityAuthenticationOidcSignInOutputSchema = z.object({
+  authUrl: z.string().nullable(),
+  state: z.string().nullable(),
+});
+
 /** Zod schema for IdentityAuthenticationPasswordChangeInput. Request to change password for authenticated user */
 IdentityAuthenticationPasswordChangeInputSchema = z.object({
   confirmPassword: z.string().min(1),
@@ -29415,6 +29562,12 @@ IdentityAuthenticationRefreshTokenInputSchema = z.object({
 IdentityAuthenticationRemoveRoleFromUserInputSchema = z.object({
   roleId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationRequestEmailCodeInput. Request to send a one-time email sign-in code. */
+IdentityAuthenticationRequestEmailCodeInputSchema = z.object({
+  email: z.string().email().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationRequestMagicLinkInput. Request to send a passwordless magic sign-in link. */
@@ -29590,6 +29743,8 @@ IdentityAuthenticationSessionTerminationOutputSchema = z.object({
 IdentityAuthenticationSignInOutputSchema = z.object({
   accessToken: z.string().nullable().optional(),
   accessTokenExpiresAt: z.string().datetime().optional(),
+  authenticationContextClassReference: z.string().nullable().optional(),
+  authenticationMethodReferences: z.array(z.string()).nullable().optional(),
   availableMethods: z.array(z.string()).nullable().optional(),
   availableTenants: z
     .array(z.lazy(() => TenantInfoSchema))
@@ -29601,6 +29756,7 @@ IdentityAuthenticationSignInOutputSchema = z.object({
   message: z.string().nullable().optional(),
   mfaSessionId: z.string().nullable().optional(),
   mfaToken: z.string().nullable().optional(),
+  mfaVerifiedByProvider: z.boolean().optional(),
   refreshToken: z.string().nullable().optional(),
   refreshTokenExpiresAt: z.string().datetime().optional(),
   requiresMfa: z.boolean().optional(),
@@ -40693,6 +40849,10 @@ export type IdentityAuthenticationGoogleIdTokenRequest = IdentityAuthenticationG
 export { IdentityAuthenticationGoogleIdTokenRequestDtoSchema as IdentityAuthenticationGoogleIdTokenRequestSchema };
 export type IdentityAuthenticationJwtKeyInfo = IdentityAuthenticationJwtKeyInfoDto;
 export { IdentityAuthenticationJwtKeyInfoDtoSchema as IdentityAuthenticationJwtKeyInfoSchema };
+export type IdentityAuthenticationOidcAuthorizeRequest = IdentityAuthenticationOidcAuthorizeRequestDto;
+export { IdentityAuthenticationOidcAuthorizeRequestDtoSchema as IdentityAuthenticationOidcAuthorizeRequestSchema };
+export type IdentityAuthenticationOidcCallbackRequest = IdentityAuthenticationOidcCallbackRequestDto;
+export { IdentityAuthenticationOidcCallbackRequestDtoSchema as IdentityAuthenticationOidcCallbackRequestSchema };
 export type IdentityAuthenticationUser = IdentityAuthenticationUserDto;
 export { IdentityAuthenticationUserDtoSchema as IdentityAuthenticationUserSchema };
 export type IdentityAuthorizationEffectivePermission = IdentityAuthorizationEffectivePermissionDto;
