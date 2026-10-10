@@ -1,8 +1,5 @@
 using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace GameGuild.Assets.Deduplication;
 
@@ -18,6 +15,9 @@ public interface IDeduplicationService
 
     /// <summary>
     /// Computes a perceptual hash for images (for near-duplicate detection).
+    /// Returns null: pHash computation moved to the Openinary media pipeline;
+    /// <see cref="DeduplicationOptions.EnablePerceptualHashing"/> is kept for a
+    /// future re-enable.
     /// </summary>
     Task<string?> ComputePerceptualHashAsync(Stream content, string mimeType, CancellationToken ct = default);
 
@@ -59,11 +59,6 @@ public class DeduplicationService : IDeduplicationService
     private readonly DeduplicationOptions _options;
     private readonly ILogger<DeduplicationService> _logger;
 
-    /// <summary>
-    /// Size for perceptual hash computation (8x8 = 64 bits)
-    /// </summary>
-    private const int HashSize = 8;
-
     public DeduplicationService(
         IAssetContentRepository contentRepository,
         Microsoft.Extensions.Options.IOptions<DeduplicationOptions> options,
@@ -83,6 +78,11 @@ public class DeduplicationService : IDeduplicationService
         return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
 
+    /// <summary>
+    /// Returns null: pHash computation moved to the Openinary media pipeline.
+    /// <see cref="DeduplicationOptions.EnablePerceptualHashing"/> is kept for a
+    /// future re-enable.
+    /// </summary>
     public async Task<string?> ComputePerceptualHashAsync(Stream content, string mimeType, CancellationToken ct = default)
     {
         if (!_options.EnablePerceptualHashing)
@@ -90,77 +90,19 @@ public class DeduplicationService : IDeduplicationService
             return null;
         }
 
-        // Only compute perceptual hash for images
         if (!mimeType.StartsWith("image/"))
         {
             return null;
         }
 
-        try
+        if (content.CanSeek)
         {
-            // Reset stream position if needed
-            if (content.CanSeek && content.Position != 0)
-            {
-                content.Position = 0;
-            }
-
-            // Load image and compute average hash (aHash)
-            using var image = await Image.LoadAsync<Rgba32>(content, ct);
-            
-            // Resize to 8x8 (HashSize x HashSize)
-            image.Mutate(x => x
-                .Resize(HashSize, HashSize)
-                .Grayscale());
-
-            // Calculate average pixel value
-            double totalBrightness = 0;
-            for (int y = 0; y < HashSize; y++)
-            {
-                for (int x = 0; x < HashSize; x++)
-                {
-                    var pixel = image[x, y];
-                    // Already grayscale, so R=G=B
-                    totalBrightness += pixel.R;
-                }
-            }
-            var avgBrightness = totalBrightness / (HashSize * HashSize);
-
-            // Build hash: 1 if pixel >= average, 0 otherwise
-            ulong hash = 0;
-            for (int y = 0; y < HashSize; y++)
-            {
-                for (int x = 0; x < HashSize; x++)
-                {
-                    var pixel = image[x, y];
-                    if (pixel.R >= avgBrightness)
-                    {
-                        var bitPosition = (y * HashSize) + x;
-                        hash |= 1UL << bitPosition;
-                    }
-                }
-            }
-
-            // Reset stream position for subsequent reads
-            if (content.CanSeek)
-            {
-                content.Position = 0;
-            }
-
-            // Return as 16-char hex string (64 bits)
-            return hash.ToString("x16");
+            content.Position = 0;
         }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to compute perceptual hash for image");
-            
-            // Reset stream position on error
-            if (content.CanSeek)
-            {
-                content.Position = 0;
-            }
-            
-            return null;
-        }
+
+        _logger.LogDebug("Perceptual hashing is delegated to the Openinary media pipeline; skipping local computation");
+        await Task.CompletedTask;
+        return null;
     }
 
     /// <summary>

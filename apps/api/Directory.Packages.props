@@ -101,8 +101,6 @@
          validates SigV1 SNS messages (no SHA256), which would 401 every prod event. -->
     <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="3.7.509.10" />
     <PackageVersion Include="AWSSDK.SimpleNotificationService" Version="3.7.502.61" />
-    <!-- Image Processing -->
-    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.11" />
     <!-- Testing packages -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
