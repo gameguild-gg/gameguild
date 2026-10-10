@@ -28,6 +28,13 @@ public class EmailCodeService(
     /// <summary>Wrong-code attempts tolerated before the code is invalidated.</summary>
     public const int MaxVerificationAttempts = 5;
 
+    /// <summary>
+    ///     Extra retention beyond <see cref="CodeLifetime"/> for the cache-level safety-net
+    ///     eviction, so an entry is never physically dropped by the cache before its logical
+    ///     lifetime has been judged by the domain clock.
+    /// </summary>
+    public static readonly TimeSpan EvictionSlack = TimeSpan.FromMinutes(5);
+
     private static readonly byte[] DummyDigest = SHA256.HashData(Encoding.UTF8.GetBytes("email-code-timing-equalizer"));
 
     public Task<string?> GenerateEmailCodeAsync(Guid userId, string email)
@@ -58,7 +65,13 @@ public class EmailCodeService(
 
         memoryCache.Set(EntryKeyPrefix + emailDigest, entry, new MemoryCacheEntryOptions
         {
-            AbsoluteExpiration = entry.ExpiresAt
+            // Cache-level eviction is only a safety net for abandoned entries, so it must
+            // be relative to the cache's own clock. The logical ten-minute TTL lives in
+            // entry.ExpiresAt and is enforced against the domain clock (SystemClock) in
+            // VerifyEmailCodeAsync — stamping an absolute, domain-clock-derived expiration
+            // here would let the cache's real-time scanner evict live entries whenever the
+            // domain clock (e.g. a fake provider in tests) disagrees with wall time.
+            AbsoluteExpirationRelativeToNow = CodeLifetime + EvictionSlack
         }.SetSize(1));
 
         memoryCache.Set(throttleKey, SystemClock.UtcNow, new MemoryCacheEntryOptions

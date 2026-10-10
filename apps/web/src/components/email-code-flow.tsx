@@ -20,7 +20,7 @@ import {
   FieldLabel,
 } from "@game-guild/ui/components/field";
 import { Input } from "@game-guild/ui/components/input";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 export interface EmailCodeMessages {
   request: {
@@ -125,7 +125,7 @@ function EmailCodeRequestForm({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(event) => void handleSubmit(event)}>
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="email-code-email">
@@ -257,7 +257,7 @@ function EmailCodeConsumer({
             </Link>
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={(event) => void handleSubmit(event)}>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email-code-input">
