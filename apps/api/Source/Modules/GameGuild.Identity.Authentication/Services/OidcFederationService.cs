@@ -75,7 +75,8 @@ public sealed class OidcFederationService(
             EmailVerified = bool.TryParse(emailVerifiedClaim, out var emailVerified) && emailVerified,
             Name = ReadMappedClaim(options, principal, "name"),
             Amr = principal.FindAll("amr").Select(claim => claim.Value).Where(value => !string.IsNullOrWhiteSpace(value)).ToArray(),
-            Acr = principal.FindFirst("acr")?.Value
+            Acr = principal.FindFirst("acr")?.Value,
+            GrantedScopes = options.Scopes.ToArray()
         };
 
         EnforceEmailDomainGate(options, identity);

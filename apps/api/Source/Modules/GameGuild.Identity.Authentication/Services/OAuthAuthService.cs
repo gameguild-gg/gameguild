@@ -223,6 +223,7 @@ public class OAuthAuthService(
                     federatedIdentity.ProviderKey,
                     federatedIdentity.Name,
                     federatedIdentity.EmailVerified,
+                    federatedIdentity.GrantedScopes.ToArray(),
                     cancellationToken).ConfigureAwait(false);
 
                 await EnforceOidcMfaPolicyAsync(resolvedUser.Id, federatedIdentity, request.Slug, cancellationToken).ConfigureAwait(false);
@@ -249,6 +250,7 @@ public class OAuthAuthService(
             $"OIDC sign-in successful ({request.Slug})",
             authenticationMethod,
             stopwatch,
+            request.RememberMe == true,
             cancellationToken).ConfigureAwait(false);
 
         // Map the provider's amr/acr assertions onto the sign-in surface so clients and

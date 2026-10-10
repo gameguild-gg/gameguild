@@ -354,7 +354,8 @@ public sealed class AuthController(ISender sender) : BaseApiController
             Code = body.Code,
             State = body.State,
             RedirectUri = body.RedirectUri,
-            TenantId = body.TenantId
+            TenantId = body.TenantId,
+            RememberMe = body.RememberMe
         };
 
         try

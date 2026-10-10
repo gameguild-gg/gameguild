@@ -33,4 +33,9 @@ public sealed class OidcCallbackCommand : ICommand<SignInResponse>
     ///     Optional tenant context
     /// </summary>
     public Guid? TenantId { get; init; }
+
+    /// <summary>
+    ///     Whether the caller asked for a persistent ("remember me") refresh-token lifetime
+    /// </summary>
+    public bool? RememberMe { get; init; }
 }

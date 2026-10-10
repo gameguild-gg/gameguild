@@ -52,6 +52,12 @@ public sealed record OidcFederatedIdentity
     ///     Whether <see cref="Amr" /> contains the OIDC multiple-factor method reference ("mfa").
     /// </summary>
     public bool HasMfaProof => Amr.Contains("mfa", StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    ///     The scope tokens granted at this authorization (the provider's configured scopes),
+    ///     recorded on the external-login consent trail like the social providers.
+    /// </summary>
+    public IReadOnlyList<string> GrantedScopes { get; init; } = [];
 }
 
 /// <summary>

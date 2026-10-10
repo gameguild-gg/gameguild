@@ -41,6 +41,11 @@ public class OidcCallbackRequestDto
     ///     Optional tenant context
     /// </summary>
     public Guid? TenantId { get; set; }
+
+    /// <summary>
+    ///     Whether the caller asked for a persistent ("remember me") refresh-token lifetime
+    /// </summary>
+    public bool? RememberMe { get; set; }
 }
 
 /// <summary>
@@ -60,6 +65,8 @@ public class OidcSignInRequest
     public string RedirectUri { get; set; } = string.Empty;
 
     public Guid? TenantId { get; set; }
+
+    public bool? RememberMe { get; set; }
 }
 
 /// <summary>

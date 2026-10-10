@@ -34,7 +34,8 @@ public sealed class OidcCallbackCommandHandler(
             Code = command.Code,
             State = command.State,
             RedirectUri = command.RedirectUri,
-            TenantId = command.TenantId
+            TenantId = command.TenantId,
+            RememberMe = command.RememberMe
         };
 
         var domainResult = await oAuthAuthService.OidcSignInAsync(signInRequest, cancellationToken).ConfigureAwait(false);
