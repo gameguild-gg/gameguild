@@ -124,7 +124,10 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
             new { refreshToken = "not-a-real-refresh-token" });
 
         refreshResponse.StatusCode.Should().BeOneOf(HttpStatusCode.Unauthorized, HttpStatusCode.BadRequest);
-        SingleHeader(refreshResponse, "Cache-Control").Should().Be(SensitiveCacheControl);
+        // RFC 9111 §5.2: directive order within Cache-Control is not significant,
+        // so compare the directive set rather than the exact emitted ordering.
+        CacheControlDirectives(refreshResponse).Should().BeEquivalentTo(
+            SensitiveCacheControl.Split(',').Select(directive => directive.Trim()));
         SingleHeader(refreshResponse, "Pragma").Should().Be("no-cache");
         AssertDefaultSecurityHeaders(refreshResponse);
 
@@ -149,6 +152,9 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
         {
             BaseAddress = new Uri("https://localhost")
         });
+        // TLS terminates upstream of the app in production; the forwarded proto
+        // header is what marks the request as HTTPS to the HSTS middleware.
+        client.DefaultRequestHeaders.Add("X-Forwarded-Proto", "https");
         using var response = await client.GetAsync("/health");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -185,6 +191,10 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
 
     private static bool HasHeader(HttpResponseMessage response, string name) =>
         response.Headers.Contains(name) || response.Content.Headers.Contains(name);
+
+    private static IEnumerable<string> CacheControlDirectives(HttpResponseMessage response) =>
+        SingleHeader(response, "Cache-Control")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
     private static string SingleHeader(HttpResponseMessage response, string name)
     {
@@ -294,6 +304,14 @@ public sealed class SecurityHeadersHttpTests(ApiPostgreSqlFixture fixture)
                 // OperationalStartupConfiguration requires deployment-grade values for
                 // Production even though nothing under test connects to them.
                 configuration["Jwt:SecretKey"] = "security-headers-http-tests-jwt-secret-with-at-least-32-characters";
+                // HSTS fires on Request.IsHttps. The in-memory test host does not
+                // terminate TLS itself, so the production case signals HTTPS the way
+                // production deployments do: through the app's own trusted-proxy
+                // forwarded-headers wiring (X-Forwarded-Proto from the loopback test
+                // proxy), which runs before UseHsts in the pipeline.
+                configuration["RateLimiting:TrustedProxyAddresses:0"] = "127.0.0.1";
+                configuration["RateLimiting:TrustedProxyAddresses:1"] = "::1";
+                configuration["RateLimiting:TrustedProxyForwardLimit"] = "1";
                 configuration["Encryption:EncryptionKey"] = Convert.ToBase64String(new byte[32]);
                 configuration["Redis:Enabled"] = "true";
                 configuration["Redis:ConnectionString"] = "localhost:6379,abortConnect=false";
