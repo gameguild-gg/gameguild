@@ -582,6 +582,24 @@ export const getApiAuditSecurityEventsAlertsEndpoint = {
 } as const;
 
 /**
+ * Resolves a security alert, completing the incident lifecycle (detection → acknowledgement →
+ * resolution). The acting administrator is derived from the request context and recorded together
+ * with the resolution instant and note; the resolution is audited as a security event.
+ */
+export interface PostApiAuditSecurityEventsAlertsResolveInput {
+  alertId: string;
+  body?: Types.ComplianceAuditResolveSecurityAlertInput;
+}
+export type PostApiAuditSecurityEventsAlertsResolveOutput = Types.ComplianceAuditSecurityAlertOutput;
+export const postApiAuditSecurityEventsAlertsResolveEndpoint = {
+  operationId: 'postApiAuditSecurityEventsAlertsResolve' as const,
+  method: 'POST' as const,
+  path: '/api/audit/security-events/alerts/{alertId}:resolve' as const,
+  tags: ['ComplianceAuditSecurityEvents'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Acknowledges an open security alert. The acting administrator is derived from the request context.
  */
 export interface PostApiAuditSecurityEventsAlertsAcknowledgeInput {
@@ -6649,6 +6667,24 @@ export const postBillingWebhooksPaypalEndpoint = {
 } as const;
 
 /**
+ * Get the billing webhook security monitoring summary
+ *
+ * Admin-facing monitoring surface for the billing webhook security controls: the state of
+ * the source IP allowlist, the suspicious-activity threshold blocking (currently blocked
+ * sources), and the delivery health of the central security event pipeline that persists
+ * verification failures, allowlist rejections, and replay detections.
+ */
+export type GetBillingWebhooksSecurityInput = void;
+export type GetBillingWebhooksSecurityOutput = Types.CommerceBillingBillingWebhookSecuritySummaryDto;
+export const getBillingWebhooksSecurityEndpoint = {
+  operationId: 'getBillingWebhooksSecurity' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/webhooks/security' as const,
+  tags: ['CommerceBillingWebhooks'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Handle Stripe webhook events with signature verification
  *
  * Processes Stripe webhook notifications with enhanced security through signature verification.
@@ -6689,7 +6725,7 @@ export const getBillingWebhooksWebhookEventsEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/billing/webhooks/webhook-events/{eventId}' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: false,
+  requiresAuth: true,
 } as const;
 
 /**
@@ -6714,7 +6750,7 @@ export const postBillingWebhooksWebhookEventsRetryEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/billing/webhooks/webhook-events/{eventId}:retry' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: false,
+  requiresAuth: true,
 } as const;
 
 export interface PostEconomyAdRewardsSessionsInput {
@@ -12400,6 +12436,24 @@ export const getAuditSecurityEventsAlertsEndpoint = {
 } as const;
 
 /**
+ * Resolves a security alert, completing the incident lifecycle (detection → acknowledgement →
+ * resolution). The acting administrator is derived from the request context and recorded together
+ * with the resolution instant and note; the resolution is audited as a security event.
+ */
+export interface PostAuditSecurityEventsAlertsResolveInput {
+  alertId: string;
+  body?: Types.ComplianceAuditResolveSecurityAlertInput;
+}
+export type PostAuditSecurityEventsAlertsResolveOutput = Types.ComplianceAuditSecurityAlertOutput;
+export const postAuditSecurityEventsAlertsResolveEndpoint = {
+  operationId: 'postAuditSecurityEventsAlertsResolve' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/security-events/alerts/{alertId}:resolve' as const,
+  tags: ['ComplianceAuditSecurityEvents'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Acknowledges an open security alert. The acting administrator is derived from the request context.
  */
 export interface PostAuditSecurityEventsAlertsAcknowledgeInput {
@@ -12669,7 +12723,7 @@ export const postAuthEmailVerifyEndpoint = {
 /**
  * List the external logins linked to the current user, newest first.
  *
- * HEAD request per Google REST guidance: safe, metadata-only response with no body. Linked providers and their linked-at timestamps are conveyed in the X-Linked-Providers response header as comma-separated 'provider=iso8601-timestamp' pairs, newest first. The header is omitted when no providers are linked.
+ * HEAD request per Google REST guidance: safe, metadata-only response with no body. Linked providers and their linked-at timestamps are conveyed in the X-Linked-Providers response header as comma-separated 'provider=iso8601-timestamp' pairs, newest first. The header is omitted when no providers are linked. Granted OAuth scopes (issue #250) are conveyed in the X-Granted-Scopes header as comma-separated 'provider=iso8601-consent-timestamp|consent-version|url-encoded-space-separated-scopes' triples, one entry per link with a recorded consent (consent-version 0 marks a legacy row); the header is omitted when no consents are recorded.
  */
 export type HeadAuthExternalLoginsInput = void;
 export type HeadAuthExternalLoginsOutput = void;
@@ -12684,7 +12738,7 @@ export const headAuthExternalLoginsEndpoint = {
 /**
  * Unlink an external provider from the current user.
  *
- * Removes the external login link for the given provider. Refused with 400 when it is the user's last sign-in method and no password is set.
+ * Removes the external login link for the given provider — this is the whole-provider full revocation of every granted scope and the recorded consent. Refused with 400 when it is the user's last sign-in method and no password is set.
  */
 export interface DeleteAuthExternalLoginsInput {
   provider: string;
@@ -12694,6 +12748,41 @@ export const deleteAuthExternalLoginsEndpoint = {
   operationId: 'deleteAuthExternalLogins' as const,
   method: 'DELETE' as const,
   path: '/v1/auth/external-logins/{provider}' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Preview the scopes a provider link flow will request (authorization-time consent screen data).
+ *
+ * Returns the exact OAuth scopes the provider link flow will request, resolved the same way the authorize step embeds them in the authorization URL. Powers the authorization-time consent surface shown before linking (issue #250).
+ */
+export interface GetAuthExternalLoginsLinkPreviewInput {
+  provider: string;
+}
+export type GetAuthExternalLoginsLinkPreviewOutput = Types.IdentityAuthenticationExternalLoginLinkPreviewOutput;
+export const getAuthExternalLoginsLinkPreviewEndpoint = {
+  operationId: 'getAuthExternalLoginsLinkPreview' as const,
+  method: 'GET' as const,
+  path: '/v1/auth/external-logins/{provider}/link-preview' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Revoke individual OAuth scope grants on a linked provider.
+ *
+ * Revokes individual scope grants on a linked provider without unlinking it; the remaining grant state is returned. Idempotent for scopes that are not currently granted. Revoking every remaining scope leaves the link in place with an empty grant list — whole-provider revocation remains the unlink endpoint (DELETE /external-logins/{provider}), which removes the link entirely.
+ */
+export interface PostAuthExternalLoginsScopesRevokeInput {
+  provider: string;
+  body?: Types.IdentityAuthenticationRevokeExternalLoginScopesInput;
+}
+export type PostAuthExternalLoginsScopesRevokeOutput = Types.IdentityAuthenticationRevokeExternalLoginScopesOutput;
+export const postAuthExternalLoginsScopesRevokeEndpoint = {
+  operationId: 'postAuthExternalLoginsScopesRevoke' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/external-logins/{provider}/scopes:revoke' as const,
   tags: ['Auth'] as const,
   requiresAuth: true,
 } as const;
@@ -17764,6 +17853,8 @@ export const getMeTasksEndpoint = {
  * OAuth2 client_credentials grant - authenticates a service account and returns a JWT token.
  *
  * This endpoint implements the OAuth2 client_credentials flow for machine-to-machine authentication.
+ * Authentication uses the `client_secret` form field, or an X.509 client certificate
+ * negotiated over TLS in lieu of the secret when one is bound to the service account.
  * The returned access token can be used to authenticate API requests.
  */
 export interface PostOauthTokenInput {
@@ -25947,6 +26038,7 @@ export const endpoints = {
   putApiAuditRetentionSimulationConfiguration: putApiAuditRetentionSimulationConfigurationEndpoint,
   getApiAuditRetentionSimulationTemplates: getApiAuditRetentionSimulationTemplatesEndpoint,
   getApiAuditSecurityEventsAlerts: getApiAuditSecurityEventsAlertsEndpoint,
+  postApiAuditSecurityEventsAlertsResolve: postApiAuditSecurityEventsAlertsResolveEndpoint,
   postApiAuditSecurityEventsAlertsAcknowledge: postApiAuditSecurityEventsAlertsAcknowledgeEndpoint,
   getApiAuditSecurityEventsDeliveryStatus: getApiAuditSecurityEventsDeliveryStatusEndpoint,
   postApiAuditSecurityEventsRetentionEnforce: postApiAuditSecurityEventsRetentionEnforceEndpoint,
@@ -26370,6 +26462,7 @@ export const endpoints = {
   postBillingWebhooksApplePay: postBillingWebhooksApplePayEndpoint,
   postBillingWebhooksGooglePay: postBillingWebhooksGooglePayEndpoint,
   postBillingWebhooksPaypal: postBillingWebhooksPaypalEndpoint,
+  getBillingWebhooksSecurity: getBillingWebhooksSecurityEndpoint,
   postBillingWebhooksStripe: postBillingWebhooksStripeEndpoint,
   getBillingWebhooksWebhookEvents: getBillingWebhooksWebhookEventsEndpoint,
   postBillingWebhooksWebhookEventsRetry: postBillingWebhooksWebhookEventsRetryEndpoint,
@@ -26720,6 +26813,7 @@ export const endpoints = {
   putAuditRetentionSimulationConfiguration: putAuditRetentionSimulationConfigurationEndpoint,
   getAuditRetentionSimulationTemplates: getAuditRetentionSimulationTemplatesEndpoint,
   getAuditSecurityEventsAlerts: getAuditSecurityEventsAlertsEndpoint,
+  postAuditSecurityEventsAlertsResolve: postAuditSecurityEventsAlertsResolveEndpoint,
   postAuditSecurityEventsAlertsAcknowledge: postAuditSecurityEventsAlertsAcknowledgeEndpoint,
   getAuditSecurityEventsDeliveryStatus: getAuditSecurityEventsDeliveryStatusEndpoint,
   postAuditSecurityEventsRetentionEnforce: postAuditSecurityEventsRetentionEnforceEndpoint,
@@ -26739,6 +26833,8 @@ export const endpoints = {
   postAuthEmailVerify: postAuthEmailVerifyEndpoint,
   headAuthExternalLogins: headAuthExternalLoginsEndpoint,
   deleteAuthExternalLogins: deleteAuthExternalLoginsEndpoint,
+  getAuthExternalLoginsLinkPreview: getAuthExternalLoginsLinkPreviewEndpoint,
+  postAuthExternalLoginsScopesRevoke: postAuthExternalLoginsScopesRevokeEndpoint,
   postAuthExternalLoginsDiscordLinkAuthorize: postAuthExternalLoginsDiscordLinkAuthorizeEndpoint,
   postAuthExternalLoginsDiscordLinkCallback: postAuthExternalLoginsDiscordLinkCallbackEndpoint,
   postAuthExternalLoginsGoogle: postAuthExternalLoginsGoogleEndpoint,
