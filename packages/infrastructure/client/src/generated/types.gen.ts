@@ -4299,6 +4299,12 @@ export interface ComplianceAuditPermissionAuditOutput {
   totalCount?: number;
 }
 
+/** Body of `POST /api/audit/security-events/alerts/{id}:resolve`. */
+export interface ComplianceAuditResolveSecurityAlertInput {
+  /** Resolution note recorded on the alert and in the resolution audit event. */
+  notes?: string | null;
+}
+
 /** Data model for Compliance Audit Review Compliance Document Request. */
 export interface ComplianceAuditReviewComplianceDocumentInput {
   decision?: ComplianceAuditComplianceDocumentReview;
@@ -4346,6 +4352,9 @@ export interface ComplianceAuditSecurityAlertOutput {
   kind?: ComplianceAuditSecurityEventKind;
   lastSeenAtUtc?: string;
   occurrenceCount?: number;
+  resolutionNotes?: string | null;
+  resolvedAtUtc?: string | null;
+  resolvedByUserId?: string | null;
   ruleId?: string | null;
   severity?: ComplianceAuditAuditRiskLevel;
   sourceActionType?: string | null;
@@ -7314,7 +7323,7 @@ export interface IdentityAuthenticationCreateStepUpChallengeInput {
 }
 
 /** Credential type detection */
-export type IdentityAuthenticationCredentialType = 'Email' | 'Username' | 'Phone' | 'WalletAddress';
+export type IdentityAuthenticationCredentialType = 'Email' | 'Username' | 'Phone' | 'WalletAddress' | 'Certificate';
 
 /** Represents detailed device information for security tracking. */
 export interface IdentityAuthenticationDeviceInfo {
@@ -7422,6 +7431,14 @@ export interface IdentityAuthenticationEmailVerificationResult {
   userId?: string | null;
   /** When the verification was completed */
   verifiedAt?: string | null;
+}
+
+/** Authorization-time consent preview: the exact scopes a link flow will request from
+the provider, shown to the user before they continue (issue #250). */
+export interface IdentityAuthenticationExternalLoginLinkPreviewOutput {
+  provider: string | null;
+  /** Scope tokens that will appear on the authorization request. */
+  requestedScopes: string[] | null;
 }
 
 /** Response for GitHub sign-in initiation */
@@ -7693,6 +7710,24 @@ export interface IdentityAuthenticationRequestPasswordResetInput {
 /** Data model for Identity Authentication Revoke Api Key Request. */
 export interface IdentityAuthenticationRevokeApiKeyInput {
   reason?: string | null;
+}
+
+/** Request to revoke individual OAuth scope grants on a linked provider.
+Revoking every remaining scope is allowed and leaves the link in place with an
+empty grant list; removing the whole provider remains the unlink endpoint's job. */
+export interface IdentityAuthenticationRevokeExternalLoginScopesInput {
+  /** Scope tokens to revoke. Each must be a valid scope token (non-empty, no whitespace). */
+  scopes: string[];
+}
+
+/** Post-revocation snapshot of the link's grant state. */
+export interface IdentityAuthenticationRevokeExternalLoginScopesOutput {
+  /** UTC moment the underlying consent was recorded (revocation does not re-stamp it), when one exists. */
+  consentedAt?: string | null;
+  consentVersion?: number;
+  /** Scope grants remaining after the revocation. */
+  grantedScopes: string[] | null;
+  provider: string | null;
 }
 
 /** Request for revoking a refresh token */
@@ -20112,6 +20147,7 @@ export let ComplianceAuditExportStatusSchema: z.ZodType<ComplianceAuditExportSta
 export let ComplianceAuditFailureReasonCountSchema: z.ZodType<ComplianceAuditFailureReasonCount>;
 export let ComplianceAuditPermissionAuditEntrySchema: z.ZodType<ComplianceAuditPermissionAuditEntry>;
 export let ComplianceAuditPermissionAuditOutputSchema: z.ZodType<ComplianceAuditPermissionAuditOutput>;
+export let ComplianceAuditResolveSecurityAlertInputSchema: z.ZodType<ComplianceAuditResolveSecurityAlertInput>;
 export let ComplianceAuditReviewComplianceDocumentInputSchema: z.ZodType<ComplianceAuditReviewComplianceDocumentInput>;
 export let ComplianceAuditRunAuditRetentionSimulationInputSchema: z.ZodType<ComplianceAuditRunAuditRetentionSimulationInput>;
 export let ComplianceAuditScheduledAuditExportOutputSchema: z.ZodType<ComplianceAuditScheduledAuditExportOutput>;
@@ -20418,6 +20454,7 @@ export let IdentityAuthenticationDiscordLinkCallbackInputSchema: z.ZodType<Ident
 export let IdentityAuthenticationDiscordSignInOutputSchema: z.ZodType<IdentityAuthenticationDiscordSignInOutput>;
 export let IdentityAuthenticationEmailVerificationOutputSchema: z.ZodType<IdentityAuthenticationEmailVerificationOutput>;
 export let IdentityAuthenticationEmailVerificationResultSchema: z.ZodType<IdentityAuthenticationEmailVerificationResult>;
+export let IdentityAuthenticationExternalLoginLinkPreviewOutputSchema: z.ZodType<IdentityAuthenticationExternalLoginLinkPreviewOutput>;
 export let IdentityAuthenticationGitHubSignInOutputSchema: z.ZodType<IdentityAuthenticationGitHubSignInOutput>;
 export let IdentityAuthenticationGoogleIdTokenRequestDtoSchema: z.ZodType<IdentityAuthenticationGoogleIdTokenRequestDto>;
 export let IdentityAuthenticationJwtKeyInfoDtoSchema: z.ZodType<IdentityAuthenticationJwtKeyInfoDto>;
@@ -20447,6 +20484,8 @@ export let IdentityAuthenticationRemoveRoleFromUserInputSchema: z.ZodType<Identi
 export let IdentityAuthenticationRequestMagicLinkInputSchema: z.ZodType<IdentityAuthenticationRequestMagicLinkInput>;
 export let IdentityAuthenticationRequestPasswordResetInputSchema: z.ZodType<IdentityAuthenticationRequestPasswordResetInput>;
 export let IdentityAuthenticationRevokeApiKeyInputSchema: z.ZodType<IdentityAuthenticationRevokeApiKeyInput>;
+export let IdentityAuthenticationRevokeExternalLoginScopesInputSchema: z.ZodType<IdentityAuthenticationRevokeExternalLoginScopesInput>;
+export let IdentityAuthenticationRevokeExternalLoginScopesOutputSchema: z.ZodType<IdentityAuthenticationRevokeExternalLoginScopesOutput>;
 export let IdentityAuthenticationRevokeRefreshTokenInputSchema: z.ZodType<IdentityAuthenticationRevokeRefreshTokenInput>;
 export let IdentityAuthenticationRiskLevelSchema: z.ZodType<IdentityAuthenticationRiskLevel>;
 export let IdentityAuthenticationRotateApiKeyInputSchema: z.ZodType<IdentityAuthenticationRotateApiKeyInput>;
@@ -25593,6 +25632,11 @@ ComplianceAuditPermissionAuditOutputSchema = z.object({
   totalCount: z.number().int().optional(),
 });
 
+/** Zod schema for ComplianceAuditResolveSecurityAlertInput. Body of `POST /api/audit/security-events/alerts/{id}:resolve`. */
+ComplianceAuditResolveSecurityAlertInputSchema = z.object({
+  notes: z.string().max(1000).nullable().optional(),
+});
+
 /** Zod schema for ComplianceAuditReviewComplianceDocumentInput. Data model for Compliance Audit Review Compliance Document Request. */
 ComplianceAuditReviewComplianceDocumentInputSchema = z.object({
   decision: z.lazy(() => ComplianceAuditComplianceDocumentReviewSchema).optional(),
@@ -25643,6 +25687,9 @@ ComplianceAuditSecurityAlertOutputSchema = z.object({
   kind: z.lazy(() => ComplianceAuditSecurityEventKindSchema).optional(),
   lastSeenAtUtc: z.string().datetime().optional(),
   occurrenceCount: z.number().int().optional(),
+  resolutionNotes: z.string().nullable().optional(),
+  resolvedAtUtc: z.string().datetime().nullable().optional(),
+  resolvedByUserId: z.string().uuid().nullable().optional(),
   ruleId: z.string().nullable().optional(),
   severity: z.lazy(() => ComplianceAuditAuditRiskLevelSchema).optional(),
   sourceActionType: z.string().nullable().optional(),
@@ -28732,7 +28779,7 @@ IdentityAuthenticationCreateStepUpChallengeInputSchema = z.object({
 });
 
 /** Zod schema for IdentityAuthenticationCredentialType. Credential type detection */
-IdentityAuthenticationCredentialTypeSchema = z.enum(['Email', 'Username', 'Phone', 'WalletAddress']);
+IdentityAuthenticationCredentialTypeSchema = z.enum(['Email', 'Username', 'Phone', 'WalletAddress', 'Certificate']);
 
 /** Zod schema for IdentityAuthenticationDeviceInfo. Represents detailed device information for security tracking. */
 IdentityAuthenticationDeviceInfoSchema = z.object({
@@ -28808,6 +28855,13 @@ IdentityAuthenticationEmailVerificationResultSchema = z.object({
   success: z.boolean().optional(),
   userId: z.string().uuid().nullable().optional(),
   verifiedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationExternalLoginLinkPreviewOutput. Authorization-time consent preview: the exact scopes a link flow will request from
+the provider, shown to the user before they continue (issue #250). */
+IdentityAuthenticationExternalLoginLinkPreviewOutputSchema = z.object({
+  provider: z.string().nullable(),
+  requestedScopes: z.array(z.string()).nullable(),
 });
 
 /** Zod schema for IdentityAuthenticationGitHubSignInOutput. Response for GitHub sign-in initiation */
@@ -29027,6 +29081,21 @@ IdentityAuthenticationRequestPasswordResetInputSchema = z.object({
 /** Zod schema for IdentityAuthenticationRevokeApiKeyInput. Data model for Identity Authentication Revoke Api Key Request. */
 IdentityAuthenticationRevokeApiKeyInputSchema = z.object({
   reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationRevokeExternalLoginScopesInput. Request to revoke individual OAuth scope grants on a linked provider.
+Revoking every remaining scope is allowed and leaves the link in place with an
+empty grant list; removing the whole provider remains the unlink endpoint's job. */
+IdentityAuthenticationRevokeExternalLoginScopesInputSchema = z.object({
+  scopes: z.array(z.string()).min(1),
+});
+
+/** Zod schema for IdentityAuthenticationRevokeExternalLoginScopesOutput. Post-revocation snapshot of the link's grant state. */
+IdentityAuthenticationRevokeExternalLoginScopesOutputSchema = z.object({
+  consentedAt: z.string().datetime().nullable().optional(),
+  consentVersion: z.number().int().optional(),
+  grantedScopes: z.array(z.string()).nullable(),
+  provider: z.string().nullable(),
 });
 
 /** Zod schema for IdentityAuthenticationRevokeRefreshTokenInput. Request for revoking a refresh token */
