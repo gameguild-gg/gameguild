@@ -37,22 +37,28 @@ public class ScimUserMappingRepository(IApplicationDbContext context) : IScimUse
 
     public IQueryable<ScimUserView> QueryTenantUsers(Guid tenantId)
     {
+        // Join to an intermediate pair and project through an explicit Select node:
+        // projecting straight from the Join resultSelector leaves downstream operators
+        // (Where/OrderBy/Skip/Take) binding members through the constructor inside the
+        // join, which EF Core cannot translate ("The LINQ expression ... could not be
+        // translated") — every /scim/v2/Users request failed with 500 on PostgreSQL.
         return Mappings
             .AsNoTracking()
             .Where(mapping => mapping.TenantId == tenantId && mapping.DeletedAt == null)
             .Join(Users.AsNoTracking(),
                 mapping => mapping.UserId,
                 user => user.Id,
-                (mapping, user) => new ScimUserView(
-                    user.Id,
-                    mapping.ExternalId,
-                    user.Username,
-                    user.Email,
-                    user.Name,
-                    user.PhoneNumber,
-                    user.IsActive && !user.IsSuspended && user.DeletedAt == null,
-                    user.CreatedAt,
-                    user.UpdatedAt));
+                (mapping, user) => new { Mapping = mapping, User = user })
+            .Select(joined => new ScimUserView(
+                joined.User.Id,
+                joined.Mapping.ExternalId,
+                joined.User.Username,
+                joined.User.Email,
+                joined.User.Name,
+                joined.User.PhoneNumber,
+                joined.User.IsActive && !joined.User.IsSuspended && joined.User.DeletedAt == null,
+                joined.User.CreatedAt,
+                joined.User.UpdatedAt));
     }
 
     public void Add(ScimUserMapping mapping) => Mappings.Add(mapping);

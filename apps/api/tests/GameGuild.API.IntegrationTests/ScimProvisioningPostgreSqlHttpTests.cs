@@ -111,7 +111,9 @@ public sealed class ScimProvisioningPostgreSqlHttpTests(ApiPostgreSqlFixture fix
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var body = JsonNode.Parse(await response.Content.ReadAsStringAsync())!;
-        body["schemas"]!.AsArray().Should().Contain("urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig");
+        body["schemas"]!.AsArray()
+            .Select(node => node!.GetValue<string>())
+            .Should().Contain("urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig");
         body["patch"]!["supported"]!.GetValue<bool>().Should().BeTrue();
         body["filter"]!["supported"]!.GetValue<bool>().Should().BeTrue();
         body["bulk"]!["supported"]!.GetValue<bool>().Should().BeTrue();
@@ -225,7 +227,9 @@ public sealed class ScimProvisioningPostgreSqlHttpTests(ApiPostgreSqlFixture fix
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var body = JsonNode.Parse(await response.Content.ReadAsStringAsync())!;
-        body["schemas"]!.AsArray().Should().Contain("urn:ietf:params:scim:api:messages:2.0:Error");
+        body["schemas"]!.AsArray()
+            .Select(node => node!.GetValue<string>())
+            .Should().Contain("urn:ietf:params:scim:api:messages:2.0:Error");
         body["scimType"]!.GetValue<string>().Should().Be("invalidFilter");
         body["status"]!.GetValue<int>().Should().Be(400);
     }

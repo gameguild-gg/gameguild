@@ -253,10 +253,13 @@ public sealed class ScimBulkProcessor(
         => bulkIds.TryGetValue(resourceId, out var resolved) ? resolved : resourceId;
 
     private static bool IsUsersPath(string path)
-        => path.TrimEnd('/').EndsWith("/Users", StringComparison.OrdinalIgnoreCase);
+        // Bulk paths appear both with a leading slash ("/Users" for POST) and split
+        // without one ("Users" after SplitPath on "/Users/{id}"); compare the trimmed
+        // segment so mutation operations route to the right service.
+        => path.Trim('/').Equals("Users", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsGroupsPath(string path)
-        => path.TrimEnd('/').EndsWith("/Groups", StringComparison.OrdinalIgnoreCase);
+        => path.Trim('/').Equals("Groups", StringComparison.OrdinalIgnoreCase);
 
     private static ScimBulkResponseOperation Succeeded(string method, string? bulkId, int code, string location, string version)
         => new()

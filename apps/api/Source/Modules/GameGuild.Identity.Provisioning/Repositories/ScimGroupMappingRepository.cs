@@ -38,20 +38,23 @@ public class ScimGroupMappingRepository(IApplicationDbContext context) : IScimGr
 
     public IQueryable<ScimGroupView> QueryTenantGroups(Guid tenantId)
     {
+        // Same pair-then-Select shape as ScimUserMappingRepository: keeps downstream
+        // Where/OrderBy/Skip/Take translatable by EF Core on relational providers.
         return Mappings
             .AsNoTracking()
             .Where(mapping => mapping.TenantId == tenantId && mapping.DeletedAt == null)
             .Join(Roles.AsNoTracking(),
                 mapping => mapping.RoleId,
                 role => role.Id,
-                (mapping, role) => new ScimGroupView(
-                    role.Id,
-                    mapping.ExternalId,
-                    role.Name,
-                    role.Description,
-                    role.IsActive && role.DeletedAt == null,
-                    role.CreatedAt,
-                    role.UpdatedAt));
+                (mapping, role) => new { Mapping = mapping, Role = role })
+            .Select(joined => new ScimGroupView(
+                joined.Role.Id,
+                joined.Mapping.ExternalId,
+                joined.Role.Name,
+                joined.Role.Description,
+                joined.Role.IsActive && joined.Role.DeletedAt == null,
+                joined.Role.CreatedAt,
+                joined.Role.UpdatedAt));
     }
 
     public void Add(ScimGroupMapping mapping) => Mappings.Add(mapping);
