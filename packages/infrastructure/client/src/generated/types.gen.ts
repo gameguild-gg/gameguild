@@ -7628,6 +7628,8 @@ export interface IdentityAuthenticationOidcCallbackRequestDto {
   code: string;
   /** The same redirect URI used in the authorization request */
   redirectUri: string;
+  /** Whether the caller asked for a persistent ("remember me") refresh-token lifetime */
+  rememberMe?: boolean | null;
   /** OAuth state parameter for CSRF protection (validated web-side against the signed state cookie) */
   state: string;
   /** Optional tenant context */
@@ -29077,6 +29079,7 @@ IdentityAuthenticationOidcAuthorizeRequestDtoSchema = z.object({
 IdentityAuthenticationOidcCallbackRequestDtoSchema = z.object({
   code: z.string().min(1),
   redirectUri: z.string().min(1),
+  rememberMe: z.boolean().nullable().optional(),
   state: z.string().min(1),
   tenantId: z.string().uuid().nullable().optional(),
 });
