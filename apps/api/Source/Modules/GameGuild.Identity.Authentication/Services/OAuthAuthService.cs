@@ -29,7 +29,8 @@ public class OAuthAuthService(
     ISender sender,
     ISessionManagementService sessionManagementService,
     ILogger<OAuthAuthService> logger,
-    IOptions<JwtOptions>? jwtOptions = null
+    IOptions<JwtOptions>? jwtOptions = null,
+    IAuthenticationAuditEventSink? auditEventSink = null
 ) : IOAuthAuthService
 {
     public async Task<SignInResponse> GitHubSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
@@ -375,7 +376,7 @@ public class OAuthAuthService(
         var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
                                            ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
-        return new SignInResponse
+        var response = new SignInResponse
         {
             Success = true,
             Message = successMessage,
@@ -391,6 +392,21 @@ public class OAuthAuthService(
             TenantId = tenantAccessContext.TenantId,
             AvailableTenants = tenantAccessContext.AvailableTenants
         };
+
+        // IdP integration auditing (issue #180): every federated/external sign-in success is a
+        // durable security event with the provider, session and tenant context.
+        await RecordAuditEventAsync(new AuthenticationAuditEvent(
+            AuditActionTypes.ExternalLoginSucceeded,
+            user.Id,
+            Success: true,
+            Method: authenticationMethod,
+            IpAddress: ipAddress,
+            UserAgent: userAgent,
+            SessionId: sessionId,
+            TenantId: tenantAccessContext.TenantId,
+            Metadata: new { Provider = authenticationMethod, SessionId = sessionId, DurationMs = stopwatch.ElapsedMilliseconds })).ConfigureAwait(false);
+
+        return response;
     }
 
     private async Task<T> RunProviderAuthenticationAsync<T>(
