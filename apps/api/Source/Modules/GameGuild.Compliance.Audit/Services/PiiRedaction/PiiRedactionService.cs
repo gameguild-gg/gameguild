@@ -39,6 +39,16 @@ public interface IPiiRedactionService
     Task<PiiRedactionSummary> ApplyToAuditLogAsync(AuditLog entry, IApplicationDbContext context, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Applies tenant + global rules to the before/after JSON snapshots of an automatically captured
+    /// entity change (issue #166). Snapshot property names act as field names, so field-scoped rules
+    /// match exactly like they do over <see cref="AuditLog.Metadata"/>. Fail-closed: when rules cannot
+    /// be loaded both snapshots are replaced wholesale instead of persisting potentially unredacted PII.
+    /// Vault entries and a <see cref="PiiRedactionOperation"/> trail row are staged on
+    /// <paramref name="context"/> so record, vault, and trail persist in one save.
+    /// </summary>
+    Task<PiiRedactionSummary> ApplyToEntityChangeAuditAsync(IEntityChangeAuditRecord record, IApplicationDbContext context, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Returns a sanitized copy of a request used for durable structured-log fallbacks and spool files:
     /// protectable text fields are redacted with the fail-closed marker when rules are unavailable.
     /// Never returns the original references unmodified.
@@ -86,6 +96,71 @@ public sealed class PiiRedactionService(
         }
 
         return ApplyWithRules(entry, context, rules, PiiRedactionSource.AuditSink);
+    }
+
+    public async Task<PiiRedactionSummary> ApplyToEntityChangeAuditAsync(IEntityChangeAuditRecord record, IApplicationDbContext context, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(record);
+
+        PiiRuleSet rules;
+        try
+        {
+            rules = await ruleProvider.GetTenantRuleSetAsync(record.TenantId, cancellationToken).ConfigureAwait(false);
+        }
+        catch (PiiRedactionUnavailableException exception)
+        {
+            logger.LogError(
+                exception,
+                "PII redaction rule set unavailable for tenant {TenantId}; failing closed and redacting entity-change audit record {RecordId} snapshots",
+                record.TenantId,
+                record.Id);
+            // Fail closed exactly like the audit sink: raw snapshots are never persisted.
+            record.BeforeValues = record.BeforeValues is null ? null : PiiRedactionFailClosed.Marker;
+            record.AfterValues = record.AfterValues is null ? null : PiiRedactionFailClosed.Marker;
+            StageOperation(context, record.TenantId, PiiRedactionSource.EntityChangeCapture, [], 1, 0, failClosed: true, exception.InnerException!.Message);
+            return new PiiRedactionSummary(Changed: true, FailClosed: true, FailureReason: exception.InnerException!.Message, RedactedValueCount: 1);
+        }
+
+        var counter = new ApplicationCounter();
+        record.BeforeValues = RedactSnapshot(record.BeforeValues, rules, counter, context, record.TenantId);
+        record.AfterValues = RedactSnapshot(record.AfterValues, rules, counter, context, record.TenantId);
+
+        if (counter.Changed)
+        {
+            StageOperation(context, record.TenantId, PiiRedactionSource.EntityChangeCapture, counter.AppliedRuleIds.ToList(), counter.Redacted, counter.Tokenized, failClosed: false, null);
+        }
+
+        return new PiiRedactionSummary(counter.Changed, false, null, counter.Redacted, counter.Tokenized, counter.AppliedRuleIds.ToList());
+    }
+
+    /// <summary>
+    /// Applies the rule set to one entity-change snapshot. Snapshot property names are used as field
+    /// names (field-scoped rules fire per property; global rules fire over every string value), matching
+    /// the metadata-rewriting behavior of the central audit sink.
+    /// </summary>
+    private string? RedactSnapshot(string? snapshot, PiiRuleSet rules, ApplicationCounter counter, IApplicationDbContext context, Guid? tenantId)
+    {
+        if (string.IsNullOrEmpty(snapshot))
+        {
+            return snapshot;
+        }
+
+        JsonDocument document;
+        try
+        {
+            document = JsonDocument.Parse(snapshot);
+        }
+        catch (JsonException)
+        {
+            // Not JSON (fallback serialization wrote strings): treat as opaque text under a generic field name.
+            return ApplyValue(snapshot, "EntityChangeSnapshot", rules, counter, context, tenantId);
+        }
+
+        using (document)
+        {
+            var rewritten = RewriteJsonNode(JsonSerializer.SerializeToNode(document.RootElement), "EntityChangeSnapshot", rules, counter, context, tenantId);
+            return rewritten is null ? snapshot : JsonSerializer.Serialize(rewritten, MetadataJsonOptions);
+        }
     }
 
     public async Task<CreateAuditLogRequest> RedactRequestForDurableFallbackAsync(CreateAuditLogRequest request, CancellationToken cancellationToken)

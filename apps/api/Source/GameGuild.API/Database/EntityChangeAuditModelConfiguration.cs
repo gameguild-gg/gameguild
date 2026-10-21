@@ -22,5 +22,9 @@ public sealed class EntityChangeAuditModelConfiguration : IModelConfiguration
             .HasDatabaseName("ix_entity_change_audit_time");
         entity.HasIndex(record => record.CorrelationId)
             .HasDatabaseName("ix_entity_change_audit_correlation");
+        // Tenant-scoped serving surface (issue #166): the centralized query endpoint filters by
+        // tenant and orders by recency.
+        entity.HasIndex(record => new { record.TenantId, record.OccurredAtUtc })
+            .HasDatabaseName("ix_entity_change_audit_tenant_time");
     }
 }

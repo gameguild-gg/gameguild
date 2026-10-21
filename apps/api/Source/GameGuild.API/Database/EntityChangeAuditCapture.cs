@@ -46,16 +46,21 @@ internal static class EntityChangeAuditCapture
     ///     Captures audit records for all tracked entity changes and adds them to the context.
     ///     Returns the number of audit records staged (used to keep SaveChanges row counts stable).
     ///     Snapshot failures are logged per entry and never prevent the authorized change.
+    ///     <paramref name="configuredExclusions"/> carries the service-level exclusion list
+    ///     (<see cref="EntityChangeAuditOptions.ExcludedEntityTypes"/>); audit-store entities are
+    ///     always excluded regardless of configuration.
     /// </summary>
     internal static int Capture(DbContext context, UseCaseOperationContext? operation, ILogger? logger,
-        Guid? mutationActorId = null, Guid? mutationTenantId = null, bool useEntityTenantScope = false)
+        Guid? mutationActorId = null, Guid? mutationTenantId = null, bool useEntityTenantScope = false,
+        IReadOnlySet<string>? configuredExclusions = null)
     {
         var records = new List<EntityChangeAuditRecord>();
 
         foreach (var entry in context.ChangeTracker.Entries())
         {
             if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted)
-                || IsAuditStoreEntity(entry.Metadata.ClrType))
+                || IsAuditStoreEntity(entry.Metadata.ClrType)
+                || IsConfiguredExclusion(entry.Metadata.ClrType, configuredExclusions))
             {
                 continue;
             }
@@ -102,6 +107,23 @@ internal static class EntityChangeAuditCapture
             ExcludedTypes.Contains(type)
             || (type.Namespace?.StartsWith(AuditStoreNamespacePrefix, StringComparison.Ordinal) ?? false)
             || type.Name.Contains("AuditLog", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    ///     Service-level exclusion guard: matches the configured entity names case-insensitively,
+    ///     accepting either the simple CLR name or the full name. Configured exclusions can never
+    ///     re-include an audit-store entity (checked first) and never apply retroactively to rows
+    ///     already captured.
+    /// </summary>
+    private static bool IsConfiguredExclusion(Type clrType, IReadOnlySet<string>? configuredExclusions)
+    {
+        if (configuredExclusions is null || configuredExclusions.Count == 0)
+        {
+            return false;
+        }
+
+        return configuredExclusions.Contains(clrType.Name)
+               || (clrType.FullName is { } fullName && configuredExclusions.Contains(fullName));
+    }
 
     /// <summary>Modified entries record only changed properties; Added/Deleted record the full state.</summary>
     private static string? SerializeValues(EntityEntry entry, bool useOriginalValues)
