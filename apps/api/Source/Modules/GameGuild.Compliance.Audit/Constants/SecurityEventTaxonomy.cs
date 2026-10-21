@@ -54,6 +54,13 @@ public static class SecurityEventTaxonomy
         [AuditActionTypes.PasswordResetRequested] = new(SecurityEventKind.Authentication, AuditRiskLevel.Medium, false, "Password reset requested."),
         [AuditActionTypes.PasswordReset] = new(SecurityEventKind.Authentication, AuditRiskLevel.High, false, "Password reset completed."),
 
+        // Federated identity provider / SSO integration (issue #180)
+        [AuditActionTypes.ExternalLoginSucceeded] = new(SecurityEventKind.Authentication, AuditRiskLevel.Low, true, "Federated or external-provider sign-in succeeded."),
+        [AuditActionTypes.ExternalLoginFailed] = new(SecurityEventKind.Authentication, AuditRiskLevel.High, false, "Federated or external-provider sign-in failed."),
+        [AuditActionTypes.ExternalAccountLinked] = new(SecurityEventKind.Authentication, AuditRiskLevel.Medium, false, "External identity linked to an existing account."),
+        [AuditActionTypes.ExternalAccountProvisioned] = new(SecurityEventKind.AccountLifecycle, AuditRiskLevel.Medium, false, "Account provisioned just-in-time from a federated identity."),
+        [AuditActionTypes.FederatedSignInMfaDenied] = new(SecurityEventKind.Authentication, AuditRiskLevel.High, false, "Federated sign-in refused because the provider did not attest multi-factor authentication."),
+
         // Authorization
         [AuditActionTypes.PermissionGranted] = new(SecurityEventKind.Authorization, AuditRiskLevel.Medium, false, "Permission granted to a subject."),
         [AuditActionTypes.PermissionDenied] = new(SecurityEventKind.Authorization, AuditRiskLevel.High, false, "Permission denied to a subject."),
@@ -112,6 +119,19 @@ public static class SecurityEventTaxonomy
         // Data movement
         [AuditActionTypes.DataExported] = new(SecurityEventKind.DataMovement, AuditRiskLevel.Medium, true, "Data exported out of the platform."),
         [AuditActionTypes.DataImported] = new(SecurityEventKind.DataMovement, AuditRiskLevel.Medium, true, "Data imported into the platform."),
+        [AuditActionTypes.BulkExportThresholdExceeded] = new(SecurityEventKind.DataMovement, AuditRiskLevel.High, false, "Bulk export exceeded a configured record threshold."),
+        [AuditActionTypes.CrossBorderTransferRecorded] = new(SecurityEventKind.DataMovement, AuditRiskLevel.Medium, true, "Cross-border data transfer validated and logged."),
+
+        // Field-level data protection (issue #186)
+        [AuditActionTypes.FieldAccessRecorded] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Low, false, "Field-level data access recorded."),
+        [AuditActionTypes.SensitiveFieldClassified] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, false, "Field automatically classified as sensitive."),
+        [AuditActionTypes.FieldAccessAnomalyDetected] = new(SecurityEventKind.ThreatDetection, AuditRiskLevel.High, false, "Unusual data access pattern detected."),
+        [AuditActionTypes.DataSubjectRequestRecorded] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, false, "Data subject rights request received."),
+        [AuditActionTypes.DataSubjectRequestCompleted] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, true, "Data subject rights request fulfilled."),
+        [AuditActionTypes.DataSubjectRequestRejected] = new(SecurityEventKind.DataProtection, AuditRiskLevel.High, true, "Data subject rights request rejected."),
+        [AuditActionTypes.SensitiveDataRetentionEnforced] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, true, "Sensitive data retention policy enforced."),
+        [AuditActionTypes.ConsentGranted] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Low, false, "Consent granted for a processing purpose."),
+        [AuditActionTypes.ConsentRevoked] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, true, "Consent revoked for a processing purpose."),
 
         // Configuration and administration
         [AuditActionTypes.AdminAction] = new(SecurityEventKind.ConfigurationChange, AuditRiskLevel.High, true, "Administrative action executed."),

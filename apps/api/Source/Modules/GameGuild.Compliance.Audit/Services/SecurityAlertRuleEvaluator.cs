@@ -20,6 +20,8 @@ public static class SecurityAlertRules
     public static string PermissionChangeBurst { get; } = "security.permission-change-burst";
 
     public static string BulkPermissionChange { get; } = "security.bulk-permission-change";
+
+    public static string BulkExportThresholdExceeded { get; } = "security.bulk-export-threshold-exceeded";
 }
 
 /// <summary>

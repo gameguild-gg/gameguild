@@ -144,3 +144,46 @@ public static class AuditActionTypes
 
     public const string UsernameCollisionResolved = "UsernameCollisionResolved";
 }
+
+    // Federated identity / IdP integration auditing (issue #180)
+    public const string ExternalLoginSucceeded = "Authentication.ExternalLoginSucceeded";
+
+    public const string ExternalLoginFailed = "Authentication.ExternalLoginFailed";
+
+    public const string ExternalAccountLinked = "Authentication.ExternalAccountLinked";
+
+    public const string ExternalAccountProvisioned = "Authentication.ExternalAccountProvisioned";
+
+    public const string FederatedSignInMfaDenied = "Authentication.FederatedSignInMfaDenied";
+
+    // Learning lifecycle auditing (issue #180)
+    public const string CertificateVerified = "Learning.Certificates.CertificateVerified";
+
+    public const string CertificateRenewed = "Learning.Certificates.CertificateRenewed";
+
+    public const string EnrollmentCompleted = "Learning.Enrollments.EnrollmentCompleted";
+
+    // Field-level data access auditing (issue #186)
+    public const string FieldAccessRecorded = "DataProtection.FieldAccessRecorded";
+
+    public const string ConsentGranted = "Consent.Granted";
+
+    public const string ConsentRevoked = "Consent.Revoked";
+
+    public const string SensitiveFieldClassified = "DataProtection.SensitiveFieldClassified";
+
+    public const string FieldAccessAnomalyDetected = "DataProtection.FieldAccessAnomalyDetected";
+
+    public const string BulkExportThresholdExceeded = "DataProtection.BulkExportThresholdExceeded";
+
+    public const string GdprProcessingActivityChanged = "DataProtection.GdprProcessingActivityChanged";
+
+    public const string DataSubjectRequestRecorded = "DataProtection.DataSubjectRequestRecorded";
+
+    public const string DataSubjectRequestCompleted = "DataProtection.DataSubjectRequestCompleted";
+
+    public const string DataSubjectRequestRejected = "DataProtection.DataSubjectRequestRejected";
+
+    public const string CrossBorderTransferRecorded = "DataProtection.CrossBorderTransferRecorded";
+
+    public const string SensitiveDataRetentionEnforced = "DataProtection.SensitiveDataRetentionEnforced";
