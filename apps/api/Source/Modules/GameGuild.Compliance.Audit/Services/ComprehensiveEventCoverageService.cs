@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.Loader;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 
@@ -278,7 +279,44 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
             }
         }
 
+        // Reference walking alone can miss modules the entry point never links against directly
+        // (plug-in style modules). Every deployed GameGuild assembly in the application directory
+        // joins the sweep so the manifest provably enumerates the full module catalog, not just the
+        // reference closure.
+        foreach (var assembly in LoadDeployedGameGuildAssemblies())
+        {
+            loaded.TryAdd(assembly.GetName().Name ?? assembly.FullName, assembly);
+        }
+
         return loaded.Values;
+    }
+
+    private static IEnumerable<Assembly> LoadDeployedGameGuildAssemblies()
+    {
+        string[] candidatePaths;
+        try
+        {
+            candidatePaths = Directory.GetFiles(AppContext.BaseDirectory, "GameGuild*.dll");
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return [];
+        }
+
+        foreach (var path in candidatePaths)
+        {
+            Assembly? assembly;
+            try
+            {
+                assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.GetFullPath(path));
+            }
+            catch (Exception exception) when (exception is IOException or FileLoadException or BadImageFormatException)
+            {
+                continue;
+            }
+
+            yield return assembly;
+        }
     }
 
     private static Assembly ResolveAssembly(AssemblyName reference)
