@@ -30,6 +30,122 @@ function installedConsumers(name) {
   return roots;
 }
 
+function createSanitizerFixture(context, packageRoot) {
+  const webRequire = createRequire(join(repositoryRoot, "apps/web/package.json"));
+  const { JSDOM } = webRequire("jsdom");
+  const window = new JSDOM("<!doctype html><body></body>").window;
+  context.after(() => window.close());
+  const sanitizer = require(packageRoot)(window);
+  assert.equal(sanitizer.version, "3.4.17");
+  assert.equal(sanitizer.isSupported, true);
+  return { window, sanitizer };
+}
+
+for (const packageRoot of installedConsumers("dompurify")) {
+  test(`${packageRoot}: ordinary HTML and diagram SVG retain their supported content`, context => {
+    const { sanitizer } = createSanitizerFixture(context, packageRoot);
+    assert.equal(sanitizer.sanitize('<b onclick="fixture()">ordinary</b><script>fixture()</script>'), "<b>ordinary</b>");
+    const svg = sanitizer.sanitize('<svg xmlns="http://www.w3.org/2000/svg"><rect width="2" height="3"/><script>fixture()</script></svg>', {
+      USE_PROFILES: { svg: true, svgFilters: true },
+      FORBID_TAGS: ["foreignObject", "iframe", "object", "embed", "script"],
+    });
+    assert.match(svg, /<rect\b/);
+    assert.doesNotMatch(svg, /<script\b|onclick=/i);
+  });
+
+  for (const [dialect, left, right] of [
+    ["mustache", "{", "{fixture}}"],
+    ["interpolation", "$", "{fixture}"],
+    ["erb", "<", "%fixture%>"],
+  ]) {
+    for (const location of ["direct", "nested-shadow", "template-content"]) {
+      test(`${packageRoot}: ${dialect} fragments are scrubbed in ${location} shadow content`, context => {
+        const { window, sanitizer } = createSanitizerFixture(context, packageRoot);
+        const document = window.document;
+        const host = document.createElement("div");
+        document.body.appendChild(host);
+        let container = document.body;
+        let shadowHost = host;
+        if (location !== "direct") {
+          if (location === "nested-shadow") container = host.attachShadow({ mode: "open" });
+          else {
+            const template = document.createElement("template");
+            host.appendChild(template);
+            container = template.content;
+          }
+          shadowHost = document.createElement("div");
+          container.appendChild(shadowHost);
+        }
+        const shadow = shadowHost.attachShadow({ mode: "open" });
+        shadow.append(document.createTextNode(left), document.createElement("object"), document.createTextNode(right));
+        assert.equal(shadow.textContent, left + right);
+        const ordinary = document.createElement("span");
+        ordinary.textContent = "ordinary-shadow";
+        shadow.appendChild(ordinary);
+
+        assert.equal(sanitizer.sanitize(host, { IN_PLACE: true, SAFE_FOR_TEMPLATES: true, ADD_TAGS: ["template"] }), host);
+
+        assert.equal(document.body.contains(host), true);
+        if (location === "template-content") assert.equal(host.querySelector("template")?.content, container);
+        assert.equal(container.contains(shadowHost), true);
+        assert.equal(shadowHost.shadowRoot, shadow);
+        assert.equal(shadow.querySelector("object"), null);
+        assert.equal(shadow.querySelector("span"), ordinary);
+        assert.equal(ordinary.textContent, "ordinary-shadow");
+        shadow.normalize();
+        assert.equal(shadow.textContent.includes(left + right), false);
+      });
+    }
+  }
+
+  for (const hook of ["beforeSanitizeElements", "uponSanitizeElement", "afterSanitizeElements", "beforeSanitizeAttributes", "afterSanitizeAttributes"]) {
+    for (const removal of ["current", "ancestor", "following"]) {
+      test(`${packageRoot}: ${hook} neutralizes elements discarded through ${removal} removal`, context => {
+        const { window, sanitizer } = createSanitizerFixture(context, packageRoot);
+        const root = window.document.createElement("div");
+        root.innerHTML = '<section><img class="fixture-trigger"><img id="discarded-fixture" onerror="fixture()"></section><p>ordinary</p>';
+        window.document.body.appendChild(root);
+        const discarded = root.querySelector("#discarded-fixture");
+        assert.ok(discarded);
+        assert.equal(discarded.getAttribute("onerror"), "fixture()");
+        sanitizer.addHook(hook, node => {
+          if (node.getAttribute?.("class") !== "fixture-trigger") return;
+          const target = removal === "current" ? node : removal === "ancestor" ? node.parentNode : node.nextElementSibling;
+          assert.ok(target);
+          target.remove();
+        });
+
+        assert.equal(sanitizer.sanitize(root, { IN_PLACE: true }), root);
+
+        assert.equal(discarded.getAttribute("onerror"), null);
+        assert.equal(root.querySelector("p").textContent, "ordinary");
+        assert.equal(root.contains(discarded), removal === "current");
+      });
+    }
+  }
+
+  for (const mediaType of ["text/html", "application/xhtml+xml"]) {
+    test(`${packageRoot}: ${mediaType} blocks href animation while retaining ordinary animation`, context => {
+      const { sanitizer } = createSanitizerFixture(context, packageRoot);
+      const attributeName = mediaType === "application/xhtml+xml" ? "attributeName" : "attributename";
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg"><a><animate id="danger-animation" attributeName="href" values="x;javascript:fixture()"/><animate id="ordinary-animation" attributeName="fill" values="red;blue"/><text>ordinary</text></a></svg>';
+      const result = sanitizer.sanitize(svg, {
+        PARSER_MEDIA_TYPE: mediaType,
+        RETURN_DOM: true,
+        ALLOWED_TAGS: ["svg", "a", "animate", "text"],
+        ALLOWED_ATTR: [attributeName, "values", "id"],
+      });
+      const dangerous = result.querySelector("#danger-animation");
+      const ordinary = result.querySelector("#ordinary-animation");
+      assert.ok(dangerous);
+      assert.ok(ordinary);
+      assert.equal(dangerous.hasAttribute("attributeName") || dangerous.hasAttribute("attributename"), false);
+      assert.equal(ordinary.getAttribute("attributeName") ?? ordinary.getAttribute("attributename"), "fill");
+      assert.equal(result.querySelector("text").textContent, "ordinary");
+    });
+  }
+}
+
 function verifyParserResourceLimits(context, packageName, packageRoot) {
   const worker = new Worker(new URL("./helpers/parser-resource-limits.mjs", import.meta.url), {
     workerData: { packageName, packageRoot },
