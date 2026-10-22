@@ -58,6 +58,15 @@ public interface ICertificateService
     Task<Result> RevokeCertificateAsync(Guid certificateId, string reason);
 
     /// <summary>
+    /// Renews an expiring or expired certificate by extending its validity (certificate lifecycle
+    /// renewal, issue #180). Revoked certificates cannot be renewed.
+    /// </summary>
+    /// <param name="certificateId">The ID of the certificate to renew</param>
+    /// <param name="newExpiresAt">The new expiry timestamp; must be in the future</param>
+    /// <returns>Result containing the renewed certificate or error information</returns>
+    Task<Result<Certificate>> RenewCertificateAsync(Guid certificateId, DateTime newExpiresAt);
+
+    /// <summary>
     /// Gets certificates that are about to expire
     /// </summary>
     /// <param name="thresholdDays">Number of days before expiration</param>

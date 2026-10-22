@@ -243,8 +243,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
         "Learning.Certificates.CertificateIssued", "Learning.Certificates.CertificateVerified",
         "Learning.Certificates.CertificateRevoked", "Learning.Certificates.CertificateRenewed",
         "Learning.Certificates.TemplateCreated", "Learning.Certificates.TemplateUpdated",
-        "Learning.Certificates.TemplateDeleted", "Learning.Certificates.TemplateDefaultChanged",
-        "Learning.Courses.CourseCreated", "Learning.Courses.CourseUpdated", "Learning.Courses.CourseDeleted"
+        "Learning.Certificates.TemplateDeleted", "Learning.Certificates.TemplateDefaultChanged"
     };
 
     private static bool IsActionTypeKnown(string actionType) =>
