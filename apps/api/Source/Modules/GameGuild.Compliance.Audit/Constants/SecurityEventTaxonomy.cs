@@ -91,6 +91,7 @@ public static class SecurityEventTaxonomy
         [AuditActionTypes.RateLimitExceeded] = new(SecurityEventKind.ThreatDetection, AuditRiskLevel.Medium, false, "Rate limit exceeded."),
         [AuditActionTypes.SuspiciousActivity] = new(SecurityEventKind.ThreatDetection, AuditRiskLevel.High, false, "Suspicious activity detected."),
         [AuditActionTypes.PolicyViolation] = new(SecurityEventKind.ThreatDetection, AuditRiskLevel.High, false, "Security policy violated."),
+        [AuditActionTypes.SecurityAlertResolved] = new(SecurityEventKind.ThreatDetection, AuditRiskLevel.Low, false, "Raised security alert resolved."),
 
         // Webhook security (provider callback verification pipeline)
         [AuditActionTypes.WebhookSignatureFailed] = new(SecurityEventKind.ThreatDetection, AuditRiskLevel.High, false, "Billing webhook failed provider signature or timestamp verification."),
@@ -123,6 +124,12 @@ public static class SecurityEventTaxonomy
         [AuditActionTypes.BulkExportThresholdExceeded] = new(SecurityEventKind.DataMovement, AuditRiskLevel.High, false, "Bulk export exceeded a configured record threshold."),
         [AuditActionTypes.CrossBorderTransferRecorded] = new(SecurityEventKind.DataMovement, AuditRiskLevel.Medium, true, "Cross-border data transfer validated and logged."),
 
+        // Financial transaction auditing (issue #180)
+        [AuditActionTypes.BillingProviderEnabled] = new(SecurityEventKind.ConfigurationChange, AuditRiskLevel.High, true, "External billing provider enabled."),
+        [AuditActionTypes.BillingProviderDisabled] = new(SecurityEventKind.ConfigurationChange, AuditRiskLevel.High, true, "External billing provider disabled."),
+        [AuditActionTypes.BillingProviderMigrationDryRun] = new(SecurityEventKind.ConfigurationChange, AuditRiskLevel.Medium, false, "Billing provider migration dry-run executed."),
+        [AuditActionTypes.BillingWebhookSecretRotated] = new(SecurityEventKind.ConfigurationChange, AuditRiskLevel.High, true, "Billing webhook signing secret rotated."),
+
         // Field-level data protection (issue #186)
         [AuditActionTypes.FieldAccessRecorded] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Low, false, "Field-level data access recorded."),
         [AuditActionTypes.SensitiveFieldClassified] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, false, "Field automatically classified as sensitive."),
@@ -133,6 +140,7 @@ public static class SecurityEventTaxonomy
         [AuditActionTypes.SensitiveDataRetentionEnforced] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, true, "Sensitive data retention policy enforced."),
         [AuditActionTypes.ConsentGranted] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Low, false, "Consent granted for a processing purpose."),
         [AuditActionTypes.ConsentRevoked] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, true, "Consent revoked for a processing purpose."),
+        [AuditActionTypes.GdprProcessingActivityChanged] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, true, "GDPR Article 30 processing activity recorded or changed."),
 
         // Configuration and administration
         [AuditActionTypes.AdminAction] = new(SecurityEventKind.ConfigurationChange, AuditRiskLevel.High, true, "Administrative action executed."),

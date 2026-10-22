@@ -146,7 +146,6 @@ public static class AuditActionTypes
     public const string UsernameNormalized = "UsernameNormalized";
 
     public const string UsernameCollisionResolved = "UsernameCollisionResolved";
-}
 
     // Federated identity / IdP integration auditing (issue #180)
     public const string ExternalLoginSucceeded = "Authentication.ExternalLoginSucceeded";
@@ -190,3 +189,4 @@ public static class AuditActionTypes
     public const string CrossBorderTransferRecorded = "DataProtection.CrossBorderTransferRecorded";
 
     public const string SensitiveDataRetentionEnforced = "DataProtection.SensitiveDataRetentionEnforced";
+}
