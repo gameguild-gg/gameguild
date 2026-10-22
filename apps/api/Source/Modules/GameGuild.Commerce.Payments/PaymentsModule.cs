@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace GameGuild.Commerce.Payments;
@@ -121,6 +122,43 @@ public static class PaymentsModule
         services.AddHttpClient<PayPalApiClient>();
         services.AddScoped<IPayPalApiClient>(provider => provider.GetRequiredService<PayPalApiClient>());
 
+        // Additional gateway adapters (issue #413): Authorize.Net, Braintree and Adyen are
+        // registered fail-closed (disabled until their PaymentGateways section opts in);
+        // their HTTP clients resolve credentials per call through the encrypted credential
+        // store with the configuration fallback.
+        services.AddSingleton<IValidateOptions<AuthorizeNetGatewayOptions>, AuthorizeNetGatewayOptionsValidator>();
+        services.AddOptions<AuthorizeNetGatewayOptions>()
+            .Bind(configuration.GetSection(AuthorizeNetGatewayOptions.SectionName))
+            .ValidateOnStart();
+        services.AddHttpClient<AuthorizeNetApiClient>((serviceProvider, client) =>
+        {
+            var gatewayOptions = serviceProvider.GetRequiredService<IOptions<AuthorizeNetGatewayOptions>>().Value;
+            client.BaseAddress = new Uri(gatewayOptions.ResolveBaseUrl(), UriKind.Absolute);
+            client.Timeout = TimeSpan.FromSeconds(Math.Max(1, gatewayOptions.RequestTimeoutSeconds));
+        });
+
+        services.AddSingleton<IValidateOptions<BraintreeGatewayOptions>, BraintreeGatewayOptionsValidator>();
+        services.AddOptions<BraintreeGatewayOptions>()
+            .Bind(configuration.GetSection(BraintreeGatewayOptions.SectionName))
+            .ValidateOnStart();
+        services.AddHttpClient<BraintreeApiClient>((serviceProvider, client) =>
+        {
+            var gatewayOptions = serviceProvider.GetRequiredService<IOptions<BraintreeGatewayOptions>>().Value;
+            client.BaseAddress = new Uri(gatewayOptions.ResolveBaseUrl(), UriKind.Absolute);
+            client.Timeout = TimeSpan.FromSeconds(Math.Max(1, gatewayOptions.RequestTimeoutSeconds));
+        });
+
+        services.AddSingleton<IValidateOptions<AdyenGatewayOptions>, AdyenGatewayOptionsValidator>();
+        services.AddOptions<AdyenGatewayOptions>()
+            .Bind(configuration.GetSection(AdyenGatewayOptions.SectionName))
+            .ValidateOnStart();
+        services.AddHttpClient<AdyenApiClient>((serviceProvider, client) =>
+        {
+            var gatewayOptions = serviceProvider.GetRequiredService<IOptions<AdyenGatewayOptions>>().Value;
+            client.BaseAddress = new Uri(gatewayOptions.ResolveBaseUrl(), UriKind.Absolute);
+            client.Timeout = TimeSpan.FromSeconds(Math.Max(1, gatewayOptions.RequestTimeoutSeconds));
+        });
+
         // Register services
         services.AddScoped<IDisputeService, DisputeService>();
         services.AddScoped<IRevenueAuditService, RevenueAuditService>();
@@ -174,14 +212,45 @@ public static class PaymentsModule
         // IPaymentGateway resolved by the payment path.
         services.AddScoped<StripePaymentGateway>();
         services.AddScoped<PayPalPaymentGateway>();
+        services.AddScoped<AuthorizeNetPaymentGateway>();
+        services.AddScoped<BraintreePaymentGateway>();
+        services.AddScoped<AdyenPaymentGateway>();
         services.AddScoped<IGatewayRegistry, GatewayRegistry>();
-        services.AddScoped<IPaymentGatewaySelector, ConfigPaymentGatewaySelector>();
+        services.AddSingleton<IGatewayRotationState, InMemoryGatewayRotationState>();
+        services.AddScoped<IPaymentGatewaySelector>(provider => new ConfigPaymentGatewaySelector(
+            provider.GetRequiredService<IGatewayRegistry>(),
+            provider.GetRequiredService<IOptions<GatewayRoutingOptions>>(),
+            provider.GetRequiredService<ILogger<ConfigPaymentGatewaySelector>>(),
+            provider.GetService<IGatewayMetricsService>(),
+            provider.GetService<IGatewayRotationState>()));
         services.AddSingleton<IGatewayCircuitBreaker>(provider =>
             new InMemoryGatewayCircuitBreaker(
                 provider.GetRequiredService<IOptions<GatewayFailoverOptions>>().Value));
         services.AddSingleton<IGatewayAvailabilityAlerter, NotificationGatewayAvailabilityAlerter>();
         services.AddScoped<IGatewayMetricsService, GatewayMetricsService>();
         services.AddScoped<IPaymentGateway, FailoverPaymentGateway>();
+
+        // Encrypted-at-rest gateway credentials (issue #413): DataProtection (AES-256 under
+        // the application key ring) store for gateway API credentials, provisioned and
+        // deactivated through guarded admin commands; plaintext never persists. The resolver
+        // prefers the encrypted store over configuration fallbacks for credential consumers.
+        services.AddSingleton<IGatewayCredentialStore, GatewayCredentialStore>();
+        services.AddScoped<IGatewayCredentialResolver, GatewayCredentialResolver>();
+
+        // Gateway connection tests (issue #413): one cheap authenticated probe per registered
+        // adapter (Stripe balance, PayPal OAuth token, ...), dispatched by
+        // TestGatewayConnectionQuery. Adapters that ship without a probe simply do not
+        // register a tester and the query fails closed with an explicit result.
+        services.AddScoped<IGatewayConnectionTester, StripeGatewayConnectionTester>();
+        services.AddScoped<IGatewayConnectionTester, PayPalGatewayConnectionTester>();
+
+        // The additional adapters implement their own connection tests (Authorize.Net
+        // merchant-details probe, Braintree client-token probe, Adyen payment-methods
+        // probe); registering the adapters as testers makes them addressable through the
+        // same test-connection query surface.
+        services.AddScoped<IGatewayConnectionTester>(provider => provider.GetRequiredService<AuthorizeNetPaymentGateway>());
+        services.AddScoped<IGatewayConnectionTester>(provider => provider.GetRequiredService<BraintreePaymentGateway>());
+        services.AddScoped<IGatewayConnectionTester>(provider => provider.GetRequiredService<AdyenPaymentGateway>());
 
         // Account credits, gifting and referrals (issue #410 v1): the credit ledger with
         // FIFO-by-expiry consumption and idempotent grants, the gift status machine with
