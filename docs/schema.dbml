@@ -3530,7 +3530,8 @@ Table "payment_methods" {
   "UserId" uuid [not null]
   "Type" "character varying(20)" [not null]
   "GatewayProvider" "character varying(50)" [not null]
-  "GatewayPaymentMethodId" "character varying(255)" [not null]
+  "GatewayPaymentMethodId" "character varying(512)" [not null]
+  "GatewayPaymentMethodIdHash" "character varying(64)"
   "IsDefault" boolean [not null]
   "Status" "character varying(20)" [not null]
   "CardBrand" "character varying(50)"
@@ -3555,8 +3556,10 @@ Table "payment_methods" {
     Id [pk, name: "PK_payment_methods"]
     ExpiresAt [name: "IX_payment_methods_ExpiresAt"]
     GatewayPaymentMethodId [name: "IX_payment_methods_GatewayPaymentMethodId"]
+    GatewayPaymentMethodIdHash [name: "IX_payment_methods_GatewayPaymentMethodIdHash"]
     (TenantId, UserId) [unique, name: "ix_payment_methods_single_default"]
     (TenantId, GatewayProvider, GatewayPaymentMethodId) [unique, name: "ix_payment_methods_tenant_gateway_unique"]
+    (TenantId, GatewayProvider, GatewayPaymentMethodIdHash) [unique, name: "ix_payment_methods_tenant_gateway_hash_unique"]
     (TenantId, UserId, IsDefault) [name: "IX_payment_methods_TenantId_UserId_IsDefault"]
   }
 }

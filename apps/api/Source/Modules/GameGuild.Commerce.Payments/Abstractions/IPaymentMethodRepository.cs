@@ -40,6 +40,20 @@ public interface IPaymentMethodRepository
     Task<PaymentMethod?> GetDefaultAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Loads another live payment method of the same owner that already carries the given
+    ///     gateway card fingerprint (duplicate-card detection, issue #414). The row whose id
+    ///     equals <paramref name="excludePaymentMethodId"/> (the token being re-registered)
+    ///     is ignored.
+    /// </summary>
+    Task<PaymentMethod?> GetLiveByFingerprintAsync(
+        Guid tenantId,
+        Guid userId,
+        string gatewayProvider,
+        string cardFingerprint,
+        Guid? excludePaymentMethodId = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Loads all live card payment methods that have an expiry date (expiry monitor).
     /// </summary>
     Task<IReadOnlyList<PaymentMethod>> ListExpiringCandidatesAsync(CancellationToken cancellationToken = default);

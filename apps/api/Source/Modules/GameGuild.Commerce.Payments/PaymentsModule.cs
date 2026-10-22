@@ -144,7 +144,12 @@ public static class PaymentsModule
 
         // Payment-method registry (issue #414): self-service management plus the daily
         // expiry monitor (30/14/7-day notices through the Notifications module).
+        // Gateway references are encrypted at rest with DataProtection (deterministic
+        // lookup hash for equality queries); charge resolution is default-first with
+        // fallback to the next usable saved method.
+        services.AddSingleton<IGatewayPaymentMethodIdProtector, DataProtectionGatewayPaymentMethodIdProtector>();
         services.AddScoped<IPaymentMethodService, PaymentMethodRegistryService>();
+        services.AddScoped<IPaymentMethodChargeResolver, PaymentMethodChargeResolver>();
         services.AddScoped<IPaymentMethodExpiryMonitor, PaymentMethodExpiryMonitor>();
         services.AddOptions<PaymentMethodExpiryOptions>()
             .Bind(configuration.GetSection(PaymentMethodExpiryOptions.SectionName))
