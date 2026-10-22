@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -216,7 +217,7 @@ public sealed record RecordFieldAccessRequest(
 
 public sealed record FieldAccessAuditResponse(
     Guid Id,
-    Guid TenantId,
+    Guid? TenantId,
     Guid UserId,
     string EntityType,
     Guid EntityId,

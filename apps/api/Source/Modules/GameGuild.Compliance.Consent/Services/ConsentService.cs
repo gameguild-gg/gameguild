@@ -69,7 +69,7 @@ public class ConsentService(
             ConsentAuditActionTypes.Granted,
             userId,
             null,
-            success: true,
+            Success: true,
             $"Consent granted for policy version {policyVersionId}",
             Metadata: new { PolicyVersionId = policyVersionId, Method = method, IpAddress = ipAddress }), ct).ConfigureAwait(false);
         return ToDto(consent);
@@ -85,7 +85,7 @@ public class ConsentService(
             ConsentAuditActionTypes.Revoked,
             userId,
             null,
-            success: true,
+            Success: true,
             $"Consent revoked for policy version {policyVersionId}",
             Metadata: new { PolicyVersionId = policyVersionId }), ct).ConfigureAwait(false);
     }
@@ -110,7 +110,7 @@ public class ConsentService(
             ConsentAuditActionTypes.RequestSubmitted,
             userId,
             null,
-            success: true,
+            Success: true,
             $"Data subject {type} request submitted (30-day statutory deadline {request.Deadline:yyyy-MM-dd})",
             Metadata: new { RequestId = request.Id, RequestType = type.ToString(), Deadline = request.Deadline }), ct).ConfigureAwait(false);
         return ToDto(request);
@@ -126,7 +126,7 @@ public class ConsentService(
             ConsentAuditActionTypes.RequestCompleted,
             request.UserId,
             null,
-            success: true,
+            Success: true,
             $"Data subject {request.RequestType} request fulfilled",
             Metadata: new { RequestId = request.Id, ProcessedBy = processedBy, OnTime = DateTime.UtcNow <= request.Deadline }), ct).ConfigureAwait(false);
         return ToDto(request);

@@ -128,7 +128,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
 
         foreach (var assembly in assemblies.OrderBy(assembly => assembly.GetName().Name, StringComparer.Ordinal))
         {
-            var assemblyName = assembly.GetName().Name ?? assembly.FullName;
+            var assemblyName = assembly.GetName()?.Name ?? assembly.FullName ?? string.Empty;
             if (!assemblyName.StartsWith("GameGuild.", StringComparison.Ordinal))
             {
                 continue;
@@ -193,7 +193,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
             }
         }
 
-        return new ComprehensiveEventCoverageReport(
+        var report = new ComprehensiveEventCoverageReport(
             DateTime.UtcNow,
             modules.Count,
             modules.Sum(module => module.MutatingCommandCount),
@@ -201,6 +201,14 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
             modules.Sum(module => module.MutationEndpointCount),
             modules,
             gaps.OrderBy(gap => gap, StringComparer.Ordinal).ToList());
+
+        logger?.LogInformation(
+            "Event coverage sweep: {ModuleCount} modules, {CommandCount} mutating commands, {GapCount} gap(s).",
+            report.ModuleCount,
+            report.TotalMutatingCommands,
+            report.Gaps.Count);
+
+        return report;
     }
 
     public ComprehensiveAuditTrailCoverageReport BuildAuditTrailCoverage()
@@ -285,7 +293,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
         // reference closure.
         foreach (var assembly in LoadDeployedGameGuildAssemblies())
         {
-            loaded.TryAdd(assembly.GetName().Name ?? assembly.FullName, assembly);
+            loaded.TryAdd(assembly.GetName()?.Name ?? assembly.FullName ?? string.Empty, assembly);
         }
 
         return loaded.Values;
@@ -300,7 +308,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            return [];
+            yield break;
         }
 
         foreach (var path in candidatePaths)

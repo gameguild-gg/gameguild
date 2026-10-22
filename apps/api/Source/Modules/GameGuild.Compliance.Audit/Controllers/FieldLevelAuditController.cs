@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -84,14 +85,18 @@ public sealed class FieldLevelAuditController(
         [FromQuery] string? status, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
     {
         FieldAccessAnomalyStatus? parsed = null;
-        if (!string.IsNullOrWhiteSpace(status)
-            && !Enum.TryParse<FieldAccessAnomalyStatus>(status, ignoreCase: true, out parsed))
+        if (!string.IsNullOrWhiteSpace(status))
         {
-            return BadRequest(new ValidationProblemDetails
+            if (!Enum.TryParse<FieldAccessAnomalyStatus>(status, ignoreCase: true, out var candidate))
             {
-                Status = StatusCodes.Status400BadRequest,
-                Errors = { ["status"] = [$"Unknown anomaly status '{status}'."] }
-            });
+                return BadRequest(new ValidationProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Errors = { ["status"] = [$"Unknown anomaly status '{status}'."] }
+                });
+            }
+
+            parsed = candidate;
         }
 
         var anomalies = await patternAnalysis.GetAnomaliesAsync(actors.ActorContext.TenantId, parsed, skip, take, cancellationToken).ConfigureAwait(false);
@@ -199,14 +204,18 @@ public sealed class FieldLevelAuditController(
         [FromQuery] string? status, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
     {
         CrossBorderTransferStatus? parsed = null;
-        if (!string.IsNullOrWhiteSpace(status)
-            && !Enum.TryParse<CrossBorderTransferStatus>(status, ignoreCase: true, out parsed))
+        if (!string.IsNullOrWhiteSpace(status))
         {
-            return BadRequest(new ValidationProblemDetails
+            if (!Enum.TryParse<CrossBorderTransferStatus>(status, ignoreCase: true, out var candidate))
             {
-                Status = StatusCodes.Status400BadRequest,
-                Errors = { ["status"] = [$"Unknown transfer status '{status}'."] }
-            });
+                return BadRequest(new ValidationProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Errors = { ["status"] = [$"Unknown transfer status '{status}'."] }
+                });
+            }
+
+            parsed = candidate;
         }
 
         var transfers = await crossBorder.GetTransfersAsync(actors.ActorContext.TenantId, parsed, skip, take, cancellationToken).ConfigureAwait(false);
@@ -286,7 +295,7 @@ public sealed class FieldLevelAuditController(
         Execute<SensitiveDataRetentionEnforcementResult>(async () =>
             await sender.Send(new EnforceSensitiveDataRetentionCommand(actors.ActorContext.TenantId, dryRun), cancellationToken).ConfigureAwait(false));
 
-    private async Task<ActionResult<T>> Execute<T>(Func<Task<T>> operation) where T : class
+    private async Task<ActionResult<T>> Execute<T>(Func<Task<T>> operation)
     {
         try
         {
