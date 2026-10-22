@@ -263,6 +263,33 @@ public class PaymentMethodsControllerTests
     }
 
     [Fact]
+    public async Task Delete_WithoutConfirmation_ShouldReturn400WithoutSendingCommand()
+    {
+        var sender = new Mock<ISender>();
+        var controller = CreateController(Actor(Guid.NewGuid(), Guid.NewGuid()), sender.Object);
+
+        var result = await controller.Delete(Guid.NewGuid(), body: null, CancellationToken.None);
+
+        result.Should().BeOfType<BadRequestObjectResult>();
+        sender.Verify(
+            service => service.Send(It.IsAny<RemovePaymentMethodCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Delete_WithExplicitConfirmationFalse_ShouldReturn400()
+    {
+        var controller = CreateController(Actor(Guid.NewGuid(), Guid.NewGuid()));
+
+        var result = await controller.Delete(
+            Guid.NewGuid(),
+            new PaymentMethodsController.RemovePaymentMethodRequestBody(Confirm: false),
+            CancellationToken.None);
+
+        result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
     public async Task Delete_WhileInUse_ShouldReturn409ProblemDetails()
     {
         var sender = new Mock<ISender>();
@@ -273,7 +300,10 @@ public class PaymentMethodsControllerTests
                 "Payment method is the billing method for 2 active subscription(s).")));
         var controller = CreateController(Actor(Guid.NewGuid(), Guid.NewGuid()), sender.Object);
 
-        var result = await controller.Delete(Guid.NewGuid(), CancellationToken.None);
+        var result = await controller.Delete(
+            Guid.NewGuid(),
+            new PaymentMethodsController.RemovePaymentMethodRequestBody(Confirm: true),
+            CancellationToken.None);
 
         var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(StatusCodes.Status409Conflict);
@@ -282,17 +312,26 @@ public class PaymentMethodsControllerTests
     }
 
     [Fact]
-    public async Task Delete_Success_ShouldReturn204()
+    public async Task Delete_Success_ShouldReturn204AndCarryConfirmation()
     {
+        var paymentMethodId = Guid.NewGuid();
         var sender = new Mock<ISender>();
         sender
             .Setup(service => service.Send(It.IsAny<RemovePaymentMethodCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success());
         var controller = CreateController(Actor(Guid.NewGuid(), Guid.NewGuid()), sender.Object);
 
-        var result = await controller.Delete(Guid.NewGuid(), CancellationToken.None);
+        var result = await controller.Delete(
+            paymentMethodId,
+            new PaymentMethodsController.RemovePaymentMethodRequestBody(Confirm: true),
+            CancellationToken.None);
 
         result.Should().BeOfType<NoContentResult>();
+        sender.Verify(
+            service => service.Send(
+                It.Is<RemovePaymentMethodCommand>(command => command.PaymentMethodId == paymentMethodId && command.Confirm),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

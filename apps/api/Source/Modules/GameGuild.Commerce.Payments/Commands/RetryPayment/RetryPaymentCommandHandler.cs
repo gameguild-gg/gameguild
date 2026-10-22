@@ -104,7 +104,8 @@ public sealed class RetryPaymentCommandHandler(
         //    longer usable (expired, gateway-failed or removed), the owner's default saved
         //    method — then the next usable one — takes over.
         var chargePaymentMethodId = await ResolveChargeMethodAsync(payment, cancellationToken).ConfigureAwait(false);
-        if (!string.Equals(chargePaymentMethodId, payment.PaymentMethodId, StringComparison.Ordinal))
+        if (!string.IsNullOrEmpty(chargePaymentMethodId)
+            && !string.Equals(chargePaymentMethodId, payment.PaymentMethodId, StringComparison.Ordinal))
         {
             logger.LogInformation(
                 "Payment {PaymentId} retry falling back from recorded method {RecordedMethodRedacted} to saved method resolution (default-first).",

@@ -1,4 +1,5 @@
 using GameGuild.Commerce.Payments;
+using GameGuild.Commerce.Subscriptions;
 using GameGuild.CQRS;
 using GameGuild.Notifications;
 using GameGuild.Notifications.Services;

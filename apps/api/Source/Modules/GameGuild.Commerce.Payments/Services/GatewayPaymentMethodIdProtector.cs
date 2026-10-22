@@ -8,7 +8,7 @@ namespace GameGuild.Commerce.Payments;
 ///     Protects stored gateway payment-method references at rest (issue #414). The
 ///     <c>GatewayPaymentMethodId</c> column stores a protected payload; plaintext tokens are
 ///     only materialized when a gateway call or an API response needs them. Values written
-///     before this protection carry a <see cref="Marker"/>-less legacy plaintext form and are
+///     before this protection carry a legacy plaintext form (no <c>enc1:</c> marker) and are
 ///     returned unchanged until the row is next written (dual-format reads).
 /// </summary>
 public interface IGatewayPaymentMethodIdProtector
@@ -18,7 +18,7 @@ public interface IGatewayPaymentMethodIdProtector
 
     /// <summary>
     ///     Recovers the plaintext gateway payment method id from a stored value. Legacy
-    ///     plaintext values (no <see cref="Marker"/>) are returned unchanged.
+    ///     plaintext values (no <c>enc1:</c> marker) are returned unchanged.
     /// </summary>
     string Unprotect(string storedGatewayPaymentMethodId);
 
@@ -29,7 +29,8 @@ public interface IGatewayPaymentMethodIdProtector
 /// <summary>
 ///     ASP.NET DataProtection implementation (same pattern as
 ///     <c>Commerce.Billing/Services/WebhookSigningSecretProvider.cs</c>), purpose
-///     <c>Payments.GatewayPaymentMethodIds</c>. Registered as a singleton.
+///     <c>Payments.GatewayPaymentMethodIds</c>. Protected values carry the
+///     <see cref="Marker"/> prefix. Registered as a singleton.
 /// </summary>
 public sealed class DataProtectionGatewayPaymentMethodIdProtector(IDataProtectionProvider protectionProvider)
     : IGatewayPaymentMethodIdProtector

@@ -643,7 +643,8 @@ public class PaymentMethodRegistryService(
                 restored),
             cancellationToken).ConfigureAwait(false);
 
-    private async Task PublishSafeAsync(INotification domainEvent, CancellationToken cancellationToken)
+    private async Task PublishSafeAsync<TNotification>(TNotification domainEvent, CancellationToken cancellationToken)
+        where TNotification : INotification
     {
         if (_publisher is null)
         {
