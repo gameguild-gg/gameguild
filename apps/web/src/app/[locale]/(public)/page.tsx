@@ -1,7 +1,9 @@
 import { auth } from '@/auth';
 import { publicWebsiteHighlights } from '@/components/app/app-shell';
 import { isSocialFeedTab } from '@/components/feed/social-feed-tabs';
+import { GuestSessionBanner } from '@/components/guest-session-banner';
 import { Link, redirect } from '@/i18n/navigation';
+import { getTranslations } from 'next-intl/server';
 import { getBlogIndex } from '@/lib/blogs/queries';
 import {
   getPublicActivities,
@@ -25,7 +27,12 @@ import React from 'react';
 
 /** `/` is contextual: the community feed when signed in, the marketing landing otherwise. */
 export default async function Page({ params, searchParams }: PageProps<'/[locale]'>): Promise<React.JSX.Element> {
-  const [{ locale }, query, session] = await Promise.all([params, searchParams, auth()]);
+  const [{ locale }, query, session, t] = await Promise.all([
+    params,
+    searchParams,
+    auth(),
+    getTranslations('signIn'),
+  ]);
   if (session && typeof session !== 'function') {
     const rawTab = typeof query?.tab === 'string' && isSocialFeedTab(query.tab) ? query.tab : undefined;
     const rawTag = typeof query?.tag === 'string' ? query.tag : undefined;
@@ -54,6 +61,19 @@ export default async function Page({ params, searchParams }: PageProps<'/[locale
 
   return (
     <main className="bg-background text-foreground">
+      {/* Guest-state display (issue #213): rendered only while an active guest
+          session exists in the browser's guest slot; the CTA routes into
+          sign-up carrying the guest-session id for the backend upgrade. */}
+      <GuestSessionBanner
+        labels={{
+          title: t('guest.bannerTitle'),
+          description: t('guest.bannerDescription'),
+          upgradeCta: t('guest.upgradeCta'),
+          leaveGuestMode: t('guest.leaveGuestMode'),
+          sessionLabel: t('guest.sessionLabel'),
+          permissionsLabel: t('guest.permissionsLabel'),
+        }}
+      />
       <section className="relative overflow-hidden">
         <div className="absolute inset-x-0 top-[-20%] h-96 bg-[radial-gradient(circle_at_center,var(--primary),transparent_58%)] opacity-20" />
         <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-28">

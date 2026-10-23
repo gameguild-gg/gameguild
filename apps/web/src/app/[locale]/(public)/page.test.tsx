@@ -10,6 +10,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/auth', () => ({ auth: mocks.auth, getToken: vi.fn().mockResolvedValue(null) }));
+vi.mock('next-intl/server', () => ({
+  getTranslations: async (namespace: string) => (key: string) => `${namespace}.${key}`,
+}));
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
     <a href={href}>{children}</a>

@@ -442,6 +442,83 @@ describe('Handlers — signUp extended', () => {
     const response = await POST(request);
     expect(response.status).toBeGreaterThanOrEqual(400);
   });
+
+  it('forwards the guest bearer on signup so the backend can upgrade the guest session', async () => {
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          accessToken: 'at',
+          refreshToken: 'rt',
+          userId: '1',
+          upgradedFromGuestSessionId: '11111111-2222-3333-4444-555555555555',
+        }),
+        { status: 200 },
+      ),
+    );
+
+    const config = makeConfig();
+    const { POST } = createHandlers(config);
+
+    const request = buildRequest('/api/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({
+        csrfToken: 'csrf-token-value',
+        username: 'guestup',
+        email: 'guest@example.com',
+        password: 'Password1!',
+        guestAccessToken: 'guest-access-token',
+      }),
+      cookies: { '__me.csrf-token': 'csrf-cookie-value' },
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'http://localhost:8080/v1/auth/sign-up',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          username: 'guestup',
+          email: 'guest@example.com',
+          password: 'Password1!',
+          guestAccessToken: 'guest-access-token',
+        }),
+      }),
+    );
+  });
+
+  it('omits the guest field entirely when no guest bearer is presented', async () => {
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ accessToken: 'at', refreshToken: 'rt', userId: '1' }), {
+        status: 200,
+      }),
+    );
+
+    const config = makeConfig();
+    const { POST } = createHandlers(config);
+
+    const request = buildRequest('/api/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({
+        csrfToken: 'csrf-token-value',
+        username: 'plain',
+        email: 'plain@example.com',
+        password: 'Password1!',
+      }),
+      cookies: { '__me.csrf-token': 'csrf-cookie-value' },
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+    const signupCall = fetchSpy.mock.calls.find(
+      ([url]) => typeof url === 'string' && url.includes('/v1/auth/sign-up'),
+    ) as [string, RequestInit] | undefined;
+    expect(signupCall).toBeDefined();
+    if (!signupCall) throw new Error('sign-up upstream call missing');
+    expect(JSON.parse(String(signupCall[1].body))).not.toHaveProperty(
+      'guestAccessToken',
+    );
+  });
 });
 
 describe('Handlers — updateSession', () => {

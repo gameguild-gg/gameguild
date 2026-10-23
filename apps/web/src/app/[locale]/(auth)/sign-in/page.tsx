@@ -4,6 +4,8 @@ import { SignInForm } from '@/components/sign-in-form';
 import { GoogleOneTap } from '@/components/google-one-tap';
 import { GoogleSignInButton } from '@/components/google-sign-in-button';
 import { resolveAllowedAuthRedirect } from '@/lib/auth/cross-domain-auth';
+import { guestAccessEnabled } from '@/lib/auth/guest-session';
+import { GuestAccessEntry } from '@/components/guest-access-entry';
 import { auth } from '@/auth';
 import { AuthErrorNotice } from '@/components/auth/auth-error-notice';
 
@@ -35,6 +37,23 @@ export default async function Page({
       <SignInForm
         magicLinkLabel={t('magicLink')}
         emailCodeLabel={t('emailCode')}
+        guestEntry={
+          // Capability-gated (issue #213): the affordance is rendered only when
+          // guest access is enabled for this deployment, mirroring the backend's
+          // Authentication:Guest:IsEnabled posture; the backend stays the
+          // fail-closed authority on issuance itself.
+          guestAccessEnabled() ? (
+            <GuestAccessEntry
+              redirectTo={redirectTo}
+              labels={{
+                continueAsGuest: t('guest.continueAsGuest'),
+                busy: t('guest.busy'),
+                disabledMessage: t('guest.disabledMessage'),
+                errorMessage: t('guest.errorMessage'),
+              }}
+            />
+          ) : undefined
+        }
         providers={
           <div className="flex flex-col gap-3">
             <GoogleSignInButton redirectTo={redirectTo} />

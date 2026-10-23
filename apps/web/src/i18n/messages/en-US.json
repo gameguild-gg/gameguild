@@ -12,6 +12,19 @@
     "continueWithDiscord": "Continue with Discord",
     "magicLink": "Sign in with an email link",
     "emailCode": "Sign in with an email code",
+    "guest": {
+      "continueAsGuest": "Continue as guest",
+      "busy": "Entering guest mode...",
+      "disabledMessage": "Guest access is currently disabled.",
+      "errorMessage": "Could not start a guest session. Please try again.",
+      "bannerTitle": "You are browsing as a guest",
+      "bannerDescription": "You have limited access to public content. Create an account to unlock the full experience and keep your progress.",
+      "upgradeCta": "Create your account",
+      "leaveGuestMode": "Leave guest mode",
+      "sessionLabel": "Guest session",
+      "permissionsLabel": "Permissions",
+      "signUpNotice": "Your guest session will be linked to your new account."
+    },
     "mfa": {
       "title": "Two-factor authentication",
       "description": "Confirm your sign-in with your authenticator app. This sign-in challenge expires after five minutes.",

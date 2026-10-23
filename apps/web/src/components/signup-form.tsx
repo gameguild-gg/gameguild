@@ -5,6 +5,10 @@ import { Link } from "@/i18n/navigation"
 import { useLocale } from "next-intl"
 import { useAuth } from "@game-guild/client/react"
 import { cn } from "@/lib/utils"
+import {
+  clearGuestSession,
+  loadGuestSession,
+} from "@/lib/auth/guest-session"
 import { Button } from "@game-guild/ui/components/button"
 import {
   Card,
@@ -27,10 +31,19 @@ export function SignupForm({
   className,
   redirectTo = "/",
   providers,
+  guestSessionId,
+  guestUpgradeNotice,
   ...props
 }: React.ComponentProps<"div"> & {
   redirectTo?: string
   providers?: React.ReactNode
+  /**
+   * Guest upgrade entry (issue #213): when set, the sign-up presents the
+   * matching guest bearer from the browser's guest slot so the backend
+   * upgrade flow links the new account to the guest session.
+   */
+  guestSessionId?: string
+  guestUpgradeNotice?: string
 }) {
   const { signUp, isLoading, error, clearError } = useAuth()
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -73,6 +86,15 @@ export function SignupForm({
       return
     }
 
+    // Guest upgrade (issue #213): the guest banner's CTA arrives with the
+    // guest-session id; only the matching stored guest session's bearer is
+    // presented (a stale or absent session never blocks registration).
+    const guestSession = guestSessionId ? loadGuestSession() : null
+    const guestAccessToken =
+      guestSession && guestSession.guestSessionId === guestSessionId
+        ? guestSession.accessToken
+        : undefined
+
     try {
       await signUp({
         username: email.split("@")[0],
@@ -81,7 +103,13 @@ export function SignupForm({
         firstName: name.split(" ")[0],
         lastName: name.split(" ").slice(1).join(" ") || undefined,
         redirectTo,
+        ...(guestAccessToken ? { guestAccessToken } : {}),
       })
+
+      // The upgrade verdict is the backend's (UpgradedFromGuestSessionId on
+      // the sign-up response); once an authenticated session exists the guest
+      // slot has served its purpose and is cleared either way.
+      if (guestSessionId) clearGuestSession()
     } catch {
       // error state is set by useAuth
     }
@@ -111,6 +139,14 @@ export function SignupForm({
           )}
           <form onSubmit={handleSubmit} noValidate>
             <FieldGroup>
+              {guestUpgradeNotice ? (
+                <p
+                  data-testid="guest-upgrade-notice"
+                  className="rounded-md border border-sky-400/25 bg-sky-400/10 px-3 py-2 text-sm text-sky-100"
+                >
+                  {guestUpgradeNotice}
+                </p>
+              ) : null}
               <Field>
                 <FieldLabel htmlFor="name">Full Name</FieldLabel>
                 <Input
