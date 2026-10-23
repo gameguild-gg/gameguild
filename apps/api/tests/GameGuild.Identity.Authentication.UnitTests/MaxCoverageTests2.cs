@@ -513,7 +513,7 @@ public class TrustedDevicesControllerCovTests
     public async Task TrustCurrentDevice_Success_ReturnsOk()
     {
         _sessionService.Setup(s => s.TrustDeviceAsync(
-            _userId, It.IsAny<string>(), "My Phone", It.IsAny<CancellationToken>()))
+            _userId, It.IsAny<string>(), "My Phone", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var result = await _controller.TrustCurrentDevice(
@@ -525,7 +525,7 @@ public class TrustedDevicesControllerCovTests
     public async Task TrustCurrentDevice_Failure_ReturnsBadRequest()
     {
         _sessionService.Setup(s => s.TrustDeviceAsync(
-            _userId, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            _userId, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         var result = await _controller.TrustCurrentDevice(

@@ -363,7 +363,7 @@ public sealed class SessionManagementService(
         }
     }
 
-    public async Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, CancellationToken cancellationToken = default)
+    public async Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, string? deviceInfo = null, CancellationToken cancellationToken = default)
     {
         if (!_sessionOptions.EnableDeviceFingerprinting || string.IsNullOrWhiteSpace(deviceFingerprint))
         {
@@ -383,6 +383,12 @@ public sealed class SessionManagementService(
             }
 
             existingDevice.DeviceName = deviceName;
+            // Refresh the persisted metadata from the session being re-trusted; an empty
+            // caller payload never erases previously captured device details.
+            if (!string.IsNullOrWhiteSpace(deviceInfo))
+            {
+                existingDevice.DeviceInfo = TruncateDeviceInfo(deviceInfo);
+            }
             existingDevice.LastUsedAt = now;
             existingDevice.ExpiresAt = now.AddDays(_sessionOptions.TrustedDeviceDurationDays);
             existingDevice.UpdatedAt = now;
@@ -398,7 +404,7 @@ public sealed class SessionManagementService(
             UserId = userId,
             DeviceFingerprint = deviceFingerprint,
             DeviceName = deviceName,
-            DeviceInfo = string.Empty,
+            DeviceInfo = string.IsNullOrWhiteSpace(deviceInfo) ? string.Empty : TruncateDeviceInfo(deviceInfo),
             TrustedAt = now,
             LastUsedAt = now,
             ExpiresAt = now.AddDays(_sessionOptions.TrustedDeviceDurationDays),
@@ -411,6 +417,17 @@ public sealed class SessionManagementService(
 
         return true;
     }
+
+    /// <summary>
+    ///     Clamps persisted device metadata to the <see cref="TrustedDevice"/> column limit so a
+    ///     long user-agent-derived payload can never overflow the store.
+    /// </summary>
+    private static string TruncateDeviceInfo(string deviceInfo) => deviceInfo.Length <= TrustedDeviceInfoMaxLength
+        ? deviceInfo
+        : deviceInfo[..TrustedDeviceInfoMaxLength];
+
+    /// <summary>The maximum persisted length of a trusted device's metadata JSON (column limit).</summary>
+    public const int TrustedDeviceInfoMaxLength = 2000;
 
     public async Task<bool> IsDeviceTrustedAsync(Guid userId, string deviceFingerprint, CancellationToken cancellationToken = default)
     {
@@ -504,6 +521,38 @@ public sealed class SessionManagementService(
 
         return true;
     }
+
+    /// <summary>
+    ///     Names or renames one of the caller's own trusted devices (issue #278 trusted-device
+    ///     management surface). The name must be non-empty after trimming and no longer than
+    ///     <see cref="MaxTrustedDeviceNameLength"/>; renaming another user's device is rejected.
+    /// </summary>
+    public async Task<bool> RenameTrustedDeviceAsync(Guid userId, Guid deviceId, string name, CancellationToken cancellationToken = default)
+    {
+        var trimmed = name?.Trim() ?? string.Empty;
+        if (trimmed.Length is < 1 or > MaxTrustedDeviceNameLength)
+        {
+            return false;
+        }
+
+        var device = await trustedDeviceRepository.GetByIdAsync(deviceId, cancellationToken).ConfigureAwait(false);
+        if (device is not { IsActive: true } || device.UserId != userId)
+        {
+            return false;
+        }
+
+        device.DeviceName = trimmed;
+        device.UpdatedAt = SystemClock.UtcNow;
+
+        await trustedDeviceRepository.UpdateAsync(device, cancellationToken).ConfigureAwait(false);
+
+        logger.LogInformation("Trusted device {DeviceId} renamed for user {UserId}", deviceId, userId);
+
+        return true;
+    }
+
+    /// <summary>The maximum accepted length of a user-defined trusted device name (column limit).</summary>
+    public const int MaxTrustedDeviceNameLength = 200;
 
     private async Task EnforceMaxConcurrentSessionsAsync(Guid userId, CancellationToken cancellationToken)
     {
