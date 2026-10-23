@@ -360,6 +360,37 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
     }
 
     /// <summary>
+    ///     Get the billing webhook processing statistics (issue #408)
+    /// </summary>
+    /// <param name="fromUtc">Optional inclusive window start (ISO-8601); defaults to 24 hours ago.</param>
+    /// <param name="toUtc">Optional inclusive window end (ISO-8601); defaults to now.</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Webhook activity statistics for the window</returns>
+    /// <remarks>
+    ///     Admin-facing webhook activity dashboard (issue #408): events received, processed and
+    ///     failed in the window, the processing success rate, the average received-to-processed
+    ///     latency, the dead-lettered and unverified counts, and a per-provider breakdown.
+    /// </remarks>
+    [HttpGet("stats")]
+    [Authorize(Policy = Policies.SystemAdmin)]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
+    [EndpointSummary("Get billing webhook processing statistics")]
+    [EndpointDescription(
+        "Admin-facing webhook activity dashboard: events received, processed and currently failed, the processing success rate, the average received-to-processed latency in seconds, dead-lettered and unverified counts over the window, and a per-provider breakdown. Defaults to the last 24 hours. Requires the SystemAdmin policy."
+    )]
+    [ProducesResponseType<BillingWebhookStatsDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetWebhookStats(
+        [FromQuery] DateTime? fromUtc = null,
+        [FromQuery] DateTime? toUtc = null,
+        CancellationToken ct = default)
+    {
+        var stats = await sender.Send(new GetBillingWebhookStatsQuery(fromUtc, toUtc), ct).ConfigureAwait(false);
+
+        return Ok(stats);
+    }
+
+    /// <summary>
     ///     Rotate a provider's webhook signing secret (issue #408)
     /// </summary>
     /// <param name="body">Rotation request (provider key and the new secret exactly as configured at the provider).</param>

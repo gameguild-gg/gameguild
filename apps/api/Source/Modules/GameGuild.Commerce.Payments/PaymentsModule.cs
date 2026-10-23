@@ -89,6 +89,13 @@ public static class PaymentsModule
         services.AddScoped<IFraudSignalProvider, CardTestingPatternFraudSignalProvider>();
         services.AddScoped<IFraudSignalProvider, AccountAgeFraudSignalProvider>();
         services.AddScoped<IFraudSignalProvider, BehaviorAnomalyFraudSignalProvider>();
+        // Fraud blacklist (issue #409): tenant-scoped entry store with wildcard patterns,
+        // expiry and manual whitelist overrides, evaluated as a gate signal and administered
+        // through the fraud/blacklist endpoints; declined (confirmed-fraud) reviews add
+        // entries automatically.
+        services.AddScoped<IFraudBlacklistService, FraudBlacklistService>();
+        services.AddScoped<IFraudSignalProvider, BlacklistFraudSignalProvider>();
+        services.AddScoped<FraudReviewAutoBlacklister>();
         services.AddScoped<IFraudDetectionService, FraudDetectionService>();
 
         // Failure-code retry policy + automated retry queue (issue #415): classifies gateway
