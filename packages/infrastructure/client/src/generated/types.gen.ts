@@ -3157,6 +3157,11 @@ export interface CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequ
   tenantId?: string;
 }
 
+/** Request body for removing a payment method (destructive action; issue #414). */
+export interface CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody {
+  confirm?: boolean;
+}
+
 /** Request body for updating payment-method display fields. */
 export interface CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBody {
   billingAddress?: string | null;
@@ -24609,6 +24614,7 @@ export let CommercePaymentsPaymentFailureReasonBucketSchema: z.ZodType<CommerceP
 export let CommercePaymentsPaymentFailureReasonDistributionSchema: z.ZodType<CommercePaymentsPaymentFailureReasonDistribution>;
 export let CommercePaymentsPaymentMethodDtoSchema: z.ZodType<CommercePaymentsPaymentMethodDto>;
 export let CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBodySchema: z.ZodType<CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody>;
+export let CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBodySchema: z.ZodType<CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody>;
 export let CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBodySchema: z.ZodType<CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBody>;
 export let CommercePaymentsPaymentRecoveryMetricsSchema: z.ZodType<CommercePaymentsPaymentRecoveryMetrics>;
 export let CommercePaymentsPaymentResultSchema: z.ZodType<CommercePaymentsPaymentResult>;
@@ -29298,6 +29304,11 @@ CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBodySchema = z
   ownerUserId: z.string().uuid().nullable().optional(),
   setAsDefault: z.boolean().optional(),
   tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody. Request body for removing a payment method (destructive action; issue #414). */
+CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBodySchema = z.object({
+  confirm: z.boolean().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBody. Request body for updating payment-method display fields. */

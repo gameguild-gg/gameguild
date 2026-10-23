@@ -7350,12 +7350,13 @@ export const putBillingPaymentMethodsEndpoint = {
 } as const;
 
 /**
- * Remove a payment method (soft delete).
+ * Remove a payment method (confirmation required).
  *
- * Soft-deletes a payment method. Fails closed with 409 Conflict while any active subscription still bills with it; set a new default first to re-point subscriptions.
+ * Soft-deletes a payment method after explicit confirmation (body confirm=true). Without confirmation the request fails with 400. Fails closed with 409 Conflict while any active subscription still bills with it; set a new default first to re-point subscriptions.
  */
 export interface DeleteBillingPaymentMethodsInput {
   paymentMethodId: string;
+  body?: Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody;
 }
 export type DeleteBillingPaymentMethodsOutput = void;
 export const deleteBillingPaymentMethodsEndpoint = {
