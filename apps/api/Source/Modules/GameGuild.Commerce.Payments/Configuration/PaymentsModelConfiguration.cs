@@ -162,5 +162,10 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
         modelBuilder.ApplyConfiguration(new AccountCreditInvoiceSettlementConfiguration());
         modelBuilder.ApplyConfiguration(new GiftSubscriptionConfiguration());
         modelBuilder.ApplyConfiguration(new ReferralConfiguration());
+
+        // Fraud blacklist (issue #409): tenant-scoped entry store with wildcard patterns,
+        // expiry dates and manual whitelist overrides, evaluated as a payment fraud signal
+        // and administered through the fraud/blacklist endpoints.
+        modelBuilder.ApplyConfiguration(new FraudBlacklistEntryConfiguration());
     }
 }
