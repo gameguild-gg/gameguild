@@ -16,6 +16,7 @@ public sealed record ModuleEventCoverageEntry(
     IReadOnlyList<string> CommandsWithoutContracts,
     IReadOnlyList<string> CommandsMissingHandlers,
     IReadOnlyList<string> CommandsDuplicateHandlers,
+    IReadOnlyList<string> UnavailableCommands,
     string CoverageChannel)
 {
     public bool IsFullyCovered =>
@@ -75,7 +76,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
     /// Audit trail coverage families (issue #180): each family lists the action types its emitters
     /// record and the components that produce them. Kept as the living manifest of the audit surface.
     /// </summary>
-    internal static readonly IReadOnlyList<(string Family, string Coverage, string[] ActionTypes, string[] Evidence)> AuditTrailFamilies =
+    public static readonly IReadOnlyList<(string Family, string Coverage, string[] ActionTypes, string[] Evidence)> AuditTrailFamilies =
     [
         ("Authentication", "Login, logout, MFA and failure tracking for every interactive and token-based sign-in path.",
             [AuditActionTypes.Login, AuditActionTypes.Logout, AuditActionTypes.LoginFailed, AuditActionTypes.MfaVerified, AuditActionTypes.MfaFailed, AuditActionTypes.MfaEnabled, AuditActionTypes.MfaDisabled],
@@ -122,6 +123,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
     {
         var assemblies = LoadGameGuildAssemblies();
         var contracts = LoadCommandContracts(assemblies);
+        var unavailable = LoadUnavailableCommands(assemblies);
         var handlers = LoadCommandHandlers(assemblies);
         var modules = new List<ModuleEventCoverageEntry>();
         var gaps = new List<string>();
@@ -139,7 +141,9 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
             var withoutContracts = new List<string>();
             var missingHandlers = new List<string>();
             var duplicateHandlers = new List<string>();
+            var unavailableCommands = new List<string>();
             var contractCount = 0;
+            var handledCount = 0;
 
             foreach (var command in commands)
             {
@@ -153,13 +157,28 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
                 }
 
                 var handlerCount = handlers.TryGetValue(command, out var commandHandlers) ? commandHandlers.Count : 0;
-                if (handlerCount == 0)
-                {
-                    missingHandlers.Add(command.Name);
-                }
-                else if (handlerCount > 1)
+                if (handlerCount > 1)
                 {
                     duplicateHandlers.Add(command.Name);
+                }
+
+                if (handlerCount == 0)
+                {
+                    // A mutating command whose use-case contract explicitly declares the surface
+                    // unavailable (planned, not-yet-shipped APIs) cannot be dispatched by any user
+                    // interaction: it is reported as dormant, not as a coverage gap.
+                    if (unavailable.Contains(command))
+                    {
+                        unavailableCommands.Add(command.Name);
+                    }
+                    else
+                    {
+                        missingHandlers.Add(command.Name);
+                    }
+                }
+                else
+                {
+                    handledCount++;
                 }
             }
 
@@ -172,11 +191,12 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
                 assemblyName,
                 commands.Count,
                 contractCount,
-                commands.Count - missingHandlers.Count,
+                handledCount,
                 mutationEndpoints,
                 withoutContracts.OrderBy(name => name, StringComparer.Ordinal).ToList(),
                 missingHandlers.OrderBy(name => name, StringComparer.Ordinal).ToList(),
                 duplicateHandlers.OrderBy(name => name, StringComparer.Ordinal).ToList(),
+                unavailableCommands.OrderBy(name => name, StringComparer.Ordinal).ToList(),
                 channel));
 
             if (withoutContracts.Count > 0)
@@ -231,7 +251,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
     /// taxonomy classifies the platform catalog; these module-emitted literals are the second
     /// known source of audit action types and are recognized explicitly by the coverage check.
     /// </summary>
-    internal static readonly HashSet<string> KnownModuleEmittedActionTypes = new(StringComparer.Ordinal)
+    public static readonly HashSet<string> KnownModuleEmittedActionTypes = new(StringComparer.Ordinal)
     {
         "Content.Pages.PageCreated", "Content.Pages.PageUpdated", "Content.Pages.PageDeleted", "Content.Pages.PagePublished",
         "Content.Pages.PageUnpublished", "Content.Pages.PageSectionCreated", "Content.Pages.PageSectionUpdated",
@@ -354,6 +374,26 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
         return contracts;
     }
 
+    /// <summary>
+    /// Mutating commands whose use-case contract explicitly declares the operation surface
+    /// unavailable (planned but unshipped APIs). They are dormant by declaration: no live endpoint
+    /// dispatches them, so they are surfaced by the manifest instead of failing coverage.
+    /// </summary>
+    private static HashSet<Type> LoadUnavailableCommands(IEnumerable<Assembly> assemblies)
+    {
+        var unavailable = new HashSet<Type>();
+        foreach (var assembly in assemblies)
+        {
+            foreach (var attribute in assembly.GetCustomAttributes<UseCaseEventContractAttribute>()
+                         .Where(attribute => !string.IsNullOrWhiteSpace(attribute.UnavailableReason)))
+            {
+                unavailable.Add(attribute.CommandType);
+            }
+        }
+
+        return unavailable;
+    }
+
     private static Dictionary<Type, List<Type>> LoadCommandHandlers(IEnumerable<Assembly> assemblies)
     {
         var handlers = new Dictionary<Type, List<Type>>();
@@ -392,11 +432,14 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
 
     private static IEnumerable<Type> ExtractHandledCommands(Type type)
     {
+        // Handlers may implement the module-facing ICommandHandler leaf interfaces or the CQRS
+        // root IRequestHandler&lt;,&gt; directly; both dispatch through the same ISender pipeline,
+        // so both prove the command is operable and journaled by UseCaseOperationBehavior.
         foreach (var implemented in type.GetInterfaces())
         {
             if (implemented.IsGenericType
                 && implemented.GetGenericTypeDefinition() is var definition
-                && (definition == typeof(ICommandHandler<,>) || definition == typeof(ICommandHandler<>)))
+                && (definition == typeof(IRequestHandler<,>) || definition == typeof(ICommandHandler<,>) || definition == typeof(ICommandHandler<>)))
             {
                 yield return implemented.GetGenericArguments()[0];
             }
