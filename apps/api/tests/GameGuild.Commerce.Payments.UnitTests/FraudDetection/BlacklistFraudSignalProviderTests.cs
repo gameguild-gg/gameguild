@@ -28,7 +28,7 @@ public class BlacklistFraudSignalProviderTests : IAsyncDisposable
         await _context.SaveChangesAsync();
         await AddBlacklistEntryAsync(FraudBlacklistEntryType.PaymentMethodToken, "tok_stolen");
 
-        var signals = await CreateProvider().EvaluateAsync(Context(), Options(), CancellationToken.None);
+        var signals = await CreateProvider().EvaluateAsync(Context(paymentMethodId: "tok_stolen"), Options(), CancellationToken.None);
 
         var signal = signals.Should().ContainSingle().Subject;
         signal.SignalType.Should().Be("Blacklist.PaymentMethodToken");
@@ -43,7 +43,7 @@ public class BlacklistFraudSignalProviderTests : IAsyncDisposable
         await _context.SaveChangesAsync();
         await AddBlacklistEntryAsync(FraudBlacklistEntryType.CardFingerprint, "fp_bad");
 
-        var signals = await CreateProvider().EvaluateAsync(Context(), Options(), CancellationToken.None);
+        var signals = await CreateProvider().EvaluateAsync(Context(paymentMethodId: "tok_ok"), Options(), CancellationToken.None);
 
         var signal = signals.Should().ContainSingle().Subject;
         signal.SignalType.Should().Be("Blacklist.CardFingerprint");
@@ -79,7 +79,7 @@ public class BlacklistFraudSignalProviderTests : IAsyncDisposable
         await _context.SaveChangesAsync();
         await AddBlacklistEntryAsync(FraudBlacklistEntryType.PaymentMethodToken, "tok_other");
 
-        var signals = await CreateProvider().EvaluateAsync(Context(), Options(), CancellationToken.None);
+        var signals = await CreateProvider().EvaluateAsync(Context(paymentMethodId: "tok_clean"), Options(), CancellationToken.None);
 
         signals.Should().BeEmpty();
     }
@@ -92,7 +92,7 @@ public class BlacklistFraudSignalProviderTests : IAsyncDisposable
         await _context.SaveChangesAsync();
         await AddBlacklistEntryAsync(FraudBlacklistEntryType.PaymentMethodToken, "tok_secret");
 
-        var signals = await CreateProvider().EvaluateAsync(Context(), Options(), CancellationToken.None);
+        var signals = await CreateProvider().EvaluateAsync(Context(paymentMethodId: "tok_secret"), Options(), CancellationToken.None);
 
         var details = JsonDocument.Parse(signals.Single().Details).RootElement;
         details.GetProperty("matchedPattern").GetString().Should().Be("tok_secret"); // stored pattern, not derived data
@@ -102,8 +102,10 @@ public class BlacklistFraudSignalProviderTests : IAsyncDisposable
     private BlacklistFraudSignalProvider CreateProvider() =>
         new(_context, CreateBlacklistService(), NullLogger<BlacklistFraudSignalProvider>.Instance);
 
-    private FraudSignalContext Context(string? externalCustomerId = "cus_regular") =>
-        new(_tenantId, _paymentId, _subscriptionId, externalCustomerId, _paymentMethodId, 100m, "USD", 3);
+    private FraudSignalContext Context(
+        string? externalCustomerId = "cus_regular",
+        string? paymentMethodId = null) =>
+        new(_tenantId, _paymentId, _subscriptionId, externalCustomerId, paymentMethodId, 100m, "USD", 3);
 
     private static FraudAssessmentOptions Options() => new();
 

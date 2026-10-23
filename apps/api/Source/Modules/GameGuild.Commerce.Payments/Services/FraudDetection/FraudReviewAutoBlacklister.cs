@@ -101,7 +101,7 @@ public sealed class FraudReviewAutoBlacklister(
             entryType,
             value,
             reason,
-            IsWhitelist: false,
+            isWhitelist: false,
             FraudBlacklistSource.AutoFraudDecline,
             expiresAt,
             reviewedByUserId);
