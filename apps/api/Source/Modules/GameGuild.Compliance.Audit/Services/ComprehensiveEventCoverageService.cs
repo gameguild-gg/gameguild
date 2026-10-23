@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Reflection;
 using System.Runtime.Loader;
 using GameGuild.CQRS;
@@ -251,7 +252,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
     /// taxonomy classifies the platform catalog; these module-emitted literals are the second
     /// known source of audit action types and are recognized explicitly by the coverage check.
     /// </summary>
-    public static readonly HashSet<string> KnownModuleEmittedActionTypes = new(StringComparer.Ordinal)
+    public static readonly FrozenSet<string> KnownModuleEmittedActionTypes = new[]
     {
         "Content.Pages.PageCreated", "Content.Pages.PageUpdated", "Content.Pages.PageDeleted", "Content.Pages.PagePublished",
         "Content.Pages.PageUnpublished", "Content.Pages.PageSectionCreated", "Content.Pages.PageSectionUpdated",
@@ -264,7 +265,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
         "Learning.Certificates.CertificateRevoked", "Learning.Certificates.CertificateRenewed",
         "Learning.Certificates.TemplateCreated", "Learning.Certificates.TemplateUpdated",
         "Learning.Certificates.TemplateDeleted", "Learning.Certificates.TemplateDefaultChanged"
-    };
+    }.ToFrozenSet(StringComparer.Ordinal);
 
     private static bool IsActionTypeKnown(string actionType) =>
         KnownModuleEmittedActionTypes.Contains(actionType)
