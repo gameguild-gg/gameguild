@@ -66,6 +66,11 @@ public class LocationInfo
     public bool? IsProxy { get; set; }
 
     /// <summary>
+    ///     Whether the IP is a known Tor exit node.
+    /// </summary>
+    public bool? IsTor { get; set; }
+
+    /// <summary>
     ///     Whether the IP is from a known hosting provider.
     /// </summary>
     public bool? IsHosting { get; set; }

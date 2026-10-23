@@ -729,6 +729,34 @@ public sealed class SessionManagementService(
             }
         }
 
+        // Anonymous-network detection (issue #278 VPN/proxy detection): sessions or the
+        // current request resolved through known VPN/proxy/Tor/hosting networks raise the
+        // score even when the geography alone looks unremarkable. Traits are only present
+        // when the geolocation provider carries anonymous-IP data.
+        var networkObservations = sessionLocations
+            .Concat(requestLocation is not null ? new[] { requestLocation } : Array.Empty<LocationInfo>())
+            .ToList();
+        var torCount = networkObservations.Count(l => l.IsTor == true);
+        if (torCount > 0)
+        {
+            riskScore += 30;
+            riskFactors.Add($"Tor exit node usage: {torCount}");
+        }
+
+        var proxyCount = networkObservations.Count(l => l.IsProxy == true);
+        if (proxyCount > 0)
+        {
+            riskScore += 20;
+            riskFactors.Add($"VPN/proxy usage: {proxyCount}");
+        }
+
+        var hostingCount = networkObservations.Count(l => l.IsHosting == true);
+        if (hostingCount > 0)
+        {
+            riskScore += 10;
+            riskFactors.Add($"Hosting/datacenter network: {hostingCount}");
+        }
+
         // Per-session anomaly detection: an active session located outside the account's
         // usual country is flagged individually. The usual-country baseline is the country
         // of the active session matching the request IP (where the user is right now); when
@@ -804,7 +832,10 @@ public sealed class SessionManagementService(
                 ["max_observed_velocity_kmh"] = maxVelocityKmh is null
                     ? string.Empty
                     : maxVelocityKmh.Value.ToString("F0", CultureInfo.InvariantCulture),
-                ["anomalous_session_ids"] = string.Join(",", anomalousSessionIds)
+                ["anomalous_session_ids"] = string.Join(",", anomalousSessionIds),
+                ["anonymous_network_sessions"] = sessionLocations
+                    .Count(l => l.IsTor == true || l.IsProxy == true || l.IsHosting == true)
+                    .ToString(CultureInfo.InvariantCulture)
             }
         };
     }
