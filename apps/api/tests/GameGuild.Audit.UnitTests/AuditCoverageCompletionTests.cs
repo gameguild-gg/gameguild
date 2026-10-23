@@ -1236,7 +1236,7 @@ public class AuditControllerCoverageCompletionTests
             auditService ?? Mock.Of<IAuditService>(),
             actorAccessor.Object,
             NullLogger<AuditController>.Instance,
-            new CommandHandlerSender(auditService ?? Mock.Of<IAuditService>(), Mock.Of<ISecurityAuditAggregator>(), actorAccessor.Object),
+            new CommandHandlerSender(auditService ?? Mock.Of<IAuditService>(), Mock.Of<ISecurityAuditAggregator>(), actorAccessor.Object, new NoOpBulkExportMonitor()),
             exportProgressTracker ?? CreateProgressTracker(),
             exportWebhookNotifier ?? CreateWebhookNotifier(),
             Mock.Of<IScheduledAuditExportService>())
