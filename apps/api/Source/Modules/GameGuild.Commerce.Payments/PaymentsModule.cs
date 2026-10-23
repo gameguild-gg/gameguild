@@ -136,6 +136,7 @@ public static class PaymentsModule
             client.BaseAddress = new Uri(gatewayOptions.ResolveBaseUrl(), UriKind.Absolute);
             client.Timeout = TimeSpan.FromSeconds(Math.Max(1, gatewayOptions.RequestTimeoutSeconds));
         });
+        services.AddScoped<IAuthorizeNetApiClient>(provider => provider.GetRequiredService<AuthorizeNetApiClient>());
 
         services.AddSingleton<IValidateOptions<BraintreeGatewayOptions>, BraintreeGatewayOptionsValidator>();
         services.AddOptions<BraintreeGatewayOptions>()
@@ -147,6 +148,7 @@ public static class PaymentsModule
             client.BaseAddress = new Uri(gatewayOptions.ResolveBaseUrl(), UriKind.Absolute);
             client.Timeout = TimeSpan.FromSeconds(Math.Max(1, gatewayOptions.RequestTimeoutSeconds));
         });
+        services.AddScoped<IBraintreeApiClient>(provider => provider.GetRequiredService<BraintreeApiClient>());
 
         services.AddSingleton<IValidateOptions<AdyenGatewayOptions>, AdyenGatewayOptionsValidator>();
         services.AddOptions<AdyenGatewayOptions>()
@@ -158,6 +160,7 @@ public static class PaymentsModule
             client.BaseAddress = new Uri(gatewayOptions.ResolveBaseUrl(), UriKind.Absolute);
             client.Timeout = TimeSpan.FromSeconds(Math.Max(1, gatewayOptions.RequestTimeoutSeconds));
         });
+        services.AddScoped<IAdyenApiClient>(provider => provider.GetRequiredService<AdyenApiClient>());
 
         // Register services
         services.AddScoped<IDisputeService, DisputeService>();
