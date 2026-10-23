@@ -171,9 +171,10 @@ public static class DataDependencyInjection
         services.AddScoped<IOidcFederationService, OidcFederationService>();
         // SAML 2.0 federation (enterprise IdPs, issue #268) — config-supplied IdP certificates,
         // SP metadata + Assertion Consumer Service validation with single-use InResponseTo
-        // correlation and assertion-ID replay protection in IDistributedCache; config-gated per
-        // Authentication:ExternalProviders:Saml:<slug> (fail closed).
-        services.AddScoped<ISamlProtocolStateStore, DistributedCacheSamlProtocolStateStore>();
+        // correlation (bound to the issued RelayState) and assertion-ID replay protection,
+        // persisted atomically in the shared PostgreSQL schema across instances; config-gated
+        // per Authentication:ExternalProviders:Saml:<slug> (fail closed).
+        services.AddScoped<ISamlProtocolStateStore, PostgreSqlSamlProtocolStateStore>();
         services.AddScoped<ISamlFederationService, SamlFederationService>();
         services.AddScoped<IWeb3Service, Web3Service>();
         services.AddScoped<IServiceAccountService, ServiceAccountService>();
