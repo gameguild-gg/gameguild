@@ -304,7 +304,6 @@ public sealed class AuditModelConfiguration : IModelConfiguration
             entity.HasIndex(revision => new { revision.SavedAuditQueryId, revision.Revision }).IsUnique();
         });
 
-<<<<<<< HEAD
         // Field-level data access auditing (issue #186).
         modelBuilder.Entity<FieldAccessAudit>(entity =>
         {
@@ -417,7 +416,8 @@ public sealed class AuditModelConfiguration : IModelConfiguration
             entity.Property(item => item.Category).HasConversion<int>();
             entity.Property(item => item.Action).HasConversion<int>();
             entity.HasIndex(item => new { item.TenantId, item.Category }).IsUnique();
-=======
+        });
+
         // Mutation value snapshots (issue #176): insert-only forensic value store staged in the
         // same SaveChanges call as each mutation. No FKs by design: snapshots outlive the rows
         // they describe and retention may strip payloads while checksums stay verifiable.
@@ -584,7 +584,6 @@ public sealed class AuditModelConfiguration : IModelConfiguration
             entity.Property(accessLog => accessLog.Reason).HasMaxLength(500).IsRequired();
             entity.Property(accessLog => accessLog.Purpose).HasMaxLength(1000);
             entity.HasIndex(accessLog => new { accessLog.TenantId, accessLog.EvidenceId, accessLog.OccurredAtUtc });
->>>>>>> origin/develop
         });
     }
 }

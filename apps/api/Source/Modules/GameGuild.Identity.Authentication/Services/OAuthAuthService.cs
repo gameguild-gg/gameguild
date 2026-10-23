@@ -30,11 +30,8 @@ public class OAuthAuthService(
     ISessionManagementService sessionManagementService,
     ILogger<OAuthAuthService> logger,
     IOptions<JwtOptions>? jwtOptions = null,
-<<<<<<< HEAD
-    IAuthenticationAuditEventSink? auditEventSink = null
-=======
+    IAuthenticationAuditEventSink? auditEventSink = null,
     ISamlFederationService? samlFederationService = null
->>>>>>> origin/develop
 ) : IOAuthAuthService
 {
     public async Task<SignInResponse> GitHubSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
