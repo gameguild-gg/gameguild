@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using FluentAssertions;
+using GameGuild.API.Setup;
 using GameGuild.Configuration.PresentationLayer;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
