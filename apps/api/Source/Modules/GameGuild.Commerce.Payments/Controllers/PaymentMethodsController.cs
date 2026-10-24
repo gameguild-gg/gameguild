@@ -159,18 +159,24 @@ public sealed class PaymentMethodsController(
     }
 
     /// <summary>
-    ///     Remove a payment method (soft delete).
+    ///     Remove a payment method (soft delete, explicit confirmation required).
     /// </summary>
     [HttpDelete("{paymentMethodId:guid}")]
-    [EndpointSummary("Remove a payment method")]
-    [EndpointDescription("Soft-deletes a payment method. Fails closed with 409 Conflict while any active subscription still bills with it; set a new default first to re-point subscriptions.")]
+    [EndpointSummary("Remove a payment method (confirmation required)")]
+    [EndpointDescription("Soft-deletes a payment method after explicit confirmation (body confirm=true). Without confirmation the request fails with 400. Fails closed with 409 Conflict while any active subscription still bills with it; set a new default first to re-point subscriptions.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Delete(Guid paymentMethodId, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(Guid paymentMethodId, [FromBody] RemovePaymentMethodRequestBody? body = null, CancellationToken ct = default)
     {
-        var result = await sender.Send(new RemovePaymentMethodCommand(paymentMethodId), ct).ConfigureAwait(false);
+        if (body?.Confirm != true)
+        {
+            return BadRequest(new { error = "Removing a payment method requires confirmation. Re-issue the request with confirm=true." });
+        }
+
+        var result = await sender.Send(new RemovePaymentMethodCommand(paymentMethodId, body.Confirm), ct).ConfigureAwait(false);
 
         return FromResult(result);
     }
@@ -190,6 +196,11 @@ public sealed class PaymentMethodsController(
     ///     Request body for updating payment-method display fields.
     /// </summary>
     public sealed record UpdatePaymentMethodRequestBody(string? Nickname = null, string? BillingAddress = null);
+
+    /// <summary>
+    ///     Request body for removing a payment method (destructive action; issue #414).
+    /// </summary>
+    public sealed record RemovePaymentMethodRequestBody(bool Confirm = false);
 
     #region Private Methods
 

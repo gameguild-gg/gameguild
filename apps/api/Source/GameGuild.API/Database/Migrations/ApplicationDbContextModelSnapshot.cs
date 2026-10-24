@@ -2954,8 +2954,12 @@ namespace GameGuild.API.Database.Migrations
 
                     b.Property<string>("GatewayPaymentMethodId")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("GatewayPaymentMethodIdHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("GatewayProvider")
                         .IsRequired()
@@ -3001,6 +3005,8 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("GatewayPaymentMethodId");
 
+                    b.HasIndex("GatewayPaymentMethodIdHash");
+
                     b.HasIndex("TenantId", "UserId")
                         .IsUnique()
                         .HasDatabaseName("ix_payment_methods_single_default")
@@ -3009,6 +3015,11 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId", "GatewayProvider", "GatewayPaymentMethodId")
                         .IsUnique()
                         .HasDatabaseName("ix_payment_methods_tenant_gateway_unique")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
+                    b.HasIndex("TenantId", "GatewayProvider", "GatewayPaymentMethodIdHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_payment_methods_tenant_gateway_hash_unique")
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex("TenantId", "UserId", "IsDefault");

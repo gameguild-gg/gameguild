@@ -1,22 +1,35 @@
+using System.Text.Json;
 using GameGuild.Commerce;
+using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Payment-method registry management (issue #414): tokenized registration, display
-///     updates, single-default invariant with subscription re-pointing, and a fail-closed
-///     delete guard while billable subscriptions still reference a method.
+///     Payment-method registry management (issue #414): tokenized registration with
+/// duplicate-card (fingerprint) rejection, display updates, single-default invariant with
+/// subscription re-pointing, a fail-closed delete guard while billable subscriptions still
+/// reference a method, encrypted-at-rest gateway references (DataProtection), audit
+/// trail rows for every registry mutation, and confirmation events on add/remove.
 /// </summary>
 public class PaymentMethodRegistryService(
     IPaymentMethodRepository repository,
     IStripeCustomerService stripeCustomerService,
     ISubscriptionPaymentMethodCoordination subscriptionCoordination,
     IApplicationDbContext context,
-    ILogger<PaymentMethodRegistryService> logger) : IPaymentMethodService
+    ILogger<PaymentMethodRegistryService> logger,
+    IGatewayPaymentMethodIdProtector? gatewayIdProtector = null,
+    IRevenueAuditService? revenueAuditService = null,
+    IPublisher? publisher = null) : IPaymentMethodService
 {
     private const string GatewayProviderStripe = "stripe";
+
+    private readonly IGatewayPaymentMethodIdProtector _gatewayIdProtector =
+        gatewayIdProtector ?? PassthroughGatewayPaymentMethodIdProtector.Instance;
+
+    private readonly IRevenueAuditService? _revenueAuditService = revenueAuditService;
+    private readonly IPublisher? _publisher = publisher;
 
     /// <inheritdoc />
     public async Task<Result<IReadOnlyList<PaymentMethodDto>>> ListAsync(
@@ -34,7 +47,7 @@ public class PaymentMethodRegistryService(
             .ListAsync(tenantId, scopeToOwner ? actor.UserId : null, cancellationToken)
             .ConfigureAwait(false);
 
-        return Result.Success<IReadOnlyList<PaymentMethodDto>>(methods.Select(ToDto).ToList());
+        return Result.Success<IReadOnlyList<PaymentMethodDto>>(methods.Select(method => ToDto(method, _gatewayIdProtector)).ToList());
     }
 
     /// <inheritdoc />
@@ -59,7 +72,7 @@ public class PaymentMethodRegistryService(
             return Result.Failure<PaymentMethodDto>(accessError);
         }
 
-        return Result.Success(ToDto(paymentMethod));
+        return Result.Success(ToDto(paymentMethod, _gatewayIdProtector));
     }
 
     /// <inheritdoc />
@@ -203,7 +216,9 @@ public class PaymentMethodRegistryService(
         paymentMethod.UpdateDisplay(request.Nickname, request.BillingAddress);
         await repository.UpdateAsync(paymentMethod, cancellationToken).ConfigureAwait(false);
 
-        return Result.Success(ToDto(paymentMethod));
+        await RecordAuditAsync(actor, paymentMethod, "Updated", cancellationToken).ConfigureAwait(false);
+
+        return Result.Success(ToDto(paymentMethod, _gatewayIdProtector));
     }
 
     /// <inheritdoc />
@@ -274,18 +289,30 @@ public class PaymentMethodRegistryService(
             throw;
         }
 
-        return Result.Success(ToDto(paymentMethod));
+        await RecordAuditAsync(actor, paymentMethod, "StatusChanged", cancellationToken).ConfigureAwait(false);
+
+        return Result.Success(ToDto(paymentMethod, _gatewayIdProtector));
     }
 
     /// <inheritdoc />
     public async Task<Result> DeleteAsync(
         PaymentMethodActor actor,
         Guid paymentMethodId,
+        bool confirm = false,
         CancellationToken cancellationToken = default)
     {
         if (!TryValidateActor(actor, out var actorError))
         {
             return Result.Failure(actorError);
+        }
+
+        if (!confirm)
+        {
+            // Removing a payment method is a destructive, confirmation-required action
+            // (issue #414): callers must pass an explicit confirm flag.
+            return Result.Failure(Error.Validation(
+                "PaymentMethods.DeleteConfirmationRequired",
+                "Removing a payment method requires confirmation. Re-issue the request with confirm=true."));
         }
 
         var paymentMethod = await repository.GetByIdAsync(paymentMethodId, cancellationToken).ConfigureAwait(false);
@@ -320,6 +347,11 @@ public class PaymentMethodRegistryService(
             "Payment method {PaymentMethodId} soft-deleted for tenant {TenantId}.",
             paymentMethodId, tenantId);
 
+        await RecordAuditAsync(actor, paymentMethod, "Deleted", cancellationToken).ConfigureAwait(false);
+        await PublishSafeAsync(
+            new PaymentMethodDeletedEvent(paymentMethod.Id, tenantId, paymentMethod.UserId, paymentMethod.CardBrand, paymentMethod.CardLast4),
+            cancellationToken).ConfigureAwait(false);
+
         return Result.Success();
     }
 
@@ -349,20 +381,57 @@ public class PaymentMethodRegistryService(
                 .ConfigureAwait(false);
         }
 
+        // Duplicate-card detection (issue #414): a brand-new token (or the restoration of a
+        // removed one) whose gateway fingerprint already belongs to another live method of
+        // the same owner is rejected — the customer must reuse the existing entry. The same
+        // token being re-registered is exempt (it is its own fingerprint match).
+        if (existing is null
+            && !string.IsNullOrWhiteSpace(gatewayDetails.CardFingerprint))
+        {
+            var duplicate = await repository
+                .GetLiveByFingerprintAsync(
+                    tenantId,
+                    ownerUserId,
+                    GatewayProviderStripe,
+                    gatewayDetails.CardFingerprint,
+                    excludePaymentMethodId: deleted?.Id,
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            if (duplicate is not null)
+            {
+                logger.LogInformation(
+                    "Duplicate card registration rejected for tenant {TenantId} user {UserId}: fingerprint of token {GatewayPaymentMethodId} already registered as payment method {ExistingPaymentMethodId}.",
+                    tenantId, ownerUserId, LogRedaction.RedactId(gatewayPaymentMethodId, "pm"), duplicate.Id);
+                return Result.Failure<PaymentMethodDto>(Error.Conflict(
+                    "PaymentMethods.DuplicateCard",
+                    "This card is already registered. A card can only be saved once per user; reuse or set the existing entry as the default instead of adding it again."));
+            }
+        }
+
         var firstForOwner = existing is null
                             && deleted is null
                             && await repository.GetDefaultAsync(tenantId, ownerUserId, cancellationToken).ConfigureAwait(false) is null;
 
         var shouldBeDefault = setAsDefault || firstForOwner;
 
+        // Encrypted-at-rest gateway reference (issue #414): stored value is protected with
+        // DataProtection; equality lookups use the deterministic hash instead of ciphertext.
+        var protectedGatewayId = _gatewayIdProtector.Protect(gatewayPaymentMethodId);
+        var gatewayIdHash = GatewayPaymentMethodIdHash.Compute(GatewayProviderStripe, gatewayPaymentMethodId);
+
         await using var transaction = await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             PaymentMethod paymentMethod;
+            string auditAction;
+            bool restored;
             if (existing is not null)
             {
                 paymentMethod = existing;
                 paymentMethod.UpdateGatewayMetadata(type, gatewayDetails.CardBrand, gatewayDetails.CardLast4, gatewayDetails.CardExpMonth, gatewayDetails.CardExpYear, gatewayDetails.CardFingerprint);
+                auditAction = "Updated";
+                restored = false;
             }
             else if (deleted is not null)
             {
@@ -370,13 +439,27 @@ public class PaymentMethodRegistryService(
                 paymentMethod = deleted;
                 paymentMethod.Restore();
                 paymentMethod.UpdateGatewayMetadata(type, gatewayDetails.CardBrand, gatewayDetails.CardLast4, gatewayDetails.CardExpMonth, gatewayDetails.CardExpYear, gatewayDetails.CardFingerprint);
+                auditAction = "Restored";
+                restored = true;
             }
             else
             {
-                paymentMethod = new PaymentMethod(tenantId, ownerUserId, GatewayProviderStripe, gatewayPaymentMethodId, type, isDefault: false);
+                paymentMethod = new PaymentMethod(tenantId, ownerUserId, GatewayProviderStripe, protectedGatewayId, type, isDefault: false);
                 paymentMethod.UpdateGatewayMetadata(type, gatewayDetails.CardBrand, gatewayDetails.CardLast4, gatewayDetails.CardExpMonth, gatewayDetails.CardExpYear, gatewayDetails.CardFingerprint);
                 paymentMethod.UpdateDisplay(nickname, billingAddress);
-                await repository.AddAsync(paymentMethod, cancellationToken).ConfigureAwait(false);
+                auditAction = "Created";
+                restored = false;
+            }
+
+            // New rows store the protected reference; legacy rows are migrated lazily the
+            // next time their token is registered.
+            if (!_gatewayIdProtector.IsProtected(paymentMethod.GatewayPaymentMethodId))
+            {
+                paymentMethod.StoreProtectedGatewayReference(protectedGatewayId, gatewayIdHash);
+            }
+            else if (paymentMethod.GatewayPaymentMethodIdHash is null)
+            {
+                paymentMethod.StoreProtectedGatewayReference(paymentMethod.GatewayPaymentMethodId, gatewayIdHash);
             }
 
             if (shouldBeDefault && !paymentMethod.IsDefault)
@@ -415,7 +498,10 @@ public class PaymentMethodRegistryService(
             await repository.UpdateAsync(paymentMethod, cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
-            return Result.Success(ToDto(paymentMethod));
+            await RecordAuditAsync(actor, paymentMethod, auditAction, cancellationToken).ConfigureAwait(false);
+            await PublishRegistrationAsync(paymentMethod, gatewayPaymentMethodId, restored, cancellationToken).ConfigureAwait(false);
+
+            return Result.Success(ToDto(paymentMethod, _gatewayIdProtector));
         }
         catch
         {
@@ -492,13 +578,103 @@ public class PaymentMethodRegistryService(
     private static Error NotFoundError(Guid paymentMethodId) =>
         Error.NotFound("PaymentMethods.NotFound", $"Payment method {paymentMethodId} was not found.");
 
-    private static PaymentMethodDto ToDto(PaymentMethod paymentMethod) => new(
+    /// <summary>
+    ///     Writes an audit-trail row for a registry mutation (issue #414): every create,
+    ///     update, set-default and delete is attributable. Payload is display-safe metadata
+    ///     only — the protected gateway reference never enters the audit trail.
+    /// </summary>
+    private async Task RecordAuditAsync(
+        PaymentMethodActor actor,
+        PaymentMethod paymentMethod,
+        string action,
+        CancellationToken cancellationToken)
+    {
+        if (_revenueAuditService is null)
+        {
+            return;
+        }
+
+        var changedBy = actor.UserId != Guid.Empty ? actor.UserId : paymentMethod.UserId;
+        var newValue = JsonSerializer.Serialize(new
+        {
+            type = paymentMethod.Type.ToString(),
+            gatewayProvider = paymentMethod.GatewayProvider,
+            cardBrand = paymentMethod.CardBrand,
+            cardLast4 = paymentMethod.CardLast4,
+            isDefault = paymentMethod.IsDefault,
+            status = paymentMethod.Status.ToString()
+        });
+
+        await _revenueAuditService.RecordAuditTrailAsync(
+            entityType: nameof(PaymentMethod),
+            entityId: paymentMethod.Id,
+            action: action,
+            changedBy: changedBy,
+            oldValue: null,
+            newValue: newValue,
+            reason: action switch
+            {
+                "Created" => "Payment method registered from a gateway token",
+                "Restored" => "Previously removed payment method re-registered",
+                "Deleted" => "Payment method removed after explicit confirmation",
+                "StatusChanged" => "Payment method set as the owner's default",
+                _ => "Payment method updated"
+            },
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Publishes the registration confirmation event (issue #414) after the transaction
+    ///     committed. Best-effort: notification pipeline problems never fail the registration.
+    /// </summary>
+    private async Task PublishRegistrationAsync(
+        PaymentMethod paymentMethod,
+        string gatewayPaymentMethodId,
+        bool restored,
+        CancellationToken cancellationToken)
+        => await PublishSafeAsync(
+            new PaymentMethodRegisteredEvent(
+                paymentMethod.Id,
+                paymentMethod.TenantId ?? Guid.Empty,
+                paymentMethod.UserId,
+                gatewayPaymentMethodId,
+                paymentMethod.CardBrand,
+                paymentMethod.CardLast4,
+                restored),
+            cancellationToken).ConfigureAwait(false);
+
+    private async Task PublishSafeAsync<TNotification>(TNotification domainEvent, CancellationToken cancellationToken)
+        where TNotification : INotification
+    {
+        if (_publisher is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _publisher.Publish(domainEvent, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Failed to publish payment-method event {EventType}; the registry mutation stays committed.",
+                domainEvent.GetType().Name);
+        }
+    }
+
+    private static PaymentMethodDto ToDto(PaymentMethod paymentMethod, IGatewayPaymentMethodIdProtector protector) => new(
         paymentMethod.Id,
         paymentMethod.TenantId ?? Guid.Empty,
         paymentMethod.UserId,
         paymentMethod.Type.ToString(),
         paymentMethod.GatewayProvider,
-        paymentMethod.GatewayPaymentMethodId,
+        protector.Unprotect(paymentMethod.GatewayPaymentMethodId),
         paymentMethod.IsDefault,
         paymentMethod.Status.ToString(),
         paymentMethod.CardBrand,
@@ -512,4 +688,31 @@ public class PaymentMethodRegistryService(
         paymentMethod.GetDaysUntilExpiry(SystemClock.UtcNow),
         paymentMethod.CreatedAt,
         paymentMethod.UpdatedAt);
+}
+
+/// <summary>
+///     Identity protector used when no DataProtection-backed protector is supplied (unit
+///     tests, legacy hosting): values are stored and returned unchanged.
+/// </summary>
+internal sealed class PassthroughGatewayPaymentMethodIdProtector : IGatewayPaymentMethodIdProtector
+{
+    public static readonly PassthroughGatewayPaymentMethodIdProtector Instance = new();
+
+    private PassthroughGatewayPaymentMethodIdProtector()
+    {
+    }
+
+    public string Protect(string gatewayPaymentMethodId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(gatewayPaymentMethodId);
+        return gatewayPaymentMethodId.Trim();
+    }
+
+    public string Unprotect(string storedGatewayPaymentMethodId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(storedGatewayPaymentMethodId);
+        return storedGatewayPaymentMethodId.Trim();
+    }
+
+    public bool IsProtected(string storedGatewayPaymentMethodId) => false;
 }

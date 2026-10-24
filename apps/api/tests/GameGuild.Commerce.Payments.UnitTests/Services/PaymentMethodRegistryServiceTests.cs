@@ -1,6 +1,8 @@
 using FluentAssertions;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce;
+using GameGuild.CQRS;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -19,6 +21,8 @@ public class PaymentMethodRegistryServiceTests : IDisposable
     private readonly PaymentMethodRepository _repository;
     private readonly Mock<IStripeCustomerService> _stripeCustomerService = new();
     private readonly Mock<ISubscriptionPaymentMethodCoordination> _coordination = new();
+    private readonly Mock<IRevenueAuditService> _revenueAudit = new();
+    private readonly Mock<IPublisher> _publisher = new();
     private readonly PaymentMethodRegistryService _service;
 
     public PaymentMethodRegistryServiceTests()
@@ -34,7 +38,10 @@ public class PaymentMethodRegistryServiceTests : IDisposable
             _stripeCustomerService.Object,
             _coordination.Object,
             _context,
-            NullLogger<PaymentMethodRegistryService>.Instance);
+            NullLogger<PaymentMethodRegistryService>.Instance,
+            gatewayIdProtector: null,
+            revenueAuditService: _revenueAudit.Object,
+            publisher: _publisher.Object);
     }
 
     public void Dispose() => _context.Dispose();
@@ -363,7 +370,7 @@ public class PaymentMethodRegistryServiceTests : IDisposable
             .Setup(c => c.CountBillableSubscriptionsOnPaymentMethodAsync(tenantId, seeded.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(2);
 
-        var result = await _service.DeleteAsync(OwnerActor(tenantId, owner), seeded.Id, CancellationToken.None);
+        var result = await _service.DeleteAsync(OwnerActor(tenantId, owner), seeded.Id, confirm: true, CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Code.Should().Be("PaymentMethods.InUseBySubscriptions");
@@ -385,7 +392,7 @@ public class PaymentMethodRegistryServiceTests : IDisposable
             .Setup(c => c.CountBillableSubscriptionsOnPaymentMethodAsync(tenantId, seeded.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 
-        var result = await _service.DeleteAsync(OwnerActor(tenantId, owner), seeded.Id, CancellationToken.None);
+        var result = await _service.DeleteAsync(OwnerActor(tenantId, owner), seeded.Id, confirm: true, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         (await _repository.GetByIdAsync(seeded.Id, CancellationToken.None)).Should().BeNull();
@@ -399,7 +406,7 @@ public class PaymentMethodRegistryServiceTests : IDisposable
         var tenantId = Guid.NewGuid();
         var seeded = await SeedAsync(tenantId, Guid.NewGuid(), "pm_owner_delete");
 
-        var result = await _service.DeleteAsync(OwnerActor(tenantId, Guid.NewGuid()), seeded.Id, CancellationToken.None);
+        var result = await _service.DeleteAsync(OwnerActor(tenantId, Guid.NewGuid()), seeded.Id, confirm: true, CancellationToken.None);
 
         result.Error.Code.Should().Be("PaymentMethods.NotOwner");
     }
@@ -459,5 +466,395 @@ public class PaymentMethodRegistryServiceTests : IDisposable
         result.IsSuccess.Should().BeTrue("checkout already succeeded at the gateway; the local mirror must not fail the flow");
         result.Value.GatewayPaymentMethodId.Should().Be("pm_gateway_down");
         result.Value.CardLast4.Should().BeNull();
+    }
+
+    // ── Duplicate-card detection (issue #414) ───────────────────────────
+
+    [Fact]
+    public async Task Create_DuplicateCardFingerprintForSameOwner_ShouldBeRejectedWithConflict()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        await SeedAsync(tenantId, userId, "pm_original_card"); // fingerprint fp_pm_original_card
+        _stripeCustomerService
+            .Setup(service => service.GetPaymentMethodAsync("pm_same_card", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayPaymentMethodDetailsResult(
+                Success: true,
+                PaymentMethodId: "pm_same_card",
+                Details: new GatewayPaymentMethodDetails("card", "visa", "4242", 12, 2031, "fp_pm_original_card", null, null, null),
+                ErrorCode: null,
+                ErrorMessage: null));
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, userId),
+            new CreatePaymentMethodRequest(tenantId, "pm_same_card"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Code.Should().Be("PaymentMethods.DuplicateCard");
+        result.Error.Type.Should().Be(ErrorType.Conflict);
+
+        var all = await _repository.ListAsync(tenantId, null, CancellationToken.None);
+        all.Should().ContainSingle("the duplicate card must not create a second registry row");
+    }
+
+    [Fact]
+    public async Task Create_SameFingerprintForDifferentOwner_ShouldBeAllowed()
+    {
+        var tenantId = Guid.NewGuid();
+        await SeedAsync(tenantId, Guid.NewGuid(), "pm_corporate_card");
+        _stripeCustomerService
+            .Setup(service => service.GetPaymentMethodAsync("pm_shared_card", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayPaymentMethodDetailsResult(
+                Success: true,
+                PaymentMethodId: "pm_shared_card",
+                Details: new GatewayPaymentMethodDetails("card", "visa", "4242", 12, 2031, "fp_pm_corporate_card", null, null, null),
+                ErrorCode: null,
+                ErrorMessage: null));
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, Guid.NewGuid()),
+            new CreatePaymentMethodRequest(tenantId, "pm_shared_card"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue("fingerprint dedup is scoped per owner; different users may share a card");
+    }
+
+    [Fact]
+    public async Task Create_SameFingerprintAcrossTenants_ShouldBeAllowed()
+    {
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+        await SeedAsync(tenantA, Guid.NewGuid(), "pm_tenant_a_card");
+        _stripeCustomerService
+            .Setup(service => service.GetPaymentMethodAsync("pm_tenant_b_card", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayPaymentMethodDetailsResult(
+                Success: true,
+                PaymentMethodId: "pm_tenant_b_card",
+                Details: new GatewayPaymentMethodDetails("card", "visa", "4242", 12, 2031, "fp_pm_tenant_a_card", null, null, null),
+                ErrorCode: null,
+                ErrorMessage: null));
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantB, Guid.NewGuid()),
+            new CreatePaymentMethodRequest(tenantB, "pm_tenant_b_card"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue("fingerprint dedup is scoped per tenant and owner");
+    }
+
+    [Fact]
+    public async Task Create_ReRegisteringRemovedToken_WhenAnotherLiveMethodHoldsTheFingerprint_ShouldBeRejected()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var removed = await SeedAsync(tenantId, userId, "pm_removed_card");
+        removed.SoftDelete();
+        await _repository.UpdateAsync(removed, CancellationToken.None);
+        // Same owner later registers the same physical card through a fresh token that
+        // shares the fingerprint with a different live method.
+        await SeedAsync(tenantId, userId, "pm_reissued_card");
+        _stripeCustomerService
+            .Setup(service => service.GetPaymentMethodAsync("pm_removed_card", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayPaymentMethodDetailsResult(
+                Success: true,
+                PaymentMethodId: "pm_removed_card",
+                Details: new GatewayPaymentMethodDetails("card", "visa", "4242", 12, 2031, "fp_pm_reissued_card", null, null, null),
+                ErrorCode: null,
+                ErrorMessage: null));
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, userId),
+            new CreatePaymentMethodRequest(tenantId, "pm_removed_card"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Code.Should().Be("PaymentMethods.DuplicateCard");
+    }
+
+    [Fact]
+    public async Task Create_MethodWithoutFingerprint_ShouldBypassDedup()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        await SeedAsync(tenantId, userId, "pm_with_fp");
+        _stripeCustomerService
+            .Setup(service => service.GetPaymentMethodAsync("pm_no_fp", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayPaymentMethodDetailsResult(
+                Success: true,
+                PaymentMethodId: "pm_no_fp",
+                Details: new GatewayPaymentMethodDetails("us_bank_account", null, null, null, null, null, "First Bank", "0002", null),
+                ErrorCode: null,
+                ErrorMessage: null));
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, userId),
+            new CreatePaymentMethodRequest(tenantId, "pm_no_fp"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue("methods without a gateway fingerprint cannot be deduplicated");
+    }
+
+    // ── Delete confirmation (issue #414) ────────────────────────────────
+
+    [Fact]
+    public async Task Delete_WithoutConfirmFlag_ShouldFailClosedWithValidationError()
+    {
+        var tenantId = Guid.NewGuid();
+        var owner = Guid.NewGuid();
+        var seeded = await SeedAsync(tenantId, owner, "pm_needs_confirm");
+
+        var result = await _service.DeleteAsync(OwnerActor(tenantId, owner), seeded.Id, confirm: false, CancellationToken.None);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Code.Should().Be("PaymentMethods.DeleteConfirmationRequired");
+        result.Error.Type.Should().Be(ErrorType.Validation);
+
+        var stillThere = await _repository.GetByIdAsync(seeded.Id, CancellationToken.None);
+        stillThere.Should().NotBeNull("the unconfirmed delete must not touch the row");
+    }
+
+    // ── Audit trail + confirmation events (issue #414) ──────────────────
+
+    [Fact]
+    public async Task Create_ShouldRecordAuditTrailRow()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        SetupGatewayDetails("pm_audited");
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, userId),
+            new CreatePaymentMethodRequest(tenantId, "pm_audited"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _revenueAudit.Verify(
+            audit => audit.RecordAuditTrailAsync(
+                nameof(PaymentMethod),
+                result.Value.Id,
+                "Created",
+                userId,
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Delete_ShouldRecordAuditTrailRowAndPublishDeletedEvent()
+    {
+        var tenantId = Guid.NewGuid();
+        var owner = Guid.NewGuid();
+        var seeded = await SeedAsync(tenantId, owner, "pm_audit_delete");
+        _coordination
+            .Setup(c => c.CountBillableSubscriptionsOnPaymentMethodAsync(tenantId, seeded.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        var result = await _service.DeleteAsync(OwnerActor(tenantId, owner), seeded.Id, confirm: true, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _revenueAudit.Verify(
+            audit => audit.RecordAuditTrailAsync(
+                nameof(PaymentMethod),
+                seeded.Id,
+                "Deleted",
+                owner,
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        _publisher.Verify(
+            publisher => publisher.Publish(
+                It.Is<PaymentMethodDeletedEvent>(domainEvent =>
+                    domainEvent.PaymentMethodId == seeded.Id
+                    && domainEvent.UserId == owner
+                    && domainEvent.CardLast4 == "4242"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task SetDefault_ShouldRecordAuditTrailRow()
+    {
+        var tenantId = Guid.NewGuid();
+        var owner = Guid.NewGuid();
+        var candidate = await SeedAsync(tenantId, owner, "pm_audit_default");
+
+        var result = await _service.SetDefaultAsync(OwnerActor(tenantId, owner), candidate.Id, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _revenueAudit.Verify(
+            audit => audit.RecordAuditTrailAsync(
+                nameof(PaymentMethod),
+                candidate.Id,
+                It.IsAny<string>(),
+                It.IsAny<Guid>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Create_ShouldPublishRegisteredEventWithDisplayDetails()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        SetupGatewayDetails("pm_confirm_email");
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, userId),
+            new CreatePaymentMethodRequest(tenantId, "pm_confirm_email"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _publisher.Verify(
+            publisher => publisher.Publish(
+                It.Is<PaymentMethodRegisteredEvent>(domainEvent =>
+                    domainEvent.PaymentMethodId == result.Value.Id
+                    && domainEvent.UserId == userId
+                    && domainEvent.TenantId == tenantId
+                    && domainEvent.GatewayPaymentMethodId == "pm_confirm_email"
+                    && domainEvent.CardBrand == "visa"
+                    && domainEvent.CardLast4 == "4242"
+                    && !domainEvent.Restored),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Create_PublishFailure_ShouldNotFailTheRegistration()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        SetupGatewayDetails("pm_publish_blows");
+        _publisher
+            .Setup(publisher => publisher.Publish(It.IsAny<PaymentMethodRegisteredEvent>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("notification pipeline down"));
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, userId),
+            new CreatePaymentMethodRequest(tenantId, "pm_publish_blows"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue("confirmation emails are best-effort; the registry mutation stays committed");
+    }
+
+    // ── Encrypted-at-rest gateway references (issue #414) ───────────────
+
+    [Fact]
+    public async Task Create_WithProtector_ShouldStoreProtectedReferenceAndHash()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var context = NewContext();
+        var repository = new PaymentMethodRepository(context, NullLogger<PaymentMethodRepository>.Instance);
+        var protector = new DataProtectionGatewayPaymentMethodIdProtector(new EphemeralDataProtectionProvider());
+        var service = new PaymentMethodRegistryService(
+            repository,
+            _stripeCustomerService.Object,
+            _coordination.Object,
+            context,
+            NullLogger<PaymentMethodRegistryService>.Instance,
+            gatewayIdProtector: protector);
+        SetupGatewayDetails("pm_secret_storage");
+
+        var result = await service.CreateAsync(
+            OwnerActor(tenantId, userId),
+            new CreatePaymentMethodRequest(tenantId, "pm_secret_storage"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.GatewayPaymentMethodId.Should().Be("pm_secret_storage", "the DTO always exposes the plaintext token");
+
+        var stored = await context.Set<PaymentMethod>().SingleAsync(pm => pm.Id == result.Value.Id, CancellationToken.None);
+        stored.GatewayPaymentMethodId.Should().NotBe("pm_secret_storage", "the stored reference must not be plaintext");
+        protector.IsProtected(stored.GatewayPaymentMethodId).Should().BeTrue();
+        stored.GatewayPaymentMethodIdHash.Should().Be(GatewayPaymentMethodIdHash.Compute("stripe", "pm_secret_storage"));
+
+        // The registry resolves the row by its plaintext token through the hash.
+        var resolved = await repository.GetByGatewayIdAsync(tenantId, "stripe", "pm_secret_storage", CancellationToken.None);
+        resolved.Should().NotBeNull();
+        resolved!.Id.Should().Be(result.Value.Id);
+    }
+
+    [Fact]
+    public async Task Create_WithProtector_LegacyPlaintextRowIsMigratedOnReRegister()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var context = NewContext();
+        var repository = new PaymentMethodRepository(context, NullLogger<PaymentMethodRepository>.Instance);
+        var protector = new DataProtectionGatewayPaymentMethodIdProtector(new EphemeralDataProtectionProvider());
+        var service = new PaymentMethodRegistryService(
+            repository,
+            _stripeCustomerService.Object,
+            _coordination.Object,
+            context,
+            NullLogger<PaymentMethodRegistryService>.Instance,
+            gatewayIdProtector: protector);
+
+        var legacy = new PaymentMethod(tenantId, userId, "stripe", "pm_legacy_plain", PaymentMethodType.Card, isDefault: true);
+        legacy.UpdateGatewayMetadata(PaymentMethodType.Card, "visa", "1881", 11, 2030, "fp_legacy");
+        context.Set<PaymentMethod>().Add(legacy);
+        await context.SaveChangesAsync(CancellationToken.None);
+        SetupGatewayDetails("pm_legacy_plain");
+
+        var result = await service.CreateAsync(
+            OwnerActor(tenantId, userId),
+            new CreatePaymentMethodRequest(tenantId, "pm_legacy_plain"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        var stored = await context.Set<PaymentMethod>().SingleAsync(pm => pm.Id == legacy.Id, CancellationToken.None);
+        protector.IsProtected(stored.GatewayPaymentMethodId).Should().BeTrue("re-registering migrates the legacy plaintext reference");
+        stored.GatewayPaymentMethodIdHash.Should().NotBeNull();
+        result.Value.GatewayPaymentMethodId.Should().Be("pm_legacy_plain");
+    }
+
+    [Fact]
+    public void GatewayPaymentMethodIdHash_ShouldBeDeterministicAndProviderScoped()
+    {
+        var first = GatewayPaymentMethodIdHash.Compute("Stripe", "pm_x");
+        var second = GatewayPaymentMethodIdHash.Compute("stripe", "pm_x");
+        var otherProvider = GatewayPaymentMethodIdHash.Compute("paypal", "pm_x");
+        var otherToken = GatewayPaymentMethodIdHash.Compute("stripe", "pm_y");
+
+        first.Should().Be(second, "the provider is normalized before hashing");
+        first.Should().NotBe(otherProvider);
+        first.Should().NotBe(otherToken);
+        first.Length.Should().BeLessThanOrEqualTo(64);
+    }
+
+    [Fact]
+    public void DataProtectionProtector_RoundTripsAndMarksProtectedValues()
+    {
+        var protector = new DataProtectionGatewayPaymentMethodIdProtector(new EphemeralDataProtectionProvider());
+        var protectedValue = protector.Protect("pm_roundtrip");
+
+        protectedValue.Should().NotBe("pm_roundtrip");
+        protector.IsProtected(protectedValue).Should().BeTrue();
+        protector.IsProtected("pm_legacy_plaintext").Should().BeFalse();
+        protector.Unprotect(protectedValue).Should().Be("pm_roundtrip");
+        protector.Unprotect("pm_legacy_plaintext").Should().Be("pm_legacy_plaintext", "legacy plaintext values pass through unchanged");
+    }
+
+    private PaymentsPersistenceTestDbContext NewContext()
+    {
+        var options = new DbContextOptionsBuilder<PaymentsPersistenceTestDbContext>()
+            .UseInMemoryDatabase($"payment-methods-{Guid.NewGuid()}")
+            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
+            .Options;
+        return new PaymentsPersistenceTestDbContext(options);
     }
 }
