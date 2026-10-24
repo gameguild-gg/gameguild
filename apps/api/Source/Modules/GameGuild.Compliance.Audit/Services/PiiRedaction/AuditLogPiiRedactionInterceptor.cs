@@ -8,6 +8,9 @@ namespace GameGuild.Compliance.Audit;
 /// Covers every write path (AuditService, SecurityEventLogger command and retry paths, alert
 /// resolution) without per-caller wiring. Vault entries and redaction-operation rows are staged on
 /// the same context so record, vault, and audit trail persist in one save (and one caller transaction).
+/// Also sweeps the universal entity-change audit records (issue #166): their before/after snapshots
+/// pass through the same rule pipeline, so automatically captured deltas are redacted exactly like
+/// the central audit sink before persistence.
 /// </summary>
 public sealed class AuditLogPiiRedactionInterceptor(IPiiRedactionService redactionService) : SaveChangesInterceptor
 {
@@ -42,10 +45,27 @@ public sealed class AuditLogPiiRedactionInterceptor(IPiiRedactionService redacti
             .ToList();
     }
 
+    private static List<IEntityChangeAuditRecord> CollectEntityChangeEntries(DbContext? context)
+    {
+        if (context is not IApplicationDbContext)
+        {
+            return [];
+        }
+
+        // Entity-change records are insert-only: they are staged in the same SaveChanges call as the
+        // audited mutation, so only Added entries can carry unredacted snapshots.
+        return context.ChangeTracker.Entries()
+            .Where(entry => entry.State is EntityState.Added
+                            && entry.Entity is IEntityChangeAuditRecord)
+            .Select(entry => (IEntityChangeAuditRecord)entry.Entity)
+            .ToList();
+    }
+
     private void ApplyRedaction(DbContext? context)
     {
         var auditEntries = CollectAuditEntries(context);
-        if (auditEntries.Count == 0)
+        var entityChangeEntries = CollectEntityChangeEntries(context);
+        if (auditEntries.Count == 0 && entityChangeEntries.Count == 0)
         {
             return;
         }
@@ -55,12 +75,18 @@ public sealed class AuditLogPiiRedactionInterceptor(IPiiRedactionService redacti
         {
             _ = redactionService.ApplyToAuditLogAsync(entry, applicationDbContext, CancellationToken.None).GetAwaiter().GetResult();
         }
+
+        foreach (var entry in entityChangeEntries)
+        {
+            _ = redactionService.ApplyToEntityChangeAuditAsync(entry, applicationDbContext, CancellationToken.None).GetAwaiter().GetResult();
+        }
     }
 
     private async Task ApplyRedactionAsync(DbContext? context, CancellationToken cancellationToken)
     {
         var auditEntries = CollectAuditEntries(context);
-        if (auditEntries.Count == 0)
+        var entityChangeEntries = CollectEntityChangeEntries(context);
+        if (auditEntries.Count == 0 && entityChangeEntries.Count == 0)
         {
             return;
         }
@@ -69,6 +95,11 @@ public sealed class AuditLogPiiRedactionInterceptor(IPiiRedactionService redacti
         foreach (var entry in auditEntries)
         {
             _ = await redactionService.ApplyToAuditLogAsync(entry, applicationDbContext, cancellationToken).ConfigureAwait(false);
+        }
+
+        foreach (var entry in entityChangeEntries)
+        {
+            _ = await redactionService.ApplyToEntityChangeAuditAsync(entry, applicationDbContext, cancellationToken).ConfigureAwait(false);
         }
     }
 }

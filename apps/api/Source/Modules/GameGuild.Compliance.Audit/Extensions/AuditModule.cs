@@ -124,6 +124,10 @@ public static class AuditModule
         services.AddScoped<ISecurityLogRetentionService, SecurityLogRetentionService>();
         services.AddHostedService<SecurityLogRetentionBackgroundService>();
 
+        // Universal entity-change audit query surface (issue #166): the host registers the
+        // IEntityChangeAuditStore bridge over its capture store; this module serves it.
+        services.AddScoped<IEntityChangeAuditQueryService, EntityChangeAuditQueryService>();
+
         services.AddSingleton<AuditRetentionSimulationEngine>();
         services.AddScoped<IAuditRetentionSimulationRepository, AuditRetentionSimulationRepository>();
         services.AddScoped<IAuditRetentionSimulationService, AuditRetentionSimulationService>();

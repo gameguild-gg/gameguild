@@ -231,6 +231,9 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("OccurredAtUtc")
                         .HasDatabaseName("ix_entity_change_audit_time");
 
+                    b.HasIndex("TenantId", "OccurredAtUtc")
+                        .HasDatabaseName("ix_entity_change_audit_tenant_time");
+
                     b.HasIndex("EntityName", "KeyId", "OccurredAtUtc")
                         .HasDatabaseName("ix_entity_change_audit_entity");
 
