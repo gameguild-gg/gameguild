@@ -103,16 +103,6 @@ export type WalletConnectAdapter = WalletAdapter & {
 };
 
 /**
- * Optional SDK specifier. A widened TypeScript string does not prevent
- * Turbopack from resolving a constant import while compiling ordinary sign-in.
- * The import below explicitly remains native in each supported bundler, so
- * an absent optional SDK cannot break routes where WalletConnect is disabled.
- * Hosts enabling it still need an SDK-backed loader or browser ESM resolution;
- * load failures map to `wallet_not_found` without bypassing authentication.
- */
-const ETHEREUM_PROVIDER_MODULE: string = '@walletconnect/ethereum-provider';
-
-/**
  * `EthereumProvider.init` options accepted by the default loader — the
  * runtime mirror of the ambient declaration in
  * `src/types/walletconnect-ethereum-provider.d.ts` (which documents the
@@ -173,13 +163,10 @@ export const createWalletConnectAdapter = (
   const loadProvider =
     options.loadProvider ??
     (async (): Promise<WalletConnectEthereumProviderLike> => {
-      // Preserve the optional native import in Vite, Webpack and Turbopack.
-      // The host must provide browser module resolution or inject loadProvider;
-      // a failed runtime import lands in the fail-closed catch below.
+      // A static specifier lets bundlers include the SDK from the committed
+      // dependency graph. Provider initialization failures remain fail-closed.
       const module = (await import(
-        /* webpackIgnore: true */
-        /* turbopackIgnore: true */
-        /* @vite-ignore */ ETHEREUM_PROVIDER_MODULE
+        '@walletconnect/ethereum-provider'
       )) as WalletConnectEthereumProviderModule;
       return module.default.init({
         projectId: projectId as string,
