@@ -30,6 +30,7 @@ public class OAuthAuthService(
     ISessionManagementService sessionManagementService,
     ILogger<OAuthAuthService> logger,
     IOptions<JwtOptions>? jwtOptions = null,
+    IAuthenticationAuditEventSink? auditEventSink = null,
     ISamlFederationService? samlFederationService = null
 ) : IOAuthAuthService
 {
@@ -514,6 +515,19 @@ public class OAuthAuthService(
         var mfaRequired = await mfaService.IsMfaRequiredAsync(userId, cancellationToken).ConfigureAwait(false);
         if (mfaRequired)
         {
+            // IdP integration auditing (issue #180): a federated sign-in refused by the MFA policy
+            // is a durable denial event with the provider context.
+            var deniedHttpContext = httpContextAccessor.HttpContext;
+            await RecordAuditEventAsync(new AuthenticationAuditEvent(
+                FederatedSignInMfaDeniedActionType,
+                userId,
+                Success: false,
+                Method: $"Oidc:{slug}",
+                IpAddress: authAttemptService.GetClientIpAddress(deniedHttpContext),
+                UserAgent: deniedHttpContext?.Request.Headers.UserAgent.ToString(),
+                ErrorMessage: "Provider did not attest multi-factor authentication",
+                Metadata: new { Provider = slug, RequiredAmr = "mfa" })).ConfigureAwait(false);
+
             throw new UnauthorizedAccessException(
                 $"OIDC sign-in for provider '{slug}' requires multi-factor authentication, but the provider did not attest one (no 'mfa' amr value).");
         }
@@ -573,7 +587,7 @@ public class OAuthAuthService(
         var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
                                            ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
-        return new SignInResponse
+        var response = new SignInResponse
         {
             Success = true,
             Message = successMessage,
@@ -589,6 +603,49 @@ public class OAuthAuthService(
             TenantId = tenantAccessContext.TenantId,
             AvailableTenants = tenantAccessContext.AvailableTenants
         };
+
+        // IdP integration auditing (issue #180): every federated/external sign-in success is a
+        // durable security event with the provider, session and tenant context.
+        await RecordAuditEventAsync(new AuthenticationAuditEvent(
+            ExternalLoginSucceededActionType,
+            user.Id,
+            Success: true,
+            Method: authenticationMethod,
+            IpAddress: ipAddress,
+            UserAgent: userAgent,
+            SessionId: sessionId,
+            TenantId: tenantAccessContext.TenantId,
+            Metadata: new { Provider = authenticationMethod, SessionId = sessionId, DurationMs = stopwatch.ElapsedMilliseconds })).ConfigureAwait(false);
+
+        return response;
+    }
+
+    /// <summary>Audit action types for identity-provider integration events (issue #180). Kept as
+    /// literals so the identity module stays decoupled from the audit module; the central
+    /// authentication audit sink persists them and the security event taxonomy classifies them.</summary>
+    private const string ExternalLoginSucceededActionType = "Authentication.ExternalLoginSucceeded";
+    private const string ExternalLoginFailedActionType = "Authentication.ExternalLoginFailed";
+    private const string ExternalAccountLinkedActionType = "Authentication.ExternalAccountLinked";
+    private const string ExternalAccountProvisionedActionType = "Authentication.ExternalAccountProvisioned";
+    private const string FederatedSignInMfaDeniedActionType = "Authentication.FederatedSignInMfaDenied";
+
+    /// <summary>Forwards an identity-provider audit event to the central authentication audit sink.
+    /// Auditing must never break sign-in, so sink failures are logged and swallowed.</summary>
+    private async Task RecordAuditEventAsync(AuthenticationAuditEvent auditEvent)
+    {
+        if (auditEventSink is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await auditEventSink.RecordAsync(auditEvent, CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogError(exception, "Could not record identity-provider audit event {ActionType}", auditEvent.ActionType);
+        }
     }
 
     private async Task<T> RunProviderAuthenticationAsync<T>(
@@ -625,6 +682,19 @@ public class OAuthAuthService(
         {
             logger.LogError(auditException, "Could not record failed {AuthenticationMethod} authentication", authenticationMethod);
         }
+
+        // IdP integration auditing (issue #180): federated sign-in failures are durable security
+        // events even when no user could be resolved — provider, IP and user agent still identify
+        // the attempt.
+        await RecordAuditEventAsync(new AuthenticationAuditEvent(
+            ExternalLoginFailedActionType,
+            UserId: null,
+            Success: false,
+            Method: authenticationMethod,
+            IpAddress: authAttemptService.GetClientIpAddress(httpContextAccessor.HttpContext),
+            UserAgent: httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString(),
+            ErrorMessage: exception.GetType().Name,
+            Metadata: new { Provider = authenticationMethod, DurationMs = stopwatch.ElapsedMilliseconds })).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -693,6 +763,13 @@ public class OAuthAuthService(
                 },
                 cancellationToken).ConfigureAwait(false);
 
+            await RecordExternalAccountLifecycleEventAsync(
+                provider,
+                user,
+                createdNewUser,
+                grantedScopes,
+                cancellationToken).ConfigureAwait(false);
+
             return user;
         }
         catch (DbUpdateException)
@@ -725,8 +802,35 @@ public class OAuthAuthService(
                 },
                 cancellationToken).ConfigureAwait(false);
 
+            // Race-lost path: the winning row was an existing user matched by email, and the link
+            // was created here — the account-link lifecycle event still applies.
+            await RecordAuditEventAsync(new AuthenticationAuditEvent(
+                ExternalAccountLinkedActionType,
+                user.Id,
+                Success: true,
+                Method: provider,
+                IpAddress: authAttemptService.GetClientIpAddress(httpContextAccessor.HttpContext),
+                UserAgent: httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString(),
+                Metadata: new { Provider = provider, GrantedScopes = grantedScopes, ResumedAfterRace = true })).ConfigureAwait(false);
+
             return user;
         }
+    }
+
+    /// <summary>Journals the external-account lifecycle event for a freshly created external login
+    /// link (issue #180): just-in-time provisioning when the sign-in created a brand-new user, or an
+    /// account link when a verified federated identity was attached to an existing account.</summary>
+    private async Task RecordExternalAccountLifecycleEventAsync(string provider, User user, bool createdNewUser, string[] grantedScopes, CancellationToken cancellationToken)
+    {
+        var httpContext = httpContextAccessor.HttpContext;
+        await RecordAuditEventAsync(new AuthenticationAuditEvent(
+            createdNewUser ? ExternalAccountProvisionedActionType : ExternalAccountLinkedActionType,
+            user.Id,
+            Success: true,
+            Method: provider,
+            IpAddress: authAttemptService.GetClientIpAddress(httpContext),
+            UserAgent: httpContext?.Request.Headers.UserAgent.ToString(),
+            Metadata: new { Provider = provider, GrantedScopes = grantedScopes, EmailVerified = user.IsEmailVerified })).ConfigureAwait(false);
     }
 
     private async Task<TenantAccessContext> ResolveTenantAccessContextAsync(Guid userId, Guid? requestedTenantId, CancellationToken cancellationToken)

@@ -304,6 +304,120 @@ public sealed class AuditModelConfiguration : IModelConfiguration
             entity.HasIndex(revision => new { revision.SavedAuditQueryId, revision.Revision }).IsUnique();
         });
 
+        // Field-level data access auditing (issue #186).
+        modelBuilder.Entity<FieldAccessAudit>(entity =>
+        {
+            entity.ToTable("FieldAccessAudits");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId).IsRequired();
+            entity.Property(item => item.EntityType).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.FieldName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.IpAddress).HasMaxLength(45).IsRequired();
+            entity.Property(item => item.UserAgent).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.RequestId).HasMaxLength(100);
+            entity.Property(item => item.SessionId).HasMaxLength(100);
+            entity.Property(item => item.ApiEndpoint).HasMaxLength(500);
+            entity.Property(item => item.LegalBasis).HasMaxLength(100);
+            entity.Property(item => item.ConsentId).HasMaxLength(100);
+            entity.Property(item => item.AccessType).HasConversion<int>();
+            entity.Property(item => item.SensitivityLevel).HasConversion<int>();
+            // Raw observation values may hold sensitive content before masking is applied downstream;
+            // they are stored as text and covered by the classification-driven retention lifecycle.
+            entity.Property(item => item.OldValue).HasColumnType("text");
+            entity.Property(item => item.NewValue).HasColumnType("text");
+            entity.Property(item => item.MaskedOldValue).HasColumnType("text");
+            entity.Property(item => item.MaskedNewValue).HasColumnType("text");
+            entity.HasIndex(item => new { item.TenantId, item.AccessedAt });
+            entity.HasIndex(item => item.EntityId);
+            entity.HasIndex(item => item.UserId);
+            entity.HasIndex(item => new { item.EntityType, item.FieldName });
+        });
+
+        modelBuilder.Entity<SensitiveFieldClassification>(entity =>
+        {
+            entity.ToTable("SensitiveFieldClassifications");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId);
+            entity.Property(item => item.EntityType).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.FieldName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.DetectionRule).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Category).HasConversion<int>();
+            entity.Property(item => item.Sensitivity).HasConversion<int>();
+            entity.HasIndex(item => new { item.TenantId, item.EntityType, item.FieldName }).IsUnique();
+            entity.HasIndex(item => item.Category);
+        });
+
+        modelBuilder.Entity<FieldAccessAnomaly>(entity =>
+        {
+            entity.ToTable("FieldAccessAnomalies");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId).IsRequired();
+            entity.Property(item => item.EntityType).HasMaxLength(200);
+            entity.Property(item => item.Detail).HasMaxLength(1000).IsRequired();
+            entity.Property(item => item.ResolutionNotes).HasMaxLength(2000);
+            entity.Property(item => item.AnomalyType).HasConversion<int>();
+            entity.Property(item => item.Status).HasConversion<int>();
+            entity.HasIndex(item => new { item.TenantId, item.Status });
+            entity.HasIndex(item => new { item.TenantId, item.DetectedAtUtc });
+            entity.HasIndex(item => item.UserId);
+        });
+
+        modelBuilder.Entity<BulkExportEvent>(entity =>
+        {
+            entity.ToTable("BulkExportEvents");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId).IsRequired();
+            entity.Property(item => item.IpAddress).HasMaxLength(45);
+            entity.Property(item => item.CorrelationId).HasMaxLength(100);
+            entity.Property(item => item.Destination).HasMaxLength(500);
+            entity.Property(item => item.Scope).HasConversion<int>();
+            entity.HasIndex(item => new { item.TenantId, item.OccurredAtUtc });
+            entity.HasIndex(item => new { item.TenantId, item.UserId, item.OccurredAtUtc });
+            entity.HasIndex(item => item.ThresholdExceeded);
+        });
+
+        modelBuilder.Entity<CrossBorderTransferLog>(entity =>
+        {
+            entity.ToTable("CrossBorderTransferLogs");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId).IsRequired();
+            entity.Property(item => item.DestinationJurisdiction).HasMaxLength(2).IsRequired();
+            entity.Property(item => item.DataCategories).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.Purpose).HasMaxLength(500).IsRequired();
+            entity.Property(item => item.Reason).HasMaxLength(1000).IsRequired();
+            entity.Property(item => item.CorrelationId).HasMaxLength(100);
+            entity.Property(item => item.Status).HasConversion<int>();
+            entity.HasIndex(item => new { item.TenantId, item.OccurredAtUtc });
+            entity.HasIndex(item => item.Status);
+        });
+
+        modelBuilder.Entity<GdprProcessingActivity>(entity =>
+        {
+            entity.ToTable("GdprProcessingActivities");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId);
+            entity.Property(item => item.ActivityName).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Purpose).HasMaxLength(1000).IsRequired();
+            entity.Property(item => item.LegalBasis).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.CategoriesOfDataSubjects).HasMaxLength(1000).IsRequired();
+            entity.Property(item => item.CategoriesOfPersonalData).HasMaxLength(2000).IsRequired();
+            entity.Property(item => item.Recipients).HasMaxLength(1000).IsRequired();
+            entity.Property(item => item.TransferDestinations).HasMaxLength(500);
+            entity.Property(item => item.RetentionPeriod).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.SecurityMeasures).HasMaxLength(1000).IsRequired();
+            entity.HasIndex(item => new { item.TenantId, item.ActivityName }).IsUnique();
+        });
+
+        modelBuilder.Entity<SensitiveDataRetentionPolicy>(entity =>
+        {
+            entity.ToTable("SensitiveDataRetentionPolicies");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId);
+            entity.Property(item => item.Category).HasConversion<int>();
+            entity.Property(item => item.Action).HasConversion<int>();
+            entity.HasIndex(item => new { item.TenantId, item.Category }).IsUnique();
+        });
+
         // Mutation value snapshots (issue #176): insert-only forensic value store staged in the
         // same SaveChanges call as each mutation. No FKs by design: snapshots outlive the rows
         // they describe and retention may strip payloads while checksums stay verifiable.

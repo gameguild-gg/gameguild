@@ -23,6 +23,8 @@ public static class SecurityAlertRules
 
     /// <summary>Unusual promo code usage pattern (validation/redemption velocity anomaly, issue #418).</summary>
     public static string PromoUsageAnomaly { get; } = "security.promo-usage-anomaly";
+
+    public static string BulkExportThresholdExceeded { get; } = "security.bulk-export-threshold-exceeded";
 }
 
 /// <summary>
