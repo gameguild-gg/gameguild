@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Commerce.Products;
 
@@ -7,9 +8,13 @@ namespace GameGuild.Commerce.Products;
 /// Atomic promo usage recorder. Counter increments (total + per-user) are guarded conditional
 /// updates and the usage row insert shares one transaction, so concurrent redemptions cannot
 /// exceed <c>MaxUses</c>/<c>MaxUsesPerUser</c> and a replayed idempotency key never counts twice.
+/// When the redeemed code carries a campaign tag and this is the customer's first recorded
+/// usage, a first-purchase attribution row (issue #418 CAC) is written best-effort after the
+/// commit — an attribution failure is logged and never fails the redemption.
 /// </summary>
-public class PromoCodeUsageRecorder(IPromoCodeRepository promoCodeRepository)
-    : IPromoCodeUsageRecorder
+public class PromoCodeUsageRecorder(
+    IPromoCodeRepository promoCodeRepository,
+    ILogger<PromoCodeUsageRecorder>? logger = null) : IPromoCodeUsageRecorder
 {
     /// <inheritdoc />
     public async Task<(PromoUsageRecordingStatus Status, PromoCodeUse? Usage)> RecordAsync(
@@ -40,6 +45,11 @@ public class PromoCodeUsageRecorder(IPromoCodeRepository promoCodeRepository)
         {
             return (PromoUsageRecordingStatus.RejectedTotalLimit, null);
         }
+
+        // Issue #418 CAC: "first purchase" = the customer's first recorded promo usage.
+        // Captured before the insert so the just-recorded usage does not count as history.
+        var isFirstUsage = !string.IsNullOrWhiteSpace(promoCode.CampaignId)
+            && !await promoCodeRepository.HasUserRecordedUsageAsync(userId, cancellationToken).ConfigureAwait(false);
 
         await using var transaction = await promoCodeRepository.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -81,6 +91,9 @@ public class PromoCodeUsageRecorder(IPromoCodeRepository promoCodeRepository)
             await promoCodeRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
+            await RecordFirstPurchaseAttributionAsync(promoCode, usage, isFirstUsage, cancellationToken)
+                .ConfigureAwait(false);
+
             return (PromoUsageRecordingStatus.Recorded, usage);
         }
         catch (DbUpdateException)
@@ -100,6 +113,51 @@ public class PromoCodeUsageRecorder(IPromoCodeRepository promoCodeRepository)
             }
 
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Links the customer to the campaign whose code tagged their first purchase
+    /// (issue #418 CAC attribution). One row per customer — the unique index on
+    /// UserId makes the first attribution win; a lost race is logged, not thrown.
+    /// </summary>
+    private async Task RecordFirstPurchaseAttributionAsync(
+        PromoCode promoCode,
+        PromoCodeUse usage,
+        bool isFirstUsage,
+        CancellationToken cancellationToken)
+    {
+        if (!isFirstUsage || string.IsNullOrWhiteSpace(promoCode.CampaignId))
+        {
+            return;
+        }
+
+        try
+        {
+            await promoCodeRepository.RecordFirstPurchaseAttributionAsync(
+                new PromoCampaignAttribution
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = usage.UserId,
+                    TenantId = promoCode.TenantId,
+                    CampaignKey = promoCode.CampaignId!,
+                    Code = promoCode.Code,
+                    FirstPurchaseUsageId = usage.Id,
+                    OrderId = usage.OrderId,
+                    SubscriptionId = usage.SubscriptionId,
+                    AttributedAtUtc = SystemClock.UtcNow
+                },
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Best effort: attribution is analytics; a concurrent winner or a write
+            // failure must never fail the committed redemption.
+            logger?.LogWarning(
+                exception,
+                "Failed to record first-purchase campaign attribution for user {UserId} on campaign {CampaignKey}",
+                usage.UserId,
+                promoCode.CampaignId);
         }
     }
 }

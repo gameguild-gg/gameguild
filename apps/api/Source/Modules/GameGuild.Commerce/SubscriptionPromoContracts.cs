@@ -96,12 +96,39 @@ public sealed record SubscriptionPromoInvoiceContext(
     IReadOnlyList<Guid> UsageIds);
 
 /// <summary>
+///     Request to quote promo codes against a subscription plan change (issue #418):
+///     an upgrade's prorated charge or a plan-scoped new-cycle amount. Same validation
+///     semantics as creation quotes (plan scoping, windows, eligibility, limits).
+/// </summary>
+/// <param name="SubscriptionId">Subscription being changed; usage rows link back to it.</param>
+/// <param name="PlanId">Plan the subscription is moving to; drives plan-scoped eligibility.</param>
+/// <param name="ChargeAmount">Charge amount the codes are quoted against.</param>
+/// <param name="PromoCodes">Promo code strings submitted with the plan change.</param>
+/// <param name="UserId">Acting user, for per-user limit checks.</param>
+public sealed record SubscriptionPlanChangePromoQuoteRequest(
+    Guid SubscriptionId,
+    Guid PlanId,
+    decimal ChargeAmount,
+    IReadOnlyList<string> PromoCodes,
+    Guid? UserId = null);
+
+/// <summary>
 ///     Bridges the promo engine (Products module) into subscription creation and invoice
 ///     materialization (issue #418). Implemented by the Products module so the Subscriptions
 ///     and Billing project graphs keep their dependency direction.
 /// </summary>
 public interface ISubscriptionPromoCoordinator
 {
+    /// <summary>
+    ///     Quotes promo codes for a subscription plan change (issue #418): validates against
+    ///     the target plan and the charge amount, resolves stacking, and returns the discount.
+    ///     Read-only; usage rows are persisted by <see cref="RecordSubscriptionUsageAsync"/>
+    ///     after the plan change succeeds.
+    /// </summary>
+    Task<SubscriptionPromoQuoteResult> QuoteForPlanChangeAsync(
+        SubscriptionPlanChangePromoQuoteRequest request,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     ///     Quotes promo codes for a subscription being created on the given plan. Read-only:
     ///     validates (including plan scoping), resolves stacking, and returns the discounted

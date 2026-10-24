@@ -93,6 +93,9 @@ public static class SecurityEventTaxonomy
         [AuditActionTypes.WebhookSourceBlocked] = new(SecurityEventKind.ThreatDetection, AuditRiskLevel.High, false, "Billing webhook source temporarily blocked for suspicious activity."),
         [AuditActionTypes.WebhookDeadLettered] = new(SecurityEventKind.ThreatDetection, AuditRiskLevel.Critical, false, "Billing webhook dead-lettered after exhausting its retry budget; repeated delivery failures require operator attention."),
 
+        // Promo engine abuse detection (issue #418)
+        [AuditActionTypes.PromoUsageAnomalyDetected] = new(SecurityEventKind.ThreatDetection, AuditRiskLevel.High, false, "Unusual promo code usage pattern detected (validation or redemption velocity anomaly)."),
+
         // Tenant isolation
         [AuditActionTypes.TenantIsolationBypassed] = new(SecurityEventKind.TenantIsolation, AuditRiskLevel.Critical, false, "Tenant isolation boundary bypassed."),
 

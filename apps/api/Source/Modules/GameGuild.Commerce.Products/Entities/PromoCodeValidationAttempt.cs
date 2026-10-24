@@ -40,7 +40,16 @@ public enum PromoCodeValidationOutcome
     MaxUsesPerUserReached = 8,
 
     /// <summary>Validation failed for another reason (empty input, calculation failure, ...)</summary>
-    Invalid = 9
+    Invalid = 9,
+
+    /// <summary>The code exists and is active but its validity window has not opened yet (issue #418)</summary>
+    NotYetValid = 10,
+
+    /// <summary>The customer's relationship state (new/existing/churned) is not eligible for this code (issue #418)</summary>
+    CustomerNotEligible = 11,
+
+    /// <summary>A CAPTCHA challenge was required for this untrusted redemption and was not satisfied (issue #418)</summary>
+    CaptchaRequired = 12
 }
 
 /// <summary>

@@ -174,7 +174,9 @@ public class PromoCodesController(IMediator mediator) : BaseApiController
             request.CampaignId,
             request.ProductId,
             GetUserId(),
-            request.PlanId
+            request.PlanId,
+            request.TimeZoneId,
+            request.EligibleCustomerType
         );
 
         var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
@@ -216,7 +218,9 @@ public class PromoCodesController(IMediator mediator) : BaseApiController
             request.StackingPriority,
             request.CampaignId,
             request.ProductId,
-            request.PlanId
+            request.PlanId,
+            request.TimeZoneId,
+            request.EligibleCustomerType
         );
 
         var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
@@ -258,7 +262,9 @@ public class PromoCodesController(IMediator mediator) : BaseApiController
             request.StackingPriority,
             request.CampaignId,
             request.ProductId,
-            request.PlanId
+            request.PlanId,
+            request.TimeZoneId,
+            request.EligibleCustomerType
         );
 
         var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
@@ -351,7 +357,8 @@ public class PromoCodesController(IMediator mediator) : BaseApiController
             GetUserId(),
             request.IdempotencyKey,
             request.OrderId,
-            request.PlanId
+            request.PlanId,
+            request.CaptchaToken
         );
 
         var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
@@ -389,7 +396,9 @@ public class PromoCodesController(IMediator mediator) : BaseApiController
             request.CampaignId,
             request.ProductId,
             GetUserId(),
-            request.PlanId
+            request.PlanId,
+            request.TimeZoneId,
+            request.EligibleCustomerType
         );
 
         var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
@@ -428,7 +437,9 @@ public sealed record CreatePromoCodeRequest(
     int StackingPriority = 0,
     string? CampaignId = null,
     Guid? ProductId = null,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? TimeZoneId = null,
+    PromoCustomerType EligibleCustomerType = PromoCustomerType.Any
 );
 
 /// <summary>
@@ -455,7 +466,9 @@ public sealed record UpdatePromoCodeRequest(
     int? StackingPriority = null,
     string? CampaignId = null,
     Guid? ProductId = null,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? TimeZoneId = null,
+    PromoCustomerType? EligibleCustomerType = null
 );
 
 /// <summary>
@@ -482,7 +495,9 @@ public sealed record PatchPromoCodeRequest(
     int? StackingPriority = null,
     string? CampaignId = null,
     Guid? ProductId = null,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? TimeZoneId = null,
+    PromoCustomerType? EligibleCustomerType = null
 );
 
 /// <summary>
@@ -504,7 +519,8 @@ public sealed record ApplyPromoCodesRequest(
     Guid? ProductId = null,
     string? IdempotencyKey = null,
     Guid? OrderId = null,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? CaptchaToken = null
 );
 
 /// <summary>
@@ -531,5 +547,7 @@ public sealed record GenerateBulkPromoCodesRequest(
     int StackingPriority = 0,
     string? CampaignId = null,
     Guid? ProductId = null,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? TimeZoneId = null,
+    PromoCustomerType EligibleCustomerType = PromoCustomerType.Any
 );
