@@ -412,7 +412,7 @@ public class OAuthAuthService(
             async () =>
             {
                 var federatedIdentity = await federationService
-                    .ConsumeAssertionAsync(request.Slug, request.SamlResponse, cancellationToken)
+                    .ConsumeAssertionAsync(request.Slug, request.SamlResponse, request.RelayState, cancellationToken)
                     .ConfigureAwait(false);
 
                 // Tenant binding: when the provider is pinned to specific tenants, the
