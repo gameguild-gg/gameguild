@@ -11,6 +11,43 @@ namespace GameGuild.API.IntegrationTests;
 [Collection(ApiPostgreSqlCollection.Name)]
 public sealed class PermissionSoftDeletePostgreSqlTests(ApiPostgreSqlFixture fixture)
 {
+    [Fact]
+    public async Task DirectResourceTenantWrittenThroughTheBaseContractPersistsWithoutAShadowTenant()
+    {
+        await using var scope = fixture.Factory.Services.CreateAsyncScope();
+        var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var originalTenant = Guid.NewGuid();
+        var updatedTenant = Guid.NewGuid();
+        var grant = new ResourceUserPermission
+        {
+            UserId = Guid.NewGuid(),
+            TenantId = new TenantId(originalTenant),
+            ResourceType = "Document",
+            ResourceId = Guid.NewGuid().ToString("D"),
+            Permissions = ["Read"],
+            GrantedByUserId = Guid.NewGuid()
+        };
+        database.Add(grant);
+        await database.SaveChangesAsync();
+        database.ChangeTracker.Clear();
+
+        PermissionBase loaded = await database.Set<ResourceUserPermission>().SingleAsync(row => row.Id == grant.Id);
+        Assert.Equal(originalTenant, loaded.TenantId);
+        Assert.False(loaded.IsGlobal);
+        loaded.SetTenantId(updatedTenant);
+        await database.SaveChangesAsync();
+        database.ChangeTracker.Clear();
+
+        var updated = await database.Set<ResourceUserPermission>().SingleAsync(row => row.Id == grant.Id);
+        Assert.Equal(updatedTenant, updated.TenantId.Value);
+        Assert.Equal(updatedTenant, ((PermissionBase)updated).TenantId);
+        Assert.Equal(updatedTenant, ((ITenantScoped)updated).TenantId);
+        Assert.Equal(updatedTenant, updated.PermissionTenantId);
+        Assert.False(updated.IsGlobal);
+        Assert.False(updated.IsInTenantScope(originalTenant));
+        Assert.Single(database.Model.FindEntityType(typeof(ResourceUserPermission))!.GetProperties(), property => property.Name == "TenantId");
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

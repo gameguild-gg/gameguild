@@ -36,6 +36,8 @@ namespace GameGuild.Identity.Authorization;
 /// </remarks>
 public abstract class PermissionBase : EntityBase<Guid>
 {
+    private bool _isActive = true;
+
     /// <summary>
     ///     Protected constructor for entity framework and derived entities.
     ///     Generates a new identifier, mirroring the non-generic <c>EntityBase</c> behavior
@@ -59,10 +61,20 @@ public abstract class PermissionBase : EntityBase<Guid>
     public DateTime? ExpiresAt { get; set; }
 
     /// <summary>
-    ///     Whether the grant is currently active. <see cref="ResourceUserPermission"/> overrides
-    ///     this with its revocation lifecycle and rejects reactivation of an ineffective grant.
+    ///     Whether the grant is currently active. The lifecycle hooks let direct resource
+    ///     grants share their computed state without exposing a writable concrete property.
     /// </summary>
-    public virtual bool IsActive { get; set; } = true;
+    public virtual bool IsActive
+    {
+        get => ReadActivity();
+        set => WriteActivity(value);
+    }
+
+    /// <summary>Reads the stored activation flag or a derived grant's lifecycle state.</summary>
+    protected virtual bool ReadActivity() { return _isActive; }
+
+    /// <summary>Updates activation using the concrete grant's lifecycle.</summary>
+    protected virtual void WriteActivity(bool value) { _isActive = value; }
 
     /// <summary>
     ///     When the permission was granted.

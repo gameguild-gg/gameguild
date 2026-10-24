@@ -7,9 +7,8 @@ namespace GameGuild.Identity.Authorization;
 ///     Tracks who granted the permissions, when they were granted, and when they expire.
 ///     Inherits the shared permission-grant contract from <see cref="PermissionBase"/> (#352):
 ///     expiration, grant metadata, validation, audit and tenant-isolation behaviors come
-///     from the base; the required (non-nullable) subject and computed activity state hide
-///     their optional base equivalents, mirroring the tenant-column pattern already used
-///     by this entity.
+///     from the base. The required subject and tenant share their base storage, while
+///     the read-only activity property shares the base lifecycle hooks.
 ///     Implements the <see cref="IDacAttribute"/> contract (issues #318/#320): the grant
 ///     subject is the DAC owner of the entry, the payload is the permission list, and the
 ///     inheritance policy is <see cref="DacInheritancePolicy.InheritAndPropagate"/> for the
@@ -21,7 +20,11 @@ public class ResourceUserPermission : PermissionBase, IDacAttribute
     /// <summary>
     ///     Gets or sets the tenant ID this permission belongs to.
     /// </summary>
-    public new required TenantId TenantId { get; set; }
+    public new required TenantId TenantId
+    {
+        get => new(base.TenantId ?? Guid.Empty);
+        set => base.TenantId = value.Value;
+    }
 
     /// <summary>
     ///     Gets or sets the ID of the user who has these permissions.
@@ -94,24 +97,29 @@ public class ResourceUserPermission : PermissionBase, IDacAttribute
     /// <summary>
     ///     Gets whether these permissions are currently active.
     ///     Computed from deletion, revocation and expiration through both the concrete and
-    ///     shared contracts. Deactivation uses the existing revocation lifecycle; activation
-    ///     cannot undo revocation, deletion or expiration.
+    ///     shared contracts. This concrete property remains read-only for serialization
+    ///     and reflection-based consumers.
     /// </summary>
-    public override bool IsActive
-    {
-        get => !IsDeleted && RevokedAt == null && !IsExpired;
-        set
-        {
-            if (!value)
-            {
-                Expire();
-                return;
-            }
+    public new bool IsActive => ReadActivity();
 
-            if (!IsActive)
-            {
-                throw new InvalidOperationException("A revoked, deleted or expired resource permission cannot be reactivated through IsActive.");
-            }
+    /// <inheritdoc />
+    protected override bool ReadActivity() { return !IsDeleted && RevokedAt == null && !IsExpired; }
+
+    /// <summary>
+    ///     Shared-contract deactivation uses durable revocation. Reactivation cannot undo
+    ///     revocation, deletion or expiration.
+    /// </summary>
+    protected override void WriteActivity(bool value)
+    {
+        if (!value)
+        {
+            Expire();
+            return;
+        }
+
+        if (!IsActive)
+        {
+            throw new InvalidOperationException("A revoked, deleted or expired resource permission cannot be reactivated through IsActive.");
         }
     }
 
@@ -188,9 +196,9 @@ public class ResourceUserPermission : PermissionBase, IDacAttribute
     }
 
     /// <summary>
-    ///     Common validation override: additionally rejects an empty required subject.
+    ///     Common validation override: additionally rejects an empty required subject or tenant.
     /// </summary>
-    public override bool IsValid() { return base.IsValid() && UserId != Guid.Empty; }
+    public override bool IsValid() { return base.IsValid() && UserId != Guid.Empty && TenantId.Value != Guid.Empty; }
 
     /// <summary>
     ///     Revokes the permissions for the user.

@@ -2050,9 +2050,16 @@ through its accessor into the existing single, required `UserId` column. Clearin
 the shared subject leaves an invalid grant, and PostgreSQL regression coverage
 verifies subject preservation and updates after reloading the entity.
 
-Direct resource `IsActive` overrides the common writable property. Its computed
-getter retains the existing deletion, revocation and expiry rules through both
-views. Setting it to `false` uses `Expire()` and persists the existing revocation
+The required `TenantId` value object likewise reads and writes the inherited tenant
+value. `ITenantScoped`, `SetTenantId`, `IsGlobal` and permission-scope checks therefore
+observe the same tenant before and after EF materialization. The existing required
+tenant column and converter are retained; an empty or cleared required tenant makes
+the direct grant invalid.
+
+Direct resource `IsActive` remains a read-only concrete property. Shared lifecycle
+hooks retain the existing deletion, revocation and expiry rules through both
+views, without making computed activity writable to JSON or reflection consumers.
+Setting the shared property to `false` uses `Expire()` and persists the existing revocation
 column; repeated deactivation preserves prior revocation timestamps, actor and
 reason. Setting an already active grant to `true` is a no-op. Setting an
 ineffective grant to `true` throws instead of clearing revocation, deletion or

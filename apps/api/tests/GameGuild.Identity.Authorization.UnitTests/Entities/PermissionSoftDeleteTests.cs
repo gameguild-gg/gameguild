@@ -1,3 +1,4 @@
+using System.Text.Json;
 using GameGuild.CQRS.Models;
 using GameGuild.Identity.Authentication;
 using Xunit;
@@ -6,6 +7,66 @@ namespace GameGuild.Identity.Authorization.UnitTests.Entities;
 
 public sealed class PermissionSoftDeleteTests
 {
+    [Theory]
+    [InlineData("active")]
+    [InlineData("expired")]
+    [InlineData("deleted")]
+    public void DirectResourceJsonRoundTripDoesNotTurnComputedActivityIntoRevocation(string state)
+    {
+        var direct = Assert.IsType<ResourceUserPermission>(Create("direct-resource"));
+        if (state == "expired") { direct.ExpiresAt = DateTime.UtcNow.AddDays(-1); }
+        if (state == "deleted") { direct.SoftDelete(); }
+
+        var restored = Assert.IsType<ResourceUserPermission>(
+            JsonSerializer.Deserialize<ResourceUserPermission>(JsonSerializer.Serialize(direct)));
+
+        Assert.False(typeof(ResourceUserPermission).GetProperty(nameof(ResourceUserPermission.IsActive))!.CanWrite);
+        Assert.Null(restored.RevokedAt);
+        Assert.Null(restored.RevokedByUserId);
+        Assert.Equal(direct.DeletedAt, restored.DeletedAt);
+        Assert.Equal(direct.ExpiresAt, restored.ExpiresAt);
+        Assert.Equal(direct.UpdatedAt, restored.UpdatedAt);
+        Assert.Equal(direct.IsActive, restored.IsActive);
+        Assert.Equal(direct.IsActive, ((PermissionBase)restored).IsActive);
+    }
+
+    [Fact]
+    public void DirectResourceTenantIsConsistentAcrossSharedConcreteAndTenantScopedContracts()
+    {
+        var direct = Assert.IsType<ResourceUserPermission>(Create("direct-resource"));
+        PermissionBase shared = direct;
+        Assert.Equal(direct.TenantId.Value, shared.TenantId);
+        Assert.Equal(direct.TenantId.Value, ((ITenantScoped)direct).TenantId);
+        Assert.False(shared.IsGlobal);
+
+        var replacement = Guid.NewGuid();
+        shared.SetTenantId(replacement);
+        Assert.Equal(replacement, direct.TenantId.Value);
+        Assert.Equal(replacement, shared.PermissionTenantId);
+        Assert.True(shared.IsInTenantScope(replacement));
+        Assert.False(shared.IsInTenantScope(null));
+
+        replacement = Guid.NewGuid();
+        direct.TenantId = new TenantId(replacement);
+        Assert.Equal(replacement, shared.TenantId);
+        Assert.Equal(replacement, ((ITenantScoped)direct).TenantId);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ClearingTheSharedResourceTenantCannotLeaveAValidConcreteGrant(bool useEmptyId)
+    {
+        var direct = Assert.IsType<ResourceUserPermission>(Create("direct-resource"));
+        PermissionBase shared = direct;
+
+        shared.TenantId = useEmptyId ? Guid.Empty : null;
+
+        Assert.Equal(Guid.Empty, direct.TenantId.Value);
+        Assert.False(shared.IsValid());
+        Assert.False(direct.IsValid());
+    }
+
     [Fact]
     public void SharedDeactivationRevokesDirectResourceAccessWithoutChangingTheGrantPayload()
     {
