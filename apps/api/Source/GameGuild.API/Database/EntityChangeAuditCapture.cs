@@ -6,13 +6,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using GameGuild.API.Eventing;
+using GameGuild.Compliance.Audit;
 using GameGuild.Identity.Authorization;
 
 namespace GameGuild.API.Database;
 
 /// <summary>
 ///     Universal automatic entity-change audit capture. Runs inside
-///     <see cref="ApplicationDbContext.SaveChangesAsync"/> before the version bump and
+///     <see cref="ApplicationDbContext.SaveChangesAsync(CancellationToken)"/> before the version bump and
 ///     commit: it detects every Added/Modified/Deleted ChangeTracker entry and stages
 ///     insert-only <see cref="EntityChangeAuditRecord"/> rows in the same SaveChanges
 ///     call, so a failed or rolled-back transaction leaves no audit rows and bulk
@@ -40,17 +41,23 @@ internal static class EntityChangeAuditCapture
     // Auditing the audit stores themselves would recurse; durable transport and data-protection
     // keys are system-internal write-ahead records, not business entities.
     private static readonly ConcurrentDictionary<Type, bool> AuditStoreTypeCache = new();
-    private static readonly ConcurrentDictionary<(Type EntityType, string PropertyName), bool> SensitivePropertyCache = new();
+    private static readonly ConcurrentDictionary<PropertyInfo, bool> SensitivePropertyCache = new();
 
     /// <summary>
     ///     Captures audit records for all tracked entity changes and adds them to the context.
-    ///     Returns the number of audit records staged (used to keep SaveChanges row counts stable).
-    ///     Snapshot failures are logged per entry and never prevent the authorized change.
+    ///     Returns the number of audit rows staged (audit records plus mutation value snapshots),
+    ///     used to keep SaveChanges row counts stable. Snapshot failures are logged per entry and
+    ///     never prevent the authorized change.
     /// </summary>
     internal static int Capture(DbContext context, UseCaseOperationContext? operation, ILogger? logger,
-        Guid? mutationActorId = null, Guid? mutationTenantId = null, bool useEntityTenantScope = false)
+        Guid? mutationActorId = null, Guid? mutationTenantId = null, bool useEntityTenantScope = false,
+        MutationValueSnapshotFactory? snapshotFactory = null)
     {
         var records = new List<EntityChangeAuditRecord>();
+        var snapshots = new List<MutationValueSnapshot>();
+        var snapshotStagingEnabled =
+            snapshotFactory is not null
+            && context.Model.FindEntityType(typeof(MutationValueSnapshot)) is not null;
 
         foreach (var entry in context.ChangeTracker.Entries())
         {
@@ -63,21 +70,43 @@ internal static class EntityChangeAuditCapture
             try
             {
                 var isDeleted = entry.State == EntityState.Deleted;
+                var entityName = entry.Metadata.ClrType.Name;
+                var keyId = ReadPrimaryKey(entry, useOriginalValues: isDeleted) ?? "unknown";
+                var beforeValues = entry.State == EntityState.Added ? null : SerializeValues(entry, useOriginalValues: true);
+                var afterValues = isDeleted ? null : SerializeValues(entry, useOriginalValues: false);
+                // A verified mutation actor also selects the exact authorized tenant,
+                // including null for global state; it never inherits the caller's tenant.
+                var tenantId = ResolveCapturedTenant(entry, operation, isDeleted, mutationActorId, mutationTenantId, useEntityTenantScope);
+                var actorId = mutationActorId ?? ResolveActorId(entry, operation, isDeleted);
+                var correlationId = operation?.CorrelationId.ToString();
+
                 records.Add(new EntityChangeAuditRecord
                 {
                     Id = Guid.NewGuid(),
-                    EntityName = entry.Metadata.ClrType.Name,
-                    KeyId = ReadPrimaryKey(entry, useOriginalValues: isDeleted) ?? "unknown",
+                    EntityName = entityName,
+                    KeyId = keyId,
                     ChangeKind = entry.State.ToString(),
-                    BeforeValues = entry.State == EntityState.Added ? null : SerializeValues(entry, useOriginalValues: true),
-                    AfterValues = isDeleted ? null : SerializeValues(entry, useOriginalValues: false),
-                    // A verified mutation actor also selects the exact authorized tenant,
-                    // including null for global state; it never inherits the caller's tenant.
-                    TenantId = ResolveCapturedTenant(entry, operation, isDeleted, mutationActorId, mutationTenantId, useEntityTenantScope),
-                    ActorId = mutationActorId ?? ResolveActorId(entry, operation, isDeleted),
-                    CorrelationId = operation?.CorrelationId.ToString(),
+                    BeforeValues = beforeValues,
+                    AfterValues = afterValues,
+                    TenantId = tenantId,
+                    ActorId = actorId,
+                    CorrelationId = correlationId,
                     OccurredAtUtc = DateTimeOffset.UtcNow
                 });
+
+                // Before/after value snapshots (issue #176): the forensic deep-analysis store with
+                // field-level diffs, checksums, truncation, and delta compression, staged in the
+                // same transactional window so a rolled-back mutation leaves no snapshot rows.
+                if (snapshotStagingEnabled)
+                {
+                    var snapshot = snapshotFactory!.Create(
+                        entityName, keyId, entry.State.ToString(), beforeValues, afterValues,
+                        tenantId, actorId, correlationId, DateTimeOffset.UtcNow);
+                    if (snapshot is not null)
+                    {
+                        snapshots.Add(snapshot);
+                    }
+                }
             }
             catch (Exception exception)
             {
@@ -94,7 +123,12 @@ internal static class EntityChangeAuditCapture
             context.Set<EntityChangeAuditRecord>().AddRange(records);
         }
 
-        return records.Count;
+        if (snapshots.Count > 0)
+        {
+            context.Set<MutationValueSnapshot>().AddRange(snapshots);
+        }
+
+        return records.Count + snapshots.Count;
     }
 
     private static bool IsAuditStoreEntity(Type clrType) =>
@@ -116,7 +150,7 @@ internal static class EntityChangeAuditCapture
                 continue;
             }
 
-            values[property.Metadata.Name] = IsSensitiveProperty(entry.Metadata.ClrType, property.Metadata.Name)
+            values[property.Metadata.Name] = IsSensitiveProperty(property)
                 ? RedactedValue
                 : (useOriginalValues ? property.OriginalValue : property.CurrentValue);
         }
@@ -124,11 +158,12 @@ internal static class EntityChangeAuditCapture
         return values.Count == 0 ? null : SafeSerialize(values);
     }
 
-    private static bool IsSensitiveProperty(Type entityType, string propertyName) =>
-        SensitivePropertyCache.GetOrAdd((entityType, propertyName), static key =>
-            key.EntityType.GetProperty(key.PropertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                is { } property
-            && property.IsDefined(typeof(AuditSensitiveAttribute), inherit: true));
+    // EF has already resolved hidden/inherited members. Looking the name up again on
+    // the CLR type can be ambiguous and drop the entire entity's audit record.
+    private static bool IsSensitiveProperty(PropertyEntry property) =>
+        property.Metadata.PropertyInfo is { } mappedProperty
+        && SensitivePropertyCache.GetOrAdd(mappedProperty, static member =>
+            Attribute.IsDefined(member, typeof(AuditSensitiveAttribute), inherit: true));
 
     private static string SafeSerialize(Dictionary<string, object?> values)
     {

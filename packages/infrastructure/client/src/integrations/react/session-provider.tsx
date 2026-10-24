@@ -40,26 +40,9 @@ export interface SessionContextValue {
   update: (data?: Partial<Session>) => Promise<Session | null>;
 }
 
-export interface PendingMfaChallenge {
-  mfaToken: string;
-  availableMethods: string[];
-}
-
-interface AuthFlowContextValue {
-  mfaChallenge: PendingMfaChallenge | null;
-  setMfaChallenge: (challenge: PendingMfaChallenge | null) => void;
-}
-
 // ─── Context ─────────────────────────────────────────────────────
 
 export const SessionContext = createContext<SessionContextValue | undefined>(undefined);
-
-/**
- * Ephemeral state for authentication steps that span client-side routes.
- * This context is intentionally not exported from the public React barrel:
- * consumers access it through useAuth and the challenge never reaches storage.
- */
-export const AuthFlowContext = createContext<AuthFlowContextValue | undefined>(undefined);
 
 // ─── Provider Component ──────────────────────────────────────────
 
@@ -88,7 +71,6 @@ export function SessionProvider({
 }): ReactNode {
   const [session, setSession] = useState<Session | null>(initialSession ?? null);
   const [status, setStatus] = useState<SessionStatus>(initialSession ? 'authenticated' : 'loading');
-  const [mfaChallenge, setMfaChallenge] = useState<PendingMfaChallenge | null>(null);
   const [isOnline, setIsOnline] = useState(
     /* v8 ignore start -- navigator always defined in happy-dom */
     typeof navigator !== 'undefined' ? navigator.onLine : true,
@@ -285,17 +267,5 @@ export function SessionProvider({
     [session, status, updateSession],
   );
 
-  const authFlowValue = useMemo<AuthFlowContextValue>(
-    () => ({
-      mfaChallenge,
-      setMfaChallenge,
-    }),
-    [mfaChallenge],
-  );
-
-  return (
-    <SessionContext.Provider value={value}>
-      <AuthFlowContext.Provider value={authFlowValue}>{children}</AuthFlowContext.Provider>
-    </SessionContext.Provider>
-  );
+  return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

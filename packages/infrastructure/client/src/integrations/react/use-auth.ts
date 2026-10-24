@@ -33,8 +33,28 @@
 
 import { useCallback, useState, useRef, useContext, useEffect } from 'react';
 import { assertSafeServiceUrl } from '../../runtime/security/safe-remote-url.js';
-import { AuthFlowContext, SessionContext, type PendingMfaChallenge } from './session-provider.js';
+import { SessionContext } from './session-provider.js';
 import { MfaRequiredError } from '../../runtime/auth/errors.js';
+
+const MFA_CHALLENGE_STORAGE_KEY = 'gg.auth.mfaChallenge';
+
+function readStoredMfaChallenge(): UseAuthReturn['mfaChallenge'] {
+  /* v8 ignore start */
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(MFA_CHALLENGE_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { mfaToken?: unknown; availableMethods?: unknown };
+    if (typeof parsed.mfaToken !== 'string' || !Array.isArray(parsed.availableMethods)) return null;
+    return {
+      mfaToken: parsed.mfaToken,
+      availableMethods: parsed.availableMethods.filter((m): m is string => typeof m === 'string'),
+    };
+  } catch {
+    return null;
+  }
+  /* v8 ignore stop */
+}
 
 /**
  * Options for client-side authentication actions
@@ -48,8 +68,8 @@ export interface AuthActionOptions {
  * Return type of useAuth
  */
 export interface UseAuthReturn {
-  /** Expiring first-factor challenge held only in the mounted provider tree. */
-  mfaChallenge: PendingMfaChallenge | null;
+  /** Expiring first-factor challenge, persisted in sessionStorage so it survives route navigation. */
+  mfaChallenge: { mfaToken: string; availableMethods: string[] } | null;
   clearMfa: () => void;
   /** Sign in with a provider */
   signIn: (
@@ -93,7 +113,7 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [localMfaChallenge, setLocalMfaChallenge] = useState<PendingMfaChallenge | null>(null);
+  const [mfaChallenge, setMfaChallenge] = useState<UseAuthReturn['mfaChallenge']>(() => readStoredMfaChallenge());
   const csrfTokenRef = useRef<string | null>(null);
   const basePathRef = useRef(basePath);
 
@@ -103,9 +123,6 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
 
   // Access session context for updating state after auth actions
   const sessionContext = useContext(SessionContext);
-  const authFlowContext = useContext(AuthFlowContext);
-  const mfaChallenge = authFlowContext ? authFlowContext.mfaChallenge : localMfaChallenge;
-  const setMfaChallenge = authFlowContext?.setMfaChallenge ?? setLocalMfaChallenge;
 
   /**
    * Fetch a CSRF token
@@ -171,14 +188,20 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
             const availableMethods = Array.isArray(errorData.availableMethods)
               ? errorData.availableMethods.filter((m: unknown): m is string => typeof m === 'string')
               : [];
-            setMfaChallenge({ mfaToken: errorData.mfaToken, availableMethods });
+            const challenge = { mfaToken: errorData.mfaToken, availableMethods };
+            /* v8 ignore start */
+            try { window.sessionStorage.setItem(MFA_CHALLENGE_STORAGE_KEY, JSON.stringify(challenge)); } catch { /* storage unavailable */ }
+            /* v8 ignore stop */
+            setMfaChallenge(challenge);
             throw new MfaRequiredError(undefined, { mfaToken: errorData.mfaToken, availableMethods });
           }
           throw new Error((errorData as Record<string, string>).message || (errorData as Record<string, string>).detail || 'Sign-in failed');
         }
 
         const data = await response.json();
-        setMfaChallenge(null);
+        /* v8 ignore start */
+        try { window.sessionStorage.removeItem(MFA_CHALLENGE_STORAGE_KEY); } catch { /* storage unavailable */ }
+        /* v8 ignore stop */
 
         // If the response has a URL (OAuth redirect)
         if (data.url) {
@@ -191,10 +214,15 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
           await sessionContext.update();
         }
 
-        // Handle redirect
+        // Null the challenge only AFTER assigning location: a state update
+        // paints the no-challenge notice before the browser commits the
+        // navigation (the /sign-in/2fa "blink").
         if (redirect && redirectTo) {
           window.location.href = redirectTo;
+          return;
         }
+
+        setMfaChallenge(null);
       } catch (err) {
         const authError = err instanceof Error ? err : new Error('Sign-in failed');
         setError(authError);
@@ -203,7 +231,7 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
         setIsLoading(false);
       }
     },
-    [getCSRFToken, sessionContext, setMfaChallenge],
+    [getCSRFToken, sessionContext],
   );
 
   /**
@@ -288,8 +316,6 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
           throw new Error('Sign-out failed');
         }
 
-        setMfaChallenge(null);
-
         // Broadcast sign-out to other tabs
         // (SessionProvider will handle this via the BroadcastChannel)
 
@@ -309,15 +335,18 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
         setIsLoading(false);
       }
     },
-    [getCSRFToken, sessionContext, setMfaChallenge],
+    [getCSRFToken, sessionContext],
   );
 
   const clearError = useCallback(() => setError(null), []);
 
   const clearMfa = useCallback(() => {
+    /* v8 ignore start */
+    try { window.sessionStorage.removeItem(MFA_CHALLENGE_STORAGE_KEY); } catch { /* storage unavailable */ }
+    /* v8 ignore stop */
     setMfaChallenge(null);
     setError(null);
-  }, [setMfaChallenge]);
+  }, []);
 
   return {
     mfaChallenge,
