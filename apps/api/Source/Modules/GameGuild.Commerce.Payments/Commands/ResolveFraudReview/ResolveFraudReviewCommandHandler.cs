@@ -9,12 +9,17 @@ namespace GameGuild.Commerce.Payments;
 ///     Handler for resolving a pending manual fraud review (issue #409). Guarded (the
 ///     <c>payments:admin</c> permission plus an authenticated reviewer and tenant match)
 ///     and audited (a payment audit-trail entry records the transition with reviewer notes).
+///     Declining a review as confirmed fraud also blacklists the attempt's listable
+///     attributes (payment-method token, card fingerprint, provider customer id) so future
+///     attempts with the same attributes are scored by the blacklist signal provider
+///     (issue #409: automatic addition on confirmed fraud).
 /// </summary>
 public sealed class ResolveFraudReviewCommandHandler(
     IPaymentRepository paymentRepository,
     IRevenueAuditService revenueAuditService,
     IActorContextAccessor actorContextAccessor,
-    ILogger<ResolveFraudReviewCommandHandler> logger) : ICommandHandler<ResolveFraudReviewCommand, FraudReviewResolutionResult>
+    ILogger<ResolveFraudReviewCommandHandler> logger,
+    FraudReviewAutoBlacklister? autoBlacklister = null) : ICommandHandler<ResolveFraudReviewCommand, FraudReviewResolutionResult>
 {
     public async Task<FraudReviewResolutionResult> Handle(ResolveFraudReviewCommand request, CancellationToken cancellationToken)
     {
@@ -67,6 +72,11 @@ public sealed class ResolveFraudReviewCommandHandler(
         logger.LogInformation(
             "Fraud review for payment {PaymentId} resolved as {Status} by reviewer {ReviewerId}",
             payment.Id, payment.FraudReviewStatus, reviewedByUserId);
+
+        if (!request.Approve)
+        {
+            await (autoBlacklister?.RunAsync(payment, reviewedByUserId, cancellationToken) ?? Task.FromResult(0)).ConfigureAwait(false);
+        }
 
         return new FraudReviewResolutionResult
         {
