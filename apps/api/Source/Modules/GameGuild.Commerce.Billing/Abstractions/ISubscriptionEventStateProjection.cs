@@ -95,8 +95,9 @@ public enum SubscriptionProjectedStatus
 }
 
 /// <summary>
-///     Live snapshot facts taken from the authoritative <see cref="Subscription" /> row,
-///     used as the verification baseline for the event-sourced projection.
+///     Live snapshot facts taken from the authoritative subscription row
+///     (<c>GameGuild.Commerce.Subscriptions.Subscription</c>), used as the verification
+///     baseline for the event-sourced projection.
 /// </summary>
 public sealed record SubscriptionStateFacts(
     Guid SubscriptionId,
