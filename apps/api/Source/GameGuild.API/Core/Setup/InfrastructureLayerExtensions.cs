@@ -316,6 +316,9 @@ public static class InfrastructureLayerExtensions
         // Connect the billing module's outbox read port to the platform outbox read model
         // (issue #396: billing events monitoring over the existing durable transport).
         services.AddScoped<IBillingOutboxEventReader, Core.Integration.BillingOutboxEventReader>();
+        // Connect the billing module's subscription event log port to the durable aggregate
+        // event log (issue #396: state reconstruction over the durable billing event log).
+        services.AddScoped<IBillingSubscriptionEventLog, Core.Integration.BillingSubscriptionEventLog>();
         logger.LogInformation("Billing Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10e. Commerce Payments Module (payment gateway, payment services)

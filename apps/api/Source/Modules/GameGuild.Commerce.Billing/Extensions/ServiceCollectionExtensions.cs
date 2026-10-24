@@ -66,6 +66,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<GameGuild.Commerce.Subscriptions.ISubscriptionInvoiceMaterializer, SubscriptionInvoiceMaterializer>();
         services.AddScoped<GameGuild.Notifications.Services.Email.IEmailRenderer, Services.Email.Renderers.InvoiceIssuedEmailRenderer>();
 
+        // Event-sourced state reconstruction (issue #396): deterministic fold of the durable
+        // billing event log into projected subscription state, verified against the live snapshot.
+        services.AddSingleton<ISubscriptionEventStateProjection, SubscriptionEventStateProjectionService>();
+
+        // Orchestrated subscription plan change saga (issue #396 workflow orchestration):
+        // proration, invoice, payment and activation as journaled, event-observable steps
+        // with compensating actions on failure.
+        services.AddScoped<ISubscriptionChangeSaga, SubscriptionChangeSagaOrchestrator>();
+
         // Register Apple sub-services
         services.AddSingleton<IAppleJwsVerificationService, AppleJwsVerificationService>();
         services.AddSingleton<IAppleStoreAuthService, AppleStoreAuthService>();

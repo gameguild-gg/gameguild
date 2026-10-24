@@ -33,3 +33,17 @@ using GameGuild.Commerce.Billing;
     typeof(ValidatePricingLedgerDriftCommand),
     "commerce.billing.validate-pricing-ledger-drift",
     NoDomainEventReason = "Drift validation stamps ledger entries in place; the ledger rows and audit trail are the durable record, and the durable generic operation event remains the observable contract.")]
+
+// Orchestrated subscription plan change saga (issue #396 workflow orchestration): every
+// executed step emits a durable step event; the saga then completes (completed event) or
+// fails after compensating actions (failed event). All named events are conditional on
+// the step outcomes of the specific run.
+[assembly: UseCaseEventContract(
+    typeof(OrchestrateSubscriptionPlanChangeCommand),
+    "commerce.billing.orchestrate-subscription-plan-change",
+    ConditionalEventTypes =
+    [
+        typeof(BillingSubscriptionChangeStepV1),
+        typeof(BillingSubscriptionChangeCompletedV1),
+        typeof(BillingSubscriptionChangeFailedV1)
+    ])]

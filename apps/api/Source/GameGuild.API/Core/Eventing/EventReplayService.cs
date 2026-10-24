@@ -73,4 +73,38 @@ public sealed class EventReplayService(ApplicationDbContext db, TimeProvider tim
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return true;
     }
+
+    public async Task<IReadOnlyList<DurableEventLogEntry>> GetAggregateEventLogAsync(
+        string aggregateType,
+        string aggregateId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(aggregateType))
+        {
+            throw new ArgumentException("Aggregate type is required.", nameof(aggregateType));
+        }
+
+        if (string.IsNullOrWhiteSpace(aggregateId))
+        {
+            throw new ArgumentException("Aggregate id is required.", nameof(aggregateId));
+        }
+
+        var messages = await db.Set<OutboxMessage>().AsNoTracking()
+            .Where(message => message.AggregateType == aggregateType && message.AggregateId == aggregateId)
+            .OrderBy(message => message.OccurredAtUtc)
+            .ThenBy(message => message.EventId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return messages
+            .Select(message => new DurableEventLogEntry(
+                message.EventId,
+                message.EventName,
+                message.SchemaVersion,
+                message.TenantId,
+                message.CorrelationId,
+                new DateTimeOffset(message.OccurredAtUtc, TimeSpan.Zero),
+                message.Payload))
+            .ToArray();
+    }
 }
