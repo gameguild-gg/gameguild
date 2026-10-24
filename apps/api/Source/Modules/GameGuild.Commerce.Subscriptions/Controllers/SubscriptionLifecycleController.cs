@@ -202,7 +202,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     public async Task<IActionResult> UpgradeSubscription(Guid subscriptionId, [FromBody] UpgradeRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var result = await sender.Send(new UpgradeSubscriptionPlanCommand(subscriptionId, body.NewPlanId, body.EffectiveDate), ct).ConfigureAwait(false);
+        var result = await sender.Send(new UpgradeSubscriptionPlanCommand(subscriptionId, body.NewPlanId, body.EffectiveDate, body.PromoCodes, body.PromoCodeIdempotencyKey), ct).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -222,7 +222,7 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     public async Task<IActionResult> DowngradeSubscription(Guid subscriptionId, [FromBody] DowngradeRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var result = await sender.Send(new DowngradeSubscriptionPlanCommand(subscriptionId, body.NewPlanId, body.EffectiveDate), ct).ConfigureAwait(false);
+        var result = await sender.Send(new DowngradeSubscriptionPlanCommand(subscriptionId, body.NewPlanId, body.EffectiveDate, body.PromoCodes, body.PromoCodeIdempotencyKey), ct).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -307,9 +307,9 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
 
     public sealed record SuspendRequest(string? Reason);
 
-    public sealed record UpgradeRequest(Guid NewPlanId, DateTime? EffectiveDate);
+    public sealed record UpgradeRequest(Guid NewPlanId, DateTime? EffectiveDate, IReadOnlyList<string>? PromoCodes = null, string? PromoCodeIdempotencyKey = null);
 
-    public sealed record DowngradeRequest(Guid NewPlanId, DateTime? EffectiveDate);
+    public sealed record DowngradeRequest(Guid NewPlanId, DateTime? EffectiveDate, IReadOnlyList<string>? PromoCodes = null, string? PromoCodeIdempotencyKey = null);
 
     public sealed record ChangeBillingCycleRequest(BillingCycle BillingCycle);
 

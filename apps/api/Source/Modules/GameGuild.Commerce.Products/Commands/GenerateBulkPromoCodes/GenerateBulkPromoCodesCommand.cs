@@ -31,6 +31,8 @@ namespace GameGuild.Commerce.Products;
 /// <param name="ProductId">Product restriction</param>
 /// <param name="PlanId">Subscription plan restriction (issue #418)</param>
 /// <param name="CreatedBy">Creating user</param>
+/// <param name="TimeZoneId">IANA timezone the shared validity window is expressed in (issue #418)</param>
+/// <param name="EligibleCustomerType">Customer relationship state eligible for the codes (issue #418)</param>
 [RequiresQuota(ResourceUsageType.PromoCodes, 1, Source = "GenerateBulkPromoCodes")]
 public sealed record GenerateBulkPromoCodesCommand(
     int Count,
@@ -54,7 +56,9 @@ public sealed record GenerateBulkPromoCodesCommand(
     string? CampaignId = null,
     Guid? ProductId = null,
     Guid? CreatedBy = null,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? TimeZoneId = null,
+    PromoCustomerType EligibleCustomerType = PromoCustomerType.Any
 ) : ICommand<IReadOnlyList<PromoCodeDto>>;
 
 /// <summary>
@@ -62,7 +66,8 @@ public sealed record GenerateBulkPromoCodesCommand(
 /// </summary>
 public sealed class GenerateBulkPromoCodesCommandHandler(
     IPromoCodeRepository promoCodeRepository,
-    IPromoCodeAuditLogger auditLogger)
+    IPromoCodeAuditLogger auditLogger,
+    Microsoft.Extensions.Options.IOptions<PromoEngineOptions>? engineOptions = null)
     : ICommandHandler<GenerateBulkPromoCodesCommand, IReadOnlyList<PromoCodeDto>>
 {
     /// <summary>Maximum codes a single command may generate.</summary>
@@ -97,6 +102,12 @@ public sealed class GenerateBulkPromoCodesCommandHandler(
             existing = await promoCodeRepository.GetExistingCodesAsync(candidateCodes, cancellationToken).ConfigureAwait(false);
         }
 
+        // Issue #418: normalize the shared window to UTC instants in the batch timezone.
+        var (timeZone, _) = PromoValidityWindow.ResolveTimeZone(
+            string.IsNullOrWhiteSpace(request.TimeZoneId) ? engineOptions?.Value.DefaultTimeZoneId : request.TimeZoneId);
+        var validFromUtc = PromoValidityWindow.NormalizeToUtc(request.ValidFrom, timeZone);
+        var validUntilUtc = PromoValidityWindow.NormalizeToUtc(request.ValidUntil, timeZone);
+
         var createdAt = SystemClock.UtcNow;
         var promoCodes = candidateCodes.Select((code, index) => new PromoCode
         {
@@ -115,8 +126,10 @@ public sealed class GenerateBulkPromoCodesCommandHandler(
             FreeTrialExtensionDays = request.FreeTrialExtensionDays,
             DurationMonths = request.DurationMonths,
             ApplyToRenewal = request.ApplyToRenewal,
-            ValidFrom = request.ValidFrom,
-            ValidUntil = request.ValidUntil,
+            ValidFrom = validFromUtc,
+            ValidUntil = validUntilUtc,
+            TimeZoneId = timeZone.Id,
+            EligibleCustomerType = request.EligibleCustomerType,
             IsActive = true,
             IsExclusive = false,
             StackingPriority = request.StackingPriority,

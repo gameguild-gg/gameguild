@@ -13,6 +13,11 @@ namespace GameGuild.Commerce.Products;
 /// <param name="IdempotencyKey">Optional replay-protection key; repeated submissions of the same key never count twice</param>
 /// <param name="OrderId">Optional order linkage recorded with the usage</param>
 /// <param name="PlanId">Optional subscription plan ID for plan-scoped codes (issue #418)</param>
+/// <param name="CaptchaToken">
+/// CAPTCHA token for untrusted (anonymous) redemption contexts (issue #418 anti-farming).
+/// Required and verified when the redemption CAPTCHA gate is enabled; missing or invalid
+/// tokens fail closed with every code rejected.
+/// </param>
 public sealed record ApplyPromoCodesCommand(
     decimal OrderAmount,
     List<string> PromoCodes,
@@ -20,5 +25,6 @@ public sealed record ApplyPromoCodesCommand(
     Guid? UserId = null,
     string? IdempotencyKey = null,
     Guid? OrderId = null,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? CaptchaToken = null
 ) : ICommand<PromoCodeApplicationResult>;

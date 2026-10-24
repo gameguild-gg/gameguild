@@ -27,6 +27,8 @@ namespace GameGuild.Commerce.Products;
 /// <param name="CampaignId">Campaign identifier for tracking</param>
 /// <param name="ProductId">Specific product ID</param>
 /// <param name="PlanId">Specific subscription plan ID (null = not plan-scoped; issue #418)</param>
+/// <param name="TimeZoneId">IANA timezone the validity window is expressed in (issue #418; null = keep current)</param>
+/// <param name="EligibleCustomerType">Customer relationship state eligible for this code (issue #418)</param>
 public sealed record UpdatePromoCodeCommand(
     Guid Id,
     string? Name = null,
@@ -49,5 +51,7 @@ public sealed record UpdatePromoCodeCommand(
     int? StackingPriority = null,
     string? CampaignId = null,
     Guid? ProductId = null,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? TimeZoneId = null,
+    PromoCustomerType? EligibleCustomerType = null
 ) : ICommand<PromoCodeDto>;

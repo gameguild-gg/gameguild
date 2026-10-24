@@ -118,6 +118,9 @@ public static class AuditActionTypes
     // Billing webhook signing-secret rotation (issue #408)
     public const string BillingWebhookSecretRotated = "BillingWebhookSecretRotated";
 
+    // Promo engine unusual-usage anomaly (issue #418 anti-farming alerting)
+    public const string PromoUsageAnomalyDetected = "PromoUsageAnomalyDetected";
+
     // Tenant Operations
     public const string TenantCreated = "TenantCreated";
 
