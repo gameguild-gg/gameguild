@@ -57,6 +57,7 @@ const clientSuites = [
   'tests/next/auth.test.ts',
   'tests/next/actions-extended.test.ts',
   'tests/gaps/final-gaps.test.ts',
+  'tests/react/query-hooks-extended.test.ts',
   'tests/generator',
 ];
 
