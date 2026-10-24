@@ -26,6 +26,7 @@ public class ApiKeyController : BaseApiController
     /// </summary>
     [HttpPost("v{version:apiVersion}/auth/api-keys")]
     [Authorize(Policy = ApiKeyScopePolicies.Prefix + ApiKeyScopes.ManageApiKeys)]
+    [Authorize(Policy = TrustedDevicePolicy.Name)]
     [EndpointSummary("Create a new API key")]
     [ProducesResponseType(typeof(CreateApiKeyResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -60,6 +61,7 @@ public class ApiKeyController : BaseApiController
     /// </summary>
     [HttpPost("v{version:apiVersion}/auth/api-keys/{keyId}:rotate")]
     [Authorize(Policy = ApiKeyScopePolicies.Prefix + ApiKeyScopes.ManageApiKeys)]
+    [Authorize(Policy = TrustedDevicePolicy.Name)]
     [EndpointSummary("Rotate an API key")]
     [ProducesResponseType(typeof(RotateApiKeyResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -89,6 +91,7 @@ public class ApiKeyController : BaseApiController
     /// </summary>
     [HttpPost("v{version:apiVersion}/auth/api-keys/{keyId}:revoke")]
     [Authorize(Policy = ApiKeyScopePolicies.Prefix + ApiKeyScopes.ManageApiKeys)]
+    [Authorize(Policy = TrustedDevicePolicy.Name)]
     [EndpointSummary("Revoke an API key")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

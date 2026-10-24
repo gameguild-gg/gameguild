@@ -86,7 +86,21 @@ rehearse acceptance, and retain a rollback path.
   "Session": {
     "IdleTimeoutMinutes": 30,
     "AbsoluteTimeoutMinutes": 1440,
-    "TerminateSessionsOnPasswordChange": true
+    "MaxConcurrentSessions": 5,
+    "TrustedDeviceDurationDays": 30,
+    "MaxTrustedDevices": 10,
+    "TerminateSessionsOnPasswordChange": true,
+    "TerminateSessionsOnMfaDisable": true,
+    "EnableDeviceFingerprinting": true,
+    "EnableLocationTracking": true,
+    "RequireTrustedDeviceForSensitiveOps": false,
+    "IpAddressBinding": "Off"
+  },
+  "Geolocation": {
+    "MaxMind": {
+      "DatabasePath": "",
+      "AnonymousDatabasePath": ""
+    }
   }
 }
 ```
@@ -198,3 +212,22 @@ Authentication-related concerns remain in their owning typed sections: account l
 `PresentationLayer:SecurityHeaders`. The current platform uses the `GameGuild.Identity.Authentication` services and
 repositories for account, password, OAuth, API-key, Basic, cookie, and MFA flows; the historical request to add a
 second ASP.NET Core Identity persistence stack is superseded by that platform architecture.
+
+### Session hardening options (issue #278)
+
+- `Session:IpAddressBinding` — `Off` (default) or `Strict`. In `Strict` mode the token
+  revocation middleware rejects any session-bound request whose normalized remote IP differs
+  from the address recorded at session creation (fail closed). `Strict` requires
+  `EnableLocationTracking` so sessions always carry a real client address; startup
+  validation rejects the combination otherwise.
+- `Session:RequireTrustedDeviceForSensitiveOps` — when `true`, endpoints carrying the
+  `require-trusted-device` policy (currently API-key create/rotate/revoke) reject requests
+  whose session is not bound to an active, unexpired trusted device. Inert while `false`.
+- `Session:MaxConcurrentSessions` — creating a session beyond the limit evicts the
+  oldest active sessions for that user.
+- `Geolocation:MaxMind:DatabasePath` — GeoLite2-City database for session location
+  enrichment (city/country/coordinates). Empty disables enrichment (fail closed).
+- `Geolocation:MaxMind:AnonymousDatabasePath` — optional GeoIP2 Anonymous IP database.
+  When present, resolved addresses additionally carry VPN/proxy/Tor/hosting traits; the
+  session security analysis raises the risk score for sessions observed on anonymous
+  networks. Absent leaves those traits unknown (never blocks the city enrichment).
