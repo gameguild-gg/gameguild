@@ -135,8 +135,9 @@ public sealed class RetireCompletedOutboxMessages : Migration
 
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        // Deleting permanent identities would permit duplicate business side effects.
-        // Roll back the application without discarding these receipts or restoring payloads.
-        throw new NotSupportedException("Outbox delivery identities must be retained across application rollback.");
+        // This operational schema is an additive, permanent expansion. An application
+        // or earlier feature migration may roll back, but identity reservation must
+        // keep protecting retired events throughout that window. Up is idempotent
+        // so a later upgrade reuses the retained receipts, trigger and function.
     }
 }

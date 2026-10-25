@@ -64,5 +64,9 @@ Regular vacuum makes space from deleted tuples reusable. It may leave the
 allocated file size unchanged. Reclaiming filesystem space with a table rewrite
 requires separate downtime and disk-capacity planning; the worker does not do it.
 
-Rollback the application while retaining the identity table. The migration's
-down operation intentionally refuses to discard deduplication history.
+Rollback retains the expanded operational schema: the identity table, reservation
+trigger, cleanup function and indexes remain in place when EF rolls this migration
+back. This lets earlier feature migrations and the application roll back without
+reopening retired identities. Reapplying the migration reuses the retained schema
+and data. Retired payloads are not reconstructed, and deduplication history must
+never be dropped manually.

@@ -300,6 +300,9 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         var completed = NewMessage("rollback", now);
         completed.CompletedAtUtc = now;
         await InsertAsync(provider, completed, Receipt(completed, now, completed: true, dead: false));
+        await using var original = provider.CreateAsyncScope();
+        var storedPayload = await original.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+            .Set<OutboxMessage>().AsNoTracking().Select(message => message.Payload).SingleAsync();
         await using (var scope = provider.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -311,9 +314,43 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         }
         await using var verify = provider.CreateAsyncScope();
         var context = verify.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        Assert.Equal(completed.Payload, (await context.Set<OutboxMessage>().SingleAsync()).Payload);
+        Assert.Equal(storedPayload, (await context.Set<OutboxMessage>().SingleAsync()).Payload);
         Assert.Single(await context.Set<InboxReceipt>().ToListAsync());
         Assert.Null((await context.Set<OutboxDeliveryReceipt>().SingleAsync()).CompletedAtUtc);
+    }
+
+    [Fact]
+    public async Task Cleanup_MigrationRollbackAndReupgradeKeepRetiredIdentityProtected()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var message = NewMessage("migration-rollback", now);
+        message.CompletedAtUtc = now;
+        await InsertAsync(provider, message);
+        Assert.Equal(1, await CleanupOnceAsync(provider));
+
+        var migration = new RetireCompletedOutboxMessages();
+        await using var connection = new NpgsqlConnection(_database.ConnectionString);
+        await connection.OpenAsync();
+        foreach (var operations in new[] { migration.DownOperations, migration.UpOperations })
+        {
+            foreach (var operation in operations.OfType<Microsoft.EntityFrameworkCore.Migrations.Operations.SqlOperation>())
+            {
+                await using var command = new NpgsqlCommand(operation.Sql, connection);
+                await command.ExecuteNonQueryAsync();
+            }
+
+            await using var verify = provider.CreateAsyncScope();
+            var db = verify.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            Assert.Empty(await db.Set<OutboxMessage>().ToListAsync());
+            var receipt = await db.Set<OutboxDeliveryReceipt>().SingleAsync();
+            Assert.Equal(message.EventId, receipt.EventId);
+            Assert.Equal(now, receipt.CompletedAtUtc);
+            db.Add(message);
+            var error = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+            Assert.Equal(PostgresErrorCodes.UniqueViolation, ((PostgresException)error.InnerException!).SqlState);
+        }
     }
 
     [Fact]
