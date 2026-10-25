@@ -52,6 +52,10 @@ const cases = [];
 const errors = [];
 let browser;
 let failure;
+const cleanupFailures = [];
+const recordCleanupFailure = (operation, error) => {
+  cleanupFailures.push(`${operation}: ${redact(error?.stack ?? error)}`);
+};
 try {
   const deadline = Date.now() + 180_000;
   let ready = false;
@@ -93,21 +97,31 @@ try {
   cases.push({ name: 'Disabled optional wallets do not break ordinary sign-in', outcome: 'Passed' });
   await page.screenshot({ path: path.join(evidence, 'sign-in.png'), fullPage: true });
 } catch (error) {
-  failure = redact(error.stack ?? error);
+  failure = redact(error?.stack ?? error);
 } finally {
-  await browser?.close();
+  try { await browser?.close(); } catch (error) { recordCleanupFailure('Close browser', error); }
   if (child.pid && child.exitCode === null && child.signalCode === null) {
-    try { process.kill(-child.pid, 'SIGTERM'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+    try { process.kill(-child.pid, 'SIGTERM'); } catch (error) {
+      if (error?.code !== 'ESRCH') recordCleanupFailure('Terminate Next process group', error);
+    }
     const deadline = Date.now() + 5000;
     while (child.exitCode === null && child.signalCode === null && Date.now() < deadline) await delay(100);
     if (child.exitCode === null && child.signalCode === null) {
-      try { process.kill(-child.pid, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+      try { process.kill(-child.pid, 'SIGKILL'); } catch (error) {
+        if (error?.code !== 'ESRCH') recordCleanupFailure('Kill Next process group', error);
+      }
     }
   }
-  await writeFile(path.join(evidence, 'next.log'), serverLog);
-  await writeFile(path.join(evidence, 'result.json'), JSON.stringify({ ...source, mode, passed: !failure,
-    cases, browserErrors: errors, failure: failure ?? null, credentialsSubmitted: false,
-    backendResponsesMocked: false, externalBrowserRequestsBlocked: true }, null, 2));
+  try { await writeFile(path.join(evidence, 'next.log'), serverLog); }
+  catch (error) { recordCleanupFailure('Write Next log', error); }
+  try {
+    await writeFile(path.join(evidence, 'result.json'), JSON.stringify({ ...source, mode,
+      passed: !failure && cleanupFailures.length === 0,
+      cases, browserErrors: errors, failure: failure ?? null, cleanupFailures, credentialsSubmitted: false,
+      backendResponsesMocked: false, externalBrowserRequestsBlocked: true }, null, 2));
+  } catch (error) { recordCleanupFailure('Write regression result', error); }
 }
-if (failure) throw new Error(failure);
+if (failure || cleanupFailures.length > 0) {
+  throw new Error([failure, ...cleanupFailures].filter(Boolean).join('\n\n'));
+}
 console.log(`PASS: ${mode} sign-in rendering and hydration (${cases.length} cases).`);
