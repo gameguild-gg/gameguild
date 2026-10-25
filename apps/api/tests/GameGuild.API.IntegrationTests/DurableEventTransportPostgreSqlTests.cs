@@ -3,6 +3,9 @@ using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Data.Common;
 using Microsoft.Extensions.DependencyInjection;
 using GameGuild.API.Database;
@@ -12,6 +15,7 @@ using GameGuild.Commerce.Billing;
 using GameGuild.API.Eventing;
 using GameGuild.API.IntegrationTests.Infrastructure;
 using GameGuild.TestSupport.Finance.Economy;
+using GameGuild.Identity.Authentication;
 using Npgsql;
 
 namespace GameGuild.API.IntegrationTests;
@@ -331,14 +335,16 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         Assert.Equal(1, await CleanupOnceAsync(provider));
 
         var migration = new RetireCompletedOutboxMessages();
-        await using var connection = new NpgsqlConnection(_database.ConnectionString);
-        await connection.OpenAsync();
+        await using var migrationScope = provider.CreateAsyncScope();
+        var migrationDb = migrationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await migrationDb.Database.OpenConnectionAsync();
+        var generator = migrationDb.GetService<IMigrationsSqlGenerator>();
+        var connection = migrationDb.GetService<IRelationalConnection>();
         foreach (var operations in new[] { migration.DownOperations, migration.UpOperations })
         {
-            foreach (var operation in operations.OfType<Microsoft.EntityFrameworkCore.Migrations.Operations.SqlOperation>())
+            foreach (var command in generator.Generate(operations, model: null))
             {
-                await using var command = new NpgsqlCommand(operation.Sql, connection);
-                await command.ExecuteNonQueryAsync();
+                await command.ExecuteNonQueryAsync(connection, parameterValues: null, cancellationToken: CancellationToken.None);
             }
 
             await using var verify = provider.CreateAsyncScope();
@@ -351,6 +357,82 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
             var error = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
             Assert.Equal(PostgresErrorCodes.UniqueViolation, ((PostgresException)error.InnerException!).SqlState);
         }
+    }
+
+    [Fact]
+    public async Task UseCaseVerifier_AcceptsOperationAndDeclaredEventsAfterPayloadRetirement()
+    {
+        await ResetAsync();
+        var operation = new UseCaseOperationContext("test.retired-operation", nameof(LocalSignInCommand),
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
+        operation.MarkBusinessMutationObserved();
+        var operationEvent = operation.GetOrCreateOperationEvent("Fixture", "retired-operation");
+        var declaredEvent = new PostgresEvent
+        {
+            EventId = Guid.NewGuid(), TenantId = operation.TenantId, ActorId = operation.ActorId,
+            CorrelationId = operation.CorrelationId, AggregateType = "Fixture", AggregateId = "retired-declaration",
+            OccurredAt = operationEvent.OccurredAt
+        };
+        var now = DateTimeOffset.UtcNow;
+        await using var provider = BuildProvider(new MutableTimeProvider(now), services =>
+            services.AddScoped<IUseCaseEventVerifier, UseCaseEventVerifier>());
+        var generic = NewMessage(operationEvent, now);
+        var declared = NewMessage(declaredEvent, now);
+        generic.CompletedAtUtc = now;
+        declared.CompletedAtUtc = now;
+        await InsertAsync(provider, generic, declared);
+        Assert.Equal(2, await CleanupOnceAsync(provider));
+
+        await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Empty(await db.Set<OutboxMessage>().ToListAsync());
+        Assert.Equal(2, await db.Set<OutboxDeliveryReceipt>().CountAsync(receipt =>
+            receipt.CorrelationId == operation.CorrelationId && receipt.CompletedAtUtc != null));
+        var contract = new UseCaseEventContract(typeof(LocalSignInCommand), operation.OperationCode,
+            [typeof(PostgresEvent)], [], null, null, null);
+        await scope.ServiceProvider.GetRequiredService<IUseCaseEventVerifier>()
+            .VerifyAsync(contract, operation, CancellationToken.None);
+    }
+
+    [Theory]
+    [InlineData("reservation-only")]
+    [InlineData("other-correlation")]
+    [InlineData("missing-declaration")]
+    public async Task UseCaseVerifier_RejectsIncompleteOrUnrelatedRetirementEvidence(string evidence)
+    {
+        await ResetAsync();
+        var now = DateTimeOffset.UtcNow;
+        await using var provider = BuildProvider(new MutableTimeProvider(now), services =>
+            services.AddScoped<IUseCaseEventVerifier, UseCaseEventVerifier>());
+        var operation = new UseCaseOperationContext("test.retirement-denial", nameof(LocalSignInCommand),
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
+        operation.MarkBusinessMutationObserved();
+        var storedCorrelation = evidence == "other-correlation" ? Guid.NewGuid() : operation.CorrelationId;
+        await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Add(new OutboxDeliveryReceipt
+        {
+            EventId = Guid.NewGuid(), CorrelationId = storedCorrelation,
+            EventType = DurableIntegrationEventValidator.GetStableTypeName(typeof(UseCaseOperationOccurredV1)),
+            CompletedAtUtc = evidence == "reservation-only" ? null : now
+        });
+        if (evidence != "missing-declaration")
+        {
+            db.Add(new OutboxDeliveryReceipt
+            {
+                EventId = Guid.NewGuid(), CorrelationId = storedCorrelation,
+                EventType = DurableIntegrationEventValidator.GetStableTypeName(typeof(PostgresEvent)),
+                CompletedAtUtc = evidence == "reservation-only" ? null : now
+            });
+        }
+        await db.SaveChangesAsync();
+        var contract = new UseCaseEventContract(typeof(LocalSignInCommand), operation.OperationCode,
+            [typeof(PostgresEvent)], [], null, null, null);
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            scope.ServiceProvider.GetRequiredService<IUseCaseEventVerifier>()
+                .VerifyAsync(contract, operation, CancellationToken.None));
+        Assert.Contains(evidence == "missing-declaration"
+            ? "missing declared durable events" : "without its durable operation event", error.Message);
     }
 
     [Fact]
@@ -600,13 +682,18 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
             CorrelationId = Guid.NewGuid(),
             OccurredAt = occurredAt.UtcDateTime
         };
+        return NewMessage(integrationEvent, occurredAt);
+    }
+
+    private static OutboxMessage NewMessage(IDurableIntegrationEvent integrationEvent, DateTimeOffset createdAt)
+    {
         return new OutboxMessage
         {
             EventId = integrationEvent.EventId,
             TenantId = integrationEvent.TenantId,
             ActorId = integrationEvent.ActorId,
             EventName = integrationEvent.EventName,
-            EventType = $"{typeof(PostgresEvent).FullName}, {typeof(PostgresEvent).Assembly.GetName().Name}",
+            EventType = DurableIntegrationEventValidator.GetStableTypeName(integrationEvent.GetType()),
             SourceModule = integrationEvent.SourceModule,
             AggregateType = integrationEvent.AggregateType,
             AggregateId = integrationEvent.AggregateId,
@@ -614,7 +701,7 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
             OccurredAtUtc = integrationEvent.OccurredAt,
             SchemaVersion = integrationEvent.SchemaVersion,
             Payload = JsonSerializer.Serialize(integrationEvent, integrationEvent.GetType(), new JsonSerializerOptions(JsonSerializerDefaults.Web)),
-            CreatedAtUtc = occurredAt
+            CreatedAtUtc = createdAt
         };
     }
 

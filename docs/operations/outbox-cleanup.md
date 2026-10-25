@@ -20,6 +20,11 @@ metadata needed by administrative readers. Payloads and consumer error details
 are never copied. Do not delete these identities: their unique constraint also
 protects raw SQL publishers and older transaction snapshots against redelivery.
 
+Use-case verification reads both live outbox envelopes and completed delivery
+metadata in one database statement. A reservation with no completion timestamp
+cannot satisfy the event contract. The partial correlation index keeps these
+checks from scanning operational HTTP identities.
+
 For an existing backlog, first inspect the primary, consumer states, replication
 lag and free disk. On a large live database, create the two migration indexes
 concurrently before applying the migration, so index construction does not block
@@ -38,6 +43,15 @@ WHERE "CompletedAtUtc" IS NULL OR "DeadLetteredAtUtc" IS NOT NULL;
 Check `pg_index.indisvalid` after concurrent construction; an interrupted build
 can leave an invalid index that `IF NOT EXISTS` will skip. Refresh planner
 statistics with `ANALYZE` after a large queue distribution change.
+
+If the additive receipt table already exists, also build its correlation index
+concurrently before applying the migration:
+
+```sql
+CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_outbox_delivery_correlation
+ON "gameguild.integration".outbox_delivery_receipts ("CorrelationId")
+WHERE "CompletedAtUtc" IS NOT NULL AND "EventType" IS NOT NULL;
+```
 
 Use the same bounded cleanup function for an operational drain. Each call must
 commit separately; check replication between batches and stop the drain if

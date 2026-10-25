@@ -26,6 +26,9 @@ public sealed class RetireCompletedOutboxMessages : Migration
             CREATE INDEX IF NOT EXISTS ix_outbox_delivery_source
                 ON "gameguild.integration".outbox_delivery_receipts ("SourceModule", "OccurredAtUtc")
                 WHERE "SourceModule" IS NOT NULL;
+            CREATE INDEX IF NOT EXISTS ix_outbox_delivery_correlation
+                ON "gameguild.integration".outbox_delivery_receipts ("CorrelationId")
+                WHERE "CompletedAtUtc" IS NOT NULL AND "EventType" IS NOT NULL;
 
             CREATE INDEX IF NOT EXISTS ix_outbox_pending_order
                 ON "gameguild.integration".outbox_messages ("OccurredAtUtc", "EventId")
