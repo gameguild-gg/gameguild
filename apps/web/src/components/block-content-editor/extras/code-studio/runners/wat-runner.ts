@@ -289,7 +289,7 @@ export class WatRunner implements CodeRunner {
         // If there's a main function, call it
         if ('main' in exports && typeof exports.main === 'function') {
           console.log('[WatRunner] Calling main function after _initialize')
-          const result = (exports.main as Function)()
+          const result: unknown = exports.main()
           exitCode = typeof result === 'number' ? result : 0
         }
       } else if ('main' in exports && typeof exports.main === 'function') {
@@ -298,7 +298,7 @@ export class WatRunner implements CodeRunner {
         console.log('[WatRunner] Calling main function')
         
         try {
-          const result = (exports.main as Function)()
+          const result: unknown = exports.main()
           
           // The result might be the value to print
           if (typeof result === 'number') {
@@ -334,7 +334,11 @@ export class WatRunner implements CodeRunner {
         if (callableFuncs.length === 1) {
           const funcName: string = callableFuncs[0] as string
           console.log(`[WatRunner] Calling single exported function: ${funcName}`)
-          const result = (exports[funcName] as Function)()
+          const entryPoint = exports[funcName]
+          if (typeof entryPoint !== 'function') {
+            throw new Error(`Exported entry point is not callable: ${funcName}`)
+          }
+          const result: unknown = entryPoint()
           if (typeof result === 'number') {
             wasmStdout += result.toString() + '\n'
           }
