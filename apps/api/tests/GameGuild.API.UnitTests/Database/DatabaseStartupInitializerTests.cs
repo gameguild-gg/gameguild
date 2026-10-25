@@ -324,7 +324,31 @@ public sealed class DatabaseStartupInitializerTests
 
         await InvokeGrantRuntimeRolePrivilegesAsync(app, db);
 
-        interceptor.CommandCount.Should().Be(2);
+        interceptor.CommandCount.Should().Be(3);
+        interceptor.Commands.Should().ContainSingle(sql => sql.Contains(
+            "GRANT EXECUTE ON FUNCTION \"gameguild.integration\".retire_completed_outbox_messages(",
+            StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task GrantRuntimeRolePrivilegesAsync_ShouldQuoteRoleInCleanupFunctionGrant()
+    {
+        const string runtimeUser = "runtime\"; DROP TABLE protected_rows; --";
+        var interceptor = new SuppressGrantInterceptor();
+        var configuration = CreateGrantConfiguration(failClosed: true);
+        configuration["ConnectionStrings:DefaultConnection"] = new NpgsqlConnectionStringBuilder(RuntimeConnection)
+        {
+            Username = runtimeUser
+        }.ConnectionString;
+        await using var app = CreateApp(configuration);
+        await using var db = CreateGrantContext(interceptor);
+
+        await InvokeGrantRuntimeRolePrivilegesAsync(app, db);
+
+        var cleanupGrant = interceptor.Commands.Single(sql => sql.Contains(
+            "retire_completed_outbox_messages", StringComparison.Ordinal));
+        cleanupGrant.Should().Contain(
+            "integer, timestamptz, text) TO \"runtime\"\"; DROP TABLE protected_rows; --\";");
     }
 
     [Theory]
@@ -430,6 +454,7 @@ public sealed class DatabaseStartupInitializerTests
         {
             modelBuilder.Entity<PublicGrantEntity>().ToTable("PublicRows");
             modelBuilder.Entity<AuditGrantEntity>().ToTable("AuditRows", "audit");
+            modelBuilder.Entity<IntegrationGrantEntity>().ToTable("IntegrationRows", "gameguild.integration");
         }
     }
 
@@ -443,9 +468,15 @@ public sealed class DatabaseStartupInitializerTests
         public int Id { get; set; }
     }
 
+    private sealed class IntegrationGrantEntity
+    {
+        public int Id { get; set; }
+    }
+
     private sealed class SuppressGrantInterceptor : DbCommandInterceptor
     {
         public int CommandCount { get; private set; }
+        public List<string> Commands { get; } = [];
 
         public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(
             DbCommand command,
@@ -454,6 +485,7 @@ public sealed class DatabaseStartupInitializerTests
             CancellationToken cancellationToken = default)
         {
             CommandCount++;
+            Commands.Add(command.CommandText);
             return ValueTask.FromResult(InterceptionResult<int>.SuppressWithResult(0));
         }
     }

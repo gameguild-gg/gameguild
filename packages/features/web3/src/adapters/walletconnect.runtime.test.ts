@@ -13,7 +13,9 @@ import type { WalletConnectEthereumProviderLike } from './walletconnect';
 describe('WalletConnect runtime provider delivery', () => {
   it('accepts the real SDK event API as the adapter provider contract', async () => {
     const module = await import('@walletconnect/ethereum-provider');
-    const provider: WalletConnectEthereumProviderLike = module.default.prototype;
+    // The SDK binds event methods on each instance. Its constructor only
+    // initializes local state; relay initialization happens in static init().
+    const provider: WalletConnectEthereumProviderLike = new module.default();
 
     expect(typeof provider.on).toBe('function');
     expect(typeof provider.removeListener).toBe('function');
