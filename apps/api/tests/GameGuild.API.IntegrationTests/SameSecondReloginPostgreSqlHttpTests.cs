@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Headers;
@@ -13,17 +14,15 @@ using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Moq;
 
 namespace GameGuild.API.IntegrationTests;
 
@@ -33,13 +32,9 @@ public sealed class SameSecondReloginPostgreSqlHttpTests(ApiPostgreSqlFixture fi
     [Fact]
     public async Task ActualCredentialReloginCurrentVersionBearerIsAcceptedAtTheLogoutSecondWhilePriorBearerIsDenied()
     {
-        var diagnosticLogger = new Mock<ILogger>();
-        diagnosticLogger.Setup(logger => logger.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
-        var diagnosticProvider = new Mock<ILoggerProvider>();
-        diagnosticProvider.Setup(provider => provider.CreateLogger(It.IsAny<string>())).Returns(diagnosticLogger.Object);
+        var exceptions = new ConcurrentQueue<Exception>();
         using var factory = fixture.CreateFactory(builder =>
         {
-            builder.ConfigureLogging(logging => logging.AddProvider(diagnosticProvider.Object));
             builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
                 new Dictionary<string, string?> { ["Authentication:TokenRevocation:UseDistributedCache"] = "true", ["Redis:Enabled"] = "false" }));
             builder.ConfigureTestServices(services =>
@@ -54,6 +49,16 @@ public sealed class SameSecondReloginPostgreSqlHttpTests(ApiPostgreSqlFixture fi
                 services.AddSingleton<ITokenRevocationService, DistributedCacheTokenRevocationService>();
                 services.RemoveAll<IDistributedCache>();
                 services.AddDistributedMemoryCache();
+                services.PostConfigure<ProblemDetailsOptions>(options =>
+                {
+                    var customize = options.CustomizeProblemDetails;
+                    options.CustomizeProblemDetails = context =>
+                    {
+                        if (context.Exception is { } exception)
+                            exceptions.Enqueue(exception);
+                        customize?.Invoke(context);
+                    };
+                });
             });
         });
         Assert.IsType<DistributedCacheTokenRevocationService>(factory.Services.GetRequiredService<ITokenRevocationService>());
@@ -90,9 +95,7 @@ public sealed class SameSecondReloginPostgreSqlHttpTests(ApiPostgreSqlFixture fi
         using var login = await anonymous.PostAsJsonAsync("/v1/auth/polymorphic", new { credential = user.Email, password, tenantId });
         // Keep credential/token response bodies and exception messages/Data out of CI evidence.
         // On failure, retain only exception types and this repository's stack locations.
-        var diagnostics = diagnosticLogger.Invocations
-            .Where(invocation => invocation.Method.Name == nameof(ILogger.Log))
-            .Select(invocation => invocation.Arguments[3]).OfType<Exception>()
+        var diagnostics = exceptions
             .Select(exception => exception.GetType().FullName + " -> " + exception.GetBaseException().GetType().FullName
                 + "\n" + string.Join("\n", (exception.StackTrace ?? string.Empty).Split('\n')
                     .Where(frame => frame.TrimStart().StartsWith("at GameGuild.", StringComparison.Ordinal))));
