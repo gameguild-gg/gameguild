@@ -704,7 +704,7 @@ export function ContentTree({
     displayIndex: number,
     moduleIsVirtual: boolean,
     sortableProps?: {
-      listeners: Record<string, Function> | undefined;
+      listeners: ReturnType<typeof useSortable>["listeners"];
       isDragging: boolean;
     },
   ) => {
