@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  "@azure/identity>@azure/msal-node": 7.1.0
+  '@azure/identity>@azure/msal-node': 7.1.0
   '@babel/plugin-transform-modules-systemjs': 7.29.7
   '@modelcontextprotocol/sdk@<1.32.0': 1.32.0
   '@tootallnate/once': 2.0.1
@@ -14,10 +14,10 @@ overrides:
   '@excalidraw/mermaid-to-excalidraw>nanoid': 5.1.16
   dompurify: 3.4.17
   fast-uri: 3.1.9
-  follow-redirects@<1.16.1: 1.16.1
   hono: 4.13.11
   lodash-es: 4.18.0
   syncpack>minimatch: 9.0.7
+  follow-redirects@<1.16.1: 1.16.1
   handlebars: 4.7.10
   icu-minify: 4.9.2
   ip-address: 10.7.4
@@ -43,6 +43,7 @@ overrides:
   source-map-js@<1.2.2: 1.2.2
   proxy-addr@<2.0.8: 2.0.8
   postcss-selector-parser@<7.1.6: 7.1.6
+  zod@<4.6.6: 4.6.6
   snowflake-sdk@<3.3.0: 3.3.0
   sprintf-js@<1.1.3: 1.1.3
   shell-quote@<1.11.0: 1.11.0
@@ -1370,7 +1371,7 @@ importers:
     dependencies:
       '@toruslabs/torus-embed':
         specifier: '*'
-        version: 7.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)
+        version: 7.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.6)
     devDependencies:
       '@game-guild/typescript-config':
         specifier: workspace:*
@@ -4285,7 +4286,7 @@ packages:
       valibot: '>=0.31.0 || ^1.0.0-beta.4 || ^1.0.0-rc'
       vest: '>=6.0.0'
       yup: ^1.0.0
-      zod: ^3.25.0 || ^4.0.0
+      zod: 4.6.6
     peerDependenciesMeta:
       '@sinclair/typebox':
         optional: true
@@ -5017,7 +5018,7 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
-      zod: ^3.25 || ^4.0
+      zod: 4.6.6
     peerDependenciesMeta:
       '@cfworker/json-schema':
         optional: true
@@ -8033,7 +8034,7 @@ packages:
     resolution: {integrity: sha512-Ofer5QUnuUdTFsBRwARMoWKOH1ND5ehwYhJ3OJ/BQO+StkwQjHw0XyVh4vDttzHB7QOFhPHa/o413PJ82gU/Tg==}
     peerDependencies:
       typescript: '>=5.0.4'
-      zod: ^3.22.0 || ^4.0.0
+      zod: 4.6.6
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -9835,6 +9836,8 @@ packages:
   follow-redirects@1.16.1:
     resolution: {integrity: sha512-FNvFGzoMLWmE6Yj9spb/zjd7yiNCHiAW9/Tg9CXrQ8wuu32HtlJOwWO11OJafl5FfY3DxTdQ0vj42zU1kvv5jg==}
     engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
     peerDependenciesMeta:
       debug:
         optional: true
@@ -14483,13 +14486,16 @@ packages:
   zod-to-json-schema@3.25.2:
     resolution: {integrity: sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==}
     peerDependencies:
-      zod: ^3.25.28 || ^4
+      zod: 4.6.6
 
   zod-validation-error@4.0.2:
     resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      zod: ^3.25.0 || ^4.0.0
+      zod: 4.6.6
+
+  zod@4.6.6:
+    resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
 
   zod@4.6.7:
     resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
@@ -18287,7 +18293,7 @@ snapshots:
     dependencies:
       '@chevrotain/types': 13.2.0
 
-  '@modelcontextprotocol/sdk@1.32.1(zod@4.6.7)':
+  '@modelcontextprotocol/sdk@1.32.1(zod@4.6.6)':
     dependencies:
       '@hono/node-server': 2.1.5(hono@4.13.11)
       ajv: 8.20.0
@@ -18304,8 +18310,8 @@ snapshots:
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
-      zod: 4.6.7
-      zod-to-json-schema: 3.25.2(zod@4.6.7)
+      zod: 4.6.6
+      zod-to-json-schema: 3.25.2(zod@4.6.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -19909,7 +19915,7 @@ snapshots:
       tsconfig-paths: 4.2.0
       type-fest: 4.41.0
       undici: 7.30.1
-      zod: 4.6.7
+      zod: 4.6.6
     transitivePeerDependencies:
       - supports-color
 
@@ -20271,7 +20277,7 @@ snapshots:
 
   '@tootallnate/once@2.0.1': {}
 
-  '@toruslabs/base-controllers@9.13.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)':
+  '@toruslabs/base-controllers@9.13.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.6)':
     dependencies:
       '@babel/runtime': 8.0.7
       '@toruslabs/broadcast-channel': 13.3.0(@sentry/core@10.76.2)
@@ -20283,7 +20289,7 @@ snapshots:
       events: 3.3.0
       jwt-decode: 4.0.0
       loglevel: 1.9.2
-      viem: 2.57.4(typescript@6.0.3)(zod@4.6.7)
+      viem: 2.57.4(typescript@6.0.3)(zod@4.6.6)
     transitivePeerDependencies:
       - '@sentry/core'
       - bufferutil
@@ -20427,10 +20433,10 @@ snapshots:
       - '@babel/runtime'
       - '@sentry/core'
 
-  '@toruslabs/torus-embed@7.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)':
+  '@toruslabs/torus-embed@7.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.6)':
     dependencies:
       '@babel/runtime': 8.0.7
-      '@web3auth/ws-embed': 6.1.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)
+      '@web3auth/ws-embed': 6.1.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.6)
     transitivePeerDependencies:
       - '@sentry/core'
       - bufferutil
@@ -21026,11 +21032,11 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@web3auth/ws-embed@6.1.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)':
+  '@web3auth/ws-embed@6.1.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.6)':
     dependencies:
       '@babel/runtime': 8.0.7
       '@scure/base': 2.2.0
-      '@toruslabs/base-controllers': 9.13.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)
+      '@toruslabs/base-controllers': 9.13.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.6)
       '@toruslabs/constants': 16.1.1(@babel/runtime@8.0.7)
       '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
       '@web3auth/auth': 11.8.3(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)
@@ -21145,10 +21151,10 @@ snapshots:
 
   abab@2.0.6: {}
 
-  abitype@1.2.3(typescript@6.0.3)(zod@4.6.7):
+  abitype@1.2.3(typescript@6.0.3)(zod@4.6.6):
     optionalDependencies:
       typescript: 6.0.3
-      zod: 4.6.7
+      zod: 4.6.6
 
   abort-controller@3.0.0:
     dependencies:
@@ -21440,6 +21446,7 @@ snapshots:
       https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
+      - debug
       - supports-color
 
   axobject-query@4.1.0: {}
@@ -22950,8 +22957,8 @@ snapshots:
       '@babel/parser': 7.29.8
       eslint: 10.13.0(jiti@2.7.0)
       hermes-parser: 0.25.1
-      zod: 4.6.7
-      zod-validation-error: 4.0.2(zod@4.6.7)
+      zod: 4.6.6
+      zod-validation-error: 4.0.2(zod@4.6.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -26339,7 +26346,7 @@ snapshots:
       object-keys: 1.1.1
       safe-push-apply: 1.0.0
 
-  ox@0.14.54(typescript@6.0.3)(zod@4.6.7):
+  ox@0.14.54(typescript@6.0.3)(zod@4.6.6):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
       '@noble/ciphers': 1.3.0
@@ -26347,7 +26354,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.2.3(typescript@6.0.3)(zod@4.6.7)
+      abitype: 1.2.3(typescript@6.0.3)(zod@4.6.6)
       eventemitter3: 5.0.1
     optionalDependencies:
       typescript: 6.0.3
@@ -27510,7 +27517,7 @@ snapshots:
       '@babel/plugin-transform-typescript': 7.29.9(@babel/core@7.29.7)
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7)
       '@dotenvx/dotenvx': 1.75.1
-      '@modelcontextprotocol/sdk': 1.32.1(zod@4.6.7)
+      '@modelcontextprotocol/sdk': 1.32.1(zod@4.6.6)
       '@shadcn/registry': 0.2.0
       '@types/validate-npm-package-name': 4.0.2
       browserslist: 4.29.3
@@ -27536,7 +27543,7 @@ snapshots:
       tsconfig-paths: 4.2.0
       undici: 7.30.1
       validate-npm-package-name: 7.0.2
-      zod: 4.6.7
+      zod: 4.6.6
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - babel-plugin-macros
@@ -28872,15 +28879,15 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
-  viem@2.57.4(typescript@6.0.3)(zod@4.6.7):
+  viem@2.57.4(typescript@6.0.3)(zod@4.6.6):
     dependencies:
       '@noble/curves': 1.9.1
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.2.3(typescript@6.0.3)(zod@4.6.7)
+      abitype: 1.2.3(typescript@6.0.3)(zod@4.6.6)
       isows: 1.0.7(ws@8.21.0)
-      ox: 0.14.54(typescript@6.0.3)(zod@4.6.7)
+      ox: 0.14.54(typescript@6.0.3)(zod@4.6.6)
       ws: 8.21.0
     optionalDependencies:
       typescript: 6.0.3
@@ -29325,13 +29332,15 @@ snapshots:
 
   yoga-layout@3.2.1: {}
 
-  zod-to-json-schema@3.25.2(zod@4.6.7):
+  zod-to-json-schema@3.25.2(zod@4.6.6):
     dependencies:
-      zod: 4.6.7
+      zod: 4.6.6
 
-  zod-validation-error@4.0.2(zod@4.6.7):
+  zod-validation-error@4.0.2(zod@4.6.6):
     dependencies:
-      zod: 4.6.7
+      zod: 4.6.6
+
+  zod@4.6.6: {}
 
   zod@4.6.7: {}
 
