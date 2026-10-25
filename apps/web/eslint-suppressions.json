@@ -1494,23 +1494,8 @@
     }
   },
   "src/components/block-content-editor/extras/source-code/code-editor.tsx": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 7
-    },
-    "@typescript-eslint/no-unsafe-call": {
-      "count": 5
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 5
-    },
     "@typescript-eslint/no-unused-vars": {
-      "count": 4
+      "count": 3
     },
     "react-hooks/refs": {
       "count": 18
@@ -1526,7 +1511,7 @@
   },
   "src/components/block-content-editor/extras/source-code/components/source-code-editor-edit.tsx": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 12
+      "count": 7
     },
     "@typescript-eslint/no-redundant-type-constituents": {
       "count": 1
@@ -1543,7 +1528,7 @@
   },
   "src/components/block-content-editor/extras/source-code/components/source-code-editor-view.tsx": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 12
+      "count": 7
     },
     "@typescript-eslint/no-redundant-type-constituents": {
       "count": 1
@@ -1749,9 +1734,6 @@
     }
   },
   "src/components/block-content-editor/extras/source-code/types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    },
     "@typescript-eslint/no-redundant-type-constituents": {
       "count": 4
     }

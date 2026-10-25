@@ -5,6 +5,7 @@ import { Label } from "@game-guild/ui/components/label"
 import { Switch } from "@game-guild/ui/components/switch"
 import { cn } from "@/lib/utils"
 import type React from "react"
+import type { OnMount } from "@monaco-editor/react"
 import { useEffect } from "react"
 import { CodeEditor } from "../code-editor"
 import { FileTabs } from "../file-tabs"
@@ -41,7 +42,7 @@ interface SourceCodeEditorEditProps {
   // Handlers
   handleCodeEditorResize: (e: React.MouseEvent, initialY: number) => void
   handleTerminalResize: (e: React.MouseEvent, initialY: number) => void
-  handleEditorMount: (editor: any, monaco: any) => void
+  handleEditorMount: OnMount
   updateActiveFileContent: (content: string) => void
   isFileReadOnly: (file: CodeFile, readonly: boolean) => boolean
 
@@ -64,9 +65,9 @@ interface SourceCodeEditorEditProps {
   getBaseName: (name: string) => string
   getExtensionForSelectedLanguage: () => string
   getAllowedProgrammingLanguages: () => ProgrammingLanguage[]
-  getLanguageLabel: (lang: any) => string
-  getFileIcon: (file: CodeFile) => any
-  getStateIcon: (file: CodeFile) => any
+  getLanguageLabel: (lang: string) => string
+  getFileIcon: (file: CodeFile) => React.ReactNode
+  getStateIcon: (file: CodeFile) => React.ReactNode
 
   // Drag and drop
   draggedFileId: string | null
