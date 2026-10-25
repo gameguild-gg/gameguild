@@ -2,6 +2,7 @@ import type { CodeRunner, RunnerResult, RunnerOptions, FileMap } from './types'
 import type { WASIFS } from '@runno/wasi'
 import { createWatEnvironment } from './wat-env-bindings'
 import { createWasiStdinReader } from './wasi-stdin'
+import { runtimeValueToString } from './runtime-value-to-string'
 
 // Load wabt from local public assets (managed by update-wasm.mjs script)
 let wabtInstance: any = null
@@ -305,7 +306,7 @@ export class WatRunner implements CodeRunner {
             wasmStdout += result.toString() + '\n'
             exitCode = 0
           } else if (result !== undefined) {
-            wasmStdout += String(result) + '\n'
+            wasmStdout += runtimeValueToString(result) + '\n'
             exitCode = 0
           } else {
             // Function executed successfully but returned nothing

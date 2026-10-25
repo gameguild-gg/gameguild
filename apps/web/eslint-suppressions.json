@@ -859,12 +859,6 @@
     }
   },
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/window.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-function-type": {
-      "count": 3
-    },
     "@typescript-eslint/no-unused-vars": {
       "count": 9
     }
@@ -875,15 +869,6 @@
     }
   },
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/gameguild/test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    },
-    "@typescript-eslint/no-unsafe-call": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-function-type": {
-      "count": 2
-    },
     "@typescript-eslint/no-unused-vars": {
       "count": 2
     }
@@ -922,11 +907,6 @@
       "count": 128
     }
   },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/types.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    }
-  },
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/wasi/clocks.ts": {
     "@typescript-eslint/no-unused-vars": {
       "count": 2
@@ -945,16 +925,13 @@
       "count": 5
     },
     "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 4
+      "count": 2
     },
     "@typescript-eslint/no-unsafe-assignment": {
-      "count": 8
+      "count": 5
     },
     "@typescript-eslint/no-unsafe-call": {
       "count": 8
-    },
-    "@typescript-eslint/no-unsafe-function-type": {
-      "count": 3
     },
     "@typescript-eslint/no-unsafe-member-access": {
       "count": 7
@@ -2980,9 +2957,6 @@
       "count": 1
     },
     "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-function-type": {
       "count": 2
     },
     "@typescript-eslint/no-unused-vars": {

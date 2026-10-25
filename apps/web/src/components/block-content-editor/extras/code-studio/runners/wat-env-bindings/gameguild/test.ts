@@ -13,6 +13,7 @@
  * ```
  */
 import type { TestExpectation } from '../types.js'
+import { runtimeValueToString } from '../../runtime-value-to-string'
 
 export interface GameGuildTest {
   describe: (name: string, fn: () => void) => void
@@ -48,7 +49,7 @@ export function createTest(
     expect: (actual: unknown) => ({
       'to-be': (expected: unknown) => {
         if (actual !== expected) {
-          throw new Error(`Expected ${expected}, got ${actual}`)
+          throw new Error(`Expected ${runtimeValueToString(expected)}, got ${runtimeValueToString(actual)}`)
         }
       },
       'to-equal': (expected: unknown) => {
@@ -60,12 +61,12 @@ export function createTest(
       },
       'to-be-truthy': () => {
         if (!actual) {
-          throw new Error(`Expected truthy value, got ${actual}`)
+          throw new Error(`Expected truthy value, got ${runtimeValueToString(actual)}`)
         }
       },
       'to-be-falsy': () => {
         if (actual) {
-          throw new Error(`Expected falsy value, got ${actual}`)
+          throw new Error(`Expected falsy value, got ${runtimeValueToString(actual)}`)
         }
       },
     }),
