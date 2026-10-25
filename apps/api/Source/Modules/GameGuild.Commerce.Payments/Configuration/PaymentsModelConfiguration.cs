@@ -167,5 +167,14 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
         // expiry dates and manual whitelist overrides, evaluated as a payment fraud signal
         // and administered through the fraud/blacklist endpoints.
         modelBuilder.ApplyConfiguration(new FraudBlacklistEntryConfiguration());
+
+        // Currency configuration and FX rate sync (issue #412 specs A/B): per-tenant currency
+        // enablement/display preferences (one row per tenant+currency, at most one base row)
+        // plus the persisted FX rate snapshots and sync-run audit records backing the
+        // scheduled provider sync and the manual rate-override command.
+        modelBuilder.ApplyConfiguration(new CurrencyConfigurationConfiguration());
+        modelBuilder.ApplyConfiguration(new FxRateSnapshotConfiguration());
+        modelBuilder.ApplyConfiguration(new FxRateSyncRunConfiguration());
+        modelBuilder.ApplyConfiguration(new AuditTrailConfiguration());
     }
 }
