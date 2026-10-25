@@ -13,30 +13,30 @@ interface ProviderHarness {
   };
   readonly connect: ReturnType<typeof vi.fn>;
   readonly disconnect: ReturnType<typeof vi.fn>;
-  readonly events: Map<string, Set<(...args: never[]) => void>>;
+  readonly events: Map<string, Set<(...args: unknown[]) => void>>;
 }
 
 const createProviderHarness = (
   eip1193: Eip1193Provider = createMockEip1193Provider(),
 ): ProviderHarness => {
-  const events = new Map<string, Set<(...args: never[]) => void>>();
+  const events = new Map<string, Set<(...args: unknown[]) => void>>();
   const connect = vi.fn(async () => undefined);
   const disconnect = vi.fn(async () => undefined);
   const provider = {
     request: (args: Eip1193RequestArguments) => eip1193.request(args),
-    on: (event: string, listener: (...args: never[]) => void) => {
+    on: (event: string, listener: (...args: unknown[]) => void) => {
       const set = events.get(event) ?? new Set();
       set.add(listener);
       events.set(event, set);
     },
-    removeListener: (event: string, listener: (...args: never[]) => void) => {
+    removeListener: (event: string, listener: (...args: unknown[]) => void) => {
       events.get(event)?.delete(listener);
     },
     connect,
     disconnect,
     emit(event: string, ...args: unknown[]) {
       for (const listener of events.get(event) ?? []) {
-        (listener as (...a: unknown[]) => void)(...args);
+        listener(...args);
       }
     },
   };
@@ -347,6 +347,36 @@ describe('WalletConnectAdapter (session events)', () => {
 
     expect(onAccountsChanged).toHaveBeenCalledWith(['0x1111111111111111111111111111111111111111']);
     expect(onChainChanged).toHaveBeenCalledWith('11155111');
+  });
+
+  it('accepts numeric network ids emitted by the SDK', async () => {
+    const { adapter, harness } = await connectedAdapter();
+    const onChainChanged = vi.fn();
+    adapter.onEvent({ onAccountsChanged: vi.fn(), onChainChanged, onDisconnected: vi.fn() });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    harness.provider.emit('chainChanged', 11155111);
+
+    expect(onChainChanged).toHaveBeenCalledWith('11155111');
+  });
+
+  it('ignores malformed account and network event payloads without inventing a mainnet session', async () => {
+    const { adapter, harness } = await connectedAdapter();
+    const onAccountsChanged = vi.fn();
+    const onChainChanged = vi.fn();
+    adapter.onEvent({ onAccountsChanged, onChainChanged, onDisconnected: vi.fn() });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    harness.provider.emit('accountsChanged', 'not-an-account-list');
+    harness.provider.emit('accountsChanged', ['0x1111111111111111111111111111111111111111', null]);
+    harness.provider.emit('chainChanged', undefined);
+    harness.provider.emit('chainChanged', Number.NaN);
+    harness.provider.emit('chainChanged', 'not-a-chain');
+
+    expect(onAccountsChanged).not.toHaveBeenCalled();
+    expect(onChainChanged).not.toHaveBeenCalled();
+    harness.provider.emit('accountsChanged', []);
+    expect(onAccountsChanged).toHaveBeenCalledWith([]);
   });
 
   it('handles disconnect by resetting the session for the next connect', async () => {

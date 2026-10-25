@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { WalletConnectEthereumProviderLike } from './walletconnect';
 
 /**
  * Runtime delivery proof for the WalletConnect integration (#18): the
@@ -10,6 +11,15 @@ import { describe, expect, it } from 'vitest';
  * production bundle would.
  */
 describe('WalletConnect runtime provider delivery', () => {
+  it('accepts the real SDK event API as the adapter provider contract', async () => {
+    const module = await import('@walletconnect/ethereum-provider');
+    const provider: WalletConnectEthereumProviderLike = module.default.prototype;
+
+    expect(typeof provider.on).toBe('function');
+    expect(typeof provider.removeListener).toBe('function');
+    expect(typeof provider.request).toBe('function');
+  });
+
   it('resolves the SDK from the shipped dependency graph', async () => {
     const module = (await import('@walletconnect/ethereum-provider')) as {
       default?: { init: (config: unknown) => Promise<unknown> };

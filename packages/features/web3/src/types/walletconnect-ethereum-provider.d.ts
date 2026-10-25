@@ -47,8 +47,8 @@ declare module '@walletconnect/ethereum-provider' {
   export default class EthereumProvider {
     static init(options: EthereumProviderInitOptions): Promise<EthereumProvider>;
     request(args: Eip1193RequestArguments): Promise<unknown>;
-    on(event: string, listener: (...args: never[]) => void): void;
-    removeListener(event: string, listener: (...args: never[]) => void): void;
+    on(event: string, listener: (...args: unknown[]) => void): void;
+    removeListener(event: string, listener: (...args: unknown[]) => void): void;
     connect(options?: { pairingTopic?: string }): Promise<void>;
     disconnect(): Promise<void>;
     readonly accounts: string[];
