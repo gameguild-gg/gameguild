@@ -237,6 +237,11 @@ internal static class DatabaseStartupInitializer
                     .ConfigureAwait(false);
             }
 
+            await migrationDb.Database.ExecuteSqlRawAsync($"""
+                GRANT EXECUTE ON FUNCTION "gameguild.integration".retire_completed_outbox_messages(
+                    integer, timestamptz, text) TO {quotedRuntimeUser};
+                """, app.Lifetime.ApplicationStopping).ConfigureAwait(false);
+
             app.Logger.LogInformation("Granted runtime database privileges after migrations.");
         }
         catch (Exception ex)

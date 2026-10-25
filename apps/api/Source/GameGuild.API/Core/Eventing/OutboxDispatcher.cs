@@ -13,7 +13,7 @@ public sealed class OutboxDispatcher(
     TimeProvider timeProvider,
     ILogger<OutboxDispatcher> logger) : IOutboxDispatcher
 {
-    private const int BatchSize = 50;
+    internal const int BatchSize = 50;
     private static readonly TimeSpan ClaimDuration = TimeSpan.FromMinutes(2);
 
     public async Task<int> DispatchPendingAsync(CancellationToken cancellationToken = default)

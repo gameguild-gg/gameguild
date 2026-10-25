@@ -4,6 +4,9 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using GameGuild.API.Database;
+using GameGuild.API.Database.Migrations;
+using GameGuild.API.Core.Integration;
+using GameGuild.Commerce.Billing;
 using GameGuild.API.Eventing;
 using GameGuild.API.IntegrationTests.Infrastructure;
 using GameGuild.TestSupport.Finance.Economy;
@@ -56,6 +59,11 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
                 PRIMARY KEY ("EventId", "ConsumerName")
             );
             """;
+        await command.ExecuteNonQueryAsync();
+        command.CommandText = string.Join(Environment.NewLine,
+            new RetireCompletedOutboxMessages().UpOperations
+                .OfType<Microsoft.EntityFrameworkCore.Migrations.Operations.SqlOperation>()
+                .Select(operation => operation.Sql));
         await command.ExecuteNonQueryAsync();
     }
 
@@ -237,6 +245,215 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         (await context.Set<OutboxMessage>().SingleAsync()).DeadLetteredAtUtc.Should().NotBeNull();
     }
 
+    [Fact]
+    public async Task Cleanup_RetiresOnlySuccessfulUnleasedMessagesAndKeepsCompactHttpIdentity()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var successful = NewMessage("successful", now);
+        successful.SourceModule = "Platform.Http";
+        successful.CompletedAtUtc = now;
+        var pending = NewMessage("pending", now);
+        var dead = NewMessage("dead", now);
+        dead.DeadLetteredAtUtc = now;
+        var leased = NewMessage("leased", now);
+        leased.CompletedAtUtc = now;
+        leased.ClaimedUntilUtc = now.AddMinutes(1);
+        var unfinished = NewMessage("unfinished", now);
+        unfinished.CompletedAtUtc = now;
+        var historicalFailure = NewMessage("historical-failure", now);
+        historicalFailure.CompletedAtUtc = now;
+        await InsertAsync(provider, successful, pending, dead, leased, unfinished, historicalFailure,
+            Receipt(successful, now, completed: true, dead: false),
+            Receipt(unfinished, now, completed: false, dead: false),
+            Receipt(historicalFailure, now, completed: false, dead: true));
+
+        Assert.Equal(1, await CleanupOnceAsync(provider));
+        await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var remaining = await db.Set<OutboxMessage>().Select(message => message.EventId).ToListAsync();
+        remaining.Should().BeEquivalentTo(new[] { pending.EventId, dead.EventId, leased.EventId,
+            unfinished.EventId, historicalFailure.EventId });
+        Assert.Equal(2, await db.Set<InboxReceipt>().CountAsync());
+        var retired = await db.Set<OutboxDeliveryReceipt>().SingleAsync(value => value.CompletedAtUtc != null);
+        Assert.Equal(successful.EventId, retired.EventId);
+        Assert.Equal(now, retired.CompletedAtUtc);
+        Assert.Null(retired.EventName);
+        Assert.Null(retired.SourceModule);
+        Assert.Null(retired.AggregateId);
+        Assert.False(await new EventReplayService(db, TimeProvider.System)
+            .ReplayAsync(successful.EventId, "cleanup.consumer"));
+        await DurableEventDeliveryWaiter.WaitForCompletionAsync(provider, successful.EventId);
+    }
+
+    [Fact]
+    public async Task Cleanup_RollbackRestoresPayloadAndConsumerReceiptTogether()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var completed = NewMessage("rollback", now);
+        completed.CompletedAtUtc = now;
+        await InsertAsync(provider, completed, Receipt(completed, now, completed: true, dead: false));
+        await using (var scope = provider.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            await using var transaction = await db.Database.BeginTransactionAsync();
+            Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<OutboxCleanupService>()
+                .CleanupCompletedAsync(CancellationToken.None));
+            Assert.Empty(await db.Set<OutboxMessage>().ToListAsync());
+            await transaction.RollbackAsync();
+        }
+        await using var verify = provider.CreateAsyncScope();
+        var context = verify.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(completed.Payload, (await context.Set<OutboxMessage>().SingleAsync()).Payload);
+        Assert.Single(await context.Set<InboxReceipt>().ToListAsync());
+        Assert.Null((await context.Set<OutboxDeliveryReceipt>().SingleAsync()).CompletedAtUtc);
+    }
+
+    [Fact]
+    public async Task Cleanup_ConcurrentWorkersRetireDisjointBoundedBatches()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var messages = Enumerable.Range(0, 1100).Select(index =>
+        {
+            var message = NewMessage($"batch-{index}", now);
+            message.CompletedAtUtc = now;
+            return message;
+        }).ToArray();
+        await InsertAsync(provider, messages.Cast<object>().ToArray());
+
+        var counts = await Task.WhenAll(CleanupOnceAsync(provider), CleanupOnceAsync(provider));
+        Assert.Equal(1100, counts.Sum());
+        Assert.All(counts, count => Assert.InRange(count, 0, 1000));
+        Assert.Equal(0, await CleanupOnceAsync(provider));
+        await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Empty(await db.Set<OutboxMessage>().ToListAsync());
+        Assert.Equal(1100, await db.Set<OutboxDeliveryReceipt>().CountAsync(value => value.CompletedAtUtc != null));
+    }
+
+    [Fact]
+    public async Task Cleanup_SkipsReplayParentLockAndPreservesReplayedWork()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var replayed = NewMessage("replayed", now);
+        replayed.CompletedAtUtc = now;
+        var other = NewMessage("other", now);
+        other.CompletedAtUtc = now;
+        await InsertAsync(provider, replayed, other, Receipt(replayed, now, completed: true, dead: false));
+        await using var replayScope = provider.CreateAsyncScope();
+        var db = replayScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await using var transaction = await db.Database.BeginTransactionAsync();
+        // The public replay path takes the parent lock before changing child receipts.
+        Assert.True(await new EventReplayService(db, new MutableTimeProvider(now))
+            .ReplayAsync(replayed.EventId, "cleanup.consumer"));
+        Assert.Equal(1, await CleanupOnceAsync(provider).WaitAsync(TimeSpan.FromSeconds(10)));
+        await transaction.CommitAsync();
+        Assert.Equal(0, await CleanupOnceAsync(provider));
+        await using var verify = provider.CreateAsyncScope();
+        var message = await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+            .Set<OutboxMessage>().SingleAsync();
+        Assert.Equal(replayed.EventId, message.EventId);
+        Assert.Null(message.CompletedAtUtc);
+    }
+
+    [Fact]
+    public async Task Cleanup_BillingReadModelPreservesCompletedMetadataAndPagination()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var first = NewMessage("invoice-first", now.AddMinutes(-2));
+        first.SourceModule = "Commerce.Billing";
+        first.CompletedAtUtc = now;
+        var second = NewMessage("invoice-second", now.AddMinutes(-1));
+        second.SourceModule = "Commerce.Billing";
+        second.CompletedAtUtc = now;
+        var pending = NewMessage("invoice-pending", now);
+        pending.SourceModule = "Commerce.Billing";
+        await InsertAsync(provider, first, second, pending);
+        await using var scope = provider.CreateAsyncScope();
+        var reader = new BillingOutboxEventReader(scope.ServiceProvider.GetRequiredService<ApplicationDbContext>());
+        var before = await reader.ListAsync(0, 20, null, null, null, null, CancellationToken.None);
+
+        Assert.Equal(2, await CleanupOnceAsync(provider));
+        var after = await reader.ListAsync(0, 20, null, null, null, null, CancellationToken.None);
+        after.Should().Equal(before);
+        Assert.Equal(before.Single(value => value.EventId == first.EventId), await reader.GetByIdAsync(first.EventId));
+        Assert.Equal(2, await reader.CountAsync(first.EventName, BillingOutboxEventStatus.Completed,
+            now.AddMinutes(-3), now, CancellationToken.None));
+        var page = await reader.ListAsync(1, 1, null, null, null, null, CancellationToken.None);
+        page.Should().Equal(before.Skip(1).Take(1));
+    }
+
+    [Theory]
+    [InlineData(System.Data.IsolationLevel.ReadCommitted, false)]
+    [InlineData(System.Data.IsolationLevel.ReadCommitted, true)]
+    [InlineData(System.Data.IsolationLevel.RepeatableRead, false)]
+    [InlineData(System.Data.IsolationLevel.RepeatableRead, true)]
+    public async Task Cleanup_RawPublisherCannotReinsertRetiredIdentityFromOlderSnapshot(
+        System.Data.IsolationLevel isolation, bool legacy)
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var message = NewMessage("deduplication", now);
+        message.CompletedAtUtc = now;
+        await InsertAsync(provider, message);
+        if (legacy)
+        {
+            // This disposable fixture also covers envelopes created before identity reservation existed.
+            await using var legacyScope = provider.CreateAsyncScope();
+            await legacyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+                .Set<OutboxDeliveryReceipt>().Where(value => value.EventId == message.EventId).ExecuteDeleteAsync();
+        }
+        await using var snapshotScope = provider.CreateAsyncScope();
+        var db = snapshotScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await using var transaction = await db.Database.BeginTransactionAsync(isolation);
+        Assert.True(await db.Set<OutboxMessage>().AnyAsync(value => value.EventId == message.EventId));
+        Assert.Equal(1, await CleanupOnceAsync(provider));
+
+        // Repeatable read still sees the old envelope. A raw write must nevertheless
+        // fail through the permanent unique identity, not enqueue a second delivery.
+        if (isolation == System.Data.IsolationLevel.ReadCommitted)
+        {
+            db.Add(message);
+            var error = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+            Assert.Equal(PostgresErrorCodes.UniqueViolation, ((PostgresException)error.InnerException!).SqlState);
+        }
+        else
+        {
+            var error = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO "gameguild.integration".outbox_messages
+                SELECT * FROM "gameguild.integration".outbox_messages WHERE "EventId" = {message.EventId}
+                """));
+            Assert.Contains(error.SqlState, new[] { PostgresErrorCodes.UniqueViolation, PostgresErrorCodes.SerializationFailure });
+        }
+        await transaction.RollbackAsync();
+        await using var verify = provider.CreateAsyncScope();
+        Assert.Empty(await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<OutboxMessage>().ToListAsync());
+    }
+
+    private static InboxReceipt Receipt(OutboxMessage message, DateTimeOffset now, bool completed, bool dead) => new()
+    {
+        EventId = message.EventId, ConsumerName = "cleanup.consumer", AttemptCount = 1,
+        NextAttemptAtUtc = now, UpdatedAtUtc = now,
+        CompletedAtUtc = completed ? now : null, DeadLetteredAtUtc = dead ? now : null
+    };
+
+    private static async Task<int> CleanupOnceAsync(IServiceProvider provider)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<OutboxCleanupService>()
+            .CleanupCompletedAsync(CancellationToken.None);
+    }
+
     private ServiceProvider BuildProvider(MutableTimeProvider clock, Action<IServiceCollection> addHandlers)
     {
         var services = new ServiceCollection();
@@ -244,6 +461,7 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         services.AddSingleton<TimeProvider>(clock);
         services.AddScoped<IInboxStore, InboxStore>();
         services.AddScoped<IOutboxDispatcher, OutboxDispatcher>();
+        services.AddScoped<OutboxCleanupService>();
         services.AddLogging();
         addHandlers(services);
         return services.BuildServiceProvider();
@@ -254,7 +472,7 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         await using var connection = new NpgsqlConnection(_database.ConnectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "TRUNCATE TABLE \"gameguild.integration\".\"inbox_receipts\", \"gameguild.integration\".\"outbox_messages\"";
+        command.CommandText = "TRUNCATE TABLE \"gameguild.integration\".\"inbox_receipts\", \"gameguild.integration\".\"outbox_messages\", \"gameguild.integration\".\"outbox_delivery_receipts\"";
         await command.ExecuteNonQueryAsync();
     }
 
