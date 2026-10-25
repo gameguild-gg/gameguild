@@ -1,0 +1,11 @@
+name: Runner Smoke
+on:
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: [self-hosted, gameguild]
+    steps:
+      - name: Who am I
+        run: echo "runner=$RUNNER_NAME node=$(uname -n) arch=$(uname -m)"
+      - name: Linger for panel check
+        run: sleep 90
