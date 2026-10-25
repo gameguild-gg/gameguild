@@ -1,4 +1,5 @@
 using System.Text.Json;
+using GameGuild.CQRS;
 using GameGuild.CQRS.Models;
 using GameGuild.Identity.Authentication;
 using Xunit;
