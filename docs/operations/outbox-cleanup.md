@@ -8,7 +8,8 @@ partially filled or failed cycle.
 
 Retirement requires a completed parent, no parent dead letter, no live lease,
 and no unfinished or dead-lettered consumer receipt, including historical
-consumers. Parent locks serialize replay and cleanup. Other workers skip locked
+consumers. The completion timestamp must be at or before the supplied cutoff.
+Parent locks serialize replay, finalization and cleanup. Other workers skip locked
 parents. The permanent identity is saved before inbox children and the payload
 are deleted, in one transaction.
 
@@ -46,8 +47,12 @@ administrative readers.
 
 ```sql
 SELECT "gameguild.integration".retire_completed_outbox_messages(
-    1000, clock_timestamp(), 'Platform.Http');
+    1000, clock_timestamp() - interval '5 minutes', 'Platform.Http');
 ```
+
+The five-minute operational grace period protects finalizers from an older worker
+version during rollout. The updated worker locks finalization against retirement
+and can retire completed payloads immediately.
 
 A return value of zero means no eligible unlocked deliveries were found in that
 call. It does not prove that pending or leased work is absent. Inspect those

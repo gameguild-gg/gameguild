@@ -36,7 +36,8 @@ public sealed class OutboxCleanupService(ApplicationDbContext db, TimeProvider t
             : null;
 
         var messages = await db.Set<OutboxMessage>().AsNoTracking()
-                .Where(message => message.CompletedAtUtc != null && message.DeadLetteredAtUtc == null
+                .Where(message => message.CompletedAtUtc != null && message.CompletedAtUtc <= now
+                    && message.DeadLetteredAtUtc == null
                     && (message.ClaimedUntilUtc == null || message.ClaimedUntilUtc <= now)
                     && !db.Set<InboxReceipt>().Any(receipt => receipt.EventId == message.EventId
                         && (receipt.CompletedAtUtc == null || receipt.DeadLetteredAtUtc != null)))

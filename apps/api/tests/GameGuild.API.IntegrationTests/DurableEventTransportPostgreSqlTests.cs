@@ -2,6 +2,8 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Data.Common;
 using Microsoft.Extensions.DependencyInjection;
 using GameGuild.API.Database;
 using GameGuild.API.Database.Migrations;
@@ -264,7 +266,9 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         unfinished.CompletedAtUtc = now;
         var historicalFailure = NewMessage("historical-failure", now);
         historicalFailure.CompletedAtUtc = now;
-        await InsertAsync(provider, successful, pending, dead, leased, unfinished, historicalFailure,
+        var futureCompletion = NewMessage("future-completion", now);
+        futureCompletion.CompletedAtUtc = now.AddMinutes(1);
+        await InsertAsync(provider, successful, pending, dead, leased, unfinished, historicalFailure, futureCompletion,
             Receipt(successful, now, completed: true, dead: false),
             Receipt(unfinished, now, completed: false, dead: false),
             Receipt(historicalFailure, now, completed: false, dead: true));
@@ -274,7 +278,7 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var remaining = await db.Set<OutboxMessage>().Select(message => message.EventId).ToListAsync();
         remaining.Should().BeEquivalentTo(new[] { pending.EventId, dead.EventId, leased.EventId,
-            unfinished.EventId, historicalFailure.EventId });
+            unfinished.EventId, historicalFailure.EventId, futureCompletion.EventId });
         Assert.Equal(2, await db.Set<InboxReceipt>().CountAsync());
         var retired = await db.Set<OutboxDeliveryReceipt>().SingleAsync(value => value.CompletedAtUtc != null);
         Assert.Equal(successful.EventId, retired.EventId);
@@ -438,6 +442,62 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         await transaction.RollbackAsync();
         await using var verify = provider.CreateAsyncScope();
         Assert.Empty(await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<OutboxMessage>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Cleanup_BetweenExpiredClaimFinalizers_DoesNotCreateTransportFailureOrRedeliver()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        var clock = new MutableTimeProvider(now);
+        var barrier = new FinalizationBarrier();
+        var handler = new RecordingHandler();
+        await using var provider = BuildProvider(clock, services =>
+        {
+            services.AddSingleton<IIntegrationEventHandler<PostgresEvent>>(handler);
+            services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(barrier));
+        });
+        var message = NewMessage("expired-finalizer", now);
+        await InsertAsync(provider, message);
+        var first = DispatchOnceAsync(provider);
+        try
+        {
+            await barrier.Blocked.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            clock.Advance(TimeSpan.FromMinutes(3));
+            await DispatchOnceAsync(provider).WaitAsync(TimeSpan.FromSeconds(15));
+            Assert.Equal(1, await CleanupOnceAsync(provider));
+        }
+        finally
+        {
+            barrier.Release.TrySetResult();
+            await first.WaitAsync(TimeSpan.FromSeconds(15));
+        }
+        Assert.Single(handler.Events);
+        await using var verify = provider.CreateAsyncScope();
+        var db = verify.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Empty(await db.Set<OutboxMessage>().ToListAsync());
+        Assert.Empty(await db.Set<InboxReceipt>().ToListAsync());
+        Assert.NotNull((await db.Set<OutboxDeliveryReceipt>().SingleAsync()).CompletedAtUtc);
+    }
+
+    private sealed class FinalizationBarrier : DbCommandInterceptor
+    {
+        private int _finalizers;
+        public TaskCompletionSource Blocked { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public override async ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+            DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result,
+            CancellationToken cancellationToken)
+        {
+            if (command.CommandText.Contains("SELECT \"EventId\" AS \"Value\"", StringComparison.Ordinal)
+                && Interlocked.Increment(ref _finalizers) == 1)
+            {
+                Blocked.TrySetResult();
+                await Release.Task.WaitAsync(cancellationToken);
+            }
+            return await base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
+        }
     }
 
     private static InboxReceipt Receipt(OutboxMessage message, DateTimeOffset now, bool completed, bool dead) => new()

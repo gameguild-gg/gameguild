@@ -170,14 +170,51 @@ public sealed class OutboxDispatcher(
                 .ConfigureAwait(false);
         }
 
+        var currentConsumerNames = handlerTypes
+            .Select(handlerType => handlerType.FullName ?? handlerType.Name)
+            .ToHashSet(StringComparer.Ordinal);
+        if (db.Database.CurrentTransaction is not null)
+        {
+            await FinalizeAsync(message, currentConsumerNames, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await db.Database.CreateExecutionStrategy().ExecuteAsync(() =>
+                FinalizeAsync(message, currentConsumerNames, cancellationToken)).ConfigureAwait(false);
+        }
+    }
+
+    private async Task FinalizeAsync(
+        OutboxMessage message, IReadOnlySet<string> currentConsumerNames, CancellationToken cancellationToken)
+    {
+        await using var transaction = db.Database.IsRelational() && db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false) : null;
+        if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true)
+        {
+            // An expired claim can leave two dispatchers finalizing the same delivery.
+            // Serialize their final writes with cleanup before reading consumer receipts.
+            var locked = await db.Database.SqlQuery<Guid>($$"""
+                SELECT "EventId" AS "Value" FROM "gameguild.integration".outbox_messages
+                WHERE "EventId" = {{message.EventId}} FOR UPDATE
+                """).ToListAsync(cancellationToken).ConfigureAwait(false);
+            if (locked.Count == 0)
+            {
+                if (!await db.Set<OutboxDeliveryReceipt>().AnyAsync(receipt =>
+                    receipt.EventId == message.EventId && receipt.CompletedAtUtc != null, cancellationToken)
+                    .ConfigureAwait(false))
+                {
+                    throw new InvalidOperationException("An unfinished integration event disappeared before finalization.");
+                }
+                db.Entry(message).State = EntityState.Detached;
+                return;
+            }
+        }
+
         var receipts = await db.Set<InboxReceipt>().AsNoTracking()
             .Where(receipt => receipt.EventId == message.EventId)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         var finishedAt = timeProvider.GetUtcNow();
-        var currentConsumerNames = handlerTypes
-            .Select(handlerType => handlerType.FullName ?? handlerType.Name)
-            .ToHashSet(StringComparer.Ordinal);
         var currentReceipts = receipts
             .Where(receipt => currentConsumerNames.Contains(receipt.ConsumerName))
             .ToList();
@@ -196,6 +233,10 @@ public sealed class OutboxDispatcher(
 
         message.ClaimedUntilUtc = null;
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private async Task DispatchConsumerAsync(

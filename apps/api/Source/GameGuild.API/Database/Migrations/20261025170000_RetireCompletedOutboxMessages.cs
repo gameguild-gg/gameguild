@@ -94,6 +94,7 @@ public sealed class RetireCompletedOutboxMessages : Migration
                         message."CorrelationId", message."OccurredAtUtc", message."SchemaVersion"
                     FROM "gameguild.integration".outbox_messages message
                     WHERE message."CompletedAtUtc" IS NOT NULL
+                      AND message."CompletedAtUtc" <= p_now
                       AND message."DeadLetteredAtUtc" IS NULL
                       AND (message."ClaimedUntilUtc" IS NULL OR message."ClaimedUntilUtc" <= p_now)
                       AND (p_source_module IS NULL OR message."SourceModule" = p_source_module)
