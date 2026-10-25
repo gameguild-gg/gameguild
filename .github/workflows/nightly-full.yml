@@ -7,15 +7,59 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: nightly-full
   cancel-in-progress: false
 
 jobs:
+  runner-pool:
+    name: Select runner pool
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      pool: ${{ steps.select.outputs.pool }}
+    steps:
+      - name: Choose self-hosted pool or GitHub-hosted overflow
+        id: select
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
+        run: |
+          set -eu
+          if [[ "$FORK_PR" == 'true' ]]; then
+            echo 'Fork PR: untrusted code must never run on self-hosted hardware.' >&2
+            echo 'pool=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          pool='["self-hosted","gameguild"]'
+          response=$(curl -s -w '\n%{http_code}' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$REPOSITORY/actions/runners" || echo $'\n000')
+          status=$(tail -n1 <<<"$response")
+          body=$(sed '$d' <<<"$response")
+          if [[ "$status" == '200' ]]; then
+            total=$(jq '[.runners[] | select(any(.labels[]; .name == "gameguild"))] | length' <<<"$body")
+            busy=$(jq '[.runners[] | select(any(.labels[]; .name == "gameguild")) | select(.busy == true)] | length' <<<"$body")
+            echo "Self-hosted ARC runners: total=$total busy=$busy (max 9)."
+            if [[ "$busy" -ge 9 ]]; then
+              echo 'All 9 ARC runners busy; overflowing to GitHub-hosted.' >&2
+              pool='["ubuntu-latest"]'
+            fi
+          else
+            echo "Runner list unavailable (HTTP $status); defaulting to self-hosted." >&2
+          fi
+          echo "pool=$pool" >> "$GITHUB_OUTPUT"
+
   full-verification:
     name: Full solution, Economy, browser, and OpenAPI
-    runs-on: ubuntu-latest
+    needs: runner-pool
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

@@ -22,9 +22,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  runner-pool:
+    name: Select runner pool
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      pool: ${{ steps.select.outputs.pool }}
+    steps:
+      - name: Choose self-hosted pool or GitHub-hosted overflow
+        id: select
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
+        run: |
+          set -eu
+          if [[ "$FORK_PR" == 'true' ]]; then
+            echo 'Fork PR: untrusted code must never run on self-hosted hardware.' >&2
+            echo 'pool=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          pool='["self-hosted","gameguild"]'
+          response=$(curl -s -w '\n%{http_code}' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$REPOSITORY/actions/runners" || echo $'\n000')
+          status=$(tail -n1 <<<"$response")
+          body=$(sed '$d' <<<"$response")
+          if [[ "$status" == '200' ]]; then
+            total=$(jq '[.runners[] | select(any(.labels[]; .name == "gameguild"))] | length' <<<"$body")
+            busy=$(jq '[.runners[] | select(any(.labels[]; .name == "gameguild")) | select(.busy == true)] | length' <<<"$body")
+            echo "Self-hosted ARC runners: total=$total busy=$busy (max 9)."
+            if [[ "$busy" -ge 9 ]]; then
+              echo 'All 9 ARC runners busy; overflowing to GitHub-hosted.' >&2
+              pool='["ubuntu-latest"]'
+            fi
+          else
+            echo "Runner list unavailable (HTTP $status); defaulting to self-hosted." >&2
+          fi
+          echo "pool=$pool" >> "$GITHUB_OUTPUT"
+
   classify:
     name: Classify release surfaces
-    runs-on: ubuntu-latest
+    needs: runner-pool
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     outputs:
       api: ${{ steps.changes.outputs.api }}
       web: ${{ steps.changes.outputs.web }}
@@ -79,7 +122,8 @@ jobs:
 
   repository-policy:
     name: Repository policy
-    runs-on: ubuntu-latest
+    needs: runner-pool
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -102,9 +146,9 @@ jobs:
 
   web:
     name: Web verify
-    needs: classify
+    needs: [runner-pool, classify]
     if: needs.classify.outputs.web == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     # Include the bounded producer wait and the existing Web gates.
     timeout-minutes: 360
     permissions:
@@ -173,9 +217,9 @@ jobs:
 
   api:
     name: API verify
-    needs: classify
+    needs: [runner-pool, classify]
     if: needs.classify.outputs.api == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     # Broad API changes select the full suite of affected test projects.
     # Keep the per-test hang limit and allow the sequential suite to finish.
     # Full host regression takes about 30 minutes before additional affected module suites.
@@ -229,13 +273,13 @@ jobs:
 
   testing-lab:
     name: Testing Lab critical flow
-    needs: [classify, web, api]
+    needs: [runner-pool, classify, web, api]
     if: >-
       always() &&
       needs.classify.outputs.testingLab == 'true' &&
       (needs.web.result == 'success' || needs.web.result == 'skipped') &&
       (needs.api.result == 'success' || needs.api.result == 'skipped')
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -256,9 +300,9 @@ jobs:
 
   openapi:
     name: OpenAPI client consistency
-    needs: classify
+    needs: [runner-pool, classify]
     if: needs.classify.outputs.openApi == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     timeout-minutes: 20
     services:
       postgres:
@@ -293,9 +337,9 @@ jobs:
 
   migration:
     name: Migration compatibility
-    needs: classify
+    needs: [runner-pool, classify]
     if: needs.classify.outputs.migration == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     timeout-minutes: 20
     services:
       postgres:
@@ -332,9 +376,9 @@ jobs:
 
   economy:
     name: Economy Release Gate
-    needs: [classify, economy-api, economy-client]
+    needs: [runner-pool, classify, economy-api, economy-client]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     # Reuse the same-run API/client outputs. Coverage and regression remain
     # required independent jobs; this lane verifies OpenAPI/web/browser surfaces.
     timeout-minutes: 20
@@ -371,9 +415,9 @@ jobs:
 
   economy-api:
     name: Economy API publish
-    needs: classify
+    needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -401,9 +445,9 @@ jobs:
 
   economy-client:
     name: Economy client tests and build
-    needs: classify
+    needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -428,9 +472,9 @@ jobs:
 
   economy-coverage:
     name: Economy coverage and provider contracts
-    needs: classify
+    needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -450,9 +494,9 @@ jobs:
 
   economy-regression:
     name: Economy regression (${{ matrix.shard }})
-    needs: classify
+    needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     timeout-minutes: 20
     strategy:
       # Keep every shard's evidence when another shard fails.
@@ -485,6 +529,7 @@ jobs:
     if: always()
     needs:
       [
+        runner-pool,
         classify,
         repository-policy,
         web,
@@ -498,7 +543,7 @@ jobs:
         economy-coverage,
         economy-regression,
       ]
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     steps:
       - name: Require every selected gate
         # toJSON(needs) embeds classify's changedFiles list; on large PRs that
