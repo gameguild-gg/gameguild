@@ -27,9 +27,9 @@ public class LoginAttemptAnalysisService(
     {
         logger.LogWarning(
             "Suspicious activity recorded - Type: {ActivityType}, UserId: {UserId}, Identifier: {Identifier}, RiskLevel: {RiskLevel}",
-            activity.ActivityType,
-            activity.UserId,
-            activity.Identifier,
+            LogRedaction.Sanitize(activity.ActivityType),
+            LogRedaction.RedactId(activity.UserId, "uid"),
+            LogRedaction.MaskIdentifier(activity.Identifier),
             activity.RiskLevel);
 
         await siemService
@@ -78,8 +78,8 @@ public class LoginAttemptAnalysisService(
 
             logger.LogInformation(
                 "Login attempt recorded: Email={Email}, IP={IpAddress}, Success={IsSuccessful}, Risk={RiskScore}, Suspicious={IsSuspicious}",
-                request.Email,
-                request.IpAddress,
+                LogRedaction.MaskEmail(request.Email),
+                LogRedaction.MaskIpAddress(request.IpAddress),
                 request.IsSuccessful,
                 analysis.RiskScore,
                 analysis.IsSuspicious);
@@ -88,8 +88,11 @@ public class LoginAttemptAnalysisService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error recording login attempt for {Email} from {IpAddress}",
-                request.Email, request.IpAddress);
+            // Provider exceptions can contain the original request in their message/Data.
+            // Keep the failure category in diagnostics and rethrow the original to the caller.
+            logger.LogError("Error recording login attempt for {Email} from {IpAddress}: {ExceptionType}",
+                LogRedaction.MaskEmail(request.Email), LogRedaction.MaskIpAddress(request.IpAddress),
+                ex.GetType().Name);
             throw;
         }
         finally
@@ -211,13 +214,13 @@ public class LoginAttemptAnalysisService(
             {
                 logger.LogWarning(
                     "Anomalous login attempt detected - UserId: {UserId}, IP: {IpAddress}, RiskScore: {RiskScore}, Anomalies: {Anomalies}",
-                    context.UserId, context.IpAddress, result.RiskScore,
-                    string.Join(", ", result.DetectedAnomalies));
+                    LogRedaction.RedactId(context.UserId, "uid"), LogRedaction.MaskIpAddress(context.IpAddress),
+                    result.RiskScore, LogRedaction.Sanitize(string.Join(", ", result.DetectedAnomalies)));
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error analyzing login attempt context");
+            logger.LogError("Error analyzing login attempt context: {ExceptionType}", ex.GetType().Name);
             throw;
         }
 
@@ -283,7 +286,8 @@ public class LoginAttemptAnalysisService(
         {
             // Fail open: threat intelligence is defense-in-depth and must not affect the
             // outcome (or the availability) of the primary risk analysis.
-            logger.LogWarning(exception, "Threat intelligence evaluation skipped after a provider error");
+            logger.LogWarning("Threat intelligence evaluation skipped after a provider error: {ExceptionType}",
+                exception.GetType().Name);
         }
     }
 
@@ -316,10 +320,10 @@ public class LoginAttemptAnalysisService(
 
         logger.LogWarning(
             "Learned behavioral deviation detected - UserId: {UserId}, ZScore: {ZScore}, BaselineSamples: {BaselineSamples}, Features: {Features}",
-            context.UserId,
+            LogRedaction.RedactId(context.UserId, "uid"),
             assessment.CombinedZScore,
             assessment.BaselineSampleCount,
-            string.Join(", ", assessment.DeviationLabels));
+            LogRedaction.Sanitize(string.Join(", ", assessment.DeviationLabels)));
     }
 
     private async Task ApplyThreatIntelligenceMatchAsync(
@@ -341,8 +345,8 @@ public class LoginAttemptAnalysisService(
             "Threat intelligence match ({Mode}) - Signal: {Signal}, IP: {IpAddress}, UserId: {UserId}, RiskScoreBump: {RiskScoreBump}",
             enforce ? "Enforce" : "Observation",
             anomalyLabel,
-            context.IpAddress,
-            context.UserId,
+            LogRedaction.MaskIpAddress(context.IpAddress),
+            LogRedaction.RedactId(context.UserId, "uid"),
             enforce ? riskScoreBump : 0);
 
         if (auditEventSink is null)
@@ -376,7 +380,8 @@ public class LoginAttemptAnalysisService(
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Could not record the threat intelligence match security event");
+            logger.LogError("Could not record the threat intelligence match security event: {ExceptionType}",
+                exception.GetType().Name);
         }
     }
 
@@ -434,7 +439,8 @@ public class LoginAttemptAnalysisService(
     {
         logger.LogWarning(
             "Suspicious login attempt detected - Email: {Email}, IP: {IpAddress}, RiskScore: {RiskScore}",
-            attempt.Email, attempt.IpAddress, analysis.RiskScore);
+            LogRedaction.MaskEmail(attempt.Email), LogRedaction.MaskIpAddress(attempt.IpAddress),
+            analysis.RiskScore);
 
         await Task.CompletedTask.ConfigureAwait(false);
     }
