@@ -1,5 +1,6 @@
 using GameGuild.API.Database;
 using GameGuild.API.IntegrationTests.Infrastructure;
+using GameGuild.CQRS;
 using GameGuild.CQRS.Models;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
