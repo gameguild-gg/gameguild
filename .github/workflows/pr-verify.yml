@@ -60,7 +60,8 @@ jobs:
               pool='["ubuntu-latest"]'
             fi
           else
-            echo "Runner list unavailable (HTTP $status); defaulting to self-hosted." >&2
+            echo "Runner list unavailable (HTTP $status); using GitHub-hosted overflow." >&2
+            pool='["ubuntu-latest"]'
           fi
           echo "pool=$pool" >> "$GITHUB_OUTPUT"
 
