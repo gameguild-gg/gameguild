@@ -325,6 +325,35 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_LostLocalTransaction_ReusesTheProviderChargeIdentity()
+    {
+        var subscription = NewActiveSubscription();
+        SetupSubscription(subscription);
+        SetupGatewayChargeSuccess();
+        var request = new SubscriptionChangeSagaRequest(subscription.Id, ToPlanId,
+            new DateTime(2026, 10, 23, 0, 0, 0, DateTimeKind.Utc), null, ActorId);
+        var first = await NewOrchestrator().ExecuteAsync(request);
+
+        // Simulate loss of the local transaction after the external gateway accepted
+        // the charge: the same subscription intent must not acquire a new charge key.
+        _sagas.Clear();
+        _sagaSteps.Clear();
+        _invoices.Clear();
+        var restoredSubscription = NewActiveSubscription();
+        restoredSubscription.Id = subscription.Id;
+        SetupSubscription(restoredSubscription);
+        var second = await NewOrchestrator().ExecuteAsync(request);
+
+        second.SagaId.Should().NotBe(first.SagaId);
+        var chargeKeys = _paymentGateway.Invocations
+            .Where(invocation => invocation.Method.Name == nameof(IPaymentGateway.ProcessPaymentAsync))
+            .Select(invocation => ((GatewayPaymentRequest)invocation.Arguments[0]).IdempotencyKey)
+            .ToArray();
+        chargeKeys.Should().HaveCount(2);
+        chargeKeys[1].Should().Be(chargeKeys[0]);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_MissingTargetPlan_FailsAtProrationWithNoSideEffects()
     {
         var subscription = NewActiveSubscription();

@@ -127,7 +127,7 @@ public sealed class SubscriptionChangeSagaOrchestrator(
                 subscription.Id,
                 proration.NetAdjustment,
                 subscription.Amount.Currency,
-                $"subscription-change:{saga.Id}:invoice");
+                $"{saga.IdempotencyKey}:invoice");
             invoice.SetBillingPeriod(subscription.CurrentPeriodStart, subscription.CurrentPeriodEnd);
             invoice.SetDescription($"Plan change proration: {saga.FromPlanId} -> {saga.ToPlanId}");
             invoice.SetMetadata(
@@ -175,7 +175,7 @@ public sealed class SubscriptionChangeSagaOrchestrator(
                 charge = await paymentGateway
                     .ProcessPaymentAsync(
                         new GatewayPaymentRequest(
-                            $"subscription-change:{saga.Id}:charge",
+                            $"{saga.IdempotencyKey}:charge",
                             proration.NetAdjustment,
                             subscription.Amount.Currency,
                             subscription.ExternalCustomerId,
@@ -301,7 +301,7 @@ public sealed class SubscriptionChangeSagaOrchestrator(
                 var refund = await paymentGateway
                     .ProcessRefundAsync(
                         new GatewayRefundRequest(
-                            $"subscription-change:{saga.Id}:refund",
+                            $"{saga.IdempotencyKey}:refund",
                             transactionId,
                             saga.NetAdjustment,
                             $"Subscription change saga {saga.Id} failed at {failedStep}: {reason}",
