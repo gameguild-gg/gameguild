@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using FluentAssertions;
+using FluentValidation;
+using GameGuild.CQRS;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -121,8 +123,11 @@ public sealed class LayerExtensionCoverageTests
     [Fact]
     public void CountHandlersAndValidators_WhenAssemblyPartiallyLoads_CountsAvailableTypes()
     {
+        typeof(LoadableHandlerValidator).GetInterfaces().Should()
+            .Contain(typeof(IRequestHandler<LoadableRequest, string>))
+            .And.Contain(typeof(IValidator<LoadableRequest>));
         var assembly = CreatePartiallyLoadedAssembly(
-            typeof(IRequestHandler<>),
+            typeof(IRequestHandler<,>),
             typeof(InfrastructureAbstractType),
             typeof(NonGenericMarker),
             typeof(LoadableHandlerValidator));
@@ -139,10 +144,13 @@ public sealed class LayerExtensionCoverageTests
     [Fact]
     public void CountHandlersAndValidators_WhenAssemblyLoads_CountsOnlyConcreteGenericContracts()
     {
+        typeof(LoadableHandlerValidator).GetInterfaces().Should()
+            .Contain(typeof(IRequestHandler<LoadableRequest, string>))
+            .And.Contain(typeof(IValidator<LoadableRequest>));
         var assembly = new Mock<Assembly>();
         assembly.Setup(value => value.GetTypes()).Returns(
         [
-            typeof(IRequestHandler<>),
+            typeof(IRequestHandler<,>),
             typeof(InfrastructureAbstractType),
             typeof(NonGenericMarker),
             typeof(GenericMarker),
@@ -503,15 +511,22 @@ public sealed class LayerExtensionCoverageTests
         return value.Should().BeAssignableTo<T>().Subject;
     }
 
-    private interface IRequestHandler<T>;
-    private interface IValidator<T>;
     private interface INonGenericMarker;
     private sealed class NonGenericMarker : INonGenericMarker;
     private sealed class GenericMarker : IComparable<GenericMarker>
     {
         public int CompareTo(GenericMarker? other) => other is null ? 1 : 0;
     }
-    private sealed class LoadableHandlerValidator : IRequestHandler<string>, IValidator<string>;
+    private sealed record LoadableRequest(string Value) : IRequest<string>;
+
+    private sealed class LoadableHandlerValidator : AbstractValidator<LoadableRequest>, IRequestHandler<LoadableRequest, string>
+    {
+        public Task<string> Handle(LoadableRequest request, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(request.Value);
+        }
+    }
 }
 
 public sealed class InfrastructureLoadableType;

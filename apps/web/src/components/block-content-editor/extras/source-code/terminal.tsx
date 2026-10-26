@@ -125,6 +125,8 @@ interface TerminalProps {
   addCustomTestFiles?: (testIndex: number) => void
 }
 
+type TerminalTestCase = TerminalProps["testCases"][string][number]
+
 function TestTypeDialog({
   isOpen,
   setIsOpen,
@@ -234,10 +236,10 @@ function CustomTestUI({
   addCustomTestFiles,
   testType,
 }: {
-  testCase: any
+  testCase: TerminalTestCase
   index: number
   activeFileId: string
-  updateTestCase: any
+  updateTestCase: TerminalProps["updateTestCase"]
   isEditing: boolean
   isDarkTheme: boolean
   fileSelectedLanguage?: ProgrammingLanguage
@@ -587,7 +589,7 @@ export function Terminal({
 
   // Helper function to get custom code for a specific language
   const getCustomCode = (
-    testCase: any,
+    testCase: TerminalTestCase | undefined,
     codeType: "customCodeFirst" | "customCodeSecond",
     language: ProgrammingLanguage,
     index = 0,
@@ -672,7 +674,7 @@ export function Terminal({
     updatedCode[language] = code
 
     // Update the test case
-    const update: any = {}
+    const update: Partial<TerminalTestCase> = {}
     update[codeType] = updatedCode
 
     // For backward compatibility, also update customCode if we're updating customCodeFirst
@@ -685,7 +687,7 @@ export function Terminal({
 
   // Helper function to get test-specific code for a specific language
   const getTestSpecificCode = (
-    testCase: any,
+    testCase: TerminalTestCase | undefined,
     codeType: "testSpecificFirst" | "testSpecificSecond",
     language: ProgrammingLanguage,
   ): string => {
@@ -741,7 +743,7 @@ export function Terminal({
     updatedCode[language] = code
 
     // Update the test case
-    const update: any = {}
+    const update: Partial<TerminalTestCase> = {}
     update[codeType] = updatedCode
 
     updateTestCase(fileId, index, update)

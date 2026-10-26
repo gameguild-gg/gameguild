@@ -1,6 +1,6 @@
 "use client"
 
-import { ProjectExporter, type ProjectData as ExportProjectData } from "../../lib/interopAdapter/project-exporter"
+import { ProjectExporter, type ProjectData as ExportProjectData, type ProjectMetadata } from "../../lib/interopAdapter/project-exporter"
 import { ProjectImporter, type FolderStructureData } from "../../lib/interopAdapter/project-importer"
 import { HashManager } from "../../lib/sync/editor/hash-manager"
 
@@ -24,6 +24,16 @@ interface GoogleDriveProjectData {
   hash: string
   driveFileId?: string
   storageType: string
+}
+
+type GoogleDriveProjectMetadata = Pick<ProjectMetadata,
+  "id" | "name" | "tags" | "size" | "createdAt" | "updatedAt" | "hash">
+
+type ValidProjectData = Pick<GoogleDriveProjectData,
+  "id" | "name" | "data" | "tags" | "createdAt" | "updatedAt">
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
 export class GoogleDriveService {
@@ -139,7 +149,7 @@ export class GoogleDriveService {
   }
 
   // Download file content
-  private async downloadJsonFile(fileId: string): Promise<object | null> {
+  private async downloadJsonFile(fileId: string): Promise<unknown> {
     if (!this.isReady()) {
       throw new Error('Google Drive service not ready')
     }
@@ -191,16 +201,16 @@ export class GoogleDriveService {
           const indexFile = indexFileResponse.result.files?.[0]
           if (indexFile) {
             const metadata = await this.downloadJsonFile(indexFile.id!)
-            if (metadata && this.isValidProjectMetadata(metadata)) {
+            if (this.isValidProjectMetadata(metadata)) {
               projects.push({
-                id: (metadata as any).id,
-                name: (metadata as any).name,
+                id: metadata.id,
+                name: metadata.name,
                 data: "", // Placeholder - actual data loaded when opening project
-                tags: (metadata as any).tags || [],
-                size: (metadata as any).size || 0,
-                createdAt: (metadata as any).createdAt,
-                updatedAt: (metadata as any).updatedAt,
-                hash: (metadata as any).hash || "",
+                tags: metadata.tags,
+                size: metadata.size,
+                createdAt: metadata.createdAt,
+                updatedAt: metadata.updatedAt,
+                hash: metadata.hash,
                 driveFileId: folder.id!, // Use folder ID for reference
                 storageType: "google-drive"
               })
@@ -578,25 +588,27 @@ export class GoogleDriveService {
   }
 
   // Validate project data structure
-  private isValidProjectData(data: any): boolean {
+  private isValidProjectData(data: unknown): data is ValidProjectData {
     return (
-      data &&
+      isRecord(data) &&
       typeof data.id === 'string' &&
       typeof data.name === 'string' &&
       typeof data.data === 'string' &&
       Array.isArray(data.tags) &&
+      data.tags.every((tag: unknown) => typeof tag === 'string') &&
       typeof data.createdAt === 'string' &&
       typeof data.updatedAt === 'string'
     )
   }
 
   // Validate project metadata structure (lighter validation for index.json)
-  private isValidProjectMetadata(data: any): boolean {
+  private isValidProjectMetadata(data: unknown): data is GoogleDriveProjectMetadata {
     return (
-      data &&
+      isRecord(data) &&
       typeof data.id === 'string' &&
       typeof data.name === 'string' &&
       Array.isArray(data.tags) &&
+      data.tags.every((tag: unknown) => typeof tag === 'string') &&
       typeof data.hash === 'string' &&
       typeof data.size === 'number' &&
       typeof data.createdAt === 'string' &&
