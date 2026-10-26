@@ -47,7 +47,7 @@ public class PromoCustomerEligibilityTests
     public async Task Resolve_NoPurchasesAndNoPromoHistory_IsNew()
     {
         var userId = Guid.NewGuid();
-        _userProductRepository.Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+        _userProductRepository.Setup(r => r.GetByUserIdAsync(userId, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Enumerable.Empty<UserProduct>());
         _promoCodeRepository.Setup(r => r.HasUserRecordedUsageAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
@@ -61,7 +61,7 @@ public class PromoCustomerEligibilityTests
     public async Task Resolve_ActivePurchase_IsExisting()
     {
         var userId = Guid.NewGuid();
-        _userProductRepository.Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+        _userProductRepository.Setup(r => r.GetByUserIdAsync(userId, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Purchase(active: true) });
         _promoCodeRepository.Setup(r => r.HasUserRecordedUsageAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
@@ -75,7 +75,7 @@ public class PromoCustomerEligibilityTests
     public async Task Resolve_OnlyExpiredPurchases_IsChurned()
     {
         var userId = Guid.NewGuid();
-        _userProductRepository.Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+        _userProductRepository.Setup(r => r.GetByUserIdAsync(userId, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Purchase(active: false) });
 
         var state = await CreateResolver().ResolveAsync(userId);
@@ -87,7 +87,7 @@ public class PromoCustomerEligibilityTests
     public async Task Resolve_PromoHistoryWithoutPurchases_IsExisting()
     {
         var userId = Guid.NewGuid();
-        _userProductRepository.Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+        _userProductRepository.Setup(r => r.GetByUserIdAsync(userId, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Enumerable.Empty<UserProduct>());
         _promoCodeRepository.Setup(r => r.HasUserRecordedUsageAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);

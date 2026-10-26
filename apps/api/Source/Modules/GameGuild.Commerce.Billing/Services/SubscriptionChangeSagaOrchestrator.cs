@@ -134,6 +134,11 @@ public sealed class SubscriptionChangeSagaOrchestrator(
         var newAmount = await intervalPricingService
             .ResolvePriceForCycleAsync(targetPlan, subscription.BillingCycle, cancellationToken)
             .ConfigureAwait(false);
+        if (!string.Equals(newAmount.Currency, subscription.Amount.Currency, StringComparison.Ordinal))
+        {
+            throw new BusinessRuleViolationException("subscription-change.currency-mismatch",
+                "A plan change cannot prorate amounts in different currencies.");
+        }
         var proration = billingCalculator.CalculateProration(
             subscription.Amount,
             newAmount,
@@ -397,6 +402,7 @@ public sealed class SubscriptionChangeSagaOrchestrator(
             "Failed",
             $"reason={reason}; compensations=[{string.Join(", ", compensations)}]",
             SystemClock.UtcNow);
+        journal.SetTenantId(saga.TenantId!.Value);
         saga.AppendStep(journal);
         context.Set<SubscriptionChangeSagaStep>().Add(journal);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -453,6 +459,7 @@ public sealed class SubscriptionChangeSagaOrchestrator(
             outcome,
             detail,
             SystemClock.UtcNow);
+        journal.SetTenantId(saga.TenantId!.Value);
         saga.AppendStep(journal);
         context.Set<SubscriptionChangeSagaStep>().Add(journal);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

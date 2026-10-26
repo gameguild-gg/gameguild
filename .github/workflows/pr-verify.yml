@@ -337,7 +337,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p artifacts/model-drift
-          git show -s --format='%H%n%T%n%P' HEAD > artifacts/model-drift/checkout.txt
+          git -c core.commitGraph=false show -s --format='%H%n%T' HEAD > artifacts/model-drift/checkout.txt
+          git -c core.commitGraph=false cat-file -p HEAD | sed -n 's/^parent //p' | paste -sd ' ' >> artifacts/model-drift/checkout.txt
           if dotnet ef migrations has-pending-model-changes \
             --project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
             --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj; then
@@ -367,6 +368,21 @@ jobs:
           --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj
       - name: Verify model and migrated schema agree
         run: pnpm db:dbml:verify
+      - name: Verify generated schema documentation
+        shell: bash
+        run: |
+          mkdir -p artifacts/schema-model
+          cp artifacts/model-drift/checkout.txt artifacts/schema-model/checkout.txt
+          pnpm db:dbml
+          cp docs/schema.dbml artifacts/schema-model/schema.dbml
+          git -c core.commitGraph=false diff --exit-code -- docs/schema.dbml
+      - name: Preserve generated schema documentation
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: schema-model-diagnostics
+          path: artifacts/schema-model
+          if-no-files-found: warn
 
   economy:
     name: Economy Release Gate

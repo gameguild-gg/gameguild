@@ -39,13 +39,13 @@ public sealed class MaxMindGeolocationProvider : IGeolocationProvider, IDisposab
     {
         if (string.IsNullOrWhiteSpace(databasePath))
         {
-            logger.LogInformation("MaxMind {Purpose} database is not configured; {Purpose} enrichment stays disabled", purpose, purpose);
+            logger.LogInformation("MaxMind {Purpose} database is not configured; enrichment stays disabled", purpose);
             return null;
         }
 
         if (!File.Exists(databasePath))
         {
-            logger.LogWarning("MaxMind {Purpose} database not found at {DatabasePath}; {Purpose} enrichment stays disabled", purpose, databasePath, purpose);
+            logger.LogWarning("MaxMind {Purpose} database not found at {DatabasePath}; enrichment stays disabled", purpose, databasePath);
             return null;
         }
 
@@ -58,7 +58,7 @@ public sealed class MaxMindGeolocationProvider : IGeolocationProvider, IDisposab
         catch (Exception ex)
         {
             // Fail closed: an unreadable database must disable enrichment, not startup.
-            logger.LogError(ex, "MaxMind {Purpose} database at {DatabasePath} could not be opened; {Purpose} enrichment stays disabled", purpose, databasePath, purpose);
+            logger.LogError(ex, "MaxMind {Purpose} database at {DatabasePath} could not be opened; enrichment stays disabled", purpose, databasePath);
             return null;
         }
     }

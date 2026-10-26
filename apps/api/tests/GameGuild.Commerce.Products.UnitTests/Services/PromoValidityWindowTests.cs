@@ -32,8 +32,8 @@ public class PromoValidityWindowTests
     [Fact]
     public void ResolveTimeZone_NullOrEmpty_FallsBackToUtc()
     {
-        PromoValidityWindow.ResolveTimeZone(null).Zone.Id.Should().Be("UTC");
-        PromoValidityWindow.ResolveTimeZone("  ").Zone.Id.Should().Be("UTC");
+        PromoValidityWindow.ResolveTimeZone(null).TimeZone.Id.Should().Be("UTC");
+        PromoValidityWindow.ResolveTimeZone("  ").TimeZone.Id.Should().Be("UTC");
     }
 
     [Fact]
@@ -44,12 +44,11 @@ public class PromoValidityWindowTests
 
         var utc = PromoValidityWindow.NormalizeToUtc(wallClock, saoPaulo);
 
-        // Brazil daylight time starts 2026-11-01; the local midnight is 03:00 UTC.
-        utc.Should().NotBeNull();
-        utc.Value.Kind.Should().Be(DateTimeKind.Utc);
+        var instant = Assert.IsType<DateTime>(utc);
+        instant.Kind.Should().Be(DateTimeKind.Utc);
         var expected = TimeZoneInfo.ConvertTimeToUtc(wallClock, saoPaulo);
-        utc.Value.Should().Be(expected);
-        utc.Value.Hour.Should().Be(expected.Hour);
+        instant.Should().Be(expected);
+        instant.Hour.Should().Be(expected.Hour);
     }
 
     [Fact]

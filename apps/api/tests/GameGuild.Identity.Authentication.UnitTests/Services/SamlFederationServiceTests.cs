@@ -54,7 +54,7 @@ public sealed class SamlFederationServiceTests : IDisposable
     ///     well-behaved browser echoes back); relay-mismatch tests pass an explicit value.
     /// </summary>
     private Task<SamlFederatedIdentity> Consume(SamlFederationService sut, string samlResponse, string? relayState = null) =>
-        Consume(sut, samlResponse, relayState ?? _lastIssuedRelayState);
+        sut.ConsumeAssertionAsync(Slug, samlResponse, relayState ?? _lastIssuedRelayState);
 
     private string CertificateBase64(RSA key, DateTimeOffset notBefore, DateTimeOffset notAfter)
     {

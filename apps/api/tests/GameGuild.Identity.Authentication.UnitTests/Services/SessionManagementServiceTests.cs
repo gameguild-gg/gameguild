@@ -1162,7 +1162,7 @@ public class SessionManagementServiceTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData("over-200-chars")]
-    public async Task RenameTrustedDeviceAsync_RejectsInvalidNamesWithoutReadingStorage(string boundary)
+    public async Task RenameTrustedDeviceAsync_RejectsInvalidNamesWithoutReadingStorage(string? boundary)
     {
         var name = boundary == "over-200-chars" ? new string('n', SessionManagementService.MaxTrustedDeviceNameLength + 1) : boundary;
 

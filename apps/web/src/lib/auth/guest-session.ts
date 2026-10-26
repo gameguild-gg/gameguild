@@ -19,6 +19,9 @@ export interface GuestSessionRecord {
 }
 
 const STORAGE_KEY = "gameguild.guest-session";
+const CHANGE_EVENT = "gameguild:guest-session-changed";
+let snapshotRaw: string | null = null;
+let snapshotRecord: GuestSessionRecord | null = null;
 
 function isValidRecord(value: unknown): value is GuestSessionRecord {
   if (typeof value !== "object" || value === null) return false;
@@ -43,6 +46,57 @@ function isExpired(record: GuestSessionRecord, now = Date.now()): boolean {
 export function saveGuestSession(record: GuestSessionRecord): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+
+/** Stable, read-only snapshot for React's browser-store subscription. */
+export function getGuestSessionSnapshot(): GuestSessionRecord | null {
+  if (typeof window === "undefined") return null;
+  let raw: string | null;
+  try {
+    raw = window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+  if (raw !== snapshotRaw) {
+    snapshotRaw = raw;
+    snapshotRecord = null;
+    try {
+      const parsed: unknown = raw ? JSON.parse(raw) : null;
+      if (isValidRecord(parsed)) snapshotRecord = parsed;
+    } catch {
+      // The render-time reader never mutates storage for an invalid payload.
+    }
+  }
+  return snapshotRecord && !isExpired(snapshotRecord) ? snapshotRecord : null;
+}
+
+/** Observe same-tab writes, other tabs and the active session's expiry. */
+export function subscribeGuestSession(onChange: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  let expiryTimer: ReturnType<typeof setTimeout> | undefined;
+  const scheduleExpiry = () => {
+    clearTimeout(expiryTimer);
+    const record = getGuestSessionSnapshot();
+    if (record) {
+      expiryTimer = setTimeout(notify, Math.min(Date.parse(record.expiresAt) - Date.now(), 2_147_483_647));
+    }
+  };
+  function notify() {
+    onChange();
+    scheduleExpiry();
+  }
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === null || event.key === STORAGE_KEY) notify();
+  };
+  window.addEventListener(CHANGE_EVENT, notify);
+  window.addEventListener("storage", onStorage);
+  scheduleExpiry();
+  return () => {
+    clearTimeout(expiryTimer);
+    window.removeEventListener(CHANGE_EVENT, notify);
+    window.removeEventListener("storage", onStorage);
+  };
 }
 
 /**
@@ -85,6 +139,7 @@ export function clearGuestSession(): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(STORAGE_KEY);
+    window.dispatchEvent(new Event(CHANGE_EVENT));
   } catch {
     // Storage can be unavailable (private mode); there is nothing to clear.
   }

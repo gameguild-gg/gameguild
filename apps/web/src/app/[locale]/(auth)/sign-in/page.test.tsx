@@ -21,8 +21,8 @@ vi.mock('@/lib/auth/cross-domain-auth', () => ({
 vi.mock('@/components/sign-in-form', () => ({
   // Renders the providers slot so the composition assertions below can see
   // the provider buttons the page passes into the form.
-  SignInForm: ({ providers }: { providers?: ReactNode }) => (
-    <div data-testid="sign-in-form">{providers}</div>
+  SignInForm: ({ providers, guestEntry }: { providers?: ReactNode; guestEntry?: ReactNode }) => (
+    <div data-testid="sign-in-form">{providers}{guestEntry}</div>
   ),
 }));
 vi.mock('@/components/google-one-tap', () => ({

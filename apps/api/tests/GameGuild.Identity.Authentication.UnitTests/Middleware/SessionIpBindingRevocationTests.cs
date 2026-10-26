@@ -17,6 +17,7 @@ namespace GameGuild.Identity.Authentication.UnitTests.Middleware;
 /// </summary>
 public sealed class SessionIpBindingRevocationTests
 {
+    private const string NextInvoked = "session-ip-binding-next-invoked";
     private static (DefaultHttpContext Context, Mock<ITokenRevocationService> Revocation, Mock<IUserRepository> Users, Mock<IUserSessionRepository> Sessions, Func<Task> Next)
         CreateHarness(Guid userId, Guid sessionId, string? sessionIpAddress, System.Net.IPAddress? remoteIpAddress)
     {
@@ -25,6 +26,7 @@ public sealed class SessionIpBindingRevocationTests
             User = new ClaimsPrincipal(new ClaimsIdentity(
             [
                 new Claim("sub", userId.ToString()),
+                new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture)),
                 new Claim(JwtClaimTypes.SessionId, sessionId.ToString())
             ], "Bearer"))
         };
@@ -32,7 +34,7 @@ public sealed class SessionIpBindingRevocationTests
         context.Connection.RemoteIpAddress = remoteIpAddress;
         var revocation = new Mock<ITokenRevocationService>(MockBehavior.Strict);
         revocation
-            .Setup(service => service.IsUserTokenRevokedAsync(userId, It.IsAny<DateTime>(), null, It.IsAny<CancellationToken>()))
+            .Setup(service => service.IsUserTokenRevokedAsync(userId, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         var users = new Mock<IUserRepository>(MockBehavior.Strict);
         var sessions = new Mock<IUserSessionRepository>(MockBehavior.Strict);
@@ -46,21 +48,16 @@ public sealed class SessionIpBindingRevocationTests
                 ExpiresAt = DateTime.UtcNow.AddHours(1),
                 IpAddress = sessionIpAddress ?? string.Empty
             });
-        var invoked = false;
         Task Next()
         {
-            invoked = true;
+            context.Items[NextInvoked] = true;
             return Task.CompletedTask;
         }
-        return (context, revocation, users, sessions, () => { Assert.True(invoked); return Task.CompletedTask; });
+        return (context, revocation, users, sessions, Next);
     }
 
-    private static TokenRevocationMiddleware CreateMiddleware(Func<Task> assertNextInvoked) =>
-        new(_ =>
-        {
-            assertNextInvoked();
-            return Task.CompletedTask;
-        }, NullLogger<TokenRevocationMiddleware>.Instance);
+    private static TokenRevocationMiddleware CreateMiddleware(Func<Task> next) =>
+        new(_ => next(), NullLogger<TokenRevocationMiddleware>.Instance);
 
     [Fact]
     public async Task StrictBindingAcceptsRequestFromTheRecordedAddress()
@@ -74,6 +71,7 @@ public sealed class SessionIpBindingRevocationTests
         await CreateMiddleware(assertNext).InvokeAsync(context, revocation.Object, users.Object, sessions.Object);
 
         Assert.Equal(StatusCodes.Status200OK, context.Response.StatusCode);
+        Assert.True(context.Items.ContainsKey(NextInvoked));
     }
 
     [Fact]
@@ -88,6 +86,7 @@ public sealed class SessionIpBindingRevocationTests
         await CreateMiddleware(assertNext).InvokeAsync(context, revocation.Object, users.Object, sessions.Object);
 
         Assert.Equal(StatusCodes.Status200OK, context.Response.StatusCode);
+        Assert.True(context.Items.ContainsKey(NextInvoked));
     }
 
     [Theory]
@@ -97,30 +96,32 @@ public sealed class SessionIpBindingRevocationTests
     [InlineData("")]                  // empty session address
     public async Task StrictBindingRejectsEverythingElse(string sessionIpAddress)
     {
-        var (context, revocation, users, sessions, _) = CreateHarness(
+        var (context, revocation, users, sessions, next) = CreateHarness(
             Guid.NewGuid(), Guid.NewGuid(), sessionIpAddress, System.Net.IPAddress.Parse("203.0.113.7"));
         context.RequestServices = new ServiceCollection()
             .AddSingleton(new SessionOptions { IpAddressBinding = SessionIpAddressBinding.Strict, EnableLocationTracking = true })
             .BuildServiceProvider();
 
-        await CreateMiddleware(() => Task.CompletedTask).InvokeAsync(context, revocation.Object, users.Object, sessions.Object);
+        await CreateMiddleware(next).InvokeAsync(context, revocation.Object, users.Object, sessions.Object);
 
         Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
         Assert.False(context.User.Identity?.IsAuthenticated);
+        Assert.False(context.Items.ContainsKey(NextInvoked));
     }
 
     [Fact]
     public async Task StrictBindingFailsClosedWithoutARemoteAddress()
     {
-        var (context, revocation, users, sessions, _) = CreateHarness(
+        var (context, revocation, users, sessions, next) = CreateHarness(
             Guid.NewGuid(), Guid.NewGuid(), "203.0.113.7", remoteIpAddress: null);
         context.RequestServices = new ServiceCollection()
             .AddSingleton(new SessionOptions { IpAddressBinding = SessionIpAddressBinding.Strict, EnableLocationTracking = true })
             .BuildServiceProvider();
 
-        await CreateMiddleware(() => Task.CompletedTask).InvokeAsync(context, revocation.Object, users.Object, sessions.Object);
+        await CreateMiddleware(next).InvokeAsync(context, revocation.Object, users.Object, sessions.Object);
 
         Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
+        Assert.False(context.Items.ContainsKey(NextInvoked));
     }
 
     [Fact]
@@ -135,6 +136,7 @@ public sealed class SessionIpBindingRevocationTests
         await CreateMiddleware(assertNext).InvokeAsync(context, revocation.Object, users.Object, sessions.Object);
 
         Assert.Equal(StatusCodes.Status200OK, context.Response.StatusCode);
+        Assert.True(context.Items.ContainsKey(NextInvoked));
     }
 
     [Fact]
@@ -147,6 +149,7 @@ public sealed class SessionIpBindingRevocationTests
         await CreateMiddleware(assertNext).InvokeAsync(context, revocation.Object, users.Object, sessions.Object);
 
         Assert.Equal(StatusCodes.Status200OK, context.Response.StatusCode);
+        Assert.True(context.Items.ContainsKey(NextInvoked));
     }
 }
 

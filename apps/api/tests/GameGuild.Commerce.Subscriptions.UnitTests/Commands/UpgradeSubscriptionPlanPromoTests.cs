@@ -199,7 +199,7 @@ public class UpgradeSubscriptionPlanPromoTests
                 []));
 
         var downgraded = new Subscription(
-            tenantId, newPlan.Id, subscription.CreatedByUserId, BillingCycle.Monthly,
+            subscription.TenantId!.Value, newPlan.Id, subscription.CreatedByUserId, BillingCycle.Monthly,
             new Money(10m), SystemClock.UtcNow, null);
         _lifecycle
             .Setup(l => l.DowngradePlanAsync(subscription.Id, newPlan.Id, It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))

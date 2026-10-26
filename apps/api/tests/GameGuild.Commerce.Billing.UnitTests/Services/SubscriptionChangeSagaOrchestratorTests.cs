@@ -196,6 +196,7 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
             ("Invoice", "Succeeded"),
             ("Payment", "Succeeded"),
             ("Activation", "Succeeded"));
+        _sagaSteps.Should().OnlyContain(step => step.TenantId == TenantId);
 
         _invoices.Should().ContainSingle().Which.Status.Should().Be(InvoiceStatus.Paid, "the charge settles the issued invoice");
         _billingEvents.Verify(publisher => publisher.PublishSubscriptionChangeCompletedAsync(
@@ -231,6 +232,7 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
         result.Status.Should().Be(SubscriptionChangeSagaStatus.Failed);
         result.FailedStep.Should().Be("Payment");
         result.CompensationsApplied.Should().Contain("invoice-voided");
+        _sagaSteps.Should().OnlyContain(step => step.TenantId == TenantId);
         subscription.PlanId.Should().Be(FromPlanId, "the subscription keeps its original plan");
         _invoices.Should().ContainSingle().Which.Status.Should().Be(InvoiceStatus.Void);
         _paymentGateway.Verify(gateway => gateway.ProcessRefundAsync(It.IsAny<GatewayRefundRequest>(), It.IsAny<CancellationToken>()), Times.Never,
@@ -296,6 +298,22 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
         await act.Should().ThrowAsync<DbUpdateException>();
         _paymentGateway.Verify(gateway => gateway.ProcessRefundAsync(It.IsAny<GatewayRefundRequest>(), It.IsAny<CancellationToken>()), Times.Never);
         _billingEvents.Verify(publisher => publisher.PublishSubscriptionChangeCompletedAsync(It.IsAny<SubscriptionChangeSaga>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_TargetCurrencyDiffers_DoesNotProrateOrCharge()
+    {
+        var subscription = NewActiveSubscription();
+        SetupSubscription(subscription);
+        _intervalPricing.Setup(service => service.ResolvePriceForCycleAsync(It.IsAny<SubscriptionPlan>(), It.IsAny<BillingCycle>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Money(200m, "EUR"));
+
+        var act = () => NewOrchestrator().ExecuteAsync(new SubscriptionChangeSagaRequest(subscription.Id, ToPlanId, null, null, ActorId));
+
+        await act.Should().ThrowAsync<BusinessRuleViolationException>();
+        _invoices.Should().BeEmpty();
+        _paymentGateway.Verify(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+        _billingCalculator.Verify(calculator => calculator.CalculateProration(It.IsAny<Money>(), It.IsAny<Money>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()), Times.Never);
     }
 
     [Fact]

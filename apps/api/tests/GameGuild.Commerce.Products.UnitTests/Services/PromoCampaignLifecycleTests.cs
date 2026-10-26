@@ -150,7 +150,7 @@ public class PromoCampaignLifecycleTests
         campaignRepository
             .Setup(r => r.AddAsync(It.IsAny<PromoCampaign>(), It.IsAny<CancellationToken>()))
             .Callback<PromoCampaign, CancellationToken>((campaign, _) => persisted = campaign)
-            .Returns(ValueTask.CompletedTask);
+            .Returns(Task.CompletedTask);
         var handler = new CreatePromoCampaignCommandHandler(
             campaignRepository.Object, Mock.Of<IPromoCodeAuditLogger>());
 

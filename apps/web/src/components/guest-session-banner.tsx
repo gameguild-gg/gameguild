@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Link } from "@/i18n/navigation";
 import {
   clearGuestSession,
-  loadGuestSession,
-  type GuestSessionRecord,
+  getGuestSessionSnapshot,
+  subscribeGuestSession,
 } from "@/lib/auth/guest-session";
 import { Button } from "@game-guild/ui/components/button";
+
+const getServerSnapshot = () => null;
 
 export interface GuestSessionBannerLabels {
   title: string;
@@ -30,17 +32,12 @@ export function GuestSessionBanner({
 }: {
   labels: GuestSessionBannerLabels;
 }) {
-  const [record, setRecord] = useState<GuestSessionRecord | null>(null);
-
-  // Read the guest slot after mount: the store is browser-only and the first
-  // server-rendered pass must stay identical for hydration.
-  useEffect(() => {
-    setRecord(loadGuestSession());
-  }, []);
+  // Server rendering and hydration share an empty snapshot. React subscribes
+  // to browser storage after hydration without an effect-driven state copy.
+  const record = useSyncExternalStore(subscribeGuestSession, getGuestSessionSnapshot, getServerSnapshot);
 
   function handleLeaveGuestMode() {
     clearGuestSession();
-    setRecord(null);
   }
 
   if (!record) return null;

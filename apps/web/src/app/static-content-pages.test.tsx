@@ -9,6 +9,10 @@ vi.mock('next/headers', () => ({
   cookies: vi.fn(async () => ({ get: () => undefined })),
 }));
 
+vi.mock('next-intl/server', () => ({
+  getTranslations: async (namespace: string) => (key: string) => `${namespace}.${key}`,
+}));
+
 vi.mock('@/i18n', () => ({
   Link: ({ href, children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
     <a href={href} {...props}>

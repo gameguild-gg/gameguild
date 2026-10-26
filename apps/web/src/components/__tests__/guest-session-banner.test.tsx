@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { act, cleanup, screen } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { renderWithUser } from '@/test/auth-test-helpers';
+import { clearGuestSession, saveGuestSession } from '@/lib/auth/guest-session';
 
 vi.mock('@/i18n/navigation', () => ({
   Link: ({
@@ -41,7 +43,45 @@ describe('GuestSessionBanner', () => {
   });
 
   afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
     window.localStorage.clear();
+  });
+
+  it('keeps browser credentials out of the server-rendered snapshot', () => {
+    saveGuestSession(record);
+    expect(renderToString(<GuestSessionBanner labels={labels} />)).toBe('');
+  });
+
+  it('updates when guest mode changes elsewhere in the same tab', () => {
+    renderWithUser(<GuestSessionBanner labels={labels} />);
+    expect(screen.queryByTestId('guest-session-banner')).not.toBeInTheDocument();
+
+    act(() => saveGuestSession(record));
+    expect(screen.getByTestId('guest-session-banner')).toBeInTheDocument();
+
+    act(() => clearGuestSession());
+    expect(screen.queryByTestId('guest-session-banner')).not.toBeInTheDocument();
+  });
+
+  it('removes the banner when the guest session expires', () => {
+    vi.useFakeTimers();
+    saveGuestSession({ ...record, expiresAt: new Date(Date.now() + 1000).toISOString() });
+    renderWithUser(<GuestSessionBanner labels={labels} />);
+    expect(screen.getByTestId('guest-session-banner')).toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(1000));
+    expect(screen.queryByTestId('guest-session-banner')).not.toBeInTheDocument();
+  });
+
+  it('responds to a guest session removed in another tab', () => {
+    saveGuestSession(record);
+    renderWithUser(<GuestSessionBanner labels={labels} />);
+    act(() => {
+      window.localStorage.removeItem('gameguild.guest-session');
+      window.dispatchEvent(new StorageEvent('storage', { key: 'gameguild.guest-session' }));
+    });
+    expect(screen.queryByTestId('guest-session-banner')).not.toBeInTheDocument();
   });
 
   it('renders nothing without a stored guest session', async () => {
