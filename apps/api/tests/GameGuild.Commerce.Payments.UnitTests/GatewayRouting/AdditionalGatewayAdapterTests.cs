@@ -149,7 +149,7 @@ public class AdditionalGatewayAdapterTests
 
         adapter.IsEnabled.Should().BeFalse();
 
-        var charge = await adapter.ProcessPaymentAsync(Charge("KL4TW4V5KXQZ6W3H"));
+        var charge = await adapter.ProcessPaymentAsync(Charge("adyenTestToken123"));
         charge.Success.Should().BeFalse();
         charge.ErrorCode.Should().Be("adyen_adapter_disabled");
 
@@ -158,7 +158,7 @@ public class AdditionalGatewayAdapterTests
         var enabled = new AdyenPaymentGateway(
             Options.Create(new AdyenGatewayOptions { IsEnabled = true, UseSimulation = true }),
             new Mock<IAdyenApiClient>().Object);
-        var inquiry = await enabled.GetPaymentAsync("KL4TW4V5KXQZ6W3H");
+        var inquiry = await enabled.GetPaymentAsync("adyenTestToken123");
         inquiry.Success.Should().BeFalse();
         inquiry.ErrorCode.Should().Be("adyen_inquiry_not_supported");
     }
@@ -170,7 +170,7 @@ public class AdditionalGatewayAdapterTests
             Options.Create(new AdyenGatewayOptions { IsEnabled = true, UseSimulation = true }),
             new Mock<IAdyenApiClient>().Object);
 
-        var charge = await adapter.ProcessPaymentAsync(Charge("KL4TW4V5KXQZ6W3H"));
+        var charge = await adapter.ProcessPaymentAsync(Charge("adyenTestToken123"));
         charge.Success.Should().BeTrue();
         charge.TransactionId.Should().StartWith("ADYEN-SIMULATED-");
 
@@ -190,24 +190,24 @@ public class AdditionalGatewayAdapterTests
 
         client.Setup(instance => instance.PaymentAsync("idem-1", 25m, "USD", It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result("""{"pspReference":"8525","resultCode":"Authorised"}"""));
-        (await adapter.ProcessPaymentAsync(Charge("KL4TW4V5KXQZ6W3H")))
+        (await adapter.ProcessPaymentAsync(Charge("adyenTestToken123")))
             .Should().Match<GatewayPaymentResult>(result => result.Success && result.TransactionId == "8525");
 
         client.Setup(instance => instance.PaymentAsync("idem-1", 25m, "USD", It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result("""{"pspReference":"8526","resultCode":"Refused","refusalReason":"DECLINED_BY_ISSUER"}"""));
-        (await adapter.ProcessPaymentAsync(Charge("KL4TW4V5KXQZ6W3H")))
+        (await adapter.ProcessPaymentAsync(Charge("adyenTestToken123")))
             .Should().Match<GatewayPaymentResult>(result =>
                 !result.Success && result.FailureKind == GatewayFailureKind.TerminalDecline);
 
         client.Setup(instance => instance.PaymentAsync("idem-1", 25m, "USD", It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result("{}"));
-        (await adapter.ProcessPaymentAsync(Charge("KL4TW4V5KXQZ6W3H")))
+        (await adapter.ProcessPaymentAsync(Charge("adyenTestToken123")))
             .Should().Match<GatewayPaymentResult>(result =>
                 !result.Success && result.FailureKind == GatewayFailureKind.OutcomeUnknown);
 
         client.Setup(instance => instance.PaymentAsync("idem-1", 25m, "USD", It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GatewayProviderApiResult(false, 429, null, "adyen_http_429", "rate limited", TransportFailed: false));
-        (await adapter.ProcessPaymentAsync(Charge("KL4TW4V5KXQZ6W3H")))
+        (await adapter.ProcessPaymentAsync(Charge("adyenTestToken123")))
             .Should().Match<GatewayPaymentResult>(result =>
                 !result.Success && result.FailureKind == GatewayFailureKind.RetriableGatewayFailure);
     }
@@ -274,9 +274,9 @@ public class AdditionalGatewayAdapterTests
         GatewayPaymentMethodTokens.ResolveProvider("B-12345678").Should().Be("paypal");
         GatewayPaymentMethodTokens.ResolveProvider($"{Descriptor}|{OpaqueValue}").Should().Be("authorizenet");
         GatewayPaymentMethodTokens.ResolveProvider("tokencc_bh_sandbox_abc123", "braintree").Should().Be("braintree");
-        GatewayPaymentMethodTokens.ResolveProvider("KL4TW4V5KXQZ6W3H", "adyen").Should().Be("adyen");
+        GatewayPaymentMethodTokens.ResolveProvider("adyenTestToken123", "adyen").Should().Be("adyen");
         GatewayPaymentMethodTokens.ResolveProvider("tokencc_bh_sandbox_abc123").Should().BeNull();
-        GatewayPaymentMethodTokens.ResolveProvider("KL4TW4V5KXQZ6W3H").Should().BeNull();
+        GatewayPaymentMethodTokens.ResolveProvider("adyenTestToken123").Should().BeNull();
         GatewayPaymentMethodTokens.ResolveProvider("not_a_pm").Should().BeNull();
         GatewayPaymentMethodTokens.ResolveProvider("pm_card_visa", "adyen").Should().BeNull();
         GatewayPaymentMethodTokens.ResolveProvider("4111111111111111", "adyen").Should().BeNull();
@@ -294,7 +294,7 @@ public class AdditionalGatewayAdapterTests
         GatewayRouteContext.InferPaymentMethodType("pm_card_visa").Should().Be("card");
         GatewayRouteContext.InferPaymentMethodType("ba_agreement").Should().Be("paypal");
         GatewayRouteContext.InferPaymentMethodType("tokencc_bh_sandbox_abc").Should().Be("card");
-        GatewayRouteContext.InferPaymentMethodType("KL4TW4V5KXQZ6W3H").Should().Be("card");
+        GatewayRouteContext.InferPaymentMethodType("adyenTestToken123").Should().Be("card");
         GatewayRouteContext.InferPaymentMethodType($"{Descriptor}|{OpaqueValue}").Should().Be("card");
     }
 

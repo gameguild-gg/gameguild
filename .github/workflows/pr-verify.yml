@@ -333,33 +333,33 @@ jobs:
       - uses: ./.github/actions/setup-dotnet
       - run: dotnet tool restore
       - run: dotnet restore apps/api/Source/GameGuild.API/GameGuild.API.csproj
-        - name: Verify the committed EF model snapshot
-          shell: bash
-          run: |
-            mkdir -p artifacts/model-drift
-            git show -s --format='%H%n%T%n%P' HEAD > artifacts/model-drift/checkout.txt
-            if dotnet ef migrations has-pending-model-changes \
-              --project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
-              --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj; then
-              exit 0
-            fi
-            # Scaffold diagnostic source on the hosted runner for review. This does not
-            # accept or apply the generated migration; a changed snapshot fails this gate.
-            dotnet ef migrations add ReconcileBranchSyncModel \
-              --project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
-              --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
-              --output-dir Database/Migrations
-            cp apps/api/Source/GameGuild.API/Database/Migrations/*ReconcileBranchSyncModel*.cs artifacts/model-drift/
-            cp apps/api/Source/GameGuild.API/Database/Migrations/ApplicationDbContextModelSnapshot.cs artifacts/model-drift/
-            echo '::error::The committed snapshot does not match the application model. Review and commit a complete migration.'
-            exit 1
-        - name: Preserve EF model diagnostics
-          if: always()
-          uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-          with:
-            name: migration-model-diagnostics
-            path: artifacts/model-drift
-            if-no-files-found: error
+      - name: Verify the committed EF model snapshot
+        shell: bash
+        run: |
+          mkdir -p artifacts/model-drift
+          git show -s --format='%H%n%T%n%P' HEAD > artifacts/model-drift/checkout.txt
+          if dotnet ef migrations has-pending-model-changes \
+            --project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
+            --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj; then
+            exit 0
+          fi
+          # Scaffold diagnostic source on the hosted runner for review. This does not
+          # accept or apply the generated migration; a changed snapshot fails this gate.
+          dotnet ef migrations add ReconcileBranchSyncModel \
+            --project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
+            --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
+            --output-dir Database/Migrations
+          cp apps/api/Source/GameGuild.API/Database/Migrations/*ReconcileBranchSyncModel*.cs artifacts/model-drift/
+          cp apps/api/Source/GameGuild.API/Database/Migrations/ApplicationDbContextModelSnapshot.cs artifacts/model-drift/
+          echo '::error::The committed snapshot does not match the application model. Review and commit a complete migration.'
+          exit 1
+      - name: Preserve EF model diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: migration-model-diagnostics
+          path: artifacts/model-drift
+          if-no-files-found: error
       - name: Apply migrations to a clean database
         run: >-
           dotnet ef database update
