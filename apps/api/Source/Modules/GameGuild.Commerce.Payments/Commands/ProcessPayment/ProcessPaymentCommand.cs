@@ -9,4 +9,13 @@ namespace GameGuild.Commerce.Payments;
 /// <param name="SubscriptionId">Subscription ID</param>
 /// <param name="Amount">Payment amount</param>
 /// <param name="PaymentMethodId">Payment method identifier</param>
-public sealed record ProcessPaymentCommand(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId) : ICommand<PaymentResult>;
+/// <param name="Country">
+///     Optional ISO 3166-1 alpha-2 billing country (issue #413): feeds the geography-aware
+///     gateway routing filters/strategy and the geographic analytics breakdown.
+/// </param>
+public sealed record ProcessPaymentCommand(
+    Guid TenantId,
+    Guid SubscriptionId,
+    decimal Amount,
+    string PaymentMethodId,
+    string? Country = null) : ICommand<PaymentResult>;

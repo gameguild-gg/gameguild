@@ -176,6 +176,7 @@ public sealed class ProcessPaymentCommandHandler(
 
         // 4. Mark as processing
         payment.MarkAsProcessing();
+        payment.RecordBillingCountry(request.Country);
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
 
         // 5. Process through payment gateway — or settle entirely with credits when they
@@ -191,6 +192,19 @@ public sealed class ProcessPaymentCommandHandler(
                 .ConfigureAwait(false);
         }
 
+        var gatewayMetadata = new Dictionary<string, string>
+        {
+            ["tenant_id"] = subscription.TenantId.ToString(),
+            ["subscription_id"] = request.SubscriptionId.ToString(),
+            ["billing_cycle"] = subscription.BillingCycleNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        };
+
+        // The billing country feeds the geography-aware routing filters/strategy (issue #413).
+        if (!string.IsNullOrWhiteSpace(request.Country))
+        {
+            gatewayMetadata[GatewayRouteContext.CountryMetadataKey] = request.Country.ToUpperInvariant();
+        }
+
         var gatewayRequest = new GatewayPaymentRequest(
             IdempotencyKey: idempotencyKey,
             Amount: chargeAmount,
@@ -198,12 +212,7 @@ public sealed class ProcessPaymentCommandHandler(
             CustomerId: externalCustomerId,
             PaymentMethodId: request.PaymentMethodId,
             Description: $"Payment for subscription {request.SubscriptionId}",
-            Metadata: new Dictionary<string, string>
-            {
-                ["tenant_id"] = subscription.TenantId.ToString(),
-                ["subscription_id"] = request.SubscriptionId.ToString(),
-                ["billing_cycle"] = subscription.BillingCycleNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)
-            });
+            Metadata: gatewayMetadata);
 
         var gatewayResult = await paymentGateway.ProcessPaymentAsync(gatewayRequest, cancellationToken)
             .ConfigureAwait(false);

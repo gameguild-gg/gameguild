@@ -752,6 +752,41 @@ public class PaymentMethodRegistryServiceTests : IDisposable
 
     // ── Encrypted-at-rest gateway references (issue #414) ───────────────
 
+    [Theory]
+    [InlineData("paypal", "ba_registry_fixture")]
+    [InlineData("authorizenet", "COMMON.ACCEPT.INAPP.PAYMENT|opaque_fixture")]
+    [InlineData("braintree", "nonce_registry_fixture")]
+    [InlineData("adyen", "storedRegistryFixture")]
+    public async Task Create_WithProtector_ShouldScopeEncryptedUpsertsToTheResolvedGateway(string provider, string token)
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        await using var context = NewContext();
+        var repository = new PaymentMethodRepository(context, NullLogger<PaymentMethodRepository>.Instance);
+        var protector = new DataProtectionGatewayPaymentMethodIdProtector(new EphemeralDataProtectionProvider());
+        var service = new PaymentMethodRegistryService(
+            repository, _stripeCustomerService.Object, _coordination.Object, context,
+            NullLogger<PaymentMethodRegistryService>.Instance, gatewayIdProtector: protector);
+        var actor = OwnerActor(tenantId, userId);
+        var request = new CreatePaymentMethodRequest(tenantId, token);
+
+        var first = await service.CreateAsync(actor, request, CancellationToken.None);
+        first.IsSuccess.Should().BeTrue();
+        var second = await service.CreateAsync(actor, request, CancellationToken.None);
+        second.IsSuccess.Should().BeTrue();
+        second.Value.Id.Should().Be(first.Value.Id);
+
+        var stored = await context.Set<PaymentMethod>().SingleAsync();
+        stored.GatewayProvider.Should().Be(provider);
+        protector.IsProtected(stored.GatewayPaymentMethodId).Should().BeTrue();
+        stored.GatewayPaymentMethodId.Should().NotBe(token);
+        stored.GatewayPaymentMethodIdHash.Should().Be(GatewayPaymentMethodIdHash.Compute(provider, token));
+        var resolved = await repository.GetByGatewayIdAsync(tenantId, provider, token, CancellationToken.None);
+        resolved.Should().NotBeNull();
+        resolved!.Id.Should().Be(stored.Id);
+        _stripeCustomerService.VerifyNoOtherCalls();
+    }
+
     [Fact]
     public async Task Create_WithProtector_ShouldStoreProtectedReferenceAndHash()
     {

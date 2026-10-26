@@ -96,12 +96,12 @@ public class PaymentMethodRegistryService(
             return Result.Failure<PaymentMethodDto>(Error.Forbidden("PaymentMethods.CrossTenant", "Cross-tenant payment method registration is denied."));
         }
 
-        if (!StripePaymentMethodIdentifier.IsValid(request.GatewayPaymentMethodId))
+        if (GatewayPaymentMethodTokens.ResolveProvider(request.GatewayPaymentMethodId) is not { } gatewayProvider)
         {
-            return Result.Failure<PaymentMethodDto>(Error.Validation("PaymentMethods.InvalidToken", StripePaymentMethodIdentifier.ValidationMessage));
+            return Result.Failure<PaymentMethodDto>(Error.Validation("PaymentMethods.InvalidToken", GatewayPaymentMethodTokens.ValidationMessage));
         }
 
-        var gatewayDetails = await ResolveGatewayDetailsAsync(request.GatewayPaymentMethodId, cancellationToken).ConfigureAwait(false);
+        var gatewayDetails = await ResolveGatewayDetailsAsync(request.GatewayPaymentMethodId, gatewayProvider, cancellationToken).ConfigureAwait(false);
         if (gatewayDetails is null)
         {
             return Result.Failure<PaymentMethodDto>(Error.Validation(
@@ -122,6 +122,7 @@ public class PaymentMethodRegistryService(
             request.TenantId,
             ownerUserId,
             request.GatewayPaymentMethodId,
+            gatewayProvider,
             gatewayDetails,
             request.SetAsDefault,
             request.Nickname,
@@ -143,9 +144,9 @@ public class PaymentMethodRegistryService(
             return Result.Failure<PaymentMethodDto>(Error.Validation("PaymentMethods.InvalidCheckoutContext", "TenantId and SubscriptionId are required to register a checkout payment method."));
         }
 
-        if (!StripePaymentMethodIdentifier.IsValid(gatewayPaymentMethodId))
+        if (GatewayPaymentMethodTokens.ResolveProvider(gatewayPaymentMethodId) is not { } checkoutGatewayProvider)
         {
-            return Result.Failure<PaymentMethodDto>(Error.Validation("PaymentMethods.InvalidToken", StripePaymentMethodIdentifier.ValidationMessage));
+            return Result.Failure<PaymentMethodDto>(Error.Validation("PaymentMethods.InvalidToken", GatewayPaymentMethodTokens.ValidationMessage));
         }
 
         var ownerUserId = actor.UserId;
@@ -166,7 +167,7 @@ public class PaymentMethodRegistryService(
                 "No billing owner could be resolved for the checkout payment method."));
         }
 
-        var gatewayDetails = await ResolveGatewayDetailsAsync(gatewayPaymentMethodId, cancellationToken).ConfigureAwait(false);
+        var gatewayDetails = await ResolveGatewayDetailsAsync(gatewayPaymentMethodId, checkoutGatewayProvider, cancellationToken).ConfigureAwait(false);
         if (gatewayDetails is null)
         {
             // Checkout already succeeded at the gateway; a metadata lookup failure must not
@@ -182,6 +183,7 @@ public class PaymentMethodRegistryService(
             tenantId,
             ownerUserId,
             gatewayPaymentMethodId,
+            checkoutGatewayProvider,
             gatewayDetails,
             setAsDefault: true,
             nickname: null,
@@ -360,6 +362,7 @@ public class PaymentMethodRegistryService(
         Guid tenantId,
         Guid ownerUserId,
         string gatewayPaymentMethodId,
+        string gatewayProvider,
         GatewayPaymentMethodDetails gatewayDetails,
         bool setAsDefault,
         string? nickname,
@@ -370,14 +373,14 @@ public class PaymentMethodRegistryService(
         var type = MapGatewayType(gatewayDetails.Type);
 
         var existing = await repository
-            .GetByGatewayIdAsync(tenantId, GatewayProviderStripe, gatewayPaymentMethodId, cancellationToken)
+            .GetByGatewayIdAsync(tenantId, gatewayProvider, gatewayPaymentMethodId, cancellationToken)
             .ConfigureAwait(false);
 
         PaymentMethod? deleted = null;
         if (existing is null)
         {
             deleted = await repository
-                .GetDeletedByGatewayIdAsync(tenantId, GatewayProviderStripe, gatewayPaymentMethodId, cancellationToken)
+                .GetDeletedByGatewayIdAsync(tenantId, gatewayProvider, gatewayPaymentMethodId, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -392,7 +395,7 @@ public class PaymentMethodRegistryService(
                 .GetLiveByFingerprintAsync(
                     tenantId,
                     ownerUserId,
-                    GatewayProviderStripe,
+                    gatewayProvider,
                     gatewayDetails.CardFingerprint,
                     excludePaymentMethodId: deleted?.Id,
                     cancellationToken)
@@ -418,7 +421,7 @@ public class PaymentMethodRegistryService(
         // Encrypted-at-rest gateway reference (issue #414): stored value is protected with
         // DataProtection; equality lookups use the deterministic hash instead of ciphertext.
         var protectedGatewayId = _gatewayIdProtector.Protect(gatewayPaymentMethodId);
-        var gatewayIdHash = GatewayPaymentMethodIdHash.Compute(GatewayProviderStripe, gatewayPaymentMethodId);
+        var gatewayIdHash = GatewayPaymentMethodIdHash.Compute(gatewayProvider, gatewayPaymentMethodId);
 
         await using var transaction = await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -444,7 +447,7 @@ public class PaymentMethodRegistryService(
             }
             else
             {
-                paymentMethod = new PaymentMethod(tenantId, ownerUserId, GatewayProviderStripe, protectedGatewayId, type, isDefault: false);
+                paymentMethod = new PaymentMethod(tenantId, ownerUserId, gatewayProvider, protectedGatewayId, type, isDefault: false);
                 paymentMethod.UpdateGatewayMetadata(type, gatewayDetails.CardBrand, gatewayDetails.CardLast4, gatewayDetails.CardExpMonth, gatewayDetails.CardExpYear, gatewayDetails.CardFingerprint);
                 paymentMethod.UpdateDisplay(nickname, billingAddress);
                 auditAction = "Created";
@@ -510,8 +513,20 @@ public class PaymentMethodRegistryService(
         }
     }
 
-    private async Task<GatewayPaymentMethodDetails?> ResolveGatewayDetailsAsync(string gatewayPaymentMethodId, CancellationToken cancellationToken)
+    private async Task<GatewayPaymentMethodDetails?> ResolveGatewayDetailsAsync(
+        string gatewayPaymentMethodId,
+        string gatewayProvider,
+        CancellationToken cancellationToken)
     {
+        // Gateway-aware resolution (issue #413): Stripe tokens are verified against the
+        // Stripe API as before; the other registered gateways tokenize client-side and
+        // expose no server-side metadata lookup, so their tokens register typed as card
+        // without display metadata — mirroring the established checkout fallback.
+        if (!string.Equals(gatewayProvider, GatewayProviderStripe, StringComparison.OrdinalIgnoreCase))
+        {
+            return new GatewayPaymentMethodDetails("card", null, null, null, null, null, null, null, null);
+        }
+
         var result = await stripeCustomerService
             .GetPaymentMethodAsync(gatewayPaymentMethodId, cancellationToken)
             .ConfigureAwait(false);

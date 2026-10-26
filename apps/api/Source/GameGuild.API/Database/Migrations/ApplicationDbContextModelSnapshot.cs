@@ -2477,6 +2477,68 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("fx_rate_sync_runs", (string)null);
                 });
 
+            modelBuilder.Entity("GameGuild.Commerce.Payments.GatewayCredential", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ActivatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeactivatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EncryptedValue")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ProviderKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid?>("ProvisionedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SecretName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProviderKey", "SecretName")
+                        .IsUnique()
+                        .HasDatabaseName("ix_gateway_credentials_active_slot")
+                        .HasFilter("\"DeactivatedAtUtc\" IS NULL");
+
+                    b.HasIndex(new[] { "ProviderKey", "SecretName", "DeactivatedAtUtc" }, "ix_gateway_credentials_lookup");
+
+                    b.ToTable("gateway_credentials");
+                });
+
             modelBuilder.Entity("GameGuild.Commerce.Payments.GiftSubscription", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2600,6 +2662,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BillingCountry")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
 
                     b.Property<string>("CancellationReason")
                         .HasMaxLength(500)

@@ -12,6 +12,15 @@ public static class PaymentProviders
     /// <summary>PayPal payment provider</summary>
     public const string PayPal = "paypal";
 
+    /// <summary>Authorize.Net payment provider (issue #413 gateway adapter expansion)</summary>
+    public const string AuthorizeNet = "authorizenet";
+
+    /// <summary>Braintree payment provider (issue #413 gateway adapter expansion)</summary>
+    public const string Braintree = "braintree";
+
+    /// <summary>Adyen payment provider, international (issue #413 gateway adapter expansion)</summary>
+    public const string Adyen = "adyen";
+
     /// <summary>Apple Pay payment provider (in-app purchases)</summary>
     public const string ApplePay = "applepay";
 
@@ -31,6 +40,9 @@ public static class PaymentProviders
     {
         Stripe,
         PayPal,
+        AuthorizeNet,
+        Braintree,
+        Adyen,
         ApplePay,
         AppleAppStore,
         GooglePay,

@@ -96,6 +96,23 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
             builder.HasIndex(attempt => attempt.PaymentId)
                 .HasDatabaseName("ix_payment_retry_attempts_payment_id");
         });
+
+        // Encrypted-at-rest gateway credentials (issue #413): at most one active row per
+        // (provider, secret name); the value column only ever holds DataProtection payloads.
+        modelBuilder.Entity<GatewayCredential>(builder =>
+        {
+            builder.Property(credential => credential.ProviderKey)
+                .HasMaxLength(50);
+            builder.Property(credential => credential.SecretName)
+                .HasMaxLength(100);
+            builder.Property(credential => credential.Fingerprint)
+                .HasMaxLength(64);
+
+            builder.HasIndex(credential => new { credential.ProviderKey, credential.SecretName })
+                .HasFilter("\"DeactivatedAtUtc\" IS NULL")
+                .IsUnique()
+                .HasDatabaseName("ix_gateway_credentials_active_slot");
+        });
         modelBuilder.ApplyConfiguration(new TaxJurisdictionConfiguration());
         modelBuilder.ApplyConfiguration(new TaxRateConfiguration());
         modelBuilder.ApplyConfiguration(new TaxRuleConfiguration());
