@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using GatewayStatus = GameGuild.Commerce.Payments.PaymentStatus;
+using GatewayPaymentMethodType = GameGuild.Commerce.Payments.PaymentMethodType;
 
 namespace GameGuild.API.IntegrationTests;
 
@@ -39,7 +40,7 @@ public sealed class SubscriptionChangeSagaPostgreSqlTests(ApiPostgreSqlFixture f
         var subscription = new Subscription(tenant.Id, oldPlan.Id, owner, BillingCycle.Monthly,
             new Money(100m, "USD"), effective.AddDays(-10));
         subscription.Activate();
-        var method = new PaymentMethod(tenant.Id, owner, "stripe", "pm_saga_test", PaymentMethodType.Card, true);
+        var method = new PaymentMethod(tenant.Id, owner, "stripe", "pm_saga_test", GatewayPaymentMethodType.Card, true);
         subscription.SetPaymentMethod(method.Id);
         db.Add(subscription);
         await db.SaveChangesAsync();

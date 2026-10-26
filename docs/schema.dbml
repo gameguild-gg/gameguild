@@ -3073,6 +3073,29 @@ Table "follows" {
   }
 }
 
+Table "FraudBlacklistEntries" {
+  "Id" uuid [not null]
+  "TenantId" uuid [not null]
+  "EntryType" "character varying(32)" [not null]
+  "Value" "character varying(255)" [not null]
+  "Reason" "character varying(1000)"
+  "IsWhitelist" boolean [not null]
+  "Source" "character varying(32)" [not null]
+  "ExpiresAt" timestamp
+  "CreatedByUserId" uuid
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+
+  Indexes {
+    Id [pk, name: "PK_FraudBlacklistEntries"]
+    ExpiresAt [name: "ix_fraud_blacklist_expiry"]
+    (TenantId, EntryType) [name: "ix_fraud_blacklist_tenant_type"]
+    (TenantId, EntryType, Value, IsWhitelist) [unique, name: "ix_fraud_blacklist_tenant_type_value_unique"]
+  }
+}
+
 Table "fx_rate_snapshots" {
   "Id" uuid [not null]
   "BaseCurrency" "character varying(3)" [not null]
@@ -3199,6 +3222,28 @@ Table "game_jams" {
     Id [pk, name: "PK_game_jams"]
     Slug [unique, name: "IX_game_jams_Slug"]
     Status [name: "IX_game_jams_Status"]
+  }
+}
+
+Table "gateway_credentials" {
+  "Id" uuid [not null]
+  "ProviderKey" "character varying(50)" [not null]
+  "SecretName" "character varying(100)" [not null]
+  "EncryptedValue" text [not null]
+  "Fingerprint" "character varying(64)" [not null]
+  "ActivatedAtUtc" timestamp [not null]
+  "DeactivatedAtUtc" timestamp
+  "ProvisionedByUserId" uuid
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_gateway_credentials"]
+    (ProviderKey, SecretName) [unique, name: "ix_gateway_credentials_active_slot"]
+    (ProviderKey, SecretName, DeactivatedAtUtc) [name: "ix_gateway_credentials_lookup"]
   }
 }
 
@@ -4083,8 +4128,8 @@ Table "payment_methods" {
     GatewayPaymentMethodId [name: "IX_payment_methods_GatewayPaymentMethodId"]
     GatewayPaymentMethodIdHash [name: "IX_payment_methods_GatewayPaymentMethodIdHash"]
     (TenantId, UserId) [unique, name: "ix_payment_methods_single_default"]
-    (TenantId, GatewayProvider, GatewayPaymentMethodId) [unique, name: "ix_payment_methods_tenant_gateway_unique"]
     (TenantId, GatewayProvider, GatewayPaymentMethodIdHash) [unique, name: "ix_payment_methods_tenant_gateway_hash_unique"]
+    (TenantId, GatewayProvider, GatewayPaymentMethodId) [unique, name: "ix_payment_methods_tenant_gateway_unique"]
     (TenantId, UserId, IsDefault) [name: "IX_payment_methods_TenantId_UserId_IsDefault"]
   }
 }
@@ -4098,6 +4143,7 @@ Table "payments" {
   "Amount" numeric(18,2) [not null]
   "CreditAppliedAmount" numeric(18,2) [not null]
   "Currency" "character varying(3)" [not null]
+  "BillingCountry" "character varying(2)"
   "Status" integer [not null]
   "Provider" "character varying(50)" [not null]
   "ExternalPaymentId" "character varying(255)"
@@ -5915,6 +5961,41 @@ Table "SoDRule" {
     Id [pk, name: "PK_SoDRule"]
     IsEnabled [name: "IX_SoDRule_IsEnabled"]
     TenantId [name: "IX_SoDRule_TenantId"]
+  }
+}
+
+Table "subscription_change_sagas" {
+  "Id" uuid [not null]
+  "SubscriptionId" uuid [not null]
+  "FromPlanId" uuid [not null]
+  "ToPlanId" uuid [not null]
+  "InitiatedByActorId" uuid [not null]
+  "IdempotencyKey" "character varying(200)" [not null]
+  "Status" integer [not null]
+  "CurrentStep" "character varying(50)" [not null]
+  "CreditForUnused" numeric(18,2) [not null]
+  "ChargeForNew" numeric(18,2) [not null]
+  "NetAdjustment" numeric(18,2) [not null]
+  "Currency" "character varying(3)" [not null]
+  "ProrationEffectiveDateUtc" timestamp [not null]
+  "InvoiceId" uuid
+  "PaymentTransactionId" "character varying(255)"
+  "StartedAtUtc" timestamp [not null]
+  "CompletedAtUtc" timestamp
+  "FailedStep" "character varying(50)"
+  "FailureReason" "character varying(1000)"
+  "CompensationsApplied" "character varying(1000)"
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_subscription_change_sagas"]
+    IdempotencyKey [unique, name: "IX_subscription_change_sagas_IdempotencyKey"]
+    Status [name: "IX_subscription_change_sagas_Status"]
+    SubscriptionId [name: "IX_subscription_change_sagas_SubscriptionId"]
   }
 }
 
@@ -8558,6 +8639,26 @@ Table "SoDViolation" {
   }
 }
 
+Table "subscription_change_saga_steps" {
+  "Id" uuid [not null]
+  "SagaId" uuid [not null]
+  "Sequence" integer [not null]
+  "Step" "character varying(50)" [not null]
+  "Outcome" "character varying(20)" [not null]
+  "Detail" "character varying(500)" [not null]
+  "OccurredAtUtc" timestamp [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_subscription_change_saga_steps"]
+    SagaId [name: "IX_subscription_change_saga_steps_SagaId"]
+  }
+}
+
 Table "SubscriptionPlanIntervalPrices" {
   "Id" uuid [not null]
   "PlanId" uuid [not null]
@@ -9161,6 +9262,60 @@ Table "projects" {
     Title [name: "IX_projects_Title"]
     UpdatedAt [name: "IX_projects_UpdatedAt"]
     Visibility [name: "IX_projects_Visibility"]
+  }
+}
+
+Table "promo_campaign_attributions" {
+  "Id" uuid [not null]
+  "UserId" uuid [not null]
+  "CampaignKey" "character varying(100)" [not null]
+  "Code" "character varying(50)"
+  "FirstPurchaseUsageId" uuid
+  "OrderId" uuid
+  "SubscriptionId" uuid
+  "AttributedAtUtc" timestamp [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_promo_campaign_attributions"]
+    AttributedAtUtc [name: "IX_promo_campaign_attributions_AttributedAtUtc"]
+    CampaignKey [name: "IX_promo_campaign_attributions_CampaignKey"]
+    FirstPurchaseUsageId [name: "IX_promo_campaign_attributions_FirstPurchaseUsageId"]
+    UserId [unique, name: "IX_promo_campaign_attributions_UserId"]
+  }
+}
+
+Table "promo_campaigns" {
+  "Id" uuid [not null]
+  "Name" "character varying(200)" [not null]
+  "Key" "character varying(100)" [not null]
+  "Description" "character varying(1000)"
+  "Status" integer [not null]
+  "StartsAtUtc" timestamp
+  "EndsAtUtc" timestamp
+  "TimeZoneId" "character varying(50)"
+  "Budget" numeric(14,2)
+  "AcquisitionSpend" numeric(14,2)
+  "Currency" "character varying(3)" [not null, default: 'USD']
+  "CreatedBy" uuid [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_promo_campaigns"]
+    CreatedBy [name: "IX_promo_campaigns_CreatedBy"]
+    EndsAtUtc [name: "IX_promo_campaigns_EndsAtUtc"]
+    Key [name: "IX_promo_campaigns_Key"]
+    StartsAtUtc [name: "IX_promo_campaigns_StartsAtUtc"]
+    Status [name: "IX_promo_campaigns_Status"]
+    (TenantId, Key) [unique, name: "IX_promo_campaigns_TenantId_Key"]
   }
 }
 
@@ -10353,6 +10508,8 @@ Table "promo_codes" {
   "ApplyToRenewal" boolean [not null]
   "ValidFrom" timestamp
   "ValidUntil" timestamp
+  "TimeZoneId" "character varying(50)"
+  "EligibleCustomerType" integer [not null]
   "IsActive" boolean [not null]
   "IsExclusive" boolean [not null]
   "StackingPriority" integer [not null]
@@ -10371,6 +10528,7 @@ Table "promo_codes" {
     CampaignId [name: "IX_promo_codes_CampaignId"]
     Code [unique, name: "IX_promo_codes_Code"]
     CreatedBy [name: "IX_promo_codes_CreatedBy"]
+    EligibleCustomerType [name: "IX_promo_codes_EligibleCustomerType"]
     IsActive [name: "IX_promo_codes_IsActive"]
     (IsActive, ValidUntil) [name: "IX_promo_codes_IsActive_ValidUntil"]
     PlanId [name: "IX_promo_codes_PlanId"]
@@ -12433,6 +12591,8 @@ Ref "FK_social_profile_skills_social_profiles_ProfileId":"social_profiles"."Id" 
 
 Ref "FK_SoDViolation_SoDRule_RuleId":"SoDRule"."Id" <? "SoDViolation"."RuleId" [delete: cascade]
 
+Ref "FK_subscription_change_saga_steps_subscription_change_sagas_Sa~":"subscription_change_sagas"."Id" <? "subscription_change_saga_steps"."SagaId" [delete: cascade]
+
 Ref "FK_SubscriptionPlanIntervalPrices_SubscriptionPlans_PlanId":"SubscriptionPlans"."Id" <? "SubscriptionPlanIntervalPrices"."PlanId" [delete: cascade]
 
 Ref "FK_Subscriptions_SubscriptionPlans_PlanId":"SubscriptionPlans"."Id" <? "Subscriptions"."PlanId" [delete: restrict]
@@ -12492,6 +12652,10 @@ Ref "FK_projects_Users_CreatedById":"Users"."Id" ?<? "projects"."CreatedById" [d
 Ref "FK_projects_project_categories_CategoryId":"project_categories"."Id" ?<? "projects"."CategoryId" [delete: set null]
 
 Ref "FK_projects_project_categories_ProjectCategoryId":"project_categories"."Id" ?<? "projects"."ProjectCategoryId"
+
+Ref "FK_promo_campaign_attributions_Users_UserId":"Users"."Id" <? "promo_campaign_attributions"."UserId" [delete: cascade]
+
+Ref "FK_promo_campaigns_Users_CreatedBy":"Users"."Id" <? "promo_campaigns"."CreatedBy" [delete: cascade]
 
 Ref "FK_TenantMembers_TenantMembers_ParentMemberId":"TenantMembers"."Id" ?<? "TenantMembers"."ParentMemberId" [delete: restrict]
 
@@ -13370,6 +13534,24 @@ Table "gameguild.authentication"."role" {
     name [name: "idx_role_name"]
     (name, tenant_id) [unique, name: "idx_role_name_tenant_id"]
     tenant_id [name: "idx_role_tenant_id"]
+  }
+}
+
+Table "gameguild.authentication"."saml_protocol_state" {
+  "state_kind" "character varying(32)" [not null]
+  "provider_slug" "character varying(64)" [not null]
+  "state_key" "character varying(256)" [not null]
+  "relay_state_fingerprint" "character varying(64)" [not null, default: '']
+  "expires_at" timestamp [not null]
+  "created_at" timestamp [not null]
+
+  Checks {
+    `state_kind IN ('pending_request', 'assertion_reservation')` [name: 'ck_saml_protocol_state_kind']
+  }
+
+  Indexes {
+    (state_kind, provider_slug, state_key) [pk, name: "PK_saml_protocol_state"]
+    expires_at [name: "ix_saml_protocol_state_expires_at"]
   }
 }
 
@@ -14313,6 +14495,25 @@ Table "gameguild.audit"."entity_change_audit_records" {
   }
 }
 
+Table "gameguild.integration"."outbox_delivery_receipts" {
+  "EventId" uuid [not null]
+  "CompletedAtUtc" timestamp
+  "EventName" "character varying(200)"
+  "EventType" "character varying(1000)"
+  "SourceModule" "character varying(200)"
+  "AggregateType" "character varying(200)"
+  "AggregateId" "character varying(200)"
+  "TenantId" uuid
+  "CorrelationId" uuid
+  "OccurredAtUtc" timestamp
+  "SchemaVersion" integer
+
+  Indexes {
+    EventId [pk, name: "outbox_delivery_receipts_pkey"]
+    (SourceModule, OccurredAtUtc) [name: "ix_outbox_delivery_source"]
+  }
+}
+
 Table "gameguild.integration"."outbox_messages" {
   "EventId" uuid [not null]
   "TenantId" uuid [not null]
@@ -14337,6 +14538,7 @@ Table "gameguild.integration"."outbox_messages" {
     (AggregateType, AggregateId, OccurredAtUtc, EventId) [name: "ix_outbox_aggregate_order"]
     CorrelationId [name: "ix_outbox_correlation"]
     (CompletedAtUtc, DeadLetteredAtUtc, ClaimedUntilUtc) [name: "ix_outbox_dispatch"]
+    (OccurredAtUtc, EventId) [name: "ix_outbox_pending_order"]
   }
 }
 
@@ -14353,6 +14555,7 @@ Table "gameguild.integration"."inbox_receipts" {
   Indexes {
     (EventId, ConsumerName) [pk, name: "PK_inbox_receipts"]
     (CompletedAtUtc, DeadLetteredAtUtc, NextAttemptAtUtc) [name: "ix_inbox_retry"]
+    EventId [name: "ix_inbox_unfinished_event"]
   }
 }
 

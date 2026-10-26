@@ -107,7 +107,7 @@ public sealed class AggregateEventLogTests
     }
 
     [Fact]
-    public void SubscriptionAggregateLogAdapter_MapsEntriesToTheBillingPortContract()
+    public async Task SubscriptionAggregateLogAdapter_MapsEntriesToTheBillingPortContract()
     {
         var entries = new[]
         {
@@ -123,7 +123,7 @@ public sealed class AggregateEventLogTests
         var replay = new MockReplayService(entries);
         var adapter = new GameGuild.API.Core.Integration.BillingSubscriptionEventLog(replay);
 
-        var mapped = adapter.ReadAsync(Guid.NewGuid()).GetAwaiter().GetResult();
+        var mapped = await adapter.ReadAsync(Guid.NewGuid());
 
         mapped.Should().ContainSingle().Which.Should().BeEquivalentTo(new LoggedBillingEvent(
             entries[0].EventId,

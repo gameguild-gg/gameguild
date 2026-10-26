@@ -149,6 +149,32 @@ export class CommerceBillingWebhooksModule {
   }
 
   /**
+   * Get the billing webhook processing statistics (issue #408)
+   *
+   * Admin-facing webhook activity dashboard (issue #408): events received, processed and
+   * failed in the window, the processing success rate, the average received-to-processed
+   * latency, the dead-lettered and unverified counts, and a per-provider breakdown.
+   */
+  async getBillingWebhooksStats(query?: { fromUtc?: string; toUtc?: string }): Promise<Result<Types.CommerceBillingBillingWebhookStatsDto, ApiError>> {
+    const url = '/api/v1/billing/webhooks/stats';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceBillingBillingWebhookStatsDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Handle Stripe webhook events with signature verification
    *
    * Processes Stripe webhook notifications with enhanced security through signature verification.

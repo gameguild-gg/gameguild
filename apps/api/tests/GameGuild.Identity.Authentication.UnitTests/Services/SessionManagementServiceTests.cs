@@ -1166,7 +1166,8 @@ public class SessionManagementServiceTests
     {
         var name = boundary == "over-200-chars" ? new string('n', SessionManagementService.MaxTrustedDeviceNameLength + 1) : boundary;
 
-        var result = await _service.RenameTrustedDeviceAsync(Guid.NewGuid(), Guid.NewGuid(), name);
+        // Deliberately exercise the runtime guard against a null value from an untyped caller.
+        var result = await _service.RenameTrustedDeviceAsync(Guid.NewGuid(), Guid.NewGuid(), name!);
 
         result.Should().BeFalse();
         _trustedDeviceRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
