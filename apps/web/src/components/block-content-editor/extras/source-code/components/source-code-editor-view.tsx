@@ -11,7 +11,10 @@ import { SettingsPanel } from "../settings-panel"
 import { Terminal } from "../terminal"
 import type { CodeFile, ProgrammingLanguage } from "../types"
 
-interface SourceCodeEditorViewProps {
+type TerminalTestBindings = Pick<React.ComponentProps<typeof Terminal>,
+  "testCases" | "addTestCase" | "removeTestCase" | "updateTestCase" | "testResults" | "runTests">
+
+interface SourceCodeEditorViewProps extends TerminalTestBindings {
   // File management
   files: CodeFile[]
   activeFileId: string
@@ -91,12 +94,6 @@ interface SourceCodeEditorViewProps {
   activeTab: "terminal" | "tests"
   setActiveTab: (tab: "terminal" | "tests") => void
   showTests: boolean
-  testCases: any
-  addTestCase: any
-  removeTestCase: any
-  updateTestCase: any
-  testResults: any
-  runTests: any
   addSolutionTemplate?: () => void
   addCustomTestFiles?: (testIndex: number) => void
 

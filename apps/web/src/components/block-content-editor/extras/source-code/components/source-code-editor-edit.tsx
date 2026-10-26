@@ -12,7 +12,10 @@ import { FileTabs } from "../file-tabs"
 import { Terminal } from "../terminal"
 import type { CodeFile, ProgrammingLanguage } from "../types"
 
-interface SourceCodeEditorEditProps {
+type TerminalTestBindings = Pick<React.ComponentProps<typeof Terminal>,
+  "testCases" | "addTestCase" | "removeTestCase" | "updateTestCase" | "testResults" | "runTests">
+
+interface SourceCodeEditorEditProps extends TerminalTestBindings {
   // File management
   files: CodeFile[]
   activeFileId: string
@@ -97,12 +100,6 @@ interface SourceCodeEditorEditProps {
   terminalInputRef: React.RefObject<HTMLInputElement | null>
   activeTab: "terminal" | "tests"
   setActiveTab: (tab: "terminal" | "tests") => void
-  testCases: any
-  addTestCase: any
-  removeTestCase: any
-  updateTestCase: any
-  testResults: any
-  runTests: any
   addSolutionTemplate?: () => void
   addCustomTestFiles?: (testIndex: number) => void
 
