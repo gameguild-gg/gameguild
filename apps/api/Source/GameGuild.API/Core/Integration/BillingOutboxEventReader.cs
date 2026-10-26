@@ -8,7 +8,7 @@ namespace GameGuild.API.Core.Integration;
 /// <summary>
 ///     Connects the Commerce.Billing module's <see cref="IBillingOutboxEventReader" /> port to the
 ///     platform outbox read model. Only events published by the Commerce.Billing module are
-///     returned; delivery status is derived from the outbox row lifecycle timestamps.
+///     returned, including compact completion metadata after payload retirement.
 /// </summary>
 public sealed class BillingOutboxEventReader(ApplicationDbContext context) : IBillingOutboxEventReader
 {
@@ -24,10 +24,9 @@ public sealed class BillingOutboxEventReader(ApplicationDbContext context) : IBi
         DateTimeOffset? toUtc,
         CancellationToken cancellationToken = default)
     {
-        // Materialize rows first: the status derivation happens in memory because it
-        // combines three lifecycle columns that cannot be projected into a method call.
         var messages = await BuildQuery(eventName, status, fromUtc, toUtc)
             .OrderByDescending(message => message.OccurredAtUtc)
+            .ThenBy(message => message.EventId)
             .Skip(skip)
             .Take(take)
             .ToListAsync(cancellationToken)
@@ -52,22 +51,43 @@ public sealed class BillingOutboxEventReader(ApplicationDbContext context) : IBi
     /// <inheritdoc />
     public async Task<BillingOutboxEventDto?> GetByIdAsync(Guid eventId, CancellationToken cancellationToken = default)
     {
-        var message = await context.Set<OutboxMessage>()
-            .Where(message => message.EventId == eventId && message.SourceModule == BillingSourceModule)
+        var message = await BuildQuery(null, null, null, null)
+            .Where(message => message.EventId == eventId)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
         return message is null ? null : ToDto(message);
     }
 
-    private IQueryable<OutboxMessage> BuildQuery(
+    private IQueryable<EventRow> BuildQuery(
         string? eventName,
         BillingOutboxEventStatus? status,
         DateTimeOffset? fromUtc,
         DateTimeOffset? toUtc)
     {
-        var query = context.Set<OutboxMessage>()
-            .Where(message => message.SourceModule == BillingSourceModule);
+        var current = context.Set<OutboxMessage>().AsNoTracking()
+            .Where(message => message.SourceModule == BillingSourceModule)
+            .Select(message => new EventRow
+            {
+                EventId = message.EventId, EventName = message.EventName, EventType = message.EventType,
+                AggregateType = message.AggregateType, AggregateId = message.AggregateId,
+                TenantId = message.TenantId, CorrelationId = message.CorrelationId,
+                OccurredAtUtc = message.OccurredAtUtc, SchemaVersion = message.SchemaVersion,
+                Status = message.DeadLetteredAtUtc != null ? BillingOutboxEventStatus.DeadLettered
+                    : message.CompletedAtUtc != null ? BillingOutboxEventStatus.Completed : BillingOutboxEventStatus.Pending
+            });
+        var retired = context.Set<OutboxDeliveryReceipt>().AsNoTracking()
+            .Where(receipt => receipt.SourceModule == BillingSourceModule && receipt.CompletedAtUtc != null
+                && !context.Set<OutboxMessage>().Any(message => message.EventId == receipt.EventId))
+            .Select(receipt => new EventRow
+            {
+                EventId = receipt.EventId, EventName = receipt.EventName!, EventType = receipt.EventType!,
+                AggregateType = receipt.AggregateType!, AggregateId = receipt.AggregateId!,
+                TenantId = receipt.TenantId!.Value, CorrelationId = receipt.CorrelationId!.Value,
+                OccurredAtUtc = receipt.OccurredAtUtc!.Value, SchemaVersion = receipt.SchemaVersion!.Value,
+                Status = BillingOutboxEventStatus.Completed
+            });
+        var query = current.Concat(retired);
 
         if (!string.IsNullOrWhiteSpace(eventName))
         {
@@ -79,10 +99,9 @@ public sealed class BillingOutboxEventReader(ApplicationDbContext context) : IBi
         {
             query = status.Value switch
             {
-                BillingOutboxEventStatus.Completed => query.Where(message => message.CompletedAtUtc != null),
-                BillingOutboxEventStatus.DeadLettered => query.Where(message => message.DeadLetteredAtUtc != null),
-                BillingOutboxEventStatus.Pending => query.Where(message =>
-                    message.CompletedAtUtc == null && message.DeadLetteredAtUtc == null),
+                BillingOutboxEventStatus.Completed => query.Where(message => message.Status == BillingOutboxEventStatus.Completed),
+                BillingOutboxEventStatus.DeadLettered => query.Where(message => message.Status == BillingOutboxEventStatus.DeadLettered),
+                BillingOutboxEventStatus.Pending => query.Where(message => message.Status == BillingOutboxEventStatus.Pending),
                 _ => query
             };
         }
@@ -102,16 +121,8 @@ public sealed class BillingOutboxEventReader(ApplicationDbContext context) : IBi
         return query;
     }
 
-    private static BillingOutboxEventDto ToDto(OutboxMessage message)
+    private static BillingOutboxEventDto ToDto(EventRow message)
     {
-        // Delivery status is derived from the outbox lifecycle: dead-letter dominates,
-        // then completion; everything else is still in flight.
-        var status = message.DeadLetteredAtUtc.HasValue
-            ? BillingOutboxEventStatus.DeadLettered
-            : message.CompletedAtUtc.HasValue
-                ? BillingOutboxEventStatus.Completed
-                : BillingOutboxEventStatus.Pending;
-
         return new BillingOutboxEventDto(
             message.EventId,
             message.EventName,
@@ -120,8 +131,22 @@ public sealed class BillingOutboxEventReader(ApplicationDbContext context) : IBi
             message.AggregateId,
             message.TenantId,
             message.CorrelationId,
-            status,
+            message.Status,
             message.OccurredAtUtc,
             message.SchemaVersion);
+    }
+
+    private sealed class EventRow
+    {
+        public Guid EventId { get; init; }
+        public string EventName { get; init; } = string.Empty;
+        public string EventType { get; init; } = string.Empty;
+        public string AggregateType { get; init; } = string.Empty;
+        public string AggregateId { get; init; } = string.Empty;
+        public Guid TenantId { get; init; }
+        public Guid CorrelationId { get; init; }
+        public DateTime OccurredAtUtc { get; init; }
+        public int SchemaVersion { get; init; }
+        public BillingOutboxEventStatus Status { get; init; }
     }
 }

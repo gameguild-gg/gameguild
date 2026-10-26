@@ -40,8 +40,8 @@ import { requestChainSwitch } from './chain-switch';
  */
 export interface WalletConnectEthereumProviderLike {
   request(args: Eip1193RequestArguments): Promise<unknown>;
-  on(event: string, listener: (...args: never[]) => void): void;
-  removeListener(event: string, listener: (...args: never[]) => void): void;
+  on(event: string, listener: (...args: unknown[]) => void): void;
+  removeListener(event: string, listener: (...args: unknown[]) => void): void;
   /** Runs the pairing flow (shows the QR modal unless suppressed). */
   connect(options?: { pairingTopic?: string }): Promise<unknown>;
   /** Deletes the relay session and notifies the paired wallet. */
@@ -232,8 +232,8 @@ export const createWalletConnectAdapter = (
     provider: WalletConnectEthereumProviderLike,
     terminate: (error?: Eip1193ProviderError) => void,
   ): (() => void) => {
-    const onSessionDelete = (...args: never[]) => {
-      const error = args[0] as Eip1193ProviderError | undefined;
+    const onSessionDelete = (...args: unknown[]) => {
+      const error = args[0] === undefined ? undefined : toProviderError(args[0]);
       resetSession();
       terminate(error);
     };
@@ -261,8 +261,8 @@ export const createWalletConnectAdapter = (
     connect: async (): Promise<WalletConnection> => {
       const provider = await ensureProvider();
       // Surface the pairing URI to hosts rendering their own QR code.
-      const onDisplayUri = (...args: never[]) => {
-        const uri = args[0] as string | undefined;
+      const onDisplayUri = (...args: unknown[]) => {
+        const uri = args[0];
         if (typeof uri === 'string') pairingUri = uri;
       };
       provider.on('display_uri', onDisplayUri);
@@ -347,17 +347,23 @@ export const createWalletConnectAdapter = (
       void providerPromise
         .then((provider) => {
           if (cancelled) return;
-          const accountsChanged = (...args: never[]) => {
-            const accounts = args[0] as string[] | undefined;
-            handlers.onAccountsChanged(accounts ?? []);
+          const accountsChanged = (...args: unknown[]) => {
+            const accounts = args[0];
+            if (Array.isArray(accounts) && accounts.every((account): account is string => typeof account === 'string')) {
+              handlers.onAccountsChanged(accounts);
+            }
           };
-          const chainChanged = (...args: never[]) => {
-            const chainId = args[0] as string | undefined;
-            handlers.onChainChanged(parseChainId(chainId ?? '0x1'));
+          const chainChanged = (...args: unknown[]) => {
+            const chainId = args[0];
+            if (typeof chainId === 'string' && /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(chainId)) {
+              handlers.onChainChanged(parseChainId(chainId.toLowerCase()));
+            } else if (typeof chainId === 'number' && Number.isSafeInteger(chainId) && chainId >= 0) {
+              handlers.onChainChanged(String(chainId));
+            }
           };
-          const disconnected = (...args: never[]) => {
+          const disconnected = (...args: unknown[]) => {
             resetSession();
-            handlers.onDisconnected(args[0] as Eip1193ProviderError | undefined);
+            handlers.onDisconnected(args[0] === undefined ? undefined : toProviderError(args[0]));
           };
           provider.on('accountsChanged', accountsChanged);
           provider.on('chainChanged', chainChanged);

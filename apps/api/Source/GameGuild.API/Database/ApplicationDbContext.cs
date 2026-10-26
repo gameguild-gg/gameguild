@@ -120,6 +120,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
 
         var capturedOutboxCount = 0;
 
+        await RejectCompletedEventIdsAsync(integrationEvents.Select(value => value.EventId).ToArray(),
+            useAsync, cancellationToken).ConfigureAwait(false);
+
         foreach (var integrationEvent in integrationEvents)
         {
             DurableIntegrationEventValidator.Validate(integrationEvent);
@@ -160,7 +163,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
             .FirstOrDefault(entry =>
                 entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted
                 && entry.Entity is not OutboxMessage
-                && entry.Entity is not InboxReceipt);
+                && entry.Entity is not InboxReceipt
+                && entry.Entity is not OutboxDeliveryReceipt);
         if (operationContext is not null && aggregateEntry is not null)
         {
             operationContext.MarkBusinessMutationObserved();
@@ -178,6 +182,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
                 aggregateEntry.Metadata.ClrType.Name,
                 aggregateId);
             DurableIntegrationEventValidator.Validate(operationEvent);
+            await RejectCompletedEventIdsAsync([operationEvent.EventId], useAsync, cancellationToken)
+                .ConfigureAwait(false);
             var trackedOperationOutbox = ChangeTracker.Entries<OutboxMessage>()
                 .FirstOrDefault(entry => entry.Entity.EventId == operationEvent.EventId);
             if (trackedOperationOutbox is null)
@@ -269,6 +275,23 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         }
 
         return affectedRows - capturedOutboxCount - capturedAuditRecordCount;
+    }
+
+    private async Task RejectCompletedEventIdsAsync(Guid[] eventIds, bool useAsync, CancellationToken cancellationToken)
+    {
+        if (eventIds.Length == 0)
+        {
+            return;
+        }
+
+        var query = Set<OutboxDeliveryReceipt>().Where(receipt => eventIds.Contains(receipt.EventId));
+        var alreadyCompleted = useAsync
+            ? await query.AnyAsync(cancellationToken).ConfigureAwait(false)
+            : query.Any();
+        if (alreadyCompleted)
+        {
+            throw new DbUpdateException("An integration event identifier has already completed delivery.");
+        }
     }
 
     /// <summary>

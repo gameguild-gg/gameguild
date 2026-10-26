@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useRef, useEffect, useState } from "react"
-import Editor, { useMonaco } from "@monaco-editor/react"
+import Editor, { useMonaco, type OnMount } from "@monaco-editor/react"
 import { GripVertical } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { PythonLanguageService } from "./python/python-language-service"
@@ -23,7 +23,7 @@ export interface CodeEditorProps {
   isEditing: boolean
   updateActiveFileContent: (content: string) => void
   handleCodeEditorResize: (e: React.MouseEvent, startY: number) => void
-  onEditorMount?: (editor: any, monaco: any) => void
+  onEditorMount?: OnMount
   isAutocompleteEnabled?: boolean
 }
 
@@ -39,7 +39,7 @@ export function CodeEditor({
   onEditorMount,
   isAutocompleteEnabled,
 }: CodeEditorProps) {
-  const editorRef = useRef<any>(null)
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const monaco = useMonaco()
   const [isPythonEnabled, setIsPythonEnabled] = useState(false)
   const [isLuaEnabled, setIsLuaEnabled] = useState(false)
@@ -103,10 +103,6 @@ export function CodeEditor({
       }
     }
   }, [activeFileLanguage, monaco])
-
-  const handleEditorWillMount = (monaco: any) => {
-    // here is the place to define custom languages and editor themes
-  }
 
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor, monaco: typeof import("monaco-editor")) => {
     editorRef.current = editor
@@ -204,7 +200,6 @@ export function CodeEditor({
           tabCompletion: isAutocompleteEnabled !== false ? "on" : "off",
           snippetSuggestions: isAutocompleteEnabled !== false ? "inline" : "none",
         }}
-        beforeMount={handleEditorWillMount}
         onMount={handleEditorDidMount}
         onChange={handleChange}
       />

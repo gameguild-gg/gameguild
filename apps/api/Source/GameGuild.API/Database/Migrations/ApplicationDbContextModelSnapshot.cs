@@ -270,10 +270,64 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasKey("EventId", "ConsumerName");
 
+                    b.HasIndex("EventId")
+                        .HasDatabaseName("ix_inbox_unfinished_event")
+                        .HasFilter("\"CompletedAtUtc\" IS NULL OR \"DeadLetteredAtUtc\" IS NOT NULL");
+
                     b.HasIndex("CompletedAtUtc", "DeadLetteredAtUtc", "NextAttemptAtUtc")
                         .HasDatabaseName("ix_inbox_retry");
 
                     b.ToTable("inbox_receipts", "gameguild.integration");
+                });
+
+            modelBuilder.Entity("GameGuild.API.Eventing.OutboxDeliveryReceipt", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("AggregateId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("AggregateType")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("CorrelationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EventName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("EventType")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("OccurredAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("SchemaVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceModule")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("EventId")
+                        .HasName("outbox_delivery_receipts_pkey");
+
+                    b.HasIndex("SourceModule", "OccurredAtUtc")
+                        .HasDatabaseName("ix_outbox_delivery_source")
+                        .HasFilter("\"SourceModule\" IS NOT NULL");
+
+                    b.ToTable("outbox_delivery_receipts", "gameguild.integration");
                 });
 
             modelBuilder.Entity("GameGuild.API.Eventing.OutboxMessage", b =>
@@ -345,6 +399,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("CorrelationId")
                         .HasDatabaseName("ix_outbox_correlation");
+
+                    b.HasIndex("OccurredAtUtc", "EventId")
+                        .HasDatabaseName("ix_outbox_pending_order")
+                        .HasFilter("\"CompletedAtUtc\" IS NULL AND \"DeadLetteredAtUtc\" IS NULL");
 
                     b.HasIndex("CompletedAtUtc", "DeadLetteredAtUtc", "ClaimedUntilUtc")
                         .HasDatabaseName("ix_outbox_dispatch");

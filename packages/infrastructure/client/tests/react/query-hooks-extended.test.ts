@@ -45,7 +45,7 @@ vi.mock('@tanstack/react-query', () => ({
 }));
 
 import { generateQueryKey, createApiClientHooks, createQueryHook, createMutationHook } from '../../src/integrations/react/query-hooks.js';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 function capturedCallback<T extends (...args: never[]) => unknown>(value: unknown, name: string): T {
   if (typeof value !== 'function') throw new TypeError(`Missing captured ${name} callback`);

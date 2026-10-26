@@ -674,3 +674,79 @@ for (const packageRoot of installedConsumers("@modelcontextprotocol/sdk")) {
     assert.equal(require(join(packageRoot, "package.json")).version, "1.32.1");
   });
 }
+
+
+// Wallet validator upgrade: exercise the installed publisher modules, including
+// the SDK schemas whose previous dependency graph selected Zod v3.
+for (const packageRoot of installedConsumers("zod")) {
+  for (const kind of ["array", "map", "set"]) {
+    test(`${packageRoot}: Zod rejects oversized ${kind} input before parsing its children`, () => {
+      assert.equal(require(join(packageRoot, "package.json")).version, "4.6.7");
+      const { z } = require(packageRoot);
+      let visited = 0;
+      const element = z.string().transform(value => { visited++; return value; });
+      const cases = {
+        array: { schema: z.array(element).max(2), large: Array(4096).fill("ordinary"), small: ["ordinary"], visits: 1 },
+        map: { schema: z.map(element, element).max(2), large: new Map(Array.from({ length: 4096 }, (_, i) => [`key${i}`, "ordinary"])), small: new Map([["key", "ordinary"]]), visits: 2 },
+        set: { schema: z.set(element).max(2), large: new Set(Array.from({ length: 4096 }, (_, i) => `item${i}`)), small: new Set(["ordinary"]), visits: 1 },
+      };
+      const { schema, large, small, visits } = cases[kind];
+      const result = schema.safeParse(large);
+      assert.equal(result.success, false);
+      assert.deepEqual(result.error.issues.map(issue => [issue.code, issue.path]), [["too_big", []]]);
+      assert.equal(visited, 0, "A rejected size must not allocate child validation results");
+      assert.deepEqual(schema.parse(small), small);
+      assert.equal(visited, visits, "Supported input must still pass through its validator");
+    });
+  }
+}
+
+for (const packageRoot of installedConsumers("@reown/appkit-wallet")) {
+  test(`${packageRoot}: Reown network and theme schemas retain their supported payloads`, { timeout: 10_000 }, async () => {
+    const consumerRequire = createRequire(join(packageRoot, "package.json"));
+    assert.equal(consumerRequire("zod/package.json").version, "4.6.7");
+    const schemas = await import(pathToFileURL(join(packageRoot, "dist/esm/src/W3mFrameSchema.js")).href);
+    const network = { chainId: "1", rpcUrl: "https://rpc.example.test" };
+    const theme = { themeMode: "dark", themeVariables: { accent: "blue", radius: 4 }, w3mThemeVariables: { color: "blue" } };
+    assert.deepEqual(schemas.AppSwitchNetworkRequest.parse(network), network);
+    assert.deepEqual(schemas.AppSyncThemeRequest.parse(theme), theme);
+    assert.equal(schemas.AppSwitchNetworkRequest.safeParse({ chainId: {} }).success, false);
+    assert.equal(schemas.AppSyncThemeRequest.safeParse({ themeVariables: { accent: null } }).success, false);
+  });
+}
+
+for (const packageRoot of installedConsumers("abitype")) {
+  test(`${packageRoot}: the Zod-4-compatible ABI validator retains ABI and typed-data validation`, () => {
+    const consumerRequire = createRequire(join(packageRoot, "package.json"));
+    assert.equal(require(join(packageRoot, "package.json")).version, "1.2.3");
+    assert.equal(consumerRequire("zod/package.json").version, "4.6.7");
+    const { Abi, TypedData } = require(join(packageRoot, "dist/cjs/zod.js"));
+    const abi = [{ type: "function", name: "transfer", stateMutability: "nonpayable", inputs: [{ name: "to", type: "address" }, { name: "value", type: "uint256" }], outputs: [{ name: "", type: "bool" }] }];
+    const parsed = Abi.parse(abi);
+    assert.equal(parsed[0].name, "transfer");
+    assert.equal(parsed[0].inputs[1].type, "uint256");
+    assert.equal(Abi.safeParse([{ type: "function", name: "invalid", stateMutability: "nonpayable", inputs: [{ type: "unknown" }], outputs: [] }]).success, false);
+    const typedData = { Message: [{ name: "contents", type: "string" }] };
+    assert.deepEqual(TypedData.parse(typedData), typedData);
+    assert.equal(TypedData.safeParse({ Message: [{ name: 42, type: "string" }] }).success, false);
+  });
+}
+
+for (const packageRoot of installedConsumers("@coinbase/cdp-sdk")) {
+  test(`${packageRoot}: CDP policy validators retain rule discrimination and policy limits`, { timeout: 10_000 }, async () => {
+    const consumerRequire = createRequire(join(packageRoot, "package.json"));
+    assert.equal(consumerRequire("zod/package.json").version, "4.6.7");
+    assert.equal(consumerRequire("abitype/package.json").version, "1.2.3");
+    const { RuleSchema, CreatePolicyBodySchema } = await import(pathToFileURL(join(packageRoot, "_esm/policies/types.js")).href);
+    const rule = { action: "reject", operation: "signEvmHash" };
+    const policy = { scope: "account", description: "Fixture policy", rules: [rule] };
+    assert.deepEqual(RuleSchema.parse(rule), rule);
+    assert.deepEqual(CreatePolicyBodySchema.parse(policy), policy);
+    assert.equal(RuleSchema.safeParse({ action: "bypass", operation: "signEvmHash" }).success, false);
+    assert.equal(RuleSchema.safeParse({ action: "reject", operation: "unknown" }).success, false);
+    assert.equal(CreatePolicyBodySchema.safeParse({ ...policy, rules: [] }).success, false);
+    const oversized = CreatePolicyBodySchema.safeParse({ ...policy, rules: Array(101).fill(rule) });
+    assert.equal(oversized.success, false);
+    assert.ok(oversized.error.issues.some(issue => issue.code === "too_big" && issue.path.join(".") === "rules"));
+  });
+}

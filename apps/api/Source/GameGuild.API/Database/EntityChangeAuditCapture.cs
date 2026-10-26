@@ -33,6 +33,7 @@ internal static class EntityChangeAuditCapture
         typeof(EntityChangeAuditRecord),
         typeof(OutboxMessage),
         typeof(InboxReceipt),
+        typeof(OutboxDeliveryReceipt),
         typeof(DataProtectionKey),
         typeof(PermissionAuditLog),
         typeof(PermissionEvaluationLogEntry)
