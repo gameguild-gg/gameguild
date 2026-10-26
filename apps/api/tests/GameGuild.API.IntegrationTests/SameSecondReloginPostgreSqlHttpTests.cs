@@ -55,7 +55,9 @@ public sealed class SameSecondReloginPostgreSqlHttpTests(ApiPostgreSqlFixture fi
                     options.CustomizeProblemDetails = context =>
                     {
                         if (context.Exception is { } exception)
+                        {
                             exceptions.Enqueue(exception);
+                        }
                         customize?.Invoke(context);
                     };
                 });
