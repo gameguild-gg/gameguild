@@ -24,7 +24,7 @@ public static partial class GatewayPaymentMethodTokens
     ///     opaque value through a pipe by this module's adapter convention.
     /// </summary>
     [GeneratedRegex(
-        "^COMMON\\.ACCEPT\\.[A-Za-z0-9_.]+(\\|[A-Za-z0-9_$.-]+)?$",
+        "^COMMON\\.ACCEPT\\.[A-Za-z0-9_.]+\\|[A-Za-z0-9_$.-]+$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant)]
     private static partial Regex AuthorizeNetPattern();
 
@@ -38,13 +38,13 @@ public static partial class GatewayPaymentMethodTokens
 
     /// <summary>Validation message surfaced by the API for tokens of no registered gateway.</summary>
     public const string ValidationMessage =
-        "PaymentMethodId must be a payment method token of a registered gateway (Stripe pm_..., PayPal ba_.../B-..., Authorize.Net opaque data, a Braintree nonce or an Adyen stored payment method id). Raw card numbers are not accepted.";
+        "PaymentMethodId must be a gateway token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider. Raw card numbers are not accepted.";
 
     /// <summary>
     ///     Resolves the gateway that owns the token format, or null when the identifier
     ///     matches no registered gateway's token grammar (fail closed).
     /// </summary>
-    public static string? ResolveProvider(string? value)
+    public static string? ResolveProvider(string? value, string? gatewayProvider = null)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -52,34 +52,36 @@ public static partial class GatewayPaymentMethodTokens
         }
 
         var token = value.Trim();
+        var provider = gatewayProvider?.Trim().ToLowerInvariant();
+        if (token.Length > 512 || token.All(character => char.IsAsciiDigit(character) || character is ' ' or '-'))
+        {
+            return null;
+        }
 
         if (StripePattern().IsMatch(token))
         {
-            return GatewayProviderIds.Stripe;
+            return provider is null or GatewayProviderIds.Stripe ? GatewayProviderIds.Stripe : null;
         }
 
         if (PayPalPattern().IsMatch(token))
         {
-            return GatewayProviderIds.PayPal;
+            return provider is null or GatewayProviderIds.PayPal ? GatewayProviderIds.PayPal : null;
         }
 
         if (AuthorizeNetPattern().IsMatch(token))
         {
-            return GatewayProviderIds.AuthorizeNet;
+            return provider is null or GatewayProviderIds.AuthorizeNet ? GatewayProviderIds.AuthorizeNet : null;
         }
 
-        // Braintree nonces and Adyen stored ids are opaque strings; the dot/underscore
-        // variants are Braintree's nonce alphabet, the plain alphanumeric form Adyen's.
-        if (BraintreePattern().IsMatch(token))
+        // Opaque token alphabets overlap. Never infer their owner from punctuation.
+        return provider switch
         {
-            return token.Contains('_') || token.Contains('-')
-                ? GatewayProviderIds.Braintree
-                : GatewayProviderIds.Adyen;
-        }
-
-        return null;
+            GatewayProviderIds.Braintree when BraintreePattern().IsMatch(token) => GatewayProviderIds.Braintree,
+            GatewayProviderIds.Adyen when AdyenPattern().IsMatch(token) => GatewayProviderIds.Adyen,
+            _ => null
+        };
     }
 
     /// <summary>Whether the identifier is a valid token of any registered gateway.</summary>
-    public static bool IsKnownGatewayToken(string? value) => ResolveProvider(value) is not null;
+    public static bool IsKnownGatewayToken(string? value, string? gatewayProvider = null) => ResolveProvider(value, gatewayProvider) is not null;
 }

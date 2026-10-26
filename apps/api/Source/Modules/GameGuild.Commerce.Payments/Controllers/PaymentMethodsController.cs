@@ -80,7 +80,7 @@ public sealed class PaymentMethodsController(
     /// </summary>
     [HttpPost]
     [EndpointSummary("Register a payment method from a gateway token")]
-    [EndpointDescription("Registers a payment method from a Stripe payment method token (pm_...) produced by Stripe.js/Elements or a confirmed SetupIntent. Raw card data is never accepted; only display metadata returned by the gateway is stored.")]
+    [EndpointDescription("Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.")]
     [ProducesResponseType<PaymentMethodDto>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -96,9 +96,9 @@ public sealed class PaymentMethodsController(
             return BadRequest(new { error = "GatewayPaymentMethodId is required" });
         }
 
-        if (!StripePaymentMethodIdentifier.IsValid(body.GatewayPaymentMethodId))
+        if (!GatewayPaymentMethodTokens.IsKnownGatewayToken(body.GatewayPaymentMethodId, body.GatewayProvider))
         {
-            return BadRequest(new { error = StripePaymentMethodIdentifier.ValidationMessage });
+            return BadRequest(new { error = GatewayPaymentMethodTokens.ValidationMessage });
         }
 
         var validationError = ValidateTenantAccess(body.TenantId, "register a payment method");
@@ -111,7 +111,8 @@ public sealed class PaymentMethodsController(
                 body.SetAsDefault,
                 body.Nickname,
                 body.BillingAddress,
-                body.OwnerUserId),
+                body.OwnerUserId,
+                body.GatewayProvider),
             ct).ConfigureAwait(false);
 
         if (!result.IsSuccess)
@@ -190,7 +191,8 @@ public sealed class PaymentMethodsController(
         bool SetAsDefault = false,
         string? Nickname = null,
         string? BillingAddress = null,
-        Guid? OwnerUserId = null);
+        Guid? OwnerUserId = null,
+        string? GatewayProvider = null);
 
     /// <summary>
     ///     Request body for updating payment-method display fields.

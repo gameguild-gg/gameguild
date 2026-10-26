@@ -273,8 +273,15 @@ public class AdditionalGatewayAdapterTests
         GatewayPaymentMethodTokens.ResolveProvider("ba_xxxxxxxx").Should().Be("paypal");
         GatewayPaymentMethodTokens.ResolveProvider("B-12345678").Should().Be("paypal");
         GatewayPaymentMethodTokens.ResolveProvider($"{Descriptor}|{OpaqueValue}").Should().Be("authorizenet");
-        GatewayPaymentMethodTokens.ResolveProvider("tokencc_bh_sandbox_abc123").Should().Be("braintree");
-        GatewayPaymentMethodTokens.ResolveProvider("KL4TW4V5KXQZ6W3H").Should().Be("adyen");
+        GatewayPaymentMethodTokens.ResolveProvider("tokencc_bh_sandbox_abc123", "braintree").Should().Be("braintree");
+        GatewayPaymentMethodTokens.ResolveProvider("KL4TW4V5KXQZ6W3H", "adyen").Should().Be("adyen");
+        GatewayPaymentMethodTokens.ResolveProvider("tokencc_bh_sandbox_abc123").Should().BeNull();
+        GatewayPaymentMethodTokens.ResolveProvider("KL4TW4V5KXQZ6W3H").Should().BeNull();
+        GatewayPaymentMethodTokens.ResolveProvider("not_a_pm").Should().BeNull();
+        GatewayPaymentMethodTokens.ResolveProvider("pm_card_visa", "adyen").Should().BeNull();
+        GatewayPaymentMethodTokens.ResolveProvider("4111111111111111", "adyen").Should().BeNull();
+        GatewayPaymentMethodTokens.ResolveProvider("4111-1111-1111-1111", "braintree").Should().BeNull();
+        GatewayPaymentMethodTokens.ResolveProvider("COMMON.ACCEPT.INAPP.PAYMENT").Should().BeNull();
 
         GatewayPaymentMethodTokens.ResolveProvider("4111111111111111").Should().BeNull("raw card numbers never validate");
         GatewayPaymentMethodTokens.ResolveProvider("not a token!").Should().BeNull();

@@ -134,7 +134,8 @@ public sealed record GatewayPaymentRequest(
     string? CustomerId,
     string? PaymentMethodId,
     string? Description,
-    Dictionary<string, string>? Metadata = null);
+    Dictionary<string, string>? Metadata = null,
+    string? GatewayProvider = null);
 
 /// <summary>
 ///     Result of a payment processing attempt

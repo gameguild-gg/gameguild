@@ -768,7 +768,7 @@ public class PaymentMethodRegistryServiceTests : IDisposable
             repository, _stripeCustomerService.Object, _coordination.Object, context,
             NullLogger<PaymentMethodRegistryService>.Instance, gatewayIdProtector: protector);
         var actor = OwnerActor(tenantId, userId);
-        var request = new CreatePaymentMethodRequest(tenantId, token);
+        var request = new CreatePaymentMethodRequest(tenantId, token, GatewayProvider: provider);
 
         var first = await service.CreateAsync(actor, request, CancellationToken.None);
         first.IsSuccess.Should().BeTrue();

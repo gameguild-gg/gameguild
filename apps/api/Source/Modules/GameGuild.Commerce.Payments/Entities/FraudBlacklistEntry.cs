@@ -13,7 +13,11 @@ public class FraudBlacklistEntry : EntityBase
 {
     /// <summary>Tenant the entry belongs to.</summary>
     [Required]
-    public new Guid TenantId { get; set; }
+    public new Guid TenantId
+    {
+        get => base.TenantId ?? Guid.Empty;
+        set => base.TenantId = value;
+    }
 
     /// <summary>Kind of value being listed.</summary>
     [Required]
@@ -72,7 +76,7 @@ public class FraudBlacklistEntry : EntityBase
         Guid? createdByUserId = null)
     {
         var normalized = FraudBlacklistPatterns.Normalize(value);
-        if (normalized is null || normalized.Length > 255)
+        if (tenantId == Guid.Empty || normalized is null || normalized.Length > 255)
         {
             return null;
         }

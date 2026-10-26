@@ -23,7 +23,8 @@ public sealed class SubscriptionChangeSagaOrchestrator(
     IPaymentGateway paymentGateway,
     IPaymentMethodRepository paymentMethodRepository,
     IBillingIntegrationEventPublisher billingEvents,
-    ILogger<SubscriptionChangeSagaOrchestrator> logger) : ISubscriptionChangeSaga
+    ILogger<SubscriptionChangeSagaOrchestrator> logger,
+    IGatewayPaymentMethodIdProtector gatewayIdProtector) : ISubscriptionChangeSaga
 {
     public const string ProrationStep = "Proration";
     public const string InvoiceStep = "Invoice";
@@ -42,13 +43,6 @@ public sealed class SubscriptionChangeSagaOrchestrator(
             .ConfigureAwait(false)
             ?? throw new SubscriptionNotFoundException(request.SubscriptionId);
 
-        if (subscription.PlanId == request.NewPlanId)
-        {
-            throw new BusinessRuleViolationException(
-                "subscription-change.same-plan",
-                $"Subscription {request.SubscriptionId} is already on plan {request.NewPlanId}.");
-        }
-
         // Idempotency by change intent: a replayed request resolves to the recorded saga.
         var effectiveDate = request.EffectiveDateUtc ?? SystemClock.UtcNow;
         var idempotencyKey = BuildIdempotencyKey(request.SubscriptionId, request.NewPlanId, effectiveDate);
@@ -61,6 +55,13 @@ public sealed class SubscriptionChangeSagaOrchestrator(
                 request.SubscriptionId,
                 existing.Status);
             return ToResult(existing);
+        }
+
+        if (subscription.PlanId == request.NewPlanId)
+        {
+            throw new BusinessRuleViolationException(
+                "subscription-change.same-plan",
+                $"Subscription {request.SubscriptionId} is already on plan {request.NewPlanId}.");
         }
 
         var saga = new SubscriptionChangeSaga(
@@ -165,6 +166,7 @@ public sealed class SubscriptionChangeSagaOrchestrator(
                 var gatewayPaymentMethodId = await ResolveGatewayPaymentMethodIdAsync(
                         request.PaymentMethodId ?? subscription.PaymentMethodId,
                         saga.TenantId!.Value,
+                        subscription.CreatedByUserId,
                         cancellationToken)
                     .ConfigureAwait(false);
 
@@ -351,6 +353,7 @@ public sealed class SubscriptionChangeSagaOrchestrator(
     private async Task<string> ResolveGatewayPaymentMethodIdAsync(
         Guid? localPaymentMethodId,
         Guid tenantId,
+        Guid ownerUserId,
         CancellationToken cancellationToken)
     {
         if (!localPaymentMethodId.HasValue)
@@ -364,13 +367,13 @@ public sealed class SubscriptionChangeSagaOrchestrator(
             .ConfigureAwait(false)
             ?? throw new InvalidOperationException($"Payment method {localPaymentMethodId} not found.");
 
-        if (method.TenantId.HasValue && method.TenantId.Value != tenantId)
+        if (method.TenantId != tenantId || method.UserId != ownerUserId || !method.IsChargeable)
         {
             throw new InvalidOperationException(
                 $"Payment method {localPaymentMethodId} belongs to tenant {method.TenantId}, not {tenantId}.");
         }
 
-        return method.GatewayPaymentMethodId;
+        return gatewayIdProtector.Unprotect(method.GatewayPaymentMethodId);
     }
 
     private async Task RecordStepAsync(
@@ -414,7 +417,10 @@ public sealed class SubscriptionChangeSagaOrchestrator(
             .ConfigureAwait(false);
         foreach (var step in steps)
         {
-            saga.AppendStep(step);
+            if (saga.Steps.All(existingStep => existingStep.Id != step.Id))
+            {
+                saga.AppendStep(step);
+            }
         }
 
         return saga;

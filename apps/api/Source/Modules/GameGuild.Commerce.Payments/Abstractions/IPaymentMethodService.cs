@@ -96,7 +96,8 @@ public sealed record CreatePaymentMethodRequest(
     bool SetAsDefault = false,
     string? Nickname = null,
     string? BillingAddress = null,
-    Guid? OwnerUserId = null);
+    Guid? OwnerUserId = null,
+    string? GatewayProvider = null);
 
 /// <summary>
 ///     Request to update display-only payment-method fields.

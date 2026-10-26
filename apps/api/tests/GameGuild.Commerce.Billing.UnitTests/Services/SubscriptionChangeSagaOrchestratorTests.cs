@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using MockQueryable.Moq;
@@ -29,18 +30,29 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
     private readonly List<SubscriptionChangeSaga> _sagas = [];
     private readonly List<SubscriptionChangeSagaStep> _sagaSteps = [];
     private readonly List<Invoice> _invoices = [];
+    private readonly IGatewayPaymentMethodIdProtector _protector =
+        new DataProtectionGatewayPaymentMethodIdProtector(new EphemeralDataProtectionProvider());
 
     public SubscriptionChangeSagaOrchestratorTests()
     {
+        var sagaSet = _sagas.AsQueryable().BuildMockDbSet();
+        sagaSet.Setup(set => set.Add(It.IsAny<SubscriptionChangeSaga>()))
+            .Callback<SubscriptionChangeSaga>(saga => _sagas.Add(saga));
+        var stepSet = _sagaSteps.AsQueryable().BuildMockDbSet();
+        stepSet.Setup(set => set.Add(It.IsAny<SubscriptionChangeSagaStep>()))
+            .Callback<SubscriptionChangeSagaStep>(step => _sagaSteps.Add(step));
+        var invoiceSet = _invoices.AsQueryable().BuildMockDbSet();
+        invoiceSet.Setup(set => set.Add(It.IsAny<Invoice>()))
+            .Callback<Invoice>(invoice => _invoices.Add(invoice));
         _context
             .Setup(context => context.Set<SubscriptionChangeSaga>())
-            .Returns(_sagas.AsQueryable().BuildMockDbSet().Object);
+            .Returns(sagaSet.Object);
         _context
             .Setup(context => context.Set<SubscriptionChangeSagaStep>())
-            .Returns(_sagaSteps.AsQueryable().BuildMockDbSet().Object);
+            .Returns(stepSet.Object);
         _context
             .Setup(context => context.Set<Invoice>())
-            .Returns(_invoices.AsQueryable().BuildMockDbSet().Object);
+            .Returns(invoiceSet.Object);
         _context
             .Setup(context => context.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
@@ -60,7 +72,7 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
 
         _paymentMethodRepository
             .Setup(repository => repository.GetByIdAsync(PaymentMethodRegistryId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PaymentMethod(TenantId, Guid.NewGuid(), "stripe", "pm_stripe_1", GameGuild.Commerce.Payments.PaymentMethodType.Card, true));
+            .ReturnsAsync(new PaymentMethod(TenantId, ActorId, "stripe", "pm_stripe_1", GameGuild.Commerce.Payments.PaymentMethodType.Card, true));
 
         _billingEvents
             .Setup(publisher => publisher.PublishSubscriptionChangeStepAsync(
@@ -79,7 +91,7 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
         var subscription = new Subscription(
             TenantId,
             FromPlanId,
-            Guid.NewGuid(),
+            ActorId,
             BillingCycle.Monthly,
             new Money(100m, "USD"),
             SystemClock.UtcNow.AddMonths(-1));
@@ -97,7 +109,40 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
         _paymentGateway.Object,
         _paymentMethodRepository.Object,
         _billingEvents.Object,
-        NullLogger<SubscriptionChangeSagaOrchestrator>.Instance);
+        NullLogger<SubscriptionChangeSagaOrchestrator>.Instance,
+        _protector);
+
+    [Fact]
+    public async Task ExecuteAsync_EncryptedMethod_IsDecryptedBeforeCharging()
+    {
+        var subscription = NewActiveSubscription();
+        SetupSubscription(subscription);
+        SetupGatewayChargeSuccess();
+        var method = new PaymentMethod(TenantId, ActorId, "stripe", "pm_stripe_1", GameGuild.Commerce.Payments.PaymentMethodType.Card, true);
+        method.StoreProtectedGatewayReference(_protector.Protect("pm_stripe_1"), GatewayPaymentMethodIdHash.Compute("stripe", "pm_stripe_1"));
+        _paymentMethodRepository.Setup(repository => repository.GetByIdAsync(PaymentMethodRegistryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(method);
+
+        var result = await NewOrchestrator().ExecuteAsync(new SubscriptionChangeSagaRequest(subscription.Id, ToPlanId, null, null, ActorId));
+
+        result.Succeeded.Should().BeTrue();
+        _paymentGateway.Verify(gateway => gateway.ProcessPaymentAsync(
+            It.Is<GatewayPaymentRequest>(request => request.PaymentMethodId == "pm_stripe_1"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AnotherOwnersMethod_DoesNotCharge()
+    {
+        var subscription = NewActiveSubscription();
+        SetupSubscription(subscription);
+        _paymentMethodRepository.Setup(repository => repository.GetByIdAsync(PaymentMethodRegistryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaymentMethod(TenantId, Guid.NewGuid(), "stripe", "pm_other_owner", GameGuild.Commerce.Payments.PaymentMethodType.Card, true));
+
+        var result = await NewOrchestrator().ExecuteAsync(new SubscriptionChangeSagaRequest(subscription.Id, ToPlanId, null, null, ActorId));
+
+        result.Succeeded.Should().BeFalse();
+        _paymentGateway.Verify(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 
     private void SetupGatewayChargeSuccess()
     {
@@ -269,6 +314,7 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
         first.Succeeded.Should().BeTrue();
         second.Succeeded.Should().BeTrue();
         second.SagaId.Should().Be(first.SagaId, "the replay resolves to the recorded saga");
+        second.Steps.Should().Equal(first.Steps);
         _sagas.Should().ContainSingle();
         _paymentGateway.Verify(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()), Times.Once,
             "the idempotency key prevents a double charge");

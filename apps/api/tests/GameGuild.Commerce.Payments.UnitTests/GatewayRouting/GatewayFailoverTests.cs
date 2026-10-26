@@ -51,6 +51,34 @@ public class GatewayFailoverTests
         new("idem-1", amount, currency, "cus_1", "pm_card_visa", "test charge");
 
     [Fact]
+    public async Task Charge_ProviderBoundToken_IsNeverSentToAnotherGateway()
+    {
+        var stripe = new FakePaymentGateway("stripe")
+            .EnqueueCharge(FakePaymentGateway.FailureResult("stripe", GatewayFailureKind.RetriableGatewayFailure))
+            .EnqueueCharge(FakePaymentGateway.FailureResult("stripe", GatewayFailureKind.RetriableGatewayFailure));
+        var paypal = new FakePaymentGateway("paypal");
+        var sut = CreateSut([stripe, paypal]);
+
+        var result = await sut.ProcessPaymentAsync(ChargeRequest() with { GatewayProvider = "stripe" });
+
+        result.Success.Should().BeFalse();
+        stripe.ChargeCallCount.Should().Be(2);
+        paypal.ChargeCallCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Charge_UnavailableTokenProvider_FailsBeforeAnyGatewayCall()
+    {
+        var paypal = new FakePaymentGateway("paypal");
+        var sut = CreateSut([paypal]);
+
+        var act = () => sut.ProcessPaymentAsync(ChargeRequest() with { GatewayProvider = "stripe" });
+
+        await act.Should().ThrowAsync<GatewaySelectionFailedException>();
+        paypal.ChargeCallCount.Should().Be(0);
+    }
+
+    [Fact]
     public async Task Charge_ReturnsFirstGatewaySuccess_WithAttemptedProviderAttribution()
     {
         var stripe = new FakePaymentGateway("stripe");

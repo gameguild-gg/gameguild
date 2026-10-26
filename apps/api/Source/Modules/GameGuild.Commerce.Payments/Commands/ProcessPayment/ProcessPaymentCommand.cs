@@ -18,4 +18,5 @@ public sealed record ProcessPaymentCommand(
     Guid SubscriptionId,
     decimal Amount,
     string PaymentMethodId,
-    string? Country = null) : ICommand<PaymentResult>;
+    string? Country = null,
+    string? GatewayProvider = null) : ICommand<PaymentResult>;

@@ -28,6 +28,9 @@ public sealed class ProcessPaymentCommandHandler(
 
     public async Task<PaymentResult> Handle(ProcessPaymentCommand request, CancellationToken cancellationToken)
     {
+        var tokenProvider = GatewayPaymentMethodTokens.ResolveProvider(request.PaymentMethodId, request.GatewayProvider)
+            ?? throw new ArgumentException(GatewayPaymentMethodTokens.ValidationMessage, nameof(request));
+
         var subscription = await subscriptionPaymentContextService.GetPaymentContextAsync(request.SubscriptionId, cancellationToken)
             .ConfigureAwait(false)
             ?? throw new InvalidOperationException($"Payment subscription {request.SubscriptionId} was not found.");
@@ -212,7 +215,8 @@ public sealed class ProcessPaymentCommandHandler(
             CustomerId: externalCustomerId,
             PaymentMethodId: request.PaymentMethodId,
             Description: $"Payment for subscription {request.SubscriptionId}",
-            Metadata: gatewayMetadata);
+            Metadata: gatewayMetadata,
+            GatewayProvider: tokenProvider);
 
         var gatewayResult = await paymentGateway.ProcessPaymentAsync(gatewayRequest, cancellationToken)
             .ConfigureAwait(false);

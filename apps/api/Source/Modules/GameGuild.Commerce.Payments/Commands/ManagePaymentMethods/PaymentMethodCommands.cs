@@ -50,7 +50,8 @@ public sealed record RegisterPaymentMethodCommand(
     bool SetAsDefault = false,
     string? Nickname = null,
     string? BillingAddress = null,
-    Guid? OwnerUserId = null) : ICommand<Result<PaymentMethodDto>>;
+    Guid? OwnerUserId = null,
+    string? GatewayProvider = null) : ICommand<Result<PaymentMethodDto>>;
 
 /// <summary>
 ///     Handler for <see cref="RegisterPaymentMethodCommand"/>.
@@ -76,7 +77,8 @@ public sealed class RegisterPaymentMethodCommandHandler(
                 request.SetAsDefault,
                 request.Nickname,
                 request.BillingAddress,
-                request.OwnerUserId),
+                request.OwnerUserId,
+                request.GatewayProvider),
             cancellationToken);
     }
 }

@@ -57,6 +57,11 @@ public sealed class FailoverPaymentGateway(
 
         var routeContext = GatewayRouteContext.FromRequest(request);
         var candidates = selector.Select(routeContext);
+        if (request.GatewayProvider is not null)
+        {
+            candidates = candidates.Where(candidate => string.Equals(candidate.Gateway.ProviderId,
+                request.GatewayProvider, StringComparison.OrdinalIgnoreCase)).ToArray();
+        }
 
         if (candidates.Count == 0)
         {

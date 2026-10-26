@@ -148,13 +148,13 @@ public sealed class PaymentsController(
             return BadRequest(new { error = "PaymentMethodId is required" });
         }
 
-        if (!GatewayPaymentMethodTokens.IsKnownGatewayToken(body.PaymentMethodId))
+        if (!GatewayPaymentMethodTokens.IsKnownGatewayToken(body.PaymentMethodId, body.GatewayProvider))
         {
             return BadRequest(new { error = GatewayPaymentMethodTokens.ValidationMessage });
         }
 
         var result = await sender.Send(
-            new ProcessPaymentCommand(body.TenantId, body.SubscriptionId, body.Amount, body.PaymentMethodId, body.Country), ct).ConfigureAwait(false);
+            new ProcessPaymentCommand(body.TenantId, body.SubscriptionId, body.Amount, body.PaymentMethodId, body.Country, body.GatewayProvider), ct).ConfigureAwait(false);
 
         return CreatedAtRoute("GetPaymentById", new { paymentId = result.PaymentId }, result);
     }
@@ -836,7 +836,7 @@ public sealed class PaymentsController(
         return Ok(metrics);
     }
 
-    public sealed record ProcessPaymentRequest(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId, string? Country = null);
+    public sealed record ProcessPaymentRequest(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId, string? Country = null, string? GatewayProvider = null);
 
     public sealed record CreateSetupIntentRequest(Guid TenantId, Guid SubscriptionId, string? CustomerEmail, string? CustomerName);
 

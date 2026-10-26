@@ -96,7 +96,7 @@ public class PaymentMethodRegistryService(
             return Result.Failure<PaymentMethodDto>(Error.Forbidden("PaymentMethods.CrossTenant", "Cross-tenant payment method registration is denied."));
         }
 
-        if (GatewayPaymentMethodTokens.ResolveProvider(request.GatewayPaymentMethodId) is not { } gatewayProvider)
+        if (GatewayPaymentMethodTokens.ResolveProvider(request.GatewayPaymentMethodId, request.GatewayProvider) is not { } gatewayProvider)
         {
             return Result.Failure<PaymentMethodDto>(Error.Validation("PaymentMethods.InvalidToken", GatewayPaymentMethodTokens.ValidationMessage));
         }

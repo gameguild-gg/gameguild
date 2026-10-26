@@ -1,5 +1,6 @@
 using FluentValidation;
 using GameGuild.CQRS;
+using GameGuild.Commerce.Subscriptions;
 using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Commerce.Billing;
@@ -48,7 +49,8 @@ public sealed class OrchestrateSubscriptionPlanChangeCommandValidator : Abstract
 /// </summary>
 public sealed class OrchestrateSubscriptionPlanChangeCommandHandler(
     ISubscriptionChangeSaga saga,
-    IActorContextAccessor actorContextAccessor) : ICommandHandler<OrchestrateSubscriptionPlanChangeCommand, SubscriptionChangeSagaResult>
+    IActorContextAccessor actorContextAccessor,
+    ISubscriptionRepository subscriptions) : ICommandHandler<OrchestrateSubscriptionPlanChangeCommand, SubscriptionChangeSagaResult>
 {
     public async Task<SubscriptionChangeSagaResult> Handle(
         OrchestrateSubscriptionPlanChangeCommand command,
@@ -57,8 +59,18 @@ public sealed class OrchestrateSubscriptionPlanChangeCommandHandler(
         ArgumentNullException.ThrowIfNull(command);
 
         var actor = actorContextAccessor.ActorContext;
-        var actorId = actor.SubjectIdAsGuid
-            ?? DurableIntegrationEventActors.System;
+        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid is not { } actorId || actorId == Guid.Empty)
+        {
+            throw new UnauthorizedAccessException("An authenticated user is required to change a subscription plan.");
+        }
+
+        var subscription = await subscriptions.GetByIdAsync(command.SubscriptionId, cancellationToken)
+            .ConfigureAwait(false) ?? throw new SubscriptionNotFoundException(command.SubscriptionId);
+        if (!actor.IsSystemAdmin && (actor.TenantId != subscription.TenantId
+            || (subscription.CreatedByUserId != actorId && !actor.IsTenantAdmin)))
+        {
+            throw new UnauthorizedAccessException("Only the subscription owner or a tenant administrator can change this plan.");
+        }
 
         return await saga
             .ExecuteAsync(
