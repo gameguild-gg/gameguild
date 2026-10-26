@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@game-guild/ui
 import { Label } from "@game-guild/ui/components/label"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
-import { Upload, FileText, FolderOpen, X } from "lucide-react"
+import { Upload, FileText, FolderOpen, Archive, X } from "lucide-react"
 import { ProjectImporter, type ImportedProjectData } from "@/components/block-content-editor/lib/interopAdapter/project-importer"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
@@ -55,7 +55,6 @@ interface ImportProjectDialogProps {
 export function ImportProjectDialog({
   open,
   onOpenChange,
-  isDbInitialized,
   storageAdapter,
   availableTags,
   onProjectCreate,
