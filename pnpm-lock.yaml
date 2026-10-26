@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  "@azure/identity>@azure/msal-node": 7.1.0
+  '@azure/identity>@azure/msal-node': 7.1.0
   '@babel/plugin-transform-modules-systemjs': 7.29.7
   '@modelcontextprotocol/sdk@<1.32.0': 1.32.0
   '@tootallnate/once': 2.0.1
