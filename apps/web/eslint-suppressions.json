@@ -1668,9 +1668,6 @@
     "@typescript-eslint/no-explicit-any": {
       "count": 7
     },
-    "@typescript-eslint/no-misused-promises": {
-      "count": 2
-    },
     "@typescript-eslint/no-redundant-type-constituents": {
       "count": 1
     },
