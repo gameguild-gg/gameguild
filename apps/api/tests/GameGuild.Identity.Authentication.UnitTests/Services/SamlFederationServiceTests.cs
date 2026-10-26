@@ -451,6 +451,35 @@ public sealed class SamlFederationServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ConsumeAssertionAsync_ConcurrentReplayOfSameResponse_ExactlyOneSucceeds()
+    {
+        // Issue #268 acceptance, review item 3: two consumers racing with the very
+        // same (genuinely signed) response — the atomic store must let exactly one
+        // of them win; the loser is refused on single-use state, never duplicated.
+        var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
+        var requestId = await IssuePendingRequestIdAsync(sut);
+        var samlResponse = BuildResponse(o => o with { InResponseTo = requestId });
+        var relayState = _lastIssuedRelayState;
+
+        var attempts = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => TryConsume()));
+
+        attempts.Count(success => success).Should().Be(1, "a signed SAML response is single-use however many consumers race");
+
+        async Task<bool> TryConsume()
+        {
+            try
+            {
+                await sut.ConsumeAssertionAsync(Slug, samlResponse, relayState);
+                return true;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return false;
+            }
+        }
+    }
+
+    [Fact]
     public async Task ConsumeAssertionAsync_IdpInitiated_DefaultRejected()
     {
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
