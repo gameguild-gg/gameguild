@@ -222,7 +222,8 @@ jobs:
     name: API verify
     needs: [runner-pool, classify]
     if: needs.classify.outputs.api == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    # PostgreSQL/Testcontainers require a Docker daemon; the ARC image has only the CLI.
+    runs-on: ubuntu-latest
     # Broad API changes select the full suite of affected test projects.
     # Keep the per-test hang limit and allow the sequential suite to finish.
     # Full host regression takes about 30 minutes before additional affected module suites.
@@ -290,7 +291,7 @@ jobs:
       needs.classify.outputs.testingLab == 'true' &&
       (needs.web.result == 'success' || needs.web.result == 'skipped') &&
       (needs.api.result == 'success' || needs.api.result == 'skipped')
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -313,7 +314,7 @@ jobs:
     name: OpenAPI client consistency
     needs: [runner-pool, classify]
     if: needs.classify.outputs.openApi == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
       postgres:
@@ -350,7 +351,7 @@ jobs:
     name: Migration compatibility
     needs: [runner-pool, classify]
     if: needs.classify.outputs.migration == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
       postgres:
@@ -389,7 +390,7 @@ jobs:
     name: Economy Release Gate
     needs: [runner-pool, classify, economy-api, economy-client]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ubuntu-latest
     # Reuse the same-run API/client outputs. Coverage and regression remain
     # required independent jobs; this lane verifies OpenAPI/web/browser surfaces.
     # Chromium system dependencies plus the release checks can consume 20 minutes
@@ -487,7 +488,7 @@ jobs:
     name: Economy coverage and provider contracts
     needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -509,7 +510,7 @@ jobs:
     name: Economy regression (${{ matrix.shard }})
     needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       # Keep every shard's evidence when another shard fails.
