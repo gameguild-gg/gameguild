@@ -50,8 +50,8 @@ public static class SensitiveFieldClassifier
 
     /// <summary>
     /// Classifies one field observation by field name first, then by value pattern. Returns null for
-    /// non-sensitive fields. Only positive matches are cached: a valueless observation never pins a
-    /// "not sensitive" verdict for a field name that a later value-bearing observation could classify.
+    /// non-sensitive fields. Only field-name rules are cached: value-based classifications belong
+    /// to the individual observation and must be reevaluated when another value uses the same field.
     /// </summary>
     public static SensitiveFieldMatch? Classify(string entityType, string fieldName, string? value)
     {
@@ -67,7 +67,7 @@ public static class SensitiveFieldClassifier
         }
 
         var match = ClassifyUncached(entityType, fieldName, value);
-        if (match is not null)
+        if (match is not null && match.Rule.StartsWith("name:", StringComparison.Ordinal))
         {
             FieldCache[fieldName] = match;
         }

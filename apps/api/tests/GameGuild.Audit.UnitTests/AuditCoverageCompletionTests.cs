@@ -1402,7 +1402,7 @@ public class SecurityAuditControllerCoverageCompletionTests
             auditService ?? Mock.Of<IAuditService>(),
             actorAccessor.Object,
             NullLogger<SecurityAuditController>.Instance,
-            new CommandHandlerSender(aggregator ?? Mock.Of<ISecurityAuditAggregator>(), auditService ?? Mock.Of<IAuditService>(), actorAccessor.Object));
+            new CommandHandlerSender(aggregator ?? Mock.Of<ISecurityAuditAggregator>(), auditService ?? Mock.Of<IAuditService>(), actorAccessor.Object, new NoOpBulkExportMonitor()));
     }
 
     private static ActorContext CreateActor(Guid userId)

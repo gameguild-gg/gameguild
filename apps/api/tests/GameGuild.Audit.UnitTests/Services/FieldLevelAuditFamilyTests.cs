@@ -47,6 +47,9 @@ public sealed class FieldLevelAuditFamilyTests
 
         card!.Category.Should().Be(SensitiveDataCategory.Financial);
         email!.Category.Should().Be(SensitiveDataCategory.PII);
+        SensitiveFieldClassifier.Classify("Order", "Note", "plain text").Should().BeNull();
+        SensitiveFieldClassifier.Classify("Order", "Note", "4111111111111111")!
+            .Category.Should().Be(SensitiveDataCategory.Financial);
     }
 
     [Theory]
@@ -192,6 +195,13 @@ public sealed class FieldLevelAuditFamilyTests
         var activities = await service.GetActivitiesAsync(TenantId);
         activities.Should().OnlyContain(activity => activity.IsAutoDerived || activity.TenantId == TenantId);
         activities.Select(activity => activity.ActivityName).Should().Contain("Identity and authentication");
+        var reviewGaps = await service.GetCompletenessGapsAsync(TenantId);
+        reviewGaps.Should().BeEquivalentTo(activities.Select(activity => $"{activity.ActivityName}: never reviewed."),
+            "seeding supplies the register fields but cannot claim a human review");
+        foreach (var activity in activities)
+        {
+            await service.MarkReviewedAsync(activity.Id, UserId);
+        }
         (await service.GetCompletenessGapsAsync(TenantId)).Should().BeEmpty();
     }
 
@@ -300,8 +310,10 @@ public sealed class FieldLevelAuditFamilyTests
 
     // ── Access-pattern anomaly analysis (criterion 3) ─────────────────────────
 
-    [Fact]
-    public async Task PatternAnalysisFlagsUnusualVolumeAgainstTheBaseline()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PatternAnalysisFlagsUnusualVolumeAgainstTheBaseline(bool analyzeWholeTenant)
     {
         var startTime = new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc);
         var clock = new FrozenTimeProvider(startTime);
@@ -331,16 +343,23 @@ public sealed class FieldLevelAuditFamilyTests
                     ipAddress: "10.0.0.1", userAgent: "test");
             }
 
-            var result = await analysis.AnalyzeUserAsync(
-                TenantId, UserId,
-                windowStartUtc: startTime.AddHours(2), windowEndUtc: startTime.AddHours(3),
-                baselineStartUtc: startTime, baselineEndUtc: startTime.AddHours(1),
-                offHoursStartHour: 20, offHoursEndHour: 6);
+            var result = analyzeWholeTenant
+                ? (await analysis.AnalyzeTenantAsync(
+                    TenantId,
+                    windowStartUtc: startTime.AddHours(2), windowEndUtc: startTime.AddHours(3),
+                    baselineStartUtc: startTime, baselineEndUtc: startTime.AddHours(1),
+                    offHoursStartHour: 20, offHoursEndHour: 6)).Single()
+                : await analysis.AnalyzeUserAsync(
+                    TenantId, UserId,
+                    windowStartUtc: startTime.AddHours(2), windowEndUtc: startTime.AddHours(3),
+                    baselineStartUtc: startTime, baselineEndUtc: startTime.AddHours(1),
+                    offHoursStartHour: 20, offHoursEndHour: 6);
 
             result.ObservedAccesses.Should().Be(30);
             result.BaselineAccesses.Should().Be(6);
             result.HasAnomalies.Should().BeTrue();
             result.Anomalies.Should().Contain(anomaly => anomaly.AnomalyType == FieldAccessAnomalyType.UnusualVolume);
+            context.ChangeTracker.Clear();
             (await analysis.GetAnomaliesAsync(TenantId, FieldAccessAnomalyStatus.Open, skip: 0, take: 10))
                 .Should().NotBeEmpty();
         }

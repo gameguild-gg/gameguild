@@ -10,7 +10,7 @@ namespace GameGuild.Tests.Audit.Unit.Services;
 /// handler, and the audit trail manifest reports coverage for every issue #180 family with action
 /// types recognized by the platform taxonomy or a module emitter.
 /// </summary>
-public sealed class EventCoverageSweepTests
+public sealed class EventCoverageSweepServiceTests
 {
     private static readonly Lazy<ComprehensiveEventCoverageReport> Sweep =
         new(() => new EventCoverageSweepService().SweepEventCoverage());

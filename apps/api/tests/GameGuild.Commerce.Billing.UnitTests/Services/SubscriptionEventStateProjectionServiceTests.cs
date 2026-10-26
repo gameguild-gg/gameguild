@@ -13,11 +13,12 @@ public sealed class SubscriptionEventStateProjectionServiceTests
         decimal amount = 100m,
         string currency = "USD",
         string provider = "stripe",
-        Guid? eventId = null) => new(
+        Guid? eventId = null,
+        Guid? tenantId = null) => new(
         eventId ?? Guid.NewGuid(),
         "commerce.billing.invoice-paid.v1",
         1,
-        TenantId: Guid.NewGuid(),
+        TenantId: tenantId ?? Guid.NewGuid(),
         CorrelationId: Guid.NewGuid(),
         occurredAt,
         JsonSerializer.Serialize(new
@@ -51,11 +52,12 @@ public sealed class SubscriptionEventStateProjectionServiceTests
     private static LoggedBillingEvent ChangeCompleted(
         DateTimeOffset occurredAt,
         Guid toPlanId,
-        Guid sagaId) => new(
+        Guid sagaId,
+        Guid? tenantId = null) => new(
         Guid.NewGuid(),
         "commerce.billing.subscription-change-completed.v1",
         1,
-        Guid.NewGuid(),
+        tenantId ?? Guid.NewGuid(),
         Guid.NewGuid(),
         occurredAt,
         $$"""{"sagaId":"{{sagaId}}","subscriptionId":"00000000-0000-0000-0000-000000000001","fromPlanId":"00000000-0000-0000-0000-00000000000a","toPlanId":"{{toPlanId}}","invoiceId":"00000000-0000-0000-0000-00000000000b","paymentTransactionId":"txn_1","netAdjustment":50.0,"currency":"USD"}""");
@@ -172,8 +174,8 @@ public sealed class SubscriptionEventStateProjectionServiceTests
         var projection = _sut.Replay(
             subscriptionId,
             [
-                InvoicePaid(paidAt, eventId: Guid.NewGuid()),
-                ChangeCompleted(DateTimeOffset.Parse("2026-10-02T00:00:00Z"), toPlanId, sagaId)
+                InvoicePaid(paidAt, eventId: Guid.NewGuid(), tenantId: tenantId),
+                ChangeCompleted(DateTimeOffset.Parse("2026-10-02T00:00:00Z"), toPlanId, sagaId, tenantId)
             ]);
 
         var verification = _sut.Verify(

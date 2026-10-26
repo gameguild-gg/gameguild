@@ -417,7 +417,9 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
                     continue;
                 }
 
-                foreach (var commandType in ExtractHandledCommands(type))
+                // A leaf ICommandHandler also exposes its inherited IRequestHandler contract.
+                // Count one implementation once, while retaining distinct handler classes.
+                foreach (var commandType in ExtractHandledCommands(type).Distinct())
                 {
                     if (!handlers.TryGetValue(commandType, out var list))
                     {

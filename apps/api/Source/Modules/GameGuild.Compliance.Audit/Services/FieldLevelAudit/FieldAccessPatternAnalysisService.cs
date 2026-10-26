@@ -95,9 +95,14 @@ public sealed class FieldAccessPatternAnalysisService(
     {
         var windowAccesses = await LoadAccessesAsync(tenantId, userId, windowStartUtc, windowEndUtc, cancellationToken).ConfigureAwait(false);
         var baselineAccesses = await LoadAccessesAsync(tenantId, userId, baselineStartUtc, baselineEndUtc, cancellationToken).ConfigureAwait(false);
-        return AnalyzeLoaded(
+        var result = AnalyzeLoaded(
             tenantId, userId, windowStartUtc, windowEndUtc, windowAccesses, baselineAccesses,
             offHoursStartHour, offHoursEndHour, persist: true, cancellationToken);
+        if (result.HasAnomalies)
+        {
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        return result;
     }
 
     public async Task<IReadOnlyList<FieldAccessPatternAnalysisResult>> AnalyzeTenantAsync(
@@ -135,6 +140,10 @@ public sealed class FieldAccessPatternAnalysisService(
                 offHoursStartHour, offHoursEndHour, persist: true, cancellationToken));
         }
 
+        if (results.Any(result => result.HasAnomalies))
+        {
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
         return results;
     }
 

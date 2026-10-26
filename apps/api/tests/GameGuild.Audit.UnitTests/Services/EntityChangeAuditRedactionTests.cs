@@ -196,20 +196,20 @@ public sealed class EntityChangeAuditQueryServiceTests
     public async Task Store_ReturnsOnlyTheRequestedTenantRecords_NewestFirst()
     {
         await using var context = await SeededContextAsync();
-        var tenantRecords = await context.Set<EntityChangeAuditRecord>().IgnoreQueryFilters()
-            .Where(record => record.TenantId != null && record.EntityName == "Project")
-            .ToListAsync();
-        var tenantId = tenantRecords[0].TenantId;
+        var tenantId = await context.Set<EntityChangeAuditRecord>().IgnoreQueryFilters()
+            .Where(record => record.EntityName == "User")
+            .Select(record => record.TenantId)
+            .SingleAsync();
 
         var store = new EntityChangeAuditStore(context);
         var result = await store.QueryAsync(new EntityChangeAuditQuery(TenantId: tenantId, Take: 10), CancellationToken.None);
 
         result.Should().OnlyContain(entry => entry.TenantId == tenantId);
-        result.Select(entry => entry.EntityName).Should().ContainSingle("Project");
+        result.Select(entry => entry.EntityName).Should().Equal("Project", "User");
         result[0].OccurredAtUtc.Should().Be(result.Max(entry => entry.OccurredAtUtc));
 
         var count = await store.CountAsync(new EntityChangeAuditQuery(TenantId: tenantId), CancellationToken.None);
-        count.Should().Be(1);
+        count.Should().Be(2);
     }
 
     [Fact]

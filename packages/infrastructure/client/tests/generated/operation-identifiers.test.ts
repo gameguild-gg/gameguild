@@ -12,6 +12,16 @@ describe('generated operation identifiers', () => {
       endpointsSource.matchAll(/operationId: ['"]([A-Za-z_$][A-Za-z0-9_$]*)['"] as const/g),
       (match) => match[1],
     );
+    // Resource names may contain meaningful numbers (for example GDPR article-30).
+    // Only accept a numeric ending when it comes from the final literal route
+    // segment, rather than a suffix introduced to resolve a naming collision.
+    const numericResourceIds = new Set(Array.from(
+      endpointsSource.matchAll(/operationId: ['"]([^'"]+)['"] as const,\s+method: ['"][^'"]+['"] as const,\s+path: ['"]([^'"]+)['"] as const/g),
+      (match) => ({ id: match[1], path: match[2] }),
+    ).filter(({ id, path }) => {
+      const resource = path.split('/').filter((segment) => segment && !segment.startsWith('{')).at(-1) ?? '';
+      return /\d$/.test(resource) && id.toLowerCase().endsWith(resource.replace(/[^a-z0-9]/gi, '').toLowerCase());
+    }).map(({ id }) => id));
 
     const moduleMethods = readdirSync(join(generatedRoot, 'modules'))
       .filter((fileName) => fileName.endsWith('.gen.ts'))
@@ -25,8 +35,8 @@ describe('generated operation identifiers', () => {
 
     expect(operationIds.length).toBeGreaterThan(0);
     expect(moduleMethods.length).toBeGreaterThan(0);
-    expect(operationIds.filter((operationId) => /\d+$/.test(operationId))).toEqual([]);
-    expect(moduleMethods.filter((methodName) => /\d+$/.test(methodName))).toEqual([]);
+    expect(operationIds.filter((operationId) => /\d+$/.test(operationId) && !numericResourceIds.has(operationId))).toEqual([]);
+    expect(moduleMethods.filter((methodName) => /\d+$/.test(methodName) && !numericResourceIds.has(methodName))).toEqual([]);
   }, 15_000);
 
   it('does not contain duplicate entries in the generated endpoint registry', () => {

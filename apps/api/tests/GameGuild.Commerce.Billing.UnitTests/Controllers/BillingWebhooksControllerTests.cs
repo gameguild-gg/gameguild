@@ -302,6 +302,7 @@ public class BillingWebhooksControllerTests
             [nameof(BillingWebhooksController.GetWebhookEvent),
              nameof(BillingWebhooksController.RetryWebhookEvent),
              nameof(BillingWebhooksController.GetWebhookSecuritySummary),
+             nameof(BillingWebhooksController.GetWebhookStats),
              nameof(BillingWebhooksController.RotateSecret)]);
 
         foreach (var method in controllerType.GetMethods()
