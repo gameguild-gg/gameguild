@@ -89,9 +89,10 @@ public class ResourceUserPermission : PermissionBase, IDacAttribute
 
     /// <summary>
     ///     Gets whether these permissions are currently active.
-    ///     Computed from the revocation state; hides the optional stored base property.
+    ///     Computed from the revocation and soft-deletion state; hides the optional stored base property.
+    ///     A soft-deleted grant is never active (fail closed).
     /// </summary>
-    public new bool IsActive => RevokedAt == null && !IsExpired;
+    public new bool IsActive => RevokedAt == null && !IsDeleted && !IsExpired;
 
     /// <summary>
     ///     Gets whether these permissions have expired.

@@ -95,9 +95,11 @@ public abstract class PermissionBase : EntityBase<Guid>
     public virtual bool IsExpired() { return ExpiresAt.HasValue && ExpiresAt.Value <= SystemClock.UtcNow; }
 
     /// <summary>
-    ///     Check if the grant is currently effective (active and not expired).
+    ///     Check if the grant is currently effective (active, not expired, and not soft-deleted).
+    ///     Deletion is checked fail closed: a soft-deleted grant never conveys access even
+    ///     while its IsActive flag still reads true.
     /// </summary>
-    public virtual bool IsEffective() { return IsActive && !IsExpired(); }
+    public virtual bool IsEffective() { return !IsDeleted && IsActive && !IsExpired(); }
 
     /// <summary>
     ///     Check whether this grant currently conveys the given permission (fail closed:
