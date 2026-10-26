@@ -31,7 +31,12 @@ public sealed class SubscriptionChangeSagaPostgreSqlTests(ApiPostgreSqlFixture f
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var marker = Guid.NewGuid().ToString("N");
         var owner = Guid.NewGuid();
-        var tenant = new Tenant { Name = "Saga " + marker, Slug = "saga-" + marker };
+        var tenant = new Tenant
+        {
+            Name = "Saga " + marker,
+            Slug = "saga-" + marker,
+            AdminEmail = marker + "@example.test"
+        };
         var oldPlan = new SubscriptionPlan("Old " + marker, "old-" + marker, 10000);
         var newPlan = new SubscriptionPlan("New " + marker, "new-" + marker, 20000);
         db.AddRange(tenant, oldPlan, newPlan);
