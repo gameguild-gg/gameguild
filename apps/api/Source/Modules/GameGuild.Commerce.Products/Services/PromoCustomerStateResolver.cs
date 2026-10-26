@@ -37,7 +37,7 @@ public sealed class PromoCustomerStateResolver(
         }
 
         var purchases = (await userProductRepository
-            .GetByUserIdAsync(userId.Value, cancellationToken)
+            .GetByUserIdAsync(userId.Value, cancellationToken: cancellationToken)
             .ConfigureAwait(false)).ToList();
 
         var hasPromoHistory = await promoCodeRepository

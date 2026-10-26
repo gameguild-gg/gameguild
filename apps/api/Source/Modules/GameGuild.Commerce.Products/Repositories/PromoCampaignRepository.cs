@@ -122,7 +122,7 @@ public class PromoCampaignRepository(IApplicationDbContext context)
     }
 
     /// <inheritdoc />
-    public Task UpdateAsync(PromoCampaign campaign, CancellationToken cancellationToken = default)
+    public new Task UpdateAsync(PromoCampaign campaign, CancellationToken cancellationToken = default)
     {
         Entities.Update(campaign);
         return Task.CompletedTask;
