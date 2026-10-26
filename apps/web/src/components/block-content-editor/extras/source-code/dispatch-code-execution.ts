@@ -4,7 +4,9 @@ export function dispatchCodeExecution(
   onFailure: () => void,
 ): void {
   try {
-    void execute(fileId).catch(onFailure)
+    void execute(fileId).catch(() => {
+      onFailure()
+    })
   } catch {
     onFailure()
   }
