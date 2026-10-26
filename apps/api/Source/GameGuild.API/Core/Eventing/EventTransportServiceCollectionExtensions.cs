@@ -26,6 +26,7 @@ internal static class EventTransportServiceCollectionExtensions
         services.AddScoped<IIntegrationEventHandler<BillingInvoicePaidV1>, BillingInvoicePaidWalletCreditHandler>();
         services.AddScoped<IInboxStore, InboxStore>();
         services.AddScoped<IOutboxDispatcher, OutboxDispatcher>();
+        services.AddScoped<OutboxCleanupService>();
         services.AddScoped<IEventReplayService, EventReplayService>();
         services.AddHostedService<OutboxBackgroundService>();
         return services;

@@ -10,7 +10,10 @@ public sealed class EventReplayService(ApplicationDbContext db, TimeProvider tim
         var outbox = db.Set<OutboxMessage>().AsNoTracking();
         return new EventTransportStatus(
             await outbox.LongCountAsync(message => message.CompletedAtUtc == null && message.DeadLetteredAtUtc == null, cancellationToken),
-            await outbox.LongCountAsync(message => message.CompletedAtUtc != null, cancellationToken),
+            await outbox.Where(message => message.CompletedAtUtc != null).Select(message => message.EventId)
+                // Retirement changes both tables atomically, so these committed sets are disjoint.
+                .Concat(db.Set<OutboxDeliveryReceipt>().Where(receipt => receipt.CompletedAtUtc != null)
+                    .Select(receipt => receipt.EventId)).LongCountAsync(cancellationToken),
             await outbox.LongCountAsync(message => message.DeadLetteredAtUtc != null, cancellationToken),
             await db.Set<InboxReceipt>().LongCountAsync(
                 receipt => receipt.CompletedAtUtc == null && receipt.DeadLetteredAtUtc == null,
@@ -38,7 +41,26 @@ public sealed class EventReplayService(ApplicationDbContext db, TimeProvider tim
         string? consumerName = null,
         CancellationToken cancellationToken = default)
     {
-        var message = await db.Set<OutboxMessage>().FindAsync([eventId], cancellationToken).ConfigureAwait(false);
+        if (db.Database.CurrentTransaction is not null)
+        {
+            return await ReplayCoreAsync(eventId, consumerName, cancellationToken).ConfigureAwait(false);
+        }
+
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(() =>
+            ReplayCoreAsync(eventId, consumerName, cancellationToken)).ConfigureAwait(false);
+    }
+
+    private async Task<bool> ReplayCoreAsync(Guid eventId, string? consumerName, CancellationToken cancellationToken)
+    {
+        await using var transaction = db.Database.IsRelational() && db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false) : null;
+        // Match the cleanup lock order: parent first, then consumer receipts.
+        var message = db.Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true
+            ? (await db.Set<OutboxMessage>().FromSqlInterpolated($$"""
+                SELECT * FROM "gameguild.integration".outbox_messages
+                WHERE "EventId" = {{eventId}} FOR UPDATE
+                """).ToListAsync(cancellationToken).ConfigureAwait(false)).SingleOrDefault()
+            : await db.Set<OutboxMessage>().FindAsync([eventId], cancellationToken).ConfigureAwait(false);
         if (message is null)
         {
             return false;
@@ -71,6 +93,10 @@ public sealed class EventReplayService(ApplicationDbContext db, TimeProvider tim
         message.DeadLetteredAtUtc = null;
         message.ClaimedUntilUtc = null;
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        }
         return true;
     }
 }

@@ -214,7 +214,6 @@ public sealed class ValueSnapshotAnalysisService(
             }
             else if (snapshot.ChangeKind == "Deleted")
             {
-                value = null;
                 series.Add(new ValueHistoryEntry(snapshot.Id, snapshot.OccurredAtUtc, snapshot.ActorId, snapshot.ChangeKind, null, false));
                 fieldChanged.Add(series[^1]);
                 lastValue = null;

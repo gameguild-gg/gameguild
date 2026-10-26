@@ -155,14 +155,16 @@ public sealed class LoginAttemptAnalysisServiceThreatIntelTests
             log.Arguments[0].Should().Be(LogLevel.Warning);
             log.Arguments[3].Should().BeNull();
             log.Arguments[2].ToString().Should().NotContain(BreachedDigest);
+            log.Arguments[2].ToString().Should().NotContain(context.IpAddress);
         }
 
         var matchProperties = ((IEnumerable<KeyValuePair<string, object?>>)logs[0].Arguments[2]).ToDictionary();
         matchProperties.Keys.Should().BeEquivalentTo(["Mode", "Signal", "IpAddress", "UserId", "RiskScoreBump", "{OriginalFormat}"]);
         matchProperties["Mode"].Should().Be(mode);
         matchProperties["Signal"].Should().Be("ThreatIntel:BreachedPassword");
-        matchProperties["IpAddress"].Should().Be("203.0.113.42");
-        matchProperties["UserId"].Should().BeNull();
+        var ipFingerprint = matchProperties["IpAddress"].Should().BeOfType<string>().Which;
+        ipFingerprint.Should().MatchRegex("^ip-network:[a-f0-9]{64}$");
+        matchProperties["UserId"].Should().Be("none");
         matchProperties["RiskScoreBump"].Should().BeOfType<int>().Which.Should().Be(expectedScore);
         matchProperties["{OriginalFormat}"].Should().Be(
             "Threat intelligence match ({Mode}) - Signal: {Signal}, IP: {IpAddress}, UserId: {UserId}, RiskScoreBump: {RiskScoreBump}");
@@ -173,8 +175,8 @@ public sealed class LoginAttemptAnalysisServiceThreatIntelTests
             anomalyProperties.Keys.Should().BeEquivalentTo(["UserId", "IpAddress", "RiskScore", "Anomalies", "{OriginalFormat}"]);
             anomalyProperties["RiskScore"].Should().BeOfType<int>().Which.Should().Be(expectedScore);
             anomalyProperties["Anomalies"].Should().Be("ThreatIntel:BreachedPassword");
-            anomalyProperties["UserId"].Should().BeNull();
-            anomalyProperties["IpAddress"].Should().Be("203.0.113.42");
+            anomalyProperties["UserId"].Should().Be("none");
+            anomalyProperties["IpAddress"].Should().Be(ipFingerprint);
             anomalyProperties["{OriginalFormat}"].Should().Be(
                 "Anomalous login attempt detected - UserId: {UserId}, IP: {IpAddress}, RiskScore: {RiskScore}, Anomalies: {Anomalies}");
         }

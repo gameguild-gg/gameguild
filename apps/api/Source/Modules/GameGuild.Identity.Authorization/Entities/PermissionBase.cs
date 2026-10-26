@@ -31,11 +31,13 @@ namespace GameGuild.Identity.Authorization;
 ///     </para>
 ///     <para>
 ///         <b>Fail-closed.</b> Undefined permission values are never guessed, expired or
-///         inactive grants never convey permissions, and tenant-scope mismatches are rejected.
+///         inactive or soft-deleted grants never convey permissions, and tenant-scope mismatches are rejected.
 ///     </para>
 /// </remarks>
 public abstract class PermissionBase : EntityBase<Guid>
 {
+    private bool _isActive = true;
+
     /// <summary>
     ///     Protected constructor for entity framework and derived entities.
     ///     Generates a new identifier, mirroring the non-generic <c>EntityBase</c> behavior
@@ -59,10 +61,20 @@ public abstract class PermissionBase : EntityBase<Guid>
     public DateTime? ExpiresAt { get; set; }
 
     /// <summary>
-    ///     Whether the grant is currently active. <see cref="ResourceUserPermission"/> hides this
-    ///     with a computed equivalent derived from its revocation state.
+    ///     Whether the grant is currently active. The lifecycle hooks let direct resource
+    ///     grants share their computed state without exposing a writable concrete property.
     /// </summary>
-    public virtual bool IsActive { get; set; } = true;
+    public virtual bool IsActive
+    {
+        get => ReadActivity();
+        set => WriteActivity(value);
+    }
+
+    /// <summary>Reads the stored activation flag or a derived grant's lifecycle state.</summary>
+    protected virtual bool ReadActivity() { return _isActive; }
+
+    /// <summary>Updates activation using the concrete grant's lifecycle.</summary>
+    protected virtual void WriteActivity(bool value) { _isActive = value; }
 
     /// <summary>
     ///     When the permission was granted.
@@ -95,15 +107,13 @@ public abstract class PermissionBase : EntityBase<Guid>
     public virtual bool IsExpired() { return ExpiresAt.HasValue && ExpiresAt.Value <= SystemClock.UtcNow; }
 
     /// <summary>
-    ///     Check if the grant is currently effective (active, not expired, and not soft-deleted).
-    ///     Deletion is checked fail closed: a soft-deleted grant never conveys access even
-    ///     while its IsActive flag still reads true.
+    ///     Check if the grant is currently effective (not deleted, active and not expired).
     /// </summary>
     public virtual bool IsEffective() { return !IsDeleted && IsActive && !IsExpired(); }
 
     /// <summary>
     ///     Check whether this grant currently conveys the given permission (fail closed:
-    ///     inactive, expired, undefined or unmapped values never grant anything).
+    ///     deleted, inactive, expired, undefined or unmapped values never grant anything).
     /// </summary>
     /// <param name="permission">Permission to check.</param>
     /// <returns>True when the grant is effective and its payload includes the permission.</returns>
