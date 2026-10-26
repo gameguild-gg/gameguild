@@ -13,6 +13,7 @@ namespace GameGuild.Commerce.Payments;
 ///     Optional ISO 3166-1 alpha-2 billing country (issue #413): feeds the geography-aware
 ///     gateway routing filters/strategy and the geographic analytics breakdown.
 /// </param>
+/// <param name="GatewayProvider">Explicit provider for opaque gateway tokens; known prefixes may omit it.</param>
 public sealed record ProcessPaymentCommand(
     Guid TenantId,
     Guid SubscriptionId,
