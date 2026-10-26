@@ -22,6 +22,7 @@ import {
 } from "@game-guild/ui/components/field"
 import { Input } from "@game-guild/ui/components/input"
 import { PasswordInput } from "@/components/ui/password-input"
+import { TurnstileWidget } from "@/components/antibot/turnstile-widget"
 
 export function SignupForm({
   className,
@@ -34,6 +35,7 @@ export function SignupForm({
 }) {
   const { signUp, isLoading, error, clearError } = useAuth()
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const locale = useLocale()
 
   function clearFieldError(field: string) {
@@ -81,8 +83,11 @@ export function SignupForm({
         firstName: name.split(" ")[0],
         lastName: name.split(" ").slice(1).join(" ") || undefined,
         redirectTo,
-      })
+        turnstileToken,
+      } as Parameters<typeof signUp>[0])
     } catch {
+      // Single-use token: reset on failure so the widget re-issues a fresh one.
+      setTurnstileToken(null)
       // error state is set by useAuth
     }
   }
@@ -190,6 +195,7 @@ export function SignupForm({
               </Field>
               {error && <FieldError>{error.message}</FieldError>}
               <Field>
+                <TurnstileWidget onToken={setTurnstileToken} action="sign-up" id="sign-up-turnstile" />
                 <Button type="submit" disabled={isLoading}>
                   {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
