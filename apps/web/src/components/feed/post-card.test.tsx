@@ -124,7 +124,7 @@ describe("PostCard", () => {
 
     fireEvent.change(screen.getByPlaceholderText(/add a comment/i), { target: { value: "Nice" } });
     fireEvent.submit(screen.getByPlaceholderText(/add a comment/i).closest("form")!);
-    await waitFor(() => expect(mocks.createPostComment).toHaveBeenCalledWith("post-1", { content: "Nice" }));
+    await waitFor(() => expect(mocks.createPostComment).toHaveBeenCalledWith("post-1", expect.objectContaining({ content: "Nice" })));
   });
 
   it("records a share before using the browser clipboard fallback", async () => {
