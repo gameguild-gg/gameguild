@@ -87,7 +87,7 @@ public static class SessionEnrichmentJson
 
         // Proxy/VPN: true when any anonymous-network signal fires, false only when every
         // known signal is explicitly clean, null when the provider has no anonymous-IP data.
-        var isProxy = result.IsPublicProxy == true || result.IsAnonymousVpn == true
+        bool? isProxy = result.IsPublicProxy == true || result.IsAnonymousVpn == true
             ? true
             : result.IsPublicProxy == false && result.IsAnonymousVpn == false ? false : null;
 

@@ -157,18 +157,20 @@ public sealed class SubscriptionChangeSagaOrchestrator(
 
         // ── Step 3: Payment (external; compensated, never transactional) ───────────
         string? transactionId = null;
+        string? chargedProviderId = null;
         if (proration.NetAdjustment > 0)
         {
             saga.AdvanceTo(PaymentStep);
             GatewayPaymentResult charge;
             try
             {
-                var gatewayPaymentMethodId = await ResolveGatewayPaymentMethodIdAsync(
+                var (gatewayPaymentMethodId, gatewayProvider) = await ResolveGatewayPaymentMethodIdAsync(
                         request.PaymentMethodId ?? subscription.PaymentMethodId,
                         saga.TenantId!.Value,
                         subscription.CreatedByUserId,
                         cancellationToken)
                     .ConfigureAwait(false);
+                chargedProviderId = gatewayProvider;
 
                 charge = await paymentGateway
                     .ProcessPaymentAsync(
@@ -183,7 +185,8 @@ public sealed class SubscriptionChangeSagaOrchestrator(
                             {
                                 ["sagaId"] = saga.Id.ToString(),
                                 ["subscriptionId"] = subscription.Id.ToString()
-                            }),
+                            },
+                            GatewayProvider: gatewayProvider),
                         cancellationToken)
                     .ConfigureAwait(false);
             }
@@ -214,6 +217,7 @@ public sealed class SubscriptionChangeSagaOrchestrator(
             }
 
             transactionId = charge.TransactionId;
+            chargedProviderId = charge.ProviderId ?? chargedProviderId;
             saga.RecordPayment(transactionId);
             if (invoice is not null)
             {
@@ -227,7 +231,7 @@ public sealed class SubscriptionChangeSagaOrchestrator(
                 saga,
                 PaymentStep,
                 "Succeeded",
-                $"charge {transactionId} settled {proration.NetAdjustment:F2} {subscription.Amount.Currency}",
+                $"{chargedProviderId} charge {transactionId} settled {proration.NetAdjustment:F2} {subscription.Amount.Currency}",
                 cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -247,7 +251,8 @@ public sealed class SubscriptionChangeSagaOrchestrator(
                 exception.Message,
                 invoice,
                 transactionId,
-                cancellationToken)
+                cancellationToken,
+                providerId: chargedProviderId)
                 .ConfigureAwait(false);
             return ToResult(saga);
         }
@@ -284,7 +289,8 @@ public sealed class SubscriptionChangeSagaOrchestrator(
         string reason,
         Invoice? invoice,
         string? transactionId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? providerId = null)
     {
         var compensations = new List<string>();
 
@@ -298,7 +304,9 @@ public sealed class SubscriptionChangeSagaOrchestrator(
                             $"subscription-change:{saga.Id}:refund",
                             transactionId,
                             saga.NetAdjustment,
-                            $"Subscription change saga {saga.Id} failed at {failedStep}: {reason}"),
+                            $"Subscription change saga {saga.Id} failed at {failedStep}: {reason}",
+                            ProviderId: providerId,
+                            Currency: saga.Currency),
                         cancellationToken)
                     .ConfigureAwait(false);
                 compensations.Add(refund.Success
@@ -350,7 +358,7 @@ public sealed class SubscriptionChangeSagaOrchestrator(
             saga.CompensationsApplied);
     }
 
-    private async Task<string> ResolveGatewayPaymentMethodIdAsync(
+    private async Task<(string Token, string Provider)> ResolveGatewayPaymentMethodIdAsync(
         Guid? localPaymentMethodId,
         Guid tenantId,
         Guid ownerUserId,
@@ -373,7 +381,7 @@ public sealed class SubscriptionChangeSagaOrchestrator(
                 $"Payment method {localPaymentMethodId} belongs to tenant {method.TenantId}, not {tenantId}.");
         }
 
-        return gatewayIdProtector.Unprotect(method.GatewayPaymentMethodId);
+        return (gatewayIdProtector.Unprotect(method.GatewayPaymentMethodId), method.GatewayProvider);
     }
 
     private async Task RecordStepAsync(

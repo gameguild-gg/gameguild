@@ -127,7 +127,7 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
 
         result.Succeeded.Should().BeTrue();
         _paymentGateway.Verify(gateway => gateway.ProcessPaymentAsync(
-            It.Is<GatewayPaymentRequest>(request => request.PaymentMethodId == "pm_stripe_1"), It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<GatewayPaymentRequest>(request => request.PaymentMethodId == "pm_stripe_1" && request.GatewayProvider == "stripe"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -268,6 +268,8 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
             It.Is<GatewayRefundRequest>(request =>
                 request.OriginalTransactionId == "txn_saga_1"
                 && request.Amount == 100m
+                && request.ProviderId == "stripe"
+                && request.Currency == "USD"
                 && request.IdempotencyKey.Contains("refund")),
             It.IsAny<CancellationToken>()), Times.Once);
         _invoices.Should().ContainSingle().Which.Status.Should().Be(InvoiceStatus.Paid,
