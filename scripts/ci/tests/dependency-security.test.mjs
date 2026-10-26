@@ -569,10 +569,13 @@ for (const packageRoot of installedConsumers("body-parser")) {
       const origin = await startHeaderServer(context, (request, response) => {
         parser(request, response, error => {
           response.statusCode = error ? 400 : 200;
+          response.setHeader("Content-Type", "application/json");
+          response.setHeader("X-Content-Type-Options", "nosniff");
           response.end(JSON.stringify(error ? { rejected: true } : request.body));
         });
       });
-      const payload = Buffer.from(JSON.stringify({ message: "ordinary compressed JSON", count: 3 }));
+      const expected = { message: "ordinary compressed JSON", count: 3, markup: "<script>alert('fixture')</script>" };
+      const payload = Buffer.from(JSON.stringify(expected));
       const response = await fetch(origin, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Content-Encoding": encoding },
@@ -580,7 +583,9 @@ for (const packageRoot of installedConsumers("body-parser")) {
         signal: AbortSignal.timeout(5000),
       });
       assert.equal(response.status, 200);
-      assert.deepEqual(await response.json(), { message: "ordinary compressed JSON", count: 3 });
+      assert.equal(response.headers.get("content-type"), "application/json");
+      assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+      assert.deepEqual(await response.json(), expected);
     });
   }
 
@@ -601,7 +606,11 @@ for (const packageRoot of installedConsumers("body-parser")) {
         }
         // Deliver the rest only after parsing has finished, then require the HTTP
         // request to finish too. Sending one combined buffer misses this lifecycle.
-        request.once("end", () => response.end(JSON.stringify(request.body)));
+        request.once("end", () => {
+          response.setHeader("Content-Type", "application/json");
+          response.setHeader("X-Content-Type-Options", "nosniff");
+          response.end(JSON.stringify(request.body));
+        });
         client.end(trailing);
       });
     });
@@ -614,13 +623,15 @@ for (const packageRoot of installedConsumers("body-parser")) {
         const chunks = [];
         response.on("data", chunk => chunks.push(chunk));
         response.on("error", rejectResponse);
-        response.on("end", () => resolveResponse({ status: response.statusCode, body: Buffer.concat(chunks).toString("utf8") }));
+        response.on("end", () => resolveResponse({ status: response.statusCode, headers: response.headers, body: Buffer.concat(chunks).toString("utf8") }));
       });
       client.on("error", rejectResponse);
       client.setTimeout(5000, () => client.destroy(new Error("Compressed request did not finish")));
       client.write(first);
     });
     assert.equal(result.status, 200);
+    assert.equal(result.headers["content-type"], "application/json");
+    assert.equal(result.headers["x-content-type-options"], "nosniff");
     assert.deepEqual(JSON.parse(result.body), payload);
   });
 }
