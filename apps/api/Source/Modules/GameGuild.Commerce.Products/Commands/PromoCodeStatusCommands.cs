@@ -81,6 +81,8 @@ public sealed class DeactivatePromoCodeHandler(IPromoCodeRepository repository) 
 /// <param name="CampaignId">Optional campaign identifier</param>
 /// <param name="ProductId">Optional product ID</param>
 /// <param name="PlanId">Optional subscription plan ID (issue #418)</param>
+/// <param name="TimeZoneId">Optional time zone used to evaluate the promotion window.</param>
+/// <param name="EligibleCustomerType">Optional customer eligibility restriction.</param>
 public sealed record PatchPromoCodeCommand(
     Guid PromoCodeId,
     string? Name = null,

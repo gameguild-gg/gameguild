@@ -32,7 +32,7 @@ public sealed class SubscriptionChangeOrchestrationController(ISender sender) : 
     [HttpPost("plan-change:orchestrate")]
     [EndpointSummary("Run the orchestrated subscription plan change saga")]
     [EndpointDescription(
-        "Orchestrates the plan change as a saga: proration is calculated, an invoice is issued for a positive net adjustment, the charge settles through the payment gateway and the subscription activates on the new plan. Every step is journaled and emitted as a durable billing event; a failure triggers compensating actions (gateway refund, invoice void) and the subscription keeps its original plan.")]
+        "Orchestrates the plan change as a saga: proration, invoice, confirmed gateway payment and activation. Local state and required billing events commit together. Confirmed business failures trigger compensation; uncertain persistence or provider outcomes require reconciliation and retry with the same effective date and payment parameters.")]
     [ProducesResponseType<SubscriptionChangeSagaResult>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

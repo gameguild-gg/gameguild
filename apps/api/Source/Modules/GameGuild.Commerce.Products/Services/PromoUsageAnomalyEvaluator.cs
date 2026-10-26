@@ -32,6 +32,7 @@ public interface IPromoUsageAnomalyEvaluator
     /// <param name="normalizedCode">The normalized code string (used as the subject for anonymous callers).</param>
     /// <param name="userId">Authenticated user, when present.</param>
     /// <param name="recentAttemptCount">Attempts inside the window including the current one.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task EvaluateValidationVelocityAsync(string normalizedCode, Guid? userId, int recentAttemptCount, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -41,6 +42,7 @@ public interface IPromoUsageAnomalyEvaluator
     /// <param name="userId">Redeeming user.</param>
     /// <param name="code">The redeemed promo code string.</param>
     /// <param name="recentUsageCount">Usages inside the window including the current one.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     Task EvaluateRedemptionVelocityAsync(Guid userId, string code, int recentUsageCount, CancellationToken cancellationToken = default);
 }
 

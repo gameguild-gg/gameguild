@@ -9,10 +9,10 @@ namespace GameGuild.Commerce.Billing;
 ///     <see cref="ISubscriptionChangeSaga" /> implementation (issue #396 workflow
 ///     orchestration): coordinates the subscription plan change as an explicit multi-step
 ///     workflow — proration, invoice, payment, activation — with journaled steps, durable
-///     step events and compensating actions (gateway refund, invoice void) when a later
-///     step fails. Local step state persists atomically with its journal row and durable
-///     event; the external gateway charge is compensated rather than transactionally
-///     rolled back, which is precisely the guarantee a saga exists to provide.
+///     step events and compensating actions for confirmed business failures. Local
+///     state and required events share a transaction. An uncertain persistence or
+///     transport outcome propagates for rollback and provider reconciliation; it must
+///     never be converted to a confirmed decline or an automatic refund.
 /// </summary>
 public sealed class SubscriptionChangeSagaOrchestrator(
     IApplicationDbContext context,
@@ -32,11 +32,48 @@ public sealed class SubscriptionChangeSagaOrchestrator(
     public const string ActivationStep = "Activation";
 
     /// <inheritdoc />
-    public async Task<SubscriptionChangeSagaResult> ExecuteAsync(
+    public Task<SubscriptionChangeSagaResult> ExecuteAsync(
         SubscriptionChangeSagaRequest request,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        // Commands already run inside the use-case transaction. Direct service calls
+        // must provide the same atomic boundary for the plan, invoice and journal.
+        if (context is DbContext database && database.Database.IsRelational()
+            && database.Database.CurrentTransaction is null)
+        {
+            return database.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+            {
+                await using var transaction = await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    var result = await ExecuteCoreAsync(request, cancellationToken).ConfigureAwait(false);
+                    await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+                    return result;
+                }
+                catch
+                {
+                    try
+                    {
+                        await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        database.ChangeTracker.Clear();
+                    }
+                    throw;
+                }
+            });
+        }
+
+        return ExecuteCoreAsync(request, cancellationToken);
+    }
+
+    private async Task<SubscriptionChangeSagaResult> ExecuteCoreAsync(
+        SubscriptionChangeSagaRequest request,
+        CancellationToken cancellationToken)
+    {
 
         var subscription = await subscriptionRepository
             .GetByIdAsync(request.SubscriptionId, cancellationToken)
@@ -161,18 +198,29 @@ public sealed class SubscriptionChangeSagaOrchestrator(
         if (proration.NetAdjustment > 0)
         {
             saga.AdvanceTo(PaymentStep);
-            GatewayPaymentResult charge;
+            string gatewayPaymentMethodId;
+            string gatewayProvider;
             try
             {
-                var (gatewayPaymentMethodId, gatewayProvider) = await ResolveGatewayPaymentMethodIdAsync(
+                (gatewayPaymentMethodId, gatewayProvider) = await ResolveGatewayPaymentMethodIdAsync(
                         request.PaymentMethodId ?? subscription.PaymentMethodId,
                         saga.TenantId!.Value,
                         subscription.CreatedByUserId,
                         cancellationToken)
                     .ConfigureAwait(false);
-                chargedProviderId = gatewayProvider;
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                // Reference validation happens before any gateway side effect.
+                await CompensateAsync(saga, PaymentStep, exception.Message, invoice,
+                    transactionId: null, cancellationToken).ConfigureAwait(false);
+                return ToResult(saga);
+            }
 
-                charge = await paymentGateway
+            chargedProviderId = gatewayProvider;
+            // Transport exceptions must roll back the local transaction. They do not
+            // prove that the provider rejected the charge; a retry uses the same key.
+            var charge = await paymentGateway
                     .ProcessPaymentAsync(
                         new GatewayPaymentRequest(
                             $"{saga.IdempotencyKey}:charge",
@@ -183,23 +231,18 @@ public sealed class SubscriptionChangeSagaOrchestrator(
                             $"Plan change proration for subscription {subscription.Id}",
                             new Dictionary<string, string>
                             {
-                                ["sagaId"] = saga.Id.ToString(),
+                                ["changeIntent"] = saga.IdempotencyKey,
                                 ["subscriptionId"] = subscription.Id.ToString()
                             },
                             GatewayProvider: gatewayProvider),
                         cancellationToken)
                     .ConfigureAwait(false);
-            }
-            catch (Exception exception) when (exception is not OperationCanceledException)
+            if (charge.FailureKind == GatewayFailureKind.OutcomeUnknown
+                || charge.Status is GameGuild.Commerce.Payments.PaymentStatus.Pending
+                    or GameGuild.Commerce.Payments.PaymentStatus.Processing
+                    or GameGuild.Commerce.Payments.PaymentStatus.RequiresAction)
             {
-                charge = new GatewayPaymentResult(
-                    Success: false,
-                    TransactionId: null,
-                    ExternalPaymentId: null,
-                    ErrorCode: "charge-threw",
-                    ErrorMessage: exception.Message,
-                    Status: GameGuild.Commerce.Payments.PaymentStatus.Failed,
-                    ProcessedAt: SystemClock.UtcNow);
+                throw new InvalidOperationException("The provider has not confirmed the plan-change payment; retry the same change intent after reconciliation.");
             }
 
             if (!charge.Success || string.IsNullOrWhiteSpace(charge.TransactionId))
@@ -218,6 +261,14 @@ public sealed class SubscriptionChangeSagaOrchestrator(
 
             transactionId = charge.TransactionId;
             chargedProviderId = charge.ProviderId ?? chargedProviderId;
+            // An idempotent charge response can be cached even after a refund. Read
+            // the current provider state before granting the paid plan on a replay.
+            var confirmed = await paymentGateway.GetPaymentAsync(transactionId, cancellationToken, chargedProviderId)
+                .ConfigureAwait(false);
+            if (!confirmed.Success || confirmed.Status != GameGuild.Commerce.Payments.PaymentStatus.Succeeded)
+            {
+                throw new InvalidOperationException("The current provider payment is not settled; the subscription plan was not activated.");
+            }
             saga.RecordPayment(transactionId);
             if (invoice is not null)
             {
@@ -241,7 +292,6 @@ public sealed class SubscriptionChangeSagaOrchestrator(
         try
         {
             subscription.ChangePlan(request.NewPlanId, newAmount, effectiveDate);
-            await subscriptionRepository.UpdateAsync(subscription, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -257,6 +307,11 @@ public sealed class SubscriptionChangeSagaOrchestrator(
             return ToResult(saga);
         }
 
+        // A persistence exception leaves commit outcome uncertain. Never refund and
+        // then save the still-tracked new plan from the compensation path. Propagate
+        // so the transaction owner rolls back all local writes; the provider charge
+        // identity remains stable if the same intent is retried.
+        await subscriptionRepository.UpdateAsync(subscription, cancellationToken).ConfigureAwait(false);
         saga.Complete(SystemClock.UtcNow);
         await RecordStepAsync(
             saga,

@@ -7,6 +7,8 @@ namespace GameGuild.Commerce.Billing;
 ///     Publication is best-effort from the webhook processing path: a recording failure is
 ///     logged and never changes the webhook processing outcome, mirroring the
 ///     <see cref="IWebhookSecurityEventPublisher" /> reliability contract.
+///     Saga transitions require their outbox event: failures propagate to roll back
+///     the local subscription-change transaction.
 /// </summary>
 public interface IBillingIntegrationEventPublisher
 {
@@ -167,7 +169,7 @@ public sealed class BillingIntegrationEventPublisher(
                 AggregateType = "Subscription",
                 AggregateId = saga.SubscriptionId.ToString()
             },
-            cancellationToken);
+            cancellationToken, required: true);
 
     public Task PublishSubscriptionChangeCompletedAsync(
         SubscriptionChangeSaga saga,
@@ -188,7 +190,7 @@ public sealed class BillingIntegrationEventPublisher(
                 AggregateType = "Subscription",
                 AggregateId = saga.SubscriptionId.ToString()
             },
-            cancellationToken);
+            cancellationToken, required: true);
 
     public Task PublishSubscriptionChangeFailedAsync(
         SubscriptionChangeSaga saga,
@@ -208,9 +210,9 @@ public sealed class BillingIntegrationEventPublisher(
                 AggregateType = "Subscription",
                 AggregateId = saga.SubscriptionId.ToString()
             },
-            cancellationToken);
+            cancellationToken, required: true);
 
-    private async Task RecordAsync<TEvent>(TEvent integrationEvent, CancellationToken cancellationToken)
+    private async Task RecordAsync<TEvent>(TEvent integrationEvent, CancellationToken cancellationToken, bool required = false)
         where TEvent : DurableIntegrationEventBase
     {
         try
@@ -230,7 +232,7 @@ public sealed class BillingIntegrationEventPublisher(
 
             await durableEvents.RecordAsync(integrationEvent, cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        catch (Exception exception) when (!required && exception is not OperationCanceledException)
         {
             logger.LogError(
                 exception,

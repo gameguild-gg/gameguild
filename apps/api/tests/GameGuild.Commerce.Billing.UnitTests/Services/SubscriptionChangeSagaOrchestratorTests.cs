@@ -156,6 +156,10 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
                 ErrorMessage: null,
                 Status: GameGuild.Commerce.Payments.PaymentStatus.Succeeded,
                 ProcessedAt: SystemClock.UtcNow));
+        _paymentGateway
+            .Setup(gateway => gateway.GetPaymentAsync("txn_saga_1", It.IsAny<CancellationToken>(), "stripe"))
+            .ReturnsAsync(new GatewayPaymentResult(true, "txn_saga_1", "ch_saga_1", null, null,
+                GameGuild.Commerce.Payments.PaymentStatus.Succeeded, SystemClock.UtcNow, ProviderId: "stripe"));
     }
 
     private void SetupSubscription(Subscription subscription)
@@ -243,10 +247,8 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
         _subscriptionRepository
             .Setup(repository => repository.GetByIdAsync(subscription.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(subscription);
-        _subscriptionRepository
-            .SetupSequence(repository => repository.UpdateAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("concurrent modification detected"))
-            .ReturnsAsync(subscription);
+        // The domain rejects activation without changing PlanId or Amount.
+        subscription.Suspend("plan change is no longer permitted");
         SetupGatewayChargeSuccess();
         _paymentGateway
             .Setup(gateway => gateway.ProcessRefundAsync(It.IsAny<GatewayRefundRequest>(), It.IsAny<CancellationToken>()))
@@ -264,6 +266,7 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
         result.Succeeded.Should().BeFalse();
         result.FailedStep.Should().Be("Activation");
         result.CompensationsApplied.Should().Contain("refund:re_saga_1");
+        subscription.PlanId.Should().Be(FromPlanId);
         _paymentGateway.Verify(gateway => gateway.ProcessRefundAsync(
             It.Is<GatewayRefundRequest>(request =>
                 request.OriginalTransactionId == "txn_saga_1"
@@ -277,6 +280,55 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
         _billingEvents.Verify(publisher => publisher.PublishSubscriptionChangeFailedAsync(
             It.Is<SubscriptionChangeSaga>(saga => saga.FailedStep == "Activation"),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ActivationPersistenceFails_PropagatesWithoutRefundingAnUncertainCommit()
+    {
+        var subscription = NewActiveSubscription();
+        SetupSubscription(subscription);
+        SetupGatewayChargeSuccess();
+        _subscriptionRepository.Setup(repository => repository.UpdateAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new DbUpdateException("database unavailable"));
+
+        var act = () => NewOrchestrator().ExecuteAsync(new SubscriptionChangeSagaRequest(subscription.Id, ToPlanId, null, null, ActorId));
+
+        await act.Should().ThrowAsync<DbUpdateException>();
+        _paymentGateway.Verify(gateway => gateway.ProcessRefundAsync(It.IsAny<GatewayRefundRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+        _billingEvents.Verify(publisher => publisher.PublishSubscriptionChangeCompletedAsync(It.IsAny<SubscriptionChangeSaga>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CachedChargeWasRefunded_DoesNotActivateThePlan()
+    {
+        var subscription = NewActiveSubscription();
+        SetupSubscription(subscription);
+        SetupGatewayChargeSuccess();
+        _paymentGateway.Setup(gateway => gateway.GetPaymentAsync("txn_saga_1", It.IsAny<CancellationToken>(), "stripe"))
+            .ReturnsAsync(new GatewayPaymentResult(true, "txn_saga_1", "ch_saga_1", null, null,
+                GameGuild.Commerce.Payments.PaymentStatus.Refunded, SystemClock.UtcNow, ProviderId: "stripe"));
+
+        var act = () => NewOrchestrator().ExecuteAsync(new SubscriptionChangeSagaRequest(subscription.Id, ToPlanId, null, null, ActorId));
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        subscription.PlanId.Should().Be(FromPlanId);
+        _subscriptionRepository.Verify(repository => repository.UpdateAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_GatewayTimesOut_DoesNotRecordADeclineOrRefund()
+    {
+        var subscription = NewActiveSubscription();
+        SetupSubscription(subscription);
+        _paymentGateway.Setup(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("provider response was lost"));
+
+        var act = () => NewOrchestrator().ExecuteAsync(new SubscriptionChangeSagaRequest(subscription.Id, ToPlanId, null, null, ActorId));
+
+        await act.Should().ThrowAsync<TimeoutException>();
+        subscription.PlanId.Should().Be(FromPlanId);
+        _paymentGateway.Verify(gateway => gateway.ProcessRefundAsync(It.IsAny<GatewayRefundRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+        _billingEvents.Verify(publisher => publisher.PublishSubscriptionChangeFailedAsync(It.IsAny<SubscriptionChangeSaga>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -351,6 +403,10 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
             .ToArray();
         chargeKeys.Should().HaveCount(2);
         chargeKeys[1].Should().Be(chargeKeys[0]);
+        var requests = _paymentGateway.Invocations
+            .Where(invocation => invocation.Method.Name == nameof(IPaymentGateway.ProcessPaymentAsync))
+            .Select(invocation => (GatewayPaymentRequest)invocation.Arguments[0]).ToArray();
+        requests[1].Metadata.Should().BeEquivalentTo(requests[0].Metadata);
     }
 
     [Fact]

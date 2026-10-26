@@ -61,9 +61,11 @@ public sealed record SubscriptionChangeSagaResult(
 ///     <para>
 ///         Every step attempt appends a journal row and a durable step event atomically with
 ///         the saga state transition, so the workflow is observable end to end in the durable
-///         billing event log and resumable by evidence. The external gateway charge cannot be
-///         rolled back by a database transaction, which is exactly why the saga carries
-///         compensating actions: a failed activation refunds the charge and voids the invoice.
+///         billing event log. The external gateway charge cannot be rolled back by a database
+///         transaction. A confirmed domain rejection compensates the charge; persistence or
+///         transport errors roll back local state and require retrying the same intent with
+///         the original effective date and payment parameters. The current provider state
+///         must still be settled before activation, including after an idempotent replay.
 ///     </para>
 ///     <para>
 ///         Idempotency: sagas are keyed by the change intent (subscription, target plan,
