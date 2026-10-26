@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import {
   createMockUseAuth,
@@ -320,4 +320,113 @@ describe('SignupForm', () => {
 
     expect(container.firstChild).toHaveClass('custom-class');
   });
+});
+
+/* ------------------------------------------------------------------ */
+/*  Guest upgrade entry (issue #213)                                   */
+/* ------------------------------------------------------------------ */
+
+describe('SignupForm guest upgrade', () => {
+  const guestSessionId = '11111111-2222-3333-4444-555555555555';
+
+  beforeEach(() => {
+    mockAuth = createMockUseAuth();
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    window.localStorage.clear();
+  });
+
+  function seedGuestSession(overrides: Record<string, unknown> = {}) {
+    window.localStorage.setItem(
+      'gameguild.guest-session',
+      JSON.stringify({
+        guestSessionId,
+        accessToken: 'guest-access-token',
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        permissions: ['guest:browse-catalog'],
+        ...overrides,
+      }),
+    );
+  }
+
+  async function submitValidForm() {
+    const { user } = renderWithUser(
+      <SignupForm guestSessionId={guestSessionId} />,
+    );
+
+    await user.type(screen.getByLabelText('Full Name'), 'Jo Do');
+    await user.type(screen.getByLabelText('Email'), 'jo@e.co');
+    await user.type(screen.getByLabelText('Password'), '12345678');
+    await user.type(screen.getByLabelText('Confirm Password'), '12345678');
+    await user.click(screen.getByRole('button', { name: /create account$/i }));
+  }
+
+  it('renders the guest upgrade notice when arriving from the guest banner', () => {
+    renderWithUser(
+      <SignupForm
+        guestSessionId={guestSessionId}
+        guestUpgradeNotice="Your guest session will be linked to your new account."
+      />,
+    );
+
+    expect(screen.getByTestId('guest-upgrade-notice')).toHaveTextContent(
+      'Your guest session will be linked to your new account.',
+    );
+  });
+
+  it('presents the matching guest bearer on sign-up and clears the guest slot after', async () => {
+    seedGuestSession();
+    await submitValidForm();
+
+    expect(mockAuth.signUp).toHaveBeenCalledWith(
+      expect.objectContaining({ guestAccessToken: 'guest-access-token' }),
+    );
+    expect(window.localStorage.getItem('gameguild.guest-session')).toBeNull();
+  }, 10000);
+
+  it('never presents a guest bearer from a non-matching session id', async () => {
+    seedGuestSession({
+      guestSessionId: '99999999-9999-9999-9999-999999999999',
+    });
+    await submitValidForm();
+
+    expect(mockAuth.signUp).toHaveBeenCalledWith(
+      expect.not.objectContaining({ guestAccessToken: expect.anything() }),
+    );
+  }, 10000);
+
+  it('signs up normally when the guest slot is empty', async () => {
+    await submitValidForm();
+
+    expect(mockAuth.signUp).toHaveBeenCalledWith({
+      username: 'jo',
+      email: 'jo@e.co',
+      password: '12345678',
+      firstName: 'Jo',
+      lastName: 'Do',
+      redirectTo: '/',
+    });
+  }, 10000);
+
+  it('keeps the guest slot when sign-up fails (retry keeps the upgrade path)', async () => {
+    seedGuestSession();
+    mockAuth = createMockUseAuth({
+      signUp: vi.fn().mockRejectedValue(new Error('Email taken')),
+    });
+
+    const { user } = renderWithUser(
+      <SignupForm guestSessionId={guestSessionId} />,
+    );
+    await user.type(screen.getByLabelText('Full Name'), 'Jo Do');
+    await user.type(screen.getByLabelText('Email'), 'jo@e.co');
+    await user.type(screen.getByLabelText('Password'), '12345678');
+    await user.type(screen.getByLabelText('Confirm Password'), '12345678');
+    await user.click(screen.getByRole('button', { name: /create account$/i }));
+
+    expect(
+      window.localStorage.getItem('gameguild.guest-session'),
+    ).not.toBeNull();
+  }, 10000);
 });
