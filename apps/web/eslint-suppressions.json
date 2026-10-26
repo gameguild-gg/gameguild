@@ -1684,7 +1684,7 @@
       "count": 21
     },
     "@typescript-eslint/no-unused-vars": {
-      "count": 20
+      "count": 18
     }
   },
   "src/components/block-content-editor/extras/source-code/terminal.tsx": {
@@ -2389,9 +2389,6 @@
     }
   },
   "src/components/block-content-editor/services/editor/google-drive-service.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 9
-    },
     "@typescript-eslint/no-unnecessary-type-assertion": {
       "count": 2
     },
@@ -2399,16 +2396,16 @@
       "count": 3
     },
     "@typescript-eslint/no-unsafe-assignment": {
-      "count": 27
+      "count": 20
     },
     "@typescript-eslint/no-unsafe-call": {
       "count": 13
     },
     "@typescript-eslint/no-unsafe-member-access": {
-      "count": 55
+      "count": 35
     },
     "@typescript-eslint/no-unsafe-return": {
-      "count": 8
+      "count": 5
     },
     "@typescript-eslint/no-unused-vars": {
       "count": 2
@@ -3176,9 +3173,6 @@
     }
   },
   "src/lib/api/generated.ts": {
-    "@typescript-eslint/no-duplicate-enum-values": {
-      "count": 20
-    },
     "@typescript-eslint/no-unused-vars": {
       "count": 1
     },

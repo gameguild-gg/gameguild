@@ -14,6 +14,7 @@ import { SourceCodeEditorView } from "./components/source-code-editor-view"
 
 // Import utilities
 import { getBaseName, getFileIcon, getLanguageLabel, getStateIcon } from "./utils"
+import { dispatchCodeExecution } from "./dispatch-code-execution"
 
 // Import hooks
 import { useCustomTestFiles } from "@/components/block-content-editor/hooks/editor/use-custom-test-files"
@@ -336,6 +337,12 @@ export function SourceCodeRenderer({
     handleSave,
   })
 
+  const handleTerminalExecute = () => {
+    dispatchCodeExecution(executeCode, activeFileId, () => {
+      addOutput("Error: Unable to execute code. Please try again.")
+    })
+  }
+
   // Use the custom hook for test files
   const { createCustomTestFiles } = useCustomTestFiles({
     files,
@@ -570,7 +577,7 @@ export function SourceCodeRenderer({
             waitingForInput={waitingForInput}
             inputPrompt={inputPrompt}
             handleTerminalInput={handleTerminalInput}
-            handleExecute={() => executeCode(activeFileId)}
+            handleExecute={handleTerminalExecute}
             handleStopExecution={stopCodeExecution}
             clearTerminalOnRun={clearTerminalOnRun}
             setClearTerminalOnRun={setClearTerminalOnRun}
@@ -584,7 +591,7 @@ export function SourceCodeRenderer({
             removeTestCase={removeTestCase}
             updateTestCase={updateTestCase}
             testResults={testResults}
-            runTests={() => Promise.resolve()}
+            runTests={runTests}
             addSolutionTemplate={addSolutionTemplate}
             addCustomTestFiles={(testIndex: number) => {
               createCustomTestFiles(testIndex, selectedLanguage)
@@ -651,7 +658,7 @@ export function SourceCodeRenderer({
             waitingForInput={waitingForInput}
             inputPrompt={inputPrompt}
             handleTerminalInput={handleTerminalInput}
-            handleExecute={() => executeCode(activeFileId)}
+            handleExecute={handleTerminalExecute}
             handleStopExecution={stopCodeExecution}
             clearTerminalOnRun={clearTerminalOnRun}
             setClearTerminalOnRun={setClearTerminalOnRun}
@@ -664,7 +671,7 @@ export function SourceCodeRenderer({
             removeTestCase={removeTestCase}
             updateTestCase={updateTestCase}
             testResults={testResults}
-            runTests={() => Promise.resolve()}
+            runTests={runTests}
             addSolutionTemplate={addSolutionTemplate}
             setIsEditing={setIsEditing}
             allowedLanguages={allowedLanguages}
