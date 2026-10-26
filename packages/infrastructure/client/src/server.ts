@@ -5,6 +5,7 @@
  */
 
 import { createFetchTransport, createHeaderInterceptor } from './runtime/transport/fetch.js';
+import { createForwardedIpHeaderInterceptor } from './runtime/transport/forwarded-ip.js';
 import { ok, err } from './runtime/result/helpers.js';
 import type { Result } from './runtime/result/types.js';
 import type { ApiError } from './runtime/errors/types.js';
@@ -52,6 +53,11 @@ export interface ServerClientConfig {
  */
 export function createServerClient(config: ServerClientConfig): ApiClient {
   const interceptors: Interceptor[] = [...(config.interceptors || [])];
+
+  // Forward the end-user IP from the Cloudflare ingress header so the API can
+  // attribute web-originated traffic to the visitor. Must run before the auth
+  // and tenant interceptors.
+  interceptors.push(createForwardedIpHeaderInterceptor());
 
   // Shared token cache for the current request cycle.
   // This prevents calling getAccessToken() multiple times per request,
