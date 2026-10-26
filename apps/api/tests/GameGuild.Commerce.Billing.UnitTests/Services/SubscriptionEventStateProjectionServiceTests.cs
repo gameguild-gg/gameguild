@@ -17,8 +17,8 @@ public sealed class SubscriptionEventStateProjectionServiceTests
         eventId ?? Guid.NewGuid(),
         "commerce.billing.invoice-paid.v1",
         1,
-        tenantId: Guid.NewGuid(),
-        correlationId: Guid.NewGuid(),
+        TenantId: Guid.NewGuid(),
+        CorrelationId: Guid.NewGuid(),
         occurredAt,
         JsonSerializer.Serialize(new
         {

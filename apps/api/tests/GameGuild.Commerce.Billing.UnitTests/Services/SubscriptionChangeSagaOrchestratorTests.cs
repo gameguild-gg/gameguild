@@ -34,13 +34,13 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
     {
         _context
             .Setup(context => context.Set<SubscriptionChangeSaga>())
-            .Returns(_sagas.BuildMockDbSet().Object);
+            .Returns(_sagas.AsQueryable().BuildMockDbSet().Object);
         _context
             .Setup(context => context.Set<SubscriptionChangeSagaStep>())
-            .Returns(_sagaSteps.BuildMockDbSet().Object);
+            .Returns(_sagaSteps.AsQueryable().BuildMockDbSet().Object);
         _context
             .Setup(context => context.Set<Invoice>())
-            .Returns(_invoices.BuildMockDbSet().Object);
+            .Returns(_invoices.AsQueryable().BuildMockDbSet().Object);
         _context
             .Setup(context => context.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
@@ -60,7 +60,7 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
 
         _paymentMethodRepository
             .Setup(repository => repository.GetByIdAsync(PaymentMethodRegistryId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PaymentMethod(TenantId, Guid.NewGuid(), "stripe", "pm_stripe_1", PaymentMethodType.Card, IsDefault: true));
+            .ReturnsAsync(new PaymentMethod(TenantId, Guid.NewGuid(), "stripe", "pm_stripe_1", GameGuild.Commerce.Payments.PaymentMethodType.Card, true));
 
         _billingEvents
             .Setup(publisher => publisher.PublishSubscriptionChangeStepAsync(
@@ -109,7 +109,7 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
                 ExternalPaymentId: "ch_saga_1",
                 ErrorCode: null,
                 ErrorMessage: null,
-                Status: PaymentStatus.Succeeded,
+                Status: GameGuild.Commerce.Payments.PaymentStatus.Succeeded,
                 ProcessedAt: SystemClock.UtcNow));
     }
 
@@ -172,7 +172,7 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
                 ExternalPaymentId: null,
                 ErrorCode: "card_declined",
                 ErrorMessage: "card declined",
-                Status: PaymentStatus.Failed,
+                Status: GameGuild.Commerce.Payments.PaymentStatus.Failed,
                 ProcessedAt: SystemClock.UtcNow));
 
         var result = await NewOrchestrator().ExecuteAsync(
