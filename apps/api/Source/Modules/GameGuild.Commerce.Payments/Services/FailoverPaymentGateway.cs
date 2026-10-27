@@ -123,17 +123,17 @@ public sealed class FailoverPaymentGateway(
                 catch (Exception exception) when (
                     exception is HttpRequestException or TaskCanceledException or TimeoutException)
                 {
-                    // The gateway adapter blew up at the transport layer before producing a
-                    // result: count as a retriable gateway failure and keep the loop going.
+                    // A missing response does not prove that the provider did not capture.
+                    // Idempotency is provider-local; leave this attempt for reconciliation
+                    // instead of replaying it here or at the next provider.
                     circuitBreaker.RecordFailure(candidate.Gateway.ProviderId);
-                    lastRetriableFailure = SynthesizeTransportFailure(candidate.Gateway.ProviderId, exception);
                     logger.LogWarning(
                         exception,
-                        "Gateway {ProviderId} charge failed at the transport layer (attempt {Attempt} of {Max})",
+                        "Gateway {ProviderId} charge outcome is unknown after a transport failure (attempt {Attempt} of {Max})",
                         candidate.Gateway.ProviderId,
                         attemptsUsed,
                         _failoverOptions.MaxAttemptsTotal);
-                    continue;
+                    return SynthesizeTransportFailure(candidate.Gateway.ProviderId, exception);
                 }
 
                 if (result.FailureKind == GatewayFailureKind.RetriableGatewayFailure)
@@ -412,10 +412,10 @@ public sealed class FailoverPaymentGateway(
             ExternalPaymentId: null,
             ErrorCode: "gateway_transport_failure",
             ErrorMessage: $"The gateway request never produced a response: {exception.Message}",
-            Status: PaymentStatus.Failed,
+            Status: PaymentStatus.Processing,
             ProcessedAt: SystemClock.UtcNow,
             ProviderId: providerId,
-            FailureKind: GatewayFailureKind.RetriableGatewayFailure);
+            FailureKind: GatewayFailureKind.OutcomeUnknown);
 
     private static GatewayDisputeActionResult SynthesizeDisputeTransportFailure(Exception exception) =>
         new(

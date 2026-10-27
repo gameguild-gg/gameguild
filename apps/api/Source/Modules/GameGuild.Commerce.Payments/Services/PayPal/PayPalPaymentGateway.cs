@@ -10,10 +10,9 @@ namespace GameGuild.Commerce.Payments;
 ///     the adapter is disabled until <c>PaymentGateways:PayPal:IsEnabled</c> opts in, defaults to
 ///     the sandbox environment, answers every operation of an unconfigured/real-mode-disabled
 ///     adapter with an explicit failure (never a fake success), and only performs real HTTP calls
-///     when simulation is off. Real-call failure classification: transport failures, HTTP
-///     408/429/5xx without a confirmed capture are retriable gateway failures (safe to retry or
-///     fail over because no provider payment object was confirmed); HTTP 4xx answers are terminal
-///     declines; anything that might have moved money but cannot be confirmed is outcome-unknown
+///     when simulation is off. Charge transport failures and HTTP 408/429/5xx are
+///     outcome-unknown: a missing response or capture id does not prove no charge occurred.
+///     Definitive HTTP 4xx declines are terminal; anything that might have moved money but cannot be confirmed is outcome-unknown
 ///     and left to reconciliation. PayPal webhook ingress lives in Commerce.Billing
 ///     (<c>PayPalBillingWebhookService</c>); live certification is deferred.
 /// </summary>
@@ -391,14 +390,16 @@ public sealed class PayPalPaymentGateway(
                 ProviderMapping: CreateProviderMapping(captureId, captured: true));
         }
 
-        var failureKind = ClassifyFailure(apiResult);
+        // Creation/capture may have reached PayPal even without a readable response.
+        var failureKind = apiResult.TransportFailed || apiResult.IsServerError
+            ? GatewayFailureKind.OutcomeUnknown : GatewayFailureKind.TerminalDecline;
         return new GatewayPaymentResult(
             Success: false,
             TransactionId: null,
             ExternalPaymentId: null,
             ErrorCode: apiResult.ErrorCode ?? "paypal_error",
             ErrorMessage: apiResult.ErrorMessage ?? "The PayPal request failed.",
-            Status: PaymentStatus.Failed,
+            Status: failureKind == GatewayFailureKind.OutcomeUnknown ? PaymentStatus.Processing : PaymentStatus.Failed,
             ProcessedAt: SystemClock.UtcNow,
             FailureKind: failureKind);
     }
@@ -433,9 +434,8 @@ public sealed class PayPalPaymentGateway(
     {
         if (apiResult.TransportFailed || apiResult.IsServerError)
         {
-            // No confirmed provider payment object exists for a transport failure or an
-            // HTTP 408/429/5xx answer: safe to retry on this gateway (PayPal-Request-Id
-            // idempotency) and, once that budget is spent, to fail over.
+            // Refund retry stays on the owning provider with the same PayPal-Request-Id.
+            // Charge failures use the stricter outcome-unknown classification above.
             return GatewayFailureKind.RetriableGatewayFailure;
         }
 

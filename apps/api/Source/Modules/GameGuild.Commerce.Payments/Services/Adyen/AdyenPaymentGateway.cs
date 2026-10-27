@@ -12,7 +12,7 @@ namespace GameGuild.Commerce.Payments;
 ///     opts in, defaults to the test endpoint, answers every operation of an
 ///     unconfigured/real-mode-disabled adapter with an explicit failure (never a fake
 ///     success). Failure classification mirrors the PayPal adapter: transport failures and
-///     HTTP 408/429/5xx without a pspReference are retriable; refusals and 4xx answers are
+///     HTTP 408/429/5xx are outcome-unknown; a missing pspReference does not prove no charge occurred. Refusals and definitive 4xx answers are
 ///     terminal; anything that may have moved money without a confirmed result code is
 ///     outcome-unknown. Payment inquiries are not part of the Checkout API, so
 ///     <see cref="GetPaymentAsync" /> fails closed with an explicit result — Adyen payment
@@ -388,15 +388,17 @@ public sealed class AdyenPaymentGateway(
                 FailureKind: GatewayFailureKind.TerminalDecline);
         }
 
+        var failureKind = apiResult.TransportFailed || apiResult.IsServerError
+            ? GatewayFailureKind.OutcomeUnknown : GatewayFailureKind.TerminalDecline;
         return new GatewayPaymentResult(
             Success: false,
             TransactionId: null,
             ExternalPaymentId: null,
             ErrorCode: apiResult.ErrorCode ?? "adyen_error",
             ErrorMessage: apiResult.ErrorMessage ?? "The Adyen request failed.",
-            Status: PaymentStatus.Failed,
+            Status: failureKind == GatewayFailureKind.OutcomeUnknown ? PaymentStatus.Processing : PaymentStatus.Failed,
             ProcessedAt: SystemClock.UtcNow,
-            FailureKind: ClassifyFailure(apiResult));
+            FailureKind: failureKind);
     }
 
     private static GatewayFailureKind ClassifyFailure(GatewayProviderApiResult apiResult) =>

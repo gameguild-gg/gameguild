@@ -20,7 +20,7 @@ public sealed record GatewayProviderApiResult(
     string? ErrorMessage,
     bool TransportFailed)
 {
-    /// <summary>True when the call failed with an HTTP 408/429/5xx response (safe to retry or fail over).</summary>
+    /// <summary>True when the call failed with an HTTP 408/429/5xx response; this alone does not prove that no charge occurred.</summary>
     public bool IsServerError =>
         StatusCode is 408 or 429 or >= 500;
 

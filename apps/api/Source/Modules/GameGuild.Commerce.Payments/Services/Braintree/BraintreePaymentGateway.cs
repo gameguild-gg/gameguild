@@ -12,7 +12,7 @@ namespace GameGuild.Commerce.Payments;
 ///     defaults to the sandbox endpoint, answers every operation of an
 ///     unconfigured/real-mode-disabled adapter with an explicit failure (never a fake
 ///     success). Failure classification mirrors the PayPal adapter: transport failures and
-///     HTTP 408/429/5xx without a confirmed transaction are retriable; processor declines
+///     HTTP 408/429/5xx are outcome-unknown; a missing transaction id does not prove no charge occurred. Processor declines
 ///     and 4xx answers are terminal; anything that might have moved money but cannot be
 ///     confirmed (settlement-pending after a successful sale) is outcome-unknown.
 /// </summary>
@@ -411,15 +411,17 @@ public sealed class BraintreePaymentGateway(
                     : GatewayFailureKind.OutcomeUnknown);
         }
 
+        var failureKind = apiResult.TransportFailed || apiResult.IsServerError
+            ? GatewayFailureKind.OutcomeUnknown : GatewayFailureKind.TerminalDecline;
         return new GatewayPaymentResult(
             Success: false,
             TransactionId: null,
             ExternalPaymentId: null,
             ErrorCode: apiResult.ErrorCode ?? "braintree_error",
             ErrorMessage: apiResult.ErrorMessage ?? "The Braintree request failed.",
-            Status: PaymentStatus.Failed,
+            Status: failureKind == GatewayFailureKind.OutcomeUnknown ? PaymentStatus.Processing : PaymentStatus.Failed,
             ProcessedAt: SystemClock.UtcNow,
-            FailureKind: ClassifyFailure(apiResult));
+            FailureKind: failureKind);
     }
 
     private static GatewayFailureKind ClassifyFailure(GatewayProviderApiResult apiResult) =>

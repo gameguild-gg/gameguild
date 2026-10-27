@@ -9,7 +9,7 @@ namespace GameGuild.Commerce.Payments.UnitTests.GatewayRouting;
 ///     Adapter contract tests for the Authorize.Net, Braintree and Adyen gateways (issue
 ///     #413): fail-closed defaults (disabled adapters answer every operation with an explicit
 ///     failure, never a fake success), deterministic simulation results, real-mode result
-///     mapping with the documented failure classification (transport/5xx retriable, 4xx
+///     mapping with the documented charge failure classification (transport/5xx unknown, definitive 4xx
 ///     terminal, unconfirmed outcomes outcome-unknown), and the credential-validating
 ///     connection tests.
 /// </summary>
@@ -83,7 +83,7 @@ public class AdditionalGatewayAdapterTests
             .ReturnsAsync(new GatewayProviderApiResult(false, 503, null, "authorizenet_http_503", "server error", TransportFailed: false));
         (await adapter.ProcessPaymentAsync(Charge($"{Descriptor}|{OpaqueValue}")))
             .Should().Match<GatewayPaymentResult>(result =>
-                !result.Success && result.FailureKind == GatewayFailureKind.RetriableGatewayFailure);
+                !result.Success && result.Status == PaymentStatus.Processing && result.FailureKind == GatewayFailureKind.OutcomeUnknown);
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public class AdditionalGatewayAdapterTests
             .ReturnsAsync(new GatewayProviderApiResult(false, null, null, "braintree_transport_failure", "timeout", TransportFailed: true));
         (await adapter.ProcessPaymentAsync(Charge("tokencc_bh_sandbox_abc123")))
             .Should().Match<GatewayPaymentResult>(result =>
-                !result.Success && result.FailureKind == GatewayFailureKind.RetriableGatewayFailure);
+                !result.Success && result.Status == PaymentStatus.Processing && result.FailureKind == GatewayFailureKind.OutcomeUnknown);
     }
 
     [Fact]
@@ -209,7 +209,7 @@ public class AdditionalGatewayAdapterTests
             .ReturnsAsync(new GatewayProviderApiResult(false, 429, null, "adyen_http_429", "rate limited", TransportFailed: false));
         (await adapter.ProcessPaymentAsync(Charge("adyenTestToken123")))
             .Should().Match<GatewayPaymentResult>(result =>
-                !result.Success && result.FailureKind == GatewayFailureKind.RetriableGatewayFailure);
+                !result.Success && result.Status == PaymentStatus.Processing && result.FailureKind == GatewayFailureKind.OutcomeUnknown);
     }
 
     [Fact]

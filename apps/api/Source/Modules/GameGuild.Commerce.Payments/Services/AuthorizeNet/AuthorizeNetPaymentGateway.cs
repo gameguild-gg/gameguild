@@ -11,7 +11,7 @@ namespace GameGuild.Commerce.Payments;
 ///     answers every operation of an unconfigured/real-mode-disabled adapter with an explicit
 ///     failure (never a fake success), and only performs real HTTP calls when simulation is
 ///     off. Failure classification mirrors the PayPal adapter: transport failures and HTTP
-///     408/429/5xx without a confirmed transaction are retriable; definitive 4xx answers (and
+///     408/429/5xx are outcome-unknown; a missing transaction id does not prove no charge occurred. Definitive 4xx answers (and
 ///     Authorize.Net declines, response codes 2/3) are terminal declines; anything that might
 ///     have moved money but cannot be confirmed is outcome-unknown and left to reconciliation.
 /// </summary>
@@ -412,23 +412,25 @@ public sealed class AuthorizeNetPaymentGateway(
                     : GatewayFailureKind.TerminalDecline);
         }
 
+        var failureKind = apiResult.TransportFailed || apiResult.IsServerError
+            ? GatewayFailureKind.OutcomeUnknown : GatewayFailureKind.TerminalDecline;
         return new GatewayPaymentResult(
             Success: false,
             TransactionId: null,
             ExternalPaymentId: null,
             ErrorCode: apiResult.ErrorCode ?? "authorizenet_error",
             ErrorMessage: apiResult.ErrorMessage ?? "The Authorize.Net request failed.",
-            Status: PaymentStatus.Failed,
+            Status: failureKind == GatewayFailureKind.OutcomeUnknown ? PaymentStatus.Processing : PaymentStatus.Failed,
             ProcessedAt: SystemClock.UtcNow,
-            FailureKind: ClassifyFailure(apiResult));
+            FailureKind: failureKind);
     }
 
     private static GatewayFailureKind ClassifyFailure(GatewayProviderApiResult apiResult)
     {
         if (apiResult.TransportFailed || apiResult.IsServerError)
         {
-            // No confirmed provider payment object exists for a transport failure or an
-            // HTTP 408/429/5xx answer: safe to retry (refId idempotency) and to fail over.
+            // Refund retry remains pinned to the owning provider. Charge failures use
+            // the stricter outcome-unknown classification above and never fail over.
             return GatewayFailureKind.RetriableGatewayFailure;
         }
 
