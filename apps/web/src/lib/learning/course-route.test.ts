@@ -57,9 +57,19 @@ describe("course route helpers", () => {
         creatorEmail: "@example.com",
         creatorId: " Creator 123 ",
       }),
-    ).toBe("creator-123");
-    expect(getCourseAuthorHandle({ creatorId: "@@@" })).toBe("gameguild");
-    expect(getCourseAuthorHandle({})).toBe("gameguild");
+    ).toBe("");
+    expect(getCourseAuthorHandle({ creatorId: "@@@" })).toBe("");
+    expect(getCourseAuthorHandle({})).toBe("");
+  });
+
+  it("omits the author suffix when no usable author identity exists", () => {
+    expect(
+      getCourseRouteParam({
+        id: "course-1",
+        slug: "ai4games",
+        creatorId: "019f594e-8e00-0000-0000-000000000000",
+      }),
+    ).toBe("ai4games");
   });
 
   it("uses a legacy id when a course has no slug", () => {

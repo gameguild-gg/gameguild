@@ -61,6 +61,21 @@ export default async function ContentPage({
         </span>
       </div>
 
+      {content.error && (
+        <div
+          role="alert"
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        >
+          Couldn&apos;t load course content —{" "}
+          <a
+            href={`?retry=${String(content.error)}`}
+            className="underline underline-offset-2"
+          >
+            retry
+          </a>
+        </div>
+      )}
+
       <ContentTree
         courseId={courseId}
         modules={treeModel.modules}

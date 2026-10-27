@@ -54,24 +54,22 @@ function createUsersModule(): UserLookupModule | null {
   return UsersModule ? new UsersModule(getApiClient()) : null;
 }
 
-async function getCreatorHandles(programs: ProgramDto[]): Promise<Map<string, string>> {
+async function getCreatorHandles(programs: ProgramDto[]): Promise<Map<string, string | null>> {
   const users = createUsersModule();
   const creatorIds = [...new Set(programs.map((program) => program.creatorId).filter((id): id is string => Boolean(id)))];
-  const handles = new Map<string, string>();
+  const handles = new Map<string, string | null>();
 
   await Promise.all(
     creatorIds.map(async (creatorId) => {
-      const fallback = slugifyRoutePart(creatorId).slice(0, 12) || 'gameguild';
-
       if (!users) {
-        handles.set(creatorId, fallback);
+        handles.set(creatorId, null);
         return;
       }
 
       try {
         const result = await users.getUsersByUserId(creatorId);
         if (!result.ok) {
-          handles.set(creatorId, fallback);
+          handles.set(creatorId, null);
           return;
         }
 
@@ -79,10 +77,10 @@ async function getCreatorHandles(programs: ProgramDto[]): Promise<Map<string, st
           creatorId,
           slugifyRoutePart(result.data.name ?? '') ||
           slugifyRoutePart(result.data.email?.split('@')[0] ?? '') ||
-          fallback,
+          null,
         );
       } catch {
-        handles.set(creatorId, fallback);
+        handles.set(creatorId, null);
       }
     }),
   );
@@ -193,7 +191,7 @@ export async function getCourses(): Promise<{
           const id = String(program.id ?? '');
           const slug = typeof program.slug === 'string' ? program.slug.trim() : '';
           const creatorId = program.creatorId ?? null;
-          const creatorHandle = creatorId ? creatorHandles.get(creatorId)! : null;
+          const creatorHandle = creatorId ? creatorHandles.get(creatorId) ?? null : null;
 
           return {
             id,

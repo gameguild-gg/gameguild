@@ -147,6 +147,25 @@ describe("request-bound authentication readers", () => {
     );
   });
 
+  it("concurrent rotations across uncached reads perform a single cookie write", async () => {
+    state.processSession.mockResolvedValue({ session, token, updated: true });
+    const authModule = await import("./auth");
+    const [a, b] = await Promise.all([
+      authModule.readSessionUnCached(),
+      authModule.readSessionUnCached(),
+    ]);
+
+    expect(a).toBe(session);
+    expect(b).toBe(session);
+    // Two parallel rotations, one write — the losing writer would persist an
+    // already-revoked refresh token.
+    expect(state.processSession).toHaveBeenCalledTimes(2);
+    expect(state.encodeSession).toHaveBeenCalledTimes(1);
+    expect(state.cookieSet).toHaveBeenCalledExactlyOnceWith(
+      "gameguild.session-token", "rotated-encrypted-session", { httpOnly: true, path: "/" },
+    );
+  });
+
   it("a writable request removes an invalidated session cookie once", async () => {
     state.processSession.mockResolvedValue({ session: null, token: null, updated: false });
     const authModule = await import("./auth");

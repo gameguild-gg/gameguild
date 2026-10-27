@@ -122,6 +122,12 @@ export function auth(handler?: AuthProxyHandler) {
   return handler ? result.auth(handler) : getSession();
 }
 
+// Single-flight guard for refresh-token rotation: concurrent RSC requests
+// rotating in parallel would present already-revoked tokens (one cookie write
+// wins; the sibling's token is revoked). One shared promise serializes
+// rotate+write; concurrent waiters reuse its result.
+let rotationInFlight: Promise<void> | null = null;
+
 async function readCurrentSession() {
   const cookieStore = await cookies();
   const cookieOptions = resolveCookieOptions(
@@ -141,15 +147,28 @@ async function readCurrentSession() {
   );
 
   if (updated && token) {
-    try {
-      const newEncrypted = await encodeSession(token, authConfig);
-      sessionStore.write(newEncrypted, (name, value, options) =>
-        cookieStore.set(name, value, options),
-      );
-    } catch {
-      // Server Components can read a valid refreshed session even when the
-      // response context cannot persist its rotated cookie.
+    const write = async () => {
+      try {
+        const newEncrypted = await encodeSession(token, authConfig);
+        sessionStore.write(newEncrypted, (name, value, options) =>
+          cookieStore.set(name, value, options),
+        );
+      } catch {
+        // Server Components can read a valid refreshed session even when the
+        // response context cannot persist its rotated cookie.
+      }
+    };
+
+    // A concurrent rotation already wrote; skip writing our possibly-stale
+    // cookie — the sibling write is authoritative.
+    if (rotationInFlight) {
+      await rotationInFlight;
+    } else {
+      rotationInFlight = write().finally(() => {
+        rotationInFlight = null;
+      });
     }
+    await rotationInFlight;
   }
 
   if (!session) {
