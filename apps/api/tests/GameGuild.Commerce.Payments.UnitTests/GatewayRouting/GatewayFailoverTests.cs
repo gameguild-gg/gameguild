@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Moq;
 using Xunit;
 
 namespace GameGuild.Commerce.Payments.UnitTests.GatewayRouting;
@@ -49,6 +50,36 @@ public class GatewayFailoverTests
 
     private static GatewayPaymentRequest ChargeRequest(decimal amount = 25m, string currency = "USD") =>
         new("idem-1", amount, currency, "cus_1", "pm_card_visa", "test charge");
+
+    [Fact]
+    public void SettlementVerification_IsPinnedToTheRequestedProviderAndDefaultsToUnsupported()
+    {
+        var stripe = new Mock<IPaymentGateway>();
+        stripe.SetupGet(gateway => gateway.ProviderId).Returns("stripe");
+        stripe.SetupGet(gateway => gateway.IsEnabled).Returns(true);
+        stripe.Setup(gateway => gateway.SupportsVerifiedSettlement("stripe")).Returns(true);
+        var paypal = new FakePaymentGateway("paypal");
+        var sut = CreateSut([stripe.Object, paypal]);
+
+        sut.SupportsVerifiedSettlement("paypal").Should().BeFalse();
+        sut.SupportsVerifiedSettlement("stripe").Should().BeTrue();
+
+        paypal.ChargeCallCount.Should().Be(0);
+        stripe.Verify(gateway => gateway.SupportsVerifiedSettlement("stripe"), Times.Once);
+        stripe.Verify(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void SettlementVerification_UnknownProviderNeverFallsBackToPrimary()
+    {
+        var stripe = new FakePaymentGateway("stripe");
+        var sut = CreateSut([stripe]);
+
+        Action act = () => sut.SupportsVerifiedSettlement("unknown-gateway");
+
+        act.Should().Throw<GatewaySelectionFailedException>();
+        stripe.ChargeCallCount.Should().Be(0);
+    }
 
     [Fact]
     public async Task Charge_ProviderBoundToken_IsNeverSentToAnotherGateway()

@@ -219,6 +219,15 @@ public sealed class SubscriptionChangeSagaOrchestrator(
                         subscription.CreatedByUserId,
                         cancellationToken)
                     .ConfigureAwait(false);
+
+                // Do not capture money through an adapter that cannot subsequently
+                // prove the settlement needed for activation. Unknown adapters and
+                // simulations fail before ProcessPaymentAsync, without a refund.
+                if (!paymentGateway.SupportsVerifiedSettlement(gatewayProvider))
+                {
+                    throw new InvalidOperationException(
+                        $"Gateway '{gatewayProvider}' cannot verify settlement amount and currency for a plan change; no charge was attempted.");
+                }
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {

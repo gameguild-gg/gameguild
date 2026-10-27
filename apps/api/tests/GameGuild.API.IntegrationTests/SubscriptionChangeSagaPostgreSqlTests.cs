@@ -90,6 +90,7 @@ public sealed class SubscriptionChangeSagaPostgreSqlTests(ApiPostgreSqlFixture f
         var charges = new Dictionary<string, GatewayPaymentRequest>();
         var paymentAttempts = new List<GatewayPaymentRequest>();
         var gateway = new Mock<IPaymentGateway>();
+        gateway.Setup(value => value.SupportsVerifiedSettlement("stripe")).Returns(true);
         var receipt = new GatewayPaymentResult(true, "txn_" + marker, "ch_" + marker, null, null,
             GatewayStatus.Succeeded, effective, ProviderId: "stripe", SettledAmount: 100m, SettledCurrency: "USD");
         gateway.Setup(value => value.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))

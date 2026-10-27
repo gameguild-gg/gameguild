@@ -35,6 +35,7 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
 
     public SubscriptionChangeSagaOrchestratorTests()
     {
+        _paymentGateway.Setup(gateway => gateway.SupportsVerifiedSettlement("stripe")).Returns(true);
         var sagaSet = _sagas.AsQueryable().BuildMockDbSet();
         sagaSet.Setup(set => set.Add(It.IsAny<SubscriptionChangeSaga>()))
             .Callback<SubscriptionChangeSaga>(saga => _sagas.Add(saga));
@@ -199,6 +200,11 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
         _sagaSteps.Should().OnlyContain(step => step.TenantId == TenantId);
 
         _invoices.Should().ContainSingle().Which.Status.Should().Be(InvoiceStatus.Paid, "the charge settles the issued invoice");
+        _paymentGateway.Verify(gateway => gateway.SupportsVerifiedSettlement("stripe"), Times.Once);
+        _paymentGateway.Verify(gateway => gateway.ProcessPaymentAsync(
+            It.Is<GatewayPaymentRequest>(request => request.GatewayProvider == "stripe" && request.Amount == 100m && request.Currency == "USD"),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _paymentGateway.Verify(gateway => gateway.GetPaymentAsync("txn_saga_1", It.IsAny<CancellationToken>(), "stripe"), Times.Once);
         _billingEvents.Verify(publisher => publisher.PublishSubscriptionChangeCompletedAsync(
             It.Is<SubscriptionChangeSaga>(saga => saga.ToPlanId == ToPlanId && saga.NetAdjustment == 100m),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -331,6 +337,64 @@ public sealed class SubscriptionChangeSagaOrchestratorTests
         await act.Should().ThrowAsync<InvalidOperationException>();
         subscription.PlanId.Should().Be(FromPlanId);
         _subscriptionRepository.Verify(repository => repository.UpdateAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-100)]
+    public async Task ExecuteAsync_NonPositiveAdjustment_DoesNotRequireSettlementCapability(int netAdjustment)
+    {
+        var subscription = NewActiveSubscription();
+        SetupSubscription(subscription);
+        _paymentGateway.Setup(gateway => gateway.SupportsVerifiedSettlement(It.IsAny<string?>())).Returns(false);
+        _billingCalculator.Setup(calculator => calculator.CalculateProration(
+                It.IsAny<Money>(), It.IsAny<Money>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+            .Returns(new PlanChangeProration(100m - netAdjustment, 100m, netAdjustment, SystemClock.UtcNow));
+
+        var result = await NewOrchestrator().ExecuteAsync(new SubscriptionChangeSagaRequest(
+            subscription.Id, ToPlanId, SystemClock.UtcNow, null, ActorId));
+
+        result.Succeeded.Should().BeTrue();
+        result.NetAdjustment.Should().Be(netAdjustment);
+        subscription.PlanId.Should().Be(ToPlanId);
+        _paymentGateway.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData("stripe")]
+    [InlineData("paypal")]
+    [InlineData("adyen")]
+    public async Task ExecuteAsync_UnsupportedSettlement_FailsBeforeAnyProviderOperation(string provider)
+    {
+        var subscription = NewActiveSubscription();
+        SetupSubscription(subscription);
+        SetupGatewayChargeSuccess();
+        _paymentGateway.Setup(gateway => gateway.GetPaymentAsync("txn_saga_1", It.IsAny<CancellationToken>(), provider))
+            .ReturnsAsync(new GatewayPaymentResult(true, "txn_saga_1", "ch_saga_1", null, null,
+                GameGuild.Commerce.Payments.PaymentStatus.Succeeded, SystemClock.UtcNow, ProviderId: provider,
+                SettledAmount: 100m, SettledCurrency: "USD"));
+        var method = new PaymentMethod(TenantId, ActorId, provider, "pm_settlement_test",
+            GameGuild.Commerce.Payments.PaymentMethodType.Card, true);
+        method.StoreProtectedGatewayReference(_protector.Protect("pm_settlement_test"),
+            GatewayPaymentMethodIdHash.Compute(provider, "pm_settlement_test"));
+        _paymentMethodRepository.Setup(repository => repository.GetByIdAsync(PaymentMethodRegistryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(method);
+        _paymentGateway.Setup(gateway => gateway.SupportsVerifiedSettlement(provider)).Returns(false);
+
+        var result = await NewOrchestrator().ExecuteAsync(new SubscriptionChangeSagaRequest(
+            subscription.Id, ToPlanId, SystemClock.UtcNow, null, ActorId));
+
+        result.Succeeded.Should().BeFalse();
+        result.FailedStep.Should().Be("Payment");
+        result.FailureReason.Should().Contain("cannot verify settlement");
+        subscription.PlanId.Should().Be(FromPlanId);
+        _invoices.Should().ContainSingle().Which.Status.Should().Be(InvoiceStatus.Void);
+        _paymentGateway.Verify(gateway => gateway.SupportsVerifiedSettlement(provider), Times.Once);
+        _paymentGateway.Verify(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+        _paymentGateway.Verify(gateway => gateway.GetPaymentAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string?>()), Times.Never);
+        _paymentGateway.Verify(gateway => gateway.ProcessRefundAsync(It.IsAny<GatewayRefundRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+        _subscriptionRepository.Verify(repository => repository.UpdateAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()), Times.Never);
+        _billingEvents.Verify(publisher => publisher.PublishSubscriptionChangeCompletedAsync(It.IsAny<SubscriptionChangeSaga>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Theory]

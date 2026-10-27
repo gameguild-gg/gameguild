@@ -49,6 +49,13 @@ public sealed class FailoverPaymentGateway(
     public bool IsEnabled => selector.Select(new GatewayRouteContext(string.Empty)).Count > 0;
 
     /// <inheritdoc />
+    public bool SupportsVerifiedSettlement(string? providerId = null)
+    {
+        var gateway = ResolveOwnerGateway(providerId, "settlement verification");
+        return gateway.IsEnabled && gateway.SupportsVerifiedSettlement(gateway.ProviderId);
+    }
+
+    /// <inheritdoc />
     public async Task<GatewayPaymentResult> ProcessPaymentAsync(
         GatewayPaymentRequest request,
         CancellationToken cancellationToken = default)

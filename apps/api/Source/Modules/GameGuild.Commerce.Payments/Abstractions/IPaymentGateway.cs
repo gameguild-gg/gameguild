@@ -22,6 +22,14 @@ public interface IPaymentGateway
     bool IsEnabled { get; }
 
     /// <summary>
+    ///     Whether authoritative inquiry can verify the received amount and currency
+    ///     before a paid entitlement is activated. This capability check performs no
+    ///     provider operation. Adapters must explicitly opt in; simulation is not proof
+    ///     of settlement. The optional provider identifies the owner in a routing facade.
+    /// </summary>
+    bool SupportsVerifiedSettlement(string? providerId = null) => false;
+
+    /// <summary>
     ///     Processes a payment through this gateway
     /// </summary>
     /// <param name="request">Payment request details</param>
