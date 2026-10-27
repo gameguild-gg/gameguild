@@ -14,6 +14,11 @@ const mocks = vi.hoisted(() => ({
   revokeTrustedDevice: vi.fn(),
   toastSuccess: vi.fn(),
   toastError: vi.fn(),
+  refresh: vi.fn(),
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: mocks.refresh }),
 }));
 
 vi.mock('@/lib/auth/sessions-actions', () => ({
