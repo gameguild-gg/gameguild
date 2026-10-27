@@ -264,17 +264,17 @@ export function BlogComments(props: BlogCommentsProps): React.JSX.Element {
         setCommentText("");
         setReplyingTo(null);
       } else {
-        setTurnstileToken(null);
         const message = result.error;
         setError(message);
         toast.error(message);
       }
     } catch (reason) {
-      setTurnstileToken(null);
       const message = reason instanceof Error ? reason.message : "Comment could not be published.";
       setError(message);
       toast.error(message);
     } finally {
+      // Single-use token: consumed by this submit regardless of outcome.
+      setTurnstileToken(null);
       submitPendingRef.current = false;
       setSubmitPending(false);
     }

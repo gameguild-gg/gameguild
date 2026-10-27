@@ -150,6 +150,31 @@ describe("PostComments", () => {
     expect(mocks.createPostComment.mock.calls[1]?.[1]).toMatchObject({ turnstileToken: null });
   });
 
+  it("clears the single-use turnstile token after a successful submit", async () => {
+    mocks.loadPostCommentsPageAction.mockResolvedValueOnce({ items: [], nextSkip: null });
+    mocks.createPostComment
+      .mockResolvedValueOnce(comment("c-1", "First"))
+      .mockResolvedValueOnce(comment("c-2", "Second"));
+    render(<PostComments postId="post-1" currentUserId="viewer-1" open onOpenChange={vi.fn()} />);
+
+    await screen.findByPlaceholderText("Add a comment…");
+    await waitFor(() => expect(widgetProps).toHaveBeenCalled());
+    const onToken = (widgetProps.mock.calls.at(-1)?.[0] as { onToken: (token: string | null) => void }).onToken;
+    act(() => onToken("tok-1"));
+
+    fireEvent.change(screen.getByPlaceholderText("Add a comment…"), { target: { value: "First" } });
+    fireEvent.click(screen.getByRole("button", { name: "Publish comment" }));
+    await waitFor(() => expect(mocks.createPostComment).toHaveBeenCalledTimes(1));
+    expect(mocks.createPostComment.mock.calls[0]?.[1]).toMatchObject({ turnstileToken: "tok-1" });
+    expect(await screen.findByText("First")).toBeInTheDocument();
+
+    // Single-use token: the successful submit consumed it, so the next submit sends null.
+    fireEvent.change(screen.getByPlaceholderText("Add a comment…"), { target: { value: "Second" } });
+    fireEvent.click(screen.getByRole("button", { name: "Publish comment" }));
+    await waitFor(() => expect(mocks.createPostComment).toHaveBeenCalledTimes(2));
+    expect(mocks.createPostComment.mock.calls[1]?.[1]).toMatchObject({ turnstileToken: null });
+  });
+
   it("edits authoritatively and confirms a guarded delete", async () => {
     const own = comment("comment-1", "Original");
     mocks.loadPostCommentsPageAction.mockResolvedValueOnce({ items: [own], nextSkip: null });

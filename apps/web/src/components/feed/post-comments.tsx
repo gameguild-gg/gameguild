@@ -371,11 +371,12 @@ function CommentsPanel({
       setReplyingTo(null);
       onCommentCountChange?.(1);
     } catch (reason) {
-      setTurnstileToken(null);
       const message = reason instanceof Error ? reason.message : "Comment could not be published.";
       setError(message);
       toast.error(message);
     } finally {
+      // Single-use token: consumed by this submit regardless of outcome.
+      setTurnstileToken(null);
       commentPendingRef.current = false;
       setCommentPending(false);
     }

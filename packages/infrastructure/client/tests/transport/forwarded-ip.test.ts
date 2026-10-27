@@ -11,25 +11,32 @@ function getterFrom(headers: Record<string, string>): (name: string) => string |
 }
 
 describe('resolveForwardedIpHeader', () => {
-  it('returns X-Forwarded-For when cf-connecting-ip is present', () => {
-    expect(resolveForwardedIpHeader(getterFrom({ 'cf-connecting-ip': '203.0.113.7' }))).toEqual({
+  it('returns X-Forwarded-For when cf-connecting-ip and cf-ray are present', () => {
+    expect(resolveForwardedIpHeader(getterFrom({ 'cf-connecting-ip': '203.0.113.7', 'cf-ray': '9f3a-1' }))).toEqual({
       'X-Forwarded-For': '203.0.113.7',
     });
   });
 
   it('trims the cf-connecting-ip value', () => {
-    expect(resolveForwardedIpHeader(getterFrom({ 'cf-connecting-ip': '  203.0.113.7  ' }))).toEqual({
+    expect(
+      resolveForwardedIpHeader(getterFrom({ 'cf-connecting-ip': '  203.0.113.7  ', 'cf-ray': '9f3a-1' })),
+    ).toEqual({
       'X-Forwarded-For': '203.0.113.7',
     });
   });
 
   it('returns {} when cf-connecting-ip is absent, ignoring client-controlled x-forwarded-for', () => {
-    const get = getterFrom({ 'x-forwarded-for': '203.0.113.7, 10.0.0.1' });
+    const get = getterFrom({ 'x-forwarded-for': '203.0.113.7, 10.0.0.1', 'cf-ray': '9f3a-1' });
+    expect(resolveForwardedIpHeader(get)).toEqual({});
+  });
+
+  it('returns {} when cf-connecting-ip is present but cf-ray is missing (direct-origin spoof)', () => {
+    const get = getterFrom({ 'cf-connecting-ip': '203.0.113.7' });
     expect(resolveForwardedIpHeader(get)).toEqual({});
   });
 
   it('returns {} for a whitespace-only cf-connecting-ip', () => {
-    expect(resolveForwardedIpHeader(getterFrom({ 'cf-connecting-ip': '   ' }))).toEqual({});
+    expect(resolveForwardedIpHeader(getterFrom({ 'cf-connecting-ip': '   ', 'cf-ray': '9f3a-1' }))).toEqual({});
   });
 
   it('returns {} when the getter has no headers at all', () => {
