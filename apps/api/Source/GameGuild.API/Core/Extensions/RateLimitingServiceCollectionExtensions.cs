@@ -38,8 +38,9 @@ public static class RateLimitingServiceCollectionExtensions
         services.PostConfigure<ForwardedHeadersOptions>(forwardedHeadersOptions =>
         {
             // Hosting-level settings can enable forwarded headers for every proxy. Replace those
-            // settings so only the explicit RateLimiting:TrustedProxyAddresses list is trusted.
-            forwardedHeadersOptions.ForwardedHeaders = trustedProxies.Length == 0
+            // settings so only the explicit RateLimiting:TrustedProxyAddresses list and the
+            // RateLimiting:TrustedProxyNetworks CIDR ranges are trusted.
+            forwardedHeadersOptions.ForwardedHeaders = trustedProxies.Length == 0 && options.TrustedProxyNetworks.Length == 0
                 ? ForwardedHeaders.None
                 : ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
             forwardedHeadersOptions.ForwardLimit = options.TrustedProxyForwardLimit;
@@ -49,6 +50,16 @@ public static class RateLimitingServiceCollectionExtensions
             foreach (var trustedProxy in trustedProxies)
             {
                 forwardedHeadersOptions.KnownProxies.Add(trustedProxy);
+            }
+
+            // Validate() already rejects malformed networks; skipping unparseable entries here is
+            // only a belt-and-braces guard against hosting-level configuration being mutated later.
+            foreach (var trustedNetwork in options.TrustedProxyNetworks)
+            {
+                if (System.Net.IPNetwork.TryParse(trustedNetwork, out var network))
+                {
+                    forwardedHeadersOptions.KnownIPNetworks.Add(network);
+                }
             }
         });
 

@@ -21,6 +21,17 @@ vi.mock('next/link', () => ({
   ),
 }));
 
+const turnstileHarness = vi.hoisted(() => ({
+  captured: null as null | { onToken: (token: string | null) => void; action?: string },
+}));
+
+vi.mock('@/components/antibot/turnstile-widget', () => ({
+  TurnstileWidget: (props: { onToken: (token: string | null) => void; action?: string }) => {
+    turnstileHarness.captured = props;
+    return null;
+  },
+}));
+
 const { ForgotPasswordForm } = await import(
   '@/components/forgot-password-form'
 );
@@ -101,7 +112,7 @@ describe('ForgotPasswordForm', () => {
       'href',
       '/sign-in'
     );
-    expect(onRequestReset).toHaveBeenCalledWith('test@example.com');
+    expect(onRequestReset).toHaveBeenCalledWith('test@example.com', null);
   });
 
   it('allows retrying after success', async () => {
@@ -171,7 +182,41 @@ describe('ForgotPasswordForm', () => {
     resolveRequest?.({ success: true, data: undefined });
 
     await waitFor(() => {
-      expect(onRequestReset).toHaveBeenCalledWith('test@example.com');
+      expect(onRequestReset).toHaveBeenCalledWith('test@example.com', null);
+    });
+  });
+});
+
+describe('ForgotPasswordForm Turnstile', () => {
+  beforeEach(() => {
+    turnstileHarness.captured = null;
+  });
+
+  it('passes the emitted token to onRequestReset and resets it after a failed attempt (single-use)', async () => {
+    const onRequestReset = vi
+      .fn()
+      .mockResolvedValueOnce({ success: false, error: 'Bot check failed. Please refresh and try again.' })
+      .mockResolvedValue({ success: true, data: undefined });
+    const { user } = renderWithUser(<ForgotPasswordForm onRequestReset={onRequestReset} />);
+
+    expect(turnstileHarness.captured).not.toBeNull();
+    turnstileHarness.captured!.onToken('tok-forgot');
+
+    await user.type(screen.getByLabelText('Email'), 'test@example.com');
+    await user.click(screen.getByRole('button', { name: /send reset link/i }));
+
+    await waitFor(() => {
+      expect(onRequestReset).toHaveBeenCalledWith('test@example.com', 'tok-forgot');
+    });
+    expect(screen.getByText('Bot check failed. Please refresh and try again.')).toBeInTheDocument();
+
+    // Second submission after failure must NOT reuse the token (single-use).
+    await user.click(screen.getByRole('button', { name: /send reset link/i }));
+    await waitFor(() => {
+      expect(onRequestReset).toHaveBeenLastCalledWith('test@example.com', null);
+    });
+    await waitFor(() => {
+      expect(screen.getByText('Check your email')).toBeInTheDocument();
     });
   });
 });

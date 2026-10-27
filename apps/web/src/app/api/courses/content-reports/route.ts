@@ -1,4 +1,6 @@
 import { getToken } from '@/auth';
+import { verifyTurnstileToken } from '@/lib/antibot/turnstile';
+import { forwardedIpHeaders } from '@/lib/server/forwarded-headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 const DEFAULT_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -66,6 +68,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (authHeader instanceof NextResponse) return authHeader;
 
   const body = await request.json();
+
+  // Public write surface: verify the Turnstile token before proxying. The
+  // token is consumed here and never included in the forwarded body below.
+  const verification = await verifyTurnstileToken(
+    typeof body?.turnstileToken === 'string' ? body.turnstileToken : undefined,
+  );
+  if (!verification.success) {
+    return NextResponse.json({ error: 'bot-check-failed' }, { status: 403 });
+  }
+
   const contentId = typeof body?.contentId === 'string' ? body.contentId.trim() : '';
   if (!GUID_PATTERN.test(contentId)) {
     return badRequest('This learning content is not backed by a reportable asset reference yet.');
@@ -76,6 +88,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     headers: {
       ...authHeader,
       'Content-Type': 'application/json',
+      ...(await forwardedIpHeaders()),
     },
     body: JSON.stringify({
       reason: mapReason(body?.reason ?? body?.reportType),

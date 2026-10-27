@@ -131,6 +131,13 @@ public sealed class RateLimitingOptions : BaseOptions
     public string[] TrustedProxyAddresses { get; set; } = Array.Empty<string>();
 
     /// <summary>
+    ///     Proxy networks, in CIDR notation (e.g. "173.245.48.0/20", "172.16.0.0/12"), permitted to
+    ///     supply X-Forwarded-For and X-Forwarded-Proto values. Populates
+    ///     ForwardedHeadersOptions.KnownIPNetworks so entire proxy ranges can be trusted.
+    /// </summary>
+    public string[] TrustedProxyNetworks { get; set; } = Array.Empty<string>();
+
+    /// <summary>
     ///     Maximum number of trusted proxy hops to read from forwarded client-address and scheme chains.
     /// </summary>
     public int TrustedProxyForwardLimit { get; set; } = 1;
@@ -368,6 +375,12 @@ public sealed class RateLimitingOptions : BaseOptions
                 string.IsNullOrWhiteSpace(address) || !IPAddress.TryParse(address, out _)))
         {
             throw new InvalidOperationException("Rate-limiting trusted proxy addresses must be valid IP addresses.");
+        }
+
+        if (TrustedProxyNetworks is null || TrustedProxyNetworks.Any(network =>
+                string.IsNullOrWhiteSpace(network) || !IPNetwork.TryParse(network, out _)))
+        {
+            throw new InvalidOperationException("Rate-limiting trusted proxy networks must be valid IPv4/IPv6 CIDR networks.");
         }
 
         if (TrustedProxyForwardLimit <= 0)

@@ -12,11 +12,23 @@ public sealed class RateLimitAccessOptions
     private HashSet<string> _denylistedUserIds = new(StringComparer.Ordinal);
     private HashSet<IPAddress> _allowlistedIpAddresses = [];
     private HashSet<IPAddress> _denylistedIpAddresses = [];
+    private List<IPNetwork> _allowlistedIpNetworks = [];
+    private List<IPNetwork> _denylistedIpNetworks = [];
 
     public string[] AllowlistedUserIds { get; set; } = [];
     public string[] DenylistedUserIds { get; set; } = [];
     public string[] AllowlistedIpAddresses { get; set; } = [];
     public string[] DenylistedIpAddresses { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets IP networks in CIDR notation (e.g. "172.16.0.0/12") whose requests bypass rate limits.
+    /// </summary>
+    public string[] AllowlistedIpNetworks { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets IP networks in CIDR notation (e.g. "172.16.0.0/12") whose requests are denied at the API boundary.
+    /// </summary>
+    public string[] DenylistedIpNetworks { get; set; } = [];
 
     public void Validate()
     {
@@ -24,6 +36,8 @@ public sealed class RateLimitAccessOptions
         _denylistedUserIds = ParseUserIds(DenylistedUserIds, nameof(DenylistedUserIds));
         _allowlistedIpAddresses = ParseIpAddresses(AllowlistedIpAddresses, nameof(AllowlistedIpAddresses));
         _denylistedIpAddresses = ParseIpAddresses(DenylistedIpAddresses, nameof(DenylistedIpAddresses));
+        _allowlistedIpNetworks = ParseIpNetworks(AllowlistedIpNetworks, nameof(AllowlistedIpNetworks));
+        _denylistedIpNetworks = ParseIpNetworks(DenylistedIpNetworks, nameof(DenylistedIpNetworks));
     }
 
     internal bool IsAllowlisted(HttpContext context)
@@ -35,7 +49,8 @@ public sealed class RateLimitAccessOptions
         }
 
         var ipAddress = Normalize(context.Connection.RemoteIpAddress);
-        return ipAddress is not null && _allowlistedIpAddresses.Contains(ipAddress);
+        return ipAddress is not null
+            && (_allowlistedIpAddresses.Contains(ipAddress) || IsInAnyNetwork(_allowlistedIpNetworks, ipAddress));
     }
 
     internal bool IsDenylisted(HttpContext context)
@@ -47,7 +62,21 @@ public sealed class RateLimitAccessOptions
         }
 
         var ipAddress = Normalize(context.Connection.RemoteIpAddress);
-        return ipAddress is not null && _denylistedIpAddresses.Contains(ipAddress);
+        return ipAddress is not null
+            && (_denylistedIpAddresses.Contains(ipAddress) || IsInAnyNetwork(_denylistedIpNetworks, ipAddress));
+    }
+
+    private static bool IsInAnyNetwork(List<IPNetwork> networks, IPAddress ipAddress)
+    {
+        foreach (var network in networks)
+        {
+            if (network.Contains(ipAddress))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static string? GetUserId(HttpContext context)
@@ -91,6 +120,23 @@ public sealed class RateLimitAccessOptions
         }
 
         return addresses;
+    }
+
+    private static List<IPNetwork> ParseIpNetworks(IEnumerable<string> values, string optionName)
+    {
+        var networks = new List<IPNetwork>();
+        foreach (var value in values)
+        {
+            if (!IPNetwork.TryParse(value, out var network))
+            {
+                throw new InvalidOperationException(
+                    $"Rate limiting access option '{optionName}' contains invalid CIDR network '{value}'.");
+            }
+
+            networks.Add(network);
+        }
+
+        return networks;
     }
 
     private static IPAddress? Normalize(IPAddress? address)
