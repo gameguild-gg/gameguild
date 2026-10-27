@@ -148,6 +148,24 @@ public sealed class RetryPaymentCommandHandler(
                 Status = PaymentStatus.Succeeded
             };
         }
+        else if (gatewayResult.FailureKind == GatewayFailureKind.OutcomeUnknown
+                 || gatewayResult.Status is PaymentStatus.Pending or PaymentStatus.Processing or PaymentStatus.RequiresAction)
+        {
+            if (gatewayResult.Status == PaymentStatus.RequiresAction)
+            {
+                payment.MarkAsRequiresAction(gatewayResult.TransactionId);
+            }
+            logger.LogWarning("Payment {PaymentId} retry awaits provider reconciliation or customer action", payment.Id);
+            paymentResult = new PaymentResult
+            {
+                TenantId = payment.TenantId,
+                Success = false,
+                TransactionId = gatewayResult.TransactionId,
+                PaymentId = payment.Id.ToString(),
+                Amount = new Money(payment.Amount, payment.Currency),
+                Status = payment.Status
+            };
+        }
         else
         {
             failureSchedule = retryPolicyResolver.ComputeSchedule(gatewayResult.ErrorCode, payment.RetryCount);
@@ -195,13 +213,16 @@ public sealed class RetryPaymentCommandHandler(
 
         // 9. Recovery lifecycle (issue #415): a successful retry lifts a dunning suspension;
         //    a terminal failure suspends the subscription and sends the final dunning notice.
-        await ApplyRecoveryLifecycleAsync(payment, gatewayResult.Success, gatewayResult.ErrorMessage, cancellationToken)
-            .ConfigureAwait(false);
+        if (payment.Status is PaymentStatus.Succeeded or PaymentStatus.Failed)
+        {
+            await ApplyRecoveryLifecycleAsync(payment, gatewayResult.Success, gatewayResult.ErrorMessage, cancellationToken)
+                .ConfigureAwait(false);
 
-        // Payment-event notifications (issue #415): a successful retry emails the payment
-        // receipt; the second failure overall prompts the customer to update the payment method.
-        await SendOutcomeNotificationsAsync(payment, gatewayResult.Success, cancellationToken)
-            .ConfigureAwait(false);
+            // Payment-event notifications (issue #415): a successful retry emails the payment
+            // receipt; the second failure overall prompts the customer to update the payment method.
+            await SendOutcomeNotificationsAsync(payment, gatewayResult.Success, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
         if (gatewayResult.Success && payment.ProcessedAt.HasValue)
         {

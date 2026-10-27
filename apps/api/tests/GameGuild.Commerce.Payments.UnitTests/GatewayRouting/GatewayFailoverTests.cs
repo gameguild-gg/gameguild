@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Moq;
 using Xunit;
 
 namespace GameGuild.Commerce.Payments.UnitTests.GatewayRouting;
@@ -155,20 +156,64 @@ public class GatewayFailoverTests
         payPal.ChargeCallCount.Should().Be(1);
     }
 
-    [Fact]
-    public async Task Charge_TreatsTransportExceptionsAsRetriableGatewayFailures()
+    [Theory]
+    [InlineData(null)]
+    [InlineData(408)]
+    [InlineData(429)]
+    [InlineData(500)]
+    [InlineData(503)]
+    public async Task Charge_RealPayPalAdapterWithLostOrAmbiguousResponse_DoesNotReplay(int? status)
     {
+        var apiCalls = 0;
+        var paypal = new Mock<IPayPalApiClient>();
+        paypal.Setup(client => client.CreateAndCaptureOrderAsync(It.IsAny<string>(), It.IsAny<decimal>(),
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .Callback(() => apiCalls++)
+            .ReturnsAsync(new PayPalApiResult(false, status, null, "response_unconfirmed", "Response lost after send", status is null));
+        var adapter = new PayPalPaymentGateway(Options.Create(new PayPalGatewayOptions { IsEnabled = true }),
+            paypal.Object, NullLogger<PayPalPaymentGateway>.Instance);
+        var fallback = new FakePaymentGateway("fallback");
+        var routing = new GatewayRoutingOptions
+        {
+            Gateways = [new GatewayRouteEntry { ProviderId = "paypal", Priority = 1 },
+                new GatewayRouteEntry { ProviderId = "fallback", Priority = 2 }]
+        };
+
+        var result = await CreateSut([adapter, fallback], routing: routing).ProcessPaymentAsync(ChargeRequest());
+
+        result.Success.Should().BeFalse();
+        result.Status.Should().Be(PaymentStatus.Processing);
+        result.FailureKind.Should().Be(GatewayFailureKind.OutcomeUnknown);
+        result.ProviderId.Should().Be("paypal");
+        apiCalls.Should().Be(1, "neither the same provider nor another provider may repeat an unconfirmed charge");
+        fallback.ChargeCallCount.Should().Be(0);
+    }
+
+    [Theory]
+    [InlineData("http")]
+    [InlineData("timeout")]
+    [InlineData("canceled")]
+    public async Task Charge_TransportExceptionAfterAttempt_DoesNotRetryOrFailOver(string failure)
+    {
+        Exception exception = failure switch
+        {
+            "timeout" => new TimeoutException("Response lost after send"),
+            "canceled" => new TaskCanceledException("Response lost after send"),
+            _ => new HttpRequestException("Response lost after send")
+        };
         var stripe = new FakePaymentGateway("stripe")
-            .EnqueueTransportError()
-            .EnqueueTransportError();
+            .EnqueueCharge(_ => throw exception);
         var payPal = new FakePaymentGateway("paypal");
         var sut = CreateSut([stripe, payPal]);
 
         var result = await sut.ProcessPaymentAsync(ChargeRequest());
 
-        result.Success.Should().BeTrue();
-        result.ProviderId.Should().Be("paypal");
-        stripe.ChargeCallCount.Should().Be(2);
+        result.Success.Should().BeFalse();
+        result.Status.Should().Be(PaymentStatus.Processing);
+        result.FailureKind.Should().Be(GatewayFailureKind.OutcomeUnknown);
+        result.ProviderId.Should().Be("stripe");
+        stripe.ChargeCallCount.Should().Be(1);
+        payPal.ChargeCallCount.Should().Be(0, "a lost response may hide a successful charge at the first provider");
     }
 
     [Fact]

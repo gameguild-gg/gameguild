@@ -230,6 +230,13 @@ public sealed class ProcessPaymentCommandHandler(
             payment.MarkAsRequiresAction(gatewayResult.TransactionId);
             logger.LogInformation("Payment {PaymentId} requires additional action", payment.Id);
         }
+        else if (gatewayResult.FailureKind == GatewayFailureKind.OutcomeUnknown
+                 || gatewayResult.Status is PaymentStatus.Pending or PaymentStatus.Processing)
+        {
+            // The provider may already have charged. Keep the persisted processing
+            // claim; a failure retry would create another monetary attempt.
+            logger.LogWarning("Payment {PaymentId} awaits provider reconciliation", payment.Id);
+        }
         else
         {
             // First-failure classification (issue #415): hard declines are marked non-retriable
@@ -289,7 +296,7 @@ public sealed class ProcessPaymentCommandHandler(
         }
 
         if (!gatewayResult.Success
-            && gatewayResult.Status != PaymentStatus.RequiresAction
+            && payment.Status == PaymentStatus.Failed
             && payment.RetryCount == 1
             && subscription.OwnerUserId.HasValue)
         {
