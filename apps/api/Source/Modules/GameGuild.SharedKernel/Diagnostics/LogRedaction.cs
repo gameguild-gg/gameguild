@@ -147,7 +147,7 @@ public static partial class LogRedaction
 
         if (identifier.Contains('@'))
         {
-            return MaskEmail(identifier);
+            return ProtectContact(identifier);
         }
 
         if (TrySplitIpv4(identifier, out _, out _, out _))
