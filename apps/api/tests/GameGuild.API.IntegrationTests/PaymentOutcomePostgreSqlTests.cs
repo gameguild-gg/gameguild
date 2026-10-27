@@ -24,8 +24,7 @@ public sealed class PaymentOutcomePostgreSqlTests(ApiPostgreSqlFixture fixture)
         var tenant = new Tenant { Id = Guid.NewGuid(), Name = "Payment outcome " + marker,
             Slug = "payment-outcome-" + marker, AdminEmail = "outcome-" + marker + "@example.test", IsActive = true };
         var subscription = new SubscriptionPaymentContext(Guid.NewGuid(), tenant.Id, 25m, "USD", "synthetic-customer");
-        var key = SubscriptionPaymentIdentity.CreateIdempotencyKey(
-            subscription.TenantId, subscription.SubscriptionId, subscription.BillingCycleNumber);
+        var key = "payment-outcome-" + marker;
         var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(fixture.ConnectionString).Options;
         var operation = new UseCaseOperationContextAccessor();
         var actor = new Mock<IActorContextAccessor>();
@@ -33,6 +32,10 @@ public sealed class PaymentOutcomePostgreSqlTests(ApiPostgreSqlFixture fixture)
         var gateway = new Mock<IPaymentGateway>();
         gateway.SetupGet(value => value.ProviderId).Returns("paypal");
         gateway.Setup(value => value.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<GatewayPaymentRequest, CancellationToken>((request, _) =>
+            {
+                if (!retry) { key = request.IdempotencyKey; }
+            })
             .ReturnsAsync(new GatewayPaymentResult(false, null, null, "response_unconfirmed", "Synthetic lost response",
                 PaymentStatus.Processing, SystemClock.UtcNow, ProviderId: "paypal", FailureKind: GatewayFailureKind.OutcomeUnknown));
         var contextService = new Mock<ISubscriptionPaymentContextService>();
