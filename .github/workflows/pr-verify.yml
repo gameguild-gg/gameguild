@@ -122,6 +122,29 @@ jobs:
       - name: Test docker build-context invariants
         run: node --test scripts/ci/tests/dockerignore-pnpm-patches.test.mjs scripts/ci/tests/dockerignore-api-analyzer-config.test.mjs
 
+  secret-scan:
+    name: PR secret scan
+    needs: classify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Scan all PR commits and the tested merge
+        env:
+          SOURCE_BASE_SHA: ${{ needs.classify.outputs.baseSha }}
+          SOURCE_HEAD_SHA: ${{ needs.classify.outputs.headSha }}
+        run: bash scripts/ci/verify-pr-secrets.sh
+      - name: Preserve redacted secret scan evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: secret-scan-${{ needs.classify.outputs.headSha }}
+          path: artifacts/secret-scan
+          if-no-files-found: error
+
   repository-policy:
     name: Repository policy
     needs: runner-pool
@@ -546,6 +569,7 @@ jobs:
       [
         runner-pool,
         classify,
+        secret-scan,
         repository-policy,
         web,
         api,
@@ -566,6 +590,7 @@ jobs:
         # ("Argument list too long"). Pass each job's result string instead.
         env:
           CLASSIFY: ${{ needs.classify.result }}
+          SECRET_SCAN: ${{ needs.secret-scan.result }}
           REPOSITORY_POLICY: ${{ needs.repository-policy.result }}
           WEB: ${{ needs.web.result }}
           API: ${{ needs.api.result }}
@@ -582,6 +607,7 @@ jobs:
           node - <<'NODE'
           const gates = {
             classify: process.env.CLASSIFY,
+            'secret-scan': process.env.SECRET_SCAN,
             'repository-policy': process.env.REPOSITORY_POLICY,
             web: process.env.WEB,
             api: process.env.API,
@@ -597,6 +623,9 @@ jobs:
           const failed = Object.entries(gates)
             .filter(([, result]) => result === 'failure' || result === 'cancelled')
             .map(([name, result]) => `${name}=${result}`);
+          if (gates['secret-scan'] !== 'success' && !failed.some(item => item.startsWith('secret-scan='))) {
+            failed.push(`secret-scan=${gates['secret-scan']}`);
+          }
           if (process.env.ECONOMY_SELECTED === 'true') {
             for (const name of ['economy', 'economy-api', 'economy-client', 'economy-coverage', 'economy-regression']) {
               if (gates[name] !== 'success' && !failed.some(item => item.startsWith(`${name}=`))) {
