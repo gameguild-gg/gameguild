@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using GameGuild.API.Database;
+using GameGuild.Configuration.PresentationLayer.Authentication;
 using GameGuild.Identity.Tenants;
 using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.AspNetCore.Hosting;
@@ -52,6 +53,13 @@ public sealed class SamlBrowserFlowPostgreSqlTests : IAsyncLifetime
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            Assert.Same(dbContext, scope.ServiceProvider.GetRequiredService<IApplicationDbContext>());
+            Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", dbContext.Database.ProviderName);
+            var configured = scope.ServiceProvider.GetRequiredService<AuthenticationOptions>();
+            Assert.True(configured.ExternalProviders.Saml.TryGetValue(TestSamlIdentityProvider.Slug, out var provider),
+                "The full API host must bind the configured test SAML provider.");
+            Assert.NotNull(provider);
+            Assert.True(provider.Enabled);
             if (!await dbContext.Set<Tenant>().AnyAsync(tenant => tenant.IsDefault))
             {
                 dbContext.Add(new Tenant
@@ -93,7 +101,8 @@ public sealed class SamlBrowserFlowPostgreSqlTests : IAsyncLifetime
         using var authorize = await initiator.PostAsJsonAsync(
             $"/v1/auth/saml/{TestSamlIdentityProvider.Slug}:sign-in-authorize",
             new { });
-        authorize.EnsureSuccessStatusCode();
+        Assert.True(authorize.IsSuccessStatusCode,
+            $"SAML authorize returned {(int)authorize.StatusCode}: {await authorize.Content.ReadAsStringAsync()}");
         var challenge = await authorize.Content.ReadFromJsonAsync<SamlChallengeResponse>();
         Assert.NotNull(challenge);
 
@@ -242,8 +251,10 @@ public sealed class SamlBrowserFlowPostgreSqlTests : IAsyncLifetime
         Assert.True(signIn.MfaVerifiedByProvider, "a TimeSyncToken AuthnContext must surface as provider MFA proof");
         Assert.Equal(TestSamlIdentityProvider.MfaAuthnContext, signIn.AuthenticationContextClassReference);
 
-        using var logoutUrl = await _client.GetAsync(
+        using var logoutRequest = new HttpRequestMessage(HttpMethod.Get,
             $"/v1/auth/saml/{TestSamlIdentityProvider.Slug}:logout-url?postLogoutRedirectUri=https%3A%2F%2Fgameguild.example.test%2Fsigned-out");
+        logoutRequest.Headers.Authorization = new("Bearer", signIn.AccessToken);
+        using var logoutUrl = await _client.SendAsync(logoutRequest);
         Assert.True(logoutUrl.IsSuccessStatusCode);
         var logout = await logoutUrl.Content.ReadFromJsonAsync<SamlLogoutUrlResponseBody>();
         Assert.NotNull(logout);

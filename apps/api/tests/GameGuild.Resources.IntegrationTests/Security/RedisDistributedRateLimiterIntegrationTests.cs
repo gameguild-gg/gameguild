@@ -132,6 +132,7 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
         using var firstClient = firstHost.GetTestClient();
         using var secondClient = secondHost.GetTestClient();
 
+        var windowEndsAt = await WaitForConcurrentLoadWindowAsync();
         var stopwatch = Stopwatch.StartNew();
         var measurements = await Task.WhenAll(Enumerable.Range(0, requestCount).Select(async index =>
         {
@@ -147,6 +148,8 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
 
         try
         {
+            DateTimeOffset.UtcNow.Should().BeBefore(windowEndsAt,
+                "the concurrent admission assertion must cover one fixed window");
             var accepted = responses.Count(response => response.StatusCode == HttpStatusCode.NoContent);
             var rejected = responses.Count(response => response.StatusCode == HttpStatusCode.TooManyRequests);
             accepted.Should().Be(requestLimit);
@@ -196,6 +199,7 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
             using var firstClient = CreateProbeHttpClient(firstHost, certificateAuthority);
             using var secondClient = CreateProbeHttpClient(secondHost, certificateAuthority);
             await Task.WhenAll(WaitForProbeHostAsync(firstClient), WaitForProbeHostAsync(secondClient));
+            var windowEndsAt = await WaitForConcurrentLoadWindowAsync();
             var responses = await Task.WhenAll(Enumerable.Range(0, requestCount).Select(async index =>
             {
                 var client = index % 2 == 0 ? firstClient : secondClient;
@@ -206,6 +210,8 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
 
             try
             {
+                DateTimeOffset.UtcNow.Should().BeBefore(windowEndsAt,
+                    "the concurrent admission assertion must cover one fixed window");
                 responses.Count(response => response.StatusCode == HttpStatusCode.NoContent).Should().Be(requestLimit);
                 responses.Count(response => response.StatusCode == HttpStatusCode.TooManyRequests)
                     .Should().Be(requestCount - requestLimit);
@@ -228,6 +234,29 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
         {
             CryptographicOperations.ZeroMemory(certificateBytes);
             Directory.Delete(certificateDirectory.FullName, recursive: true);
+        }
+    }
+
+    private static async Task<DateTimeOffset> WaitForConcurrentLoadWindowAsync()
+    {
+        // The production fixed window is aligned to Unix time, not the first request.
+        // Starting a load test just before the minute changes legitimately admits a
+        // second quota. Reserve at least half a window, and assert above that the
+        // complete batch stayed in it; never relax the shared limit of twenty.
+        var window = TimeSpan.FromMinutes(1);
+        while (true)
+        {
+            var now = DateTimeOffset.UtcNow;
+            var windowMilliseconds = (long)window.TotalMilliseconds;
+            var end = DateTimeOffset.FromUnixTimeMilliseconds(
+                (now.ToUnixTimeMilliseconds() / windowMilliseconds + 1) * windowMilliseconds);
+            var remaining = end - now;
+            if (remaining >= TimeSpan.FromSeconds(30))
+            {
+                return end;
+            }
+
+            await Task.Delay(remaining + TimeSpan.FromMilliseconds(100));
         }
     }
 

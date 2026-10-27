@@ -152,15 +152,18 @@ public sealed class ApiKeyScopeEnforcementTests
                      nameof(ApiKeyController.RevokeApiKey)
                  })
         {
-            var authorize = typeof(ApiKeyController)
+            var policies = typeof(ApiKeyController)
                 .GetMethod(action)!
                 .GetCustomAttributes(typeof(AuthorizeAttribute), inherit: true)
                 .Cast<AuthorizeAttribute>()
-                .Should()
-                .ContainSingle()
-                .Subject;
+                .Select(attribute => attribute.Policy)
+                .ToArray();
 
-            authorize.Policy.Should().Be(expectedPolicy, "{0} must be scope-constrained for API-key callers", action);
+            var expectedPolicies = action == nameof(ApiKeyController.ListApiKeys)
+                ? new[] { expectedPolicy }
+                : new[] { expectedPolicy, TrustedDevicePolicy.Name };
+            policies.Should().BeEquivalentTo(expectedPolicies,
+                "{0} must retain API-key scope enforcement and trusted-device protection for mutations", action);
         }
     }
 
