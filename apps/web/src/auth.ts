@@ -122,6 +122,13 @@ export function auth(handler?: AuthProxyHandler) {
   return handler ? result.auth(handler) : getSession();
 }
 
+// Single-flight guard for refresh-token rotation: concurrent readers within
+// ONE request rotating in parallel would present already-revoked tokens (one
+// cookie write wins; the sibling's token is revoked). The guard is keyed by the
+// per-request cookie store (Next returns a fresh store object per request), so
+// unrelated concurrent requests never suppress each other's cookie writes.
+const requestRotations = new WeakMap<object, Promise<void>>();
+
 async function readCurrentSession() {
   const cookieStore = await cookies();
   const cookieOptions = resolveCookieOptions(
@@ -141,14 +148,30 @@ async function readCurrentSession() {
   );
 
   if (updated && token) {
-    try {
-      const newEncrypted = await encodeSession(token, authConfig);
-      sessionStore.write(newEncrypted, (name, value, options) =>
-        cookieStore.set(name, value, options),
-      );
-    } catch {
-      // Server Components can read a valid refreshed session even when the
-      // response context cannot persist its rotated cookie.
+    const write = async () => {
+      try {
+        const newEncrypted = await encodeSession(token, authConfig);
+        sessionStore.write(newEncrypted, (name, value, options) =>
+          cookieStore.set(name, value, options),
+        );
+      } catch {
+        // Server Components can read a valid refreshed session even when the
+        // response context cannot persist its rotated cookie.
+      }
+    };
+
+    // A concurrent rotation on this request's cookie store already wrote;
+    // skip writing our possibly-stale cookie — the sibling write is
+    // authoritative.
+    const prior = requestRotations.get(cookieStore);
+    if (prior) {
+      await prior;
+    } else {
+      const rotation = write().finally(() => {
+        requestRotations.delete(cookieStore);
+      });
+      requestRotations.set(cookieStore, rotation);
+      await rotation;
     }
   }
 

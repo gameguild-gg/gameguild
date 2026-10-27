@@ -129,6 +129,7 @@ export interface CourseContentItemViewModel {
 export interface CourseContentViewModel {
   items: CourseContentItemViewModel[];
   total: number;
+  error?: number | 'error' | null;
 }
 
 /**
