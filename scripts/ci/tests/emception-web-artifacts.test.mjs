@@ -51,7 +51,7 @@ const web = job(pr, 'web');
 const producer = job(emception, 'build-test-package');
 const acquire = step(web, 'Acquire verified Toolchain release for Web');
 
-const clientGateName = 'Test client credentials, MFA, auth factory and generator contracts';
+const clientGateName = 'Test client credentials, MFA, auth factory, transport and generator contracts';
 const clientSuites = [
   'tests/auth/providers/credentials.test.ts',
   'tests/next/auth.test.ts',
@@ -59,6 +59,7 @@ const clientSuites = [
   'tests/gaps/final-gaps.test.ts',
   'tests/react/query-hooks-extended.test.ts',
   'tests/generator',
+  'tests/transport',
 ];
 
 function assertClientContractGate(source) {
