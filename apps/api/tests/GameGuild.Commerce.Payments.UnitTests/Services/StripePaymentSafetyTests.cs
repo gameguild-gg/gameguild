@@ -59,7 +59,7 @@ public sealed class StripePaymentSafetyTests
 
     [Theory]
     [InlineData("succeeded", "usd", 12345, 123.45)]
-    [InlineData("succeeded", "jpy", 12345, 12345)]
+    [InlineData("succeeded", "jpy", 12345, 12345d)]
     [InlineData("processing", "usd", 12345, null)]
     [InlineData("succeeded", null, 12345, null)]
     public void MapPaymentIntent_ReportsOnlyTheProviderVerifiedReceivedAmount(
