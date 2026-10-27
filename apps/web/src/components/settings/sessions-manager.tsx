@@ -30,6 +30,7 @@ import {
 } from '@game-guild/ui/components/alert-dialog';
 import { Monitor, Smartphone, Tablet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { toast } from 'sonner';
 
@@ -39,7 +40,10 @@ import { toast } from 'sonner';
  * the current-session security analysis, and the trusted-device list.
  *
  * All mutations go through server actions (sessions-actions.ts); revalidatePath
- * refreshes the server-rendered data after every action.
+ * refreshes the server-rendered data after every action, and router.refresh()
+ * guarantees the client re-renders even when the route has no cache entry for
+ * revalidatePath to invalidate (dynamic routes in dev — see the session-state
+ * browser acceptance flake).
  */
 
 const RISK_TONE: Record<string, 'default' | 'secondary' | 'destructive'> = {
@@ -88,6 +92,7 @@ function riskTone(riskLevel: string | null | undefined) {
 
 export function SessionsManager({ data, locale }: { data: SessionsPageData; locale: string }) {
   const t = useTranslations('settings.security');
+  const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
   const [renamingId, setRenamingId] = React.useState<string | null>(null);
   const [renameValue, setRenameValue] = React.useState('');
@@ -97,6 +102,7 @@ export function SessionsManager({ data, locale }: { data: SessionsPageData; loca
     startTransition(async () => {
       const result = await action();
       if (result.success) {
+        router.refresh();
         toast.success(successMessage);
       } else {
         toast.error(t('actionFailed'));

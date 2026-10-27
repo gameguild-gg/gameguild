@@ -30,6 +30,7 @@ jobs:
       actions: read
     outputs:
       pool: ${{ steps.select.outputs.pool }}
+      docker-pool: ${{ steps.select.outputs.docker_pool }}
     steps:
       - name: Choose self-hosted pool or GitHub-hosted overflow
         id: select
@@ -39,6 +40,9 @@ jobs:
           FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
         run: |
           set -eu
+          # ARC runner pods have no Docker daemon: jobs that run Postgres via
+          # docker (API/economy test gates) always use GitHub-hosted runners.
+          echo 'docker_pool=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
           if [[ "$FORK_PR" == 'true' ]]; then
             echo 'Fork PR: untrusted code must never run on self-hosted hardware.' >&2
             echo 'pool=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
@@ -219,7 +223,7 @@ jobs:
     name: API verify
     needs: [runner-pool, classify]
     if: needs.classify.outputs.api == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
     # Broad API changes select the full suite of affected test projects.
     # Keep the per-test hang limit and allow the sequential suite to finish.
     # Full host regression takes about 30 minutes before additional affected module suites.
@@ -339,7 +343,7 @@ jobs:
     name: Migration compatibility
     needs: [runner-pool, classify]
     if: needs.classify.outputs.migration == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
     timeout-minutes: 20
     services:
       postgres:
@@ -378,7 +382,7 @@ jobs:
     name: Economy Release Gate
     needs: [runner-pool, classify, economy-api, economy-client]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
     # Reuse the same-run API/client outputs. Coverage and regression remain
     # required independent jobs; this lane verifies OpenAPI/web/browser surfaces.
     timeout-minutes: 20
@@ -417,7 +421,7 @@ jobs:
     name: Economy API publish
     needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -447,7 +451,7 @@ jobs:
     name: Economy client tests and build
     needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -474,7 +478,7 @@ jobs:
     name: Economy coverage and provider contracts
     needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -496,7 +500,7 @@ jobs:
     name: Economy regression (${{ matrix.shard }})
     needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
     timeout-minutes: 20
     strategy:
       # Keep every shard's evidence when another shard fails.

@@ -13,7 +13,17 @@ type CredentialsAuthorize = CredentialsProviderConfig["authorize"];
  * Wire this around the innermost password authorize ONLY (see auth.ts):
  * the wrapper is applied at the password layer, so token-less flows that
  * bypass it (magic-link, MFA, web3) stay untouched — the exemption comes from
- * placement, not from inspecting credential fields.
+ * placement, plus an explicit `mfaToken` guard at the wrapped layer. The
+ * default credentials provider also handles MFA completion (`mfaToken` +
+ * `method`/`code` — never a password), which has no Turnstile widget by design
+ * (post-auth); the `mfaToken` is a short-lived server-issued first-factor
+ * bearer, so possession is already proven — same trust class as magic-link.
+ * The exemption therefore requires BOTH a non-empty `mfaToken` AND the
+ * ABSENCE of a `password` field; mixed payloads (password + mfaToken) fall
+ * through to Turnstile verification so a bogus appended `mfaToken` cannot
+ * bypass the challenge on password attempts. A bogus password-less
+ * `mfaToken` delegates and fails server-side against the MFA-verification
+ * endpoint (rate-limited).
  *
  * - `TURNSTILE_SECRET_KEY` unset/empty → delegate immediately, no verification
  *   call (dev/e2e fail-open; verifyTurnstileToken would fail open too, but this
@@ -31,6 +41,18 @@ type CredentialsAuthorize = CredentialsProviderConfig["authorize"];
 export function withAntibotVerification(authorize: CredentialsAuthorize): CredentialsAuthorize {
   return async (credentials, request) => {
     if (!process.env.TURNSTILE_SECRET_KEY) {
+      return authorize(credentials, request);
+    }
+
+    // MFA completion (mfaToken + code, never a password) — first-factor
+    // possession already proven by the server-issued short-lived bearer; no
+    // widget on the 2FA page. Exempt ONLY when no password is present: a
+    // password attempt with an appended bogus mfaToken must NOT skip Turnstile.
+    const isPasswordlessMfaCompletion =
+      typeof credentials.mfaToken === "string" &&
+      credentials.mfaToken.length > 0 &&
+      (typeof credentials.password !== "string" || credentials.password.length === 0);
+    if (isPasswordlessMfaCompletion) {
       return authorize(credentials, request);
     }
 
