@@ -18,7 +18,7 @@ export class CommerceBillingSubscriptionChangesModule {
   /**
    * Run the orchestrated plan change for one subscription
    *
-   * Orchestrates the plan change as a saga: proration, invoice, confirmed gateway payment and activation. Local state and required billing events commit together. Confirmed business failures trigger compensation; uncertain persistence or provider outcomes require reconciliation and retry with the same effective date and payment parameters.
+   * Orchestrates the plan change as a saga: proration, invoice, confirmed gateway payment and activation. EffectiveDateUtc is required as an explicit UTC timestamp and must be reused unchanged on retries. Local state and required billing events commit together. Activation requires provider-verified settlement amount and currency; providers without that evidence require reconciliation. Confirmed business failures trigger compensation; uncertain persistence or provider outcomes require reconciliation and retry with the same effective date and payment parameters.
    */
   async postBillingSubscriptionsPlanChangeOrchestrate(
     subscriptionId: string,
