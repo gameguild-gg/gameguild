@@ -41,6 +41,10 @@ public sealed class RetryPaymentCommandHandler(
     INotificationService? notificationService = null,
     IPaymentMethodRepository? paymentMethodRepository = null) : ICommandHandler<RetryPaymentCommand, PaymentRetryResult>
 {
+    // Return only after recording the attempt and completing its handler steps. Early
+    // validation failures, exceptions and cancellation keep the ordinary rollback path.
+    private sealed class RecordedPaymentRetryResult : PaymentRetryResult, ICommitOnFailureOutcome { }
+
     public async Task<PaymentRetryResult> Handle(RetryPaymentCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Retrying payment {PaymentId}", request.PaymentId);
@@ -247,7 +251,7 @@ public sealed class RetryPaymentCommandHandler(
         }
 
         // 10. Return retry result
-        return new PaymentRetryResult
+        return new RecordedPaymentRetryResult
         {
             Success = gatewayResult.Success,
             RetryAttempt = payment.RetryCount,

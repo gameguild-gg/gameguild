@@ -32,12 +32,21 @@ public class ProcessPaymentCommandHandlerTests
 
         result.Success.Should().BeFalse();
         result.Status.Should().Be(PaymentStatus.Processing);
+        CommandOutcome.IsFailure(result).Should().BeTrue();
+        CommandOutcome.ShouldRollback(result).Should().BeFalse("the recorded attempt must survive the outer command transaction");
         persisted.Should().NotBeNull();
         persisted!.Status.Should().Be(PaymentStatus.Processing);
         persisted.NextRetryAt.Should().BeNull();
         persisted.CanRetry.Should().BeFalse();
         fixture.SyncService.VerifyNoOtherCalls();
         fixture.PaymentGateway.Verify(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void UnrecordedPaymentFailures_KeepTheOrdinaryRollbackContract()
+    {
+        CommandOutcome.ShouldRollback(PaymentResult.Failed("Synthetic unrecorded failure")).Should().BeTrue();
+        CommandOutcome.ShouldRollback(new PaymentRetryResult { Success = false }).Should().BeTrue();
     }
 
     [Fact]

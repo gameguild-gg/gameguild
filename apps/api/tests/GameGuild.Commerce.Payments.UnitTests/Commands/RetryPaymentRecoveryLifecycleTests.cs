@@ -58,6 +58,8 @@ public class RetryPaymentRecoveryLifecycleTests
 
         result.Success.Should().BeFalse();
         result.PaymentResult!.Status.Should().Be(PaymentStatus.Processing);
+        CommandOutcome.IsFailure(result).Should().BeTrue();
+        CommandOutcome.ShouldRollback(result).Should().BeFalse("the recorded retry must survive the outer command transaction");
         payment.Status.Should().Be(PaymentStatus.Processing);
         payment.NextRetryAt.Should().BeNull();
         payment.CanRetry.Should().BeFalse();
