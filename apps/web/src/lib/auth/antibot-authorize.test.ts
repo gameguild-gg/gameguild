@@ -121,6 +121,24 @@ describe("withAntibotVerification", () => {
     expect(mocks.verifyTurnstileToken).toHaveBeenCalledWith(undefined);
   });
 
+  it("does not exempt a password attempt with an appended bogus mfaToken (bypass closure)", async () => {
+    // MFA completion never carries a password (fields: mfaToken + method +
+    // code — see the client credentials provider). A payload with BOTH
+    // password and mfaToken is a password attempt trying to smuggle the MFA
+    // exemption; it must fall through to Turnstile verification.
+    process.env.TURNSTILE_SECRET_KEY = "test-secret";
+    mocks.verifyTurnstileToken.mockResolvedValue({ success: false, reason: "missing-token" });
+    const underlying = makeUnderlyingAuthorize({ user: { id: "u1" } } as ProviderResult);
+    const authorize = withAntibotVerification(underlying);
+
+    await expect(
+      authorize({ email: "a@b.c", password: "hunter2", mfaToken: "bogus" }),
+    ).rejects.toThrow(CredentialsSignInError);
+
+    expect(underlying).not.toHaveBeenCalled();
+    expect(mocks.verifyTurnstileToken).toHaveBeenCalledWith(undefined);
+  });
+
   it("does not treat a magicLinkToken-shaped payload as a Turnstile token", async () => {
     // Token-less flows are exempted by WHERE the wrapper is applied in auth.ts
     // (innermost password authorize only), not by field inspection. If a

@@ -15,10 +15,15 @@ type CredentialsAuthorize = CredentialsProviderConfig["authorize"];
  * bypass it (magic-link, MFA, web3) stay untouched — the exemption comes from
  * placement, plus an explicit `mfaToken` guard at the wrapped layer. The
  * default credentials provider also handles MFA completion (`mfaToken` +
- * `method`/`code`), which has no Turnstile widget by design (post-auth); the
- * `mfaToken` is a short-lived server-issued first-factor bearer, so possession
- * is already proven — same trust class as magic-link — and the call delegates
- * without verification.
+ * `method`/`code` — never a password), which has no Turnstile widget by design
+ * (post-auth); the `mfaToken` is a short-lived server-issued first-factor
+ * bearer, so possession is already proven — same trust class as magic-link.
+ * The exemption therefore requires BOTH a non-empty `mfaToken` AND the
+ * ABSENCE of a `password` field; mixed payloads (password + mfaToken) fall
+ * through to Turnstile verification so a bogus appended `mfaToken` cannot
+ * bypass the challenge on password attempts. A bogus password-less
+ * `mfaToken` delegates and fails server-side against the MFA-verification
+ * endpoint (rate-limited).
  *
  * - `TURNSTILE_SECRET_KEY` unset/empty → delegate immediately, no verification
  *   call (dev/e2e fail-open; verifyTurnstileToken would fail open too, but this
@@ -39,9 +44,15 @@ export function withAntibotVerification(authorize: CredentialsAuthorize): Creden
       return authorize(credentials, request);
     }
 
-    // MFA completion (mfaToken + code) — first-factor possession already
-    // proven by the server-issued short-lived bearer; no widget on the 2FA page.
-    if (typeof credentials.mfaToken === "string" && credentials.mfaToken.length > 0) {
+    // MFA completion (mfaToken + code, never a password) — first-factor
+    // possession already proven by the server-issued short-lived bearer; no
+    // widget on the 2FA page. Exempt ONLY when no password is present: a
+    // password attempt with an appended bogus mfaToken must NOT skip Turnstile.
+    const isPasswordlessMfaCompletion =
+      typeof credentials.mfaToken === "string" &&
+      credentials.mfaToken.length > 0 &&
+      (typeof credentials.password !== "string" || credentials.password.length === 0);
+    if (isPasswordlessMfaCompletion) {
       return authorize(credentials, request);
     }
 
