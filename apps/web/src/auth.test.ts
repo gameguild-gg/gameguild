@@ -147,6 +147,58 @@ describe("request-bound authentication readers", () => {
     );
   });
 
+  it("concurrent rotations across uncached reads perform a single cookie write", async () => {
+    state.processSession.mockResolvedValue({ session, token, updated: true });
+    const authModule = await import("./auth");
+    const [a, b] = await Promise.all([
+      authModule.readSessionUnCached(),
+      authModule.readSessionUnCached(),
+    ]);
+
+    expect(a).toBe(session);
+    expect(b).toBe(session);
+    // Two parallel rotations, one write — the losing writer would persist an
+    // already-revoked refresh token.
+    expect(state.processSession).toHaveBeenCalledTimes(2);
+    expect(state.encodeSession).toHaveBeenCalledTimes(1);
+    expect(state.cookieSet).toHaveBeenCalledExactlyOnceWith(
+      "gameguild.session-token", "rotated-encrypted-session", { httpOnly: true, path: "/" },
+    );
+  });
+
+  it("unrelated concurrent requests each persist their own rotated cookie", async () => {
+    state.processSession.mockResolvedValue({ session, token, updated: true });
+    const authModule = await import("./auth");
+    const storeA = {
+      get: () => ({ value: state.cookie }),
+      set: state.cookieSet,
+    };
+    const storeB = {
+      get: () => ({ value: state.cookie }),
+      set: state.cookieSet,
+    };
+    state.cookieRead.mockReset()
+      .mockResolvedValueOnce(storeA)
+      .mockResolvedValueOnce(storeA)
+      .mockResolvedValueOnce(storeB)
+      .mockResolvedValueOnce(storeB);
+
+    const [a1, a2, b1, b2] = await Promise.all([
+      authModule.readSessionUnCached(),
+      authModule.readSessionUnCached(),
+      authModule.readSessionUnCached(),
+      authModule.readSessionUnCached(),
+    ]);
+
+    expect(a1).toBe(session);
+    expect(a2).toBe(session);
+    expect(b1).toBe(session);
+    expect(b2).toBe(session);
+    // One write per request: unrelated requests must not suppress each
+    // other's cookie writes via the shared single-flight guard.
+    expect(state.cookieSet).toHaveBeenCalledTimes(2);
+  });
+
   it("a writable request removes an invalidated session cookie once", async () => {
     state.processSession.mockResolvedValue({ session: null, token: null, updated: false });
     const authModule = await import("./auth");

@@ -169,7 +169,7 @@ describe("course list queries", () => {
         avgRating: "4.5",
       }),
       expect.objectContaining({
-        creatorHandle: "creator-3",
+        creatorHandle: null,
         status: "archived",
         visibility: "private",
         enrolledCount: 7,
@@ -177,7 +177,7 @@ describe("course list queries", () => {
       }),
       expect.objectContaining({
         id: "",
-        creatorHandle: "creator-4",
+        creatorHandle: null,
         status: "draft",
         visibility: "private",
         enrolledCount: 0,
@@ -191,7 +191,7 @@ describe("course list queries", () => {
         completionPercent: null,
       }),
       expect.objectContaining({
-        creatorHandle: "creator-5",
+        creatorHandle: null,
         enrolledCount: 6,
         completionPercent: 0,
       }),
@@ -203,7 +203,7 @@ describe("course list queries", () => {
     await expect(auth.getAccessToken()).resolves.toBe("token");
   });
 
-  it("falls back to creator IDs when the generated users module is unavailable", async () => {
+  it("omits the author handle when the generated users module is unavailable", async () => {
     const UsersModule = GeneratedApi.UsersModule;
     (GeneratedApi as { UsersModule?: unknown }).UsersModule = undefined;
     mocks.getCourses.mockResolvedValue({
@@ -221,7 +221,8 @@ describe("course list queries", () => {
     mocks.getAnalytics.mockResolvedValue({ ok: true, data: { totalUsers: 0 } });
     try {
       const result = await getCourses();
-      expect(result.courses[0]?.creatorHandle).toBe("gameguild");
+      expect(result.courses[0]?.creatorHandle).toBeNull();
+      expect(result.courses[0]?.routeParam).toBe("course");
       expect(mocks.getUser).not.toHaveBeenCalled();
     } finally {
       (GeneratedApi as { UsersModule?: unknown }).UsersModule = UsersModule;

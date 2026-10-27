@@ -162,6 +162,61 @@ describe('BlogComments', () => {
     expect(addComment.mock.calls[1]?.[1]).toMatchObject({ turnstileToken: null });
   });
 
+  it('clears the single-use turnstile token after a successful submit', async () => {
+    const user = userEvent.setup();
+    addComment
+      .mockResolvedValueOnce({ success: true, data: comment({ id: 'c8', content: 'First' }) })
+      .mockResolvedValueOnce({ success: true, data: comment({ id: 'c9', content: 'Second' }) });
+
+    render(<BlogComments {...baseProps} currentUserId="user-1" />);
+    await waitFor(() => expect(widgetProps).toHaveBeenCalled());
+    const onToken = (widgetProps.mock.calls.at(-1)?.[0] as { onToken: (token: string | null) => void }).onToken;
+    act(() => onToken('tok-1'));
+
+    await user.type(screen.getByLabelText(/write a comment/i), 'First');
+    await user.click(screen.getByRole('button', { name: /publish comment/i }));
+    await waitFor(() => expect(addComment).toHaveBeenCalledTimes(1));
+    expect(addComment.mock.calls[0]?.[1]).toMatchObject({ turnstileToken: 'tok-1' });
+    expect(await screen.findByText('First')).toBeInTheDocument();
+
+    // Single-use token: the successful submit consumed it, so the next submit sends null.
+    await user.type(screen.getByLabelText(/write a comment/i), 'Second');
+    await user.click(screen.getByRole('button', { name: /publish comment/i }));
+    await waitFor(() => expect(addComment).toHaveBeenCalledTimes(2));
+    expect(addComment.mock.calls[1]?.[1]).toMatchObject({ turnstileToken: null });
+  });
+
+  it('keeps a token re-issued by the widget during a pending submit', async () => {
+    const user = userEvent.setup();
+    let resolveFirst!: (value: { success: boolean; error?: string; status?: number }) => void;
+    addComment.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveFirst = resolve;
+        }),
+    );
+    addComment.mockResolvedValueOnce({ success: true, data: comment({ id: 'c9', content: 'Retry' }) });
+
+    render(<BlogComments {...baseProps} currentUserId="user-1" />);
+    await waitFor(() => expect(widgetProps).toHaveBeenCalled());
+    const onToken = (widgetProps.mock.calls.at(-1)?.[0] as { onToken: (token: string | null) => void }).onToken;
+    act(() => onToken('tok-1'));
+
+    await user.type(screen.getByLabelText(/write a comment/i), 'First try');
+    await user.click(screen.getByRole('button', { name: /publish comment/i }));
+    await waitFor(() => expect(addComment).toHaveBeenCalledTimes(1));
+
+    // The widget re-issues a fresh token while the submit is still in flight.
+    act(() => onToken('tok-2'));
+    act(() => resolveFirst({ success: false, error: 'Bot check failed.', status: 403 }));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/bot check failed/i));
+
+    await user.type(screen.getByLabelText(/write a comment/i), 'Retry');
+    await user.click(screen.getByRole('button', { name: /publish comment/i }));
+    await waitFor(() => expect(addComment).toHaveBeenCalledTimes(2));
+    expect(addComment.mock.calls[1]?.[1]).toMatchObject({ turnstileToken: 'tok-2' });
+  });
+
   it('shows the comments-disabled notice and hides the composer when AllowComments=false', async () => {
     render(<BlogComments {...baseProps} allowComments={false} currentUserId="user-1" />);
 

@@ -253,6 +253,7 @@ export function BlogComments(props: BlogCommentsProps): React.JSX.Element {
     submitPendingRef.current = true;
     setSubmitPending(true);
     setError(null);
+    const spentToken = turnstileToken;
     try {
       const result = await addComment(postId, {
         content: value,
@@ -264,17 +265,18 @@ export function BlogComments(props: BlogCommentsProps): React.JSX.Element {
         setCommentText("");
         setReplyingTo(null);
       } else {
-        setTurnstileToken(null);
         const message = result.error;
         setError(message);
         toast.error(message);
       }
     } catch (reason) {
-      setTurnstileToken(null);
       const message = reason instanceof Error ? reason.message : "Comment could not be published.";
       setError(message);
       toast.error(message);
     } finally {
+      // Single-use token: consumed by this submit regardless of outcome —
+      // unless the widget already re-issued a fresh one during the await.
+      setTurnstileToken((current) => (current === spentToken ? null : current));
       submitPendingRef.current = false;
       setSubmitPending(false);
     }

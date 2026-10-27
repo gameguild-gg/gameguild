@@ -15,11 +15,15 @@ import type { Interceptor } from './types.js';
  * Resolve the forwarded-IP headers from a header getter.
  *
  * Returns `{ 'X-Forwarded-For': <ip> }` when `cf-connecting-ip` is present
- * (trimmed, non-empty), otherwise `{}`. Deliberately no `x-forwarded-for`
- * fallback: its entries are client-controlled when `cf-connecting-ip` is
- * missing.
+ * (trimmed, non-empty) AND `cf-ray` is present — `cf-ray` is set by the
+ * Cloudflare edge and corroborates that the request actually traversed
+ * Cloudflare, so `cf-connecting-ip` alone (direct-origin spoof) yields `{}`.
+ * `cf-ray` alone yields nothing; the forwarded value is still the
+ * `cf-connecting-ip` value. Deliberately no `x-forwarded-for` fallback: its
+ * entries are client-controlled when the Cloudflare headers are missing.
  */
 export function resolveForwardedIpHeader(get: (name: string) => string | null): Record<string, string> {
+  if (!get('cf-ray')?.trim()) return {};
   const ip = get('cf-connecting-ip')?.trim();
   return ip ? { 'X-Forwarded-For': ip } : {};
 }
