@@ -107,6 +107,7 @@ describe("verifyTurnstileToken", () => {
   it("forwards the cf-connecting-ip as remoteip when verification succeeds", async () => {
     process.env.TURNSTILE_SECRET_KEY = FAILING_TEST_SECRET;
     mocks.headerStore.set("cf-connecting-ip", "198.51.100.23");
+    mocks.headerStore.set("cf-ray", "9f3aCacheRay-1");
     const fetchMock = vi.fn().mockResolvedValue({
       json: async () => ({ success: true }),
     });
