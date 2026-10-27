@@ -156,13 +156,11 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
   try {
     const response = await fetch(assertSafeServiceUrl(url, transportConfig.baseUrl), options);
 
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-
     // Check for HTTP errors
     if (!response.ok) {
       const error = await createApiError(response);
+      // Error-body parsing tolerates invalid JSON, but must not swallow cancellation.
+      options.signal?.throwIfAborted();
       // Copy metrics key if present
       const metricsKey = (requestConfig as RequestConfig & { _metricsKey?: string })._metricsKey;
       if (metricsKey) {
@@ -184,7 +182,9 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
       if (contentType?.includes('application/json')) {
         try {
           data = await response.json();
-        } catch {
+        } catch (cause) {
+          options.signal?.throwIfAborted();
+          if (cause instanceof Error && cause.name === 'AbortError') throw cause;
           // Invalid JSON response - return error instead of throwing
           const text = await response.text().catch(() => '');
           const truncated = text.length > 100 ? `${text.slice(0, 100)}...` : text;
@@ -210,6 +210,7 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
       }
     }
 
+    options.signal?.throwIfAborted();
     const apiResponse: ApiResponse<T> = {
       data,
       status: response.status,
@@ -223,11 +224,11 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
     }
 
     return ok(apiResponse);
-  } catch (error) {
+  } finally {
+    // Fetch resolves at headers; the deadline also covers consuming the body.
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
-    throw error;
   }
 }
 
