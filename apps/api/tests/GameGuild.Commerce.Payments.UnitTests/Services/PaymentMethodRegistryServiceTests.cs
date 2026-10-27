@@ -84,6 +84,35 @@ public class PaymentMethodRegistryServiceTests : IDisposable
 
     // ── Create ───────────────────────────────────────────────────────────
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Create_CannotClaimAnotherOwnersLiveOrDeletedToken(bool deleted)
+    {
+        var tenantId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var stored = await SeedAsync(tenantId, ownerId, "pm_owned_fixture");
+        if (deleted)
+        {
+            stored.SoftDelete();
+            await _context.SaveChangesAsync();
+        }
+        SetupGatewayDetails("pm_owned_fixture");
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, Guid.NewGuid()),
+            new CreatePaymentMethodRequest(tenantId, "pm_owned_fixture"), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("PaymentMethods.OwnerMismatch");
+        _context.ChangeTracker.Clear();
+        var persisted = await _context.Set<PaymentMethod>().SingleAsync();
+        persisted.UserId.Should().Be(ownerId);
+        persisted.IsDeleted.Should().Be(deleted);
+        _coordination.VerifyNoOtherCalls();
+        _publisher.VerifyNoOtherCalls();
+    }
+
     [Fact]
     public async Task Create_ShouldRejectNonTokenizedPaymentMethodIds()
     {

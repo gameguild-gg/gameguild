@@ -95,6 +95,9 @@ public class FraudBlacklistServiceTests : IAsyncDisposable
     public async Task RemoveAsync_Should_SoftDelete_And_Be_Tenant_Scoped()
     {
         var entry = FraudBlacklistEntry.Create(_tenantId, FraudBlacklistEntryType.Email, "fraud@example.com", "reason", isWhitelist: false, FraudBlacklistSource.Manual)!;
+        // The plain EF harness does not run ApplicationDbContext's version pipeline.
+        // Model a persisted entity, as required by EntityBase.SoftDelete.
+        entry.Version = 1;
         await CreateService().AddAsync(entry);
 
         var service = CreateService();

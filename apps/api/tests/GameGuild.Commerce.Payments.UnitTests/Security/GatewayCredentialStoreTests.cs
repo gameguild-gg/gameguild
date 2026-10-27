@@ -22,6 +22,8 @@ public class GatewayCredentialStoreTests
     private sealed class CredentialTestDbContext(DbContextOptions<CredentialTestDbContext> options)
         : DbContext(options), IApplicationDbContext
     {
+        public DbContextOptions<CredentialTestDbContext> ContextOptions { get; } = options;
+
         public DbSet<GatewayCredential> Credentials { get; set; } = null!;
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
@@ -53,7 +55,7 @@ public class GatewayCredentialStoreTests
     {
         var protection = new EphemeralDataProtectionProvider();
         var scopeFactory = new ServiceCollection()
-            .AddScoped<IApplicationDbContext>(_ => context)
+            .AddScoped<IApplicationDbContext>(_ => new CredentialTestDbContext(context.ContextOptions))
             .BuildServiceProvider()
             .GetRequiredService<IServiceScopeFactory>();
 
@@ -135,7 +137,7 @@ public class GatewayCredentialStoreTests
 
         var otherProtection = new EphemeralDataProtectionProvider();
         var scopeFactory = new ServiceCollection()
-            .AddScoped<IApplicationDbContext>(_ => context)
+            .AddScoped<IApplicationDbContext>(_ => new CredentialTestDbContext(context.ContextOptions))
             .BuildServiceProvider()
             .GetRequiredService<IServiceScopeFactory>();
         var otherKeyRingStore = new GatewayCredentialStore(

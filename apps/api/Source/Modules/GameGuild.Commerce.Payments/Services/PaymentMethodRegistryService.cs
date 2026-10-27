@@ -1,6 +1,7 @@
 using System.Text.Json;
 using GameGuild.Commerce;
 using GameGuild.CQRS;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
@@ -257,7 +258,7 @@ public class PaymentMethodRegistryService(
             ? null
             : await repository.GetDefaultAsync(tenantId, paymentMethod.UserId, cancellationToken).ConfigureAwait(false);
 
-        await using var transaction = await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = await BeginOwnedTransactionAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             if (previousDefault is not null)
@@ -283,11 +284,17 @@ public class PaymentMethodRegistryService(
                 }
             }
 
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
         catch
         {
-            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            if (transaction is not null)
+            {
+                await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
+            }
             throw;
         }
 
@@ -384,6 +391,13 @@ public class PaymentMethodRegistryService(
                 .ConfigureAwait(false);
         }
 
+        if ((existing ?? deleted) is { } registered && registered.UserId != ownerUserId)
+        {
+            return Result.Failure<PaymentMethodDto>(Error.Conflict(
+                "PaymentMethods.OwnerMismatch",
+                "This payment method is already registered to another owner."));
+        }
+
         // Duplicate-card detection (issue #414): a brand-new token (or the restoration of a
         // removed one) whose gateway fingerprint already belongs to another live method of
         // the same owner is rejected — the customer must reuse the existing entry. The same
@@ -423,7 +437,7 @@ public class PaymentMethodRegistryService(
         var protectedGatewayId = _gatewayIdProtector.Protect(gatewayPaymentMethodId);
         var gatewayIdHash = GatewayPaymentMethodIdHash.Compute(gatewayProvider, gatewayPaymentMethodId);
 
-        await using var transaction = await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = await BeginOwnedTransactionAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             PaymentMethod paymentMethod;
@@ -498,8 +512,18 @@ public class PaymentMethodRegistryService(
                     .ConfigureAwait(false);
             }
 
-            await repository.UpdateAsync(paymentMethod, cancellationToken).ConfigureAwait(false);
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            if (existing is null && deleted is null)
+            {
+                await repository.AddAsync(paymentMethod, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await repository.UpdateAsync(paymentMethod, cancellationToken).ConfigureAwait(false);
+            }
+            if (transaction is not null)
+            {
+                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            }
 
             await RecordAuditAsync(actor, paymentMethod, auditAction, cancellationToken).ConfigureAwait(false);
             await PublishRegistrationAsync(paymentMethod, gatewayPaymentMethodId, restored, cancellationToken).ConfigureAwait(false);
@@ -508,9 +532,25 @@ public class PaymentMethodRegistryService(
         }
         catch
         {
-            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            if (transaction is not null)
+            {
+                await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
+            }
             throw;
         }
+    }
+
+    private async Task<IDbContextTransaction?> BeginOwnedTransactionAsync(CancellationToken cancellationToken)
+    {
+        // The command pipeline owns its transaction, including the operation outbox.
+        // Joining it must neither start a nested transaction nor commit it early.
+        if (context is DbContext database && database.Database.IsRelational()
+            && database.Database.CurrentTransaction is not null)
+        {
+            return null;
+        }
+
+        return await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<GatewayPaymentMethodDetails?> ResolveGatewayDetailsAsync(

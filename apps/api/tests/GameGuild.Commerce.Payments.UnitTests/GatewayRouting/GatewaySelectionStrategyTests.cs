@@ -139,7 +139,7 @@ public class GatewaySelectionStrategyTests
         var candidates = selector.Select(new GatewayRouteContext("USD"));
 
         candidates.Select(candidate => candidate.Gateway.ProviderId)
-            .Should().Equal("stripe", "paypal", "priority order is the fail-safe disposition");
+            .Should().Equal(new[] { "stripe", "paypal" }, "priority order is the fail-safe disposition");
     }
 
     [Fact]

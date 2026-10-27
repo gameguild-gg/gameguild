@@ -50,7 +50,15 @@ public sealed class SubscriptionChangeSagaPostgreSqlTests(ApiPostgreSqlFixture f
         db.Add(subscription);
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
-        var originalOutboxCount = await db.Set<OutboxMessage>().CountAsync();
+        var subscriptionAggregateId = subscription.Id.ToString();
+        var failedEventIds = new List<Guid>();
+        async Task CaptureUncommittedEvents(CancellationToken cancellationToken)
+        {
+            failedEventIds.AddRange(await db.Set<OutboxMessage>()
+                .Where(value => value.TenantId == tenant.Id && value.AggregateId == subscriptionAggregateId)
+                .Select(value => value.EventId).ToListAsync(cancellationToken));
+            Assert.NotEmpty(failedEventIds);
+        }
 
         var fail = true;
         var repository = new SubscriptionRepository(db);
@@ -62,7 +70,11 @@ public sealed class SubscriptionChangeSagaPostgreSqlTests(ApiPostgreSqlFixture f
             {
                 var updated = await repository.UpdateAsync(value, ct);
                 // Throw after the real UPDATE succeeded, before transaction commit.
-                if (fail && !failAtCompletionEvent) throw new DbUpdateException("synthetic post-write failure");
+                if (fail && !failAtCompletionEvent)
+                {
+                    await CaptureUncommittedEvents(ct);
+                    throw new DbUpdateException("synthetic post-write failure");
+                }
                 return updated;
             });
         var plans = new Mock<ISubscriptionPlanService>();
@@ -95,10 +107,23 @@ public sealed class SubscriptionChangeSagaPostgreSqlTests(ApiPostgreSqlFixture f
         gateway.Setup(value => value.GetPaymentAsync(receipt.TransactionId!, It.IsAny<CancellationToken>(), "stripe"))
             .ReturnsAsync(receipt);
         var events = new Mock<IBillingIntegrationEventPublisher>();
+        var operationAccessor = scope.ServiceProvider.GetRequiredService<IUseCaseOperationContextAccessor>();
+        var durableEvents = new BillingIntegrationEventPublisher(new DurableEventProducer(db), operationAccessor,
+            NullLogger<BillingIntegrationEventPublisher>.Instance);
+        events.Setup(value => value.PublishSubscriptionChangeStepAsync(It.IsAny<SubscriptionChangeSaga>(),
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns((SubscriptionChangeSaga saga, string step, string outcome, string detail, CancellationToken ct) =>
+                durableEvents.PublishSubscriptionChangeStepAsync(saga, step, outcome, detail, ct));
         events.Setup(value => value.PublishSubscriptionChangeCompletedAsync(It.IsAny<SubscriptionChangeSaga>(), It.IsAny<CancellationToken>()))
-            .Returns(() => fail && failAtCompletionEvent
-                ? Task.FromException(new DbUpdateException("synthetic completion outbox failure"))
-                : Task.CompletedTask);
+            .Returns(async (SubscriptionChangeSaga saga, CancellationToken ct) =>
+            {
+                await durableEvents.PublishSubscriptionChangeCompletedAsync(saga, ct);
+                if (fail && failAtCompletionEvent)
+                {
+                    await CaptureUncommittedEvents(ct);
+                    throw new DbUpdateException("synthetic completion outbox failure");
+                }
+            });
         var orchestrator = new SubscriptionChangeSagaOrchestrator(db, subscriptions.Object, plans.Object,
             pricing.Object, calculator.Object, gateway.Object, methods.Object, events.Object,
             NullLogger<SubscriptionChangeSagaOrchestrator>.Instance,
@@ -107,7 +132,7 @@ public sealed class SubscriptionChangeSagaPostgreSqlTests(ApiPostgreSqlFixture f
         var actor = new Mock<IActorContextAccessor>();
         actor.SetupGet(value => value.ActorContext).Returns(ActorContext.Anonymous);
         var behavior = new UseCaseOperationBehavior<OrchestrateSubscriptionPlanChangeCommand, SubscriptionChangeSagaResult>(
-            db, actor.Object, scope.ServiceProvider.GetRequiredService<IUseCaseOperationContextAccessor>());
+            db, actor.Object, operationAccessor);
         Task<SubscriptionChangeSagaResult> Execute() => ambientCommand
             ? behavior.Handle(new OrchestrateSubscriptionPlanChangeCommand(subscription.Id, newPlan.Id, effective),
                 () => orchestrator.ExecuteAsync(request), CancellationToken.None)
@@ -123,7 +148,11 @@ public sealed class SubscriptionChangeSagaPostgreSqlTests(ApiPostgreSqlFixture f
             Assert.Equal(100m, stored.Amount.Amount);
             Assert.False(await verify.Set<SubscriptionChangeSaga>().AnyAsync(value => value.SubscriptionId == subscription.Id));
             Assert.False(await verify.Set<Invoice>().AnyAsync(value => value.SubscriptionId == subscription.Id));
-            Assert.Equal(originalOutboxCount, await verify.Set<OutboxMessage>().CountAsync());
+            // Check the events actually inserted by this attempt. Other tenants' completed
+            // messages can be pruned concurrently by the hosted outbox cleanup service.
+            Assert.NotEmpty(failedEventIds);
+            Assert.False(await verify.Set<OutboxMessage>().AnyAsync(value => failedEventIds.Contains(value.EventId)));
+            Assert.False(await verify.Set<OutboxDeliveryReceipt>().AnyAsync(value => failedEventIds.Contains(value.EventId)));
         }
         gateway.Verify(value => value.ProcessRefundAsync(It.IsAny<GatewayRefundRequest>(), It.IsAny<CancellationToken>()), Times.Never);
 

@@ -81,8 +81,14 @@ public class GatewayAnalyticsTests
         var unclassified = window.Single(row => row.ErrorCode == "(unclassified)");
         unclassified.Count.Should().Be(1);
 
-        report.ErrorBreakdown.Should().OnlyContain(row => row.Window == "24h",
-            "every payment is recent, so only the 24h window has failures");
+        report.ErrorBreakdown.Select(row => row.Window).Distinct()
+            .Should().BeEquivalentTo("24h", "7d", "30d");
+        foreach (var rollingWindow in report.ErrorBreakdown.GroupBy(row => row.Window))
+        {
+            rollingWindow.Should().HaveCount(3);
+            rollingWindow.Sum(row => row.Count).Should().Be(4,
+                "recent failures belong to each overlapping rolling window");
+        }
     }
 
     [Fact]

@@ -114,6 +114,13 @@ public static class PromoSqliteTestSupport
             });
 
             // First-purchase campaign attribution (issue #418 CAC): unique per user.
+            modelBuilder.Entity<PromoCampaign>(b =>
+            {
+                b.HasKey(x => x.Id);
+                b.HasIndex(x => new { x.TenantId, x.Key }).IsUnique();
+                b.Ignore(x => x.CreatedByUser);
+            });
+
             modelBuilder.Entity<PromoCampaignAttribution>(b =>
             {
                 b.HasKey(x => x.Id);
