@@ -90,6 +90,37 @@ describe("withAntibotVerification", () => {
     expect(underlying).toHaveBeenCalledWith(credentials, undefined);
   });
 
+  it("delegates MFA completion without any verification call when the secret is set", async () => {
+    // The default credentials provider also handles MFA completion
+    // (mfaToken + method/code — see mfa-challenge-form.tsx). The 2FA page has
+    // no widget, and the mfaToken is a server-issued first-factor bearer, so
+    // the wrapper must delegate without a Turnstile check.
+    process.env.TURNSTILE_SECRET_KEY = "test-secret";
+    const underlying = makeUnderlyingAuthorize({ user: { id: "u1" } } as ProviderResult);
+    const authorize = withAntibotVerification(underlying);
+    const credentials = { mfaToken: "x", method: "Totp", code: "123" };
+
+    await expect(authorize(credentials)).resolves.toEqual({ user: { id: "u1" } });
+
+    expect(mocks.verifyTurnstileToken).not.toHaveBeenCalled();
+    expect(underlying).toHaveBeenCalledTimes(1);
+    expect(underlying).toHaveBeenCalledWith(credentials, undefined);
+  });
+
+  it("still gates password credentials without a turnstileToken when the secret is set", async () => {
+    process.env.TURNSTILE_SECRET_KEY = "test-secret";
+    mocks.verifyTurnstileToken.mockResolvedValue({ success: false, reason: "missing-token" });
+    const underlying = makeUnderlyingAuthorize({ user: { id: "u1" } } as ProviderResult);
+    const authorize = withAntibotVerification(underlying);
+
+    await expect(authorize({ email: "a@b.c", password: "hunter2" })).rejects.toThrow(
+      CredentialsSignInError,
+    );
+
+    expect(underlying).not.toHaveBeenCalled();
+    expect(mocks.verifyTurnstileToken).toHaveBeenCalledWith(undefined);
+  });
+
   it("does not treat a magicLinkToken-shaped payload as a Turnstile token", async () => {
     // Token-less flows are exempted by WHERE the wrapper is applied in auth.ts
     // (innermost password authorize only), not by field inspection. If a
