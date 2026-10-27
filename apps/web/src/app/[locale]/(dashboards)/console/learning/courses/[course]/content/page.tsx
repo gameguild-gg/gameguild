@@ -68,7 +68,7 @@ export default async function ContentPage({
         >
           Couldn&apos;t load course content —{" "}
           <a
-            href={`?retry=${String(content.error)}`}
+            href="./"
             className="underline underline-offset-2"
           >
             retry
