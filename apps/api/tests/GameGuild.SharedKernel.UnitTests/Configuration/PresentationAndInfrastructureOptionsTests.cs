@@ -926,6 +926,47 @@ public class RateLimitingOptionsTests
     {
         RateLimitingOptions.CreateDefault().Should().NotBeNull();
     }
+
+    [Fact]
+    public void Validate_TrustedProxyNetworksWithValidCidr_ShouldNotThrow()
+    {
+        var options = new RateLimitingOptions
+        {
+            TrustedProxyNetworks = ["173.245.48.0/20", "172.16.0.0/12", "2400:cb00::/32"]
+        };
+        var act = () => options.Validate();
+
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Validate_TrustedProxyNetworksEmpty_ShouldNotThrow()
+    {
+        var options = new RateLimitingOptions { TrustedProxyNetworks = [] };
+        var act = () => options.Validate();
+
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Validate_TrustedProxyNetworksNonCidr_ShouldThrow()
+    {
+        var options = new RateLimitingOptions { TrustedProxyNetworks = ["not-a-cidr"] };
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("Rate-limiting trusted proxy networks must be valid IPv4/IPv6 CIDR networks.");
+    }
+
+    [Fact]
+    public void Validate_TrustedProxyNetworksInvalidPrefixLength_ShouldThrow()
+    {
+        var options = new RateLimitingOptions { TrustedProxyNetworks = ["10.0.0.0/33"] };
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("Rate-limiting trusted proxy networks must be valid IPv4/IPv6 CIDR networks.");
+    }
 }
 
 public class MemoryCachingOptionsTests

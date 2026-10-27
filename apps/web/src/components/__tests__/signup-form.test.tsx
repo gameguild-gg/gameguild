@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import {
   createMockUseAuth,
   renderWithUser,
@@ -11,6 +11,17 @@ import {
 /* ------------------------------------------------------------------ */
 
 let mockAuth: MockUseAuthReturn;
+
+const turnstileHarness = vi.hoisted(() => ({
+  captured: null as null | { onToken: (token: string | null) => void; action?: string },
+}));
+
+vi.mock('@/components/antibot/turnstile-widget', () => ({
+  TurnstileWidget: (props: { onToken: (token: string | null) => void; action?: string }) => {
+    turnstileHarness.captured = props;
+    return null;
+  },
+}));
 
 vi.mock('@game-guild/client/react', () => ({
   useAuth: () => mockAuth,
@@ -46,6 +57,7 @@ const { SignupForm } = await import('@/components/signup-form');
 describe('SignupForm', () => {
   beforeEach(() => {
     mockAuth = createMockUseAuth();
+    turnstileHarness.captured = null;
   });
 
   /* ---------- Rendering ---------- */
@@ -204,6 +216,7 @@ describe('SignupForm', () => {
       firstName: 'Jo',
       lastName: 'Do',
       redirectTo: '/',
+      turnstileToken: null,
     });
   }, 10000);
 
@@ -320,4 +333,62 @@ describe('SignupForm', () => {
 
     expect(container.firstChild).toHaveClass('custom-class');
   });
+});
+
+describe('SignupForm Turnstile', () => {
+  beforeEach(() => {
+    mockAuth = createMockUseAuth();
+    turnstileHarness.captured = null;
+  });
+
+  it('renders nothing when the site key is unset and still submits with a null token', async () => {
+    const { user } = renderWithUser(<SignupForm />);
+
+    expect(screen.queryByRole('group', { name: /bot verification/i })).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Full Name'), 'Jo Do');
+    await user.type(screen.getByLabelText('Email'), 'jo@e.co');
+    await user.type(screen.getByLabelText('Password'), '12345678');
+    await user.type(screen.getByLabelText('Confirm Password'), '12345678');
+    await user.click(screen.getByRole('button', { name: /create account$/i }));
+
+    expect(mockAuth.signUp).toHaveBeenCalledWith(
+      expect.objectContaining({ turnstileToken: null }),
+    );
+  }, 10000);
+
+  it('passes the emitted token to signUp and resets it after a failed attempt (single-use)', async () => {
+    mockAuth = createMockUseAuth({
+      signUp: vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Email already exists'))
+        .mockResolvedValue(undefined),
+    });
+    const { user } = renderWithUser(<SignupForm />);
+
+    expect(turnstileHarness.captured).not.toBeNull();
+    turnstileHarness.captured!.onToken('tok-signup');
+
+    await user.type(screen.getByLabelText('Full Name'), 'Jo Do');
+    await user.type(screen.getByLabelText('Email'), 'jo@e.co');
+    await user.type(screen.getByLabelText('Password'), '12345678');
+    await user.type(screen.getByLabelText('Confirm Password'), '12345678');
+    await user.click(screen.getByRole('button', { name: /create account$/i }));
+
+    await waitFor(() => {
+      expect(mockAuth.signUp).toHaveBeenCalledTimes(1);
+    });
+    expect(mockAuth.signUp).toHaveBeenCalledWith(
+      expect.objectContaining({ turnstileToken: 'tok-signup' }),
+    );
+
+    // Second submission after failure must NOT reuse the token (single-use).
+    await user.click(screen.getByRole('button', { name: /create account$/i }));
+    await waitFor(() => {
+      expect(mockAuth.signUp).toHaveBeenCalledTimes(2);
+    });
+    expect(mockAuth.signUp).toHaveBeenLastCalledWith(
+      expect.objectContaining({ turnstileToken: null }),
+    );
+  }, 10000);
 });

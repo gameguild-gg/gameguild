@@ -14,6 +14,18 @@ let mockAuth: MockUseAuthReturn;
 
 const mockRouter = { replace: vi.fn(), push: vi.fn() };
 
+// Turnstile harness: captures the widget props so tests can drive onToken.
+const turnstileHarness = vi.hoisted(() => ({
+  captured: null as null | { onToken: (token: string | null) => void; action?: string },
+}));
+
+vi.mock('@/components/antibot/turnstile-widget', () => ({
+  TurnstileWidget: (props: { onToken: (token: string | null) => void; action?: string }) => {
+    turnstileHarness.captured = props;
+    return null;
+  },
+}));
+
 vi.mock('@game-guild/client/react', () => ({
   useAuth: () => mockAuth,
 }));
@@ -149,6 +161,7 @@ describe('SignInForm', () => {
       password: 'password123',
       rememberMe: false,
       redirectTo: '/',
+      turnstileToken: null,
     });
   });
 
@@ -165,6 +178,7 @@ describe('SignInForm', () => {
       password: 'password123',
       rememberMe: true,
       redirectTo: '/',
+      turnstileToken: null,
     });
   });
 
@@ -394,5 +408,62 @@ describe('SignInForm providers slot composition', () => {
     // (c) "or sign in with email" divider present exactly once.
     expect(screen.getByText('or sign in with email')).toBeInTheDocument();
     expect(screen.getAllByText('or sign in with email')).toHaveLength(1);
+  });
+});
+
+describe('SignInForm Turnstile', () => {
+  beforeEach(() => {
+    mockAuth = createMockUseAuth();
+    turnstileHarness.captured = null;
+  });
+
+  it('renders nothing when the site key is unset and still submits with a null token', async () => {
+    const { user } = renderWithUser(<SignInForm />);
+
+    expect(screen.queryByRole('group', { name: /bot verification/i })).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Email'), 'test@example.com');
+    await user.type(screen.getByLabelText('Password'), 'password123');
+    await user.click(screen.getByRole('button', { name: /sign in$/i }));
+
+    expect(mockAuth.signIn).toHaveBeenCalledWith(
+      'credentials',
+      expect.objectContaining({ turnstileToken: null }),
+    );
+  });
+
+  it('passes the emitted token to signIn and resets it after a failed attempt (single-use)', async () => {
+    mockAuth = createMockUseAuth({
+      signIn: vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Invalid credentials'))
+        .mockResolvedValue(undefined),
+    });
+    const { user } = renderWithUser(<SignInForm />);
+
+    expect(turnstileHarness.captured).not.toBeNull();
+    turnstileHarness.captured!.onToken('tok-123');
+
+    await user.type(screen.getByLabelText('Email'), 'test@example.com');
+    await user.type(screen.getByLabelText('Password'), 'password123');
+    await user.click(screen.getByRole('button', { name: /sign in$/i }));
+
+    await waitFor(() => {
+      expect(mockAuth.signIn).toHaveBeenCalledTimes(1);
+    });
+    expect(mockAuth.signIn).toHaveBeenCalledWith(
+      'credentials',
+      expect.objectContaining({ turnstileToken: 'tok-123' }),
+    );
+
+    // Second submission after failure must NOT reuse the token (single-use).
+    await user.click(screen.getByRole('button', { name: /sign in$/i }));
+    await waitFor(() => {
+      expect(mockAuth.signIn).toHaveBeenCalledTimes(2);
+    });
+    expect(mockAuth.signIn).toHaveBeenLastCalledWith(
+      'credentials',
+      expect.objectContaining({ turnstileToken: null }),
+    );
   });
 });

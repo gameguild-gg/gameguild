@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
@@ -11,6 +11,14 @@ vi.mock('@/lib/blogs/actions', () => ({
   addComment: (...args: unknown[]) => addComment(...args),
   deleteComment: (...args: unknown[]) => deleteComment(...args),
   getBlogPostCommentsPage: (...args: unknown[]) => getBlogPostCommentsPage(...args),
+}));
+
+const widgetProps = vi.fn();
+vi.mock('@/components/antibot/turnstile-widget', () => ({
+  TurnstileWidget: (props: { onToken: (token: string | null) => void; id?: string }) => {
+    widgetProps(props);
+    return null;
+  },
 }));
 
 const { BlogComments } = await import('@/components/blogs/blog-comments');
@@ -126,8 +134,32 @@ describe('BlogComments', () => {
     await user.type(screen.getByLabelText(/write a comment/i), 'Fresh');
     await user.click(screen.getByRole('button', { name: /publish comment/i }));
 
-    await waitFor(() => expect(addComment).toHaveBeenCalledWith('post-1', { content: 'Fresh' }));
+    await waitFor(() => expect(addComment).toHaveBeenCalledWith('post-1', expect.objectContaining({ content: 'Fresh' })));
     expect(await screen.findByText('Fresh')).toBeInTheDocument();
+  });
+
+  it('sends the turnstile token and resets it to null after a failed submit', async () => {
+    const user = userEvent.setup();
+    addComment
+      .mockResolvedValueOnce({ success: false, error: 'Bot check failed. Please refresh and try again.', status: 403 })
+      .mockResolvedValueOnce({ success: true, data: comment({ id: 'c9', content: 'Retry' }) });
+
+    render(<BlogComments {...baseProps} currentUserId="user-1" />);
+    await waitFor(() => expect(widgetProps).toHaveBeenCalled());
+    const onToken = (widgetProps.mock.calls.at(-1)?.[0] as { onToken: (token: string | null) => void }).onToken;
+    act(() => onToken('tok-1'));
+
+    await user.type(screen.getByLabelText(/write a comment/i), 'First try');
+    await user.click(screen.getByRole('button', { name: /publish comment/i }));
+    await waitFor(() => expect(addComment).toHaveBeenCalledTimes(1));
+    expect(addComment.mock.calls[0]?.[1]).toMatchObject({ turnstileToken: 'tok-1' });
+    expect(await screen.findByRole('alert')).toHaveTextContent(/bot check failed/i);
+
+    // Single-use token: the failed submit consumed it, so the retry must send null.
+    await user.type(screen.getByLabelText(/write a comment/i), ' ');
+    await user.click(screen.getByRole('button', { name: /publish comment/i }));
+    await waitFor(() => expect(addComment).toHaveBeenCalledTimes(2));
+    expect(addComment.mock.calls[1]?.[1]).toMatchObject({ turnstileToken: null });
   });
 
   it('shows the comments-disabled notice and hides the composer when AllowComments=false', async () => {
@@ -227,7 +259,7 @@ describe('BlogComments', () => {
     await user.click(screen.getByRole('button', { name: /publish reply/i }));
 
     await waitFor(() =>
-      expect(addComment).toHaveBeenCalledWith('post-1', { content: 'Reply body', parentCommentId: 'c1' }),
+      expect(addComment).toHaveBeenCalledWith('post-1', expect.objectContaining({ content: 'Reply body', parentCommentId: 'c1' })),
     );
     expect(await screen.findByText('Reply body')).toBeInTheDocument();
   });

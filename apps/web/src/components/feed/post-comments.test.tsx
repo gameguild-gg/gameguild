@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -12,6 +12,14 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/feed/actions", () => mocks);
 vi.mock("next/image", () => ({ default: () => <span data-testid="next-image" /> }));
+
+const widgetProps = vi.fn();
+vi.mock("@/components/antibot/turnstile-widget", () => ({
+  TurnstileWidget: (props: { onToken: (token: string | null) => void; id?: string }) => {
+    widgetProps(props);
+    return null;
+  },
+}));
 
 import { PostComments } from "./post-comments";
 import type { PostComment } from "@/lib/feed/contracts";
@@ -110,11 +118,36 @@ describe("PostComments", () => {
     fireEvent.change(screen.getByPlaceholderText("Add a reply…"), { target: { value: "My draft" } });
     fireEvent.click(screen.getByRole("button", { name: "Publish reply" }));
 
-    await waitFor(() => expect(mocks.createPostComment).toHaveBeenCalledWith("post-1", {
+    await waitFor(() => expect(mocks.createPostComment).toHaveBeenCalledWith("post-1", expect.objectContaining({
       content: "My draft",
       parentCommentId: "root-1",
-    }));
+    })));
     expect(await screen.findByText("Canonical reply")).toBeInTheDocument();
+  });
+
+  it("sends the turnstile token and resets it to null after a failed submit", async () => {
+    mocks.loadPostCommentsPageAction.mockResolvedValueOnce({ items: [], nextSkip: null });
+    mocks.createPostComment
+      .mockRejectedValueOnce(new Error("Bot check failed. Please refresh and try again."))
+      .mockResolvedValueOnce(comment("c-new", "Retry"));
+    render(<PostComments postId="post-1" currentUserId="viewer-1" open onOpenChange={vi.fn()} />);
+
+    await screen.findByPlaceholderText("Add a comment…");
+    await waitFor(() => expect(widgetProps).toHaveBeenCalled());
+    const onToken = (widgetProps.mock.calls.at(-1)?.[0] as { onToken: (token: string | null) => void }).onToken;
+    act(() => onToken("tok-1"));
+
+    fireEvent.change(screen.getByPlaceholderText("Add a comment…"), { target: { value: "First try" } });
+    fireEvent.click(screen.getByRole("button", { name: "Publish comment" }));
+    await waitFor(() => expect(mocks.createPostComment).toHaveBeenCalledTimes(1));
+    expect(mocks.createPostComment.mock.calls[0]?.[1]).toMatchObject({ turnstileToken: "tok-1" });
+    expect(await screen.findByRole("alert")).toHaveTextContent(/bot check failed/i);
+
+    // Single-use token: the failed submit consumed it, so the retry must send null.
+    fireEvent.change(screen.getByPlaceholderText("Add a comment…"), { target: { value: "First try " } });
+    fireEvent.click(screen.getByRole("button", { name: "Publish comment" }));
+    await waitFor(() => expect(mocks.createPostComment).toHaveBeenCalledTimes(2));
+    expect(mocks.createPostComment.mock.calls[1]?.[1]).toMatchObject({ turnstileToken: null });
   });
 
   it("edits authoritatively and confirms a guarded delete", async () => {

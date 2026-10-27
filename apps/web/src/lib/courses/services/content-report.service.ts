@@ -15,6 +15,8 @@ export interface ContentReport {
 
 type ReportPayload = Omit<ContentReport, 'id' | 'status' | 'createdAt' | 'userId'> & {
   userId?: string;
+  /** Consumed by the same-origin proxy's Turnstile gate; never forwarded to the backend. */
+  turnstileToken?: string | null;
 };
 
 interface ContentReportSuccess {
@@ -54,6 +56,7 @@ export async function reportContent(data: ReportPayload): Promise<ContentReportR
       reportType: data.reportType,
       reason: data.reason,
       description: data.description,
+      turnstileToken: data.turnstileToken,
     }),
   });
 

@@ -2,6 +2,7 @@ import { cache } from "react";
 import {
   GameGuildAuth,
   CredentialsProvider,
+  CredentialsSignInError,
   GoogleProvider,
   DiscordProvider,
   GitHubProvider,
@@ -12,10 +13,12 @@ import {
   type Session,
 } from "@game-guild/client";
 import { cookies } from "next/headers";
+import { verifyTurnstileToken } from "@/lib/antibot/turnstile";
 import { createSharedAuthCookieConfig } from "@/lib/auth/cross-domain-auth";
 import { createMagicLinkCredentialsAuthorize } from "@/lib/auth/magic-link-credentials";
 import { createEmailCodeCredentialsAuthorize } from "@/lib/auth/email-code-credentials";
 import { createWeb3CredentialsAuthorize } from "@/lib/auth/web3-credentials";
+import { withAntibotVerification } from "@/lib/auth/antibot-authorize";
 
 const passwordCredentials = CredentialsProvider();
 const apiUrl =
@@ -28,7 +31,13 @@ const result = GameGuildAuth({
     CredentialsProvider({
       authorize: createWeb3CredentialsAuthorize(
         createMagicLinkCredentialsAuthorize(
-          createEmailCodeCredentialsAuthorize(passwordCredentials.authorize, apiUrl),
+          createEmailCodeCredentialsAuthorize(
+            // Turnstile gates ONLY the password layer: magic-link, MFA and web3
+            // are token-less or use their own challenge tokens and must not
+            // require a Turnstile token (see withAntibotVerification).
+            withAntibotVerification(passwordCredentials.authorize),
+            apiUrl,
+          ),
           apiUrl,
         ),
         apiUrl,
@@ -79,7 +88,28 @@ const result = GameGuildAuth({
   }),
 });
 
-export const { handlers, signIn, signOut, signUp, update } = result;
+export const { handlers, signIn, signOut, update } = result;
+
+const rawSignUp = result.signUp;
+
+/**
+ * Sign-up is always password-based, so it is gated unconditionally. The
+ * fail-open behavior comes from verifyTurnstileToken itself when
+ * TURNSTILE_SECRET_KEY is unset (dev/e2e).
+ */
+export async function signUp(
+  credentials: Parameters<typeof rawSignUp>[0] & { turnstileToken?: string },
+  options?: Parameters<typeof rawSignUp>[1],
+) {
+  const verification = await verifyTurnstileToken(credentials.turnstileToken);
+
+  if (!verification.success) {
+    throw new CredentialsSignInError("Bot verification failed");
+  }
+
+  return rawSignUp(credentials, options);
+}
+
 export const authConfig = result.config;
 
 type AuthProxyHandler = Parameters<typeof result.auth>[0];

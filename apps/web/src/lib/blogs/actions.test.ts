@@ -2,15 +2,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getRequestAuthContext: vi.fn(),
+  verifyTurnstileToken: vi.fn(),
+  forwardedIpHeaders: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({ getRequestAuthContext: mocks.getRequestAuthContext }));
+vi.mock('@/lib/antibot/turnstile', () => ({ verifyTurnstileToken: mocks.verifyTurnstileToken }));
+vi.mock('@/lib/server/forwarded-headers', () => ({ forwardedIpHeaders: mocks.forwardedIpHeaders }));
 vi.mock('react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react')>()),
   cache: <T extends (...args: never[]) => unknown>(fn: T) => fn,
 }));
 
-import { createPost, updateDraft } from './actions';
+import { addComment, createPost, updateDraft } from './actions';
 
 function fetchResponding(status: number, body: unknown) {
   return vi.fn().mockResolvedValue(
@@ -24,6 +28,8 @@ function fetchResponding(status: number, body: unknown) {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.getRequestAuthContext.mockResolvedValue({ token: 'tok', tenantId: 'tenant-1', session: {} });
+  mocks.verifyTurnstileToken.mockResolvedValue({ success: true });
+  mocks.forwardedIpHeaders.mockResolvedValue({});
 });
 
 describe('blog action error mapping', () => {
@@ -81,6 +87,52 @@ describe('blog action error mapping', () => {
     const result = await updateDraft('p1', { revision: 7, title: 'New title' });
 
     expect(result).toEqual({ success: true, data: { id: 'p1', revision: 8 } });
+  });
+});
+
+describe('addComment turnstile gate', () => {
+  it('returns a typed failure before any API call when the token fails verification', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    mocks.verifyTurnstileToken.mockResolvedValue({ success: false, reason: 'verify-failed' });
+
+    const result = await addComment('p1', { content: 'hi', turnstileToken: 'stale' });
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Bot check failed. Please refresh and try again.',
+      status: 403,
+    });
+    expect(mocks.verifyTurnstileToken).toHaveBeenCalledWith('stale');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('verifies a missing token and fails closed before any API call', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    mocks.verifyTurnstileToken.mockResolvedValue({ success: false, reason: 'missing-token' });
+
+    const result = await addComment('p1', { content: 'hi' });
+
+    expect(result).toMatchObject({ success: false, status: 403 });
+    expect(mocks.verifyTurnstileToken).toHaveBeenCalledWith(undefined);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('forwards the comment once with the token stripped and the client IP attached', async () => {
+    mocks.forwardedIpHeaders.mockResolvedValue({ 'X-Forwarded-For': '203.0.113.7' });
+    const fetchMock = fetchResponding(200, { id: 'c1', content: 'hi' });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await addComment('p1', { content: 'hi', parentCommentId: null, turnstileToken: 'fresh' });
+
+    expect(result).toEqual({ success: true, data: { id: 'c1', content: 'hi' } });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, init] = fetchMock.mock.calls[0];
+    const body = JSON.parse(init.body as string);
+    expect(body).toEqual({ content: 'hi', parentCommentId: null });
+    expect(body).not.toHaveProperty('turnstileToken');
+    expect(init.headers['X-Forwarded-For']).toBe('203.0.113.7');
   });
 });
 

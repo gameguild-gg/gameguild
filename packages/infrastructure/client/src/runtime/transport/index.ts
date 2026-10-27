@@ -7,3 +7,5 @@
 export type { ApiResponse, HttpMethod, Interceptor, RequestConfig, RequestInterceptor, ResponseInterceptor, Transport, TransportConfig } from './types.js';
 
 export { createFetchTransport, createHeaderInterceptor } from './fetch.js';
+
+export { createForwardedIpHeaderInterceptor, resolveForwardedIpHeader } from './forwarded-ip.js';

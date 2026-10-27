@@ -22,6 +22,7 @@ import {
 import { Input } from "@game-guild/ui/components/input";
 import { Checkbox } from "@game-guild/ui/components/checkbox";
 import { PasswordInput } from "@/components/ui/password-input";
+import { TurnstileWidget } from "@/components/antibot/turnstile-widget";
 
 const subscribeToHydration = () => () => undefined;
 
@@ -41,6 +42,7 @@ export function SignInForm({
   const router = useRouter();
   const { signIn, isLoading, error, clearError } = useAuth();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const isHydrated = useSyncExternalStore(
     subscribeToHydration,
     () => true,
@@ -76,8 +78,11 @@ export function SignInForm({
         password,
         rememberMe,
         redirectTo,
+        turnstileToken,
       });
     } catch (err) {
+      // Single-use token: reset on failure so the widget re-issues a fresh one.
+      setTurnstileToken(null);
       // The MFA challenge lives on the dedicated /sign-in/2fa route; the
       // app-wide useAuth state (mfaChallenge) survives the navigation.
       // redirectTo rides along so the challenge returns to the caller's
@@ -194,6 +199,7 @@ export function SignInForm({
                   <FieldError>{error.message}</FieldError>
                 )}
               <Field>
+                <TurnstileWidget onToken={setTurnstileToken} action="sign-in" id="sign-in-turnstile" />
                 <Button
                   type="submit"
                   size="lg"
