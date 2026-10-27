@@ -59,6 +59,7 @@ const clientSuites = [
   'tests/gaps/final-gaps.test.ts',
   'tests/react/query-hooks-extended.test.ts',
   'tests/generator',
+  'tests/transport',
 ];
 
 function assertClientContractGate(source) {
