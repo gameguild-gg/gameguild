@@ -15,11 +15,9 @@
  * The SDK is loaded behind a lazy dynamic `import()` and the adapter is
  * config-gated fail-closed: without `enabled: true` AND a `projectId` the
  * wallet reports unavailable and every operation rejects (`wallet_not_found`).
- * Current SDK releases ship under the proprietary WalletConnect/Reown
- * Community License, so this repository does not vendor the package — a
- * deployment that has accepted the license supplies an SDK-backed loader
- * or browser ESM resolution for the optional native import. Installing the
- * package on the Node host alone does not provide browser module resolution.
+ * The host owns the optional SDK installation and bundling. GameGuild's Next
+ * configuration excludes the SDK from the disabled graph and bundles the real
+ * package when enabled. Other hosts may inject an SDK-backed loader.
  */
 import { toProviderError, toWeb3Error } from '../types';
 import type {
@@ -85,8 +83,8 @@ export interface WalletConnectAdapterOptions extends WalletConnectNetworkOptions
   /**
    * Loader for the SDK-backed provider. Defaults to the lazy dynamic import
    * of `@walletconnect/ethereum-provider` + `EthereumProvider.init(...)`.
-   * That native import requires browser ESM resolution supplied by the host;
-   * applications can instead inject a loader backed by their bundled SDK.
+   * The host bundles the installed optional peer; applications can instead
+   * inject a loader backed by their own SDK integration.
    * Rejects (fail closed) when the SDK cannot be resolved or the relay is unreachable.
    */
   readonly loadProvider?: () => Promise<WalletConnectEthereumProviderLike>;
