@@ -1,6 +1,7 @@
 using GameGuild.API.Database;
 using GameGuild.API.Eventing;
 using GameGuild.API.IntegrationTests.Infrastructure;
+using GameGuild.Commerce;
 using GameGuild.Commerce.Payments;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
@@ -129,7 +130,7 @@ public sealed class PaymentMethodRegistryPostgreSqlTests(ApiPostgreSqlFixture fi
             }, CancellationToken.None));
         var stored = await db.Set<PaymentMethod>().AsNoTracking()
             .Where(value => value.TenantId == tenant.Id).ToListAsync();
-        Assert.Equal(first.Value.Id, Assert.Single(stored.Where(value => value.IsDefault)).Id);
+        Assert.Equal(first.Value.Id, Assert.Single(stored, value => value.IsDefault).Id);
         Assert.Equal(2, stored.Count);
     }
 }
