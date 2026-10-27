@@ -311,13 +311,6 @@ const nextConfig: NextConfig = {
     ];
   },
   webpack: (config, { isServer, webpack }) => {
-    if (!walletConnectEnabled) {
-      config.resolve ??= {};
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        "@walletconnect/ethereum-provider$": path.resolve(__dirname, walletConnectDisabledModule),
-      };
-    }
     if (process.env.GAMEGUILD_DISABLE_WEBPACK_CACHE === "1") {
       config.cache = false;
     }
@@ -349,6 +342,14 @@ const nextConfig: NextConfig = {
 
     config.resolve.alias = {
       ...config.resolve.alias,
+      ...(!walletConnectEnabled
+        ? {
+            "@walletconnect/ethereum-provider$": path.resolve(
+              __dirname,
+              walletConnectDisabledModule,
+            ),
+          }
+        : {}),
       // The isolated coding-cycle runner must exercise the packages checked
       // out beside this app. A developer may have another worktree mounted
       // through node_modules, which would otherwise make a green browser run
