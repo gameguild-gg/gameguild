@@ -26,6 +26,10 @@ public sealed class ProcessPaymentCommandHandler(
 {
     private const string SubscriptionInvoiceKind = "subscription";
 
+    // Returned only after the gateway outcome and required payment writes complete.
+    // A business failure must retain that recorded attempt, including unknown charges.
+    private sealed class RecordedPaymentResult : PaymentResult, ICommitOnFailureOutcome { }
+
     public async Task<PaymentResult> Handle(ProcessPaymentCommand request, CancellationToken cancellationToken)
     {
         var tokenProvider = GatewayPaymentMethodTokens.ResolveProvider(request.PaymentMethodId, request.GatewayProvider)
@@ -326,7 +330,7 @@ public sealed class ProcessPaymentCommandHandler(
         }
 
         // 7. Return result
-        return new PaymentResult
+        return new RecordedPaymentResult
         {
             TenantId = payment.TenantId,
             Success = gatewayResult.Success,

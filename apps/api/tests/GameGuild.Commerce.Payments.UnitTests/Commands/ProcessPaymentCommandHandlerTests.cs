@@ -32,12 +32,29 @@ public class ProcessPaymentCommandHandlerTests
 
         result.Success.Should().BeFalse();
         result.Status.Should().Be(PaymentStatus.Processing);
+        CommandOutcome.IsFailure(result).Should().BeTrue();
+        CommandOutcome.ShouldRollback(result).Should().BeFalse();
         persisted.Should().NotBeNull();
         persisted!.Status.Should().Be(PaymentStatus.Processing);
         persisted.NextRetryAt.Should().BeNull();
         persisted.CanRetry.Should().BeFalse();
         fixture.SyncService.VerifyNoOtherCalls();
         fixture.PaymentGateway.Verify(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void OrdinaryPaymentDenialsAndDeserializedPendingDtos_DoNotGrantCommitAuthority()
+    {
+        CommandOutcome.ShouldRollback(PaymentResult.Failed("denied")).Should().BeTrue();
+        CommandOutcome.ShouldRollback(new PaymentRetryResult { Success = false }).Should().BeTrue();
+        var pending = System.Text.Json.JsonSerializer.Deserialize<PaymentResult>(
+            """{"Success":false,"Status":1,"PaymentId":"00000000-0000-0000-0000-000000000001"}""");
+        pending.Should().NotBeAssignableTo<ICommitOnFailureOutcome>();
+        CommandOutcome.ShouldRollback(pending).Should().BeTrue();
+        var retry = System.Text.Json.JsonSerializer.Deserialize<PaymentRetryResult>(
+            """{"Success":false,"CommitOnFailure":true,"PaymentResult":{"Success":false,"Status":1}}""");
+        retry.Should().NotBeAssignableTo<ICommitOnFailureOutcome>();
+        CommandOutcome.ShouldRollback(retry).Should().BeTrue();
     }
 
     [Fact]
