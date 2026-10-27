@@ -97,7 +97,7 @@ public sealed class SamlBrowserFlowPostgreSqlTests : IAsyncLifetime
 
     /// <summary>Starts a sign-in like the browser does and answers it like the test IdP does.</summary>
     private async Task<(TestSamlIdentityProvider.ParsedAuthnRequest Request, string RelayState, string Response)> StartFlowAndBuildResponseAsync(
-        TestSamlIdentityProvider.ResponseOptions? options = null,
+        Func<TestSamlIdentityProvider.ResponseOptions, TestSamlIdentityProvider.ResponseOptions>? configureResponse = null,
         HttpClient? client = null)
     {
         var initiator = client ?? _client;
@@ -113,7 +113,9 @@ public sealed class SamlBrowserFlowPostgreSqlTests : IAsyncLifetime
         Assert.Equal(TestSamlIdpSpEntityId, request.Issuer);
         Assert.Equal(TestSamlIdentityProvider.AcsUrl, request.AssertionConsumerServiceUrl);
 
-        var response = _idp.BuildSignedResponse(request, challenge.RelayState, options);
+        var options = TestSamlIdentityProvider.ResponseOptions.ForRequest(request);
+        var response = _idp.BuildSignedResponse(request, challenge.RelayState,
+            configureResponse is null ? options : configureResponse(options));
         return (request, challenge.RelayState, response);
     }
 
@@ -201,13 +203,17 @@ public sealed class SamlBrowserFlowPostgreSqlTests : IAsyncLifetime
         // claiming it: outer InResponseTo = attacker's request, signed subject
         // confirmation = the original request.
         var (attackerRequest, attackerRelayState, forgedResponse) = await StartFlowAndBuildResponseAsync(
-            new TestSamlIdentityProvider.ResponseOptions(
-                SubjectInResponseTo: originalRequest.Id,
-                SignResponse: false));
+            options => options with
+            {
+                SubjectInResponseTo = originalRequest.Id,
+                SignResponse = false
+            });
         Assert.NotEqual(originalRequest.Id, attackerRequest.Id);
 
         using var forged = await PostCallbackAsync(forgedResponse, attackerRelayState);
         Assert.Equal(System.Net.HttpStatusCode.Unauthorized, forged.StatusCode);
+        Assert.Contains("InResponseTo correlation that does not match the response",
+            await forged.Content.ReadAsStringAsync());
 
         // Neither the refused forgery nor anything else consumed the original flow's
         // pending request: the legitimate browser still completes it.
@@ -244,7 +250,7 @@ public sealed class SamlBrowserFlowPostgreSqlTests : IAsyncLifetime
         // Review item 5 (behavior retention): the assertion's AuthnContext still
         // reaches the response and the configured IdP logout path is served.
         var (_, relayState, samlResponse) = await StartFlowAndBuildResponseAsync(
-            new TestSamlIdentityProvider.ResponseOptions(AuthnContextClassRef: TestSamlIdentityProvider.MfaAuthnContext));
+            options => options with { AuthnContextClassRef = TestSamlIdentityProvider.MfaAuthnContext });
 
         using var callback = await PostCallbackAsync(samlResponse, relayState);
         Assert.True(callback.IsSuccessStatusCode,
