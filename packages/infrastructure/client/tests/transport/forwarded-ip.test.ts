@@ -42,6 +42,18 @@ describe('resolveForwardedIpHeader', () => {
   it('returns {} when the getter has no headers at all', () => {
     expect(resolveForwardedIpHeader(() => null)).toEqual({});
   });
+
+  it('trims a padded cf-ray value', () => {
+    expect(
+      resolveForwardedIpHeader(getterFrom({ 'cf-connecting-ip': '203.0.113.7', 'cf-ray': '  9f3a-1  ' })),
+    ).toEqual({ 'X-Forwarded-For': '203.0.113.7' });
+  });
+
+  it('returns {} for a whitespace-only cf-ray', () => {
+    expect(
+      resolveForwardedIpHeader(getterFrom({ 'cf-connecting-ip': '203.0.113.7', 'cf-ray': '   ' })),
+    ).toEqual({});
+  });
 });
 
 describe('createForwardedIpHeaderInterceptor', () => {

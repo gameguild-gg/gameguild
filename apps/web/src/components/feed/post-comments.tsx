@@ -357,6 +357,7 @@ function CommentsPanel({
     commentPendingRef.current = true;
     setCommentPending(true);
     setError(null);
+    const spentToken = turnstileToken;
     try {
       const persisted = await createPostComment(postId, {
         content: value,
@@ -375,8 +376,9 @@ function CommentsPanel({
       setError(message);
       toast.error(message);
     } finally {
-      // Single-use token: consumed by this submit regardless of outcome.
-      setTurnstileToken(null);
+      // Single-use token: consumed by this submit regardless of outcome —
+      // unless the widget already re-issued a fresh one during the await.
+      setTurnstileToken((current) => (current === spentToken ? null : current));
       commentPendingRef.current = false;
       setCommentPending(false);
     }

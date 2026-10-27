@@ -13,7 +13,7 @@ import { headers } from 'next/headers';
  */
 export async function getClientIp(): Promise<string | null> {
   const requestHeaders = await headers();
-  if (!requestHeaders.get('cf-ray')) return null;
+  if (!requestHeaders.get('cf-ray')?.trim()) return null;
   const ip = requestHeaders.get('cf-connecting-ip')?.trim();
   return ip ? ip : null;
 }

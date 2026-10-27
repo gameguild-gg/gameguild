@@ -175,6 +175,35 @@ describe("PostComments", () => {
     expect(mocks.createPostComment.mock.calls[1]?.[1]).toMatchObject({ turnstileToken: null });
   });
 
+  it("keeps a token re-issued by the widget during a pending submit", async () => {
+    mocks.loadPostCommentsPageAction.mockResolvedValueOnce({ items: [], nextSkip: null });
+    let releaseFirst!: (value: ReturnType<typeof comment>) => void;
+    mocks.createPostComment.mockImplementationOnce(
+      () => new Promise((resolve) => { releaseFirst = resolve; }),
+    );
+    mocks.createPostComment.mockResolvedValueOnce(comment("c-new", "Retry"));
+    render(<PostComments postId="post-1" currentUserId="viewer-1" open onOpenChange={vi.fn()} />);
+
+    await screen.findByPlaceholderText("Add a comment…");
+    await waitFor(() => expect(widgetProps).toHaveBeenCalled());
+    const onToken = (widgetProps.mock.calls.at(-1)?.[0] as { onToken: (token: string | null) => void }).onToken;
+    act(() => onToken("tok-1"));
+
+    fireEvent.change(screen.getByPlaceholderText("Add a comment…"), { target: { value: "First try" } });
+    fireEvent.click(screen.getByRole("button", { name: "Publish comment" }));
+    await waitFor(() => expect(mocks.createPostComment).toHaveBeenCalledTimes(1));
+
+    // The widget re-issues a fresh token while the submit is still in flight.
+    act(() => onToken("tok-2"));
+    act(() => releaseFirst(comment("c-1", "First")));
+    await screen.findByText("First");
+
+    fireEvent.change(screen.getByPlaceholderText("Add a comment…"), { target: { value: "Retry" } });
+    fireEvent.click(screen.getByRole("button", { name: "Publish comment" }));
+    await waitFor(() => expect(mocks.createPostComment).toHaveBeenCalledTimes(2));
+    expect(mocks.createPostComment.mock.calls[1]?.[1]).toMatchObject({ turnstileToken: "tok-2" });
+  });
+
   it("edits authoritatively and confirms a guarded delete", async () => {
     const own = comment("comment-1", "Original");
     mocks.loadPostCommentsPageAction.mockResolvedValueOnce({ items: [own], nextSkip: null });

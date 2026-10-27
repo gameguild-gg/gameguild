@@ -23,7 +23,7 @@ import type { Interceptor } from './types.js';
  * entries are client-controlled when the Cloudflare headers are missing.
  */
 export function resolveForwardedIpHeader(get: (name: string) => string | null): Record<string, string> {
-  if (!get('cf-ray')) return {};
+  if (!get('cf-ray')?.trim()) return {};
   const ip = get('cf-connecting-ip')?.trim();
   return ip ? { 'X-Forwarded-For': ip } : {};
 }
