@@ -145,15 +145,22 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
   // Add timeout
   const timeout = requestConfig.timeout || transportConfig.timeout;
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  let abortController: AbortController | undefined;
+  let deadline: Promise<never> | undefined;
 
   if (timeout && !requestConfig.signal) {
-    abortController = new AbortController();
+    const abortController = new AbortController();
     options.signal = abortController.signal;
-    timeoutId = setTimeout(() => abortController!.abort(), timeout);
+    deadline = new Promise<never>((_resolve, reject) => {
+      timeoutId = setTimeout(() => {
+        const reason = new DOMException('Request timed out', 'AbortError');
+        // Settle independently: adapters and body readers may ignore cancellation.
+        reject(reason);
+        abortController.abort(reason);
+      }, timeout);
+    });
   }
 
-  try {
+  async function requestAndReadBody(): Promise<Result<ApiResponse<T>, ApiError>> {
     const response = await fetch(assertSafeServiceUrl(url, transportConfig.baseUrl), options);
 
     // Check for HTTP errors
@@ -224,6 +231,11 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
     }
 
     return ok(apiResponse);
+  }
+
+  try {
+    const request = requestAndReadBody();
+    return await (deadline ? Promise.race([request, deadline]) : request);
   } finally {
     // Fetch resolves at headers; the deadline also covers consuming the body.
     if (timeoutId) {
