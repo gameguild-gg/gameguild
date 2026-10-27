@@ -501,7 +501,9 @@ jobs:
     needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
     runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
-    timeout-minutes: 20
+    # Whole-solution shards (api-unit, remaining-*) run the sequential full API
+    # unit suite, which takes ~30 minutes alone; the job timeout must cover it.
+    timeout-minutes: 60
     strategy:
       # Keep every shard's evidence when another shard fails.
       fail-fast: false
@@ -518,6 +520,7 @@ jobs:
           ECONOMY_GATE_PROFILE: regression
           ECONOMY_REGRESSION_SHARD: ${{ matrix.shard }}
           ECONOMY_WHOLE_SOLUTION_JOBS: "2"
+          ECONOMY_API_TEST_TIMEOUT: 35m
           ECONOMY_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: bash scripts/ci/verify-economy.sh
       - name: Upload regression evidence
