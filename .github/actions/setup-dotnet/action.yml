@@ -6,9 +6,14 @@ runs:
   steps:
     - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       env:
-        DOTNET_INSTALL_DIR: ${{ runner.temp }}/.dotnet
+        # ARC cannot write the system directory. Hosted images keep their
+        # existing SDK/runtime pool and the repository's roll-forward policy.
+        DOTNET_INSTALL_DIR: ${{ runner.environment == 'self-hosted' && format('{0}/.dotnet', runner.temp) || '' }}
       with:
         dotnet-version: 10.0.103
+    - name: Record .NET SDK and runtime selection
+      shell: bash
+      run: dotnet --info
     - name: Prepare certificate for disposable CI key storage
       shell: bash
       run: bash scripts/ci/prepare-data-protection-test-certificate.sh
