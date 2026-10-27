@@ -115,7 +115,8 @@ test_workflow_uses_fast_pr_and_full_release_economy_profiles() {
   grep -Fq 'ECONOMY_GATE_PROFILE: client-bundle' "$pr_workflow" || return 1
   grep -Fq 'ECONOMY_GATE_PROFILE: regression' "$pr_workflow" || return 1
   grep -Fq 'shard: [api-integration-1, api-integration-2, api-integration-3, api-integration-4, api-unit, remaining-1, remaining-2]' "$pr_workflow" || return 1
-  grep -Fq 'needs: [classify, economy-api, economy-client]' "$pr_workflow" || return 1
+  grep -Fq 'needs: [classify, economy-api, economy-client]' "$pr_workflow" ||
+    grep -Fq 'needs: [runner-pool, classify, economy-api, economy-client]' "$pr_workflow" || return 1
   grep -Fq 'tree or SHA256 mismatch' "$ci_dir/economy-artifacts.sh" || return 1
   sed -n '/^  required-gate:/,$p' "$pr_workflow" | grep -Fq 'economy-coverage,' || return 1
   sed -n '/^  required-gate:/,$p' "$pr_workflow" | grep -Fq 'economy-regression,' || return 1
