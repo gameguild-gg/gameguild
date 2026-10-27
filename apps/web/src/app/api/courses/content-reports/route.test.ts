@@ -12,7 +12,7 @@ vi.mock('@/auth', () => ({ getToken: mocks.getToken }));
 vi.mock('@/lib/antibot/turnstile', () => ({ verifyTurnstileToken: mocks.verifyTurnstileToken }));
 vi.mock('@/lib/server/forwarded-headers', () => ({ forwardedIpHeaders: mocks.forwardedIpHeaders }));
 
-import { POST } from './route';
+import { PATCH, POST } from './route';
 
 const CONTENT_ID = '01234567-89ab-1def-9abc-0123456789ab';
 
@@ -37,6 +37,28 @@ describe('content-reports POST turnstile gate', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
+  });
+
+  it.each([null, [], 'text', 42])('rejects a non-object JSON payload (%j) before proxying', async (body) => {
+    for (const handler of [POST, PATCH]) {
+      const response = await handler(jsonRequest(body));
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toEqual({ error: 'A valid JSON object is required.' });
+    }
+    expect(mocks.fetch).not.toHaveBeenCalled();
+    expect(mocks.verifyTurnstileToken).not.toHaveBeenCalled();
+  });
+
+  it('rejects malformed JSON before proxying', async () => {
+    for (const handler of [POST, PATCH]) {
+      const response = await handler(new NextRequest('http://localhost/api/courses/content-reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{',
+      }));
+      expect(response.status).toBe(400);
+    }
+    expect(mocks.fetch).not.toHaveBeenCalled();
   });
 
   it('returns 403 bot-check-failed before proxying when verification fails', async () => {

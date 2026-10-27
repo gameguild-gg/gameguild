@@ -47,6 +47,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(rootDir, './src'),
+      'server-only': path.resolve(rootDir, './src/test/server-only.ts'),
       '@game-guild/ui': path.resolve(rootDir, '../../packages/ui/src'),
       '@game-guild/client/react': path.resolve(
         rootDir,

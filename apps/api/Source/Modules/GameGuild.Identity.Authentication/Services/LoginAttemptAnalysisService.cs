@@ -29,7 +29,7 @@ public class LoginAttemptAnalysisService(
             "Suspicious activity recorded - Type: {ActivityType}, UserId: {UserId}, Identifier: {Identifier}, RiskLevel: {RiskLevel}",
             LogRedaction.Sanitize(activity.ActivityType),
             LogRedaction.RedactId(activity.UserId, "uid"),
-            LogRedaction.MaskIdentifier(activity.Identifier),
+            LogRedaction.ProtectIdentifier(activity.Identifier),
             activity.RiskLevel);
 
         await siemService
@@ -78,7 +78,7 @@ public class LoginAttemptAnalysisService(
 
             logger.LogInformation(
                 "Login attempt recorded: Email={Email}, IP={IpAddress}, Success={IsSuccessful}, Risk={RiskScore}, Suspicious={IsSuspicious}",
-                LogRedaction.MaskEmail(request.Email),
+                LogRedaction.ProtectEmail(request.Email),
                 LogRedaction.MaskIpAddress(request.IpAddress),
                 request.IsSuccessful,
                 analysis.RiskScore,
@@ -91,7 +91,7 @@ public class LoginAttemptAnalysisService(
             // Provider exceptions can contain the original request in their message/Data.
             // Keep the failure category in diagnostics and rethrow the original to the caller.
             logger.LogError("Error recording login attempt for {Email} from {IpAddress}: {ExceptionType}",
-                LogRedaction.MaskEmail(request.Email), LogRedaction.MaskIpAddress(request.IpAddress),
+                LogRedaction.ProtectEmail(request.Email), LogRedaction.MaskIpAddress(request.IpAddress),
                 ex.GetType().Name);
             throw;
         }
@@ -214,8 +214,9 @@ public class LoginAttemptAnalysisService(
             {
                 logger.LogWarning(
                     "Anomalous login attempt detected - UserId: {UserId}, IP: {IpAddress}, RiskScore: {RiskScore}, Anomalies: {Anomalies}",
-                    LogRedaction.RedactId(context.UserId, "uid"), LogRedaction.MaskIpAddress(context.IpAddress),
-                    result.RiskScore, LogRedaction.Sanitize(string.Join(", ", result.DetectedAnomalies)));
+                    LogRedaction.ProtectIdentifier(context.UserId), LogRedaction.MaskIpAddress(context.IpAddress),
+                    ProtectDiagnosticScore(result.RiskScore),
+                    string.Join(", ", result.DetectedAnomalies.Select(ProtectDiagnosticSignal)));
             }
         }
         catch (Exception ex)
@@ -228,6 +229,29 @@ public class LoginAttemptAnalysisService(
     }
 
     // ── Private helpers ──────────────────────────────────────────────────
+
+    // Ordinary diagnostics accept only public signal labels. An extension's arbitrary
+    // text remains available to the protected analysis/audit pipeline, never this log.
+    private static string ProtectDiagnosticSignal(string signal) => signal switch
+    {
+        "FirstAttemptOrLongAbsence" => "FirstAttemptOrLongAbsence",
+        "IpAddressChange" => "IpAddressChange",
+        "UserAgentChange" => "UserAgentChange",
+        "DeviceFingerprintChange" => "DeviceFingerprintChange",
+        "UnusualTimeOfDay" => "UnusualTimeOfDay",
+        SecurityAlertKinds.ImpossibleTravel => SecurityAlertKinds.ImpossibleTravel,
+        SecurityAlertKinds.BruteForceDetected => SecurityAlertKinds.BruteForceDetected,
+        MaliciousIpAnomaly => "ThreatIntel:MaliciousIp",
+        BreachedPasswordAnomaly => "ThreatIntel:BreachedPassword",
+        AdaptiveAnomalyDetectionService.HourOfDayDeviationLabel => "Learned:HourOfDayDeviation",
+        AdaptiveAnomalyDetectionService.IpNoveltyDeviationLabel => "Learned:IpNovelty",
+        AdaptiveAnomalyDetectionService.CadenceDeviationLabel => "Learned:CadenceDeviation",
+        _ => LogRedaction.ProtectIdentifier(signal)
+    };
+
+    // Publish the bounded risk scale, not arbitrary configuration values, to diagnostics.
+    // The original assessment and enforcement contribution are left unchanged.
+    private static int ProtectDiagnosticScore(int score) => Math.Clamp(score, 0, 100);
 
     /// <summary>
     ///     Applies credential-stuffing threat-intelligence signals (malicious IP blocklist,
@@ -323,7 +347,7 @@ public class LoginAttemptAnalysisService(
             LogRedaction.RedactId(context.UserId, "uid"),
             assessment.CombinedZScore,
             assessment.BaselineSampleCount,
-            LogRedaction.Sanitize(string.Join(", ", assessment.DeviationLabels)));
+            string.Join(", ", assessment.DeviationLabels.Select(ProtectDiagnosticSignal)));
     }
 
     private async Task ApplyThreatIntelligenceMatchAsync(
@@ -344,10 +368,10 @@ public class LoginAttemptAnalysisService(
         logger.LogWarning(
             "Threat intelligence match ({Mode}) - Signal: {Signal}, IP: {IpAddress}, UserId: {UserId}, RiskScoreBump: {RiskScoreBump}",
             enforce ? "Enforce" : "Observation",
-            anomalyLabel,
+            ProtectDiagnosticSignal(anomalyLabel),
             LogRedaction.MaskIpAddress(context.IpAddress),
-            LogRedaction.RedactId(context.UserId, "uid"),
-            enforce ? riskScoreBump : 0);
+            LogRedaction.ProtectIdentifier(context.UserId),
+            ProtectDiagnosticScore(enforce ? riskScoreBump : 0));
 
         if (auditEventSink is null)
         {
@@ -439,7 +463,7 @@ public class LoginAttemptAnalysisService(
     {
         logger.LogWarning(
             "Suspicious login attempt detected - Email: {Email}, IP: {IpAddress}, RiskScore: {RiskScore}",
-            LogRedaction.MaskEmail(attempt.Email), LogRedaction.MaskIpAddress(attempt.IpAddress),
+            LogRedaction.ProtectEmail(attempt.Email), LogRedaction.MaskIpAddress(attempt.IpAddress),
             analysis.RiskScore);
 
         await Task.CompletedTask.ConfigureAwait(false);

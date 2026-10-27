@@ -6,6 +6,50 @@ namespace GameGuild.SharedKernel.UnitTests;
 public class LogRedactionTests
 {
     [Theory]
+    [InlineData("alice.secret@example.com")]
+    [InlineData("alice@example.com\r\nFORGED EVENT")]
+    public void ProtectEmail_ShouldExposeOnlyAnOpaqueCorrelationToken(string email)
+    {
+        var token = LogRedaction.ProtectEmail(email);
+        token.Should().MatchRegex("^email:[a-f0-9]{64}$")
+            .And.NotContain(email).And.NotContainAny("@", "\r", "\n");
+        LogRedaction.ProtectEmail(email.ToUpperInvariant()).Should().Be(token);
+    }
+
+    [Fact]
+    public void ProtectEmail_ShouldHandleMissingAndMalformedAddresses()
+    {
+        LogRedaction.ProtectEmail(null).Should().Be("none");
+        LogRedaction.ProtectEmail("").Should().Be("none");
+        LogRedaction.ProtectEmail("not-an-address").Should().Be("invalid");
+    }
+
+    [Fact]
+    public void ProtectIdentifier_ShouldCorrelateGuidFormsWithoutExposingTheIdentifier()
+    {
+        var id = Guid.NewGuid();
+        var token = LogRedaction.ProtectIdentifier(id);
+        token.Should().MatchRegex("^id:[a-f0-9]{64}$").And.NotContain(id.ToString("N"));
+        LogRedaction.ProtectIdentifier(id.ToString("D")).Should().Be(token);
+        LogRedaction.ProtectIdentifier(id.ToString("N").ToUpperInvariant()).Should().Be(token);
+        LogRedaction.ProtectIdentifier(Guid.NewGuid()).Should().NotBe(token);
+    }
+
+    [Fact]
+    public void ProtectIdentifier_ShouldProtectUntrustedTextAndHandleAbsentValues()
+    {
+        const string value = "private-identifier\r\nFORGED EVENT";
+        var token = LogRedaction.ProtectIdentifier(value);
+        token.Should().MatchRegex("^id:[a-f0-9]{64}$").And.NotContain(value)
+            .And.NotContainAny("\r", "\n");
+        LogRedaction.ProtectIdentifier(value).Should().Be(token);
+        LogRedaction.ProtectIdentifier((Guid?)null).Should().Be("none");
+        LogRedaction.ProtectIdentifier(Guid.Empty).Should().Be("none");
+        LogRedaction.ProtectIdentifier((string?)null).Should().Be("none");
+        LogRedaction.ProtectIdentifier("").Should().Be("none");
+    }
+
+    [Theory]
     [InlineData("alice@private-organization.example", "a***@p***.example")]
     [InlineData("alice@example.com", "a***@e***.com")]
     [InlineData("Bob.Example@MailServer.org", "b***@m***.org")]

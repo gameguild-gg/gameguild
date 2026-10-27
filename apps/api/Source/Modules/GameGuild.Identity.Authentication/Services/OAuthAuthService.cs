@@ -55,7 +55,7 @@ public class OAuthAuthService(
 
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "OAuth Device", DeviceType = "Web" };
 
-        logger.LogInformation("GitHub OAuth sign-in successful for {Email}", LogRedaction.MaskEmail(email));
+        logger.LogInformation("GitHub OAuth sign-in successful for {Email}", LogRedaction.ProtectEmail(email));
 
         return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "GitHub sign-in successful", "GitHub", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
     }
@@ -82,7 +82,7 @@ public class OAuthAuthService(
 
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "OAuth Device", DeviceType = "Web" };
 
-        logger.LogInformation("Google OAuth sign-in successful for {Email}", LogRedaction.MaskEmail(email));
+        logger.LogInformation("Google OAuth sign-in successful for {Email}", LogRedaction.ProtectEmail(email));
 
         return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google sign-in successful", "Google", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
     }
@@ -116,7 +116,7 @@ public class OAuthAuthService(
             DeviceType = "Web"
         };
 
-        logger.LogInformation("Microsoft OAuth sign-in successful for {Email}", LogRedaction.MaskEmail(email));
+        logger.LogInformation("Microsoft OAuth sign-in successful for {Email}", LogRedaction.ProtectEmail(email));
 
         return await CompleteSignInAsync(
             user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Microsoft sign-in successful", "Microsoft", stopwatch, request.RememberMe == true, cancellationToken)
@@ -156,7 +156,7 @@ public class OAuthAuthService(
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "OAuth Device", DeviceType = "Web" };
 
-        logger.LogInformation("Google ID token sign-in successful for {Email}", LogRedaction.MaskEmail(email));
+        logger.LogInformation("Google ID token sign-in successful for {Email}", LogRedaction.ProtectEmail(email));
 
         return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google ID token sign-in successful", "GoogleIdToken", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
     }
@@ -189,7 +189,7 @@ public class OAuthAuthService(
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "OAuth Device", DeviceType = "Web" };
 
-        logger.LogInformation("Discord OAuth sign-in successful for {Email}", LogRedaction.MaskEmail(email));
+        logger.LogInformation("Discord OAuth sign-in successful for {Email}", LogRedaction.ProtectEmail(email));
 
         return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Discord sign-in successful", "Discord", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
     }
@@ -229,7 +229,7 @@ public class OAuthAuthService(
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "OAuth Device", DeviceType = "Web" };
 
-        logger.LogInformation("GitHub OAuth authorization-code sign-in successful for {Email}", LogRedaction.MaskEmail(email));
+        logger.LogInformation("GitHub OAuth authorization-code sign-in successful for {Email}", LogRedaction.ProtectEmail(email));
 
         return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "GitHub sign-in successful", "GitHub", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
     }
@@ -315,7 +315,7 @@ public class OAuthAuthService(
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "OAuth Device", DeviceType = "Web" };
 
-        logger.LogInformation("{Provider} OAuth authorization-code sign-in successful for {Email}", displayName, LogRedaction.MaskEmail(email));
+        logger.LogInformation("{Provider} OAuth authorization-code sign-in successful for {Email}", displayName, LogRedaction.ProtectEmail(email));
 
         return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, $"{displayName} sign-in successful", displayName, stopwatch, rememberMe == true, cancellationToken).ConfigureAwait(false);
     }

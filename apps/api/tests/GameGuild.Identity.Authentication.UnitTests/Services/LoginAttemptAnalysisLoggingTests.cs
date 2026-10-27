@@ -88,14 +88,45 @@ public sealed class LoginAttemptAnalysisLoggingTests
         _logger.Entries.Should().OnlyContain(entry => !entry.Message.Contains('\r') && !entry.Message.Contains('\n'));
     }
 
-    private LoginAttemptAnalysisService CreateService()
+    [Fact]
+    public async Task AdaptiveAnalysis_ProtectsExtensionLabelsWithoutChangingTheAssessment()
+    {
+        const string privateLabel = "private-adaptive-detail\r\nFORGED EVENT";
+        var adaptive = new Mock<IAdaptiveAnomalyDetectionService>();
+        adaptive.Setup(service => service.AssessAsync(
+                It.IsAny<AuthenticationAttemptContext>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AdaptiveAnomalyAssessment
+            {
+                Origin = AdaptiveAnomalyOrigin.LearnedBaseline,
+                IsLearnedDeviation = true,
+                LearnedRiskScoreContribution = 40,
+                DeviationLabels = ["Learned:HourOfDayDeviation", privateLabel]
+            });
+        var context = new AuthenticationAttemptContext
+        {
+            IpAddress = IpAddress,
+            AttemptedAt = new DateTime(2026, 10, 21, 14, 0, 0, DateTimeKind.Utc)
+        };
+
+        var result = await CreateService(adaptive.Object).AnalyzeLoginAttemptAsync(context);
+
+        result.RiskScore.Should().Be(40);
+        result.IsAnomalous.Should().BeTrue();
+        result.DetectedAnomalies.Should().Contain(privateLabel);
+        AssertOpaqueLogs();
+        _logger.Entries.Should().Contain(entry => entry.Message.Contains("Learned:HourOfDayDeviation", StringComparison.Ordinal));
+        _logger.Entries.Should().OnlyContain(entry => !entry.Message.Contains(privateLabel, StringComparison.Ordinal)
+            && !entry.Message.Contains('\r') && !entry.Message.Contains('\n'));
+    }
+
+    private LoginAttemptAnalysisService CreateService(IAdaptiveAnomalyDetectionService? adaptive = null)
     {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Authentication:Anomaly:SuspiciousThreshold"] = "2"
         }).Build();
         return new LoginAttemptAnalysisService(_repository.Object, Mock.Of<IThreatDetectionService>(),
-            _logger, configuration, _siem.Object, null, null, null);
+            _logger, configuration, _siem.Object, null, null, adaptive);
     }
 
     private static TestCreateAuthenticationAttemptRequest CreateRequest() => new()

@@ -41,12 +41,27 @@ function badRequest(message: string): NextResponse {
   return NextResponse.json({ error: message }, { status: 400 });
 }
 
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+async function readRequestBody(request: NextRequest): Promise<Record<string, unknown> | null> {
+  try {
+    const body: unknown = await request.json();
+    return isJsonObject(body) ? body : null;
+  } catch {
+    return null;
+  }
+}
+
 async function getBackendError(response: Response): Promise<string> {
   try {
-    const body = await response.json();
-    if (typeof body?.title === 'string') return body.title;
-    if (typeof body?.error === 'string') return body.error;
-    if (typeof body?.message === 'string') return body.message;
+    const body: unknown = await response.json();
+    if (isJsonObject(body)) {
+      if (typeof body.title === 'string') return body.title;
+      if (typeof body.error === 'string') return body.error;
+      if (typeof body.message === 'string') return body.message;
+    }
   } catch {
     // Use the HTTP status text below.
   }
@@ -67,7 +82,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const authHeader = await getAuthHeader();
   if (authHeader instanceof NextResponse) return authHeader;
 
-  const body = await request.json();
+  const body = await readRequestBody(request);
+  if (!body) return badRequest('A valid JSON object is required.');
 
   // Public write surface: verify the Turnstile token before proxying. The
   // token is consumed here and never included in the forwarded body below.
@@ -131,7 +147,8 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
   const authHeader = await getAuthHeader();
   if (authHeader instanceof NextResponse) return authHeader;
 
-  const body = await request.json();
+  const body = await readRequestBody(request);
+  if (!body) return badRequest('A valid JSON object is required.');
   const reportId = typeof body?.reportId === 'string' ? body.reportId.trim() : '';
   if (!GUID_PATTERN.test(reportId)) {
     return badRequest('A valid report id is required.');

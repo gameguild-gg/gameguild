@@ -14,6 +14,20 @@ public static partial class LogRedaction
 {
     private static readonly byte[] IdentifierKey = RandomNumberGenerator.GetBytes(32);
 
+    /// <summary>Protects an opaque identifier with a process-local keyed correlation token.</summary>
+    public static string ProtectIdentifier(Guid? identifier) =>
+        !identifier.HasValue || identifier.Value == Guid.Empty
+            ? "none"
+            : Fingerprint(identifier.Value.ToString("N"), "id");
+
+    /// <summary>Protects string identifiers, normalizing alternate GUID representations.</summary>
+    public static string ProtectIdentifier(string? identifier) =>
+        string.IsNullOrEmpty(identifier)
+            ? "none"
+            : Guid.TryParse(identifier, out var parsed)
+                ? ProtectIdentifier(parsed)
+                : Fingerprint(identifier, "id");
+
     /// <summary>
     ///     Redacts a <see cref="Guid"/> to a short hash prefix (first 8 hex chars of SHA-256).
     ///     Returns <c>"none"</c> for <see cref="Guid.Empty"/> or null.
@@ -58,7 +72,7 @@ public static partial class LogRedaction
     ///     Returns <c>"none"</c> for null/empty input and <c>"invalid"</c>
     ///     for values without a usable separator or leading domain character.
     /// </summary>
-    public static string MaskEmail(string? email)
+    public static string ProtectEmail(string? email)
     {
         if (string.IsNullOrEmpty(email))
         {
@@ -73,6 +87,9 @@ public static partial class LogRedaction
 
         return Fingerprint(email.ToLowerInvariant(), "email");
     }
+
+    /// <summary>Compatibility entry point for the protected email correlation token.</summary>
+    public static string MaskEmail(string? email) => ProtectEmail(email);
 
     /// <summary>
     ///     Produces an opaque keyed fingerprint for username log correlation
