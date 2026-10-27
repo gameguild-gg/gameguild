@@ -1,3 +1,4 @@
+using System.Globalization;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Subscriptions;
 using Microsoft.EntityFrameworkCore;
@@ -528,5 +529,6 @@ public sealed class SubscriptionChangeSagaOrchestrator(
     ///     Two orchestrations of the same intent resolve to the same saga row.
     /// </summary>
     public static string BuildIdempotencyKey(Guid subscriptionId, Guid newPlanId, DateTime effectiveDateUtc) =>
-        FormattableString.Invariant($"subscription:{subscriptionId}:change:{newPlanId}:{effectiveDateUtc:O}");
+        string.Create(CultureInfo.InvariantCulture,
+            $"subscription:{subscriptionId}:change:{newPlanId}:{effectiveDateUtc:O}");
 }
