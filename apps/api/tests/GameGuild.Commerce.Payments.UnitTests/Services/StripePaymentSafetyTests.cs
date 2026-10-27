@@ -57,6 +57,30 @@ public sealed class StripePaymentSafetyTests
             "capture"));
     }
 
+    [Theory]
+    [InlineData("succeeded", "usd", 12345, 123.45)]
+    [InlineData("succeeded", "jpy", 12345, 12345)]
+    [InlineData("processing", "usd", 12345, null)]
+    [InlineData("succeeded", null, 12345, null)]
+    public void MapPaymentIntent_ReportsOnlyTheProviderVerifiedReceivedAmount(
+        string status, string? currency, long received, double? expected)
+    {
+        var service = new StripePaymentService(
+            Options.Create(new StripeGatewayOptions { UseSimulation = true }),
+            NullLogger<StripePaymentService>.Instance);
+        var result = service.MapPaymentIntent(new PaymentIntent
+        {
+            Id = "pi_saga_settlement",
+            Status = status,
+            Currency = currency!,
+            Amount = 99999,
+            AmountReceived = received
+        });
+
+        result.SettledAmount.Should().Be(expected.HasValue ? (decimal)expected.Value : null);
+        result.SettledCurrency.Should().Be(expected.HasValue ? currency : null);
+    }
+
     [Fact]
     public async Task ProcessPaymentAsync_ShouldReturnCompleteProviderMappingInSimulation()
     {

@@ -37,6 +37,10 @@ public sealed class OrchestrateSubscriptionPlanChangeCommandValidator : Abstract
             .NotEqual(command => command.SubscriptionId)
             .WithMessage("NewPlanId must differ from SubscriptionId.");
         RuleFor(command => command.EffectiveDateUtc)
+            .NotNull()
+            .WithMessage("EffectiveDateUtc is required and must be reused when retrying a plan change.")
+            .Must(effectiveDate => effectiveDate is { Kind: DateTimeKind.Utc })
+            .WithMessage("EffectiveDateUtc must be a UTC timestamp.")
             .Must(effectiveDate => !effectiveDate.HasValue || effectiveDate.Value <= SystemClock.UtcNow.AddMinutes(5))
             .WithMessage("EffectiveDateUtc cannot be in the future beyond a five-minute clock-skew tolerance.");
     }

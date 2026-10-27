@@ -7,7 +7,7 @@ namespace GameGuild.Commerce.Billing;
 /// </summary>
 /// <param name="SubscriptionId">Subscription aggregate to change.</param>
 /// <param name="NewPlanId">Plan the subscription should land on.</param>
-/// <param name="EffectiveDateUtc">Proration effective date; null means now.</param>
+/// <param name="EffectiveDateUtc">Explicit UTC proration timestamp, required and reused unchanged on retries.</param>
 /// <param name="PaymentMethodId">
 ///     Optional local payment-method registry id to charge. Falls back to the subscription's
 ///     payment method; required when the proration yields a positive net due.

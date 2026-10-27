@@ -442,7 +442,7 @@ public class StripePaymentService(
         }
     }
 
-    private GatewayPaymentResult MapPaymentIntent(PaymentIntent paymentIntent)
+    internal GatewayPaymentResult MapPaymentIntent(PaymentIntent paymentIntent)
     {
         var status = StripeStatusMapper.MapPaymentStatus(paymentIntent.Status);
         return new GatewayPaymentResult(
@@ -454,7 +454,12 @@ public class StripePaymentService(
             Status: status,
             ProcessedAt: SystemClock.UtcNow,
             ClientActionToken: status == PaymentStatus.RequiresAction ? paymentIntent.ClientSecret : null,
-            ProviderMapping: CreateProviderMapping(paymentIntent.Id));
+            ProviderMapping: CreateProviderMapping(paymentIntent.Id),
+            SettledAmount: status == PaymentStatus.Succeeded && !string.IsNullOrWhiteSpace(paymentIntent.Currency)
+                ? StripeAmountConverter.FromStripeAmount(paymentIntent.AmountReceived, paymentIntent.Currency)
+                : null,
+            SettledCurrency: status == PaymentStatus.Succeeded && !string.IsNullOrWhiteSpace(paymentIntent.Currency)
+                ? paymentIntent.Currency : null);
     }
 
     private GatewayProviderMapping CreateProviderMapping(string paymentIntentId) =>

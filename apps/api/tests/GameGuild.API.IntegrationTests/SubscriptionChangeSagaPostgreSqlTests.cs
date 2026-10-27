@@ -88,15 +88,19 @@ public sealed class SubscriptionChangeSagaPostgreSqlTests(ApiPostgreSqlFixture f
         var methods = new Mock<IPaymentMethodRepository>();
         methods.Setup(value => value.GetByIdAsync(method.Id, It.IsAny<CancellationToken>())).ReturnsAsync(method);
         var charges = new Dictionary<string, GatewayPaymentRequest>();
+        var paymentAttempts = new List<GatewayPaymentRequest>();
         var gateway = new Mock<IPaymentGateway>();
         var receipt = new GatewayPaymentResult(true, "txn_" + marker, "ch_" + marker, null, null,
-            GatewayStatus.Succeeded, effective, ProviderId: "stripe");
+            GatewayStatus.Succeeded, effective, ProviderId: "stripe", SettledAmount: 100m, SettledCurrency: "USD");
         gateway.Setup(value => value.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((GatewayPaymentRequest request, CancellationToken _) =>
             {
+                paymentAttempts.Add(request);
                 if (charges.TryGetValue(request.IdempotencyKey, out var original))
                 {
-                    Assert.Equal(original.Amount, request.Amount);
+                    // Model a provider that returns its original receipt on replay,
+                    // even when the catalog price changed after local rollback.
+                    Assert.Equal(original.Amount, receipt.SettledAmount);
                     Assert.Equal(original.Currency, request.Currency);
                     Assert.Equal(original.PaymentMethodId, request.PaymentMethodId);
                     Assert.Equal(original.Metadata, request.Metadata);
@@ -157,9 +161,25 @@ public sealed class SubscriptionChangeSagaPostgreSqlTests(ApiPostgreSqlFixture f
         gateway.Verify(value => value.ProcessRefundAsync(It.IsAny<GatewayRefundRequest>(), It.IsAny<CancellationToken>()), Times.Never);
 
         fail = false;
+        pricing.Setup(value => value.ResolvePriceForCycleAsync(newPlan, BillingCycle.Monthly, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Money(250m, "USD"));
+        calculator.Setup(value => value.CalculateProration(It.IsAny<Money>(), It.IsAny<Money>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+            .Returns(new PlanChangeProration(100m, 250m, 150m, effective));
+        await Assert.ThrowsAsync<InvalidOperationException>(Execute);
+        Assert.Single(charges);
+        Assert.Equal(150m, paymentAttempts[^1].Amount);
+        Assert.Equal(oldPlan.Id, (await db.Set<Subscription>().AsNoTracking().SingleAsync(value => value.Id == subscription.Id)).PlanId);
+        Assert.False(await db.Set<Invoice>().AnyAsync(value => value.SubscriptionId == subscription.Id));
+        gateway.Verify(value => value.ProcessRefundAsync(It.IsAny<GatewayRefundRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        pricing.Setup(value => value.ResolvePriceForCycleAsync(newPlan, BillingCycle.Monthly, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Money(200m, "USD"));
+        calculator.Setup(value => value.CalculateProration(It.IsAny<Money>(), It.IsAny<Money>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+            .Returns(new PlanChangeProration(100m, 200m, 100m, effective));
         var completed = await Execute();
         Assert.True(completed.Succeeded);
         Assert.Single(charges);
+        Assert.Equal(100m, paymentAttempts[^1].Amount);
         db.ChangeTracker.Clear();
         Assert.Equal(newPlan.Id, (await db.Set<Subscription>().SingleAsync(value => value.Id == subscription.Id)).PlanId);
         Assert.Single(await db.Set<SubscriptionChangeSaga>().Where(value => value.SubscriptionId == subscription.Id).ToListAsync());

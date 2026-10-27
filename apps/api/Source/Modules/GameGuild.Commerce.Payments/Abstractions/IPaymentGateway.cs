@@ -140,6 +140,10 @@ public sealed record GatewayPaymentRequest(
 /// <summary>
 ///     Result of a payment processing attempt
 /// </summary>
+/// <remarks>
+///     SettledAmount and SettledCurrency are verified from the provider's payment
+///     object, never copied from the caller's request; null when unavailable.
+/// </remarks>
 public sealed record GatewayPaymentResult(
     bool Success,
     string? TransactionId,
@@ -151,7 +155,9 @@ public sealed record GatewayPaymentResult(
     string? ClientActionToken = null,
     GatewayProviderMapping? ProviderMapping = null,
     string? ProviderId = null,
-    GatewayFailureKind FailureKind = GatewayFailureKind.NotApplicable);
+    GatewayFailureKind FailureKind = GatewayFailureKind.NotApplicable,
+    decimal? SettledAmount = null,
+    string? SettledCurrency = null);
 
 /// <summary>
 ///     Immutable provider identity for one payment object and monetary leg.

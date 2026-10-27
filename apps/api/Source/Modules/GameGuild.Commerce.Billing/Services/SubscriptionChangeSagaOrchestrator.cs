@@ -37,6 +37,11 @@ public sealed class SubscriptionChangeSagaOrchestrator(
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        if (request.EffectiveDateUtc is not { Kind: DateTimeKind.Utc })
+        {
+            throw new BusinessRuleViolationException("subscription-change.effective-date-required",
+                "Supply an explicit UTC EffectiveDateUtc and reuse it when retrying a plan change.");
+        }
 
         // Commands already run inside the use-case transaction. Direct service calls
         // must provide the same atomic boundary for the plan, invoice and journal.
@@ -81,7 +86,7 @@ public sealed class SubscriptionChangeSagaOrchestrator(
             ?? throw new SubscriptionNotFoundException(request.SubscriptionId);
 
         // Idempotency by change intent: a replayed request resolves to the recorded saga.
-        var effectiveDate = request.EffectiveDateUtc ?? SystemClock.UtcNow;
+        var effectiveDate = request.EffectiveDateUtc!.Value;
         var idempotencyKey = BuildIdempotencyKey(request.SubscriptionId, request.NewPlanId, effectiveDate);
         var existing = await FindByIdempotencyKeyAsync(idempotencyKey, cancellationToken).ConfigureAwait(false);
         if (existing is not null)
@@ -273,6 +278,11 @@ public sealed class SubscriptionChangeSagaOrchestrator(
             if (!confirmed.Success || confirmed.Status != GameGuild.Commerce.Payments.PaymentStatus.Succeeded)
             {
                 throw new InvalidOperationException("The current provider payment is not settled; the subscription plan was not activated.");
+            }
+            if (confirmed.SettledAmount != proration.NetAdjustment
+                || !string.Equals(confirmed.SettledCurrency, subscription.Amount.Currency, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("The provider has not verified the expected plan-change amount and currency; reconcile the original payment before retrying.");
             }
             saga.RecordPayment(transactionId);
             if (invoice is not null)
@@ -518,5 +528,5 @@ public sealed class SubscriptionChangeSagaOrchestrator(
     ///     Two orchestrations of the same intent resolve to the same saga row.
     /// </summary>
     public static string BuildIdempotencyKey(Guid subscriptionId, Guid newPlanId, DateTime effectiveDateUtc) =>
-        $"subscription:{subscriptionId}:change:{newPlanId}:{effectiveDateUtc:yyyyMMdd}";
+        FormattableString.Invariant($"subscription:{subscriptionId}:change:{newPlanId}:{effectiveDateUtc:O}");
 }

@@ -26,13 +26,13 @@ public sealed class SubscriptionChangeOrchestrationController(ISender sender) : 
     ///     Run the orchestrated plan change for one subscription
     /// </summary>
     /// <param name="subscriptionId">Subscription to change.</param>
-    /// <param name="request">Target plan, optional effective date and optional payment method override.</param>
+    /// <param name="request">Target plan, required explicit UTC effective date and optional payment method override.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The terminal saga state with every executed step and any compensations applied.</returns>
     [HttpPost("plan-change:orchestrate")]
     [EndpointSummary("Run the orchestrated subscription plan change saga")]
     [EndpointDescription(
-        "Orchestrates the plan change as a saga: proration, invoice, confirmed gateway payment and activation. Local state and required billing events commit together. Confirmed business failures trigger compensation; uncertain persistence or provider outcomes require reconciliation and retry with the same effective date and payment parameters.")]
+        "Orchestrates the plan change as a saga: proration, invoice, confirmed gateway payment and activation. EffectiveDateUtc is required as an explicit UTC timestamp and must be reused unchanged on retries. Local state and required billing events commit together. Activation requires provider-verified settlement amount and currency; providers without that evidence require reconciliation. Confirmed business failures trigger compensation; uncertain persistence or provider outcomes require reconciliation and retry with the same effective date and payment parameters.")]
     [ProducesResponseType<SubscriptionChangeSagaResult>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
