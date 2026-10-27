@@ -1279,7 +1279,20 @@ async function instructorJourney(fixture, browser) {
     // Submit grade.
     const submitGrade = gradingPanel.getByTestId("submit-grade");
     await submitGrade.waitFor({ state: "visible", timeout: 10_000 });
+    // Wait for this mutation's streamed server-action response, not just the
+    // click. On a loaded runner the save and RSC response can consume most of
+    // the separate refresh budget before the browser can apply the new queue.
+    const gradeResponsePromise = page.waitForResponse((response) =>
+      response.request().method() === "POST"
+      && response.url() === page.url()
+      && Boolean(response.request().headers()["next-action"])
+      && (response.request().postData() ?? "").includes('"rubricScores"'),
+    { timeout: 120_000 });
     await submitGrade.click();
+    const gradeResponse = await gradeResponsePromise;
+    const gradeTransportError = await gradeResponse.finished();
+    record("grade mutation response completes", gradeResponse.ok() && !gradeTransportError,
+      `status=${gradeResponse.status()}; streamComplete=${!gradeTransportError}`);
     // router.refresh() re-renders; the queue item status flips to Graded.
     let graded = false;
     const gradeDeadline = Date.now() + 60_000;

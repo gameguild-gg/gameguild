@@ -56,6 +56,9 @@ public sealed class SamlBrowserFlowPostgreSqlTests : IAsyncLifetime
             Assert.Same(dbContext, scope.ServiceProvider.GetRequiredService<IApplicationDbContext>());
             Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", dbContext.Database.ProviderName);
             var configured = scope.ServiceProvider.GetRequiredService<AuthenticationOptions>();
+            var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+            Assert.True(configuration.GetValue<bool>(
+                $"Authentication:ExternalProviders:Saml:{TestSamlIdentityProvider.Slug}:Enabled"));
             Assert.True(configured.ExternalProviders.Saml.TryGetValue(TestSamlIdentityProvider.Slug, out var provider),
                 "The full API host must bind the configured test SAML provider.");
             Assert.NotNull(provider);
@@ -316,6 +319,23 @@ public sealed class SamlBrowserFlowPostgreSqlTests : IAsyncLifetime
             });
             builder.ConfigureTestServices(services =>
             {
+                // The minimal host binds this singleton before WebApplicationFactory
+                // applies its final configuration overrides. Bind the test provider
+                // from that final configuration without replacing the real SAML
+                // service, signature validator, protocol store, or JWT settings.
+                var authentication = Assert.IsType<AuthenticationOptions>(
+                    Assert.Single(services, descriptor =>
+                        descriptor.ServiceType == typeof(AuthenticationOptions)).ImplementationInstance);
+                services.RemoveAll<AuthenticationOptions>();
+                services.AddSingleton(provider =>
+                {
+                    provider.GetRequiredService<IConfiguration>()
+                        .GetSection("Authentication:ExternalProviders")
+                        .Bind(authentication.ExternalProviders);
+                    authentication.Validate();
+                    return authentication;
+                });
+
                 services.RemoveAll<ApplicationDbContext>();
                 services.RemoveAll<DbContext>();
                 services.RemoveAll<DbContextOptions>();
