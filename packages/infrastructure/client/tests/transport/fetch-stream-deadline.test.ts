@@ -1,4 +1,6 @@
+import { createHook } from 'node:async_hooks';
 import { once } from 'node:events';
+import { writeSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -8,12 +10,15 @@ import type { RequestConfig } from '../../src/runtime/transport/types.js';
 describe('Fetch response-body deadlines', () => {
   let originalFetch: typeof globalThis.fetch;
   let server: Server | undefined;
+  let stopNativeDiagnostics: (() => void) | undefined;
 
   beforeEach(() => {
     originalFetch = globalThis.fetch;
   });
 
   afterEach(async () => {
+    stopNativeDiagnostics?.();
+    stopNativeDiagnostics = undefined;
     globalThis.fetch = originalFetch;
     vi.useRealTimers();
     vi.restoreAllMocks();
@@ -30,17 +35,86 @@ describe('Fetch response-body deadlines', () => {
   // These use a real HTTP response whose headers and partial JSON arrive, but
   // whose body never ends. Observing headers rules out a connection-timeout pass.
   it.each([200, 503])('times out a native HTTP %i body after headers', async status => {
+    const started = performance.now();
+    const deadlineIds = new Set<number>();
+    let deadlineFired = 0;
+    let deadlineDestroyed = 0;
+    let signal: AbortSignal | undefined;
+    let headersReceived = false;
+    let bodyState = 'not-started';
+    let tracing = true;
+    let checkpoint: ReturnType<typeof setTimeout> | undefined;
+    const trace = (boundary: string) => {
+      if (!tracing) return;
+      // Synchronous stderr avoids creating async work from the hook itself.
+      writeSync(2, '[fetch-body-deadline-boundary] ' + JSON.stringify({
+        boundary, status, node: process.version, undici: process.versions.undici,
+        elapsedMs: Math.round(performance.now() - started),
+        fakeTimers: vi.isFakeTimers(), headersReceived, bodyState,
+        signalAborted: signal?.aborted ?? null,
+        deadlineScheduled: deadlineIds.size, deadlineFired, deadlineDestroyed,
+      }) + '\n');
+    };
+    const deadlineHook = createHook({
+      init(asyncId, type, _triggerId, resource) {
+        if (type === 'Timeout' && resource !== null && typeof resource === 'object'
+          && (resource as { _idleTimeout?: number })._idleTimeout === 5_000) {
+          deadlineIds.add(asyncId);
+          trace('deadline-created');
+        }
+      },
+      before(asyncId) {
+        if (deadlineIds.has(asyncId)) {
+          deadlineFired++;
+          trace('deadline-fired');
+        }
+      },
+      destroy(asyncId) {
+        if (deadlineIds.has(asyncId)) {
+          deadlineDestroyed++;
+          trace('deadline-destroyed');
+        }
+      },
+    });
+    stopNativeDiagnostics = () => {
+      tracing = false;
+      deadlineHook.disable();
+      if (checkpoint) clearTimeout(checkpoint);
+    };
+    deadlineHook.enable();
+    checkpoint = setTimeout(() => trace('checkpoint-6s'), 6_000);
+    trace('test-start');
     server = createServer((_request, response) => {
+      trace('server-request');
       response.writeHead(status, { 'Content-Type': 'application/json' });
       response.write('{"partial":');
     });
     server.listen(0, '127.0.0.1');
     await once(server, 'listening');
+    trace('server-listening');
     const address = server.address() as AddressInfo;
-    let headersReceived = false;
     globalThis.fetch = vi.fn(async (...args: Parameters<typeof fetch>) => {
+      signal = args[1]?.signal ?? undefined;
+      signal?.addEventListener('abort', () => trace('signal-abort'), { once: true });
+      trace('fetch-start');
       const response = await originalFetch(...args);
       headersReceived = true;
+      trace('headers-received');
+      const readJson = response.json.bind(response);
+      response.json = async () => {
+        bodyState = 'reading';
+        trace('json-read-start');
+        try {
+          const value = await readJson();
+          bodyState = 'fulfilled';
+          trace('json-read-fulfilled');
+          return value;
+        } catch (cause) {
+          bodyState = 'rejected';
+          trace('json-read-rejected');
+          throw cause;
+        }
+      };
       return response;
     });
 
@@ -48,7 +122,9 @@ describe('Fetch response-body deadlines', () => {
       baseUrl: `http://127.0.0.1:${address.port}`,
       timeout: 5_000,
     });
-    const result = await transport.request({ method: 'GET', path: '/unfinished' });
+    const pending = transport.request({ method: 'GET', path: '/unfinished' });
+    const result = await pending;
+    trace('transport-settled');
 
     expect(headersReceived).toBe(true);
     expect(result.ok).toBe(false);
