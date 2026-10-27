@@ -12,6 +12,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using GatewayStatus = GameGuild.Commerce.Payments.PaymentStatus;
+using PaymentResult = GameGuild.Commerce.Payments.PaymentResult;
+using PaymentRetryResult = GameGuild.Commerce.Payments.PaymentRetryResult;
 
 namespace GameGuild.API.IntegrationTests;
 
