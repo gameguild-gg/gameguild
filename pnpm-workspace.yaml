@@ -26,6 +26,7 @@ overrides:
   "@excalidraw/mermaid-to-excalidraw>mermaid": "11.16.1"
   "@excalidraw/mermaid-to-excalidraw>nanoid": "5.1.16"
   dompurify: "3.4.17"
+  deepmerge: "4.1.2"
   fast-uri: "3.1.9"
   hono: "4.13.11"
   lodash-es: "4.18.0"

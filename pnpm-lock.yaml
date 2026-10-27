@@ -12,6 +12,7 @@ overrides:
   '@excalidraw/mermaid-to-excalidraw>mermaid': 11.16.1
   '@excalidraw/mermaid-to-excalidraw>nanoid': 5.1.16
   dompurify: 3.4.17
+  deepmerge: 4.1.2
   fast-uri: 3.1.9
   hono: 4.13.11
   lodash-es: 4.18.0
@@ -9145,8 +9146,8 @@ packages:
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
 
-  deepmerge@4.3.1:
-    resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
+  deepmerge@4.1.2:
+    resolution: {integrity: sha512-9ZXh/8Fp+ggcscoRg324S1aNdGSCl2X1P8F1FPTHbtq3RAxy9ECbU2Wgy2J12r6x/O0BStDlkzcpKK/HptX+Kg==}
     engines: {node: '>=0.10.0'}
 
   default-browser-id@5.0.1:
@@ -19912,7 +19913,7 @@ snapshots:
       '@dotenvx/dotenvx': 1.75.1
       cn: 0.2.6
       code-block-writer: 13.0.3
-      deepmerge: 4.3.1
+      deepmerge: 4.1.2
       execa: 9.6.1
       fast-glob: 3.3.3
       fs-extra: 11.4.1
@@ -20347,7 +20348,7 @@ snapshots:
       '@toruslabs/session-manager': 5.6.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
       '@toruslabs/torus.js': 17.2.3(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
       bowser: 2.14.1
-      deepmerge: 4.3.1
+      deepmerge: 4.1.2
       events: 3.3.0
       loglevel: 1.9.2
     optionalDependencies:
@@ -20383,7 +20384,7 @@ snapshots:
   '@toruslabs/http-helpers@9.0.0(@babel/runtime@7.29.10)(@sentry/core@10.76.2)':
     dependencies:
       '@babel/runtime': 7.29.10
-      deepmerge: 4.3.1
+      deepmerge: 4.1.2
       loglevel: 1.9.2
     optionalDependencies:
       '@sentry/core': 10.76.2
@@ -20391,7 +20392,7 @@ snapshots:
   '@toruslabs/http-helpers@9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)':
     dependencies:
       '@babel/runtime': 8.0.7
-      deepmerge: 4.3.1
+      deepmerge: 4.1.2
       loglevel: 1.9.2
     optionalDependencies:
       '@sentry/core': 10.76.2
@@ -21052,7 +21053,7 @@ snapshots:
       '@toruslabs/constants': 16.1.1(@babel/runtime@8.0.7)
       '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
       '@web3auth/auth': 11.8.3(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)
-      deepmerge: 4.3.1
+      deepmerge: 4.1.2
       fast-deep-equal: 3.1.3
       loglevel: 1.9.2
       readable-stream: 4.8.0
@@ -22395,7 +22396,7 @@ snapshots:
 
   deep-is@0.1.4: {}
 
-  deepmerge@4.3.1: {}
+  deepmerge@4.1.2: {}
 
   default-browser-id@5.0.1: {}
 
@@ -24322,7 +24323,7 @@ snapshots:
       babel-jest: 29.7.0(@babel/core@7.29.7)
       chalk: 4.1.2
       ci-info: 3.9.0
-      deepmerge: 4.3.1
+      deepmerge: 4.1.2
       glob: 7.2.3
       graceful-fs: 4.2.11
       jest-circus: 29.7.0
@@ -24354,7 +24355,7 @@ snapshots:
       babel-jest: 30.5.2(@babel/core@7.29.7)
       chalk: 4.1.2
       ci-info: 4.4.0
-      deepmerge: 4.3.1
+      deepmerge: 4.1.2
       glob: 13.0.6
       graceful-fs: 4.2.11
       jest-circus: 30.5.2
@@ -27536,7 +27537,7 @@ snapshots:
       cn: 0.2.6
       commander: 14.0.3
       dedent: 1.7.2
-      deepmerge: 4.3.1
+      deepmerge: 4.1.2
       diff: 8.0.4
       execa: 9.6.1
       fast-glob: 3.3.3
