@@ -8,20 +8,20 @@ public class LogRedactionTests
     [Theory]
     [InlineData("alice.secret@example.com")]
     [InlineData("alice@example.com\r\nFORGED EVENT")]
-    public void ProtectEmail_ShouldExposeOnlyAnOpaqueCorrelationToken(string email)
+    public void ProtectContact_ShouldExposeOnlyAnOpaqueCorrelationToken(string email)
     {
-        var token = LogRedaction.ProtectEmail(email);
+        var token = LogRedaction.ProtectContact(email);
         token.Should().MatchRegex("^email:[a-f0-9]{64}$")
             .And.NotContain(email).And.NotContainAny("@", "\r", "\n");
-        LogRedaction.ProtectEmail(email.ToUpperInvariant()).Should().Be(token);
+        LogRedaction.ProtectContact(email.ToUpperInvariant()).Should().Be(token);
     }
 
     [Fact]
-    public void ProtectEmail_ShouldHandleMissingAndMalformedAddresses()
+    public void ProtectContact_ShouldHandleMissingAndMalformedAddresses()
     {
-        LogRedaction.ProtectEmail(null).Should().Be("none");
-        LogRedaction.ProtectEmail("").Should().Be("none");
-        LogRedaction.ProtectEmail("not-an-address").Should().Be("invalid");
+        LogRedaction.ProtectContact(null).Should().Be("none");
+        LogRedaction.ProtectContact("").Should().Be("none");
+        LogRedaction.ProtectContact("not-an-address").Should().Be("invalid");
     }
 
     [Fact]

@@ -78,7 +78,7 @@ public class LoginAttemptAnalysisService(
 
             logger.LogInformation(
                 "Login attempt recorded: Email={Email}, IP={IpAddress}, Success={IsSuccessful}, Risk={RiskScore}, Suspicious={IsSuspicious}",
-                LogRedaction.ProtectEmail(request.Email),
+                LogRedaction.ProtectContact(request.Email),
                 LogRedaction.MaskIpAddress(request.IpAddress),
                 request.IsSuccessful,
                 analysis.RiskScore,
@@ -91,7 +91,7 @@ public class LoginAttemptAnalysisService(
             // Provider exceptions can contain the original request in their message/Data.
             // Keep the failure category in diagnostics and rethrow the original to the caller.
             logger.LogError("Error recording login attempt for {Email} from {IpAddress}: {ExceptionType}",
-                LogRedaction.ProtectEmail(request.Email), LogRedaction.MaskIpAddress(request.IpAddress),
+                LogRedaction.ProtectContact(request.Email), LogRedaction.MaskIpAddress(request.IpAddress),
                 ex.GetType().Name);
             throw;
         }
@@ -463,7 +463,7 @@ public class LoginAttemptAnalysisService(
     {
         logger.LogWarning(
             "Suspicious login attempt detected - Email: {Email}, IP: {IpAddress}, RiskScore: {RiskScore}",
-            LogRedaction.ProtectEmail(attempt.Email), LogRedaction.MaskIpAddress(attempt.IpAddress),
+            LogRedaction.ProtectContact(attempt.Email), LogRedaction.MaskIpAddress(attempt.IpAddress),
             analysis.RiskScore);
 
         await Task.CompletedTask.ConfigureAwait(false);

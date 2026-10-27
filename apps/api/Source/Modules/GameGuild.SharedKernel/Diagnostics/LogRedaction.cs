@@ -72,7 +72,7 @@ public static partial class LogRedaction
     ///     Returns <c>"none"</c> for null/empty input and <c>"invalid"</c>
     ///     for values without a usable separator or leading domain character.
     /// </summary>
-    public static string ProtectEmail(string? email)
+    public static string ProtectContact(string? email)
     {
         if (string.IsNullOrEmpty(email))
         {
@@ -89,7 +89,7 @@ public static partial class LogRedaction
     }
 
     /// <summary>Compatibility entry point for the protected email correlation token.</summary>
-    public static string MaskEmail(string? email) => ProtectEmail(email);
+    public static string MaskEmail(string? email) => ProtectContact(email);
 
     /// <summary>
     ///     Produces an opaque keyed fingerprint for username log correlation
