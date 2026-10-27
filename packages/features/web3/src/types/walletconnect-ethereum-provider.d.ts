@@ -2,17 +2,13 @@
  * Ambient declaration for the lazily-imported `@walletconnect/ethereum-provider`
  * SDK (WalletConnect v2 protocol).
  *
- * The web3 package must type-check WITHOUT the SDK installed: current SDK
- * releases ship under the proprietary WalletConnect/Reown Community License
- * (not OSI-approved), so the repository does not vendor them. A deployment
- * that has accepted that license installs the package and enables the
- * adapter; the adapter loads it through a lazy dynamic `import()` and fails
- * closed when it is absent. Only the surface the adapter touches is
+ * The web3 package must type-check WITHOUT the optional SDK installed. An
+ * enabled host installs and bundles the peer; a disabled host excludes its
+ * runtime graph. The adapter loads it through a lazy dynamic `import()`.
+ * Only the surface the adapter touches is
  * declared; see `WalletConnectAdapterOptions.loadProvider` to inject an
  * alternative implementation.
  */
-import type { Eip1193RequestArguments } from './index';
-
 declare module '@walletconnect/ethereum-provider' {
   /** Minimal subset of `EthereumProvider.init` options used by the adapter. */
   export interface EthereumProviderInitOptions {
@@ -46,7 +42,7 @@ declare module '@walletconnect/ethereum-provider' {
    */
   export default class EthereumProvider {
     static init(options: EthereumProviderInitOptions): Promise<EthereumProvider>;
-    request(args: Eip1193RequestArguments): Promise<unknown>;
+    request(args: import('./index').Eip1193RequestArguments): Promise<unknown>;
     on(event: string, listener: (...args: unknown[]) => void): void;
     removeListener(event: string, listener: (...args: unknown[]) => void): void;
     connect(options?: { pairingTopic?: string }): Promise<void>;
