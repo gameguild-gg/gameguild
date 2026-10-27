@@ -181,8 +181,9 @@ public sealed class ProcessPaymentCommandHandler(
             }
         }
 
-        // 4. Mark as processing
-        payment.MarkAsProcessing();
+        // 4. Persist a local claim before invoking the provider. Unmapped Stripe
+        // remains Pending until a verified mapping permits Processing.
+        GatewayPaymentResultBinder.PrepareProcessingClaim(payment);
         payment.RecordBillingCountry(request.Country);
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
 
@@ -231,6 +232,7 @@ public sealed class ProcessPaymentCommandHandler(
         // mapped provider stays authoritative (RecordProcessingProvider is a no-op).
         payment.RecordProcessingProvider(gatewayResult.ProviderId ?? paymentGateway.ProviderId);
         GatewayPaymentResultBinder.BindVerifiedProviderMapping(payment, payment.Provider, gatewayResult);
+        GatewayPaymentResultBinder.PrepareProcessingClaim(payment);
 
         // 6. Update payment based on gateway result
         if (gatewayResult.Success)
@@ -388,6 +390,7 @@ public sealed class ProcessPaymentCommandHandler(
 
         payment.RecordCreditApplied(appliedCredit);
         var settlementReference = $"account-credit:{payment.Id}";
+        if (payment.Status == PaymentStatus.Pending) payment.MarkAsProcessing();
         payment.MarkAsSucceeded(settlementReference, settlementReference);
 
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);

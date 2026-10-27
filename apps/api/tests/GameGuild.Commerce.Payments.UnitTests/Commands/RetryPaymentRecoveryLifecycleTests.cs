@@ -44,7 +44,7 @@ public class RetryPaymentRecoveryLifecycleTests
     [InlineData(PaymentStatus.Processing, GatewayFailureKind.OutcomeUnknown)]
     [InlineData(PaymentStatus.Failed, GatewayFailureKind.OutcomeUnknown)]
     [InlineData(PaymentStatus.Processing, GatewayFailureKind.NotApplicable)]
-    public async Task RetryWithUnconfirmedCharge_RecordsProcessingWithoutRetryOrDunning(
+    public async Task RetryWithUnconfirmedCharge_RetainsPendingClaimWithoutRetryOrDunning(
         PaymentStatus providerStatus, GatewayFailureKind failureKind)
     {
         var payment = FailedPayment(maxRetries: 4);
@@ -57,15 +57,15 @@ public class RetryPaymentRecoveryLifecycleTests
         await handler.Handle(new RetryPaymentCommand(payment.Id), CancellationToken.None);
 
         result.Success.Should().BeFalse();
-        result.PaymentResult!.Status.Should().Be(PaymentStatus.Processing);
+        result.PaymentResult!.Status.Should().Be(PaymentStatus.Pending);
         CommandOutcome.IsFailure(result).Should().BeTrue();
         CommandOutcome.ShouldRollback(result).Should().BeFalse();
-        payment.Status.Should().Be(PaymentStatus.Processing);
+        payment.Status.Should().Be(PaymentStatus.Pending);
         payment.NextRetryAt.Should().BeNull();
         payment.CanRetry.Should().BeFalse();
         _gateway.Verify(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()), Times.Once);
         _repository.Verify(repository => repository.AddRetryAttemptAsync(
-            It.Is<PaymentRetryAttempt>(attempt => attempt.Outcome == PaymentStatus.Processing), It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<PaymentRetryAttempt>(attempt => attempt.Outcome == PaymentStatus.Pending), It.IsAny<CancellationToken>()), Times.Once);
         _dunning.VerifyNoOtherCalls();
     }
 

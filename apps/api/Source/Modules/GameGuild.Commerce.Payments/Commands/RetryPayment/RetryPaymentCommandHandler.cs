@@ -99,8 +99,9 @@ public sealed class RetryPaymentCommandHandler(
 
         logger.LogInformation("Payment {PaymentId} retry attempt {RetryCount}", request.PaymentId, payment.RetryCount);
 
-        // 4. Mark as processing
-        payment.MarkAsProcessing();
+        // 4. Persist the claim without asserting a Stripe provider mapping that
+        // has not been returned. Pending also excludes the automatic retry queue.
+        GatewayPaymentResultBinder.PrepareProcessingClaim(payment);
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
 
         // 5. Retry through payment gateway with new idempotency key, resolving the charge
@@ -142,6 +143,7 @@ public sealed class RetryPaymentCommandHandler(
         // mapped provider stays authoritative (RecordProcessingProvider is a no-op).
         payment.RecordProcessingProvider(gatewayResult.ProviderId ?? paymentGateway.ProviderId);
         GatewayPaymentResultBinder.BindVerifiedProviderMapping(payment, payment.Provider, gatewayResult);
+        GatewayPaymentResultBinder.PrepareProcessingClaim(payment);
 
         // 6. Update payment based on gateway result. The retry schedule is resolved from the
         //    failure-code retry policy (issue #415) on top of the Payments:Retry options.

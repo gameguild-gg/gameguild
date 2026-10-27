@@ -13,7 +13,7 @@ public class ProcessPaymentCommandHandlerTests
     [InlineData(PaymentStatus.Processing, GatewayFailureKind.OutcomeUnknown)]
     [InlineData(PaymentStatus.Failed, GatewayFailureKind.OutcomeUnknown)]
     [InlineData(PaymentStatus.Processing, GatewayFailureKind.NotApplicable)]
-    public async Task Handle_UnconfirmedCharge_RemainsProcessingWithoutSchedulingAnotherAttempt(
+    public async Task Handle_UnconfirmedCharge_RetainsPendingClaimWithoutSchedulingAnotherAttempt(
         PaymentStatus providerStatus, GatewayFailureKind failureKind)
     {
         var fixture = CreateFixture();
@@ -31,11 +31,11 @@ public class ProcessPaymentCommandHandlerTests
             new ProcessPaymentCommand(fixture.TenantId, fixture.SubscriptionId, 25m, "pm_test"), CancellationToken.None);
 
         result.Success.Should().BeFalse();
-        result.Status.Should().Be(PaymentStatus.Processing);
+        result.Status.Should().Be(PaymentStatus.Pending);
         CommandOutcome.IsFailure(result).Should().BeTrue();
         CommandOutcome.ShouldRollback(result).Should().BeFalse();
         persisted.Should().NotBeNull();
-        persisted!.Status.Should().Be(PaymentStatus.Processing);
+        persisted!.Status.Should().Be(PaymentStatus.Pending);
         persisted.NextRetryAt.Should().BeNull();
         persisted.CanRetry.Should().BeFalse();
         fixture.SyncService.VerifyNoOtherCalls();
