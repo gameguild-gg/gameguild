@@ -10,6 +10,10 @@ const fastDev =
   process.env.GAMEGUILD_FAST_DEV === "1" ||
   process.env.npm_lifecycle_event === "dev:fast";
 const gradingValidationE2e = process.env.GRADING_VALIDATION_E2E === "1";
+// Keep the optional provider out of the disabled sign-in dependency graph.
+// With a project ID, both bundlers resolve the real, installed SDK normally.
+const walletConnectEnabled = Boolean(process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim());
+const walletConnectDisabledModule = "./src/lib/web3/walletconnect-disabled.ts";
 const isolatedDistDir =
   process.env.CODING_CYCLE_E2E === "1"
     ? ".next-e2e-coding-cycle"
@@ -87,6 +91,9 @@ const nextConfig: NextConfig = {
       },
     },
     resolveAlias: {
+      ...(!walletConnectEnabled
+        ? { "@walletconnect/ethereum-provider": walletConnectDisabledModule }
+        : {}),
       ...(fastDev
         ? {
             "@game-guild/client/react":
@@ -304,6 +311,13 @@ const nextConfig: NextConfig = {
     ];
   },
   webpack: (config, { isServer, webpack }) => {
+    if (!walletConnectEnabled) {
+      config.resolve ??= {};
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        "@walletconnect/ethereum-provider$": path.resolve(__dirname, walletConnectDisabledModule),
+      };
+    }
     if (process.env.GAMEGUILD_DISABLE_WEBPACK_CACHE === "1") {
       config.cache = false;
     }

@@ -44,18 +44,26 @@ signing failures (raw provider errors, surfaced by the context as
 
 ### WalletConnect runtime behavior and limits (#18)
 
-- The SDK is **not vendored** by this repository: current
-  `@walletconnect/*` releases ship under the proprietary
-  WalletConnect/Reown Community License (not OSI-approved), which the
-  GameGuild license posture has not accepted. A deployment enabling it must
-  supply an SDK-backed `loadProvider`, or browser ESM resolution (such as an
-  import map) for the default native import. Installing the package on the
-  Node host alone does not make a bare module specifier resolvable by browsers.
-  The import explicitly opts out of Vite, Webpack and Turbopack bundling so an
-  absent optional SDK cannot prevent ordinary sign-in from compiling. Runtime
-  load failures remain `wallet_not_found`. No SDK is included in this repo's
-  lockfile or bundle; the GameGuild app's real provider delivery and pairing
-  acceptance remain pending in #18.
+- The SDK is an optional peer of `@game-guild/web3`. The default loader uses a
+  static dynamic import that the host bundles normally; `loadProvider` remains
+  available for hosts supplying their own integration.
+- In the GameGuild Next application, leave
+  `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` unset to disable WalletConnect. Both
+  Turbopack and Webpack then resolve the optional provider to a local disabled
+  module, so `/sign-in` compiles even if the SDK is physically absent. The SDK is
+  not required for password, MetaMask or Trust Wallet sign-in.
+- To enable WalletConnect in an installation without the optional peer, run
+  `pnpm --filter @game-guild/web3 add --save-optional @walletconnect/ethereum-provider@2.26.0`,
+  set a real `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` in `apps/web/.env.local`, and
+  restart `pnpm run dev:fast` (or rebuild for production). With that setting,
+  both bundlers use the real package; a missing SDK is a build error rather
+  than a nonfunctional enabled button. Upstream SDK license terms apply.
+- Hosted sign-in tests cover both bundlers with the SDK removed and disabled,
+  and with the locked SDK installed and enabled. The enabled test clicks the
+  real button and verifies SDK initialization reaches its provider transport;
+  external HTTP/WebSocket requests are blocked. This proves module delivery,
+  not a real relay pairing or signed wallet authentication; those remain
+  separate acceptance work in #18.
 - `isAvailable()` only checks the config gate (`enabled` + `projectId`, a
   public WalletConnect Cloud identifier — not a secret). The SDK import and
   the relay session happen exclusively inside `connect()`.

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Hosted-only render/hydration regression. It never submits credentials or pairs a wallet.
+// Hosted-only render/hydration and SDK-resolution regression. No credentials or real pairing.
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
@@ -14,6 +14,9 @@ assert.equal(process.env.GITHUB_ACTIONS, 'true', 'Run this probe only in hosted 
 assert.equal(process.platform, 'linux', 'The process cleanup is scoped to a hosted Linux process group.');
 const mode = process.argv[2];
 assert.ok(['webpack', 'turbopack-fast'].includes(mode));
+const sdkState = process.argv[4];
+assert.ok(['absent', 'installed'].includes(sdkState));
+const walletConnectEnabled = sdkState === 'installed';
 const evidence = path.resolve(process.argv[3]);
 await mkdir(evidence, { recursive: true });
 const require = createRequire(import.meta.url);
@@ -39,7 +42,8 @@ const child = spawn(process.execPath, ['--max-old-space-size=6144', require.reso
     AUTH_SECRET: secret, AUTH_COOKIE_SECURE: 'false', AUTH_COOKIE_DOMAIN: '',
     API_URL: 'http://127.0.0.1:9', NEXT_PUBLIC_API_URL: 'http://127.0.0.1:9',
     NEXT_PUBLIC_APP_URL: origin, NEXTAUTH_URL: origin,
-    NEXT_PUBLIC_WALLET_TORUS_ENABLED: 'false', NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: '',
+    NEXT_PUBLIC_WALLET_TORUS_ENABLED: 'false',
+    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: walletConnectEnabled ? '0'.repeat(32) : '',
     GOOGLE_CLIENT_ID: '', GOOGLE_CLIENT_SECRET: '', NEXT_PUBLIC_GOOGLE_CLIENT_ID: '',
     DISCORD_CLIENT_ID: '', DISCORD_CLIENT_SECRET: '', GITHUB_CLIENT_ID: '', GITHUB_CLIENT_SECRET: '',
   },
@@ -50,6 +54,7 @@ for (const stream of [child.stdout, child.stderr]) {
 }
 const cases = [];
 const errors = [];
+const sdkRequests = [];
 let browser;
 let failure;
 const cleanupFailures = [];
@@ -71,10 +76,26 @@ try {
   assert.ok(ready, 'The anonymous session endpoint never became ready.');
   browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-  // External integrations are not part of this regression. No backend responses are mocked.
+  // The installed SDK must actually initialize when clicked. Record and block its
+  // external requests: resolving/initializing it does not require a real pairing.
+  const recordSdkRequest = url => {
+    if (/(^|\.)(walletconnect\.(com|org)|reown\.com)$/.test(url.hostname)) {
+      sdkRequests.push(url.origin + url.pathname);
+    }
+  };
   await context.route('**/*', route => {
     const url = new URL(route.request().url());
+    if (url.origin !== origin) recordSdkRequest(url);
     return url.origin === origin ? route.continue() : route.abort('blockedbyclient');
+  });
+  await context.routeWebSocket('**/*', route => {
+    const url = new URL(route.url());
+    if (url.hostname === '127.0.0.1' && url.port === String(port)) {
+      route.connectToServer();
+    } else {
+      recordSdkRequest(url);
+      route.close();
+    }
   });
   const page = await context.newPage();
   page.setDefaultTimeout(120_000);
@@ -91,10 +112,23 @@ try {
   await page.getByRole('button', { name: 'Hide password', exact: true }).click();
   assert.equal(await page.locator('#password').getAttribute('type'), 'password');
   cases.push({ name: 'Hydrated password visibility control remains interactive', outcome: 'Passed' });
-  assert.equal(await page.getByTestId('walletconnect-sign-in-button').count(), 0);
+  if (walletConnectEnabled) {
+    const walletButton = page.getByTestId('walletconnect-sign-in-button');
+    await walletButton.waitFor({ state: 'visible' });
+    sdkRequests.length = 0;
+    await walletButton.click();
+    const sdkDeadline = Date.now() + 30_000;
+    while (sdkRequests.length === 0 && Date.now() < sdkDeadline) await delay(100);
+    assert.ok(sdkRequests.length > 0,
+      'The real installed SDK must load and reach provider initialization; a stub or unresolved import cannot pass.');
+    cases.push({ name: 'Enabled WalletConnect resolves the installed SDK and begins provider initialization', outcome: 'Passed' });
+  } else {
+    assert.equal(await page.getByTestId('walletconnect-sign-in-button').count(), 0);
+    assert.deepEqual(sdkRequests, []);
+    cases.push({ name: 'Disabled WalletConnect compiles and hydrates with its SDK physically absent', outcome: 'Passed' });
+  }
   assert.equal(await page.getByTestId('torus-sign-in-button').count(), 0);
   assert.deepEqual(errors, [], 'Sign-in must not produce a browser runtime error.');
-  cases.push({ name: 'Disabled optional wallets do not break ordinary sign-in', outcome: 'Passed' });
   await page.screenshot({ path: path.join(evidence, 'sign-in.png'), fullPage: true });
 } catch (error) {
   failure = redact(error?.stack ?? error);
@@ -115,10 +149,10 @@ try {
   try { await writeFile(path.join(evidence, 'next.log'), serverLog); }
   catch (error) { recordCleanupFailure('Write Next log', error); }
   try {
-    await writeFile(path.join(evidence, 'result.json'), JSON.stringify({ ...source, mode,
+    await writeFile(path.join(evidence, 'result.json'), JSON.stringify({ ...source, mode, sdkState, sdkRequests,
       passed: !failure && cleanupFailures.length === 0,
       cases, browserErrors: errors, failure: failure ?? null, cleanupFailures, credentialsSubmitted: false,
-      backendResponsesMocked: false, externalBrowserRequestsBlocked: true }, null, 2));
+      backendResponsesMocked: false, externalBrowserRequestsBlocked: true, realWalletPaired: false }, null, 2));
   } catch (error) { recordCleanupFailure('Write regression result', error); }
 }
 if (failure || cleanupFailures.length > 0) {
