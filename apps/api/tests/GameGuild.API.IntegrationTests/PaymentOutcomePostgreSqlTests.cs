@@ -68,7 +68,7 @@ public sealed class PaymentOutcomePostgreSqlTests(ApiPostgreSqlFixture fixture)
                 inconsistentProviderStatus ? GatewayStatus.Failed : GatewayStatus.Processing, DateTime.UtcNow,
                 ProviderId: provider, FailureKind: GatewayFailureKind.OutcomeUnknown));
         var actor = new Mock<IActorContextAccessor>();
-        actor.SetupGet(value => value.ActorContext).Returns(ActorContext.Anonymous);
+        actor.SetupGet(value => value.ActorContext).Returns(TestAdministrator(tenantId));
         var options = Options.Create(new PaymentRetryOptions { MaxRetries = 4, JitterRatio = 0 });
         var fraud = new Mock<IFraudDetectionService>();
         fraud.Setup(value => value.AssessPaymentAsync(It.IsAny<FraudSignalContext>(), It.IsAny<CancellationToken>()))
@@ -181,7 +181,7 @@ public sealed class PaymentOutcomePostgreSqlTests(ApiPostgreSqlFixture fixture)
                 null, null, requiresAction ? GatewayStatus.RequiresAction : GatewayStatus.Succeeded, DateTime.UtcNow,
                 ProviderId: "stripe", ProviderMapping: mapping));
         var actor = new Mock<IActorContextAccessor>();
-        actor.SetupGet(value => value.ActorContext).Returns(ActorContext.Anonymous);
+        actor.SetupGet(value => value.ActorContext).Returns(TestAdministrator(tenantId));
         var contextService = new Mock<ISubscriptionPaymentContextService>();
         contextService.Setup(value => value.GetPaymentContextAsync(subscriptionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SubscriptionPaymentContext(subscriptionId, tenantId, 25m, "USD", "cus_payment_outcome"));
@@ -219,4 +219,16 @@ public sealed class PaymentOutcomePostgreSqlTests(ApiPostgreSqlFixture fixture)
         Assert.Equal(mapping.ProviderMonetaryLeg, stored.ProviderMonetaryLeg);
         gateway.Verify(value => value.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    private static ActorContext TestAdministrator(Guid tenantId) => new()
+    {
+        ActorKind = ActorKind.User,
+        SubjectId = Guid.NewGuid().ToString(),
+        TenantId = tenantId,
+        Roles = new HashSet<string> { "Admin" },
+        Permissions = new HashSet<string> { "payments:manage" },
+        TypedAttributes = ActorAttributes.Empty,
+        AuthScheme = "Test",
+        IsAuthenticated = true
+    };
 }
