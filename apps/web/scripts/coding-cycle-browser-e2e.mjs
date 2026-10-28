@@ -1276,20 +1276,107 @@ async function instructorJourney(fixture, browser) {
     record("rubric total = maxScore (100)", /100/.test(totalText ?? ""), totalText);
     await screenshot(page, "instructor-rubric-filled");
 
-    // Submit grade.
-    const submitGrade = gradingPanel.getByTestId("submit-grade");
-    await submitGrade.waitFor({ state: "visible", timeout: 10_000 });
-    await submitGrade.click();
-    // router.refresh() re-renders; the queue item status flips to Graded.
-    let graded = false;
-    const gradeDeadline = Date.now() + 60_000;
-    while (Date.now() < gradeDeadline) {
-      const badge = await page.getByTestId("needs-grading-badge").textContent().catch(() => "");
-      if (/0 to grade/.test(badge ?? "")) { graded = true; break; }
-      await page.waitForTimeout(1500);
+    // Hold only the subsequent RSC GET: the grade mutation and canonical API
+    // read still complete normally. A confirmed review must not leave the
+    // visible counter dependent on an unrelated route response arriving.
+    const gradingPage = new URL(page.url());
+    const isGradingPage = (url) => url.origin === gradingPage.origin && url.pathname === gradingPage.pathname;
+    /** @type {() => void} */
+    let releaseRefresh = () => {};
+    /** @type {() => void} */
+    let observeRefresh = () => {};
+    /** @type {Promise<void>} */
+    const refreshReleased = new Promise((resolve) => { releaseRefresh = resolve; });
+    /** @type {Promise<void>} */
+    const refreshObserved = new Promise((resolve) => { observeRefresh = resolve; });
+    let heldRefreshes = 0;
+    const deferRefresh = async (route) => {
+      const request = route.request();
+      if (request.method() === "GET" && request.headers()["rsc"] === "1") {
+        heldRefreshes++;
+        observeRefresh();
+        await refreshReleased;
+      }
+      await route.continue();
+    };
+    const githubEvent = process.env.GITHUB_EVENT_PATH
+      ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")) : null;
+    const gradingProof = {
+      caseId: "QG-REVIEW-AUTOMATED-INSTRUCTOR-001",
+      sourceHead: githubEvent?.pull_request?.head?.sha ?? process.env.GITHUB_SHA ?? null,
+      testedMerge: process.env.GITHUB_SHA ?? null,
+      checkpoint: "confirmed-review-with-deferred-rsc",
+      mutation: null,
+      canonicalQueue: null,
+      visibleBadge: null,
+      heldRefreshes: 0,
+    };
+    const awaitGradingBoundary = async (promise, label, milliseconds) => {
+      let timer;
+      try {
+        return await Promise.race([promise, new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error(`Grading boundary timed out: ${label}`)), milliseconds);
+        })]);
+      } finally { clearTimeout(timer); }
+    };
+    await page.route(isGradingPage, deferRefresh);
+    try {
+      // Submit grade.
+      const submitGrade = gradingPanel.getByTestId("submit-grade");
+      await submitGrade.waitFor({ state: "visible", timeout: 10_000 });
+      // Register before clicking; observe both headers and completed body. The
+      // original 60s DOM oracle below retains its own independent deadline.
+      const gradeResponsePromise = page.waitForResponse((response) => {
+        const request = response.request();
+        return request.method() === "POST" && isGradingPage(new URL(response.url()))
+          && Boolean(request.headers()["next-action"])
+          && (request.postData() ?? "").includes('"rubricScores"');
+      }, { timeout: 120_000 }).then((response) => ({ response, error: null }), (error) => ({ response: null, error }));
+      await submitGrade.click();
+      const gradeResponseResult = await gradeResponsePromise;
+      if (gradeResponseResult.error) throw gradeResponseResult.error;
+      const gradeResponse = gradeResponseResult.response;
+      if (!gradeResponse) throw new Error("The grading mutation response was not captured.");
+      const transportError = await awaitGradingBoundary(gradeResponse.finished(), "mutation response body", 120_000);
+      gradingProof.mutation = { status: gradeResponse.status(), streamComplete: !transportError };
+      record("grade mutation response completes", gradeResponse.ok() && !transportError,
+        `status=${gradeResponse.status()}; streamComplete=${!transportError}`);
+      const queueClient = createApiClient(fixture.adminToken, fixture.tenantId);
+      const canonicalQueue = unwrap(await queueClient.request({
+        method: "GET", path: `/v1.0/assessments/${fixture.assessmentId}/grading-queue`, requiresAuth: true,
+      }), "Read canonical grading queue after instructor resolution");
+      gradingProof.canonicalQueue = {
+        total: canonicalQueue.total, needsGrading: canonicalQueue.needsGrading,
+        items: (canonicalQueue.items ?? []).map((item) => ({
+          status: item.status, activeGradeRoundStatus: item.activeGradeRoundStatus,
+          requiresStaffReview: item.requiresStaffReview,
+        })),
+      };
+      record("canonical queue has no remaining staff review", canonicalQueue.needsGrading === 0
+        && canonicalQueue.items?.length === 1 && canonicalQueue.items[0].requiresStaffReview === false,
+      `needsGrading=${canonicalQueue.needsGrading}`);
+      await awaitGradingBoundary(refreshObserved, "deferred route refresh", 15_000);
+      record("route refresh is deferred during the confirmed-grade check", heldRefreshes > 0,
+        `heldRefreshes=${heldRefreshes}`);
+      // router.refresh() re-renders; the queue item status flips to Graded.
+      let graded = false;
+      const gradeDeadline = Date.now() + 60_000;
+      while (Date.now() < gradeDeadline) {
+        const badge = await page.getByTestId("needs-grading-badge").textContent().catch(() => "");
+        if (/0 to grade/.test(badge ?? "")) { graded = true; break; }
+        await page.waitForTimeout(1500);
+      }
+      gradingProof.visibleBadge = await page.getByTestId("needs-grading-badge").textContent();
+      record("submit grade → needs-grading drops to 0", graded, "polled needs-grading-badge");
+      await screenshot(page, "instructor-grade-submitted");
+    } finally {
+      gradingProof.heldRefreshes = heldRefreshes;
+      // Release after the assertion, never reload to make a stale badge pass.
+      releaseRefresh();
+      await page.unroute(isGradingPage, deferRefresh);
+      await writeFile(resolve(ARTIFACTS, "grading-refresh-proof.json"), JSON.stringify(gradingProof, null, 2));
+      log(`grading-refresh-proof ${JSON.stringify(gradingProof)}`);
     }
-    record("submit grade → needs-grading drops to 0", graded, "polled needs-grading-badge");
-    await screenshot(page, "instructor-grade-submitted");
 
     httpFailures.assertNone("Instructor journey");
     const browserErrors = [...new Set(errors.errors())];
