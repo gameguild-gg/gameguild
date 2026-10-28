@@ -2030,6 +2030,35 @@ export interface CommerceBillingStackingOutcomeRow {
   stackingRuleName?: string | null;
 }
 
+/** Read model returned by GameGuild.Commerce.Billing.GetSubscriptionChangeSagaQuery (issue #396
+workflow-orchestration observability): the durable saga row — status, current step,
+proration amounts, payment reference, failure and compensation record — plus the
+journaled step trail in execution order. */
+export interface CommerceBillingSubscriptionChangeSagaDto {
+  id?: string;
+  chargeForNew?: number;
+  compensationsApplied?: string | null;
+  completedAtUtc?: string | null;
+  creditForUnused?: number;
+  currency?: string | null;
+  currentStep?: string | null;
+  failedStep?: string | null;
+  failureReason?: string | null;
+  fromPlanId?: string;
+  idempotencyKey?: string | null;
+  initiatedByActorId?: string;
+  invoiceId?: string | null;
+  netAdjustment?: number;
+  paymentTransactionId?: string | null;
+  prorationEffectiveDateUtc?: string;
+  startedAtUtc?: string;
+  status?: string | null;
+  steps?: CommerceBillingSubscriptionChangeSagaStepDto[] | null;
+  subscriptionId?: string;
+  tenantId?: string;
+  toPlanId?: string;
+}
+
 /** Terminal result of the orchestrated subscription plan change: the saga state, the
 executed steps and, on failure, the compensating actions that were applied. */
 export interface CommerceBillingSubscriptionChangeSagaResult {
@@ -2055,6 +2084,15 @@ workflow orchestration). The saga moves GameGuild.Commerce.Billing.SubscriptionC
 (proration, invoice, payment, activation) and lands in GameGuild.Commerce.Billing.SubscriptionChangeSagaStatus.Completed or,
 after compensating actions, GameGuild.Commerce.Billing.SubscriptionChangeSagaStatus.Failed. */
 export type CommerceBillingSubscriptionChangeSagaStatus = 'Pending' | 'Running' | 'Completed' | 'Compensating' | 'Failed';
+
+/** One journaled saga step attempt, in execution order. */
+export interface CommerceBillingSubscriptionChangeSagaStepDto {
+  detail?: string | null;
+  occurredAtUtc?: string;
+  outcome?: string | null;
+  sequence?: number;
+  step?: string | null;
+}
 
 /** Outcome of one executed saga step, in execution order. */
 export interface CommerceBillingSubscriptionChangeSagaStepResult {
@@ -26531,8 +26569,10 @@ export let CommerceBillingPricingLedgerTotalsSchema: z.ZodType<CommerceBillingPr
 export let CommerceBillingPricingRuleImpactRowSchema: z.ZodType<CommerceBillingPricingRuleImpactRow>;
 export let CommerceBillingPromoCodeEffectivenessRowSchema: z.ZodType<CommerceBillingPromoCodeEffectivenessRow>;
 export let CommerceBillingStackingOutcomeRowSchema: z.ZodType<CommerceBillingStackingOutcomeRow>;
+export let CommerceBillingSubscriptionChangeSagaDtoSchema: z.ZodType<CommerceBillingSubscriptionChangeSagaDto>;
 export let CommerceBillingSubscriptionChangeSagaResultSchema: z.ZodType<CommerceBillingSubscriptionChangeSagaResult>;
 export let CommerceBillingSubscriptionChangeSagaStatusSchema: z.ZodType<CommerceBillingSubscriptionChangeSagaStatus>;
+export let CommerceBillingSubscriptionChangeSagaStepDtoSchema: z.ZodType<CommerceBillingSubscriptionChangeSagaStepDto>;
 export let CommerceBillingSubscriptionChangeSagaStepResultSchema: z.ZodType<CommerceBillingSubscriptionChangeSagaStepResult>;
 export let CommerceBillingSubscriptionEventProjectionDtoSchema: z.ZodType<CommerceBillingSubscriptionEventProjectionDto>;
 export let CommerceBillingSubscriptionProjectionEventDtoSchema: z.ZodType<CommerceBillingSubscriptionProjectionEventDto>;
@@ -30527,6 +30567,38 @@ CommerceBillingStackingOutcomeRowSchema = z.object({
   stackingRuleName: z.string().nullable().optional(),
 });
 
+/** Zod schema for CommerceBillingSubscriptionChangeSagaDto. Read model returned by GameGuild.Commerce.Billing.GetSubscriptionChangeSagaQuery (issue #396
+workflow-orchestration observability): the durable saga row — status, current step,
+proration amounts, payment reference, failure and compensation record — plus the
+journaled step trail in execution order. */
+CommerceBillingSubscriptionChangeSagaDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  chargeForNew: z.number().optional(),
+  compensationsApplied: z.string().nullable().optional(),
+  completedAtUtc: z.string().datetime().nullable().optional(),
+  creditForUnused: z.number().optional(),
+  currency: z.string().nullable().optional(),
+  currentStep: z.string().nullable().optional(),
+  failedStep: z.string().nullable().optional(),
+  failureReason: z.string().nullable().optional(),
+  fromPlanId: z.string().uuid().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  initiatedByActorId: z.string().uuid().optional(),
+  invoiceId: z.string().uuid().nullable().optional(),
+  netAdjustment: z.number().optional(),
+  paymentTransactionId: z.string().nullable().optional(),
+  prorationEffectiveDateUtc: z.string().datetime().optional(),
+  startedAtUtc: z.string().datetime().optional(),
+  status: z.string().nullable().optional(),
+  steps: z
+    .array(z.lazy(() => CommerceBillingSubscriptionChangeSagaStepDtoSchema))
+    .nullable()
+    .optional(),
+  subscriptionId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+  toPlanId: z.string().uuid().optional(),
+});
+
 /** Zod schema for CommerceBillingSubscriptionChangeSagaResult. Terminal result of the orchestrated subscription plan change: the saga state, the
 executed steps and, on failure, the compensating actions that were applied. */
 CommerceBillingSubscriptionChangeSagaResultSchema = z.object({
@@ -30554,6 +30626,15 @@ workflow orchestration). The saga moves GameGuild.Commerce.Billing.SubscriptionC
 (proration, invoice, payment, activation) and lands in GameGuild.Commerce.Billing.SubscriptionChangeSagaStatus.Completed or,
 after compensating actions, GameGuild.Commerce.Billing.SubscriptionChangeSagaStatus.Failed. */
 CommerceBillingSubscriptionChangeSagaStatusSchema = z.enum(['Pending', 'Running', 'Completed', 'Compensating', 'Failed']);
+
+/** Zod schema for CommerceBillingSubscriptionChangeSagaStepDto. One journaled saga step attempt, in execution order. */
+CommerceBillingSubscriptionChangeSagaStepDtoSchema = z.object({
+  detail: z.string().nullable().optional(),
+  occurredAtUtc: z.string().datetime().optional(),
+  outcome: z.string().nullable().optional(),
+  sequence: z.number().int().optional(),
+  step: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommerceBillingSubscriptionChangeSagaStepResult. Outcome of one executed saga step, in execution order. */
 CommerceBillingSubscriptionChangeSagaStepResultSchema = z.object({
@@ -52884,6 +52965,10 @@ export type CommerceBillingPricingDecisionLedgerEntryDetail = CommerceBillingPri
 export { CommerceBillingPricingDecisionLedgerEntryDetailDtoSchema as CommerceBillingPricingDecisionLedgerEntryDetailSchema };
 export type CommerceBillingPricingDecisionLedgerEntry = CommerceBillingPricingDecisionLedgerEntryDto;
 export { CommerceBillingPricingDecisionLedgerEntryDtoSchema as CommerceBillingPricingDecisionLedgerEntrySchema };
+export type CommerceBillingSubscriptionChangeSaga = CommerceBillingSubscriptionChangeSagaDto;
+export { CommerceBillingSubscriptionChangeSagaDtoSchema as CommerceBillingSubscriptionChangeSagaSchema };
+export type CommerceBillingSubscriptionChangeSagaStep = CommerceBillingSubscriptionChangeSagaStepDto;
+export { CommerceBillingSubscriptionChangeSagaStepDtoSchema as CommerceBillingSubscriptionChangeSagaStepSchema };
 export type CommerceBillingSubscriptionEventProjection = CommerceBillingSubscriptionEventProjectionDto;
 export { CommerceBillingSubscriptionEventProjectionDtoSchema as CommerceBillingSubscriptionEventProjectionSchema };
 export type CommerceBillingSubscriptionProjectionEvent = CommerceBillingSubscriptionProjectionEventDto;
