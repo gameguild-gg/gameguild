@@ -35,6 +35,11 @@ public class PaymentDisputeConfiguration : IEntityTypeConfiguration<PaymentDispu
 
         builder.Property(x => x.DisputeFee).HasColumnType("decimal(18,2)").IsRequired();
 
+        // Replay-safe evidence submission (issue #419): the frozen manifest of the accepted
+        // evidence bundle and its digest, which binds the dispute's submission idempotency key.
+        builder.Property(x => x.EvidenceManifest).HasMaxLength(4000);
+        builder.Property(x => x.EvidenceManifestHash).HasMaxLength(128);
+
         // Configure indexes for performance
         builder.HasIndex(x => x.PaymentId);
         builder.HasIndex(x => x.UserId);

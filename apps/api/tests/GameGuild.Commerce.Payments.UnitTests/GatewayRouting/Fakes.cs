@@ -11,6 +11,7 @@ namespace GameGuild.Commerce.Payments.UnitTests.GatewayRouting;
 public sealed class FakePaymentGateway(string providerId) : IPaymentGateway
 {
     private readonly Queue<Func<GatewayPaymentRequest, GatewayPaymentResult>> _chargeScript = new();
+    private readonly Queue<Func<GatewayRefundRequest, GatewayRefundResult>> _refundScript = new();
 
     public List<string> ChargeCallLog { get; } = [];
 
@@ -101,11 +102,39 @@ public sealed class FakePaymentGateway(string providerId) : IPaymentGateway
         Task.FromResult(new GatewayPaymentCancellationResult(true, OutcomeUnknown: false, null, null));
 
     /// <inheritdoc />
+    /// <summary>Enqueues one scripted refund outcome (issue #419 composed retry budget tests).</summary>
+    public FakePaymentGateway EnqueueRefund(GatewayRefundResult result) => EnqueueRefund(_ => result);
+
+    /// <summary>Enqueues one scripted refund outcome computed from the request.</summary>
+    public FakePaymentGateway EnqueueRefund(Func<GatewayRefundRequest, GatewayRefundResult> factory)
+    {
+        _refundScript.Enqueue(factory);
+        return this;
+    }
+
+    /// <summary>A failed refund result classified with the given failure kind.</summary>
+    public static GatewayRefundResult RefundFailureResult(
+        GatewayFailureKind kind,
+        string errorCode = "refund_transient_failure",
+        string errorMessage = "transient refund failure") => new(
+        Success: false,
+        RefundId: null,
+        AmountRefunded: 0,
+        ErrorCode: errorCode,
+        ErrorMessage: errorMessage,
+        ProcessedAt: SystemClock.UtcNow,
+        FailureKind: kind);
+
     public Task<GatewayRefundResult> ProcessRefundAsync(
         GatewayRefundRequest request,
         CancellationToken cancellationToken = default)
     {
         RefundCalls.Add(request);
+
+        if (_refundScript.Count > 0)
+        {
+            return Task.FromResult(_refundScript.Dequeue()(request));
+        }
 
         return Task.FromResult(new GatewayRefundResult(
             Success: true,

@@ -126,6 +126,15 @@ public class Refund : EntityBase
     /// <summary>Number of gateway execution attempts for this refund</summary>
     public int AttemptCount { get; private set; }
 
+    /// <summary>
+    ///     Failure classification of the last unsuccessful gateway execution (issue #419 retry
+    ///     classification): preserved so the automated workflow can distinguish retryable
+    ///     transient failures from permanent declines and outcome-unknown attempts. Permanent
+    ///     declines are never replayed; outcome-unknown attempts stay reserved for provider
+    ///     reconciliation (webhook or recovery inquiry), never replayed by the worker.
+    /// </summary>
+    public GatewayFailureKind LastFailureKind { get; private set; } = GatewayFailureKind.NotApplicable;
+
     /// <summary>Dispute that triggered this refund through the accept-dispute flow, when applicable</summary>
     public Guid? DisputeId { get; private set; }
 
@@ -235,15 +244,29 @@ public class Refund : EntityBase
         FailureReason = null;
     }
 
-    /// <summary>Marks the refund as rejected by the gateway; may be re-executed later.</summary>
-    public void MarkFailed(string failureReason)
+    /// <summary>
+    ///     Marks the refund as rejected by the gateway; may be re-executed later. The failure
+    ///     classification is preserved (issue #419): retryable failures remain worker-eligible,
+    ///     permanent declines and outcome-unknown attempts are not replayed automatically.
+    /// </summary>
+    public void MarkFailed(string failureReason, GatewayFailureKind failureKind = GatewayFailureKind.NotApplicable)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(failureReason);
 
         TransitionTo(RefundStatus.Failed);
         FailedAt = SystemClock.UtcNow;
         FailureReason = Bound(failureReason);
+        LastFailureKind = failureKind;
     }
+
+    /// <summary>
+    ///     Whether the last failed attempt may be retried by the automated workflow (issue
+    ///     #419): unclassified failures keep the legacy retry behavior; permanent declines and
+    ///     outcome-unknown attempts are excluded (the latter belong to reconciliation).
+    /// </summary>
+    public bool IsWorkerRetryEligible =>
+        Status == RefundStatus.Failed
+        && LastFailureKind is GatewayFailureKind.RetriableGatewayFailure or GatewayFailureKind.NotApplicable;
 
     /// <summary>Whether this refund is in a terminal state.</summary>
     public bool IsTerminal => Status is RefundStatus.Completed or RefundStatus.Rejected;
