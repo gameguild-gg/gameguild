@@ -47,7 +47,8 @@ public sealed record SubscriptionChangeSagaStepDto(
 ///     saga of one subscription, with its journaled steps and compensations — the recovery
 ///     and debugging surface for the orchestrated workflow.
 /// </summary>
-public sealed record GetSubscriptionChangeSagaQuery(Guid SubscriptionId);
+public sealed record GetSubscriptionChangeSagaQuery(Guid SubscriptionId)
+    : IQuery<SubscriptionChangeSagaDto?>;
 
 /// <summary>Validator for <see cref="GetSubscriptionChangeSagaQuery" />.</summary>
 public sealed class GetSubscriptionChangeSagaQueryValidator : AbstractValidator<GetSubscriptionChangeSagaQuery>
