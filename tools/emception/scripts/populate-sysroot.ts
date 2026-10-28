@@ -69,6 +69,10 @@ if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'src'))) {
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'html'))) {
     copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'html'), path.join(SYSROOT, 'usr/lib/emscripten/html'));
 }
+// media logos are base64-embedded into generated HTML (SHELL_LOGO)
+if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'media'))) {
+    copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'media'), path.join(SYSROOT, 'usr/lib/emscripten/media'));
+}
 // third_party contains pure-Python dependencies required at runtime (e.g. leb128, ply)
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'third_party'))) {
     console.log('>> Copying emscripten third_party runtime sources...');
