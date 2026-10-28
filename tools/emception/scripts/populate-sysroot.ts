@@ -65,10 +65,31 @@ if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'tools'))) {
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'src'))) {
     copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'src'), path.join(SYSROOT, 'usr/lib/emscripten/src'));
 }
+// html/shell.html is the default output template read by tools/preprocessor.mjs
+if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'html'))) {
+    copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'html'), path.join(SYSROOT, 'usr/lib/emscripten/html'));
+}
 // third_party contains pure-Python dependencies required at runtime (e.g. leb128, ply)
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'third_party'))) {
-    console.log('>> Copying Emscripten third_party dependencies...');
+    console.log('>> Copying emscripten third_party runtime sources...');
     copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'third_party'), path.join(SYSROOT, 'usr/lib/emscripten/third_party'));
+}
+
+// acorn is required by tools/acorn-optimizer.mjs, which the browser runtime
+// executes with the real node tool sources (see packages/browser node-tool).
+{
+    const acornDist = path.join(EMSCRIPTEN_ROOT, 'node_modules', 'acorn', 'dist');
+    const acornDest = path.join(SYSROOT, 'usr/lib/emscripten/node_modules/acorn/dist');
+    if (fs.existsSync(acornDist)) {
+        console.log('>> Copying acorn (JS optimizer dependency)...');
+        copyRuntimeSourceTree(acornDist, acornDest);
+        shell.cp(
+            path.join(EMSCRIPTEN_ROOT, 'node_modules', 'acorn', 'package.json'),
+            path.join(SYSROOT, 'usr/lib/emscripten/node_modules/acorn/package.json'),
+        );
+    } else {
+        console.warn('!! acorn not found in emsdk node_modules — JS optimizer will fail');
+    }
 }
 
 // Core Python driver files + data files required by emcc

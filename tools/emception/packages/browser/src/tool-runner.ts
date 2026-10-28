@@ -18,6 +18,26 @@ import { SUBPROCESS_SHIM } from './emscripten/subprocess-shim.js';
 import { loadModuleFactory } from './loader/wasm-module.js';
 import { mountVFSFS, type VFSFSRuntime } from './vfs/emscripten-vfsfs.js';
 import type { VFSManager } from './vfs/index.js';
+import { runNodeTool, type NodeToolVfs } from './node-tool.js';
+
+interface NodeToolFileCache {
+  get(path: string): Uint8Array | null;
+  has(path: string): boolean;
+  readAsync(path: string, fallback: (path: string) => Promise<Uint8Array | null>): Promise<Uint8Array | null>;
+}
+
+/**
+ * Emscripten Node.js build tools executed with the real sources via the
+ * node-emulation loader (see node-tool.ts). Everything else dispatched to
+ * `node` is an Emscripten-compiled JS program and uses the legacy evaluator.
+ */
+const NODE_TOOL_PATHS: ReadonlySet<string> = new Set([
+  '/usr/lib/emscripten/tools/compiler.mjs',
+  '/usr/lib/emscripten/tools/preprocessor.mjs',
+  '/usr/lib/emscripten/tools/acorn-optimizer.mjs',
+  '/usr/lib/emscripten/tools/unsafe_optimizations.mjs',
+  '/usr/lib/emscripten/tools/lz4-compress.mjs',
+]);
 
 const LOG_PREFIX = '[Emception:Kernel]';
 function elapsed(t0: number): string {
@@ -3165,6 +3185,71 @@ sys.excepthook = _hook
   /* ---------------------------------------------------------------- */
 
   /**
+   * In-memory cache of /usr/lib/emscripten tool sources. The node tool
+   * loader's synchronous fs.readFileSync needs the sources available
+   * without await, but LazyFS only serves CDN files asynchronously —
+   * so preload them once. Lean by design: only the JS toolchain files
+   * (tools/*.mjs, src/*.mjs, src/*.js, node_modules/acorn), NOT the
+   * multi-thousand-file system/ headers that also live in the
+   * emscripten-core bundle.
+   */
+  private nodeToolFileCache: Map<string, Uint8Array> | null = null;
+
+  private isNodeToolFile(path: string): boolean {
+    return (
+      (path.startsWith('/usr/lib/emscripten/tools/') && path.endsWith('.mjs')) ||
+      (path.startsWith('/usr/lib/emscripten/src/') &&
+        (path.endsWith('.mjs') || path.endsWith('.js'))) ||
+      path.startsWith('/usr/lib/emscripten/node_modules/acorn/') ||
+      path.startsWith('/usr/lib/emscripten/html/')
+    );
+  }
+
+  private async preloadNodeToolFiles(): Promise<NodeToolFileCache> {
+    if (!this.nodeToolFileCache) {
+      const cache = new Map<string, Uint8Array>();
+      const files = this.vfs.getBundleFilePaths('emscripten-core').filter((p) => this.isNodeToolFile(p));
+      const results = await Promise.allSettled(files.map(async (p) => [p, await this.vfs.fetchFile(p)] as const));
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value[1]) cache.set(result.value[0], result.value[1]);
+      }
+      // Bare-specifier resolution (e.g. `import * as acorn from 'acorn'`) is
+      // synchronous: it reads <pkg>/package.json and probes entry files via
+      // the cache. On CDN manifests that don't list acorn yet, eagerly fetch
+      // the known files so resolution succeeds.
+      const acornProbePaths = [
+        '/usr/lib/emscripten/node_modules/acorn/package.json',
+        '/usr/lib/emscripten/node_modules/acorn/dist/acorn.mjs',
+        '/usr/lib/emscripten/node_modules/acorn/dist/acorn.js',
+        '/usr/lib/emscripten/html/shell.html',
+        '/usr/lib/emscripten/html/shell_minimal.html',
+        '/usr/lib/emscripten/html/shell_file.html',
+        '/usr/lib/emscripten/html/shell_runtime.html',
+      ];
+      await Promise.allSettled(
+        acornProbePaths.map(async (p) => {
+          if (cache.has(p)) return;
+          const data = await this.vfs.fetchFile(p).catch(() => null);
+          if (data) cache.set(p, data);
+        }),
+      );
+      this.nodeToolFileCache = cache;
+      console.log(`${LOG_PREFIX}   Preloaded ${cache.size}/${files.length} emscripten node-tool files`);
+    }
+    return {
+      get: (p: string) => this.nodeToolFileCache?.get(p) ?? null,
+      has: (p: string) => this.nodeToolFileCache?.has(p) ?? false,
+      readAsync: async (p: string, fallback: (p: string) => Promise<Uint8Array | null>) => {
+        const cached = this.nodeToolFileCache?.get(p);
+        if (cached) return cached;
+        const data = await fallback(p);
+        if (data) this.nodeToolFileCache?.set(p, data);
+        return data;
+      },
+    };
+  }
+
+  /**
    * Run an Emscripten-compiled JavaScript file in the browser.
    *
    * After emcc produces main.js + main.wasm, this evaluator:
@@ -3178,24 +3263,43 @@ sys.excepthook = _hook
     const scriptPath = argv.length > 1 ? argv[1] : argv[0];
     console.log(`${LOG_PREFIX} ===== NODE (JS eval): ${scriptPath} =====`);
 
-    // Special case: compiler.mjs is a heavy Node.js script that's used for
-    // post-processing after clang compilation. The actual compilation is done
-    // by clang, so we can safely skip the node execution and return minimal output.
-    if (scriptPath.includes('compiler.mjs')) {
-      console.log(`${LOG_PREFIX}   [SKIPPED] compiler.mjs (post-processing, already done by clang)`);
-      // Return minimal valid JSON matching the format that compiler.mjs --symbols-only
-      // produces (see src/jsifier.mjs runJSify symbolsOnly branch).
-      // Python's get_js_sym_info() -> json.loads(output) expects:
-      //   deps: dict[str, list[str]]  — JS symbol → native dependencies
-      //   asyncFuncs: list[str]       — async JS library functions
-      //   extraLibraryFuncs: list[str] — extra library function names
-      const output = JSON.stringify({
-        deps: {},
-        asyncFuncs: [],
-        extraLibraryFuncs: [],
+    // Emscripten's own Node.js build tools run with their real sources via
+    // the node-emulation loader (see node-tool.ts).
+    if (NODE_TOOL_PATHS.has(scriptPath)) {
+      console.log(`${LOG_PREFIX}   Dispatching to real node tool execution: ${scriptPath}`);
+      // Python's subprocess shim stores piped stdin in /tmp/.subprocess_stdin.
+      let stdin: string | undefined;
+      try {
+        const stdinBytes = await this.vfs.fetchFile('/tmp/.subprocess_stdin');
+        if (stdinBytes) stdin = new TextDecoder().decode(stdinBytes);
+      } catch {
+        /* stdin file absent — tool reads no stdin */
+      }
+      const cache = await this.preloadNodeToolFiles();
+      const toolVfs: NodeToolVfs = {
+        fetchFile: (p: string) => cache.readAsync(p, () => this.vfs.fetchFile(p)),
+        readFileSync: (p: string) => cache.get(p) ?? this.vfs.readFileSync(p),
+        writeFileSync: (p: string, d: Uint8Array) => this.vfs.writeFileSync(p, d),
+        existsSync: (p: string) => cache.has(p) || this.vfs.existsSync(p),
+        readdirSync: (p: string) => this.vfs.readdirSync(p),
+        statSync: (p: string) => {
+          const s = this.vfs.statSync(p);
+          if (!s || s.type === 'symlink') return s ? { type: 'dir' as const, size: s.size } : null;
+          return { type: s.type, size: s.size };
+        },
+        deleteFileSync: (p: string) => this.vfs.deleteFileSync(p),
+        mkdirSync: (p: string) => this.vfs.mkdirSync(p),
+      };
+      const result = await runNodeTool(toolVfs, {
+        cwd: options.cwd || '/home/user',
+        argv,
+        env: options.env,
+        stdin,
+        onStdout: options.onStdout,
+        onStderr: options.onStderr,
       });
-      options.onStdout?.(output);
-      return { exitCode: 0, stdout: output, stderr: '' };
+      console.log(`${LOG_PREFIX} ===== NODE COMPLETE: exitCode=${result.exitCode}, total=${elapsed(tTotal)} =====`);
+      return result;
     }
 
     // Read the JS file from the kernel VFS
