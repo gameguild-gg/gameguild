@@ -1276,9 +1276,9 @@ async function instructorJourney(fixture, browser) {
     record("rubric total = maxScore (100)", /100/.test(totalText ?? ""), totalText);
     await screenshot(page, "instructor-rubric-filled");
 
-    // Hold only the subsequent RSC GET: the grade mutation and canonical API
-    // read still complete normally. A confirmed review must not leave the
-    // visible counter dependent on an unrelated route response arriving.
+    // Let the subsequent RSC GET reach the server, but defer delivery of its
+    // original response to the browser. Do not stall the request upstream of
+    // the server while waiting for the independent grade stream to finish.
     const gradingPage = new URL(page.url());
     const isGradingPage = (url) => url.origin === gradingPage.origin && url.pathname === gradingPage.pathname;
     /** @type {() => void} */
@@ -1291,15 +1291,24 @@ async function instructorJourney(fixture, browser) {
     const refreshObserved = new Promise((resolve) => { observeRefresh = resolve; });
     let heldRefreshes = 0;
     const routeErrors = [];
+    const refreshResponses = [];
     const pendingRouteHandlers = new Set();
     const deferRefresh = (route) => {
       const task = (async () => {
         try {
           const request = route.request();
           if (request.method() === "GET" && request.headers()["rsc"] === "1") {
+            const response = await route.fetch({ timeout: 30_000, maxRedirects: 0, maxRetries: 0 });
+            const body = await awaitGradingBoundary(response.body(), "route refresh response body", 30_000);
+            const observation = { status: response.status(), streamComplete: true, delivered: false };
+            refreshResponses.push(observation);
             heldRefreshes++;
             observeRefresh();
             await refreshReleased;
+            await route.fulfill({ response, body });
+            observation.delivered = true;
+            await response.dispose();
+            return;
           }
           await route.continue();
         } catch (error) {
@@ -1307,6 +1316,8 @@ async function instructorJourney(fixture, browser) {
           // Preserve transport failures as hard assertions, never unhandled
           // rejections that discard the original boundary evidence.
           routeErrors.push(error instanceof Error ? error.message : String(error));
+          try { await route.abort("failed"); }
+          catch (abortError) { routeErrors.push(`Route abort failed: ${abortError instanceof Error ? abortError.message : String(abortError)}`); }
         }
       })();
       pendingRouteHandlers.add(task);
@@ -1324,6 +1335,7 @@ async function instructorJourney(fixture, browser) {
       canonicalQueue: null,
       visibleBadge: null,
       heldRefreshes: 0,
+      refreshResponses,
     };
     const awaitGradingBoundary = async (promise, label, milliseconds) => {
       let timer;
@@ -1370,8 +1382,9 @@ async function instructorJourney(fixture, browser) {
         && canonicalQueue.items?.length === 1 && canonicalQueue.items[0].requiresStaffReview === false,
       `needsGrading=${canonicalQueue.needsGrading}`);
       await awaitGradingBoundary(refreshObserved, "deferred route refresh", 15_000);
-      record("route refresh is deferred during the confirmed-grade check", heldRefreshes > 0,
-        `heldRefreshes=${heldRefreshes}`);
+      record("route refresh is deferred during the confirmed-grade check", heldRefreshes > 0
+        && refreshResponses.every((response) => response.status === 200 && response.streamComplete && !response.delivered),
+        `heldRefreshes=${heldRefreshes}; responses=${JSON.stringify(refreshResponses)}`);
       // router.refresh() re-renders; the queue item status flips to Graded.
       let graded = false;
       const gradeDeadline = Date.now() + 60_000;
