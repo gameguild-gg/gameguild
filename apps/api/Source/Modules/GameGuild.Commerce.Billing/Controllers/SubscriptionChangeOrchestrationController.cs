@@ -50,4 +50,22 @@ public sealed class SubscriptionChangeOrchestrationController(ISender sender) : 
             ct).ConfigureAwait(false);
         return Ok(result);
     }
+
+    /// <summary>
+    ///     Read the latest saga state of one subscription
+    /// </summary>
+    /// <param name="subscriptionId">Subscription whose latest plan-change saga is inspected.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The durable saga row with its journaled steps and compensations, for workflow recovery and debugging.</returns>
+    [HttpGet("plan-change:saga")]
+    [EndpointSummary("Inspect the latest subscription plan-change saga")]
+    [EndpointDescription(
+        "Returns the most recent durable saga of the subscription — status, current step, proration amounts, payment reference, failure reason, compensations applied — plus the journaled step trail in execution order. 404 when the subscription never went through an orchestrated plan change.")]
+    [ProducesResponseType<SubscriptionChangeSagaDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetLatestSaga(Guid subscriptionId, CancellationToken ct)
+    {
+        var saga = await sender.Send(new GetSubscriptionChangeSagaQuery(subscriptionId), ct).ConfigureAwait(false);
+        return saga is null ? NotFound() : Ok(saga);
+    }
 }

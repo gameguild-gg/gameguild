@@ -44,6 +44,29 @@ export class CommerceBillingSubscriptionChangesModule {
 
     return result;
   }
+
+  /**
+   * Read the latest saga state of one subscription
+   *
+   * Returns the most recent durable saga of the subscription — status, current step, proration amounts, payment reference, failure reason, compensations applied — plus the journaled step trail in execution order. 404 when the subscription never went through an orchestrated plan change.
+   */
+  async getBillingSubscriptionsPlanChangeSaga(subscriptionId: string): Promise<Result<Types.CommerceBillingSubscriptionChangeSagaDto, ApiError>> {
+    const url = `/api/v1/billing/subscriptions/${subscriptionId}/plan-change:saga`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceBillingSubscriptionChangeSagaDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
 }
 
 export function createCommerceBillingSubscriptionChangesModule(client: ApiClient): CommerceBillingSubscriptionChangesModule {
