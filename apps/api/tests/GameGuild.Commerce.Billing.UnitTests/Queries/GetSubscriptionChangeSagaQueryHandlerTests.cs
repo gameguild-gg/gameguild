@@ -83,7 +83,10 @@ public sealed class GetSubscriptionChangeSagaQueryHandlerTests
         result!.FailedStep.Should().Be(SubscriptionChangeSagaOrchestrator.PaymentStep);
         result.FailureReason.Should().Be("gateway declined");
         result.CompensationsApplied.Should().Be("Payment:compensated");
-        result.CompletedAtUtc.Should().BeNull();
+        result.Status.Should().Be(SubscriptionChangeSagaStatus.Failed.ToString());
+        // CompletedAtUtc is the TERMINAL timestamp (completed or failed): BeginCompensation
+        // stamps it when the saga leaves the in-flight states, per the entity contract.
+        result.CompletedAtUtc.Should().NotBeNull();
     }
 
     [Fact]
