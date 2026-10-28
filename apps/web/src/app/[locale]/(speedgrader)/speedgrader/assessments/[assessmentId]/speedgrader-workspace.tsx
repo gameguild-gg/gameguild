@@ -102,6 +102,10 @@ export function SpeedgraderWorkspace({
       const roundId = submission.execution.activeRoundId ?? null;
       if (prior?.supersededRoundIds.includes(roundId)) return current;
       const currentRoundId = item.activeGradeRoundId ?? null;
+      // A late mutation result cannot reopen a round already confirmed final
+      // by a newer queue snapshot, including before any local confirmation.
+      if ((prior?.roundId === roundId && prior.finalized)
+        || (currentRoundId === roundId && item.activeGradeRoundStatus === 'finalized')) return current;
       // Without a recorded confirmation, a response for another round may
       // predate fresh queue props. Its history must establish the ordering.
       if (currentRoundId !== null && currentRoundId !== roundId

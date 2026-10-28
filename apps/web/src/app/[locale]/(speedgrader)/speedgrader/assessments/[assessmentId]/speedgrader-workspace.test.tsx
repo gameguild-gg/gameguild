@@ -272,4 +272,30 @@ describe('SpeedGrader confirmed review consistency with a pending route refresh'
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('1 to grade');
   });
+
+  it('preserves a finalized canonical round when an earlier regrade response arrives after a local confirmation', async () => {
+    actions.resolve.mockResolvedValue({ success: true, data: submission(true) });
+    const view = renderQueue();
+    await submitReview();
+    await waitFor(() => expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('0 to grade'));
+    let confirm!: (value: { success: true; data: AssessmentSubmissionRuntimeViewV1 }) => void;
+    actions.regrade.mockReturnValue(new Promise((resolve) => { confirm = resolve; }));
+    await startRegrade();
+    view.rerender(<SpeedgraderWorkspace queue={roundQueue('round-2', false)} assessmentId="assessment-1" courseSlug="course-1" initialIndex={0} />);
+    confirm({ success: true, data: roundSubmission('round-2') });
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(2));
+    expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('0 to grade');
+  });
+
+  it('preserves a finalized canonical round before any local review confirmation', async () => {
+    actions.get.mockResolvedValue({ success: true, data: submission(true) });
+    let confirm!: (value: { success: true; data: AssessmentSubmissionRuntimeViewV1 }) => void;
+    actions.regrade.mockReturnValue(new Promise((resolve) => { confirm = resolve; }));
+    const view = renderQueue(queue(0));
+    await startRegrade();
+    view.rerender(<SpeedgraderWorkspace queue={roundQueue('round-2', false)} assessmentId="assessment-1" courseSlug="course-1" initialIndex={0} />);
+    confirm({ success: true, data: roundSubmission('round-2') });
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('0 to grade');
+  });
 });
