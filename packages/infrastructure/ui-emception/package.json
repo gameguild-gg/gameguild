@@ -30,7 +30,7 @@
     "react-resizable-panels": "^4.12.2"
   },
   "devDependencies": {
-    "@babel/core": "^8.0.7",
+    "@babel/core": "^8.0.9",
     "@babel/preset-env": "8",
     "@babel/preset-react": "8",
     "@babel/preset-typescript": "8",

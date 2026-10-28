@@ -31,9 +31,9 @@
     "@shikijs/monaco": "^4.5.0",
     "d3-dsv": "^3.0.1",
     "dompurify": "3.4.17",
-    "katex": "^0.19.0",
+    "katex": "^0.19.1",
     "lexical": "^0.52.0",
-    "lucide-react": "^1.59.0",
+    "lucide-react": "^1.61.0",
     "mathlive": "^0.111.0",
     "mermaid": "^12.2.0",
     "monaco-editor": "^0.57.0",
@@ -47,7 +47,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@excalidraw/mermaid-to-excalidraw": "2.2.2",
+    "@excalidraw/mermaid-to-excalidraw": "2.3.0",
     "@game-guild/typescript-config": "workspace:*",
     "@types/node": "^26",
     "@types/d3-dsv": "^3.0.7",
