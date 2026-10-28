@@ -6,9 +6,9 @@ import test from 'node:test';
 const workflow = readFileSync(new URL('../../../.github/workflows/pr-verify.yml', import.meta.url), 'utf8');
 const requiredGate = workflow.split('\n  required-gate:')[1];
 assert.ok(requiredGate, 'PR Required Gate remains present');
-const run = requiredGate.match(/        run: \|\r?\n([\s\S]*)/);
+const run = requiredGate.match(/ {8}run: \|\r?\n([\s\S]*)/);
 assert.ok(run, 'test the actual required-gate Bash, not a duplicate evaluator');
-const script = run[1].replace(/^          /gm, '');
+const script = run[1].replace(/^ {10}/gm, '');
 
 function evaluate(overrides = {}) {
   return spawnSync('bash', ['-e', '-c', script], {
