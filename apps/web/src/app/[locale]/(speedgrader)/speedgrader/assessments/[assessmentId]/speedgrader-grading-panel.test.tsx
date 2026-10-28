@@ -229,7 +229,7 @@ describe('runtime GradingPanel', () => {
     expect(screen.getByTestId('release-result')).toHaveTextContent(
       'Release to learner',
     );
-    expect(router.refresh).toHaveBeenCalled();
+    expect(router.refresh).not.toHaveBeenCalled();
   });
 
   it('does not allow a score above the immutable item maximum', async () => {

@@ -1,7 +1,9 @@
 'use server';
 
 import { getToken } from '@/auth';
+import { routing } from '@/i18n/routing';
 import { createServerClient } from '@game-guild/client';
+import { revalidatePath } from 'next/cache';
 import type {
   AssessmentExecutionRuntimeViewV1,
   AssessmentResponseEnvelopeV1,
@@ -384,18 +386,28 @@ export async function submitRuntimeSelfReview(
   );
 }
 
+function revalidateSpeedgrader(assessmentId: string): void {
+  const path = `/speedgrader/assessments/${encodeURIComponent(assessmentId)}`;
+  revalidatePath(path);
+  // The proxy rewrites the unprefixed default locale internally. Invalidate
+  // the actual locale destinations as well as that browser-visible alias.
+  for (const locale of routing.locales) revalidatePath(`/${locale}${path}`);
+}
+
 export async function resolveRuntimeInstructorReview(
   submissionId: string,
   resolution: InstructorReviewResolutionV1,
   idempotencyKey: string,
 ): Promise<GradingRuntimeActionResult<AssessmentSubmissionRuntimeViewV1>> {
-  return runtimeRequest(
+  const result = await runtimeRequest(
     'POST',
     `/v1.0/assessments/runtime-submissions/${encodeURIComponent(submissionId)}/instructor-review`,
     { resolution, idempotencyKey },
     undefined,
     normalizeRuntimeSubmission,
   );
+  if (result.success) revalidateSpeedgrader(result.data.assessmentId);
+  return result;
 }
 
 export async function regradeRuntimeSubmission(
@@ -403,13 +415,15 @@ export async function regradeRuntimeSubmission(
   reason: string,
   idempotencyKey: string,
 ): Promise<GradingRuntimeActionResult<AssessmentSubmissionRuntimeViewV1>> {
-  return runtimeRequest(
+  const result = await runtimeRequest(
     'POST',
     `/v1.0/assessments/runtime-submissions/${encodeURIComponent(submissionId)}/regrade`,
     { reason, idempotencyKey },
     undefined,
     normalizeRuntimeSubmission,
   );
+  if (result.success) revalidateSpeedgrader(result.data.assessmentId);
+  return result;
 }
 
 export async function releaseRuntimeSubmission(
