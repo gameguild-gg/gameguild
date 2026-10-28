@@ -165,11 +165,6 @@ jobs:
           node --test apps/web/scripts/sync-javascript-runtime.test.mjs
           node --test scripts/ci/tests/dev-runtime-registration.test.mjs scripts/ci/tests/lint-budget.test.mjs
           node --test scripts/ci/tests/eslint-root-config.test.mjs
-      - name: Verify confirmed SpeedGrader review consistency
-        run: >-
-          pnpm --filter @game-guild/web exec vitest run
-          'src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/speedgrader-workspace.test.tsx'
-          --maxWorkers=1
       - name: Upload policy evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

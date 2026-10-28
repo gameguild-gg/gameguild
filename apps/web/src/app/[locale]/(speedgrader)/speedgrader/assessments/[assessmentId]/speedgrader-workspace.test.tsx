@@ -94,6 +94,29 @@ function renderQueue(value = queue()) {
   return render(<SpeedgraderWorkspace queue={value} assessmentId="assessment-1" courseSlug="course-1" initialIndex={0} />);
 }
 
+function roundQueue(roundId: string, needsGrading: boolean): LearningAssessmentsGradingQueue {
+  const value = queue(Number(needsGrading));
+  value.items![0] = { ...value.items![0], activeGradeRoundId: roundId,
+    activeGradeRoundStatus: needsGrading ? 'awaiting-instructor-resolution' : 'finalized',
+    requiresStaffReview: needsGrading };
+  return value;
+}
+
+function roundSubmission(roundId: string, final = false): AssessmentSubmissionRuntimeViewV1 {
+  const value = submission(final);
+  value.execution.activeRoundId = roundId;
+  value.execution.history = value.execution.history.map((round) => ({ ...round, roundId }));
+  value.version += 2;
+  return value;
+}
+
+async function startRegrade() {
+  const user = userEvent.setup();
+  await user.type(await screen.findByPlaceholderText('Reason for opening a new round'), 'New evidence');
+  await user.click(screen.getByRole('button', { name: 'Start regrade' }));
+  await waitFor(() => expect(actions.regrade).toHaveBeenCalledTimes(1));
+}
+
 async function submitReview() {
   const user = userEvent.setup();
   await user.type(await screen.findByTestId('item-score-q1'), '1');
@@ -159,5 +182,80 @@ describe('SpeedGrader confirmed review consistency with a pending route refresh'
     await user.click(screen.getByRole('button', { name: 'Start regrade' }));
     await waitFor(() => expect(actions.regrade).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('1 to grade'));
+  });
+
+  it('does not overwrite a confirmation with stale same-round server props', async () => {
+    actions.resolve.mockResolvedValue({ success: true, data: submission(true) });
+    const view = renderQueue();
+    await submitReview();
+    expect(await screen.findByTestId('result-release-status')).toHaveTextContent('Ready to release');
+    await waitFor(() => expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('0 to grade'));
+    view.rerender(<SpeedgraderWorkspace queue={queue()} assessmentId="assessment-1" courseSlug="course-1" initialIndex={0} />);
+    expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('0 to grade');
+  });
+
+  it('lets an advanced canonical round supply fresh review work', async () => {
+    actions.resolve.mockResolvedValue({ success: true, data: submission(true) });
+    const view = renderQueue();
+    await submitReview();
+    expect(await screen.findByTestId('result-release-status')).toHaveTextContent('Ready to release');
+    await waitFor(() => expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('0 to grade'));
+    const advanced = queue();
+    advanced.items![0] = { ...advanced.items![0], status: 'Graded', activeGradeRoundId: 'round-2', requiresStaffReview: true };
+    view.rerender(<SpeedgraderWorkspace queue={advanced} assessmentId="assessment-1" courseSlug="course-1" initialIndex={0} />);
+    expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('1 to grade');
+  });
+
+  it('does not resurrect finalized work when old props arrive after acknowledgement', async () => {
+    actions.resolve.mockResolvedValue({ success: true, data: submission(true) });
+    const view = renderQueue();
+    await submitReview();
+    await waitFor(() => expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('0 to grade'));
+    view.rerender(<SpeedgraderWorkspace queue={roundQueue('round-1', false)} assessmentId="assessment-1" courseSlug="course-1" initialIndex={0} />);
+    expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('0 to grade');
+    view.rerender(<SpeedgraderWorkspace queue={roundQueue('round-1', true)} assessmentId="assessment-1" courseSlug="course-1" initialIndex={0} />);
+    expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('0 to grade');
+  });
+
+  it('keeps the current regrade round when an older round arrives after acknowledgement', async () => {
+    actions.get.mockResolvedValue({ success: true, data: submission(true) });
+    actions.regrade.mockResolvedValue({ success: true, data: roundSubmission('round-2') });
+    const view = renderQueue(queue(0));
+    await startRegrade();
+    await waitFor(() => expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('1 to grade'));
+    view.rerender(<SpeedgraderWorkspace queue={roundQueue('round-2', true)} assessmentId="assessment-1" courseSlug="course-1" initialIndex={0} />);
+    expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('1 to grade');
+    view.rerender(<SpeedgraderWorkspace queue={roundQueue('round-1', false)} assessmentId="assessment-1" courseSlug="course-1" initialIndex={0} />);
+    expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('1 to grade');
+  });
+
+  it('accepts instructor work after the new round finishes its automated stage', async () => {
+    actions.get.mockResolvedValue({ success: true, data: submission(true) });
+    const pending = roundSubmission('round-2');
+    pending.execution.requiresInstructorReview = false;
+    pending.execution.status = 'running';
+    actions.regrade.mockResolvedValue({ success: true, data: pending });
+    const view = renderQueue(queue(0));
+    await startRegrade();
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+    expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('0 to grade');
+    view.rerender(<SpeedgraderWorkspace queue={roundQueue('round-2', true)} assessmentId="assessment-1" courseSlug="course-1" initialIndex={0} />);
+    expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('1 to grade');
+  });
+
+  it('confirms a review against queue props received while the save was pending', async () => {
+    actions.get.mockResolvedValue({ success: true, data: submission(true) });
+    actions.regrade.mockResolvedValue({ success: true, data: roundSubmission('round-2') });
+    let confirm!: (value: { success: true; data: AssessmentSubmissionRuntimeViewV1 }) => void;
+    actions.resolve.mockReturnValue(new Promise((resolve) => { confirm = resolve; }));
+    const view = renderQueue(queue(0));
+    await startRegrade();
+    await submitReview();
+    await waitFor(() => expect(actions.resolve).toHaveBeenCalledTimes(1));
+    view.rerender(<SpeedgraderWorkspace queue={roundQueue('round-2', true)} assessmentId="assessment-1" courseSlug="course-1" initialIndex={0} />);
+    expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('1 to grade');
+    confirm({ success: true, data: roundSubmission('round-2', true) });
+    expect(await screen.findByTestId('result-release-status')).toHaveTextContent('Ready to release');
+    await waitFor(() => expect(screen.getByTestId('needs-grading-badge')).toHaveTextContent('0 to grade'));
   });
 });
