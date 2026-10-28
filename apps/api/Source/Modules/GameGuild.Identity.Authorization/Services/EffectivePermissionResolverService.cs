@@ -100,7 +100,8 @@ public sealed class EffectivePermissionResolverService(
         {
             logger.LogWarning(
                 "Effective permission resolution requested with an invalid context (user {UserId}, tenant {TenantId}, resource {ResourceType}/{ResourceId}) - returning empty permissions (fail-closed).",
-                context.UserId, context.TenantId, context.ResourceType ?? "<none>", context.ResourceId ?? "<none>");
+                LogRedaction.ProtectIdentifier(context.UserId), LogRedaction.ProtectIdentifier(context.TenantId),
+                LogRedaction.ProtectIdentifier(context.ResourceType), LogRedaction.ProtectIdentifier(context.ResourceId));
             return FailClosed(context);
         }
 
@@ -325,7 +326,7 @@ public sealed class EffectivePermissionResolverService(
             {
                 logger.LogWarning(
                     "Attempted to deny static permission {Permission} for user {UserId} - denies cannot override static grants",
-                    denied, context.UserId);
+                    LogRedaction.Sanitize(denied), LogRedaction.ProtectIdentifier(context.UserId));
                 continue;
             }
 
@@ -335,7 +336,7 @@ public sealed class EffectivePermissionResolverService(
             {
                 logger.LogWarning(
                     "Attempted to deny owner-minted permission {Permission} - the AlwaysAllow owner-override mode makes owner grants non-deniable",
-                    denied);
+                    LogRedaction.Sanitize(denied));
                 continue;
             }
 
@@ -347,7 +348,8 @@ public sealed class EffectivePermissionResolverService(
 
         logger.LogDebug(
             "Resolved {Count} effective permissions ({AllowCount} allowed, {DenyCount} denied) for user {UserId} in tenant {TenantId}",
-            effectivePermissions.Count, allows.Count, denies.Count, context.UserId, context.TenantId);
+            effectivePermissions.Count, allows.Count, denies.Count,
+            LogRedaction.ProtectIdentifier(context.UserId), LogRedaction.ProtectIdentifier(context.TenantId));
 
         return new EffectivePermissions
         {

@@ -13,11 +13,12 @@
  * ```
  */
 import type { TestExpectation } from '../types.js'
+import { runtimeValueToString } from '../../runtime-value-to-string'
 
 export interface GameGuildTest {
   describe: (name: string, fn: () => void) => void
   it: (name: string, fn: () => void) => void
-  expect: (value: any) => TestExpectation
+  expect: (value: unknown) => TestExpectation
 }
 
 export function createTest(
@@ -28,12 +29,12 @@ export function createTest(
   let testsFailed = 0
 
   return {
-    describe: (name: string, fn: Function) => {
+    describe: (name: string, fn: () => void) => {
       stdout(`\n[Suite] ${name}`)
       fn()
     },
 
-    it: (name: string, fn: Function) => {
+    it: (name: string, fn: () => void) => {
       try {
         fn()
         testsPassed++
@@ -45,13 +46,13 @@ export function createTest(
       }
     },
 
-    expect: (actual: any) => ({
-      'to-be': (expected: any) => {
+    expect: (actual: unknown) => ({
+      'to-be': (expected: unknown) => {
         if (actual !== expected) {
-          throw new Error(`Expected ${expected}, got ${actual}`)
+          throw new Error(`Expected ${runtimeValueToString(expected)}, got ${runtimeValueToString(actual)}`)
         }
       },
-      'to-equal': (expected: any) => {
+      'to-equal': (expected: unknown) => {
         if (JSON.stringify(actual) !== JSON.stringify(expected)) {
           throw new Error(
             `Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
@@ -60,12 +61,12 @@ export function createTest(
       },
       'to-be-truthy': () => {
         if (!actual) {
-          throw new Error(`Expected truthy value, got ${actual}`)
+          throw new Error(`Expected truthy value, got ${runtimeValueToString(actual)}`)
         }
       },
       'to-be-falsy': () => {
         if (actual) {
-          throw new Error(`Expected falsy value, got ${actual}`)
+          throw new Error(`Expected falsy value, got ${runtimeValueToString(actual)}`)
         }
       },
     }),

@@ -8,8 +8,8 @@ namespace GameGuild.Commerce.Payments.UnitTests.GatewayRouting;
 
 /// <summary>
 ///     PayPal adapter tests (issue #413): the fail-closed sandbox-default configuration, the
-///     simulated charge/refund round-trip, real-mode failure classification (transport →
-///     retriable, HTTP 4xx → terminal, HTTP 5xx → retriable), outcome-unknown capture
+///     simulated charge/refund round-trip, real-mode charge classification (transport →
+///     unknown, definitive HTTP 4xx → terminal, HTTP 5xx → unknown), outcome-unknown capture
 ///     handling, and the options startup validation.
 /// </summary>
 public class PayPalPaymentGatewayTests
@@ -142,7 +142,7 @@ public class PayPalPaymentGatewayTests
     }
 
     [Fact]
-    public async Task Charge_TransportFailure_IsRetriable()
+    public async Task Charge_TransportFailure_RequiresReconciliation()
     {
         var sut = CreateSut(Enabled(simulation: false));
         _apiClient
@@ -154,8 +154,8 @@ public class PayPalPaymentGatewayTests
         var result = await sut.ProcessPaymentAsync(ChargeRequest());
 
         result.Success.Should().BeFalse();
-        result.Status.Should().Be(PaymentStatus.Failed);
-        result.FailureKind.Should().Be(GatewayFailureKind.RetriableGatewayFailure);
+        result.Status.Should().Be(PaymentStatus.Processing);
+        result.FailureKind.Should().Be(GatewayFailureKind.OutcomeUnknown);
     }
 
     [Theory]
@@ -163,7 +163,7 @@ public class PayPalPaymentGatewayTests
     [InlineData(429)]
     [InlineData(500)]
     [InlineData(503)]
-    public async Task Charge_ServerOrThrottleHttpFailures_AreRetriable(int statusCode)
+    public async Task Charge_ServerOrThrottleHttpFailures_RequireReconciliation(int statusCode)
     {
         var sut = CreateSut(Enabled(simulation: false));
         _apiClient
@@ -181,7 +181,8 @@ public class PayPalPaymentGatewayTests
         var result = await sut.ProcessPaymentAsync(ChargeRequest());
 
         result.Success.Should().BeFalse();
-        result.FailureKind.Should().Be(GatewayFailureKind.RetriableGatewayFailure);
+        result.Status.Should().Be(PaymentStatus.Processing);
+        result.FailureKind.Should().Be(GatewayFailureKind.OutcomeUnknown);
     }
 
     [Fact]

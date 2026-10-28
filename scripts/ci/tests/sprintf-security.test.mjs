@@ -33,7 +33,7 @@ test("the dependency gate applies reviewed patches before auditing installed byt
   const steps = [
     'rm -f "$repository_root/node_modules/.pnpm-workspace-state.json"',
     "\npnpm install --frozen-lockfile --ignore-scripts\n",
-    "\npnpm rebuild braces sprintf-js\n",
+    "\npnpm rebuild braces deepmerge sprintf-js\n",
     'cp "$virtual_store_lock" "$audit_lock"',
     'node "$script_dir/validate-pnpm-audit.mjs"',
   ];
@@ -85,7 +85,7 @@ test("the advisory mitigation requires the exact installed patch on every consum
     "patches/sprintf-js@1.1.3.patch",
   );
   assert.equal(pnpmConfig.auditConfig, undefined);
-  assert.deepEqual(pnpmConfig.onlyBuiltDependencies, ["braces", "sprintf-js"]);
+  assert.deepEqual(pnpmConfig.onlyBuiltDependencies, ["braces", "deepmerge", "sprintf-js"]);
   const scannerExceptions = readFileSync(
     join(repositoryRoot, ".trivyignore"),
     "utf8",

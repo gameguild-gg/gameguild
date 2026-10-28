@@ -41,29 +41,32 @@ function badRequest(message: string): NextResponse {
   return NextResponse.json({ error: message }, { status: 400 });
 }
 
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+async function readRequestBody(request: NextRequest): Promise<Record<string, unknown> | null> {
+  try {
+    const body: unknown = await request.json();
+    return isJsonObject(body) ? body : null;
+  } catch {
+    return null;
+  }
+}
+
 async function getBackendError(response: Response): Promise<string> {
   try {
     const body: unknown = await response.json();
-    if (typeof body === 'object' && body !== null) {
-      const { title, error, message } = body as Record<string, unknown>;
-      if (typeof title === 'string') return title;
-      if (typeof error === 'string') return error;
-      if (typeof message === 'string') return message;
+    if (isJsonObject(body)) {
+      if (typeof body.title === 'string') return body.title;
+      if (typeof body.error === 'string') return body.error;
+      if (typeof body.message === 'string') return body.message;
     }
   } catch {
     // Use the HTTP status text below.
   }
 
   return response.statusText || 'Backend request failed.';
-}
-
-async function readJsonBody(request: NextRequest): Promise<Record<string, unknown>> {
-  try {
-    const body: unknown = await request.json();
-    return typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {};
-  } catch {
-    return {};
-  }
 }
 
 function readString(body: Record<string, unknown>, key: string): string | undefined {
@@ -84,7 +87,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const authHeader = await getAuthHeader();
   if (authHeader instanceof NextResponse) return authHeader;
 
-  const body = await readJsonBody(request);
+  const body = await readRequestBody(request);
+  if (!body) return badRequest('A valid JSON object is required.');
 
   // Public write surface: verify the Turnstile token before proxying. The
   // token is consumed here and never included in the forwarded body below.
@@ -146,7 +150,8 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
   const authHeader = await getAuthHeader();
   if (authHeader instanceof NextResponse) return authHeader;
 
-  const body = await readJsonBody(request);
+  const body = await readRequestBody(request);
+  if (!body) return badRequest('A valid JSON object is required.');
   const reportId = readString(body, 'reportId')?.trim() ?? '';
   if (!GUID_PATTERN.test(reportId)) {
     return badRequest('A valid report id is required.');

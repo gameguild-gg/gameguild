@@ -28,8 +28,16 @@ internal static class DurableEventDeliveryWaiter
                 await using var scope = services.CreateAsyncScope();
                 var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 var message = await db.Set<OutboxMessage>().AsNoTracking()
-                    .SingleOrDefaultAsync(value => value.EventId == eventId, deadline.Token)
-                    ?? throw new InvalidOperationException("The expected durable event was not recorded.");
+                    .SingleOrDefaultAsync(value => value.EventId == eventId, deadline.Token);
+                if (message is null)
+                {
+                    if (await db.Set<OutboxDeliveryReceipt>().AsNoTracking().AnyAsync(value =>
+                        value.EventId == eventId && value.CompletedAtUtc != null, deadline.Token))
+                    {
+                        return;
+                    }
+                    throw new InvalidOperationException("The expected durable event was not recorded.");
+                }
                 var consumerFailed = await db.Set<InboxReceipt>().AsNoTracking().AnyAsync(value =>
                     value.EventId == eventId && value.CompletedAtUtc == null && value.AttemptCount > 0,
                     deadline.Token);

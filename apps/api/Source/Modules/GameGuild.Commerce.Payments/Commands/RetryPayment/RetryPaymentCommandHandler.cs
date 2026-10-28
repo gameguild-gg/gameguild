@@ -41,6 +41,10 @@ public sealed class RetryPaymentCommandHandler(
     INotificationService? notificationService = null,
     IPaymentMethodRepository? paymentMethodRepository = null) : ICommandHandler<RetryPaymentCommand, PaymentRetryResult>
 {
+    // Return only after recording the attempt and completing its handler steps. Early
+    // validation failures, exceptions and cancellation keep the ordinary rollback path.
+    private sealed class RecordedPaymentRetryResult : PaymentRetryResult, ICommitOnFailureOutcome { }
+
     public async Task<PaymentRetryResult> Handle(RetryPaymentCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Retrying payment {PaymentId}", request.PaymentId);
@@ -94,8 +98,9 @@ public sealed class RetryPaymentCommandHandler(
 
         logger.LogInformation("Payment {PaymentId} retry attempt {RetryCount}", request.PaymentId, payment.RetryCount);
 
-        // 4. Mark as processing
-        payment.MarkAsProcessing();
+        // 4. Persist the claim without asserting a Stripe provider mapping that
+        // has not been returned. Pending also excludes the automatic retry queue.
+        GatewayPaymentResultBinder.PrepareProcessingClaim(payment);
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
 
         // 5. Retry through payment gateway with new idempotency key
@@ -122,6 +127,7 @@ public sealed class RetryPaymentCommandHandler(
         // mapped provider stays authoritative (RecordProcessingProvider is a no-op).
         payment.RecordProcessingProvider(gatewayResult.ProviderId ?? paymentGateway.ProviderId);
         GatewayPaymentResultBinder.BindVerifiedProviderMapping(payment, payment.Provider, gatewayResult);
+        GatewayPaymentResultBinder.PrepareProcessingClaim(payment);
 
         // 6. Update payment based on gateway result. The retry schedule is resolved from the
         //    failure-code retry policy (issue #415) on top of the Payments:Retry options.
@@ -146,6 +152,24 @@ public sealed class RetryPaymentCommandHandler(
                 Amount = new Money(payment.Amount, payment.Currency),
                 ProcessedAt = payment.ProcessedAt,
                 Status = PaymentStatus.Succeeded
+            };
+        }
+        else if (gatewayResult.FailureKind == GatewayFailureKind.OutcomeUnknown
+                 || gatewayResult.Status is PaymentStatus.Pending or PaymentStatus.Processing or PaymentStatus.RequiresAction)
+        {
+            if (gatewayResult.Status == PaymentStatus.RequiresAction)
+            {
+                payment.MarkAsRequiresAction(gatewayResult.TransactionId);
+            }
+            logger.LogWarning("Payment {PaymentId} retry awaits provider reconciliation or customer action", payment.Id);
+            paymentResult = new PaymentResult
+            {
+                TenantId = payment.TenantId,
+                Success = false,
+                TransactionId = gatewayResult.TransactionId,
+                PaymentId = payment.Id.ToString(),
+                Amount = new Money(payment.Amount, payment.Currency),
+                Status = payment.Status
             };
         }
         else
@@ -195,13 +219,16 @@ public sealed class RetryPaymentCommandHandler(
 
         // 9. Recovery lifecycle (issue #415): a successful retry lifts a dunning suspension;
         //    a terminal failure suspends the subscription and sends the final dunning notice.
-        await ApplyRecoveryLifecycleAsync(payment, gatewayResult.Success, gatewayResult.ErrorMessage, cancellationToken)
-            .ConfigureAwait(false);
+        if (payment.Status is PaymentStatus.Succeeded or PaymentStatus.Failed)
+        {
+            await ApplyRecoveryLifecycleAsync(payment, gatewayResult.Success, gatewayResult.ErrorMessage, cancellationToken)
+                .ConfigureAwait(false);
 
-        // Payment-event notifications (issue #415): a successful retry emails the payment
-        // receipt; the second failure overall prompts the customer to update the payment method.
-        await SendOutcomeNotificationsAsync(payment, gatewayResult.Success, cancellationToken)
-            .ConfigureAwait(false);
+            // Payment-event notifications (issue #415): a successful retry emails the payment
+            // receipt; the second failure overall prompts the customer to update the payment method.
+            await SendOutcomeNotificationsAsync(payment, gatewayResult.Success, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
         if (gatewayResult.Success && payment.ProcessedAt.HasValue)
         {
@@ -226,7 +253,7 @@ public sealed class RetryPaymentCommandHandler(
         }
 
         // 10. Return retry result
-        return new PaymentRetryResult
+        return new RecordedPaymentRetryResult
         {
             Success = gatewayResult.Success,
             RetryAttempt = payment.RetryCount,

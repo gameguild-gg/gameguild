@@ -19,6 +19,13 @@ const sprintfAdvisory = {
   cve: 'CVE-2026-97058',
   patchedVersion: '1.1.3',
 };
+const deepmergeAdvisory = {
+  moduleName: 'deepmerge',
+  id: 'GHSA-gcqx-w48m-w2h4',
+  url: 'https://github.com/advisories/GHSA-gcqx-w48m-w2h4',
+  cve: 'CVE-2026-93753',
+  patchedVersion: '4.3.1',
+};
 
 const readCounts = (report) => report?.metadata?.vulnerabilities;
 const readAdvisories = (report) => report?.advisories;
@@ -54,21 +61,22 @@ const hasOnlyPatchedFindings = (advisory, expected) =>
 const matchesPatchedAdvisory = (advisory, expected) =>
   matchesAdvisoryIdentity(advisory, expected) && hasSingleExpectedCve(advisory, expected) && hasOnlyPatchedFindings(advisory, expected);
 
-const isLocallyPatchedAdvisory = (advisory, verifiedBracesPatch, verifiedSprintfPatch) => {
+const isLocallyPatchedAdvisory = (advisory, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch) => {
   const knownBraces = verifiedBracesPatch && matchesPatchedAdvisory(advisory, bracesAdvisory);
   const knownSprintf = verifiedSprintfPatch && matchesPatchedAdvisory(advisory, sprintfAdvisory);
-  return knownBraces || knownSprintf;
+  const knownDeepmerge = verifiedDeepmergePatch && matchesPatchedAdvisory(advisory, deepmergeAdvisory);
+  return knownBraces || knownSprintf || knownDeepmerge;
 };
 
-const requireLocallyPatchedAdvisory = (advisory, verifiedBracesPatch, verifiedSprintfPatch) => {
-  if (!isLocallyPatchedAdvisory(advisory, verifiedBracesPatch, verifiedSprintfPatch)) {
+const requireLocallyPatchedAdvisory = (advisory, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch) => {
+  if (!isLocallyPatchedAdvisory(advisory, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch)) {
     throw new Error(`Unmitigated dependency advisory: ${advisory.github_advisory_id ?? advisory.id ?? 'unknown'}`);
   }
 };
 
-const requireAllAdvisoriesPatched = (items, verifiedBracesPatch, verifiedSprintfPatch) => {
+const requireAllAdvisoriesPatched = (items, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch) => {
   for (const advisory of items) {
-    requireLocallyPatchedAdvisory(advisory, verifiedBracesPatch, verifiedSprintfPatch);
+    requireLocallyPatchedAdvisory(advisory, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch);
   }
 };
 
@@ -84,14 +92,14 @@ const requireConsistentExitCode = (exitCode, advisoryCount) => {
   }
 };
 
-const validateAuditReport = (report, exitCode, verifiedBracesPatch = false, verifiedSprintfPatch = false) => {
+const validateAuditReport = (report, exitCode, verifiedBracesPatch = false, verifiedSprintfPatch = false, verifiedDeepmergePatch = false) => {
   const counts = readCounts(report),
     advisories = readAdvisories(report);
   requireCompleteReport(report, counts, advisories);
   requireValidSeverityCounts(counts);
   const items = Object.values(advisories);
   const reportedCount = severityLevels.reduce((sum, level) => sum + counts[level], 0);
-  requireAllAdvisoriesPatched(items, verifiedBracesPatch, verifiedSprintfPatch);
+  requireAllAdvisoriesPatched(items, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch);
   // pnpm counts each workspace finding, while advisories are deduplicated.
   // Only verified advisories reach this point, so every findings array exists.
   const findingCount = items.reduce((sum, advisory) => sum + advisory.findings.length, 0);
@@ -110,11 +118,12 @@ if (invokedDirectly) {
         '--test',
         resolve(dirname(fileURLToPath(import.meta.url)), 'tests/braces-security.test.mjs'),
         resolve(dirname(fileURLToPath(import.meta.url)), 'tests/sprintf-security.test.mjs'),
+        resolve(dirname(fileURLToPath(import.meta.url)), 'tests/deepmerge-security.test.mjs'),
       ],
       { stdio: 'inherit' },
     );
     if (patchCheck.error || patchCheck.status !== 0) throw new Error('Installed dependency security patch verification failed');
-    const result = validateAuditReport(report, Number(process.argv[3]), true, true);
+    const result = validateAuditReport(report, Number(process.argv[3]), true, true, true);
     console.log(`Dependency audit passed: ${result.advisories} reported advisories, ${result.verifiedLocalPatches} verified local patches`);
   } catch (error) {
     console.error(error.message);
