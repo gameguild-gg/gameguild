@@ -58,6 +58,12 @@ public static class PaymentsModule
         services.AddScoped<IDisputeNotificationService, DisputeNotificationService>();
         services.AddHostedService<DisputeDeadlineReminderBackgroundService>();
 
+        // Dispute evidence file delivery (issue #419): resolves the authorized stored bytes of
+        // evidence files for provider-native delivery (Stripe file uploads / PayPal dispute
+        // documents). Fail-closed default until a storage-backed implementation is registered:
+        // evidence items degrade to their textual references instead of fabricated uploads.
+        services.AddScoped<IDisputeEvidenceFileStore, NullDisputeEvidenceFileStore>();
+
         // Revenue auditing (issue #404): external statement reconciliation, anomaly
         // detection, compliance reporting and CSV/JSON exports.
         services.AddScoped<IRevenueReconciliationRepository, RevenueReconciliationRepository>();

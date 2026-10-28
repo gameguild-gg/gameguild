@@ -215,9 +215,16 @@ public sealed class FailoverPaymentGateway(
 
         // Refunds are pinned to the gateway that owns the captured payment; a refund can
         // never be rerouted to a different gateway. Retriable failures retry the same
-        // gateway only, bounded by the failover attempt budget.
+        // gateway only, bounded by the failover attempt budget. A caller-supplied
+        // MaxProviderAttempts (issue #419 composed retry budget) clamps this loop further so
+        // the provider calls consumed across the whole refund workflow — caller executions
+        // multiplied by composite-internal retries — never exceed the workflow maximum.
         var gateway = ResolveOwnerGateway(request.ProviderId, "refund");
         var maxAttempts = Math.Min(1 + ResolveSameGatewayRetryLimit(), _failoverOptions.MaxAttemptsTotal);
+        if (request.MaxProviderAttempts is > 0 and var callerBudget)
+        {
+            maxAttempts = Math.Min(maxAttempts, callerBudget);
+        }
 
         for (var attempt = 1; ; attempt++)
         {

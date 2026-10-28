@@ -88,6 +88,38 @@ public class PaymentDispute : EntityBase
     public DateTime? EvidenceSubmittedAt { get; set; }
 
     /// <summary>
+    ///     Frozen manifest of the evidence bundle accepted by the gateway (issue #419 replay-safe
+    ///     submission): JSON list of <c>{ evidenceId, providerFileId, contentDigest }</c> entries
+    ///     captured at submission time. The gateway's final evidence response cannot be amended
+    ///     with additional files, so later submissions are validated against this manifest — an
+    ///     identical manifest replays idempotently, an added/changed one is rejected.
+    /// </summary>
+    [MaxLength(4000)]
+    public string? EvidenceManifest { get; private set; }
+
+    /// <summary>
+    ///     SHA-256 digest (hex) of the frozen <see cref="EvidenceManifest"/> (issue #419): binds
+    ///     the dispute's idempotency key to the exact accepted evidence set, so a retry after a
+    ///     crash between the gateway call and the local persist replays the same provider request.
+    /// </summary>
+    [MaxLength(128)]
+    public string? EvidenceManifestHash { get; private set; }
+
+    /// <summary>
+    ///     Freezes the accepted evidence manifest after a successful gateway submission (issue
+    ///     #419). The manifest is only written once: later submissions compare against it.
+    /// </summary>
+    public void FreezeEvidenceManifest(string manifestJson, string manifestHash)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(manifestJson);
+        ArgumentException.ThrowIfNullOrWhiteSpace(manifestHash);
+
+        EvidenceManifest = manifestJson.Length > 4000 ? manifestJson[..4000] : manifestJson;
+        EvidenceManifestHash = manifestHash;
+        Touch();
+    }
+
+    /// <summary>
     ///     Dispute (chargeback) fee charged by the gateway, in major currency units (issue #419).
     ///     Zero when the gateway reported no fee. Recorded once from the gateway webhook; later
     ///     gateway values overwrite only while the dispute is unresolved.

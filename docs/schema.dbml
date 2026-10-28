@@ -8260,6 +8260,8 @@ Table "payment_disputes" {
   "GatewayName" "character varying(50)"
   "EvidenceDueBy" timestamp
   "EvidenceSubmittedAt" timestamp
+  "EvidenceManifest" "character varying(4000)"
+  "EvidenceManifestHash" "character varying(128)"
   "DisputeFee" numeric(18,2) [not null]
   "Version" integer [not null]
   "CreatedAt" timestamp [not null]
@@ -8326,6 +8328,7 @@ Table "refunds" {
   "FailedAt" timestamp
   "FailureReason" "character varying(1000)"
   "AttemptCount" integer [not null]
+  "LastFailureKind" integer [not null]
   "DisputeId" uuid
   "Version" integer [not null]
   "CreatedAt" timestamp [not null]
@@ -10145,6 +10148,8 @@ Table "dispute_evidence" {
   "IsFromMerchant" boolean [not null]
   "Metadata" "character varying(2000)"
   "GatewaySubmittedAt" timestamp
+  "ProviderFileId" "character varying(255)"
+  "ContentDigest" "character varying(128)"
   "Version" integer [not null]
   "CreatedAt" timestamp [not null]
   "UpdatedAt" timestamp [not null]

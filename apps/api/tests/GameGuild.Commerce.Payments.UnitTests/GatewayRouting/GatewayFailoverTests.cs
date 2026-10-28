@@ -51,6 +51,53 @@ public class GatewayFailoverTests
     private static GatewayPaymentRequest ChargeRequest(decimal amount = 25m, string currency = "USD") =>
         new("idem-1", amount, currency, "cus_1", "pm_card_visa", "test charge");
 
+    /// <summary>
+    ///     Composed retry budget (issue #419): a refund execution carrying
+    ///     <see cref="GatewayRefundRequest.MaxProviderAttempts"/> clamps the composite's
+    ///     same-gateway retry loop so the provider calls across the whole workflow never
+    ///     exceed the workflow maximum.
+    /// </summary>
+    [Fact]
+    public async Task Refund_CallerProvidedBudget_ClampsTheCompositeRetryLoop()
+    {
+        var stripe = new FakePaymentGateway("stripe")
+            .EnqueueRefund(FakePaymentGateway.RefundFailureResult(GatewayFailureKind.RetriableGatewayFailure))
+            .EnqueueRefund(FakePaymentGateway.RefundFailureResult(GatewayFailureKind.RetriableGatewayFailure));
+        var sut = CreateSut([stripe]);
+
+        var result = await sut.ProcessRefundAsync(new GatewayRefundRequest(
+            "idem-refund-1",
+            "ch_1",
+            10m,
+            "goodwill",
+            ProviderId: "stripe",
+            MaxProviderAttempts: 1));
+
+        // The configured budget would retry once (SameGatewayRetryLimit=1 => 2 attempts); the
+        // caller budget of 1 allows exactly one provider call.
+        result.Success.Should().BeFalse();
+        stripe.RefundCalls.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task Refund_WithoutCallerBudget_UsesTheConfiguredCompositeBudget()
+    {
+        var stripe = new FakePaymentGateway("stripe")
+            .EnqueueRefund(FakePaymentGateway.RefundFailureResult(GatewayFailureKind.RetriableGatewayFailure))
+            .EnqueueRefund(FakePaymentGateway.RefundFailureResult(GatewayFailureKind.RetriableGatewayFailure));
+        var sut = CreateSut([stripe]);
+
+        var result = await sut.ProcessRefundAsync(new GatewayRefundRequest(
+            "idem-refund-2",
+            "ch_1",
+            10m,
+            "goodwill",
+            ProviderId: "stripe"));
+
+        result.Success.Should().BeFalse();
+        stripe.RefundCalls.Should().HaveCount(2, "the configured SameGatewayRetryLimit=1 budget allows two attempts");
+    }
+
     [Fact]
     public void SettlementVerification_IsPinnedToTheRequestedProviderAndDefaultsToUnsupported()
     {

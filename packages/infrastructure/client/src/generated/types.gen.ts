@@ -2710,6 +2710,10 @@ export interface CommercePaymentsDisputeEvidence {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** SHA-256 digest (hex) of the bytes delivered to the provider for this row (issue #419
+provider file delivery), retained so an accepted submission can be audited against the
+stored content. Null when the stored bytes could not be resolved for delivery. */
+  contentDigest?: string | null;
   /** Timestamp when the entity was created.
 Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
@@ -2746,6 +2750,10 @@ first submission wins so each row keeps the timestamp of when it reached the gat
   metadata?: string | null;
   /** MIME type */
   mimeType?: string | null;
+  /** Provider file/evidence reference that now holds this file after a successful bundle
+submission (issue #419 provider file delivery), e.g. a Stripe `file_...` id or a
+PayPal dispute-evidence document reference. Null until the provider accepted the file. */
+  providerFileId?: string | null;
   /** Submitted timestamp */
   submittedAt?: string;
   /** Submitted by user ID */
@@ -3584,6 +3592,16 @@ gateway values overwrite only while the dispute is unresolved. */
   evidence?: CommercePaymentsDisputeEvidence[] | null;
   /** Deadline by which evidence must be submitted to the gateway, when provided. */
   evidenceDueBy?: string | null;
+  /** Frozen manifest of the evidence bundle accepted by the gateway (issue #419 replay-safe
+submission): JSON list of `{ evidenceId, providerFileId, contentDigest }` entries
+captured at submission time. The gateway's final evidence response cannot be amended
+with additional files, so later submissions are validated against this manifest — an
+identical manifest replays idempotently, an added/changed one is rejected. */
+  evidenceManifest?: string | null;
+  /** SHA-256 digest (hex) of the frozen GameGuild.Commerce.Payments.PaymentDispute.EvidenceManifest (issue #419): binds
+the dispute's idempotency key to the exact accepted evidence set, so a retry after a
+crash between the gateway call and the local persist replays the same provider request. */
+  evidenceManifestHash?: string | null;
   /** When the merchant evidence bundle was submitted to the gateway (issue #419 evidence
 submission tracking). Null while no bundle has been submitted; refreshed by every
 successful submission so the deadline reminder surface can distinguish disputes whose
@@ -31201,6 +31219,7 @@ CommercePaymentsDisputeActionResultSchema = z.object({
 /** Zod schema for CommercePaymentsDisputeEvidence. Entity representing dispute evidence */
 CommercePaymentsDisputeEvidenceSchema = z.object({
   id: z.string().uuid().optional(),
+  contentDigest: z.string().max(128).nullable().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   description: z.string().max(2000).nullable().optional(),
@@ -31225,6 +31244,7 @@ CommercePaymentsDisputeEvidenceSchema = z.object({
   isNew: z.boolean().optional(),
   metadata: z.string().max(2000).nullable().optional(),
   mimeType: z.string().max(100).nullable().optional(),
+  providerFileId: z.string().max(255).nullable().optional(),
   submittedAt: z.string().datetime().optional(),
   submittedBy: z.string().uuid(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -31863,6 +31883,8 @@ CommercePaymentsPaymentDisputeSchema = z.object({
     .nullable()
     .optional(),
   evidenceDueBy: z.string().datetime().nullable().optional(),
+  evidenceManifest: z.string().max(4000).nullable().optional(),
+  evidenceManifestHash: z.string().max(128).nullable().optional(),
   evidenceSubmittedAt: z.string().datetime().nullable().optional(),
   gatewayDisputeId: z.string().max(255).nullable().optional(),
   gatewayName: z.string().max(50).nullable().optional(),
