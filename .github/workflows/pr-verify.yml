@@ -217,6 +217,7 @@ jobs:
       - name: Build Web
         env:
           GAMEGUILD_DISABLE_WEBPACK_CACHE: "1"
+          NODE_OPTIONS: --max-old-space-size=12288
         run: pnpm --filter @game-guild/web build
 
   api:
