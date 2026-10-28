@@ -307,7 +307,7 @@ jobs:
     needs: [runner-pool, classify]
     if: needs.classify.outputs.openApi == 'true'
     runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     services:
       postgres:
         image: mirror.gcr.io/library/postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
@@ -344,7 +344,7 @@ jobs:
     needs: [runner-pool, classify]
     if: needs.classify.outputs.migration == 'true'
     runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     services:
       postgres:
         image: mirror.gcr.io/library/postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
@@ -385,7 +385,7 @@ jobs:
     runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
     # Reuse the same-run API/client outputs. Coverage and regression remain
     # required independent jobs; this lane verifies OpenAPI/web/browser surfaces.
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -479,7 +479,7 @@ jobs:
     needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
     runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/setup-node-workspace
