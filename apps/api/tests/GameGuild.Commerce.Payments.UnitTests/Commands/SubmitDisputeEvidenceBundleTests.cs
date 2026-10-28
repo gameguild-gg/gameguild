@@ -50,12 +50,13 @@ public class SubmitDisputeEvidenceBundleTests
 
         result.Success.Should().BeTrue();
 
-        // The bundle carries the summary plus one entry per evidence row.
+        // The bundle carries the summary plus one entry per evidence row, and the idempotency
+        // key is bound to the frozen manifest hash (issue #419 replay-safe submission).
         _gateway.Verify(
             gateway => gateway.ChallengeDisputeAsync(
                 It.Is<GatewayDisputeChallengeRequest>(request =>
                     request.ExternalDisputeId == "dp_9001" &&
-                    request.IdempotencyKey == $"dispute_evidence_{fixture.Dispute.Id}" &&
+                    request.IdempotencyKey.StartsWith($"dispute_evidence_{fixture.Dispute.Id}_", StringComparison.Ordinal) &&
                     request.EvidenceSummary!.StartsWith("merchant evidence follows", StringComparison.Ordinal) &&
                     request.EvidenceSummary.Contains("[Invoice] Invoice evidence #1") &&
                     request.EvidenceSummary.Contains("[Receipt] Receipt evidence #2") &&
@@ -90,27 +91,122 @@ public class SubmitDisputeEvidenceBundleTests
     }
 
     [Fact]
-    public async Task SubmitBundle_ReSubmission_KeepsTheFirstEvidenceSubmissionTimestamp()
+    public async Task SubmitBundle_ReplayOfTheSameManifest_IsIdempotent_WithoutASecondGatewayCall()
     {
         var fixture = await NewDatabaseWithDisputeAsync(gatewayDisputeId: "dp_9002", evidenceCount: 1);
         await using var db = fixture.Db;
 
         var handler = CreateHandler(db);
-        await handler.Handle(new SubmitDisputeEvidenceCommand(fixture.Dispute.Id), CancellationToken.None);
+        var first = await handler.Handle(new SubmitDisputeEvidenceCommand(fixture.Dispute.Id), CancellationToken.None);
+        first.Success.Should().BeTrue();
 
         var firstStamp = (await db.Set<DisputeEvidence>()
-            .SingleAsync(evidence => evidence.DisputeId == fixture.Dispute.Id)).GatewaySubmittedAt;
-        firstStamp.Should().NotBeNull();
+                .SingleAsync(evidence => evidence.DisputeId == fixture.Dispute.Id)).GatewaySubmittedAt;
+        var manifestHash = fixture.Dispute.EvidenceManifestHash;
+        manifestHash.Should().NotBeNull();
 
-        // A later re-submission refreshes the dispute-level timestamp but never rewrites the
-        // per-evidence history.
-        await handler.Handle(new SubmitDisputeEvidenceCommand(fixture.Dispute.Id), CancellationToken.None);
-        var evidenceRow = await db.Set<DisputeEvidence>()
-            .SingleAsync(evidence => evidence.DisputeId == fixture.Dispute.Id);
-        evidenceRow.GatewaySubmittedAt.Should().Be(firstStamp);
+        // The provider's final evidence response cannot be amended: an identical re-submission
+        // replays the frozen manifest instead of issuing a second challenge (issue #419).
+        var replay = await handler.Handle(new SubmitDisputeEvidenceCommand(fixture.Dispute.Id), CancellationToken.None);
+
+        replay.Success.Should().BeTrue();
         _gateway.Verify(
             gateway => gateway.ChallengeDisputeAsync(It.IsAny<GatewayDisputeChallengeRequest>(), It.IsAny<CancellationToken>()),
-            Times.Exactly(2));
+            Times.Once);
+        fixture.Dispute.EvidenceManifestHash.Should().Be(manifestHash);
+        (await db.Set<DisputeEvidence>()
+                .SingleAsync(evidence => evidence.DisputeId == fixture.Dispute.Id))
+            .GatewaySubmittedAt.Should().Be(firstStamp);
+    }
+
+    [Fact]
+    public async Task SubmitBundle_ChangedEvidenceAfterSubmission_IsRejected()
+    {
+        var fixture = await NewDatabaseWithDisputeAsync(gatewayDisputeId: "dp_9006", evidenceCount: 1);
+        await using var db = fixture.Db;
+
+        var handler = CreateHandler(db);
+        await handler.Handle(new SubmitDisputeEvidenceCommand(fixture.Dispute.Id), CancellationToken.None);
+
+        // Evidence added after the accepted submission changes the manifest: rejected because
+        // the gateway's final response cannot be amended with additional files (issue #419).
+        db.Add(new DisputeEvidence
+        {
+            DisputeId = fixture.Dispute.Id,
+            EvidenceType = EvidenceType.Receipt,
+            Title = "late receipt",
+            SubmittedBy = Guid.NewGuid(),
+            IsFromMerchant = true
+        });
+        await db.SaveChangesAsync();
+
+        var result = await handler.Handle(new SubmitDisputeEvidenceCommand(fixture.Dispute.Id), CancellationToken.None);
+
+        result.Success.Should().BeFalse();
+        result.FailureReason.Should().Contain("cannot be amended");
+        _gateway.Verify(
+            gateway => gateway.ChallengeDisputeAsync(It.IsAny<GatewayDisputeChallengeRequest>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task SubmitBundle_DeliversStoredFilesThroughProviderFileFields_AndRetainsIdsAndDigests()
+    {
+        var fixture = await NewDatabaseWithDisputeAsync(gatewayDisputeId: "dp_9007", evidenceCount: 2);
+        await using var db = fixture.Db;
+
+        // The authorized file store resolves the stored bytes (issue #419 provider file
+        // delivery): banks do not review external download links.
+        var invoiceBytes = "invoice-pdf-bytes"u8.ToArray();
+        var receiptBytes = "receipt-pdf-bytes"u8.ToArray();
+        var fileStore = new Mock<IDisputeEvidenceFileStore>();
+        fileStore
+            .Setup(store => store.ResolveAsync(It.IsAny<DisputeEvidence>(), It.IsAny<CancellationToken>()))
+            .Returns<DisputeEvidence, CancellationToken>((evidence, _) =>
+                Task.FromResult<GatewayDisputeEvidenceContent?>(
+                    new GatewayDisputeEvidenceContent(
+                        new MemoryStream(evidence.FileName == "invoice.pdf" ? invoiceBytes : receiptBytes),
+                        "application/pdf",
+                        (evidence.FileName == "invoice.pdf" ? invoiceBytes : receiptBytes).Length)));
+
+        GatewayDisputeChallengeRequest? delivered = null;
+        var evidenceRowIds = await db.Set<DisputeEvidence>()
+            .Where(evidence => evidence.DisputeId == fixture.Dispute.Id)
+            .Select(evidence => evidence.Id)
+            .ToListAsync();
+        _gateway
+            .Setup(gateway => gateway.ChallengeDisputeAsync(It.IsAny<GatewayDisputeChallengeRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<GatewayDisputeChallengeRequest, CancellationToken>((request, _) => delivered = request)
+            .ReturnsAsync(new GatewayDisputeActionResult(
+                true,
+                null,
+                null,
+                evidenceRowIds.Select(id => new GatewayDisputeEvidenceAcceptance(
+                    id.ToString(),
+                    $"file_accepted_{id:N}",
+                    Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+                        id == evidenceRowIds[0] ? invoiceBytes : receiptBytes)).ToLowerInvariant(),
+                    "receipt")).ToList()));
+
+        var handler = CreateHandler(db, fileStore.Object);
+        var result = await handler.Handle(new SubmitDisputeEvidenceCommand(fixture.Dispute.Id), CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+
+        // Structured provider file delivery: every row is delivered as an evidence item with a
+        // pre-computed digest and a resolvable content accessor — not as text.
+        delivered.Should().NotBeNull();
+        delivered!.EvidenceFiles.Should().HaveCount(2);
+        delivered.EvidenceFiles.Should().OnlyContain(item => item.ContentAccessor != null);
+
+        // Retained acceptance: each row keeps the provider file id and the digest of the exact
+        // bytes that were delivered.
+        var rows = await db.Set<DisputeEvidence>()
+            .Where(evidence => evidence.DisputeId == fixture.Dispute.Id)
+            .ToListAsync();
+        rows.Should().OnlyContain(row => row.ProviderFileId != null && row.ContentDigest != null);
+        rows.Single(row => row.FileName == "invoice.pdf").ContentDigest.Should().Be(
+            Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(invoiceBytes)).ToLowerInvariant());
     }
 
     [Fact]
@@ -181,13 +277,14 @@ public class SubmitDisputeEvidenceBundleTests
             Times.Never);
     }
 
-    private SubmitDisputeEvidenceCommandHandler CreateHandler(RefundsTestDbContext db) => new(
+    private SubmitDisputeEvidenceCommandHandler CreateHandler(RefundsTestDbContext db, IDisputeEvidenceFileStore? fileStore = null) => new(
         db,
         new PaymentRepository(db, NullLogger<PaymentRepository>.Instance),
         _gateway.Object,
         _revenueAudit.Object,
         _actorAccessor.Object,
-        NullLogger<SubmitDisputeEvidenceCommandHandler>.Instance);
+        NullLogger<SubmitDisputeEvidenceCommandHandler>.Instance,
+        fileStore);
 
     private async Task<DisputeFixture> NewDatabaseWithDisputeAsync(string? gatewayDisputeId, int evidenceCount)
     {
@@ -231,8 +328,8 @@ public class SubmitDisputeEvidenceBundleTests
                 EvidenceType = evidenceTypes[(index - 1) % evidenceTypes.Length],
                 Title = $"{evidenceTypes[(index - 1) % evidenceTypes.Length]} evidence #{index}",
                 Description = "documents the merchant position",
-                FileName = index == 1 ? "invoice.pdf" : null,
-                FileUrl = index == 1 ? "https://files/invoice.pdf" : null,
+                FileName = index == 1 ? "invoice.pdf" : $"evidence-{index}.pdf",
+                FileUrl = index == 1 ? "https://files/invoice.pdf" : $"https://files/evidence-{index}.pdf",
                 SubmittedBy = Guid.NewGuid(),
                 IsFromMerchant = true,
                 SubmittedAt = SystemClock.UtcNow.AddMinutes(index)

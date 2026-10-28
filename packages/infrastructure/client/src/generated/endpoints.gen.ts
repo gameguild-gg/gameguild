@@ -9042,6 +9042,23 @@ export const postBillingSubscriptionsPlanChangeOrchestrateEndpoint = {
 } as const;
 
 /**
+ * Read the latest saga state of one subscription
+ *
+ * Returns the most recent durable saga of the subscription — status, current step, proration amounts, payment reference, failure reason, compensations applied — plus the journaled step trail in execution order. 404 when the subscription never went through an orchestrated plan change.
+ */
+export interface GetBillingSubscriptionsPlanChangeSagaInput {
+  subscriptionId: string;
+}
+export type GetBillingSubscriptionsPlanChangeSagaOutput = Types.CommerceBillingSubscriptionChangeSagaDto;
+export const getBillingSubscriptionsPlanChangeSagaEndpoint = {
+  operationId: 'getBillingSubscriptionsPlanChangeSaga' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/subscriptions/{subscriptionId}/plan-change:saga' as const,
+  tags: ['CommerceBillingSubscriptionChanges'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Handle Apple Pay webhook events
  *
  * Processes Apple Pay webhook notifications for payment processing and transaction updates.
@@ -33328,6 +33345,7 @@ export const endpoints = {
   postBillingSubscriptionsCancel: postBillingSubscriptionsCancelEndpoint,
   postBillingSubscriptionsRenew: postBillingSubscriptionsRenewEndpoint,
   postBillingSubscriptionsPlanChangeOrchestrate: postBillingSubscriptionsPlanChangeOrchestrateEndpoint,
+  getBillingSubscriptionsPlanChangeSaga: getBillingSubscriptionsPlanChangeSagaEndpoint,
   postBillingWebhooksApplePay: postBillingWebhooksApplePayEndpoint,
   postBillingWebhooksGooglePay: postBillingWebhooksGooglePayEndpoint,
   postBillingWebhooksPaypal: postBillingWebhooksPaypalEndpoint,
