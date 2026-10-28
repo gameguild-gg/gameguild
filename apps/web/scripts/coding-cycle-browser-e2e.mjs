@@ -50,7 +50,7 @@ import { createMfaSignInContinuation, E2E_ADMIN_TOTP_SECRET } from "./sign-in-mf
 import { verifyCodingCycleToolchain } from "./coding-cycle-toolchain-support.mjs";
 import { assertRenderedEditorSource } from "./coding-cycle-editor-support.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { existsSync, readFileSync, createWriteStream, rmSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, createWriteStream, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient, GeneratedApi } from "@game-guild/client";
 import { chromium } from "playwright";
@@ -1291,21 +1291,27 @@ async function instructorJourney(fixture, browser) {
     const refreshObserved = new Promise((resolve) => { observeRefresh = resolve; });
     let heldRefreshes = 0;
     const routeErrors = [];
-    const deferRefresh = async (route) => {
-      try {
-        const request = route.request();
-        if (request.method() === "GET" && request.headers()["rsc"] === "1") {
-          heldRefreshes++;
-          observeRefresh();
-          await refreshReleased;
+    const pendingRouteHandlers = new Set();
+    const deferRefresh = (route) => {
+      const task = (async () => {
+        try {
+          const request = route.request();
+          if (request.method() === "GET" && request.headers()["rsc"] === "1") {
+            heldRefreshes++;
+            observeRefresh();
+            await refreshReleased;
+          }
+          await route.continue();
+        } catch (error) {
+          // Route callbacks run independently of the journey's await chain.
+          // Preserve transport failures as hard assertions, never unhandled
+          // rejections that discard the original boundary evidence.
+          routeErrors.push(error instanceof Error ? error.message : String(error));
         }
-        await route.continue();
-      } catch (error) {
-        // Route callbacks run independently of the journey's await chain.
-        // Preserve any transport failure as a hard assertion instead of an
-        // unhandled rejection that discards the original boundary evidence.
-        routeErrors.push(error instanceof Error ? error.message : String(error));
-      }
+      })();
+      pendingRouteHandlers.add(task);
+      void task.then(() => pendingRouteHandlers.delete(task));
+      return task;
     };
     const githubEvent = process.env.GITHUB_EVENT_PATH
       ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")) : null;
@@ -1377,19 +1383,28 @@ async function instructorJourney(fixture, browser) {
       gradingProof.visibleBadge = await page.getByTestId("needs-grading-badge").textContent();
       record("submit grade → needs-grading drops to 0", graded, "polled needs-grading-badge");
       await screenshot(page, "instructor-grade-submitted");
+    } catch (error) {
+      gradingProof.failure = error instanceof Error ? error.message.split("\n")[0] : String(error);
+      throw error;
     } finally {
       gradingProof.heldRefreshes = heldRefreshes;
+      gradingProof.routeErrors = routeErrors;
+      gradingProof.instrumentPhase = "before-route-cleanup";
+      // Keep the observed boundary even if releasing a route later fails.
+      writeFileSync(resolve(ARTIFACTS, "grading-refresh-proof.json"), JSON.stringify(gradingProof, null, 2));
+      log(`grading-refresh-proof ${JSON.stringify(gradingProof)}`);
       // Release after the assertion, never reload to make a stale badge pass.
       releaseRefresh();
       try {
-        // The default unroute behavior does not wait for active handlers.
-        // Finish them before the context closes and invalidates their routes.
+        // Finish existing continuations before removing the interception.
+        await awaitGradingBoundary(Promise.all([...pendingRouteHandlers]), "finish deferred route handlers", 15_000);
+        // Also wait for any handler that arrived during that first await.
         await awaitGradingBoundary(page.unrouteAll({ behavior: "wait" }), "release deferred route handlers", 15_000);
       } finally {
-        gradingProof.routeErrors = routeErrors;
+        gradingProof.instrumentPhase = "after-route-cleanup";
         record("deferred route handlers complete without transport errors", routeErrors.length === 0,
           routeErrors.join(" | "));
-        await writeFile(resolve(ARTIFACTS, "grading-refresh-proof.json"), JSON.stringify(gradingProof, null, 2));
+        writeFileSync(resolve(ARTIFACTS, "grading-refresh-proof.json"), JSON.stringify(gradingProof, null, 2));
         log(`grading-refresh-proof ${JSON.stringify(gradingProof)}`);
       }
     }
