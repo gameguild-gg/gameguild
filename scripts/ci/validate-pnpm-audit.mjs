@@ -110,6 +110,7 @@ if (invokedDirectly) {
         '--test',
         resolve(dirname(fileURLToPath(import.meta.url)), 'tests/braces-security.test.mjs'),
         resolve(dirname(fileURLToPath(import.meta.url)), 'tests/sprintf-security.test.mjs'),
+        resolve(dirname(fileURLToPath(import.meta.url)), 'tests/deepmerge-security.test.mjs'),
       ],
       { stdio: 'inherit' },
     );
