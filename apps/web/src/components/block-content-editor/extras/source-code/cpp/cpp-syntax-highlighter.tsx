@@ -1,14 +1,16 @@
-export class CppSyntaxHighlighter {
-  private monaco: any
-  private disposables: any[] = []
+import type { IDisposable } from "monaco-editor"
 
-  constructor(monaco: any) {
+export class CppSyntaxHighlighter {
+  private readonly monaco: typeof import("monaco-editor")
+  private readonly disposables: IDisposable[] = []
+
+  constructor(monaco: typeof import("monaco-editor")) {
     this.monaco = monaco
   }
 
   register() {
     // Define C++ syntax highlighting rules
-    this.monaco.languages.setMonarchTokensProvider("cpp", {
+    const registration = this.monaco.languages.setMonarchTokensProvider("cpp", {
       defaultToken: "invalid",
       tokenPostfix: ".cpp",
 
@@ -223,10 +225,11 @@ export class CppSyntaxHighlighter {
         ],
       },
     })
+    this.disposables.push(registration)
   }
 
   dispose() {
     // Clean up any disposables
-    this.disposables.forEach((disposable) => disposable.dispose())
+    this.disposables.splice(0).forEach((disposable) => disposable.dispose())
   }
 }
