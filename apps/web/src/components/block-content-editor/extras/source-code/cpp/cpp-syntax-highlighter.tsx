@@ -1,14 +1,26 @@
 import type { IDisposable } from "monaco-editor"
 
-export class CppSyntaxHighlighter {
-  private readonly monaco: typeof import("monaco-editor")
-  private readonly disposables: IDisposable[] = []
+type Monaco = typeof import("monaco-editor")
 
-  constructor(monaco: typeof import("monaco-editor")) {
+const cppTokenizers = new WeakMap<Monaco["languages"], { registration: IDisposable; users: number }>()
+
+export class CppSyntaxHighlighter {
+  private readonly monaco: Monaco
+  private hasRegistration = false
+
+  constructor(monaco: Monaco) {
     this.monaco = monaco
   }
 
   register() {
+    if (this.hasRegistration) return
+    const existing = cppTokenizers.get(this.monaco.languages)
+    if (existing) {
+      existing.users += 1
+      this.hasRegistration = true
+      return
+    }
+
     // Define C++ syntax highlighting rules
     const registration = this.monaco.languages.setMonarchTokensProvider("cpp", {
       defaultToken: "invalid",
@@ -225,11 +237,19 @@ export class CppSyntaxHighlighter {
         ],
       },
     })
-    this.disposables.push(registration)
+    cppTokenizers.set(this.monaco.languages, { registration, users: 1 })
+    this.hasRegistration = true
   }
 
   dispose() {
-    // Clean up any disposables
-    this.disposables.splice(0).forEach((disposable) => disposable.dispose())
+    if (!this.hasRegistration) return
+    this.hasRegistration = false
+    const existing = cppTokenizers.get(this.monaco.languages)
+    if (!existing) return
+    existing.users -= 1
+    if (existing.users === 0) {
+      cppTokenizers.delete(this.monaco.languages)
+      existing.registration.dispose()
+    }
   }
 }

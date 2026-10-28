@@ -43,6 +43,32 @@ describe("C++ syntax registration lifecycle", () => {
     expect(first.dispose).toHaveBeenCalledTimes(1);
     expect(second.dispose).toHaveBeenCalledTimes(1);
   });
+
+  it("keeps shared syntax active when the most recently opened editor closes", () => {
+    let activeDefinition: unknown;
+    const sdk = {
+      languages: {
+        setMonarchTokensProvider: (_language: string, definition: unknown) => {
+          activeDefinition = definition;
+          return {
+            dispose: () => {
+              if (activeDefinition === definition) activeDefinition = undefined;
+            },
+          };
+        },
+      },
+    } as unknown as Monaco;
+    const firstEditor = new CppSyntaxHighlighter(sdk);
+    const secondEditor = new CppSyntaxHighlighter(sdk);
+
+    firstEditor.register();
+    secondEditor.register();
+    secondEditor.dispose();
+    expect(activeDefinition).toBeDefined();
+
+    firstEditor.dispose();
+    expect(activeDefinition).toBeUndefined();
+  });
 });
 
 function createChecker() {
