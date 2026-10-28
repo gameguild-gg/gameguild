@@ -143,6 +143,51 @@ public sealed partial class RevenueReportService(
     }
 
     /// <inheritdoc />
+    public async Task<CurrencyPopularityReport> GetPopularCurrenciesAsync(
+        DateTime fromUtc,
+        DateTime toUtc,
+        Guid? tenantId,
+        int limit = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var dailyTotals = await revenueEventRepository
+            .GetDailyTotalsAsync(fromUtc, toUtc, tenantId, cancellationToken)
+            .ConfigureAwait(false);
+
+        // Rank per currency only: transaction count first, then net volume (absolute, so a
+        // refund-heavy currency is not punished into invisibility), then code for determinism.
+        // Totals are never merged across currencies (100 USD + 100 EUR is not a unitless 200).
+        var entries = dailyTotals
+            .GroupBy(total => total.Currency, StringComparer.Ordinal)
+            .Select(group => new
+            {
+                Currency = group.Key,
+                TransactionCount = group.Sum(total => total.EventCount),
+                TotalCredit = group.Sum(total => total.CreditTotal),
+                TotalDebit = group.Sum(total => total.DebitTotal),
+                TotalNet = group.Sum(total => total.NetTotal)
+            })
+            .OrderByDescending(entry => entry.TransactionCount)
+            .ThenByDescending(entry => Math.Abs(entry.TotalNet))
+            .ThenBy(entry => entry.Currency, StringComparer.Ordinal)
+            .Take(Math.Clamp(limit, 1, 50))
+            .Select((entry, index) => new CurrencyPopularityEntry(
+                index + 1,
+                entry.Currency,
+                entry.TransactionCount,
+                entry.TotalCredit,
+                entry.TotalDebit,
+                entry.TotalNet))
+            .ToList();
+
+        return new CurrencyPopularityReport(
+            fromUtc,
+            toUtc,
+            SystemClock.UtcNow,
+            entries);
+    }
+
+    /// <inheritdoc />
     public async Task<RevenueReportExport> ExportAsync(
         DateTime fromUtc,
         DateTime toUtc,

@@ -33,6 +33,20 @@ public sealed record ExportRevenueReportQuery(
     string Format = "csv",
     Guid? TenantId = null) : IQuery<RevenueReportExport>;
 
+/// <summary>
+/// Query (issue #412 spec G): most-transacted currencies over an inclusive period, ranked by
+/// transaction count (then net volume, then code), with per-currency credit/debit/net totals.
+/// </summary>
+/// <param name="FromUtc">Inclusive period start (UTC).</param>
+/// <param name="ToUtc">Inclusive period end (UTC).</param>
+/// <param name="TenantId">Optional tenant scope.</param>
+/// <param name="Limit">Maximum ranked currencies (1..50, default 10).</param>
+public sealed record GetPopularCurrenciesQuery(
+    DateTime FromUtc,
+    DateTime ToUtc,
+    Guid? TenantId = null,
+    int Limit = 10) : IQuery<CurrencyPopularityReport>;
+
 /// <summary>Validator for <see cref="GetRevenueComplianceReportQuery" />.</summary>
 public sealed class GetRevenueComplianceReportQueryValidator : AbstractValidator<GetRevenueComplianceReportQuery>
 {
@@ -85,6 +99,34 @@ public sealed class GetRevenueComplianceReportQueryHandler(
 
     internal static Guid? ResolveTenantScope(Guid? requestedTenantId, ActorContext actorContext)
         => actorContext.IsAuthenticated && !actorContext.IsSystemAdmin ? actorContext.TenantId : requestedTenantId;
+}
+
+/// <summary>Validator for <see cref="GetPopularCurrenciesQuery" />.</summary>
+public sealed class GetPopularCurrenciesQueryValidator : AbstractValidator<GetPopularCurrenciesQuery>
+{
+    /// <summary>Initializes the validator.</summary>
+    public GetPopularCurrenciesQueryValidator()
+    {
+        RuleFor(query => query.ToUtc)
+            .GreaterThan(query => query.FromUtc).WithMessage("Period end must be after period start.");
+        RuleFor(query => query.Limit)
+            .InclusiveBetween(1, 50).WithMessage("Limit must be between 1 and 50.");
+    }
+}
+
+/// <summary>Handler for <see cref="GetPopularCurrenciesQuery" />.</summary>
+public sealed class GetPopularCurrenciesQueryHandler(
+    IRevenueReportService reportService,
+    IActorContextAccessor actorContextAccessor) : IQueryHandler<GetPopularCurrenciesQuery, CurrencyPopularityReport>
+{
+    /// <inheritdoc />
+    public Task<CurrencyPopularityReport> Handle(GetPopularCurrenciesQuery request, CancellationToken cancellationToken)
+        => reportService.GetPopularCurrenciesAsync(
+            request.FromUtc,
+            request.ToUtc,
+            GetRevenueComplianceReportQueryHandler.ResolveTenantScope(request.TenantId, actorContextAccessor.ActorContext),
+            request.Limit,
+            cancellationToken);
 }
 
 /// <summary>Handler for <see cref="GetRevenueTrendReportQuery" />.</summary>
