@@ -473,6 +473,9 @@ public enum NotificationType
     /// <summary>Open dispute is approaching its evidence-submission deadline (issue #419)</summary>
     DisputeDeadlineReminder = 35,
 
+    /// <summary>Legal hold requires a custodian's or stakeholder's attention (issue #177)</summary>
+    LegalHoldNotice = 36,
+
     /// <summary>Custom/other notification type</summary>
     Custom = 99
 }
