@@ -28,10 +28,10 @@ export CI=true
 rm -f "$repository_root/node_modules/.pnpm-workspace-state.json"
 printf '> pnpm install --frozen-lockfile --ignore-scripts\n'
 pnpm install --frozen-lockfile --ignore-scripts
-# Patch application uses pnpm's dependency build stage. Only these two
-# reviewed packages are approved for that stage in the root manifest.
-printf '> pnpm rebuild braces sprintf-js\n'
-pnpm rebuild braces sprintf-js
+# Patch application uses pnpm's dependency build stage. Only these reviewed
+# packages are approved for that stage in the root manifest.
+printf '> pnpm rebuild braces deepmerge sprintf-js\n'
+pnpm rebuild braces deepmerge sprintf-js
 lock_hash_after_install="$(sha256sum "$root_lock" | awk '{print $1}')"
 [[ "$lock_hash_before" == "$lock_hash_after_install" ]] || economy_gate_error 'pnpm install unexpectedly changed the repository lockfile'
 [[ -f "$virtual_store_lock" ]] || economy_gate_error "pnpm install did not produce its virtual-store resolution: $virtual_store_lock"

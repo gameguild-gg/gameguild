@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
+import { readPnpmSecurityConfig } from '../read-pnpm-config.mjs';
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const virtualStore = join(repositoryRoot, 'node_modules/.pnpm');
@@ -20,6 +22,27 @@ for (const entry of readdirSync(virtualStore, { withFileTypes: true })) {
   consumers.push({ name: entry.name, packageRoot, require: createRequire(join(virtualStore, entry.name, 'security-probe.cjs')) });
 }
 assert.ok(packageRoots.size > 0, 'The installed consumer graph must contain deepmerge');
+
+test('the deepmerge mitigation requires the exact patched bytes on every installed consumer', () => {
+  const config = readPnpmSecurityConfig(repositoryRoot);
+  assert.equal(config.patchedDependencies?.['deepmerge@4.3.1'], 'patches/deepmerge@4.3.1.patch');
+  assert.equal(config.auditConfig, undefined);
+  assert.deepEqual(config.onlyBuiltDependencies, ['braces', 'deepmerge', 'sprintf-js']);
+  assert.equal(createHash('sha256').update(readFileSync(join(repositoryRoot, 'patches/deepmerge@4.3.1.patch'))).digest('hex'), 'ce7bc8c614caad7eae9afd0ccb7c63767c693fed9df668af1a4dbb8516664919');
+  const expected = {
+    'index.js': 'dbef7cab6abdd1338228a08297f0047b3f56c9d7533b38358629b6024c78dbc7',
+    'dist/cjs.js': '8983763adcccc772c023cb97bbf8830de52f7eeaa3c997b867345e1e62dd9d3b',
+    'dist/umd.js': '61f125f6ee85c534ddafcd12d2e89c52acd0cd2c9cd292b111cd403ab58e5172',
+  };
+  for (const packageRoot of packageRoots) {
+    assert.match(packageRoot, /deepmerge@4\.3\.1_patch_hash[=_]/);
+    const manifest = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'));
+    for (const hook of ['preinstall', 'install', 'postinstall']) assert.equal(manifest.scripts?.[hook], undefined);
+    for (const [entry, digest] of Object.entries(expected)) {
+      assert.equal(createHash('sha256').update(readFileSync(join(packageRoot, entry))).digest('hex'), digest, entry);
+    }
+  }
+});
 
 for (const consumer of consumers) {
   test(`${consumer.name}: actual dependency resolution uses the reviewed deepmerge version`, () => {
