@@ -101,8 +101,14 @@ export function SpeedgraderWorkspace({
       if (prior && prior.version > submission.version) return current;
       const roundId = submission.execution.activeRoundId ?? null;
       if (prior?.supersededRoundIds.includes(roundId)) return current;
+      const currentRoundId = item.activeGradeRoundId ?? null;
+      // Without a recorded confirmation, a response for another round may
+      // predate fresh queue props. Its history must establish the ordering.
+      if (currentRoundId !== null && currentRoundId !== roundId
+        && !submission.execution.history.some((round) => round.roundId === currentRoundId)
+        && !(prior?.roundId === roundId && prior.supersededRoundIds.includes(currentRoundId))) return current;
       const supersededRoundIds = new Set(prior?.supersededRoundIds ?? []);
-      supersededRoundIds.add(item.activeGradeRoundId ?? null);
+      supersededRoundIds.add(currentRoundId);
       if (prior) supersededRoundIds.add(prior.roundId);
       for (const round of submission.execution.history) supersededRoundIds.add(round.roundId);
       supersededRoundIds.delete(roundId);
