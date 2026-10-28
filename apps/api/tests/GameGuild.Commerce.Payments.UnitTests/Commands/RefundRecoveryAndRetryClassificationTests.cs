@@ -199,7 +199,9 @@ public class RefundRecoveryAndRetryClassificationTests
         await using var db = NewDatabase();
         db.Add(payment);
         await db.SaveChangesAsync();
-        var refund = NewProcessingRefund(payment);
+        // A full 60m refund so the reconciled completion refunds the whole payment; the
+        // gateway fixture below reports the same 60m refunded at the provider.
+        var refund = NewProcessingRefund(payment, amount: 60m);
         db.Add(refund);
         await db.SaveChangesAsync();
 
@@ -381,12 +383,12 @@ public class RefundRecoveryAndRetryClassificationTests
         return new RefundsTestDbContext(options);
     }
 
-    private static Refund NewProcessingRefund(Payment payment, string keySuffix = "stuck")
+    private static Refund NewProcessingRefund(Payment payment, string keySuffix = "stuck", decimal amount = 10m)
     {
         var refund = Refund.Create(
             payment.TenantId,
             payment.Id,
-            10m,
+            amount,
             "USD",
             "goodwill",
             null,
