@@ -23,4 +23,20 @@ public sealed class EntityChangeAuditOptions
     ///     re-included through this list.
     /// </summary>
     public HashSet<string> ExcludedEntityTypes { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    ///     Master switch for set-based capture (issue #166 remainder): <c>ExecuteUpdate</c>/
+    ///     <c>ExecuteDelete</c> (and equivalent single-statement raw <c>UPDATE</c>/<c>DELETE</c> SQL)
+    ///     produce before/after audit evidence. Defaults to <c>true</c> and is additionally gated
+    ///     by <see cref="Enabled"/>; disabling either switch stops set-based capture only —
+    ///     tracked-entity capture follows <see cref="Enabled"/> alone.
+    /// </summary>
+    public bool CaptureSetBasedChanges { get; set; } = true;
+
+    /// <summary>
+    ///     Maximum number of affected rows captured per set-based statement. Statements that
+    ///     match more rows capture the first rows up to this bound and log a warning naming the
+    ///     truncation, so a runaway bulk mutation cannot grow audit storage unboundedly.
+    /// </summary>
+    public int MaxSetBasedCapturedRows { get; set; } = 5_000;
 }

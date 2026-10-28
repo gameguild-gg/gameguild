@@ -173,6 +173,11 @@ public class UserNotificationRepository(IApplicationDbContext context) : IUserNo
             .Where(n => n.UserId == userId && !n.IsRead && n.DeletedAt == null)
             .ExecuteUpdateAsync(setters => setters.SetProperty(n => n.IsRead, true).SetProperty(n => n.ReadAt, SystemClock.UtcNow).SetProperty(n => n.UpdatedAt, SystemClock.UtcNow), cancellationToken)
             .ConfigureAwait(false);
+
+        // Set-based writes stage their audit rows on the context; saving here keeps the bulk
+        // mutation self-contained (issue #166): the audit evidence persists with this call when
+        // no ambient use-case save follows, and participates in the caller's transaction when one does.
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task ArchiveAllAsync(Guid userId, int olderThanDays = 30, CancellationToken cancellationToken = default)
@@ -183,6 +188,9 @@ public class UserNotificationRepository(IApplicationDbContext context) : IUserNo
             .Where(n => n.UserId == userId && !n.IsArchived && n.DeletedAt == null && n.CreatedAt < cutoffDate)
             .ExecuteUpdateAsync(setters => setters.SetProperty(n => n.IsArchived, true).SetProperty(n => n.ArchivedAt, SystemClock.UtcNow).SetProperty(n => n.UpdatedAt, SystemClock.UtcNow), cancellationToken)
             .ConfigureAwait(false);
+
+        // See MarkAllAsReadAsync: persist the staged set-based audit rows with the mutation.
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task DeleteArchivedAsync(Guid userId, int olderThanDays = 90, CancellationToken cancellationToken = default)
@@ -190,6 +198,9 @@ public class UserNotificationRepository(IApplicationDbContext context) : IUserNo
         var cutoffDate = SystemClock.UtcNow.AddDays(-olderThanDays);
 
         await context.Set<UserNotification>().Where(n => n.UserId == userId && n.IsArchived && n.ArchivedAt < cutoffDate).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+
+        // See MarkAllAsReadAsync: persist the staged set-based audit rows with the mutation.
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default) { await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false); }
