@@ -1290,14 +1290,22 @@ async function instructorJourney(fixture, browser) {
     /** @type {Promise<void>} */
     const refreshObserved = new Promise((resolve) => { observeRefresh = resolve; });
     let heldRefreshes = 0;
+    const routeErrors = [];
     const deferRefresh = async (route) => {
-      const request = route.request();
-      if (request.method() === "GET" && request.headers()["rsc"] === "1") {
-        heldRefreshes++;
-        observeRefresh();
-        await refreshReleased;
+      try {
+        const request = route.request();
+        if (request.method() === "GET" && request.headers()["rsc"] === "1") {
+          heldRefreshes++;
+          observeRefresh();
+          await refreshReleased;
+        }
+        await route.continue();
+      } catch (error) {
+        // Route callbacks run independently of the journey's await chain.
+        // Preserve any transport failure as a hard assertion instead of an
+        // unhandled rejection that discards the original boundary evidence.
+        routeErrors.push(error instanceof Error ? error.message : String(error));
       }
-      await route.continue();
     };
     const githubEvent = process.env.GITHUB_EVENT_PATH
       ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")) : null;
@@ -1373,9 +1381,17 @@ async function instructorJourney(fixture, browser) {
       gradingProof.heldRefreshes = heldRefreshes;
       // Release after the assertion, never reload to make a stale badge pass.
       releaseRefresh();
-      await page.unroute(isGradingPage, deferRefresh);
-      await writeFile(resolve(ARTIFACTS, "grading-refresh-proof.json"), JSON.stringify(gradingProof, null, 2));
-      log(`grading-refresh-proof ${JSON.stringify(gradingProof)}`);
+      try {
+        // The default unroute behavior does not wait for active handlers.
+        // Finish them before the context closes and invalidates their routes.
+        await awaitGradingBoundary(page.unrouteAll({ behavior: "wait" }), "release deferred route handlers", 15_000);
+      } finally {
+        gradingProof.routeErrors = routeErrors;
+        record("deferred route handlers complete without transport errors", routeErrors.length === 0,
+          routeErrors.join(" | "));
+        await writeFile(resolve(ARTIFACTS, "grading-refresh-proof.json"), JSON.stringify(gradingProof, null, 2));
+        log(`grading-refresh-proof ${JSON.stringify(gradingProof)}`);
+      }
     }
 
     httpFailures.assertNone("Instructor journey");
