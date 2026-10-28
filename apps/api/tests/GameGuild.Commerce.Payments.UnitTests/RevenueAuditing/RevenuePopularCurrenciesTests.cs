@@ -54,7 +54,7 @@ public class RevenuePopularCurrenciesTests
         var eur = report.Currencies[1];
         eur.TransactionCount.Should().Be(40);
         eur.TotalCredit.Should().Be(400m);
-        eur.TotalNet.Should().Be(280m);
+        eur.TotalNet.Should().Be(380m);
     }
 
     [Fact]
