@@ -10,6 +10,7 @@ import {
   assertApplicableCheckpoint,
   checkpointIndex,
   getScenarioDefinition,
+  hasAIReview,
   hasInstructorReview,
   hasPeerReview,
   hasSelfReview,
@@ -453,6 +454,7 @@ async function ensureQuizAuthoring(manifest, definition, quiz, sessions) {
 function buildReviewConfiguration(quiz) {
   if (
     !hasPeerReview(quiz) &&
+    !hasAIReview(quiz) &&
     !hasSelfReview(quiz) &&
     !hasInstructorReview(quiz)
   ) {
@@ -471,7 +473,17 @@ function buildReviewConfiguration(quiz) {
           onInsufficientEvidence: "await-instructor-resolution",
         }
       : null,
-    ai: null,
+    ai: hasAIReview(quiz)
+      ? {
+          providerKey:
+            process.env.GRADING_AI_LIVE_TEST === "1"
+              ? "gameguild-ai"
+              : process.env.GRADING_VALIDATION_E2E === "1"
+              ? "controlled-ai"
+              : "gameguild-ai",
+          policyVersion: "v1",
+        }
+      : null,
     self: hasSelfReview(quiz)
       ? {
           instructions:
@@ -882,6 +894,13 @@ async function ensurePersonaSubmission(
       },
     });
   }
+  if (hasAIReview(quiz)) {
+    submission = await waitForAIReviewSubmission(
+      learner,
+      submissionResources.submissionId,
+      hasInstructorReview(quiz),
+    );
+  }
   captureExecution(submissionResources, submission);
   await persist(manifest);
 }
@@ -1073,6 +1092,32 @@ function readRuntimeSubmission(session, submissionId) {
     method: "GET",
     path: `/v1/assessments/runtime-submissions/${submissionId}`,
   });
+}
+
+async function waitForAIReviewSubmission(
+  session,
+  submissionId,
+  requiresInstructor,
+) {
+  const deadline = Date.now() + 30_000;
+  let submission = await readRuntimeSubmission(session, submissionId);
+  while (!hasSettledAIReview(submission, requiresInstructor)) {
+    if (Date.now() >= deadline) {
+      throw new Error(
+        `AI review for submission ${submissionId} did not settle within 30 seconds.`,
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    submission = await readRuntimeSubmission(session, submissionId);
+  }
+  return submission;
+}
+
+function hasSettledAIReview(submission, requiresInstructor) {
+  if (requiresInstructor) {
+    return submission.execution?.requiresInstructorReview === true;
+  }
+  return submission.execution?.instructorVisibleResult?.state === "final";
 }
 
 function setQuizCheckpoint(manifest, quizKey, next) {

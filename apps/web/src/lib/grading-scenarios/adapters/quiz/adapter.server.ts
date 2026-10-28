@@ -43,6 +43,49 @@ import {
 const ADAPTER_KEY = "quiz";
 const DEFAULT_SCENARIO_KEY = "review-matrix";
 
+function environmentValue(name: string): string | null {
+  const direct = process.env[name]?.trim();
+  if (direct) return direct;
+  const normalizedName = name.toLowerCase();
+  const match = Object.entries(process.env).find(
+    ([key, value]) => key.toLowerCase() === normalizedName && value?.trim(),
+  );
+  return match?.[1]?.trim() || null;
+}
+
+function reviewProviderSummary(quiz: QuizTargetDefinition) {
+  if (!quiz.reviewMethods.includes("AIReview")) return null;
+
+  const controlled =
+    process.env.GRADING_VALIDATION_E2E === "1" &&
+    process.env.GRADING_AI_LIVE_TEST !== "1";
+  if (controlled) {
+    return {
+      key: "controlled-ai",
+      policyVersion: "v1",
+      runtimeProvider: "controlled-validation",
+      model: "v1",
+    };
+  }
+
+  const runtimeProvider =
+    environmentValue("Grading__AIReview__Provider") ??
+    environmentValue("AI__DefaultProvider");
+  const model =
+    environmentValue("Grading__AIReview__Model") ??
+    (runtimeProvider
+      ? environmentValue(`AI__Providers__${runtimeProvider}__DefaultModel`)
+      : null);
+  return {
+    key:
+      environmentValue("Grading__AIReview__ProviderKey") ?? "gameguild-ai",
+    policyVersion:
+      environmentValue("Grading__AIReview__PolicyVersion") ?? "v1",
+    runtimeProvider,
+    model,
+  };
+}
+
 function definitionSummary(
   definition: QuizDefinition,
 ): GradingScenarioDefinitionSummary {
@@ -62,6 +105,7 @@ function definitionSummary(
         ) as QuizValidationCase
       ).id,
       maxCheckpoint: quiz.maxSupportedCheckpoint ?? "released",
+      reviewProvider: reviewProviderSummary(quiz),
     })),
   };
 }

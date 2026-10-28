@@ -364,6 +364,18 @@ export function GradingScenarioLab({
                         target.capability ||
                         target.kind}
                     </span>
+                    {target.reviewProvider && (
+                      <span className="mt-1 block text-xs text-muted-foreground">
+                        {target.reviewProvider.key}@
+                        {target.reviewProvider.policyVersion}
+                        {target.reviewProvider.runtimeProvider
+                          ? ` · ${target.reviewProvider.runtimeProvider}`
+                          : ""}
+                        {target.reviewProvider.model
+                          ? `/${target.reviewProvider.model}`
+                          : " · model resolved at execution"}
+                      </span>
+                    )}
                   </span>
                 </label>
               ))}

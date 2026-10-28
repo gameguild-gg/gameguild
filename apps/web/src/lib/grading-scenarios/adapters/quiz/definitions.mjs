@@ -73,6 +73,7 @@ const BASE_QUIZ = Object.freeze({
   expected: {
     maxScore: 200,
     automatedScore: 200,
+    aiReviewScore: 200,
     selfReviewScore: 175,
     peerReviewScore: 175,
     instructorScore: 175,
@@ -94,6 +95,16 @@ const REVIEW_QUIZZES = Object.freeze({
     key: "automated-instructor",
     title: "Automated and instructor review",
     reviewMethods: ["AutomatedReview", "InstructorReview"],
+  }),
+  "ai-review": makeQuizDefinition({
+    key: "ai-review",
+    title: "AI review",
+    reviewMethods: ["AIReview"],
+  }),
+  "ai-instructor-review": makeQuizDefinition({
+    key: "ai-instructor-review",
+    title: "AI and instructor review",
+    reviewMethods: ["AIReview", "InstructorReview"],
   }),
   self: makeQuizDefinition({
     key: "self",
@@ -145,6 +156,12 @@ const DEFINITIONS = Object.freeze({
     "Automated and instructor review",
     ["automated-instructor"],
   ),
+  "ai-review": makeScenario("ai-review", "AI review", ["ai-review"]),
+  "ai-instructor-review": makeScenario(
+    "ai-instructor-review",
+    "AI and instructor review",
+    ["ai-instructor-review"],
+  ),
   self: makeScenario("self", "Self review", ["self"]),
   "self-instructor": makeScenario(
     "self-instructor",
@@ -169,6 +186,8 @@ const DEFINITIONS = Object.freeze({
       "automated",
       "instructor",
       "automated-instructor",
+      "ai-review",
+      "ai-instructor-review",
       "self",
       "self-instructor",
       "peer",
@@ -193,6 +212,8 @@ const DEFINITIONS = Object.freeze({
       "automated",
       "instructor",
       "automated-instructor",
+      "ai-review",
+      "ai-instructor-review",
       "self",
       "self-instructor",
       "peer",
@@ -348,6 +369,10 @@ export function hasInstructorReview(quiz) {
   return hasReviewMethod(quiz, "InstructorReview");
 }
 
+export function hasAIReview(quiz) {
+  return hasReviewMethod(quiz, "AIReview");
+}
+
 export function hasSelfReview(quiz) {
   return hasReviewMethod(quiz, "SelfReview");
 }
@@ -364,6 +389,7 @@ export function requiresLearnerB(definition) {
 
 export function expectedFinalScore(quiz) {
   if (hasInstructorReview(quiz)) return quiz.expected.instructorScore;
+  if (hasAIReview(quiz)) return quiz.expected.aiReviewScore;
   if (hasSelfReview(quiz)) return quiz.expected.selfReviewScore;
   if (hasPeerReview(quiz)) return quiz.expected.peerReviewScore;
   return quiz.expected.automatedScore;

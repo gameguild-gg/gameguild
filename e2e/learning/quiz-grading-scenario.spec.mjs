@@ -12,6 +12,7 @@ import {
   checkpointIndex,
   expectedFinalScore,
   getScenarioDefinition,
+  hasAIReview,
   hasInstructorReview,
   hasPeerReview,
   hasSelfReview,
@@ -240,6 +241,10 @@ async function verifyAuthoringAndTestRun(page, manifest, quiz) {
   await expect(
     page.getByRole("heading", { name: new RegExp(quiz.title, "i") }).first(),
   ).toBeVisible({ timeout: 60_000 });
+  if (process.env.GRADING_AI_LIVE_TEST === "1" && hasAIReview(quiz)) {
+    await screenshot(page, manifest, quiz.key, "01-authoring-live-smoke.png");
+    return;
+  }
   await openTestRunDialog(page);
   await page.getByRole("button", { name: "Start test run" }).click();
 
@@ -574,7 +579,7 @@ async function synchronizeSubmission(
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
-  const submission = await request(
+  let submission = await request(
     instructor.client,
     "Synchronize runtime submission",
     {
@@ -582,12 +587,39 @@ async function synchronizeSubmission(
       path: `/v1/assessments/runtime-submissions/${submissionId}`,
     },
   );
+  while (
+    wait &&
+    hasAIReview(quiz) &&
+    !hasSettledAIReview(submission, hasInstructorReview(quiz))
+  ) {
+    if (Date.now() >= deadline) {
+      throw new Error(
+        `The AI review for "${quiz.key}" did not settle within 30 seconds.`,
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    submission = await request(
+      instructor.client,
+      "Wait for AI review submission",
+      {
+        method: "GET",
+        path: `/v1/assessments/runtime-submissions/${submissionId}`,
+      },
+    );
+  }
   const target = resources.submissions[personaKey];
   target.submissionId = submission.submissionId;
   target.gradingExecutionId = submission.execution?.executionId ?? null;
   target.gradeResultId = submission.execution?.activeRoundId ?? null;
   manifest.urls = buildScenarioUrls(manifest);
   return true;
+}
+
+function hasSettledAIReview(submission, requiresInstructor) {
+  if (requiresInstructor) {
+    return submission.execution?.requiresInstructorReview === true;
+  }
+  return submission.execution?.instructorVisibleResult?.state === "final";
 }
 
 async function refreshPersonaPage(page, manifest, personaKey) {

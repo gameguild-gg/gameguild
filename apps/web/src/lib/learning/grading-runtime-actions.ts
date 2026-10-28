@@ -531,6 +531,18 @@ export async function startAssessmentTestRun(
   );
 }
 
+export async function getAssessmentTestRun(
+  testRunId: string,
+): Promise<GradingRuntimeActionResult<AssessmentTestRunRuntimeViewV1>> {
+  return runtimeRequest(
+    'GET',
+    `/v1.0/assessments/test-runs/${encodeURIComponent(testRunId)}`,
+    undefined,
+    undefined,
+    normalizeTestRun,
+  );
+}
+
 export async function submitAssessmentTestRun(
   testRunId: string,
   response: AssessmentResponseEnvelopeV1,

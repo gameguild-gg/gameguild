@@ -22,11 +22,58 @@ export const AVAILABLE_PRIMARY_REVIEW_METHODS = [
   "SelfReview",
 ] as const satisfies readonly AssessmentReviewMethod[];
 
+export type AIReviewExecutionContext =
+  | "author-test"
+  | "official-submission";
+
+export interface AIReviewProviderCapability {
+  providerKey: string;
+  policyVersions: string[];
+  contexts: AIReviewExecutionContext[];
+  available: boolean;
+  code: string | null;
+  message: string | null;
+}
+
+export interface AIReviewConfiguration {
+  providerKey: string;
+  policyVersion: string;
+}
+
+const REQUIRED_AI_REVIEW_CONTEXTS = [
+  "author-test",
+  "official-submission",
+] as const satisfies readonly AIReviewExecutionContext[];
+
 export function isPrimaryReviewMethodAvailable(
   method: AssessmentReviewMethod,
+  aiReviewProviders: readonly AIReviewProviderCapability[] = [],
 ): boolean {
+  if (method === "AIReview") {
+    return resolveAIReviewConfiguration(aiReviewProviders) !== null;
+  }
   return (AVAILABLE_PRIMARY_REVIEW_METHODS as readonly AssessmentReviewMethod[])
     .includes(method);
+}
+
+export function resolveAIReviewConfiguration(
+  aiReviewProviders: readonly AIReviewProviderCapability[],
+): AIReviewConfiguration | null {
+  const provider = aiReviewProviders.find(
+    (candidate) =>
+      candidate.available &&
+      candidate.providerKey.trim().length > 0 &&
+      candidate.policyVersions.length > 0 &&
+      REQUIRED_AI_REVIEW_CONTEXTS.every((context) =>
+        candidate.contexts.includes(context),
+      ),
+  );
+  const policyVersion = provider?.policyVersions.find(
+    (candidate) => candidate.trim().length > 0,
+  );
+  return provider && policyVersion
+    ? { providerKey: provider.providerKey, policyVersion }
+    : null;
 }
 
 export const REVIEW_METHOD_LABELS: Record<AssessmentReviewMethod, string> = {

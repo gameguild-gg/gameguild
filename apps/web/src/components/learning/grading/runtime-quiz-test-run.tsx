@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import {
   claimTestRunPeerReview,
+  getAssessmentTestRun,
   getTestRunPeerReview,
   restartAssessmentTestRun,
   resolveTestRunInstructorReview,
@@ -122,6 +123,7 @@ export function RuntimeQuizTestRun({
   const activePeerClaim = peerClaims[activeSubjectKey] ?? null;
   const isPeerReview =
     (reviewMethods & REVIEW_METHOD_FLAGS.PeerReview) !== 0;
+  const isAIReview = (reviewMethods & REVIEW_METHOD_FLAGS.AIReview) !== 0;
   const items = execution ? readQuizItems(execution) : [];
   const scoreRows = items.map((item) => {
     const raw = scores[item.itemId]?.points ?? '';
@@ -233,14 +235,38 @@ export function RuntimeQuizTestRun({
       submitCommand.current.key,
       activeSubject?.subjectId === 'primary' ? undefined : activeSubject?.subjectId,
     );
-    setBusy(false);
     if (!result.success) {
+      setBusy(false);
       setError(result.error);
       return;
     }
+    const refreshed = isAIReview
+      ? await waitForAIReview(result.data)
+      : result.data;
+    setBusy(false);
     adoptRun(
-      result.data as AssessmentTestRunRuntimeViewV1<QuizLearnerDeliveryItemV1>,
+      refreshed as AssessmentTestRunRuntimeViewV1<QuizLearnerDeliveryItemV1>,
     );
+  }
+
+  async function waitForAIReview(
+    current: AssessmentTestRunRuntimeViewV1,
+  ): Promise<AssessmentTestRunRuntimeViewV1> {
+    const deadline = Date.now() + 30_000;
+    let latest = current;
+    while (!hasSettledAIReview(latest) && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const refreshed = await getAssessmentTestRun(latest.testRunId);
+      if (!refreshed.success) {
+        setError(refreshed.error);
+        return latest;
+      }
+      latest = refreshed.data;
+    }
+    if (!hasSettledAIReview(latest)) {
+      setError('AI review is still pending. Close and reopen the test run to refresh it.');
+    }
+    return latest;
   }
 
   async function resolveInstructorReview() {
@@ -852,6 +878,20 @@ export function RuntimeQuizTestRun({
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function hasSettledAIReview(run: AssessmentTestRunRuntimeViewV1): boolean {
+  const executions = run.subjects?.length
+    ? run.subjects.map((subject) => subject.execution)
+    : [run.execution];
+  const submitted = executions.filter(
+    (execution) => execution.submittedResponse != null,
+  );
+  return submitted.length > 0 && submitted.every(
+    (execution) =>
+      execution.instructorVisibleResult?.state === 'final' ||
+      execution.requiresInstructorReview,
   );
 }
 

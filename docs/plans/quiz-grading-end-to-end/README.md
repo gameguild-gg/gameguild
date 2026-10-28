@@ -9,7 +9,7 @@ integração.
 
 Data: 2026-08-21.
 
-Atualizado: 2026-10-17.
+Atualizado: 2026-10-28.
 
 ## Objetivo
 
@@ -37,6 +37,13 @@ inverte a dependência entre aplicação e scripts de teste e preserva Playwrigh
 apenas como runner automatizado. Ele também formaliza o núcleo genérico e os
 adapters específicos para que quiz não seja incorporado ao grading e futuros
 tipos, como code, possam ser registrados sem condicionais na UI.
+
+O plano de integração
+[`12-ai-review-provider-integration-and-validation.md`](./12-ai-review-provider-integration-and-validation.md)
+define como tornar `AIReview` executável usando `GameGuild.AI` por uma ponte no
+host, sem acoplar assessments a fornecedor ou quiz. Ele cobre configuração
+segura, contexto server-derived, saída estruturada, idempotência, capability
+dinâmica e testes determinísticos, mantendo chamadas reais como smoke opt-in.
 
 O documento anterior
 [`quiz-assessment-end-to-end-grading-flow.md`](../quiz-assessment-end-to-end-grading-flow.md)

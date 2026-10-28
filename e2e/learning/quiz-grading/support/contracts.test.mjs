@@ -62,6 +62,11 @@ test("scenario definitions expose canonical workflows and checkpoint applicabili
     getScenarioDefinition("automated-instructor").reviewMethodValue,
     12,
   );
+  assert.equal(getScenarioDefinition("ai-review").reviewMethodValue, 2);
+  assert.equal(
+    getScenarioDefinition("ai-instructor-review").reviewMethodValue,
+    10,
+  );
   assert.equal(checkpointIndex("released"), CHECKPOINTS.length - 1);
   assert.throws(
     () =>
@@ -144,6 +149,10 @@ test("browser validation boots the lean stack without SDK watchers", async () =>
   assert.match(supervisor, /DEV_FAST_WEB_BUNDLER: "turbopack"/);
   assert.match(supervisor, /DEV_FAST_WEB_MAX_OLD_SPACE_SIZE_MB/);
   assert.match(supervisor, /GRADING_VALIDATION_E2E: "1"/);
+  assert.match(
+    supervisor,
+    /Grading__AIReview__ControlledProviderEnabled: "true"/,
+  );
   assert.match(supervisor, /signalProcess\(dev, "SIGTERM"\)/);
 
   const devFast = await readFile(
@@ -172,6 +181,8 @@ test("review matrix keeps one isolated two-question quiz per executable workflow
       "automated",
       "instructor",
       "automated-instructor",
+      "ai-review",
+      "ai-instructor-review",
       "self",
       "self-instructor",
       "peer",
@@ -190,12 +201,18 @@ test("review matrix keeps one isolated two-question quiz per executable workflow
     assert.equal(quiz.expected.maxScore, 200);
   }
   assert.equal(expectedFinalScore(definition.quizzes[0]), 200);
-  assert.equal(expectedFinalScore(definition.quizzes[3]), 175);
+  assert.equal(expectedFinalScore(definition.quizzes[3]), 200);
   assert.equal(expectedFinalScore(definition.quizzes[5]), 175);
+  assert.equal(expectedFinalScore(definition.quizzes[7]), 175);
   assert.equal(
     expectedFinalScore(definition.quizzes[2]),
     175,
     "instructor review owns the final score when it follows another review",
+  );
+  assert.equal(
+    expectedFinalScore(definition.quizzes[4]),
+    175,
+    "instructor review owns the final score when it follows AI review",
   );
 });
 
@@ -538,8 +555,8 @@ test("quiz selection is ordered, rejects unknown keys, and drives the next check
     "release-ready",
   );
   assert.throws(
-    () => selectQuizDefinitions(definition, ["ai"]),
-    /has no quiz ai/,
+    () => selectQuizDefinitions(definition, ["unknown-review"]),
+    /has no quiz unknown-review/,
   );
 });
 

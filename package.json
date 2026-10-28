@@ -34,6 +34,8 @@
     "test:e2e": "turbo run test:e2e",
     "e2e": "playwright test",
     "grading:validation:contracts": "pnpm --filter @game-guild/web test:grading:validation && pnpm --filter @game-guild/grading test && pnpm --filter @game-guild/grading-adapter-quiz test && dotnet test apps/api/tests/GameGuild.Learning.Assessments.UnitTests/GameGuild.Learning.Assessments.UnitTests.csproj --filter FullyQualifiedName~QuizGradingAdapterContractTests",
+    "grading:validation:ai": "E2E_RUN=1 QUIZ_GRADING_SCENARIO=review-matrix QUIZ_GRADING_QUIZZES=ai-review,ai-instructor-review pnpm exec playwright test --config=playwright.grading.config.mjs",
+    "grading:validation:ai:live": "GRADING_AI_LIVE_TEST=1 E2E_RUN=1 QUIZ_GRADING_SCENARIO=ai-review pnpm exec playwright test --config=playwright.grading.config.mjs",
     "grading:validation:smoke": "E2E_RUN=1 QUIZ_GRADING_SCENARIO=review-matrix QUIZ_GRADING_QUIZZES=automated,automated-instructor pnpm exec playwright test --config=playwright.grading.config.mjs && E2E_RUN=1 QUIZ_GRADING_SCENARIO=question-type-matrix QUIZ_GRADING_CASES=QG-ITEM-SINGLE-CHOICE-001,QG-ITEM-FILL-TEXT-001,QG-ITEM-MATCHING-PARTIAL-001,QG-ITEM-ESSAY-001 pnpm exec playwright test --config=playwright.grading.config.mjs",
     "grading:validation:full": "E2E_RUN=1 QUIZ_GRADING_SCENARIO=acceptance-lab pnpm exec playwright test --config=playwright.grading.config.mjs && E2E_RUN=1 QUIZ_GRADING_SCENARIO=lifecycle-access-matrix pnpm exec playwright test --config=playwright.grading.config.mjs",
     "e2e:record": "node scripts/e2e-record.mjs",

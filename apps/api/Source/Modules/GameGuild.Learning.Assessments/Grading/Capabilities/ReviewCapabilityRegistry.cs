@@ -158,19 +158,43 @@ public sealed class AIReviewProviderRegistry : IAIReviewProviderRegistry
         _providers = candidates.ToDictionary(provider => provider.Key, StringComparer.Ordinal);
     }
 
+    public IReadOnlyList<AIReviewProviderCapabilityV1> Capabilities => _providers.Values
+        .OrderBy(provider => provider.Key, StringComparer.Ordinal)
+        .Select(provider => new AIReviewProviderCapabilityV1(
+            provider.Key,
+            provider.PolicyVersions,
+            provider.Contexts,
+            Readiness(provider)))
+        .ToArray();
+
     public IAIReviewProvider Resolve(
         string providerKey,
         string policyVersion,
         ReviewExecutionContext context)
     {
-        if (!_providers.TryGetValue(providerKey, out var provider) ||
-            !provider.PolicyVersions.Contains(policyVersion) ||
-            !provider.Contexts.Contains(context))
+        if (!_providers.TryGetValue(providerKey, out var provider))
         {
             throw new InvalidOperationException(
                 $"AI review provider {providerKey}@{policyVersion} is unavailable for {context}.");
         }
 
+        var readiness = Readiness(provider);
+        if (!readiness.Available ||
+            !provider.PolicyVersions.Contains(policyVersion) ||
+            !provider.Contexts.Contains(context))
+        {
+            var diagnostic = string.IsNullOrWhiteSpace(readiness.Code)
+                ? string.Empty
+                : $" ({readiness.Code})";
+            throw new InvalidOperationException(
+                $"AI review provider {providerKey}@{policyVersion} is unavailable for {context}{diagnostic}.");
+        }
+
         return provider;
     }
+
+    private static AIReviewProviderReadinessV1 Readiness(IAIReviewProvider provider) =>
+        provider is IAIReviewProviderReadiness readiness
+            ? readiness.GetReadiness()
+            : new AIReviewProviderReadinessV1(true);
 }

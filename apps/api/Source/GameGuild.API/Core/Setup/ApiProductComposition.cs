@@ -23,6 +23,7 @@ using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using GameGuild.LaunchPad;
 using GameGuild.Learning.Assessments;
+using GameGuild.Learning.Assessments.Grading.Abstractions;
 using GameGuild.Learning.Assessments.Grading.Code;
 using GameGuild.Learning.Assessments.QuizAdapter;
 using GameGuild.Learning.Certificates;
@@ -138,6 +139,14 @@ internal sealed class ApiProductComposition : IApiProductComposition
         new GameGuild.Social.Announcements.AnnouncementsModule().ConfigureServices(builder.Services, builder.Configuration);
         builder.Services.AddCoursesModule();
         builder.Services.AddAssessmentsModule();
+        builder.Services.Configure<GradingAIReviewOptions>(
+            builder.Configuration.GetSection(GradingAIReviewOptions.SectionName));
+        builder.Services.AddScoped<IAIReviewProvider, GradingAIReviewProvider>();
+        if ((builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing")) &&
+            builder.Configuration.GetValue<bool>("Grading:AIReview:ControlledProviderEnabled"))
+        {
+            builder.Services.AddScoped<IAIReviewProvider, ControlledGradingAIReviewProvider>();
+        }
         builder.Services.Configure<CodeGradingWorkerOptions>(builder.Configuration.GetSection(CodeGradingWorkerOptions.Section));
         builder.Services.AddSingleton<ICodeAssessmentExecutor, CodeGradingWorker>();
         builder.Services.AddQuizGradingAdapter();

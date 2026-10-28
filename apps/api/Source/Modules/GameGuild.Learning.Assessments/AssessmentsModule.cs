@@ -69,7 +69,7 @@ public static class AssessmentsModule
         services.AddSingleton<IAssessmentTypeAdapterResolver, AssessmentTypeAdapterResolver>();
         services.AddSingleton<IAssessmentExecutionPolicyResolver, AssessmentExecutionPolicyResolver>();
         services.AddSingleton<IReviewStageHandlerResolver, ReviewStageHandlerResolver>();
-        services.AddSingleton<IAIReviewProviderRegistry, AIReviewProviderRegistry>();
+        services.AddScoped<IAIReviewProviderRegistry, AIReviewProviderRegistry>();
         services.AddSingleton<InstructorReviewStageHandler>();
         services.AddSingleton<IReviewStageHandler>(provider => provider.GetRequiredService<InstructorReviewStageHandler>());
         services.AddSingleton<SelfReviewStageHandler>();

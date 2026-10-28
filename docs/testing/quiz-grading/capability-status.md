@@ -37,7 +37,8 @@ browser case has not yet been promoted by a successful recorded execution.
 | `QG-REVIEW-PEER-001`                 | `pass`             | browser + API, C3/C5     | learning-assessments | None                                                                |
 | `QG-REVIEW-PEER-INSTRUCTOR-001`      | `pass`             | browser + API, C3/C5     | learning-assessments | None                                                                |
 | `QG-REVIEW-COLLECTIVE-001`           | `pass`             | API/runtime, C4/C5       | learning-assessments | Browser is not required for the shared-result contract              |
-| `QG-REVIEW-AI-001`                   | `external-blocker` | fail-closed contract, C4 | learning-assessments | Optional: approve and register a provider before an executable case |
+| `QG-REVIEW-AI-001`                   | `external-blocker` | provider + browser candidate, C4 | learning-assessments | Review controlled and opt-in provider evidence before promotion |
+| `QG-REVIEW-AI-INSTRUCTOR-001`        | `external-blocker` | provider + browser candidate, C4 | learning-assessments | Review provisional AI and final instructor evidence before promotion |
 
 ## Question types
 

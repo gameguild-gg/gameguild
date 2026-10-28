@@ -871,8 +871,13 @@ public sealed class AssessmentGradingRuntimeTests
 
         await harness.DispatchAIReviewAsync(request.Id);
         await harness.DispatchAIReviewAsync(request.Id);
+        harness.AIProvider.Invocations.Should().HaveCount(requireInstructorReview ? 2 : 1);
+        harness.AIProvider.Invocations.Last().TenantId.Should().Be(harness.TenantId);
+        harness.AIProvider.Invocations.Last().ActorId.Should().Be(harness.InstructorId);
         (await harness.Context.Set<ReviewEvidence>().CountAsync(value =>
             value.EvidenceType == "ai-review-response")).Should().Be(1);
+        (await harness.Context.Set<GradingCommandReceipt>().CountAsync(value =>
+            value.CommandType == "ai-review-provider-response")).Should().Be(1);
         var afterAI = await harness.Runtime.GetTestRunAsync(run.TestRunId, harness.InstructorId);
         if (requireInstructorReview)
         {
@@ -943,6 +948,32 @@ public sealed class AssessmentGradingRuntimeTests
 
         resolve.Should().Throw<InvalidOperationException>()
             .WithMessage("*unavailable for OfficialSubmission*");
+    }
+
+    [Fact]
+    public void AIReviewProviderReadinessIsSanitizedAndFailsClosed()
+    {
+        var provider = new ControlledAIReviewProvider
+        {
+            Readiness = new AIReviewProviderReadinessV1(
+                false,
+                "credential-missing",
+                "The configured provider has no server credential."),
+        };
+        var registry = new AIReviewProviderRegistry([provider]);
+
+        registry.Capabilities.Should().ContainSingle().Which.Should().BeEquivalentTo(
+            new AIReviewProviderCapabilityV1(
+                ControlledAIReviewProvider.ProviderKey,
+                provider.PolicyVersions,
+                provider.Contexts,
+                provider.Readiness));
+        var resolve = () => registry.Resolve(
+            ControlledAIReviewProvider.ProviderKey,
+            "1",
+            ReviewExecutionContext.AuthorTest);
+        resolve.Should().Throw<InvalidOperationException>()
+            .WithMessage("*credential-missing*");
     }
 
     [Fact]
@@ -2037,7 +2068,7 @@ public sealed class AssessmentGradingRuntimeTests
         }
     }
 
-    private sealed class ControlledAIReviewProvider : IAIReviewProvider
+    private sealed class ControlledAIReviewProvider : IAIReviewProvider, IAIReviewProviderReadiness
     {
         public const string ProviderKey = "controlled-ai";
 
@@ -2050,13 +2081,19 @@ public sealed class AssessmentGradingRuntimeTests
         };
         public bool FailNext { get; set; }
         public List<Guid> RequestIds { get; } = [];
+        public List<AIReviewProviderInvocationV1> Invocations { get; } = [];
+        public AIReviewProviderReadinessV1 Readiness { get; set; } = new(true);
+
+        public AIReviewProviderReadinessV1 GetReadiness() => Readiness;
 
         public ValueTask<AIReviewProviderResponseV1> ReviewAsync(
-            AIReviewProviderRequestV1 request,
+            AIReviewProviderInvocationV1 invocation,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            var request = invocation.Request;
             RequestIds.Add(request.RequestId);
+            Invocations.Add(invocation);
             if (FailNext)
             {
                 FailNext = false;
@@ -2393,7 +2430,7 @@ public sealed class AssessmentGradingRuntimeTests
             using var services = new ServiceCollection()
                 .AddSingleton<IGradingExecutionOrchestrator>(Orchestrator)
                 .BuildServiceProvider();
-            var consumer = new AIReviewRequestConsumer(AIProviders, services);
+            var consumer = new AIReviewRequestConsumer(AIProviders, Context, services);
             await consumer.ConsumeAsync(new AcademicOutboxEvent(
                 message.Id,
                 message.TenantId,
