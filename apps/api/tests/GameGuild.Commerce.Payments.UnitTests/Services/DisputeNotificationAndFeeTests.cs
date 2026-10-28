@@ -103,6 +103,42 @@ public class DisputeNotificationAndFeeTests
     }
 
     [Fact]
+    public async Task ListOpenDisputesApproachingDeadlineAsync_IncludesDueDateOnlyDisputes_Issue419EffectiveDeadline()
+    {
+        await using var context = await CreateContextAsync();
+        // DueDate-only dispute (no gateway evidence deadline): the effective deadline falls
+        // back to DueDate so the reminder no longer skips it (issue #419 gap).
+        var dueDateOnly = OpenDispute(evidenceDueBy: null);
+        dueDateOnly.Submit(SystemClock.UtcNow.AddDays(3));
+        var dueDateOnlyLater = OpenDispute(evidenceDueBy: null);
+        dueDateOnlyLater.Submit(SystemClock.UtcNow.AddDays(30));
+        context.Set<PaymentDispute>().AddRange(dueDateOnly, dueDateOnlyLater);
+        await context.SaveChangesAsync();
+        var service = CreateService(context, emails: []);
+
+        var approaching = await service.ListOpenDisputesApproachingDeadlineAsync(daysWithin: 7);
+
+        approaching.Should().ContainSingle(dispute => dispute.Id == dueDateOnly.Id);
+    }
+
+    [Fact]
+    public async Task ListOpenDisputesApproachingDeadlineAsync_UsesEvidenceDueByOverTheEarlierDueDate()
+    {
+        await using var context = await CreateContextAsync();
+        // Both deadlines present: the gateway evidence deadline is authoritative even when
+        // the local DueDate is earlier, so the reminder is not sent prematurely.
+        var bothDeadlines = OpenDispute(evidenceDueBy: SystemClock.UtcNow.AddDays(20));
+        bothDeadlines.Submit(SystemClock.UtcNow.AddDays(2));
+        context.Set<PaymentDispute>().Add(bothDeadlines);
+        await context.SaveChangesAsync();
+        var service = CreateService(context, emails: []);
+
+        var approaching = await service.ListOpenDisputesApproachingDeadlineAsync(daysWithin: 7);
+
+        approaching.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task SendDeadlineReminderAsync_EmailsTheConfiguredRecipients()
     {
         var service = CreateService(await CreateContextAsync(), emails: ["support@example.com"]);
