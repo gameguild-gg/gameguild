@@ -122,6 +122,7 @@ jobs:
           node --test scripts/ci/tests/classify-release-changes.test.mjs scripts/ci/tests/select-affected-dotnet-tests.test.mjs scripts/ci/tests/postgres-images.test.mjs scripts/ci/tests/pull-ci-image.test.mjs scripts/ci/tests/emception-web-artifacts.test.mjs apps/web/scripts/coding-cycle-editor-support.test.mjs apps/web/scripts/coding-cycle-toolchain-support.test.mjs
           node --test scripts/ci/tests/dotnet-cache-policy.test.mjs
           node --test scripts/ci/tests/api-integration-filter.test.mjs
+          node --test scripts/ci/tests/pr-required-gate.test.mjs
           python3 -m unittest discover -s scripts/ci/tests -p 'acquire_emception_release_test.py'
       - name: Test docker build-context invariants
         run: node --test scripts/ci/tests/dockerignore-pnpm-patches.test.mjs scripts/ci/tests/dockerignore-api-analyzer-config.test.mjs
@@ -601,6 +602,7 @@ jobs:
           REPOSITORY_POLICY: ${{ needs.repository-policy.result }}
           WEB: ${{ needs.web.result }}
           API: ${{ needs.api.result }}
+          API_SELECTED: ${{ needs.classify.outputs.api }}
           TESTING_LAB: ${{ needs.testing-lab.result }}
           OPENAPI: ${{ needs.openapi.result }}
           MIGRATION: ${{ needs.migration.result }}
@@ -617,7 +619,10 @@ jobs:
           check secret-scan "$SECRET_SCAN"
           check repository-policy "$REPOSITORY_POLICY"
           check web "$WEB"
-          check api "$API"
+          case "$API_SELECTED:$API" in
+            false:skipped) ;;
+            *) check api "$API" ;;
+          esac
           if [ "$ECONOMY_SELECTED" = "true" ]; then
             for g in economy economy-api economy-client economy-coverage economy-regression; do
               case "$g" in
