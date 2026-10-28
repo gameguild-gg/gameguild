@@ -229,7 +229,6 @@ function GradingPanelSession({
     }
     acceptRuntimeSubmission(result.data);
     onReviewStateChanged?.(result.data);
-    router.refresh();
   }
 
   async function releaseResult() {
@@ -330,7 +329,6 @@ function GradingPanelSession({
     acceptRuntimeSubmission(result.data);
     setRegradeReason('');
     onReviewStateChanged?.(result.data);
-    router.refresh();
   }
 
   return (
