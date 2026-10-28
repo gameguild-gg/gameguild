@@ -34,7 +34,7 @@ gate_stage='dependencies'
 bash "$script_dir/install-and-audit-pnpm.sh"
 
 gate_stage='code-toolchain-contracts'
-node --test "$repository_root/apps/web/scripts/coding-cycle-toolchain-support.test.mjs"
+node --test "$repository_root/apps/web/scripts/coding-cycle-toolchain-support.test.mjs" "$repository_root/tools/emception/scripts/tests/ci-release-policy.test.mjs"
 
 gate_stage='policy-tests'
 bash "$script_dir/tests/verify-economy.sh"
