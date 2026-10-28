@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Data.Common;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
@@ -83,10 +84,12 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
         using (var scope = factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var operations = await db.Set<OutboxMessage>().AsNoTracking()
-                .Where(value => value.ActorId == owner.User.Id && value.EventName == "platform.use-case-operation.occurred.v1").ToListAsync();
+            var operations = factory.Services.GetRequiredService<OperationEnvelopeObserver>().Operations.Values
+                .Where(value => value.ActorId == owner.User.Id).ToArray();
             var operation = Assert.Single(operations, value =>
                 DurableEventSerializer.Deserialize(value) is UseCaseOperationOccurredV1 { CommandType: nameof(RevokeAllUserTokensCommand) });
+            Assert.True(await PersistedOperationIds(db, [operation.EventId]).AnyAsync(),
+                "The observed operation must be durable, either queued or successfully retired.");
             using var operationData = JsonDocument.Parse(operation.Payload);
             Assert.Equal(nameof(RevokeAllUserTokensCommand), operationData.RootElement.GetProperty("commandType").GetString());
             Assert.Equal("identity.authentication.revoke-all-user-tokens", operationData.RootElement.GetProperty("operationCode").GetString());
@@ -353,6 +356,9 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             });
+            var observer = new OperationEnvelopeObserver();
+            services.AddSingleton(observer);
+            services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(observer));
             configure?.Invoke(services);
         }));
 
@@ -442,10 +448,62 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
     private static async Task AssertNoOperationAsync(WebApplicationFactory<Program> factory, Account account)
     {
         using var scope = factory.Services.CreateScope();
-        var operations = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<OutboxMessage>().AsNoTracking()
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var operations = await db.Set<OutboxMessage>().AsNoTracking()
             .Where(value => value.ActorId == account.User.Id && value.EventName == "platform.use-case-operation.occurred.v1").ToListAsync();
         Assert.DoesNotContain(operations, value =>
             DurableEventSerializer.Deserialize(value) is UseCaseOperationOccurredV1 { CommandType: nameof(RevokeAllUserTokensCommand) });
+        var observedIds = factory.Services.GetRequiredService<OperationEnvelopeObserver>().Operations.Values
+            .Where(value => value.ActorId == account.User.Id
+                && DurableEventSerializer.Deserialize(value) is UseCaseOperationOccurredV1 { CommandType: nameof(RevokeAllUserTokensCommand) })
+            .Select(value => value.EventId).ToArray();
+        Assert.Empty(await PersistedOperationIds(db, observedIds).ToListAsync());
+    }
+
+    private static IQueryable<Guid> PersistedOperationIds(ApplicationDbContext db, Guid[] eventIds) =>
+        db.Set<OutboxMessage>().Where(message => eventIds.Contains(message.EventId)).Select(message => message.EventId)
+            .Concat(db.Set<OutboxDeliveryReceipt>()
+                .Where(receipt => eventIds.Contains(receipt.EventId) && receipt.CompletedAtUtc != null)
+                .Select(receipt => receipt.EventId));
+
+    private sealed class OperationEnvelopeObserver : SaveChangesInterceptor
+    {
+        public ConcurrentDictionary<Guid, OutboxMessage> Operations { get; } = new();
+
+        public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
+        {
+            Capture(eventData.Context);
+            return base.SavingChanges(eventData, result);
+        }
+
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken)
+        {
+            Capture(eventData.Context);
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
+
+        private void Capture(DbContext? context)
+        {
+            if (context is not null)
+            {
+                foreach (var entry in context.ChangeTracker.Entries<OutboxMessage>()
+                    .Where(value => value.State == EntityState.Added
+                        && value.Entity.EventName == "platform.use-case-operation.occurred.v1"))
+                {
+                    var message = entry.Entity;
+                    Operations[message.EventId] = new OutboxMessage
+                    {
+                        EventId = message.EventId, TenantId = message.TenantId, ActorId = message.ActorId,
+                        EventName = message.EventName, EventType = message.EventType, SourceModule = message.SourceModule,
+                        AggregateType = message.AggregateType, AggregateId = message.AggregateId,
+                        CorrelationId = message.CorrelationId, CausationId = message.CausationId,
+                        OccurredAtUtc = message.OccurredAtUtc, SchemaVersion = message.SchemaVersion,
+                        Payload = message.Payload, CreatedAtUtc = message.CreatedAtUtc
+                    };
+                }
+            }
+        }
     }
 
     private sealed record Account(User User, Guid TenantId, List<UserSession> Sessions, List<string> RawTokens);

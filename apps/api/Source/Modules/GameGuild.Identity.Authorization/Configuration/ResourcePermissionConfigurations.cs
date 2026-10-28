@@ -22,12 +22,14 @@ public class ResourceUserPermissionConfiguration : IEntityTypeConfiguration<Reso
         builder.HasIndex(e => e.ExpiresAt);
 
         builder.Property(e => e.TenantId)
+            .UsePropertyAccessMode(PropertyAccessMode.Property)
             .HasConversion(
                 v => v.Value,
                 v => new TenantId(v))
             .IsRequired();
 
         builder.Property(e => e.UserId)
+            .UsePropertyAccessMode(PropertyAccessMode.Property)
             .IsRequired();
 
         builder.Property(e => e.ResourceType)

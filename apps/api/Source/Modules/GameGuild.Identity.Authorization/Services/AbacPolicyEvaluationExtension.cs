@@ -94,11 +94,11 @@ public sealed class AbacPolicyEvaluationExtension(
 
         logger.LogWarning(
             "ABAC deny policy {PolicyName} ({PolicyId}) subtracted {DenyCount} permission(s) from the effective set of user {UserId} in tenant {TenantId}.",
-            decidingDetail?.PolicyName ?? evaluation.DecidingPolicyName,
-            evaluation.DecidingPolicyId,
+            LogRedaction.ProtectIdentifier(decidingDetail?.PolicyName ?? evaluation.DecidingPolicyName),
+            LogRedaction.ProtectIdentifier(evaluation.DecidingPolicyId),
             denies.Length,
-            context.UserId,
-            context.TenantId);
+            LogRedaction.ProtectIdentifier(context.UserId),
+            LogRedaction.ProtectIdentifier(context.TenantId));
 
         return new PermissionEvaluationExtensionResult(
             AdditionalAllows: Array.Empty<string>(),

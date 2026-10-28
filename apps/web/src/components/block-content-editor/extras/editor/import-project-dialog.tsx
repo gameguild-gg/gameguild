@@ -18,6 +18,22 @@ import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
 
 const assetRepository = getDefaultBrowserAssetRepository()
 
+function getImportErrorDescription(error: unknown, fallback: string): string {
+  if (typeof error === "object" && error !== null && "message" in error
+    && typeof error.message === "string" && error.message) {
+    return error.message
+  }
+  return fallback
+}
+
+function isFileEntry(entry: FileSystemEntry): entry is FileSystemFileEntry {
+  return entry.isFile
+}
+
+function isDirectoryEntry(entry: FileSystemEntry): entry is FileSystemDirectoryEntry {
+  return entry.isDirectory
+}
+
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
   save: (id: string, name: string, data: string, tags: string[], storageType?: StorageType, preferences?: ProjectPreferences) => Promise<void>
@@ -30,8 +46,8 @@ interface ImportProjectDialogProps {
   storageAdapter: StorageAdapter
   availableTags: Array<{ name: string }>
   onProjectCreate: (projectData: { id: string; name: string; tags: string[] }) => void
-  onProjectsListUpdate: () => void
-  onAvailableTagsUpdate: () => void
+  onProjectsListUpdate: () => void | Promise<void>
+  onAvailableTagsUpdate: () => void | Promise<void>
   generateProjectId: () => string
   onOpenProject?: (projectData: { id: string; name: string; tags: string[] }) => void
 }
@@ -39,7 +55,6 @@ interface ImportProjectDialogProps {
 export function ImportProjectDialog({
   open,
   onOpenChange,
-  isDbInitialized,
   storageAdapter,
   availableTags,
   onProjectCreate,
@@ -103,10 +118,10 @@ export function ImportProjectDialog({
       }
       const importedData = await ProjectImporter.importFromFile(file)
       applyImportedData(importedData, file.name)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Import error:", error)
       toast.error("Import failed", {
-        description: error.message || "Failed to import project file",
+        description: getImportErrorDescription(error, "Failed to import project file"),
         duration: 4000,
         icon: "❌",
       })
@@ -116,12 +131,12 @@ export function ImportProjectDialog({
   const handleFolderUpload = async (files: File[]) => {
     try {
       const importedData = await ProjectImporter.importFromFolder(files)
-      const folderLabel = (files[0] as any)?.webkitRelativePath?.split('/')[0] || 'folder'
+      const folderLabel = files[0]?.webkitRelativePath?.split('/')[0] || 'folder'
       applyImportedData(importedData, folderLabel)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Folder import error:", error)
       toast.error("Import failed", {
-        description: error.message || "Failed to import project folder",
+        description: getImportErrorDescription(error, "Failed to import project folder"),
         duration: 4000,
         icon: "❌",
       })
@@ -129,8 +144,8 @@ export function ImportProjectDialog({
   }
 
   // Recursively read files from a dropped directory entry
-  const readEntriesAsFiles = async (entry: any, pathPrefix = ""): Promise<File[]> => {
-    if (entry.isFile) {
+  const readEntriesAsFiles = async (entry: FileSystemEntry, pathPrefix = ""): Promise<File[]> => {
+    if (isFileEntry(entry)) {
       return new Promise<File[]>((resolve, reject) => {
         entry.file((file: File) => {
           // Patch webkitRelativePath so importFromFolder can locate inner paths
@@ -146,12 +161,12 @@ export function ImportProjectDialog({
         }, reject)
       })
     }
-    if (entry.isDirectory) {
+    if (isDirectoryEntry(entry)) {
       const reader = entry.createReader()
-      const allEntries: any[] = []
+      const allEntries: FileSystemEntry[] = []
       // readEntries returns batches; loop until empty
       while (true) {
-        const batch: any[] = await new Promise((resolve, reject) => reader.readEntries(resolve, reject))
+        const batch = await new Promise<FileSystemEntry[]>((resolve, reject) => reader.readEntries(resolve, reject))
         if (!batch.length) break
         allEntries.push(...batch)
       }
@@ -167,28 +182,36 @@ export function ImportProjectDialog({
     e.preventDefault()
     setIsDragOver(false)
 
-    const items = e.dataTransfer.items
-    if (items && items.length > 0) {
-      // Detect directory drops
-      const entries: any[] = []
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i]
-        const entry = item && (item as any).webkitGetAsEntry ? (item as any).webkitGetAsEntry() : null
-        if (entry) entries.push(entry)
-      }
-      const dirEntry = entries.find((entry) => entry?.isDirectory)
-      if (dirEntry) {
-        const collected = await readEntriesAsFiles(dirEntry)
-        if (collected.length > 0) {
-          await handleFolderUpload(collected)
-          return
+    try {
+      const items = e.dataTransfer.items
+      if (items && items.length > 0) {
+        // Detect directory drops
+        const entries: FileSystemEntry[] = []
+        for (let i = 0; i < items.length; i++) {
+          const entry = items[i]?.webkitGetAsEntry?.()
+          if (entry) entries.push(entry)
+        }
+        const dirEntry = entries.find(isDirectoryEntry)
+        if (dirEntry) {
+          const collected = await readEntriesAsFiles(dirEntry)
+          if (collected.length > 0) {
+            await handleFolderUpload(collected)
+            return
+          }
         }
       }
-    }
 
-    const files = Array.from(e.dataTransfer.files)
-    if (files.length > 0) {
-      handleFileUpload(files[0] as File)
+      const file = e.dataTransfer.files[0]
+      if (file) {
+        await handleFileUpload(file)
+      }
+    } catch (error: unknown) {
+      console.error("Folder import error:", error)
+      toast.error("Import failed", {
+        description: getImportErrorDescription(error, "Failed to import project folder"),
+        duration: 4000,
+        icon: "❌",
+      })
     }
   }
 
@@ -203,9 +226,9 @@ export function ImportProjectDialog({
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (files && files.length > 0) {
-      handleFileUpload(files[0] as File)
+    const file = e.target.files?.[0]
+    if (file) {
+      void handleFileUpload(file)
     }
     // Reset so the same file can be re-selected later
     e.target.value = ""
@@ -214,7 +237,7 @@ export function ImportProjectDialog({
   const handleFolderSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (files && files.length > 0) {
-      handleFolderUpload(Array.from(files))
+      void handleFolderUpload(Array.from(files))
     }
     e.target.value = ""
   }
@@ -249,26 +272,26 @@ export function ImportProjectDialog({
 
 
 
-    // Check if project with same name already exists
-    const existingProjects = await storageAdapter.list()
-    if (existingProjects.some((p) => p.name === projectName.trim())) {
-      let suggestedName = `${projectName.trim()}-imported`
-      let counter = 1
+    try {
+      // Check if project with same name already exists
+      const existingProjects = await storageAdapter.list()
+      if (existingProjects.some((p) => p.name === projectName.trim())) {
+        let suggestedName = `${projectName.trim()}-imported`
+        let counter = 1
 
-      while (existingProjects.some((p) => p.name === suggestedName)) {
-        counter++
-        suggestedName = `${projectName.trim()}-imported-${counter}`
+        while (existingProjects.some((p) => p.name === suggestedName)) {
+          counter++
+          suggestedName = `${projectName.trim()}-imported-${counter}`
+        }
+
+        toast.error("Name already exists", {
+          description: `Project "${projectName.trim()}" already exists. Suggestion: ${suggestedName}`,
+          duration: 5000,
+          icon: "🚫",
+        })
+        return
       }
 
-      toast.error("Name already exists", {
-        description: `Project "${projectName.trim()}" already exists. Suggestion: ${suggestedName}`,
-        duration: 5000,
-        icon: "🚫",
-      })
-      return
-    }
-
-    try {
       const newProjectId = generateProjectId()
       
       // Save project with preferences
@@ -324,7 +347,7 @@ export function ImportProjectDialog({
         duration: 3000,
         icon: "🎉",
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Save error:", error)
       toast.error("Failed to save project", {
         description: "Could not save the imported project. Please try again.",
@@ -362,7 +385,7 @@ export function ImportProjectDialog({
                   ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
                   : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
               }`}
-              onDrop={handleDrop}
+              onDrop={(event) => { void handleDrop(event) }}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
             >
@@ -608,12 +631,12 @@ export function ImportProjectDialog({
               <>
                 <Button
                   variant="outline"
-                  onClick={() => handleSave(false)}
+                  onClick={() => { void handleSave(false) }}
                   disabled={!projectName.trim() || projectTags.length === 0}
                 >
                   Save and Exit
                 </Button>
-                <Button onClick={() => handleSave(true)} disabled={!projectName.trim() || projectTags.length === 0}>
+                <Button onClick={() => { void handleSave(true) }} disabled={!projectName.trim() || projectTags.length === 0}>
                   Save and Open
                 </Button>
               </>

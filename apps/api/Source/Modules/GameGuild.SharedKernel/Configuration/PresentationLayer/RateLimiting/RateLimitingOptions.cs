@@ -371,22 +371,7 @@ public sealed class RateLimitingOptions : BaseOptions
             throw new InvalidOperationException("Rate-limiting exempt paths must be non-empty paths beginning with '/'.");
         }
 
-        if (TrustedProxyAddresses is null || TrustedProxyAddresses.Any(address =>
-                string.IsNullOrWhiteSpace(address) || !IPAddress.TryParse(address, out _)))
-        {
-            throw new InvalidOperationException("Rate-limiting trusted proxy addresses must be valid IP addresses.");
-        }
-
-        if (TrustedProxyNetworks is null || TrustedProxyNetworks.Any(network =>
-                string.IsNullOrWhiteSpace(network) || !IPNetwork.TryParse(network, out _)))
-        {
-            throw new InvalidOperationException("Rate-limiting trusted proxy networks must be valid IPv4/IPv6 CIDR networks.");
-        }
-
-        if (TrustedProxyForwardLimit <= 0)
-        {
-            throw new InvalidOperationException("Rate-limiting trusted proxy forward limit must be greater than zero.");
-        }
+        ValidateTrustedProxySettings();
 
         if (Policies is null)
         {
@@ -427,6 +412,29 @@ public sealed class RateLimitingOptions : BaseOptions
             }
 
             policy.Validate(name);
+        }
+    }
+
+    /// <summary>
+    ///     Validates proxy trust without requiring request throttling to be enabled.
+    /// </summary>
+    public void ValidateTrustedProxySettings()
+    {
+        if (TrustedProxyAddresses is null || TrustedProxyAddresses.Any(address =>
+                string.IsNullOrWhiteSpace(address) || !IPAddress.TryParse(address, out _)))
+        {
+            throw new InvalidOperationException("Rate-limiting trusted proxy addresses must be valid IP addresses.");
+        }
+
+        if (TrustedProxyNetworks is null || TrustedProxyNetworks.Any(network =>
+                string.IsNullOrWhiteSpace(network) || !IPNetwork.TryParse(network, out _)))
+        {
+            throw new InvalidOperationException("Rate-limiting trusted proxy networks must be valid IPv4/IPv6 CIDR networks.");
+        }
+
+        if (TrustedProxyForwardLimit <= 0)
+        {
+            throw new InvalidOperationException("Rate-limiting trusted proxy forward limit must be greater than zero.");
         }
     }
 

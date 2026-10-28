@@ -38,9 +38,12 @@ public sealed class RefreshTokenRepositoryPostgreSqlTests(ApiPostgreSqlFixture f
         var actor = new Mock<IActorContextAccessor>();
         actor.SetupGet(value => value.ActorContext).Returns(ActorContext.Anonymous);
         var behavior = new UseCaseOperationBehavior<TransactionProbeCommand, object>(context, actor.Object, accessor);
-        var beforeOutbox = await context.Set<OutboxMessage>().CountAsync();
+        var operationCorrelationId = Guid.Empty;
         async Task<object> Mutation()
         {
+            var operationContext = accessor.Current;
+            Assert.NotNull(operationContext);
+            operationCorrelationId = operationContext.CorrelationId;
             var stored = await context.Set<RefreshToken>().SingleAsync(value => value.Id == token.Id);
             stored.IsRevoked = true;
             stored.RevokedAt = now;
@@ -61,7 +64,18 @@ public sealed class RefreshTokenRepositoryPostgreSqlTests(ApiPostgreSqlFixture f
         using var verification = fixture.Factory.Services.CreateScope();
         var db = verification.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Assert.Equal(commit, (await db.Set<RefreshToken>().AsNoTracking().SingleAsync(value => value.Id == token.Id)).IsRevoked);
-        Assert.Equal(beforeOutbox + (commit ? 1 : 0), await db.Set<OutboxMessage>().CountAsync());
+        Assert.NotEqual(Guid.Empty, operationCorrelationId);
+        // The dispatcher can retire completed payloads while this shared host is running.
+        // Check only this operation's durable identity in one database snapshot.
+        var storedEvents = await db.Set<OutboxMessage>()
+            .Where(message => message.CorrelationId == operationCorrelationId)
+            .Select(message => message.EventId)
+            .Concat(db.Set<OutboxDeliveryReceipt>()
+                .Where(receipt => receipt.CorrelationId == operationCorrelationId && receipt.CompletedAtUtc != null)
+                .Select(receipt => receipt.EventId))
+            .Distinct()
+            .CountAsync();
+        Assert.Equal(commit ? 1 : 0, storedEvents);
     }
 
     [Theory]

@@ -2,11 +2,20 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Data.Common;
 using Microsoft.Extensions.DependencyInjection;
 using GameGuild.API.Database;
+using GameGuild.API.Database.Migrations;
+using GameGuild.API.Core.Integration;
+using GameGuild.Commerce.Billing;
 using GameGuild.API.Eventing;
 using GameGuild.API.IntegrationTests.Infrastructure;
 using GameGuild.TestSupport.Finance.Economy;
+using GameGuild.Identity.Authentication;
 using Npgsql;
 
 namespace GameGuild.API.IntegrationTests;
@@ -56,6 +65,11 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
                 PRIMARY KEY ("EventId", "ConsumerName")
             );
             """;
+        await command.ExecuteNonQueryAsync();
+        command.CommandText = string.Join(Environment.NewLine,
+            new RetireCompletedOutboxMessages().UpOperations
+                .OfType<Microsoft.EntityFrameworkCore.Migrations.Operations.SqlOperation>()
+                .Select(operation => operation.Sql));
         await command.ExecuteNonQueryAsync();
     }
 
@@ -237,6 +251,388 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         (await context.Set<OutboxMessage>().SingleAsync()).DeadLetteredAtUtc.Should().NotBeNull();
     }
 
+    [Fact]
+    public async Task Cleanup_RetiresOnlySuccessfulUnleasedMessagesAndKeepsCompactHttpIdentity()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var successful = NewMessage("successful", now);
+        successful.SourceModule = "Platform.Http";
+        successful.CompletedAtUtc = now;
+        var pending = NewMessage("pending", now);
+        var dead = NewMessage("dead", now);
+        dead.DeadLetteredAtUtc = now;
+        var leased = NewMessage("leased", now);
+        leased.CompletedAtUtc = now;
+        leased.ClaimedUntilUtc = now.AddMinutes(1);
+        var unfinished = NewMessage("unfinished", now);
+        unfinished.CompletedAtUtc = now;
+        var historicalFailure = NewMessage("historical-failure", now);
+        historicalFailure.CompletedAtUtc = now;
+        var futureCompletion = NewMessage("future-completion", now);
+        futureCompletion.CompletedAtUtc = now.AddMinutes(1);
+        await InsertAsync(provider, successful, pending, dead, leased, unfinished, historicalFailure, futureCompletion,
+            Receipt(successful, now, completed: true, dead: false),
+            Receipt(unfinished, now, completed: false, dead: false),
+            Receipt(historicalFailure, now, completed: false, dead: true));
+
+        Assert.Equal(1, await CleanupOnceAsync(provider));
+        await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var remaining = await db.Set<OutboxMessage>().Select(message => message.EventId).ToListAsync();
+        remaining.Should().BeEquivalentTo(new[] { pending.EventId, dead.EventId, leased.EventId,
+            unfinished.EventId, historicalFailure.EventId, futureCompletion.EventId });
+        Assert.Equal(2, await db.Set<InboxReceipt>().CountAsync());
+        var retired = await db.Set<OutboxDeliveryReceipt>().SingleAsync(value => value.CompletedAtUtc != null);
+        Assert.Equal(successful.EventId, retired.EventId);
+        Assert.Equal(now, retired.CompletedAtUtc);
+        Assert.Null(retired.EventName);
+        Assert.Null(retired.SourceModule);
+        Assert.Null(retired.AggregateId);
+        Assert.False(await new EventReplayService(db, TimeProvider.System)
+            .ReplayAsync(successful.EventId, "cleanup.consumer"));
+        await DurableEventDeliveryWaiter.WaitForCompletionAsync(provider, successful.EventId);
+    }
+
+    [Fact]
+    public async Task Cleanup_RollbackRestoresPayloadAndConsumerReceiptTogether()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var completed = NewMessage("rollback", now);
+        completed.CompletedAtUtc = now;
+        await InsertAsync(provider, completed, Receipt(completed, now, completed: true, dead: false));
+        await using var original = provider.CreateAsyncScope();
+        var storedPayload = await original.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+            .Set<OutboxMessage>().AsNoTracking().Select(message => message.Payload).SingleAsync();
+        await using (var scope = provider.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            await using var transaction = await db.Database.BeginTransactionAsync();
+            Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<OutboxCleanupService>()
+                .CleanupCompletedAsync(CancellationToken.None));
+            Assert.Empty(await db.Set<OutboxMessage>().ToListAsync());
+            await transaction.RollbackAsync();
+        }
+        await using var verify = provider.CreateAsyncScope();
+        var context = verify.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(storedPayload, (await context.Set<OutboxMessage>().SingleAsync()).Payload);
+        Assert.Single(await context.Set<InboxReceipt>().ToListAsync());
+        Assert.Null((await context.Set<OutboxDeliveryReceipt>().SingleAsync()).CompletedAtUtc);
+    }
+
+    [Fact]
+    public async Task Cleanup_MigrationRollbackAndReupgradeKeepRetiredIdentityProtected()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var message = NewMessage("migration-rollback", now);
+        message.CompletedAtUtc = now;
+        await InsertAsync(provider, message);
+        Assert.Equal(1, await CleanupOnceAsync(provider));
+
+        var migration = new RetireCompletedOutboxMessages();
+        await using var migrationScope = provider.CreateAsyncScope();
+        var migrationDb = migrationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await migrationDb.Database.OpenConnectionAsync();
+        var generator = migrationDb.GetService<IMigrationsSqlGenerator>();
+        var connection = migrationDb.GetService<IRelationalConnection>();
+        foreach (var operations in new[] { migration.DownOperations, migration.UpOperations })
+        {
+            foreach (var command in generator.Generate(operations, model: null))
+            {
+                await command.ExecuteNonQueryAsync(connection, parameterValues: null, cancellationToken: CancellationToken.None);
+            }
+
+            await using var verify = provider.CreateAsyncScope();
+            var db = verify.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            Assert.Empty(await db.Set<OutboxMessage>().ToListAsync());
+            var receipt = await db.Set<OutboxDeliveryReceipt>().SingleAsync();
+            Assert.Equal(message.EventId, receipt.EventId);
+            Assert.Equal(now, receipt.CompletedAtUtc);
+            db.Add(message);
+            var error = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+            Assert.Equal(PostgresErrorCodes.UniqueViolation, ((PostgresException)error.InnerException!).SqlState);
+        }
+    }
+
+    [Fact]
+    public async Task UseCaseVerifier_AcceptsOperationAndDeclaredEventsAfterPayloadRetirement()
+    {
+        await ResetAsync();
+        var operation = new UseCaseOperationContext("test.retired-operation", nameof(LocalSignInCommand),
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
+        operation.MarkBusinessMutationObserved();
+        var operationEvent = operation.GetOrCreateOperationEvent("Fixture", "retired-operation");
+        var declaredEvent = new PostgresEvent
+        {
+            EventId = Guid.NewGuid(), TenantId = operation.TenantId, ActorId = operation.ActorId,
+            CorrelationId = operation.CorrelationId, AggregateType = "Fixture", AggregateId = "retired-declaration",
+            OccurredAt = operationEvent.OccurredAt
+        };
+        var now = DateTimeOffset.UtcNow;
+        await using var provider = BuildProvider(new MutableTimeProvider(now), services =>
+            services.AddScoped<IUseCaseEventVerifier, UseCaseEventVerifier>());
+        var generic = NewMessage(operationEvent, now);
+        var declared = NewMessage(declaredEvent, now);
+        generic.CompletedAtUtc = now;
+        declared.CompletedAtUtc = now;
+        await InsertAsync(provider, generic, declared);
+        Assert.Equal(2, await CleanupOnceAsync(provider));
+
+        await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Empty(await db.Set<OutboxMessage>().ToListAsync());
+        Assert.Equal(2, await db.Set<OutboxDeliveryReceipt>().CountAsync(receipt =>
+            receipt.CorrelationId == operation.CorrelationId && receipt.CompletedAtUtc != null));
+        var contract = new UseCaseEventContract(typeof(LocalSignInCommand), operation.OperationCode,
+            [typeof(PostgresEvent)], [], null, null, null);
+        await scope.ServiceProvider.GetRequiredService<IUseCaseEventVerifier>()
+            .VerifyAsync(contract, operation, CancellationToken.None);
+    }
+
+    [Theory]
+    [InlineData("reservation-only")]
+    [InlineData("other-correlation")]
+    [InlineData("missing-declaration")]
+    public async Task UseCaseVerifier_RejectsIncompleteOrUnrelatedRetirementEvidence(string evidence)
+    {
+        await ResetAsync();
+        var now = DateTimeOffset.UtcNow;
+        await using var provider = BuildProvider(new MutableTimeProvider(now), services =>
+            services.AddScoped<IUseCaseEventVerifier, UseCaseEventVerifier>());
+        var operation = new UseCaseOperationContext("test.retirement-denial", nameof(LocalSignInCommand),
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null);
+        operation.MarkBusinessMutationObserved();
+        var storedCorrelation = evidence == "other-correlation" ? Guid.NewGuid() : operation.CorrelationId;
+        await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Add(new OutboxDeliveryReceipt
+        {
+            EventId = Guid.NewGuid(), CorrelationId = storedCorrelation,
+            EventType = DurableIntegrationEventValidator.GetStableTypeName(typeof(UseCaseOperationOccurredV1)),
+            CompletedAtUtc = evidence == "reservation-only" ? null : now
+        });
+        if (evidence != "missing-declaration")
+        {
+            db.Add(new OutboxDeliveryReceipt
+            {
+                EventId = Guid.NewGuid(), CorrelationId = storedCorrelation,
+                EventType = DurableIntegrationEventValidator.GetStableTypeName(typeof(PostgresEvent)),
+                CompletedAtUtc = evidence == "reservation-only" ? null : now
+            });
+        }
+        await db.SaveChangesAsync();
+        var contract = new UseCaseEventContract(typeof(LocalSignInCommand), operation.OperationCode,
+            [typeof(PostgresEvent)], [], null, null, null);
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            scope.ServiceProvider.GetRequiredService<IUseCaseEventVerifier>()
+                .VerifyAsync(contract, operation, CancellationToken.None));
+        Assert.Contains(evidence == "missing-declaration"
+            ? "missing declared durable events" : "without its durable operation event", error.Message);
+    }
+
+    [Fact]
+    public async Task Cleanup_ConcurrentWorkersRetireDisjointBoundedBatches()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var messages = Enumerable.Range(0, 1100).Select(index =>
+        {
+            var message = NewMessage($"batch-{index}", now);
+            message.CompletedAtUtc = now;
+            return message;
+        }).ToArray();
+        await InsertAsync(provider, messages.Cast<object>().ToArray());
+
+        var counts = await Task.WhenAll(CleanupOnceAsync(provider), CleanupOnceAsync(provider));
+        Assert.Equal(1100, counts.Sum());
+        Assert.All(counts, count => Assert.InRange(count, 0, 1000));
+        Assert.Equal(0, await CleanupOnceAsync(provider));
+        await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Empty(await db.Set<OutboxMessage>().ToListAsync());
+        Assert.Equal(1100, await db.Set<OutboxDeliveryReceipt>().CountAsync(value => value.CompletedAtUtc != null));
+    }
+
+    [Fact]
+    public async Task Cleanup_SkipsReplayParentLockAndPreservesReplayedWork()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var replayed = NewMessage("replayed", now);
+        replayed.CompletedAtUtc = now;
+        var other = NewMessage("other", now);
+        other.CompletedAtUtc = now;
+        await InsertAsync(provider, replayed, other, Receipt(replayed, now, completed: true, dead: false));
+        await using var replayScope = provider.CreateAsyncScope();
+        var db = replayScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await using var transaction = await db.Database.BeginTransactionAsync();
+        // The public replay path takes the parent lock before changing child receipts.
+        Assert.True(await new EventReplayService(db, new MutableTimeProvider(now))
+            .ReplayAsync(replayed.EventId, "cleanup.consumer"));
+        Assert.Equal(1, await CleanupOnceAsync(provider).WaitAsync(TimeSpan.FromSeconds(10)));
+        await transaction.CommitAsync();
+        Assert.Equal(0, await CleanupOnceAsync(provider));
+        await using var verify = provider.CreateAsyncScope();
+        var message = await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+            .Set<OutboxMessage>().SingleAsync();
+        Assert.Equal(replayed.EventId, message.EventId);
+        Assert.Null(message.CompletedAtUtc);
+    }
+
+    [Fact]
+    public async Task Cleanup_BillingReadModelPreservesCompletedMetadataAndPagination()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var first = NewMessage("invoice-first", now.AddMinutes(-2));
+        first.SourceModule = "Commerce.Billing";
+        first.CompletedAtUtc = now;
+        var second = NewMessage("invoice-second", now.AddMinutes(-1));
+        second.SourceModule = "Commerce.Billing";
+        second.CompletedAtUtc = now;
+        var pending = NewMessage("invoice-pending", now);
+        pending.SourceModule = "Commerce.Billing";
+        await InsertAsync(provider, first, second, pending);
+        await using var scope = provider.CreateAsyncScope();
+        var reader = new BillingOutboxEventReader(scope.ServiceProvider.GetRequiredService<ApplicationDbContext>());
+        var before = await reader.ListAsync(0, 20, null, null, null, null, CancellationToken.None);
+
+        Assert.Equal(2, await CleanupOnceAsync(provider));
+        var after = await reader.ListAsync(0, 20, null, null, null, null, CancellationToken.None);
+        after.Should().Equal(before);
+        Assert.Equal(before.Single(value => value.EventId == first.EventId), await reader.GetByIdAsync(first.EventId));
+        Assert.Equal(2, await reader.CountAsync(first.EventName, BillingOutboxEventStatus.Completed,
+            now.AddMinutes(-3), now, CancellationToken.None));
+        var page = await reader.ListAsync(1, 1, null, null, null, null, CancellationToken.None);
+        page.Should().Equal(before.Skip(1).Take(1));
+    }
+
+    [Theory]
+    [InlineData(System.Data.IsolationLevel.ReadCommitted, false)]
+    [InlineData(System.Data.IsolationLevel.ReadCommitted, true)]
+    [InlineData(System.Data.IsolationLevel.RepeatableRead, false)]
+    [InlineData(System.Data.IsolationLevel.RepeatableRead, true)]
+    public async Task Cleanup_RawPublisherCannotReinsertRetiredIdentityFromOlderSnapshot(
+        System.Data.IsolationLevel isolation, bool legacy)
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        await using var provider = BuildProvider(new MutableTimeProvider(now), _ => { });
+        var message = NewMessage("deduplication", now);
+        message.CompletedAtUtc = now;
+        await InsertAsync(provider, message);
+        if (legacy)
+        {
+            // This disposable fixture also covers envelopes created before identity reservation existed.
+            await using var legacyScope = provider.CreateAsyncScope();
+            await legacyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+                .Set<OutboxDeliveryReceipt>().Where(value => value.EventId == message.EventId).ExecuteDeleteAsync();
+        }
+        await using var snapshotScope = provider.CreateAsyncScope();
+        var db = snapshotScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await using var transaction = await db.Database.BeginTransactionAsync(isolation);
+        Assert.True(await db.Set<OutboxMessage>().AnyAsync(value => value.EventId == message.EventId));
+        Assert.Equal(1, await CleanupOnceAsync(provider));
+
+        // Repeatable read still sees the old envelope. A raw write must nevertheless
+        // fail through the permanent unique identity, not enqueue a second delivery.
+        if (isolation == System.Data.IsolationLevel.ReadCommitted)
+        {
+            db.Add(message);
+            var error = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+            Assert.Equal(PostgresErrorCodes.UniqueViolation, ((PostgresException)error.InnerException!).SqlState);
+        }
+        else
+        {
+            var error = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO "gameguild.integration".outbox_messages
+                SELECT * FROM "gameguild.integration".outbox_messages WHERE "EventId" = {message.EventId}
+                """));
+            Assert.Contains(error.SqlState, new[] { PostgresErrorCodes.UniqueViolation, PostgresErrorCodes.SerializationFailure });
+        }
+        await transaction.RollbackAsync();
+        await using var verify = provider.CreateAsyncScope();
+        Assert.Empty(await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<OutboxMessage>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Cleanup_BetweenExpiredClaimFinalizers_DoesNotCreateTransportFailureOrRedeliver()
+    {
+        await ResetAsync();
+        var now = new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero);
+        var clock = new MutableTimeProvider(now);
+        var barrier = new FinalizationBarrier();
+        var handler = new RecordingHandler();
+        await using var provider = BuildProvider(clock, services =>
+        {
+            services.AddSingleton<IIntegrationEventHandler<PostgresEvent>>(handler);
+            services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(barrier));
+        });
+        var message = NewMessage("expired-finalizer", now);
+        await InsertAsync(provider, message);
+        var first = DispatchOnceAsync(provider);
+        try
+        {
+            await barrier.Blocked.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            clock.Advance(TimeSpan.FromMinutes(3));
+            await DispatchOnceAsync(provider).WaitAsync(TimeSpan.FromSeconds(15));
+            Assert.Equal(1, await CleanupOnceAsync(provider));
+        }
+        finally
+        {
+            barrier.Release.TrySetResult();
+            await first.WaitAsync(TimeSpan.FromSeconds(15));
+        }
+        Assert.Single(handler.Events);
+        await using var verify = provider.CreateAsyncScope();
+        var db = verify.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Empty(await db.Set<OutboxMessage>().ToListAsync());
+        Assert.Empty(await db.Set<InboxReceipt>().ToListAsync());
+        Assert.NotNull((await db.Set<OutboxDeliveryReceipt>().SingleAsync()).CompletedAtUtc);
+    }
+
+    private sealed class FinalizationBarrier : DbCommandInterceptor
+    {
+        private int _finalizers;
+        public TaskCompletionSource Blocked { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public override async ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+            DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result,
+            CancellationToken cancellationToken)
+        {
+            if (command.CommandText.Contains("SELECT \"EventId\" AS \"Value\"", StringComparison.Ordinal)
+                && Interlocked.Increment(ref _finalizers) == 1)
+            {
+                Blocked.TrySetResult();
+                await Release.Task.WaitAsync(cancellationToken);
+            }
+            return await base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
+        }
+    }
+
+    private static InboxReceipt Receipt(OutboxMessage message, DateTimeOffset now, bool completed, bool dead) => new()
+    {
+        EventId = message.EventId, ConsumerName = "cleanup.consumer", AttemptCount = 1,
+        NextAttemptAtUtc = now, UpdatedAtUtc = now,
+        CompletedAtUtc = completed ? now : null, DeadLetteredAtUtc = dead ? now : null
+    };
+
+    private static async Task<int> CleanupOnceAsync(IServiceProvider provider)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<OutboxCleanupService>()
+            .CleanupCompletedAsync(CancellationToken.None);
+    }
+
     private ServiceProvider BuildProvider(MutableTimeProvider clock, Action<IServiceCollection> addHandlers)
     {
         var services = new ServiceCollection();
@@ -244,6 +640,7 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         services.AddSingleton<TimeProvider>(clock);
         services.AddScoped<IInboxStore, InboxStore>();
         services.AddScoped<IOutboxDispatcher, OutboxDispatcher>();
+        services.AddScoped<OutboxCleanupService>();
         services.AddLogging();
         addHandlers(services);
         return services.BuildServiceProvider();
@@ -254,7 +651,7 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         await using var connection = new NpgsqlConnection(_database.ConnectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "TRUNCATE TABLE \"gameguild.integration\".\"inbox_receipts\", \"gameguild.integration\".\"outbox_messages\"";
+        command.CommandText = "TRUNCATE TABLE \"gameguild.integration\".\"inbox_receipts\", \"gameguild.integration\".\"outbox_messages\", \"gameguild.integration\".\"outbox_delivery_receipts\"";
         await command.ExecuteNonQueryAsync();
     }
 
@@ -285,13 +682,18 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
             CorrelationId = Guid.NewGuid(),
             OccurredAt = occurredAt.UtcDateTime
         };
+        return NewMessage(integrationEvent, occurredAt);
+    }
+
+    private static OutboxMessage NewMessage(IDurableIntegrationEvent integrationEvent, DateTimeOffset createdAt)
+    {
         return new OutboxMessage
         {
             EventId = integrationEvent.EventId,
             TenantId = integrationEvent.TenantId,
             ActorId = integrationEvent.ActorId,
             EventName = integrationEvent.EventName,
-            EventType = $"{typeof(PostgresEvent).FullName}, {typeof(PostgresEvent).Assembly.GetName().Name}",
+            EventType = DurableIntegrationEventValidator.GetStableTypeName(integrationEvent.GetType()),
             SourceModule = integrationEvent.SourceModule,
             AggregateType = integrationEvent.AggregateType,
             AggregateId = integrationEvent.AggregateId,
@@ -299,7 +701,7 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
             OccurredAtUtc = integrationEvent.OccurredAt,
             SchemaVersion = integrationEvent.SchemaVersion,
             Payload = JsonSerializer.Serialize(integrationEvent, integrationEvent.GetType(), new JsonSerializerOptions(JsonSerializerDefaults.Web)),
-            CreatedAtUtc = occurredAt
+            CreatedAtUtc = createdAt
         };
     }
 

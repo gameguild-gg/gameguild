@@ -177,8 +177,8 @@ public enum GatewayFailureKind
     NotApplicable = 0,
 
     /// <summary>
-    ///     The gateway itself failed transiently (transport error, rate limit, 5xx)
-    ///     without confirming a provider payment object. Eligible for a same-gateway
+    ///     The gateway authoritatively rejected the attempt before any payment could
+    ///     be processed. Absence of a response or object id is not such proof. Eligible for a same-gateway
     ///     retry and, once that budget is spent, failover to the next-priority gateway.
     /// </summary>
     RetriableGatewayFailure = 1,

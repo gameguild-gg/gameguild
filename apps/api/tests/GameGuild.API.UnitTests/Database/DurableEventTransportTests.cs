@@ -676,6 +676,47 @@ public sealed class DurableEventTransportTests
             .Should().Be(1);
     }
 
+    [Fact]
+    public async Task RetiredDelivery_IsNotProducedAgainAndCannotCommitDuplicateBusinessMutation()
+    {
+        var successful = new SuccessfulHandler();
+        var clock = new MutableTimeProvider(new DateTimeOffset(2026, 10, 25, 17, 0, 0, TimeSpan.Zero));
+        await using var provider = NewDispatcherServices(Guid.NewGuid().ToString(), clock, successful).BuildServiceProvider();
+        var tenant = NewTenant();
+        var integrationEvent = NewEvent(tenant.Id);
+        tenant.AddIntegrationEvent(integrationEvent);
+        await using (var arrange = provider.CreateAsyncScope())
+        {
+            var db = arrange.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.Add(tenant);
+            await db.SaveChangesAsync();
+        }
+        await using (var dispatch = provider.CreateAsyncScope())
+        {
+            await dispatch.ServiceProvider.GetRequiredService<IOutboxDispatcher>().DispatchPendingAsync();
+        }
+        await using (var retire = provider.CreateAsyncScope())
+        {
+            var db = retire.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            Assert.Equal(1, await new OutboxCleanupService(db, clock).CleanupCompletedAsync(CancellationToken.None));
+            await new DurableEventProducer(db).RecordAsync(integrationEvent);
+            Assert.Empty(await db.Set<OutboxMessage>().ToListAsync());
+            Assert.Equal(1, (await new EventReplayService(db, clock).GetStatusAsync()).Completed);
+        }
+        await using (var mutate = provider.CreateAsyncScope())
+        {
+            var db = mutate.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var current = await db.Set<Tenant>().SingleAsync(value => value.Id == tenant.Id);
+            current.Name = "Must not commit";
+            current.AddIntegrationEvent(integrationEvent);
+            await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        }
+        await using var verify = provider.CreateAsyncScope();
+        Assert.Equal(tenant.Name, (await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+            .Set<Tenant>().SingleAsync(value => value.Id == tenant.Id)).Name);
+        Assert.Equal(1, successful.Calls);
+    }
+
     private static Tenant NewTenant() => new()
     {
         Id = Guid.NewGuid(),

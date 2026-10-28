@@ -9,6 +9,46 @@ namespace GameGuild.Commerce.Payments.UnitTests.Commands;
 
 public class ProcessPaymentCommandHandlerTests
 {
+    [Theory]
+    [InlineData(PaymentStatus.Processing, GatewayFailureKind.OutcomeUnknown)]
+    [InlineData(PaymentStatus.Failed, GatewayFailureKind.OutcomeUnknown)]
+    [InlineData(PaymentStatus.Processing, GatewayFailureKind.NotApplicable)]
+    public async Task Handle_UnconfirmedCharge_RetainsItsClaimWithoutSchedulingAnotherAttempt(
+        PaymentStatus providerStatus, GatewayFailureKind failureKind)
+    {
+        var fixture = CreateFixture();
+        Payment? persisted = null;
+        fixture.PaymentRepository.Setup(repository => repository.AddAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()))
+            .Callback<Payment, CancellationToken>((payment, _) => persisted = payment)
+            .ReturnsAsync((Payment payment, CancellationToken _) => payment);
+        fixture.PaymentContextService.Setup(service => service.GetPaymentContextAsync(fixture.SubscriptionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SubscriptionPaymentContext(fixture.SubscriptionId, fixture.TenantId, 25m, "USD", "cus_123"));
+        fixture.PaymentGateway.Setup(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayPaymentResult(false, null, null, "response_unconfirmed", "Response lost after send",
+                providerStatus, SystemClock.UtcNow, ProviderId: "stripe", FailureKind: failureKind));
+
+        var result = await fixture.Handler.Handle(
+            new ProcessPaymentCommand(fixture.TenantId, fixture.SubscriptionId, 25m, "pm_test"), CancellationToken.None);
+
+        result.Success.Should().BeFalse();
+        result.Status.Should().Be(PaymentStatus.Pending);
+        CommandOutcome.IsFailure(result).Should().BeTrue();
+        CommandOutcome.ShouldRollback(result).Should().BeFalse("the recorded attempt must survive the outer command transaction");
+        persisted.Should().NotBeNull();
+        persisted!.Status.Should().Be(PaymentStatus.Pending);
+        persisted.NextRetryAt.Should().BeNull();
+        persisted.CanRetry.Should().BeFalse();
+        fixture.SyncService.VerifyNoOtherCalls();
+        fixture.PaymentGateway.Verify(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void UnrecordedPaymentFailures_KeepTheOrdinaryRollbackContract()
+    {
+        CommandOutcome.ShouldRollback(PaymentResult.Failed("Synthetic unrecorded failure")).Should().BeTrue();
+        CommandOutcome.ShouldRollback(new PaymentRetryResult { Success = false }).Should().BeTrue();
+    }
+
     [Fact]
     public async Task Handle_ShouldFailClosed_WhenSubscriptionDoesNotExist()
     {

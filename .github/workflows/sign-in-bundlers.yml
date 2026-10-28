@@ -1,0 +1,74 @@
+name: Sign-in bundler regression
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - '.github/workflows/sign-in-bundlers.yml'
+      - '.github/actions/setup-node-workspace/**'
+      - '.github/actions/setup-playwright/**'
+      - 'apps/web/**'
+      - 'packages/features/web3/**'
+      - 'packages/infrastructure/client/**'
+      - 'packages/ui/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/ci/**'
+  push:
+    branches: [develop, main]
+    paths:
+      - '.github/workflows/sign-in-bundlers.yml'
+      - '.github/actions/setup-node-workspace/**'
+      - '.github/actions/setup-playwright/**'
+      - 'apps/web/**'
+      - 'packages/features/web3/**'
+      - 'packages/infrastructure/client/**'
+      - 'packages/ui/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/ci/**'
+
+permissions:
+  contents: read
+
+jobs:
+  sign-in:
+    name: Sign-in rendering (${{ matrix.mode }}, SDK ${{ matrix.sdk }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [webpack, turbopack-fast]
+        sdk: [absent, installed]
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-node-workspace
+      - uses: ./.github/actions/setup-playwright
+      - name: Build the standard API client
+        run: pnpm --filter @game-guild/client build
+      - name: Build the client selected by dev:fast
+        if: matrix.mode == 'turbopack-fast'
+        run: pnpm --filter @game-guild/client build:fast
+      - name: Prepare and verify the optional SDK installation state
+        run: node --max-old-space-size=128 apps/web/scripts/prepare-walletconnect-bundler-smoke.mjs '${{ matrix.sdk }}' '${{ github.workspace }}/artifacts/sign-in-bundlers/${{ matrix.mode }}-${{ matrix.sdk }}'
+      - name: Check the Web3 type contract without the optional SDK
+        if: matrix.sdk == 'absent'
+        run: pnpm --filter @game-guild/web3 typecheck
+      - name: Verify the Web3 adapter contracts
+        if: matrix.sdk == 'installed'
+        run: pnpm --filter @game-guild/web3 test
+      - name: Compile and hydrate the actual sign-in route
+        working-directory: apps/web
+        run: node --max-old-space-size=128 scripts/sign-in-bundler-smoke.mjs '${{ matrix.mode }}' '${{ github.workspace }}/artifacts/sign-in-bundlers/${{ matrix.mode }}-${{ matrix.sdk }}' '${{ matrix.sdk }}'
+      - name: Retain source-bound rendering evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: sign-in-bundler-${{ matrix.mode }}-${{ matrix.sdk }}-${{ github.sha }}
+          if-no-files-found: error
+          path: artifacts/sign-in-bundlers/${{ matrix.mode }}-${{ matrix.sdk }}/

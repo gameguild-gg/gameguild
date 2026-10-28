@@ -26,6 +26,10 @@ public sealed class ProcessPaymentCommandHandler(
 {
     private const string SubscriptionInvoiceKind = "subscription";
 
+    // Returned only after the gateway outcome and required payment writes complete.
+    // A business failure must retain that recorded attempt, including unknown charges.
+    private sealed class RecordedPaymentResult : PaymentResult, ICommitOnFailureOutcome { }
+
     public async Task<PaymentResult> Handle(ProcessPaymentCommand request, CancellationToken cancellationToken)
     {
         var subscription = await subscriptionPaymentContextService.GetPaymentContextAsync(request.SubscriptionId, cancellationToken)
@@ -174,8 +178,9 @@ public sealed class ProcessPaymentCommandHandler(
             }
         }
 
-        // 4. Mark as processing
-        payment.MarkAsProcessing();
+        // 4. Persist a local claim before invoking the provider. Unmapped Stripe
+        // remains Pending until a verified mapping permits Processing.
+        GatewayPaymentResultBinder.PrepareProcessingClaim(payment);
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
 
         // 5. Process through payment gateway — or settle entirely with credits when they
@@ -214,6 +219,7 @@ public sealed class ProcessPaymentCommandHandler(
         // mapped provider stays authoritative (RecordProcessingProvider is a no-op).
         payment.RecordProcessingProvider(gatewayResult.ProviderId ?? paymentGateway.ProviderId);
         GatewayPaymentResultBinder.BindVerifiedProviderMapping(payment, payment.Provider, gatewayResult);
+        GatewayPaymentResultBinder.PrepareProcessingClaim(payment);
 
         // 6. Update payment based on gateway result
         if (gatewayResult.Success)
@@ -229,6 +235,13 @@ public sealed class ProcessPaymentCommandHandler(
         {
             payment.MarkAsRequiresAction(gatewayResult.TransactionId);
             logger.LogInformation("Payment {PaymentId} requires additional action", payment.Id);
+        }
+        else if (gatewayResult.FailureKind == GatewayFailureKind.OutcomeUnknown
+                 || gatewayResult.Status is PaymentStatus.Pending or PaymentStatus.Processing)
+        {
+            // The provider may already have charged. Keep the persisted processing
+            // claim; a failure retry would create another monetary attempt.
+            logger.LogWarning("Payment {PaymentId} awaits provider reconciliation", payment.Id);
         }
         else
         {
@@ -289,7 +302,7 @@ public sealed class ProcessPaymentCommandHandler(
         }
 
         if (!gatewayResult.Success
-            && gatewayResult.Status != PaymentStatus.RequiresAction
+            && payment.Status == PaymentStatus.Failed
             && payment.RetryCount == 1
             && subscription.OwnerUserId.HasValue)
         {
@@ -306,7 +319,7 @@ public sealed class ProcessPaymentCommandHandler(
         }
 
         // 7. Return result
-        return new PaymentResult
+        return new RecordedPaymentResult
         {
             TenantId = payment.TenantId,
             Success = gatewayResult.Success,
@@ -364,6 +377,7 @@ public sealed class ProcessPaymentCommandHandler(
 
         payment.RecordCreditApplied(appliedCredit);
         var settlementReference = $"account-credit:{payment.Id}";
+        if (payment.Status == PaymentStatus.Pending) payment.MarkAsProcessing();
         payment.MarkAsSucceeded(settlementReference, settlementReference);
 
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);

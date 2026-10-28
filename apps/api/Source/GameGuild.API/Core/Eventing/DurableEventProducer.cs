@@ -18,6 +18,13 @@ internal sealed class DurableEventProducer(ApplicationDbContext context) : IDura
             return;
         }
 
+        if (await context.Set<OutboxDeliveryReceipt>()
+                .AnyAsync(receipt => receipt.EventId == integrationEvent.EventId, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            return;
+        }
+
         context.Set<OutboxMessage>().Add(new OutboxMessage
         {
             EventId = integrationEvent.EventId,

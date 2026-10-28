@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils"
 import { GripVertical } from "lucide-react"
 import type React from "react"
+import type { OnMount } from "@monaco-editor/react"
 import { ContentEditMenu, type EditMenuOption } from "../../content-edit-menu"
 import { CodeEditor } from "../code-editor"
 import { FileTabs } from "../file-tabs"
@@ -10,7 +11,10 @@ import { SettingsPanel } from "../settings-panel"
 import { Terminal } from "../terminal"
 import type { CodeFile, ProgrammingLanguage } from "../types"
 
-interface SourceCodeEditorViewProps {
+type TerminalTestBindings = Pick<React.ComponentProps<typeof Terminal>,
+  "testCases" | "addTestCase" | "removeTestCase" | "updateTestCase" | "testResults" | "runTests">
+
+interface SourceCodeEditorViewProps extends TerminalTestBindings {
   // File management
   files: CodeFile[]
   activeFileId: string
@@ -35,7 +39,7 @@ interface SourceCodeEditorViewProps {
   // Handlers
   handleCodeEditorResize: (e: React.MouseEvent, initialY: number) => void
   handleTerminalResize: (e: React.MouseEvent, initialY: number) => void
-  handleEditorMount: (editor: any, monaco: any) => void
+  handleEditorMount: OnMount
   updateActiveFileContent: (content: string) => void
   isFileReadOnly: (file: CodeFile, readonly: boolean) => boolean
 
@@ -57,9 +61,9 @@ interface SourceCodeEditorViewProps {
   getBaseName: (name: string) => string
   getExtensionForSelectedLanguage: () => string
   getAllowedProgrammingLanguages: () => ProgrammingLanguage[]
-  getLanguageLabel: (lang: any) => string
-  getFileIcon: (file: CodeFile) => any
-  getStateIcon: (file: CodeFile) => any
+  getLanguageLabel: (lang: string) => string
+  getFileIcon: (file: CodeFile) => React.ReactNode
+  getStateIcon: (file: CodeFile) => React.ReactNode
 
   // Drag and drop
   draggedFileId: string | null
@@ -90,12 +94,6 @@ interface SourceCodeEditorViewProps {
   activeTab: "terminal" | "tests"
   setActiveTab: (tab: "terminal" | "tests") => void
   showTests: boolean
-  testCases: any
-  addTestCase: any
-  removeTestCase: any
-  updateTestCase: any
-  testResults: any
-  runTests: any
   addSolutionTemplate?: () => void
   addCustomTestFiles?: (testIndex: number) => void
 
