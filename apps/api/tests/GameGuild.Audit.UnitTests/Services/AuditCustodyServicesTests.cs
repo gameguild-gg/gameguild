@@ -5,7 +5,6 @@ using GameGuild.Compliance.Audit;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Notifications;
 using GameGuild.Notifications.Services;
-using GameGuild.SharedKernel.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -210,7 +209,7 @@ public sealed class LegalHoldServiceTests : AuditCustodyServiceTestBase
         var pipelineNotification = PipelineNotification();
         _notifications
             .Setup(service => service.SendAsync(
-                It.Is<Guid?>(recipientId => recipientId is null),
+                It.Is<Guid?>(recipientId => recipientId == null),
                 NotificationType.LegalHoldNotice,
                 It.IsAny<string>(),
                 It.IsAny<string>(),

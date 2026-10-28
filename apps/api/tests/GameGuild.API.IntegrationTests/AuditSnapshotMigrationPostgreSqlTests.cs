@@ -2,6 +2,7 @@ using GameGuild.API.Database;
 using GameGuild.API.IntegrationTests.Infrastructure;
 using GameGuild.Compliance.Audit;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
@@ -25,6 +26,7 @@ public sealed class AuditSnapshotMigrationPostgreSqlTests(ApiPostgreSqlFixture f
     private static readonly Type[] AuditStores =
     [
         typeof(MutationValueSnapshot), typeof(MutationValuePayloadChunk),
+        typeof(MutationValueSnapshotArchive),
         typeof(ValueSnapshotRetentionPolicy), typeof(ValueSnapshotRetentionExecution),
         typeof(ValueSnapshotRollbackPlan), typeof(CustodyEvidenceItem), typeof(CustodyEvent),
         typeof(EvidenceCustodian), typeof(EvidenceTransfer), typeof(LegalHold),
@@ -115,6 +117,106 @@ public sealed class AuditSnapshotMigrationPostgreSqlTests(ApiPostgreSqlFixture f
     {
         using var scope = fixture.Factory.Services.CreateScope();
         await AssertStoresReadableAsync(scope.ServiceProvider.GetRequiredService<ApplicationDbContext>());
+    }
+
+    /// <summary>
+    ///     Focused PostgreSQL regression (issues #176): a legal hold keeps held snapshots' complete
+    ///     values on the hot rows, and once the hold lifts, the archive tier persists a durable,
+    ///     readable archive copy before stripping the hot representation.
+    /// </summary>
+    [Fact]
+    public async Task RetentionKeepsHeldValuesAndArchivesReadablyOnPostgres()
+    {
+        var tenant = Guid.NewGuid();
+        var before = """{"Title":"Held","Secret":"before"}""";
+        var after = """{"Title":"Held","Secret":"after"}""";
+        await using var scope = fixture.Factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        context.Set<MutationValueSnapshot>().Add(new MutationValueSnapshot
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenant,
+            EntityName = nameof(Tenant),
+            KeyId = "held-1",
+            ChangeKind = "Modified",
+            BeforePayload = before,
+            AfterPayload = after,
+            BeforeStoredSha256 = "b-hash",
+            AfterStoredSha256 = "a-hash",
+            StructuredDiffJson = """[{"Field":"Secret","Before":"before","After":"after"}]""",
+            DiffCount = 1,
+            StorageMode = "Delta",
+            OccurredAtUtc = DateTimeOffset.UtcNow.AddDays(-30)
+        });
+        await context.SaveChangesAsync();
+
+        var actors = services.GetRequiredService<IActorContextAccessor>();
+        actors.SetActorContext(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = Guid.NewGuid().ToString(),
+            TenantId = tenant,
+            IsAuthenticated = true,
+            Roles = new HashSet<string> { "TenantAdmin" },
+            Permissions = new HashSet<string>()
+        });
+        try
+        {
+            var retention = services.GetRequiredService<IValueSnapshotRetentionService>();
+            await retention.ConfigurePolicyAsync(new ConfigureValueSnapshotRetentionRequest
+            {
+                RetentionDays = 90,
+                ArchiveAfterDays = 7,
+                LegalHoldUntilUtc = DateTime.UtcNow.AddDays(10)
+            }, default);
+
+            var held = await retention.EnforceAsync(new EnforceValueSnapshotRetentionRequest(), default);
+            Assert.True(held.LegalHoldActive);
+            Assert.Equal(0, held.ArchivedCount);
+            var heldRow = await context.Set<MutationValueSnapshot>().AsNoTracking()
+                .SingleAsync(row => row.TenantId == tenant);
+            Assert.Equal(before, heldRow.BeforePayload);
+            Assert.Equal(after, heldRow.AfterPayload);
+            Assert.Null(heldRow.ArchivedAtUtc);
+            Assert.False(await context.Set<MutationValueSnapshotArchive>().AnyAsync(row => row.TenantId == tenant));
+
+            // Hold lifts: the same pass now archives — but only after the durable copy persisted.
+            await retention.ConfigurePolicyAsync(new ConfigureValueSnapshotRetentionRequest
+            {
+                RetentionDays = 90,
+                ArchiveAfterDays = 7
+            }, default);
+            var archived = await retention.EnforceAsync(new EnforceValueSnapshotRetentionRequest(), default);
+            Assert.Equal(1, archived.ArchivedCount);
+
+            var stripped = await context.Set<MutationValueSnapshot>().AsNoTracking()
+                .SingleAsync(row => row.TenantId == tenant);
+            Assert.NotNull(stripped.ArchivedAtUtc);
+            Assert.Null(stripped.BeforePayload);
+            Assert.Null(stripped.AfterPayload);
+
+            var archiveCopy = await context.Set<MutationValueSnapshotArchive>().AsNoTracking()
+                .SingleAsync(row => row.TenantId == tenant);
+            Assert.Equal(stripped.Id, archiveCopy.SnapshotId);
+            Assert.Equal(before, archiveCopy.BeforePayload);
+            Assert.Equal(after, archiveCopy.AfterPayload);
+
+            var query = services.GetRequiredService<IValueSnapshotQueryService>();
+            var detail = await query.GetAsync(stripped.Id, default);
+            Assert.NotNull(detail);
+            Assert.Equal(after, detail.AfterPayload);
+            var search = await query.SearchAsync(new ValueSnapshotSearchRequest
+            {
+                EntityName = nameof(Tenant),
+                ValuePattern = "after"
+            }, default);
+            Assert.Equal(1, search.TotalCount);
+        }
+        finally
+        {
+            actors.ClearActorContext();
+        }
     }
 
     [Fact]

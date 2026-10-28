@@ -110,13 +110,13 @@ public sealed class ValueSnapshotRetentionServiceTests : ValueSnapshotServiceTes
     [Fact]
     public async Task EnforceCarriesChunkContentIntoTheArchiveCopyAndDropsTheChunk()
     {
-        var large = """{"Title":"Chunked","Blob":"""" + new string('x', 400) + """"}""";
+        var large = "{\"Title\":\"Chunked\",\"Blob\":\"" + new string('x', 400) + "\"}";
         var snapshot = SeedSnapshot("Record", "chunk-1", "Added", null, large, DateTimeOffset.UtcNow.AddDays(-30));
 
         // Deduplicate the payload into a chunk so the hot row only keeps the chunk reference.
+        var tenantId = snapshot.TenantId!.Value;
         var retention = await ConfigureAsync(retentionDays: 90, archiveAfterDays: 90);
-        var (compacted, _) = await retention.CompactAsync(
-            (await Context.Set<MutationValueSnapshot>().FirstAsync(item => item.Id == snapshot.Id)).TenantId, CancellationToken.None);
+        var (compacted, _) = await retention.CompactAsync(tenantId, CancellationToken.None);
         Assert.Equal(1, compacted);
         Context.ChangeTracker.Clear();
         var chunked = await Context.Set<MutationValueSnapshot>().SingleAsync(item => item.Id == snapshot.Id);
