@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Compliance.Audit;
 
@@ -20,7 +21,9 @@ public sealed record ExportSecurityAuditLogsCommand(
 
 public sealed class AuditExportCommandHandler(
     IAuditService auditService,
-    ISecurityAuditAggregator auditAggregator) :
+    ISecurityAuditAggregator auditAggregator,
+    IBulkExportMonitoringService bulkExports,
+    IActorContextAccessor actors) :
     ICommandHandler<ExportAuditLogsCommand, AuditLogExportData>,
     ICommandHandler<ExportSecurityAuditLogsCommand, byte[]>
 {
@@ -59,6 +62,7 @@ public sealed class AuditExportCommandHandler(
         };
 
         var totalCount = await auditService.GetAuditLogCountAsync(query).ConfigureAwait(false);
+        await RecordBulkExportEvaluationAsync(command, totalCount, cancellationToken).ConfigureAwait(false);
         var records = auditService.StreamAuditLogsAsync(query, cancellationToken);
 
         return new AuditLogExportData(
@@ -67,6 +71,41 @@ public sealed class AuditExportCommandHandler(
             command.Request.PageNumber,
             command.Request.PageSize,
             records);
+    }
+
+    /// <summary>
+    /// Bulk data export detection (issues #180/#186): every audit-log export flows through the
+    /// bulk-export monitor with the <see cref="BulkExportScope.AuditLogExport"/> scope, so exports
+    /// exceeding the configured record thresholds raise a durable security alert and, when blocking
+    /// is enabled, are refused. A platform-wide export by a tenantless system administrator has no
+    /// tenant ledger to record against; its admin action is already journaled above.
+    /// </summary>
+    private async Task RecordBulkExportEvaluationAsync(
+        ExportAuditLogsCommand command,
+        int totalCount,
+        CancellationToken cancellationToken)
+    {
+        var actor = actors.ActorContext;
+        var tenantId = command.Request.TenantId ?? actor.TenantId;
+        if (tenantId is null)
+        {
+            return;
+        }
+
+        var evaluation = await bulkExports.EvaluateAndRecordAsync(
+            tenantId.Value,
+            command.AdminUserId,
+            BulkExportScope.AuditLogExport,
+            totalCount,
+            actor.TypedAttributes.IpAddress,
+            command.ExportId.ToString("D"),
+            destination: null,
+            cancellationToken).ConfigureAwait(false);
+
+        if (evaluation.Blocked)
+        {
+            throw new FieldLevelAuditExportBlockedException(evaluation.Event.RecordCount, evaluation.Event.Threshold);
+        }
     }
 
     public async Task<byte[]> Handle(

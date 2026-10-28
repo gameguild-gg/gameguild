@@ -22,6 +22,14 @@ public interface IPaymentGateway
     bool IsEnabled { get; }
 
     /// <summary>
+    ///     Whether authoritative inquiry can verify the received amount and currency
+    ///     before a paid entitlement is activated. This capability check performs no
+    ///     provider operation. Adapters must explicitly opt in; simulation is not proof
+    ///     of settlement. The optional provider identifies the owner in a routing facade.
+    /// </summary>
+    bool SupportsVerifiedSettlement(string? providerId = null) => false;
+
+    /// <summary>
     ///     Processes a payment through this gateway
     /// </summary>
     /// <param name="request">Payment request details</param>
@@ -134,11 +142,16 @@ public sealed record GatewayPaymentRequest(
     string? CustomerId,
     string? PaymentMethodId,
     string? Description,
-    Dictionary<string, string>? Metadata = null);
+    Dictionary<string, string>? Metadata = null,
+    string? GatewayProvider = null);
 
 /// <summary>
 ///     Result of a payment processing attempt
 /// </summary>
+/// <remarks>
+///     SettledAmount and SettledCurrency are verified from the provider's payment
+///     object, never copied from the caller's request; null when unavailable.
+/// </remarks>
 public sealed record GatewayPaymentResult(
     bool Success,
     string? TransactionId,
@@ -150,7 +163,9 @@ public sealed record GatewayPaymentResult(
     string? ClientActionToken = null,
     GatewayProviderMapping? ProviderMapping = null,
     string? ProviderId = null,
-    GatewayFailureKind FailureKind = GatewayFailureKind.NotApplicable);
+    GatewayFailureKind FailureKind = GatewayFailureKind.NotApplicable,
+    decimal? SettledAmount = null,
+    string? SettledCurrency = null);
 
 /// <summary>
 ///     Immutable provider identity for one payment object and monetary leg.
@@ -177,8 +192,8 @@ public enum GatewayFailureKind
     NotApplicable = 0,
 
     /// <summary>
-    ///     The gateway itself failed transiently (transport error, rate limit, 5xx)
-    ///     without confirming a provider payment object. Eligible for a same-gateway
+    ///     The gateway authoritatively rejected the attempt before any payment could
+    ///     be processed. Absence of a response or object id is not such proof. Eligible for a same-gateway
     ///     retry and, once that budget is spent, failover to the next-priority gateway.
     /// </summary>
     RetriableGatewayFailure = 1,

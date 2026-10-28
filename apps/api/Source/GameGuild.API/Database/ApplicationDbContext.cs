@@ -21,6 +21,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
     private readonly IUseCaseOperationContextAccessor? _useCaseOperationContextAccessor;
     private readonly IAuditService? _auditService;
     private readonly ILogger<ApplicationDbContext>? _logger;
+    private readonly EntityChangeAuditOptions _entityChangeAuditOptions = new();
     private readonly bool _entityChangeAuditCaptureEnabled = true;
     private readonly MutationValueSnapshotFactory? _valueSnapshotFactory;
     private readonly PermissionAuditOptions _permissionAuditOptions = new();
@@ -36,9 +37,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
 
     internal ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
-        bool enableEntityChangeAuditCapture) : this(options)
+        bool enableEntityChangeAuditCapture,
+        EntityChangeAuditOptions? entityChangeAuditOptions = null) : this(options)
     {
-        _entityChangeAuditCaptureEnabled = enableEntityChangeAuditCapture;
+        _entityChangeAuditOptions = entityChangeAuditOptions ?? new EntityChangeAuditOptions();
+        _entityChangeAuditCaptureEnabled = enableEntityChangeAuditCapture && _entityChangeAuditOptions.Enabled;
     }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IPublisher? publisher) : this(options)
@@ -54,7 +57,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         ILogger<ApplicationDbContext>? logger = null,
         IOptions<PermissionAuditOptions>? permissionAuditOptions = null,
         IEnumerable<IPermissionAuditHook>? permissionAuditHooks = null,
-        IOptions<ValueSnapshotOptions>? valueSnapshotOptions = null) : this(options, publisher)
+        IOptions<ValueSnapshotOptions>? valueSnapshotOptions = null,
+        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions = null) : this(options, publisher)
     {
         _useCaseOperationContextAccessor = useCaseOperationContextAccessor;
         _auditService = auditService;
@@ -67,6 +71,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         _valueSnapshotFactory = valueSnapshotOptions is null || valueSnapshotOptions.Value.StagingEnabled
             ? new MutationValueSnapshotFactory(valueSnapshotOptions?.Value)
             : null;
+        _entityChangeAuditOptions = entityChangeAuditOptions?.Value ?? new EntityChangeAuditOptions();
+        _entityChangeAuditCaptureEnabled = _entityChangeAuditOptions.Enabled;
     }
 
     public override int SaveChanges() => SaveChanges(acceptAllChangesOnSuccess: true);
@@ -216,11 +222,15 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         // the dedicated permission audit path above feeds the centralized compliance
         // AuditLog store, while these rows are the per-entity change history — separate
         // stores, no double recording. Audit-store types are excluded inside the capture
-        // to prevent audit-of-audit recursion.
+        // to prevent audit-of-audit recursion. Service-level configuration
+        // (Audit:EntityChangeCapture) is opt-out: capture stays on unless explicitly
+        // disabled, and the configured exclusion list is a performance guard only.
         var capturedAuditRecordCount = _entityChangeAuditCaptureEnabled
             ? EntityChangeAuditCapture.Capture(this, operationContext, _logger,
                 _permissionMutationAuditScope?.ActorId, _permissionMutationAuditScope?.TenantId,
-                _permissionMutationAuditScope?.UseEntityTenantScope ?? false, _valueSnapshotFactory)
+                _permissionMutationAuditScope?.UseEntityTenantScope ?? false,
+                snapshotFactory: _valueSnapshotFactory,
+                configuredExclusions: _entityChangeAuditOptions.ExcludedEntityTypes)
             : 0;
 
         foreach (var entry in ChangeTracker.Entries())

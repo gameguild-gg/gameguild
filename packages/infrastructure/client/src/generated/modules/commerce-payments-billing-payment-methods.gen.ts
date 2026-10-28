@@ -36,7 +36,7 @@ export class CommercePaymentsBillingPaymentMethodsModule {
   /**
    * Register a payment method from a tokenized gateway result.
    *
-   * Registers a payment method from a Stripe payment method token (pm_...) produced by Stripe.js/Elements or a confirmed SetupIntent. Raw card data is never accepted; only display metadata returned by the gateway is stored.
+   * Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.
    */
   async postBillingPaymentMethods(
     body: Types.CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody,
@@ -116,16 +116,23 @@ export class CommercePaymentsBillingPaymentMethodsModule {
   }
 
   /**
-   * Remove a payment method (soft delete).
+   * Remove a payment method (soft delete, explicit confirmation required).
    *
-   * Soft-deletes a payment method. Fails closed with 409 Conflict while any active subscription still bills with it; set a new default first to re-point subscriptions.
+   * Soft-deletes a payment method after explicit confirmation (body confirm=true). Without confirmation the request fails with 400. Fails closed with 409 Conflict while any active subscription still bills with it; set a new default first to re-point subscriptions.
    */
-  async deleteBillingPaymentMethods(paymentMethodId: string): Promise<Result<void, ApiError>> {
+  async deleteBillingPaymentMethods(
+    paymentMethodId: string,
+    body: Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/billing/payment-methods/${paymentMethodId}`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'DELETE',
       path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 

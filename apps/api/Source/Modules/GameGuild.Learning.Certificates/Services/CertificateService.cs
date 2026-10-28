@@ -204,7 +204,7 @@ public class CertificateService : ICertificateService, ICertificateIssuanceServi
 
             if (certificate == null)
             {
-                return Result.Success(new CertificateVerificationResult(
+                var notFoundResult = Result.Success(new CertificateVerificationResult(
                     IsValid: false,
                     CertificateNumber: certificateNumber,
                     RecipientName: null,
@@ -214,6 +214,8 @@ public class CertificateService : ICertificateService, ICertificateIssuanceServi
                     Status: CertificateStatus.Revoked,
                     Message: "Certificate not found"
                 ));
+                await RecordVerificationAuditSafelyAsync(null, certificateNumber, notFoundResult.Value).ConfigureAwait(false);
+                return notFoundResult;
             }
 
             var isValid = certificate.IsValid();
@@ -221,7 +223,7 @@ public class CertificateService : ICertificateService, ICertificateIssuanceServi
                 certificate.Status == CertificateStatus.Revoked ? "Certificate has been revoked" :
                 "Certificate has expired";
 
-            return Result.Success(new CertificateVerificationResult(
+            var verificationResult = Result.Success(new CertificateVerificationResult(
                 IsValid: isValid,
                 CertificateNumber: certificate.CertificateNumber,
                 RecipientName: certificate.RecipientName,
@@ -231,6 +233,8 @@ public class CertificateService : ICertificateService, ICertificateIssuanceServi
                 Status: certificate.Status,
                 Message: message
             ));
+            await RecordVerificationAuditSafelyAsync(certificate, certificateNumber, verificationResult.Value).ConfigureAwait(false);
+            return verificationResult;
         }
         catch (Exception ex)
         {
@@ -328,6 +332,61 @@ public class CertificateService : ICertificateService, ICertificateIssuanceServi
         }
     }
 
+    /// <summary>
+    /// Renews an expiring or expired certificate (issue #180 certificate lifecycle). Same
+    /// fail-closed contract as issuance and revocation: the renewed row and its audit event share
+    /// one transaction, so a renewal whose audit event cannot be persisted rolls back.
+    /// </summary>
+    public async Task<Result<Certificate>> RenewCertificateAsync(Guid certificateId, DateTime newExpiresAt)
+    {
+        try
+        {
+            var certificate = await GetCertificateByIdAsync(certificateId).ConfigureAwait(false);
+
+            if (certificate == null)
+            {
+                return Result.Failure<Certificate>(Error.NotFound("Certificate", "Certificate not found"));
+            }
+
+            if (certificate.Status == CertificateStatus.Revoked)
+            {
+                return Result.Failure<Certificate>(Error.Conflict("Certificate", "A revoked certificate cannot be renewed"));
+            }
+
+            certificate.Renew(newExpiresAt);
+            _context.Set<Certificate>().Update(certificate);
+            var transaction = await _context.BeginAuditedMutationTransactionAsync().ConfigureAwait(false);
+            try
+            {
+                await _context.SaveChangesAsync().ConfigureAwait(false);
+                await _auditSink.RecordAsync(new LearningAuditEvent(
+                    "Learning.Certificates.CertificateRenewed", "Certificate", certificate.Id.ToString(),
+                    ActingUserId, certificate.TenantId,
+                    $"Certificate {certificate.CertificateNumber} renewed until {newExpiresAt:yyyy-MM-dd}",
+                    Metadata: new { certificate.CertificateNumber, NewExpiresAt = newExpiresAt }), CancellationToken.None).ConfigureAwait(false);
+                await transaction.CommitAuditedMutationAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                if (transaction is not null)
+                {
+                    await transaction.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+
+            _logger.LogInformation(
+                "Certificate renewed: {CertificateNumber} until {NewExpiresAt}",
+                certificate.CertificateNumber, newExpiresAt);
+
+            return Result.Success(certificate);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error renewing certificate {CertificateId}", certificateId);
+            return Result.Failure<Certificate>(Error.Failure("RenewCertificate", "Failed to renew certificate"));
+        }
+    }
+
     public async Task<IEnumerable<Certificate>> GetExpiringCertificatesAsync(int thresholdDays = 30)
     {
         var threshold = SystemClock.UtcNow.AddDays(thresholdDays);
@@ -403,6 +462,48 @@ public class CertificateService : ICertificateService, ICertificateIssuanceServi
     {
         var number = $"CERT-{SystemClock.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}";
         return Task.FromResult(number);
+    }
+
+    /// <summary>
+    ///     Audits one certificate validation attempt (issue #180 certificate lifecycle: validation).
+    ///     Verification is a read, so the audit row is persisted in its own short transaction and is
+    ///     best effort: an audit-store hiccup is logged and never breaks the public verification
+    ///     endpoint. The sanitized certificate number and the verification outcome (valid, revoked,
+    ///     expired, not found) are the durable record; recipient personal data is not included.
+    /// </summary>
+    private async Task RecordVerificationAuditSafelyAsync(
+        Certificate? certificate, string requestedCertificateNumber, CertificateVerificationResult result)
+    {
+        var sanitizedNumber = LogRedaction.Sanitize(requestedCertificateNumber);
+        try
+        {
+            var transaction = await _context.BeginAuditedMutationTransactionAsync().ConfigureAwait(false);
+            try
+            {
+                await _auditSink.RecordAsync(new LearningAuditEvent(
+                    "Learning.Certificates.CertificateVerified", "Certificate",
+                    certificate?.Id.ToString() ?? sanitizedNumber,
+                    ActingUserId, certificate?.TenantId,
+                    $"Certificate validation for {sanitizedNumber}: {result.Message}",
+                    Success: result.IsValid,
+                    Metadata: new { IsValid = result.IsValid, Status = result.Status.ToString() }), CancellationToken.None).ConfigureAwait(false);
+                await transaction.CommitAuditedMutationAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                if (transaction is not null)
+                {
+                    await transaction.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Certificate verification audit could not be persisted for {CertificateNumber} (non-fatal)",
+                sanitizedNumber);
+        }
     }
 
     /// <summary>

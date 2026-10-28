@@ -78,6 +78,29 @@ jobs:
       - name: Test docker build-context invariants
         run: node --test scripts/ci/tests/dockerignore-pnpm-patches.test.mjs scripts/ci/tests/dockerignore-api-analyzer-config.test.mjs
 
+  secret-scan:
+    name: PR secret scan
+    needs: classify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Scan all PR commits and the tested merge
+        env:
+          SOURCE_BASE_SHA: ${{ needs.classify.outputs.baseSha }}
+          SOURCE_HEAD_SHA: ${{ needs.classify.outputs.headSha }}
+        run: bash scripts/ci/verify-pr-secrets.sh
+      - name: Preserve redacted secret scan evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: secret-scan-${{ needs.classify.outputs.headSha }}
+          path: artifacts/secret-scan
+          if-no-files-found: error
+
   repository-policy:
     name: Repository policy
     runs-on: ubuntu-latest
@@ -117,7 +140,7 @@ jobs:
       - name: Build generated client
         run: pnpm --filter @game-guild/client build
       - name: Test client credentials, MFA, auth factory and generator contracts
-        run: pnpm --filter @game-guild/client exec vitest run tests/auth/providers/credentials.test.ts tests/next/auth.test.ts tests/next/actions-extended.test.ts tests/gaps/final-gaps.test.ts tests/react/query-hooks-extended.test.ts tests/generator --maxWorkers=1
+        run: pnpm --filter @game-guild/client exec vitest run tests/auth/providers/credentials.test.ts tests/next/auth.test.ts tests/next/actions-extended.test.ts tests/gaps/final-gaps.test.ts tests/react/query-hooks-extended.test.ts tests/generator tests/transport --maxWorkers=1
       - name: Test delivered WalletConnect runtime
         run: pnpm --filter @game-guild/web3 exec vitest run src/adapters/walletconnect.runtime.test.ts src/adapters/walletconnect.test.ts --maxWorkers=1
       - name: Acquire verified Toolchain release for Web
@@ -333,6 +356,34 @@ jobs:
       - uses: ./.github/actions/setup-dotnet
       - run: dotnet tool restore
       - run: dotnet restore apps/api/Source/GameGuild.API/GameGuild.API.csproj
+      - name: Verify the committed EF model snapshot
+        shell: bash
+        run: |
+          mkdir -p artifacts/model-drift
+          git -c core.commitGraph=false show -s --format='%H%n%T' HEAD > artifacts/model-drift/checkout.txt
+          git -c core.commitGraph=false cat-file -p HEAD | sed -n 's/^parent //p' | paste -sd ' ' >> artifacts/model-drift/checkout.txt
+          if dotnet ef migrations has-pending-model-changes \
+            --project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
+            --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj; then
+            exit 0
+          fi
+          # Scaffold diagnostic source on the hosted runner for review. This does not
+          # accept or apply the generated migration; a changed snapshot fails this gate.
+          dotnet ef migrations add ReconcileBranchSyncModel \
+            --project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
+            --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
+            --output-dir Database/Migrations
+          cp apps/api/Source/GameGuild.API/Database/Migrations/*ReconcileBranchSyncModel*.cs artifacts/model-drift/
+          cp apps/api/Source/GameGuild.API/Database/Migrations/ApplicationDbContextModelSnapshot.cs artifacts/model-drift/
+          echo '::error::The committed snapshot does not match the application model. Review and commit a complete migration.'
+          exit 1
+      - name: Preserve EF model diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: migration-model-diagnostics
+          path: artifacts/model-drift
+          if-no-files-found: error
       - name: Apply migrations to a clean database
         run: >-
           dotnet ef database update
@@ -340,6 +391,21 @@ jobs:
           --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj
       - name: Verify model and migrated schema agree
         run: pnpm db:dbml:verify
+      - name: Verify generated schema documentation
+        shell: bash
+        run: |
+          mkdir -p artifacts/schema-model
+          cp artifacts/model-drift/checkout.txt artifacts/schema-model/checkout.txt
+          pnpm db:dbml
+          cp docs/schema.dbml artifacts/schema-model/schema.dbml
+          git -c core.commitGraph=false diff --exit-code -- docs/schema.dbml
+      - name: Preserve generated schema documentation
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: schema-model-diagnostics
+          path: artifacts/schema-model
+          if-no-files-found: warn
 
   economy:
     name: Economy Release Gate
@@ -499,6 +565,7 @@ jobs:
     needs:
       [
         classify,
+        secret-scan,
         repository-policy,
         web,
         api,
@@ -519,6 +586,7 @@ jobs:
         # ("Argument list too long"). Pass each job's result string instead.
         env:
           CLASSIFY: ${{ needs.classify.result }}
+          SECRET_SCAN: ${{ needs.secret-scan.result }}
           REPOSITORY_POLICY: ${{ needs.repository-policy.result }}
           WEB: ${{ needs.web.result }}
           API: ${{ needs.api.result }}
@@ -535,6 +603,7 @@ jobs:
           node - <<'NODE'
           const gates = {
             classify: process.env.CLASSIFY,
+            'secret-scan': process.env.SECRET_SCAN,
             'repository-policy': process.env.REPOSITORY_POLICY,
             web: process.env.WEB,
             api: process.env.API,
@@ -550,6 +619,9 @@ jobs:
           const failed = Object.entries(gates)
             .filter(([, result]) => result === 'failure' || result === 'cancelled')
             .map(([name, result]) => `${name}=${result}`);
+          if (gates['secret-scan'] !== 'success' && !failed.some(item => item.startsWith('secret-scan='))) {
+            failed.push(`secret-scan=${gates['secret-scan']}`);
+          }
           if (process.env.ECONOMY_SELECTED === 'true') {
             for (const name of ['economy', 'economy-api', 'economy-client', 'economy-coverage', 'economy-regression']) {
               if (gates[name] !== 'success' && !failed.some(item => item.startsWith(`${name}=`))) {

@@ -80,7 +80,7 @@ public sealed class PaymentMethodsController(
     /// </summary>
     [HttpPost]
     [EndpointSummary("Register a payment method from a gateway token")]
-    [EndpointDescription("Registers a payment method from a Stripe payment method token (pm_...) produced by Stripe.js/Elements or a confirmed SetupIntent. Raw card data is never accepted; only display metadata returned by the gateway is stored.")]
+    [EndpointDescription("Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.")]
     [ProducesResponseType<PaymentMethodDto>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -96,9 +96,9 @@ public sealed class PaymentMethodsController(
             return BadRequest(new { error = "GatewayPaymentMethodId is required" });
         }
 
-        if (!StripePaymentMethodIdentifier.IsValid(body.GatewayPaymentMethodId))
+        if (!GatewayPaymentMethodTokens.IsKnownGatewayToken(body.GatewayPaymentMethodId, body.GatewayProvider))
         {
-            return BadRequest(new { error = StripePaymentMethodIdentifier.ValidationMessage });
+            return BadRequest(new { error = GatewayPaymentMethodTokens.ValidationMessage });
         }
 
         var validationError = ValidateTenantAccess(body.TenantId, "register a payment method");
@@ -111,7 +111,8 @@ public sealed class PaymentMethodsController(
                 body.SetAsDefault,
                 body.Nickname,
                 body.BillingAddress,
-                body.OwnerUserId),
+                body.OwnerUserId,
+                body.GatewayProvider),
             ct).ConfigureAwait(false);
 
         if (!result.IsSuccess)
@@ -159,18 +160,24 @@ public sealed class PaymentMethodsController(
     }
 
     /// <summary>
-    ///     Remove a payment method (soft delete).
+    ///     Remove a payment method (soft delete, explicit confirmation required).
     /// </summary>
     [HttpDelete("{paymentMethodId:guid}")]
-    [EndpointSummary("Remove a payment method")]
-    [EndpointDescription("Soft-deletes a payment method. Fails closed with 409 Conflict while any active subscription still bills with it; set a new default first to re-point subscriptions.")]
+    [EndpointSummary("Remove a payment method (confirmation required)")]
+    [EndpointDescription("Soft-deletes a payment method after explicit confirmation (body confirm=true). Without confirmation the request fails with 400. Fails closed with 409 Conflict while any active subscription still bills with it; set a new default first to re-point subscriptions.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> Delete(Guid paymentMethodId, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(Guid paymentMethodId, [FromBody] RemovePaymentMethodRequestBody? body = null, CancellationToken ct = default)
     {
-        var result = await sender.Send(new RemovePaymentMethodCommand(paymentMethodId), ct).ConfigureAwait(false);
+        if (body?.Confirm != true)
+        {
+            return BadRequest(new { error = "Removing a payment method requires confirmation. Re-issue the request with confirm=true." });
+        }
+
+        var result = await sender.Send(new RemovePaymentMethodCommand(paymentMethodId, body.Confirm), ct).ConfigureAwait(false);
 
         return FromResult(result);
     }
@@ -184,12 +191,18 @@ public sealed class PaymentMethodsController(
         bool SetAsDefault = false,
         string? Nickname = null,
         string? BillingAddress = null,
-        Guid? OwnerUserId = null);
+        Guid? OwnerUserId = null,
+        string? GatewayProvider = null);
 
     /// <summary>
     ///     Request body for updating payment-method display fields.
     /// </summary>
     public sealed record UpdatePaymentMethodRequestBody(string? Nickname = null, string? BillingAddress = null);
+
+    /// <summary>
+    ///     Request body for removing a payment method (destructive action; issue #414).
+    /// </summary>
+    public sealed record RemovePaymentMethodRequestBody(bool Confirm = false);
 
     #region Private Methods
 

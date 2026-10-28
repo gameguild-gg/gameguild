@@ -50,7 +50,8 @@ public sealed record RegisterPaymentMethodCommand(
     bool SetAsDefault = false,
     string? Nickname = null,
     string? BillingAddress = null,
-    Guid? OwnerUserId = null) : ICommand<Result<PaymentMethodDto>>;
+    Guid? OwnerUserId = null,
+    string? GatewayProvider = null) : ICommand<Result<PaymentMethodDto>>;
 
 /// <summary>
 ///     Handler for <see cref="RegisterPaymentMethodCommand"/>.
@@ -76,7 +77,8 @@ public sealed class RegisterPaymentMethodCommandHandler(
                 request.SetAsDefault,
                 request.Nickname,
                 request.BillingAddress,
-                request.OwnerUserId),
+                request.OwnerUserId,
+                request.GatewayProvider),
             cancellationToken);
     }
 }
@@ -141,8 +143,10 @@ public sealed class SetDefaultPaymentMethodCommandHandler(
 
 /// <summary>
 ///     Soft-deletes a payment method (fail-closed while billable subscriptions use it).
+///     Removal is a destructive action and requires an explicit confirmation flag
+///     (issue #414): <see cref="Confirm"/> must be true.
 /// </summary>
-public sealed record RemovePaymentMethodCommand(Guid PaymentMethodId) : ICommand<Result>;
+public sealed record RemovePaymentMethodCommand(Guid PaymentMethodId, bool Confirm = false) : ICommand<Result>;
 
 /// <summary>
 ///     Handler for <see cref="RemovePaymentMethodCommand"/>.
@@ -160,7 +164,7 @@ public sealed class RemovePaymentMethodCommandHandler(
             return Task.FromResult(Result.Failure(PaymentMethodActors.InvalidActor()));
         }
 
-        return paymentMethodService.DeleteAsync(actor, request.PaymentMethodId, cancellationToken);
+        return paymentMethodService.DeleteAsync(actor, request.PaymentMethodId, request.Confirm, cancellationToken);
     }
 }
 

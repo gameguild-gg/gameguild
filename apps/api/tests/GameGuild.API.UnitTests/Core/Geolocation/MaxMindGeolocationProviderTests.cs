@@ -57,4 +57,28 @@ public sealed class MaxMindGeolocationProviderTests
 
         result.Should().BeNull();
     }
+
+    // ── Anonymous-IP (VPN/proxy/Tor/hosting) database, issue #278 ───────
+
+    [Fact]
+    public async Task MissingAnonymousDatabaseFile_Alone_ResolvesToNull()
+    {
+        using var provider = new MaxMindGeolocationProvider(
+            (string?)null, NullLogger<MaxMindGeolocationProvider>.Instance, "Z:/does-not-exist/GeoIP2-Anonymous-IP.mmdb");
+
+        var result = await provider.ResolveAsync("203.0.113.25");
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task NoDatabasesConfigured_AtAll_ResolvesToNull()
+    {
+        using var provider = new MaxMindGeolocationProvider(
+            (string?)null, NullLogger<MaxMindGeolocationProvider>.Instance, (string?)null);
+
+        var result = await provider.ResolveAsync("203.0.113.25");
+
+        result.Should().BeNull();
+    }
 }

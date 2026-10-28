@@ -1,9 +1,36 @@
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using GameGuild.CQRS;
+using GameGuild.Compliance.Audit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Tests.Audit.Unit;
+
+/// <summary>
+/// No-op bulk-export monitor for controller tests that route <see cref="ExportAuditLogsCommand"/>
+/// through <see cref="CommandHandlerSender"/>: the evaluation succeeds without alerting or blocking,
+/// mirroring the platform defaults for a below-threshold export.
+/// </summary>
+internal sealed class NoOpBulkExportMonitor : IBulkExportMonitoringService
+{
+    public Task<BulkExportEvaluation> EvaluateAndRecordAsync(
+        Guid tenantId,
+        Guid? userId,
+        BulkExportScope scope,
+        long recordCount,
+        string? ipAddress = null,
+        string? correlationId = null,
+        string? destination = null,
+        CancellationToken cancellationToken = default)
+    {
+        var export = BulkExportEvent.Record(tenantId, userId, scope, recordCount, int.MaxValue, false, DateTime.UtcNow, ipAddress, correlationId, destination);
+        return Task.FromResult(new BulkExportEvaluation(export, ThresholdExceeded: false, DailyTotal: recordCount, DailyThresholdExceeded: false, Blocked: false));
+    }
+
+    public Task<IReadOnlyList<BulkExportEvent>> GetExportsAsync(
+        Guid? tenantId, bool? thresholdExceeded, int skip, int take, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<BulkExportEvent>>([]);
+}
 
 /// <summary>Routes controller unit tests through real command handlers and mocked service boundaries.</summary>
 internal sealed class CommandHandlerSender(params object[] dependencies) : ISender

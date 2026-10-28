@@ -26,6 +26,10 @@ vi.mock('@/auth', () => ({
   getToken: getTokenMock,
 }));
 
+vi.mock('next-intl/server', () => ({
+  getTranslations: async (namespace: string) => (key: string) => `${namespace}.${key}`,
+}));
+
 vi.mock('@game-guild/client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@game-guild/client')>()),
   createServerClient: () => ({ request: requestMock }),

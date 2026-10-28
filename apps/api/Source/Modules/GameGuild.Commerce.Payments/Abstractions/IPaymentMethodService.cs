@@ -51,12 +51,14 @@ public interface IPaymentMethodService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Soft-deletes a payment method. Fails closed with a conflict while any billable
-    ///     subscription still points at it.
+    ///     Soft-deletes a payment method. Requires an explicit confirmation
+    ///     (<paramref name="confirm"/> == true) so removals are never accidental. Fails
+    ///     closed with a conflict while any billable subscription still points at it.
     /// </summary>
     Task<Result> DeleteAsync(
         PaymentMethodActor actor,
         Guid paymentMethodId,
+        bool confirm = false,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -94,7 +96,8 @@ public sealed record CreatePaymentMethodRequest(
     bool SetAsDefault = false,
     string? Nickname = null,
     string? BillingAddress = null,
-    Guid? OwnerUserId = null);
+    Guid? OwnerUserId = null,
+    string? GatewayProvider = null);
 
 /// <summary>
 ///     Request to update display-only payment-method fields.

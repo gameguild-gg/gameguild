@@ -8,8 +8,13 @@ public sealed record TerminateUserSessionsCommand(
     SessionTerminationReason Reason,
     Guid? ExceptSessionId = null) : ICommand<int>;
 public sealed record RefreshUserSessionCommand(Guid SessionId) : ICommand<bool>;
-public sealed record TrustDeviceCommand(Guid UserId, Guid SessionId, string DeviceName) : ICommand<bool>;
+public sealed record TrustDeviceCommand(Guid UserId, Guid SessionId, string DeviceName, string? DeviceInfo = null) : ICommand<bool>;
 public sealed record RevokeTrustedDeviceCommand(Guid UserId, Guid DeviceId) : ICommand<bool>;
+/// <summary>
+///     Names or renames one of the acting user's own trusted devices. The acting user is bound
+///     by the controller from the authenticated principal, never from the request body.
+/// </summary>
+public sealed record RenameTrustedDeviceCommand(Guid UserId, Guid DeviceId, string Name) : ICommand<bool>;
 /// <summary>
 ///     Names or renames one of the acting user's own active sessions. The acting user is bound
 ///     by the controller from the authenticated principal, never from the request body.
@@ -22,6 +27,7 @@ public sealed class SessionMutationCommandHandler(ISessionManagementService sess
     ICommandHandler<RefreshUserSessionCommand, bool>,
     ICommandHandler<TrustDeviceCommand, bool>,
     ICommandHandler<RevokeTrustedDeviceCommand, bool>,
+    ICommandHandler<RenameTrustedDeviceCommand, bool>,
     ICommandHandler<RenameSessionCommand, bool>
 {
     public Task<bool> Handle(TerminateSessionCommand command, CancellationToken cancellationToken) =>
@@ -57,11 +63,17 @@ public sealed class SessionMutationCommandHandler(ISessionManagementService sess
             command.UserId,
             session.DeviceFingerprint,
             command.DeviceName ?? string.Empty,
+            // The trusted-device row inherits the metadata captured by the session being
+            // trusted, so the list can show browser/OS details alongside the fingerprint.
+            session.DeviceInfo,
             cancellationToken).ConfigureAwait(false);
     }
 
     public Task<bool> Handle(RevokeTrustedDeviceCommand command, CancellationToken cancellationToken) =>
         sessionService.RevokeTrustedDeviceAsync(command.UserId, command.DeviceId, cancellationToken);
+
+    public Task<bool> Handle(RenameTrustedDeviceCommand command, CancellationToken cancellationToken) =>
+        sessionService.RenameTrustedDeviceAsync(command.UserId, command.DeviceId, command.Name, cancellationToken);
 
     public Task<bool> Handle(RenameSessionCommand command, CancellationToken cancellationToken) =>
         sessionService.RenameSessionAsync(command.UserId, command.SessionId, command.Name, cancellationToken);

@@ -130,5 +130,16 @@ public sealed class CreatePromoCodeCommandValidator : AbstractValidator<CreatePr
                 PromoPlanEligibility.PlanExistsOrNullAsync(planRepository, planId, cancellationToken))
             .WithMessage("The subscription plan referenced by PlanId does not exist.")
             .When(x => x.PlanId.HasValue);
+
+        // Issue #418 timezone awareness: an explicit timezone must be resolvable;
+        // the window edges are stored as UTC instants in that zone.
+        RuleFor(x => x.TimeZoneId)
+            .Must(timeZoneId => PromoValidityWindow.IsKnownTimeZone(timeZoneId))
+            .WithMessage("TimeZoneId must be a resolvable IANA timezone id (e.g. America/Sao_Paulo).")
+            .When(x => !string.IsNullOrWhiteSpace(x.TimeZoneId));
+
+        RuleFor(x => x.EligibleCustomerType)
+            .IsInEnum()
+            .WithMessage("EligibleCustomerType must be a defined customer type (Any, New, Existing, Churned).");
     }
 }

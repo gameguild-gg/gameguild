@@ -22,6 +22,7 @@ public static class ProductsModule
         services.AddScoped<IProductPricingRepository, ProductPricingRepository>();
         services.AddScoped<IPromoCodeRepository, PromoCodeRepository>();
         services.AddScoped<IPromoStackingRuleRepository, PromoStackingRuleRepository>();
+        services.AddScoped<IPromoCampaignRepository, PromoCampaignRepository>();
         services.AddScoped<IUserProductRepository, UserProductRepository>();
         services.AddScoped<IPricingRuleRepository, PricingRuleRepository>();
         services.AddScoped<IPricingExperimentRepository, PricingExperimentRepository>();
@@ -34,6 +35,9 @@ public static class ProductsModule
         services.AddScoped<IPromoCodeUsageRecorder, PromoCodeUsageRecorder>();
         services.AddScoped<GameGuild.Commerce.ISubscriptionPromoCoordinator, SubscriptionPromoCoordinator>();
         services.AddScoped<IPromoCodeAuditLogger, PromoCodeAuditLogger>();
+        services.AddScoped<IPromoCustomerStateResolver, PromoCustomerStateResolver>();
+        services.AddScoped<IPromoRedemptionCaptchaGate, PromoRedemptionCaptchaGate>();
+        services.AddScoped<IPromoUsageAnomalyEvaluator, PromoUsageAnomalyEvaluator>();
         services.AddScoped<IUserProductService, UserProductService>();
         services.AddScoped<IEntitlementService, EntitlementService>();
         services.AddScoped<IProductCategoryValidator, ProductCategoryValidator>();
@@ -45,6 +49,12 @@ public static class ProductsModule
         // Automated pricing scheduling (issue #395): opt-in per rule/experiment date windows.
         services.AddOptions<PricingSchedulingOptions>();
         services.AddHostedService<PricingSchedulingBackgroundService>();
+
+        // Promo engine configuration (issue #418): tenant-default validity timezone,
+        // unusual-usage alerting thresholds, and the CAPTCHA gate for untrusted redemptions.
+        services.AddOptions<PromoEngineOptions>();
+        services.AddOptions<PromoAbuseDetectionOptions>();
+        services.AddOptions<PromoRedemptionCaptchaOptions>();
 
         // Note: Order-related services are now in GameGuild.Commerce.Orders module
         // CQRS handlers are automatically registered by assembly scanning in ApplicationLayerExtensions
@@ -171,6 +181,40 @@ public static class ProductsModule
             entity.Property(e => e.MaxDiscountAmount).HasPrecision(10, 2);
             entity.Property(e => e.Currency).HasMaxLength(3).HasDefaultValue("USD");
             entity.Property(e => e.CampaignId).HasMaxLength(100);
+            entity.Property(e => e.TimeZoneId).HasMaxLength(50);
+            entity.HasIndex(e => e.EligibleCustomerType);
+        });
+
+        // Campaign management (issue #418): the managed entity behind the free-form
+        // PromoCode.CampaignId grouping key, with lifecycle and CAC spend inputs.
+        modelBuilder.Entity<PromoCampaign>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.TenantId, e.Key }).IsUnique();
+            entity.HasIndex(e => e.Key);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.StartsAtUtc);
+            entity.HasIndex(e => e.EndsAtUtc);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Key).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.TimeZoneId).HasMaxLength(50);
+            entity.Property(e => e.Budget).HasPrecision(14, 2);
+            entity.Property(e => e.AcquisitionSpend).HasPrecision(14, 2);
+            entity.Property(e => e.Currency).HasMaxLength(3).HasDefaultValue("USD");
+        });
+
+        // First-purchase campaign attribution (issue #418 CAC): one row per customer —
+        // the unique index on UserId makes the first attribution win.
+        modelBuilder.Entity<PromoCampaignAttribution>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId).IsUnique();
+            entity.HasIndex(e => e.CampaignKey);
+            entity.HasIndex(e => e.AttributedAtUtc);
+            entity.HasIndex(e => e.FirstPurchaseUsageId);
+            entity.Property(e => e.CampaignKey).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Code).HasMaxLength(50);
         });
 
         modelBuilder.Entity<PromoCodeUse>(entity =>

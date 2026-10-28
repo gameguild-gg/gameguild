@@ -21,8 +21,8 @@ vi.mock('@/lib/auth/cross-domain-auth', () => ({
 vi.mock('@/components/sign-in-form', () => ({
   // Renders the providers slot so the composition assertions below can see
   // the provider buttons the page passes into the form.
-  SignInForm: ({ providers }: { providers?: ReactNode }) => (
-    <div data-testid="sign-in-form">{providers}</div>
+  SignInForm: ({ providers, guestEntry }: { providers?: ReactNode; guestEntry?: ReactNode }) => (
+    <div data-testid="sign-in-form">{providers}{guestEntry}</div>
   ),
 }));
 vi.mock('@/components/google-one-tap', () => ({
@@ -37,6 +37,9 @@ vi.mock('@/components/wallet-sign-in-buttons', () => ({
 vi.mock('@/components/auth/auth-error-notice', () => ({
   AuthErrorNotice: ({ errorCode }: { errorCode?: string }) =>
     errorCode ? <div data-testid="auth-error-notice">{errorCode}</div> : null,
+}));
+vi.mock('@/components/guest-access-entry', () => ({
+  GuestAccessEntry: () => <div data-testid="guest-access-entry" />,
 }));
 
 import SignInPage from './page';
@@ -77,5 +80,31 @@ describe('sign-in page inline auth errors', () => {
     expect(screen.getByTestId('wallet-sign-in-buttons')).toBeInTheDocument();
     expect(screen.getByTestId('google-sign-in-button')).toBeInTheDocument();
     expect(screen.getByTestId('discord-sign-in-button')).toBeInTheDocument();
+  });
+});
+
+describe('sign-in page guest entry capability gate (issue #213)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.auth.mockResolvedValue(null);
+    vi.unstubAllEnvs();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllEnvs();
+  });
+
+  it('renders the continue-as-guest affordance when guest access is enabled (default)', async () => {
+    await renderPage({});
+
+    expect(screen.getByTestId('guest-access-entry')).toBeInTheDocument();
+  });
+
+  it('omits the affordance when GUEST_ACCESS_ENABLED=false', async () => {
+    vi.stubEnv('GUEST_ACCESS_ENABLED', 'false');
+    await renderPage({});
+
+    expect(screen.queryByTestId('guest-access-entry')).not.toBeInTheDocument();
   });
 });

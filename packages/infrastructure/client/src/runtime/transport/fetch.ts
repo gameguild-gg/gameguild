@@ -145,24 +145,29 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
   // Add timeout
   const timeout = requestConfig.timeout || transportConfig.timeout;
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  let abortController: AbortController | undefined;
+  let deadline: Promise<never> | undefined;
 
   if (timeout && !requestConfig.signal) {
-    abortController = new AbortController();
+    const abortController = new AbortController();
     options.signal = abortController.signal;
-    timeoutId = setTimeout(() => abortController!.abort(), timeout);
+    deadline = new Promise<never>((_resolve, reject) => {
+      timeoutId = setTimeout(() => {
+        const reason = new DOMException('Request timed out', 'AbortError');
+        // Settle independently: adapters and body readers may ignore cancellation.
+        reject(reason);
+        abortController.abort(reason);
+      }, timeout);
+    });
   }
 
-  try {
+  async function requestAndReadBody(): Promise<Result<ApiResponse<T>, ApiError>> {
     const response = await fetch(assertSafeServiceUrl(url, transportConfig.baseUrl), options);
-
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
 
     // Check for HTTP errors
     if (!response.ok) {
       const error = await createApiError(response);
+      // Error-body parsing tolerates invalid JSON, but must not swallow cancellation.
+      options.signal?.throwIfAborted();
       // Copy metrics key if present
       const metricsKey = (requestConfig as RequestConfig & { _metricsKey?: string })._metricsKey;
       if (metricsKey) {
@@ -184,7 +189,9 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
       if (contentType?.includes('application/json')) {
         try {
           data = await response.json();
-        } catch {
+        } catch (cause) {
+          options.signal?.throwIfAborted();
+          if (cause instanceof Error && cause.name === 'AbortError') throw cause;
           // Invalid JSON response - return error instead of throwing
           const text = await response.text().catch(() => '');
           const truncated = text.length > 100 ? `${text.slice(0, 100)}...` : text;
@@ -210,6 +217,7 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
       }
     }
 
+    options.signal?.throwIfAborted();
     const apiResponse: ApiResponse<T> = {
       data,
       status: response.status,
@@ -223,11 +231,16 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
     }
 
     return ok(apiResponse);
-  } catch (error) {
+  }
+
+  try {
+    const request = requestAndReadBody();
+    return await (deadline ? Promise.race([request, deadline]) : request);
+  } finally {
+    // Fetch resolves at headers; the deadline also covers consuming the body.
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
-    throw error;
   }
 }
 

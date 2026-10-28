@@ -330,6 +330,13 @@ public static class SecurityServiceCollectionExtensions
             sp.GetRequiredService<DbAuthorizationPolicyProvider>()));
         services.AddScoped<IAuthorizationHandler, ApiKeyScopeHandler>();
 
+        // ===== Trusted-device gate for sensitive operations (issue #278) =====
+        // "require-trusted-device" is satisfied unless Session:RequireTrustedDeviceForSensitiveOps
+        // is enabled; when enabled, interactive user sessions must run on a device whose
+        // fingerprint is currently trusted (fail closed). API-key/service-account/guest traffic
+        // carries no user session and is evaluated by its own policies.
+        services.AddScoped<IAuthorizationHandler, TrustedDeviceAuthorizationHandler>();
+
         // ===== Rule-Based Authorization (DB-driven, tenant-configurable policies) =====
         services.AddRuleBasedAuthorization();
 
@@ -349,14 +356,19 @@ public static class SecurityServiceCollectionExtensions
             // namespace, no permission outside the allowlist, no user-id claims).
             authzOptions.AddPolicy(AuthorizationPolicies.GuestAccess, policy =>
                 policy.RequireAuthenticatedUser().AddRequirements(new GuestAccessRequirement(null)));
-            foreach (var guestPermission in GuestPermission.Allowlist)
-            {
-                authzOptions.AddPolicy(
-                    AuthorizationPolicies.GuestAccessFor(guestPermission),
-                    policy => policy
-                        .RequireAuthenticatedUser()
-                        .AddRequirements(new GuestAccessRequirement(guestPermission)));
-            }
+                foreach (var guestPermission in GuestPermission.Allowlist)
+                {
+                    authzOptions.AddPolicy(
+                        AuthorizationPolicies.GuestAccessFor(guestPermission),
+                        policy => policy
+                            .RequireAuthenticatedUser()
+                            .AddRequirements(new GuestAccessRequirement(guestPermission)));
+                }
+
+            // Trusted-device gate (issue #278): reserved static policy enforced by
+            // TrustedDeviceAuthorizationHandler; inert unless Session:RequireTrustedDeviceForSensitiveOps is enabled.
+            authzOptions.AddPolicy(TrustedDevicePolicy.Name, policy =>
+                policy.RequireAuthenticatedUser().AddRequirements(new TrustedDeviceRequirement()));
 
             foreach (var (name, configuredPolicy) in options.Policies)
             {

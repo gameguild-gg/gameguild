@@ -20,6 +20,11 @@ public static class SecurityAlertRules
     public static string PermissionChangeBurst { get; } = "security.permission-change-burst";
 
     public static string BulkPermissionChange { get; } = "security.bulk-permission-change";
+
+    /// <summary>Unusual promo code usage pattern (validation/redemption velocity anomaly, issue #418).</summary>
+    public static string PromoUsageAnomaly { get; } = "security.promo-usage-anomaly";
+
+    public static string BulkExportThresholdExceeded { get; } = "security.bulk-export-threshold-exceeded";
 }
 
 /// <summary>
@@ -91,6 +96,19 @@ public sealed class SecurityAlertRuleEvaluator(
             if (classification.Kind == SecurityEventKind.Authentication && !securityEvent.Success)
             {
                 await EvaluateFailedAuthenticationBurstAsync(context, securityEvent, cancellationToken).ConfigureAwait(false);
+            }
+
+            if (securityEvent.ActionType == AuditActionTypes.PromoUsageAnomalyDetected)
+            {
+                // Issue #418 unusual-usage alerting: the promo engine computed the velocity
+                // anomaly from its own attempt/usage tables and published the event; this rule
+                // turns it into a (deduplicated) SecurityAlert.
+                await RaiseOrMergeAsync(context, securityEvent, classification,
+                    SecurityAlertRules.PromoUsageAnomaly,
+                    AuditRiskLevel.High,
+                    "Unusual promo code usage pattern detected",
+                    securityEvent.ErrorMessage ?? "Promo code validation or redemption velocity exceeded the configured threshold.",
+                    cancellationToken).ConfigureAwait(false);
             }
         }
         catch (Exception exception) when (exception is not OperationCanceledException)

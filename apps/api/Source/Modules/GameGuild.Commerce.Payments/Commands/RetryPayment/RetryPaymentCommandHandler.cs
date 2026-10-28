@@ -39,8 +39,13 @@ public sealed class RetryPaymentCommandHandler(
     IActorContextAccessor actorContextAccessor,
     ILogger<RetryPaymentCommandHandler> logger,
     INotificationService? notificationService = null,
-    IPaymentMethodRepository? paymentMethodRepository = null) : ICommandHandler<RetryPaymentCommand, PaymentRetryResult>
+    IPaymentMethodRepository? paymentMethodRepository = null,
+    IPaymentMethodChargeResolver? chargeResolver = null) : ICommandHandler<RetryPaymentCommand, PaymentRetryResult>
 {
+    // Return only after recording the attempt and completing its handler steps. Early
+    // validation failures, exceptions and cancellation keep the ordinary rollback path.
+    private sealed class RecordedPaymentRetryResult : PaymentRetryResult, ICommitOnFailureOutcome { }
+
     public async Task<PaymentRetryResult> Handle(RetryPaymentCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Retrying payment {PaymentId}", request.PaymentId);
@@ -94,11 +99,27 @@ public sealed class RetryPaymentCommandHandler(
 
         logger.LogInformation("Payment {PaymentId} retry attempt {RetryCount}", request.PaymentId, payment.RetryCount);
 
-        // 4. Mark as processing
-        payment.MarkAsProcessing();
+        // 4. Persist the claim without asserting a Stripe provider mapping that
+        // has not been returned. Pending also excludes the automatic retry queue.
+        GatewayPaymentResultBinder.PrepareProcessingClaim(payment);
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
 
-        // 5. Retry through payment gateway with new idempotency key
+        // 5. Retry through payment gateway with new idempotency key, resolving the charge
+        //    method default-first with fallback (issue #414): when the recorded method is no
+        //    longer usable (expired, gateway-failed or removed), the owner's default saved
+        //    method — then the next usable one — takes over.
+        var chargePaymentMethodId = await ResolveChargeMethodAsync(payment, cancellationToken).ConfigureAwait(false);
+        if (!string.IsNullOrEmpty(chargePaymentMethodId)
+            && !string.Equals(chargePaymentMethodId, payment.PaymentMethodId, StringComparison.Ordinal))
+        {
+            logger.LogInformation(
+                "Payment {PaymentId} retry falling back from recorded method {RecordedMethodRedacted} to saved method resolution (default-first).",
+                payment.Id,
+                LogRedaction.RedactId(payment.PaymentMethodId ?? string.Empty, "pm"));
+            payment.ApplyPaymentMethodChange(chargePaymentMethodId);
+            await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+        }
+
         var retryIdempotencyKey = $"{payment.IdempotencyKey}_retry_{payment.RetryCount}";
         var gatewayRequest = new GatewayPaymentRequest(
             IdempotencyKey: retryIdempotencyKey,
@@ -122,6 +143,7 @@ public sealed class RetryPaymentCommandHandler(
         // mapped provider stays authoritative (RecordProcessingProvider is a no-op).
         payment.RecordProcessingProvider(gatewayResult.ProviderId ?? paymentGateway.ProviderId);
         GatewayPaymentResultBinder.BindVerifiedProviderMapping(payment, payment.Provider, gatewayResult);
+        GatewayPaymentResultBinder.PrepareProcessingClaim(payment);
 
         // 6. Update payment based on gateway result. The retry schedule is resolved from the
         //    failure-code retry policy (issue #415) on top of the Payments:Retry options.
@@ -146,6 +168,24 @@ public sealed class RetryPaymentCommandHandler(
                 Amount = new Money(payment.Amount, payment.Currency),
                 ProcessedAt = payment.ProcessedAt,
                 Status = PaymentStatus.Succeeded
+            };
+        }
+        else if (gatewayResult.FailureKind == GatewayFailureKind.OutcomeUnknown
+                 || gatewayResult.Status is PaymentStatus.Pending or PaymentStatus.Processing or PaymentStatus.RequiresAction)
+        {
+            if (gatewayResult.Status == PaymentStatus.RequiresAction)
+            {
+                payment.MarkAsRequiresAction(gatewayResult.TransactionId);
+            }
+            logger.LogWarning("Payment {PaymentId} retry awaits provider reconciliation or customer action", payment.Id);
+            paymentResult = new PaymentResult
+            {
+                TenantId = payment.TenantId,
+                Success = false,
+                TransactionId = gatewayResult.TransactionId,
+                PaymentId = payment.Id.ToString(),
+                Amount = new Money(payment.Amount, payment.Currency),
+                Status = payment.Status
             };
         }
         else
@@ -195,13 +235,16 @@ public sealed class RetryPaymentCommandHandler(
 
         // 9. Recovery lifecycle (issue #415): a successful retry lifts a dunning suspension;
         //    a terminal failure suspends the subscription and sends the final dunning notice.
-        await ApplyRecoveryLifecycleAsync(payment, gatewayResult.Success, gatewayResult.ErrorMessage, cancellationToken)
-            .ConfigureAwait(false);
+        if (payment.Status is PaymentStatus.Succeeded or PaymentStatus.Failed)
+        {
+            await ApplyRecoveryLifecycleAsync(payment, gatewayResult.Success, gatewayResult.ErrorMessage, cancellationToken)
+                .ConfigureAwait(false);
 
-        // Payment-event notifications (issue #415): a successful retry emails the payment
-        // receipt; the second failure overall prompts the customer to update the payment method.
-        await SendOutcomeNotificationsAsync(payment, gatewayResult.Success, cancellationToken)
-            .ConfigureAwait(false);
+            // Payment-event notifications (issue #415): a successful retry emails the payment
+            // receipt; the second failure overall prompts the customer to update the payment method.
+            await SendOutcomeNotificationsAsync(payment, gatewayResult.Success, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
         if (gatewayResult.Success && payment.ProcessedAt.HasValue)
         {
@@ -226,7 +269,7 @@ public sealed class RetryPaymentCommandHandler(
         }
 
         // 10. Return retry result
-        return new PaymentRetryResult
+        return new RecordedPaymentRetryResult
         {
             Success = gatewayResult.Success,
             RetryAttempt = payment.RetryCount,
@@ -235,6 +278,52 @@ public sealed class RetryPaymentCommandHandler(
             MaxRetriesReached = payment.MaxRetriesReached,
             FailureReason = gatewayResult.Success ? null : gatewayResult.ErrorMessage
         };
+    }
+
+    /// <summary>
+    ///     Default-first charge-method resolution with fallback (issue #414). The recorded
+    ///     gateway reference is kept when it is still a usable saved method (explicit
+    ///     per-bill choice); when it is expired, gateway-failed, removed or unknown but the
+    ///     owner has other usable saved methods, the default (then the next usable one in
+    ///     registry order) takes over. Falls back to the recorded reference whenever the
+    ///     registry cannot resolve an owner or no usable method exists — the pre-fallback
+    ///     behavior.
+    /// </summary>
+    private async Task<string?> ResolveChargeMethodAsync(Payment payment, CancellationToken cancellationToken)
+    {
+        if (paymentMethodRepository is null || chargeResolver is null || string.IsNullOrWhiteSpace(payment.PaymentMethodId))
+        {
+            return payment.PaymentMethodId;
+        }
+
+        var saved = await paymentMethodRepository
+            .GetByGatewayIdAsync(payment.TenantId, payment.Provider, payment.PaymentMethodId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (saved is null)
+        {
+            // A removed method still identifies its owner through the soft-deleted row.
+            saved = await paymentMethodRepository
+                .GetDeletedByGatewayIdAsync(payment.TenantId, payment.Provider, payment.PaymentMethodId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (saved is null)
+        {
+            // No registry knowledge of this reference: keep the recorded behavior.
+            return payment.PaymentMethodId;
+        }
+
+        if (saved.IsChargeable)
+        {
+            return payment.PaymentMethodId;
+        }
+
+        var candidates = await chargeResolver
+            .ResolveChargeCandidatesAsync(payment.TenantId, saved.UserId, payment.PaymentMethodId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return candidates.Count > 0 ? candidates[0] : payment.PaymentMethodId;
     }
 
     /// <summary>

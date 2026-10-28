@@ -69,6 +69,13 @@ public class Payment : EntityBase
     [MaxLength(3)]
     public string Currency { get; private set; } = "USD";
 
+    /// <summary>
+    ///     ISO 3166-1 alpha-2 billing country recorded for routing and geographic analytics
+    ///     (issue #413); null when the charge context carried no country.
+    /// </summary>
+    [MaxLength(2)]
+    public string? BillingCountry { get; private set; }
+
     /// <summary>Current payment status</summary>
     [Required]
     public PaymentStatus Status { get; private set; } = PaymentStatus.Pending;
@@ -256,6 +263,33 @@ public class Payment : EntityBase
             MaxRetries = maxRetries ?? DefaultMaxRetries,
             Status = PaymentStatus.Pending
         };
+    }
+
+    /// <summary>
+    ///     Records the billing country for gateway routing and geographic analytics (issue
+    ///     #413). Accepts an ISO 3166-1 alpha-2 code (normalized uppercase); null or
+    ///     whitespace clears nothing and invalid codes throw. Idempotent.
+    /// </summary>
+    public void RecordBillingCountry(string? country)
+    {
+        if (string.IsNullOrWhiteSpace(country))
+        {
+            return;
+        }
+
+        if (country.Length != 2 || !country.All(char.IsLetter))
+        {
+            throw new ArgumentException("The billing country must be an ISO 3166-1 alpha-2 code.", nameof(country));
+        }
+
+        var normalized = country.ToUpperInvariant();
+        if (string.Equals(BillingCountry, normalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        BillingCountry = normalized;
+        Touch();
     }
 
     /// <summary>

@@ -92,6 +92,21 @@ public sealed class FraudAssessmentOptions
     [Range(0, 100)]
     public int BehaviorAnomalyWeight { get; set; } = 25;
 
+    /// <summary>Score contributed per payment-attempt attribute (payment-method token, card
+    /// fingerprint, provider customer id) that matches a tenant blacklist entry (issue #409).</summary>
+    [Range(0, 100)]
+    public int BlacklistWeight { get; set; } = 60;
+
+    /// <summary>Whether declining a manual fraud review automatically blacklists the
+    /// confirmed-fraud attempt's listable attributes (issue #409: automatic addition on
+    /// confirmed fraud).</summary>
+    public bool AutoBlacklistOnFraudDecline { get; set; } = true;
+
+    /// <summary>Expiry, in days, applied to automatically added blacklist entries
+    /// (issue #409: blacklist entries with expiry dates).</summary>
+    [Range(1, 3650)]
+    public int AutoBlacklistExpiryDays { get; set; } = 730;
+
     /// <summary>Aggregate score at or above which the gate decision becomes <see cref="FraudDecision.Review"/>.</summary>
     [Range(1, 100)]
     public int ReviewThreshold { get; set; } = 40;
@@ -137,6 +152,9 @@ public sealed class FraudAssessmentOptions
             BehaviorAnomalyMinHistory = overrideValues.BehaviorAnomalyMinHistory ?? BehaviorAnomalyMinHistory,
             BehaviorAnomalyAmountMultiplier = overrideValues.BehaviorAnomalyAmountMultiplier ?? BehaviorAnomalyAmountMultiplier,
             BehaviorAnomalyWeight = overrideValues.BehaviorAnomalyWeight ?? BehaviorAnomalyWeight,
+            BlacklistWeight = overrideValues.BlacklistWeight ?? BlacklistWeight,
+            AutoBlacklistOnFraudDecline = overrideValues.AutoBlacklistOnFraudDecline ?? AutoBlacklistOnFraudDecline,
+            AutoBlacklistExpiryDays = overrideValues.AutoBlacklistExpiryDays ?? AutoBlacklistExpiryDays,
             ReviewThreshold = overrideValues.ReviewThreshold ?? ReviewThreshold,
             BlockThreshold = overrideValues.BlockThreshold ?? BlockThreshold
         };
@@ -214,6 +232,17 @@ public sealed class FraudAssessmentOverride
     /// <summary>See <see cref="FraudAssessmentOptions.BehaviorAnomalyWeight"/>.</summary>
     [Range(0, 100)]
     public int? BehaviorAnomalyWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.BlacklistWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? BlacklistWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.AutoBlacklistOnFraudDecline"/>.</summary>
+    public bool? AutoBlacklistOnFraudDecline { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.AutoBlacklistExpiryDays"/>.</summary>
+    [Range(1, 3650)]
+    public int? AutoBlacklistExpiryDays { get; set; }
 
     /// <summary>See <see cref="FraudAssessmentOptions.ReviewThreshold"/>.</summary>
     [Range(1, 100)]

@@ -1,3 +1,4 @@
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Identity.Authorization.Utilities;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Net;
 using System.Security.Claims;
 
 namespace GameGuild.Identity.Authentication;
@@ -123,9 +125,44 @@ public sealed class TokenRevocationMiddleware
                 await RejectAsync(context).ConfigureAwait(false);
                 return;
             }
+
+            // Session IP binding (issue #278): when enabled, the request must originate
+            // from the exact address recorded for the session. Off by default; Strict
+            // fails closed (unknown/unparseable addresses on either side reject).
+            if (context.RequestServices.GetService<SessionOptions>()?
+                    .IpAddressBinding == SessionIpAddressBinding.Strict &&
+                !RequestOriginatesFromSessionAddress(context, session.IpAddress))
+            {
+                _logger.LogWarning(
+                    "Rejected session-bound request from mismatched client address: SessionId={SessionId}, SessionAddress={SessionAddress}, ClientAddress={ClientAddress}",
+                    sessionId, session.IpAddress, context.Connection.RemoteIpAddress);
+                await RejectAsync(context).ConfigureAwait(false);
+                return;
+            }
         }
 
         await _next(context).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Compares the request's remote address against the session's recorded address after
+    ///     normalizing IPv4-mapped IPv6 form. Fail closed: a missing remote address, or a
+    ///     missing/unparseable session address (e.g. "unknown" written when location tracking
+    ///     is off), never satisfies strict binding.
+    /// </summary>
+    private static bool RequestOriginatesFromSessionAddress(HttpContext context, string? sessionIpAddress)
+    {
+        var remote = context.Connection.RemoteIpAddress;
+        if (remote is null || string.IsNullOrWhiteSpace(sessionIpAddress) ||
+            !IPAddress.TryParse(sessionIpAddress, out var recorded))
+        {
+            return false;
+        }
+
+        return Normalize(remote).Equals(Normalize(recorded));
+
+        static IPAddress Normalize(IPAddress address) =>
+            address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
     }
 
     private async Task RejectAsync(HttpContext context)

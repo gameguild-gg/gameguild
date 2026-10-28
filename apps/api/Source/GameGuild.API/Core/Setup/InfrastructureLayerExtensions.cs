@@ -316,6 +316,9 @@ public static class InfrastructureLayerExtensions
         // Connect the billing module's outbox read port to the platform outbox read model
         // (issue #396: billing events monitoring over the existing durable transport).
         services.AddScoped<IBillingOutboxEventReader, Core.Integration.BillingOutboxEventReader>();
+        // Connect the billing module's subscription event log port to the durable aggregate
+        // event log (issue #396: state reconstruction over the durable billing event log).
+        services.AddScoped<IBillingSubscriptionEventLog, Core.Integration.BillingSubscriptionEventLog>();
         logger.LogInformation("Billing Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10e. Commerce Payments Module (payment gateway, payment services)
@@ -371,6 +374,9 @@ public static class InfrastructureLayerExtensions
         databaseOptions ??= DatabaseOptions.CreateDefault();
 
         services.Configure<PermissionAuditOptions>(configuration.GetSection(PermissionAuditOptions.SectionName));
+        // Universal entity-change audit capture (issue #166): opt-out configuration plus the
+        // service-level exclusion list consumed by the SaveChanges capture pass.
+        services.Configure<EntityChangeAuditOptions>(configuration.GetSection(EntityChangeAuditOptions.SectionName));
 
         var connectionString = PostgresConnectionString.Resolve(configuration, databaseOptions.ConnectionStringName)
                                ?? throw new InvalidOperationException(
@@ -404,6 +410,10 @@ public static class InfrastructureLayerExtensions
         services.AddScoped<PermissionGovernanceAuditHook>();
         services.AddScoped<IPermissionAuditHook>(provider =>
             provider.GetRequiredService<PermissionGovernanceAuditHook>());
+        // Universal entity-change audit capture (issue #166): the host owns the record entity,
+        // so it also owns the store bridge through which the audit module serves the captured
+        // change history over its centralized query surface.
+        services.TryAddScoped<GameGuild.Compliance.Audit.IEntityChangeAuditStore, EntityChangeAuditStore>();
         // Universal audit coverage for learning-course mutations (issues #180/#181/#184): the
         // host owns this bridge because the audit module cannot reference Learning.Courses
         // without closing a project-reference cycle.

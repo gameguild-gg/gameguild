@@ -1,11 +1,16 @@
 using GameGuild.CQRS;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Commerce.Products;
 
 /// <summary>
-/// Handler for updating an existing promo code
+/// Handler for updating an existing promo code. Supplied validity edges are
+/// normalized to UTC instants in the code's (new or current) timezone — the
+/// tenant default applies when neither carries one (issue #418).
 /// </summary>
-public sealed class UpdatePromoCodeCommandHandler(IPromoCodeRepository promoCodeRepository)
+public sealed class UpdatePromoCodeCommandHandler(
+    IPromoCodeRepository promoCodeRepository,
+    IOptions<PromoEngineOptions>? engineOptions = null)
     : ICommandHandler<UpdatePromoCodeCommand, PromoCodeDto>
 {
     public async Task<PromoCodeDto> Handle(UpdatePromoCodeCommand request, CancellationToken cancellationToken)
@@ -86,14 +91,33 @@ public sealed class UpdatePromoCodeCommandHandler(IPromoCodeRepository promoCode
             promoCode.ApplyToRenewal = request.ApplyToRenewal.Value;
         }
 
-        if (request.ValidFrom.HasValue)
+        if (request.ValidFrom.HasValue || request.ValidUntil.HasValue || !string.IsNullOrWhiteSpace(request.TimeZoneId))
         {
-            promoCode.ValidFrom = request.ValidFrom.Value;
+            // Issue #418: re-resolve the window timezone (explicit update wins, else the
+            // stored zone, else the tenant default) and normalize the supplied edges to
+            // UTC instants before storage.
+            var defaultTimeZoneId = engineOptions?.Value.DefaultTimeZoneId;
+            var effectiveTimeZoneId = !string.IsNullOrWhiteSpace(request.TimeZoneId)
+                ? request.TimeZoneId
+                : !string.IsNullOrWhiteSpace(promoCode.TimeZoneId) ? promoCode.TimeZoneId : defaultTimeZoneId;
+            var (timeZone, _) = PromoValidityWindow.ResolveTimeZone(effectiveTimeZoneId);
+
+            if (request.ValidFrom.HasValue)
+            {
+                promoCode.ValidFrom = PromoValidityWindow.NormalizeToUtc(request.ValidFrom, timeZone);
+            }
+
+            if (request.ValidUntil.HasValue)
+            {
+                promoCode.ValidUntil = PromoValidityWindow.NormalizeToUtc(request.ValidUntil, timeZone);
+            }
+
+            promoCode.TimeZoneId = timeZone.Id;
         }
 
-        if (request.ValidUntil.HasValue)
+        if (request.EligibleCustomerType.HasValue)
         {
-            promoCode.ValidUntil = request.ValidUntil.Value;
+            promoCode.EligibleCustomerType = request.EligibleCustomerType.Value;
         }
 
         if (request.IsActive.HasValue)

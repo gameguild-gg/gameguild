@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Moq;
 using Xunit;
 
 namespace GameGuild.Commerce.Payments.UnitTests.GatewayRouting;
@@ -49,6 +50,64 @@ public class GatewayFailoverTests
 
     private static GatewayPaymentRequest ChargeRequest(decimal amount = 25m, string currency = "USD") =>
         new("idem-1", amount, currency, "cus_1", "pm_card_visa", "test charge");
+
+    [Fact]
+    public void SettlementVerification_IsPinnedToTheRequestedProviderAndDefaultsToUnsupported()
+    {
+        var stripe = new Mock<IPaymentGateway>();
+        stripe.SetupGet(gateway => gateway.ProviderId).Returns("stripe");
+        stripe.SetupGet(gateway => gateway.IsEnabled).Returns(true);
+        stripe.Setup(gateway => gateway.SupportsVerifiedSettlement("stripe")).Returns(true);
+        var paypal = new FakePaymentGateway("paypal");
+        var sut = CreateSut([stripe.Object, paypal]);
+
+        sut.SupportsVerifiedSettlement("paypal").Should().BeFalse();
+        sut.SupportsVerifiedSettlement("stripe").Should().BeTrue();
+
+        paypal.ChargeCallCount.Should().Be(0);
+        stripe.Verify(gateway => gateway.SupportsVerifiedSettlement("stripe"), Times.Once);
+        stripe.Verify(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void SettlementVerification_UnknownProviderNeverFallsBackToPrimary()
+    {
+        var stripe = new FakePaymentGateway("stripe");
+        var sut = CreateSut([stripe]);
+
+        Action act = () => sut.SupportsVerifiedSettlement("unknown-gateway");
+
+        act.Should().Throw<GatewaySelectionFailedException>();
+        stripe.ChargeCallCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Charge_ProviderBoundToken_IsNeverSentToAnotherGateway()
+    {
+        var stripe = new FakePaymentGateway("stripe")
+            .EnqueueCharge(FakePaymentGateway.FailureResult("stripe", GatewayFailureKind.RetriableGatewayFailure))
+            .EnqueueCharge(FakePaymentGateway.FailureResult("stripe", GatewayFailureKind.RetriableGatewayFailure));
+        var paypal = new FakePaymentGateway("paypal");
+        var sut = CreateSut([stripe, paypal]);
+
+        var result = await sut.ProcessPaymentAsync(ChargeRequest() with { GatewayProvider = "stripe" });
+
+        result.Success.Should().BeFalse();
+        stripe.ChargeCallCount.Should().Be(2);
+        paypal.ChargeCallCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Charge_UnavailableTokenProvider_FailsBeforeAnyGatewayCall()
+    {
+        var paypal = new FakePaymentGateway("paypal");
+        var sut = CreateSut([paypal]);
+
+        var act = () => sut.ProcessPaymentAsync(ChargeRequest() with { GatewayProvider = "stripe" });
+
+        await act.Should().ThrowAsync<GatewaySelectionFailedException>();
+        paypal.ChargeCallCount.Should().Be(0);
+    }
 
     [Fact]
     public async Task Charge_ReturnsFirstGatewaySuccess_WithAttemptedProviderAttribution()
@@ -155,20 +214,98 @@ public class GatewayFailoverTests
         payPal.ChargeCallCount.Should().Be(1);
     }
 
-    [Fact]
-    public async Task Charge_TreatsTransportExceptionsAsRetriableGatewayFailures()
+    public static IEnumerable<object?[]> AmbiguousProviderFailures()
     {
+        foreach (var provider in new[] { "paypal", "adyen", "braintree", "authorizenet" })
+        foreach (var status in new int?[] { null, 408, 429, 500, 503 })
+            yield return [provider, status];
+    }
+
+    [Theory]
+    [MemberData(nameof(AmbiguousProviderFailures))]
+    public async Task Charge_RealAdapterWithLostOrAmbiguousResponse_DoesNotReplay(string provider, int? status)
+    {
+        var apiCalls = 0;
+        var failure = new GatewayProviderApiResult(false, status, null, "response_unconfirmed", "Response lost after send", status is null);
+        IPaymentGateway adapter;
+        switch (provider)
+        {
+            case "paypal":
+                var paypal = new Mock<IPayPalApiClient>();
+                paypal.Setup(client => client.CreateAndCaptureOrderAsync(It.IsAny<string>(), It.IsAny<decimal>(),
+                        It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+                    .Callback(() => apiCalls++)
+                    .ReturnsAsync(new PayPalApiResult(false, status, null, failure.ErrorCode, failure.ErrorMessage, status is null));
+                adapter = new PayPalPaymentGateway(Options.Create(new PayPalGatewayOptions { IsEnabled = true }),
+                    paypal.Object, NullLogger<PayPalPaymentGateway>.Instance);
+                break;
+            case "adyen":
+                var adyen = new Mock<IAdyenApiClient>();
+                adyen.Setup(client => client.PaymentAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<string>(),
+                        It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    .Callback(() => apiCalls++).ReturnsAsync(failure);
+                adapter = new AdyenPaymentGateway(Options.Create(new AdyenGatewayOptions { IsEnabled = true }), adyen.Object);
+                break;
+            case "braintree":
+                var braintree = new Mock<IBraintreeApiClient>();
+                braintree.Setup(client => client.SaleAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<string>(),
+                        It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+                    .Callback(() => apiCalls++).ReturnsAsync(failure);
+                adapter = new BraintreePaymentGateway(Options.Create(new BraintreeGatewayOptions { IsEnabled = true }), braintree.Object);
+                break;
+            default:
+                var authorizenet = new Mock<IAuthorizeNetApiClient>();
+                authorizenet.Setup(client => client.ChargeAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<string>(),
+                        It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+                    .Callback(() => apiCalls++).ReturnsAsync(failure);
+                adapter = new AuthorizeNetPaymentGateway(Options.Create(new AuthorizeNetGatewayOptions { IsEnabled = true }), authorizenet.Object);
+                break;
+        }
+        var fallback = new FakePaymentGateway("fallback");
+        var routing = new GatewayRoutingOptions
+        {
+            Gateways = [new GatewayRouteEntry { ProviderId = provider, Priority = 1 },
+                new GatewayRouteEntry { ProviderId = "fallback", Priority = 2 }]
+        };
+
+        var result = await CreateSut([adapter, fallback], routing: routing).ProcessPaymentAsync(ChargeRequest());
+
+        result.Success.Should().BeFalse();
+        result.Status.Should().Be(PaymentStatus.Processing);
+        result.FailureKind.Should().Be(GatewayFailureKind.OutcomeUnknown);
+        result.ProviderId.Should().Be(provider);
+        apiCalls.Should().Be(1, "neither the same provider nor another provider may repeat an unconfirmed charge");
+        fallback.ChargeCallCount.Should().Be(0);
+    }
+
+    [Theory]
+    [InlineData("http", false)]
+    [InlineData("timeout", false)]
+    [InlineData("canceled", false)]
+    [InlineData("http", true)]
+    [InlineData("timeout", true)]
+    [InlineData("canceled", true)]
+    public async Task Charge_TransportExceptionAfterAttempt_DoesNotRetryOrFailOver(string failure, bool pinned)
+    {
+        Exception exception = failure switch
+        {
+            "timeout" => new TimeoutException("Response lost after send"),
+            "canceled" => new TaskCanceledException("Response lost after send"),
+            _ => new HttpRequestException("Response lost after send")
+        };
         var stripe = new FakePaymentGateway("stripe")
-            .EnqueueTransportError()
-            .EnqueueTransportError();
+            .EnqueueCharge(_ => throw exception);
         var payPal = new FakePaymentGateway("paypal");
         var sut = CreateSut([stripe, payPal]);
 
-        var result = await sut.ProcessPaymentAsync(ChargeRequest());
+        var result = await sut.ProcessPaymentAsync(ChargeRequest() with { GatewayProvider = pinned ? "stripe" : null });
 
-        result.Success.Should().BeTrue();
-        result.ProviderId.Should().Be("paypal");
-        stripe.ChargeCallCount.Should().Be(2);
+        result.Success.Should().BeFalse();
+        result.Status.Should().Be(PaymentStatus.Processing);
+        result.FailureKind.Should().Be(GatewayFailureKind.OutcomeUnknown);
+        result.ProviderId.Should().Be("stripe");
+        stripe.ChargeCallCount.Should().Be(1);
+        payPal.ChargeCallCount.Should().Be(0, "a lost response may hide a successful charge at the first provider");
     }
 
     [Fact]

@@ -17,6 +17,19 @@
     "walletSigning": "Assinando…",
     "walletConnected": "Conectado:",
     "walletDisconnect": "Desconectar",
+    "guest": {
+      "continueAsGuest": "Continuar como visitante",
+      "busy": "Entrando como visitante...",
+      "disabledMessage": "O acesso como visitante está desativado no momento.",
+      "errorMessage": "Não foi possível iniciar uma sessão de visitante. Tente novamente.",
+      "bannerTitle": "Você está navegando como visitante",
+      "bannerDescription": "Você tem acesso limitado ao conteúdo público. Crie uma conta para desbloquear a experiência completa e manter seu progresso.",
+      "upgradeCta": "Criar sua conta",
+      "leaveGuestMode": "Sair do modo visitante",
+      "sessionLabel": "Sessão de visitante",
+      "permissionsLabel": "Permissões",
+      "signUpNotice": "Sua sessão de visitante será vinculada à sua nova conta."
+    },
     "mfa": {
       "title": "Autenticação de dois fatores",
       "description": "Confirme seu acesso com seu app autenticador. Este desafio expira após cinco minutos.",

@@ -270,3 +270,54 @@ test("a combined report requires independent verification of both installed patc
   }
   assert.deepEqual(validateAuditReport(combined, 1, true, true), { advisories: 2, verifiedLocalPatches: 2 });
 });
+
+const patchedDeepmergeReport = () => {
+  const result = report();
+  result.metadata.vulnerabilities.low = 1;
+  result.advisories["1243505"] = {
+    module_name: "deepmerge",
+    github_advisory_id: "GHSA-gcqx-w48m-w2h4",
+    url: "https://github.com/advisories/GHSA-gcqx-w48m-w2h4",
+    cves: ["CVE-2026-93753"],
+    findings: [{ version: "4.3.1" }],
+  };
+  return result;
+};
+
+test("deepmerge requires its own installed-byte and exploit verification", () => {
+  assert.throws(() => validateAuditReport(patchedDeepmergeReport(), 1, true, true), /Unmitigated/);
+  assert.deepEqual(validateAuditReport(patchedDeepmergeReport(), 1, false, false, true), {
+    advisories: 1, verifiedLocalPatches: 1,
+  });
+  assert.throws(() => validateAuditReport(patchedDeepmergeReport(), 0, true, true, true), /exit code/);
+});
+
+test("deepmerge mitigation rejects changed identities, missing evidence and unreviewed versions", () => {
+  for (const mutation of [
+    { module_name: "other" }, { github_advisory_id: "GHSA-other" },
+    { url: "https://github.com/advisories/GHSA-other" },
+    { cves: [] }, { cves: ["CVE-2026-93753", "CVE-other"] },
+    { findings: [] }, { findings: undefined }, { findings: [{}] },
+    { findings: [{ version: "4.3.0" }] },
+    { findings: [{ version: "4.3.1" }, { version: "4.3.0" }] },
+  ]) {
+    const invalid = patchedDeepmergeReport();
+    Object.assign(invalid.advisories["1243505"], mutation);
+    assert.throws(() => validateAuditReport(invalid, 1, true, true, true), /Unmitigated/);
+  }
+});
+
+test("combined advisories retain independent proof and cannot hide additional findings", () => {
+  const combined = patchedReport();
+  combined.advisories["1241202"] = patchedSprintfReport().advisories["1241202"];
+  combined.advisories["1243505"] = patchedDeepmergeReport().advisories["1243505"];
+  combined.metadata.vulnerabilities.moderate = 1;
+  combined.metadata.vulnerabilities.low = 1;
+  for (const flags of [[false, true, true], [true, false, true], [true, true, false]]) {
+    assert.throws(() => validateAuditReport(combined, 1, ...flags), /Unmitigated/);
+  }
+  assert.deepEqual(validateAuditReport(combined, 1, true, true, true), { advisories: 3, verifiedLocalPatches: 3 });
+  combined.advisories.other = { module_name: "other", github_advisory_id: "GHSA-other" };
+  combined.metadata.vulnerabilities.low = 2;
+  assert.throws(() => validateAuditReport(combined, 1, true, true, true), /Unmitigated.*GHSA-other/);
+});
