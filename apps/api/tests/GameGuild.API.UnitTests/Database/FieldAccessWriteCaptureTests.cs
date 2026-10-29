@@ -106,10 +106,12 @@ public sealed class FieldAccessWriteCaptureTests
         member.Role = "Admin";
         await context.SaveChangesAsync();
 
+        // The initial Added-stage save already recorded the first Role value; the modification
+        // adds the Member→Admin diff row.
         var roleRow = await FieldRows(context).SingleAsync(row =>
-            row.EntityType == "TenantMember" && row.FieldName == "Role" && row.AccessType == FieldAccessType.Write);
+            row.EntityType == "TenantMember" && row.FieldName == "Role"
+            && row.AccessType == FieldAccessType.Write && row.OldValue == "Member");
         roleRow.TenantId.Should().Be(tenantId);
-        roleRow.OldValue.Should().Be("Member");
         roleRow.NewValue.Should().Be("Admin");
     }
 

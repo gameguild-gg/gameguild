@@ -71,9 +71,11 @@ public sealed class FieldAccessReadCaptureFilterTests
         await ExecuteAsync(filterContext, filter);
 
         var rows = await context.Set<FieldAccessAudit>().IgnoreQueryFilters().ToListAsync();
-        // Only the first returned entity is walked (cap = 1): one sensitive field, one row.
-        rows.Should().ContainSingle(row => row.FieldName == "Email");
-        rows.Single().EntityId.Should().Be(first);
+        // Only the first returned entity is walked (cap = 1): its sensitive fields — Email and the
+        // name-classified PhoneNumber slot — are recorded and nothing for the second entity.
+        rows.Should().OnlyContain(row => row.EntityId == first);
+        rows.Should().Contain(row => row.FieldName == "Email" && row.IsSensitiveField);
+        rows.Should().NotContain(row => row.EntityId == second);
     }
 
     [Fact]
