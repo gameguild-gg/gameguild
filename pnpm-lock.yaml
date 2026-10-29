@@ -46,6 +46,7 @@ overrides:
   snowflake-sdk@<3.3.0: 3.3.0
   sprintf-js@<1.1.3: 1.1.3
   shell-quote@<1.11.0: 1.11.0
+  systeminformation@<5.33.16: 5.33.16
   'zod@<4.6.6': 4.6.7
   '@coinbase/cdp-sdk>abitype': 1.2.3
 
@@ -14220,8 +14221,8 @@ packages:
     engines: {node: '>=14.17.0'}
     hasBin: true
 
-  systeminformation@5.33.15:
-    resolution: {integrity: sha512-s5RloL0F7xhN0ZjfHtLGnbf7EW74EI0N8NFL+1xR7Oxz9QA33obNZsl7lyfnJOhN04E/kGFPoJPlvY7TZ5fzmw==}
+  systeminformation@5.33.16:
+    resolution: {integrity: sha512-R+Lh69IJXfJj6bfyH1In5cIR9FTr4hBS39YvlZHZjsK1p9cuELPq7hplZZIb56ZESMMb+DzdKqqE6Iomi01Mvg==}
     engines: {node: '>=10.0.0'}
     os: [darwin, linux, win32, freebsd, openbsd, netbsd, sunos, android]
     hasBin: true
@@ -17950,7 +17951,7 @@ snapshots:
       object-treeify: 1.1.33
       open: 8.4.2
       picomatch: 4.0.7
-      systeminformation: 5.33.15
+      systeminformation: 5.33.16
       undici: 7.30.1
       which: 4.0.0
       yocto-spinner: 1.2.2
@@ -30595,7 +30596,7 @@ snapshots:
       syncpack-windows-arm64: 15.3.3
       syncpack-windows-x64: 15.3.3
 
-  systeminformation@5.33.15: {}
+  systeminformation@5.33.16: {}
 
   tabbable@6.5.0: {}
 
