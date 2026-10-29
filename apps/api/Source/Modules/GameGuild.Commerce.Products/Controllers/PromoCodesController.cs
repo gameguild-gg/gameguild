@@ -320,7 +320,9 @@ public class PromoCodesController(IMediator mediator) : BaseApiController
     }
 
     /// <summary>
-    /// Validate a promo code
+    /// Validate a promo code. Untrusted (anonymous) contexts are CAPTCHA-gated when the
+    /// promo redemption CAPTCHA gate is enabled (issue #418 anti-farming): a missing or
+    /// unverifiable token is rejected before any code lookup, fail closed.
     /// </summary>
     [HttpPost(":validate")]
     [EnableRateLimiting(RateLimitPolicies.Api)]
@@ -333,7 +335,8 @@ public class PromoCodesController(IMediator mediator) : BaseApiController
             request.OrderAmount,
             request.ProductId,
             GetUserId(),
-            request.PlanId
+            request.PlanId,
+            request.CaptchaToken
         );
 
         var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
@@ -507,7 +510,8 @@ public sealed record ValidatePromoCodeRequest(
     string Code,
     decimal OrderAmount,
     Guid? ProductId = null,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? CaptchaToken = null
 );
 
 /// <summary>

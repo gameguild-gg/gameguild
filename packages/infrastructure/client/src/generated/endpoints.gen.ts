@@ -26711,7 +26711,9 @@ export const postPromoCodesGenerateBulkEndpoint = {
 } as const;
 
 /**
- * Validate a promo code
+ * Validate a promo code. Untrusted (anonymous) contexts are CAPTCHA-gated when the
+ * promo redemption CAPTCHA gate is enabled (issue #418 anti-farming): a missing or
+ * unverifiable token is rejected before any code lookup, fail closed.
  */
 export interface PostPromoCodesValidateInput {
   body?: Types.CommerceProductsValidatePromoCodeInput;
