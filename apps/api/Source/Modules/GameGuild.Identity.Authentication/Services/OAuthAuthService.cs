@@ -495,6 +495,19 @@ public class OAuthAuthService(
         var mfaRequired = await mfaService.IsMfaRequiredAsync(userId, cancellationToken).ConfigureAwait(false);
         if (mfaRequired)
         {
+            // IdP integration auditing (issue #180): a federated sign-in refused by the MFA policy
+            // is a durable denial event with the provider context, mirroring the OIDC gate.
+            var deniedHttpContext = httpContextAccessor.HttpContext;
+            await RecordAuditEventAsync(new AuthenticationAuditEvent(
+                FederatedSignInMfaDeniedActionType,
+                userId,
+                Success: false,
+                Method: $"Saml:{slug}",
+                IpAddress: authAttemptService.GetClientIpAddress(deniedHttpContext),
+                UserAgent: deniedHttpContext?.Request.Headers.UserAgent.ToString(),
+                ErrorMessage: "Assertion did not carry a configured MFA AuthnContext class",
+                Metadata: new { Provider = slug, RequiredProof = "MfaAuthnContextClass" })).ConfigureAwait(false);
+
             throw new UnauthorizedAccessException(
                 $"SAML sign-in for provider '{slug}' requires multi-factor authentication, but the assertion did not carry a configured MFA AuthnContext class.");
         }
