@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations.Internal;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -297,10 +298,31 @@ public sealed class AuditSnapshotMigrationPostgreSqlTests(ApiPostgreSqlFixture f
 
     private static async Task AssertStoresReadableAsync(ApplicationDbContext db)
     {
+        // Historical-upgrade scenarios migrate to an explicit boundary that can predate the
+        // migrations introducing newer audit stores; only stores whose creating migration is
+        // applied at the current boundary are expected to be readable.
+        var applied = (await db.Database.GetAppliedMigrationsAsync()).ToHashSet();
+        var assembly = db.GetService<IMigrationsAssembly>();
+        var creatingMigrations = assembly.Migrations
+            .Select(pair => (Id: pair.Key, Instance: (Migration) Activator.CreateInstance(pair.Value.AsType())!))
+            .SelectMany(pair => pair.Instance.UpOperations.OfType<CreateTableOperation>()
+                .Select(operation => (Table: operation.Name, pair.Id)))
+            .GroupBy(entry => entry.Table, StringComparer.Ordinal)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Select(entry => entry.Id).ToList(),
+                StringComparer.Ordinal);
+
         foreach (var type in AuditStores)
         {
             var entity = db.Model.FindEntityType(type)!;
             var table = entity.GetTableName()!;
+            if (creatingMigrations.TryGetValue(table, out var migrations)
+                && migrations.All(id => !applied.Contains(id)))
+            {
+                continue;
+            }
+
             var store = StoreObjectIdentifier.Table(table, entity.GetSchema());
             var columns = string.Join(", ", entity.GetProperties().Select(property =>
                 '"' + property.GetColumnName(store)!.Replace("\"", "\"\"", StringComparison.Ordinal) + '"'));
