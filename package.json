@@ -89,10 +89,5 @@
     "syncpack": "^15.3.2",
     "turbo": "^2.11.9",
     "typescript": "^6.0.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "systeminformation": "5.33.16"
-    }
   }
 }
