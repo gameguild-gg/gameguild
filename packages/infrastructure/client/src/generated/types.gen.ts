@@ -8725,6 +8725,7 @@ export interface ComplianceAuditModuleEventCoverageEntry {
   moduleName?: string | null;
   mutatingCommandCount?: number;
   mutationEndpointCount?: number;
+  mutationEndpointsWithoutCommandDispatch?: string[] | null;
   unavailableCommands?: string[] | null;
 }
 
@@ -36490,6 +36491,7 @@ ComplianceAuditModuleEventCoverageEntrySchema = z.object({
   moduleName: z.string().nullable().optional(),
   mutatingCommandCount: z.number().int().optional(),
   mutationEndpointCount: z.number().int().optional(),
+  mutationEndpointsWithoutCommandDispatch: z.array(z.string()).nullable().optional(),
   unavailableCommands: z.array(z.string()).nullable().optional(),
 });
 
