@@ -117,6 +117,21 @@ are opt-in additions. Basic and API-key query credentials require HTTPS. API-key
 by default because URLs are commonly logged. Cookie authentication emits an HTTP-only, secure cookie with a
 validated SameSite mode.
 
+### Password change and reset revocation (`Session:TerminateSessionsOnPasswordChange`, default on)
+
+A successful password change (`POST /v1/auth/password:change`) or token-based password reset (`POST /v1/auth/password:reset`) runs the full
+credential-change revocation battery (issue #278), mirroring the terminate-everywhere session endpoint:
+
+1. every refresh token for the user is revoked, so a stolen refresh token cannot outlive the password that
+   guarded it;
+2. every active session is terminated with the audited `PasswordChanged` reason (per-session audit events and
+   session analytics metrics flow through `ISessionManagementService`);
+3. the user's token version is bumped by the password update itself, and a versioned user-token revocation is
+   recorded, so legacy access tokens without version/session claims stop validating immediately.
+
+Disabling the option keeps only the request-scoped behavior: with `RevokeOtherSessions` the change terminates
+every session except the one that performed it.
+
 To enable the optional schemes, add only the settings the deployment needs:
 
 ```json
