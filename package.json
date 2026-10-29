@@ -87,7 +87,7 @@
     "prettier": "3.9.10",
     "rimraf": "^6.0.0",
     "syncpack": "^15.3.2",
-    "turbo": "^2.11.9",
+    "turbo": "^2.11.10",
     "typescript": "^6.0.3"
   }
 }

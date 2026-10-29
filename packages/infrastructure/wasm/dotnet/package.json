@@ -40,13 +40,13 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "pako": "^3.0.2"
+    "pako": "^3.0.3"
   },
   "devDependencies": {
     "@types/node": "^26",
     "@types/pako": "^3.0.0",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
-    "vite": "^8.3.2"
+    "vite": "^8.3.5"
   }
 }

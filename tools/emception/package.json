@@ -148,7 +148,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "@xterm/xterm": "^6.0.0",
     "cli-progress": "^3.12.0",
-    "eslint-config-next": "16.4.2",
+    "eslint-config-next": "16.4.3",
     "npm-run-all": "4.1.5",
     "shelljs": "^0.10.0",
     "tar": "^7.5.22",
@@ -156,6 +156,6 @@
     "tsup": "^8.4.0",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
-    "vite": "^8.3.2"
+    "vite": "^8.3.5"
   }
 }
