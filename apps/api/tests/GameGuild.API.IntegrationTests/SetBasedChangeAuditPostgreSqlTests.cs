@@ -381,6 +381,7 @@ public sealed class SetBasedChangeAuditPostgreSqlTests(ApiPostgreSqlFixture fixt
             Type = "billing",
             Title = title,
             Content = "content",
+            Metadata = "{}",
             IsRead = false,
             IsArchived = archived,
             ArchivedAt = archived ? DateTime.UtcNow.AddDays(-daysOld) : null,
