@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmdirSync, unlinkSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -53,26 +53,25 @@ test('ambiguous receipts and unsafe output values cannot publish success', () =>
   assert.throws(() => selectUploadReceipt(name, [{ ...success(), url: success().url.replace('https:', 'http:') }, skipped, skipped]));
 });
 
-test('the CLI propagates complete retention metadata to the runner output', () => {
+test('the CLI propagates complete retention metadata to the runner output', (context) => {
   const directory = mkdtempSync(join(process.env.ARTIFACT_RECEIPT_TEST_TEMP ?? tmpdir(), 'required-artifact-receipt-'));
   const output = join(directory, 'output');
-  try {
-    const run = spawnSync(process.execPath, ['--max-old-space-size=128', fileURLToPath(new URL('../../../.github/actions/upload-required-artifact/select-upload.mjs', import.meta.url))], {
-      encoding: 'utf8',
-      timeout: 10000,
-      env: { ...process.env, ARTIFACT_BASE_NAME: name, GITHUB_OUTPUT: output,
-        UPLOAD_1_OUTCOME: 'failure', UPLOAD_2_OUTCOME: 'success', UPLOAD_2_ID: '456', UPLOAD_2_URL: success('456').url,
-        UPLOAD_2_DIGEST: digest, UPLOAD_3_OUTCOME: 'skipped' },
-    });
-    assert.equal(run.status, 0, run.stderr);
-    const values = Object.fromEntries(readFileSync(output, 'utf8').trim().split('\n').map((line) => line.split(/=(.*)/s).slice(0, 2)));
-    assert.equal(values['artifact-id'], '456');
-    assert.equal(values['artifact-name'], `${name}-retry-2`);
-    assert.equal(values['artifact-digest'], digest);
-  } finally {
-    try { unlinkSync(output); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  context.after(() => {
+    rmSync(output, { force: true });
     rmdirSync(directory);
-  }
+  });
+  const run = spawnSync(process.execPath, ['--max-old-space-size=128', fileURLToPath(new URL('../../../.github/actions/upload-required-artifact/select-upload.mjs', import.meta.url))], {
+    encoding: 'utf8',
+    timeout: 10000,
+    env: { ...process.env, ARTIFACT_BASE_NAME: name, GITHUB_OUTPUT: output,
+      UPLOAD_1_OUTCOME: 'failure', UPLOAD_2_OUTCOME: 'success', UPLOAD_2_ID: '456', UPLOAD_2_URL: success('456').url,
+      UPLOAD_2_DIGEST: digest, UPLOAD_3_OUTCOME: 'skipped' },
+  });
+  assert.equal(run.status, 0, run.stderr);
+  const values = Object.fromEntries(readFileSync(output, 'utf8').trim().split('\n').map((line) => line.split(/=(.*)/s).slice(0, 2)));
+  assert.equal(values['artifact-id'], '456');
+  assert.equal(values['artifact-name'], `${name}-retry-2`);
+  assert.equal(values['artifact-digest'], digest);
 });
 
 test('the CLI exits unsuccessfully when every upload fails', () => {
