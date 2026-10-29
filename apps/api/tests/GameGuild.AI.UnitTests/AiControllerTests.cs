@@ -34,6 +34,7 @@ public sealed class AiControllerTests
         var orchestrator = new Mock<IAiOrchestrator>();
         AiGenerateRequest? capturedRequest = null;
         var expected = new AiCompletionResponse(
+            "primary",
             "OpenAi",
             "gpt-4.1-mini",
             "Email body",
@@ -84,16 +85,21 @@ public sealed class AiControllerTests
     }
 
     [Fact]
-    public void Status_ShouldReportProviderCredentialPresenceWithoutReturningSecrets()
+    public void Status_ShouldReportBackendCredentialPresenceWithoutReturningSecrets()
     {
         var controller = CreateController(aiOptions: new AiOptions
         {
             Enabled = true,
-            DefaultProvider = "OpenAi",
+            DefaultBackend = "primary",
             AllowTenantOverrides = true,
-            Providers = new Dictionary<string, AiProviderOptions>
+            Backends = new Dictionary<string, AiBackendOptions>
             {
-                ["OpenAi"] = new() { ApiKey = "sk-secret", DefaultModel = "gpt-4.1-mini" }
+                ["primary"] = new()
+                {
+                    Adapter = AiAdapterKeys.OpenAi,
+                    ApiKey = "sk-secret",
+                    DefaultModel = "gpt-4.1-mini",
+                },
             }
         });
 
@@ -101,9 +107,9 @@ public sealed class AiControllerTests
 
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var payload = ok.Value.Should().BeOfType<AiStatusResponse>().Subject;
-        var openAi = payload.Providers.Single(provider => provider.Provider == "OpenAi");
-        openAi.Configured.Should().BeTrue();
-        openAi.CredentialsConfigured.Should().BeTrue();
+        var primary = payload.Backends.Single(backend => backend.Backend == "primary");
+        primary.Configured.Should().BeTrue();
+        primary.CredentialsConfigured.Should().BeTrue();
         ok.Value!.ToString().Should().NotContain("sk-secret");
     }
 
@@ -115,11 +121,25 @@ public sealed class AiControllerTests
         requestContextAccessor.SetupGet(accessor => accessor.CurrentTenantId).Returns(Guid.NewGuid());
         requestContextAccessor.SetupGet(accessor => accessor.CurrentUserId).Returns(Guid.NewGuid());
 
+        var options = aiOptions ?? new AiOptions { Enabled = true };
+        var adapter = new Mock<IAiAdapter>();
+        adapter.SetupGet(value => value.Key).Returns(AiAdapterKeys.OpenAi);
+        adapter.SetupGet(value => value.Descriptor).Returns(new AiAdapterDescriptor(
+            AiAdapterKeys.OpenAi,
+            RequiresExplicitBaseUrl: false,
+            AiCredentialPolicy.Required,
+            "https://api.openai.com",
+            SupportsStreaming: true));
+        var catalog = new AiBackendCatalog(
+            Options.Create(options),
+            new AiAdapterRegistry([adapter.Object]));
+
         return new AiController(
             new CommandHandlerSender(orchestrator ?? Mock.Of<IAiOrchestrator>(), Mock.Of<IAiPromptTemplateService>()),
             Mock.Of<IAiConversationHistoryReader>(),
             requestContextAccessor.Object,
             Mock.Of<IResourceQuotaReader>(),
-            Options.Create(aiOptions ?? new AiOptions { Enabled = true }));
+            catalog,
+            Options.Create(options));
     }
 }

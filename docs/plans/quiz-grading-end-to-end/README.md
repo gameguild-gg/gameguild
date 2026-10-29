@@ -45,6 +45,12 @@ host, sem acoplar assessments a fornecedor ou quiz. Ele cobre configuração
 segura, contexto server-derived, saída estruturada, idempotência, capability
 dinâmica e testes determinísticos, mantendo chamadas reais como smoke opt-in.
 
+O plano de infraestrutura
+[`13-standard-ai-adapter-and-generic-backends.md`](./13-standard-ai-adapter-and-generic-backends.md)
+separa backend, adapter, modelo e credencial no módulo de IA. Ele preserva o
+adapter oficial da OpenAI, introduz `StandardAiAdapter` para servidores próprios
+compatíveis e mantém grading independente do modelo e do protocolo executados.
+
 O documento anterior
 [`quiz-assessment-end-to-end-grading-flow.md`](../quiz-assessment-end-to-end-grading-flow.md)
 permanece como diagnóstico detalhado do estado encontrado. Em caso de conflito,

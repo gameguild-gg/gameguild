@@ -30,7 +30,7 @@ public sealed class AiCoverageCompletionTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["AI:Enabled"] = "true",
-                ["AI:DefaultProvider"] = "OpenAi"
+                ["AI:DefaultBackend"] = "primary"
             })
             .Build();
         var module = new AiModule();
@@ -45,16 +45,17 @@ public sealed class AiCoverageCompletionTests
         services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IAiPromptTemplateService) && descriptor.ImplementationType == typeof(AiPromptTemplateService));
         services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IAiConversationHistoryReader) && descriptor.ImplementationType == typeof(AiConversationHistoryRepository));
         services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IAiConversationHistoryRepository) && descriptor.ImplementationType == typeof(AiConversationHistoryRepository));
-        services.Where(descriptor => descriptor.ServiceType == typeof(IAiProviderAdapter))
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IAiBackendCatalog));
+        services.Where(descriptor => descriptor.ServiceType == typeof(IAiAdapter))
             .Select(descriptor => descriptor.ImplementationType)
-            .Should().BeEquivalentTo(new[] { typeof(OpenAiAdapter), typeof(AnthropicAdapter), typeof(GoogleAiAdapter) });
+            .Should().BeEquivalentTo(new[] { typeof(OpenAiAdapter), typeof(StandardAiAdapter), typeof(AnthropicAdapter), typeof(GoogleAiAdapter) });
     }
 
     [Fact]
-    public void AiContractsAndProviderParser_ShouldCoverAliasesDefaultsAndRecords()
+    public void AiContractsAndAdapterRegistry_ShouldCoverBackendRecordsAndRegistryRules()
     {
-        var chat = new AiChatRequest("openai", "gpt", "system", [new AiChatMessage("user", "hello")], 0.2, 32);
-        var generated = new AiGeneratedContentRequest(AiGeneratedContentKind.Report, "subject", "context", "audience", "tone", "openai", "gpt", 100);
+        var chat = new AiChatRequest("primary", "gpt", "system", [new AiChatMessage("user", "hello")], 0.2, 32);
+        var generated = new AiGeneratedContentRequest(AiGeneratedContentKind.Report, "subject", "context", "audience", "tone", "primary", "gpt", 100);
         var quota = new AiQuotaStatusDto("AiTokens", 10, 20, 30, 20, 33.3, "Monthly", true, DateTime.UtcNow, DateTime.UtcNow.AddDays(1));
         var quotaResponse = new AiQuotaStatusResponse(Guid.NewGuid(), [quota], DateTime.UtcNow);
         var history = new AiConversationHistoryEntryDto(
@@ -74,7 +75,7 @@ public sealed class AiCoverageCompletionTests
             DateTime.UtcNow);
         var update = new UpdateAiPromptTemplateRequest("Name", "Prompt", "Description", "Category", "System", true);
         var render = new AiPromptTemplateRenderRequest(new Dictionary<string, string?> { ["name"] = "value" });
-        var generate = new AiPromptTemplateGenerateRequest(new Dictionary<string, string?> { ["name"] = "value" }, "openai", "gpt", 0.3, 50);
+        var generate = new AiPromptTemplateGenerateRequest(new Dictionary<string, string?> { ["name"] = "value" }, "primary", "gpt", 0.3, 50);
 
         chat.Messages.Should().ContainSingle();
         generated.Kind.Should().Be(AiGeneratedContentKind.Report);
@@ -84,31 +85,95 @@ public sealed class AiCoverageCompletionTests
         render.Variables.Should().ContainKey("name");
         generate.MaxTokens.Should().Be(50);
 
-        foreach (var alias in new[] { "openai", "open-ai", "gpt", "anthropic", "claude", "google", "gemini", "googleai" })
+        var adapter = CreateMockAdapter("Custom");
+        var registry = new AiAdapterRegistry([adapter]);
+        registry.TryGet("custom", out var resolved).Should().BeTrue();
+        resolved.Should().BeSameAs(adapter);
+        registry.TryGet("unknown", out _).Should().BeFalse();
+
+        FluentActions.Invoking(() => new AiAdapterRegistry([adapter, CreateMockAdapter("custom")]))
+            .Should().Throw<InvalidOperationException>().WithMessage("*registered more than once*");
+        FluentActions.Invoking(() => new AiAdapterRegistry([CreateMockAdapter("", descriptorKey: "Custom")]))
+            .Should().Throw<InvalidOperationException>().WithMessage("*matching, non-empty key*");
+        FluentActions.Invoking(() => new AiAdapterRegistry([CreateMockAdapter("Custom", descriptorKey: "Different")]))
+            .Should().Throw<InvalidOperationException>().WithMessage("*matching, non-empty key*");
+
+        AiContractJson.ToJsonElement(null).Should().BeNull();
+        using var document = JsonDocument.Parse("""{"backend":"primary"}""");
+        AiContractJson.ToJsonElement(document.RootElement)!.Value.GetProperty("backend").GetString().Should().Be("primary");
+        AiContractJson.ToJsonElement(new { backend = "fallback" })!.Value.GetProperty("backend").GetString().Should().Be("fallback");
+    }
+
+    [Fact]
+    public void AiBackendCatalog_ShouldResolveBackendAdapterModelUrlAndCredentialPolicy()
+    {
+        var standard = CreateMockAdapter(
+            AiAdapterKeys.StandardAi,
+            requiresExplicitBaseUrl: true,
+            credentialPolicy: AiCredentialPolicy.Optional,
+            defaultBaseUrl: null);
+        var openAi = CreateMockAdapter(
+            AiAdapterKeys.OpenAi,
+            credentialPolicy: AiCredentialPolicy.Required,
+            defaultBaseUrl: "https://api.openai.com");
+        var options = new AiOptions
         {
-            AiProviderParser.TryParse(alias, out _).Should().BeTrue();
-        }
+            Enabled = true,
+            DefaultBackend = "primary",
+            Backends = new Dictionary<string, AiBackendOptions>
+            {
+                ["primary"] = new()
+                {
+                    Adapter = AiAdapterKeys.StandardAi,
+                    BaseUrl = " https://ai.internal/v1/ ",
+                    DefaultModel = "glm-5.3-flash"
+                },
+                ["official"] = new()
+                {
+                    Adapter = AiAdapterKeys.OpenAi,
+                    DefaultModel = "gpt"
+                },
+                ["missing-adapter"] = new()
+                {
+                    Adapter = "Unknown",
+                    DefaultModel = "model"
+                },
+                ["missing-url"] = new()
+                {
+                    Adapter = AiAdapterKeys.StandardAi,
+                    DefaultModel = "model"
+                },
+                ["missing-model"] = new()
+                {
+                    Adapter = AiAdapterKeys.StandardAi,
+                    BaseUrl = "https://ai.internal"
+                }
+            }
+        };
+        var catalog = new AiBackendCatalog(
+            Options.Create(options),
+            new AiAdapterRegistry([standard, openAi]));
 
-        AiProviderParser.TryParse(null, out var nullProvider).Should().BeFalse();
-        nullProvider.Should().Be(default);
-        AiProviderParser.TryParse("unknown", out _).Should().BeFalse();
-        AiProviderParser.ToResponseValue(AiProvider.OpenAi).Should().Be("OpenAi");
-        AiProviderParser.ToResponseValue(AiProvider.Anthropic).Should().Be("Anthropic");
-        AiProviderParser.ToResponseValue(AiProvider.Google).Should().Be("Google");
-        AiProviderParser.ToResponseValue((AiProvider)999).Should().Be("999");
-        AiProviderParser.ToApiKeySetting(AiProvider.OpenAi).Should().Be("ai:openai");
-        AiProviderParser.ToApiKeySetting(AiProvider.Anthropic).Should().Be("ai:anthropic");
-        AiProviderParser.ToApiKeySetting(AiProvider.Google).Should().Be("ai:google");
-        FluentActions.Invoking(() => AiProviderParser.ToApiKeySetting((AiProvider)999)).Should().Throw<ArgumentOutOfRangeException>();
-        AiProviderParser.GetDefaultBaseUrl(AiProvider.OpenAi).Should().Contain("openai");
-        AiProviderParser.GetDefaultBaseUrl(AiProvider.Anthropic).Should().Contain("anthropic");
-        AiProviderParser.GetDefaultBaseUrl(AiProvider.Google).Should().Contain("googleapis");
-        FluentActions.Invoking(() => AiProviderParser.GetDefaultBaseUrl((AiProvider)999)).Should().Throw<ArgumentOutOfRangeException>();
+        var resolution = catalog.Resolve("PRIMARY", " requested-model ", null);
+        resolution.IsSuccess.Should().BeTrue();
+        resolution.Value.Backend.Should().Be("primary");
+        resolution.Value.Adapter.Should().Be(AiAdapterKeys.StandardAi);
+        resolution.Value.Model.Should().Be("requested-model");
+        resolution.Value.BaseUrl.Should().Be("https://ai.internal/v1");
+        resolution.Value.ApiKey.Should().BeNull();
 
-        AiProviderParser.ToJsonElement(null).Should().BeNull();
-        using var document = JsonDocument.Parse("""{"provider":"OpenAi"}""");
-        AiProviderParser.ToJsonElement(document.RootElement)!.Value.GetProperty("provider").GetString().Should().Be("OpenAi");
-        AiProviderParser.ToJsonElement(new { provider = "Google" })!.Value.GetProperty("provider").GetString().Should().Be("Google");
+        catalog.GetReadiness().Available.Should().BeTrue();
+        catalog.GetReadiness("official").Code.Should().Be("AI.CredentialsMissing");
+        catalog.GetReadiness("unknown").Code.Should().Be("AI.BackendInvalid");
+        catalog.GetReadiness("missing-adapter").Code.Should().Be("AI.AdapterNotRegistered");
+        catalog.GetReadiness("missing-url").Code.Should().Be("AI.BaseUrlMissing");
+        catalog.GetReadiness("missing-model").Code.Should().Be("AI.ModelNotConfigured");
+
+        var status = catalog.GetStatus().Single(candidate => candidate.Backend == "primary");
+        status.Ready.Should().BeTrue();
+        status.Adapter.Should().Be(AiAdapterKeys.StandardAi);
+        status.CredentialPolicy.Should().Be(nameof(AiCredentialPolicy.Optional));
+        status.CredentialsConfigured.Should().BeFalse();
     }
 
     [Fact]
@@ -145,39 +210,24 @@ public sealed class AiCoverageCompletionTests
     }
 
     [Fact]
-    public void AiProviderErrorMapper_ShouldMapStatusesAndBodyShapes()
+    public void AiAdapterErrorMapper_ShouldMapStatusesWithoutExposingRemoteBodies()
     {
-        AiProviderErrorMapper.Map("OpenAI", HttpStatusCode.Unauthorized, "body").Code.Should().Be("AI.ProviderUnauthorized");
-        AiProviderErrorMapper.Map("OpenAI", HttpStatusCode.Forbidden, "body").Code.Should().Be("AI.ProviderForbidden");
-        AiProviderErrorMapper.Map("OpenAI", (HttpStatusCode)429, "body").Code.Should().Be("AI.ProviderRateLimited");
-        AiProviderErrorMapper.Map("OpenAI", HttpStatusCode.BadRequest, "bad").Code.Should().Be("AI.ProviderBadRequest");
-        AiProviderErrorMapper.Map("OpenAI", HttpStatusCode.NotFound, "missing").Code.Should().Be("AI.ProviderEndpointNotFound");
-        AiProviderErrorMapper.Map("OpenAI", HttpStatusCode.InternalServerError, new string('x', 401)).Code.Should().Be("AI.ProviderFailure");
+        AiAdapterErrorMapper.Map("OpenAI", HttpStatusCode.Unauthorized).Code.Should().Be("AI.ProviderUnauthorized");
+        AiAdapterErrorMapper.Map("OpenAI", HttpStatusCode.Forbidden).Code.Should().Be("AI.ProviderForbidden");
+        AiAdapterErrorMapper.Map("OpenAI", (HttpStatusCode)429).Code.Should().Be("AI.ProviderRateLimited");
+        AiAdapterErrorMapper.Map("OpenAI", HttpStatusCode.BadRequest).Description.Should().Be("OpenAI returned 400.");
+        AiAdapterErrorMapper.Map("OpenAI", HttpStatusCode.NotFound).Code.Should().Be("AI.ProviderEndpointNotFound");
+        AiAdapterErrorMapper.Map("OpenAI", HttpStatusCode.InternalServerError).Code.Should().Be("AI.ProviderFailure");
 
-        var emptyBody = AiProviderErrorMapper.Map("OpenAI", (HttpStatusCode)418, " ");
+        var emptyBody = AiAdapterErrorMapper.Map("OpenAI", (HttpStatusCode)418);
         emptyBody.Code.Should().Be("AI.ProviderRequestFailed");
         emptyBody.Description.Should().Be("OpenAI returned 418.");
     }
 
     [Fact]
-    public void AiControllerPrivateHelpers_ShouldCoverGeneratedContentProviderAndCsvBranches()
+    public void AiControllerPrivateHelpers_ShouldCoverGeneratedContentAndCsvBranches()
     {
-        var controller = CreateAiController(aiOptions: new AiOptions
-        {
-            Enabled = true,
-            DefaultProvider = "OpenAi",
-            AllowTenantOverrides = true,
-            Providers = new Dictionary<string, AiProviderOptions>
-            {
-                ["OpenAi"] = new() { ApiKey = "openai-key", DefaultModel = "gpt", BaseUrl = " https://openai.test " },
-                ["claude"] = new() { ApiKey = "claude-key", DefaultModel = "claude" },
-                ["unknown-provider"] = new() { ApiKey = "ignored" }
-            }
-        });
-
-        InvokePrivateInstance<AiProviderOptions?>(controller, "ResolvePlatformProviderOptions", AiProvider.OpenAi)!.DefaultModel.Should().Be("gpt");
-        InvokePrivateInstance<AiProviderOptions?>(controller, "ResolvePlatformProviderOptions", AiProvider.Anthropic)!.DefaultModel.Should().Be("claude");
-        InvokePrivateInstance<AiProviderOptions?>(controller, "ResolvePlatformProviderOptions", AiProvider.Google).Should().BeNull();
+        var controller = CreateAiController();
 
         InvokePrivateStatic<string>(typeof(AiController), "BuildGeneratedContentSystemPrompt", AiGeneratedContentKind.Email).Should().Contain("emails");
         InvokePrivateStatic<string>(typeof(AiController), "BuildGeneratedContentSystemPrompt", AiGeneratedContentKind.Report).Should().Contain("reports");
@@ -405,9 +455,9 @@ public sealed class AiCoverageCompletionTests
     }
 
     [Fact]
-    public async Task ProviderAdapters_ShouldNormalizeSuccessfulResponses()
+    public async Task AiAdapters_ShouldNormalizeSuccessfulResponses()
     {
-        var openAi = new OpenAiAdapter(
+        var openAi = CreateOpenAiAdapter(
             new SequenceHttpClientFactory(
                 JsonResponse((HttpStatusCode)429, """{"error":"retry"}"""),
                 JsonResponse(HttpStatusCode.OK, """
@@ -421,8 +471,7 @@ public sealed class AiCoverageCompletionTests
                   ],
                   "usage": { "prompt_tokens": 3, "completion_tokens": 4, "total_tokens": 7 }
                 }
-                """)),
-            NullLogger<OpenAiAdapter>.Instance);
+                """)));
         var anthropicWithUsage = new AnthropicAdapter(
             new SequenceHttpClientFactory(JsonResponse(HttpStatusCode.OK, """
             {
@@ -457,13 +506,13 @@ public sealed class AiCoverageCompletionTests
             NullLogger<GoogleAiAdapter>.Instance);
 
         var openResult = await openAi.CompleteAsync(CreateResolvedRequest(systemPrompt: "system", baseUrl: "https://openai.test/"));
-        var anthropicResult = await anthropicWithUsage.CompleteAsync(CreateResolvedRequest(AiProvider.Anthropic, baseUrl: "https://anthropic.test/"));
-        var anthropicNoUsageResult = await anthropicWithoutUsage.CompleteAsync(CreateResolvedRequest(AiProvider.Anthropic, baseUrl: "https://anthropic.test/"));
-        var googleResult = await google.CompleteAsync(CreateResolvedRequest(AiProvider.Google, model: "gemini model", systemPrompt: "system", baseUrl: "https://google.test/"));
+        var anthropicResult = await anthropicWithUsage.CompleteAsync(CreateResolvedRequest(adapter: AiAdapterKeys.Anthropic, baseUrl: "https://anthropic.test/"));
+        var anthropicNoUsageResult = await anthropicWithoutUsage.CompleteAsync(CreateResolvedRequest(adapter: AiAdapterKeys.Anthropic, baseUrl: "https://anthropic.test/"));
+        var googleResult = await google.CompleteAsync(CreateResolvedRequest(adapter: AiAdapterKeys.Google, model: "gemini model", systemPrompt: "system", baseUrl: "https://google.test/"));
 
-        openAi.Provider.Should().Be(AiProvider.OpenAi);
-        anthropicWithUsage.Provider.Should().Be(AiProvider.Anthropic);
-        google.Provider.Should().Be(AiProvider.Google);
+        openAi.Key.Should().Be(AiAdapterKeys.OpenAi);
+        anthropicWithUsage.Key.Should().Be(AiAdapterKeys.Anthropic);
+        google.Key.Should().Be(AiAdapterKeys.Google);
         openResult.Value.Text.Should().Be("open\nai");
         openResult.Value.TotalTokens.Should().Be(7);
         anthropicResult.Value.TotalTokens.Should().Be(11);
@@ -473,9 +522,9 @@ public sealed class AiCoverageCompletionTests
     }
 
     [Fact]
-    public async Task ProviderAdapters_ShouldStreamDeltasAndReturnCanonicalUsage()
+    public async Task AiAdapters_ShouldStreamDeltasAndReturnCanonicalUsage()
     {
-        var openAi = new OpenAiAdapter(
+        var openAi = CreateOpenAiAdapter(
             new SequenceHttpClientFactory(EventStreamResponse("""
             data: {"model":"gpt-stream","choices":[{"delta":{"content":"open "},"finish_reason":null}]}
 
@@ -485,8 +534,7 @@ public sealed class AiCoverageCompletionTests
 
             data: [DONE]
 
-            """)),
-            NullLogger<OpenAiAdapter>.Instance);
+            """)));
         var anthropic = new AnthropicAdapter(
             new SequenceHttpClientFactory(EventStreamResponse("""
             event: message_start
@@ -516,10 +564,10 @@ public sealed class AiCoverageCompletionTests
             CreateResolvedRequest(baseUrl: "https://openai.test/"),
             (delta, _) => { openDeltas.Add(delta); return ValueTask.CompletedTask; });
         var anthropicResult = await anthropic.CompleteStreamingAsync(
-            CreateResolvedRequest(AiProvider.Anthropic, baseUrl: "https://anthropic.test/"),
+            CreateResolvedRequest(adapter: AiAdapterKeys.Anthropic, baseUrl: "https://anthropic.test/"),
             (delta, _) => { anthropicDeltas.Add(delta); return ValueTask.CompletedTask; });
         var googleResult = await google.CompleteStreamingAsync(
-            CreateResolvedRequest(AiProvider.Google, baseUrl: "https://google.test/"),
+            CreateResolvedRequest(adapter: AiAdapterKeys.Google, baseUrl: "https://google.test/"),
             (delta, _) => { googleDeltas.Add(delta); return ValueTask.CompletedTask; });
 
         openDeltas.Should().Equal("open ", "ai");
@@ -534,18 +582,114 @@ public sealed class AiCoverageCompletionTests
     }
 
     [Fact]
-    public void AiOrchestratorPrivateHelpers_ShouldCoverModerationProviderModelAndTenantConfigBranches()
+    public async Task StandardAiAdapter_ShouldUseExplicitNormalizedEndpointAndOptionalBearer()
+    {
+        var withoutKeyFactory = new SequenceHttpClientFactory(JsonResponse(HttpStatusCode.OK, """
+        {
+          "model": "glm-5.3-flash",
+          "choices": [{ "message": { "content": "without key" }, "finish_reason": "stop" }],
+          "usage": { "prompt_tokens": 2, "completion_tokens": 3, "total_tokens": 5 }
+        }
+        """));
+        var withKeyFactory = new SequenceHttpClientFactory(JsonResponse(HttpStatusCode.OK, """
+        {
+          "model": "glm-5.3-flash",
+          "choices": [{ "message": { "content": "with key" }, "finish_reason": "stop" }]
+        }
+        """));
+        var withoutKey = CreateStandardAiAdapter(withoutKeyFactory);
+        var withKey = CreateStandardAiAdapter(withKeyFactory);
+
+        var withoutKeyResult = await withoutKey.CompleteAsync(CreateResolvedRequest(
+            adapter: AiAdapterKeys.StandardAi,
+            model: "glm-5.3-flash",
+            apiKey: null,
+            baseUrl: "https://ai.internal/v1/"));
+        var withKeyResult = await withKey.CompleteAsync(CreateResolvedRequest(
+            adapter: AiAdapterKeys.StandardAi,
+            model: "glm-5.3-flash",
+            apiKey: "secret",
+            baseUrl: "https://ai.internal"));
+
+        withoutKey.Key.Should().Be(AiAdapterKeys.StandardAi);
+        withoutKey.Descriptor.RequiresExplicitBaseUrl.Should().BeTrue();
+        withoutKey.Descriptor.CredentialPolicy.Should().Be(AiCredentialPolicy.Optional);
+        withoutKeyResult.Value.Text.Should().Be("without key");
+        withoutKeyResult.Value.Model.Should().Be("glm-5.3-flash");
+        withoutKeyFactory.Requests.Should().ContainSingle().Which.Should().Be(new ObservedRequest(
+            new Uri("https://ai.internal/v1/chat/completions"),
+            null,
+            null));
+        withKeyResult.Value.Text.Should().Be("with key");
+        withKeyFactory.Requests.Should().ContainSingle().Which.Should().Be(new ObservedRequest(
+            new Uri("https://ai.internal/v1/chat/completions"),
+            "Bearer",
+            "secret"));
+    }
+
+    [Fact]
+    public async Task OpenAiCompatibleProtocolClient_ShouldRetryServerFailuresAndSanitizeInvalidResponses()
+    {
+        var retryFactory = new SequenceHttpClientFactory(
+            JsonResponse(HttpStatusCode.InternalServerError, """{"error":"first"}"""),
+            JsonResponse(HttpStatusCode.BadGateway, """{"error":"second"}"""),
+            JsonResponse(HttpStatusCode.OK, """
+            {
+              "model": "glm-5.3-flash",
+              "choices": [{ "message": { "content": "recovered" }, "finish_reason": "stop" }]
+            }
+            """));
+        var malformedFactory = new SequenceHttpClientFactory(
+            JsonResponse(HttpStatusCode.OK, "{not-json"));
+        var emptyFactory = new SequenceHttpClientFactory(
+            JsonResponse(HttpStatusCode.OK, " "));
+
+        var recovered = await CreateStandardAiAdapter(retryFactory).CompleteAsync(CreateResolvedRequest(
+            adapter: AiAdapterKeys.StandardAi,
+            apiKey: null,
+            baseUrl: "https://ai.internal"));
+        var malformed = await CreateStandardAiAdapter(malformedFactory).CompleteAsync(CreateResolvedRequest(
+            adapter: AiAdapterKeys.StandardAi,
+            apiKey: null,
+            baseUrl: "https://ai.internal"));
+        var empty = await CreateStandardAiAdapter(emptyFactory).CompleteAsync(CreateResolvedRequest(
+            adapter: AiAdapterKeys.StandardAi,
+            apiKey: null,
+            baseUrl: "https://ai.internal"));
+
+        recovered.Value.Text.Should().Be("recovered");
+        retryFactory.Requests.Should().HaveCount(3);
+        malformed.Error.Code.Should().Be("AI.StandardAiMalformedResponse");
+        malformed.Error.Description.Should().NotContain("not-json");
+        empty.Error.Code.Should().Be("AI.StandardAiEmptyResponse");
+    }
+
+    [Fact]
+    public async Task OpenAiCompatibleProtocolClient_ShouldMapTimeoutWithoutLeakingTransportDetails()
+    {
+        var adapter = CreateStandardAiAdapter(new ThrowingHttpClientFactory(
+            new TaskCanceledException("sensitive transport details")));
+
+        var result = await adapter.CompleteAsync(CreateResolvedRequest(
+            adapter: AiAdapterKeys.StandardAi,
+            apiKey: null,
+            baseUrl: "https://ai.internal"));
+
+        result.Error.Code.Should().Be("AI.StandardAiTimeout");
+        result.Error.Description.Should().NotContain("sensitive");
+    }
+
+    [Fact]
+    public void AiOrchestratorPrivateHelpers_ShouldCoverModerationBackendModelAndTenantConfigBranches()
     {
         var orchestrator = CreateOrchestrator(new AiOptions
         {
             Enabled = true,
-            DefaultProvider = "bad-provider",
+            DefaultBackend = "platform-default",
             AllowTenantOverrides = false,
-            Providers = new Dictionary<string, AiProviderOptions>
+            Backends = new Dictionary<string, AiBackendOptions>
             {
-                ["OpenAi"] = new() { ApiKey = "platform-openai", DefaultModel = "platform-chat", BaseUrl = " https://platform.openai " },
-                ["gemini"] = new() { ApiKey = "platform-google", DefaultModel = "platform-google" },
-                ["unknown-provider"] = new() { ApiKey = "ignored" }
+                ["platform-default"] = new() { Adapter = AiAdapterKeys.StandardAi, DefaultModel = "platform-chat", BaseUrl = "https://platform.ai" }
             }
         });
         var enabledModeration = new AiModerationConfiguration(true, [" ", "blocked"], 10, 10);
@@ -560,15 +704,15 @@ public sealed class AiCoverageCompletionTests
         InvokePrivateStatic<Result<bool>>(typeof(AiOrchestrator), "ModerateInput", CreateResolvedRequest(messages: [new AiChatMessage("user", "clean")], moderation: noMatchModeration))
             .IsSuccess.Should().BeTrue();
 
-        InvokePrivateStatic<Result<bool>>(typeof(AiOrchestrator), "ModerateOutput", CreateResolvedRequest(moderation: new AiModerationConfiguration(false, [], null, null)), new AiProviderExecutionResult("m", "text", null, null, null, null))
+        InvokePrivateStatic<Result<bool>>(typeof(AiOrchestrator), "ModerateOutput", CreateResolvedRequest(moderation: new AiModerationConfiguration(false, [], null, null)), new AiAdapterExecutionResult("m", "text", null, null, null, null))
             .IsSuccess.Should().BeTrue();
-        InvokePrivateStatic<Result<bool>>(typeof(AiOrchestrator), "ModerateOutput", CreateResolvedRequest(moderation: enabledModeration), new AiProviderExecutionResult("m", "this response is too long", null, null, null, null))
+        InvokePrivateStatic<Result<bool>>(typeof(AiOrchestrator), "ModerateOutput", CreateResolvedRequest(moderation: enabledModeration), new AiAdapterExecutionResult("m", "this response is too long", null, null, null, null))
             .Error.Code.Should().Be("AI.ResponseTooLong");
-        InvokePrivateStatic<Result<bool>>(typeof(AiOrchestrator), "ModerateOutput", CreateResolvedRequest(moderation: blockedTermModeration), new AiProviderExecutionResult("m", "blocked", null, null, null, null))
+        InvokePrivateStatic<Result<bool>>(typeof(AiOrchestrator), "ModerateOutput", CreateResolvedRequest(moderation: blockedTermModeration), new AiAdapterExecutionResult("m", "blocked", null, null, null, null))
             .Error.Code.Should().Be("AI.ModerationBlockedTerm");
-        InvokePrivateStatic<Result<bool>>(typeof(AiOrchestrator), "ModerateOutput", CreateResolvedRequest(moderation: noMatchModeration), new AiProviderExecutionResult("m", "clean", null, null, null, null))
+        InvokePrivateStatic<Result<bool>>(typeof(AiOrchestrator), "ModerateOutput", CreateResolvedRequest(moderation: noMatchModeration), new AiAdapterExecutionResult("m", "clean", null, null, null, null))
             .IsSuccess.Should().BeTrue();
-        InvokePrivateStatic<Result<bool>>(typeof(AiOrchestrator), "ModerateOutput", CreateResolvedRequest(moderation: new AiModerationConfiguration(true, [], null, null)), new AiProviderExecutionResult("m", "clean", null, null, null, null))
+        InvokePrivateStatic<Result<bool>>(typeof(AiOrchestrator), "ModerateOutput", CreateResolvedRequest(moderation: new AiModerationConfiguration(true, [], null, null)), new AiAdapterExecutionResult("m", "clean", null, null, null, null))
             .IsSuccess.Should().BeTrue();
 
         InvokePrivateStatic<string>(typeof(AiOrchestrator), "BuildRequestText", new[] { new AiChatMessage("user", " hello "), new AiChatMessage("assistant", " ") }, null)
@@ -577,33 +721,34 @@ public sealed class AiCoverageCompletionTests
         var tenantConfiguration = new AiTenantConfiguration(
             true,
             true,
-            AiProvider.Anthropic,
+            "tenant-default",
             "tenant-chat",
             "tenant-generate",
-            new Dictionary<AiProvider, AiTenantProviderConfiguration> { [AiProvider.OpenAi] = new(true, "tenant-provider") },
-            new Dictionary<AiProvider, string> { [AiProvider.OpenAi] = "tenant-key" },
+            new Dictionary<string, AiTenantBackendConfiguration>(StringComparer.OrdinalIgnoreCase) { ["primary"] = new(true, "tenant-backend") },
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["primary"] = "tenant-key" },
             new AiModerationConfiguration(false, [], null, null),
             new AiHistoryConfiguration(true));
 
-        InvokePrivateInstance<Result<AiProvider>>(orchestrator, "ResolveProvider", "bad", tenantConfiguration).Error.Code.Should().Be("AI.ProviderInvalid");
-        InvokePrivateInstance<Result<AiProvider>>(orchestrator, "ResolveProvider", "OpenAi", tenantConfiguration).Value.Should().Be(AiProvider.OpenAi);
-        InvokePrivateInstance<Result<AiProvider>>(orchestrator, "ResolveProvider", null, tenantConfiguration).Value.Should().Be(AiProvider.Anthropic);
-        InvokePrivateInstance<Result<AiProvider>>(orchestrator, "ResolveProvider", null, tenantConfiguration with { DefaultProvider = null }).Error.Code.Should().Be("AI.ProviderNotConfigured");
-        InvokePrivateInstance<Result<AiProvider>>(CreateOrchestrator(new AiOptions { Enabled = true, DefaultProvider = "Google" }), "ResolveProvider", null, tenantConfiguration with { DefaultProvider = null }).Value.Should().Be(AiProvider.Google);
-        InvokePrivateInstance<AiProviderOptions?>(orchestrator, "ResolvePlatformProviderOptions", AiProvider.OpenAi)!.DefaultModel.Should().Be("platform-chat");
-        InvokePrivateInstance<AiProviderOptions?>(orchestrator, "ResolvePlatformProviderOptions", AiProvider.Google)!.DefaultModel.Should().Be("platform-google");
-        InvokePrivateInstance<AiProviderOptions?>(orchestrator, "ResolvePlatformProviderOptions", AiProvider.Anthropic).Should().BeNull();
+        InvokePrivateInstance<Result<string>>(orchestrator, "ResolveBackend", "requested", tenantConfiguration with { AllowRequestOverride = false })
+            .Error.Code.Should().Be("AI.BackendOverrideForbidden");
+        InvokePrivateInstance<Result<string>>(orchestrator, "ResolveBackend", " requested ", tenantConfiguration).Value.Should().Be("requested");
+        InvokePrivateInstance<Result<string>>(orchestrator, "ResolveBackend", null, tenantConfiguration).Value.Should().Be("tenant-default");
+        InvokePrivateInstance<Result<string>>(orchestrator, "ResolveBackend", null, tenantConfiguration with { DefaultBackend = null }).Value.Should().Be("platform-default");
+        InvokePrivateInstance<Result<string>>(
+                CreateOrchestrator(new AiOptions { Enabled = true }),
+                "ResolveBackend",
+                null,
+                tenantConfiguration with { DefaultBackend = null })
+            .Error.Code.Should().Be("AI.BackendNotConfigured");
 
-        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveModel", " requested ", AiRequestKind.Chat, AiProvider.OpenAi, tenantConfiguration, null).Should().Be(" requested ");
-        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveModel", null, AiRequestKind.Chat, AiProvider.OpenAi, tenantConfiguration, null).Should().Be("tenant-chat");
-        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveModel", null, AiRequestKind.Generate, AiProvider.OpenAi, tenantConfiguration, null).Should().Be("tenant-generate");
-        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveModel", null, AiRequestKind.Chat, AiProvider.OpenAi, tenantConfiguration with { DefaultChatModel = null }, null).Should().Be("tenant-provider");
-        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveModel", null, AiRequestKind.Chat, AiProvider.Google, tenantConfiguration with { DefaultChatModel = null }, new AiProviderOptions { DefaultModel = "platform" }).Should().Be("platform");
-        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveModel", null, AiRequestKind.Chat, AiProvider.Google, tenantConfiguration with { DefaultChatModel = null }, null).Should().BeNull();
+        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveModel", " requested ", AiRequestKind.Chat, "primary", tenantConfiguration).Should().Be(" requested ");
+        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveModel", null, AiRequestKind.Chat, "primary", tenantConfiguration).Should().Be("tenant-chat");
+        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveModel", null, AiRequestKind.Generate, "primary", tenantConfiguration).Should().Be("tenant-generate");
+        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveModel", null, AiRequestKind.Chat, "primary", tenantConfiguration with { DefaultChatModel = null }).Should().Be("tenant-backend");
+        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveModel", null, AiRequestKind.Chat, "missing", tenantConfiguration with { DefaultChatModel = null }).Should().BeNull();
 
-        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveApiKey", AiProvider.OpenAi, tenantConfiguration, new AiProviderOptions { ApiKey = "platform" }).Should().Be("tenant-key");
-        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveApiKey", AiProvider.Google, tenantConfiguration with { ApiKeys = new Dictionary<AiProvider, string> { [AiProvider.Google] = " " } }, new AiProviderOptions { ApiKey = "platform" }).Should().Be("platform");
-        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveApiKey", AiProvider.Anthropic, tenantConfiguration, null).Should().BeNull();
+        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveApiKey", "primary", tenantConfiguration).Should().Be("tenant-key");
+        InvokePrivateStatic<string?>(typeof(AiOrchestrator), "ResolveApiKey", "missing", tenantConfiguration).Should().BeNull();
 
         var emptySettings = InvokePrivateInstance<AiTenantConfiguration>(orchestrator, "ParseTenantConfiguration", TenantIntegrationSettingsSerializer.Empty());
         var scalarSettings = InvokePrivateInstance<AiTenantConfiguration>(orchestrator, "ParseTenantConfiguration", new TenantIntegrationSettingsDto(
@@ -627,12 +772,12 @@ public sealed class AiCoverageCompletionTests
             new Dictionary<string, object?>(),
             new Dictionary<string, string>(),
             new Dictionary<string, object?>()));
-        var nonObjectProviderSettings = InvokePrivateInstance<AiTenantConfiguration>(orchestrator, "ParseTenantConfiguration", new TenantIntegrationSettingsDto(
+        var nonObjectBackendSettings = InvokePrivateInstance<AiTenantConfiguration>(orchestrator, "ParseTenantConfiguration", new TenantIntegrationSettingsDto(
             new Dictionary<string, object?>
             {
                 ["ai"] = new Dictionary<string, object?>
                 {
-                    ["providers"] = "not-an-object"
+                    ["backends"] = "not-an-object"
                 }
             },
             new Dictionary<string, object?>(),
@@ -644,12 +789,13 @@ public sealed class AiCoverageCompletionTests
         nullApiKeySettings.ApiKeys.Should().BeEmpty();
         nullExternalServicesSettings.Enabled.Should().BeTrue();
         nullAiSettings.Enabled.Should().BeTrue();
-        nonObjectProviderSettings.Providers.Should().BeEmpty();
+        nonObjectBackendSettings.Backends.Should().BeEmpty();
         fullSettings.Enabled.Should().BeFalse();
         fullSettings.AllowRequestOverride.Should().BeFalse();
-        fullSettings.Providers[AiProvider.OpenAi].Enabled.Should().BeFalse();
-        fullSettings.Providers[AiProvider.OpenAi].DefaultModel.Should().Be("tenant-openai");
-        fullSettings.ApiKeys[AiProvider.OpenAi].Should().Be("tenant-openai-key");
+        fullSettings.DefaultBackend.Should().Be("primary");
+        fullSettings.Backends["primary"].Enabled.Should().BeFalse();
+        fullSettings.Backends["primary"].DefaultModel.Should().Be("tenant-standard");
+        fullSettings.ApiKeys["primary"].Should().Be("tenant-standard-key");
         fullSettings.Moderation.Enabled.Should().BeTrue();
         fullSettings.Moderation.BlockedTerms.Should().Equal("blocked", "other");
         fullSettings.Moderation.MaxPromptCharacters.Should().Be(50);
@@ -678,6 +824,7 @@ public sealed class AiCoverageCompletionTests
         IAiOrchestrator? orchestrator = null,
         IAiConversationHistoryReader? historyReader = null,
         IResourceQuotaReader? quotaReader = null,
+        IAiBackendCatalog? backendCatalog = null,
         AiOptions? aiOptions = null,
         Guid? currentTenantId = null,
         bool hasTenantContext = true)
@@ -691,6 +838,7 @@ public sealed class AiCoverageCompletionTests
             historyReader ?? Mock.Of<IAiConversationHistoryReader>(),
             requestContextAccessor.Object,
             quotaReader ?? Mock.Of<IResourceQuotaReader>(),
+            backendCatalog ?? Mock.Of<IAiBackendCatalog>(),
             Options.Create(aiOptions ?? new AiOptions { Enabled = true }));
     }
 
@@ -757,18 +905,20 @@ public sealed class AiCoverageCompletionTests
         ];
 
     private static AiResolvedRequest CreateResolvedRequest(
-        AiProvider provider = AiProvider.OpenAi,
+        string backend = "primary",
+        string adapter = AiAdapterKeys.OpenAi,
         string model = "model",
         string? systemPrompt = null,
         IReadOnlyList<AiChatMessage>? messages = null,
-        string apiKey = "api-key",
+        string? apiKey = "api-key",
         string baseUrl = "https://provider.test",
         AiModerationConfiguration? moderation = null,
         AiHistoryConfiguration? history = null)
         => new(
             Guid.NewGuid(),
             AiRequestKind.Generate,
-            provider,
+            backend,
+            adapter,
             model,
             systemPrompt,
             messages ?? [new AiChatMessage("user", "hello")],
@@ -784,9 +934,12 @@ public sealed class AiCoverageCompletionTests
         var requestContextAccessor = new Mock<IRequestContextAccessor>();
         requestContextAccessor.SetupGet(accessor => accessor.CurrentTenantId).Returns(Guid.NewGuid());
         requestContextAccessor.SetupGet(accessor => accessor.CurrentUserId).Returns(Guid.NewGuid());
+        var registry = new AiAdapterRegistry(Array.Empty<IAiAdapter>());
+        var catalog = new AiBackendCatalog(Options.Create(options), registry);
 
         return new AiOrchestrator(
-            Array.Empty<IAiProviderAdapter>(),
+            registry,
+            catalog,
             requestContextAccessor.Object,
             Mock.Of<ITenantSettingsRepository>(),
             Mock.Of<IResourceQuotaEnforcer>(),
@@ -803,15 +956,15 @@ public sealed class AiCoverageCompletionTests
                 {
                     ["enabled"] = false,
                     ["allowRequestOverride"] = false,
-                    ["defaultProvider"] = "unknown",
+                    ["defaultBackend"] = "primary",
                     ["defaultChatModel"] = "tenant-chat",
                     ["defaultGenerateModel"] = "tenant-generate",
-                    ["providers"] = new Dictionary<string, object?>
+                    ["backends"] = new Dictionary<string, object?>
                     {
-                        ["gpt"] = new Dictionary<string, object?>
+                        ["primary"] = new Dictionary<string, object?>
                         {
                             ["enabled"] = false,
-                            ["defaultModel"] = "tenant-openai"
+                            ["defaultModel"] = "tenant-standard"
                         },
                         ["unknown"] = new Dictionary<string, object?>(),
                         ["google"] = "not-an-object"
@@ -832,10 +985,34 @@ public sealed class AiCoverageCompletionTests
             new Dictionary<string, object?>(),
             new Dictionary<string, string>
             {
-                ["ai:openai"] = "tenant-openai-key",
-                ["ai:google"] = " "
+                ["ai:backend:primary"] = "tenant-standard-key",
+                ["ai:backend:fallback"] = " "
             },
             new Dictionary<string, object?>());
+
+    private static IAiAdapter CreateMockAdapter(
+        string key,
+        string? descriptorKey = null,
+        bool requiresExplicitBaseUrl = false,
+        AiCredentialPolicy credentialPolicy = AiCredentialPolicy.None,
+        string? defaultBaseUrl = "https://adapter.test")
+    {
+        var adapter = new Mock<IAiAdapter>();
+        adapter.SetupGet(candidate => candidate.Key).Returns(key);
+        adapter.SetupGet(candidate => candidate.Descriptor).Returns(new AiAdapterDescriptor(
+            descriptorKey ?? key,
+            requiresExplicitBaseUrl,
+            credentialPolicy,
+            defaultBaseUrl,
+            SupportsStreaming: true));
+        return adapter.Object;
+    }
+
+    private static OpenAiAdapter CreateOpenAiAdapter(IHttpClientFactory factory)
+        => new(new OpenAiCompatibleProtocolClient(factory, NullLogger<OpenAiCompatibleProtocolClient>.Instance));
+
+    private static StandardAiAdapter CreateStandardAiAdapter(IHttpClientFactory factory)
+        => new(new OpenAiCompatibleProtocolClient(factory, NullLogger<OpenAiCompatibleProtocolClient>.Instance));
 
     private static TestAiDbContext CreateDbContext()
     {
@@ -868,6 +1045,8 @@ public sealed class AiCoverageCompletionTests
     {
         private readonly SequenceHttpHandler _handler = new(responses);
 
+        public IReadOnlyList<ObservedRequest> Requests => _handler.Requests;
+
         public HttpClient CreateClient(string name) => new(_handler, disposeHandler: false);
     }
 
@@ -875,9 +1054,33 @@ public sealed class AiCoverageCompletionTests
     {
         private readonly Queue<HttpResponseMessage> _responses = new(responses);
 
+        public List<ObservedRequest> Requests { get; } = [];
+
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            => Task.FromResult(_responses.Dequeue());
+        {
+            Requests.Add(new ObservedRequest(
+                request.RequestUri!,
+                request.Headers.Authorization?.Scheme,
+                request.Headers.Authorization?.Parameter));
+            return Task.FromResult(_responses.Dequeue());
+        }
     }
+
+    private sealed class ThrowingHttpClientFactory(Exception exception) : IHttpClientFactory
+    {
+        private readonly ThrowingHttpHandler _handler = new(exception);
+
+        public HttpClient CreateClient(string name) => new(_handler, disposeHandler: false);
+    }
+
+    private sealed class ThrowingHttpHandler(Exception exception) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken) => Task.FromException<HttpResponseMessage>(exception);
+    }
+
+    private sealed record ObservedRequest(Uri RequestUri, string? AuthorizationScheme, string? AuthorizationParameter);
 
     private sealed class TestAiDbContext(DbContextOptions<TestAiDbContext> options)
         : DbContext(options), IApplicationDbContext

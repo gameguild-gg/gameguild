@@ -3,7 +3,7 @@ using GameGuild;
 namespace GameGuild.AI;
 
 /// <summary>
-///     Orchestrates provider selection, credential resolution, and execution of AI requests.
+///     Orchestrates backend selection, credential resolution, and execution of AI requests.
 /// </summary>
 public interface IAiOrchestrator
 {
@@ -29,7 +29,7 @@ public interface IAiOrchestrator
 
     /// <summary>
     /// Executes a streamed request whose request and token quota envelope was
-    /// already reserved atomically by the owning workflow. Provider resolution,
+    /// already reserved atomically by the owning workflow. Backend and adapter resolution,
     /// moderation, history, and actor binding remain enforced here.
     /// </summary>
     Task<Result<AiCompletionResponse>> GenerateForActorStreamingWithReservedQuotaAsync(
@@ -42,6 +42,16 @@ public interface IAiOrchestrator
 public interface IAiConversationHistoryReader
 {
     Task<IReadOnlyList<AiConversationHistoryEntryDto>> GetRecentAsync(Guid tenantId, int take, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Exposes sanitized backend readiness without revealing credentials or adapter internals.
+/// </summary>
+public interface IAiBackendCatalog
+{
+    AiBackendReadinessDto GetReadiness(string? backend = null, string? model = null);
+
+    IReadOnlyList<AiBackendStatusDto> GetStatus();
 }
 
 /// <summary>
@@ -101,13 +111,29 @@ internal interface IAiConversationHistoryRepository
     Task AddAsync(AiConversationLog entry, CancellationToken cancellationToken = default);
 }
 
-internal interface IAiProviderAdapter
+internal enum AiCredentialPolicy
 {
-    AiProvider Provider { get; }
+    Required,
+    Optional,
+    None,
+}
 
-    Task<Result<AiProviderExecutionResult>> CompleteAsync(AiResolvedRequest request, CancellationToken cancellationToken = default);
+internal sealed record AiAdapterDescriptor(
+    string Key,
+    bool RequiresExplicitBaseUrl,
+    AiCredentialPolicy CredentialPolicy,
+    string? DefaultBaseUrl,
+    bool SupportsStreaming);
 
-    async Task<Result<AiProviderExecutionResult>> CompleteStreamingAsync(
+internal interface IAiAdapter
+{
+    string Key { get; }
+
+    AiAdapterDescriptor Descriptor { get; }
+
+    Task<Result<AiAdapterExecutionResult>> CompleteAsync(AiResolvedRequest request, CancellationToken cancellationToken = default);
+
+    async Task<Result<AiAdapterExecutionResult>> CompleteStreamingAsync(
         AiResolvedRequest request,
         Func<string, CancellationToken, ValueTask> onDelta,
         CancellationToken cancellationToken = default)

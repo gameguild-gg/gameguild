@@ -23,6 +23,7 @@ public sealed class AiController(
     IAiConversationHistoryReader historyRepository,
     IRequestContextAccessor requestContextAccessor,
     IResourceQuotaReader quotaReader,
+    IAiBackendCatalog backendCatalog,
     IOptions<AiOptions> aiOptions) : BaseApiController
 {
     private readonly AiOptions _aiOptions = aiOptions.Value;
@@ -31,24 +32,11 @@ public sealed class AiController(
     [ProducesResponseType<AiStatusResponse>(StatusCodes.Status200OK)]
     public ActionResult<AiStatusResponse> Status()
     {
-        var providers = Enum.GetValues<AiProvider>()
-            .Select(provider =>
-            {
-                var options = ResolvePlatformProviderOptions(provider);
-                return new AiProviderStatusDto(
-                    AiProviderParser.ToResponseValue(provider),
-                    options is not null,
-                    options?.DefaultModel,
-                    string.IsNullOrWhiteSpace(options?.BaseUrl) ? AiProviderParser.GetDefaultBaseUrl(provider) : options!.BaseUrl!.Trim(),
-                    !string.IsNullOrWhiteSpace(options?.ApiKey));
-            })
-            .ToList();
-
         return Ok(new AiStatusResponse(
             _aiOptions.Enabled,
-            _aiOptions.DefaultProvider,
+            _aiOptions.DefaultBackend,
             _aiOptions.AllowTenantOverrides,
-            providers));
+            backendCatalog.GetStatus()));
     }
 
     /// <summary>
@@ -75,7 +63,7 @@ public sealed class AiController(
             request.Context,
             request.Audience,
             request.Tone,
-            request.Provider,
+            request.Backend,
             request.Model,
             request.MaxTokens,
             cancellationToken).ConfigureAwait(false);
@@ -92,7 +80,7 @@ public sealed class AiController(
             request.Context,
             request.Audience,
             request.Tone,
-            request.Provider,
+            request.Backend,
             request.Model,
             request.MaxTokens,
             cancellationToken).ConfigureAwait(false);
@@ -109,7 +97,7 @@ public sealed class AiController(
             request.Context,
             request.Audience,
             request.Tone,
-            request.Provider,
+            request.Backend,
             request.Model,
             request.MaxTokens,
             cancellationToken).ConfigureAwait(false);
@@ -125,7 +113,7 @@ public sealed class AiController(
             request.Context,
             request.Audience,
             request.Tone,
-            request.Provider,
+            request.Backend,
             request.Model,
             request.MaxTokens,
             cancellationToken).ConfigureAwait(false);
@@ -136,7 +124,7 @@ public sealed class AiController(
         string context,
         string? audience,
         string? tone,
-        string? provider,
+        string? backend,
         string? model,
         int? maxTokens,
         CancellationToken cancellationToken)
@@ -153,7 +141,7 @@ public sealed class AiController(
 
         var prompt = BuildGeneratedContentPrompt(kind, subject, context, audience, tone);
         var result = await sender.Send(new GenerateAiCommand(new AiGenerateRequest(
-            provider,
+            backend,
             model,
             BuildGeneratedContentSystemPrompt(kind),
             prompt,
@@ -265,24 +253,6 @@ public sealed class AiController(
         }
 
         return new AiQuotaStatusResponse(tenantId, quotas, DateTime.UtcNow);
-    }
-
-    private AiProviderOptions? ResolvePlatformProviderOptions(AiProvider provider)
-    {
-        if (_aiOptions.Providers.TryGetValue(provider.ToString(), out var directMatch))
-        {
-            return directMatch;
-        }
-
-        foreach (var providerEntry in _aiOptions.Providers)
-        {
-            if (AiProviderParser.TryParse(providerEntry.Key, out var parsedProvider) && parsedProvider == provider)
-            {
-                return providerEntry.Value;
-            }
-        }
-
-        return null;
     }
 
     private static string BuildGeneratedContentSystemPrompt(AiGeneratedContentKind kind)

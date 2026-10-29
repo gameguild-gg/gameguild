@@ -3,16 +3,6 @@ using System.Text.Json;
 namespace GameGuild.AI;
 
 /// <summary>
-///     Supported AI provider backends.
-/// </summary>
-public enum AiProvider
-{
-    OpenAi,
-    Anthropic,
-    Google
-}
-
-/// <summary>
 ///     Chat message payload for AI requests.
 /// </summary>
 public sealed record AiChatMessage(string Role, string Content);
@@ -21,7 +11,7 @@ public sealed record AiChatMessage(string Role, string Content);
 ///     Canonical request shape for conversational completions.
 /// </summary>
 public sealed record AiChatRequest(
-    string? Provider,
+    string? Backend,
     string? Model,
     string? SystemPrompt,
     IReadOnlyList<AiChatMessage> Messages,
@@ -32,7 +22,7 @@ public sealed record AiChatRequest(
 ///     Canonical request shape for single-prompt generation.
 /// </summary>
 public sealed record AiGenerateRequest(
-    string? Provider,
+    string? Backend,
     string? Model,
     string? SystemPrompt,
     string Prompt,
@@ -45,7 +35,7 @@ public sealed record AiGenerateRequest(
 /// </summary>
 public sealed record AiExecutionActor(Guid TenantId, Guid UserId);
 
-public sealed record AiResolvedModelDto(string Provider, string Model, int MaximumOutputTokens);
+public sealed record AiResolvedModelDto(string Backend, string Provider, string Model, int MaximumOutputTokens);
 
 /// <summary>
 /// Terminal billing attribution for one AI execution, emitted after the request
@@ -75,6 +65,7 @@ public sealed record AiUsageDto(int? InputTokens, int? OutputTokens, int? TotalT
 ///     Canonical completion response shape exposed by the GameGuild API.
 /// </summary>
 public sealed record AiCompletionResponse(
+    string Backend,
     string Provider,
     string Model,
     string Text,
@@ -94,7 +85,7 @@ public sealed record AiGeneratedContentRequest(
     string Context,
     string? Audience,
     string? Tone,
-    string? Provider,
+    string? Backend,
     string? Model,
     int? MaxTokens);
 
@@ -103,22 +94,34 @@ public sealed record AiGeneratedContentDraftRequest(
     string Context,
     string? Audience,
     string? Tone,
-    string? Provider,
+    string? Backend,
     string? Model,
     int? MaxTokens);
 
-public sealed record AiProviderStatusDto(
-    string Provider,
+public sealed record AiBackendStatusDto(
+    string Backend,
+    string? Adapter,
     bool Configured,
+    bool Ready,
+    string? ReadinessCode,
     string? DefaultModel,
-    string BaseUrl,
-    bool CredentialsConfigured);
+    string? BaseUrl,
+    bool CredentialsConfigured,
+    string? CredentialPolicy);
 
 public sealed record AiStatusResponse(
     bool Enabled,
-    string? DefaultProvider,
+    string? DefaultBackend,
     bool AllowTenantOverrides,
-    IReadOnlyList<AiProviderStatusDto> Providers);
+    IReadOnlyList<AiBackendStatusDto> Backends);
+
+public sealed record AiBackendReadinessDto(
+    bool Available,
+    string? Code = null,
+    string? Message = null,
+    string? Backend = null,
+    string? Adapter = null,
+    string? Model = null);
 
 public sealed record AiQuotaStatusDto(
     string ResourceType,
@@ -201,7 +204,7 @@ public sealed record AiPromptTemplateRenderResponse(
 
 public sealed record AiPromptTemplateGenerateRequest(
     IReadOnlyDictionary<string, string?>? Variables = null,
-    string? Provider = null,
+    string? Backend = null,
     string? Model = null,
     double? Temperature = null,
     int? MaxTokens = null);
@@ -215,18 +218,19 @@ internal enum AiRequestKind
 internal sealed record AiResolvedRequest(
     Guid TenantId,
     AiRequestKind RequestKind,
-    AiProvider Provider,
+    string Backend,
+    string Adapter,
     string Model,
     string? SystemPrompt,
     IReadOnlyList<AiChatMessage> Messages,
     double? Temperature,
     int? MaxTokens,
-    string ApiKey,
+    string? ApiKey,
     string BaseUrl,
     AiModerationConfiguration Moderation,
     AiHistoryConfiguration History);
 
-internal sealed record AiProviderExecutionResult(
+internal sealed record AiAdapterExecutionResult(
     string Model,
     string Text,
     string? FinishReason,
@@ -234,7 +238,7 @@ internal sealed record AiProviderExecutionResult(
     int? OutputTokens,
     int? TotalTokens);
 
-internal sealed record AiTenantProviderConfiguration(bool Enabled, string? DefaultModel);
+internal sealed record AiTenantBackendConfiguration(bool Enabled, string? DefaultModel);
 
 internal sealed record AiModerationConfiguration(
     bool Enabled,
@@ -247,67 +251,16 @@ internal sealed record AiHistoryConfiguration(bool Enabled);
 internal sealed record AiTenantConfiguration(
     bool Enabled,
     bool AllowRequestOverride,
-    AiProvider? DefaultProvider,
+    string? DefaultBackend,
     string? DefaultChatModel,
     string? DefaultGenerateModel,
-    IReadOnlyDictionary<AiProvider, AiTenantProviderConfiguration> Providers,
-    IReadOnlyDictionary<AiProvider, string> ApiKeys,
+    IReadOnlyDictionary<string, AiTenantBackendConfiguration> Backends,
+    IReadOnlyDictionary<string, string> ApiKeys,
     AiModerationConfiguration Moderation,
     AiHistoryConfiguration History);
 
-internal static class AiProviderParser
+internal static class AiContractJson
 {
-    public static bool TryParse(string? value, out AiProvider provider)
-    {
-        switch (value?.Trim().ToLowerInvariant())
-        {
-            case "openai":
-            case "open-ai":
-            case "gpt":
-                provider = AiProvider.OpenAi;
-                return true;
-
-            case "anthropic":
-            case "claude":
-                provider = AiProvider.Anthropic;
-                return true;
-
-            case "google":
-            case "gemini":
-            case "googleai":
-                provider = AiProvider.Google;
-                return true;
-
-            default:
-                provider = default;
-                return false;
-        }
-    }
-
-    public static string ToResponseValue(AiProvider provider) => provider switch
-    {
-        AiProvider.OpenAi => "OpenAi",
-        AiProvider.Anthropic => "Anthropic",
-        AiProvider.Google => "Google",
-        _ => provider.ToString()
-    };
-
-    public static string ToApiKeySetting(AiProvider provider) => provider switch
-    {
-        AiProvider.OpenAi => "ai:openai",
-        AiProvider.Anthropic => "ai:anthropic",
-        AiProvider.Google => "ai:google",
-        _ => throw new ArgumentOutOfRangeException(nameof(provider), provider, null)
-    };
-
-    public static string GetDefaultBaseUrl(AiProvider provider) => provider switch
-    {
-        AiProvider.OpenAi => "https://api.openai.com",
-        AiProvider.Anthropic => "https://api.anthropic.com",
-        AiProvider.Google => "https://generativelanguage.googleapis.com",
-        _ => throw new ArgumentOutOfRangeException(nameof(provider), provider, null)
-    };
-
     public static JsonElement? ToJsonElement(object? value)
     {
         if (value is null)

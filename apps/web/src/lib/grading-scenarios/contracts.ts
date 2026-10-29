@@ -3,6 +3,7 @@ export type GradingScenarioHealth = "not-prepared" | "ready" | "unhealthy";
 export interface GradingScenarioReviewProviderSummary {
   key: string;
   policyVersion: string;
+  runtimeBackend: string | null;
   runtimeProvider: string | null;
   model: string | null;
 }

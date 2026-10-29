@@ -63,24 +63,29 @@ function reviewProviderSummary(quiz: QuizTargetDefinition) {
     return {
       key: "controlled-ai",
       policyVersion: "v1",
+      runtimeBackend: "controlled-validation",
       runtimeProvider: "controlled-validation",
       model: "v1",
     };
   }
 
-  const runtimeProvider =
-    environmentValue("Grading__AIReview__Provider") ??
-    environmentValue("AI__DefaultProvider");
+  const runtimeBackend =
+    environmentValue("Grading__AIReview__Backend") ??
+    environmentValue("AI__DefaultBackend");
+  const runtimeProvider = runtimeBackend
+    ? environmentValue(`AI__Backends__${runtimeBackend}__Adapter`)
+    : null;
   const model =
     environmentValue("Grading__AIReview__Model") ??
-    (runtimeProvider
-      ? environmentValue(`AI__Providers__${runtimeProvider}__DefaultModel`)
+    (runtimeBackend
+      ? environmentValue(`AI__Backends__${runtimeBackend}__DefaultModel`)
       : null);
   return {
     key:
       environmentValue("Grading__AIReview__ProviderKey") ?? "gameguild-ai",
     policyVersion:
       environmentValue("Grading__AIReview__PolicyVersion") ?? "v1",
+    runtimeBackend,
     runtimeProvider,
     model,
   };

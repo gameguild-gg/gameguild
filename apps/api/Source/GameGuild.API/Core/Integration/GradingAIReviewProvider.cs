@@ -10,7 +10,7 @@ namespace GameGuild.API.Core.Integration;
 
 internal sealed class GradingAIReviewProvider(
     IAiOrchestrator orchestrator,
-    IOptions<AiOptions> aiOptions,
+    IAiBackendCatalog backendCatalog,
     IOptions<GradingAIReviewOptions> gradingOptions,
     ILogger<GradingAIReviewProvider> logger) : IAIReviewProvider, IAIReviewProviderReadiness
 {
@@ -32,7 +32,6 @@ internal sealed class GradingAIReviewProvider(
             ReviewExecutionContext.OfficialSubmission,
         };
 
-    private readonly AiOptions _aiOptions = aiOptions.Value;
     private readonly GradingAIReviewOptions _options = gradingOptions.Value;
 
     public string Key => string.IsNullOrWhiteSpace(_options.ProviderKey)
@@ -49,11 +48,6 @@ internal sealed class GradingAIReviewProvider(
             return Unavailable("grading-ai-disabled", "AI review is disabled for this environment.");
         }
 
-        if (!_aiOptions.Enabled)
-        {
-            return Unavailable("ai-disabled", "The AI module is disabled for this environment.");
-        }
-
         if (!string.Equals(
                 _options.PolicyVersion,
                 GradingAIReviewOptions.SupportedPolicyVersion,
@@ -67,25 +61,12 @@ internal sealed class GradingAIReviewProvider(
             return Unavailable("policy-invalid", "The configured AI review generation limits are invalid.");
         }
 
-        var provider = ResolveProviderName();
-        if (provider is null)
+        var backendReadiness = backendCatalog.GetReadiness(_options.Backend, _options.Model);
+        if (!backendReadiness.Available)
         {
-            return Unavailable("provider-missing", "No AI provider is configured for AI review.");
-        }
-
-        if (!TryGetProviderOptions(provider, out var providerOptions))
-        {
-            return Unavailable("provider-unsupported", "The configured AI provider is not registered.");
-        }
-
-        if (string.IsNullOrWhiteSpace(providerOptions.ApiKey))
-        {
-            return Unavailable("credential-missing", "The configured AI provider has no server credential.");
-        }
-
-        if (string.IsNullOrWhiteSpace(ResolveModel(providerOptions)))
-        {
-            return Unavailable("model-missing", "The configured AI provider has no review model.");
+            return Unavailable(
+                backendReadiness.Code ?? "backend-unavailable",
+                backendReadiness.Message ?? "The configured AI backend is unavailable.");
         }
 
         return new AIReviewProviderReadinessV1(true);
@@ -102,14 +83,12 @@ internal sealed class GradingAIReviewProvider(
             throw new InvalidOperationException($"AI review provider is unavailable ({readiness.Code}).");
         }
 
-        var provider = ResolveProviderName()!;
-        TryGetProviderOptions(provider, out var providerOptions);
         var request = invocation.Request;
         var completion = await orchestrator.GenerateForActorAsync(
                 new AiExecutionActor(invocation.TenantId, invocation.ActorId),
                 new AiGenerateRequest(
-                    provider,
-                    ResolveModel(providerOptions),
+                    string.IsNullOrWhiteSpace(_options.Backend) ? null : _options.Backend.Trim(),
+                    string.IsNullOrWhiteSpace(_options.Model) ? null : _options.Model.Trim(),
                     SystemPrompt,
                     BuildPrompt(request),
                     _options.Temperature,
@@ -123,8 +102,9 @@ internal sealed class GradingAIReviewProvider(
 
         var result = ParseResult(request, completion.Value.Text);
         logger.LogInformation(
-            "AI review request {RequestId} completed with provider {Provider} and model {Model}",
+            "AI review request {RequestId} completed with backend {Backend}, provider {Provider}, and model {Model}",
             request.RequestId,
+            completion.Value.Backend,
             completion.Value.Provider,
             completion.Value.Model);
         return new AIReviewProviderResponseV1(
@@ -142,34 +122,6 @@ internal sealed class GradingAIReviewProvider(
     }
 
     private static AIReviewProviderReadinessV1 Unavailable(string code, string message) => new(false, code, message);
-
-    private string? ResolveProviderName()
-    {
-        var provider = string.IsNullOrWhiteSpace(_options.Provider)
-            ? _aiOptions.DefaultProvider
-            : _options.Provider;
-        return string.IsNullOrWhiteSpace(provider) ? null : provider.Trim();
-    }
-
-    private bool TryGetProviderOptions(string provider, out AiProviderOptions options)
-    {
-        if (_aiOptions.Providers.TryGetValue(provider, out var configured))
-        {
-            options = configured;
-            return true;
-        }
-
-        options = new AiProviderOptions();
-        return false;
-    }
-
-    private string? ResolveModel(AiProviderOptions providerOptions)
-    {
-        var model = string.IsNullOrWhiteSpace(_options.Model)
-            ? providerOptions.DefaultModel
-            : _options.Model;
-        return string.IsNullOrWhiteSpace(model) ? null : model.Trim();
-    }
 
     private void ValidateInvocation(AIReviewProviderInvocationV1 invocation)
     {

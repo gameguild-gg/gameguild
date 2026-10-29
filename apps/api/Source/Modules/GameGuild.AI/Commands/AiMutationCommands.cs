@@ -84,7 +84,7 @@ public sealed class AiMutationCommandHandler(
 
         return await aiOrchestrator.GenerateAsync(
             new AiGenerateRequest(
-                command.Request.Provider,
+                command.Request.Backend,
                 command.Request.Model,
                 rendered.Value.SystemPrompt,
                 rendered.Value.Prompt,

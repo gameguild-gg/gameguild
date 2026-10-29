@@ -8,7 +8,8 @@ using System.Text.Json;
 namespace GameGuild.AI;
 
 internal sealed class AiOrchestrator(
-    IEnumerable<IAiProviderAdapter> adapters,
+    AiAdapterRegistry adapterRegistry,
+    AiBackendCatalog backendCatalog,
     IRequestContextAccessor requestContextAccessor,
     ITenantSettingsRepository tenantSettingsRepository,
     IResourceQuotaEnforcer quotaEnforcer,
@@ -24,7 +25,6 @@ internal sealed class AiOrchestrator(
         "assistant"
     };
 
-    private readonly Dictionary<AiProvider, IAiProviderAdapter> _adapters = adapters.ToDictionary(static adapter => adapter.Provider);
     private readonly AiOptions _aiOptions = aiOptions.Value;
 
     public async Task<Result<AiCompletionResponse>> ChatAsync(AiChatRequest request, CancellationToken cancellationToken = default)
@@ -48,7 +48,7 @@ internal sealed class AiOrchestrator(
 
         var resolvedResult = await ResolveRequestAsync(
             requestContextAccessor.CurrentTenantId,
-            request.Provider,
+            request.Backend,
             request.Model,
             request.SystemPrompt,
             request.Messages,
@@ -81,7 +81,7 @@ internal sealed class AiOrchestrator(
 
         var resolvedResult = await ResolveRequestAsync(
             requestContextAccessor.CurrentTenantId,
-            request.Provider,
+            request.Backend,
             request.Model,
             request.SystemPrompt,
             messages,
@@ -108,7 +108,7 @@ internal sealed class AiOrchestrator(
         var messages = new[] { new AiChatMessage("user", string.IsNullOrWhiteSpace(request.Prompt) ? "preview" : request.Prompt.Trim()) };
         var resolved = await ResolveRequestAsync(
             actor.TenantId,
-            request.Provider,
+            request.Backend,
             request.Model,
             request.SystemPrompt,
             messages,
@@ -119,7 +119,8 @@ internal sealed class AiOrchestrator(
         return resolved.IsFailure
             ? Result.Failure<AiResolvedModelDto>(resolved.Error)
             : Result.Success(new AiResolvedModelDto(
-                AiProviderParser.ToResponseValue(resolved.Value.Provider),
+                resolved.Value.Backend,
+                resolved.Value.Adapter,
                 resolved.Value.Model,
                 resolved.Value.MaxTokens ?? 2048));
     }
@@ -138,7 +139,7 @@ internal sealed class AiOrchestrator(
 
         var resolved = await ResolveRequestAsync(
             actor.TenantId,
-            request.Provider,
+            request.Backend,
             request.Model,
             request.SystemPrompt,
             [new AiChatMessage("user", request.Prompt.Trim())],
@@ -167,7 +168,7 @@ internal sealed class AiOrchestrator(
 
         var resolved = await ResolveRequestAsync(
             actor.TenantId,
-            request.Provider,
+            request.Backend,
             request.Model,
             request.SystemPrompt,
             [new AiChatMessage("user", request.Prompt.Trim())],
@@ -196,7 +197,7 @@ internal sealed class AiOrchestrator(
 
         var resolved = await ResolveRequestAsync(
             actor.TenantId,
-            request.Provider,
+            request.Backend,
             request.Model,
             request.SystemPrompt,
             [new AiChatMessage("user", request.Prompt.Trim())],
@@ -230,7 +231,7 @@ internal sealed class AiOrchestrator(
 
     private async Task<Result<AiResolvedRequest>> ResolveRequestAsync(
         Guid? tenantIdOverride,
-        string? requestedProvider,
+        string? requestedBackend,
         string? requestedModel,
         string? systemPrompt,
         IReadOnlyList<AiChatMessage> messages,
@@ -261,54 +262,44 @@ internal sealed class AiOrchestrator(
             return Result.Failure<AiResolvedRequest>(Error.Forbidden("AI.TenantDisabled", "AI functionality is disabled for this tenant."));
         }
 
-        var providerResult = ResolveProvider(requestedProvider, tenantConfiguration);
-        if (providerResult.IsFailure)
+        var backendResult = ResolveBackend(requestedBackend, tenantConfiguration);
+        if (backendResult.IsFailure)
         {
-            return Result.Failure<AiResolvedRequest>(providerResult.Error);
+            return Result.Failure<AiResolvedRequest>(backendResult.Error);
         }
 
-        var provider = providerResult.Value;
+        var backend = backendResult.Value;
 
-        if (tenantConfiguration.Providers.TryGetValue(provider, out var tenantProviderConfiguration)
-            && !tenantProviderConfiguration.Enabled)
+        if (tenantConfiguration.Backends.TryGetValue(backend, out var tenantBackendConfiguration)
+            && !tenantBackendConfiguration.Enabled)
         {
             return Result.Failure<AiResolvedRequest>(Error.Forbidden(
-                "AI.ProviderDisabled",
-                $"Provider '{AiProviderParser.ToResponseValue(provider)}' is disabled for this tenant."));
+                "AI.BackendDisabled",
+                $"Backend '{backend}' is disabled for this tenant."));
         }
 
-        var platformProviderOptions = ResolvePlatformProviderOptions(provider);
-        var model = ResolveModel(requestedModel, requestKind, provider, tenantConfiguration, platformProviderOptions);
-        if (string.IsNullOrWhiteSpace(model))
+        var model = ResolveModel(requestedModel, requestKind, backend, tenantConfiguration);
+        var apiKey = ResolveApiKey(backend, tenantConfiguration);
+        var platformResolution = backendCatalog.Resolve(backend, model, apiKey);
+        if (platformResolution.IsFailure)
         {
-            return Result.Failure<AiResolvedRequest>(Error.Problem(
-                "AI.ModelNotConfigured",
-                $"No default model is configured for provider '{AiProviderParser.ToResponseValue(provider)}'."));
+            return Result.Failure<AiResolvedRequest>(platformResolution.Error);
         }
 
-        var apiKey = ResolveApiKey(provider, tenantConfiguration, platformProviderOptions);
-        if (string.IsNullOrWhiteSpace(apiKey))
-        {
-            return Result.Failure<AiResolvedRequest>(Error.Problem(
-                "AI.CredentialsMissing",
-                $"No credentials are configured for provider '{AiProviderParser.ToResponseValue(provider)}'."));
-        }
-
-        var baseUrl = string.IsNullOrWhiteSpace(platformProviderOptions?.BaseUrl)
-            ? AiProviderParser.GetDefaultBaseUrl(provider)
-            : platformProviderOptions.BaseUrl!.Trim();
+        var resolvedBackend = platformResolution.Value;
 
         return Result.Success(new AiResolvedRequest(
             tenantId,
             requestKind,
-            provider,
-            model.Trim(),
+            resolvedBackend.Backend,
+            resolvedBackend.Adapter,
+            resolvedBackend.Model,
             string.IsNullOrWhiteSpace(systemPrompt) ? null : systemPrompt.Trim(),
             messages,
             temperature,
             maxTokens,
-            apiKey.Trim(),
-            baseUrl,
+            resolvedBackend.ApiKey,
+            resolvedBackend.BaseUrl,
             tenantConfiguration.Moderation,
             tenantConfiguration.History));
     }
@@ -338,17 +329,17 @@ internal sealed class AiOrchestrator(
             }
         }
 
-        if (!_adapters.TryGetValue(resolvedRequest.Provider, out var adapter))
+        if (!adapterRegistry.TryGet(resolvedRequest.Adapter, out var adapter))
         {
             if (enforceQuota)
             {
-                await quotaEnforcer.DecrementUsageAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, actorId, "AI.ProviderNotRegistered", cancellationToken).ConfigureAwait(false);
+                await quotaEnforcer.DecrementUsageAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, actorId, "AI.AdapterNotRegistered", cancellationToken).ConfigureAwait(false);
             }
 
-            await RecordBillingAsync(resolvedRequest, actorId, null, "Failed", "AI.ProviderNotRegistered", $"Provider '{AiProviderParser.ToResponseValue(resolvedRequest.Provider)}' is not registered.", cancellationToken).ConfigureAwait(false);
+            await RecordBillingAsync(resolvedRequest, actorId, null, "Failed", "AI.AdapterNotRegistered", $"Adapter '{resolvedRequest.Adapter}' is not registered.", cancellationToken).ConfigureAwait(false);
             return Result.Failure<AiCompletionResponse>(Error.Problem(
-                "AI.ProviderNotRegistered",
-                $"Provider '{AiProviderParser.ToResponseValue(resolvedRequest.Provider)}' is not registered."));
+                "AI.AdapterNotRegistered",
+                $"Adapter '{resolvedRequest.Adapter}' is not registered."));
         }
 
         var canStreamBeforeModeration = onDelta is not null && !resolvedRequest.Moderation.Enabled;
@@ -359,7 +350,7 @@ internal sealed class AiOrchestrator(
         {
             if (enforceQuota)
             {
-                await quotaEnforcer.DecrementUsageAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, actorId, "AI.ProviderExecutionFailed", cancellationToken).ConfigureAwait(false);
+                await quotaEnforcer.DecrementUsageAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, actorId, "AI.AdapterExecutionFailed", cancellationToken).ConfigureAwait(false);
             }
 
             await RecordBillingAsync(resolvedRequest, actorId, null, "Failed", executionResult.Error.Code, executionResult.Error.Description, cancellationToken).ConfigureAwait(false);
@@ -397,16 +388,18 @@ internal sealed class AiOrchestrator(
         }
 
         logger.LogInformation(
-            "Completed AI request for tenant {TenantId} using provider {Provider} and model {Model}",
+            "Completed AI request for tenant {TenantId} using backend {Backend}, adapter {Adapter}, and model {Model}",
             resolvedRequest.TenantId,
-            AiProviderParser.ToResponseValue(resolvedRequest.Provider),
+            resolvedRequest.Backend,
+            resolvedRequest.Adapter,
             providerResult.Model);
 
         await RecordBillingAsync(resolvedRequest, actorId, providerResult, "Completed", null, null, cancellationToken).ConfigureAwait(false);
         await RecordHistoryAsync(resolvedRequest, actorId, providerResult, "Completed", null, null, cancellationToken).ConfigureAwait(false);
 
         return Result.Success(new AiCompletionResponse(
-            AiProviderParser.ToResponseValue(resolvedRequest.Provider),
+            resolvedRequest.Backend,
+            resolvedRequest.Adapter,
             providerResult.Model,
             providerResult.Text,
             providerResult.FinishReason,
@@ -416,7 +409,7 @@ internal sealed class AiOrchestrator(
     private async Task RecordBillingAsync(
         AiResolvedRequest resolvedRequest,
         Guid? actorId,
-        AiProviderExecutionResult? providerResult,
+        AiAdapterExecutionResult? providerResult,
         string outcome,
         string? outcomeCode,
         string? outcomeReason,
@@ -425,7 +418,7 @@ internal sealed class AiOrchestrator(
         var record = new AiExecutionBillingRecord(
             resolvedRequest.TenantId,
             actorId,
-            AiProviderParser.ToResponseValue(resolvedRequest.Provider),
+            resolvedRequest.Adapter,
             providerResult?.Model ?? resolvedRequest.Model,
             providerResult?.InputTokens,
             providerResult?.OutputTokens,
@@ -481,7 +474,7 @@ internal sealed class AiOrchestrator(
         return Result.Success(true);
     }
 
-    private static Result<bool> ModerateOutput(AiResolvedRequest resolvedRequest, AiProviderExecutionResult providerResult)
+    private static Result<bool> ModerateOutput(AiResolvedRequest resolvedRequest, AiAdapterExecutionResult providerResult)
     {
         if (!resolvedRequest.Moderation.Enabled)
         {
@@ -509,7 +502,7 @@ internal sealed class AiOrchestrator(
     private async Task RecordHistoryAsync(
         AiResolvedRequest resolvedRequest,
         Guid? actorId,
-        AiProviderExecutionResult? providerResult,
+        AiAdapterExecutionResult? providerResult,
         string outcome,
         string? outcomeCode,
         string? outcomeReason,
@@ -525,7 +518,7 @@ internal sealed class AiOrchestrator(
             TenantId = resolvedRequest.TenantId,
             UserId = actorId,
             RequestKind = resolvedRequest.RequestKind.ToString(),
-            Provider = AiProviderParser.ToResponseValue(resolvedRequest.Provider),
+            Provider = resolvedRequest.Adapter,
             Model = providerResult?.Model ?? resolvedRequest.Model,
             RequestText = BuildRequestText(resolvedRequest.Messages),
             SystemPrompt = resolvedRequest.SystemPrompt,
@@ -579,66 +572,40 @@ internal sealed class AiOrchestrator(
         return false;
     }
 
-    private Result<AiProvider> ResolveProvider(string? requestedProvider, AiTenantConfiguration tenantConfiguration)
+    private Result<string> ResolveBackend(string? requestedBackend, AiTenantConfiguration tenantConfiguration)
     {
-        if (!string.IsNullOrWhiteSpace(requestedProvider))
+        if (!string.IsNullOrWhiteSpace(requestedBackend))
         {
             if (!tenantConfiguration.AllowRequestOverride)
             {
-                return Result.Failure<AiProvider>(Error.Forbidden(
-                    "AI.ProviderOverrideForbidden",
-                    "This tenant does not allow provider overrides per request."));
+                return Result.Failure<string>(Error.Forbidden(
+                    "AI.BackendOverrideForbidden",
+                    "This tenant does not allow backend overrides per request."));
             }
 
-            if (!AiProviderParser.TryParse(requestedProvider, out var parsedRequestedProvider))
-            {
-                return Result.Failure<AiProvider>(Error.Validation(
-                    "AI.ProviderInvalid",
-                    $"Provider '{requestedProvider}' is not supported."));
-            }
-
-            return Result.Success(parsedRequestedProvider);
+            return Result.Success(requestedBackend.Trim());
         }
 
-        if (tenantConfiguration.DefaultProvider.HasValue)
+        if (!string.IsNullOrWhiteSpace(tenantConfiguration.DefaultBackend))
         {
-            return Result.Success(tenantConfiguration.DefaultProvider.Value);
+            return Result.Success(tenantConfiguration.DefaultBackend.Trim());
         }
 
-        if (AiProviderParser.TryParse(_aiOptions.DefaultProvider, out var platformDefaultProvider))
+        if (!string.IsNullOrWhiteSpace(_aiOptions.DefaultBackend))
         {
-            return Result.Success(platformDefaultProvider);
+            return Result.Success(_aiOptions.DefaultBackend.Trim());
         }
 
-        return Result.Failure<AiProvider>(Error.Problem(
-            "AI.ProviderNotConfigured",
-            "No default AI provider is configured for this tenant or environment."));
-    }
-
-    private AiProviderOptions? ResolvePlatformProviderOptions(AiProvider provider)
-    {
-        if (_aiOptions.Providers.TryGetValue(provider.ToString(), out var directMatch))
-        {
-            return directMatch;
-        }
-
-        foreach (var providerEntry in _aiOptions.Providers)
-        {
-            if (AiProviderParser.TryParse(providerEntry.Key, out var parsedProvider) && parsedProvider == provider)
-            {
-                return providerEntry.Value;
-            }
-        }
-
-        return null;
+        return Result.Failure<string>(Error.Problem(
+            "AI.BackendNotConfigured",
+            "No default AI backend is configured for this tenant or environment."));
     }
 
     private static string? ResolveModel(
         string? requestedModel,
         AiRequestKind requestKind,
-        AiProvider provider,
-        AiTenantConfiguration tenantConfiguration,
-        AiProviderOptions? platformProviderOptions)
+        string backend,
+        AiTenantConfiguration tenantConfiguration)
     {
         if (!string.IsNullOrWhiteSpace(requestedModel))
         {
@@ -657,24 +624,24 @@ internal sealed class AiOrchestrator(
             return tenantDefaultModel;
         }
 
-        if (tenantConfiguration.Providers.TryGetValue(provider, out var tenantProviderConfiguration)
-            && !string.IsNullOrWhiteSpace(tenantProviderConfiguration.DefaultModel))
+        if (tenantConfiguration.Backends.TryGetValue(backend, out var tenantBackendConfiguration)
+            && !string.IsNullOrWhiteSpace(tenantBackendConfiguration.DefaultModel))
         {
-            return tenantProviderConfiguration.DefaultModel;
+            return tenantBackendConfiguration.DefaultModel;
         }
 
-        return platformProviderOptions?.DefaultModel;
+        return null;
     }
 
-    private static string? ResolveApiKey(AiProvider provider, AiTenantConfiguration tenantConfiguration, AiProviderOptions? platformProviderOptions)
+    private static string? ResolveApiKey(string backend, AiTenantConfiguration tenantConfiguration)
     {
-        if (tenantConfiguration.ApiKeys.TryGetValue(provider, out var tenantApiKey)
+        if (tenantConfiguration.ApiKeys.TryGetValue(backend, out var tenantApiKey)
             && !string.IsNullOrWhiteSpace(tenantApiKey))
         {
             return tenantApiKey;
         }
 
-        return platformProviderOptions?.ApiKey;
+        return null;
     }
 
     private AiTenantConfiguration ParseTenantConfiguration(TenantIntegrationSettingsDto integrationSettings)
@@ -682,14 +649,15 @@ internal sealed class AiOrchestrator(
         var apiKeySettings = integrationSettings.ApiKeys ?? new Dictionary<string, string>();
         var externalServices = integrationSettings.ExternalServices ?? new Dictionary<string, object?>();
 
-        var apiKeys = new Dictionary<AiProvider, string>();
-        foreach (var provider in Enum.GetValues<AiProvider>())
+        var apiKeys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        const string backendKeyPrefix = "ai:backend:";
+        foreach (var apiKeySetting in apiKeySettings)
         {
-            var apiKeySetting = AiProviderParser.ToApiKeySetting(provider);
-            if (apiKeySettings.TryGetValue(apiKeySetting, out var apiKey)
-                && !string.IsNullOrWhiteSpace(apiKey))
+            if (apiKeySetting.Key.StartsWith(backendKeyPrefix, StringComparison.OrdinalIgnoreCase)
+                && apiKeySetting.Key.Length > backendKeyPrefix.Length
+                && !string.IsNullOrWhiteSpace(apiKeySetting.Value))
             {
-                apiKeys[provider] = apiKey;
+                apiKeys[apiKeySetting.Key[backendKeyPrefix.Length..]] = apiKeySetting.Value;
             }
         }
 
@@ -698,51 +666,46 @@ internal sealed class AiOrchestrator(
             return new AiTenantConfiguration(
                 Enabled: true,
                 AllowRequestOverride: _aiOptions.AllowTenantOverrides,
-                DefaultProvider: null,
+                DefaultBackend: null,
                 DefaultChatModel: null,
                 DefaultGenerateModel: null,
-                Providers: new Dictionary<AiProvider, AiTenantProviderConfiguration>(),
+                Backends: new Dictionary<string, AiTenantBackendConfiguration>(StringComparer.OrdinalIgnoreCase),
                 ApiKeys: apiKeys,
                 Moderation: new AiModerationConfiguration(false, [], null, null),
                 History: new AiHistoryConfiguration(true));
         }
 
-        var aiSettingsElement = AiProviderParser.ToJsonElement(rawAiSettings);
+        var aiSettingsElement = AiContractJson.ToJsonElement(rawAiSettings);
         if (!aiSettingsElement.HasValue || aiSettingsElement.Value.ValueKind != JsonValueKind.Object)
         {
             return new AiTenantConfiguration(
                 Enabled: true,
                 AllowRequestOverride: _aiOptions.AllowTenantOverrides,
-                DefaultProvider: null,
+                DefaultBackend: null,
                 DefaultChatModel: null,
                 DefaultGenerateModel: null,
-                Providers: new Dictionary<AiProvider, AiTenantProviderConfiguration>(),
+                Backends: new Dictionary<string, AiTenantBackendConfiguration>(StringComparer.OrdinalIgnoreCase),
                 ApiKeys: apiKeys,
                 Moderation: new AiModerationConfiguration(false, [], null, null),
                 History: new AiHistoryConfiguration(true));
         }
 
         var aiElement = aiSettingsElement.Value;
-        var providers = new Dictionary<AiProvider, AiTenantProviderConfiguration>();
+        var backends = new Dictionary<string, AiTenantBackendConfiguration>(StringComparer.OrdinalIgnoreCase);
 
-        if (aiElement.TryGetProperty("providers", out var providerSettingsElement)
-            && providerSettingsElement.ValueKind == JsonValueKind.Object)
+        if (aiElement.TryGetProperty("backends", out var backendSettingsElement)
+            && backendSettingsElement.ValueKind == JsonValueKind.Object)
         {
-            foreach (var providerProperty in providerSettingsElement.EnumerateObject())
+            foreach (var backendProperty in backendSettingsElement.EnumerateObject())
             {
-                if (!AiProviderParser.TryParse(providerProperty.Name, out var provider))
+                if (backendProperty.Value.ValueKind != JsonValueKind.Object)
                 {
                     continue;
                 }
 
-                if (providerProperty.Value.ValueKind != JsonValueKind.Object)
-                {
-                    continue;
-                }
-
-                var enabled = !AiJsonHelpers.TryGetBoolean(providerProperty.Value, "enabled", out var configuredEnabled) || configuredEnabled;
-                AiJsonHelpers.TryGetString(providerProperty.Value, "defaultModel", out var defaultModel);
-                providers[provider] = new AiTenantProviderConfiguration(enabled, defaultModel);
+                var enabled = !AiJsonHelpers.TryGetBoolean(backendProperty.Value, "enabled", out var configuredEnabled) || configuredEnabled;
+                AiJsonHelpers.TryGetString(backendProperty.Value, "defaultModel", out var defaultModel);
+                backends[backendProperty.Name] = new AiTenantBackendConfiguration(enabled, defaultModel);
             }
         }
 
@@ -751,7 +714,7 @@ internal sealed class AiOrchestrator(
             ? configuredAllowOverride
             : _aiOptions.AllowTenantOverrides;
 
-        AiJsonHelpers.TryGetString(aiElement, "defaultProvider", out var defaultProviderText);
+        AiJsonHelpers.TryGetString(aiElement, "defaultBackend", out var defaultBackend);
         AiJsonHelpers.TryGetString(aiElement, "defaultChatModel", out var defaultChatModel);
         AiJsonHelpers.TryGetString(aiElement, "defaultGenerateModel", out var defaultGenerateModel);
 
@@ -780,17 +743,13 @@ internal sealed class AiOrchestrator(
             || !AiJsonHelpers.TryGetBoolean(historySettings, "enabled", out var configuredHistoryEnabled)
             || configuredHistoryEnabled;
 
-        AiProvider? defaultProvider = AiProviderParser.TryParse(defaultProviderText, out var parsedDefaultProvider)
-            ? parsedDefaultProvider
-            : null;
-
         return new AiTenantConfiguration(
             tenantEnabled,
             allowRequestOverride,
-            defaultProvider,
+            defaultBackend,
             defaultChatModel,
             defaultGenerateModel,
-            providers,
+            backends,
             apiKeys,
             new AiModerationConfiguration(moderationEnabled, blockedTerms, maxPromptCharacters, maxResponseCharacters),
             new AiHistoryConfiguration(historyEnabled));

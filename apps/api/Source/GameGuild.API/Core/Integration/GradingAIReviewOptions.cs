@@ -9,7 +9,7 @@ internal sealed class GradingAIReviewOptions
     public bool Enabled { get; set; }
     public string ProviderKey { get; set; } = DefaultProviderKey;
     public string PolicyVersion { get; set; } = SupportedPolicyVersion;
-    public string? Provider { get; set; }
+    public string? Backend { get; set; }
     public string? Model { get; set; }
     public double Temperature { get; set; }
     public int MaxTokens { get; set; } = 2048;

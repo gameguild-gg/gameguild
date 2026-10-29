@@ -14,32 +14,29 @@ namespace GameGuild.API.UnitTests.Core.Integration;
 public sealed class GradingAIReviewProviderTests
 {
     [Theory]
-    [InlineData(false, true, "secret", "model", "grading-ai-disabled")]
-    [InlineData(true, false, "secret", "model", "ai-disabled")]
-    [InlineData(true, true, "", "model", "credential-missing")]
-    [InlineData(true, true, "secret", "", "model-missing")]
+    [InlineData(false, true, null, "grading-ai-disabled")]
+    [InlineData(true, false, "AI.Disabled", "AI.Disabled")]
+    [InlineData(true, false, "AI.CredentialsMissing", "AI.CredentialsMissing")]
+    [InlineData(true, false, "AI.ModelNotConfigured", "AI.ModelNotConfigured")]
     public void ReadinessFailsClosedWithoutExposingConfiguration(
         bool gradingEnabled,
-        bool aiEnabled,
-        string apiKey,
-        string model,
+        bool backendAvailable,
+        string? backendCode,
         string expectedCode)
     {
         var provider = CreateProvider(
             new RecordingAiOrchestrator("{}"),
             gradingEnabled,
-            aiEnabled,
-            apiKey,
-            model);
+            new StubAiBackendCatalog(new AiBackendReadinessDto(
+                backendAvailable,
+                backendCode,
+                backendAvailable ? null : "Sanitized backend diagnostic.")));
 
         var readiness = provider.GetReadiness();
 
         readiness.Available.Should().BeFalse();
         readiness.Code.Should().Be(expectedCode);
-        if (!string.IsNullOrEmpty(apiKey))
-        {
-            readiness.Message.Should().NotContain(apiKey, because: "readiness diagnostics must never expose credentials");
-        }
+        readiness.Message.Should().NotContain("secret", because: "readiness diagnostics must never expose credentials");
     }
 
     [Fact]
@@ -59,14 +56,14 @@ public sealed class GradingAIReviewProviderTests
 
         orchestrator.Actor.Should().Be(new AiExecutionActor(tenantId, actorId));
         orchestrator.Request.Should().NotBeNull();
-        orchestrator.Request!.Provider.Should().Be("OpenAi");
+        orchestrator.Request!.Backend.Should().Be("primary");
         orchestrator.Request.Model.Should().Be("grading-model");
         orchestrator.Request.Temperature.Should().Be(0);
         orchestrator.Request.MaxTokens.Should().Be(2048);
         orchestrator.Request.SystemPrompt.Should().Contain("Return exactly one JSON object");
         orchestrator.Request.Prompt.Should().Contain("<assessment-data>");
         orchestrator.Request.Prompt.Should().Contain(invocation.Request.RequestId.ToString());
-        response.ModelKey.Should().Be("OpenAi");
+        response.ModelKey.Should().Be("StandardAi");
         response.ModelVersion.Should().Be("resolved-model");
         response.Result.State.Should().Be("final");
         response.Result.Score.Should().Be(ScoreValue.FromUnits(75));
@@ -131,30 +128,25 @@ public sealed class GradingAIReviewProviderTests
     private static GradingAIReviewProvider CreateProvider(
         RecordingAiOrchestrator orchestrator,
         bool gradingEnabled = true,
-        bool aiEnabled = true,
-        string apiKey = "server-secret",
-        string model = "grading-model")
+        IAiBackendCatalog? backendCatalog = null)
     {
-        var aiOptions = new AiOptions
-        {
-            Enabled = aiEnabled,
-            DefaultProvider = "OpenAi",
-            Providers = new Dictionary<string, AiProviderOptions>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["OpenAi"] = new() { ApiKey = apiKey, DefaultModel = model },
-            },
-        };
         var gradingOptions = new GradingAIReviewOptions
         {
             Enabled = gradingEnabled,
             ProviderKey = GradingAIReviewOptions.DefaultProviderKey,
             PolicyVersion = GradingAIReviewOptions.SupportedPolicyVersion,
+            Backend = "primary",
+            Model = "grading-model",
             Temperature = 0,
             MaxTokens = 2048,
         };
         return new GradingAIReviewProvider(
             orchestrator,
-            Options.Create(aiOptions),
+            backendCatalog ?? new StubAiBackendCatalog(new AiBackendReadinessDto(
+                true,
+                Backend: "primary",
+                Adapter: "StandardAi",
+                Model: "grading-model")),
             Options.Create(gradingOptions),
             NullLogger<GradingAIReviewProvider>.Instance);
     }
@@ -274,7 +266,8 @@ public sealed class GradingAIReviewProviderTests
             Request = request;
             return Task.FromResult(failure is null
                 ? Result.Success(new AiCompletionResponse(
-                    "OpenAi",
+                    "primary",
+                    "StandardAi",
                     "resolved-model",
                     completion,
                     "stop",
@@ -306,5 +299,12 @@ public sealed class GradingAIReviewProviderTests
             AiGenerateRequest request,
             Func<string, CancellationToken, ValueTask> onDelta,
             CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    private sealed class StubAiBackendCatalog(AiBackendReadinessDto readiness) : IAiBackendCatalog
+    {
+        public AiBackendReadinessDto GetReadiness(string? backend = null, string? model = null) => readiness;
+
+        public IReadOnlyList<AiBackendStatusDto> GetStatus() => [];
     }
 }

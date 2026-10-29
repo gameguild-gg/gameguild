@@ -616,10 +616,12 @@ async function synchronizeSubmission(
 }
 
 function hasSettledAIReview(submission, requiresInstructor) {
-  if (requiresInstructor) {
-    return submission.execution?.requiresInstructorReview === true;
-  }
-  return submission.execution?.instructorVisibleResult?.state === "final";
+  const execution = submission.execution;
+  if (!execution) return false;
+  return (
+    (requiresInstructor && execution.requiresInstructorReview === true) ||
+    execution.instructorVisibleResult?.state === "final"
+  );
 }
 
 async function refreshPersonaPage(page, manifest, personaKey) {
