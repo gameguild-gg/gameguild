@@ -49,6 +49,7 @@ import { randomUUID } from "node:crypto";
 import { createMfaSignInContinuation, E2E_ADMIN_TOTP_SECRET } from "./sign-in-mfa-support.mjs";
 import { verifyCodingCycleToolchain } from "./coding-cycle-toolchain-support.mjs";
 import { assertRenderedEditorSource } from "./coding-cycle-editor-support.mjs";
+import { evaluateGradingTransport } from "./coding-cycle-grading-transport.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync, writeFileSync, createWriteStream, rmSync } from "node:fs";
 import { resolve } from "node:path";
@@ -1373,10 +1374,14 @@ async function instructorJourney(fixture, browser) {
         gradeResponse.body().then((body) => ({ body, error: null }), (error) => ({ body: null, error })),
         gradeFailure.then((error) => ({ body: null, error })),
       ]), "mutation response body", 120_000);
-      if (bodyResult.error) throw bodyResult.error;
-      gradingProof.mutation.streamComplete = true;
-      gradingProof.mutation.bodyBytes = bodyResult.body?.length ?? 0;
-      gradingProof.mutation.finishedEventObserved = finishedEventObserved;
+      gradingProof.mutation.transportError = bodyResult.error?.message ?? null;
+      if (!bodyResult.error) {
+        gradingProof.mutation.streamComplete = true;
+        gradingProof.mutation.bodyBytes = bodyResult.body?.length ?? 0;
+        gradingProof.mutation.finishedEventObserved = finishedEventObserved;
+      }
+      const transport = evaluateGradingTransport(gradingProof);
+      if (!transport.accepted) throw new Error(transport.reason);
       record("grade mutation response completes", gradeResponse.ok() && gradingProof.mutation.bodyBytes > 0,
         `status=${gradeResponse.status()}; bodyBytes=${gradingProof.mutation.bodyBytes}; finishedEventObserved=${finishedEventObserved}`);
       const queueClient = createApiClient(fixture.adminToken, fixture.tenantId);
