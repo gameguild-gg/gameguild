@@ -89,10 +89,13 @@ describe('Vega-Lite validation boundaries', () => {
   });
 
   it('keeps the built-in chart templates usable by the real compiler', async () => {
-    const templates = VegaLiteValidator.getCommonPatterns();
+    const templates: Record<string, unknown> = VegaLiteValidator.getCommonPatterns();
     expect(Object.keys(templates).length).toBeGreaterThan(0);
 
     for (const template of Object.values(templates)) {
+      if (!template || typeof template !== 'object' || Array.isArray(template)) {
+        throw new Error('A chart template must be a JSON object');
+      }
       const result = await VegaLiteValidator.validateSpec(JSON.stringify({
         ...template,
         data: { values: [{ category: 'A', value: 2, date: '2026-01-01', x: 1, y: 2 }] },
