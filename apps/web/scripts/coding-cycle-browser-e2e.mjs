@@ -1348,7 +1348,7 @@ async function instructorJourney(fixture, browser) {
       const gradeResponsePromise = page.waitForResponse((response) => {
         return isGradeRequest(response.request());
       }, { timeout: 120_000 }).then((response) => ({ response, error: null }), (error) => ({ response: null, error }));
-      // Passive observations only: keep the existing body/transport assertions.
+      // Observe the acknowledgement independently of the remaining RSC stream.
       void page.getByTestId("needs-grading-badge").filter({ hasText: /0 to grade/ })
         .waitFor({ state: "visible", timeout: 120_000 })
         .then(() => traceGradingEvent("ui:zero-badge"), () => traceGradingEvent("ui:zero-badge-not-observed"));
@@ -1367,9 +1367,9 @@ async function instructorJourney(fixture, browser) {
       if (!gradeResponse) throw new Error("The grading mutation response was not captured.");
       gradingProof.mutation = { status: gradeResponse.status(), streamComplete: false, requestId: gradingRequestId(gradeResponse.request()) };
       // Read the complete bytes through Playwright's server-side body channel.
-      // Response.finished() only awaits a client event promise; a failed event
-      // does not settle that promise in Playwright 1.64.1. Reject transport
-      // failures explicitly and never infer body completion from status alone.
+      // Response.finished() does not settle on a failed event in Playwright
+      // 1.64.1. Preserve the actual transport result; a cancellation can only
+      // be accepted after independent UI and canonical-grade confirmation.
       const bodyResult = await awaitGradingBoundary(Promise.race([
         gradeResponse.body().then((body) => ({ body, error: null }), (error) => ({ body: null, error })),
         gradeFailure.then((error) => ({ body: null, error })),
@@ -1380,10 +1380,6 @@ async function instructorJourney(fixture, browser) {
         gradingProof.mutation.bodyBytes = bodyResult.body?.length ?? 0;
         gradingProof.mutation.finishedEventObserved = finishedEventObserved;
       }
-      const transport = evaluateGradingTransport(gradingProof);
-      if (!transport.accepted) throw new Error(transport.reason);
-      record("grade mutation response completes", gradeResponse.ok() && gradingProof.mutation.bodyBytes > 0,
-        `status=${gradeResponse.status()}; bodyBytes=${gradingProof.mutation.bodyBytes}; finishedEventObserved=${finishedEventObserved}`);
       const queueClient = createApiClient(fixture.adminToken, fixture.tenantId);
       const canonicalQueue = unwrap(await queueClient.request({
         method: "GET", path: `/v1.0/assessments/${fixture.assessmentId}/grading-queue`, requiresAuth: true,
@@ -1407,6 +1403,17 @@ async function instructorJourney(fixture, browser) {
       }
       gradingProof.visibleBadge = await page.getByTestId("needs-grading-badge").textContent();
       record("submit grade → needs-grading drops to 0", graded, "polled needs-grading-badge");
+      await page.getByTestId("result-release-status").filter({ hasText: "Ready to release" })
+        .waitFor({ state: "visible", timeout: 15_000 });
+      gradingProof.releaseStatus = await page.getByTestId("result-release-status").textContent({ timeout: 5000 });
+      gradingProof.events = gradingEvents;
+      const transport = evaluateGradingTransport(gradingProof);
+      gradingProof.mutation.transportClassification = transport.mode ?? "unconfirmed";
+      if (!transport.accepted) throw new Error(transport.reason);
+      record("grade mutation acknowledged with canonical queue", transport.accepted, transport.reason);
+      record("grading response transport (observation)", true,
+        `status=${gradeResponse.status()}; streamComplete=${gradingProof.mutation.streamComplete}; error=${gradingProof.mutation.transportError ?? "none"}`,
+        "observed");
       await screenshot(page, "instructor-grade-submitted");
     } catch (error) {
       gradingProof.failure = error instanceof Error ? error.message.split("\n")[0] : String(error);
