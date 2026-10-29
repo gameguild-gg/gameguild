@@ -59,7 +59,7 @@ public sealed class FieldAccessAuditPostgreSqlIntegrationTests(ApiPostgreSqlFixt
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            await SeedAsync(dbContext, tenantId, actorId, userId);
+            await SeedAsync(dbContext, tenantId, userId);
         }
 
         using var client = CreateClient(factory, tenantId, actorId);
@@ -99,7 +99,7 @@ public sealed class FieldAccessAuditPostgreSqlIntegrationTests(ApiPostgreSqlFixt
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            await SeedAsync(dbContext, tenantId, actorId, userId);
+            await SeedAsync(dbContext, tenantId, userId);
         }
 
         await using (var scope = factory.Services.CreateAsyncScope())
@@ -155,7 +155,7 @@ public sealed class FieldAccessAuditPostgreSqlIntegrationTests(ApiPostgreSqlFixt
         return client;
     }
 
-    private static async Task SeedAsync(ApplicationDbContext dbContext, Guid tenantId, Guid actorId, Guid userId)
+    private static async Task SeedAsync(ApplicationDbContext dbContext, Guid tenantId, Guid userId)
     {
         var tenant = new Tenant
         {

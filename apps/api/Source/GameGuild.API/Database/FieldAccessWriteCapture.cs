@@ -95,11 +95,9 @@ internal static class FieldAccessWriteCapture
                 var entityId = ReadPrimaryKeyAsGuid(entry, useOriginalValues: isDeleted);
                 var actorId = mutationActorId ?? ResolveActorId(entry, operation, isDeleted);
                 var correlationId = operation?.CorrelationId.ToString();
-                var accessType = entry.State switch
-                {
-                    EntityState.Deleted => FieldAccessType.Delete,
-                    _ => FieldAccessType.Write
-                };
+                var accessType = entry.State == EntityState.Deleted
+                    ? FieldAccessType.Delete
+                    : FieldAccessType.Write;
 
                 foreach (var property in entry.Properties)
                 {

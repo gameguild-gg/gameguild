@@ -82,8 +82,31 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         IOptions<PermissionAuditOptions>? permissionAuditOptions = null,
         IEnumerable<IPermissionAuditHook>? permissionAuditHooks = null,
         IOptions<ValueSnapshotOptions>? valueSnapshotOptions = null,
-        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions = null,
-        IOptions<FieldLevelAuditOptions>? fieldLevelAuditOptions = null) : this(options, publisher)
+        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions = null) : this(
+            options,
+            publisher,
+            useCaseOperationContextAccessor,
+            auditService,
+            logger,
+            permissionAuditOptions,
+            permissionAuditHooks,
+            valueSnapshotOptions,
+            entityChangeAuditOptions,
+            fieldLevelAuditOptions: null)
+    {
+    }
+
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        IPublisher? publisher,
+        IUseCaseOperationContextAccessor useCaseOperationContextAccessor,
+        IAuditService? auditService,
+        ILogger<ApplicationDbContext>? logger,
+        IOptions<PermissionAuditOptions>? permissionAuditOptions,
+        IEnumerable<IPermissionAuditHook>? permissionAuditHooks,
+        IOptions<ValueSnapshotOptions>? valueSnapshotOptions,
+        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions,
+        IOptions<FieldLevelAuditOptions>? fieldLevelAuditOptions) : this(options, publisher)
     {
         _useCaseOperationContextAccessor = useCaseOperationContextAccessor;
         _auditService = auditService;

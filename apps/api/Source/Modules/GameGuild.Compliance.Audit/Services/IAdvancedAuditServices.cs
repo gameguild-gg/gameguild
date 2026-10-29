@@ -122,10 +122,18 @@ public interface IFieldAccessAuditService {
         Guid userId,
         string entityType,
         IReadOnlyList<FieldReadObservation> observations,
-        string? ipAddress = null,
-        string? userAgent = null,
-        string? requestId = null,
-        string? apiEndpoint = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Read capture with the ambient access context (address, request id, endpoint path).</summary>
+    Task<int> RecordFieldReadsAsync(
+        Guid tenantId,
+        Guid userId,
+        string entityType,
+        IReadOnlyList<FieldReadObservation> observations,
+        string? ipAddress,
+        string? userAgent,
+        string? requestId,
+        string? apiEndpoint,
         CancellationToken cancellationToken = default);
 }
 

@@ -387,7 +387,7 @@ public sealed class FieldLevelAuditFamilyTests
                 new FieldReadObservation(userA, "Bio", null), // non-sensitive fields are recorded too
                 new FieldReadObservation(userB, "PhoneNumber", "+15550100")
             ],
-            ipAddress: "10.0.0.9", userAgent: "batch-agent", requestId: "req-9", apiEndpoint: "/v1/users");
+            ipAddress: null, userAgent: null, requestId: "req-9", apiEndpoint: "/v1/users");
 
         recorded.Should().Be(3);
         var rows = await context.Set<FieldAccessAudit>().ToListAsync();
