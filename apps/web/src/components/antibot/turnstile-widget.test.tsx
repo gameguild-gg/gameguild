@@ -93,4 +93,51 @@ describe('TurnstileWidget', () => {
     expect(removed).toHaveLength(1);
     expect(removed[0]).toBe('widget-0');
   });
+
+  it('reports a null token when the script fails to load', () => {
+    vi.stubEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'site-key-123');
+    // window.turnstile stays unset so the effect takes the script-callback path.
+
+    const onToken = vi.fn();
+    const { unmount } = render(<TurnstileWidget onToken={onToken} />);
+
+    const script = document.getElementById('cf-turnstile-script') as HTMLScriptElement;
+    expect(script).not.toBeNull();
+    script.dispatchEvent(new Event('error'));
+    expect(onToken).toHaveBeenCalledTimes(1);
+    expect(onToken).toHaveBeenCalledWith(null);
+
+    unmount();
+  });
+
+  it('caps the poll with a timeout and reports a null token when the script never resolves', () => {
+    vi.stubEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'site-key-123');
+    vi.useFakeTimers();
+    const createElement = document.createElement.bind(document);
+    const spy = vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const el = createElement(tag);
+      if (tag === 'script') {
+        Object.defineProperty(el, 'onload', { value: null, writable: true });
+        Object.defineProperty(el, 'onerror', { value: null, writable: true });
+      }
+      return el;
+    });
+    // window.turnstile stays unset so the poll fallback keeps running.
+
+    const onToken = vi.fn();
+    const { unmount } = render(<TurnstileWidget onToken={onToken} />);
+
+    const script = document.getElementById('cf-turnstile-script') as HTMLScriptElement;
+    script.onload = null;
+    script.onerror = null;
+
+    expect(onToken).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(15_000);
+    expect(onToken).toHaveBeenCalledTimes(1);
+    expect(onToken).toHaveBeenCalledWith(null);
+
+    spy.mockRestore();
+    unmount();
+    vi.useRealTimers();
+  });
 });

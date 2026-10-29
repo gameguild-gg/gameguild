@@ -30,14 +30,33 @@ const SCRIPT_SRC =
   "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
 /** Loads the Turnstile script once per document (explicit mode, no onload query param). */
-function loadTurnstileScript(): void {
-  if (document.getElementById(SCRIPT_ID)) return;
-  const script = document.createElement("script");
+function loadTurnstileScript(onAvailable?: (available: boolean) => void): void {
+  const notify = (available: boolean) => {
+    if (!onAvailable) return;
+    onAvailable(available);
+    onAvailable = undefined;
+  };
+  const existing = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
+  if (existing) {
+    if (window.turnstile) {
+      notify(true);
+      return;
+    }
+    if (existing.dataset.loadNotified) return;
+    existing.dataset.loadNotified = "1";
+  }
+  const script = existing ?? document.createElement("script");
   script.id = SCRIPT_ID;
   script.src = SCRIPT_SRC;
   script.async = true;
   script.defer = true;
-  document.head.appendChild(script);
+  script.addEventListener(
+    "load",
+    () => notify(Boolean(window.turnstile)),
+    { once: true },
+  );
+  script.addEventListener("error", () => notify(false), { once: true });
+  if (!existing) document.head.appendChild(script);
 }
 
 /**
@@ -76,6 +95,13 @@ export function TurnstileWidget({ onToken, action, id }: TurnstileWidgetProps) {
     const container = containerRef.current;
     if (!container) return;
 
+    let poll: number | undefined;
+    let timeout: number | undefined;
+    const clearTimers = () => {
+      if (poll !== undefined) window.clearInterval(poll);
+      if (timeout !== undefined) window.clearTimeout(timeout);
+    };
+
     const render = () => {
       if (cancelled || widgetId || !window.turnstile || !containerRef.current)
         return;
@@ -92,21 +118,30 @@ export function TurnstileWidget({ onToken, action, id }: TurnstileWidgetProps) {
     if (window.turnstile) {
       render();
     } else {
-      const poll = window.setInterval(() => {
+      loadTurnstileScript((available) => {
+        if (cancelled) return;
+        clearTimers();
+        if (available) {
+          render();
+        } else {
+          onTokenRef.current?.(null);
+        }
+      });
+      poll = window.setInterval(() => {
         if (window.turnstile) {
-          window.clearInterval(poll);
+          clearTimers();
           render();
         }
       }, 100);
-      return () => {
-        cancelled = true;
-        window.clearInterval(poll);
-        if (widgetId && window.turnstile) window.turnstile.remove(widgetId);
-      };
+      timeout = window.setTimeout(() => {
+        clearTimers();
+        onTokenRef.current?.(null);
+      }, 15_000);
     }
 
     return () => {
       cancelled = true;
+      clearTimers();
       if (widgetId && window.turnstile) window.turnstile.remove(widgetId);
     };
   }, [siteKey, action]);
