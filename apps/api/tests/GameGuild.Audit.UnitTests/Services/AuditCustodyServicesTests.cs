@@ -267,7 +267,7 @@ public sealed class LegalHoldServiceTests : AuditCustodyServiceTestBase
         Assert.Null(stored.DispatchedAtUtc);
 
         // Actual delivery evidence: the pipeline row reports Sent.
-        pipelineNotification.MarkAsSent();
+        pipelineNotification.MarkDeliverySent();
         var sent = await Service().DispatchNotificationsAsync(hold.Id, CancellationToken.None);
         stored = await Context.Set<LegalHoldNotification>().SingleAsync(item => item.LegalHoldId == hold.Id);
         Assert.Equal("Sent", stored.Status);
