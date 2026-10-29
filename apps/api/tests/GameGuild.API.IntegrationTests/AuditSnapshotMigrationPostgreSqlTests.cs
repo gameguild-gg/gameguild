@@ -299,33 +299,57 @@ public sealed class AuditSnapshotMigrationPostgreSqlTests(ApiPostgreSqlFixture f
     private static async Task AssertStoresReadableAsync(ApplicationDbContext db)
     {
         // Historical-upgrade scenarios migrate to an explicit boundary that can predate the
-        // migrations introducing newer audit stores; only stores whose creating migration is
-        // applied at the current boundary are expected to be readable.
+        // migrations introducing newer audit stores or columns; only tables created by an
+        // applied migration are probed, and only the columns those applied migrations
+        // actually created are selected.
         var applied = (await db.Database.GetAppliedMigrationsAsync()).ToHashSet();
         var assembly = db.GetService<IMigrationsAssembly>();
-        var creatingMigrations = assembly.Migrations
-            .Select(pair => (Id: pair.Key, Instance: (Migration) Activator.CreateInstance(pair.Value.AsType())!))
-            .SelectMany(pair => pair.Instance.UpOperations.OfType<CreateTableOperation>()
-                .Select(operation => (Table: operation.Name, pair.Id)))
-            .GroupBy(entry => entry.Table, StringComparer.Ordinal)
-            .ToDictionary(
-                group => group.Key,
-                group => group.Select(entry => entry.Id).ToList(),
-                StringComparer.Ordinal);
+        var tableColumns = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        foreach (var id in db.Database.GetMigrations().Where(applied.Contains))
+        {
+            var instance = (Migration) Activator.CreateInstance(assembly.Migrations[id].AsType())!;
+            foreach (var operation in instance.UpOperations)
+            {
+                switch (operation)
+                {
+                    case CreateTableOperation create:
+                        tableColumns[create.Name] = new HashSet<string>(
+                            create.Columns.Select(column => column.Name), StringComparer.Ordinal);
+                        break;
+                    case AddColumnOperation add:
+                        if (!tableColumns.TryGetValue(add.Table, out var columns))
+                        {
+                            columns = [];
+                            tableColumns[add.Table] = columns;
+                        }
+
+                        columns.Add(add.Name);
+                        break;
+                }
+            }
+        }
 
         foreach (var type in AuditStores)
         {
             var entity = db.Model.FindEntityType(type)!;
             var table = entity.GetTableName()!;
-            if (creatingMigrations.TryGetValue(table, out var migrations)
-                && migrations.All(id => !applied.Contains(id)))
+            if (!tableColumns.TryGetValue(table, out var available))
             {
                 continue;
             }
 
             var store = StoreObjectIdentifier.Table(table, entity.GetSchema());
-            var columns = string.Join(", ", entity.GetProperties().Select(property =>
-                '"' + property.GetColumnName(store)!.Replace("\"", "\"\"", StringComparison.Ordinal) + '"'));
+            var projected = entity.GetProperties()
+                .Select(property => property.GetColumnName(store)!)
+                .Where(available.Contains)
+                .ToList();
+            if (projected.Count == 0)
+            {
+                continue;
+            }
+
+            var columns = string.Join(", ", projected.Select(name =>
+                '"' + name.Replace("\"", "\"\"", StringComparison.Ordinal) + '"'));
             // Identifiers come exclusively from the fixed audit-store model, never request input.
             var sql = $"SELECT {columns} FROM \"{table}\" LIMIT 0";
             await db.Database.ExecuteSqlRawAsync(sql);

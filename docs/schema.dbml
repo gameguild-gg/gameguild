@@ -3776,8 +3776,8 @@ Table "LegalHoldNotifications" {
 
   Indexes {
     Id [pk, name: "PK_LegalHoldNotifications"]
+    (TenantId, DeliveredNotificationId) [name: "IX_LegalHoldNotifications_TenantId_DeliveredNotificationId"]
     (TenantId, LegalHoldId, Status) [name: "IX_LegalHoldNotifications_TenantId_LegalHoldId_Status"]
-    (TenantId, DeliveredNotificationId) [name: "IX_LegalHoldNotifications_TenantId_DeliveredNotificat~"]
   }
 }
 
@@ -3965,11 +3965,11 @@ Table "MutationValueSnapshotArchives" {
 
   Indexes {
     Id [pk, name: "PK_MutationValueSnapshotArchives"]
-    (TenantId, SnapshotId) [unique, name: "IX_MutationValueSnapshotArchives_TenantId_SnapshotId"]
-    (TenantId, EntityName, KeyId, OccurredAtUtc) [name: "IX_MutationValueSnapshotArchives_TenantId_EntityName~"]
-    (TenantId, OccurredAtUtc) [name: "IX_MutationValueSnapshotArchives_TenantId_OccurredAtUtc"]
-    (TenantId, BeforeStoredSha256) [name: "IX_MutationValueSnapshotArchives_TenantId_BeforeStoredSha25~"]
     (TenantId, AfterStoredSha256) [name: "IX_MutationValueSnapshotArchives_TenantId_AfterStoredSha256"]
+    (TenantId, BeforeStoredSha256) [name: "IX_MutationValueSnapshotArchives_TenantId_BeforeStoredSha256"]
+    (TenantId, EntityName, KeyId, OccurredAtUtc) [name: "IX_MutationValueSnapshotArchives_TenantId_EntityName_KeyId_Occ~"]
+    (TenantId, OccurredAtUtc) [name: "IX_MutationValueSnapshotArchives_TenantId_OccurredAtUtc"]
+    (TenantId, SnapshotId) [unique, name: "IX_MutationValueSnapshotArchives_TenantId_SnapshotId"]
   }
 }
 
