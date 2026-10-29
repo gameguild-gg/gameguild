@@ -10,6 +10,7 @@ public sealed class EventTransportModelConfiguration : IModelConfiguration
     {
         ConfigureOutbox(modelBuilder.Entity<OutboxMessage>());
         ConfigureInbox(modelBuilder.Entity<InboxReceipt>());
+        ConfigureDeliveryReceipt(modelBuilder.Entity<OutboxDeliveryReceipt>());
     }
 
     private static void ConfigureOutbox(EntityTypeBuilder<OutboxMessage> entity)
@@ -27,6 +28,9 @@ public sealed class EventTransportModelConfiguration : IModelConfiguration
         entity.HasIndex(message => new { message.AggregateType, message.AggregateId, message.OccurredAtUtc, message.EventId })
             .HasDatabaseName("ix_outbox_aggregate_order");
         entity.HasIndex(message => message.CorrelationId).HasDatabaseName("ix_outbox_correlation");
+        entity.HasIndex(message => new { message.OccurredAtUtc, message.EventId })
+            .HasFilter("\"CompletedAtUtc\" IS NULL AND \"DeadLetteredAtUtc\" IS NULL")
+            .HasDatabaseName("ix_outbox_pending_order");
     }
 
     private static void ConfigureInbox(EntityTypeBuilder<InboxReceipt> entity)
@@ -37,9 +41,27 @@ public sealed class EventTransportModelConfiguration : IModelConfiguration
         entity.Property(receipt => receipt.LastError).HasMaxLength(4000);
         entity.HasIndex(receipt => new { receipt.CompletedAtUtc, receipt.DeadLetteredAtUtc, receipt.NextAttemptAtUtc })
             .HasDatabaseName("ix_inbox_retry");
+        entity.HasIndex(receipt => receipt.EventId)
+            .HasFilter("\"CompletedAtUtc\" IS NULL OR \"DeadLetteredAtUtc\" IS NOT NULL")
+            .HasDatabaseName("ix_inbox_unfinished_event");
         entity.HasOne<OutboxMessage>()
             .WithMany()
             .HasForeignKey(receipt => receipt.EventId)
             .OnDelete(DeleteBehavior.Restrict);
+    }
+
+    private static void ConfigureDeliveryReceipt(EntityTypeBuilder<OutboxDeliveryReceipt> entity)
+    {
+        entity.ToTable("outbox_delivery_receipts", "gameguild.integration");
+        entity.HasKey(receipt => receipt.EventId).HasName("outbox_delivery_receipts_pkey");
+        entity.Property(receipt => receipt.EventId).ValueGeneratedNever();
+        entity.Property(receipt => receipt.EventName).HasMaxLength(200);
+        entity.Property(receipt => receipt.EventType).HasMaxLength(1000);
+        entity.Property(receipt => receipt.SourceModule).HasMaxLength(200);
+        entity.Property(receipt => receipt.AggregateType).HasMaxLength(200);
+        entity.Property(receipt => receipt.AggregateId).HasMaxLength(200);
+        entity.HasIndex(receipt => new { receipt.SourceModule, receipt.OccurredAtUtc })
+            .HasFilter("\"SourceModule\" IS NOT NULL")
+            .HasDatabaseName("ix_outbox_delivery_source");
     }
 }

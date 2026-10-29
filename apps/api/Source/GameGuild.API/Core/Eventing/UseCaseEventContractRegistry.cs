@@ -101,6 +101,10 @@ internal sealed class UseCaseEventVerifier(ApplicationDbContext context) : IUseC
         var storedEventTypes = await context.Set<OutboxMessage>()
             .Where(message => message.CorrelationId == operationContext.CorrelationId)
             .Select(message => message.EventType)
+            .Concat(context.Set<OutboxDeliveryReceipt>()
+                .Where(receipt => receipt.CorrelationId == operationContext.CorrelationId
+                    && receipt.CompletedAtUtc != null && receipt.EventType != null)
+                .Select(receipt => receipt.EventType!))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         var genericType = DurableIntegrationEventValidator.GetStableTypeName(typeof(UseCaseOperationOccurredV1));

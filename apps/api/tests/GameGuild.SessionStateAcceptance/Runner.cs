@@ -79,7 +79,7 @@ internal static class Runner
                     RedirectStandardInput = true
                 }
             };
-            child.StartInfo.ArgumentList.Add("--max-old-space-size=128");
+            child.StartInfo.ArgumentList.Add("--max-old-space-size=2048");
             child.StartInfo.ArgumentList.Add("scripts/session-state-native-browser-e2e.mjs");
             child.StartInfo.ArgumentList.Add(evidence);
             if (!child.Start())

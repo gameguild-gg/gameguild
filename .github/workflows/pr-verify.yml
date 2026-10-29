@@ -64,7 +64,8 @@ jobs:
               pool='["ubuntu-latest"]'
             fi
           else
-            echo "Runner list unavailable (HTTP $status); defaulting to self-hosted." >&2
+            echo "Runner list unavailable (HTTP $status); using GitHub-hosted overflow." >&2
+            pool='["ubuntu-latest"]'
           fi
           echo "pool=$pool" >> "$GITHUB_OUTPUT"
 
@@ -120,9 +121,34 @@ jobs:
         run: |
           node --test scripts/ci/tests/classify-release-changes.test.mjs scripts/ci/tests/select-affected-dotnet-tests.test.mjs scripts/ci/tests/postgres-images.test.mjs scripts/ci/tests/pull-ci-image.test.mjs scripts/ci/tests/emception-web-artifacts.test.mjs apps/web/scripts/coding-cycle-editor-support.test.mjs apps/web/scripts/coding-cycle-toolchain-support.test.mjs
           node --test scripts/ci/tests/dotnet-cache-policy.test.mjs
+          node --test scripts/ci/tests/api-integration-filter.test.mjs
+          node --test scripts/ci/tests/pr-required-gate.test.mjs
           python3 -m unittest discover -s scripts/ci/tests -p 'acquire_emception_release_test.py'
       - name: Test docker build-context invariants
         run: node --test scripts/ci/tests/dockerignore-pnpm-patches.test.mjs scripts/ci/tests/dockerignore-api-analyzer-config.test.mjs
+
+  secret-scan:
+    name: PR secret scan
+    needs: classify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Scan all PR commits and the tested merge
+        env:
+          SOURCE_BASE_SHA: ${{ needs.classify.outputs.baseSha }}
+          SOURCE_HEAD_SHA: ${{ needs.classify.outputs.headSha }}
+        run: bash scripts/ci/verify-pr-secrets.sh
+      - name: Preserve redacted secret scan evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: secret-scan-${{ needs.classify.outputs.headSha }}
+          path: artifacts/secret-scan
+          if-no-files-found: error
 
   repository-policy:
     name: Repository policy
@@ -163,8 +189,10 @@ jobs:
       - uses: ./.github/actions/setup-node-workspace
       - name: Build generated client
         run: pnpm --filter @game-guild/client build
-      - name: Test credentials and MFA client integration
-        run: pnpm --filter @game-guild/client exec vitest run tests/auth/providers/credentials.test.ts --maxWorkers=1
+      - name: Test client credentials, MFA, auth factory, transport and generator contracts
+        run: pnpm --filter @game-guild/client exec vitest run tests/auth/providers/credentials.test.ts tests/next/auth.test.ts tests/next/actions-extended.test.ts tests/gaps/final-gaps.test.ts tests/react/query-hooks-extended.test.ts tests/generator tests/transport --maxWorkers=1
+      - name: Test delivered WalletConnect runtime
+        run: pnpm --filter @game-guild/web3 exec vitest run src/adapters/walletconnect.runtime.test.ts src/adapters/walletconnect.test.ts --maxWorkers=1
       - name: Acquire verified Toolchain release for Web
         id: emception-web-release
         env:
@@ -217,6 +245,7 @@ jobs:
       - name: Build Web
         env:
           GAMEGUILD_DISABLE_WEBPACK_CACHE: "1"
+          NODE_OPTIONS: --max-old-space-size=12288
         run: pnpm --filter @game-guild/web build
 
   api:
@@ -237,6 +266,14 @@ jobs:
         run: >-
           dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj
           -c Release --nologo -p:TreatWarningsAsErrors=true
+      - name: Verify audit schema and authentication before full API regression
+        # Keep exact model-drift operations in TRX before running every HTTP case.
+        run: >-
+          dotnet test apps/api/tests/GameGuild.API.IntegrationTests/GameGuild.API.IntegrationTests.csproj
+          -c Release --nologo -p:TreatWarningsAsErrors=true
+          --filter "FullyQualifiedName~AuditSnapshotMigrationPostgreSqlTests|FullyQualifiedName~MfaSignInPolicyPostgreSqlTests|FullyQualifiedName~AuditExportPostgreSqlHttpTests.Concurrent_alias_and_versioned_exports_share_the_user_rate_limit"
+          --logger "trx;LogFileName=audit-schema.trx"
+          --results-directory artifacts/test-results/affected-api/audit-schema
       - name: Run affected API tests
         shell: bash
         run: >-
@@ -283,7 +320,7 @@ jobs:
       needs.classify.outputs.testingLab == 'true' &&
       (needs.web.result == 'success' || needs.web.result == 'skipped') &&
       (needs.api.result == 'success' || needs.api.result == 'skipped')
-    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -307,7 +344,7 @@ jobs:
     needs: [runner-pool, classify]
     if: needs.classify.outputs.openApi == 'true'
     runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     services:
       postgres:
         image: mirror.gcr.io/library/postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
@@ -344,7 +381,7 @@ jobs:
     needs: [runner-pool, classify]
     if: needs.classify.outputs.migration == 'true'
     runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     services:
       postgres:
         image: mirror.gcr.io/library/postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
@@ -385,7 +422,9 @@ jobs:
     runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
     # Reuse the same-run API/client outputs. Coverage and regression remain
     # required independent jobs; this lane verifies OpenAPI/web/browser surfaces.
-    timeout-minutes: 20
+    # Chromium system dependencies plus the release checks can consume 20 minutes
+    # before artifact upload and cleanup complete. Keep time for both phases.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -479,7 +518,7 @@ jobs:
     needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
     runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/setup-node-workspace
@@ -501,7 +540,9 @@ jobs:
     needs: [runner-pool, classify]
     if: needs.classify.outputs.economyCritical == 'true'
     runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
-    timeout-minutes: 20
+    # Whole-solution shards (api-unit, remaining-*) run the sequential full API
+    # unit suite, which takes ~30 minutes alone; the job timeout must cover it.
+    timeout-minutes: 60
     strategy:
       # Keep every shard's evidence when another shard fails.
       fail-fast: false
@@ -518,6 +559,7 @@ jobs:
           ECONOMY_GATE_PROFILE: regression
           ECONOMY_REGRESSION_SHARD: ${{ matrix.shard }}
           ECONOMY_WHOLE_SOLUTION_JOBS: "2"
+          ECONOMY_API_TEST_TIMEOUT: 35m
           ECONOMY_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: bash scripts/ci/verify-economy.sh
       - name: Upload regression evidence
@@ -535,6 +577,7 @@ jobs:
       [
         runner-pool,
         classify,
+        secret-scan,
         repository-policy,
         web,
         api,
@@ -555,9 +598,11 @@ jobs:
         # ("Argument list too long"). Pass each job's result string instead.
         env:
           CLASSIFY: ${{ needs.classify.result }}
+          SECRET_SCAN: ${{ needs.secret-scan.result }}
           REPOSITORY_POLICY: ${{ needs.repository-policy.result }}
           WEB: ${{ needs.web.result }}
           API: ${{ needs.api.result }}
+          API_SELECTED: ${{ needs.classify.outputs.api }}
           TESTING_LAB: ${{ needs.testing-lab.result }}
           OPENAPI: ${{ needs.openapi.result }}
           MIGRATION: ${{ needs.migration.result }}
@@ -568,34 +613,30 @@ jobs:
           ECONOMY_REGRESSION: ${{ needs.economy-regression.result }}
           ECONOMY_SELECTED: ${{ needs.classify.outputs.economyCritical }}
         run: |
-          node - <<'NODE'
-          const gates = {
-            classify: process.env.CLASSIFY,
-            'repository-policy': process.env.REPOSITORY_POLICY,
-            web: process.env.WEB,
-            api: process.env.API,
-            'testing-lab': process.env.TESTING_LAB,
-            openapi: process.env.OPENAPI,
-            migration: process.env.MIGRATION,
-            economy: process.env.ECONOMY,
-            'economy-api': process.env.ECONOMY_API,
-            'economy-client': process.env.ECONOMY_CLIENT,
-            'economy-coverage': process.env.ECONOMY_COVERAGE,
-            'economy-regression': process.env.ECONOMY_REGRESSION,
-          };
-          const failed = Object.entries(gates)
-            .filter(([, result]) => result === 'failure' || result === 'cancelled')
-            .map(([name, result]) => `${name}=${result}`);
-          if (process.env.ECONOMY_SELECTED === 'true') {
-            for (const name of ['economy', 'economy-api', 'economy-client', 'economy-coverage', 'economy-regression']) {
-              if (gates[name] !== 'success' && !failed.some(item => item.startsWith(`${name}=`))) {
-                failed.push(`${name}=${gates[name]}`);
-              }
-            }
-          }
-          if (failed.length) {
-            console.error(`Required PR gates failed: ${failed.join(', ')}`);
-            process.exit(1);
-          }
-          console.log('Every selected PR gate passed or was intentionally skipped.');
-          NODE
+          fail=0; missing=""
+          check() { case "$2" in success) ;; *) missing="$missing $1=$2"; fail=1 ;; esac; }
+          check classify "$CLASSIFY"
+          check secret-scan "$SECRET_SCAN"
+          check repository-policy "$REPOSITORY_POLICY"
+          check web "$WEB"
+          case "$API_SELECTED:$API" in
+            false:skipped) ;;
+            *) check api "$API" ;;
+          esac
+          if [ "$ECONOMY_SELECTED" = "true" ]; then
+            for g in economy economy-api economy-client economy-coverage economy-regression; do
+              case "$g" in
+                economy) r="$ECONOMY" ;;
+                economy-api) r="$ECONOMY_API" ;;
+                economy-client) r="$ECONOMY_CLIENT" ;;
+                economy-coverage) r="$ECONOMY_COVERAGE" ;;
+                economy-regression) r="$ECONOMY_REGRESSION" ;;
+              esac
+              case "$r" in success) ;; *) missing="$missing $g=$r"; fail=1 ;; esac
+            done
+          fi
+          if [ "$fail" -ne 0 ]; then
+            echo "Required PR gates failed:$missing" >&2
+            exit 1
+          fi
+          echo 'Every selected PR gate passed or was intentionally skipped.'

@@ -65,7 +65,7 @@ test_shell_only_ci_policy() {
   grep -q '"ci:economy": "bash scripts/ci/verify-economy.sh"' "$repository_root/package.json" || return 1
   grep -Fq 'pnpm install --frozen-lockfile --ignore-scripts' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'rm -f "$repository_root/node_modules/.pnpm-workspace-state.json"' "$ci_dir/install-and-audit-pnpm.sh" || return 1
-  grep -Fq 'pnpm rebuild braces sprintf-js' "$ci_dir/install-and-audit-pnpm.sh" || return 1
+  grep -Fq 'pnpm rebuild braces deepmerge sprintf-js' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'repository pnpm lockfile is required' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -q 'pnpm audit --json' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'audit_stderr_report="$audit_root/audit.stderr.log"' "$ci_dir/install-and-audit-pnpm.sh" || return 1
@@ -115,8 +115,7 @@ test_workflow_uses_fast_pr_and_full_release_economy_profiles() {
   grep -Fq 'ECONOMY_GATE_PROFILE: client-bundle' "$pr_workflow" || return 1
   grep -Fq 'ECONOMY_GATE_PROFILE: regression' "$pr_workflow" || return 1
   grep -Fq 'shard: [api-integration-1, api-integration-2, api-integration-3, api-integration-4, api-unit, remaining-1, remaining-2]' "$pr_workflow" || return 1
-  grep -Fq 'needs: [classify, economy-api, economy-client]' "$pr_workflow" ||
-    grep -Fq 'needs: [runner-pool, classify, economy-api, economy-client]' "$pr_workflow" || return 1
+  grep -Fq 'needs: [runner-pool, classify, economy-api, economy-client]' "$pr_workflow" || return 1
   grep -Fq 'tree or SHA256 mismatch' "$ci_dir/economy-artifacts.sh" || return 1
   sed -n '/^  required-gate:/,$p' "$pr_workflow" | grep -Fq 'economy-coverage,' || return 1
   sed -n '/^  required-gate:/,$p' "$pr_workflow" | grep -Fq 'economy-regression,' || return 1

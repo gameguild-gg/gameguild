@@ -96,8 +96,8 @@ describe("CourseDiscussionsManager", () => {
         content: "Can I submit a revised prototype after review?",
       });
     });
+    expect(await screen.findByText("Discussion created.")).toBeInTheDocument();
     expect(refreshMock).toHaveBeenCalled();
-    expect(screen.getByText("Discussion created.")).toBeInTheDocument();
   });
 
   it("pins existing discussion threads from the list", async () => {
@@ -168,9 +168,9 @@ describe("CourseDiscussionsManager", () => {
     await waitFor(() => {
       expect(deleteDiscussionMock).toHaveBeenCalledWith("course-1", "thread-1");
     });
+    expect(await screen.findByText("Discussion deleted.")).toBeInTheDocument();
     expect(screen.queryByText("Checkpoint question")).not.toBeInTheDocument();
     expect(screen.getByText("Keep me")).toBeInTheDocument();
-    expect(screen.getByText("Discussion deleted.")).toBeInTheDocument();
   });
 
   it("renders resolved and pinned state and unpins a thread", async () => {
@@ -200,9 +200,9 @@ describe("CourseDiscussionsManager", () => {
         false,
       );
     });
+    expect(await screen.findByText("Discussion unpinned.")).toBeInTheDocument();
     expect(screen.queryByText("Pinned")).not.toBeInTheDocument();
     expect(screen.getByText("Keep me unchanged")).toBeInTheDocument();
-    expect(screen.getByText("Discussion unpinned.")).toBeInTheDocument();
   });
 
   it.each([

@@ -1,6 +1,9 @@
 name: Runner Smoke
 on:
   workflow_dispatch:
+
+permissions: {}
+
 jobs:
   smoke:
     runs-on: [self-hosted, gameguild]

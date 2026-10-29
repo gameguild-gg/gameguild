@@ -57,14 +57,14 @@ public class NoWaitPublisherExecutionTests
         await publisher.Publish([executor], notification, cancellation.Token);
 
         await WaitForSignalAsync(handler.HandledSignal.Task);
-        handler.ReceivedToken.IsCancellationRequested.Should().BeFalse();
+        handler.ReceivedToken.Should().Be(CancellationToken.None);
     }
 
     private static async Task WaitForSignalAsync(Task signal)
     {
-        var completed = await Task.WhenAny(signal, Task.Delay(1000));
-        completed.Should().BeSameAs(signal);
-        await signal;
+        // The contract is eventual background execution, not a one-second scheduling
+        // guarantee on a loaded CI worker. Keep a hang guard while awaiting the signal.
+        await signal.WaitAsync(TimeSpan.FromSeconds(30));
     }
 
     private sealed class TestNotification : INotification

@@ -2,6 +2,25 @@ namespace GameGuild.Commerce.Payments;
 
 internal static class GatewayPaymentResultBinder
 {
+    /// <summary>
+    ///     Stripe Processing is a mapped provider state in the database. Until a real
+    ///     mapping is available, Pending is the durable local claim: it has no retry
+    ///     schedule and a repeated subscription charge returns the existing payment.
+    /// </summary>
+    public static void PrepareProcessingClaim(Payment payment)
+    {
+        ArgumentNullException.ThrowIfNull(payment);
+        if (payment.Status != PaymentStatus.Pending) return;
+        if (string.Equals(payment.Provider, GatewayProviderIds.Stripe, StringComparison.OrdinalIgnoreCase)
+            && (string.IsNullOrWhiteSpace(payment.ProviderEnvironment)
+                || string.IsNullOrWhiteSpace(payment.ProviderAccountId)
+                || string.IsNullOrWhiteSpace(payment.ProviderObjectId)
+                || string.IsNullOrWhiteSpace(payment.ProviderObjectType)
+                || string.IsNullOrWhiteSpace(payment.ProviderMonetaryLeg))) return;
+
+        payment.MarkAsProcessing();
+    }
+
     public static void BindVerifiedProviderMapping(
         Payment payment,
         string provider,

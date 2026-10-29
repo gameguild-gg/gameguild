@@ -40,6 +40,35 @@ public class RetryPaymentRecoveryLifecycleTests
             .Returns(Task.CompletedTask);
     }
 
+    [Theory]
+    [InlineData(PaymentStatus.Processing, GatewayFailureKind.OutcomeUnknown)]
+    [InlineData(PaymentStatus.Failed, GatewayFailureKind.OutcomeUnknown)]
+    [InlineData(PaymentStatus.Processing, GatewayFailureKind.NotApplicable)]
+    public async Task RetryWithUnconfirmedCharge_RecordsItsClaimWithoutRetryOrDunning(
+        PaymentStatus providerStatus, GatewayFailureKind failureKind)
+    {
+        var payment = FailedPayment(maxRetries: 4);
+        _gateway.Setup(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GatewayPaymentResult(false, null, null, "response_unconfirmed", "Response lost after send",
+                providerStatus, SystemClock.UtcNow, ProviderId: "stripe", FailureKind: failureKind));
+        var handler = CreateHandler(payment, 4);
+
+        var result = await handler.Handle(new RetryPaymentCommand(payment.Id), CancellationToken.None);
+        await handler.Handle(new RetryPaymentCommand(payment.Id), CancellationToken.None);
+
+        result.Success.Should().BeFalse();
+        result.PaymentResult!.Status.Should().Be(PaymentStatus.Pending);
+        CommandOutcome.IsFailure(result).Should().BeTrue();
+        CommandOutcome.ShouldRollback(result).Should().BeFalse("the recorded retry must survive the outer command transaction");
+        payment.Status.Should().Be(PaymentStatus.Pending);
+        payment.NextRetryAt.Should().BeNull();
+        payment.CanRetry.Should().BeFalse();
+        _gateway.Verify(gateway => gateway.ProcessPaymentAsync(It.IsAny<GatewayPaymentRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repository.Verify(repository => repository.AddRetryAttemptAsync(
+            It.Is<PaymentRetryAttempt>(attempt => attempt.Outcome == PaymentStatus.Pending), It.IsAny<CancellationToken>()), Times.Once);
+        _dunning.VerifyNoOtherCalls();
+    }
+
     [Fact]
     public async Task RetryFailure_AtBudgetExhaustion_SuspendsTheSubscriptionForDunning()
     {

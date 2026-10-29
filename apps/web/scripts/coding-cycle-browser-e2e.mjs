@@ -50,7 +50,7 @@ import { createMfaSignInContinuation, E2E_ADMIN_TOTP_SECRET } from "./sign-in-mf
 import { verifyCodingCycleToolchain } from "./coding-cycle-toolchain-support.mjs";
 import { assertRenderedEditorSource } from "./coding-cycle-editor-support.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { existsSync, readFileSync, createWriteStream, rmSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, createWriteStream, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient, GeneratedApi } from "@game-guild/client";
 import { chromium } from "playwright";
@@ -1276,20 +1276,103 @@ async function instructorJourney(fixture, browser) {
     record("rubric total = maxScore (100)", /100/.test(totalText ?? ""), totalText);
     await screenshot(page, "instructor-rubric-filled");
 
-    // Submit grade.
-    const submitGrade = gradingPanel.getByTestId("submit-grade");
-    await submitGrade.waitFor({ state: "visible", timeout: 10_000 });
-    await submitGrade.click();
-    // router.refresh() re-renders; the queue item status flips to Graded.
-    let graded = false;
-    const gradeDeadline = Date.now() + 60_000;
-    while (Date.now() < gradeDeadline) {
-      const badge = await page.getByTestId("needs-grading-badge").textContent().catch(() => "");
-      if (/0 to grade/.test(badge ?? "")) { graded = true; break; }
-      await page.waitForTimeout(1500);
+    // Observe the actual completed grading action and canonical queue without
+    // intercepting RSC: delaying its delivery also delays Next's action stream.
+    const gradingPage = new URL(page.url());
+    const isGradingPage = (url) => url.origin === gradingPage.origin && url.pathname === gradingPage.pathname;
+    const githubEvent = process.env.GITHUB_EVENT_PATH
+      ? JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")) : null;
+    const gradingProof = {
+      caseId: "QG-REVIEW-AUTOMATED-INSTRUCTOR-001",
+      sourceHead: githubEvent?.pull_request?.head?.sha ?? process.env.GITHUB_SHA ?? null,
+      testedMerge: process.env.GITHUB_SHA ?? null,
+      checkpoint: "completed-grade-with-canonical-queue",
+      mutation: null,
+      canonicalQueue: null,
+      visibleBadge: null,
+    };
+    const awaitGradingBoundary = async (promise, label, milliseconds) => {
+      let timer;
+      try {
+        return await Promise.race([promise, new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error(`Grading boundary timed out: ${label}`)), milliseconds);
+        })]);
+      } finally { clearTimeout(timer); }
+    };
+    const isGradeRequest = (request) => request.method() === "POST"
+      && isGradingPage(new URL(request.url())) && Boolean(request.headers()["next-action"])
+      && (request.postData() ?? "").includes('"rubricScores"');
+    let finishedEventObserved = false;
+    let failGradeRequest = () => {};
+    const gradeFailure = new Promise((resolve) => { failGradeRequest = resolve; });
+    const onGradeFinished = (request) => { if (isGradeRequest(request)) finishedEventObserved = true; };
+    const onGradeFailed = (request) => {
+      if (isGradeRequest(request)) failGradeRequest(new Error(`Grading request failed: ${request.failure()?.errorText ?? "unknown transport error"}`));
+    };
+    page.on("requestfinished", onGradeFinished);
+    page.on("requestfailed", onGradeFailed);
+    try {
+      const submitGrade = gradingPanel.getByTestId("submit-grade");
+      await submitGrade.waitFor({ state: "visible", timeout: 10_000 });
+      const gradeResponsePromise = page.waitForResponse((response) => {
+        return isGradeRequest(response.request());
+      }, { timeout: 120_000 }).then((response) => ({ response, error: null }), (error) => ({ response: null, error }));
+      await submitGrade.click();
+      const gradeResponseResult = await Promise.race([
+        gradeResponsePromise,
+        gradeFailure.then((error) => ({ response: null, error })),
+      ]);
+      if (gradeResponseResult.error) throw gradeResponseResult.error;
+      const gradeResponse = gradeResponseResult.response;
+      if (!gradeResponse) throw new Error("The grading mutation response was not captured.");
+      gradingProof.mutation = { status: gradeResponse.status(), streamComplete: false };
+      // Read the complete bytes through Playwright's server-side body channel.
+      // Response.finished() only awaits a client event promise; a failed event
+      // does not settle that promise in Playwright 1.64.1. Reject transport
+      // failures explicitly and never infer body completion from status alone.
+      const bodyResult = await awaitGradingBoundary(Promise.race([
+        gradeResponse.body().then((body) => ({ body, error: null }), (error) => ({ body: null, error })),
+        gradeFailure.then((error) => ({ body: null, error })),
+      ]), "mutation response body", 120_000);
+      if (bodyResult.error) throw bodyResult.error;
+      gradingProof.mutation.streamComplete = true;
+      gradingProof.mutation.bodyBytes = bodyResult.body?.length ?? 0;
+      gradingProof.mutation.finishedEventObserved = finishedEventObserved;
+      record("grade mutation response completes", gradeResponse.ok() && gradingProof.mutation.bodyBytes > 0,
+        `status=${gradeResponse.status()}; bodyBytes=${gradingProof.mutation.bodyBytes}; finishedEventObserved=${finishedEventObserved}`);
+      const queueClient = createApiClient(fixture.adminToken, fixture.tenantId);
+      const canonicalQueue = unwrap(await queueClient.request({
+        method: "GET", path: `/v1.0/assessments/${fixture.assessmentId}/grading-queue`, requiresAuth: true,
+      }), "Read canonical grading queue after instructor resolution");
+      gradingProof.canonicalQueue = {
+        total: canonicalQueue.total, needsGrading: canonicalQueue.needsGrading,
+        items: (canonicalQueue.items ?? []).map((item) => ({
+          status: item.status, activeGradeRoundStatus: item.activeGradeRoundStatus,
+          requiresStaffReview: item.requiresStaffReview,
+        })),
+      };
+      record("canonical queue has no remaining staff review", canonicalQueue.needsGrading === 0
+        && canonicalQueue.items?.length === 1 && canonicalQueue.items[0].requiresStaffReview === false,
+        `needsGrading=${canonicalQueue.needsGrading}`);
+      let graded = false;
+      const gradeDeadline = Date.now() + 60_000;
+      while (Date.now() < gradeDeadline) {
+        const badge = await page.getByTestId("needs-grading-badge").textContent().catch(() => "");
+        if (/0 to grade/.test(badge ?? "")) { graded = true; break; }
+        await page.waitForTimeout(1500);
+      }
+      gradingProof.visibleBadge = await page.getByTestId("needs-grading-badge").textContent();
+      record("submit grade → needs-grading drops to 0", graded, "polled needs-grading-badge");
+      await screenshot(page, "instructor-grade-submitted");
+    } catch (error) {
+      gradingProof.failure = error instanceof Error ? error.message.split("\n")[0] : String(error);
+      throw error;
+    } finally {
+      page.off("requestfinished", onGradeFinished);
+      page.off("requestfailed", onGradeFailed);
+      writeFileSync(resolve(ARTIFACTS, "grading-refresh-proof.json"), JSON.stringify(gradingProof, null, 2));
+      log(`grading-refresh-proof ${JSON.stringify(gradingProof)}`);
     }
-    record("submit grade → needs-grading drops to 0", graded, "polled needs-grading-badge");
-    await screenshot(page, "instructor-grade-submitted");
 
     httpFailures.assertNone("Instructor journey");
     const browserErrors = [...new Set(errors.errors())];

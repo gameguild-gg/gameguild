@@ -224,12 +224,21 @@ internal static class DatabaseStartupInitializer
             foreach (var schema in schemas)
             {
                 var quotedSchema = QuotePostgresIdentifier(schema);
+                // PostgreSQL identifiers cannot be bound as value parameters.
+                // Compose grants only from the quoted schema and role identifiers.
+                var cleanupFunctionGrant = schema == "gameguild.integration"
+                    ? $"""
+                        GRANT EXECUTE ON FUNCTION {quotedSchema}.retire_completed_outbox_messages(
+                            integer, timestamptz, text) TO {quotedRuntimeUser};
+                        """
+                    : string.Empty;
                 var sql = $"""
                     GRANT USAGE ON SCHEMA {quotedSchema} TO {quotedRuntimeUser};
                     GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA {quotedSchema} TO {quotedRuntimeUser};
                     GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA {quotedSchema} TO {quotedRuntimeUser};
                     ALTER DEFAULT PRIVILEGES IN SCHEMA {quotedSchema} GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {quotedRuntimeUser};
                     ALTER DEFAULT PRIVILEGES IN SCHEMA {quotedSchema} GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO {quotedRuntimeUser};
+                    {cleanupFunctionGrant}
                     """;
 
                 await migrationDb.Database
