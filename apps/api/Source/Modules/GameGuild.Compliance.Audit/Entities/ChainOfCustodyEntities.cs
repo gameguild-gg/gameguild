@@ -189,7 +189,9 @@ public sealed class LegalHoldNotification : EntityBase
     /// <summary>User id (custodian) or address/identifier (stakeholder).</summary>
     public required string Target { get; set; }
 
-    /// <summary>Pending, Sent, or Failed.</summary>
+    /// <summary>Pending, Queued, Sent, or Failed. <c>Queued</c> means the notification pipeline
+    ///     accepted the delivery request; <c>Sent</c> is recorded only from the pipeline's actual
+    ///     delivery evidence.</summary>
     public string Status { get; set; } = "Pending";
 
     public DateTime CreatedAtUtc { get; set; }
@@ -197,6 +199,11 @@ public sealed class LegalHoldNotification : EntityBase
     public DateTime? DispatchedAtUtc { get; set; }
 
     public string? FailureReason { get; set; }
+
+    /// <summary>Durable correlation to the notification-pipeline row carrying this delivery
+    ///     (issue #177): set when the notification is enqueued, read back to observe the actual
+    ///     delivery outcome.</summary>
+    public Guid? DeliveredNotificationId { get; set; }
 }
 
 /// <summary>

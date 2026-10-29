@@ -8037,6 +8037,9 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("DeliveredNotificationId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("DispatchedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -8073,6 +8076,8 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "DeliveredNotificationId");
 
                     b.HasIndex("TenantId", "LegalHoldId", "Status");
 
@@ -8239,6 +8244,121 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId", "EntityName", "KeyId", "OccurredAtUtc");
 
                     b.ToTable("MutationValueSnapshots", (string)null);
+                });
+
+            modelBuilder.Entity("GameGuild.Compliance.Audit.MutationValueSnapshotArchive", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AfterBytes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("AfterIntegritySha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AfterPayload")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("AfterPayloadTruncated")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("AfterStoredSha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("ArchivedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("BeforeBytes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BeforeIntegritySha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("BeforePayload")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("BeforePayloadTruncated")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("BeforeStoredSha256")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ChangeKind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DiffCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EntityName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("KeyId")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTimeOffset>("OccurredAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SnapshotId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("StorageMode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("StructuredDiffJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "AfterStoredSha256");
+
+                    b.HasIndex("TenantId", "BeforeStoredSha256");
+
+                    b.HasIndex("TenantId", "OccurredAtUtc");
+
+                    b.HasIndex("TenantId", "SnapshotId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "EntityName", "KeyId", "OccurredAtUtc");
+
+                    b.ToTable("MutationValueSnapshotArchives", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Compliance.Audit.PiiRedactionOperation", b =>
