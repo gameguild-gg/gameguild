@@ -66,7 +66,7 @@ public sealed class AuthorizationCacheOptions : BaseOptions
     /// <summary>Adapt the tracked L1 entry budget to the runtime's latest GC memory-load signal.</summary>
     public bool EnableL1MemoryPressureAdaptation { get; set; } = true;
 
-    /// <summary>Seconds between pressure samples. Sampling never forces a collection.</summary>
+    /// <summary>Seconds between samples, within the runtime timer range. Sampling never forces a collection.</summary>
     public int L1MemoryPressureCheckIntervalSeconds { get; set; } = 30;
 
     /// <summary>Percentage of the GC high-memory threshold that starts reducing the entry budget.</summary>
@@ -353,9 +353,10 @@ public sealed class AuthorizationCacheOptions : BaseOptions
     /// <summary>Validates memory-pressure settings independently of optional Redis configuration.</summary>
     public void ValidateMemoryPressureSettings()
     {
-        if (L1MemoryPressureCheckIntervalSeconds <= 0)
+        if (L1MemoryPressureCheckIntervalSeconds <= 0 ||
+            (long)L1MemoryPressureCheckIntervalSeconds * 1000 >= uint.MaxValue)
         {
-            throw new InvalidOperationException("L1MemoryPressureCheckIntervalSeconds must be positive.");
+            throw new InvalidOperationException("L1MemoryPressureCheckIntervalSeconds must be between 1 and 4294967.");
         }
         if (L1MemoryPressureHighThresholdPercent is < 1 or > 100)
         {

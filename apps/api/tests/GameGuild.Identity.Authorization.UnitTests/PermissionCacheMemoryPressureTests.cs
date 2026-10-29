@@ -167,6 +167,25 @@ public sealed class PermissionCacheMemoryPressureTests
     }
 
     [Fact]
+    public async Task MaximumSupportedSamplingIntervalStartsAndCanBeCancelled()
+    {
+        using var harness = new Harness(new AuthorizationCacheOptions { L1MemoryPressureCheckIntervalSeconds = 4294967 });
+        var observed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        harness.Signal.Setup(signal => signal.GetSnapshot())
+            .Callback(() => observed.TrySetResult())
+            .Returns(new PermissionCacheMemorySnapshot(0, 0));
+        await harness.Monitor.StartAsync(CancellationToken.None);
+        try
+        {
+            await observed.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        }
+        finally
+        {
+            await harness.Monitor.StopAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    [Fact]
     public void RegistrationSharesTheTrackerAndCapacityManagerAcrossScopes()
     {
         var services = new ServiceCollection();
@@ -184,6 +203,8 @@ public sealed class PermissionCacheMemoryPressureTests
 
     [Theory]
     [InlineData("interval", 0)]
+    [InlineData("interval", 4294968)]
+    [InlineData("interval", int.MaxValue)]
     [InlineData("high", 0)]
     [InlineData("high", 101)]
     [InlineData("recovery", -1)]
