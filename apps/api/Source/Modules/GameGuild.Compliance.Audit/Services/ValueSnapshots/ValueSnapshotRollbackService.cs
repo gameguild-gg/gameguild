@@ -331,7 +331,8 @@ public sealed class ValueSnapshotRollbackService(
     }
 
     /// <summary>Restores inline after-payloads for snapshots whose payload was deduplicated into
-    /// a chunk or stripped by archival, so replay can reconstruct full state from any store state.</summary>
+    /// a chunk or moved to the durable archive copy, so replay can reconstruct full state from any
+    /// store state (issue #176).</summary>
     private async Task ResolveChunkPayloadsAsync(Guid tenantId, List<MutationValueSnapshot> lineage, CancellationToken cancellationToken)
     {
         var chunkIds = lineage
@@ -339,21 +340,39 @@ public sealed class ValueSnapshotRollbackService(
             .Select(snapshot => snapshot.AfterChunkId!.Value)
             .Distinct()
             .ToList();
-        if (chunkIds.Count == 0)
+        if (chunkIds.Count > 0)
         {
-            return;
+            var chunks = await context.Set<MutationValuePayloadChunk>().AsNoTracking()
+                .Where(chunk => chunk.TenantId == tenantId && chunkIds.Contains(chunk.Id))
+                .ToDictionaryAsync(chunk => chunk.Id, cancellationToken)
+                .ConfigureAwait(false);
+            foreach (var snapshot in lineage)
+            {
+                if (snapshot.AfterPayload is null && snapshot.AfterChunkId is not null
+                    && chunks.TryGetValue(snapshot.AfterChunkId.Value, out var chunk))
+                {
+                    snapshot.AfterPayload = chunk.Content;
+                }
+            }
         }
 
-        var chunks = await context.Set<MutationValuePayloadChunk>().AsNoTracking()
-            .Where(chunk => chunk.TenantId == tenantId && chunkIds.Contains(chunk.Id))
-            .ToDictionaryAsync(chunk => chunk.Id, cancellationToken)
-            .ConfigureAwait(false);
-        foreach (var snapshot in lineage)
+        var archivedIds = lineage
+            .Where(snapshot => snapshot.AfterPayload is null && snapshot.AfterChunkId is null
+                && snapshot.ArchivedAtUtc != null && snapshot.ChangeKind != "Deleted")
+            .Select(snapshot => snapshot.Id)
+            .ToList();
+        if (archivedIds.Count > 0)
         {
-            if (snapshot.AfterPayload is null && snapshot.AfterChunkId is not null
-                && chunks.TryGetValue(snapshot.AfterChunkId.Value, out var chunk))
+            var archives = await context.Set<MutationValueSnapshotArchive>().AsNoTracking()
+                .Where(archive => archive.TenantId == tenantId && archivedIds.Contains(archive.SnapshotId))
+                .ToDictionaryAsync(archive => archive.SnapshotId, cancellationToken)
+                .ConfigureAwait(false);
+            foreach (var snapshot in lineage)
             {
-                snapshot.AfterPayload = chunk.Content;
+                if (snapshot.AfterPayload is null && archives.TryGetValue(snapshot.Id, out var archive))
+                {
+                    snapshot.AfterPayload = archive.AfterPayload;
+                }
             }
         }
     }

@@ -1,5 +1,7 @@
 using System.Text.Json;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -72,6 +74,7 @@ public sealed class LegalHoldService(
     IApplicationDbContext context,
     IChainOfCustodyService custody,
     IAuditService audit,
+    INotificationService notifications,
     TimeProvider timeProvider,
     ILogger<LegalHoldService> logger) : ILegalHoldService
 {
@@ -220,42 +223,149 @@ public sealed class LegalHoldService(
 
     public async Task<LegalHoldResponse> DispatchNotificationsAsync(Guid holdId, CancellationToken cancellationToken)
     {
-        var tenantId = RequireAdministrator().TenantId;
-        var hold = await FindHoldAsync(tenantId, holdId, cancellationToken).ConfigureAwait(false)
+        var (tenantId, _) = RequireAdministrator();
+        var hold = await context.Set<LegalHold>().AsNoTracking()
+            .FirstOrDefaultAsync(candidate => candidate.TenantId == tenantId && candidate.Id == holdId, cancellationToken)
+            .ConfigureAwait(false)
             ?? throw new ValueSnapshotValidationException(new Dictionary<string, string[]>
             {
                 ["HoldId"] = ["Legal hold not found."]
             });
 
-        var pending = await context.Set<LegalHoldNotification>()
+        // The automated notification workflow runs through the platform notification pipeline
+        // (issue #177): pending notifications are enqueued with durable correlation to their
+        // pipeline row, and the Sent state is recorded only from the pipeline's actual delivery
+        // evidence. An audit log records the pass; it never claims delivery by itself.
+        var open = await context.Set<LegalHoldNotification>()
             .Where(notification => notification.TenantId == tenantId
                 && notification.LegalHoldId == hold.Id
-                && notification.Status == "Pending")
+                && (notification.Status == "Pending" || notification.Status == "Queued"))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        // The notification workflow records durable delivery intent; each pending notification is
-        // stamped dispatched (with the hold as the durable audit anchor) so the workflow is
-        // observable and repeatable without an external delivery provider.
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        foreach (var notification in pending)
+        var enqueued = 0;
+        foreach (var notification in open)
         {
-            notification.Status = "Sent";
-            notification.DispatchedAtUtc = now;
+            if (notification.Status == "Queued")
+            {
+                await ReconcileDeliveryEvidence(notification, now, cancellationToken).ConfigureAwait(false);
+                continue;
+            }
+
+            var (recipientId, recipientEmail) = ResolveRecipient(notification);
+            if (recipientId is null && recipientEmail is null)
+            {
+                notification.Status = "Failed";
+                notification.FailureReason = $"The {notification.TargetKind.ToLowerInvariant()} target '{Truncate(notification.Target, 200)}' is not a routable recipient.";
+                notification.Touch();
+                continue;
+            }
+
+            try
+            {
+                var result = await notifications.SendAsync(
+                    recipientId: recipientId,
+                    type: NotificationType.LegalHoldNotice,
+                    title: $"Legal hold {hold.CaseNumber} requires your attention",
+                    message:
+                        $"A legal hold ({hold.CaseNumber}) was created for this tenant" +
+                        (string.IsNullOrWhiteSpace(hold.Description) ? "." : $": {hold.Description}") +
+                        " Evidence under this hold is preserved; custodians must not alter or release it while the hold is active.",
+                    channel: NotificationChannel.Email,
+                    tenantId: tenantId,
+                    priority: NotificationPriority.High,
+                    referenceEntityId: hold.Id,
+                    referenceEntityType: nameof(LegalHold),
+                    recipientEmail: recipientEmail,
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
+
+                if (result.IsSuccess)
+                {
+                    notification.Status = "Queued";
+                    notification.DeliveredNotificationId = result.Value.Id;
+                    notification.FailureReason = null;
+                    enqueued++;
+                }
+                else
+                {
+                    notification.Status = "Failed";
+                    notification.FailureReason = Truncate(
+                        $"{result.Error.Code}: {result.Error.Description}", 900);
+                }
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                logger.LogWarning(exception,
+                    "Legal hold notification enqueue failed for hold {HoldId}, target kind {TargetKind}",
+                    hold.Id, notification.TargetKind);
+                notification.Status = "Failed";
+                notification.FailureReason = Truncate(exception.Message, 900);
+            }
+
             notification.Touch();
         }
 
-        if (pending.Count > 0)
+        if (open.Count > 0)
         {
             await audit.LogAdminActionAsync(hold.CreatedByUserId, "audit.legal-hold.notified",
-                $"Legal hold {hold.CaseNumber}: {pending.Count} notification(s) dispatched", new { holdId = hold.Id })
+                $"Legal hold {hold.CaseNumber}: {enqueued} notification(s) enqueued to the delivery pipeline", new { holdId = hold.Id })
                 .ConfigureAwait(false);
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            logger.LogInformation("Dispatched {Count} legal hold notifications for hold {HoldId}", pending.Count, hold.Id);
+            logger.LogInformation("Enqueued {Enqueued} legal hold notifications for hold {HoldId}", enqueued, hold.Id);
         }
 
         return await MaterializeAsync(tenantId, hold, null, cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>
+    ///     Reads the durable correlation back from the notification pipeline: <c>Sent</c> is
+    ///     recorded only when the pipeline row reports actual delivery; a dead-lettered row fails
+    ///     this notification; retryable pipeline states leave it queued for the next pass.
+    /// </summary>
+    private async Task ReconcileDeliveryEvidence(LegalHoldNotification notification, DateTime now, CancellationToken cancellationToken)
+    {
+        if (notification.DeliveredNotificationId is not { } deliveredId)
+        {
+            return;
+        }
+
+        var delivered = await notifications.GetByIdAsync(deliveredId, cancellationToken).ConfigureAwait(false);
+        if (!delivered.IsSuccess)
+        {
+            return;
+        }
+
+        switch (delivered.Value.DeliveryStatus)
+        {
+            case NotificationDeliveryStatus.Sent:
+                notification.Status = "Sent";
+                notification.DispatchedAtUtc = delivered.Value.SentAt ?? now;
+                notification.FailureReason = null;
+                notification.Touch();
+                break;
+            case NotificationDeliveryStatus.DeadLettered:
+                notification.Status = "Failed";
+                notification.FailureReason = "The notification pipeline dead-lettered the delivery after exhausting retries.";
+                notification.Touch();
+                break;
+        }
+    }
+
+    /// <summary>
+    ///     Tenant-safe recipient routing: a custodian target is a user id resolved within the
+    ///     hold's tenant; a stakeholder target is routed as an explicit email address only.
+    /// </summary>
+    private static (Guid? RecipientId, string? RecipientEmail) ResolveRecipient(LegalHoldNotification notification) =>
+        notification.TargetKind switch
+        {
+            "Custodian" when Guid.TryParse(notification.Target, out var userId) => (userId, null),
+            "Stakeholder" when !string.IsNullOrWhiteSpace(notification.Target) => (null, notification.Target.Trim()),
+            _ => (null, null)
+        };
+
+    private static string Truncate(string value, int maxLength) =>
+        value.Length <= maxLength ? value : value[..maxLength];
 
     private Task<LegalHold?> FindHoldAsync(Guid tenantId, Guid holdId, CancellationToken cancellationToken) =>
         context.Set<LegalHold>().AsNoTracking()
