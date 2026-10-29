@@ -1,10 +1,12 @@
+type JSObjectInput = object | string | number | boolean | bigint | symbol;
+
 /**
  * JavaScript environment bindings
  */
 export function createJSBindings(
   stdout: (text: string) => void,
   stderr: (text: string) => void
-): Record<string, any> {
+) {
   return {
     // Memory operations
     mem: {
@@ -20,16 +22,16 @@ export function createJSBindings(
 
     // Array operations
     arr: {
-      length: (arr: any[]) => arr.length,
-      push: (arr: any[], item: any) => arr.push(item),
-      pop: (arr: any[]) => arr.pop(),
+      length: (arr: readonly unknown[]) => arr.length,
+      push: <T>(arr: T[], item: T) => arr.push(item),
+      pop: <T>(arr: T[]) => arr.pop(),
     },
 
     // Object operations
     obj: {
-      keys: (obj: any) => Object.keys(obj),
-      values: (obj: any) => Object.values(obj),
-      entries: (obj: any) => Object.entries(obj),
+      keys: (obj: JSObjectInput) => Object.keys(obj),
+      values: (obj: JSObjectInput): unknown[] => Object.values(obj),
+      entries: (obj: JSObjectInput): [string, unknown][] => Object.entries(obj),
     },
   }
 }
