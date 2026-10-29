@@ -165,7 +165,7 @@ public sealed class FieldAccessAuditPostgreSqlIntegrationTests(ApiPostgreSqlFixt
             AdminEmail = $"admin-{tenantId:N}@example.test",
             IsActive = true
         };
-        var user = User.CreateOAuthUser($"fieldaccess-{userId:N}@example.test", "Field Access User");
+        var user = User.CreateOAuthUser($"fieldaccess-{userId:N}@example.test", $"Field Access User {userId:N}");
         user.Id = userId;
         user.PhoneNumber = $"+1555{userId.GetHashCode():000000}";
 
