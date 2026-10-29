@@ -21,7 +21,7 @@ public interface IBankAccountVerificationRepository
     Task AddAsync(BankAccountVerification verification, CancellationToken cancellationToken = default);
 
     /// <summary>Persists challenge state changes (attempt counter, verification).</summary>
-    Task UpdateAsync(BankAccountVerification verification, CancellationToken cancellationToken = default);
+    Task<BankAccountVerification> UpdateAsync(BankAccountVerification verification, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -54,13 +54,6 @@ public class BankAccountVerificationRepository(
     public async Task AddAsync(BankAccountVerification verification, CancellationToken cancellationToken = default)
     {
         await Context.Set<BankAccountVerification>().AddAsync(verification, cancellationToken).ConfigureAwait(false);
-        await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc />
-    public async Task UpdateAsync(BankAccountVerification verification, CancellationToken cancellationToken = default)
-    {
-        Context.Set<BankAccountVerification>().Update(verification);
         await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }
