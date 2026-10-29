@@ -12,13 +12,20 @@ namespace GameGuild.Commerce.Products;
 /// Attempts also feed the unusual-usage velocity alerting (issue #418): when the subject's
 /// attempt count inside the configured window crosses the burst threshold, an anomaly
 /// security event is published through the central pipeline.
+/// Validation from untrusted (anonymous) contexts is CAPTCHA-gated (issue #418
+/// anti-farming): when the gate is enabled, a denied caller is rejected before any code
+/// lookup happens — the denial is recorded as an attempt with the
+/// <see cref="PromoCodeValidationOutcome.CaptchaRequired"/> outcome (keeping scripted
+/// probing observable for the anomaly alerting without resolving any code) and counted
+/// toward the velocity check.
 /// </summary>
 public sealed class ValidatePromoCodeCommandHandler(
     IPricingEngineService pricingEngine,
     IPromoCodeRepository promoCodeRepository,
     ILogger<ValidatePromoCodeCommandHandler> logger,
     IPromoUsageAnomalyEvaluator? anomalyEvaluator = null,
-    IOptions<PromoAbuseDetectionOptions>? abuseOptions = null)
+    IOptions<PromoAbuseDetectionOptions>? abuseOptions = null,
+    IPromoRedemptionCaptchaGate? captchaGate = null)
     : ICommandHandler<ValidatePromoCodeCommand, PromoCodeValidationResult>
 {
     public async Task<PromoCodeValidationResult> Handle(
@@ -26,6 +33,31 @@ public sealed class ValidatePromoCodeCommandHandler(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        // Issue #418 anti-farming: untrusted (anonymous) validation contexts must pass the
+        // CAPTCHA gate when it is enabled. Fail closed — a denied gate rejects the attempt
+        // before any code lookup, so farmed code strings never reach the pricing engine.
+        if (captchaGate is not null)
+        {
+            var gateDecision = captchaGate.Check(isTrustedContext: request.UserId.HasValue, request.CaptchaToken);
+            if (!gateDecision.Allowed)
+            {
+                var denied = new PromoCodeValidationResult(
+                    IsValid: false,
+                    Code: PromoCodeNormalizer.Normalize(request.Code) ?? request.Code.Trim().ToUpperInvariant(),
+                    ErrorMessage: gateDecision.Reason ?? "CAPTCHA verification failed",
+                    Outcome: PromoCodeValidationOutcome.CaptchaRequired);
+
+                // Record the denial as an attempt: no promo code resolves (nothing is
+                // disclosed about code existence), but the burst stays observable for the
+                // anomaly alerting. Captcha-denied attempts carry no PromoCodeId, so they
+                // never inflate any campaign's conversion denominator.
+                await RecordAttemptAsync(request, denied, cancellationToken).ConfigureAwait(false);
+                await EvaluateVelocityAsync(request, cancellationToken).ConfigureAwait(false);
+
+                return denied;
+            }
+        }
 
         var result = await pricingEngine.ValidatePromoCodeAsync(
             request.Code,
@@ -36,7 +68,7 @@ public sealed class ValidatePromoCodeCommandHandler(
             cancellationToken).ConfigureAwait(false);
 
         await RecordAttemptAsync(request, result, cancellationToken).ConfigureAwait(false);
-        await EvaluateVelocityAsync(request, result, cancellationToken).ConfigureAwait(false);
+        await EvaluateVelocityAsync(request, cancellationToken).ConfigureAwait(false);
 
         return result;
     }
@@ -76,11 +108,11 @@ public sealed class ValidatePromoCodeCommandHandler(
     /// Unusual-usage velocity check (issue #418): counts the subject's attempts inside the
     /// configured window (the current one included) and hands the count to the anomaly
     /// evaluator. Anonymous subjects are keyed by the normalized code string, exposing
-    /// scripted probing of a single code.
+    /// scripted probing of a single code. CAPTCHA-denied attempts count too: farming
+    /// bursts must raise the anomaly alert even when every probe is rejected.
     /// </summary>
     private async Task EvaluateVelocityAsync(
         ValidatePromoCodeCommand request,
-        PromoCodeValidationResult result,
         CancellationToken cancellationToken)
     {
         if (anomalyEvaluator is null)

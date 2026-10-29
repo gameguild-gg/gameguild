@@ -6622,6 +6622,7 @@ export interface CommerceProductsUpdatePromoStackingRuleInput {
 
 /** Request to validate a promo code */
 export interface CommerceProductsValidatePromoCodeInput {
+  captchaToken?: string | null;
   code?: string | null;
   orderAmount?: number;
   planId?: string | null;
@@ -34372,6 +34373,7 @@ CommerceProductsUpdatePromoStackingRuleInputSchema = z.object({
 
 /** Zod schema for CommerceProductsValidatePromoCodeInput. Request to validate a promo code */
 CommerceProductsValidatePromoCodeInputSchema = z.object({
+  captchaToken: z.string().nullable().optional(),
   code: z.string().nullable().optional(),
   orderAmount: z.number().optional(),
   planId: z.string().uuid().nullable().optional(),
