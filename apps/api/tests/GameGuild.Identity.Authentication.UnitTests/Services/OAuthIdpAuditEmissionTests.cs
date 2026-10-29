@@ -19,9 +19,9 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 
 /// <summary>
 /// Identity-provider integration auditing (issue #180): every federated/external sign-in —
-/// success, failure, just-in-time provisioning and account linking — journals a durable
-/// Authentication.External* event through the central authentication audit sink, and an audit
-/// sink failure never breaks sign-in itself.
+/// success, failure, MFA-policy denial, just-in-time provisioning and account linking —
+/// journals a durable Authentication.External*/FederatedSignInMfaDenied event through the
+/// central authentication audit sink, and an audit sink failure never breaks sign-in itself.
 /// </summary>
 public class OAuthIdpAuditEmissionTests
 {
@@ -31,6 +31,7 @@ public class OAuthIdpAuditEmissionTests
     private readonly Mock<IOAuthService> _oauthServiceMock = new();
     private readonly Mock<IGoogleIdTokenVerifier> _googleVerifierMock = new();
     private readonly Mock<IOidcFederationService> _oidcFederationServiceMock = new();
+    private readonly Mock<ISamlFederationService> _samlFederationServiceMock = new();
     private readonly Mock<IMfaService> _mfaServiceMock = new();
     private readonly Mock<IExternalLoginRepository> _externalLoginRepoMock = new();
     private readonly Mock<IAuthAttemptService> _authAttemptServiceMock = new();
@@ -101,7 +102,9 @@ public class OAuthIdpAuditEmissionTests
             .ReturnsAsync("refresh-token");
     }
 
-    private OAuthAuthService CreateSut(IAuthenticationAuditEventSink? sink = null) => new(
+    private OAuthAuthService CreateSut(
+        IAuthenticationAuditEventSink? sink = null,
+        ISamlFederationService? samlFederationService = null) => new(
         _userRepoMock.Object,
         _jwtTokenServiceMock.Object,
         _refreshTokenHasherMock.Object,
@@ -116,7 +119,8 @@ public class OAuthIdpAuditEmissionTests
         _senderMock.Object,
         _sessionManagementServiceMock.Object,
         NullLogger<OAuthAuthService>.Instance,
-        auditEventSink: sink ?? _auditSink);
+        auditEventSink: sink ?? _auditSink,
+        samlFederationService: samlFederationService);
 
     [Fact]
     public async Task SuccessfulExternalSignInJournalsExternalLoginSucceeded()
@@ -207,6 +211,100 @@ public class OAuthIdpAuditEmissionTests
             .GitHubSignInAsync(new OAuthSignInRequest { AccessToken = "gh-token" });
 
         result.Success.Should().BeTrue("auditing must never break sign-in");
+    }
+
+    [Fact]
+    public async Task OidcMfaPolicyDenialJournalsFederatedSignInMfaDenied()
+    {
+        var user = User.CreateOAuthUser("fed@example.com", "Fed User");
+        SetupLinkedFederatedUser("oidc-contoso", "oidc-sub-1", user);
+        _mfaServiceMock
+            .Setup(x => x.IsMfaRequiredAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _oidcFederationServiceMock
+            .Setup(x => x.AuthenticateCallbackAsync("contoso", "code-1", "state-1", It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OidcFederatedIdentity
+            {
+                Slug = "contoso",
+                ProviderKey = "oidc-sub-1",
+                Email = "fed@example.com",
+                EmailVerified = true,
+                Name = "Fed User",
+                Amr = ["pwd"],
+                GrantedScopes = ["openid", "email"]
+            });
+
+        var sut = CreateSut();
+        await sut.Invoking(service => service.OidcSignInAsync(new OidcSignInRequest
+        {
+            Slug = "contoso",
+            Code = "code-1",
+            State = "state-1",
+            RedirectUri = "https://app.example.com/auth/oidc/callback"
+        }))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+
+        var denied = _auditSink.Events.Should().Contain(
+            auditEvent => auditEvent.ActionType == "Authentication.FederatedSignInMfaDenied").Subject;
+        denied.UserId.Should().Be(user.Id);
+        denied.Success.Should().BeFalse();
+        denied.Method.Should().Be("Oidc:contoso");
+        // The provider-failure envelope is journaled alongside the specific denial event.
+        _auditSink.Events.Should().Contain(auditEvent =>
+            auditEvent.ActionType == "Authentication.ExternalLoginFailed"
+            && auditEvent.Method == "Oidc:contoso"
+            && !auditEvent.Success);
+    }
+
+    [Fact]
+    public async Task SamlMfaPolicyDenialJournalsFederatedSignInMfaDenied()
+    {
+        var user = User.CreateOAuthUser("fed@example.com", "Fed User");
+        SetupLinkedFederatedUser("saml-contoso", "saml-sub-1", user);
+        _mfaServiceMock
+            .Setup(x => x.IsMfaRequiredAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _samlFederationServiceMock
+            .Setup(x => x.ConsumeAssertionAsync("contoso", "response-1", "relay-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SamlFederatedIdentity
+            {
+                Slug = "contoso",
+                ProviderKey = "saml-sub-1",
+                Email = "fed@example.com",
+                EmailVerified = true,
+                Name = "Fed User",
+                HasMfaProof = false
+            });
+
+        var sut = CreateSut(samlFederationService: _samlFederationServiceMock.Object);
+        await sut.Invoking(service => service.SamlSignInAsync(new SamlSignInRequest
+        {
+            Slug = "contoso",
+            SamlResponse = "response-1",
+            RelayState = "relay-1"
+        }))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+
+        var denied = _auditSink.Events.Should().Contain(
+            auditEvent => auditEvent.ActionType == "Authentication.FederatedSignInMfaDenied").Subject;
+        denied.UserId.Should().Be(user.Id);
+        denied.Success.Should().BeFalse();
+        denied.Method.Should().Be("Saml:contoso");
+        _auditSink.Events.Should().Contain(auditEvent =>
+            auditEvent.ActionType == "Authentication.ExternalLoginFailed"
+            && auditEvent.Method == "Saml:contoso"
+            && !auditEvent.Success);
+    }
+
+    private void SetupLinkedFederatedUser(string provider, string providerKey, User user)
+    {
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync(provider, providerKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ExternalLogin { Id = Guid.NewGuid(), UserId = user.Id, Provider = provider, ProviderKey = providerKey });
+        _userRepoMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _authAttemptServiceMock
+            .Setup(x => x.RecordFailedAttemptAsync(It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
     }
 
     private sealed class RecordingAuthenticationAuditEventSink : IAuthenticationAuditEventSink
