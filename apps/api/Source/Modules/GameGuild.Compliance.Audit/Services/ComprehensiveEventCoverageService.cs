@@ -90,7 +90,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
             ["SessionManagementService records creation/termination with reason, IP and user agent"]),
         ("Identity provider integration", "Federated authentication and SSO events for every external identity provider.",
             [AuditActionTypes.ExternalLoginSucceeded, AuditActionTypes.ExternalLoginFailed, AuditActionTypes.ExternalAccountLinked, AuditActionTypes.ExternalAccountProvisioned, AuditActionTypes.FederatedSignInMfaDenied],
-            ["OAuthAuthService emits IdP events for GitHub, Google, Microsoft, Discord and generic OIDC federation sign-ins through IAuthenticationAuditEventSink", "CentralScimProvisioningAuditEventSink records SCIM provisioning"]),
+            ["OAuthAuthService emits IdP events for GitHub, Google, Microsoft, Discord, generic OIDC and SAML federation sign-ins (including MFA-policy denials) through IAuthenticationAuditEventSink", "CentralScimProvisioningAuditEventSink records SCIM provisioning"]),
         ("User lifecycle", "User creation, modification, suspension and deletion.",
             [AuditActionTypes.UserCreated, AuditActionTypes.UserUpdated, AuditActionTypes.UserDeleted, AuditActionTypes.UserSuspended, AuditActionTypes.UserReactivated, AuditActionTypes.UserProfileUpdated],
             ["PermissionAuditService and UseCaseOperationBehavior journal every mutating user command"]),
