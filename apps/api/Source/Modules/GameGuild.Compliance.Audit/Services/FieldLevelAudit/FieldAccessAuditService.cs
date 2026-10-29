@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Compliance.Audit;
 
+/// <summary>One (entity, field) read observation inside a batch: the observed value is used only for classification.</summary>
+public sealed record FieldReadObservation(Guid EntityId, string FieldName, string? Value);
+
 /// <summary>
 /// Field-level data access auditing service (issue #186): records individual field read/write/export
 /// observations with automatic sensitive-field classification and privacy-safe masked values, and
@@ -105,6 +108,58 @@ public sealed class FieldAccessAuditService(
         return created.Count == 0
             ? Result.Failure<FieldAccessAudit>(Error.Failure("FieldAccessAudit.NoFields", "No field names were supplied."))
             : Result.Success(created[0]);
+    }
+
+    /// <summary>
+    /// Records a batch of read-path observations for one entity type in a single save: one row per
+    /// (entity, field) pair, classified inline by the sensitive-field classifier. Used by the
+    /// response read-capture surface, where one request can return many entities. Read observations
+    /// never persist field values — only the fact, actor and context of the access.
+    /// </summary>
+    public async Task<int> RecordFieldReadsAsync(
+        Guid tenantId,
+        Guid userId,
+        string entityType,
+        IReadOnlyList<FieldReadObservation> observations,
+        string? ipAddress = null,
+        string? userAgent = null,
+        string? requestId = null,
+        string? apiEndpoint = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(entityType);
+        ArgumentNullException.ThrowIfNull(observations);
+        if (observations.Count == 0)
+        {
+            return 0;
+        }
+
+        var seen = new HashSet<(Guid EntityId, string FieldName)>();
+        foreach (var observation in observations)
+        {
+            if (string.IsNullOrWhiteSpace(observation.FieldName) || !seen.Add((observation.EntityId, observation.FieldName)))
+            {
+                continue;
+            }
+
+            var classification = SensitiveFieldClassifier.Classify(entityType, observation.FieldName, observation.Value);
+            var row = FieldAccessAudit.Create(
+                tenantId,
+                userId,
+                entityType,
+                observation.EntityId,
+                observation.FieldName,
+                FieldAccessType.Read,
+                classification is { IsSensitive: true },
+                classification is { IsSensitive: true } ? classification.Sensitivity : SensitivityLevel.Public,
+                ipAddress ?? string.Empty,
+                userAgent ?? string.Empty);
+            row.SetAccessContext(requestId, null, apiEndpoint);
+            context.Set<FieldAccessAudit>().Add(row);
+        }
+
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return seen.Count;
     }
 
     public string MaskSensitiveData(string? value, SensitivityLevel level) =>
