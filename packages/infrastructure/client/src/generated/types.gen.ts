@@ -2613,6 +2613,24 @@ export interface CommercePaymentsCalculateTaxInput {
   transactionDate?: string | null;
 }
 
+/** Request payload for the currency conversion endpoint. */
+export interface CommercePaymentsConvertCurrencyInput {
+  /** Optional historical instant (UTC); omit for current quotations. */
+  asOfUtc?: string | null;
+  /** Entries to convert (1..50), each with its own source currency. */
+  items?: CommercePaymentsConvertCurrencyItemInput[] | null;
+  /** ISO 4217 code every amount is converted into. */
+  targetCurrency?: string | null;
+}
+
+/** One entry of a conversion request. */
+export interface CommercePaymentsConvertCurrencyItemInput {
+  /** Amount to convert (≥ 0). */
+  amount?: number;
+  /** ISO 4217 code the amount is denominated in. */
+  currency?: string | null;
+}
+
 /** Request to create a tax jurisdiction */
 export interface CommercePaymentsCreateTaxJurisdictionInput {
   code?: string | null;
@@ -2674,10 +2692,77 @@ export interface CommercePaymentsCreditMetrics {
   usageRate?: number | null;
 }
 
+/** Per-item conversion outcome (issue #412 spec D). Successful items carry the converted
+amount rounded to the target currency's ISO 4217 minor-unit exponent and the quotation
+metadata that produced it; failed items carry Error instead so one
+bad entry never aborts a batch. */
+export interface CommercePaymentsCurrencyConversionItemResult {
+  /** Converted amount in TargetCurrency (minor-unit rounded), when the item succeeded. */
+  convertedAmount?: number | null;
+  /** Failure reason for this item, when it failed; null on success. */
+  error?: string | null;
+  /** True when source equals target and no FX quotation was involved. */
+  isIdentity?: boolean;
+  /** Quotation used (quote units per one source unit); null for same-currency identity items. */
+  rate?: number | null;
+  /** Moment the quotation was published; null for identity items. */
+  rateAsOfUtc?: string | null;
+  /** Effective (data) date of the quotation, when known (historical lookups); otherwise null. */
+  rateEffectiveDateUtc?: string | null;
+  /** Provider that produced the quotation, when known (historical lookups); otherwise null. */
+  rateProvider?: string | null;
+  /** Provenance label of the quotation (e.g. "manual-override", provider label); null for identity items. */
+  rateSource?: string | null;
+  /** Requested amount, unchanged. */
+  sourceAmount?: number;
+  /** Normalized source ISO 4217 code. */
+  sourceCurrency?: string | null;
+  /** Normalized target ISO 4217 code. */
+  targetCurrency?: string | null;
+}
+
+/** Batch conversion response. */
+export interface CommercePaymentsCurrencyConversionResult {
+  /** Historical lookup date, when requested; null means current quotations. */
+  asOfUtc?: string | null;
+  /** One outcome per requested entry, in request order. */
+  items?: CommercePaymentsCurrencyConversionItemResult[] | null;
+  /** Normalized target ISO 4217 code shared by every item. */
+  targetCurrency?: string | null;
+}
+
 /** Optional display preferences supplied when enabling a currency. */
 export interface CommercePaymentsCurrencyDisplayPreferencesInput {
   displayOrder?: number | null;
   displaySymbol?: string | null;
+}
+
+/** One ranked currency in the popularity report (issue #412 spec G). */
+export interface CommercePaymentsCurrencyPopularityEntry {
+  /** ISO-4217 currency code the entry is denominated in. */
+  currency?: string | null;
+  /** Rank position (1 = most transacted). */
+  rank?: number;
+  /** Credit-side total in Currency. */
+  totalCredit?: number;
+  /** Debit-side total in Currency. */
+  totalDebit?: number;
+  /** Net total in Currency; never consolidated across currencies. */
+  totalNet?: number;
+  /** Revenue events counted in this currency over the period. */
+  transactionCount?: number;
+}
+
+/** Most-transacted currencies over an inclusive period (issue #412 spec G). */
+export interface CommercePaymentsCurrencyPopularityReport {
+  /** Currencies ranked by transaction count (then net volume, then code), limited to the requested size. */
+  currencies?: CommercePaymentsCurrencyPopularityEntry[] | null;
+  /** Start of the period (inclusive). */
+  fromUtc?: string;
+  /** Moment the report was produced. */
+  generatedAtUtc?: string;
+  /** End of the period (inclusive). */
+  toUtc?: string;
 }
 
 /** Customer types */
@@ -4058,6 +4143,11 @@ Without tiers the charge is Quantity × PerUnitPrice;
 with tiers each quantity band is priced at its own per-unit price (utility-style
 progressive banding), the last open-ended band absorbing any remainder. */
 export interface CommercePaymentsPricingUsageChargeInput {
+  /** Optional ISO 4217 code the per-unit prices (flat and tiered) are denominated in.
+Null (default) means they are already in the calculation currency. When set and
+different from the calculation currency, every per-unit price is converted through the
+FX core before the charge is computed (issue #412 spec F). */
+  currency?: string | null;
   /** Metric name (display/line-item key) */
   metric?: string | null;
   /** Flat per-unit price used when no tiers are supplied */
@@ -6532,6 +6622,7 @@ export interface CommerceProductsUpdatePromoStackingRuleInput {
 
 /** Request to validate a promo code */
 export interface CommerceProductsValidatePromoCodeInput {
+  captchaToken?: string | null;
   code?: string | null;
   orderAmount?: number;
   planId?: string | null;
@@ -26637,13 +26728,19 @@ export let CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchem
 export let CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCreateBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerRefundBillingChargeInput>;
 export let CommercePaymentsCalculateTaxInputSchema: z.ZodType<CommercePaymentsCalculateTaxInput>;
+export let CommercePaymentsConvertCurrencyInputSchema: z.ZodType<CommercePaymentsConvertCurrencyInput>;
+export let CommercePaymentsConvertCurrencyItemInputSchema: z.ZodType<CommercePaymentsConvertCurrencyItemInput>;
 export let CommercePaymentsCreateTaxJurisdictionInputSchema: z.ZodType<CommercePaymentsCreateTaxJurisdictionInput>;
 export let CommercePaymentsCreateTaxRuleInputSchema: z.ZodType<CommercePaymentsCreateTaxRuleInput>;
 export let CommercePaymentsCreateWalletInputSchema: z.ZodType<CommercePaymentsCreateWalletInput>;
 export let CommercePaymentsCreditApplicationResultSchema: z.ZodType<CommercePaymentsCreditApplicationResult>;
 export let CommercePaymentsCreditCurrencyMetricsSchema: z.ZodType<CommercePaymentsCreditCurrencyMetrics>;
 export let CommercePaymentsCreditMetricsSchema: z.ZodType<CommercePaymentsCreditMetrics>;
+export let CommercePaymentsCurrencyConversionItemResultSchema: z.ZodType<CommercePaymentsCurrencyConversionItemResult>;
+export let CommercePaymentsCurrencyConversionResultSchema: z.ZodType<CommercePaymentsCurrencyConversionResult>;
 export let CommercePaymentsCurrencyDisplayPreferencesInputSchema: z.ZodType<CommercePaymentsCurrencyDisplayPreferencesInput>;
+export let CommercePaymentsCurrencyPopularityEntrySchema: z.ZodType<CommercePaymentsCurrencyPopularityEntry>;
+export let CommercePaymentsCurrencyPopularityReportSchema: z.ZodType<CommercePaymentsCurrencyPopularityReport>;
 export let CommercePaymentsCustomerTypeSchema: z.ZodType<CommercePaymentsCustomerType>;
 export let CommercePaymentsDisableCurrencyInputSchema: z.ZodType<CommercePaymentsDisableCurrencyInput>;
 export let CommercePaymentsDiscountTypeSchema: z.ZodType<CommercePaymentsDiscountType>;
@@ -31134,6 +31231,22 @@ CommercePaymentsCalculateTaxInputSchema = z.object({
   transactionDate: z.string().datetime().nullable().optional(),
 });
 
+/** Zod schema for CommercePaymentsConvertCurrencyInput. Request payload for the currency conversion endpoint. */
+CommercePaymentsConvertCurrencyInputSchema = z.object({
+  asOfUtc: z.string().datetime().nullable().optional(),
+  items: z
+    .array(z.lazy(() => CommercePaymentsConvertCurrencyItemInputSchema))
+    .nullable()
+    .optional(),
+  targetCurrency: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsConvertCurrencyItemInput. One entry of a conversion request. */
+CommercePaymentsConvertCurrencyItemInputSchema = z.object({
+  amount: z.number().optional(),
+  currency: z.string().nullable().optional(),
+});
+
 /** Zod schema for CommercePaymentsCreateTaxJurisdictionInput. Request to create a tax jurisdiction */
 CommercePaymentsCreateTaxJurisdictionInputSchema = z.object({
   code: z.string().nullable().optional(),
@@ -31188,10 +31301,59 @@ CommercePaymentsCreditMetricsSchema = z.object({
   usageRate: z.number().nullable().optional(),
 });
 
+/** Zod schema for CommercePaymentsCurrencyConversionItemResult. Per-item conversion outcome (issue #412 spec D). Successful items carry the converted
+amount rounded to the target currency's ISO 4217 minor-unit exponent and the quotation
+metadata that produced it; failed items carry Error instead so one
+bad entry never aborts a batch. */
+CommercePaymentsCurrencyConversionItemResultSchema = z.object({
+  convertedAmount: z.number().nullable().optional(),
+  error: z.string().nullable().optional(),
+  isIdentity: z.boolean().optional(),
+  rate: z.number().nullable().optional(),
+  rateAsOfUtc: z.string().datetime().nullable().optional(),
+  rateEffectiveDateUtc: z.string().datetime().nullable().optional(),
+  rateProvider: z.string().nullable().optional(),
+  rateSource: z.string().nullable().optional(),
+  sourceAmount: z.number().optional(),
+  sourceCurrency: z.string().nullable().optional(),
+  targetCurrency: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsCurrencyConversionResult. Batch conversion response. */
+CommercePaymentsCurrencyConversionResultSchema = z.object({
+  asOfUtc: z.string().datetime().nullable().optional(),
+  items: z
+    .array(z.lazy(() => CommercePaymentsCurrencyConversionItemResultSchema))
+    .nullable()
+    .optional(),
+  targetCurrency: z.string().nullable().optional(),
+});
+
 /** Zod schema for CommercePaymentsCurrencyDisplayPreferencesInput. Optional display preferences supplied when enabling a currency. */
 CommercePaymentsCurrencyDisplayPreferencesInputSchema = z.object({
   displayOrder: z.number().int().nullable().optional(),
   displaySymbol: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsCurrencyPopularityEntry. One ranked currency in the popularity report (issue #412 spec G). */
+CommercePaymentsCurrencyPopularityEntrySchema = z.object({
+  currency: z.string().nullable().optional(),
+  rank: z.number().int().optional(),
+  totalCredit: z.number().optional(),
+  totalDebit: z.number().optional(),
+  totalNet: z.number().optional(),
+  transactionCount: z.number().int().optional(),
+});
+
+/** Zod schema for CommercePaymentsCurrencyPopularityReport. Most-transacted currencies over an inclusive period (issue #412 spec G). */
+CommercePaymentsCurrencyPopularityReportSchema = z.object({
+  currencies: z
+    .array(z.lazy(() => CommercePaymentsCurrencyPopularityEntrySchema))
+    .nullable()
+    .optional(),
+  fromUtc: z.string().datetime().optional(),
+  generatedAtUtc: z.string().datetime().optional(),
+  toUtc: z.string().datetime().optional(),
 });
 
 /** Zod schema for CommercePaymentsCustomerType. Customer types */
@@ -32269,6 +32431,7 @@ Without tiers the charge is Quantity × PerUnitPrice;
 with tiers each quantity band is priced at its own per-unit price (utility-style
 progressive banding), the last open-ended band absorbing any remainder. */
 CommercePaymentsPricingUsageChargeInputSchema = z.object({
+  currency: z.string().nullable().optional(),
   metric: z.string().nullable().optional(),
   perUnitPrice: z.number().optional(),
   quantity: z.number().optional(),
@@ -34210,6 +34373,7 @@ CommerceProductsUpdatePromoStackingRuleInputSchema = z.object({
 
 /** Zod schema for CommerceProductsValidatePromoCodeInput. Request to validate a promo code */
 CommerceProductsValidatePromoCodeInputSchema = z.object({
+  captchaToken: z.string().nullable().optional(),
   code: z.string().nullable().optional(),
   orderAmount: z.number().optional(),
   planId: z.string().uuid().nullable().optional(),

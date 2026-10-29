@@ -303,12 +303,23 @@ public sealed class CachedAccessControlListService : IAccessControlListService, 
                 var hybridResult = await _hybridCache
                     .GetValueAsync<CachedAclDecision>(cacheKey, CacheType, cancellationToken)
                     .ConfigureAwait(false);
-                if (hybridResult.Found && TryServeDecision(cacheKey, hybridResult.Value, out cachedLevel))
+                if (hybridResult.Found)
                 {
-                    // The version was read before this key lookup, so a permission mutation
-                    // completed before that read cannot reuse an entry from its prior version.
-                    CacheAccessLevel(cacheKey, tenantId.ToString(), hybridResult.Value, l1Only: true);
-                    return cachedLevel;
+                    // A distributed lookup can complete after a concurrent invalidation.
+                    // Check the version again before accepting or promoting its old-key result.
+                    if (!await IsSecurityVersionCurrentAsync(
+                            tenantId, subject.UserId, tenantVersion, userVersion, globalVersion,
+                            cancellationToken).ConfigureAwait(false))
+                    {
+                        continue;
+                    }
+
+                    // The version read can also outlast the effective grant lifetime.
+                    if (TryServeDecision(cacheKey, hybridResult.Value, out cachedLevel))
+                    {
+                        CacheAccessLevel(cacheKey, tenantId.ToString(), hybridResult.Value, l1Only: true);
+                        return cachedLevel;
+                    }
                 }
             }
 
@@ -340,8 +351,16 @@ public sealed class CachedAccessControlListService : IAccessControlListService, 
                 decision,
                 cancellationToken).ConfigureAwait(false);
 
-            // Version reads and distributed writes can outlast a grant. Re-evaluate rather than
-            // returning the source's earlier allow after its effective lifetime has ended.
+            // A mutation can commit while the distributed write is pending. Old-version keys
+            // will be bypassed later, but this caller must not receive that stale decision either.
+            if (_hybridCache is not null && !await IsSecurityVersionCurrentAsync(
+                    tenantId, subject.UserId, tenantVersion, userVersion, globalVersion,
+                    cancellationToken).ConfigureAwait(false))
+            {
+                continue;
+            }
+
+            // Check the effective lifetime after the final awaited version read as well.
             if (!IsDecisionServable(decision))
             {
                 continue;
@@ -484,11 +503,20 @@ public sealed class CachedAccessControlListService : IAccessControlListService, 
             if (_hybridCache != null)
             {
                 var hybridResult = await _hybridCache.GetValueAsync<CachedAclDecision>(cacheKey, CacheType, cancellationToken).ConfigureAwait(false);
-                if (hybridResult.Found && TryServeDecision(cacheKey, hybridResult.Value, out var promotedLevel))
+                if (hybridResult.Found)
                 {
-                    // Promote to L1
-                    CacheAccessLevel(cacheKey, tenantId.ToString(), hybridResult.Value, l1Only: true);
-                    return promotedLevel;
+                    if (!await IsSecurityVersionCurrentAsync(
+                            tenantId, userId, tenantVersion, userVersion, globalVersion,
+                            cancellationToken).ConfigureAwait(false))
+                    {
+                        continue;
+                    }
+
+                    if (TryServeDecision(cacheKey, hybridResult.Value, out var promotedLevel))
+                    {
+                        CacheAccessLevel(cacheKey, tenantId.ToString(), hybridResult.Value, l1Only: true);
+                        return promotedLevel;
+                    }
                 }
             }
 
@@ -522,6 +550,13 @@ public sealed class CachedAccessControlListService : IAccessControlListService, 
                 tenantId.ToString(),
                 decision,
                 cancellationToken).ConfigureAwait(false);
+
+            if (_hybridCache is not null && !await IsSecurityVersionCurrentAsync(
+                    tenantId, userId, tenantVersion, userVersion, globalVersion,
+                    cancellationToken).ConfigureAwait(false))
+            {
+                continue;
+            }
 
             if (!IsDecisionServable(decision))
             {

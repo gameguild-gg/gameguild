@@ -223,6 +223,10 @@ public static class DataDependencyInjection
 
         // Session management
         services.AddScoped<ISessionManagementService, SessionManagementService>();
+        // Password change/reset revocation battery (issue #278): mirrors the
+        // terminate-everywhere command — refresh tokens revoked, sessions terminated with an
+        // audited PasswordChanged reason, and a versioned cutoff covering legacy access tokens.
+        services.AddScoped<IPasswordChangeRevocationService, PasswordChangeRevocationService>();
 
         // Guest access (issue #213): anonymous guest sessions in their own identity namespace —
         // short-lived tokens in a dedicated audience, an IDistributedCache-backed session

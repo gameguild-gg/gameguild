@@ -455,6 +455,34 @@ public sealed class AuditModelConfiguration : IModelConfiguration
             entity.HasIndex(chunk => new { chunk.TenantId, chunk.ContentSha256 }).IsUnique();
         });
 
+        // Durable archive copies (issue #176): written in the same transaction that strips the hot
+        // representation, so an archived snapshot keeps recoverable values. No FKs by design — the
+        // hot row is not deleted at archive time, but retention may delete it later while the
+        // archive copy must survive for the rest of the retention window.
+        modelBuilder.Entity<MutationValueSnapshotArchive>(entity =>
+        {
+            entity.ToTable("MutationValueSnapshotArchives");
+            entity.HasKey(archive => archive.Id);
+            entity.Property(archive => archive.TenantId).IsRequired();
+            entity.Property(archive => archive.EntityName).HasMaxLength(300).IsRequired();
+            entity.Property(archive => archive.KeyId).HasMaxLength(300).IsRequired();
+            entity.Property(archive => archive.ChangeKind).HasMaxLength(20).IsRequired();
+            entity.Property(archive => archive.BeforeIntegritySha256).HasMaxLength(64);
+            entity.Property(archive => archive.AfterIntegritySha256).HasMaxLength(64);
+            entity.Property(archive => archive.BeforeStoredSha256).HasMaxLength(64);
+            entity.Property(archive => archive.AfterStoredSha256).HasMaxLength(64);
+            entity.Property(archive => archive.BeforePayload).HasColumnType("text");
+            entity.Property(archive => archive.AfterPayload).HasColumnType("text");
+            entity.Property(archive => archive.StructuredDiffJson).HasColumnType("text").IsRequired();
+            entity.Property(archive => archive.StorageMode).HasMaxLength(10).IsRequired();
+            entity.Property(archive => archive.CorrelationId).HasMaxLength(100);
+            entity.HasIndex(archive => new { archive.TenantId, archive.SnapshotId }).IsUnique();
+            entity.HasIndex(archive => new { archive.TenantId, archive.EntityName, archive.KeyId, archive.OccurredAtUtc });
+            entity.HasIndex(archive => new { archive.TenantId, archive.OccurredAtUtc });
+            entity.HasIndex(archive => new { archive.TenantId, archive.BeforeStoredSha256 });
+            entity.HasIndex(archive => new { archive.TenantId, archive.AfterStoredSha256 });
+        });
+
         modelBuilder.Entity<ValueSnapshotRetentionPolicy>(entity =>
         {
             entity.ToTable("ValueSnapshotRetentionPolicies");
@@ -573,6 +601,7 @@ public sealed class AuditModelConfiguration : IModelConfiguration
             entity.Property(notification => notification.Status).HasMaxLength(20).IsRequired();
             entity.Property(notification => notification.FailureReason).HasMaxLength(1000);
             entity.HasIndex(notification => new { notification.TenantId, notification.LegalHoldId, notification.Status });
+            entity.HasIndex(notification => new { notification.TenantId, notification.DeliveredNotificationId });
         });
 
         modelBuilder.Entity<CustodyAccessLog>(entity =>

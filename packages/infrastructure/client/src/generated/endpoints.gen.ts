@@ -8857,6 +8857,28 @@ export const getBillingRevenueAuditingComplianceReportEndpoint = {
 } as const;
 
 /**
+ * Most-transacted currencies over an inclusive period, ranked by transaction count.
+ *
+ * Returns the currencies of the inclusive period ranked by revenue-event transaction count (ties broken by net volume then code), with per-currency credit, debit and net totals. Amounts are never consolidated across currencies.
+ */
+export interface GetBillingRevenueAuditingCurrenciesPopularInput {
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    tenantId?: string;
+    limit?: number;
+  };
+}
+export type GetBillingRevenueAuditingCurrenciesPopularOutput = Types.CommercePaymentsCurrencyPopularityReport;
+export const getBillingRevenueAuditingCurrenciesPopularEndpoint = {
+  operationId: 'getBillingRevenueAuditingCurrenciesPopular' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/revenue/auditing/currencies/popular' as const,
+  tags: ['CommercePaymentsBillingRevenueAuditing'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Export the audit report for a period as CSV (RFC 4180) or JSON for external
  * accounting and ERP systems.
  *
@@ -9325,6 +9347,26 @@ export const postCurrenciesSetBaseEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/currencies/{currencyCode}/set-base' as const,
   tags: ['CommercePaymentsCurrencies'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Converts a batch of amounts (1..50 entries) into the target currency. Entries keep
+ * their own source currency; same-currency entries are identity conversions. Per-item
+ * failures (unknown code, disabled currency, missing quotation) are reported on the
+ * item, never aborting the batch.
+ *
+ * Converts one or many amounts into the target currency through the platform FX seam (operator overrides and synced market grids, TTL-cached). Supply asOfUtc to convert with the persisted historical snapshot effective at that date. Both currencies must be enabled for the tenant.
+ */
+export interface PostCurrencyConvertInput {
+  body?: Types.CommercePaymentsConvertCurrencyInput;
+}
+export type PostCurrencyConvertOutput = Types.CommercePaymentsCurrencyConversionResult;
+export const postCurrencyConvertEndpoint = {
+  operationId: 'postCurrencyConvert' as const,
+  method: 'POST' as const,
+  path: '/api/v1/currency/convert' as const,
+  tags: ['CommercePaymentsCurrency'] as const,
   requiresAuth: true,
 } as const;
 
@@ -26669,7 +26711,9 @@ export const postPromoCodesGenerateBulkEndpoint = {
 } as const;
 
 /**
- * Validate a promo code
+ * Validate a promo code. Untrusted (anonymous) contexts are CAPTCHA-gated when the
+ * promo redemption CAPTCHA gate is enabled (issue #418 anti-farming): a missing or
+ * unverifiable token is rejected before any code lookup, fail closed.
  */
 export interface PostPromoCodesValidateInput {
   body?: Types.CommerceProductsValidatePromoCodeInput;
@@ -33335,6 +33379,7 @@ export const endpoints = {
   getBillingRevenueAuditingAnomalyAlerts: getBillingRevenueAuditingAnomalyAlertsEndpoint,
   postBillingRevenueAuditingAnomalyAlertsAcknowledge: postBillingRevenueAuditingAnomalyAlertsAcknowledgeEndpoint,
   getBillingRevenueAuditingComplianceReport: getBillingRevenueAuditingComplianceReportEndpoint,
+  getBillingRevenueAuditingCurrenciesPopular: getBillingRevenueAuditingCurrenciesPopularEndpoint,
   getBillingRevenueAuditingExport: getBillingRevenueAuditingExportEndpoint,
   getRunById: getRunByIdEndpoint,
   getBillingRevenueAuditingRunsDiscrepancies: getBillingRevenueAuditingRunsDiscrepanciesEndpoint,
@@ -33359,6 +33404,7 @@ export const endpoints = {
   postCurrenciesDisable: postCurrenciesDisableEndpoint,
   postCurrenciesEnable: postCurrenciesEnableEndpoint,
   postCurrenciesSetBase: postCurrenciesSetBaseEndpoint,
+  postCurrencyConvert: postCurrencyConvertEndpoint,
   getDisputes: getDisputesEndpoint,
   postDisputes: postDisputesEndpoint,
   getDisputeById: getDisputeByIdEndpoint,

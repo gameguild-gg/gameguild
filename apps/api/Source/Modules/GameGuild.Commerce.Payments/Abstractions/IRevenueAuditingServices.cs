@@ -111,6 +111,24 @@ public interface IRevenueReportService
         Guid? tenantId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Rank the most-transacted currencies over an inclusive period (issue #412 spec G):
+    /// per-currency transaction counts and credit/debit/net totals, ordered by transaction
+    /// count (then net volume, then code). Amounts are never consolidated across currencies.
+    /// </summary>
+    /// <param name="fromUtc">Inclusive period start (UTC).</param>
+    /// <param name="toUtc">Inclusive period end (UTC).</param>
+    /// <param name="tenantId">Optional tenant scope.</param>
+    /// <param name="limit">Maximum ranked entries (1..50, default 10).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The ranked popularity report.</returns>
+    Task<CurrencyPopularityReport> GetPopularCurrenciesAsync(
+        DateTime fromUtc,
+        DateTime toUtc,
+        Guid? tenantId,
+        int limit = 10,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Serialize the compliance and trend reports for external delivery.</summary>
     /// <param name="fromUtc">Inclusive period start (UTC).</param>
     /// <param name="toUtc">Inclusive period end (UTC).</param>

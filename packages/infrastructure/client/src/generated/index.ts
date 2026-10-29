@@ -96,6 +96,7 @@ export * from './modules/commerce-subscriptions-billing-subscriptions.gen.js';
 export * from './modules/commerce-billing-subscription-changes.gen.js';
 export * from './modules/commerce-billing-webhooks.gen.js';
 export * from './modules/commerce-payments-currencies.gen.js';
+export * from './modules/commerce-payments-currency.gen.js';
 export * from './modules/commerce-payments-disputes.gen.js';
 export * from './modules/economy-ad-rewards.gen.js';
 export * from './modules/economy-bounties.gen.js';

@@ -3790,6 +3790,7 @@ Table "LegalHoldNotifications" {
   "CreatedAtUtc" timestamp [not null]
   "DispatchedAtUtc" timestamp
   "FailureReason" "character varying(1000)"
+  "DeliveredNotificationId" uuid
   "Version" integer [not null]
   "CreatedAt" timestamp [not null]
   "UpdatedAt" timestamp [not null]
@@ -3798,6 +3799,7 @@ Table "LegalHoldNotifications" {
 
   Indexes {
     Id [pk, name: "PK_LegalHoldNotifications"]
+    (TenantId, DeliveredNotificationId) [name: "IX_LegalHoldNotifications_TenantId_DeliveredNotificationId"]
     (TenantId, LegalHoldId, Status) [name: "IX_LegalHoldNotifications_TenantId_LegalHoldId_Status"]
   }
 }
@@ -3952,6 +3954,45 @@ Table "MutationValuePayloadChunks" {
   Indexes {
     Id [pk, name: "PK_MutationValuePayloadChunks"]
     (TenantId, ContentSha256) [unique, name: "IX_MutationValuePayloadChunks_TenantId_ContentSha256"]
+  }
+}
+
+Table "MutationValueSnapshotArchives" {
+  "Id" uuid [not null]
+  "SnapshotId" uuid [not null]
+  "EntityName" "character varying(300)" [not null]
+  "KeyId" "character varying(300)" [not null]
+  "ChangeKind" "character varying(20)" [not null]
+  "BeforeIntegritySha256" "character varying(64)"
+  "AfterIntegritySha256" "character varying(64)"
+  "BeforeStoredSha256" "character varying(64)"
+  "AfterStoredSha256" "character varying(64)"
+  "BeforeBytes" integer [not null]
+  "AfterBytes" integer [not null]
+  "BeforePayload" text
+  "AfterPayload" text
+  "BeforePayloadTruncated" boolean [not null]
+  "AfterPayloadTruncated" boolean [not null]
+  "StructuredDiffJson" text [not null]
+  "DiffCount" integer [not null]
+  "StorageMode" "character varying(10)" [not null]
+  "ActorId" uuid
+  "CorrelationId" "character varying(100)"
+  "OccurredAtUtc" timestamp [not null]
+  "ArchivedAtUtc" timestamp [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid [not null]
+
+  Indexes {
+    Id [pk, name: "PK_MutationValueSnapshotArchives"]
+    (TenantId, AfterStoredSha256) [name: "IX_MutationValueSnapshotArchives_TenantId_AfterStoredSha256"]
+    (TenantId, BeforeStoredSha256) [name: "IX_MutationValueSnapshotArchives_TenantId_BeforeStoredSha256"]
+    (TenantId, EntityName, KeyId, OccurredAtUtc) [name: "IX_MutationValueSnapshotArchives_TenantId_EntityName_KeyId_Occ~"]
+    (TenantId, OccurredAtUtc) [name: "IX_MutationValueSnapshotArchives_TenantId_OccurredAtUtc"]
+    (TenantId, SnapshotId) [unique, name: "IX_MutationValueSnapshotArchives_TenantId_SnapshotId"]
   }
 }
 

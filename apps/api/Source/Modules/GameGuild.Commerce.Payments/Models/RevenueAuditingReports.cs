@@ -72,6 +72,32 @@ public sealed record RevenueTrendReport(
     IReadOnlyList<RevenueTrendPoint> Points,
     IReadOnlyList<RevenueTrendCurrencyTotal> TotalsByCurrency);
 
+/// <summary>One ranked currency in the popularity report (issue #412 spec G).</summary>
+/// <param name="Rank">Rank position (1 = most transacted).</param>
+/// <param name="Currency">ISO-4217 currency code the entry is denominated in.</param>
+/// <param name="TransactionCount">Revenue events counted in this currency over the period.</param>
+/// <param name="TotalCredit">Credit-side total in <paramref name="Currency" />.</param>
+/// <param name="TotalDebit">Debit-side total in <paramref name="Currency" />.</param>
+/// <param name="TotalNet">Net total in <paramref name="Currency" />; never consolidated across currencies.</param>
+public sealed record CurrencyPopularityEntry(
+    int Rank,
+    string Currency,
+    int TransactionCount,
+    decimal TotalCredit,
+    decimal TotalDebit,
+    decimal TotalNet);
+
+/// <summary>Most-transacted currencies over an inclusive period (issue #412 spec G).</summary>
+/// <param name="FromUtc">Start of the period (inclusive).</param>
+/// <param name="ToUtc">End of the period (inclusive).</param>
+/// <param name="GeneratedAtUtc">Moment the report was produced.</param>
+/// <param name="Currencies">Currencies ranked by transaction count (then net volume, then code), limited to the requested size.</param>
+public sealed record CurrencyPopularityReport(
+    DateTime FromUtc,
+    DateTime ToUtc,
+    DateTime GeneratedAtUtc,
+    IReadOnlyList<CurrencyPopularityEntry> Currencies);
+
 /// <summary>Reconciliation coverage summary included in compliance reports.</summary>
 /// <param name="ReconciliationRuns">Number of reconciliation runs overlapping the period.</param>
 /// <param name="MatchedLines">Total statement lines matched by those runs.</param>

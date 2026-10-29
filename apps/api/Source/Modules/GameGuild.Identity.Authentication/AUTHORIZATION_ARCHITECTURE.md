@@ -2742,6 +2742,15 @@ propagate — a mutation whose cache invalidation failed is never reported as su
 
 ### ACL decision expiry during asynchronous work
 
+Both subject-based and legacy user-based cached ACL evaluations also recheck the
+tenant/global/user security version after an awaited distributed cache hit and
+after a distributed cache write. An invalidation completed during either operation
+discards the old-version result and retries under the new version; stable L2 hits
+remain cacheable without evaluating the source. Effective grant expiration is
+checked after the final awaited version read. This closes those asynchronous
+lookup/write windows, not the interval between a returned decision and a later
+resource operation.
+
 Both subject-based and legacy user-based cached ACL evaluations recheck the
 source decision's earliest effective grant expiration after reading security
 versions and after an awaited distributed cache write. A decision that expired
