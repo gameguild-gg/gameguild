@@ -1,7 +1,10 @@
 using System.Collections.Concurrent;
 using System.Data.Common;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
+using GameGuild.API.Eventing;
 using GameGuild.Compliance.Audit;
+using GameGuild.Identity.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -15,7 +18,8 @@ namespace GameGuild.API.Database;
 ///     <c>ExecuteUpdate</c>/<c>ExecuteDelete</c> (and equivalent single-statement raw
 ///     <c>UPDATE</c>/<c>DELETE</c> SQL) bypass the change tracker, so the tracked-entity
 ///     capture in <see cref="EntityChangeAuditCapture"/> never sees them. This interceptor
-///     detects those commands through <see cref="CommandEventData.CommandSource"/>, replays
+///     detects those commands through the command source reported by EF Core
+///     (<c>ExecuteUpdate</c>/<c>ExecuteDelete</c>/raw SQL), replays
 ///     their row-selection predicate on the same connection and transaction to read the
 ///     before-image (and, for updates, the after-image by primary key), and stages
 ///     insert-only <see cref="EntityChangeAuditRecord"/> rows — plus forensic
@@ -159,34 +163,14 @@ internal sealed class SetBasedChangeAuditInterceptor(
     }
 
     /// <inheritdoc />
-    public override DbDataReader DataReaderDisposing(
-        DbCommand command, DbCommandEventData eventData, DbDataReader dataReader,
-        InterceptionResult dataReaderDisposing)
+    public override InterceptionResult DataReaderDisposing(
+        DbCommand command, DataReaderDisposingEventData eventData, InterceptionResult dataReaderDisposing)
     {
+        // Providers that stream ExecuteUpdate results through a reader dispose that reader
+        // through this sync-only hook (the reader rides on the event data); the connection
+        // is free again, so the after-image read and staging run here.
         FinalizeCapture(command, eventData, result: null);
-        return base.DataReaderDisposing(command, eventData, dataReader, dataReaderDisposing);
-    }
-
-    /// <inheritdoc />
-    public override ValueTask<DbDataReader> DataReaderDisposingAsync(
-        DbCommand command, DbCommandEventData eventData, DbDataReader dataReader,
-        InterceptionResult dataReaderDisposing, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            if (_pending.TryGetValue(command, out var pending))
-            {
-                _pending.Remove(command);
-                return new ValueTask<DbDataReader>(
-                    FinalizeReaderAsync(command, eventData, pending, dataReader, dataReaderDisposing));
-            }
-        }
-        catch (Exception exception)
-        {
-            logger?.LogWarning(exception, "Set-based audit staging failed and was skipped.");
-        }
-
-        return base.DataReaderDisposingAsync(command, eventData, dataReader, dataReaderDisposing, cancellationToken);
+        return base.DataReaderDisposing(command, eventData, dataReaderDisposing);
     }
 
     /// <inheritdoc />
@@ -265,29 +249,6 @@ internal sealed class SetBasedChangeAuditInterceptor(
         return affectedRows;
     }
 
-    private async Task<DbDataReader> FinalizeReaderAsync(
-        DbCommand command, DbCommandEventData eventData, PendingCapture pending,
-        DbDataReader dataReader, InterceptionResult dataReaderDisposing)
-    {
-        try
-        {
-            if (eventData.Context is { } context)
-            {
-                var afterRows = pending.Statement.IsUpdate
-                    ? await SelectRowsAsync(command, pending.Statement, pending.Mapping, lockRows: false, keys: pending.Keys)
-                        .ConfigureAwait(false)
-                    : [];
-                StageRecords(context, pending, afterRows);
-            }
-        }
-        catch (Exception exception)
-        {
-            logger?.LogWarning(exception, "Set-based audit staging failed and was skipped.");
-        }
-
-        return dataReader;
-    }
-
     private void StagePending(
         DbCommand command, SetBasedSqlParser.ParsedStatement statement, TableAuditMapping mapping,
         List<Dictionary<string, object?>> rows)
@@ -307,7 +268,7 @@ internal sealed class SetBasedChangeAuditInterceptor(
             rows = rows.Take(maxRows).ToList();
         }
 
-        _pending.AddOrUpdate(command, new PendingCapture(statement, mapping, rows), (_, value) => value);
+        _pending.AddOrUpdate(command, new PendingCapture(statement, mapping, rows));
     }
 
     private void CaptureBeforeState(DbCommand command, CommandEventData eventData)
@@ -329,7 +290,7 @@ internal sealed class SetBasedChangeAuditInterceptor(
         }
     }
 
-    private void FinalizeCapture(DbCommand command, CommandEventData eventData, int? result)
+    private void FinalizeCapture(DbCommand command, DbContextEventData eventData, int? result)
     {
         try
         {
@@ -371,10 +332,19 @@ internal sealed class SetBasedChangeAuditInterceptor(
             return false;
         }
 
-        if (eventData.CommandSource is not (CommandSource.ExecuteUpdate or CommandSource.ExecuteDelete or CommandSource.ExecuteSqlRaw))
+        // EF Core reports ExecuteUpdate/ExecuteDelete statements under CommandSource.BulkUpdate
+        // (verified against EF Core 10.0.9 + Npgsql 10.0.2 on PostgreSQL; Npgsql still emits the
+        // legacy value although the enum marks it obsolete), so both the legacy and the
+        // finer-grained values are matched, plus raw SQL writes.
+#pragma warning disable CS0618 // BulkUpdate is obsolete but Npgsql 10.x still reports it for set-based statements
+        if (eventData.CommandSource is not (CommandSource.ExecuteUpdate
+            or CommandSource.ExecuteDelete
+            or CommandSource.BulkUpdate
+            or CommandSource.ExecuteSqlRaw))
         {
             return false;
         }
+#pragma warning restore CS0618
 
         statement = SetBasedSqlParser.TryParse(eventData.Command.CommandText)!;
         if (statement is null)
@@ -709,7 +679,7 @@ internal sealed class SetBasedChangeAuditInterceptor(
 
         var principal = candidates.OrderBy(entityType => entityType.Name, StringComparer.Ordinal).First();
         var excluded = IsExcludedType(principal.ClrType, options);
-        var columns = new List<TableAuditMapping.AuditColumn>();
+        var columns = new List<AuditColumn>();
         IProperty? tenantProperty = null;
         IProperty? updatedByProperty = null;
         IProperty? createdByProperty = null;
@@ -726,13 +696,15 @@ internal sealed class SetBasedChangeAuditInterceptor(
 
                 if (columns.All(column => column.PropertyName != property.Name))
                 {
-                    columns.Add(new TableAuditMapping.AuditColumn(
+                    var sensitive = property.PropertyInfo is not null
+                        && SensitivePropertyCache.GetOrAdd(
+                            property,
+                            static cached => Attribute.IsDefined(cached.PropertyInfo!, typeof(AuditSensitiveAttribute), inherit: true));
+                    columns.Add(new AuditColumn(
                         property.Name,
                         columnName,
                         property.ClrType,
-                        property.PropertyInfo is { } member
-                            && SensitivePropertyCache.GetOrAdd(property, static cached => Attribute.IsDefined(cached.PropertyInfo!, typeof(AuditSensitiveAttribute), inherit: true))
-                        : false));
+                        sensitive));
                 }
 
                 tenantProperty ??= property.Name == "TenantId" ? property : null;
@@ -786,6 +758,9 @@ internal sealed class SetBasedChangeAuditInterceptor(
                 .ToList();
     }
 
+    /// <summary>One mapped property of an audited table with its store column and sensitivity.</summary>
+    private sealed record AuditColumn(string PropertyName, string ColumnName, Type ClrType, bool Sensitive);
+
     /// <summary>Model-level mapping of one database table to audit-relevant property metadata.</summary>
     private sealed record TableAuditMapping(
         string EntityName,
@@ -794,8 +769,5 @@ internal sealed class SetBasedChangeAuditInterceptor(
         IReadOnlyList<AuditColumn> KeyColumns,
         string? TenantColumnName,
         string? UpdatedByColumnName,
-        string? CreatedByColumnName)
-    {
-        internal sealed record AuditColumn(string PropertyName, string ColumnName, Type ClrType, bool Sensitive);
-    }
+        string? CreatedByColumnName);
 }
