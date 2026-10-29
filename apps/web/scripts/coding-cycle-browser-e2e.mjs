@@ -1302,13 +1302,43 @@ async function instructorJourney(fixture, browser) {
     const isGradeRequest = (request) => request.method() === "POST"
       && isGradingPage(new URL(request.url())) && Boolean(request.headers()["next-action"])
       && (request.postData() ?? "").includes('"rubricScores"');
+    const gradingEvents = [];
+    const gradingRequestIds = new WeakMap();
+    let nextGradingRequestId = 1;
+    const traceGradingEvent = (event, details = {}) => {
+      if (gradingEvents.length < 64) gradingEvents.push({ event, at: new Date().toISOString(), ...details });
+    };
+    const gradingRequestId = (request) => {
+      if (!gradingRequestIds.has(request)) gradingRequestIds.set(request, nextGradingRequestId++);
+      return gradingRequestIds.get(request);
+    };
+    const onGradeRequested = (request) => {
+      if (isGradeRequest(request)) traceGradingEvent("request", { requestId: gradingRequestId(request) });
+    };
+    const onGradeResponse = (response) => {
+      if (isGradeRequest(response.request())) traceGradingEvent("response", {
+        requestId: gradingRequestId(response.request()), status: response.status(),
+        contentType: response.headers()["content-type"] ?? null,
+        revalidationHeaderPresent: Boolean(response.headers()["x-action-revalidated"]),
+      });
+    };
     let finishedEventObserved = false;
     let failGradeRequest = () => {};
     const gradeFailure = new Promise((resolve) => { failGradeRequest = resolve; });
-    const onGradeFinished = (request) => { if (isGradeRequest(request)) finishedEventObserved = true; };
-    const onGradeFailed = (request) => {
-      if (isGradeRequest(request)) failGradeRequest(new Error(`Grading request failed: ${request.failure()?.errorText ?? "unknown transport error"}`));
+    const onGradeFinished = (request) => {
+      if (isGradeRequest(request)) {
+        traceGradingEvent("requestfinished", { requestId: gradingRequestId(request) });
+        finishedEventObserved = true;
+      }
     };
+    const onGradeFailed = (request) => {
+      if (isGradeRequest(request)) {
+        traceGradingEvent("requestfailed", { requestId: gradingRequestId(request), error: request.failure()?.errorText ?? "unknown transport error" });
+        failGradeRequest(new Error(`Grading request failed: ${request.failure()?.errorText ?? "unknown transport error"}`));
+      }
+    };
+    page.on("request", onGradeRequested);
+    page.on("response", onGradeResponse);
     page.on("requestfinished", onGradeFinished);
     page.on("requestfailed", onGradeFailed);
     try {
@@ -1317,7 +1347,16 @@ async function instructorJourney(fixture, browser) {
       const gradeResponsePromise = page.waitForResponse((response) => {
         return isGradeRequest(response.request());
       }, { timeout: 120_000 }).then((response) => ({ response, error: null }), (error) => ({ response: null, error }));
+      // Passive observations only: keep the existing body/transport assertions.
+      void page.getByTestId("needs-grading-badge").filter({ hasText: /0 to grade/ })
+        .waitFor({ state: "visible", timeout: 120_000 })
+        .then(() => traceGradingEvent("ui:zero-badge"), () => traceGradingEvent("ui:zero-badge-not-observed"));
+      void page.getByTestId("result-release-status").filter({ hasText: "Ready to release" })
+        .waitFor({ state: "visible", timeout: 120_000 })
+        .then(() => traceGradingEvent("ui:final-result"), () => traceGradingEvent("ui:final-result-not-observed"));
+      traceGradingEvent("click:submit");
       await submitGrade.click();
+      traceGradingEvent("click:returned");
       const gradeResponseResult = await Promise.race([
         gradeResponsePromise,
         gradeFailure.then((error) => ({ response: null, error })),
@@ -1325,7 +1364,7 @@ async function instructorJourney(fixture, browser) {
       if (gradeResponseResult.error) throw gradeResponseResult.error;
       const gradeResponse = gradeResponseResult.response;
       if (!gradeResponse) throw new Error("The grading mutation response was not captured.");
-      gradingProof.mutation = { status: gradeResponse.status(), streamComplete: false };
+      gradingProof.mutation = { status: gradeResponse.status(), streamComplete: false, requestId: gradingRequestId(gradeResponse.request()) };
       // Read the complete bytes through Playwright's server-side body channel.
       // Response.finished() only awaits a client event promise; a failed event
       // does not settle that promise in Playwright 1.64.1. Reject transport
@@ -1366,10 +1405,32 @@ async function instructorJourney(fixture, browser) {
       await screenshot(page, "instructor-grade-submitted");
     } catch (error) {
       gradingProof.failure = error instanceof Error ? error.message.split("\n")[0] : String(error);
+      traceGradingEvent("oracle:failed", { error: gradingProof.failure });
+      gradingProof.failureObservation = {
+        visibleBadge: await page.getByTestId("needs-grading-badge").textContent().catch(() => null),
+        releaseStatus: await page.getByTestId("result-release-status").textContent().catch(() => null),
+      };
+      try {
+        const queueClient = createApiClient(fixture.adminToken, fixture.tenantId);
+        const queue = unwrap(await awaitGradingBoundary(queueClient.request({
+          method: "GET", path: `/v1.0/assessments/${fixture.assessmentId}/grading-queue`, requiresAuth: true,
+        }), "diagnostic canonical queue", 15_000), "Read failed-run diagnostic queue");
+        gradingProof.failureObservation.canonicalQueue = {
+          total: queue.total, needsGrading: queue.needsGrading,
+          items: (queue.items ?? []).map((item) => ({ status: item.status,
+            activeGradeRoundStatus: item.activeGradeRoundStatus, requiresStaffReview: item.requiresStaffReview })),
+        };
+      } catch {
+        gradingProof.failureObservation.queueReadUnavailable = true;
+      }
+      // Diagnostic data must never turn this failed gate into a pass.
       throw error;
     } finally {
+      page.off("request", onGradeRequested);
+      page.off("response", onGradeResponse);
       page.off("requestfinished", onGradeFinished);
       page.off("requestfailed", onGradeFailed);
+      gradingProof.events = gradingEvents;
       writeFileSync(resolve(ARTIFACTS, "grading-refresh-proof.json"), JSON.stringify(gradingProof, null, 2));
       log(`grading-refresh-proof ${JSON.stringify(gradingProof)}`);
     }
