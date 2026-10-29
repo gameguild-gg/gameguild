@@ -139,7 +139,7 @@ public sealed class ValueSnapshotRetentionServiceTests : ValueSnapshotServiceTes
 
 public sealed class ValueSnapshotArchiveReadabilityTests : ValueSnapshotServiceTestBase
 {
-    private async Task ArchiveAsync(params MutationValueSnapshot[] snapshots)
+    private async Task ArchiveAsync()
     {
         var retention = new ValueSnapshotRetentionService(
             Actors.Object, Context, TimeProvider.System, NullLogger<ValueSnapshotRetentionService>.Instance);

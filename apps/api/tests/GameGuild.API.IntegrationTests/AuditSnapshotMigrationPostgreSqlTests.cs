@@ -310,21 +310,20 @@ public sealed class AuditSnapshotMigrationPostgreSqlTests(ApiPostgreSqlFixture f
             var instance = (Migration) Activator.CreateInstance(assembly.Migrations[id].AsType())!;
             foreach (var operation in instance.UpOperations)
             {
-                switch (operation)
+                if (operation is CreateTableOperation create)
                 {
-                    case CreateTableOperation create:
-                        tableColumns[create.Name] = new HashSet<string>(
-                            create.Columns.Select(column => column.Name), StringComparer.Ordinal);
-                        break;
-                    case AddColumnOperation add:
-                        if (!tableColumns.TryGetValue(add.Table, out var columns))
-                        {
-                            columns = [];
-                            tableColumns[add.Table] = columns;
-                        }
+                    tableColumns[create.Name] = new HashSet<string>(
+                        create.Columns.Select(column => column.Name), StringComparer.Ordinal);
+                }
+                else if (operation is AddColumnOperation add)
+                {
+                    if (!tableColumns.TryGetValue(add.Table, out var columns))
+                    {
+                        columns = [];
+                        tableColumns[add.Table] = columns;
+                    }
 
-                        columns.Add(add.Name);
-                        break;
+                    columns.Add(add.Name);
                 }
             }
         }
