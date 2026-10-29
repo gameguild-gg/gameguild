@@ -259,6 +259,28 @@ public sealed class RevenueAuditingController(
     }
 
     /// <summary>
+    /// Most-transacted currencies over an inclusive period, ranked by transaction count.
+    /// </summary>
+    [HttpGet("currencies/popular")]
+    [EndpointSummary("Rank currencies by transaction volume")]
+    [EndpointDescription(
+        "Returns the currencies of the inclusive period ranked by revenue-event transaction count (ties broken by net volume then code), with per-currency credit, debit and net totals. Amounts are never consolidated across currencies.")]
+    [ProducesResponseType<CurrencyPopularityReport>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetPopularCurrencies(
+        [FromQuery] DateTimeOffset fromUtc,
+        [FromQuery] DateTimeOffset toUtc,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] int limit = 10,
+        CancellationToken ct = default)
+    {
+        var result = await sender.Send(
+            new Queries.RevenueAuditingReports.GetPopularCurrenciesQuery(fromUtc.UtcDateTime, toUtc.UtcDateTime, tenantId, limit),
+            ct).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
     ///     Export the audit report for a period as CSV (RFC 4180) or JSON for external
     ///     accounting and ERP systems.
     /// </summary>

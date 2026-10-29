@@ -108,9 +108,39 @@ public sealed class PricingEngine(
         {
             foreach (var usage in request.UsageCharges)
             {
-                var charge = UsageTierCalculator.Calculate(usage.Quantity, usage.PerUnitPrice, usage.Tiers);
+                // Usage per-unit prices may be denominated in a currency other than the
+                // calculation currency (issue #412 spec F): convert the flat price and every
+                // tier band's per-unit price through the FX core exactly like add-on unit
+                // prices, before the progressive math runs.
+                var flatUnitPrice = usage.PerUnitPrice;
+                var tiers = usage.Tiers;
+                if (usage.Currency is { Length: > 0 } usageCurrency)
+                {
+                    var normalized = NormalizeCurrency(usageCurrency);
+                    if (!string.Equals(normalized, currency, StringComparison.Ordinal))
+                    {
+                        var convertedFlat = await ConvertToCalculationCurrencyAsync(
+                            new Money(usage.PerUnitPrice, normalized), currency, cancellationToken).ConfigureAwait(false);
+                        flatUnitPrice = convertedFlat.Amount;
+
+                        if (tiers is { Count: > 0 })
+                        {
+                            var convertedTiers = new List<PricingUsageTier>(tiers.Count);
+                            foreach (var tier in tiers)
+                            {
+                                var convertedTierPrice = await ConvertToCalculationCurrencyAsync(
+                                    new Money(tier.PerUnitPrice, normalized), currency, cancellationToken).ConfigureAwait(false);
+                                convertedTiers.Add(new PricingUsageTier(tier.MinQuantity, tier.MaxQuantity, convertedTierPrice.Amount));
+                            }
+
+                            tiers = convertedTiers;
+                        }
+                    }
+                }
+
+                var charge = UsageTierCalculator.Calculate(usage.Quantity, flatUnitPrice, tiers);
                 usageTotal += charge;
-                lineItems.Add(new PricingLineItem("usage", usage.Metric, usage.Quantity, usage.PerUnitPrice, MoneyOf(charge, currency)));
+                lineItems.Add(new PricingLineItem("usage", usage.Metric, usage.Quantity, flatUnitPrice, MoneyOf(charge, currency)));
                 explanation.Append(CultureInfo.InvariantCulture, $"\n  + Usage {usage.Metric} x{usage.Quantity} = {Format(charge, currency)}");
             }
         }

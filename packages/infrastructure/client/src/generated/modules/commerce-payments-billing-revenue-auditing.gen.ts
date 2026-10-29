@@ -188,6 +188,35 @@ export class CommercePaymentsBillingRevenueAuditingModule {
   }
 
   /**
+   * Most-transacted currencies over an inclusive period, ranked by transaction count.
+   *
+   * Returns the currencies of the inclusive period ranked by revenue-event transaction count (ties broken by net volume then code), with per-currency credit, debit and net totals. Amounts are never consolidated across currencies.
+   */
+  async getBillingRevenueAuditingCurrenciesPopular(query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    tenantId?: string;
+    limit?: number;
+  }): Promise<Result<Types.CommercePaymentsCurrencyPopularityReport, ApiError>> {
+    const url = '/api/v1/billing/revenue/auditing/currencies/popular';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsCurrencyPopularityReportSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Export the audit report for a period as CSV (RFC 4180) or JSON for external
    * accounting and ERP systems.
    *
