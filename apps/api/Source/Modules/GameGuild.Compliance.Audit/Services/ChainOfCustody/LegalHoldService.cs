@@ -336,19 +336,18 @@ public sealed class LegalHoldService(
             return;
         }
 
-        switch (delivered.Value.DeliveryStatus)
+        if (delivered.Value.DeliveryStatus == NotificationDeliveryStatus.Sent)
         {
-            case NotificationDeliveryStatus.Sent:
-                notification.Status = "Sent";
-                notification.DispatchedAtUtc = delivered.Value.SentAt ?? now;
-                notification.FailureReason = null;
-                notification.Touch();
-                break;
-            case NotificationDeliveryStatus.DeadLettered:
-                notification.Status = "Failed";
-                notification.FailureReason = "The notification pipeline dead-lettered the delivery after exhausting retries.";
-                notification.Touch();
-                break;
+            notification.Status = "Sent";
+            notification.DispatchedAtUtc = delivered.Value.SentAt ?? now;
+            notification.FailureReason = null;
+            notification.Touch();
+        }
+        else if (delivered.Value.DeliveryStatus == NotificationDeliveryStatus.DeadLettered)
+        {
+            notification.Status = "Failed";
+            notification.FailureReason = "The notification pipeline dead-lettered the delivery after exhausting retries.";
+            notification.Touch();
         }
     }
 
@@ -381,7 +380,7 @@ public sealed class LegalHoldService(
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-        var notifications = await context.Set<LegalHoldNotification>().AsNoTracking()
+        var holdNotifications = await context.Set<LegalHoldNotification>().AsNoTracking()
             .Where(notification => notification.TenantId == tenantId && notification.LegalHoldId == hold.Id)
             .OrderBy(notification => notification.CreatedAtUtc)
             .ToListAsync(cancellationToken)
@@ -400,7 +399,7 @@ public sealed class LegalHoldService(
             hold.ReleasedByUserId,
             hold.ReleaseReason,
             evidenceIds,
-            notifications.Select(notification => new LegalHoldNotificationResponse(
+            holdNotifications.Select(notification => new LegalHoldNotificationResponse(
                 notification.Id, notification.LegalHoldId, notification.TargetKind, notification.Target,
                 notification.Status, notification.CreatedAtUtc, notification.DispatchedAtUtc, notification.FailureReason)).ToList());
 
