@@ -43,9 +43,10 @@ public sealed record ValueSnapshotRetentionExecutionResponse(
 
 /// <summary>
 ///     Configurable retention for mutation value snapshots (issue #176): day-based retention with
-///     per-entity overrides, an archive tier that strips payloads down to checksums, content
-///     deduplication compaction, and a legal-hold window that suspends deletion. Every pass —
-///     manual, dry-run, or scheduled — is recorded as an execution row.
+///     per-entity overrides, an archive tier that first persists a durable, readable archive copy
+///     and only then strips the hot payload representation down to checksums, content
+///     deduplication compaction, and a legal-hold window that suspends both deletion and archival.
+///     Every pass — manual, dry-run, or scheduled — is recorded as an execution row.
 /// </summary>
 public interface IValueSnapshotRetentionService
 {
@@ -139,10 +140,12 @@ public sealed class ValueSnapshotRetentionService(
 
         if (legalHoldActive)
         {
-            // A legal hold suspends every deletion; archival and compaction are lossless so they
-            // may still run, and the pass is still recorded for the audit trail.
+            // A legal hold suspends every deletion AND the archive tier: a held snapshot must keep
+            // its complete inline/chunk value representation so the stored before/after values stay
+            // recoverable. Only lossless deduplication compaction may still run, and the pass is
+            // still recorded for the audit trail.
             logger.LogInformation(
-                "Value snapshot retention for tenant {TenantId}: legal hold active until {Until}; deletions suspended",
+                "Value snapshot retention for tenant {TenantId}: legal hold active until {Until}; deletions and archival suspended",
                 tenantId, policy.LegalHoldUntilUtc);
         }
         else
@@ -169,28 +172,83 @@ public sealed class ValueSnapshotRetentionService(
             }
         }
 
-        // Archive tier: older-than-ArchiveAfterDays snapshots lose their inline payloads (and
-        // chunk references) while every checksum is retained — the cost-effective storage tier.
-        var archiveCutoff = new DateTimeOffset(now.AddDays(-policy.ArchiveAfterDays), TimeSpan.Zero);
-        var archivable = await Snapshots(tenantId, tracked: true)
-            .Where(snapshot => snapshot.ArchivedAtUtc == null && snapshot.OccurredAtUtc < archiveCutoff)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-        foreach (var row in archivable)
+        // Archive tier: older-than-ArchiveAfterDays snapshots lose their hot payload representation
+        // only after the complete stored values were persisted to a durable archive copy in the
+        // same transaction (issue #176). Under an active legal hold the tier is skipped entirely so
+        // held snapshots keep their recoverable values.
+        if (!legalHoldActive)
         {
-            reclaimed += InlineBytes(row);
-            if (!request.DryRun)
+            var archiveCutoff = new DateTimeOffset(now.AddDays(-policy.ArchiveAfterDays), TimeSpan.Zero);
+            var archivable = await Snapshots(tenantId, tracked: true)
+                .Where(snapshot => snapshot.ArchivedAtUtc == null && snapshot.OccurredAtUtc < archiveCutoff)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (archivable.Count > 0)
             {
-                reclaimed += await DropChunkReferencesAsync(tenantId, row, cancellationToken).ConfigureAwait(false);
-                row.BeforePayload = null;
-                row.AfterPayload = null;
-                row.BeforeChunkId = null;
-                row.AfterChunkId = null;
-                row.ArchivedAtUtc = now;
-                row.Touch();
-            }
+                var chunkContents = await LoadChunkContentsAsync(tenantId, archivable, cancellationToken).ConfigureAwait(false);
+                foreach (var row in archivable)
+                {
+                    var before = row.BeforePayload;
+                    var after = row.AfterPayload;
+                    if ((row.BeforeChunkId is { } beforeChunk && !chunkContents.TryGetValue(beforeChunk, out before))
+                        || (row.AfterChunkId is { } afterChunk && !chunkContents.TryGetValue(afterChunk, out after)))
+                    {
+                        // The referenced chunk content is gone; stripping this row would destroy the
+                        // last value representation. Fail safe: keep the hot row intact.
+                        logger.LogWarning(
+                            "Value snapshot {SnapshotId} for tenant {TenantId} was not archived: its deduplicated chunk content is missing",
+                            row.Id, tenantId);
+                        continue;
+                    }
 
-            archived++;
+                    if (request.DryRun)
+                    {
+                        reclaimed += InlineBytes(row);
+                        archived++;
+                        continue;
+                    }
+
+                    // Durable, readable archive copy FIRST — persisted in the same SaveChanges
+                    // transaction as the strip below, so either both land or neither does.
+                    context.Set<MutationValueSnapshotArchive>().Add(new MutationValueSnapshotArchive
+                    {
+                        Id = Guid.NewGuid(),
+                        TenantId = tenantId,
+                        SnapshotId = row.Id,
+                        EntityName = row.EntityName,
+                        KeyId = row.KeyId,
+                        ChangeKind = row.ChangeKind,
+                        BeforeIntegritySha256 = row.BeforeIntegritySha256,
+                        AfterIntegritySha256 = row.AfterIntegritySha256,
+                        BeforeStoredSha256 = row.BeforeStoredSha256,
+                        AfterStoredSha256 = row.AfterStoredSha256,
+                        BeforeBytes = row.BeforeBytes,
+                        AfterBytes = row.AfterBytes,
+                        BeforePayload = before,
+                        AfterPayload = after,
+                        BeforePayloadTruncated = row.BeforePayloadTruncated,
+                        AfterPayloadTruncated = row.AfterPayloadTruncated,
+                        StructuredDiffJson = row.StructuredDiffJson,
+                        DiffCount = row.DiffCount,
+                        StorageMode = row.StorageMode,
+                        ActorId = row.ActorId,
+                        CorrelationId = row.CorrelationId,
+                        OccurredAtUtc = row.OccurredAtUtc,
+                        ArchivedAtUtc = now
+                    });
+
+                    reclaimed += InlineBytes(row);
+                    reclaimed += await DropChunkReferencesAsync(tenantId, row, cancellationToken).ConfigureAwait(false);
+                    row.BeforePayload = null;
+                    row.AfterPayload = null;
+                    row.BeforeChunkId = null;
+                    row.AfterChunkId = null;
+                    row.ArchivedAtUtc = now;
+                    row.Touch();
+
+                    archived++;
+                }
+            }
         }
 
         if (request.IncludeCompaction && !request.DryRun)
@@ -378,6 +436,28 @@ public sealed class ValueSnapshotRetentionService(
         }
 
         return reclaimed;
+    }
+
+    /// <summary>Loads the content of every chunk referenced by the given snapshots, so the archive
+    /// copy can carry the complete stored values before the hot representation is released.</summary>
+    private async Task<Dictionary<Guid, string>> LoadChunkContentsAsync(
+        Guid tenantId, List<MutationValueSnapshot> rows, CancellationToken cancellationToken)
+    {
+        var chunkIds = rows
+            .SelectMany(row => new[] { row.BeforeChunkId, row.AfterChunkId })
+            .Where(id => id is not null)
+            .Cast<Guid>()
+            .Distinct()
+            .ToList();
+        if (chunkIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await context.Set<MutationValuePayloadChunk>()
+            .Where(chunk => chunk.TenantId == tenantId && chunkIds.Contains(chunk.Id))
+            .ToDictionaryAsync(chunk => chunk.Id, chunk => chunk.Content, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private async Task<long> DropChunkReferencesAsync(Guid tenantId, MutationValueSnapshot row, CancellationToken cancellationToken)

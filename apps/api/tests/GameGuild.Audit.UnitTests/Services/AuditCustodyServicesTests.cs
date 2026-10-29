@@ -3,6 +3,8 @@ using System.Text;
 using System.Text.Json;
 using GameGuild.Compliance.Audit;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -161,19 +163,33 @@ public sealed class EvidenceTransferServiceTests : AuditCustodyServiceTestBase
 
 public sealed class LegalHoldServiceTests : AuditCustodyServiceTestBase
 {
+    private readonly Mock<INotificationService> _notifications = new();
+
     private LegalHoldService Service() => new(
-        Actors.Object, Context, Custody(), Mock.Of<IAuditService>(), TimeProvider.System, NullLogger<LegalHoldService>.Instance);
+        Actors.Object, Context, Custody(), Mock.Of<IAuditService>(), _notifications.Object, TimeProvider.System, NullLogger<LegalHoldService>.Instance);
+
+    private Task<LegalHoldResponse> CreateHoldAsync(string caseNumber, params NotificationTarget[] targets) =>
+        Service().CreateAsync(new CreateLegalHoldRequest
+        {
+            CaseNumber = caseNumber,
+            PreservationTargets = [new PreservationTarget { SourceKind = "RawContent", SourceId = "inline", RawContent = "held evidence" }],
+            NotificationTargets = targets
+        }, CancellationToken.None);
+
+    private static Notification PipelineNotification() => Notification.Create(
+        recipientId: null,
+        type: NotificationType.LegalHoldNotice,
+        channel: NotificationChannel.Email,
+        title: "Legal hold",
+        message: "Legal hold notice",
+        tenantId: null,
+        recipientEmail: "reviewer@example.test");
 
     [Fact]
     public async Task ActiveHoldPreservesEvidenceAndBlocksReleaseUntilTheHoldEnds()
     {
         await RegisterAsync(UserId);
-        var hold = await Service().CreateAsync(new CreateLegalHoldRequest
-        {
-            CaseNumber = "test-case-177",
-            PreservationTargets = [new PreservationTarget { SourceKind = "RawContent", SourceId = "inline", RawContent = "held evidence" }],
-            NotificationTargets = [new NotificationTarget { Kind = "Stakeholder", Target = "reviewer@example.test" }]
-        }, CancellationToken.None);
+        var hold = await CreateHoldAsync("test-case-177", new NotificationTarget { Kind = "Stakeholder", Target = "reviewer@example.test" });
         var evidenceId = Assert.Single(hold.PreservedEvidenceIds);
         Assert.Equal("Pending", Assert.Single(hold.Notifications).Status);
         await Assert.ThrowsAsync<ValueSnapshotValidationException>(() => Custody().ReleaseAsync(evidenceId, "Premature", CancellationToken.None));
@@ -182,6 +198,115 @@ public sealed class LegalHoldServiceTests : AuditCustodyServiceTestBase
         Assert.Equal("Released", released.Status);
         Assert.Equal("Released", (await Custody().ReleaseAsync(evidenceId, "Hold ended", CancellationToken.None)).CustodyState);
         Assert.True(await Context.Set<CustodyEvidenceItem>().AnyAsync(item => item.Id == evidenceId));
+    }
+
+    [Fact]
+    public async Task DispatchEnqueuesThroughThePipelineAndStaysQueuedUntilDeliveryEvidence()
+    {
+        await RegisterAsync(UserId);
+        var tenant = TenantId;
+        var hold = await CreateHoldAsync("dispatch-queue-1", new NotificationTarget { Kind = "Stakeholder", Target = "reviewer@example.test" });
+        var pipelineNotification = PipelineNotification();
+        _notifications
+            .Setup(service => service.SendAsync(
+                It.Is<Guid?>(recipientId => recipientId == null),
+                NotificationType.LegalHoldNotice,
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                NotificationChannel.Email,
+                tenant,
+                It.IsAny<string?>(),
+                NotificationPriority.High,
+                hold.Id,
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                "reviewer@example.test",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(pipelineNotification));
+
+        var dispatched = await Service().DispatchNotificationsAsync(hold.Id, CancellationToken.None);
+
+        var stored = await Context.Set<LegalHoldNotification>().SingleAsync(item => item.LegalHoldId == hold.Id);
+        Assert.Equal("Queued", stored.Status);
+        Assert.Equal(pipelineNotification.Id, stored.DeliveredNotificationId);
+        Assert.Null(stored.DispatchedAtUtc);
+        Assert.Null(stored.FailureReason);
+        Assert.Equal("Queued", Assert.Single(dispatched.Notifications).Status);
+        _notifications.Verify(service => service.SendAsync(
+            It.IsAny<Guid?>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<NotificationPriority>(),
+            It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task DispatchRecordsSentOnlyFromActualPipelineDeliveryEvidence()
+    {
+        await RegisterAsync(UserId);
+        var hold = await CreateHoldAsync("dispatch-evidence-1", new NotificationTarget { Kind = "Custodian", Target = UserId.ToString() });
+        var pipelineNotification = PipelineNotification();
+        _notifications
+            .Setup(service => service.SendAsync(
+                UserId, NotificationType.LegalHoldNotice, It.IsAny<string>(), It.IsAny<string>(),
+                NotificationChannel.Email, It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<NotificationPriority>(),
+                It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(pipelineNotification));
+
+        await Service().DispatchNotificationsAsync(hold.Id, CancellationToken.None);
+        var stored = await Context.Set<LegalHoldNotification>().SingleAsync(item => item.LegalHoldId == hold.Id);
+        Assert.Equal("Queued", stored.Status);
+        Assert.Null(stored.DispatchedAtUtc);
+
+        // The pipeline row has not reported delivery yet — the notification stays queued.
+        _notifications
+            .Setup(service => service.GetByIdAsync(pipelineNotification.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(pipelineNotification));
+        await Service().DispatchNotificationsAsync(hold.Id, CancellationToken.None);
+        stored = await Context.Set<LegalHoldNotification>().SingleAsync(item => item.LegalHoldId == hold.Id);
+        Assert.Equal("Queued", stored.Status);
+        Assert.Null(stored.DispatchedAtUtc);
+
+        // Actual delivery evidence: the pipeline row reports Sent.
+        pipelineNotification.MarkDeliverySent();
+        var sent = await Service().DispatchNotificationsAsync(hold.Id, CancellationToken.None);
+        stored = await Context.Set<LegalHoldNotification>().SingleAsync(item => item.LegalHoldId == hold.Id);
+        Assert.Equal("Sent", stored.Status);
+        Assert.NotNull(stored.DispatchedAtUtc);
+        Assert.Equal("Sent", Assert.Single(sent.Notifications).Status);
+    }
+
+    [Fact]
+    public async Task DispatchMarksFailedWhenThePipelineRejectsOrTheTargetIsUnroutable()
+    {
+        await RegisterAsync(UserId);
+        var hold = await CreateHoldAsync("dispatch-fail-1",
+            new NotificationTarget { Kind = "Stakeholder", Target = "reviewer@example.test" },
+            new NotificationTarget { Kind = "Custodian", Target = "not-a-user-id" });
+        _notifications
+            .Setup(service => service.SendAsync(
+                It.IsAny<Guid?>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<NotificationPriority>(),
+                It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure<Notification>(Error.Failure("Notification.Skipped", "skipped due to user preferences")));
+
+        var dispatched = await Service().DispatchNotificationsAsync(hold.Id, CancellationToken.None);
+
+        var rows = await Context.Set<LegalHoldNotification>().Where(item => item.LegalHoldId == hold.Id).ToListAsync();
+        Assert.All(rows, row =>
+        {
+            Assert.Equal("Failed", row.Status);
+            Assert.NotNull(row.FailureReason);
+            Assert.Null(row.DeliveredNotificationId);
+        });
+        Assert.Contains(rows, row => row.FailureReason!.Contains("Notification.Skipped"));
+        Assert.Contains(rows, row => row.TargetKind == "Custodian" && row.FailureReason!.Contains("not a routable recipient"));
+        // The unroutable custodian was never sent to the pipeline at all.
+        _notifications.Verify(service => service.SendAsync(
+            It.IsAny<Guid?>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<NotificationPriority>(),
+            It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        Assert.Equal(2, dispatched.Notifications.Count(row => row.Status == "Failed"));
     }
 
     [Fact]

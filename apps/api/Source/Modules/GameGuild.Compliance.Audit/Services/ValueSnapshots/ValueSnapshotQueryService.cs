@@ -113,7 +113,7 @@ public sealed class ValueSnapshotQueryService(
 
     public async Task<ValueSnapshotSearchResult> SearchAsync(ValueSnapshotSearchRequest request, CancellationToken cancellationToken)
     {
-        RequireAdministrator();
+        var tenantId = RequireAdministrator();
         Validate(request);
 
         var query = Scope().AsNoTracking();
@@ -157,10 +157,17 @@ public sealed class ValueSnapshotQueryService(
         if (!string.IsNullOrWhiteSpace(request.ValuePattern))
         {
             var pattern = request.ValuePattern;
+            // Archived snapshots keep readable values in their durable archive copies, so a value
+            // pattern must also match there (issue #176).
             query = query.Where(snapshot =>
                 (snapshot.BeforePayload != null && snapshot.BeforePayload.Contains(pattern))
                 || (snapshot.AfterPayload != null && snapshot.AfterPayload.Contains(pattern))
-                || snapshot.StructuredDiffJson.Contains(pattern));
+                || snapshot.StructuredDiffJson.Contains(pattern)
+                || context.Set<MutationValueSnapshotArchive>().Any(archive =>
+                    archive.TenantId == tenantId
+                    && archive.SnapshotId == snapshot.Id
+                    && ((archive.BeforePayload != null && archive.BeforePayload.Contains(pattern))
+                        || (archive.AfterPayload != null && archive.AfterPayload.Contains(pattern)))));
         }
 
         var candidates = await query
@@ -170,6 +177,9 @@ public sealed class ValueSnapshotQueryService(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        // Resolve deduplicated chunk and archived payload content in memory so refinement and the
+        // returned page expose the recoverable values instead of storage placeholders.
+        await MaterializePayloadsAsync(tenantId, candidates, cancellationToken).ConfigureAwait(false);
         var refined = Refine(candidates, request.Field, request.ValuePattern);
         var total = refined.Count;
         var page = refined.Skip(request.Skip).Take(request.Take).Select(Map).ToList();
@@ -185,16 +195,22 @@ public sealed class ValueSnapshotQueryService(
 
     public async Task<ValueSnapshotResponse?> GetAsync(Guid id, CancellationToken cancellationToken)
     {
-        RequireAdministrator();
+        var tenantId = RequireAdministrator();
         var snapshot = await Scope().AsNoTracking()
             .FirstOrDefaultAsync(candidate => candidate.Id == id, cancellationToken)
             .ConfigureAwait(false);
-        return snapshot is null ? null : Map(snapshot);
+        if (snapshot is null)
+        {
+            return null;
+        }
+
+        await MaterializePayloadsAsync(tenantId, [snapshot], cancellationToken).ConfigureAwait(false);
+        return Map(snapshot);
     }
 
     public async Task<ValueHistoryResponse?> GetHistoryAsync(string entityName, string keyId, string? field, CancellationToken cancellationToken)
     {
-        RequireAdministrator();
+        var tenantId = RequireAdministrator();
         if (string.IsNullOrWhiteSpace(entityName) || string.IsNullOrWhiteSpace(keyId))
         {
             throw new ValueSnapshotValidationException(new Dictionary<string, string[]>
@@ -216,6 +232,10 @@ public sealed class ValueSnapshotQueryService(
         {
             return null;
         }
+
+        // History must read the recoverable values: deduplicated chunks carry the content for
+        // compacted rows and the durable archive copy carries it for archived rows (issue #176).
+        await MaterializePayloadsAsync(tenantId, snapshots, cancellationToken).ConfigureAwait(false);
 
         var effectiveField = field;
         if (string.IsNullOrWhiteSpace(effectiveField))
@@ -396,18 +416,66 @@ public sealed class ValueSnapshotQueryService(
         }
     }
 
-    private static ValueSnapshotResponse Map(MutationValueSnapshot snapshot)
+    /// <summary>
+    ///     Restores the recoverable value representation onto untracked snapshot rows in memory:
+    ///     deduplicated chunk content for compacted rows, and the durable archive copy for archived
+    ///     rows (issue #176). Rows are untracked, so nothing here is persisted.
+    /// </summary>
+    private async Task MaterializePayloadsAsync(Guid tenantId, List<MutationValueSnapshot> snapshots, CancellationToken cancellationToken)
     {
-        string? ResolvePayload(string? inline, Guid? chunkId)
+        var chunkIds = snapshots
+            .SelectMany(snapshot => new[] { snapshot.BeforeChunkId, snapshot.AfterChunkId })
+            .Where(id => id is not null)
+            .Cast<Guid>()
+            .Distinct()
+            .ToList();
+        if (chunkIds.Count > 0)
         {
-            if (inline is not null)
+            var chunks = await context.Set<MutationValuePayloadChunk>().AsNoTracking()
+                .Where(chunk => chunk.TenantId == tenantId && chunkIds.Contains(chunk.Id))
+                .ToDictionaryAsync(chunk => chunk.Id, chunk => chunk.Content, cancellationToken)
+                .ConfigureAwait(false);
+            foreach (var snapshot in snapshots)
             {
-                return inline;
-            }
+                if (snapshot.BeforePayload is null && snapshot.BeforeChunkId is { } beforeChunk
+                    && chunks.TryGetValue(beforeChunk, out var beforeContent))
+                {
+                    snapshot.BeforePayload = beforeContent;
+                }
 
-            return chunkId is { } chunk ? $"[deduplicated chunk {chunk}]" : null;
+                if (snapshot.AfterPayload is null && snapshot.AfterChunkId is { } afterChunk
+                    && chunks.TryGetValue(afterChunk, out var afterContent))
+                {
+                    snapshot.AfterPayload = afterContent;
+                }
+            }
         }
 
+        var archivedIds = snapshots
+            .Where(snapshot => snapshot.ArchivedAtUtc != null
+                && snapshot.BeforePayload is null && snapshot.AfterPayload is null
+                && snapshot.BeforeChunkId is null && snapshot.AfterChunkId is null)
+            .Select(snapshot => snapshot.Id)
+            .ToList();
+        if (archivedIds.Count > 0)
+        {
+            var archives = await context.Set<MutationValueSnapshotArchive>().AsNoTracking()
+                .Where(archive => archive.TenantId == tenantId && archivedIds.Contains(archive.SnapshotId))
+                .ToDictionaryAsync(archive => archive.SnapshotId, cancellationToken)
+                .ConfigureAwait(false);
+            foreach (var snapshot in snapshots)
+            {
+                if (archives.TryGetValue(snapshot.Id, out var archive))
+                {
+                    snapshot.BeforePayload ??= archive.BeforePayload;
+                    snapshot.AfterPayload ??= archive.AfterPayload;
+                }
+            }
+        }
+    }
+
+    private static ValueSnapshotResponse Map(MutationValueSnapshot snapshot)
+    {
         var diffs = ValueSnapshotDiffEngine.DeserializeDiffs(snapshot.StructuredDiffJson)
             .Select(diff => new ValueSnapshotFieldDiffResponse(
                 diff.Field, diff.ChangeKind, diff.Before, diff.After, diff.BeforeTruncated, diff.AfterTruncated, diff.NumericDelta))
@@ -429,8 +497,8 @@ public sealed class ValueSnapshotQueryService(
             snapshot.AfterPayloadTruncated,
             snapshot.BeforeIntegritySha256,
             snapshot.AfterIntegritySha256,
-            ResolvePayload(snapshot.BeforePayload, snapshot.BeforeChunkId),
-            ResolvePayload(snapshot.AfterPayload, snapshot.AfterChunkId),
+            snapshot.BeforePayload,
+            snapshot.AfterPayload,
             snapshot.ArchivedAtUtc,
             diffs);
     }
