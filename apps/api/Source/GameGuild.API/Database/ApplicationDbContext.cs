@@ -28,6 +28,29 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
     private readonly IReadOnlyList<IPermissionAuditHook> _permissionAuditHooks = [];
     private readonly List<PermissionAuditChange> _pendingPermissionAuditChanges = [];
     private PermissionMutationAuditScope? _permissionMutationAuditScope;
+    private int _stagedSetBasedAuditRowCount;
+
+    /// <summary>
+    ///     Stages audit records (and their forensic value snapshots) captured by
+    ///     <see cref="SetBasedChangeAuditInterceptor"/> for a set-based
+    ///     <c>ExecuteUpdate</c>/<c>ExecuteDelete</c> statement. The rows persist with this
+    ///     context's next <c>SaveChanges</c> call — inside the caller's transaction when one is
+    ///     ambient — and pass through the centralized PII redaction pipeline like every other
+    ///     entity-change record. The staged count is subtracted from the <c>SaveChanges</c>
+    ///     result so callers keep observing business rows only.
+    /// </summary>
+    internal void StageSetBasedAuditRecords(
+        IReadOnlyList<EntityChangeAuditRecord> records, IReadOnlyList<MutationValueSnapshot> snapshots)
+    {
+        ArgumentNullException.ThrowIfNull(records);
+        Set<EntityChangeAuditRecord>().AddRange(records);
+        if (snapshots.Count > 0)
+        {
+            Set<MutationValueSnapshot>().AddRange(snapshots);
+        }
+
+        Interlocked.Add(ref _stagedSetBasedAuditRowCount, records.Count + snapshots.Count);
+    }
 
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
@@ -274,7 +297,12 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
             entity.ClearIntegrationEvents();
         }
 
-        return affectedRows - capturedOutboxCount - capturedAuditRecordCount;
+        // Set-based capture stages its rows outside this save pipeline; keep the caller-visible
+        // count stable by deducting them exactly like the tracked-capture rows above. The staged
+        // count is only reset here after a successful save, so a failed save leaves both the rows
+        // and their deduction pending for the retry.
+        var stagedSetBasedAuditRecordCount = Interlocked.Exchange(ref _stagedSetBasedAuditRowCount, 0);
+        return affectedRows - capturedOutboxCount - capturedAuditRecordCount - stagedSetBasedAuditRecordCount;
     }
 
     private async Task RejectCompletedEventIdsAsync(Guid[] eventIds, bool useAsync, CancellationToken cancellationToken)

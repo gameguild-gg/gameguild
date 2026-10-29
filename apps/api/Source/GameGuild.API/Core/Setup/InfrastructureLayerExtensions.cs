@@ -418,6 +418,14 @@ public static class InfrastructureLayerExtensions
         // host owns this bridge because the audit module cannot reference Learning.Courses
         // without closing a project-reference cycle.
         services.AddScoped<LearningCoursesMutationAuditInterceptor>();
+        // Universal audit capture for set-based writes (issue #166 remainder): ExecuteUpdate/
+        // ExecuteDelete statements carry before/after evidence into the entity-change audit
+        // store through the same transaction and PII pipeline as tracked-entity capture.
+        services.TryAddScoped<SetBasedChangeAuditInterceptor>(provider => new SetBasedChangeAuditInterceptor(
+            provider.GetRequiredService<GameGuild.IUseCaseOperationContextAccessor>(),
+            provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<EntityChangeAuditOptions>>(),
+            provider.GetService<GameGuild.Compliance.Audit.MutationValueSnapshotFactory>(),
+            provider.GetService<Microsoft.Extensions.Logging.ILogger<SetBasedChangeAuditInterceptor>>()));
 
         services.AddDbContext<ApplicationDbContext>((provider, options) =>
         {
@@ -426,6 +434,10 @@ public static class InfrastructureLayerExtensions
             // Central audit-sink integration for the PII redaction pipeline (issue #192): every
             // AuditLog entity passes through the redaction rules before persistence.
             options.AddInterceptors(provider.GetRequiredService<AuditLogPiiRedactionInterceptor>());
+            // Universal audit capture for set-based writes (issue #166): ExecuteUpdate/
+            // ExecuteDelete statements stage before/after audit rows on the executing context,
+            // so they persist and roll back with the caller's transaction.
+            options.AddInterceptors(provider.GetRequiredService<SetBasedChangeAuditInterceptor>());
             // Universal audit coverage for learning-course mutations: every save that mutates an
             // audited course entity also records its audit row in the same save batch, so the
             // mutation cannot commit without its audit event.
