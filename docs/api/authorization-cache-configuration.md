@@ -79,8 +79,13 @@ advances no security version, so the cached copy polices itself: writes clamp th
 L1 and L2 TTL to the seconds remaining before the earliest effective grant
 expiration (never above the configured TTL), and every read re-checks the
 boundary before serving, which also covers entries promoted from L2 to L1.
-A decision whose grants already lapsed is returned once from the authoritative
-evaluation but never cached.
+If an evaluated grant has lapsed before the ACL wrapper can return its decision,
+the wrapper retries the evaluation. It also rechecks tenant/global/user security
+versions after distributed cache reads and writes, so an invalidation during
+those waits cannot return the old-version decision. A stable, effective decision
+can be served; after three attempts without a stable version and lifetime, the
+wrapper throws `InvalidOperationException` and fails closed. It never returns or
+caches the expired decision.
 
 Bulk permission-check decisions (the `IPermissionService` bulk and streaming
 paths, cached under the `permission` cache type with `bulk:v2` keys) carry the
@@ -310,17 +315,38 @@ Alertmanager receiver configured for the deployment. Sentinel and Cluster
 topologies additionally alert on `redis_master_up` / managed-failover events
 from the provider.
 
-The authorization and authentication unit suites cover the L1/L2 cache behavior,
-DI registration, version increments, serialized event payloads, subscriber
-dispatch and retry, Redis publish failure handling, and cache availability when
-L2 reads, writes, or removals fail. The Redis integration project contains
-focused cases for stale-ACL protection, Pub/Sub dispatch, role/group dependency
-invalidation, and subscriber recovery after a Redis restart. The four focused
-Redis integration tests passed locally with Docker enabled. API Verify now
-selects the integration-test project when its files change.
+## Verification records and deployment qualification
 
-Full network fault injection during Redis reconnects, inherited hierarchy
-invalidation through actual group-definition and membership mutation paths,
-and production-representative database-backed performance/load measurements
-remain open work. Cross-instance metric export and example alert thresholds
-are implemented but still need CI and deployment-level validation.
+The authorization and authentication unit suites cover L1/L2 behavior, DI
+registration, version increments, event payloads, subscriber dispatch and retry,
+Redis publish failures, cache availability during L2 failures, grant expiration,
+and collision-safe keys. The additional 14 concurrency cases delivered by
+[#1016](https://github.com/gameguild-gg/gameguild/pull/1016) passed in its final
+hosted CI: tenant/global/user invalidation during L2 reads and writes on both
+ACL entry points, plus stable L2 hits. These cases control cache/version
+collaborators to make the timing boundaries deterministic.
+
+The digest-verified hosted artifacts for
+[#980](https://github.com/gameguild-gg/gameguild/pull/980) contain seven passing
+Redis cache cases and one passing PostgreSQL bulk-permission cache case. The
+Redis cases use an actual Redis server and two service providers, with controlled
+ACL/version stores. They cover shared-L2 stale-ACL protection, concurrent version
+changes, Pub/Sub dispatch, inherited role/group dependency eviction across scopes,
+group-grant invalidation, and resubscription after a server restart. The separate
+PostgreSQL case verifies bulk checks and invalidation across calls. Together these
+records describe the exercised boundaries; they are not a combined PostgreSQL/Redis
+production deployment or exhaustive network-fault trial.
+
+The EF/PostgreSQL cached-versus-database measurements recorded by
+[#666](https://github.com/gameguild-gg/gameguild/pull/666) remain in the
+[benchmark README](../../apps/api/tests/GameGuild.Identity.Authorization.PerformanceTests/README.md).
+They are dated, isolated-fixture measurements, not fresh throughput or capacity
+numbers for a later release. That verification also exercised metric export through
+the sample Collector/Prometheus stack, all three cache alert rules, and a firing
+smoke alert received by Alertmanager. The
+[deployment guide](./authorization-cache-deployment.md) describes configuring an
+external notification receiver for each deployment.
+
+For release capacity planning, measure representative data, network topology,
+load, and fault conditions in the intended deployment. The examples and historical
+fixtures do not establish its service-level objectives.
