@@ -11,11 +11,28 @@ namespace GameGuild.Commerce.Payments;
 ///     through a typed <see cref="HttpClient"/> registered by
 ///     <see cref="FxRateSyncServiceCollectionExtensions"/>. Config-gated: only registered when
 ///     <c>FxRates:Provider</c> (or the fallback) selects it, so the default deployment dials
-///     nothing. The app ID travels as a query parameter per the provider's API contract; it is
-///     supplied through configuration/secrets and never persisted by this module.
+///     nothing. The app ID travels as a query parameter per the provider's API contract.
 /// </summary>
-public sealed class OpenExchangeRatesFxRateProvider(HttpClient httpClient, IOptions<FxSyncOptions> options, ILogger<OpenExchangeRatesFxRateProvider> logger) : IFxRateProvider
+/// <remarks>
+///     API-key handling (issue #412 spec H): the app ID is resolved FIRST from the
+///     encrypted-at-rest credential store (<see cref="IGatewayCredentialStore"/>, slot
+///     <c>fx:openexchangerates/app-id</c>, AES-256 via ASP.NET DataProtection — provisioned
+///     through the admin endpoint, never returned or logged) and only then from plain
+///     configuration, which remains the development/tests path. The module never persists the
+///     plaintext key anywhere.
+/// </remarks>
+public sealed class OpenExchangeRatesFxRateProvider(
+    HttpClient httpClient,
+    IOptions<FxSyncOptions> options,
+    ILogger<OpenExchangeRatesFxRateProvider> logger,
+    IGatewayCredentialStore? credentialStore = null) : IFxRateProvider
 {
+    /// <summary>Credential-store slot holding the encrypted OpenExchangeRates app ID.</summary>
+    public const string CredentialProviderKey = "fx:openexchangerates";
+
+    /// <summary>Credential-store slot name holding the encrypted OpenExchangeRates app ID.</summary>
+    public const string CredentialSecretName = "app-id";
+
     /// <summary>Provider identifier persisted on snapshots and sync runs.</summary>
     public string Name { get => "openexchangerates"; }
 
@@ -25,9 +42,12 @@ public sealed class OpenExchangeRatesFxRateProvider(HttpClient httpClient, IOpti
     public async Task<FxRateSet> GetRatesAsync(DateTimeOffset? asOfUtc = null, CancellationToken cancellationToken = default)
     {
         var settings = Settings;
-        if (string.IsNullOrWhiteSpace(settings.AppId))
+        var appId = await ResolveAppIdAsync(settings, cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(appId))
         {
-            throw new FxRateProviderUnavailableException(Name, "AppId is not configured (FxRates:OpenExchangeRates:AppId).");
+            throw new FxRateProviderUnavailableException(
+                Name,
+                "AppId is not configured (FxRates:OpenExchangeRates:AppId or the encrypted fx:openexchangerates/app-id credential).");
         }
 
         var baseCurrency = Normalize(settings.BaseCurrency, "USD");
@@ -51,6 +71,27 @@ public sealed class OpenExchangeRatesFxRateProvider(HttpClient httpClient, IOpti
         }
 
         return Parse(raw, baseCurrency);
+    }
+
+    /// <summary>
+    ///     Resolves the app ID: encrypted credential store first (spec H), plain
+    ///     configuration second (development/tests). An undecryptable stored payload
+    ///     surfaces as "no stored credential" and falls through to configuration.
+    /// </summary>
+    private async Task<string> ResolveAppIdAsync(FxSyncOptions.OpenExchangeRatesOptions settings, CancellationToken cancellationToken)
+    {
+        if (credentialStore is not null)
+        {
+            var stored = await credentialStore
+                .GetActiveAsync(CredentialProviderKey, CredentialSecretName, cancellationToken)
+                .ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(stored?.Plaintext))
+            {
+                return stored.Plaintext;
+            }
+        }
+
+        return settings.AppId ?? string.Empty;
     }
 
     /// <summary>Parses an OpenExchangeRates response body into an <see cref="FxRateSet"/>.</summary>

@@ -60,9 +60,10 @@ public sealed record CurrencyConversionResult(
 ///     Command (issue #412 spec D): convert one or many amounts into a target currency. Current
 ///     requests resolve quotations through the platform FX seam (operator overrides and synced
 ///     market grids behind <see cref="PersistedFxRateProvider"/>, TTL-cached); requests with
-///     <paramref name="AsOfUtc"/> resolve the newest persisted snapshot whose effective date is
+/// <paramref name="AsOfUtc"/> resolve the newest persisted snapshot whose effective date is
 ///     at or before that date — the exact direction first, then the inverse of the opposite
-///     pair (derived arithmetic, but the documented inverse of an auditable quotation). Both
+///     pair, and finally a cross rate composed through the grid base currency when the direct
+///     pair is unavailable (single publication, never mixing providers or dates). Both
 ///     currencies must be enabled for the tenant. Same-currency entries are identity
 ///     conversions and need no quotation.
 /// </summary>
@@ -266,16 +267,29 @@ public sealed class ConvertCurrencyCommandHandler(
                 .FirstOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            if (inverse is null)
+            if (inverse is not null)
             {
-                return Failed(item, target, $"No historical exchange rate available for {source} → {target} at {asOfUtc:yyyy-MM-dd}.");
+                rate = decimal.Round(1m / inverse.Rate, 12, MidpointRounding.AwayFromZero);
+                rateSource = $"{inverse.Source} (inverted {target}→{source})";
+                rateAsOf = inverse.AsOfUtc;
+                effective = inverse.EffectiveDateUtc;
+                provider = inverse.ProviderName;
             }
+            else
+            {
+                // Last resort (issue #412 spec D): compose through the grid base currency —
+                // the reference grids (USD, EUR) quote every listed currency, so source→target
+                // resolves as base→target over base→source inside ONE publication (never
+                // mixing providers or dates). Fails closed when either leg is outside it.
+                var composed = await FindComposedHistoricalRateAsync(source, target, effectiveDate, cancellationToken)
+                    .ConfigureAwait(false);
+                if (composed is null)
+                {
+                    return Failed(item, target, $"No historical exchange rate available for {source} → {target} at {asOfUtc:yyyy-MM-dd}.");
+                }
 
-            rate = decimal.Round(1m / inverse.Rate, 12, MidpointRounding.AwayFromZero);
-            rateSource = $"{inverse.Source} (inverted {target}→{source})";
-            rateAsOf = inverse.AsOfUtc;
-            effective = inverse.EffectiveDateUtc;
-            provider = inverse.ProviderName;
+                (rate, rateSource, rateAsOf, effective, provider) = composed.Value;
+            }
         }
 
         var converted = new Money(item.Amount * rate, target);
@@ -283,6 +297,95 @@ public sealed class ConvertCurrencyCommandHandler(
             item.Amount, source, converted.Amount, target,
             rate, rateSource, rateAsOf, effective, provider,
             IsIdentity: false, Error: null);
+    }
+
+    /// <summary>
+    ///     Composes a historical quotation <paramref name="source"/> → <paramref name="target"/>
+    ///     through the grid base currency when no direct or inverse snapshot exists: pick the
+    ///     newest market publication (single provider, single effective date, never mixed) at
+    ///     or before the requested date and derive the cross rate inside it, mirroring the
+    ///     runtime source's within-grid derivation semantics.
+    /// </summary>
+    private async Task<(decimal Rate, string RateSource, DateTime RateAsOf, DateTime Effective, string Provider)?> FindComposedHistoricalRateAsync(
+        string source,
+        string target,
+        DateTime effectiveDate,
+        CancellationToken cancellationToken)
+    {
+        var snapshots = context.Set<FxRateSnapshot>().AsNoTracking();
+
+        var latestDate = await snapshots
+            .Where(snapshot => !snapshot.IsOverride && snapshot.EffectiveDateUtc <= effectiveDate)
+            .MaxAsync(snapshot => (DateTime?)snapshot.EffectiveDateUtc, cancellationToken)
+            .ConfigureAwait(false);
+        if (latestDate is null)
+        {
+            return null;
+        }
+
+        var rows = await snapshots
+            .Where(snapshot => !snapshot.IsOverride && snapshot.EffectiveDateUtc == latestDate.Value)
+            .Select(snapshot => new
+            {
+                snapshot.BaseCurrency,
+                snapshot.QuoteCurrency,
+                snapshot.Rate,
+                snapshot.AsOfUtc,
+                snapshot.ProviderName,
+                snapshot.Source,
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (rows.Count == 0)
+        {
+            return null;
+        }
+
+        // One publication, never the provider with the most accumulated rows: a later
+        // fallback grid with fewer quotations must not be mixed with an older grid.
+        var publication = rows
+            .GroupBy(row => new { row.ProviderName, row.BaseCurrency, row.AsOfUtc, row.Source })
+            .OrderByDescending(group => group.Key.AsOfUtc)
+            .ThenBy(group => group.Key.ProviderName, StringComparer.Ordinal)
+            .ThenBy(group => group.Key.BaseCurrency, StringComparer.Ordinal)
+            .ThenBy(group => group.Key.Source, StringComparer.Ordinal)
+            .First();
+
+        var baseCurrency = publication.Key.BaseCurrency;
+        decimal? sourceRate = null;
+        decimal? targetRate = null;
+        foreach (var row in publication)
+        {
+            if (row.QuoteCurrency == source)
+            {
+                sourceRate = row.Rate;
+            }
+
+            if (row.QuoteCurrency == target)
+            {
+                targetRate = row.Rate;
+            }
+        }
+
+        // Grid semantics: R(c) = units of c per one grid base.
+        var fromRate = source == baseCurrency ? 1m : sourceRate;
+        var toRate = target == baseCurrency ? 1m : targetRate;
+        if (fromRate is not > 0m || toRate is not > 0m)
+        {
+            return null; // one leg is outside the publication — fail closed
+        }
+
+        var composed = source == baseCurrency
+            ? toRate.Value
+            : target == baseCurrency
+                ? decimal.Round(1m / fromRate.Value, 12, MidpointRounding.AwayFromZero)
+                : decimal.Round(toRate.Value / fromRate.Value, 12, MidpointRounding.AwayFromZero);
+        if (composed <= 0m)
+        {
+            return null;
+        }
+
+        return (composed, $"{publication.Key.Source} (composed via {baseCurrency})", publication.Key.AsOfUtc, latestDate.Value, publication.Key.ProviderName);
     }
 
     private static string NoRateMessage(string source, string target)

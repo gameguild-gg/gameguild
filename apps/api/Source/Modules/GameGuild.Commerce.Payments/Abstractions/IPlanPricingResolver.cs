@@ -38,6 +38,15 @@ public interface IPlanPricingResolver
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if the plan exists</returns>
     Task<bool> PlanExistsAsync(Guid planId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Lists the identifiers of the tenant's active plans (issue #412 spec C): the
+    ///     enumeration scope for bulk localized-price recalculation. Empty when the
+    ///     Subscriptions module is not available.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Active plan identifiers (tenant scope is implicit in the implementation).</returns>
+    Task<IReadOnlyList<Guid>> GetActivePlanIdsAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -54,4 +63,7 @@ public sealed class NullPlanPricingResolver : IPlanPricingResolver
 
     public Task<bool> PlanExistsAsync(Guid planId, CancellationToken cancellationToken = default)
         => Task.FromResult(false);
+
+    public Task<IReadOnlyList<Guid>> GetActivePlanIdsAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<Guid>>([]);
 }

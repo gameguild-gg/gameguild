@@ -78,8 +78,24 @@ public sealed class FxRatesController(ISender sender) : BaseApiController
     }
 
     /// <summary>
+    ///     Exchange rate variance report (issue #412 spec G): every active operator override
+    ///     against the newest synced market quotation of the same pair (actual vs expected),
+    ///     with variances beyond the anomaly threshold flagged.
+    /// </summary>
+    /// <param name="ct">Cancellation token.</param>
+    [HttpGet("variance")]
+    [EndpointSummary("Exchange rate variance report")]
+    [EndpointDescription("Compares every active operator rate override (expected) against the newest synced market quotation (actual) of the same pair; variances beyond the configured threshold are flagged.")]
+    [ProducesResponseType(typeof(FxRateVarianceReport), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetVarianceReport(CancellationToken ct)
+    {
+        var result = await sender.Send(new GetFxRateVarianceReportQuery(), ct).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
     ///     Sets or replaces an operator manual FX rate override for an exact direction
-    ///     (audit-logged with reason; effective immediately).
+    /// (audit-logged with reason; effective immediately).
     /// </summary>
     /// <param name="body">Override payload.</param>
     /// <param name="ct">Cancellation token.</param>
@@ -100,6 +116,48 @@ public sealed class FxRatesController(ISender sender) : BaseApiController
                 body.ExpiresAtUtc),
             ct).ConfigureAwait(false);
         return StatusCode(StatusCodes.Status201Created, new { id });
+    }
+
+    /// <summary>
+    ///     Provisions the API key of an FX rate provider into the encrypted-at-rest store
+    /// (issue #412 spec H): the plaintext key is encrypted with ASP.NET DataProtection
+    /// (AES-256 under the application key ring) before it touches the database. Only the
+    /// key fingerprint is ever returned or audited.
+    /// </summary>
+    /// <param name="provider">Key-bearing FX provider identifier (openexchangerates).</param>
+    /// <param name="body">Plaintext API key payload.</param>
+    /// <param name="ct">Cancellation token.</param>
+    [HttpPut("provider-keys/{provider}")]
+    [EndpointSummary("Provision an encrypted FX provider API key")]
+    [EndpointDescription("Encrypts the provider API key at rest (DataProtection AES-256) and makes it the active credential; the plaintext is never stored, returned or logged.")]
+    [ProducesResponseType(typeof(GatewayCredentialProvisionResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ProvisionApiKey(string provider, [FromBody] ProvisionFxProviderApiKeyRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var result = await sender.Send(
+            new ProvisionFxProviderApiKeyCommand(provider, body.Value),
+            ct).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     Deactivates the active encrypted FX provider API key. The provider falls back to
+    ///     configuration and fails closed when no key is available from either source.
+    /// </summary>
+    /// <param name="provider">Key-bearing FX provider identifier (openexchangerates).</param>
+    /// <param name="ct">Cancellation token.</param>
+    [HttpDelete("provider-keys/{provider}")]
+    [EndpointSummary("Deactivate the encrypted FX provider API key")]
+    [EndpointDescription("Deactivates the active encrypted credential; the encrypted row stays for audit and the provider falls back to configuration.")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> DeactivateApiKey(string provider, CancellationToken ct)
+    {
+        var deactivated = await sender.Send(
+            new DeactivateFxProviderApiKeyCommand(provider),
+            ct).ConfigureAwait(false);
+        return Ok(new { provider, deactivated });
     }
 }
 

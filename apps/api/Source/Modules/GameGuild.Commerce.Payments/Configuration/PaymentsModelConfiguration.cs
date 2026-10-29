@@ -187,6 +187,11 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
         modelBuilder.ApplyConfiguration(new CurrencyConfigurationConfiguration());
         modelBuilder.ApplyConfiguration(new FxRateSnapshotConfiguration());
         modelBuilder.ApplyConfiguration(new FxRateSyncRunConfiguration());
+        // Localized plan prices (issue #412 spec C): per-tenant per-market price points
+        // (auto-calculated from the FX seam or manual psychological overrides) plus the
+        // recalculation runs with progress tracking and rollback before-snapshots.
+        modelBuilder.ApplyConfiguration(new PriceLocalizationConfiguration());
+        modelBuilder.ApplyConfiguration(new PriceRecalculationRunConfiguration());
         modelBuilder.ApplyConfiguration(new AuditTrailConfiguration());
         // Fraud blacklist (issue #409): tenant-scoped entry store with wildcard patterns,
         // expiry dates and manual whitelist overrides, evaluated as a payment fraud signal

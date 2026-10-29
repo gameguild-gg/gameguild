@@ -66,6 +66,22 @@ public sealed class FxSyncOptions
     /// <summary>Newest persisted snapshot older than this many days counts as stale and raises a staleness alert.</summary>
     public int StalenessAlertDays { get; set; } = 2;
 
+    /// <summary>
+    ///     Rate-reasonableness guard (issue #412 spec H): a fetched quotation whose value moved
+    ///     more than this many percent against the most recent previously-persisted quotation
+    ///     of the pair is treated as anomalous — it is quarantined (not persisted), audited and
+    ///     reported to operators. Default 10 (the spec's "&gt; 10% daily change"); 0 disables
+    ///     the guard only for the very first backfill of a pair with no prior history.
+    /// </summary>
+    public decimal MaxRateChangePercentPerDay { get; set; } = 10m;
+
+    /// <summary>
+    ///     Outbound politeness guard (issue #412 spec H): maximum HTTP calls per provider per
+    ///     minute before the FX HttpClient starts rejecting requests (the sync treats the
+    ///     rejection as provider unavailability and fails over). 0 disables the limiter.
+    /// </summary>
+    public int ProviderMaxCallsPerMinute { get; set; } = 30;
+
     /// <summary>OpenExchangeRates adapter settings.</summary>
     public OpenExchangeRatesOptions OpenExchangeRates { get; set; } = new();
 
@@ -186,6 +202,16 @@ public sealed class FxSyncOptionsValidator : IValidateOptions<FxSyncOptions>
         if (options.StalenessAlertDays < 1)
         {
             failures.Add("FxRates:StalenessAlertDays must be >= 1.");
+        }
+
+        if (options.MaxRateChangePercentPerDay < 0m)
+        {
+            failures.Add("FxRates:MaxRateChangePercentPerDay must be >= 0.");
+        }
+
+        if (options.ProviderMaxCallsPerMinute < 0)
+        {
+            failures.Add("FxRates:ProviderMaxCallsPerMinute must be >= 0.");
         }
 
         if (options.IntervalMinutes < 0)

@@ -28,7 +28,8 @@ public sealed class PricingEngine(
     IWalletService walletService,
     CurrencyConversionService currencyConversion,
     IPricingDecisionLedgerWriter ledgerWriter,
-    IMemoryCache cache) : IPricingEngine
+    IMemoryCache cache,
+    ILocalizedPlanPriceResolver? localizedPriceResolver = null) : IPricingEngine
 {
     private const string PlanPriceCacheKeyPrefix = "PricingEngine:PlanPrice:";
 
@@ -455,9 +456,22 @@ public sealed class PricingEngine(
             return null;
         }
 
-        // FX through the SharedKernel core: same-currency is exact identity; cross-currency
-        // needs a real quotation and fails closed when none is configured (#790 semantics).
-        var converted = await currencyConversion.ConvertAsync(price, normalizedCurrency, cancellationToken).ConfigureAwait(false);
+        // Localized plan price (issue #412 spec C): an effective manual override or the last
+        // FX-auto-calculated value for this (plan, currency) market wins over live conversion;
+        // when no localization applies the SharedKernel FX core converts as before (fail
+        // closed when no quotation is configured, #790 semantics).
+        Money converted;
+        if (localizedPriceResolver is not null
+            && await localizedPriceResolver.ResolveLocalizedPriceAsync(
+                    planId, billingCycle, price, normalizedCurrency, cancellationToken)
+                .ConfigureAwait(false) is { } localized)
+        {
+            converted = localized;
+        }
+        else
+        {
+            converted = await currencyConversion.ConvertAsync(price, normalizedCurrency, cancellationToken).ConfigureAwait(false);
+        }
 
         cache.Set(cacheKey, converted, new MemoryCacheEntryOptions
         {

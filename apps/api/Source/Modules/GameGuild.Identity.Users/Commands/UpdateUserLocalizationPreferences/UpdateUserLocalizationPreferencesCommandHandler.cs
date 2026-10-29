@@ -30,7 +30,10 @@ public sealed class UpdateUserLocalizationPreferencesCommandHandler(IUserReposit
         {
             existing[pref.Key] = pref.Value;
         }
-        preferences.SetLocalizationPreferences(existing);
+
+        // Preferred-currency validation (issue #412 spec E): unknown ISO 4217 codes fail
+        // closed, known codes are stored normalized (upper-case).
+        preferences.SetLocalizationPreferences(UserCurrencyPreference.NormalizeAndValidate(existing));
 
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
         await preferencesRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
