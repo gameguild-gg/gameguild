@@ -1336,10 +1336,9 @@ async function instructorJourney(fixture, browser) {
     // Submit grade.
     const submitGrade = gradingPanel.getByTestId("submit-grade");
     await submitGrade.waitFor({ state: "visible", timeout: 10_000 });
-    // Wait for this mutation's streamed server-action response, not just the
-    // click. On a loaded runner the save and RSC response can consume most of
-    // the separate refresh budget before the browser can apply the new queue.
-    const gradeResponseStartedAt = Date.now();
+    // Correlate the save's HTTP response, then observe application completion
+    // through the refreshed queue. A development RSC stream can remain open
+    // after the action result and refreshed UI have already been applied.
     const gradeResponsePromise = page.waitForResponse((response) =>
       response.request().method() === "POST"
       && response.url() === page.url()
@@ -1348,19 +1347,14 @@ async function instructorJourney(fixture, browser) {
     { timeout: 120_000 });
     await submitGrade.click();
     const gradeResponse = await observeJourneyAwait("rubric mutation response headers", () => gradeResponsePromise);
-    const gradeTransportError = await observeJourneyAwait(
-      "rubric mutation complete response stream",
-      () => gradeResponse.finished(),
-      Math.max(1, 120_000 - (Date.now() - gradeResponseStartedAt)),
-    );
-    record("grade mutation response completes", gradeResponse.ok() && !gradeTransportError,
-      `status=${gradeResponse.status()}; streamComplete=${!gradeTransportError}`);
+    record("grade mutation HTTP response succeeds", gradeResponse.ok(),
+      `status=${gradeResponse.status()}`);
     // router.refresh() re-renders; the queue item status flips to Graded.
     let graded = false;
     const gradeDeadline = Date.now() + 60_000;
     while (Date.now() < gradeDeadline) {
       const badge = await page.getByTestId("needs-grading-badge").textContent().catch(() => "");
-      if (/0 to grade/.test(badge ?? "")) { graded = true; break; }
+      if (/^\s*0 to grade\s*$/.test(badge ?? "")) { graded = true; break; }
       await page.waitForTimeout(1500);
     }
     record("submit grade → needs-grading drops to 0", graded, "polled needs-grading-badge");
