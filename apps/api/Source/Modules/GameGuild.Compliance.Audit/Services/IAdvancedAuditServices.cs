@@ -116,15 +116,8 @@ public interface IFieldAccessAuditService {
     /// <summary>
     /// Records a batch of read observations for one entity type in a single save (issue #186 read
     /// capture): one row per (entity, field) pair, classified inline; read rows persist no values.
+    /// The context parameters carry the ambient access metadata (address, request id, endpoint).
     /// </summary>
-    Task<int> RecordFieldReadsAsync(
-        Guid tenantId,
-        Guid userId,
-        string entityType,
-        IReadOnlyList<FieldReadObservation> observations,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>Read capture with the ambient access context (address, request id, endpoint path).</summary>
     Task<int> RecordFieldReadsAsync(
         Guid tenantId,
         Guid userId,

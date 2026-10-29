@@ -116,17 +116,6 @@ public sealed class FieldAccessAuditService(
     /// response read-capture surface, where one request can return many entities. Read observations
     /// never persist field values — only the fact, actor and context of the access.
     /// </summary>
-    public Task<int> RecordFieldReadsAsync(
-        Guid tenantId,
-        Guid userId,
-        string entityType,
-        IReadOnlyList<FieldReadObservation> observations,
-        CancellationToken cancellationToken = default) =>
-        RecordFieldReadsAsync(
-            tenantId, userId, entityType, observations,
-            ipAddress: null, userAgent: null, requestId: null, apiEndpoint: null,
-            cancellationToken);
-
     public async Task<int> RecordFieldReadsAsync(
         Guid tenantId,
         Guid userId,

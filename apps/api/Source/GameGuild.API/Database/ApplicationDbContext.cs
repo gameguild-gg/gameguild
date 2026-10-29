@@ -82,31 +82,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         IOptions<PermissionAuditOptions>? permissionAuditOptions = null,
         IEnumerable<IPermissionAuditHook>? permissionAuditHooks = null,
         IOptions<ValueSnapshotOptions>? valueSnapshotOptions = null,
-        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions = null) : this(
-            options,
-            publisher,
-            useCaseOperationContextAccessor,
-            auditService,
-            logger,
-            permissionAuditOptions,
-            permissionAuditHooks,
-            valueSnapshotOptions,
-            entityChangeAuditOptions,
-            fieldLevelAuditOptions: null)
-    {
-    }
-
-    public ApplicationDbContext(
-        DbContextOptions<ApplicationDbContext> options,
-        IPublisher? publisher,
-        IUseCaseOperationContextAccessor useCaseOperationContextAccessor,
-        IAuditService? auditService,
-        ILogger<ApplicationDbContext>? logger,
-        IOptions<PermissionAuditOptions>? permissionAuditOptions,
-        IEnumerable<IPermissionAuditHook>? permissionAuditHooks,
-        IOptions<ValueSnapshotOptions>? valueSnapshotOptions,
-        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions,
-        IOptions<FieldLevelAuditOptions>? fieldLevelAuditOptions) : this(options, publisher)
+        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions = null) : this(options, publisher)
     {
         _useCaseOperationContextAccessor = useCaseOperationContextAccessor;
         _auditService = auditService;
@@ -121,6 +97,27 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
             : null;
         _entityChangeAuditOptions = entityChangeAuditOptions?.Value ?? new EntityChangeAuditOptions();
         _entityChangeAuditCaptureEnabled = _entityChangeAuditOptions.Enabled;
+    }
+
+    /// <summary>
+    ///     Full-signature constructor used by dependency injection: identical to the overload above
+    ///     plus the field-level audit options (issue #186) that toggle automatic field-access write
+    ///     capture; DI selects this constructor because it resolves every parameter.
+    /// </summary>
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        IPublisher? publisher,
+        IUseCaseOperationContextAccessor useCaseOperationContextAccessor,
+        IAuditService? auditService,
+        ILogger<ApplicationDbContext>? logger,
+        IOptions<PermissionAuditOptions>? permissionAuditOptions,
+        IEnumerable<IPermissionAuditHook>? permissionAuditHooks,
+        IOptions<ValueSnapshotOptions>? valueSnapshotOptions,
+        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions,
+        IOptions<FieldLevelAuditOptions>? fieldLevelAuditOptions)
+        : this(options, publisher, useCaseOperationContextAccessor, auditService, logger,
+            permissionAuditOptions, permissionAuditHooks, valueSnapshotOptions, entityChangeAuditOptions)
+    {
         // Field-level write tracking (issue #186) defaults to enabled; the options master
         // switch is the only way to disable it.
         _fieldAccessWriteCaptureEnabled = fieldLevelAuditOptions?.Value.CaptureEntityWrites ?? true;
