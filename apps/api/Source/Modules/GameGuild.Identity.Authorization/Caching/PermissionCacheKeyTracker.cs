@@ -54,11 +54,12 @@ public interface IPermissionCacheKeyTracker
 ///         through the registered post-eviction callbacks.
 ///     </para>
 /// </remarks>
-public sealed class PermissionCacheKeyTracker : IPermissionCacheKeyTracker
+public sealed class PermissionCacheKeyTracker : IPermissionCacheKeyTracker, IPermissionCacheCapacityManager
 {
     private readonly IMemoryCache _memoryCache;
     private readonly ICacheMetricsService _metrics;
     private readonly int _maxTrackedEntries;
+    private int _effectiveMaxTrackedEntries;
     private readonly ConcurrentDictionary<string, CacheKeyRegistration> _keys = new(StringComparer.Ordinal);
     private long _nextSequence;
 
@@ -84,6 +85,52 @@ public sealed class PermissionCacheKeyTracker : IPermissionCacheKeyTracker
         _memoryCache = memoryCache;
         _metrics = metrics;
         _maxTrackedEntries = maxTrackedEntries;
+        _effectiveMaxTrackedEntries = maxTrackedEntries;
+    }
+
+    /// <inheritdoc />
+    public int ConfiguredCapacity => _maxTrackedEntries;
+
+    /// <inheritdoc />
+    public int EffectiveCapacity => Volatile.Read(ref _effectiveMaxTrackedEntries);
+
+    /// <inheritdoc />
+    public int ResizeCapacity(int capacity, string reason)
+    {
+        if (capacity <= 0 || capacity > _maxTrackedEntries)
+        {
+            throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must stay within the configured positive limit.");
+        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+
+        Interlocked.Exchange(ref _effectiveMaxTrackedEntries, capacity);
+        var toRemove = Math.Max(0, _keys.Count - capacity);
+        if (toRemove == 0)
+        {
+            return 0;
+        }
+
+        // A pressure response can remove many entries. Sort once instead of scanning
+        // the complete index again for every eviction. Conditional index removal keeps
+        // an older snapshot from forgetting a replacement registration.
+        var candidates = _keys
+            .OrderBy(entry => entry.Value.LastAccessSequence)
+            .ThenBy(entry => entry.Value.RegistrationId)
+            .Take(toRemove)
+            .ToArray();
+        var removed = 0;
+        foreach (var entry in candidates)
+        {
+            if (!RemoveRegistration(entry.Key, entry.Value))
+            {
+                continue;
+            }
+            _memoryCache.Remove(entry.Key);
+            var cacheType = entry.Value.CacheType == "all" ? "permission" : entry.Value.CacheType;
+            _metrics.RecordEviction(CacheLevel.L1, cacheType, reason);
+            removed++;
+        }
+        return removed;
     }
 
     /// <inheritdoc />
@@ -220,7 +267,7 @@ public sealed class PermissionCacheKeyTracker : IPermissionCacheKeyTracker
 
     private void EvictOverCapacity(long protectedRegistrationId)
     {
-        while (_keys.Count > _maxTrackedEntries)
+        while (_keys.Count > EffectiveCapacity)
         {
             var leastRecentlyUsed = _keys
                 .Where(entry => entry.Value.RegistrationId != protectedRegistrationId)
