@@ -1,5 +1,14 @@
 # @gameguild/emception-react
 
+## 4.5.2
+
+### Patch Changes
+
+- Updated dependencies [[`19e442a`](https://github.com/gameguild-gg/gameguild/commit/19e442ad393392368fb84c496a538cbb99d11bbf)]:
+  - @gameguild/emception-browser@4.5.2
+  - emception@4.5.2
+  - @gameguild/emception-xterm@4.5.2
+
 ## 4.5.1
 
 ### Patch Changes

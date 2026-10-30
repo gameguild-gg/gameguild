@@ -1,5 +1,12 @@
 # @gameguild/emception-xterm
 
+## 4.5.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - emception@4.5.2
+
 ## 4.5.1
 
 ### Patch Changes
