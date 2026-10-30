@@ -191,7 +191,9 @@ jobs:
       - name: Build generated client
         run: pnpm --filter @game-guild/client build
       - name: Test client credentials, MFA, auth factory, transport and generator contracts
-        run: pnpm --filter @game-guild/client exec vitest run tests/auth/providers/credentials.test.ts tests/next/auth.test.ts tests/next/actions-extended.test.ts tests/gaps/final-gaps.test.ts tests/react/query-hooks-extended.test.ts tests/generator tests/transport --maxWorkers=1
+        run: pnpm --filter @game-guild/client exec vitest run tests/auth/providers/credentials.test.ts tests/next/auth.test.ts tests/next/actions-extended.test.ts tests/gaps/final-gaps.test.ts tests/react/query-hooks-extended.test.ts tests/generator tests/transport tests/plugins/metrics-full.test.ts --maxWorkers=1
+      - name: Typecheck client metrics correlation contracts
+        run: pnpm --filter @game-guild/client exec tsc --noEmit --project tests/plugins/tsconfig.metrics.json
       - name: Test delivered WalletConnect runtime
         run: pnpm --filter @game-guild/web3 exec vitest run src/adapters/walletconnect.runtime.test.ts src/adapters/walletconnect.test.ts --maxWorkers=1
       - name: Acquire verified Toolchain release for Web

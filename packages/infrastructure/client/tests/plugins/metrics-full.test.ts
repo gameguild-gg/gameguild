@@ -3,7 +3,13 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { createMetricsInterceptor } from '../../src/plugins/metrics.js';
-import type { ApiResponse } from '../../src/runtime/transport/types.js';
+import type { ApiResponse, RequestConfig } from '../../src/runtime/transport/types.js';
+import type { ApiError } from '../../src/runtime/errors/types.js';
+
+// The metrics interceptor carries these private correlation fields on its inputs.
+type MetricsRequest = RequestConfig & { _metricsKey?: string; _requestId?: string };
+type MetricsResponse<T> = ApiResponse<T> & { _metricsKey?: string };
+type MetricsError = ApiError & { _metricsKey?: string };
 
 describe('createMetricsInterceptor — full branch', () => {
   it('onMetrics callback fires on response', async () => {
@@ -17,11 +23,11 @@ describe('createMetricsInterceptor — full branch', () => {
       headers: {},
     });
 
-    const metricsKey = (request as any)._metricsKey;
+    const metricsKey = (request as MetricsRequest)._metricsKey;
     expect(metricsKey).toBeDefined();
 
     // Process response with the metricsKey
-    const response: ApiResponse<any> & { _metricsKey?: string } = {
+    const response: MetricsResponse<unknown> = {
       data: { ok: true },
       status: 200,
       headers: new Headers(),
@@ -50,13 +56,13 @@ describe('createMetricsInterceptor — full branch', () => {
         method: 'GET',
         headers: {},
       });
-      const key = (request as any)._metricsKey;
+      const key = (request as MetricsRequest)._metricsKey;
       await interceptor.onResponse!({
         data: null,
         status: 200,
         headers: new Headers(),
         _metricsKey: key,
-      } as any);
+      } as MetricsResponse<null>);
     }
 
     const metrics = interceptor.getMetrics();
@@ -75,7 +81,7 @@ describe('createMetricsInterceptor — full branch', () => {
       method: 'POST',
       headers: {},
     });
-    const metricsKey = (request as any)._metricsKey;
+    const metricsKey = (request as MetricsRequest)._metricsKey;
 
     const result = await interceptor.onError!({
       name: 'ApiError',
@@ -83,7 +89,7 @@ describe('createMetricsInterceptor — full branch', () => {
       message: 'Internal error',
       status: 500,
       _metricsKey: metricsKey,
-    } as any);
+    } as MetricsError);
 
     expect(result.ok).toBe(false);
     expect(onMetrics).toHaveBeenCalledWith(
@@ -108,13 +114,14 @@ describe('createMetricsInterceptor — full branch', () => {
     });
 
     expect(result.ok).toBe(false);
+    if (result.ok) throw new Error('Expected metrics to preserve the error result');
     expect(result.error.code).toBe('NETWORK_ERROR');
   });
 
   it('onResponse without metricsKey returns response unchanged', async () => {
     const interceptor = createMetricsInterceptor();
 
-    const response: ApiResponse<any> = {
+    const response: ApiResponse<unknown> = {
       data: { ok: true },
       status: 200,
       headers: new Headers(),
@@ -127,7 +134,7 @@ describe('createMetricsInterceptor — full branch', () => {
   it('onResponse with metricsKey but missing timing returns unchanged', async () => {
     const interceptor = createMetricsInterceptor();
 
-    const response: ApiResponse<any> & { _metricsKey?: string } = {
+    const response: MetricsResponse<unknown> = {
       data: {},
       status: 200,
       headers: new Headers(),
@@ -151,8 +158,8 @@ describe('createMetricsInterceptor — full branch', () => {
       data: null,
       status: 200,
       headers: new Headers(),
-      _metricsKey: (req1 as any)._metricsKey,
-    } as any);
+      _metricsKey: (req1 as MetricsRequest)._metricsKey,
+    } as MetricsResponse<null>);
 
     // Second: error
     const req2 = await interceptor.onRequest!({
@@ -165,8 +172,8 @@ describe('createMetricsInterceptor — full branch', () => {
       code: 'SERVER_ERROR',
       message: 'fail',
       status: 500,
-      _metricsKey: (req2 as any)._metricsKey,
-    } as any);
+      _metricsKey: (req2 as MetricsRequest)._metricsKey,
+    } as MetricsError);
 
     const metrics = interceptor.getMetrics();
     expect(metrics.length).toBe(1);
@@ -181,14 +188,14 @@ describe('createMetricsInterceptor — full branch', () => {
       method: 'GET',
       headers: {},
       _requestId: 'req-xyz',
-    } as any);
+    } as MetricsRequest);
 
     await interceptor.onResponse!({
       data: null,
       status: 200,
       headers: new Headers(),
-      _metricsKey: (request as any)._metricsKey,
-    } as any);
+      _metricsKey: (request as MetricsRequest)._metricsKey,
+    } as MetricsResponse<null>);
 
     const metrics = interceptor.getMetrics();
     expect(metrics[0].requestId).toBeUndefined();
@@ -215,8 +222,8 @@ describe('createMetricsInterceptor — full branch', () => {
       data: null,
       status: 200,
       headers: new Headers(),
-      _metricsKey: (req as any)._metricsKey,
-    } as any);
+      _metricsKey: (req as MetricsRequest)._metricsKey,
+    } as MetricsResponse<null>);
 
     expect(interceptor.getMetrics().length).toBe(1);
     interceptor.clearMetrics();
