@@ -113,7 +113,11 @@ export class VegaLiteValidator {
 
         try {
           // Try to compile the specification
-          const compiled = vegaLiteImport.compile(parsedSpec as TopLevelSpec);
+          // The SDK type describes valid specs; compilation validates this
+          // untrusted JSON candidate after the structural checks above.
+          const compiled = vegaLiteImport.compile(
+            parsedSpec as unknown as TopLevelSpec,
+          );
           if (!compiled || !compiled.spec) {
             return {
               isValid: false,
