@@ -155,6 +155,104 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
         report.FromUtc.Should().BeOnOrBefore(report.ToUtc);
     }
 
+    [Fact]
+    public async Task Handle_Should_Break_Down_By_Country_Provider_And_Day()
+    {
+        var now = SystemClock.UtcNow;
+
+        // Blocked attempt from a high-risk country through stripe, yesterday.
+        await AddPaymentAsync(
+            _tenantId,
+            payment =>
+            {
+                payment.RecordBillingCountry("NG");
+                payment.MarkAsProcessing();
+                payment.RecordFraudAssessment(FraudDecision.Block, 95, "blocked", null);
+            },
+            createdAt: now.AddDays(-1));
+
+        // Held attempt from Portugal through paypal, today.
+        await AddPaymentAsync(
+            _tenantId,
+            payment =>
+            {
+                payment.RecordBillingCountry("PT");
+                payment.MarkAsProcessing();
+                payment.RecordFraudAssessment(FraudDecision.Review, 55, "held", null);
+            },
+            createdAt: now.AddHours(-1));
+
+        // Attempt without a recorded country through stripe, today.
+        await AddPaymentAsync(_tenantId, payment => payment.MarkAsProcessing(), createdAt: now.AddHours(-2));
+
+        var handler = new GetFraudStatisticsQueryHandler(_context);
+        var report = await handler.Handle(new GetFraudStatisticsQuery(), CancellationToken.None);
+
+        report.ByCountry.Should().BeEquivalentTo(new[]
+        {
+            new FraudStatisticsCountryRow { Country = "NG", Created = 1, ReviewHeld = 0, Blocked = 1 },
+            new FraudStatisticsCountryRow { Country = "PT", Created = 1, ReviewHeld = 1, Blocked = 0 },
+            new FraudStatisticsCountryRow { Country = "unknown", Created = 1, ReviewHeld = 0, Blocked = 0 }
+        });
+
+        report.ByPaymentMethod.Should().HaveCount(2);
+        report.ByPaymentMethod.Should().Contain(row => row.Provider == "stripe" && row.Created == 2);
+        report.ByPaymentMethod.Should().Contain(row => row.Provider == "paypal" && row.Created == 1 && row.ReviewHeld == 1);
+
+        report.DailyTrend.Should().HaveCount(2);
+        report.DailyTrend.Should().BeInAscendingOrder(point => point.Day);
+        report.DailyTrend.Should().Contain(point => point.Created == 1 && point.Blocked == 1);
+        report.DailyTrend.Should().Contain(point => point.Created == 2 && point.ReviewHeld == 1);
+    }
+
+    [Fact]
+    public void FraudStatisticsCsvComposer_Should_Export_All_Sections()
+    {
+        var report = new FraudStatisticsReport
+        {
+            GeneratedAtUtc = SystemClock.UtcNow,
+            FromUtc = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc),
+            ToUtc = new DateTime(2026, 10, 29, 0, 0, 0, DateTimeKind.Utc),
+            Totals = new FraudStatisticsTotals
+            {
+                PaymentsCreated = 10, Assessed = 9, Allowed = 5, ReviewHeld = 3, Blocked = 1, Succeeded = 6, Disputed = 1
+            },
+            Rates = new FraudStatisticsRates
+            {
+                FlaggedPercent = 44.44, BlockedPercent = 11.11, ChargebackPercent = 16.67, FalsePositivePercent = 50.0
+            },
+            Reviews = new FraudStatisticsReviews
+            {
+                PendingBacklog = 2, ResolvedInWindow = 2, ApprovedInWindow = 1, DeclinedInWindow = 1, AverageReviewHours = 3.5
+            },
+            TopSignals =
+            [
+                new FraudStatisticsSignal { SignalType = "Velocity.PaymentFrequency", Count = 4 }
+            ],
+            ByCountry =
+            [
+                new FraudStatisticsCountryRow { Country = "NG", Created = 2, ReviewHeld = 1, Blocked = 1 }
+            ],
+            ByPaymentMethod =
+            [
+                new FraudStatisticsMethodRow { Provider = "stripe", Created = 9, ReviewHeld = 3, Blocked = 1 }
+            ],
+            DailyTrend =
+            [
+                new FraudStatisticsTrendPoint { Day = new DateTime(2026, 10, 28, 0, 0, 0, DateTimeKind.Utc), Created = 5, ReviewHeld = 2, Blocked = 0 }
+            ]
+        };
+
+        var csv = System.Text.Encoding.UTF8.GetString(FraudStatisticsCsvComposer.Compose(report));
+
+        csv.Should().Contain("summary,totals,10,3,1");
+        csv.Should().Contain("summary,flagged_percent,44.44");
+        csv.Should().Contain("by_country,NG,2,1,1");
+        csv.Should().Contain("by_payment_method,stripe,9,3,1");
+        csv.Should().Contain("daily_trend,2026-10-28,5,2,0");
+        csv.Split('\n').First().Should().Be("section,key,created,review_held,blocked");
+    }
+
     private async Task AddPaymentAsync(
         Guid tenantId,
         Action<Payment> mutate,
