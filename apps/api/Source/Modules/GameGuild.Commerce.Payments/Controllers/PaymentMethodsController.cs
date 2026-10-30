@@ -83,7 +83,7 @@ public sealed class PaymentMethodsController(
     /// </summary>
     [HttpPost]
     [EndpointSummary("Register a payment method from a gateway token")]
-    [EndpointDescription("Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.")]
+    [EndpointDescription("Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider, and an optional MethodType hint (card, bank_account, paypal, apple_pay, google_pay, wallet) states the family the token vaults. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.")]
     [ProducesResponseType<PaymentMethodDto>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -121,7 +121,8 @@ public sealed class PaymentMethodsController(
                 body.Nickname,
                 body.BillingAddress,
                 body.OwnerUserId,
-                body.GatewayProvider),
+                body.GatewayProvider,
+                body.MethodType),
             ct).ConfigureAwait(false);
 
         if (!result.IsSuccess)
@@ -285,7 +286,8 @@ public sealed class PaymentMethodsController(
         string? Nickname = null,
         string? BillingAddress = null,
         Guid? OwnerUserId = null,
-        string? GatewayProvider = null);
+        string? GatewayProvider = null,
+        string? MethodType = null);
 
     /// <summary>
     ///     Request body for updating payment-method display fields.

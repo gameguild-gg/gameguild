@@ -102,7 +102,24 @@ public class PaymentMethodRegistryService(
             return Result.Failure<PaymentMethodDto>(Error.Validation("PaymentMethods.InvalidToken", GatewayPaymentMethodTokens.ValidationMessage));
         }
 
-        var gatewayDetails = await ResolveGatewayDetailsAsync(request.GatewayPaymentMethodId, gatewayProvider, cancellationToken).ConfigureAwait(false);
+        // Optional method-type hint (issue #414): gateways whose tokens are opaque
+        // (Braintree, Adyen, Authorize.Net) expose no server-side metadata lookup, so the
+        // registrant states which family the token vaults (e.g. an Apple Pay token
+        // provisioned client-side). Fail closed: unknown hints are rejected, never
+        // guessed. Stripe ignores the hint — its API lookup is authoritative.
+        string? methodTypeHint = null;
+        if (!string.IsNullOrWhiteSpace(request.MethodType))
+        {
+            methodTypeHint = NormalizeMethodTypeHint(request.MethodType);
+            if (methodTypeHint is null)
+            {
+                return Result.Failure<PaymentMethodDto>(Error.Validation(
+                    "PaymentMethods.InvalidMethodType",
+                    $"MethodType '{request.MethodType}' is not a supported payment method family. Use one of: {string.Join(", ", SupportedMethodTypeHints)}."));
+            }
+        }
+
+        var gatewayDetails = await ResolveGatewayDetailsAsync(request.GatewayPaymentMethodId, gatewayProvider, methodTypeHint, cancellationToken).ConfigureAwait(false);
         if (gatewayDetails is null)
         {
             return Result.Failure<PaymentMethodDto>(Error.Validation(
@@ -168,7 +185,7 @@ public class PaymentMethodRegistryService(
                 "No billing owner could be resolved for the checkout payment method."));
         }
 
-        var gatewayDetails = await ResolveGatewayDetailsAsync(gatewayPaymentMethodId, checkoutGatewayProvider, cancellationToken).ConfigureAwait(false);
+        var gatewayDetails = await ResolveGatewayDetailsAsync(gatewayPaymentMethodId, checkoutGatewayProvider, methodTypeHint: null, cancellationToken).ConfigureAwait(false);
         if (gatewayDetails is null)
         {
             // Checkout already succeeded at the gateway; a metadata lookup failure must not
@@ -556,15 +573,22 @@ public class PaymentMethodRegistryService(
     private async Task<GatewayPaymentMethodDetails?> ResolveGatewayDetailsAsync(
         string gatewayPaymentMethodId,
         string gatewayProvider,
+        string? methodTypeHint,
         CancellationToken cancellationToken)
     {
-        // Gateway-aware resolution (issue #413): Stripe tokens are verified against the
-        // Stripe API as before; the other registered gateways tokenize client-side and
-        // expose no server-side metadata lookup, so their tokens register typed as card
-        // without display metadata — mirroring the established checkout fallback.
+        // Gateway-aware resolution (issue #413/#414): Stripe tokens are verified against the
+        // Stripe API as before (its type report is authoritative); the other registered
+        // gateways tokenize client-side and expose no server-side metadata lookup. For
+        // those, the family is inferred — PayPal tokens are always billing agreements,
+        // opaque tokens take the registrant's explicit method-type hint (e.g. an Apple Pay
+        // or Google Pay token vaulted at Braintree/Adyen) and default to card otherwise —
+        // mirroring the established checkout fallback.
         if (!string.Equals(gatewayProvider, GatewayProviderStripe, StringComparison.OrdinalIgnoreCase))
         {
-            return new GatewayPaymentMethodDetails("card", null, null, null, null, null, null, null, null);
+            var inferredType = gatewayProvider is GatewayProviderIds.PayPal
+                ? "paypal"
+                : methodTypeHint ?? "card";
+            return new GatewayPaymentMethodDetails(inferredType, null, null, null, null, null, null, null, null);
         }
 
         var result = await stripeCustomerService
@@ -587,9 +611,31 @@ public class PaymentMethodRegistryService(
     {
         "card" => PaymentMethodType.Card,
         "us_bank_account" or "bank_account" or "sepa_debit" => PaymentMethodType.BankAccount,
-        "paypal" or "apple_pay" or "google_pay" or "link" => PaymentMethodType.Wallet,
+        "paypal" => PaymentMethodType.PayPal,
+        "apple_pay" => PaymentMethodType.ApplePay,
+        "google_pay" => PaymentMethodType.GooglePay,
+        "link" => PaymentMethodType.Wallet,
         _ => PaymentMethodType.Card
     };
+
+    /// <summary>
+    ///     Method-type hint families accepted on registration (issue #414) for gateways
+    ///     whose tokens carry no server-side metadata.
+    /// </summary>
+    public static readonly string[] SupportedMethodTypeHints =
+    [
+        "card", "bank_account", "us_bank_account", "paypal", "apple_pay", "google_pay", "wallet"
+    ];
+
+    /// <summary>
+    ///     Normalizes a method-type hint to its gateway type string, or null when the hint
+    ///     names no supported family (fail closed — never silently coerced).
+    /// </summary>
+    internal static string? NormalizeMethodTypeHint(string? methodTypeHint)
+    {
+        var normalized = methodTypeHint?.Trim().ToLowerInvariant();
+        return SupportedMethodTypeHints.Contains(normalized) ? normalized : null;
+    }
 
     private static bool TryValidateActor(PaymentMethodActor actor, out Error error)
     {

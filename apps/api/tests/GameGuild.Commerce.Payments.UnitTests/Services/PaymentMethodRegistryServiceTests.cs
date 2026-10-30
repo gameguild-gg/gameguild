@@ -913,6 +913,125 @@ public class PaymentMethodRegistryServiceTests : IDisposable
         protector.Unprotect("pm_legacy_plaintext").Should().Be("pm_legacy_plaintext", "legacy plaintext values pass through unchanged");
     }
 
+    // ── Method-type breadth (issue #414: card, ACH, PayPal, Apple Pay, Google Pay) ──
+
+    [Fact]
+    public async Task Create_PayPalBillingAgreementToken_ShouldRegisterAsPayPalType()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, userId),
+            new CreatePaymentMethodRequest(tenantId, "B-4Y7891023X"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Type.Should().Be("PayPal");
+        result.Value.GatewayProvider.Should().Be("paypal");
+        _stripeCustomerService.Verify(
+            service => service.GetPaymentMethodAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never,
+            "PayPal tokens resolve their type from the token grammar, not a Stripe lookup");
+        _context.ChangeTracker.Clear();
+        var stored = await _context.Set<PaymentMethod>().SingleAsync(CancellationToken.None);
+        stored.Type.Should().Be(PaymentMethodType.PayPal);
+    }
+
+    [Theory]
+    [InlineData("apple_pay", PaymentMethodType.ApplePay)]
+    [InlineData("google_pay", PaymentMethodType.GooglePay)]
+    [InlineData("bank_account", PaymentMethodType.BankAccount)]
+    [InlineData("wallet", PaymentMethodType.Wallet)]
+    [InlineData("card", PaymentMethodType.Card)]
+    public async Task Create_OpaqueGatewayToken_WithMethodTypeHint_ShouldRegisterHintedType(string hint, PaymentMethodType expectedType)
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, userId),
+            new CreatePaymentMethodRequest(tenantId, "nonce-4711opaque", GatewayProvider: "braintree", MethodType: hint),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Type.Should().Be(expectedType.ToString());
+        result.Value.GatewayProvider.Should().Be("braintree");
+        _context.ChangeTracker.Clear();
+        var stored = await _context.Set<PaymentMethod>().SingleAsync(CancellationToken.None);
+        stored.Type.Should().Be(expectedType);
+    }
+
+    [Fact]
+    public async Task Create_OpaqueGatewayToken_WithoutHint_ShouldDefaultToCard()
+    {
+        var tenantId = Guid.NewGuid();
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, Guid.NewGuid()),
+            new CreatePaymentMethodRequest(tenantId, "nonce-0815opaque", GatewayProvider: "adyen"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Type.Should().Be("Card");
+    }
+
+    [Fact]
+    public async Task Create_UnknownMethodTypeHint_ShouldBeRejectedFailClosed()
+    {
+        var tenantId = Guid.NewGuid();
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, Guid.NewGuid()),
+            new CreatePaymentMethodRequest(tenantId, "nonce-4711opaque", GatewayProvider: "braintree", MethodType: "crypto"),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("PaymentMethods.InvalidMethodType");
+        _context.Set<PaymentMethod>().Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Create_StripeLookupWinsOverMethodTypeHint()
+    {
+        var tenantId = Guid.NewGuid();
+        SetupGatewayDetails("pm_hinted_card");
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, Guid.NewGuid()),
+            new CreatePaymentMethodRequest(tenantId, "pm_hinted_card", MethodType: "google_pay"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Type.Should().Be("Card", "the Stripe API lookup is authoritative and ignores the hint");
+    }
+
+    [Fact]
+    public async Task Create_HintIsNormalizedCaseAndWhitespaceInsensitive()
+    {
+        var tenantId = Guid.NewGuid();
+
+        var result = await _service.CreateAsync(
+            OwnerActor(tenantId, Guid.NewGuid()),
+            new CreatePaymentMethodRequest(tenantId, "nonce-4711opaque", GatewayProvider: "braintree", MethodType: "  Apple_Pay "),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Type.Should().Be("ApplePay");
+    }
+
+    [Theory]
+    [InlineData("card", "card")]
+    [InlineData("  BANK_ACCOUNT  ", "bank_account")]
+    [InlineData("Apple_Pay", "apple_pay")]
+    [InlineData("google pay", null)]
+    [InlineData("sepa", null)]
+    [InlineData("", null)]
+    public void NormalizeMethodTypeHint_ShouldWhitelistKnownFamilies(string hint, string? expected)
+    {
+        PaymentMethodRegistryService.NormalizeMethodTypeHint(hint).Should().Be(expected);
+    }
+
     private PaymentsPersistenceTestDbContext NewContext()
     {
         var options = new DbContextOptionsBuilder<PaymentsPersistenceTestDbContext>()
