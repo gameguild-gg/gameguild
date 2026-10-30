@@ -530,6 +530,21 @@ export class ToolRunner {
         argv = [tool, scriptPath];
       }
       console.log(`${LOG_PREFIX}   Injected Python script: ${scriptPath}`);
+      // html-minifier-terser is not shipped in the browser sysroot, so emcc's
+      // auto-enabled MINIFY_HTML (on at -O2+) would fail with a scary error.
+      // Disable it unless the caller explicitly requested MINIFY_HTML.
+      if (!argv.some((a) => /MINIFY_HTML/.test(a))) {
+        let minifierAvailable = false;
+        try {
+          minifierAvailable = !!(await this.vfs.fetchFile('/usr/lib/emscripten/node_modules/html-minifier-terser/package.json'));
+        } catch {
+          minifierAvailable = false;
+        }
+        if (!minifierAvailable) {
+          argv.push('-sMINIFY_HTML=0');
+          console.log(`${LOG_PREFIX}   Injected -sMINIFY_HTML=0 (html-minifier-terser unavailable in browser sysroot)`);
+        }
+      }
     }
 
     // Normalize linker library paths to canonical cache-lib locations.
@@ -1171,6 +1186,14 @@ export class ToolRunner {
 
     // Is this a Python-based tool (emcc/em++)?
     const isPythonTool = descriptor.modulePath.includes('python');
+    // Per-run capture file paths: python's file-backed stderr/stdout and the
+    // sys.exit wrapper's exit-code file are keyed per invocation so back-to-back
+    // runs can never leak output into each other's results (the shared
+    // write-through VFS makes fixed paths race-prone).
+    const pyCaptureId = isPythonTool ? Math.random().toString(36).slice(2, 10) : null;
+    const pyStderrLog = pyCaptureId ? `/tmp/.py_stderr_${pyCaptureId}.log` : '/tmp/stderr.log';
+    const pyStdoutLog = pyCaptureId ? `/tmp/.py_stdout_${pyCaptureId}.log` : '/tmp/stdout.log';
+    const pyExitCode = pyCaptureId ? `/tmp/.py_exit_${pyCaptureId}.txt` : null;
 
     // Is stdin provided? (interactive script mode vs build-tool mode)
     const isInteractive = !!options.stdin;
@@ -1189,6 +1212,13 @@ export class ToolRunner {
       // before flushing C stdio buffers).
       PYTHONUNBUFFERED: '1',
       ...(isPythonTool ? { EMCC_SKIP_SANITY_CHECK: '1' } : {}),
+      ...(isPythonTool
+        ? {
+            _EMCEPTION_STDERR_LOG: pyStderrLog,
+            _EMCEPTION_STDOUT_LOG: pyStdoutLog,
+            ...(pyExitCode ? { _EMCEPTION_EXIT_CODE: pyExitCode } : {}),
+          }
+        : {}),
       // Tell sitecustomize.py not to replace sys.stdout/sys.stderr
       // when running interactively — we need Emscripten's TTY I/O.
       ...(isInteractive ? { _EMCEPTION_INTERACTIVE: '1' } : {}),
@@ -1680,7 +1710,7 @@ if not _interactive:
         """File-backed stderr replacement since WASM fd 2 yields EBADF."""
         def write(self, s):
             try:
-                with open('/tmp/stderr.log', 'a') as f:
+                with open(os.environ.get('_EMCEPTION_STDERR_LOG') or '/tmp/stderr.log', 'a') as f:
                     f.write(str(s))
             except: pass
             return len(str(s))
@@ -1695,7 +1725,7 @@ if not _interactive:
         """File-backed stdout replacement since WASM fd 1 may be None/invalid."""
         def write(self, s):
             try:
-                with open('/tmp/stdout.log', 'a') as f:
+                with open(os.environ.get('_EMCEPTION_STDOUT_LOG') or '/tmp/stdout.log', 'a') as f:
                     f.write(str(s))
             except: pass
             return len(str(s))
@@ -1712,6 +1742,21 @@ if not _interactive:
 
     sys.stderr = _SafeStderr()
     sys.__stderr__ = sys.stderr
+    # Record the real exit status: the Asyncify-wrapped callMain loses it and
+    # EXITSTATUS is never set in WASM, so sys.exit writes it to a file the
+    # tool-runner reads post-run. emcc.py always routes through sys.exit.
+    _exit_log = os.environ.get('_EMCEPTION_EXIT_CODE')
+    if _exit_log:
+        _orig_exit = sys.exit
+
+        def _exit(code=0):
+            try:
+                _code_text = '0' if code is None else (str(int(code)) if isinstance(code, int) else '1')
+                with open(_exit_log, 'w') as f:
+                    f.write(_code_text)
+            except: pass
+            _orig_exit(code)
+        sys.exit = _exit
 else:
     # Interactive mode: Emscripten's TTY is wired to forward output to
     # the browser terminal, but CPython may set sys.stdout/sys.stderr to
@@ -2455,7 +2500,7 @@ sys.excepthook = _hook
 
         // Read Python stderr log (redirected from broken fd 2)
         try {
-          const stderrLog = new TextDecoder().decode(instance.FS.readFile('/tmp/stderr.log'));
+          const stderrLog = new TextDecoder().decode(instance.FS.readFile(pyStderrLog));
           if (stderrLog.length > 0) {
             console.log(`${LOG_PREFIX}   stderr.log:\n${stderrLog}`);
             for (const line of stderrLog.split('\n')) {
@@ -2471,7 +2516,7 @@ sys.excepthook = _hook
 
         // Read Python stdout log (when _SafeStdout was active, non-interactive mode)
         try {
-          const stdoutLog = new TextDecoder().decode(instance.FS.readFile('/tmp/stdout.log'));
+          const stdoutLog = new TextDecoder().decode(instance.FS.readFile(pyStdoutLog));
           if (stdoutLog.length > 0) {
             for (const line of stdoutLog.split('\n')) {
               if (line.length > 0) {
@@ -2494,6 +2539,24 @@ sys.excepthook = _hook
     // Process is done — let GC reclaim the WASM linear memory
     console.log(`${LOG_PREFIX}   Process complete, releasing WASM instance (total spawn: ${elapsed(tSpawn)})`);
 
+    // Read the exit code recorded by the sitecustomize sys.exit wrapper.
+    // The Asyncify-wrapped callMain loses the real status (EXITSTATUS is
+    // never set in WASM), so the file is authoritative when present.
+    // emcc.py routes its result through sys.exit(main()).
+    if (pyExitCode) {
+      try {
+        const exitCodeText = new TextDecoder().decode(instance.FS.readFile(pyExitCode)).trim();
+        if (exitCodeText.length > 0) {
+          const parsed = Number.parseInt(exitCodeText, 10);
+          if (Number.isFinite(parsed)) {
+            console.log(`${LOG_PREFIX}   Exit code from python capture: ${parsed} (callMain reported ${exitCode})`);
+            exitCode = parsed;
+          }
+        }
+      } catch {
+        /* not written — no wrapper or normal completion */
+      }
+    }
     return {
       exitCode,
       stdout: stdoutChunks.join('\n'),

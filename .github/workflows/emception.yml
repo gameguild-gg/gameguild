@@ -403,6 +403,7 @@ jobs:
           version-script: pnpm run version:emception
           commit-message: "chore(release): version Emception packages"
           pr-title: "chore(release): version Emception packages"
+          push-with-git-cli: true
 
       - name: Publish validated packages
         if: steps.changesets.outputs.has-changesets == 'false'
