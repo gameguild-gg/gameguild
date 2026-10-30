@@ -21,8 +21,11 @@ namespace GameGuild.Commerce.Payments;
 public sealed class PaymentMethodsController(
     ISender sender,
     IPaymentMethodService paymentMethodService,
-    IActorContextAccessor actorContextAccessor) : BaseApiController
+    IActorContextAccessor actorContextAccessor,
+    Microsoft.Extensions.Options.IOptions<PaymentMethodSecurityOptions> securityOptions) : BaseApiController
 {
+    private readonly PaymentMethodSecurityOptions _security = securityOptions.Value;
+
     /// <summary>
     ///     List registered payment methods (own methods; system admins see the whole tenant).
     /// </summary>
@@ -86,6 +89,12 @@ public sealed class PaymentMethodsController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Create([FromBody] CreatePaymentMethodRequestBody body, CancellationToken ct = default)
     {
+        var mfaGuard = RequireMfaStepUp("register a payment method");
+        if (mfaGuard is not null)
+        {
+            return mfaGuard;
+        }
+
         if (body.TenantId == Guid.Empty)
         {
             return BadRequest(new { error = "TenantId cannot be empty" });
@@ -135,6 +144,12 @@ public sealed class PaymentMethodsController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(Guid paymentMethodId, [FromBody] UpdatePaymentMethodRequestBody body, CancellationToken ct = default)
     {
+        var mfaGuard = RequireMfaStepUp("update a payment method");
+        if (mfaGuard is not null)
+        {
+            return mfaGuard;
+        }
+
         var result = await sender.Send(
             new UpdatePaymentMethodCommand(paymentMethodId, body.Nickname, body.BillingAddress),
             ct).ConfigureAwait(false);
@@ -154,6 +169,12 @@ public sealed class PaymentMethodsController(
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> SetDefault(Guid paymentMethodId, CancellationToken ct = default)
     {
+        var mfaGuard = RequireMfaStepUp("set the default payment method");
+        if (mfaGuard is not null)
+        {
+            return mfaGuard;
+        }
+
         var result = await sender.Send(new SetDefaultPaymentMethodCommand(paymentMethodId), ct).ConfigureAwait(false);
 
         return FromResult(result);
@@ -172,6 +193,12 @@ public sealed class PaymentMethodsController(
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Delete(Guid paymentMethodId, [FromBody] RemovePaymentMethodRequestBody? body = null, CancellationToken ct = default)
     {
+        var mfaGuard = RequireMfaStepUp("remove a payment method");
+        if (mfaGuard is not null)
+        {
+            return mfaGuard;
+        }
+
         if (body?.Confirm != true)
         {
             return BadRequest(new { error = "Removing a payment method requires confirmation. Re-issue the request with confirm=true." });
@@ -179,6 +206,72 @@ public sealed class PaymentMethodsController(
 
         var result = await sender.Send(new RemovePaymentMethodCommand(paymentMethodId, body.Confirm), ct).ConfigureAwait(false);
 
+        return FromResult(result);
+    }
+
+    /// <summary>
+    ///     Current micro-deposit verification state of a bank-account payment method.
+    /// </summary>
+    [HttpGet("{paymentMethodId:guid}/bank-verification")]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
+    [EndpointSummary("Get bank-account verification state")]
+    [EndpointDescription("Returns the micro-deposit verification state of a saved bank-account payment method (none, pending, verified, expired or locked) with the challenge deadline and remaining attempts. Owner or system administrator only.")]
+    [ProducesResponseType<BankAccountVerificationStatusDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetBankVerification(Guid paymentMethodId, CancellationToken ct = default)
+    {
+        var result = await sender.Send(new GetBankAccountVerificationQuery(paymentMethodId), ct).ConfigureAwait(false);
+        return FromResult(result);
+    }
+
+    /// <summary>
+    ///     Initiate micro-deposit verification: two random deposits ($0.01-$0.99) are
+    ///     generated; only salted hashes are stored.
+    /// </summary>
+    [HttpPost("{paymentMethodId:guid}/bank-verification/initiate")]
+    [EndpointSummary("Initiate micro-deposit verification")]
+    [EndpointDescription(
+        "Generates two random micro-deposits ($0.01-$0.99) for a saved bank-account payment method and returns them once (only salted hashes are stored). The owner has 3 business days and at most 3 failed echo attempts. Idempotent while a challenge is open. Subject to the configurable MFA step-up policy.")]
+    [ProducesResponseType<BankAccountVerificationInitiationDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> InitiateBankVerification(Guid paymentMethodId, CancellationToken ct = default)
+    {
+        var mfaGuard = RequireMfaStepUp("initiate bank-account verification");
+        if (mfaGuard is not null)
+        {
+            return mfaGuard;
+        }
+
+        var result = await sender.Send(new InitiateBankAccountVerificationCommand(paymentMethodId), ct).ConfigureAwait(false);
+        return FromResult(result);
+    }
+
+    /// <summary>
+    ///     Echo the two observed micro-deposit amounts to verify the bank account.
+    /// </summary>
+    [HttpPost("{paymentMethodId:guid}/bank-verification/verify")]
+    [EndpointSummary("Verify bank-account micro-deposits")]
+    [EndpointDescription(
+        "Echoes the two micro-deposit amounts observed on the bank statement. Both must match within the 3-business-day deadline and the 3-attempt cap; success marks the bank account verified and therefore chargeable. Subject to the configurable MFA step-up policy.")]
+    [ProducesResponseType<BankAccountVerificationStatusDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> VerifyBankDeposits(Guid paymentMethodId, [FromBody] VerifyBankDepositsRequestBody body, CancellationToken ct = default)
+    {
+        var mfaGuard = RequireMfaStepUp("verify bank-account deposits");
+        if (mfaGuard is not null)
+        {
+            return mfaGuard;
+        }
+
+        var result = await sender.Send(
+            new VerifyBankAccountDepositsCommand(paymentMethodId, body.Deposit1Amount, body.Deposit2Amount),
+            ct).ConfigureAwait(false);
         return FromResult(result);
     }
 
@@ -203,6 +296,37 @@ public sealed class PaymentMethodsController(
     ///     Request body for removing a payment method (destructive action; issue #414).
     /// </summary>
     public sealed record RemovePaymentMethodRequestBody(bool Confirm = false);
+
+    /// <summary>
+    ///     Request body for echoing the two observed micro-deposit amounts (issue #414).
+    /// </summary>
+    public sealed record VerifyBankDepositsRequestBody(decimal Deposit1Amount, decimal Deposit2Amount);
+
+    /// <summary>
+    ///     Enforces the configurable MFA step-up policy (issue #414): when
+    /// <c>Payments:PaymentMethodSecurity:RequireMfaForChanges</c> is enabled, mutating
+    ///     payment-method endpoints require an MFA-verified session (<c>mfa_verified</c>) for
+    ///     non-system-admin actors. Returns a 403 result when the policy blocks the request,
+    ///     null otherwise. Fail closed: policy enabled + no MFA claim = refused.
+    /// </summary>
+    private IActionResult? RequireMfaStepUp(string action)
+    {
+        if (!_security.RequireMfaForChanges)
+        {
+            return null;
+        }
+
+        var actorContext = actorContextAccessor.ActorContext;
+        if (actorContext.IsSystemAdmin || actorContext.IsMfaVerified)
+        {
+            return null;
+        }
+
+        return Problem(
+            statusCode: StatusCodes.Status403Forbidden,
+            title: "MFA verification required",
+            detail: $"Payment-method changes require a multi-factor-verified session. Complete an MFA challenge, then retry to {action}.");
+    }
 
     #region Private Methods
 
