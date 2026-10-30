@@ -10,9 +10,20 @@ namespace GameGuild.Identity.Authorization;
 public sealed class PermissionMutationTransaction(IApplicationDbContext context) : IPermissionMutationExecutor
 {
     /// <inheritdoc />
+    public Task<Result<T>> ExecuteAsync<T>(Guid actorId, Guid? tenantId,
+        Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken) =>
+        ExecuteAsync(actorId, tenantId, operation, cancellationToken, null, false);
+
+    /// <inheritdoc />
+    public Task<Result<T>> ExecuteAsync<T>(Guid actorId, Guid? tenantId,
+        Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
+        Func<T, bool>? shouldCommit) =>
+        ExecuteAsync(actorId, tenantId, operation, cancellationToken, shouldCommit, false);
+
+    /// <inheritdoc />
     public async Task<Result<T>> ExecuteAsync<T>(Guid actorId, Guid? tenantId,
         Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
-        Func<T, bool>? shouldCommit = null, bool useEntityTenantScope = false)
+        Func<T, bool>? shouldCommit, bool useEntityTenantScope)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (context is not DbContext db || !db.Database.IsRelational())

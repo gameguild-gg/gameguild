@@ -11,6 +11,15 @@ public interface IPermissionMutationExecutor
     ///     Caller-owned transactions use savepoints and remain owned by the caller.
     /// </summary>
     Task<Result<T>> ExecuteAsync<T>(Guid actorId, Guid? tenantId,
+        Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken);
+
+    /// <summary>Executes a mutation with an additional result-acceptance predicate.</summary>
+    Task<Result<T>> ExecuteAsync<T>(Guid actorId, Guid? tenantId,
         Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
-        Func<T, bool>? shouldCommit = null, bool useEntityTenantScope = false);
+        Func<T, bool>? shouldCommit);
+
+    /// <summary>Executes a mutation with explicit acceptance and entity-tenant audit-scope policies.</summary>
+    Task<Result<T>> ExecuteAsync<T>(Guid actorId, Guid? tenantId,
+        Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
+        Func<T, bool>? shouldCommit, bool useEntityTenantScope);
 }

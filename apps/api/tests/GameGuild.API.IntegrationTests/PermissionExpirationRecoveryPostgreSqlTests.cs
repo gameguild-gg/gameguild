@@ -84,7 +84,7 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests(ApiPostgreSqlFix
                 {
                     reachedPersistedMutation = await db.Set<TenantPermission>().AsNoTracking()
                         .AnyAsync(row => row.Id == grant.Id && !row.IsActive, token);
-                    throw new InjectedExpirationFailure();
+                    throw new InjectedExpirationFailureException();
                 });
             var versionStore = new Mock<ITenantSecurityVersionStore>(MockBehavior.Strict);
             versionStore.Setup(store => store.IncrementVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -93,7 +93,7 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests(ApiPostgreSqlFix
                     await realVersions.IncrementVersionAsync(key, token);
                     reachedPersistedMutation = await db.Set<PermissionAuditLog>()
                         .AnyAsync(row => row.ResourceId == grant.Id && row.OperationType == PermissionOperationType.Expire, token);
-                    throw new InjectedExpirationFailure();
+                    throw new InjectedExpirationFailureException();
                 });
             var audit = boundary == "audit"
                 ? new PermissionAuditService(auditRepository.Object, NullLogger<PermissionAuditService>.Instance)
@@ -185,7 +185,7 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests(ApiPostgreSqlFix
             db.Add(earlier); await db.SaveChangesAsync();
             var auditRepository = new Mock<IPermissionAuditLogRepository>(MockBehavior.Strict);
             auditRepository.Setup(repository => repository.CreateAsync(It.IsAny<PermissionAuditLog>(), It.IsAny<CancellationToken>()))
-                .ThrowsAsync(new InjectedExpirationFailure());
+                .ThrowsAsync(new InjectedExpirationFailureException());
             var audit = new PermissionAuditService(auditRepository.Object, NullLogger<PermissionAuditService>.Instance);
             var failure = await Record.ExceptionAsync(() => Service(services, [grant.Id], audit).ProcessExpiredAsync());
             Assert.NotNull(failure);
@@ -202,6 +202,39 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests(ApiPostgreSqlFix
         Assert.True(await persisted.Set<TenantPermission>().AnyAsync(row => row.Id == earlier.Id));
         Assert.Equal(1, await persisted.Set<AuditLog>().CountAsync(row =>
             row.ResourceId == earlier.Id.ToString() && row.Category == AuditCategory.Permission));
+    }
+
+    [Fact]
+    public async Task ReminderCooldownFirstPageDoesNotHideLaterEligibleGrantAcrossFreshScopes()
+    {
+        await using var host = await CreateHostAsync();
+        var tenant = Guid.NewGuid();
+        var grants = Enumerable.Range(1, 3).Select(index => Grant(tenant,
+            Guid.Parse($"00000000-0000-0000-0000-{index:D12}"))).ToArray();
+        foreach (var grant in grants) { grant.ExpiresAt = DateTime.UtcNow.Date.AddDays(1); }
+        foreach (var grant in grants.Take(2))
+        {
+            grant.Metadata = new Dictionary<string, object>
+            {
+                ["expirationReminderAt"] = DateTime.UtcNow.AddMinutes(-1).ToString("O")
+            };
+        }
+        await SeedAsync(host.Factory, grants, []);
+        var ids = grants.Select(grant => grant.Id).ToArray();
+        await using (var cycle = host.Factory.Services.CreateAsyncScope())
+        {
+            Assert.Equal(1, await Service(cycle.ServiceProvider, ids, batchSize: 2).SendUpcomingExpirationRemindersAsync());
+        }
+        await using (var next = host.Factory.Services.CreateAsyncScope())
+        {
+            Assert.Equal(0, await Service(next.ServiceProvider, ids, batchSize: 2).SendUpcomingExpirationRemindersAsync());
+        }
+        await using var verify = host.Factory.Services.CreateAsyncScope();
+        var persisted = await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+            .Set<TenantPermission>().AsNoTracking().SingleAsync(grant => grant.Id == grants[2].Id);
+        Assert.True(persisted.IsActive);
+        Assert.True(persisted.Metadata?.ContainsKey("expirationReminderAt") == true);
+        Assert.False(persisted.Metadata?.ContainsKey("expirationProcessedAt") == true);
     }
 
     private static TenantPermission Grant(Guid? tenant, Guid? id = null) => new()
@@ -230,6 +263,9 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests(ApiPostgreSqlFix
         repository.Setup(value => value.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
             .Returns(async (CancellationToken token) => (await real.GetExpiredPermissionsAsync(token))
                 .Where(grant => ids.Contains(grant.Id)).OrderBy(grant => grant.Id).ToList());
+        repository.Setup(value => value.GetExpiringBeforeAsync(It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .Returns(async (DateTime cutoff, CancellationToken token) => (await real.GetExpiringBeforeAsync(cutoff, token))
+                .Where(grant => ids.Contains(grant.Id)).OrderBy(grant => grant.ExpiresAt).ThenBy(grant => grant.Id).ToList());
         repository.Setup(value => value.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
             .Returns((TenantPermission grant, CancellationToken token) => real.UpdateAsync(grant, token));
         var publisher = new Mock<IPublisher>(MockBehavior.Strict);
@@ -300,5 +336,5 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests(ApiPostgreSqlFix
         }
     }
 
-    private sealed class InjectedExpirationFailure : Exception { }
+    private sealed class InjectedExpirationFailureException : Exception { }
 }
