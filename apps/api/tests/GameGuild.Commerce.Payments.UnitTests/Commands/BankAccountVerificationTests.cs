@@ -150,7 +150,9 @@ public class BankAccountVerificationTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Status.Should().Be("verified");
-        (await _verifications.GetLatestAsync(_bankAccount.Id)).IsVerified.Should().BeTrue();
+        var verifiedRow = await _verifications.GetLatestAsync(_bankAccount.Id);
+        verifiedRow.Should().NotBeNull();
+        verifiedRow!.IsVerified.Should().BeTrue();
     }
 
     [Fact]
@@ -166,8 +168,9 @@ public class BankAccountVerificationTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Code.Should().Be("PaymentMethods.BankVerificationAmountsMismatched");
         var row = await _verifications.GetLatestAsync(_bankAccount.Id);
-        row.FailedAttempts.Should().Be(1);
-        row.IsVerified.Should().BeFalse();
+        row.Should().NotBeNull();
+        row!.FailedAttempts.Should().Be(1);
+        row!.IsVerified.Should().BeFalse();
     }
 
     [Fact]
@@ -183,8 +186,9 @@ public class BankAccountVerificationTests
         }
 
         var row = await _verifications.GetLatestAsync(_bankAccount.Id);
-        row.FailedAttempts.Should().Be(3);
-        row.IsLocked.Should().BeTrue();
+        row.Should().NotBeNull();
+        row!.FailedAttempts.Should().Be(3);
+        row!.IsLocked.Should().BeTrue();
 
         var status = await new GetBankAccountVerificationQueryHandler(_paymentMethods.Object, _verifications, _actorAccessor.Object)
             .Handle(new GetBankAccountVerificationQuery(_bankAccount.Id), CancellationToken.None);
