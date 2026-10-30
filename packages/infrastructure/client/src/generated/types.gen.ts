@@ -2579,6 +2579,35 @@ export interface CommercePaymentsAppliedDiscount {
   type?: CommercePaymentsDiscountType;
 }
 
+/** Initiation result (issue #414): the challenge status plus the two generated deposit
+amounts. The amounts are surfaced once here — the same visibility a gateway sandbox
+gives the operator — and never again: the stored challenge keeps only salted hashes. */
+export interface CommercePaymentsBankAccountVerificationInitiationDto {
+  /** First generated deposit amount. */
+  deposit1Amount?: number;
+  /** Second generated deposit amount. */
+  deposit2Amount?: number;
+  status?: CommercePaymentsBankAccountVerificationStatusDto;
+}
+
+/** Verification state of a saved bank-account payment method (issue #414). */
+export interface CommercePaymentsBankAccountVerificationStatusDto {
+  /** UTC deadline (3 business days); null when no challenge exists. */
+  expiresAtUtc?: string | null;
+  /** Failed echo attempts against the current challenge. */
+  failedAttempts?: number;
+  /** UTC instant the two deposits were generated; null when no challenge exists. */
+  initiatedAtUtc?: string | null;
+  /** Bank-account payment method the challenge belongs to. */
+  paymentMethodId?: string;
+  /** Echo attempts left before the challenge locks. */
+  remainingAttempts?: number;
+  /** One of `none`, `pending`, `verified`, `expired`, `locked`. */
+  status?: string | null;
+  /** UTC instant of the successful echo; null until verified. */
+  verifiedAtUtc?: string | null;
+}
+
 /** Data model for Commerce Payments Billing Charges Controller+Cancel Billing Charge Request. */
 export interface CommercePaymentsBillingChargesControllerCancelBillingChargeInput {
   canceledBy?: string | null;
@@ -3803,6 +3832,12 @@ export interface CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequ
 export interface CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBody {
   billingAddress?: string | null;
   nickname?: string | null;
+}
+
+/** Request body for echoing the two observed micro-deposit amounts (issue #414). */
+export interface CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody {
+  deposit1Amount?: number;
+  deposit2Amount?: number;
 }
 
 /** Payment success and failed-payment recovery metrics for an inclusive window (issue #403).
@@ -26725,6 +26760,8 @@ export let CommercePaymentsAccountCreditTransactionSchema: z.ZodType<CommercePay
 export let CommercePaymentsAccountCreditTransactionTypeSchema: z.ZodType<CommercePaymentsAccountCreditTransactionType>;
 export let CommercePaymentsAccountCreditTypeSchema: z.ZodType<CommercePaymentsAccountCreditType>;
 export let CommercePaymentsAppliedDiscountSchema: z.ZodType<CommercePaymentsAppliedDiscount>;
+export let CommercePaymentsBankAccountVerificationInitiationDtoSchema: z.ZodType<CommercePaymentsBankAccountVerificationInitiationDto>;
+export let CommercePaymentsBankAccountVerificationStatusDtoSchema: z.ZodType<CommercePaymentsBankAccountVerificationStatusDto>;
 export let CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCancelBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCreateBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerRefundBillingChargeInput>;
@@ -26821,6 +26858,7 @@ export let CommercePaymentsPaymentMethodDtoSchema: z.ZodType<CommercePaymentsPay
 export let CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBodySchema: z.ZodType<CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody>;
 export let CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBodySchema: z.ZodType<CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody>;
 export let CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBodySchema: z.ZodType<CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBody>;
+export let CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBodySchema: z.ZodType<CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody>;
 export let CommercePaymentsPaymentRecoveryMetricsSchema: z.ZodType<CommercePaymentsPaymentRecoveryMetrics>;
 export let CommercePaymentsPaymentResultSchema: z.ZodType<CommercePaymentsPaymentResult>;
 export let CommercePaymentsPaymentRetryAttemptDtoSchema: z.ZodType<CommercePaymentsPaymentRetryAttemptDto>;
@@ -31198,6 +31236,26 @@ CommercePaymentsAppliedDiscountSchema = z.object({
   type: z.lazy(() => CommercePaymentsDiscountTypeSchema).optional(),
 });
 
+/** Zod schema for CommercePaymentsBankAccountVerificationInitiationDto. Initiation result (issue #414): the challenge status plus the two generated deposit
+amounts. The amounts are surfaced once here — the same visibility a gateway sandbox
+gives the operator — and never again: the stored challenge keeps only salted hashes. */
+CommercePaymentsBankAccountVerificationInitiationDtoSchema = z.object({
+  deposit1Amount: z.number().optional(),
+  deposit2Amount: z.number().optional(),
+  status: z.lazy(() => CommercePaymentsBankAccountVerificationStatusDtoSchema).optional(),
+});
+
+/** Zod schema for CommercePaymentsBankAccountVerificationStatusDto. Verification state of a saved bank-account payment method (issue #414). */
+CommercePaymentsBankAccountVerificationStatusDtoSchema = z.object({
+  expiresAtUtc: z.string().datetime().nullable().optional(),
+  failedAttempts: z.number().int().optional(),
+  initiatedAtUtc: z.string().datetime().nullable().optional(),
+  paymentMethodId: z.string().uuid().optional(),
+  remainingAttempts: z.number().int().optional(),
+  status: z.string().nullable().optional(),
+  verifiedAtUtc: z.string().datetime().nullable().optional(),
+});
+
 /** Zod schema for CommercePaymentsBillingChargesControllerCancelBillingChargeInput. Data model for Commerce Payments Billing Charges Controller+Cancel Billing Charge Request. */
 CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema = z.object({
   canceledBy: z.string().uuid().nullable().optional(),
@@ -32140,6 +32198,12 @@ CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBodySchema = z
 CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBodySchema = z.object({
   billingAddress: z.string().nullable().optional(),
   nickname: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody. Request body for echoing the two observed micro-deposit amounts (issue #414). */
+CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBodySchema = z.object({
+  deposit1Amount: z.number().optional(),
+  deposit2Amount: z.number().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentRecoveryMetrics. Payment success and failed-payment recovery metrics for an inclusive window (issue #403).
@@ -53185,6 +53249,10 @@ export type CommerceOrdersOrderLineItem = CommerceOrdersOrderLineItemDto;
 export { CommerceOrdersOrderLineItemDtoSchema as CommerceOrdersOrderLineItemSchema };
 export type CommerceOrdersProductRecommendations = CommerceOrdersProductRecommendationsDto;
 export { CommerceOrdersProductRecommendationsDtoSchema as CommerceOrdersProductRecommendationsSchema };
+export type CommercePaymentsBankAccountVerificationInitiation = CommercePaymentsBankAccountVerificationInitiationDto;
+export { CommercePaymentsBankAccountVerificationInitiationDtoSchema as CommercePaymentsBankAccountVerificationInitiationSchema };
+export type CommercePaymentsBankAccountVerificationStatus = CommercePaymentsBankAccountVerificationStatusDto;
+export { CommercePaymentsBankAccountVerificationStatusDtoSchema as CommercePaymentsBankAccountVerificationStatusSchema };
 export type CommercePaymentsFxRate = CommercePaymentsFxRateDto;
 export { CommercePaymentsFxRateDtoSchema as CommercePaymentsFxRateSchema };
 export type CommercePaymentsFxRateSyncRun = CommercePaymentsFxRateSyncRunDto;
