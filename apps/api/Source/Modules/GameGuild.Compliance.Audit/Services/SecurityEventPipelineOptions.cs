@@ -41,6 +41,15 @@ public sealed class SecurityEventPipelineOptions
     /// <summary>Permission records changed in one committed operation before a bulk-change alert is raised.</summary>
     [Range(2, 100000)] public int BulkPermissionChangeAlertThreshold { get; set; } = 25;
 
+    /// <summary>
+    ///     Webhook security failures inside the window before a webhook failure-burst alert is raised
+    ///     (issue #408: alert on more than 5 failed webhooks in 1 hour; the alert fires beyond the threshold).
+    /// </summary>
+    [Range(1, 1000)] public int WebhookFailureAlertThreshold { get; set; } = 5;
+
+    /// <summary>Window, in minutes, used for webhook failure-burst detection (issue #408).</summary>
+    [Range(1, 1440)] public int WebhookFailureWindowMinutes { get; set; } = 60;
+
     /// <summary>Interval at which the retention enforcement service applies tenant retention policies.</summary>
     public TimeSpan RetentionEnforcementInterval { get; set; } = TimeSpan.FromHours(24);
 
@@ -107,6 +116,16 @@ public static class SecurityEventPipelineOptionsConfiguration
         if (int.TryParse(section[nameof(SecurityEventPipelineOptions.BulkPermissionChangeAlertThreshold)], out var bulkThreshold))
         {
             options.BulkPermissionChangeAlertThreshold = Math.Clamp(bulkThreshold, 2, 100000);
+        }
+
+        if (int.TryParse(section[nameof(SecurityEventPipelineOptions.WebhookFailureAlertThreshold)], out var webhookThreshold))
+        {
+            options.WebhookFailureAlertThreshold = Math.Clamp(webhookThreshold, 1, 1000);
+        }
+
+        if (int.TryParse(section[nameof(SecurityEventPipelineOptions.WebhookFailureWindowMinutes)], out var webhookWindow))
+        {
+            options.WebhookFailureWindowMinutes = Math.Clamp(webhookWindow, 1, 1440);
         }
 
         if (int.TryParse(section["RetentionEnforcementIntervalHours"], out var enforcementHours))
