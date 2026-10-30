@@ -414,14 +414,21 @@ jobs:
       - name: Tag the published Emception release
         if: steps.changesets.outputs.has-changesets == 'false'
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="$(node -p "require('./tools/emception/packages/core/package.json').version")"
           TAG="emception-v${VERSION}"
           if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-            echo "${TAG} already exists; skipping."
+            echo "${TAG} already exists; skipping tag creation."
+          else
+            git config user.name "gameguild-release-bot"
+            git config user.email "noreply@gameguild.gg"
+            git tag "${TAG}"
+          fi
+          git push origin "${TAG}"
+          if gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "Release ${TAG} already exists; skipping."
             exit 0
           fi
-          git config user.name "gameguild-release-bot"
-          git config user.email "noreply@gameguild.gg"
-          git tag "${TAG}"
-          git push origin "${TAG}"
+          gh release create "${TAG}" --repo "${GITHUB_REPOSITORY}" --title "${TAG}" --latest --notes "Emception toolchain release ${VERSION} — published to npm and verified on jsDelivr. All emception packages share this version; see the merged version PR for the changelog."
