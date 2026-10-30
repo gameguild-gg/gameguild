@@ -39,4 +39,16 @@ public class WebhookRetryPolicyTests
 
         policy.CalculateDelaySeconds(2).Should().Be(10);
     }
+
+    [Fact]
+    public void RetryWorkerDefaults_Should_Match_The_Issue_408_Contract()
+    {
+        var settings = new WebhookRetryWorkerSettings();
+
+        settings.PollIntervalSeconds.Should().Be(30, "the worker polls every 30 seconds");
+        settings.BatchSize.Should().Be(50, "each cycle processes up to 50 webhooks (issue #408)");
+        settings.MaxRetryAttempts.Should().Be(5);
+        settings.RetryScheduleMinutes.Should().Equal(1, 5, 15, 60, 360);
+        settings.TerminalRetryScheduleMinutes.Should().Be(1440);
+    }
 }
