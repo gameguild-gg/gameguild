@@ -76,7 +76,10 @@ export function TurnstileWidget({ onToken, action, id }: TurnstileWidgetProps) {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const notifiedDisabled = useRef(false);
   const onTokenRef = useRef(onToken);
-  onTokenRef.current = onToken;
+  // Render-phase ref writes are forbidden by react-hooks/refs.
+  useEffect(() => {
+    onTokenRef.current = onToken;
+  });
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
