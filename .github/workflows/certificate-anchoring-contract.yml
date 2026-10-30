@@ -51,7 +51,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install pinned Foundry
-        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1
+        uses: foundry-rs/foundry-toolchain@dba66c27052e63476d886f22216e119ba7e615bf # v1
         with:
           version: v1.8.5
           cache: "false"
@@ -86,7 +86,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-dotnet
       - name: Install pinned Foundry
-        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1
+        uses: foundry-rs/foundry-toolchain@dba66c27052e63476d886f22216e119ba7e615bf # v1
         with:
           version: v1.8.5
           cache: "false"
