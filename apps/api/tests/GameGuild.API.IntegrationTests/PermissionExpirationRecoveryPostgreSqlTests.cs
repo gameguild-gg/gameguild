@@ -31,9 +31,13 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests(ApiPostgreSqlFix
         var grants = Enumerable.Range(1, 6).Select(index => Grant(
             index <= 2 ? tenantA : index <= 4 ? tenantB : null,
             Guid.Parse($"00000000-0000-0000-0000-{index:D12}"))).ToArray();
-        grants[5].SoftDelete();
         var ids = grants.Select(grant => grant.Id).ToArray();
         var baselines = await SeedAsync(host.Factory, grants, [tenantA, tenantB, Guid.Empty]);
+        await using (var prepareDeletion = host.Factory.Services.CreateAsyncScope())
+        {
+            Assert.True(await prepareDeletion.ServiceProvider.GetRequiredService<ITenantPermissionRepository>()
+                .DeleteAsync(grants[5].Id));
+        }
 
         // A stable ordering is a legal repository result. Keep it deterministic while
         // retaining the real repository's PostgreSQL query, filtering and writes.
