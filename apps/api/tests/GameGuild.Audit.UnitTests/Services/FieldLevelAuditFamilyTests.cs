@@ -369,6 +369,39 @@ public sealed class FieldLevelAuditFamilyTests
         }
     }
 
+    // ── Batch read capture (criterion 1 read surface) ─────────────────────────
+
+    [Fact]
+    public async Task RecordingAFieldReadBatchPersistsClassifiedRowsWithoutValues()
+    {
+        await using var context = CreateContext();
+        var service = new FieldAccessAuditService(context, TimeProvider.System);
+        var userA = Guid.NewGuid();
+        var userB = Guid.NewGuid();
+
+        var recorded = await service.RecordFieldReadsAsync(
+            TenantId, UserId, "User",
+            [
+                new FieldReadObservation(userA, "Email", "a@example.com"),
+                new FieldReadObservation(userA, "Email", "a@example.com"), // duplicates collapse to one row
+                new FieldReadObservation(userA, "Bio", null), // non-sensitive fields are recorded too
+                new FieldReadObservation(userB, "PhoneNumber", "+15550100")
+            ],
+            ipAddress: null, userAgent: null, requestId: "req-9", apiEndpoint: "/v1/users");
+
+        recorded.Should().Be(3);
+        var rows = await context.Set<FieldAccessAudit>().ToListAsync();
+        rows.Should().HaveCount(3);
+        rows.Should().OnlyContain(row => row.AccessType == FieldAccessType.Read);
+        rows.Should().OnlyContain(row => row.RequestId == "req-9" && row.ApiEndpoint == "/v1/users");
+        rows.Should().Contain(row => row.EntityId == userA && row.FieldName == "Email" && row.IsSensitiveField);
+        rows.Should().Contain(row => row.EntityId == userB && row.FieldName == "PhoneNumber" && row.IsSensitiveField);
+        // Read observations record the fact and context of the access, never field values.
+        rows.Should().OnlyContain(row =>
+            row.OldValue == null && row.NewValue == null
+            && row.MaskedOldValue == null && row.MaskedNewValue == null);
+    }
+
     // ── Harness ────────────────────────────────────────────────────────────────
 
     private static IOptions<FieldLevelAuditOptions> AuditSettings(FieldLevelAuditOptions? settings = null) =>

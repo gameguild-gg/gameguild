@@ -112,6 +112,22 @@ public interface IFieldAccessAuditService {
     string RedactPii(string content);
     Task<Result<IEnumerable<FieldAccessAudit>>> GetFieldAccessHistoryAsync(Guid entityId, string? fieldName = null, CancellationToken cancellationToken = default);
     Task<Result<IEnumerable<FieldAccessAudit>>> GetSensitiveFieldAccessesAsync(Guid tenantId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Records a batch of read observations for one entity type in a single save (issue #186 read
+    /// capture): one row per (entity, field) pair, classified inline; read rows persist no values.
+    /// The context parameters carry the ambient access metadata (address, request id, endpoint).
+    /// </summary>
+    Task<int> RecordFieldReadsAsync(
+        Guid tenantId,
+        Guid userId,
+        string entityType,
+        IReadOnlyList<FieldReadObservation> observations,
+        string? ipAddress,
+        string? userAgent,
+        string? requestId,
+        string? apiEndpoint,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>
