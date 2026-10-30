@@ -2137,6 +2137,28 @@ while preserving each row's own tenant, including global null scope. Source and
 regression definitions have not yet been accepted by matching hosted CI. See
 `docs/issue-audit/issue340-permission-contract-2026-10-19.md` for retained criteria.
 
+### Automatic permission expiration
+
+Authorization owns `IPermissionMutationExecutor` and `PermissionMutationTransaction`;
+the Authentication entry point delegates to that implementation. This preserves the
+dependency direction and the existing rollback, caller-state and audit-buffer rules.
+The expiration service requires that executor; it has no silent non-relational fallback.
+
+Cleanup excludes completed checkpoints before applying the batch limit. Each tenant's
+accepted grants, expiration audits, security-version increment and checkpoints share
+one transaction, with per-grant savepoints for isolated failures. Null tenant scope
+uses the established global `Guid.Empty` version key. Authenticated cross-tenant
+processing requires SystemAdmin; automatic work uses the system actor and each grant's
+own tenant. Successful groups advance their version once. Required-operation failures
+are collected and surfaced as an aggregate with `ProcessedGrantCount`, rather than a
+successful partial count. Cancellation and unconfirmed rollback/commit failures escape.
+
+The upcoming-reminder phase excludes grants in their reminder cooldown before the
+batch limit. Alert delivery retains its existing best-effort contract. The host alert
+handler queues notification records through the same scoped context; caller-owned
+transactions still own the final commit. These rules require source-matched hosted
+PostgreSQL proof, including fresh-scope retry and caller-savepoint preservation.
+
 ### In-process verification, reset and magic-link token consumption
 
 EmailVerificationService generates opaque 32-character lowercase hexadecimal

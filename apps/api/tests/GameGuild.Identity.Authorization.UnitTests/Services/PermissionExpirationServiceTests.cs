@@ -54,12 +54,13 @@ public class PermissionExpirationServiceTests
         _sut = CreateService();
     }
 
-    private PermissionExpirationService CreateService() => new(
+    private PermissionExpirationService CreateService(IPermissionMutationExecutor? executor = null) => new(
         _repoMock.Object,
         _auditMock.Object,
         _versionStoreMock.Object,
         Options.Create(_options),
         NullLogger<PermissionExpirationService>.Instance,
+        executor ?? new InlineMutationExecutor(),
         _publisherMock.Object,
         _actorAccessorMock.Object);
 
@@ -180,9 +181,9 @@ public class PermissionExpirationServiceTests
                 ? Task.FromException<TenantPermission>(new InvalidOperationException("boom"))
                 : Task.FromResult(p));
 
-        var processed = await _sut.ProcessExpiredAsync();
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => _sut.ProcessExpiredAsync());
 
-        processed.Should().Be(1);
+        failure.Data["ProcessedGrantCount"].Should().Be(1);
         succeeding.IsActive.Should().BeFalse();
     }
 
@@ -423,5 +424,56 @@ public class PermissionExpirationServiceTests
         var result = await _sut.GetExpiringAsync(TenantA);
 
         result.Should().ContainSingle().Which.Should().BeSameAs(inTenant);
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_AuthenticatedTenantAdministratorCannotStartGlobalSweep()
+    {
+        _actorAccessorMock.SetupGet(accessor => accessor.ActorContext).Returns(
+            ActorContextBuilder.ForUser(Guid.NewGuid()).WithTenantId(TenantA).WithRole("TenantAdmin").Build());
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _sut.ProcessExpiredAsync());
+        _repoMock.Verify(repository => repository.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ProcessExpiredAsync_DoesNotMaskExecutorSetupOrUnconfirmedRollbackFailures(bool aggregate)
+    {
+        Exception failure = aggregate
+            ? new AggregateException("Rollback unconfirmed", new InvalidOperationException("Storage failure"))
+            : new InvalidOperationException("Transaction setup failed");
+        _repoMock.Setup(repository => repository.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1)) });
+        var service = CreateService(new InlineMutationExecutor(failure));
+
+        Assert.Same(failure, await Record.ExceptionAsync(() => service.ProcessExpiredAsync()));
+        _repoMock.Verify(repository => repository.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_CancellationBeforeSelectionDoesNotQueryOrMutate()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _sut.ProcessExpiredAsync(cancellation.Token));
+        _repoMock.Verify(repository => repository.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // Component tests isolate orchestration; only the PostgreSQL suite proves rollback.
+    private sealed class InlineMutationExecutor(Exception? setupFailure = null) : IPermissionMutationExecutor
+    {
+        public Task<Result<T>> ExecuteAsync<T>(Guid actorId, Guid? tenantId,
+            Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken) =>
+            ExecuteAsync(actorId, tenantId, operation, cancellationToken, null, false);
+
+        public Task<Result<T>> ExecuteAsync<T>(Guid actorId, Guid? tenantId,
+            Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
+            Func<T, bool>? shouldCommit) => ExecuteAsync(actorId, tenantId, operation, cancellationToken, shouldCommit, false);
+
+        public Task<Result<T>> ExecuteAsync<T>(Guid actorId, Guid? tenantId,
+            Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
+            Func<T, bool>? shouldCommit, bool useEntityTenantScope) =>
+            setupFailure is null ? operation(cancellationToken) : Task.FromException<Result<T>>(setupFailure);
     }
 }

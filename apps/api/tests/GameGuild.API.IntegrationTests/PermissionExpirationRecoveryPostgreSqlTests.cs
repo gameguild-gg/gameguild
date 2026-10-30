@@ -278,7 +278,8 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests(ApiPostgreSqlFix
         return new PermissionExpirationService(repository.Object, audit ?? services.GetRequiredService<IPermissionAuditService>(),
             versions ?? services.GetRequiredService<ITenantSecurityVersionStore>(),
             Options.Create(new PermissionExpirationOptions { BatchSize = batchSize }),
-            NullLogger<PermissionExpirationService>.Instance, publisher.Object, services.GetRequiredService<IActorContextAccessor>());
+            NullLogger<PermissionExpirationService>.Instance, services.GetRequiredService<IPermissionMutationExecutor>(),
+            publisher.Object, services.GetRequiredService<IActorContextAccessor>());
     }
 
     private static async Task AssertUnprocessedAsync(WebApplicationFactory<Program> factory, TenantPermission original, long baseline)

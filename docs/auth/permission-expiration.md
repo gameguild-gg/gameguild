@@ -78,19 +78,29 @@ a grant of `["courses:grade"]` gets 3 days, `["courses:create"]` gets 14 days, a
 `PermissionExpirationWorker` (a `BackgroundService`) runs two phases per cycle, each in a
 fresh DI scope and bounded by `BatchSize`:
 
-1. **Expired sweep** (`ProcessExpiredAsync`): loads grants with `ExpiresAt <= now`, skips
-   ones already stamped `Metadata["expirationProcessedAt"]` (idempotency), calls
+1. **Expired sweep** (`ProcessExpiredAsync`): loads grants with `ExpiresAt <= now`, excludes
+   ones already stamped `Metadata["expirationProcessedAt"]` **before applying the batch limit**, calls
    `TenantPermission.Expire()` (sets `IsActive = false`), writes a `PermissionAuditLog`
    entry (`PermissionOperationType.Expire`, system actor), bumps the tenant security
    version (cache invalidation), and publishes a
    `PermissionExpirationNotification(Kind: Expired)`.
+   A tenant batch commits accepted grants, checkpoints, required audit and its single
+   version increment atomically. Individual grants use savepoints; failure of the
+   tenant version rolls back that tenant's accepted grants too. Global grants use the
+   shared `Guid.Empty` version scope. A failed required write leaves no completed
+   checkpoint that could suppress a fresh-scope retry.
 2. **Reminder sweep** (`SendUpcomingExpirationRemindersAsync`): loads grants expiring
-   before `now + UpcomingNotificationWindow`, skips ones reminded within
-   `MinimumReminderInterval`, stamps `expirationReminderAt`, and publishes a
+   before `now + UpcomingNotificationWindow`, excludes ones reminded within
+   `MinimumReminderInterval` **before applying the batch limit**, stamps `expirationReminderAt`, and publishes a
    `PermissionExpirationNotification(Kind: Upcoming)`.
 
-Per-grant failures are logged and retried on the next cycle; a cycle that exceeds
-`ExecutionTimeout` is abandoned and retried. The worker exits immediately when
+Required-operation failures are surfaced as an aggregate containing the failures and
+`ProcessedGrantCount`; independent accepted groups may already be committed in the
+standalone worker. A caller-owned transaction retains its own final commit/rollback.
+The worker logs the failure and retries pending grants next cycle. Cancellation and
+unconfirmed rollback/commit failures propagate; rollback cleanup ignores the cancelled
+request token. A cycle exceeding `ExecutionTimeout` is abandoned and retried.
+The worker exits immediately when
 `Enabled = false` or the configuration is invalid.
 
 ## Notifications (upcoming and past expirations)
@@ -109,8 +119,10 @@ Notifications delivery stack):
   `Kind = Upcoming` → `NotificationPriority.Normal`. Type is `NotificationType.Security`.
 - Delivery is gated on `Authorization:PermissionExpiration:Enabled` — the same switch as
   the worker — so administrative triggers cannot produce alerts while the feature is off.
-- Queueing failures are logged, not thrown: the publisher stamps dedup metadata before
-  dispatch and has no redelivery mechanism, so rethrowing would not retry the alert.
+- Queueing failures are logged, not treated as failed permission mutations: dedup
+  metadata has no guaranteed-redelivery mechanism. The host queues notification records
+  through its scoped database context, so an enclosing caller transaction still owns
+  their commit. Delivery remains best effort; this does not promise eventual delivery.
 
 ## Administrative endpoints
 
