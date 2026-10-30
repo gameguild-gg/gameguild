@@ -19,11 +19,11 @@ public class NoOpPlaidInstantVerificationTests
     }
 
     [Fact]
-    public void CreateLinkToken_FailsClosedWithTheNotConfiguredError()
+    public async Task CreateLinkToken_FailsClosedWithTheNotConfiguredError()
     {
         var verification = NoOpPlaidInstantVerification.Instance;
 
-        var result = verification.CreateLinkTokenAsync(Guid.NewGuid(), Guid.NewGuid()).GetAwaiter().GetResult();
+        var result = await verification.CreateLinkTokenAsync(Guid.NewGuid(), Guid.NewGuid());
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("PaymentMethods.PlaidNotConfigured");
@@ -31,11 +31,11 @@ public class NoOpPlaidInstantVerificationTests
     }
 
     [Fact]
-    public void ExchangePublicToken_FailsClosedWithTheNotConfiguredError()
+    public async Task ExchangePublicToken_FailsClosedWithTheNotConfiguredError()
     {
         var verification = new NoOpPlaidInstantVerification();
 
-        var result = verification.ExchangePublicTokenAsync("public-sandbox-123").GetAwaiter().GetResult();
+        var result = await verification.ExchangePublicTokenAsync("public-sandbox-123");
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("PaymentMethods.PlaidNotConfigured");
