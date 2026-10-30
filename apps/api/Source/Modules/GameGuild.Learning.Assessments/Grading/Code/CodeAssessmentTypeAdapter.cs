@@ -15,8 +15,9 @@ public static class CodeAssessmentContracts
     public static string AdapterKey { get; } = "code-assessment-type";
     public static string HandlerKey { get; } = "code-wasm-review";
     public static string LegacyVersion { get; } = "1";
-    public static string Version { get; } = "2";
-    public static bool IsSupportedVersion(string? version) => version == LegacyVersion || version == Version;
+    public static string Version2 { get; } = "2";
+    public static string Version { get; } = "3";
+    public static bool IsSupportedVersion(string? version) => version == LegacyVersion || version == Version2 || version == Version;
     public static string PayloadSchema { get; } = "code-files/v1";
     public static string ItemId { get; } = "code";
     public static int MaxResponseBytes { get; } = 2_000_000;
@@ -52,6 +53,8 @@ public sealed class CodeAssessmentTypeAdapter : IAssessmentTypeAdapter
 
     public static CodeAssessmentTypeAdapter ForVersion1(ICodeAssessmentExecutor executor) =>
         new(executor, CodeAssessmentContracts.LegacyVersion);
+    public static CodeAssessmentTypeAdapter ForVersion2(ICodeAssessmentExecutor executor) =>
+        new(executor, CodeAssessmentContracts.Version2);
     public string Key => CodeAssessmentContracts.AdapterKey;
     public string Version { get; }
     public string ContentType => CodeAssessmentContracts.ContentType;
@@ -199,7 +202,7 @@ public sealed class CodeAssessmentTypeAdapter : IAssessmentTypeAdapter
         var definition = ReadDefinition(request.ProjectedItems[0].GetProperty("definition"));
         var files = request.NormalizedResponse.GetProperty("files");
         var toolchain = JsonSerializer.Deserialize<CodeToolchainIdentity>(request.ProjectedItems[0].GetProperty("toolchain"), GradingJson.Options);
-        if (toolchain != _toolchain)
+        if (toolchain is null || !CodeToolchainIdentity.SupportsAdapterVersion(Version, toolchain))
         {
             throw new InvalidOperationException("Code review requires its frozen version " + Version + " toolchain.");
         }
@@ -264,12 +267,31 @@ public sealed record CodeExecutionReceipt(IReadOnlyList<bool> Passed, string Rec
 public sealed record CodeToolchainIdentity(string ArtifactVersion, string RuntimeAbi, string ToolchainLockHash)
 {
     public static CodeToolchainIdentity Version1 { get; } = new("4.4.0", "emception-browser-v1", "eb7e07aacb067ae32910fbebcb3762902da756b1a7ce64746f14f77a25057720");
-    public static CodeToolchainIdentity Version2 { get; } = new("4.5.2", "emception-browser-v1", "405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37");
+    public static CodeToolchainIdentity Version2 { get; } = new("4.5.1", "emception-browser-v1", "405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37");
+
+    public static CodeToolchainIdentity Version3 { get; } = new("4.5.2", "emception-browser-v1", "405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37");
+
+    public static CodeToolchainIdentity Version2Release441 { get; } = new("4.4.1", "emception-browser-v1", "405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37");
+    public static CodeToolchainIdentity Version2Release450 { get; } = new("4.5.0", "emception-browser-v1", "405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37");
+
+    // Version 2 was historically rebound by releases. Accept those exact issued
+    // identities without rewriting frozen projections or accepting future releases.
+    public static bool SupportsAdapterVersion(string version, CodeToolchainIdentity identity) => version switch
+    {
+        "1" => identity == Version1,
+        "2" => identity == Version2Release441 || identity == Version2Release450 || identity == Version2 || identity == Version3,
+        "3" => identity == Version3,
+        _ => false,
+    };
+
+    public static bool IsKnown(CodeToolchainIdentity identity) =>
+        identity == Version1 || SupportsAdapterVersion("2", identity);
 
     public static CodeToolchainIdentity ForAdapterVersion(string version) => version switch
     {
         "1" => Version1,
         "2" => Version2,
+        "3" => Version3,
         _ => throw new InvalidOperationException("Unsupported frozen Code adapter version."),
     };
 }
@@ -333,7 +355,7 @@ public sealed class CodeCapabilityRegistration : IReviewCapabilityRegistration
             ReviewExecutionContext.AuthorTest,
             ReviewExecutionContext.OfficialSubmission,
         };
-        foreach (var version in new[] { CodeAssessmentContracts.LegacyVersion, CodeAssessmentContracts.Version })
+        foreach (var version in new[] { CodeAssessmentContracts.LegacyVersion, CodeAssessmentContracts.Version2, CodeAssessmentContracts.Version })
         {
             registry.Register(new ExecutableComponentDescriptor(ExecutableComponentKind.AssessmentTypeAdapter, CodeAssessmentContracts.AdapterKey, version, contexts));
             registry.Register(new ReviewCapabilityDescriptor(ReviewMethod.AutomatedReview, CodeAssessmentContracts.HandlerKey, version, contexts));

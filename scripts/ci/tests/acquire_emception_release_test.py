@@ -32,18 +32,24 @@ class FakeGitHub:
         self.omit_detail_steps = False
         self.detail_head = HEAD
         self.failed_step = False
+        self.run_conclusion = None
+        self.job_status = "in_progress"
+        self.job_conclusion = None
+        self.logs_content = None
 
     def json(self, endpoint):
         self.calls.append(endpoint)
         if endpoint.startswith("actions/workflows/"):
             return [{"workflow_runs": [{"id": 5, "head_sha": HEAD,
-                      "path": ".github/workflows/emception.yml", "status": self.run_status}]}]
+                      "path": ".github/workflows/emception.yml", "status": self.run_status,
+                      "conclusion": self.run_conclusion}]}]
         if "/artifacts?" in endpoint:
             return [{"artifacts": self.artifacts}]
         if "/jobs?" in endpoint or endpoint == "actions/jobs/8":
             names = ["Verify release gates and npm package contents",
                      "Prepare verified Toolchain CDN provenance", "Upload verified Toolchain CDN for Web"]
             job = {"id": 8, "run_id": 5, "head_sha": HEAD, "name": "Build, test, and package Emception",
+                   "status": self.job_status, "conclusion": self.job_conclusion,
                    "steps": [{"name": name, "conclusion": "success" if self.steps_passed else None}
                              for name in names]}
             if self.failed_step:
@@ -57,6 +63,12 @@ class FakeGitHub:
                 job["steps"] = []
             return [{"jobs": [job]}]
         raise AssertionError("Unexpected endpoint: " + endpoint)
+
+    def logs(self, run_id, target):
+        self.calls.append(f"actions/runs/{run_id}/logs")
+        if run_id != 5 or self.logs_content is None:
+            raise AssertionError("Unexpected producer log download")
+        target.write_bytes(self.logs_content)
 
 
 class FakeResponse(io.BytesIO):
@@ -115,6 +127,119 @@ class ArtifactContractTests(unittest.TestCase):
                     "digest": "sha256:" + release.file_digest(archive),
                     "workflow_run": {"id": 5, "head_sha": HEAD}}
         return archive, artifact
+
+    def producer_logs(self, artifact, mutate=None, duplicate=False):
+        # Public Actions log format: three real producer phases, not step projections.
+        lines = {
+            "20_Verify release gates and npm package contents.txt":
+                "[verify-release] 7 packages and Toolchain 4.4.1 verified.",
+            "21_Prepare verified Toolchain CDN provenance.txt":
+                json.dumps({"artifactName": artifact["name"], "sourceHead": HEAD}),
+            "22_Upload verified Toolchain CDN for Web.txt":
+                f"SHA256 digest of uploaded artifact is {artifact['digest'][7:]}\n"
+                f"Artifact {artifact['name']} successfully finalized. Artifact ID {artifact['id']}",
+        }
+        if mutate:
+            mutate(lines)
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, "w") as bundle:
+            for name, text in lines.items():
+                payload = "\n".join("2026-10-30T17:38:40.000Z " + line for line in text.splitlines())
+                bundle.writestr("Build, test, and package Emception/" + name, payload)
+            if duplicate:
+                name = next(iter(lines))
+                bundle.writestr("Build, test, and package Emception/" + name, "ambiguous")
+        return stream.getvalue()
+
+    def completed_producer(self, artifact, logs):
+        api = FakeGitHub(run_status="completed", steps_passed=False)
+        api.run_conclusion = api.job_conclusion = "success"
+        api.job_status = "completed"
+        api.artifacts = [artifact]
+        api.logs_content = logs
+        return api
+
+    def test_completed_success_uses_exact_verified_logs_when_present_steps_stay_pending(self):
+        _, artifact = self.bundle()
+        api = self.completed_producer(artifact, self.producer_logs(artifact))
+        self.assertEqual(release.choose_artifact(api, HEAD, TREE)["id"], artifact["id"])
+        self.assertIn("actions/jobs/8", api.calls)
+        self.assertIn("actions/runs/5/logs", api.calls)
+
+    def test_completed_log_proof_rejects_missing_phases_wrong_source_digest_and_failed_validation(self):
+        _, artifact = self.bundle()
+        verify = "20_Verify release gates and npm package contents.txt"
+        prepare = "21_Prepare verified Toolchain CDN provenance.txt"
+        upload = "22_Upload verified Toolchain CDN for Web.txt"
+        mutations = [
+            lambda lines: lines.pop(verify),
+            lambda lines: lines.pop(prepare),
+            lambda lines: lines.pop(upload),
+            lambda lines: lines.update({prepare: lines[prepare].replace(HEAD, "c" * 40)}),
+            lambda lines: lines.update({prepare: lines[prepare].replace(TREE, "c" * 40)}),
+            lambda lines: lines.update({upload: lines[upload].replace("Artifact ID 7", "Artifact ID 8")}),
+            lambda lines: lines.update({upload: lines[upload].replace(artifact["digest"][7:], "0" * 64)}),
+            lambda lines: lines.update({verify: "verification never ran"}),
+            lambda lines: lines.update({verify: lines[verify] + "\n##[error]validation failed"}),
+            lambda lines: lines.update({verify: lines[verify] + "\nProcess completed with exit code 1."}),
+            lambda lines: lines.update({prepare: "{}"}),
+            lambda lines: lines.update({"19_Upload verified Toolchain CDN for Web.txt": lines.pop(upload)}),
+        ]
+        for mutate in mutations:
+            with self.subTest(mutation=mutate):
+                api = self.completed_producer(artifact, self.producer_logs(artifact, mutate))
+                with self.assertRaises(ValueError):
+                    release.choose_artifact(api, HEAD, TREE)
+
+    def test_completed_status_without_real_log_proof_never_accepts_an_artifact(self):
+        _, artifact = self.bundle()
+        for logs in [b"not a ZIP", self.producer_logs(artifact, duplicate=True)]:
+            with self.subTest(logs=logs[:10]):
+                api = self.completed_producer(artifact, logs)
+                with self.assertRaises((ValueError, zipfile.BadZipFile)):
+                    release.choose_artifact(api, HEAD, TREE)
+        api = self.completed_producer(artifact, self.producer_logs(artifact))
+        with patch.object(release, "MAX_PRODUCER_LOG_BYTES", 1):
+            with self.assertRaisesRegex(ValueError, "oversized"):
+                release.choose_artifact(api, HEAD, TREE)
+
+    def test_log_recovery_never_overrides_a_failed_step_run_or_job(self):
+        _, artifact = self.bundle()
+        for field in ["failed_step", "run_conclusion", "job_conclusion", "job_status"]:
+            with self.subTest(field=field):
+                api = self.completed_producer(artifact, self.producer_logs(artifact))
+                value = True if field == "failed_step" else "in_progress" if field == "job_status" else "failure"
+                setattr(api, field, value)
+                with self.assertRaises((ValueError, release.ProducerEvidencePending)):
+                    release.choose_artifact(api, HEAD, TREE)
+                self.assertNotIn("actions/runs/5/logs", api.calls)
+
+    def test_completed_log_not_ready_repolls_without_extending_the_evidence_budget(self):
+        _, artifact = self.bundle()
+        api = self.completed_producer(artifact, self.producer_logs(artifact))
+        clock = [0]
+        calls = []
+
+        def logs(run_id, target):
+            calls.append(run_id)
+            if len(calls) == 1:
+                raise release.GitHubHTTPError(404)
+            target.write_bytes(api.logs_content)
+
+        api.logs = logs
+        result = release.wait_for_artifact(api, HEAD, TREE, 300, lambda: clock[0],
+                                           lambda seconds: clock.__setitem__(0, clock[0] + seconds))
+        self.assertEqual(result["id"], 7)
+        self.assertEqual(calls, [5, 5])
+        self.assertEqual(clock[0], 30)
+
+    def test_completed_log_permission_failure_is_not_treated_as_missing_evidence(self):
+        _, artifact = self.bundle()
+        api = self.completed_producer(artifact, self.producer_logs(artifact))
+        with patch.object(api, "logs", side_effect=release.GitHubHTTPError(403)):
+            with self.assertRaises(release.GitHubHTTPError) as error:
+                release.wait_for_artifact(api, HEAD, TREE, 60)
+        self.assertEqual(error.exception.status, 403)
 
     def test_accepts_exact_source_complete_verified_archive(self):
         archive, artifact = self.bundle()
@@ -433,6 +558,28 @@ class ArtifactContractTests(unittest.TestCase):
         self.assertNotIn("Authorization", second.requests[0][2])
         self.assertEqual([call.args[0] for call in connect.call_args_list], ["api.github.com", "results.blob.core.windows.net"])
         self.assertTrue(first.closed and second.closed)
+
+    def test_producer_log_download_preserves_api_origin_auth_boundary_and_size_limit(self):
+        api = self.api()
+        first = FakeConnection(FakeResponse(status=302, headers={
+            "Location": "https://results.blob.core.windows.net/logs.zip?signature=fixture"}))
+        second = FakeConnection(FakeResponse(b"ZIP fixture", headers={"Content-Length": "11"}))
+        with patch.object(release.http.client, "HTTPSConnection", side_effect=[first, second]):
+            api.logs(5, self.root / "logs.zip")
+        self.assertEqual(first.requests[0][1], "/repos/gameguild-gg/gameguild/actions/runs/5/logs")
+        self.assertIn("Authorization", first.requests[0][2])
+        self.assertNotIn("Authorization", second.requests[0][2])
+        self.assertTrue(first.closed and second.closed)
+        connection = FakeConnection(FakeResponse(b"oversized"))
+        with patch.object(release.http.client, "HTTPSConnection", return_value=connection), \
+                patch.object(release, "MAX_PRODUCER_LOG_ARCHIVE_BYTES", 1):
+            with self.assertRaisesRegex(ValueError, "byte or time budget"):
+                api.logs(5, self.root / "oversized-logs.zip")
+        with patch.object(release.http.client, "HTTPSConnection") as connect:
+            for identity in [0, -1, "5"]:
+                with self.subTest(identity=identity), self.assertRaises(ValueError):
+                    api.logs(identity, self.root / "invalid-logs.zip")
+            connect.assert_not_called()
 
     def test_archive_rejects_untrusted_redirects_and_oversized_streams(self):
         api = self.api()

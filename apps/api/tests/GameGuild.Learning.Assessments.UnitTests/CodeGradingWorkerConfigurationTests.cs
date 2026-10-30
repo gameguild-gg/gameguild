@@ -155,12 +155,14 @@ public sealed class CodeGradingWorkerConfigurationTests
     }
 
     [Fact]
-    public void Launcher_RequiresExplicitRetainedVersion1Directories()
+    public void Launcher_RequiresExplicitRetainedHistoricalDirectories()
     {
         using var installation = new WorkerInstallation();
         Action legacy = () => CodeGradingWorker.CreateStartInfo(installation.Configuration, CodeToolchainIdentity.Version1);
         legacy.Should().Throw<InvalidOperationException>();
-        CodeGradingWorker.CreateStartInfo(installation.Configuration, CodeToolchainIdentity.Version2)
+        Action previous = () => CodeGradingWorker.CreateStartInfo(installation.Configuration, CodeToolchainIdentity.Version2);
+        previous.Should().Throw<InvalidOperationException>();
+        CodeGradingWorker.CreateStartInfo(installation.Configuration, CodeToolchainIdentity.Version3)
             .ArgumentList.Should().Equal("--max-old-space-size=512", installation.Configuration.ScriptPath,
                 installation.Configuration.RuntimeDirectory, installation.Configuration.CdnDirectory);
     }
@@ -173,13 +175,19 @@ public sealed class CodeGradingWorkerConfigurationTests
         options.Version1RuntimeDirectory = Directory.CreateDirectory(Path.Combine(installation.Root, "version1-runtime")).FullName;
         options.Version1CdnDirectory = Directory.CreateDirectory(Path.Combine(installation.Root, "version1-cdn")).FullName;
         var legacy = CodeGradingWorker.CreateStartInfo(options, CodeToolchainIdentity.Version1);
-        var current = CodeGradingWorker.CreateStartInfo(options, CodeToolchainIdentity.Version2);
+        options.Version2RuntimeDirectory = Directory.CreateDirectory(Path.Combine(installation.Root, "version2-runtime")).FullName;
+        options.Version2CdnDirectory = Directory.CreateDirectory(Path.Combine(installation.Root, "version2-cdn")).FullName;
+        var previous = CodeGradingWorker.CreateStartInfo(options, CodeToolchainIdentity.Version2);
+        var current = CodeGradingWorker.CreateStartInfo(options, CodeToolchainIdentity.Version3);
         legacy.ArgumentList.Should().Equal("--max-old-space-size=512", options.ScriptPath,
             options.Version1RuntimeDirectory, options.Version1CdnDirectory);
         current.ArgumentList.Should().Equal("--max-old-space-size=512", options.ScriptPath,
             options.RuntimeDirectory, options.CdnDirectory);
         legacy.UseShellExecute.Should().BeFalse();
         current.UseShellExecute.Should().BeFalse();
+        previous.ArgumentList.Should().Equal("--max-old-space-size=512", options.ScriptPath,
+            options.Version2RuntimeDirectory, options.Version2CdnDirectory);
+        previous.UseShellExecute.Should().BeFalse();
     }
 
     [Theory]
@@ -198,6 +206,43 @@ public sealed class CodeGradingWorkerConfigurationTests
         };
         Action create = () => CodeGradingWorker.CreateStartInfo(installation.Configuration, identity);
         create.Should().Throw<InvalidOperationException>().WithMessage("*supported frozen toolchain identity*");
+    }
+
+    [Theory]
+    [InlineData("4.4.1")]
+    [InlineData("4.5.0")]
+    public void Launcher_UsesTheExactRetainedReleaseWithoutFallingBack(string artifactVersion)
+    {
+        using var installation = new WorkerInstallation();
+        var options = installation.Configuration;
+        var identity = CodeToolchainIdentity.Version2 with { ArtifactVersion = artifactVersion };
+        Action missing = () => CodeGradingWorker.CreateStartInfo(options, identity);
+        missing.Should().Throw<InvalidOperationException>();
+        var runtime = Directory.CreateDirectory(Path.Combine(installation.Root, artifactVersion + "-runtime")).FullName;
+        var cdn = Directory.CreateDirectory(Path.Combine(installation.Root, artifactVersion + "-cdn")).FullName;
+        options.HistoricalToolchains[artifactVersion] = new CodeGradingHistoricalAssets
+        {
+            RuntimeDirectory = runtime,
+            CdnDirectory = cdn,
+        };
+        var start = CodeGradingWorker.CreateStartInfo(options, identity);
+        start.ArgumentList.Should().Equal("--max-old-space-size=512", options.ScriptPath, runtime, cdn);
+        start.UseShellExecute.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Launcher_RejectsUnknownIdentityEvenWhenAnAssetProfileExists()
+    {
+        using var installation = new WorkerInstallation();
+        var options = installation.Configuration;
+        options.HistoricalToolchains["999"] = new CodeGradingHistoricalAssets
+        {
+            RuntimeDirectory = options.RuntimeDirectory,
+            CdnDirectory = options.CdnDirectory,
+        };
+        Action unknown = () => CodeGradingWorker.CreateStartInfo(options,
+            CodeToolchainIdentity.Version2 with { ArtifactVersion = "999" });
+        unknown.Should().Throw<InvalidOperationException>().WithMessage("*supported frozen toolchain identity*");
     }
 
     private static CodingAssignmentContent Definition() => new()

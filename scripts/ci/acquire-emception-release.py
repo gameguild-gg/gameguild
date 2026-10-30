@@ -18,6 +18,13 @@ from urllib.parse import urlsplit
 MAX_ARCHIVE_BYTES = 512 * 1024 * 1024
 MAX_RELEASE_BYTES = 2 * 1024 * 1024 * 1024
 MAX_FILES = 20_000
+MAX_PRODUCER_LOG_ARCHIVE_BYTES = 64 * 1024 * 1024
+MAX_PRODUCER_LOG_BYTES = 128 * 1024 * 1024
+PRODUCER_STEPS = (
+    "Verify release gates and npm package contents",
+    "Prepare verified Toolchain CDN provenance",
+    "Upload verified Toolchain CDN for Web",
+)
 SOURCE_SCOPE = re.compile(
     r"^(\.changeset/|\.github/workflows/(emception|pr-verify)\.yml|"
     r"scripts/ci/(acquire-emception-release\.py|tests/(acquire_emception_release_test\.py|emception-web-artifacts\.test\.mjs))|"
@@ -178,8 +185,16 @@ class GitHub:
     def archive(self, artifact_id, target):
         if not isinstance(artifact_id, int) or artifact_id <= 0:
             raise ValueError("Invalid artifact identity")
-        url = f"https://api.github.com{self.prefix}artifacts/{artifact_id}/zip"
-        deadline = time.monotonic() + 180
+        self._download_archive(f"artifacts/{artifact_id}/zip", target, MAX_ARCHIVE_BYTES)
+
+    def logs(self, run_id, target):
+        if not isinstance(run_id, int) or run_id <= 0:
+            raise ValueError("Invalid producer run identity")
+        self._download_archive(f"runs/{run_id}/logs", target, MAX_PRODUCER_LOG_ARCHIVE_BYTES, time_budget=60)
+
+    def _download_archive(self, endpoint, target, byte_limit, time_budget=180):
+        url = f"https://api.github.com{self.prefix}{endpoint}"
+        deadline = time.monotonic() + time_budget
         for redirect in range(4):
             remaining = deadline - time.monotonic()
             if remaining <= 0:
@@ -192,7 +207,7 @@ class GitHub:
                         raise ValueError("Missing artifact redirect")
                     continue
                 declared = response.getheader("Content-Length")
-                if declared and not 0 < int(declared) <= MAX_ARCHIVE_BYTES:
+                if declared and not 0 < int(declared) <= byte_limit:
                     raise ValueError("Artifact exceeds its archive budget")
                 count = 0
                 with target.open("xb") as stream:
@@ -201,7 +216,7 @@ class GitHub:
                         if not chunk:
                             break
                         count += len(chunk)
-                        if count > MAX_ARCHIVE_BYTES or time.monotonic() > deadline:
+                        if count > byte_limit or time.monotonic() > deadline:
                             raise ValueError("Artifact download exceeds its byte or time budget")
                         stream.write(chunk)
                 return
@@ -212,6 +227,65 @@ class GitHub:
 
 class ProducerEvidencePending(RuntimeError):
     """The exact artifact exists, but Actions has not published its job steps yet."""
+
+
+def validate_producer_logs(archive, job_name, artifact, head, tree):
+    """Verify the same three steps from immutable completed-run logs, not job status alone."""
+    if archive.stat().st_size > MAX_PRODUCER_LOG_ARCHIVE_BYTES:
+        raise ValueError("Producer log archive exceeds its byte budget")
+    with zipfile.ZipFile(archive) as bundle:
+        entries = bundle.infolist()
+        names = [entry.filename for entry in entries]
+        if (len(entries) > 2_000 or len(set(names)) != len(names) or
+                sum(entry.file_size for entry in entries) > MAX_PRODUCER_LOG_BYTES):
+            raise ValueError("Duplicate or oversized producer logs")
+        logs, numbers = [], []
+        for name in PRODUCER_STEPS:
+            pattern = re.compile(rf"{re.escape(job_name)}/([1-9][0-9]*)_{re.escape(name)}\.txt")
+            matches = [entry for entry in entries if pattern.fullmatch(entry.filename)]
+            if len(matches) != 1:
+                raise ValueError("Missing or ambiguous producer step log")
+            entry = matches[0]
+            if stat.S_ISLNK(entry.external_attr >> 16) or entry.flag_bits & 1:
+                raise ValueError("Unsupported producer step log entry")
+            text = bundle.read(entry).decode("utf-8-sig")
+            text = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", text)
+            if "##[error]" in text or re.search(r"Process completed with exit code [1-9]", text):
+                raise ValueError("Producer step log reports a failure")
+            # Each Actions log line begins with its timestamp; only inspect payloads.
+            logs.append([line.split(" ", 1)[-1] for line in text.splitlines()])
+            numbers.append(int(pattern.fullmatch(entry.filename).group(1)))
+        if numbers != sorted(set(numbers)):
+            raise ValueError("Producer step log order is invalid")
+        if not any(re.fullmatch(r"\[verify-release\] 7 packages and Toolchain \S+ verified\.", line)
+                   for line in logs[0]):
+            raise ValueError("Missing successful release verification evidence")
+        records = [json.loads(line) for line in logs[1] if line.startswith("{")]
+        expected = {"artifactName": artifact_name(head, tree), "sourceHead": head}
+        if records != [expected] or artifact.get("name") != expected["artifactName"]:
+            raise ValueError("Producer log source identity mismatch")
+        digest = artifact.get("digest", "")
+        if re.fullmatch(r"sha256:[a-f0-9]{64}", digest) is None:
+            raise ValueError("Invalid producer artifact digest")
+        if (f"SHA256 digest of uploaded artifact is {digest[7:]}" not in logs[2] or
+                f"Artifact {artifact['name']} successfully finalized. Artifact ID {artifact['id']}" not in logs[2]):
+            raise ValueError("Producer upload log identity or digest mismatch")
+
+
+def completed_producer_logs_verify(api, run, job, artifact, head, tree):
+    if (run.get("status") != "completed" or run.get("conclusion") != "success" or
+            job.get("status") != "completed" or job.get("conclusion") != "success"):
+        return False
+    with tempfile.TemporaryDirectory(prefix="emception-producer-logs-") as directory:
+        archive = Path(directory) / "logs.zip"
+        try:
+            api.logs(run["id"], archive)
+        except GitHubHTTPError as error:
+            if error.status in {404, 410}:
+                raise ProducerEvidencePending("Completed producer logs are not available yet") from error
+            raise
+        validate_producer_logs(archive, job["name"], artifact, head, tree)
+    return True
 
 
 def choose_artifact(api, head, tree):
@@ -235,20 +309,17 @@ def choose_artifact(api, head, tree):
                 raise ValueError("Artifact producer identity mismatch")
             jobs = [job for page in api.json(f"actions/runs/{run['id']}/jobs?filter=latest&per_page=100")
                     for job in page["jobs"]]
-            required_steps = {
-                "Verify release gates and npm package contents",
-                "Prepare verified Toolchain CDN provenance",
-                "Upload verified Toolchain CDN for Web",
-            }
+            required_steps = set(PRODUCER_STEPS)
             for job in jobs:
                 if job.get("name") != "Build, test, and package Emception":
                     continue
                 if job.get("run_id") != run["id"] or job.get("head_sha") != head:
                     raise ValueError("Producer job identity mismatch")
-                # The run/jobs listing can temporarily omit steps, even after
-                # the run changes to completed. Read the individual job before
-                # deciding that the producer failed to verify its artifact.
-                if not job.get("steps"):
+                listed = {step["name"]: step.get("conclusion") for step in (job.get("steps") or [])}
+                # Listings can publish present but stale pending steps as well as
+                # omit them. Refresh incomplete evidence, never an explicit failure.
+                if (not required_steps.issubset({name for name, result in listed.items() if result == "success"})
+                        and not any(listed.get(name) not in {None, "success"} for name in required_steps)):
                     details = api.json(f"actions/jobs/{job['id']}")
                     if (len(details) != 1 or details[0].get("id") != job["id"] or
                             details[0].get("run_id") != run["id"] or details[0].get("head_sha") != head or
@@ -259,6 +330,8 @@ def choose_artifact(api, head, tree):
                 if required_steps.issubset({name for name, result in steps.items() if result == "success"}):
                     return artifact
                 failed_steps = any(steps.get(name) not in {None, "success"} for name in required_steps)
+                if not failed_steps and completed_producer_logs_verify(api, run, job, artifact, head, tree):
+                    return artifact
                 if not failed_steps and (
                         not required_steps.issubset(steps) or any(steps[name] is None for name in required_steps)):
                     pending_steps = True
