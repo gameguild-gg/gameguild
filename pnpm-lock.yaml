@@ -584,7 +584,7 @@ importers:
   demos/emception-ide-next:
     dependencies:
       '@gameguild/emception-ide':
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../../tools/emception/packages/ide
       '@monaco-editor/react':
         specifier: ^4.7.0
@@ -602,7 +602,7 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       emception:
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../../tools/emception/packages/core
       monaco-editor:
         specifier: ^0.57.0
@@ -654,7 +654,7 @@ importers:
   demos/emception-ide-react:
     dependencies:
       '@gameguild/emception-ide':
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../../tools/emception/packages/ide
       '@monaco-editor/react':
         specifier: ^4.7.0
@@ -666,7 +666,7 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       emception:
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../../tools/emception/packages/core
       react:
         specifier: 19.2.8
@@ -697,16 +697,16 @@ importers:
   demos/emception-run-react:
     dependencies:
       '@gameguild/emception-browser':
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../../tools/emception/packages/browser
       '@gameguild/emception-react':
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../../tools/emception/packages/react
       '@gameguild/emception-webcomponent':
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../../tools/emception/packages/webcomponent
       emception:
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../../tools/emception/packages/core
       react:
         specifier: 19.2.8
@@ -734,13 +734,13 @@ importers:
   demos/emception-run-webcomponent:
     dependencies:
       '@gameguild/emception-browser':
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../../tools/emception/packages/browser
       '@gameguild/emception-webcomponent':
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../../tools/emception/packages/webcomponent
       emception:
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../../tools/emception/packages/core
     devDependencies:
       typescript:
@@ -1923,10 +1923,10 @@ importers:
   tools/emception/packages/browser:
     dependencies:
       '@gameguild/emception-xterm':
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../xterm
       emception:
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../core
     devDependencies:
       '@xterm/xterm':
@@ -1948,13 +1948,13 @@ importers:
   tools/emception/packages/ide:
     dependencies:
       '@gameguild/emception-browser':
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../browser
       '@gameguild/emception-xterm':
-        specifier: ^4.5.1
+        specifier: ^4.5.2
         version: link:../xterm
       emception:
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../core
     devDependencies:
       '@monaco-editor/react':
@@ -1988,13 +1988,13 @@ importers:
   tools/emception/packages/react:
     dependencies:
       '@gameguild/emception-browser':
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../browser
       '@gameguild/emception-xterm':
-        specifier: ^4.5.1
+        specifier: ^4.5.2
         version: link:../xterm
       emception:
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../core
     devDependencies:
       '@types/react':
@@ -2018,13 +2018,13 @@ importers:
   tools/emception/packages/webcomponent:
     dependencies:
       '@gameguild/emception-browser':
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../browser
       '@gameguild/emception-xterm':
-        specifier: ^4.5.1
+        specifier: ^4.5.2
         version: link:../xterm
       emception:
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../core
     devDependencies:
       typescript:
@@ -2034,7 +2034,7 @@ importers:
   tools/emception/packages/xterm:
     dependencies:
       emception:
-        specifier: 4.5.1
+        specifier: 4.5.2
         version: link:../core
     devDependencies:
       '@xterm/xterm':

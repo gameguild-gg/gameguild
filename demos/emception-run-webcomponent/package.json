@@ -16,9 +16,9 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "@gameguild/emception-browser": "4.5.1",
-        "@gameguild/emception-webcomponent": "4.5.1",
-        "emception": "4.5.1"
+        "@gameguild/emception-browser": "4.5.2",
+        "@gameguild/emception-webcomponent": "4.5.2",
+        "emception": "4.5.2"
     },
     "devDependencies": {
         "typescript": "^6.0.3",
