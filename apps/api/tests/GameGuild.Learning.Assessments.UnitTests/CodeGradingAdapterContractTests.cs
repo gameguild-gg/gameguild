@@ -222,6 +222,37 @@ public sealed class CodeGradingAdapterContractTests
         JsonSerializer.Serialize(result).Should().NotContain("secret-result");
     }
 
+    [Fact]
+    public async Task Version2_Frozen451ProjectionRemainsExecutableAfterCurrentRelease()
+    {
+        var frozenIdentity = new CodeToolchainIdentity("4.5.1", "emception-browser-v1",
+            "405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37");
+        var executor = new RecordingExecutor([true, false], frozenIdentity);
+        var services = new ServiceCollection();
+        services.AddSingleton<ICodeAssessmentExecutor>(executor);
+        services.AddAssessmentsModule();
+        using var provider = services.BuildServiceProvider();
+        var adapter = provider.GetRequiredService<IAssessmentTypeAdapterResolver>().Resolve(
+            CodeAssessmentContracts.ContentType, CodeAssessmentContracts.AdapterKey, "2",
+            ReviewExecutionContext.OfficialSubmission);
+        var projection = adapter.ProjectAuthoring(Definition()).Items.Single().PrivateProjection;
+        var frozen = System.Text.Json.Nodes.JsonNode.Parse(projection.GetRawText())!;
+        frozen["toolchain"] = JsonSerializer.SerializeToNode(frozenIdentity, GradingJson.Options);
+
+        var result = await adapter.EvaluateDeterministicAsync(new DeterministicReviewRequest(
+            [JsonSerializer.SerializeToElement(frozen, GradingJson.Options)],
+            new AssessmentExecutionDeliveryV1(1, Guid.NewGuid(), new string('a', 64), [],
+                new Dictionary<string, AssessmentExecutionDeliveryItemV1>()),
+            Decode(new Dictionary<string, object> { ["main.cpp"] = File("source") }),
+            CodeAssessmentContracts.HandlerKey, "2"), CancellationToken.None);
+
+        result.Score.Should().Be(ScoreValue.FromUnits(2500));
+        result.Items.Single().HandlerVersion.Should().Be("2");
+        result.EvidenceRefs.Should().ContainSingle().Which.Should().StartWith("code-wasm:2:");
+        executor.CapturedDefinition.Should().NotBeNull();
+        JsonSerializer.Serialize(result).Should().NotContain("secret-result");
+    }
+
     [Theory]
     [InlineData("1")]
     [InlineData("2")]
