@@ -584,7 +584,7 @@ importers:
   demos/emception-ide-next:
     dependencies:
       '@gameguild/emception-ide':
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../../tools/emception/packages/ide
       '@monaco-editor/react':
         specifier: ^4.7.0
@@ -602,7 +602,7 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       emception:
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../../tools/emception/packages/core
       monaco-editor:
         specifier: ^0.57.0
@@ -654,7 +654,7 @@ importers:
   demos/emception-ide-react:
     dependencies:
       '@gameguild/emception-ide':
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../../tools/emception/packages/ide
       '@monaco-editor/react':
         specifier: ^4.7.0
@@ -666,7 +666,7 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       emception:
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../../tools/emception/packages/core
       react:
         specifier: 19.2.8
@@ -697,16 +697,16 @@ importers:
   demos/emception-run-react:
     dependencies:
       '@gameguild/emception-browser':
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../../tools/emception/packages/browser
       '@gameguild/emception-react':
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../../tools/emception/packages/react
       '@gameguild/emception-webcomponent':
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../../tools/emception/packages/webcomponent
       emception:
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../../tools/emception/packages/core
       react:
         specifier: 19.2.8
@@ -734,13 +734,13 @@ importers:
   demos/emception-run-webcomponent:
     dependencies:
       '@gameguild/emception-browser':
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../../tools/emception/packages/browser
       '@gameguild/emception-webcomponent':
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../../tools/emception/packages/webcomponent
       emception:
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../../tools/emception/packages/core
     devDependencies:
       typescript:
@@ -1923,10 +1923,10 @@ importers:
   tools/emception/packages/browser:
     dependencies:
       '@gameguild/emception-xterm':
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../xterm
       emception:
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../core
     devDependencies:
       '@xterm/xterm':
@@ -1948,13 +1948,13 @@ importers:
   tools/emception/packages/ide:
     dependencies:
       '@gameguild/emception-browser':
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../browser
       '@gameguild/emception-xterm':
-        specifier: ^4.5.0
+        specifier: ^4.5.1
         version: link:../xterm
       emception:
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../core
     devDependencies:
       '@monaco-editor/react':
@@ -1988,13 +1988,13 @@ importers:
   tools/emception/packages/react:
     dependencies:
       '@gameguild/emception-browser':
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../browser
       '@gameguild/emception-xterm':
-        specifier: ^4.5.0
+        specifier: ^4.5.1
         version: link:../xterm
       emception:
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../core
     devDependencies:
       '@types/react':
@@ -2018,13 +2018,13 @@ importers:
   tools/emception/packages/webcomponent:
     dependencies:
       '@gameguild/emception-browser':
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../browser
       '@gameguild/emception-xterm':
-        specifier: ^4.5.0
+        specifier: ^4.5.1
         version: link:../xterm
       emception:
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../core
     devDependencies:
       typescript:
@@ -2034,7 +2034,7 @@ importers:
   tools/emception/packages/xterm:
     dependencies:
       emception:
-        specifier: 4.5.0
+        specifier: 4.5.1
         version: link:../core
     devDependencies:
       '@xterm/xterm':
@@ -4318,7 +4318,7 @@ packages:
       valibot: '>=0.31.0 || ^1.0.0-beta.4 || ^1.0.0-rc'
       vest: '>=6.0.0'
       yup: ^1.0.0
-      zod: ^3.25.0 || ^4.0.0
+      zod: 4.6.7
     peerDependenciesMeta:
       '@sinclair/typebox':
         optional: true
@@ -5061,7 +5061,7 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
-      zod: ^3.25 || ^4.0
+      zod: 4.6.7
     peerDependenciesMeta:
       '@cfworker/json-schema':
         optional: true
@@ -8601,7 +8601,7 @@ packages:
     resolution: {integrity: sha512-Ofer5QUnuUdTFsBRwARMoWKOH1ND5ehwYhJ3OJ/BQO+StkwQjHw0XyVh4vDttzHB7QOFhPHa/o413PJ82gU/Tg==}
     peerDependencies:
       typescript: '>=5.0.4'
-      zod: ^3.22.0 || ^4.0.0
+      zod: 4.6.7
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -15378,7 +15378,7 @@ packages:
   zod-to-json-schema@3.25.2:
     resolution: {integrity: sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==}
     peerDependencies:
-      zod: ^3.25.28 || ^4
+      zod: 4.6.7
 
   zod-validation-error@4.0.2:
     resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
