@@ -930,7 +930,7 @@ export async function runNodeTool(vfs: NodeToolVfs, options: NodeToolRunOptions)
   // The global console is already swapped to the tool shim here — log to the
   // real worker console so diagnostics never contaminate the tool's stdout
   // (Python json.loads()es symbols-only output verbatim).
-  rawConsole.log(`${LOG_PREFIX} Running ${scriptPath} (cwd=${options.cwd}, stdin=${stdinBytes.length}B)`);
+  rawConsole.log(LOG_PREFIX, 'Running', scriptPath, '(cwd=' + options.cwd + ', stdin=' + stdinBytes.length + 'B)');
 
   let exitCode = 0;
   try {
@@ -943,7 +943,7 @@ export async function runNodeTool(vfs: NodeToolVfs, options: NodeToolRunOptions)
     } else {
       exitCode = 1;
       const msg = err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err);
-      rawConsole.error(`${LOG_PREFIX} ${posixPath.basename(scriptPath)} failed:`, msg);
+      rawConsole.error(LOG_PREFIX, posixPath.basename(scriptPath), 'failed:', msg);
       stdio.stderr.push(msg + '\n');
       stdio.onStderr?.(msg + '\n');
     }
@@ -956,7 +956,7 @@ export async function runNodeTool(vfs: NodeToolVfs, options: NodeToolRunOptions)
     else globalScope[SHIM_REGISTRY_KEY] = prevRegistry;
   }
 
-  console.log(`${LOG_PREFIX} ${posixPath.basename(scriptPath)} exitCode=${exitCode} total=${(performance.now() - tTotal).toFixed(0)}ms`);
+  console.log(LOG_PREFIX, posixPath.basename(scriptPath), 'exitCode=' + exitCode, 'total=' + (performance.now() - tTotal).toFixed(0) + 'ms');
   return {
     exitCode,
     stdout: stdio.stdout.join(''),
