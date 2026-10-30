@@ -45,10 +45,10 @@ export async function GET(request: NextRequest): Promise<Response> {
 
   const [suggestionResult, currenciesResult] = await Promise.all([suggestionPromise, currenciesPromise]);
 
-  const suggestion = suggestionResult?.ok
+  const suggestion: unknown = suggestionResult?.ok
     ? await suggestionResult.json().catch(() => null)
     : null;
-  const currencies = currenciesResult?.ok
+  const currencies: unknown = currenciesResult?.ok
     ? await currenciesResult.json().catch(() => null)
     : [];
 

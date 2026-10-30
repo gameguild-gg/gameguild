@@ -8,6 +8,7 @@ import {
   normalizeCurrencyCode,
   readStoredCurrency,
   storeCurrency,
+  subscribeCurrencyPreference,
 } from '@/lib/currency/currency-preference';
 import { useLocale } from 'next-intl';
 import * as React from 'react';
@@ -69,18 +70,25 @@ export function CurrencyProvider({
   initialCurrency?: string;
 }) {
   const locale = useLocale();
-  const [currency, setCurrency] = React.useState(() => initialCurrency ?? 'USD');
+  // The selected display currency lives in local storage as external state:
+  // the server render sees no preference (hydration-safe "USD" default), the
+  // client picks the stored one up after mount, and every write — same tab or
+  // cross-tab — re-renders all consumers without a page reload.
+  const storedCurrency = React.useSyncExternalStore(
+    subscribeCurrencyPreference,
+    readStoredCurrency,
+    () => null,
+  );
+  const currency = storedCurrency ?? initialCurrency ?? 'USD';
   const [currencies, setCurrencies] = React.useState<readonly CurrencyOption[]>(FALLBACK_CURRENCY_OPTIONS);
   const [currenciesFromTenant, setCurrenciesFromTenant] = React.useState(false);
   const [suggestionCode, setSuggestionCode] = React.useState<string | null>(null);
   const [suggestionDismissed, setSuggestionDismissed] = React.useState(true);
 
-  // Restore the cross-session preference, then enrich with the tenant list
-  // and the location-based suggestion (single fetch through the proxy).
+  // Enrich with the tenant list and the location-based suggestion (single
+  // fetch through the proxy). Anonymous or offline callers keep the static
+  // fallback, which leaves the switcher usable.
   React.useEffect(() => {
-    const stored = readStoredCurrency();
-    if (stored) setCurrency(stored);
-
     let cancelled = false;
     fetch('/api/currencies', { credentials: 'same-origin' })
       .then((response) => (response.ok ? response.json() : null))
@@ -90,10 +98,6 @@ export function CurrencyProvider({
         if (options.length > 0) {
           setCurrencies(options);
           setCurrenciesFromTenant(true);
-          if (!stored) {
-            const base = options.find((option) => option.code === 'USD');
-            if (base) setCurrency(base.code);
-          }
         }
         const suggested = normalizeCurrencyCode(payload.suggestion?.suggestedCurrency);
         if (suggested) {
@@ -107,7 +111,6 @@ export function CurrencyProvider({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const suggestion = React.useMemo(() => {
@@ -132,13 +135,11 @@ export function CurrencyProvider({
       selectCurrency: (code: string) => {
         const normalized = normalizeCurrencyCode(code);
         if (!normalized) return;
-        setCurrency(normalized);
         storeCurrency(normalized);
         setSuggestionDismissed(true);
       },
       acceptSuggestion: () => {
         if (!suggestionCode) return;
-        setCurrency(suggestionCode);
         storeCurrency(suggestionCode);
         setSuggestionDismissed(true);
       },

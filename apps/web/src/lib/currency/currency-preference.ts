@@ -59,6 +59,39 @@ export function storeCurrency(code: string): void {
   } catch {
     // Storage may be unavailable (private mode); the session state still works.
   }
+  notifyCurrencyPreferenceListeners();
+}
+
+type CurrencyPreferenceListener = () => void;
+
+const currencyPreferenceListeners = new Set<CurrencyPreferenceListener>();
+
+function notifyCurrencyPreferenceListeners(): void {
+  for (const listener of currencyPreferenceListeners) {
+    listener();
+  }
+}
+
+/**
+ * Subscribes to display-currency changes: same-tab writes through
+ * {@link storeCurrency} plus cross-tab `storage` events. Feeds
+ * `useSyncExternalStore`, which keeps the selected currency hydration-safe
+ * (server render sees no preference; the client picks it up after mount).
+ */
+export function subscribeCurrencyPreference(listener: CurrencyPreferenceListener): () => void {
+  currencyPreferenceListeners.add(listener);
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === CURRENCY_STORAGE_KEY) listener();
+  };
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', onStorage);
+  }
+  return () => {
+    currencyPreferenceListeners.delete(listener);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('storage', onStorage);
+    }
+  };
 }
 
 /** Whether the visitor dismissed the suggestion for the given currency. */

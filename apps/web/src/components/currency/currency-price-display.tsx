@@ -24,19 +24,21 @@ export function CurrencyPriceDisplay({
   const { currency: target, format } = useCurrency();
   const t = useTranslations('currency');
   const source = normalizeCurrencyCode(currency);
-  const [converted, setConverted] = React.useState<number | null>(null);
-  const [unavailable, setUnavailable] = React.useState(false);
+  // The latest conversion response, keyed by the inputs it answers for: stale
+  // responses for previous amount/currency pairs are ignored on render.
+  const [result, setResult] = React.useState<{
+    key: string;
+    converted: number | null;
+    unavailable: boolean;
+  } | null>(null);
+  const key = `${source ?? ''}|${target}|${amount}`;
 
   React.useEffect(() => {
-    let cancelled = false;
-    setUnavailable(false);
     if (!source || source === target) {
-      setConverted(null);
-      return () => {
-        cancelled = true;
-      };
+      return () => {};
     }
 
+    let cancelled = false;
     fetch('/api/currency/convert', {
       method: 'POST',
       credentials: 'same-origin',
@@ -47,31 +49,32 @@ export function CurrencyPriceDisplay({
       .then((payload: { items?: Array<{ convertedAmount?: number | null; error?: string | null }> } | null) => {
         if (cancelled) return;
         const value = payload?.items?.[0]?.convertedAmount;
-        if (typeof value === 'number') {
-          setConverted(value);
-        } else {
-          setUnavailable(true);
-        }
+        setResult({
+          key,
+          converted: typeof value === 'number' ? value : null,
+          unavailable: typeof value !== 'number',
+        });
       })
       .catch(() => {
-        if (!cancelled) setUnavailable(true);
+        if (!cancelled) setResult({ key, converted: null, unavailable: true });
       });
     return () => {
       cancelled = true;
     };
-  }, [amount, source, target]);
+  }, [amount, key, source, target]);
 
+  const current = result?.key === key ? result : null;
   const original = `${new Intl.NumberFormat('en-US', { style: 'currency', currency: source ?? 'USD' }).format(amount)} ${source}`;
 
   return (
     <span className={`inline-flex flex-col text-xs leading-tight ${className ?? ''}`} data-testid="currency-price-display">
       <span>{original}</span>
-      {converted !== null ? (
+      {current?.converted != null ? (
         <span className="text-muted-foreground" data-testid="currency-price-converted">
-          {t('conversionNote', { converted: format(converted) })}
+          {t('conversionNote', { converted: format(current.converted) })}
         </span>
       ) : null}
-      {unavailable && source !== target ? (
+      {current?.unavailable && source !== target ? (
         <span className="text-muted-foreground">{t('conversionUnavailable', { code: target })}</span>
       ) : null}
     </span>
