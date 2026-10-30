@@ -149,8 +149,7 @@ export class LazyFS implements IFileSystem {
     const normalized = this.normalizePath(path);
     const entry = this.manifest.files[normalized];
     if (!entry) {
-      //console.log(`${P} readFile: ${normalized} — NOT IN MANIFEST`);
-      return null;
+      return this.fetchUnlistedFile(normalized);
     }
     if (entry.symlink) {
       const target = this.resolveSymlink(normalized, entry.symlink);
@@ -482,6 +481,39 @@ export class LazyFS implements IFileSystem {
     if (target.startsWith('/')) return target;
     const dir = from.substring(0, from.lastIndexOf('/'));
     return this.normalizePath(dir + '/' + target);
+  }
+
+  /** Cache for manifest-unlisted files fetched individually over HTTP. */
+  private unlistedCache = new Map<string, Uint8Array>();
+
+  /**
+   * CDN prefixes where unlisted files legitimately exist (tool sources the
+   * LazyFS HTTP fallback serves). Everything else — workspace paths the IDE
+   * probes, /tmp, etc. — must return null without a network round-trip,
+   * otherwise every existence probe becomes a spurious 404 fetch.
+   */
+  private static readonly UNLISTED_FETCH_PREFIXES: readonly string[] = [
+    '/usr/lib/emscripten/media/',
+    '/usr/lib/emscripten/html/',
+    '/usr/lib/emscripten/node_modules/',
+  ];
+
+  private async fetchUnlistedFile(path: string): Promise<Uint8Array | null> {
+    if (!LazyFS.UNLISTED_FETCH_PREFIXES.some((p) => path.startsWith(p))) {
+      return null;
+    }
+    const cached = this.unlistedCache.get(path);
+    if (cached) return cached;
+    const url = `${this.manifest.baseUrl}${path}`;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      const data = new Uint8Array(await response.arrayBuffer());
+      this.unlistedCache.set(path, data);
+      return data;
+    } catch {
+      return null;
+    }
   }
 
   private async idbGet(path: string): Promise<{ data: Uint8Array; hash: string } | null> {

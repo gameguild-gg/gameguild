@@ -29,6 +29,10 @@ test('workflow passes the classifier API selection into the actual gate', () => 
   assert.match(workflow, /node --test scripts\/ci\/tests\/pr-required-gate\.test\.mjs/);
 });
 
+test('workflow passes the classifier Web selection into the actual gate', () => {
+  assert.match(requiredGate, /WEB_SELECTED: \$\{\{ needs\.classify\.outputs\.web \}\}/);
+});
+
 for (const selected of ['true', 'false']) {
   test(`API success is accepted when selection=${selected}`, () => {
     assert.equal(evaluate({ API_SELECTED: selected }).status, 0);
@@ -59,6 +63,18 @@ test('an unselected API does not excuse a failed mandatory Web gate', () => {
   assert.equal(outcome.status, 1);
   assert.match(outcome.stderr, /web=failure/);
 });
+
+test('a legitimately unselected Web can be skipped in an Emception-only PR', () => {
+  assert.equal(evaluate({ WEB_SELECTED: 'false', WEB: 'skipped' }).status, 0);
+});
+
+for (const selected of ['true', '', 'unknown']) {
+  test(`Web skip blocks when selection is ${selected || 'missing'}`, () => {
+    const outcome = evaluate({ WEB_SELECTED: selected, WEB: 'skipped' });
+    assert.equal(outcome.status, 1);
+    assert.match(outcome.stderr, /web=skipped/);
+  });
+}
 
 test('selected Economy gates still require success', () => {
   const outcome = evaluate({ API_SELECTED: 'false', API: 'skipped', ECONOMY_SELECTED: 'true' });
