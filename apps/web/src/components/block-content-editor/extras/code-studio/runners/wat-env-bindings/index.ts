@@ -136,11 +136,11 @@ export function createWatEnvironment(
     GOImports: createGoBindings(stdout, stderr),
 
     // JavaScript environment
-    js: createJSBindings(stdout, stderr),
+    js: createJSBindings(),
 
     // Web APIs stub
-    window: createWindowBindings(stdout, stderr),
-    document: createDocumentBindings(stdout, stderr),
+    window: createWindowBindings(stdout),
+    document: createDocumentBindings(stdout),
   }
 }
 
