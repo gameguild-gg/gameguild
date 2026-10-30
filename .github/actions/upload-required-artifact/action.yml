@@ -1,0 +1,86 @@
+name: Upload required artifact
+description: Retain required evidence with bounded upload attempts and a mandatory receipt
+
+inputs:
+  name:
+    description: Base artifact name; later attempts use distinct retry suffixes
+    required: true
+  path:
+    description: Files or directory to retain
+    required: true
+
+outputs:
+  artifact-id:
+    description: Identifier of the successfully retained artifact
+    value: ${{ steps.receipt.outputs.artifact-id }}
+  artifact-url:
+    description: Authenticated download URL of the retained artifact
+    value: ${{ steps.receipt.outputs.artifact-url }}
+  artifact-digest:
+    description: SHA-256 digest of the retained archive
+    value: ${{ steps.receipt.outputs.artifact-digest }}
+  artifact-name:
+    description: Actual artifact name, including a retry suffix when needed
+    value: ${{ steps.receipt.outputs.artifact-name }}
+
+runs:
+  using: composite
+  steps:
+    - name: Upload evidence
+      id: first
+      if: ${{ !cancelled() }}
+      continue-on-error: true
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      with:
+        name: ${{ inputs.name }}
+        path: ${{ inputs.path }}
+        if-no-files-found: error
+        overwrite: false
+    - name: Wait before second upload
+      if: ${{ !cancelled() && steps.first.outcome == 'failure' }}
+      shell: bash
+      run: sleep 10
+    - name: Retry evidence upload
+      id: second
+      if: ${{ !cancelled() && steps.first.outcome == 'failure' }}
+      continue-on-error: true
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      with:
+        name: ${{ inputs.name }}-retry-2
+        path: ${{ inputs.path }}
+        if-no-files-found: error
+        overwrite: false
+    - name: Wait before final upload
+      if: ${{ !cancelled() && steps.first.outcome == 'failure' && steps.second.outcome == 'failure' }}
+      shell: bash
+      run: sleep 30
+    - name: Final evidence upload attempt
+      id: third
+      if: ${{ !cancelled() && steps.first.outcome == 'failure' && steps.second.outcome == 'failure' }}
+      continue-on-error: true
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      with:
+        name: ${{ inputs.name }}-retry-3
+        path: ${{ inputs.path }}
+        if-no-files-found: error
+        overwrite: false
+    - name: Require a retained evidence receipt
+      id: receipt
+      if: ${{ !cancelled() }}
+      shell: bash
+      env:
+        ARTIFACT_RECEIPT_SCRIPT: ${{ github.action_path }}/select-upload.mjs
+        ARTIFACT_BASE_NAME: ${{ inputs.name }}
+        UPLOAD_1_OUTCOME: ${{ steps.first.outcome }}
+        UPLOAD_1_ID: ${{ steps.first.outputs.artifact-id }}
+        UPLOAD_1_URL: ${{ steps.first.outputs.artifact-url }}
+        UPLOAD_1_DIGEST: ${{ steps.first.outputs.artifact-digest }}
+        UPLOAD_2_OUTCOME: ${{ steps.second.outcome }}
+        UPLOAD_2_ID: ${{ steps.second.outputs.artifact-id }}
+        UPLOAD_2_URL: ${{ steps.second.outputs.artifact-url }}
+        UPLOAD_2_DIGEST: ${{ steps.second.outputs.artifact-digest }}
+        UPLOAD_3_OUTCOME: ${{ steps.third.outcome }}
+        UPLOAD_3_ID: ${{ steps.third.outputs.artifact-id }}
+        UPLOAD_3_URL: ${{ steps.third.outputs.artifact-url }}
+        UPLOAD_3_DIGEST: ${{ steps.third.outputs.artifact-digest }}
+      run: node --max-old-space-size=128 "$ARTIFACT_RECEIPT_SCRIPT"

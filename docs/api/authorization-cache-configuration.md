@@ -17,6 +17,13 @@ services.AddAuthorizationCaching(options =>
     options.AccessControlListTtlSeconds = 60;
     options.DistributedCacheTtlSeconds = 600;
     options.MaxL1CacheSize = 5000;
+    options.EnableL1MemoryPressureAdaptation = true;
+    options.L1MemoryPressureCheckIntervalSeconds = 30;
+    options.L1MemoryPressureHighThresholdPercent = 85;
+    options.L1MemoryPressureRecoveryThresholdPercent = 70;
+    options.L1MemoryPressureMinimumCapacityPercent = 25;
+    options.L1MemoryPressureReductionPercent = 50;
+    options.L1MemoryPressureRecoveryStepPercent = 25;
     options.UsePubSubInvalidation = true;
     options.InvalidationChannelName = "gg:auth:invalidate";
     options.L2CompressionEnabled = true;
@@ -46,6 +53,29 @@ key tracker. When the cap is exceeded, the tracker removes the
 least-recently-used L1 entry and records a `capacity` eviction. This cap is
 scoped to tracked authorization entries; it does not set `SizeLimit` on the
 shared application `IMemoryCache`.
+
+When `EnableL1MemoryPressureAdaptation` is enabled, a hosted monitor samples the
+runtime's latest `GC.GetGCMemoryInfo()` load indicator every 30 seconds. The high
+and recovery percentages are relative to the GC high-memory threshold. At or
+above the default 85% threshold, each sample halves the effective tracked-entry
+budget, down to 25% of `MaxL1CacheSize` (at least one entry). Excess tracked entries
+are evicted in LRU order and recorded with reason `memory_pressure`; unrelated
+entries in the shared application cache are untouched. A high-pressure sample
+never increases an already smaller budget.
+
+At or below 70%, recovery restores 25% of the configured maximum per sample,
+capped at that maximum. Values between the thresholds keep the existing budget.
+Recovery permits subsequent cache writes; it does not preload permissions.
+Unknown snapshots retain the current budget. Disabling adaptation skips sampling.
+The startup options validate the interval, percentage ranges and hysteresis order.
+
+Budget transitions emit structured logs with memory-load/threshold bytes, previous
+and effective entry budgets, and eviction counts. The signal describes the most
+recent GC observation and can lag current system load; sampling never forces a GC.
+The effective budget limits tracked entry count rather than providing a byte-level
+memory guarantee. It does not modify grants, tenant/user security versions, Redis
+entries or expiration boundaries. A sampling failure is logged and retried at
+the next interval while normal authorization continues.
 
 Permission changes advance the shared tenant security version before publishing
 user, resource, or policy invalidation events. Cache keys include this version,
