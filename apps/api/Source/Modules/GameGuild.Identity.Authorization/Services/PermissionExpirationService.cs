@@ -93,6 +93,10 @@ public sealed class PermissionExpirationService(
         foreach (var grant in pending)
         {
             var originalExpiresAt = grant.ExpiresAt;
+            var originalIsActive = grant.IsActive;
+            var originalMetadata = grant.Metadata is null
+                ? null
+                : new Dictionary<string, object>(grant.Metadata);
 
             try
             {
@@ -132,6 +136,13 @@ public sealed class PermissionExpirationService(
             }
             catch (Exception exception)
             {
+                // Roll the in-memory grant back: a failed cycle must never leak a
+                // half-processed entity. The durable row is untouched (persist
+                // failed), so the next cycle re-fetches and reprocesses it — the
+                // audit entry may duplicate, but is never lost.
+                grant.IsActive = originalIsActive;
+                grant.Metadata = originalMetadata;
+                grant.ExpiresAt = originalExpiresAt;
                 logger.LogWarning(exception,
                     "Failed to process expired permission grant {PermissionId}; retrying on the next cycle.",
                     grant.Id);
