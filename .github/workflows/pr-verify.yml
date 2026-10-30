@@ -602,6 +602,7 @@ jobs:
           SECRET_SCAN: ${{ needs.secret-scan.result }}
           REPOSITORY_POLICY: ${{ needs.repository-policy.result }}
           WEB: ${{ needs.web.result }}
+          WEB_SELECTED: ${{ needs.classify.outputs.web }}
           API: ${{ needs.api.result }}
           API_SELECTED: ${{ needs.classify.outputs.api }}
           TESTING_LAB: ${{ needs.testing-lab.result }}
@@ -619,7 +620,10 @@ jobs:
           check classify "$CLASSIFY"
           check secret-scan "$SECRET_SCAN"
           check repository-policy "$REPOSITORY_POLICY"
-          check web "$WEB"
+          case "$WEB_SELECTED:$WEB" in
+            false:skipped) ;;
+            *) check web "$WEB" ;;
+          esac
           case "$API_SELECTED:$API" in
             false:skipped) ;;
             *) check api "$API" ;;

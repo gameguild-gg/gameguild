@@ -188,7 +188,12 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
 
     async function run(cmd: string, argv?: string[], opts?: BrowserRunOptions): Promise<ToolResult> {
         const start = Date.now();
-        const result = await client.run(cmd, [...(argv ?? [])], toBrowserOpts(opts ?? {}));
+        // ToolRunner's contract is C-style argv (argv[0] = program name; the wasm
+        // module receives argv.slice(1)). Accept both the documented pure-args
+        // form and the explicit program-name form without double-prepending.
+        const rest = [...(argv ?? [])];
+        const normalized = rest[0] === cmd ? rest : [cmd, ...rest];
+        const result = await client.run(cmd, normalized, toBrowserOpts(opts ?? {}));
         const toolResult: ToolResult = { ...result, durationMs: Date.now() - start, timedOut: false };
         emit('exit', { exitCode: toolResult.exitCode, durationMs: toolResult.durationMs });
         return toolResult;
