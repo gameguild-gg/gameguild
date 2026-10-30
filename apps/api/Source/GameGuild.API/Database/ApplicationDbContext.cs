@@ -23,6 +23,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
     private readonly ILogger<ApplicationDbContext>? _logger;
     private readonly EntityChangeAuditOptions _entityChangeAuditOptions = new();
     private readonly bool _entityChangeAuditCaptureEnabled = true;
+    private readonly bool _fieldAccessWriteCaptureEnabled = true;
     private readonly MutationValueSnapshotFactory? _valueSnapshotFactory;
     private readonly PermissionAuditOptions _permissionAuditOptions = new();
     private readonly IReadOnlyList<IPermissionAuditHook> _permissionAuditHooks = [];
@@ -96,6 +97,30 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
             : null;
         _entityChangeAuditOptions = entityChangeAuditOptions?.Value ?? new EntityChangeAuditOptions();
         _entityChangeAuditCaptureEnabled = _entityChangeAuditOptions.Enabled;
+    }
+
+    /// <summary>
+    ///     Full-signature constructor used by dependency injection: identical to the overload above
+    ///     plus the field-level audit options (issue #186) that toggle automatic field-access write
+    ///     capture; DI selects this constructor because it resolves every parameter.
+    /// </summary>
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        IPublisher? publisher,
+        IUseCaseOperationContextAccessor useCaseOperationContextAccessor,
+        IAuditService? auditService,
+        ILogger<ApplicationDbContext>? logger,
+        IOptions<PermissionAuditOptions>? permissionAuditOptions,
+        IEnumerable<IPermissionAuditHook>? permissionAuditHooks,
+        IOptions<ValueSnapshotOptions>? valueSnapshotOptions,
+        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions,
+        IOptions<FieldLevelAuditOptions>? fieldLevelAuditOptions)
+        : this(options, publisher, useCaseOperationContextAccessor, auditService, logger,
+            permissionAuditOptions, permissionAuditHooks, valueSnapshotOptions, entityChangeAuditOptions)
+    {
+        // Field-level write tracking (issue #186) defaults to enabled; the options master
+        // switch is the only way to disable it.
+        _fieldAccessWriteCaptureEnabled = fieldLevelAuditOptions?.Value.CaptureEntityWrites ?? true;
     }
 
     public override int SaveChanges() => SaveChanges(acceptAllChangesOnSuccess: true);
@@ -256,6 +281,16 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
                 configuredExclusions: _entityChangeAuditOptions.ExcludedEntityTypes)
             : 0;
 
+        // Field-level write tracking (issue #186 criterion 1): one FieldAccessAudit row per changed
+        // field of every persisted entity write, staged in the same SaveChanges call with automatic
+        // classification and privacy-safe masked values. The staged count is subtracted below so
+        // callers keep observing business rows only.
+        var capturedFieldAccessCount = _fieldAccessWriteCaptureEnabled
+            ? FieldAccessWriteCapture.Capture(this, operationContext, _logger,
+                _permissionMutationAuditScope?.ActorId, _permissionMutationAuditScope?.TenantId,
+                _permissionMutationAuditScope?.UseEntityTenantScope ?? false)
+            : 0;
+
         foreach (var entry in ChangeTracker.Entries())
         {
             if (entry.Entity is EntityBase<Guid> entity &&
@@ -302,7 +337,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         // count is only reset here after a successful save, so a failed save leaves both the rows
         // and their deduction pending for the retry.
         var stagedSetBasedAuditRecordCount = Interlocked.Exchange(ref _stagedSetBasedAuditRowCount, 0);
-        return affectedRows - capturedOutboxCount - capturedAuditRecordCount - stagedSetBasedAuditRecordCount;
+        return affectedRows - capturedOutboxCount - capturedAuditRecordCount - capturedFieldAccessCount - stagedSetBasedAuditRecordCount;
     }
 
     private async Task RejectCompletedEventIdsAsync(Guid[] eventIds, bool useAsync, CancellationToken cancellationToken)
