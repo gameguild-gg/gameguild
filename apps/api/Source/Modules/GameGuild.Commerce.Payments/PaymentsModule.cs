@@ -30,6 +30,15 @@ public static class PaymentsModule
         services.AddScoped<IRevenueEventRepository, RevenueEventRepository>();
         services.AddScoped<IWalletRepository, WalletRepository>();
         services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
+        services.AddScoped<IBankAccountVerificationRepository, BankAccountVerificationRepository>();
+        services.AddScoped<BankAccountVerificationCommandHandler>();
+
+        // Self-service security policy (issue #414): opt-in MFA step-up for payment-method
+        // mutations. Fails closed to the historic behavior (disabled) when unset.
+        services.AddSingleton<IValidateOptions<PaymentMethodSecurityOptions>, PaymentMethodSecurityOptionsValidator>();
+        services.AddOptions<PaymentMethodSecurityOptions>()
+            .Bind(configuration.GetSection(PaymentMethodSecurityOptions.SectionName))
+            .ValidateOnStart();
 
         // Refund approval workflow (issue #419): configurable manual-approval threshold,
         // approver notifications and the shared refund execution core.

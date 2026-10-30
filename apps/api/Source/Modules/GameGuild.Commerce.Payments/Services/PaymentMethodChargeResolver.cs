@@ -32,7 +32,8 @@ public interface IPaymentMethodChargeResolver
 /// <inheritdoc />
 public sealed class PaymentMethodChargeResolver(
     IPaymentMethodRepository repository,
-    IGatewayPaymentMethodIdProtector? gatewayIdProtector = null) : IPaymentMethodChargeResolver
+    IGatewayPaymentMethodIdProtector? gatewayIdProtector = null,
+    IBankAccountVerificationRepository? bankAccountVerifications = null) : IPaymentMethodChargeResolver
 {
     private readonly IGatewayPaymentMethodIdProtector _protector =
         gatewayIdProtector ?? PassthroughGatewayPaymentMethodIdProtector.Instance;
@@ -49,7 +50,19 @@ public sealed class PaymentMethodChargeResolver(
             .ListAsync(tenantId, userId, cancellationToken)
             .ConfigureAwait(false);
 
-        List<PaymentMethod> candidates = [.. usable.Where(method => method.IsChargeable)];
+        // Bank accounts become chargeable only after micro-deposit verification (issue #414):
+        // an unverified bank account is excluded from the candidates even though its row is
+        // otherwise active. Unverified lookup is fail-closed (no verification row = excluded).
+        List<PaymentMethod> candidates = [];
+        foreach (var method in usable.Where(method => method.IsChargeable))
+        {
+            if (method.Type == PaymentMethodType.BankAccount && !await IsVerifiedBankAccountAsync(method, cancellationToken).ConfigureAwait(false))
+            {
+                continue;
+            }
+
+            candidates.Add(method);
+        }
 
         // An explicit, still-usable recorded method keeps priority (per-bill choice);
         // otherwise the default (registry order) leads.
@@ -72,5 +85,23 @@ public sealed class PaymentMethodChargeResolver(
         return candidates
             .Select(method => _protector.Unprotect(method.GatewayPaymentMethodId))
             .ToList();
+    }
+
+    /// <summary>
+    ///     Whether the bank-account method has a completed micro-deposit challenge. When no
+    ///     verification store is wired (legacy construction) the method fails closed to
+    ///     unverified: bank accounts never charge without verification.
+    /// </summary>
+    private async Task<bool> IsVerifiedBankAccountAsync(PaymentMethod method, CancellationToken cancellationToken)
+    {
+        if (bankAccountVerifications is null)
+        {
+            return false;
+        }
+
+        var verification = await bankAccountVerifications
+            .GetLatestAsync(method.Id, cancellationToken)
+            .ConfigureAwait(false);
+        return verification is { IsVerified: true };
     }
 }

@@ -118,6 +118,7 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
         modelBuilder.ApplyConfiguration(new TaxRuleConfiguration());
         modelBuilder.ApplyConfiguration(new UserWalletConfiguration());
         modelBuilder.ApplyConfiguration(new PaymentMethodConfiguration());
+        modelBuilder.ApplyConfiguration(new BankAccountVerificationConfiguration());
         modelBuilder.ApplyConfiguration(new RefundConfiguration());
 
         // Dispute persistence (issue #419): register the existing dispute entities into the

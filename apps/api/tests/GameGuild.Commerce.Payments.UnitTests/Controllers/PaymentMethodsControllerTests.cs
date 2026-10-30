@@ -5,6 +5,7 @@ using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Moq;
 using System.Reflection;
 using Xunit;
@@ -49,7 +50,11 @@ public class PaymentMethodsControllerTests
         var accessor = new Mock<IActorContextAccessor>();
         accessor.SetupGet(value => value.ActorContext).Returns(actorContext);
 
-        return new PaymentMethodsController(sender ?? Mock.Of<ISender>(), _paymentMethodService.Object, accessor.Object)
+        return new PaymentMethodsController(
+            sender ?? Mock.Of<ISender>(),
+            _paymentMethodService.Object,
+            accessor.Object,
+            Options.Create(new PaymentMethodSecurityOptions()))
         {
             ControllerContext = new ControllerContext
             {

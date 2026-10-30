@@ -18,12 +18,14 @@ public sealed record ModuleEventCoverageEntry(
     IReadOnlyList<string> CommandsMissingHandlers,
     IReadOnlyList<string> CommandsDuplicateHandlers,
     IReadOnlyList<string> UnavailableCommands,
+    IReadOnlyList<string> MutationEndpointsWithoutCommandDispatch,
     string CoverageChannel)
 {
     public bool IsFullyCovered =>
         CommandsWithoutContracts.Count == 0
         && CommandsMissingHandlers.Count == 0
-        && CommandsDuplicateHandlers.Count == 0;
+        && CommandsDuplicateHandlers.Count == 0
+        && MutationEndpointsWithoutCommandDispatch.Count == 0;
 }
 
 /// <summary>Report answering issue #181's "complete event coverage" criterion.</summary>
@@ -64,10 +66,11 @@ public interface IEventCoverageSweepService
 /// <summary>
 /// Coverage sweep over every loaded GameGuild module (issues #180/#181): reflects mutating commands,
 /// their assembly-level use-case event contracts, their handlers and the mutation endpoints of every
-/// module, and reports per-module coverage together with the aggregate gaps. Completeness rests on
-/// three enforcement layers: the GGARCH001/004/005 analyzers fail the build on a missing contract,
-/// handler or direct controller persistence; this sweep re-verifies the same invariants over the
-/// assemblies actually loaded at runtime; and every command journals a durable operation event through
+/// module, verifies every mutating endpoint dispatches through the CQRS pipeline, and reports
+/// per-module coverage together with the aggregate gaps. Completeness rests on three enforcement
+/// layers: the GGARCH001/004/005 analyzers fail the build on a missing contract, handler or direct
+/// controller persistence; this sweep re-verifies the same invariants over the assemblies actually
+/// loaded at runtime; and every command journals a durable operation event through
 /// <c>UseCaseOperationBehavior</c>, so the mutation event surface and the module catalog cannot drift
 /// apart silently.
 /// </summary>
@@ -184,6 +187,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
             }
 
             var mutationEndpoints = CountMutationEndpoints(assembly);
+            var endpointsWithoutDispatch = GetMutationControllersWithoutCommandDispatch(assembly);
             var channel = commands.Count == 0
                 ? "Platform/library module: no mutating use-case commands; read-only surfaces are covered by the authorization decision audit."
                 : "Every mutating command carries a use-case event contract and journals a durable operation event (UseCaseOperationOccurredV1) in its transaction through UseCaseOperationBehavior.";
@@ -198,6 +202,7 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
                 missingHandlers.OrderBy(name => name, StringComparer.Ordinal).ToList(),
                 duplicateHandlers.OrderBy(name => name, StringComparer.Ordinal).ToList(),
                 unavailableCommands.OrderBy(name => name, StringComparer.Ordinal).ToList(),
+                endpointsWithoutDispatch,
                 channel));
 
             if (withoutContracts.Count > 0)
@@ -211,6 +216,10 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
             if (duplicateHandlers.Count > 0)
             {
                 gaps.Add($"{moduleName}: {duplicateHandlers.Count} mutating command(s) with multiple handlers.");
+            }
+            if (endpointsWithoutDispatch.Count > 0)
+            {
+                gaps.Add($"{moduleName}: {endpointsWithoutDispatch.Count} controller(s) with mutating endpoints that dispatch no command through the CQRS pipeline.");
             }
         }
 
@@ -449,41 +458,74 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
         }
     }
 
-    private static IEnumerable<Type> GetMutatingCommands(Assembly assembly)
-    {
-        Type[] types;
-        try
-        {
-            types = assembly.GetTypes();
-        }
-        catch (ReflectionTypeLoadException exception)
-        {
-            types = exception.Types.Where(type => type is not null).Cast<Type>().ToArray();
-        }
-
-        return types.Where(type => type is { IsClass: true, IsAbstract: false, IsInterface: false } && IsMutatingCommand(type));
-    }
+    private static IEnumerable<Type> GetMutatingCommands(Assembly assembly) =>
+        GetSafelyLoadedTypes(assembly)
+            // Private nested records cannot be activated by DI and only exist as test probes,
+            // so they are structurally dormant and never a real use-case command surface.
+            .Where(type => type is { IsClass: true, IsAbstract: false, IsInterface: false, IsNestedPrivate: false } && IsMutatingCommand(type));
 
     private static bool IsMutatingCommand(Type type) =>
         typeof(ICommand).IsAssignableFrom(type)
         || type.GetInterfaces().Any(contract => contract.IsGenericType && contract.GetGenericTypeDefinition() == typeof(ICommand<>));
 
-    private static int CountMutationEndpoints(Assembly assembly)
+    private static int CountMutationEndpoints(Assembly assembly) =>
+        GetSafelyLoadedTypes(assembly)
+            .Where(type => type is { IsClass: true, IsAbstract: false } && type.Name.EndsWith("Controller", StringComparison.Ordinal))
+            .SelectMany(controller => controller.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+            .Count(IsMutationEndpointAction);
+
+    /// <summary>
+    /// Controllers that expose mutating endpoints but receive no command dispatcher (<see cref="ISender"/>,
+    /// which <c>IMediator</c> extends): their user interactions would bypass the journaled command
+    /// pipeline. Together with the GGARCH004/007 no-controller-persistence rules this pins the
+    /// "APIs and user interactions" half of the coverage criterion: a mutating endpoint can only
+    /// reach the database through a dispatched command whose operation event the
+    /// <c>UseCaseOperationBehavior</c> journals in the owning transaction.
+    /// </summary>
+    private static IReadOnlyList<string> GetMutationControllersWithoutCommandDispatch(Assembly assembly)
     {
-        Type[] types;
+        var lacking = new List<string>();
+        foreach (var type in GetSafelyLoadedTypes(assembly))
+        {
+            if (type is not { IsClass: true, IsAbstract: false } || !type.Name.EndsWith("Controller", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var mutationActions = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Where(IsMutationEndpointAction)
+                .ToList();
+            if (mutationActions.Count == 0)
+            {
+                continue;
+            }
+
+            var constructorDispatches = type.GetConstructors()
+                .Any(constructor => constructor.GetParameters().Any(parameter => typeof(ISender).IsAssignableFrom(parameter.ParameterType)));
+            var actionDispatches = mutationActions.Any(action =>
+                action.GetParameters().Any(parameter => typeof(ISender).IsAssignableFrom(parameter.ParameterType)));
+            if (!constructorDispatches && !actionDispatches)
+            {
+                lacking.Add(type.Name);
+            }
+        }
+
+        return lacking.OrderBy(name => name, StringComparer.Ordinal).ToList();
+    }
+
+    private static bool IsMutationEndpointAction(MethodInfo action) =>
+        action.GetCustomAttributes().Any(attribute =>
+            attribute.GetType().Name is "HttpPostAttribute" or "HttpPutAttribute" or "HttpPatchAttribute" or "HttpDeleteAttribute");
+
+    private static Type[] GetSafelyLoadedTypes(Assembly assembly)
+    {
         try
         {
-            types = assembly.GetTypes();
+            return assembly.GetTypes();
         }
         catch (ReflectionTypeLoadException exception)
         {
-            types = exception.Types.Where(type => type is not null).Cast<Type>().ToArray();
+            return exception.Types.Where(type => type is not null).Cast<Type>().ToArray();
         }
-
-        return types
-            .Where(type => type is { IsClass: true, IsAbstract: false } && type.Name.EndsWith("Controller", StringComparison.Ordinal))
-            .SelectMany(controller => controller.GetMethods(BindingFlags.Public | BindingFlags.Instance))
-            .Count(action => action.GetCustomAttributes().Any(attribute =>
-                attribute.GetType().Name is "HttpPostAttribute" or "HttpPutAttribute" or "HttpPatchAttribute" or "HttpDeleteAttribute"));
     }
 }

@@ -64,6 +64,7 @@ public static class PresentationServiceCollectionExtensions
         var mvcBuilder = services.AddControllers(mvcOptions =>
             {
                 mvcOptions.Conventions.Add(new MinimumOrderRouteApplicationModelConvention());
+                mvcOptions.Filters.AddService<FieldAccessReadCaptureFilter>();
                 mvcOptions.Filters.AddService<FieldMaskingResultFilter>();
                 mvcOptions.Filters.AddService<AuthenticationLockoutActionFilter>();
 
@@ -81,6 +82,7 @@ public static class PresentationServiceCollectionExtensions
             })
             .ConfigureApplicationPartManager(manager => manager.ApplicationParts.Clear());
 
+        services.AddScoped<FieldAccessReadCaptureFilter>();
         services.AddScoped<FieldMaskingResultFilter>();
 
         foreach (var assembly in applicationAssemblies)

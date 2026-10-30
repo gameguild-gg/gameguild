@@ -34,6 +34,22 @@ public sealed class FieldLevelAuditOptions
 
     /// <summary>Hour (UTC) marking the end of the off-hours window used by access-pattern analysis.</summary>
     public int OffHoursEndUtc { get; set; } = 6;
+
+    /// <summary>
+    /// When true (default), the universal entity-change pipeline stages one <c>FieldAccessAudit</c> row per
+    /// changed field of every persisted entity write (issue #186 criterion 1), with automatic classification
+    /// and privacy-safe masked values. Disable only to shed the per-field storage overhead.
+    /// </summary>
+    public bool CaptureEntityWrites { get; set; } = true;
+
+    /// <summary>
+    /// When true (default), endpoints annotated with <c>[DataMaskingResourceType]</c> record one field-level
+    /// read observation per sensitive field of every entity they return, using the trusted actor context.
+    /// </summary>
+    public bool CaptureEndpointReads { get; set; } = true;
+
+    /// <summary>Maximum response items the read-capture pass will walk per request (page-size guard).</summary>
+    public int MaxReadCaptureItemsPerResponse { get; set; } = 100;
 }
 
 /// <summary>Outcome of evaluating one export attempt against the bulk-export thresholds.</summary>
