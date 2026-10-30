@@ -38,6 +38,9 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
         // expiry, or not yet expired.
         var processed = harness.SeedProcessedGrant(harness.TenantA, SystemClock.UtcNow.AddHours(-6));
         var deleted = harness.SeedGrant(harness.TenantA, SystemClock.UtcNow.AddHours(-7));
+        // Soft-delete requires a persisted, previously-updated row (Version > 0) —
+        // simulate the update cycle a real tenant grant goes through before removal.
+        deleted.Version = 1;
         var deactivated = harness.SeedGrant(harness.TenantA, SystemClock.UtcNow.AddHours(-8), isActive: false);
         var future = harness.SeedGrant(harness.TenantA, SystemClock.UtcNow.AddHours(2));
         await harness.SaveChangesAsync();
