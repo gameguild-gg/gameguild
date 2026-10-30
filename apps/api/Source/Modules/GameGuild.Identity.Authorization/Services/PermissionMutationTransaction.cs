@@ -21,7 +21,21 @@ public sealed class PermissionMutationTransaction(IApplicationDbContext context)
         ExecuteAsync(actorId, tenantId, operation, cancellationToken, shouldCommit, false);
 
     /// <inheritdoc />
-    public async Task<Result<T>> ExecuteAsync<T>(Guid actorId, Guid? tenantId,
+    public Task<Result<T>> ExecuteAsync<T>(Guid actorId, Guid? tenantId,
+        Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
+        Func<T, bool>? shouldCommit, bool useEntityTenantScope) =>
+        ExecuteCoreAsync(new MutationActor(actorId, null), tenantId, operation, cancellationToken, shouldCommit, useEntityTenantScope);
+
+    /// <inheritdoc />
+    public Task<Result<T>> ExecuteSystemAsync<T>(PermissionSystemMutation maintenance, Guid? tenantId,
+        Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
+        Func<T, bool>? shouldCommit, bool useEntityTenantScope)
+    {
+        ArgumentNullException.ThrowIfNull(maintenance);
+        return ExecuteCoreAsync(new MutationActor(Guid.Empty, maintenance), tenantId, operation, cancellationToken, shouldCommit, useEntityTenantScope);
+    }
+
+    private async Task<Result<T>> ExecuteCoreAsync<T>(MutationActor actor, Guid? tenantId,
         Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
         Func<T, bool>? shouldCommit, bool useEntityTenantScope)
     {
@@ -48,7 +62,7 @@ public sealed class PermissionMutationTransaction(IApplicationDbContext context)
             // even when the caller disabled EF's automatic detection for earlier batch work.
             db.ChangeTracker.AutoDetectChangesEnabled = true;
             return await new PermissionMutationExecutionStrategy(db).ExecuteAsync(
-                () => ExecuteOnceAsync(db, actorId, tenantId, operation, cancellationToken, shouldCommit, useEntityTenantScope)).ConfigureAwait(false);
+                () => ExecuteOnceAsync(db, actor, tenantId, operation, cancellationToken, shouldCommit, useEntityTenantScope)).ConfigureAwait(false);
         }
         finally
         {
@@ -57,7 +71,7 @@ public sealed class PermissionMutationTransaction(IApplicationDbContext context)
     }
 
     private async Task<Result<T>> ExecuteOnceAsync<T>(
-        DbContext db, Guid actorId, Guid? tenantId,
+        DbContext db, MutationActor actor, Guid? tenantId,
         Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken, Func<T, bool>? shouldCommit, bool useEntityTenantScope)
     {
         var callerTransaction = db.Database.CurrentTransaction;
@@ -70,7 +84,13 @@ public sealed class PermissionMutationTransaction(IApplicationDbContext context)
             entry => new TrackedState(entry.State, entry.CurrentValues.Clone(), entry.OriginalValues.Clone()),
             ReferenceEqualityComparer.Instance);
         var buffer = context as IPermissionMutationAuditBuffer;
-        using var auditScope = buffer?.BeginPermissionMutationAuditScope(actorId, tenantId, useEntityTenantScope);
+        if (actor.Maintenance is not null && buffer is null)
+        {
+            throw new InvalidOperationException("System permission maintenance requires host-validated audit scopes.");
+        }
+        using var auditScope = actor.Maintenance is not null
+            ? buffer!.BeginSystemPermissionMutationAuditScope(actor.Maintenance, tenantId, useEntityTenantScope)
+            : buffer?.BeginPermissionMutationAuditScope(actor.UserId, tenantId, useEntityTenantScope);
         var ownsTransaction = callerTransaction is null;
         var transaction = callerTransaction ?? await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         var savepoint = "permission_" + Guid.NewGuid().ToString("N");
@@ -173,6 +193,8 @@ public sealed class PermissionMutationTransaction(IApplicationDbContext context)
     }
 
     private sealed record TrackedState(EntityState State, PropertyValues Current, PropertyValues Original);
+
+    private readonly record struct MutationActor(Guid UserId, PermissionSystemMutation? Maintenance);
 
     private sealed class PermissionMutationExecutionStrategy(DbContext db) : ExecutionStrategy(db, 0, TimeSpan.Zero)
     {

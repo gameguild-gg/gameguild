@@ -22,4 +22,12 @@ public interface IPermissionMutationExecutor
     Task<Result<T>> ExecuteAsync<T>(Guid actorId, Guid? tenantId,
         Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
         Func<T, bool>? shouldCommit, bool useEntityTenantScope);
+
+    /// <summary>
+    ///     Executes named system maintenance through the same transaction algorithm.
+    ///     The host verifies the real system actor; the descriptor cannot authorize itself.
+    /// </summary>
+    Task<Result<T>> ExecuteSystemAsync<T>(PermissionSystemMutation maintenance, Guid? tenantId,
+        Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
+        Func<T, bool>? shouldCommit, bool useEntityTenantScope);
 }

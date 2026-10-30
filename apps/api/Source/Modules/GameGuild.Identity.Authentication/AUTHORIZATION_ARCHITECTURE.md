@@ -2144,6 +2144,16 @@ the Authentication entry point delegates to that implementation. This preserves 
 dependency direction and the existing rollback, caller-state and audit-buffer rules.
 The expiration service requires that executor; it has no silent non-relational fallback.
 
+System expiration uses a separate, named maintenance capability instead of converting
+the `system` subject into a user GUID. The host validates its actual ambient actor
+(authenticated System kind, exact system subject, SystemAdmin and the reviewed
+PermissionExpiration operation) before it creates the same rollback/audit lease.
+The descriptor alone does not authorize the operation; unsupported hosts fail closed.
+The existing user overload retains its nonempty actor and valid-or-null tenant checks.
+Central permission audit metadata preserves the system subject, maintenance origin and
+operation with null UserId; dedicated expiration audit retains the existing system
+marker. The internal maintenance actor scope restores the previous caller context.
+
 Cleanup excludes completed checkpoints before applying the batch limit. Each tenant's
 accepted grants, expiration audits, security-version increment and checkpoints share
 one transaction, with per-grant savepoints for isolated failures. Null tenant scope

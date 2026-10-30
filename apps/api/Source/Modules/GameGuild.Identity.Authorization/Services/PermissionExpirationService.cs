@@ -53,13 +53,18 @@ public sealed class PermissionExpirationService(
     public async Task<int> ProcessExpiredAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var actor = Actor;
-        if (actor.IsAuthenticated && (!actor.IsSystemAdmin || actor.SubjectIdAsGuid is null || actor.SubjectIdAsGuid == Guid.Empty))
+        var processing = ResolveProcessingActor();
+        using var backgroundScope = processing.Scope;
+        var actor = processing.Actor;
+        var isSystem = IsExpirationSystemActor(actor);
+        if (!actor.IsAuthenticated || !actor.IsSystemAdmin
+            || (!isSystem && (actor.ActorKind == ActorKind.System || actor.SubjectIdAsGuid is null || actor.SubjectIdAsGuid == Guid.Empty)))
         {
             throw new UnauthorizedAccessException("Cross-tenant expiration processing requires system administration.");
         }
         if (Options.Validate().Count != 0) { throw new InvalidOperationException("Invalid permission expiration configuration."); }
-        var actorId = actor.SubjectIdAsGuid ?? Guid.Empty;
+        var mutationActor = new ExpirationActor(isSystem ? Guid.Empty : actor.SubjectIdAsGuid!.Value,
+            isSystem ? new PermissionSystemMutation(PermissionSystemMutation.ExpirationOperation) : null);
         var expired = await repository.GetExpiredPermissionsAsync(cancellationToken).ConfigureAwait(false);
         var processed = 0;
         var failures = new List<Exception>();
@@ -68,7 +73,7 @@ public sealed class PermissionExpirationService(
         {
             cancellationToken.ThrowIfCancellationRequested();
             var groupFailures = new List<Exception>();
-            var batch = await ProcessGroupAsync(group, actorId, failures, groupFailures, cancellationToken).ConfigureAwait(false);
+            var batch = await ProcessGroupAsync(group, mutationActor, failures, groupFailures, cancellationToken).ConfigureAwait(false);
             failures.AddRange(groupFailures);
             if (batch.IsFailure) { continue; }
             processed += batch.Value.Notifications.Count;
@@ -79,7 +84,7 @@ public sealed class PermissionExpirationService(
                 {
                     // Delivery remains best effort; an accepted expiration is not rolled back
                     // or advertised as retryable merely because alert queueing failed.
-                    logger.LogWarning(exception, "Failed to publish a accepted permission expiration alert.");
+                    logger.LogWarning(exception, "Failed to publish an accepted permission expiration alert.");
                 }
             }
         }
@@ -93,17 +98,39 @@ public sealed class PermissionExpirationService(
         return processed;
     }
 
+    private (ActorContext Actor, IActorContextScope? Scope) ResolveProcessingActor()
+    {
+        var actor = Actor;
+        if (actor.IsAuthenticated) { return (actor, null); }
+        if (actor.ActorKind != ActorKind.Anonymous || actor.SubjectId is not null)
+        {
+            throw new UnauthorizedAccessException("An unauthenticated actor cannot claim system maintenance identity.");
+        }
+        // This internal maintenance entry point is also called directly by the worker.
+        // HTTP command handlers retain their authenticated administrator guards.
+        var system = ActorContextBuilder.ForSystem(PermissionSystemMutation.ExpirationOperation).Build();
+        var scope = actorContextAccessor?.BeginActorContextScope(system)
+            ?? throw new InvalidOperationException("Automatic expiration requires an ambient system actor scope.");
+        return (system, scope);
+    }
+
+    private static bool IsExpirationSystemActor(ActorContext actor) =>
+        actor.IsAuthenticated && actor.ActorKind == ActorKind.System && actor.IsSystemAdmin
+        && string.Equals(actor.SubjectId, SystemActor.SystemSubjectId, StringComparison.Ordinal)
+        && string.Equals(actor.TypedAttributes.GetCustomAttribute("operation"),
+            PermissionSystemMutation.ExpirationOperation, StringComparison.Ordinal);
+
     private Task<Result<ExpirationBatchOutcome>> ProcessGroupAsync(IGrouping<Guid, TenantPermission> group,
-        Guid actorId, List<Exception> failures, List<Exception> groupFailures, CancellationToken cancellationToken)
+        ExpirationActor actor, List<Exception> failures, List<Exception> groupFailures, CancellationToken cancellationToken)
     {
         var scope = group.Key == Guid.Empty ? (Guid?)null : group.Key;
-        return ExecuteMutationAsync(actorId, scope, async token =>
+        return ExecuteMutationAsync(actor, scope, async token =>
         {
             var notifications = new List<PermissionExpirationNotification>();
             foreach (var grant in group)
             {
                 token.ThrowIfCancellationRequested();
-                var attempt = await ProcessGrantAsync(grant, actorId, groupFailures, token).ConfigureAwait(false);
+                var attempt = await ProcessGrantAsync(grant, actor, groupFailures, token).ConfigureAwait(false);
                 if (attempt.IsSuccess) { notifications.Add(attempt.Value); }
             }
             if (notifications.Count > 0)
@@ -115,16 +142,16 @@ public sealed class PermissionExpirationService(
     }
 
     private Task<Result<PermissionExpirationNotification>> ProcessGrantAsync(TenantPermission grant,
-        Guid actorId, List<Exception> failures, CancellationToken cancellationToken)
+        ExpirationActor actor, List<Exception> failures, CancellationToken cancellationToken)
     {
         var originalExpiresAt = grant.ExpiresAt;
-        return ExecuteMutationAsync(actorId, grant.TenantId, async token =>
+        return ExecuteMutationAsync(actor, grant.TenantId, async token =>
         {
             grant.Expire();
             SetStamp(grant, ProcessedStampKey);
             await repository.UpdateAsync(grant, token).ConfigureAwait(false);
             var audit = await auditService.LogPermissionChangeAsync(
-                PermissionOperationType.Expire, grant.UserId, actorId, grant.TenantId,
+                PermissionOperationType.Expire, grant.UserId, actor.UserId, grant.TenantId,
                 permissionType: "Tenant", resourceType: "TenantPermission", resourceId: grant.Id,
                 oldValue: originalExpiresAt?.ToString("O"), newValue: "inactive",
                 reason: "Automatic permission expiration", cancellationToken: token).ConfigureAwait(false);
@@ -138,18 +165,23 @@ public sealed class PermissionExpirationService(
         }, cancellationToken, failures, null, false);
     }
 
-    private async Task<Result<T>> ExecuteMutationAsync<T>(Guid actorId, Guid? tenantId,
+    private async Task<Result<T>> ExecuteMutationAsync<T>(ExpirationActor actor, Guid? tenantId,
         Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
         List<Exception> failures, Func<T, bool>? shouldCommit, bool useEntityTenantScope)
     {
         Exception? operationFailure = null;
         try
         {
-            var result = await mutationExecutor.ExecuteAsync(actorId, tenantId, async token =>
+            async Task<Result<T>> PerformAsync(CancellationToken token)
             {
                 try { return await operation(token).ConfigureAwait(false); }
                 catch (Exception exception) { operationFailure = exception; throw; }
-            }, cancellationToken, shouldCommit, useEntityTenantScope).ConfigureAwait(false);
+            }
+            var result = actor.Maintenance is null
+                ? await mutationExecutor.ExecuteAsync(actor.UserId, tenantId, PerformAsync,
+                    cancellationToken, shouldCommit, useEntityTenantScope).ConfigureAwait(false)
+                : await mutationExecutor.ExecuteSystemAsync(actor.Maintenance, tenantId, PerformAsync,
+                    cancellationToken, shouldCommit, useEntityTenantScope).ConfigureAwait(false);
             if (result.IsFailure)
             {
                 failures.Add(new InvalidOperationException(result.Error.Description));
@@ -167,6 +199,8 @@ public sealed class PermissionExpirationService(
     }
 
     private sealed record ExpirationBatchOutcome(IReadOnlyList<PermissionExpirationNotification> Notifications);
+
+    private readonly record struct ExpirationActor(Guid UserId, PermissionSystemMutation? Maintenance);
 
     public async Task<int> SendUpcomingExpirationRemindersAsync(CancellationToken cancellationToken = default)
     {

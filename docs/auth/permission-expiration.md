@@ -100,6 +100,24 @@ standalone worker. A caller-owned transaction retains its own final commit/rollb
 The worker logs the failure and retries pending grants next cycle. Cancellation and
 unconfirmed rollback/commit failures propagate; rollback cleanup ignores the cancelled
 request token. A cycle exceeding `ExecutionTimeout` is abandoned and retried.
+
+System maintenance has an explicit audit capability. `SystemActor` has subject `system`,
+which is not a user GUID. The internal automatic entry point establishes a bounded
+`ActorContextBuilder.ForSystem("PermissionExpiration")` scope and restores the prior
+context afterwards. An already authenticated system context must name that exact
+operation; an authenticated administrator with a valid user GUID keeps the user path.
+HTTP command handlers retain their authenticated administrator checks.
+
+The host independently validates the actual ambient actor before accepting a system
+mutation scope: authenticated `ActorKind.System`, subject `system`, SystemAdmin role,
+and the reviewed expiration operation. The operation descriptor cannot authorize
+itself. User/anonymous contexts, empty subjects or tenants, and unreviewed operations
+are rejected. The existing user audit-scope overload still rejects `Guid.Empty` actors.
+Hosts without the system capability fail closed. No synthetic user account is created.
+Central permission audit metadata records `SubjectId: system`, `Origin: SystemMaintenance`
+and `OperationName: PermissionExpiration`, with `AuditLog.UserId = null`. The dedicated
+expiration audit retains its established `PerformedBy = Guid.Empty` system marker.
+
 The worker exits immediately when
 `Enabled = false` or the configuration is invalid.
 

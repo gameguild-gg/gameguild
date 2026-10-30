@@ -1,3 +1,4 @@
+using System.Text.Json;
 using GameGuild.API.Database;
 using GameGuild.API.IntegrationTests.Infrastructure;
 using GameGuild.Compliance.Audit;
@@ -239,6 +240,118 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests(ApiPostgreSqlFix
         Assert.True(persisted.IsActive);
         Assert.True(persisted.Metadata?.ContainsKey("expirationReminderAt") == true);
         Assert.False(persisted.Metadata?.ContainsKey("expirationProcessedAt") == true);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AuthenticatedSystemMaintenanceRecordsItsActualSubjectAndOperation(bool global)
+    {
+        await using var host = await CreateHostAsync();
+        var tenant = global ? (Guid?)null : Guid.NewGuid();
+        var grant = Grant(tenant);
+        await SeedAsync(host.Factory, [grant], [tenant ?? Guid.Empty]);
+        await using (var scope = host.Factory.Services.CreateAsyncScope())
+        {
+            var accessor = scope.ServiceProvider.GetRequiredService<IActorContextAccessor>();
+            var earlier = accessor.ActorContext;
+            using (accessor.BeginActorContextScope(ActorContextBuilder.ForSystem(PermissionSystemMutation.ExpirationOperation).Build()))
+            {
+                Assert.Equal(1, await Service(scope.ServiceProvider, [grant.Id]).ProcessExpiredAsync());
+            }
+            Assert.Same(earlier, accessor.ActorContext);
+        }
+        await using var verify = host.Factory.Services.CreateAsyncScope();
+        var db = verify.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var logs = await db.Set<AuditLog>().AsNoTracking().Where(row =>
+            row.ResourceId == grant.Id.ToString() && row.Category == AuditCategory.Permission).ToArrayAsync();
+        var systemLogs = logs.Where(row =>
+        {
+            using var metadata = JsonDocument.Parse(row.Metadata!);
+            return metadata.RootElement.TryGetProperty("SubjectId", out var subject)
+                && subject.GetString() == SystemActor.SystemSubjectId;
+        }).ToArray();
+        Assert.NotEmpty(systemLogs);
+        foreach (var log in systemLogs)
+        {
+            Assert.Null(log.UserId);
+            Assert.Equal(tenant, log.TenantId);
+            using var metadata = JsonDocument.Parse(log.Metadata!);
+            Assert.Equal("SystemMaintenance", metadata.RootElement.GetProperty("Origin").GetString());
+            Assert.Equal(PermissionSystemMutation.ExpirationOperation, metadata.RootElement.GetProperty("OperationName").GetString());
+        }
+        var dedicated = await db.Set<PermissionAuditLog>().SingleAsync(row =>
+            row.ResourceId == grant.Id && row.OperationType == PermissionOperationType.Expire);
+        Assert.Equal(Guid.Empty, dedicated.PerformedBy);
+        Assert.Equal(tenant, dedicated.TenantId?.Value);
+    }
+
+    [Theory]
+    [InlineData("user")]
+    [InlineData("anonymous")]
+    [InlineData("empty-subject")]
+    [InlineData("unauthenticated-system")]
+    [InlineData("wrong-operation")]
+    [InlineData("no-maintenance-role")]
+    [InlineData("unknown-descriptor")]
+    public async Task SystemMutationCapabilityRejectsUntrustedContextBeforeItsCallback(string boundary)
+    {
+        await using var host = await CreateHostAsync();
+        await using var scope = host.Factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var system = ActorContextBuilder.ForSystem(PermissionSystemMutation.ExpirationOperation).Build();
+        var actor = boundary switch
+        {
+            "user" => ActorContextBuilder.ForUser(Guid.NewGuid()).WithRole("SystemAdmin").Build(),
+            "anonymous" => ActorContext.Anonymous,
+            "empty-subject" => system with { SubjectId = string.Empty },
+            "unauthenticated-system" => system with { IsAuthenticated = false },
+            "wrong-operation" => ActorContextBuilder.ForSystem("OtherMaintenance").Build(),
+            "no-maintenance-role" => system with { Roles = new HashSet<string>() },
+            _ => system
+        };
+        var maintenance = new PermissionSystemMutation(boundary == "unknown-descriptor"
+            ? "OtherMaintenance" : PermissionSystemMutation.ExpirationOperation);
+        using var actorScope = services.GetRequiredService<IActorContextAccessor>().BeginActorContextScope(actor);
+        var callbackReached = false;
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => services.GetRequiredService<IPermissionMutationExecutor>()
+            .ExecuteSystemAsync(maintenance, Guid.NewGuid(), _ =>
+            {
+                callbackReached = true;
+                return Task.FromResult(Result.Success(1));
+            }, CancellationToken.None, null, false));
+        Assert.False(callbackReached);
+        Assert.Null(services.GetRequiredService<ApplicationDbContext>().Database.CurrentTransaction);
+    }
+
+    [Fact]
+    public async Task SystemMutationCapabilityRejectsEmptyTenantBeforeItsCallback()
+    {
+        await using var host = await CreateHostAsync();
+        await using var scope = host.Factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        using var actorScope = services.GetRequiredService<IActorContextAccessor>().BeginActorContextScope(
+            ActorContextBuilder.ForSystem(PermissionSystemMutation.ExpirationOperation).Build());
+        var callbackReached = false;
+        await Assert.ThrowsAsync<ArgumentException>(() => services.GetRequiredService<IPermissionMutationExecutor>()
+            .ExecuteSystemAsync(new PermissionSystemMutation(PermissionSystemMutation.ExpirationOperation), Guid.Empty, _ =>
+            {
+                callbackReached = true;
+                return Task.FromResult(Result.Success(1));
+            }, CancellationToken.None, null, false));
+        Assert.False(callbackReached);
+    }
+
+    [Fact]
+    public async Task UserAuditScopeStillRejectsEmptyActorInsideTrustedSystemContext()
+    {
+        await using var host = await CreateHostAsync();
+        await using var scope = host.Factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        using var actorScope = services.GetRequiredService<IActorContextAccessor>().BeginActorContextScope(
+            ActorContextBuilder.ForSystem(PermissionSystemMutation.ExpirationOperation).Build());
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        Assert.Throws<ArgumentException>(() => db.BeginPermissionMutationAuditScope(Guid.Empty, Guid.NewGuid(), false));
     }
 
     private static TenantPermission Grant(Guid? tenant, Guid? id = null) => new()
