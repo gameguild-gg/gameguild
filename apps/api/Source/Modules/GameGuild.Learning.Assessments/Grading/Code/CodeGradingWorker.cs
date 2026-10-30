@@ -9,6 +9,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace GameGuild.Learning.Assessments.Grading.Code;
+public sealed class CodeGradingHistoricalAssets
+{
+    public string? RuntimeDirectory { get; set; }
+    public string? CdnDirectory { get; set; }
+}
+
 public sealed class CodeGradingWorkerOptions
 {
     public static string Section { get; } = "CodeGradingWorker";
@@ -20,6 +26,7 @@ public sealed class CodeGradingWorkerOptions
     public string? Version1CdnDirectory { get; set; }
     public string? Version2RuntimeDirectory { get; set; }
     public string? Version2CdnDirectory { get; set; }
+    public Dictionary<string, CodeGradingHistoricalAssets> HistoricalToolchains { get; set; } = new(StringComparer.Ordinal);
     public string? BrowserDirectory { get; set; }
     public string? BrowserChannel { get; set; }
     public int DeadlineSeconds { get; set; } = 300;
@@ -239,6 +246,16 @@ public sealed class CodeGradingWorker(IOptions<CodeGradingWorkerOptions> configu
         if (toolchain == CodeToolchainIdentity.Version3)
         {
             return (options.RuntimeDirectory, options.CdnDirectory);
+        }
+
+        if (!CodeToolchainIdentity.IsKnown(toolchain))
+        {
+            throw new InvalidOperationException("The trusted Code worker requires a supported frozen toolchain identity.");
+        }
+
+        if (options.HistoricalToolchains.TryGetValue(toolchain.ArtifactVersion, out var retained) && retained is not null)
+        {
+            return (retained.RuntimeDirectory, retained.CdnDirectory);
         }
 
         if (toolchain == CodeToolchainIdentity.Version2)

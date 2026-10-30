@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { CODE_TOOLCHAIN_V1, CODE_TOOLCHAIN_V2, CODE_TOOLCHAIN_V3 } from "../../../tools/emception/grading/toolchain-binding.mjs";
+import { CODE_TOOLCHAIN_V1, CODE_TOOLCHAIN_V2, CODE_TOOLCHAIN_V3, CODE_TOOLCHAIN_V2_HISTORY } from "../../../tools/emception/grading/toolchain-binding.mjs";
 import { verifyCodingCycleToolchain } from "./coding-cycle-toolchain-support.mjs";
 
 async function withManifest(manifest, run) {
@@ -74,3 +74,11 @@ test("retained version 2 artifacts cannot initialize a new version 3 assessment"
     await assert.rejects(verifyCodingCycleToolchain(filename), /verified artifacts matching its frozen toolchain/);
   });
 });
+
+for (const identity of CODE_TOOLCHAIN_V2_HISTORY.filter(binding => binding.artifactVersion !== CODE_TOOLCHAIN_V3.artifactVersion)) {
+  test(`historical ${identity.artifactVersion} cannot initialize current V3 authoring`, async () => {
+    await withManifest({ ...verifiedManifest(), ...identity }, async (filename) => {
+      await assert.rejects(verifyCodingCycleToolchain(filename), /verified artifacts matching its frozen toolchain/);
+    });
+  });
+}

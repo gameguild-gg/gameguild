@@ -208,6 +208,43 @@ public sealed class CodeGradingWorkerConfigurationTests
         create.Should().Throw<InvalidOperationException>().WithMessage("*supported frozen toolchain identity*");
     }
 
+    [Theory]
+    [InlineData("4.4.1")]
+    [InlineData("4.5.0")]
+    public void Launcher_UsesTheExactRetainedReleaseWithoutFallingBack(string artifactVersion)
+    {
+        using var installation = new WorkerInstallation();
+        var options = installation.Configuration;
+        var identity = CodeToolchainIdentity.Version2 with { ArtifactVersion = artifactVersion };
+        Action missing = () => CodeGradingWorker.CreateStartInfo(options, identity);
+        missing.Should().Throw<InvalidOperationException>();
+        var runtime = Directory.CreateDirectory(Path.Combine(installation.Root, artifactVersion + "-runtime")).FullName;
+        var cdn = Directory.CreateDirectory(Path.Combine(installation.Root, artifactVersion + "-cdn")).FullName;
+        options.HistoricalToolchains[artifactVersion] = new CodeGradingHistoricalAssets
+        {
+            RuntimeDirectory = runtime,
+            CdnDirectory = cdn,
+        };
+        var start = CodeGradingWorker.CreateStartInfo(options, identity);
+        start.ArgumentList.Should().Equal("--max-old-space-size=512", options.ScriptPath, runtime, cdn);
+        start.UseShellExecute.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Launcher_RejectsUnknownIdentityEvenWhenAnAssetProfileExists()
+    {
+        using var installation = new WorkerInstallation();
+        var options = installation.Configuration;
+        options.HistoricalToolchains["999"] = new CodeGradingHistoricalAssets
+        {
+            RuntimeDirectory = options.RuntimeDirectory,
+            CdnDirectory = options.CdnDirectory,
+        };
+        Action unknown = () => CodeGradingWorker.CreateStartInfo(options,
+            CodeToolchainIdentity.Version2 with { ArtifactVersion = "999" });
+        unknown.Should().Throw<InvalidOperationException>().WithMessage("*supported frozen toolchain identity*");
+    }
+
     private static CodingAssignmentContent Definition() => new()
     {
         Environment = new CodingEnvironment { Language = "cpp", Tools = "clang" },

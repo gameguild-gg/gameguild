@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { CODE_TOOLCHAIN_V1, CODE_TOOLCHAIN_V2, CODE_TOOLCHAIN_V3, requireFrozenCodeToolchain } from './toolchain-binding.mjs';
+import { CODE_TOOLCHAIN_V1, CODE_TOOLCHAIN_V2, CODE_TOOLCHAIN_V3, CODE_TOOLCHAIN_V2_HISTORY, requireFrozenCodeToolchain } from './toolchain-binding.mjs';
 
 function canonicalLockHash(lock) {
   function sortDeep(value) {
@@ -100,4 +100,13 @@ test('version 2 retains its released 4.5.1 identity and reviewed lock', async ()
 test('versions 2 and 3 reject cross-release artifacts despite matching lock and ABI', () => {
   assert.throws(() => requireFrozenCodeToolchain(CODE_TOOLCHAIN_V2, manifestFor(CODE_TOOLCHAIN_V3)));
   assert.throws(() => requireFrozenCodeToolchain(CODE_TOOLCHAIN_V3, manifestFor(CODE_TOOLCHAIN_V2)));
+});
+
+test('V2 history retains every exact identity issued by prior releases', () => {
+  assert.deepEqual(CODE_TOOLCHAIN_V2_HISTORY.map(identity => identity.artifactVersion), ['4.4.1', '4.5.0', '4.5.1', '4.5.2']);
+  for (const identity of CODE_TOOLCHAIN_V2_HISTORY) {
+    assert.doesNotThrow(() => requireFrozenCodeToolchain(identity, manifestFor(identity)));
+    assert.throws(() => requireFrozenCodeToolchain(identity, { ...manifestFor(identity), toolchainLockHash: 'f'.repeat(64) }));
+    assert.throws(() => requireFrozenCodeToolchain({ ...identity, artifactVersion: '999' }, manifestFor(identity)));
+  }
 });

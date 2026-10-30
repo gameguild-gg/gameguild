@@ -18,13 +18,22 @@ export const CODE_TOOLCHAIN_V3 = Object.freeze({
   toolchainLockHash: '405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37',
 });
 
+// Git history records these exact V2 identities; the adapter number was reused.
+// Keep the snapshot's binding, including 4.5.2 which is also the current V3 artifact.
+export const CODE_TOOLCHAIN_V2_HISTORY = Object.freeze([
+  Object.freeze({ ...CODE_TOOLCHAIN_V2, artifactVersion: '4.4.1' }),
+  Object.freeze({ ...CODE_TOOLCHAIN_V2, artifactVersion: '4.5.0' }),
+  CODE_TOOLCHAIN_V2,
+  CODE_TOOLCHAIN_V3,
+]);
+
 export function requireFrozenCodeToolchain(binding, manifest) {
   const names = Object.keys(CODE_TOOLCHAIN_V1);
   if (
     !binding ||
     Object.keys(binding).length !== names.length ||
     names.some((name) => !Object.hasOwn(binding, name)) ||
-    ![CODE_TOOLCHAIN_V1, CODE_TOOLCHAIN_V2, CODE_TOOLCHAIN_V3].some((identity) => names.every((name) => binding[name] === identity[name]))
+    ![CODE_TOOLCHAIN_V1, ...CODE_TOOLCHAIN_V2_HISTORY].some((identity) => names.every((name) => binding[name] === identity[name]))
   ) {
     throw new Error('Unsupported frozen Code toolchain identity.');
   }

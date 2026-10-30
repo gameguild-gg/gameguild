@@ -6,12 +6,23 @@ projections. A package release does not rewrite previously frozen identities.
 | Adapter | Artifact | Runtime ABI | Worker asset configuration |
 | --- | --- | --- | --- |
 | 1 | 4.4.0 | emception-browser-v1 | Version1RuntimeDirectory / Version1CdnDirectory |
-| 2 | 4.5.1 | emception-browser-v1 | Version2RuntimeDirectory / Version2CdnDirectory |
+| 2 (historical snapshots) | 4.4.1, 4.5.0, 4.5.1, 4.5.2 | emception-browser-v1 | Exact retained release profile; 4.5.2 shares the identical current artifact |
 | 3 (current authoring) | 4.5.2 | emception-browser-v1 | RuntimeDirectory / CdnDirectory |
 
-The identities also bind the reviewed toolchain lock hash. Versions 2 and 3
-share that hash and ABI while retaining distinct artifact versions. The worker
-rejects cross-version manifests before executing submitted code.
+The identities also bind the reviewed toolchain lock hash. Git history shows
+that adapter 2 was rebound to all four listed releases. Its frozen snapshots
+therefore retain their own exact artifact identity; they are never rewritten
+to the canonical 4.5.1 binding. Unknown releases, changed locks and changed
+ABIs remain rejected. Adapter 3 requires the exact 4.5.2 identity.
+
+`HistoricalToolchains` maps a retained artifact version to its deployment-owned
+`RuntimeDirectory` and `CdnDirectory`. The complete identity is validated before
+looking up this configuration, so adding an unknown map entry cannot authorize
+an unsupported compiler. Existing Version1 directory options remain supported;
+Version2RuntimeDirectory / Version2CdnDirectory select the retained 4.5.1 assets.
+The historically issued V2/4.5.2 identity equals V3's current executable identity
+and can use those exact current assets; this is identity equality, not fallback.
+The review handler still requires the frozen adapter version from the snapshot.
 
 Deployments must retain each historical version's runtime bundle and CDN and
 configure its own absolute directories before upgrading the current runtime.

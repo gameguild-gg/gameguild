@@ -202,7 +202,7 @@ public sealed class CodeAssessmentTypeAdapter : IAssessmentTypeAdapter
         var definition = ReadDefinition(request.ProjectedItems[0].GetProperty("definition"));
         var files = request.NormalizedResponse.GetProperty("files");
         var toolchain = JsonSerializer.Deserialize<CodeToolchainIdentity>(request.ProjectedItems[0].GetProperty("toolchain"), GradingJson.Options);
-        if (toolchain != _toolchain)
+        if (toolchain is null || !CodeToolchainIdentity.SupportsAdapterVersion(Version, toolchain))
         {
             throw new InvalidOperationException("Code review requires its frozen version " + Version + " toolchain.");
         }
@@ -270,6 +270,22 @@ public sealed record CodeToolchainIdentity(string ArtifactVersion, string Runtim
     public static CodeToolchainIdentity Version2 { get; } = new("4.5.1", "emception-browser-v1", "405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37");
 
     public static CodeToolchainIdentity Version3 { get; } = new("4.5.2", "emception-browser-v1", "405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37");
+
+    public static CodeToolchainIdentity Version2Release441 { get; } = new("4.4.1", "emception-browser-v1", "405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37");
+    public static CodeToolchainIdentity Version2Release450 { get; } = new("4.5.0", "emception-browser-v1", "405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37");
+
+    // Version 2 was historically rebound by releases. Accept those exact issued
+    // identities without rewriting frozen projections or accepting future releases.
+    public static bool SupportsAdapterVersion(string version, CodeToolchainIdentity identity) => version switch
+    {
+        "1" => identity == Version1,
+        "2" => identity == Version2Release441 || identity == Version2Release450 || identity == Version2 || identity == Version3,
+        "3" => identity == Version3,
+        _ => false,
+    };
+
+    public static bool IsKnown(CodeToolchainIdentity identity) =>
+        identity == Version1 || SupportsAdapterVersion("2", identity);
 
     public static CodeToolchainIdentity ForAdapterVersion(string version) => version switch
     {
