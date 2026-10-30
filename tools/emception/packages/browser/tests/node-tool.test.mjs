@@ -86,8 +86,7 @@ test('isClassicScriptModule detects UMD vs ESM', () => {
 
 test('wrapUmdModule exposes a default export', async () => {
   const wrapped = wrapUmdModule(`exports.answer = 42;`);
-  const blob = new Blob([wrapped], { type: 'text/javascript' });
-  // Static-compile check only (no blob import in Node); verify shape.
+  // Verify the generated module source shape.
   assert.match(wrapped, /export default/);
   assert.match(wrapped, /var exports = \{\}/);
 });
