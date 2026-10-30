@@ -269,7 +269,7 @@ public sealed class CodeGradingWorker(IOptions<CodeGradingWorkerOptions> configu
             return (options.Version1RuntimeDirectory, options.Version1CdnDirectory);
         }
 
-        throw new InvalidOperationException("The trusted Code worker requires a supported frozen toolchain identity.");
+        throw new InvalidOperationException("Retained Code toolchain assets are not configured for this frozen release.");
     }
 
     private static string RequireAbsoluteFile(string? path, string expectedName)
