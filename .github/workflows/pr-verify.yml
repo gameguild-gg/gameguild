@@ -281,6 +281,15 @@ jobs:
           bash scripts/ci/run-affected-dotnet-tests.sh
           --base "${{ needs.classify.outputs.baseSha }}"
           --head "${{ needs.classify.outputs.headSha }}"
+      - name: Verify mandatory identity and host security suites
+        shell: bash
+        run: |
+          for TEST_PROJECT in GameGuild.Identity.Authentication.UnitTests GameGuild.Identity.Authorization.UnitTests GameGuild.API.UnitTests; do
+            dotnet test "apps/api/tests/${TEST_PROJECT}/${TEST_PROJECT}.csproj" \
+              -c Release --nologo -p:TreatWarningsAsErrors=true \
+              --blame-hang-timeout 5m --logger "trx;LogFileName=${TEST_PROJECT}.trx" \
+              --results-directory "artifacts/test-results/affected-api/mandatory-security/${TEST_PROJECT}"
+          done
       - name: Upload affected API test evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
