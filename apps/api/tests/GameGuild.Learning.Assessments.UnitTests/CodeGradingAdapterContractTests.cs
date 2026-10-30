@@ -49,7 +49,7 @@ public sealed class CodeGradingAdapterContractTests
         var adapter = Adapter();
         var projection = adapter.ProjectAuthoring(Definition()).Items.Single().PrivateProjection;
         JsonSerializer.Deserialize<CodeToolchainIdentity>(projection.GetProperty("toolchain"), GradingJson.Options)
-            .Should().Be(CodeToolchainIdentity.Version2);
+            .Should().Be(CodeToolchainIdentity.Version3);
         adapter.GenerateDelivery(projection).TryGetProperty("toolchain", out _).Should().BeFalse();
     }
 
@@ -180,7 +180,7 @@ public sealed class CodeGradingAdapterContractTests
     }
 
     [Fact]
-    public void Module_RetainsVersion1AndSelectsVersion2ForAuthoring()
+    public void Module_RetainsVersions1And2AndSelectsVersion3ForAuthoring()
     {
         var services = new ServiceCollection();
         services.AddAssessmentsModule();
@@ -188,18 +188,23 @@ public sealed class CodeGradingAdapterContractTests
         var adapters = provider.GetRequiredService<IAssessmentTypeAdapterResolver>();
         var handlers = provider.GetRequiredService<IReviewStageHandlerResolver>();
         var current = adapters.ResolveForAuthoring(ProgramContentType.Code);
-        current.Version.Should().Be("2");
+        current.Version.Should().Be("3");
         var legacy = adapters.Resolve(current.ContentType, current.Key, "1", ReviewExecutionContext.OfficialSubmission);
         legacy.Version.Should().Be("1");
         legacy.IsCurrentForAuthoring.Should().BeFalse();
+        var previous = adapters.Resolve(current.ContentType, current.Key, "2", ReviewExecutionContext.OfficialSubmission);
+        previous.IsCurrentForAuthoring.Should().BeFalse();
+        previous.ReviewHandlers[ReviewMethod.AutomatedReview].Version.Should().Be("2");
+        handlers.Resolve(ReviewMethod.AutomatedReview, CodeAssessmentContracts.HandlerKey, "3",
+            ReviewExecutionContext.OfficialSubmission).Version.Should().Be("3");
         current.IsCurrentForAuthoring.Should().BeTrue();
         legacy.ReviewHandlers[ReviewMethod.AutomatedReview].Version.Should().Be("1");
-        current.ReviewHandlers[ReviewMethod.AutomatedReview].Version.Should().Be("2");
+        current.ReviewHandlers[ReviewMethod.AutomatedReview].Version.Should().Be("3");
         handlers.Resolve(ReviewMethod.AutomatedReview, CodeAssessmentContracts.HandlerKey, "1",
             ReviewExecutionContext.OfficialSubmission).Version.Should().Be("1");
         handlers.Resolve(ReviewMethod.AutomatedReview, CodeAssessmentContracts.HandlerKey, "2",
             ReviewExecutionContext.OfficialSubmission).Version.Should().Be("2");
-        Action unknown = () => adapters.Resolve(current.ContentType, current.Key, "3", ReviewExecutionContext.OfficialSubmission);
+        Action unknown = () => adapters.Resolve(current.ContentType, current.Key, "4", ReviewExecutionContext.OfficialSubmission);
         unknown.Should().Throw<InvalidOperationException>();
     }
 
@@ -254,14 +259,25 @@ public sealed class CodeGradingAdapterContractTests
     }
 
     [Theory]
-    [InlineData("1")]
-    [InlineData("2")]
-    public async Task Review_RejectsOtherVersionsBeforeInvokingTheExecutor(string version)
+    [InlineData("1", "2")]
+    [InlineData("1", "3")]
+    [InlineData("2", "1")]
+    [InlineData("2", "3")]
+    [InlineData("3", "1")]
+    [InlineData("3", "2")]
+    public async Task Review_RejectsOtherVersionsBeforeInvokingTheExecutor(string version, string otherVersion)
     {
         var identity = CodeToolchainIdentity.ForAdapterVersion(version);
         var executor = new RecordingExecutor([true, true], identity);
-        var adapter = version == "1" ? CodeAssessmentTypeAdapter.ForVersion1(executor) : new CodeAssessmentTypeAdapter(executor);
-        var other = version == "1" ? new CodeAssessmentTypeAdapter(executor) : CodeAssessmentTypeAdapter.ForVersion1(executor);
+        CodeAssessmentTypeAdapter ForVersion(string selected) => selected switch
+        {
+            "1" => CodeAssessmentTypeAdapter.ForVersion1(executor),
+            "2" => CodeAssessmentTypeAdapter.ForVersion2(executor),
+            "3" => new CodeAssessmentTypeAdapter(executor),
+            _ => throw new InvalidOperationException("Unknown test adapter version."),
+        };
+        var adapter = ForVersion(version);
+        var other = ForVersion(otherVersion);
         var projection = other.ProjectAuthoring(Definition()).Items.Single().PrivateProjection;
         Func<Task> review = async () => await adapter.EvaluateDeterministicAsync(new DeterministicReviewRequest([projection],
             new AssessmentExecutionDeliveryV1(1, Guid.NewGuid(), new string('a', 64), [],
@@ -307,7 +323,7 @@ public sealed class CodeGradingAdapterContractTests
         {
             cancellationToken.ThrowIfCancellationRequested();
             CapturedDefinition = definition;
-            toolchain.Should().Be(expectedToolchain ?? CodeToolchainIdentity.Version2);
+            toolchain.Should().Be(expectedToolchain ?? CodeToolchainIdentity.Version3);
             Files = files.Clone();
             return Task.FromResult(new CodeExecutionReceipt(passed, new string('a', 64)));
         }
