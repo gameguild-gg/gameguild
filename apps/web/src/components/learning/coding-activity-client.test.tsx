@@ -256,17 +256,31 @@ describe("CodingActivityClient", () => {
     expect(mocks.start).toHaveBeenCalledWith('assessment-1', 'enrollment-1', expect.any(String));
   });
 
-  it('uses the frozen official definition instead of the current authoring draft', async () => {
+  it.each(['1', '2', '3'])('uses the frozen official definition instead of the current authoring draft for adapter %s', async (adapterVersion) => {
     const frozen = assignment();
     frozen.Grading.MaxScore = 80;
     mocks.start.mockResolvedValue({ success: true, data: {
       submissionId: 'official-submission-1',
       execution: { delivery: { itemOrder: ['code'], items: { code: {
-        adapterKey: 'code-assessment-type', adapterVersion: '1', learnerPayload: { definition: frozen },
+        adapterKey: 'code-assessment-type', adapterVersion, learnerPayload: { definition: frozen },
       } } } },
     } });
     renderActivity({ assignment: assignment() });
     expect(await editorProps()).toMatchObject({ definition: frozen, maxScore: 80 });
+  });
+
+  it('rejects an unknown Code adapter before opening the editor or submitting', async () => {
+    mocks.start.mockResolvedValue({ success: true, data: {
+      submissionId: 'official-submission-1',
+      execution: { delivery: { itemOrder: ['code'], items: { code: {
+        adapterKey: 'code-assessment-type', adapterVersion: '4', learnerPayload: { definition: assignment() },
+      } } } },
+    } });
+    renderActivity();
+    expect(await screen.findByRole('alert')).toHaveTextContent('unavailable adapter version');
+    expect(mocks.editor).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(mocks.submit).not.toHaveBeenCalled();
   });
 
   it.each([false, true])('restores submitted files and exposes only released feedback (released=%s)', async (released) => {

@@ -11,9 +11,9 @@ export function readCodeRuntimeDefinition(
     throw new Error('The Code attempt has an invalid delivery.');
   }
   const item = delivery.items.code;
-  // Both retained adapters use content Version 1; their executable identities differ.
+  // Retained V1/V2 and current V3 use content Version 1; executable identities differ.
   if (!item || item.adapterKey !== 'code-assessment-type' ||
-      (item.adapterVersion !== '1' && item.adapterVersion !== '2')) {
+      (item.adapterVersion !== '1' && item.adapterVersion !== '2' && item.adapterVersion !== '3')) {
     throw new Error('The Code attempt requires an unavailable adapter version.');
   }
   const payload = item.learnerPayload as { definition?: CodingAssignmentContent };
