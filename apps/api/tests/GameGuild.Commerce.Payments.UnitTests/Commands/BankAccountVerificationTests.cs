@@ -161,8 +161,11 @@ public class BankAccountVerificationTests
         var handler = CreateHandler();
         var initiation = await handler.Handle(new InitiateBankAccountVerificationCommand(_bankAccount.Id), CancellationToken.None);
 
+        // Swap the two echoes; distinct locals avoid the analyzer's swapped-parameter heuristic.
+        var firstEcho = initiation.Value.Deposit1Amount;
+        var secondEcho = initiation.Value.Deposit2Amount;
         var result = await handler.Handle(
-            new VerifyBankAccountDepositsCommand(_bankAccount.Id, initiation.Value.Deposit2Amount, initiation.Value.Deposit1Amount),
+            new VerifyBankAccountDepositsCommand(_bankAccount.Id, secondEcho, firstEcho),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeFalse();
