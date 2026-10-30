@@ -460,7 +460,9 @@ public sealed class EventCoverageSweepService(ILogger<EventCoverageSweepService>
 
     private static IEnumerable<Type> GetMutatingCommands(Assembly assembly) =>
         GetSafelyLoadedTypes(assembly)
-            .Where(type => type is { IsClass: true, IsAbstract: false, IsInterface: false } && IsMutatingCommand(type));
+            // Private nested records cannot be activated by DI and only exist as test probes,
+            // so they are structurally dormant and never a real use-case command surface.
+            .Where(type => type is { IsClass: true, IsAbstract: false, IsInterface: false, IsNestedPrivate: false } && IsMutatingCommand(type));
 
     private static bool IsMutatingCommand(Type type) =>
         typeof(ICommand).IsAssignableFrom(type)
