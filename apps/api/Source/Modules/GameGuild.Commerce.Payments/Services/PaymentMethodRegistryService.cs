@@ -614,7 +614,7 @@ public class PaymentMethodRegistryService(
         "paypal" => PaymentMethodType.PayPal,
         "apple_pay" => PaymentMethodType.ApplePay,
         "google_pay" => PaymentMethodType.GooglePay,
-        "link" => PaymentMethodType.Wallet,
+        "link" or "wallet" => PaymentMethodType.Wallet,
         _ => PaymentMethodType.Card
     };
 

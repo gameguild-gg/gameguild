@@ -969,7 +969,7 @@ public class PaymentMethodRegistryServiceTests : IDisposable
 
         var result = await _service.CreateAsync(
             OwnerActor(tenantId, Guid.NewGuid()),
-            new CreatePaymentMethodRequest(tenantId, "nonce-0815opaque", GatewayProvider: "adyen"),
+            new CreatePaymentMethodRequest(tenantId, "adyenopaque0815", GatewayProvider: "adyen"),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
