@@ -779,24 +779,14 @@
       "count": 2
     }
   },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/document.ts": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/dom.ts": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
     }
   },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/js.ts": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 2
-    }
-  },
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/window.ts": {
     "@typescript-eslint/no-unused-vars": {
-      "count": 9
+      "count": 8
     }
   },
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/gameguild/debug.ts": {
@@ -812,11 +802,6 @@
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/legacy/go.ts": {
     "@typescript-eslint/no-unused-vars": {
       "count": 2
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/legacy/wasi.ts": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 128
     }
   },
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/wasi/clocks.ts": {

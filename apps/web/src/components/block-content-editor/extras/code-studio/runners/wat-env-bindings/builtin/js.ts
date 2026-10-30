@@ -3,10 +3,7 @@ type JSObjectInput = object | string | number | boolean | bigint | symbol;
 /**
  * JavaScript environment bindings
  */
-export function createJSBindings(
-  stdout: (text: string) => void,
-  stderr: (text: string) => void
-) {
+export function createJSBindings() {
   return {
     // Memory operations
     mem: {
