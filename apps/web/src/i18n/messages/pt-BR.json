@@ -837,6 +837,17 @@
     "publish": "Publicar",
     "unpublish": "Desativar"
   },
+  "currency": {
+    "label": "Moeda de exibição",
+    "switchLabel": "Moeda",
+    "suggested": "Sugerido: {code}",
+    "apply": "Usar {code}",
+    "dismiss": "Descartar sugestão",
+    "original": "Preço original",
+    "conversionNote": "≈ {converted} no câmbio atual",
+    "conversionUnavailable": "Conversão indisponível em {code}",
+    "privacyNote": "A sugestão de moeda usa apenas o seu país; nada é armazenado."
+  },
   "emailDeliverability": {
     "title": "Entregabilidade de e-mail",
     "description": "Eventos de entrega de e-mail da plataforma, endereços suprimidos e mensagens mortas.",

@@ -837,6 +837,17 @@
     "publish": "Publish",
     "unpublish": "Deactivate"
   },
+  "currency": {
+    "label": "Display currency",
+    "switchLabel": "Currency",
+    "suggested": "Suggested: {code}",
+    "apply": "Use {code}",
+    "dismiss": "Dismiss suggestion",
+    "original": "Original price",
+    "conversionNote": "≈ {converted} at the current rate",
+    "conversionUnavailable": "Conversion unavailable in {code}",
+    "privacyNote": "Currency suggestion uses only your country; nothing is stored."
+  },
   "emailDeliverability": {
     "title": "Email deliverability",
     "description": "Platform email delivery events, address suppressions, and dead letters.",
