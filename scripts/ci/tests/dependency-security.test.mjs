@@ -525,7 +525,7 @@ for (const packageRoot of installedConsumers("follow-redirects")) {
   for (const arrayHeaders of [false, true]) {
     for (const crossOrigin of [false, true]) {
       test(`${packageRoot}: ${arrayHeaders ? "array" : "object"} headers ${crossOrigin ? "strip credentials across origins" : "preserve credentials on the same origin"}`, async context => {
-        assert.equal(require(join(packageRoot, "package.json")).version, "1.16.1");
+        assert.equal(require(join(packageRoot, "package.json")).version, "1.16.2");
         const client = require(packageRoot).http;
         const capture = (request, response) => {
           request.resume();
