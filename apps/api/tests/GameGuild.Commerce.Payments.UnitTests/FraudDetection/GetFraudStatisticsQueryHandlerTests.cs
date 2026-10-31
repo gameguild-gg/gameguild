@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using Xunit;
 
 namespace GameGuild.Commerce.Payments.UnitTests.FraudDetection;
@@ -200,10 +201,129 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
         report.ByPaymentMethod.Should().Contain(row => row.Provider == "stripe" && row.Created == 2);
         report.ByPaymentMethod.Should().Contain(row => row.Provider == "paypal" && row.Created == 1 && row.ReviewHeld == 1);
 
-        report.DailyTrend.Should().HaveCount(2);
-        report.DailyTrend.Should().BeInAscendingOrder(point => point.Day);
-        report.DailyTrend.Should().Contain(point => point.Created == 1 && point.Blocked == 1);
-        report.DailyTrend.Should().Contain(point => point.Created == 2 && point.ReviewHeld == 1);
+        report.Trend.Should().HaveCount(2);
+        report.Trend.Should().BeInAscendingOrder(point => point.Day);
+        report.Trend.Should().Contain(point => point.Created == 1 && point.Blocked == 1);
+        report.Trend.Should().Contain(point => point.Created == 2 && point.ReviewHeld == 1);
+        report.TrendGranularity.Should().Be(FraudTrendGranularity.Daily);
+    }
+
+    [Fact]
+    public void BucketStart_Should_Bucket_Weekly_At_Iso_Mondays_And_Monthly_At_Firsts()
+    {
+        // 2026-10-31 is a Saturday: its ISO week starts Monday 2026-10-26.
+        GetFraudStatisticsQueryHandler
+            .BucketStart(new DateTime(2026, 10, 31, 18, 45, 0, DateTimeKind.Utc), FraudTrendGranularity.Weekly)
+            .Should().Be(new DateTime(2026, 10, 26, 0, 0, 0, DateTimeKind.Utc));
+
+        // Sunday belongs to the week that started the previous Monday.
+        GetFraudStatisticsQueryHandler
+            .BucketStart(new DateTime(2026, 11, 1, 3, 0, 0, DateTimeKind.Utc), FraudTrendGranularity.Weekly)
+            .Should().Be(new DateTime(2026, 10, 26, 0, 0, 0, DateTimeKind.Utc));
+
+        GetFraudStatisticsQueryHandler
+            .BucketStart(new DateTime(2026, 10, 31, 18, 45, 0, DateTimeKind.Utc), FraudTrendGranularity.Monthly)
+            .Should().Be(new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc));
+
+        GetFraudStatisticsQueryHandler
+            .BucketStart(new DateTime(2026, 10, 31, 18, 45, 0, DateTimeKind.Utc), FraudTrendGranularity.Daily)
+            .Should().Be(new DateTime(2026, 10, 31, 0, 0, 0, DateTimeKind.Utc));
+    }
+
+    [Fact]
+    public async Task Handle_Should_Bucket_The_Trend_Weekly_And_Monthly()
+    {
+        var now = SystemClock.UtcNow;
+
+        // Three attempts spread over one ISO week (Mon..Sun) plus one attempt in a prior week.
+        var monday = now.Date.AddDays(-((int)now.DayOfWeek + 6) % 7);
+        for (var day = 0; day < 3; day++)
+        {
+            await AddPaymentAsync(
+                _tenantId,
+                payment => payment.MarkAsProcessing(),
+                createdAt: monday.AddDays(day));
+        }
+
+        await AddPaymentAsync(
+            _tenantId,
+            payment => payment.MarkAsProcessing(),
+            createdAt: monday.AddDays(-3));
+
+        var handler = new GetFraudStatisticsQueryHandler(_context);
+
+        var weekly = await handler.Handle(
+            new GetFraudStatisticsQuery(TrendGranularity: FraudTrendGranularity.Weekly), CancellationToken.None);
+        weekly.TrendGranularity.Should().Be(FraudTrendGranularity.Weekly);
+        weekly.Trend.Should().HaveCount(2, "one bucket for the prior week, one for the ISO week of the other three");
+        weekly.Trend.Should().Contain(point => point.Created == 3);
+        weekly.Trend.Should().Contain(point => point.Created == 1);
+
+        var monthly = await handler.Handle(
+            new GetFraudStatisticsQuery(TrendGranularity: FraudTrendGranularity.Monthly), CancellationToken.None);
+        monthly.TrendGranularity.Should().Be(FraudTrendGranularity.Monthly);
+        monthly.Trend.Should().HaveCountGreaterOrEqualTo(1).And.HaveCountLessOrEqualTo(2,
+            "a month boundary may split the four attempts but never produces day-sized buckets");
+        monthly.Trend.Sum(point => point.Created).Should().Be(4);
+    }
+
+    [Fact]
+    public async Task Handle_Should_Break_Down_By_Plan_Through_The_Subscription_Contexts()
+    {
+        var subscriptionId = Guid.NewGuid();
+        var otherSubscriptionId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
+
+        await AddPaymentAsync(
+            _tenantId,
+            payment => payment.MarkAsProcessing(),
+            withSubscriptionId: subscriptionId);
+        await AddPaymentAsync(
+            _tenantId,
+            payment =>
+            {
+                payment.MarkAsProcessing();
+                payment.RecordFraudAssessment(FraudDecision.Block, 90, "blocked", null);
+            },
+            withSubscriptionId: subscriptionId);
+        await AddPaymentAsync(
+            _tenantId,
+            payment =>
+            {
+                payment.MarkAsProcessing();
+                payment.RecordFraudAssessment(FraudDecision.Review, 50, "held", null);
+            },
+            withSubscriptionId: otherSubscriptionId);
+
+        var subscriptionContexts = new Mock<GameGuild.Commerce.ISubscriptionPaymentContextService>();
+        subscriptionContexts
+            .Setup(service => service.GetPaymentContextsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<Guid> ids, CancellationToken _) => ids
+                .Select(id => new GameGuild.Commerce.SubscriptionPaymentContext(
+                    id,
+                    Guid.Empty,
+                    25m,
+                    "USD",
+                    PlanId: id == subscriptionId ? planId : null,
+                    PlanName: id == subscriptionId ? "Creator Pro" : null))
+                .ToList());
+
+        var handler = new GetFraudStatisticsQueryHandler(_context, subscriptionContexts.Object);
+        var report = await handler.Handle(new GetFraudStatisticsQuery(), CancellationToken.None);
+
+        report.ByPlan.Should().Contain(row => row.PlanId == planId && row.PlanName == "Creator Pro" && row.Created == 2 && row.Blocked == 1);
+        report.ByPlan.Should().Contain(row => row.PlanId == null && row.PlanName == "unknown" && row.Created == 1 && row.ReviewHeld == 1);
+    }
+
+    [Fact]
+    public async Task Handle_Should_Degrade_ByPlan_To_Unknown_Without_The_Subscription_Service()
+    {
+        await AddPaymentAsync(_tenantId, payment => payment.MarkAsProcessing());
+
+        var handler = new GetFraudStatisticsQueryHandler(_context);
+        var report = await handler.Handle(new GetFraudStatisticsQuery(), CancellationToken.None);
+
+        report.ByPlan.Should().ContainSingle(row => row.PlanName == "unknown" && row.Created == 1);
     }
 
     [Fact]
@@ -238,9 +358,15 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
             [
                 new FraudStatisticsMethodRow { Provider = "stripe", Created = 9, ReviewHeld = 3, Blocked = 1 }
             ],
-            DailyTrend =
+            ByPlan =
             [
-                new FraudStatisticsTrendPoint { Day = new DateTime(2026, 10, 28, 0, 0, 0, DateTimeKind.Utc), Created = 5, ReviewHeld = 2, Blocked = 0 }
+                new FraudStatisticsPlanRow { PlanId = Guid.Parse("00000000-0000-0000-0000-0000000000aa"), PlanName = "Creator Pro", Created = 7, ReviewHeld = 2, Blocked = 1 },
+                new FraudStatisticsPlanRow { PlanId = null, PlanName = "unknown", Created = 2, ReviewHeld = 1, Blocked = 0 }
+            ],
+            TrendGranularity = FraudTrendGranularity.Weekly,
+            Trend =
+            [
+                new FraudStatisticsTrendPoint { Day = new DateTime(2026, 10, 26, 0, 0, 0, DateTimeKind.Utc), Created = 5, ReviewHeld = 2, Blocked = 0 }
             ]
         };
 
@@ -250,15 +376,52 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
         csv.Should().Contain("summary,flagged_percent,44.44");
         csv.Should().Contain("by_country,NG,2,1,1");
         csv.Should().Contain("by_payment_method,stripe,9,3,1");
-        csv.Should().Contain("daily_trend,2026-10-28,5,2,0");
+        csv.Should().Contain("by_plan,Creator Pro (00000000-0000-0000-0000-0000000000aa),7,2,1");
+        csv.Should().Contain("by_plan,unknown,2,1,0");
+        csv.Should().Contain("weekly_trend,2026-10-26,5,2,0");
+        csv.Should().NotContain("daily_trend,", "the exported trend section honors the report granularity");
         csv.Split('\n').First().Should().Be("section,key,created,review_held,blocked");
+    }
+
+    [Fact]
+    public void FraudStatisticsCsvComposer_Should_Key_Monthly_Trend_Sections_By_Granularity()
+    {
+        var report = new FraudStatisticsReport
+        {
+            GeneratedAtUtc = SystemClock.UtcNow,
+            FromUtc = new DateTime(2026, 8, 1, 0, 0, 0, DateTimeKind.Utc),
+            ToUtc = new DateTime(2026, 10, 29, 0, 0, 0, DateTimeKind.Utc),
+            Totals = new FraudStatisticsTotals
+            {
+                PaymentsCreated = 3, Assessed = 3, Allowed = 1, ReviewHeld = 1, Blocked = 1, Succeeded = 0, Disputed = 0
+            },
+            Rates = new FraudStatisticsRates(),
+            Reviews = new FraudStatisticsReviews
+            {
+                PendingBacklog = 0, ResolvedInWindow = 0, ApprovedInWindow = 0, DeclinedInWindow = 0
+            },
+            TopSignals = [],
+            ByCountry = [],
+            ByPaymentMethod = [],
+            ByPlan = [],
+            TrendGranularity = FraudTrendGranularity.Monthly,
+            Trend =
+            [
+                new FraudStatisticsTrendPoint { Day = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc), Created = 3, ReviewHeld = 1, Blocked = 1 }
+            ]
+        };
+
+        var csv = System.Text.Encoding.UTF8.GetString(FraudStatisticsCsvComposer.Compose(report));
+
+        csv.Should().Contain("monthly_trend,2026-10-01,3,1,1");
     }
 
     private async Task AddPaymentAsync(
         Guid tenantId,
         Action<Payment> mutate,
         DateTime? createdAt = null,
-        string provider = "stripe")
+        string provider = "stripe",
+        Guid? withSubscriptionId = null)
     {
         var payment = Payment.Create(
             tenantId,
@@ -266,7 +429,7 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
             "USD",
             $"stats-{Guid.NewGuid():N}",
             provider: provider,
-            subscriptionId: Guid.NewGuid(),
+            subscriptionId: withSubscriptionId,
             externalCustomerId: $"cus_{Guid.NewGuid():N}",
             paymentMethodId: "pm_stats");
 

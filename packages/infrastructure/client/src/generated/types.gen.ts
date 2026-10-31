@@ -3232,6 +3232,20 @@ export interface CommercePaymentsFraudStatisticsMethodRow {
   reviewHeld: number;
 }
 
+/** Fraud outcomes for one subscription plan inside the statistics window (issue #409: fraud by plan). */
+export interface CommercePaymentsFraudStatisticsPlanRow {
+  /** Assessed payments blocked in the window. */
+  blocked: number;
+  /** Payments created for the plan in the window. */
+  created: number;
+  /** Plan the charged subscriptions are on; null when the attempt could not be attributed to a plan. */
+  planId: string | null;
+  /** Display name of the plan; "unknown" when unattributed or the plan no longer exists. */
+  planName: string | null;
+  /** Assessed payments held for review in the window. */
+  reviewHeld: number;
+}
+
 /** Derived fraud-program rates; null when the denominator is zero. */
 export interface CommercePaymentsFraudStatisticsRates {
   /** Blocked rate: blocked / assessed, 0-100. */
@@ -3250,8 +3264,8 @@ export interface CommercePaymentsFraudStatisticsReport {
   byCountry: CommercePaymentsFraudStatisticsCountryRow[] | null;
   /** Fraud outcomes by gateway payment provider inside the window (issue #409: fraud by payment method). */
   byPaymentMethod: CommercePaymentsFraudStatisticsMethodRow[] | null;
-  /** Daily trend of created/held/blocked payments inside the window (issue #409: trend analysis). */
-  dailyTrend: CommercePaymentsFraudStatisticsTrendPoint[] | null;
+  /** Fraud outcomes by subscription plan inside the window (issue #409: fraud by plan). */
+  byPlan: CommercePaymentsFraudStatisticsPlanRow[] | null;
   /** Inclusive window start used for the aggregates. */
   fromUtc: string;
   /** UTC instant the report was generated. */
@@ -3263,6 +3277,9 @@ export interface CommercePaymentsFraudStatisticsReport {
   totals: CommercePaymentsFraudStatisticsTotals;
   /** Inclusive window end used for the aggregates. */
   toUtc: string;
+  /** Trend of created/held/blocked payments inside the window, bucketed by GameGuild.Commerce.Payments.FraudStatisticsReport.TrendGranularity (issue #409: trend analysis). */
+  trend: CommercePaymentsFraudStatisticsTrendPoint[] | null;
+  trendGranularity: CommercePaymentsFraudTrendGranularity;
 }
 
 /** Manual-review queue statistics (issue #409: backlog and average time to review). */
@@ -3305,17 +3322,21 @@ export interface CommercePaymentsFraudStatisticsTotals {
   succeeded: number;
 }
 
-/** One day of the fraud-outcome trend inside the statistics window (issue #409). */
+/** One bucket of the fraud-outcome trend inside the statistics window (issue #409). */
 export interface CommercePaymentsFraudStatisticsTrendPoint {
-  /** Assessed payments blocked on the day. */
+  /** Assessed payments blocked in the bucket. */
   blocked: number;
-  /** Payments created on the day. */
+  /** Payments created in the bucket. */
   created: number;
-  /** UTC day the point aggregates. */
+  /** UTC start of the bucket (day, ISO week or month, per the report granularity). */
   day: string;
-  /** Assessed payments held for review on the day. */
+  /** Assessed payments held for review in the bucket. */
   reviewHeld: number;
 }
+
+/** Trend bucket granularity of the fraud statistics report (issue #409: weekly and
+monthly trend views alongside the daily default). */
+export type CommercePaymentsFraudTrendGranularity = 'Daily' | 'Weekly' | 'Monthly';
 
 /** One persisted FX quotation as exposed by the admin surface. */
 export interface CommercePaymentsFxRateDto {
@@ -4027,6 +4048,7 @@ export interface CommercePaymentsPaymentsControllerCreateSetupIntentOutput {
 /** Data model for Commerce Payments Payments Controller+Process Payment Request. */
 export interface CommercePaymentsPaymentsControllerProcessPaymentInput {
   amount?: number;
+  cardBin?: string | null;
   country?: string | null;
   gatewayProvider?: string | null;
   payerEmail?: string | null;
@@ -6770,8 +6792,11 @@ export interface CommerceSubscriptionsBillingSubscriptionsControllerCancelBillin
 export interface CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput {
   amount?: number;
   billingCycle?: BillingCycle;
+  cardBin?: string | null;
+  country?: string | null;
   createdByUserId?: string;
   fulfilledOrderId?: string | null;
+  payerEmail?: string | null;
   planId?: string;
   productId?: string | null;
   promoCodeIdempotencyKey?: string | null;
@@ -7191,12 +7216,18 @@ export interface CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionI
   /** The subscription amount */
   amount?: number;
   billingCycle?: BillingCycle;
+  /** Optional 6-8 digit card BIN prefix; feeds the creation-time BIN-range fraud signal (issue #409) */
+  cardBin?: string | null;
+  /** Optional ISO 3166-1 alpha-2 billing country; feeds the creation-time fraud signals (issue #409) */
+  country?: string | null;
   /** The user who created the subscription */
   createdByUserId?: string;
   /** The currency code */
   currency?: string | null;
   /** Optional Order ID that triggered this subscription (Economic Model: Order→Subscription causality) */
   fulfilledOrderId?: string | null;
+  /** Optional payer email; feeds the creation-time disposable-email/blacklist fraud signals (issue #409) */
+  payerEmail?: string | null;
   /** The subscription plan ID */
   planId?: string;
   /** Optional product context for product-scoped promo codes */
@@ -26978,12 +27009,14 @@ export let CommercePaymentsFraudReviewStatusSchema: z.ZodType<CommercePaymentsFr
 export let CommercePaymentsFraudRiskLevelSchema: z.ZodType<CommercePaymentsFraudRiskLevel>;
 export let CommercePaymentsFraudStatisticsCountryRowSchema: z.ZodType<CommercePaymentsFraudStatisticsCountryRow>;
 export let CommercePaymentsFraudStatisticsMethodRowSchema: z.ZodType<CommercePaymentsFraudStatisticsMethodRow>;
+export let CommercePaymentsFraudStatisticsPlanRowSchema: z.ZodType<CommercePaymentsFraudStatisticsPlanRow>;
 export let CommercePaymentsFraudStatisticsRatesSchema: z.ZodType<CommercePaymentsFraudStatisticsRates>;
 export let CommercePaymentsFraudStatisticsReportSchema: z.ZodType<CommercePaymentsFraudStatisticsReport>;
 export let CommercePaymentsFraudStatisticsReviewsSchema: z.ZodType<CommercePaymentsFraudStatisticsReviews>;
 export let CommercePaymentsFraudStatisticsSignalSchema: z.ZodType<CommercePaymentsFraudStatisticsSignal>;
 export let CommercePaymentsFraudStatisticsTotalsSchema: z.ZodType<CommercePaymentsFraudStatisticsTotals>;
 export let CommercePaymentsFraudStatisticsTrendPointSchema: z.ZodType<CommercePaymentsFraudStatisticsTrendPoint>;
+export let CommercePaymentsFraudTrendGranularitySchema: z.ZodType<CommercePaymentsFraudTrendGranularity>;
 export let CommercePaymentsFxRateDtoSchema: z.ZodType<CommercePaymentsFxRateDto>;
 export let CommercePaymentsFxRateSyncResultSchema: z.ZodType<CommercePaymentsFxRateSyncResult>;
 export let CommercePaymentsFxRateSyncRunDtoSchema: z.ZodType<CommercePaymentsFxRateSyncRunDto>;
@@ -31936,6 +31969,15 @@ CommercePaymentsFraudStatisticsMethodRowSchema = z.object({
   reviewHeld: z.number().int(),
 });
 
+/** Zod schema for CommercePaymentsFraudStatisticsPlanRow. Fraud outcomes for one subscription plan inside the statistics window (issue #409: fraud by plan). */
+CommercePaymentsFraudStatisticsPlanRowSchema = z.object({
+  blocked: z.number().int(),
+  created: z.number().int(),
+  planId: z.string().uuid().nullable(),
+  planName: z.string().nullable(),
+  reviewHeld: z.number().int(),
+});
+
 /** Zod schema for CommercePaymentsFraudStatisticsRates. Derived fraud-program rates; null when the denominator is zero. */
 CommercePaymentsFraudStatisticsRatesSchema = z.object({
   blockedPercent: z.number().nullable().optional(),
@@ -31948,7 +31990,7 @@ CommercePaymentsFraudStatisticsRatesSchema = z.object({
 CommercePaymentsFraudStatisticsReportSchema = z.object({
   byCountry: z.array(z.lazy(() => CommercePaymentsFraudStatisticsCountryRowSchema)).nullable(),
   byPaymentMethod: z.array(z.lazy(() => CommercePaymentsFraudStatisticsMethodRowSchema)).nullable(),
-  dailyTrend: z.array(z.lazy(() => CommercePaymentsFraudStatisticsTrendPointSchema)).nullable(),
+  byPlan: z.array(z.lazy(() => CommercePaymentsFraudStatisticsPlanRowSchema)).nullable(),
   fromUtc: z.string().datetime(),
   generatedAtUtc: z.string().datetime(),
   rates: z.lazy(() => CommercePaymentsFraudStatisticsRatesSchema),
@@ -31956,6 +31998,8 @@ CommercePaymentsFraudStatisticsReportSchema = z.object({
   topSignals: z.array(z.lazy(() => CommercePaymentsFraudStatisticsSignalSchema)).nullable(),
   totals: z.lazy(() => CommercePaymentsFraudStatisticsTotalsSchema),
   toUtc: z.string().datetime(),
+  trend: z.array(z.lazy(() => CommercePaymentsFraudStatisticsTrendPointSchema)).nullable(),
+  trendGranularity: z.lazy(() => CommercePaymentsFraudTrendGranularitySchema),
 });
 
 /** Zod schema for CommercePaymentsFraudStatisticsReviews. Manual-review queue statistics (issue #409: backlog and average time to review). */
@@ -31984,13 +32028,17 @@ CommercePaymentsFraudStatisticsTotalsSchema = z.object({
   succeeded: z.number().int(),
 });
 
-/** Zod schema for CommercePaymentsFraudStatisticsTrendPoint. One day of the fraud-outcome trend inside the statistics window (issue #409). */
+/** Zod schema for CommercePaymentsFraudStatisticsTrendPoint. One bucket of the fraud-outcome trend inside the statistics window (issue #409). */
 CommercePaymentsFraudStatisticsTrendPointSchema = z.object({
   blocked: z.number().int(),
   created: z.number().int(),
   day: z.string().datetime(),
   reviewHeld: z.number().int(),
 });
+
+/** Zod schema for CommercePaymentsFraudTrendGranularity. Trend bucket granularity of the fraud statistics report (issue #409: weekly and
+monthly trend views alongside the daily default). */
+CommercePaymentsFraudTrendGranularitySchema = z.enum(['Daily', 'Weekly', 'Monthly']);
 
 /** Zod schema for CommercePaymentsFxRateDto. One persisted FX quotation as exposed by the admin surface. */
 CommercePaymentsFxRateDtoSchema = z.object({
@@ -32520,6 +32568,7 @@ CommercePaymentsPaymentsControllerCreateSetupIntentOutputSchema = z.object({
 /** Zod schema for CommercePaymentsPaymentsControllerProcessPaymentInput. Data model for Commerce Payments Payments Controller+Process Payment Request. */
 CommercePaymentsPaymentsControllerProcessPaymentInputSchema = z.object({
   amount: z.number().optional(),
+  cardBin: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
   gatewayProvider: z.string().nullable().optional(),
   payerEmail: z.string().nullable().optional(),
@@ -34696,8 +34745,11 @@ CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInpu
 CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInputSchema = z.object({
   amount: z.number().optional(),
   billingCycle: z.lazy(() => BillingCycleSchema).optional(),
+  cardBin: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
   createdByUserId: z.string().uuid().optional(),
   fulfilledOrderId: z.string().uuid().nullable().optional(),
+  payerEmail: z.string().nullable().optional(),
   planId: z.string().uuid().optional(),
   productId: z.string().uuid().nullable().optional(),
   promoCodeIdempotencyKey: z.string().nullable().optional(),
@@ -35055,9 +35107,12 @@ CommerceSubscriptionsSubscriptionPlanTypeSchema = z.enum(['Free', 'Paid', 'Enter
 CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema = z.object({
   amount: z.number().optional(),
   billingCycle: z.lazy(() => BillingCycleSchema).optional(),
+  cardBin: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
   createdByUserId: z.string().uuid().optional(),
   currency: z.string().nullable().optional(),
   fulfilledOrderId: z.string().uuid().nullable().optional(),
+  payerEmail: z.string().nullable().optional(),
   planId: z.string().uuid().optional(),
   productId: z.string().uuid().nullable().optional(),
   promoCodeIdempotencyKey: z.string().nullable().optional(),

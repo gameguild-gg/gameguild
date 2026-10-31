@@ -121,6 +121,91 @@ public sealed class PermissionCachePopularityTrackerTests
     }
 
     [Fact]
+    public void AuthorizationCacheOptions_DisableAutomaticWarmupByDefault()
+    {
+        // Issue #353 spec: popularity-based warm scheduling is opt-in; only explicit
+        // operator-selected cache:warm warming runs without configuration.
+        new AuthorizationCacheOptions().AutomaticWarmupEnabled.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task RunCycleAsync_SkipsWarmingWhenAutomaticWarmupIsDisabled()
+    {
+        // Boundary separation: a tracker that observed traffic (enabled options) must still
+        // produce no warming when the scheduler's own options disable automatic warmup.
+        var trackingOptions = new AuthorizationCacheOptions
+        {
+            AutomaticWarmupEnabled = true,
+            PopularityTrackingCapacity = 4
+        };
+        var tracker = new PermissionCachePopularityTracker(Options.Create(trackingOptions));
+        var request = CreateRequest("popular");
+        tracker.Record(request);
+        tracker.Record(request);
+
+        var schedulerOptions = new AuthorizationCacheOptions
+        {
+            AutomaticWarmupEnabled = false,
+            AutomaticWarmupMinimumAccessCount = 2,
+            AutomaticWarmupMaxEntriesPerCycle = 10
+        };
+        var warmup = new Mock<IPermissionCacheWarmupService>();
+        var (service, provider) = CreateScheduler(tracker, schedulerOptions, warmup.Object);
+        await using (provider)
+        {
+            var result = await service.RunCycleAsync();
+
+            result.Should().Be(new PermissionCacheWarmupResult(0, 0, 0));
+            warmup.Verify(service => service.WarmAsync(
+                It.IsAny<IReadOnlyCollection<PermissionCacheWarmupRequest>>(),
+                It.IsAny<CancellationToken>()), Times.Never,
+                "a disabled scheduler must not evaluate any pair, even when popularity data exists");
+        }
+    }
+
+    [Fact]
+    public async Task RunCycleAsync_WarmsOnlyTheHottestPairsUpToTheConfiguredLimit()
+    {
+        var options = new AuthorizationCacheOptions
+        {
+            AutomaticWarmupEnabled = true,
+            AutomaticWarmupMinimumAccessCount = 2,
+            AutomaticWarmupMaxEntriesPerCycle = 2,
+            PopularityTrackingCapacity = 4
+        };
+        var tracker = new PermissionCachePopularityTracker(Options.Create(options));
+        var hottest = CreateRequest("hottest");
+        var runnerUp = CreateRequest("runner-up");
+        var cold = CreateRequest("cold");
+        foreach (var _ in Enumerable.Range(0, 3))
+        {
+            tracker.Record(hottest);
+        }
+        tracker.Record(runnerUp);
+        tracker.Record(runnerUp);
+        tracker.Record(cold);
+
+        IReadOnlyCollection<PermissionCacheWarmupRequest>? warmed = null;
+        var warmup = new Mock<IPermissionCacheWarmupService>();
+        warmup.Setup(service => service.WarmAsync(
+                It.IsAny<IReadOnlyCollection<PermissionCacheWarmupRequest>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IReadOnlyCollection<PermissionCacheWarmupRequest>, CancellationToken>((requests, _) => warmed = requests)
+            .ReturnsAsync(new PermissionCacheWarmupResult(2, 2, 0));
+        var (service, provider) = CreateScheduler(tracker, options, warmup.Object);
+        await using (provider)
+        {
+            var result = await service.RunCycleAsync();
+
+            result.Should().Be(new PermissionCacheWarmupResult(2, 2, 0));
+            warmed.Should().NotBeNull();
+            warmed!.Select(request => request.ResourceId).Should()
+                .Equal(["hottest", "runner-up"],
+                    "only pairs meeting the minimum access count are warmed, hottest first, capped at the configured limit");
+        }
+    }
+
+    [Fact]
     public async Task CachedAclService_TracksRepeatedRequestsIncludingCacheHits()
     {
         var options = new AuthorizationCacheOptions
@@ -212,6 +297,21 @@ public sealed class PermissionCachePopularityTrackerTests
             AutomaticWarmupEnabled = true,
             PopularityTrackingCapacity = capacity
         }));
+    }
+
+    private static (AutomaticPermissionCacheWarmupService Service, ServiceProvider Provider) CreateScheduler(
+        PermissionCachePopularityTracker tracker,
+        AuthorizationCacheOptions options,
+        IPermissionCacheWarmupService warmupService)
+    {
+        var services = new ServiceCollection();
+        services.AddScoped<IPermissionCacheWarmupService>(_ => warmupService);
+        var provider = services.BuildServiceProvider();
+        return (new AutomaticPermissionCacheWarmupService(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            tracker,
+            Options.Create(options),
+            NullLogger<AutomaticPermissionCacheWarmupService>.Instance), provider);
     }
 
     private static PermissionCacheWarmupRequest CreateRequest(string resourceId)

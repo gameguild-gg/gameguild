@@ -191,6 +191,7 @@ public static class AnonymousEndpointRegistry
             ["BillingWebhooksController.HandleApplePayWebhook"] = "Provider billing webhook; receipt/signature verified inside the handler.",
             ["BillingWebhooksController.HandleStripeWebhook"] = "Provider billing webhook; Stripe signature verified with the webhook secret inside the handler.",
             ["BillingWebhooksController.HandlePayPalWebhook"] = "Provider billing webhook; PayPal transmission signature verified inside the handler.",
+            ["BillingWebhooksController.HandleBraintreeWebhook"] = "Provider billing webhook; Braintree bt_signature verified offline against the configured gateway public key inside the handler.",
             ["EmailEventsController.*"] = "Email delivery-events webhook; SNS signature verified with a pinned signing-cert host.",
             ["EconomySumSubWebhookController.Ingest"] = "KYC provider webhook; request signature is validated against the provider secret.",
             ["EconomyStripeConnectWebhookController.Ingest"] = "Payout provider webhook; Stripe signature is validated against the configured secret.",

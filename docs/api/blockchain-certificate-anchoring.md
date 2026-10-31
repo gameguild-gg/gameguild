@@ -2,8 +2,9 @@
 
 Certificate evidence is **disabled by default**. The legacy `none`/`local` providers contact no external
 network. The separately enabled EVM host composes the durable certificate outbox, PostgreSQL journal,
-signer and publication worker. Full issue #224 acceptance still requires the authenticated status/proof
-surface, recovery acceptance and a verified deployment on a public testnet.
+signer, publication worker and the authenticated status/proof surface. Full issue #224 acceptance still
+requires the owner ceremony: a verified deployment on a public testnet, operational recovery drills and
+the finalized anchor/revocation evidence.
 
 ## Configuration
 
@@ -106,6 +107,17 @@ HTTPS RPC endpoint and environment key reference before activating it. Never com
 credential-bearing RPC endpoint. Only the final certificate digest and contract operation are sent
 on chain; owner/tenant IDs and revocation reasons remain off chain.
 
+The configured RPC endpoint must be a **public** HTTPS host: host activation (`AddCertificateEvmHost`)
+enforces `EvmCertificateRpcEndpointPolicy` and rejects the reserved `localhost` name and every loopback,
+private, link-local, shared (CGNAT), documentation, reserved or multicast address literal before any
+RPC call is made. A local node therefore cannot back an enabled host; use the hosted CI fixtures for
+controlled-boundary Anvil runs.
+
+The owner runbook for activating this template on Sepolia — key generation outside agent sessions,
+pinned deployment, environment-variable secret injection, firing the acceptance anchor/revocation,
+operational recovery drills and the exact evidence to attach to #224 — is
+[`evm-certificate-anchoring-ceremony.md`](evm-certificate-anchoring-ceremony.md).
+
 ```json
 "BlockchainCertificates": {
   "Provider": "none",
@@ -168,17 +180,21 @@ deployments do not register this check or apply these journal migrations.
 ## Remaining operations and acceptance
 
 The EVM protocol, constrained signer, durable journal and worker have separate implementation
-evidence; configuration alone does not establish deployment or acceptance. Remaining gates are:
+evidence; configuration alone does not establish deployment or acceptance. Remaining gates are
+owner ceremony steps — the exact procedure for each is
+[`evm-certificate-anchoring-ceremony.md`](evm-certificate-anchoring-ceremony.md):
 
 1. **Public testnet deployment** — provision the proposed Sepolia profile with its actual deployed
    registry, authorized issuer/signer and pinned runtime-code digest. No mainnet deployment is implied.
 2. **Key custody and funding** — supply a separate testnet signer environment reference, fund its
    address and approve explicit spending caps. Secret values do not belong in issues or source files.
-3. **Authenticated status and fresh proof** — the public digest-verification surface above covers
-   the legacy/local providers; owner/tenant-scoped asynchronous EVM state and canonical chain proof
-   (without leaking endpoints, keys or raw transactions) remain open.
+3. ~~**Authenticated status and fresh proof**~~ — delivered: `GET /api/certificates/{id}/evm` and
+   `GET /api/certificates/{id}/evm/proof` expose owner-scoped asynchronous EVM state and canonical
+   chain proof without leaking endpoints, keys or raw transactions
+   (`CertificateEvmEvidenceController`, `EvmCertificateEvidenceReader`).
 4. **Operator recovery** — accept original-profile availability, quarantined nonce gaps and discovery
-   after journal loss without inventing a new original identity or receipt.
+   after journal loss without inventing a new original identity or receipt. The journal/worker
+   machinery is delivered; the acceptance drill runs during the ceremony.
 5. **External evidence** — record actual anchor/revoke transactions and finalized block/state proof.
    Private Anvil fixtures and local hashes are not public-testnet acceptance.
 

@@ -174,9 +174,11 @@ public sealed class AuthorizationCacheOptions : BaseOptions
 
     /// <summary>
     ///     Whether to warm frequently accessed subject-based ACL decisions on a schedule.
+    ///     Disabled by default (issue #353 spec: popularity-based scheduling is opt-in); explicit
+    ///     operator-selected warming via <c>POST /v{version}/permissions/cache:warm</c> is always available.
     ///     Tracking is process-local and bounded; warmed decisions still use the normal versioned L1/L2 cache path.
     /// </summary>
-    public bool AutomaticWarmupEnabled { get; set; } = true;
+    public bool AutomaticWarmupEnabled { get; set; } = false;
 
     /// <summary>The number of seconds between automatic warmup cycles.</summary>
     public int AutomaticWarmupIntervalSeconds { get; set; } = 60;
