@@ -59,12 +59,12 @@ public class PaymentMethod : EntityBase
     public Guid UserId { get; private set; }
 
     /// <summary>
-    ///     Coarse payment-method family (card / bank account / wallet). Stripe-only in v1 wiring.
+    ///     Payment-method family (card / bank account / PayPal / Apple Pay / Google Pay / wallet).
     /// </summary>
     public PaymentMethodType Type { get; private set; }
 
     /// <summary>
-    ///     Gateway provider key (e.g. "stripe"). Multi-provider support is an open extension (#780).
+    ///     Gateway provider key (e.g. "stripe", "paypal", "braintree", "adyen", "authorizenet").
     /// </summary>
     [MaxLength(50)]
     public string GatewayProvider { get; private set; } = string.Empty;
@@ -349,18 +349,31 @@ public class PaymentMethod : EntityBase
 }
 
 /// <summary>
-///     Coarse payment-method families. Stripe is the only wired provider in v1.
+///     Payment-method families registrable as saved methods (issue #414): card, bank
+///     account (ACH, verified via micro-deposits), and the wallet family — PayPal billing
+///     agreements plus Apple Pay and Google Pay tokens vaulted at the gateways. Values are
+///     stored as strings; <see cref="Wallet"/> is retained for legacy rows and Link-style
+///     wallets while the three wallet brands above get distinct values.
 /// </summary>
 public enum PaymentMethodType
 {
     /// <summary>Credit or debit card</summary>
     Card = 0,
 
-    /// <summary>Bank account (ACH) — verification flow deferred</summary>
+    /// <summary>Bank account (ACH) — chargeable only after micro-deposit verification</summary>
     BankAccount = 1,
 
-    /// <summary>Wallet (PayPal, Apple Pay, Google Pay)</summary>
-    Wallet = 2
+    /// <summary>Generic wallet (legacy rows, Link-style wallets)</summary>
+    Wallet = 2,
+
+    /// <summary>PayPal billing agreement / vaulted account</summary>
+    PayPal = 3,
+
+    /// <summary>Apple Pay vaulted token</summary>
+    ApplePay = 4,
+
+    /// <summary>Google Pay vaulted token</summary>
+    GooglePay = 5
 }
 
 /// <summary>
