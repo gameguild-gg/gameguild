@@ -78,42 +78,47 @@ a grant of `["courses:grade"]` gets 3 days, `["courses:create"]` gets 14 days, a
 `PermissionExpirationWorker` (a `BackgroundService`) runs two phases per cycle, each in a
 fresh DI scope and bounded by `BatchSize`:
 
-1. **Expired sweep** (`ProcessExpiredAsync`): loads still-active grants with
-   `ExpiresAt <= now` — already-deactivated grants are excluded server-side and
-   ordered oldest-expiry-first, and grants stamped
-   `Metadata["expirationProcessedAt"]` are filtered out *before* the `BatchSize`
-   window is applied, so a backlog larger than one batch drains across cycles
-   instead of the first batch permanently occupying the window. For each batch it
-   first bumps the affected tenants' security versions (cache invalidation), then per
-   grant: writes the `PermissionAuditLog` entry (`PermissionOperationType.Expire`,
-   system actor), calls `TenantPermission.Expire()` (sets `IsActive = false`) with the
-   `expirationProcessedAt` stamp, and publishes a
+1. **Expired sweep** (`ProcessExpiredAsync`): loads grants with `ExpiresAt <= now`, excludes
+   ones already stamped `Metadata["expirationProcessedAt"]` **before applying the batch limit**, calls
+   `TenantPermission.Expire()` (sets `IsActive = false`), writes a `PermissionAuditLog`
+   entry (`PermissionOperationType.Expire`, system actor), bumps the tenant security
+   version (cache invalidation), and publishes a
    `PermissionExpirationNotification(Kind: Expired)`.
+   A tenant batch commits accepted grants, checkpoints, required audit and its single
+   version increment atomically. Individual grants use savepoints; failure of the
+   tenant version rolls back that tenant's accepted grants too. Global grants use the
+   shared `Guid.Empty` version scope. A failed required write leaves no completed
+   checkpoint that could suppress a fresh-scope retry.
 2. **Reminder sweep** (`SendUpcomingExpirationRemindersAsync`): loads grants expiring
-   before `now + UpcomingNotificationWindow`, skips ones reminded within
-   `MinimumReminderInterval`, stamps `expirationReminderAt`, and publishes a
+   before `now + UpcomingNotificationWindow`, excludes ones reminded within
+   `MinimumReminderInterval` **before applying the batch limit**, stamps `expirationReminderAt`, and publishes a
    `PermissionExpirationNotification(Kind: Upcoming)`.
 
-### Failure and recovery ordering
+Required-operation failures are surfaced as an aggregate containing the failures and
+`ProcessedGrantCount`; independent accepted groups may already be committed in the
+standalone worker. A caller-owned transaction retains its own final commit/rollback.
+The worker logs the failure and retries pending grants next cycle. Cancellation and
+unconfirmed rollback/commit failures propagate; rollback cleanup ignores the cancelled
+request token. A cycle exceeding `ExecutionTimeout` is abandoned and retried.
 
-The expired sweep is ordered so an infrastructure failure can never strand a grant in a
-half-processed state:
+System maintenance has an explicit audit capability. `SystemActor` has subject `system`,
+which is not a user GUID. The internal automatic entry point establishes a bounded
+`ActorContextBuilder.ForSystem("PermissionExpiration")` scope and restores the prior
+context afterwards. An already authenticated system context must name that exact
+operation; an authenticated administrator with a valid user GUID keeps the user path.
+HTTP command handlers retain their authenticated administrator checks.
 
-- **Tenant security version first.** Versions are incremented before any durable grant
-  mutation. A failed increment aborts the cycle with nothing persisted, so the next
-  cycle retries the entire batch — a failed increment can never be stranded behind
-  grants that were already deactivated (extra increments are harmless: the version only
-  drives cache invalidation).
-- **Audit before deactivation.** The `Expire` audit entry is written before the grant is
-  deactivated and stamped. If persistence then fails, the grant stays eligible and the
-  next cycle retries it — the audit entry may duplicate on retry, but it is never lost,
-  so a deactivated grant always carries its expiration audit trail.
-- **Notification last and best-effort.** Publishing runs after the durable mutation; a
-  publish failure is logged without undoing the deactivation, and the processed stamp
-  keeps the next cycle from touching the grant again (no redelivery guarantee).
+The host independently validates the actual ambient actor before accepting a system
+mutation scope: authenticated `ActorKind.System`, subject `system`, SystemAdmin role,
+and the reviewed expiration operation. The operation descriptor cannot authorize
+itself. User/anonymous contexts, empty subjects or tenants, and unreviewed operations
+are rejected. The existing user audit-scope overload still rejects `Guid.Empty` actors.
+Hosts without the system capability fail closed. No synthetic user account is created.
+Central permission audit metadata records `SubjectId: system`, `Origin: SystemMaintenance`
+and `OperationName: PermissionExpiration`, with `AuditLog.UserId = null`. The dedicated
+expiration audit retains its established `PerformedBy = Guid.Empty` system marker.
 
-Per-grant failures are logged and retried on the next cycle; a cycle that exceeds
-`ExecutionTimeout` is abandoned and retried. The worker exits immediately when
+The worker exits immediately when
 `Enabled = false` or the configuration is invalid.
 
 ## Notifications (upcoming and past expirations)
@@ -132,8 +137,10 @@ Notifications delivery stack):
   `Kind = Upcoming` → `NotificationPriority.Normal`. Type is `NotificationType.Security`.
 - Delivery is gated on `Authorization:PermissionExpiration:Enabled` — the same switch as
   the worker — so administrative triggers cannot produce alerts while the feature is off.
-- Queueing failures are logged, not thrown: the publisher stamps dedup metadata before
-  dispatch and has no redelivery mechanism, so rethrowing would not retry the alert.
+- Queueing failures are logged, not treated as failed permission mutations: dedup
+  metadata has no guaranteed-redelivery mechanism. The host queues notification records
+  through its scoped database context, so an enclosing caller transaction still owns
+  their commit. Delivery remains best effort; this does not promise eventual delivery.
 
 ## Administrative endpoints
 
@@ -144,7 +151,7 @@ tenant-admin authorized unless noted:
 |---|---|---|
 | Bulk set absolute expiration | `POST permissions:set-expiration` | `expiresAt` must be in the future; `null` clears the expiration (grant becomes permanent) |
 | Bulk extend by period | `POST permissions:extend-expiration` | Extension extends from the later of current `ExpiresAt` / now; must be positive |
-| List expiring grants | `GET {tenantId}/permissions:expiring` | Optional `expiresBefore` cutoff (defaults to the notification window) |
+| List expiring grants | `GET permissions:expiring` | Uses the validated authenticated request tenant (for example, selected with `X-Tenant-Id`); optional `expiresBefore` cutoff defaults to the notification window |
 | Process expired now | `POST permissions:process-expired` | System admin only; runs the expired sweep without waiting for the worker |
 | Send reminders now | `POST permissions:send-expiration-reminders` | System admin only; runs the reminder sweep on demand |
 
@@ -180,22 +187,33 @@ reminder/processed stamps so the new lifecycle generates fresh notifications.
 - When adding a new permission-sensitive surface that issues grants, accept the optional
   `expiresAt` parameter end-to-end instead of forcing callers through later bulk edits.
 
+The repository excludes soft-deleted and inactive grants before returning expired
+work, ordered by expiration and then grant id. The service excludes processed
+checkpoints before applying the bounded batch. Grant, audit, checkpoint and tenant
+(or global) version commit atomically; attempted call order is not a series of
+independent durable writes. Required failures are reported, while alert queueing
+remains best effort after acceptance.
+
 ## Tests
 
 - `GameGuild.Identity.Authorization.UnitTests/Services/PermissionExpirationServiceTests.cs` —
-  sweep/reminder logic, idempotency stamps, audit, security-version bumps, batch
-  progress past already-stamped grants, and failure recovery (audit outage, persistence
-  failure after audit, version-bump failure, publish failure, bump-before-mutation
-  ordering).
+  sweep/reminder logic, idempotency stamps, audit, security-version bumps.
 - `GameGuild.Identity.Authorization.UnitTests/PermissionExpirationOptionsTests.cs` —
   defaults resolution, wildcard precedence, validation.
 - `GameGuild.Identity.Authorization.UnitTests/Handlers/PermissionExpirationCommandHandlerTests.cs` —
   administrative command handlers.
-- `GameGuild.Identity.Authentication.IntegrationTests/PermissionExpirationRecoveryPostgreSqlTests.cs` —
-  real-PostgreSQL recovery semantics: multi-batch backlog drainage with ineligible
-  grants (processed/deleted/deactivated/unexpired) skipped server-side, audit-outage
-  retry, and persistence-failure convergence with the audit entry and tenant version
-  intact.
 - `GameGuild.API.UnitTests/Security/PermissionExpirationAlertHandlerTests.cs` — alert
   delivery: config gate, recipient resolution, InApp+Email channels, priority mapping,
   preference-driven suppression tolerance, failure tolerance.
+
+### Additional standalone PostgreSQL coverage
+
+`GameGuild.Identity.Authentication.IntegrationTests/PermissionExpirationRecoveryPostgreSqlTests.cs`
+keeps three additional cases for deterministic backlog drainage/ineligible rows,
+audit-failure retry and persistence-failure convergence. It uses a standalone
+PostgreSQL schema, the actual shared relational executor and an authenticated
+non-empty SystemAdmin caller. Failed attempts leave zero committed grant/audit/version
+effects and the accepted retry commits exactly one audit/version. These cases do not
+replace the migrated-host recovery/system-identity cases or the real HTTP tenant
+boundary cases. The six additional component cases prove orchestration only;
+PostgreSQL remains the evidence for rollback and durability.

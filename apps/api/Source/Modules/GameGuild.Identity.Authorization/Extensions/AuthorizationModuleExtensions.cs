@@ -305,6 +305,7 @@ public static class AuthorizationModuleExtensions
 
         // Permission expiration lifecycle (issue #331): automatic expirations,
         // upcoming-expiration notifications, and bulk administrative management.
+        services.AddScoped<IPermissionMutationExecutor, PermissionMutationTransaction>();
         services.AddScoped<IPermissionExpirationService, PermissionExpirationService>();
         services.AddHostedService<PermissionExpirationWorker>();
 

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using FluentAssertions;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Authorization.Configuration;
 using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
@@ -17,8 +18,9 @@ namespace GameGuild.Identity.Authentication.IntegrationTests;
 ///     (issue #331 recovery review): backlogs larger than the worker's batch must
 ///     drain across cycles, and infrastructure failures must never strand a grant
 ///     without its audit trail or leave a tenant's cache version un-bumped.
-///     Runs against a real PostgreSQL database with the real repository, audit
-///     service and security-version store; only the failure injections are stubs.
+///     Uses real PostgreSQL, repository, audit/version stores and the shared relational
+///     mutation executor. This standalone schema exercises a non-empty SystemAdmin
+///     caller; the migrated API suite separately proves host-validated system identity.
 /// </summary>
 public sealed class PermissionExpirationRecoveryPostgreSqlTests
 {
@@ -26,6 +28,10 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
     public async Task ExpiredSweepDrainsBacklogAcrossBatchesAndSkipsIneligibleGrants()
     {
         await using var harness = await ExpirationHarness.CreateAsync(batchSize: 2);
+        var initialTenantAVersion = await harness.TenantVersionAsync(harness.TenantA);
+        var initialTenantBVersion = await harness.TenantVersionAsync(harness.TenantB);
+        initialTenantAVersion.Should().Be(1);
+        initialTenantBVersion.Should().Be(1);
 
         var oldest = harness.SeedGrant(harness.TenantA, SystemClock.UtcNow.AddHours(-5));
         var second = harness.SeedGrant(harness.TenantA, SystemClock.UtcNow.AddHours(-4));
@@ -70,6 +76,9 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
             (await harness.AuditCountForAsync(grant.Id)).Should().Be(1);
         }
 
+        (await harness.TenantVersionAsync(harness.TenantA)).Should().Be(initialTenantAVersion + 2);
+        (await harness.TenantVersionAsync(harness.TenantB)).Should().Be(initialTenantBVersion + 1);
+
         // Ineligible grants are untouched and unaudited.
         var reloadedProcessed = await harness.ReloadAsync(processed);
         reloadedProcessed!.IsActive.Should().BeFalse();
@@ -98,9 +107,12 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
         var grant = harness.SeedGrant(harness.TenantA, SystemClock.UtcNow.AddHours(-1));
         await harness.SaveChangesAsync();
 
-        var failingCycle = await harness.SweepAsync(auditOverride: harness.CreateFailingAudit());
+        var versionBefore = await harness.TenantVersionAsync(harness.TenantA);
+        var failure = await Assert.ThrowsAsync<AggregateException>(() =>
+            harness.SweepAsync(auditOverride: harness.CreateFailingAudit()));
 
-        failingCycle.Should().Be(0);
+        failure.Data["ProcessedGrantCount"].Should().Be(0);
+        (await harness.TenantVersionAsync(harness.TenantA)).Should().Be(versionBefore);
         var afterFailure = await harness.ReloadAsync(grant);
         afterFailure!.IsActive.Should().BeTrue();
         afterFailure.Metadata.Should().BeNull();
@@ -113,10 +125,11 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
         afterRetry!.IsActive.Should().BeFalse();
         afterRetry.Metadata.Should().ContainKey("expirationProcessedAt");
         (await harness.AuditCountForAsync(grant.Id)).Should().Be(1);
+        (await harness.TenantVersionAsync(harness.TenantA)).Should().Be(versionBefore + 1);
     }
 
     [Fact]
-    public async Task PersistFailureAfterAuditKeepsAuditEntryAndConvergesOnRetry()
+    public async Task PersistFailureLeavesNoCommittedEffectsAndConvergesOnceOnRetry()
     {
         await using var harness = await ExpirationHarness.CreateAsync(batchSize: 10);
         var grant = harness.SeedGrant(harness.TenantA, SystemClock.UtcNow.AddHours(-1));
@@ -124,18 +137,19 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
 
         var versionBefore = await harness.TenantVersionAsync(harness.TenantA);
 
-        var failingCycle = await harness.SweepAsync(
-            repositoryOverride: new FailingFirstUpdateRepository(harness.Repository));
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => harness.SweepAsync(
+            repositoryOverride: new FailingFirstUpdateRepository(harness.Repository)));
 
-        failingCycle.Should().Be(0);
+        failure.Data["ProcessedGrantCount"].Should().Be(0);
 
-        // The audit entry is written BEFORE the durable deactivation (and the tenant
-        // version is bumped before any mutation), so a persistence failure strands
-        // neither the audit trail nor the cache invalidation.
-        (await harness.AuditCountForAsync(grant.Id)).Should().Be(1);
+        // This injection fails the repository write before the audit is staged.
+        // No grant, audit, checkpoint or version may become durable from that attempt.
+        // The migrated API suite also injects failures after audit/version staging.
+        (await harness.AuditCountForAsync(grant.Id)).Should().Be(0);
         var afterFailure = await harness.ReloadAsync(grant);
         afterFailure!.IsActive.Should().BeTrue();
-        (await harness.TenantVersionAsync(harness.TenantA)).Should().BeGreaterThan(versionBefore);
+        afterFailure.Metadata.Should().BeNull();
+        (await harness.TenantVersionAsync(harness.TenantA)).Should().Be(versionBefore);
 
         var retryCycle = await harness.SweepAsync();
 
@@ -143,9 +157,9 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
         var afterRetry = await harness.ReloadAsync(grant);
         afterRetry!.IsActive.Should().BeFalse();
         afterRetry.Metadata.Should().ContainKey("expirationProcessedAt");
-        // The retry may duplicate the audit entry, but it is never lost.
-        (await harness.AuditCountForAsync(grant.Id)).Should().BeGreaterThanOrEqualTo(2);
-        (await harness.TenantVersionAsync(harness.TenantA)).Should().BeGreaterThan(versionBefore + 1);
+        // The accepted retry commits exactly one audit and one version increment.
+        (await harness.AuditCountForAsync(grant.Id)).Should().Be(1);
+        (await harness.TenantVersionAsync(harness.TenantA)).Should().Be(versionBefore + 1);
     }
 
     private sealed class ExpirationHarness : IAsyncDisposable
@@ -171,7 +185,7 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
 
         public static async Task<ExpirationHarness> CreateAsync(int batchSize)
         {
-            var database = await EconomyPostgreSqlTestDatabase.CreateAsync("permission_expiration_recovery");
+            var database = await EconomyPostgreSqlTestDatabase.CreateEmptyAsync("permission_expiration_recovery");
             var connectionString = new NpgsqlConnectionStringBuilder(database.ConnectionString)
             {
                 Pooling = true
@@ -182,7 +196,7 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
             var context = new ExpirationRecoveryDbContext(options);
             await context.Database.EnsureCreatedAsync();
 
-            return new ExpirationHarness(context, database)
+            var harness = new ExpirationHarness(context, database)
             {
                 Repository = new TenantPermissionRepository(context),
                 AuditService = new PermissionAuditService(
@@ -194,6 +208,14 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
                     Enabled = true
                 }
             };
+            // Existing tenants start at a positive security version. Seed that
+            // baseline explicitly so these cases measure committed increments,
+            // independently of the repository's create-at-one initialization.
+            context.Set<TenantSecurityVersion>().AddRange(
+                new TenantSecurityVersion { TenantId = harness.TenantA, SecurityVersion = 1 },
+                new TenantSecurityVersion { TenantId = harness.TenantB, SecurityVersion = 1 });
+            await harness.SaveChangesAsync();
+            return harness;
         }
 
         public TenantPermission SeedGrant(Guid tenantId, DateTime expiresAt, bool isActive = true)
@@ -201,6 +223,7 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
             var grant = new TenantPermission
             {
                 UserId = Guid.NewGuid(),
+                Version = 1,
                 TenantId = tenantId,
                 Permissions = ["Read"],
                 ExpiresAt = expiresAt,
@@ -215,6 +238,7 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
             var grant = new TenantPermission
             {
                 UserId = Guid.NewGuid(),
+                Version = 1,
                 TenantId = tenantId,
                 Permissions = ["Read"],
                 ExpiresAt = expiresAt,
@@ -242,13 +266,26 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
             ITenantPermissionRepository? repositoryOverride = null,
             IPermissionAuditService? auditOverride = null)
         {
+            var actorAccessor = new ActorContextAccessor();
+            using var actorScope = actorAccessor.BeginActorContextScope(
+                ActorContextBuilder.ForUser(Guid.NewGuid()).WithRole("SystemAdmin").Build());
             var service = new PermissionExpirationService(
                 repositoryOverride ?? Repository,
                 auditOverride ?? AuditService,
                 new DatabaseTenantSecurityVersionStore(new TenantSecurityVersionRepository(_context)),
                 global::Microsoft.Extensions.Options.Options.Create(Options),
-                NullLogger<PermissionExpirationService>.Instance);
-            return await service.ProcessExpiredAsync();
+                NullLogger<PermissionExpirationService>.Instance,
+                new PermissionMutationTransaction(_context),
+                actorContextAccessor: actorAccessor);
+            try
+            {
+                return await service.ProcessExpiredAsync();
+            }
+            finally
+            {
+                // Each retry reads persisted PostgreSQL state, not stale tracked instances.
+                _context.ChangeTracker.Clear();
+            }
         }
 
         /// <summary>
@@ -319,8 +356,8 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
     }
 
     /// <summary>
-    ///     Delegating repository whose first UpdateAsync fails, proving that a grant
-    ///     whose audit entry was already persisted converges on the next cycle.
+    ///     Delegating repository whose first UpdateAsync fails, proving that an
+    ///     unaccepted attempt leaves no committed effects and converges on retry.
     /// </summary>
     private sealed class FailingFirstUpdateRepository(ITenantPermissionRepository inner) : ITenantPermissionRepository
     {

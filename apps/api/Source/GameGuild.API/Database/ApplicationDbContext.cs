@@ -9,6 +9,7 @@ using GameGuild.API.Eventing;
 using GameGuild.API.Setup;
 using GameGuild.Compliance.Audit;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.API.Database;
 
@@ -29,6 +30,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
     private readonly IReadOnlyList<IPermissionAuditHook> _permissionAuditHooks = [];
     private readonly List<PermissionAuditChange> _pendingPermissionAuditChanges = [];
     private PermissionMutationAuditScope? _permissionMutationAuditScope;
+    private readonly IActorContextAccessor? _permissionMaintenanceActorAccessor;
     private int _stagedSetBasedAuditRowCount;
 
     /// <summary>
@@ -121,6 +123,27 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         // Field-level write tracking (issue #186) defaults to enabled; the options master
         // switch is the only way to disable it.
         _fieldAccessWriteCaptureEnabled = fieldLevelAuditOptions?.Value.CaptureEntityWrites ?? true;
+    }
+
+    /// <summary>DI constructor that supplies the real actor context for system audit scopes.</summary>
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        IPublisher? publisher,
+        IUseCaseOperationContextAccessor useCaseOperationContextAccessor,
+        IAuditService? auditService,
+        ILogger<ApplicationDbContext>? logger,
+        IOptions<PermissionAuditOptions>? permissionAuditOptions,
+        IEnumerable<IPermissionAuditHook>? permissionAuditHooks,
+        IOptions<ValueSnapshotOptions>? valueSnapshotOptions,
+        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions,
+        IOptions<FieldLevelAuditOptions>? fieldLevelAuditOptions,
+        IActorContextAccessor actorContextAccessor)
+        : this(options, publisher, useCaseOperationContextAccessor, auditService, logger,
+            permissionAuditOptions, permissionAuditHooks, valueSnapshotOptions, entityChangeAuditOptions,
+            fieldLevelAuditOptions)
+    {
+        ArgumentNullException.ThrowIfNull(actorContextAccessor);
+        _permissionMaintenanceActorAccessor = actorContextAccessor;
     }
 
     public override int SaveChanges() => SaveChanges(acceptAllChangesOnSuccess: true);
@@ -389,7 +412,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
             change.ActorId,
             change.TenantId,
             change.CorrelationId,
-            change.CommandType
+            change.CommandType,
+            change.ActorSubjectId,
+            change.ActorOrigin,
+            change.ActorOperation
         });
 
         foreach (var group in groups)
@@ -409,6 +435,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
                 {
                     CommandType = group.Key.CommandType ?? operation?.CommandType,
                     CorrelationId = group.Key.CorrelationId,
+                    SubjectId = group.Key.ActorSubjectId,
+                    Origin = group.Key.ActorOrigin,
+                    OperationName = group.Key.ActorOperation,
                     ChangeCount = entries.Length,
                     Changes = entries.Select(change => new
                     {
@@ -478,7 +507,35 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         return lease;
     }
 
-    private sealed record PermissionMutationAuditScope(Guid ActorId, Guid? TenantId, bool UseEntityTenantScope);
+    /// <inheritdoc />
+    public IPermissionMutationAuditScope BeginSystemPermissionMutationAuditScope(
+        PermissionSystemMutation maintenance, Guid? tenantId, bool useEntityTenantScope)
+    {
+        ArgumentNullException.ThrowIfNull(maintenance);
+        if (tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("System permission maintenance requires a valid tenant or explicit null global scope.", nameof(tenantId));
+        }
+        var actor = _permissionMaintenanceActorAccessor?.ActorContext;
+        if (actor is null || !actor.IsAuthenticated || actor.ActorKind != ActorKind.System || !actor.IsSystemAdmin
+            || !string.Equals(actor.SubjectId, SystemActor.SystemSubjectId, StringComparison.Ordinal)
+            || !string.Equals(maintenance.Operation, PermissionSystemMutation.ExpirationOperation, StringComparison.Ordinal)
+            || !string.Equals(actor.TypedAttributes.GetCustomAttribute("operation"), maintenance.Operation, StringComparison.Ordinal))
+        {
+            throw new UnauthorizedAccessException("A trusted system context authorized for this maintenance operation is required.");
+        }
+        var lease = new PermissionMutationAuditScopeLease(this, _permissionMutationAuditScope);
+        _permissionMutationAuditScope = new PermissionMutationAuditScope(Guid.Empty, tenantId, useEntityTenantScope)
+        {
+            SystemOperation = maintenance
+        };
+        return lease;
+    }
+
+    private sealed record PermissionMutationAuditScope(Guid ActorId, Guid? TenantId, bool UseEntityTenantScope)
+    {
+        public PermissionSystemMutation? SystemOperation { get; init; }
+    }
 
     private sealed class PermissionMutationAuditScopeLease : IPermissionMutationAuditScope
     {
@@ -557,7 +614,12 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
                     operation?.CorrelationId.ToString(),
                     operation?.CommandType,
                     oldState,
-                    newState));
+                    newState)
+                {
+                    ActorSubjectId = _permissionMutationAuditScope?.SystemOperation is not null ? SystemActor.SystemSubjectId : null,
+                    ActorOrigin = _permissionMutationAuditScope?.SystemOperation is not null ? "SystemMaintenance" : null,
+                    ActorOperation = _permissionMutationAuditScope?.SystemOperation?.Operation
+                });
             }
             catch (Exception exception)
             {

@@ -14,12 +14,11 @@ overrides:
   '@excalidraw/mermaid-to-excalidraw>nanoid': 5.1.16
   dompurify: 3.4.17
   fast-uri: 3.1.9
+  follow-redirects@<1.16.2: 1.16.2
   hono: 4.13.11
   lodash-es: 4.18.0
-  syncpack>minimatch: 11.0.1
   minimatch@<11.0.1: 11.0.1
-  glob@>=9.0.0 <14.0.2: 14.0.2
-  follow-redirects@<1.16.2: 1.16.2
+  glob@>=9 <14.0.2: 14.0.2
   handlebars: 4.7.10
   icu-minify: 4.9.2
   ip-address: 10.7.4
@@ -59,6 +58,15 @@ patchedDependencies:
   deepmerge@4.3.1:
     hash: ce7bc8c614caad7eae9afd0ccb7c63767c693fed9df668af1a4dbb8516664919
     path: patches/deepmerge@4.3.1.patch
+  eslint-plugin-import@2.32.0:
+    hash: 2ffdfb53c367bdfc823dde00d2cde7c0e39915d90d96c1af9022f1c6e8a10bdc
+    path: patches/eslint-plugin-import@2.32.0.patch
+  glob@7.2.3:
+    hash: 6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375
+    path: patches/glob@7.2.3.patch
+  minimatch@11.0.1:
+    hash: 067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a
+    path: patches/minimatch@11.0.1.patch
   sprintf-js@1.1.3:
     hash: 3bb0134466e1967e01d743c6bb9f42dc45deeb6a2b2e0b986c0f2b0d35e011c8
     path: patches/sprintf-js@1.1.3.patch
@@ -15852,7 +15860,7 @@ snapshots:
       commander: 6.2.1
       convert-source-map: 2.0.0
       fs-readdir-recursive: 1.1.0
-      glob: 7.2.3
+      glob: 7.2.3(patch_hash=6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375)
       make-dir: 2.1.0
       slash: 2.0.0
     optionalDependencies:
@@ -18137,7 +18145,7 @@ snapshots:
     dependencies:
       '@eslint/object-schema': 3.0.5
       debug: 4.4.3
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
     transitivePeerDependencies:
       - supports-color
 
@@ -18158,7 +18166,7 @@ snapshots:
       ignore: 5.3.2
       import-fresh: 3.3.1
       js-yaml: 4.3.2
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
@@ -18686,7 +18694,7 @@ snapshots:
       chalk: 4.1.2
       collect-v8-coverage: 1.0.3
       exit: 0.1.2
-      glob: 7.2.3
+      glob: 7.2.3(patch_hash=6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375)
       graceful-fs: 4.2.11
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-instrument: 6.0.3
@@ -22181,7 +22189,7 @@ snapshots:
   '@ts-morph/common@0.27.0':
     dependencies:
       fast-glob: 3.3.3
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       path-browserify: 1.0.1
 
   '@tsd/typescript@5.9.3': {}
@@ -22564,7 +22572,7 @@ snapshots:
       '@typescript-eslint/types': 8.71.2
       '@typescript-eslint/visitor-keys': 8.71.2
       debug: 4.4.3
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       semver: 7.8.5
       tinyglobby: 0.2.17
       ts-api-utils: 2.5.0(typescript@6.0.3)
@@ -25101,7 +25109,7 @@ snapshots:
       eslint: 10.13.0(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@10.13.0(jiti@2.7.0))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.71.2(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(patch_hash=2ffdfb53c367bdfc823dde00d2cde7c0e39915d90d96c1af9022f1c6e8a10bdc)(@typescript-eslint/parser@8.71.2(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@10.13.0(jiti@2.7.0))
       eslint-plugin-react: 7.37.5(eslint@10.13.0(jiti@2.7.0))
       eslint-plugin-react-hooks: 7.1.1(eslint@10.13.0(jiti@2.7.0))
@@ -25121,7 +25129,7 @@ snapshots:
       eslint: 10.13.0(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@10.13.0(jiti@2.7.0))
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(patch_hash=2ffdfb53c367bdfc823dde00d2cde7c0e39915d90d96c1af9022f1c6e8a10bdc)(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@10.13.0(jiti@2.7.0))
       eslint-plugin-react: 7.37.5(eslint@10.13.0(jiti@2.7.0))
       eslint-plugin-react-hooks: 7.1.1(eslint@10.13.0(jiti@2.7.0))
@@ -25169,7 +25177,7 @@ snapshots:
       tinyglobby: 0.2.17
       unrs-resolver: 1.12.2
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.71.2(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(patch_hash=2ffdfb53c367bdfc823dde00d2cde7c0e39915d90d96c1af9022f1c6e8a10bdc)(@typescript-eslint/parser@8.71.2(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0))
     transitivePeerDependencies:
       - supports-color
 
@@ -25184,7 +25192,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.2(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0)):
+  eslint-plugin-import@2.32.0(patch_hash=2ffdfb53c367bdfc823dde00d2cde7c0e39915d90d96c1af9022f1c6e8a10bdc)(@typescript-eslint/parser@8.71.2(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.2.0
@@ -25199,7 +25207,7 @@ snapshots:
       hasown: 2.0.4
       is-core-module: 2.17.0
       is-glob: 4.0.3
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       object.fromentries: 2.0.8
       object.groupby: 1.0.3
       object.values: 1.2.1
@@ -25213,7 +25221,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-import@2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0)):
+  eslint-plugin-import@2.32.0(patch_hash=2ffdfb53c367bdfc823dde00d2cde7c0e39915d90d96c1af9022f1c6e8a10bdc)(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.2.0
@@ -25228,7 +25236,7 @@ snapshots:
       hasown: 2.0.4
       is-core-module: 2.17.0
       is-glob: 4.0.3
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       object.fromentries: 2.0.8
       object.groupby: 1.0.3
       object.values: 1.2.1
@@ -25254,7 +25262,7 @@ snapshots:
       hasown: 2.0.4
       jsx-ast-utils: 3.3.5
       language-tags: 1.0.9
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       object.fromentries: 2.0.8
       safe-regex-test: 1.1.0
       string.prototype.includes: 2.0.1
@@ -25291,7 +25299,7 @@ snapshots:
       estraverse: 5.3.0
       hasown: 2.0.4
       jsx-ast-utils: 3.3.5
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       object.entries: 1.1.9
       object.fromentries: 2.0.8
       object.values: 1.2.1
@@ -25350,7 +25358,7 @@ snapshots:
       imurmurhash: 0.1.4
       is-glob: 4.0.3
       json-stable-stringify-without-jsonify: 1.0.1
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       natural-compare: 1.4.0
       optionator: 0.9.4
     optionalDependencies:
@@ -25808,16 +25816,16 @@ snapshots:
 
   glob@14.0.2:
     dependencies:
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       minipass: 7.1.3
       path-scurry: 3.0.0
 
-  glob@7.2.3:
+  glob@7.2.3(patch_hash=6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375):
     dependencies:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       once: 1.4.0
       path-is-absolute: 1.0.1
 
@@ -26633,7 +26641,7 @@ snapshots:
       chalk: 4.1.2
       ci-info: 3.9.0
       deepmerge: 4.3.1(patch_hash=ce7bc8c614caad7eae9afd0ccb7c63767c693fed9df668af1a4dbb8516664919)
-      glob: 7.2.3
+      glob: 7.2.3(patch_hash=6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375)
       graceful-fs: 4.2.11
       jest-circus: 29.7.0
       jest-environment-node: 29.7.0
@@ -27008,7 +27016,7 @@ snapshots:
       chalk: 4.1.2
       cjs-module-lexer: 1.4.3
       collect-v8-coverage: 1.0.3
-      glob: 7.2.3
+      glob: 7.2.3(patch_hash=6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375)
       graceful-fs: 4.2.11
       jest-haste-map: 29.7.0
       jest-message-util: 29.7.0
@@ -28264,7 +28272,7 @@ snapshots:
 
   minimalistic-assert@1.0.1: {}
 
-  minimatch@11.0.1:
+  minimatch@11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a):
     dependencies:
       '@isaacs/nonrecursive-glob-match': 1.0.3
       brace-expansion: 5.0.12
@@ -28527,7 +28535,7 @@ snapshots:
       chalk: 2.4.2
       cross-spawn: 6.0.6
       memorystream: 0.3.1
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       pidtree: 0.3.1
       read-pkg: 3.0.0
       shell-quote: 1.11.0
@@ -30540,14 +30548,14 @@ snapshots:
   test-exclude@6.0.0:
     dependencies:
       '@istanbuljs/schema': 0.1.6
-      glob: 7.2.3
-      minimatch: 11.0.1
+      glob: 7.2.3(patch_hash=6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375)
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
 
   test-exclude@7.0.2:
     dependencies:
       '@istanbuljs/schema': 0.1.6
       glob: 14.0.2
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
 
   text-hex@1.0.0: {}
 
