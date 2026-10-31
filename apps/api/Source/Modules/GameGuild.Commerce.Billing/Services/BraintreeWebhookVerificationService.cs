@@ -77,8 +77,9 @@ public sealed class BraintreeWebhookVerificationService(
         {
             notification = DecodeNotification(btPayload);
         }
-        catch (Exception exception) when (exception is FormatException or JsonException or InvalidOperationException)
+        catch (Exception exception) when (exception is FormatException or JsonException or InvalidOperationException or System.Xml.XmlException)
         {
+            // XmlException includes the DTD-prohibited rejection of hostile documents.
             logger.LogWarning(exception, "Verified Braintree webhook payload could not be decoded");
             return BraintreeWebhookVerificationResult.Failed("Payload could not be decoded");
         }

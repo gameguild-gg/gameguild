@@ -323,7 +323,18 @@ public sealed class BillingWebhooksController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> HandleBraintreeWebhook(CancellationToken ct)
     {
-        var form = await Request.ReadFormAsync(ct);
+        IFormCollection form;
+        try
+        {
+            form = await Request.ReadFormAsync(ct);
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or FileLoadException)
+        {
+            // A delivery without a parseable form body (wrong content type, rejected
+            // multipart limits) is malformed, not unauthorized: reject it as a bad request.
+            logger.LogWarning("Braintree webhook body could not be read as a form: {Message}", LogRedaction.Sanitize(exception.Message));
+            return BadRequest(new { error = "Missing required Braintree form fields" });
+        }
 
         var btSignature = form["bt_signature"].ToString();
         var btPayload = form["bt_payload"].ToString();

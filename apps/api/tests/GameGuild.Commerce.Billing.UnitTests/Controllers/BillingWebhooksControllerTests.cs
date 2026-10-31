@@ -284,7 +284,8 @@ public class BillingWebhooksControllerTests
             [nameof(BillingWebhooksController.HandleGooglePayWebhook),
              nameof(BillingWebhooksController.HandleApplePayWebhook),
              nameof(BillingWebhooksController.HandleStripeWebhook),
-             nameof(BillingWebhooksController.HandlePayPalWebhook)]);
+             nameof(BillingWebhooksController.HandlePayPalWebhook),
+             nameof(BillingWebhooksController.HandleBraintreeWebhook)]);
     }
 
     [Fact]
@@ -322,7 +323,8 @@ public class BillingWebhooksControllerTests
             nameof(BillingWebhooksController.HandleGooglePayWebhook),
             nameof(BillingWebhooksController.HandleApplePayWebhook),
             nameof(BillingWebhooksController.HandleStripeWebhook),
-            nameof(BillingWebhooksController.HandlePayPalWebhook)
+            nameof(BillingWebhooksController.HandlePayPalWebhook),
+            nameof(BillingWebhooksController.HandleBraintreeWebhook)
         };
 
         foreach (var callback in callbacks)
