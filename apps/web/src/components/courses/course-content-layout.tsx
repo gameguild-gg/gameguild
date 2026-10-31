@@ -17,7 +17,13 @@ export function CourseContentLayoutClient({ courseSlug, courseTitle, content, ch
     const { isSidebarOpen, mounted } = useSidebar();
 
     return (
-        <div className="flex h-screen relative overflow-hidden">
+        // Issue #97: no `h-screen`/`overflow-hidden` here and no `overflow-auto`
+        // on the content container. Locking the root to the viewport while the
+        // public shell (sticky header + footer) also occupies it made the page
+        // taller than the viewport, so the document AND the inner container
+        // each showed a vertical scrollbar. The document is now the only
+        // vertical scrolling surface; the fixed sidebar keeps its own pane.
+        <div className="flex relative">
             {/* Sidebar */}
             <CourseContentSidebar
                 courseSlug={courseSlug}
@@ -39,7 +45,7 @@ export function CourseContentLayoutClient({ courseSlug, courseTitle, content, ch
                 <SidebarToggle />
 
                 {/* Content Container */}
-                <div className="flex-1 flex flex-col overflow-auto min-w-0">
+                <div className="flex-1 flex flex-col min-w-0">
                     {children}
                 </div>
             </main>
