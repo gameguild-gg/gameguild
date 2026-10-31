@@ -24,6 +24,10 @@ using GameGuild.Commerce.Billing;
     typeof(ProcessGooglePayWebhookCommand),
     "commerce.billing.process-google-pay-webhook",
     ConditionalEventTypes = [typeof(BillingWebhookProcessedV1), typeof(BillingWebhookFailedV1)])]
+[assembly: UseCaseEventContract(
+    typeof(ProcessBraintreeWebhookCommand),
+    "commerce.billing.process-braintree-webhook",
+    ConditionalEventTypes = [typeof(BillingWebhookProcessedV1), typeof(BillingWebhookFailedV1)])]
 
 // Pricing-decision ledger drift validation (issue #400): stamps Verified/Drifted
 // outcomes on sampled ledger entries. The ledger rows themselves are the durable

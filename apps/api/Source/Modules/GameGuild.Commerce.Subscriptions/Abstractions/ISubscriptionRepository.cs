@@ -13,6 +13,13 @@ public interface ISubscriptionRepository
     Task<Subscription?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Gets many subscriptions by ID in one query, with their plans included
+    ///     (issue #409: fraud statistics by subscription plan). Unknown ids are absent
+    ///     from the result.
+    /// </summary>
+    Task<IReadOnlyList<Subscription>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Gets a subscription by external ID
     /// </summary>
     Task<Subscription?> GetByExternalIdAsync(string externalId, CancellationToken cancellationToken = default);

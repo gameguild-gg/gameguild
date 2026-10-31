@@ -68,6 +68,12 @@ public sealed class BillingSubscriptionsController(ISender sender, IActorContext
         var validationError = actorContextAccessor.ValidateTenantAccessAsActionResult(body.TenantId, "create billing subscription");
         if (validationError != null) return validationError;
 
+        // Creation-time fraud metadata (issue #409): delivery facts of the creation attempt
+        // feed the creation-time risk scoring alongside the body's payer fields.
+        var sourceIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var deviceFingerprint = Request.Headers["X-Device-Fingerprint"].ToString();
+        var clientTimezone = Request.Headers["X-Client-Timezone"].ToString();
+
         var id = await sender.Send(
             new CreateSubscriptionCommand(
                 body.TenantId,
@@ -80,7 +86,13 @@ public sealed class BillingSubscriptionsController(ISender sender, IActorContext
                 body.TrialDays,
                 body.PromoCodes,
                 body.PromoCodeIdempotencyKey,
-                body.ProductId),
+                body.ProductId,
+                FraudCountry: body.Country,
+                FraudSourceIpAddress: string.IsNullOrWhiteSpace(sourceIpAddress) ? null : sourceIpAddress,
+                FraudDeviceFingerprint: string.IsNullOrWhiteSpace(deviceFingerprint) ? null : deviceFingerprint.Trim(),
+                FraudPayerEmail: body.PayerEmail,
+                FraudCardBin: body.CardBin,
+                FraudClientTimezone: string.IsNullOrWhiteSpace(clientTimezone) ? null : clientTimezone.Trim()),
             ct).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetBillingSubscriptionById), new { subscriptionId = id }, new { id });
@@ -145,7 +157,10 @@ public sealed class BillingSubscriptionsController(ISender sender, IActorContext
         int? TrialDays = null,
         IReadOnlyList<string>? PromoCodes = null,
         string? PromoCodeIdempotencyKey = null,
-        Guid? ProductId = null);
+        Guid? ProductId = null,
+        string? Country = null,
+        string? PayerEmail = null,
+        string? CardBin = null);
 
     public sealed record CancelBillingSubscriptionRequest(CancellationReason Reason, string? Note = null, DateTime? EffectiveDate = null);
 }

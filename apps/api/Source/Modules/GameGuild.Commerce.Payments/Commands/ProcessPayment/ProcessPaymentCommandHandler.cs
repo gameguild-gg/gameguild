@@ -105,7 +105,9 @@ public sealed class ProcessPaymentCommandHandler(
         // 3. Pre-gateway fraud assessment (issue #409): Review/Block hold the payment as
         //    failed without gateway execution and without an automatic retry. The attempt's
         //    billing country, source IP, device fingerprint and payer email feed the
-        //    geography, IP/device/email-blacklist and disposable-email signals.
+        //    geography, IP/device/email-blacklist and disposable-email signals; the card BIN,
+        //    the server-known AVS/CVV outcomes and the claimed client timezone feed the
+        //    BIN-range, verification-outcome and GeoIP anonymizer/timezone signals.
         var fraudContext = new FraudSignalContext(
             payment.TenantId,
             payment.Id,
@@ -118,7 +120,11 @@ public sealed class ProcessPaymentCommandHandler(
             Country: request.Country,
             SourceIpAddress: request.SourceIpAddress,
             DeviceFingerprint: request.DeviceFingerprint,
-            PayerEmail: request.PayerEmail);
+            PayerEmail: request.PayerEmail,
+            CardBin: request.CardBin,
+            AvsOutcome: request.AvsOutcome,
+            CvvOutcome: request.CvvOutcome,
+            ClientTimezone: request.ClientTimezone);
 
         var assessment = await fraudDetectionService.AssessPaymentAsync(fraudContext, cancellationToken)
             .ConfigureAwait(false);

@@ -18,12 +18,13 @@ export class CommercePaymentsFraudStatisticsModule {
   /**
    * Get the fraud statistics report for a date window (defaults to the last 30 days).
    *
-   * Reports fraud-program statistics over a date window: assessed, flagged and blocked payment counts with rates, the chargeback rate among succeeded payments, the false-positive proxy (held reviews later approved), the manual-review backlog with average time-to-review, and the top fraud signals by frequency. Requires the payments:admin permission.
+   * Reports fraud-program statistics over a date window: assessed, flagged and blocked payment counts with rates, the chargeback rate among succeeded payments, the false-positive proxy (held reviews later approved), the manual-review backlog with average time-to-review, the top fraud signals by frequency, and breakdowns by billing country, gateway provider and subscription plan with a daily/weekly/monthly trend series. Requires the payments:admin permission.
    */
   async getFraudStatistics(query?: {
     tenantId?: string;
     fromUtc?: string;
     toUtc?: string;
+    trendGranularity?: Types.CommercePaymentsFraudTrendGranularity;
   }): Promise<Result<Types.CommercePaymentsFraudStatisticsReport, ApiError>> {
     const url = '/api/v1/fraud/statistics';
 
@@ -45,11 +46,17 @@ export class CommercePaymentsFraudStatisticsModule {
 
   /**
    * Export the fraud statistics report for a date window as CSV (issue #409: export
-   * fraud reports). Same authorization and window semantics as the JSON report.
+   * fraud reports, including the trend/granularity views). Same authorization, window
+   * and granularity semantics as the JSON report.
    *
-   * Exports the fraud statistics report over a date window as CSV: one summary block plus per-country, per-provider and daily-trend sections. Requires the payments:admin permission.
+   * Exports the fraud statistics report over a date window as CSV: one summary block plus per-country, per-provider, per-plan and trend sections at the requested daily/weekly/monthly granularity. Requires the payments:admin permission.
    */
-  async getFraudStatisticsExport(query?: { tenantId?: string; fromUtc?: string; toUtc?: string }): Promise<Result<void, ApiError>> {
+  async getFraudStatisticsExport(query?: {
+    tenantId?: string;
+    fromUtc?: string;
+    toUtc?: string;
+    trendGranularity?: Types.CommercePaymentsFraudTrendGranularity;
+  }): Promise<Result<void, ApiError>> {
     const url = '/api/v1/fraud/statistics/export';
 
     const result = await this.client.request({
