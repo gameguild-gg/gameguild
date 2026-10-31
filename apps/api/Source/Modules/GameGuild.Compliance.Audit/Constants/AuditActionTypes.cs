@@ -108,6 +108,16 @@ public static class AuditActionTypes
     // Billing webhook delivery dead-lettering after exhausted retries (issue #408)
     public const string WebhookDeadLettered = "WebhookDeadLettered";
 
+    // Billing webhook lifecycle entries (issue #408: an audit-module entry for every
+    // webhook event). Informational operational trail complementing the security events
+    // above: every accepted delivery is recorded, and every terminal outcome (processed
+    // or failed attempt) is journaled through the same audit pipeline entry point.
+    public const string WebhookEventReceived = "WebhookEventReceived";
+
+    public const string WebhookEventProcessed = "WebhookEventProcessed";
+
+    public const string WebhookEventFailed = "WebhookEventFailed";
+
     // External Billing Provider Management (issue #397 provider-management API)
     public const string BillingProviderEnabled = "BillingProviderEnabled";
 

@@ -32,8 +32,13 @@ public static class ServiceCollectionExtensions
         services.Configure<PayPalSettings>(configuration.GetSection($"{BillingConfiguration.SectionName}:PayPal"));
         services.Configure<ApplePaySettings>(configuration.GetSection($"{BillingConfiguration.SectionName}:ApplePay"));
 
-        // Register repositories
-        services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
+        // Register repositories. The webhook inbox is decorated so every accepted delivery
+        // and every terminal outcome journals into the Compliance.Audit module (issue #408:
+        // an audit-module entry for every webhook event).
+        services.AddScoped<BillingWebhookRepository>();
+        services.AddScoped<IBillingWebhookRepository>(provider => new AuditingBillingWebhookRepository(
+            provider.GetRequiredService<BillingWebhookRepository>(),
+            provider.GetRequiredService<IWebhookLifecycleAuditPublisher>()));
         services.AddScoped<IBillingProviderStateRepository, BillingProviderStateRepository>();
 
         // Pricing-decision ledger (issue #400): durable append-only record of every
@@ -156,6 +161,11 @@ public static class ServiceCollectionExtensions
         // agent logging): captured by the filter above, stamped onto the inbox row by the
         // webhook repository.
         services.AddScoped<IWebhookDeliveryContext, WebhookDeliveryContext>();
+
+        // Webhook lifecycle audit journaling (issue #408: an audit-module entry for every
+        // webhook event): publishes through the Compliance.Audit security-event pipeline
+        // entry point; operational entries journal via the standard audit path.
+        services.AddScoped<IWebhookLifecycleAuditPublisher, WebhookLifecycleAuditPublisher>();
         return services;
     }
 
@@ -181,7 +191,10 @@ public static class ServiceCollectionExtensions
         services.AddOptions<BillingConfiguration>();
 
         // Register webhook-specific services
-        services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
+        services.AddScoped<BillingWebhookRepository>();
+        services.AddScoped<IBillingWebhookRepository>(provider => new AuditingBillingWebhookRepository(
+            provider.GetRequiredService<BillingWebhookRepository>(),
+            provider.GetRequiredService<IWebhookLifecycleAuditPublisher>()));
         services.AddSingleton<IWebhookSigningSecretProvider, WebhookSigningSecretProvider>();
         services.AddSingleton<IStripeWebhookVerifier, StripeWebhookVerifier>();
         services.AddScoped<IStripeProviderObjectBindingValidator, StripeProviderObjectBindingValidator>();
