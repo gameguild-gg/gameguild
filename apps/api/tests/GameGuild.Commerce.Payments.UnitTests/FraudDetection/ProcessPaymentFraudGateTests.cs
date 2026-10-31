@@ -187,16 +187,21 @@ public class ProcessPaymentFraudGateTests
         public Task<FraudAssessment> AssessPaymentAsync(FraudSignalContext signalContext, CancellationToken cancellationToken = default)
         {
             onAssessed(signalContext);
-            return Task.FromResult(new FraudAssessment(
-                signalContext.TenantId,
-                signalContext.PaymentId,
-                0,
-                FraudRiskLevel.Low,
-                FraudDecision.Allow,
-                "unit-test",
-                [],
-                SystemClock.UtcNow));
+            return Task.FromResult(Allow(signalContext));
         }
+
+        public Task<FraudAssessment> AssessSubscriptionCreationAsync(FraudSignalContext signalContext, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Allow(signalContext));
+
+        private static FraudAssessment Allow(FraudSignalContext signalContext) => new(
+            signalContext.TenantId,
+            signalContext.PaymentId,
+            0,
+            FraudRiskLevel.Low,
+            FraudDecision.Allow,
+            "unit-test",
+            [],
+            SystemClock.UtcNow);
     }
 
     private static ProcessPaymentCommand Command(FraudGateFixture fixture) =>
@@ -273,15 +278,20 @@ public class ProcessPaymentFraudGateTests
         public Task<FraudAssessment> AssessPaymentAsync(FraudSignalContext signalContext, CancellationToken cancellationToken = default)
         {
             callOrder.Add("assess");
-            return Task.FromResult(new FraudAssessment(
-                signalContext.TenantId,
-                signalContext.PaymentId,
-                0,
-                FraudRiskLevel.Low,
-                decision,
-                "ordering probe",
-                [],
-                SystemClock.UtcNow));
+            return Task.FromResult(Outcome(signalContext));
         }
+
+        public Task<FraudAssessment> AssessSubscriptionCreationAsync(FraudSignalContext signalContext, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Outcome(signalContext));
+
+        private FraudAssessment Outcome(FraudSignalContext signalContext) => new(
+            signalContext.TenantId,
+            signalContext.PaymentId,
+            0,
+            FraudRiskLevel.Low,
+            decision,
+            "ordering probe",
+            [],
+            SystemClock.UtcNow);
     }
 }
