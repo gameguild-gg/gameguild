@@ -33,6 +33,7 @@ overrides:
   "syncpack>minimatch": "9.0.7"
   "follow-redirects@<1.16.2": "1.16.2"
   "glob@<11.1.0": "11.1.0"
+  "minimatch@<11.0.1": "11.0.1"
   handlebars: "4.7.10"
   icu-minify: "4.9.2"
   ip-address: "10.7.4"
