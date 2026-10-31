@@ -206,6 +206,260 @@ public class PermissionExpirationServiceTests
             Times.Once);
     }
 
+    // ── ProcessExpiredAsync: recovery and batch progress (issue #331) ──
+
+    [Fact]
+    public async Task ProcessExpiredAsync_ProcessesGrantsBeyondFirstBatchWhenEarlierOnesAlreadyStamped()
+    {
+        // Batch window is 2, and the two oldest grants were already processed by a
+        // previous cycle. The stamp filter must run BEFORE the batch window is
+        // applied, otherwise the stamped pair permanently starves later grants.
+        _options.BatchSize = 2;
+
+        var stampedFirst = CreateGrant(
+            TenantA,
+            SystemClock.UtcNow.AddHours(-4),
+            isActive: false,
+            metadata: new Dictionary<string, object>
+            {
+                ["expirationProcessedAt"] = SystemClock.UtcNow.AddMinutes(-30).ToString("O")
+            });
+        var stampedSecond = CreateGrant(
+            TenantA,
+            SystemClock.UtcNow.AddHours(-3),
+            isActive: false,
+            metadata: new Dictionary<string, object>
+            {
+                ["expirationProcessedAt"] = SystemClock.UtcNow.AddMinutes(-30).ToString("O")
+            });
+        var pendingFirst = CreateGrant(TenantB, SystemClock.UtcNow.AddHours(-2));
+        var pendingSecond = CreateGrant(TenantB, SystemClock.UtcNow.AddHours(-1));
+
+        _repoMock
+            .Setup(x => x.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { stampedFirst, stampedSecond, pendingFirst, pendingSecond });
+        _repoMock
+            .Setup(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission p, CancellationToken _) => p);
+
+        var processed = await _sut.ProcessExpiredAsync();
+
+        processed.Should().Be(2);
+        pendingFirst.IsActive.Should().BeFalse();
+        pendingSecond.IsActive.Should().BeFalse();
+        _repoMock.Verify(
+            x => x.UpdateAsync(It.Is<TenantPermission>(p => ReferenceEquals(p, pendingFirst)), It.IsAny<CancellationToken>()),
+            Times.Once);
+        _repoMock.Verify(
+            x => x.UpdateAsync(It.Is<TenantPermission>(p => ReferenceEquals(p, pendingSecond)), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_AuditFailure_SkipsDurableMutationSoGrantIsRetriedNextCycle()
+    {
+        // Audit runs BEFORE the durable deactivation: an audit failure must leave the
+        // grant eligible (active, unstamped, un-persisted) so the next cycle retries
+        // it, instead of persisting first and losing the audit entry forever.
+        var failing = CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1));
+        var succeeding = CreateGrant(TenantB, SystemClock.UtcNow.AddHours(-1));
+
+        _repoMock
+            .Setup(x => x.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { failing, succeeding });
+        _repoMock
+            .Setup(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission p, CancellationToken _) => p);
+        _auditMock
+            .Setup(x => x.LogPermissionChangeAsync(
+                It.IsAny<PermissionOperationType>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<Guid>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(), It.Is<Guid?>(id => id == failing.Id), It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<bool>(),
+                It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("audit unavailable"));
+
+        var processed = await _sut.ProcessExpiredAsync();
+
+        processed.Should().Be(1);
+        succeeding.IsActive.Should().BeFalse();
+
+        // The failed grant keeps its pre-expiration state: nothing durable happened.
+        failing.IsActive.Should().BeTrue();
+        (failing.Metadata?.ContainsKey("expirationProcessedAt") ?? false).Should().BeFalse();
+        _repoMock.Verify(
+            x => x.UpdateAsync(It.Is<TenantPermission>(p => ReferenceEquals(p, failing)), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _publisherMock.Verify(
+            x => x.Publish(
+                It.Is<PermissionExpirationNotification>(n => n.PermissionId == failing.Id),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_PersistFailureAfterAudit_RetriesAndNeverLosesAuditEntry()
+    {
+        // Cycle 1: the audit entry is written but persistence fails. The grant must
+        // stay eligible and the audit entry must already exist. Cycle 2 retries and
+        // converges — the audit may duplicate, but is never lost.
+        var grant = CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1));
+
+        _repoMock
+            .Setup(x => x.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { grant });
+        _repoMock
+            .SetupSequence(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("database unavailable"))
+            .ReturnsAsync(grant);
+
+        var firstCycle = await _sut.ProcessExpiredAsync();
+
+        firstCycle.Should().Be(0);
+        grant.IsActive.Should().BeTrue();
+        _auditMock.Verify(
+            x => x.LogPermissionChangeAsync(
+                PermissionOperationType.Expire,
+                grant.UserId,
+                Guid.Empty,
+                TenantA,
+                It.IsAny<string?>(), grant.Id, It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<bool>(),
+                It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        var secondCycle = await _sut.ProcessExpiredAsync();
+
+        secondCycle.Should().Be(1);
+        grant.IsActive.Should().BeFalse();
+        (grant.Metadata?.ContainsKey("expirationProcessedAt") ?? false).Should().BeTrue();
+        _auditMock.Verify(
+            x => x.LogPermissionChangeAsync(
+                PermissionOperationType.Expire,
+                grant.UserId,
+                Guid.Empty,
+                TenantA,
+                It.IsAny<string?>(), grant.Id, It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<bool>(),
+                It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_VersionBumpFailure_AbortsCycleBeforeAnyDurableMutation()
+    {
+        // The tenant security version is incremented BEFORE any durable grant
+        // mutation: a failed increment aborts with nothing persisted, so the next
+        // cycle redoes the whole batch instead of stranding the increment behind
+        // already-stamped grants.
+        var grant = CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1));
+
+        _repoMock
+            .Setup(x => x.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { grant });
+        _versionStoreMock
+            .Setup(x => x.IncrementVersionAsync(TenantA.ToString(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("version store unavailable"));
+
+        var act = () => _sut.ProcessExpiredAsync();
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        grant.IsActive.Should().BeTrue();
+        _repoMock.Verify(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()), Times.Never);
+        _auditMock.Verify(
+            x => x.LogPermissionChangeAsync(It.IsAny<PermissionOperationType>(), It.IsAny<Guid?>(), It.IsAny<Guid>(), It.IsAny<Guid?>(),
+                It.IsAny<string?>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<bool>(),
+                It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_PublishFailureAfterPersist_StillCountsGrantAndStaysIdempotent()
+    {
+        // Notification publishing is best-effort and runs AFTER the durable
+        // mutation: a publish failure must not undo or requeue the deactivation
+        // (which is already persisted and audited), and the processed stamp keeps
+        // the next cycle from touching the grant again.
+        var grant = CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1));
+
+        _repoMock
+            .Setup(x => x.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { grant });
+        _repoMock
+            .Setup(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission p, CancellationToken _) => p);
+        _publisherMock
+            .Setup(x => x.Publish(It.IsAny<PermissionExpirationNotification>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("mediator unavailable"));
+
+        var firstCycle = await _sut.ProcessExpiredAsync();
+
+        firstCycle.Should().Be(1);
+        grant.IsActive.Should().BeFalse();
+        (grant.Metadata?.ContainsKey("expirationProcessedAt") ?? false).Should().BeTrue();
+
+        var secondCycle = await _sut.ProcessExpiredAsync();
+
+        secondCycle.Should().Be(0);
+        _repoMock.Verify(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()), Times.Once);
+        _auditMock.Verify(
+            x => x.LogPermissionChangeAsync(
+                PermissionOperationType.Expire,
+                grant.UserId,
+                Guid.Empty,
+                TenantA,
+                It.IsAny<string?>(), grant.Id, It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<bool>(),
+                It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_BumpsTenantVersionBeforeAnyDurableMutation()
+    {
+        var grant = CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1));
+        var callOrder = new List<string>();
+
+        _repoMock
+            .Setup(x => x.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { grant });
+        _repoMock
+            .Setup(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .Callback(() => callOrder.Add("persist"))
+            .ReturnsAsync((TenantPermission p, CancellationToken _) => p);
+        _versionStoreMock
+            .Setup(x => x.IncrementVersionAsync(TenantA.ToString(), It.IsAny<CancellationToken>()))
+            .Callback(() => callOrder.Add("bump"))
+            .ReturnsAsync(1L);
+        _auditMock
+            .Setup(x => x.LogPermissionChangeAsync(
+                It.IsAny<PermissionOperationType>(), It.IsAny<Guid?>(), It.IsAny<Guid>(), It.IsAny<Guid?>(),
+                It.IsAny<string?>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<bool>(),
+                It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Callback(() => callOrder.Add("audit"))
+            .ReturnsAsync(new PermissionAuditLog());
+
+        await _sut.ProcessExpiredAsync();
+
+        callOrder.Should().Equal("bump", "audit", "persist");
+    }
+
     // ── SendUpcomingExpirationRemindersAsync ───────────────────
 
     [Fact]
