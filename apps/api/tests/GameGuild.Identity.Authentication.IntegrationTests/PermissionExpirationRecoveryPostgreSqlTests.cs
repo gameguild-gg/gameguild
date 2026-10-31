@@ -181,7 +181,7 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
 
         public static async Task<ExpirationHarness> CreateAsync(int batchSize)
         {
-            var database = await EconomyPostgreSqlTestDatabase.CreateAsync("permission_expiration_recovery");
+            var database = await EconomyPostgreSqlTestDatabase.CreateEmptyAsync("permission_expiration_recovery");
             var connectionString = new NpgsqlConnectionStringBuilder(database.ConnectionString)
             {
                 Pooling = true

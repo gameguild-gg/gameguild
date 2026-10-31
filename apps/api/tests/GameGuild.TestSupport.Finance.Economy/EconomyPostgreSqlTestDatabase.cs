@@ -33,9 +33,24 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
 
     public string ConnectionString { get; }
 
-    public static async Task<EconomyPostgreSqlTestDatabase> CreateAsync(
+    public static Task<EconomyPostgreSqlTestDatabase> CreateAsync(
         string databasePrefix,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        CreateCoreAsync(databasePrefix, useTemplate: true, cancellationToken);
+
+    /// <summary>
+    ///     Creates an isolated empty database for a fixture that initializes its own
+    ///     model. The configured gate server is retained; its migrated template is not copied.
+    /// </summary>
+    public static Task<EconomyPostgreSqlTestDatabase> CreateEmptyAsync(
+        string databasePrefix,
+        CancellationToken cancellationToken = default) =>
+        CreateCoreAsync(databasePrefix, useTemplate: false, cancellationToken);
+
+    private static async Task<EconomyPostgreSqlTestDatabase> CreateCoreAsync(
+        string databasePrefix,
+        bool useTemplate,
+        CancellationToken cancellationToken)
     {
         var gateConnectionString = Environment.GetEnvironmentVariable("ECONOMY_POSTGRES_CONNECTION");
 
@@ -44,6 +59,7 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
             return await CreateFromGateAsync(
                     gateConnectionString,
                     CreateGateDatabaseName(databasePrefix),
+                    useTemplate,
                     cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -135,9 +151,12 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
     private static async Task<EconomyPostgreSqlTestDatabase> CreateFromGateAsync(
         string gateConnectionString,
         string databaseName,
+        bool useTemplate,
         CancellationToken cancellationToken)
     {
-        var configuredTemplateDatabase = Environment.GetEnvironmentVariable("ECONOMY_POSTGRES_TEMPLATE_DATABASE");
+        var configuredTemplateDatabase = useTemplate
+            ? Environment.GetEnvironmentVariable("ECONOMY_POSTGRES_TEMPLATE_DATABASE")
+            : null;
         var templateDatabase = string.IsNullOrWhiteSpace(configuredTemplateDatabase)
             ? null
             : ValidateDatabaseName(configuredTemplateDatabase, "ECONOMY_POSTGRES_TEMPLATE_DATABASE");
