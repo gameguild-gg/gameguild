@@ -300,25 +300,24 @@ public static class FraudBlacklistCsv
     /// <summary>
     ///     Parses an import CSV. The header row is detected case-insensitively and skipped;
     ///     rows are validated individually. Invalid rows throw
-    ///     <see cref="FraudBlacklistCsvFormatException"/> with the line number.
+    ///     <see cref="FraudBlacklistCsvFormatException"/> with the physical line number.
     /// </summary>
     public static List<Row> ParseImport(string csv)
     {
         ArgumentNullException.ThrowIfNull(csv);
 
         var rows = new List<Row>();
-        var lineNumber = 0;
-        foreach (var fields in SplitRecords(csv))
+        var sawHeader = false;
+        foreach (var (fields, lineNumber) in SplitRecords(csv))
         {
-            lineNumber++;
-
             if (fields.Length == 1 && string.IsNullOrWhiteSpace(fields[0]))
             {
                 continue;
             }
 
-            if (lineNumber == 1 && IsHeader(fields))
+            if (!sawHeader && IsHeader(fields))
             {
+                sawHeader = true;
                 continue;
             }
 
@@ -386,16 +385,22 @@ public static class FraudBlacklistCsv
         && string.Equals(fields[0].Trim(), "entry_type", StringComparison.OrdinalIgnoreCase)
         && string.Equals(fields[1].Trim(), "value", StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>Splits CSV text into records of unquoted fields (RFC 4180: quoted fields, "" escapes, CRLF/CR/LF).</summary>
-    private static IEnumerable<string[]> SplitRecords(string csv)
+    /// <summary>
+    ///     Splits CSV text into records of unquoted fields (RFC 4180: quoted fields, "" escapes,
+    ///     CRLF/CR/LF), each tagged with the 1-based physical line the record starts on. Blank
+    ///     lines consume their line number without producing a record.
+    /// </summary>
+    private static IEnumerable<(string[] Fields, int LineNumber)> SplitRecords(string csv)
     {
         var record = new List<string>();
         var field = new System.Text.StringBuilder();
         var inQuotes = false;
         var fieldStarted = false;
         var recordStarted = false;
+        var line = 1;
+        var recordStartLine = 1;
 
-        string[] EndRecord()
+        (string[] Fields, int LineNumber) EndRecord()
         {
             record.Add(field.ToString());
             field.Clear();
@@ -403,7 +408,7 @@ public static class FraudBlacklistCsv
             recordStarted = false;
             var fields = record.ToArray();
             record.Clear();
-            return fields;
+            return (fields, recordStartLine);
         }
 
         for (var index = 0; index < csv.Length; index++)
@@ -411,6 +416,11 @@ public static class FraudBlacklistCsv
             var character = csv[index];
             if (inQuotes)
             {
+                if (character == '\n')
+                {
+                    line++;
+                }
+
                 if (character == '"')
                 {
                     if (index + 1 < csv.Length && csv[index + 1] == '"')
@@ -432,14 +442,22 @@ public static class FraudBlacklistCsv
             {
                 inQuotes = true;
                 fieldStarted = true;
-                recordStarted = true;
+                if (!recordStarted)
+                {
+                    recordStarted = true;
+                    recordStartLine = line;
+                }
             }
             else if (character == ',')
             {
                 record.Add(field.ToString());
                 field.Clear();
                 fieldStarted = false;
-                recordStarted = true;
+                if (!recordStarted)
+                {
+                    recordStarted = true;
+                    recordStartLine = line;
+                }
             }
             else if (character == '\r' || character == '\n')
             {
@@ -448,18 +466,22 @@ public static class FraudBlacklistCsv
                     index++;
                 }
 
-                if (!recordStarted)
+                if (recordStarted)
                 {
-                    continue;
+                    yield return EndRecord();
                 }
 
-                yield return EndRecord();
+                line++;
             }
             else
             {
                 field.Append(character);
                 fieldStarted = true;
-                recordStarted = true;
+                if (!recordStarted)
+                {
+                    recordStarted = true;
+                    recordStartLine = line;
+                }
             }
         }
 

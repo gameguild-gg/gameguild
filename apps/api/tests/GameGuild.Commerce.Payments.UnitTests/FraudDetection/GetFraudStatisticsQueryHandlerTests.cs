@@ -180,7 +180,8 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
                 payment.MarkAsProcessing();
                 payment.RecordFraudAssessment(FraudDecision.Review, 55, "held", null);
             },
-            createdAt: now.AddHours(-1));
+            createdAt: now.AddHours(-1),
+            provider: "paypal");
 
         // Attempt without a recorded country through stripe, today.
         await AddPaymentAsync(_tenantId, payment => payment.MarkAsProcessing(), createdAt: now.AddHours(-2));
@@ -256,14 +257,15 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
     private async Task AddPaymentAsync(
         Guid tenantId,
         Action<Payment> mutate,
-        DateTime? createdAt = null)
+        DateTime? createdAt = null,
+        string provider = "stripe")
     {
         var payment = Payment.Create(
             tenantId,
             25m,
             "USD",
             $"stats-{Guid.NewGuid():N}",
-            provider: "stripe",
+            provider: provider,
             subscriptionId: Guid.NewGuid(),
             externalCustomerId: $"cus_{Guid.NewGuid():N}",
             paymentMethodId: "pm_stats");
