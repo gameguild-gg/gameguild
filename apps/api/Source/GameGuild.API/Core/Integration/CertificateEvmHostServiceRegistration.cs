@@ -50,6 +50,14 @@ public static class CertificateEvmHostServiceRegistration
             }
             CertificateEvmEvidenceProducer.ValidateIssuer(options.CanonicalIssuer);
             var network = EvmCertificatePublicationNetwork.Capture(options.Profile, options.Network);
+            // Server-side request rules for the activated host: the configured public-chain endpoint may not
+            // target the reserved localhost name or a loopback/private/link-local/shared/reserved address
+            // literal. The isolated Anvil/TLS interop fixtures register the module transport directly and
+            // never pass through this production composition.
+            if (EvmCertificateRpcEndpointPolicy.Validate(new Uri(options.Network.RpcEndpoint, UriKind.Absolute)).Count > 0)
+            {
+                throw InvalidConfiguration();
+            }
             var budget = EvmCertificateFeeBudget.Create(options.GasLimit, Wei(options.MaximumFeePerGasWei), Wei(options.MaximumTransactionFeeWei));
             policy = EvmCertificatePublicationPolicy.Create(network, options.SignerReference, budget,
                 Wei(options.InitialFeePerGasWei), Wei(options.InitialPriorityFeePerGasWei), options.CheckDelay,
