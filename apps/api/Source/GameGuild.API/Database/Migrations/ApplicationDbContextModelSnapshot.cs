@@ -1309,6 +1309,10 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<DateTime?>("SignatureVerifiedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("SourceIpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<Guid?>("SubscriptionId")
                         .HasColumnType("uuid");
 
@@ -1317,6 +1321,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.Property<int>("Version")
                         .IsConcurrencyToken()

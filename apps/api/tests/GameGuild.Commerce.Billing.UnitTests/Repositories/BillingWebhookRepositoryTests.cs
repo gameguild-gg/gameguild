@@ -170,6 +170,49 @@ public class BillingWebhookRepositoryTests
         (await context.BillingWebhookEvents.CountAsync()).Should().Be(0);
     }
 
+    [Fact]
+    public async Task CreateAsync_Should_Stamp_The_Captured_Delivery_Source()
+    {
+        await using var context = CreateContext();
+        var deliveryContext = new WebhookDeliveryContext();
+        deliveryContext.Capture("stripe", "203.0.113.9", "Stripe/1.0 webhook-agent");
+        var repository = new BillingWebhookRepository(context, NullLogger<BillingWebhookRepository>.Instance, deliveryContext);
+
+        var created = await repository.CreateAsync(CreateScopedEvent("acct_a", "we_a"));
+
+        created.SourceIpAddress.Should().Be("203.0.113.9");
+        created.UserAgent.Should().Be("Stripe/1.0 webhook-agent");
+
+        var persisted = await context.BillingWebhookEvents.SingleAsync();
+        persisted.SourceIpAddress.Should().Be("203.0.113.9");
+        persisted.UserAgent.Should().Be("Stripe/1.0 webhook-agent");
+    }
+
+    [Fact]
+    public async Task CreateAsync_Should_Bound_The_Captured_User_Agent_To_The_Column_Length()
+    {
+        await using var context = CreateContext();
+        var deliveryContext = new WebhookDeliveryContext();
+        deliveryContext.Capture("stripe", "198.51.100.7", new string('u', 600));
+        var repository = new BillingWebhookRepository(context, NullLogger<BillingWebhookRepository>.Instance, deliveryContext);
+
+        var created = await repository.CreateAsync(CreateScopedEvent("acct_b", "we_b"));
+
+        created.UserAgent.Should().HaveLength(512);
+    }
+
+    [Fact]
+    public async Task CreateAsync_Should_Keep_The_Original_Source_When_The_Context_Is_Empty()
+    {
+        await using var context = CreateContext();
+        var repository = new BillingWebhookRepository(context, NullLogger<BillingWebhookRepository>.Instance, new WebhookDeliveryContext());
+
+        var created = await repository.CreateAsync(CreateScopedEvent("acct_c", "we_c"));
+
+        created.SourceIpAddress.Should().BeNull();
+        created.UserAgent.Should().BeNull();
+    }
+
     private static TestBillingDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<TestBillingDbContext>()

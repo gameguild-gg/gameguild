@@ -90,6 +90,19 @@ public sealed record PaymentMethodActor(Guid? TenantId, Guid UserId, bool IsSyst
 /// <summary>
 ///     Request to register a payment method from a gateway token.
 /// </summary>
+/// <param name="TenantId">Owning tenant.</param>
+/// <param name="GatewayPaymentMethodId">Tokenized gateway reference (never raw card data).</param>
+/// <param name="SetAsDefault">Whether to make the method its owner's default.</param>
+/// <param name="Nickname">Optional user-assigned label.</param>
+/// <param name="BillingAddress">Optional billing address (serialized JSON, display only).</param>
+/// <param name="OwnerUserId">Owner for system-administrator registrations.</param>
+/// <param name="GatewayProvider">Explicit gateway provider for opaque tokens.</param>
+/// <param name="MethodType">
+///     Optional method-family hint for gateways whose tokens carry no server-side metadata
+///     (Braintree, Adyen, Authorize.Net): one of <c>card</c>, <c>bank_account</c>,
+///     <c>paypal</c>, <c>apple_pay</c>, <c>google_pay</c>, <c>wallet</c>. Stripe ignores
+///     the hint (its API lookup is authoritative); unknown values are rejected.
+/// </param>
 public sealed record CreatePaymentMethodRequest(
     Guid TenantId,
     string GatewayPaymentMethodId,
@@ -97,7 +110,8 @@ public sealed record CreatePaymentMethodRequest(
     string? Nickname = null,
     string? BillingAddress = null,
     Guid? OwnerUserId = null,
-    string? GatewayProvider = null);
+    string? GatewayProvider = null,
+    string? MethodType = null);
 
 /// <summary>
 ///     Request to update display-only payment-method fields.

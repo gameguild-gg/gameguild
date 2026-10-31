@@ -123,6 +123,54 @@ export class CommercePaymentsFraudBlacklistModule {
 
     return result;
   }
+
+  /**
+   * Export the tenant's fraud blacklist entries as CSV (issue #409: import/export blacklists).
+   *
+   * Exports the caller's tenant fraud blacklist and whitelist-override entries as CSV (columns: entry_type,value,kind,reason,expires_at,created_at). Wildcard patterns are exported verbatim so a re-import reproduces them. Requires the payments:admin permission.
+   */
+  async getFraudBlacklistExport(query?: {
+    entryType?: Types.CommercePaymentsFraudBlacklistEntryType;
+    includeExpired?: boolean;
+  }): Promise<Result<void, ApiError>> {
+    const url = '/api/v1/fraud/blacklist/export';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Import fraud blacklist entries from a CSV request body (issue #409: import/export
+   * blacklists). Accepts the file shape produced by `GET /fraud/blacklist/export`
+   * (header row detected and skipped); every row is added through the same idempotent
+   * command as the add endpoint, so re-importing is safe. Rows that fail validation
+   * are reported individually and never abort the rest of the batch.
+   *
+   * Imports fraud blacklist entries from a CSV body (columns: entry_type,value,kind,reason,expires_at; header row optional, * wildcards supported). At most 1000 rows and 1 MB per request; idempotent per (type, value, kind). Requires the payments:admin permission.
+   */
+  async postFraudBlacklistImport(): Promise<Result<Types.CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResult, ApiError>> {
+    const url = '/api/v1/fraud/blacklist/import';
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
 }
 
 export function createCommercePaymentsFraudBlacklistModule(client: ApiClient): CommercePaymentsFraudBlacklistModule {

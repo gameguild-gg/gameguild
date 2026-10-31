@@ -1,7 +1,14 @@
 {
+<<<<<<< HEAD
   "hash": "3d2c922b961f781ecfee5d68452049cea592cf65566d5a599ada4d43f96e6920",
   "apiVersion": "4.4.0",
   "source": "gameguild-openapi",
   "generatedAt": "2026-10-31T03:56:45.114Z",
+=======
+  "hash": "1bf26eda1cf529eb0f81bf0bc32d00f3006338ce33eeabd540f2b560ad393ffe",
+  "apiVersion": "4.4.0",
+  "source": "gameguild-openapi",
+  "generatedAt": "2026-10-30T22:55:02.525Z",
+>>>>>>> origin/develop
   "generatedBy": "MatheusMartins"
 }

@@ -157,6 +157,48 @@ public class ProcessPaymentFraudGateTests
         payment.CanRetry.Should().BeTrue("an approved review releases the fraud hold");
     }
 
+    [Fact]
+    public async Task Handle_ShouldThreadDeliveryMetadataIntoTheFraudContext()
+    {
+        FraudSignalContext? captured = null;
+        var fixture = CreateFixture(new CapturingDetectionService(context => captured = context));
+
+        var command = new ProcessPaymentCommand(
+            fixture.TenantId,
+            fixture.SubscriptionId,
+            25m,
+            "pm_test",
+            Country: "NG",
+            GatewayProvider: null,
+            SourceIpAddress: "203.0.113.9",
+            DeviceFingerprint: "device_fp_1",
+            PayerEmail: "someone@mailinator.com");
+        await fixture.Handler.Handle(command, CancellationToken.None);
+
+        captured.Should().NotBeNull();
+        captured!.Country.Should().Be("NG");
+        captured.SourceIpAddress.Should().Be("203.0.113.9");
+        captured.DeviceFingerprint.Should().Be("device_fp_1");
+        captured.PayerEmail.Should().Be("someone@mailinator.com");
+    }
+
+    private sealed class CapturingDetectionService(Action<FraudSignalContext> onAssessed) : IFraudDetectionService
+    {
+        public Task<FraudAssessment> AssessPaymentAsync(FraudSignalContext signalContext, CancellationToken cancellationToken = default)
+        {
+            onAssessed(signalContext);
+            return Task.FromResult(new FraudAssessment(
+                signalContext.TenantId,
+                signalContext.PaymentId,
+                0,
+                FraudRiskLevel.Low,
+                FraudDecision.Allow,
+                "unit-test",
+                [],
+                SystemClock.UtcNow));
+        }
+    }
+
     private static ProcessPaymentCommand Command(FraudGateFixture fixture) =>
         new(fixture.TenantId, fixture.SubscriptionId, 25m, "pm_test");
 

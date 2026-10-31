@@ -1641,8 +1641,12 @@ export interface CommerceBillingBillingWebhookEventDto {
   processedAt?: string | null;
   processingAttempts?: number;
   provider?: string | null;
+  /** Source IP address the delivery was accepted from (issue #408). */
+  sourceIpAddress?: string | null;
   subscriptionId?: string | null;
   tenantId?: string | null;
+  /** Bounded user agent of the delivery (issue #408). */
+  userAgent?: string | null;
 }
 
 /** List item of the billing webhook inbox event feed (issue #396). Payloads are excluded. */
@@ -3186,6 +3190,16 @@ export interface CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryI
   value?: string | null;
 }
 
+/** Summary of a blacklist CSV import. */
+export interface CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResult {
+  /** Bounded per-row error messages, one per failed row. */
+  errors?: string[] | null;
+  /** Rows that were rejected or failed to store. */
+  failed?: number;
+  /** Rows successfully stored (or already present — the add is idempotent). */
+  imported?: number;
+}
+
 /** Read model for a stored blacklist entry. */
 export interface CommercePaymentsFraudBlacklistEntryResult {
   /** Entry id. */
@@ -3313,6 +3327,30 @@ export type CommercePaymentsFraudReviewStatus = 'PendingReview' | 'Approved' | '
 /** Risk band derived from the aggregate fraud score. */
 export type CommercePaymentsFraudRiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 
+/** Fraud outcomes for one billing country inside the statistics window (issue #409). */
+export interface CommercePaymentsFraudStatisticsCountryRow {
+  /** Assessed payments blocked in the window. */
+  blocked: number;
+  /** ISO 3166-1 alpha-2 billing country; "unknown" when the attempt carried none. */
+  country: string | null;
+  /** Payments created for the country in the window. */
+  created: number;
+  /** Assessed payments held for review in the window. */
+  reviewHeld: number;
+}
+
+/** Fraud outcomes for one gateway payment provider inside the statistics window (issue #409). */
+export interface CommercePaymentsFraudStatisticsMethodRow {
+  /** Assessed payments blocked in the window. */
+  blocked: number;
+  /** Payments created through the provider in the window. */
+  created: number;
+  /** Gateway provider that processed the attempts (stripe, paypal, ...). */
+  provider: string | null;
+  /** Assessed payments held for review in the window. */
+  reviewHeld: number;
+}
+
 /** Derived fraud-program rates; null when the denominator is zero. */
 export interface CommercePaymentsFraudStatisticsRates {
   /** Blocked rate: blocked / assessed, 0-100. */
@@ -3327,6 +3365,12 @@ export interface CommercePaymentsFraudStatisticsRates {
 
 /** Combined read model of one fraud-statistics reporting pass. */
 export interface CommercePaymentsFraudStatisticsReport {
+  /** Fraud outcomes by billing country inside the window (issue #409: fraud by country). */
+  byCountry: CommercePaymentsFraudStatisticsCountryRow[] | null;
+  /** Fraud outcomes by gateway payment provider inside the window (issue #409: fraud by payment method). */
+  byPaymentMethod: CommercePaymentsFraudStatisticsMethodRow[] | null;
+  /** Daily trend of created/held/blocked payments inside the window (issue #409: trend analysis). */
+  dailyTrend: CommercePaymentsFraudStatisticsTrendPoint[] | null;
   /** Inclusive window start used for the aggregates. */
   fromUtc: string;
   /** UTC instant the report was generated. */
@@ -3378,6 +3422,18 @@ export interface CommercePaymentsFraudStatisticsTotals {
   reviewHeld: number;
   /** Payments that succeeded in the window. */
   succeeded: number;
+}
+
+/** One day of the fraud-outcome trend inside the statistics window (issue #409). */
+export interface CommercePaymentsFraudStatisticsTrendPoint {
+  /** Assessed payments blocked on the day. */
+  blocked: number;
+  /** Payments created on the day. */
+  created: number;
+  /** UTC day the point aggregates. */
+  day: string;
+  /** Assessed payments held for review on the day. */
+  reviewHeld: number;
 }
 
 /** One persisted FX quotation as exposed by the admin surface. */
@@ -3998,6 +4054,7 @@ export interface CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequ
   billingAddress?: string | null;
   gatewayPaymentMethodId?: string | null;
   gatewayProvider?: string | null;
+  methodType?: string | null;
   nickname?: string | null;
   ownerUserId?: string | null;
   setAsDefault?: boolean;
@@ -4153,6 +4210,7 @@ export interface CommercePaymentsPaymentsControllerProcessPaymentInput {
   amount?: number;
   country?: string | null;
   gatewayProvider?: string | null;
+  payerEmail?: string | null;
   paymentMethodId?: string | null;
   subscriptionId?: string;
   tenantId?: string;
@@ -27091,6 +27149,7 @@ export let CommercePaymentsDisputeTypeSchema: z.ZodType<CommercePaymentsDisputeT
 export let CommercePaymentsEvidenceTypeSchema: z.ZodType<CommercePaymentsEvidenceType>;
 export let CommercePaymentsFraudBlacklistCheckResultSchema: z.ZodType<CommercePaymentsFraudBlacklistCheckResult>;
 export let CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInputSchema: z.ZodType<CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInput>;
+export let CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResultSchema: z.ZodType<CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResult>;
 export let CommercePaymentsFraudBlacklistEntryResultSchema: z.ZodType<CommercePaymentsFraudBlacklistEntryResult>;
 export let CommercePaymentsFraudBlacklistEntryTypeSchema: z.ZodType<CommercePaymentsFraudBlacklistEntryType>;
 export let CommercePaymentsFraudBlacklistEvaluationSchema: z.ZodType<CommercePaymentsFraudBlacklistEvaluation>;
@@ -27104,11 +27163,14 @@ export let CommercePaymentsFraudReviewsControllerResolveFraudReviewInputSchema: 
 export let CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInputSchema: z.ZodType<CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInput>;
 export let CommercePaymentsFraudReviewStatusSchema: z.ZodType<CommercePaymentsFraudReviewStatus>;
 export let CommercePaymentsFraudRiskLevelSchema: z.ZodType<CommercePaymentsFraudRiskLevel>;
+export let CommercePaymentsFraudStatisticsCountryRowSchema: z.ZodType<CommercePaymentsFraudStatisticsCountryRow>;
+export let CommercePaymentsFraudStatisticsMethodRowSchema: z.ZodType<CommercePaymentsFraudStatisticsMethodRow>;
 export let CommercePaymentsFraudStatisticsRatesSchema: z.ZodType<CommercePaymentsFraudStatisticsRates>;
 export let CommercePaymentsFraudStatisticsReportSchema: z.ZodType<CommercePaymentsFraudStatisticsReport>;
 export let CommercePaymentsFraudStatisticsReviewsSchema: z.ZodType<CommercePaymentsFraudStatisticsReviews>;
 export let CommercePaymentsFraudStatisticsSignalSchema: z.ZodType<CommercePaymentsFraudStatisticsSignal>;
 export let CommercePaymentsFraudStatisticsTotalsSchema: z.ZodType<CommercePaymentsFraudStatisticsTotals>;
+export let CommercePaymentsFraudStatisticsTrendPointSchema: z.ZodType<CommercePaymentsFraudStatisticsTrendPoint>;
 export let CommercePaymentsFxRateDtoSchema: z.ZodType<CommercePaymentsFxRateDto>;
 export let CommercePaymentsFxRateSyncResultSchema: z.ZodType<CommercePaymentsFxRateSyncResult>;
 export let CommercePaymentsFxRateSyncRunDtoSchema: z.ZodType<CommercePaymentsFxRateSyncRunDto>;
@@ -30747,8 +30809,10 @@ CommerceBillingBillingWebhookEventDtoSchema = z.object({
   processedAt: z.string().datetime().nullable().optional(),
   processingAttempts: z.number().int().optional(),
   provider: z.string().nullable().optional(),
+  sourceIpAddress: z.string().nullable().optional(),
   subscriptionId: z.string().uuid().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
+  userAgent: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceBillingBillingWebhookEventListItemDto. List item of the billing webhook inbox event feed (issue #396). Payloads are excluded. */
@@ -32023,6 +32087,13 @@ CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInputSchema = z.ob
   value: z.string().nullable().optional(),
 });
 
+/** Zod schema for CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResult. Summary of a blacklist CSV import. */
+CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResultSchema = z.object({
+  errors: z.array(z.string()).nullable().optional(),
+  failed: z.number().int().optional(),
+  imported: z.number().int().optional(),
+});
+
 /** Zod schema for CommercePaymentsFraudBlacklistEntryResult. Read model for a stored blacklist entry. */
 CommercePaymentsFraudBlacklistEntryResultSchema = z.object({
   id: z.string().uuid(),
@@ -32122,6 +32193,22 @@ CommercePaymentsFraudReviewStatusSchema = z.enum(['PendingReview', 'Approved', '
 /** Zod schema for CommercePaymentsFraudRiskLevel. Risk band derived from the aggregate fraud score. */
 CommercePaymentsFraudRiskLevelSchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
+/** Zod schema for CommercePaymentsFraudStatisticsCountryRow. Fraud outcomes for one billing country inside the statistics window (issue #409). */
+CommercePaymentsFraudStatisticsCountryRowSchema = z.object({
+  blocked: z.number().int(),
+  country: z.string().nullable(),
+  created: z.number().int(),
+  reviewHeld: z.number().int(),
+});
+
+/** Zod schema for CommercePaymentsFraudStatisticsMethodRow. Fraud outcomes for one gateway payment provider inside the statistics window (issue #409). */
+CommercePaymentsFraudStatisticsMethodRowSchema = z.object({
+  blocked: z.number().int(),
+  created: z.number().int(),
+  provider: z.string().nullable(),
+  reviewHeld: z.number().int(),
+});
+
 /** Zod schema for CommercePaymentsFraudStatisticsRates. Derived fraud-program rates; null when the denominator is zero. */
 CommercePaymentsFraudStatisticsRatesSchema = z.object({
   blockedPercent: z.number().nullable().optional(),
@@ -32132,6 +32219,9 @@ CommercePaymentsFraudStatisticsRatesSchema = z.object({
 
 /** Zod schema for CommercePaymentsFraudStatisticsReport. Combined read model of one fraud-statistics reporting pass. */
 CommercePaymentsFraudStatisticsReportSchema = z.object({
+  byCountry: z.array(z.lazy(() => CommercePaymentsFraudStatisticsCountryRowSchema)).nullable(),
+  byPaymentMethod: z.array(z.lazy(() => CommercePaymentsFraudStatisticsMethodRowSchema)).nullable(),
+  dailyTrend: z.array(z.lazy(() => CommercePaymentsFraudStatisticsTrendPointSchema)).nullable(),
   fromUtc: z.string().datetime(),
   generatedAtUtc: z.string().datetime(),
   rates: z.lazy(() => CommercePaymentsFraudStatisticsRatesSchema),
@@ -32165,6 +32255,14 @@ CommercePaymentsFraudStatisticsTotalsSchema = z.object({
   paymentsCreated: z.number().int(),
   reviewHeld: z.number().int(),
   succeeded: z.number().int(),
+});
+
+/** Zod schema for CommercePaymentsFraudStatisticsTrendPoint. One day of the fraud-outcome trend inside the statistics window (issue #409). */
+CommercePaymentsFraudStatisticsTrendPointSchema = z.object({
+  blocked: z.number().int(),
+  created: z.number().int(),
+  day: z.string().datetime(),
+  reviewHeld: z.number().int(),
 });
 
 /** Zod schema for CommercePaymentsFxRateDto. One persisted FX quotation as exposed by the admin surface. */
@@ -32605,6 +32703,7 @@ CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBodySchema = z
   billingAddress: z.string().nullable().optional(),
   gatewayPaymentMethodId: z.string().nullable().optional(),
   gatewayProvider: z.string().nullable().optional(),
+  methodType: z.string().nullable().optional(),
   nickname: z.string().nullable().optional(),
   ownerUserId: z.string().uuid().nullable().optional(),
   setAsDefault: z.boolean().optional(),
@@ -32736,6 +32835,7 @@ CommercePaymentsPaymentsControllerProcessPaymentInputSchema = z.object({
   amount: z.number().optional(),
   country: z.string().nullable().optional(),
   gatewayProvider: z.string().nullable().optional(),
+  payerEmail: z.string().nullable().optional(),
   paymentMethodId: z.string().nullable().optional(),
   subscriptionId: z.string().uuid().optional(),
   tenantId: z.string().uuid().optional(),

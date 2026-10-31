@@ -13,6 +13,7 @@ namespace GameGuild.Identity.Users;
 [ApiVersion("1.0")]
 [Microsoft.AspNetCore.Http.Tags("users/profiles")]
 [Authorize]
+[DataMaskingResourceType("UserProfile")]
 public sealed class UserProfilesController(ISender sender) : BaseApiController
 {
     /// <summary>

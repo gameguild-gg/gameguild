@@ -40,6 +40,17 @@ public static class PaymentsModule
             .Bind(configuration.GetSection(PaymentMethodSecurityOptions.SectionName))
             .ValidateOnStart();
 
+        // Plaid instant bank-account verification (issue #414, optional): config-gated port
+        // with a fail-closed NoOp default — deployments without Plaid credentials keep the
+        // micro-deposit challenge. A real HTTP adapter replaces the NoOp by registering
+        // itself against IPlaidInstantVerification once credentials exist (see
+        // docs/billing/plaid-instant-verification.md).
+        services.AddSingleton<IValidateOptions<PlaidInstantVerificationOptions>, PlaidInstantVerificationOptionsValidator>();
+        services.AddOptions<PlaidInstantVerificationOptions>()
+            .Bind(configuration.GetSection(PlaidInstantVerificationOptions.SectionName))
+            .ValidateOnStart();
+        services.TryAddSingleton<IPlaidInstantVerification, NoOpPlaidInstantVerification>();
+
         // Refund approval workflow (issue #419): configurable manual-approval threshold,
         // approver notifications and the shared refund execution core.
         services.AddSingleton<IValidateOptions<RefundApprovalOptions>, RefundApprovalOptionsValidator>();
@@ -113,6 +124,10 @@ public static class PaymentsModule
         services.AddScoped<IFraudSignalProvider, BlacklistFraudSignalProvider>();
         services.AddScoped<FraudReviewAutoBlacklister>();
         services.AddScoped<IFraudDetectionService, FraudDetectionService>();
+        // Fraud model expansion (issue #409): disposable-email domains (mailinator, ...),
+        // high-risk billing countries and the IP/device/email blacklist attributes.
+        services.AddScoped<IFraudSignalProvider, DisposableEmailFraudSignalProvider>();
+        services.AddScoped<IFraudSignalProvider, HighRiskCountryFraudSignalProvider>();
 
         // Failure-code retry policy + automated retry queue (issue #415): classifies gateway
         // failure codes into retriable/non-retriable schedules, and (opt-in) polls due retries

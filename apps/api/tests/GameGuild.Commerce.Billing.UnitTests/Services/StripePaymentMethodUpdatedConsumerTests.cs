@@ -117,6 +117,32 @@ public class StripePaymentMethodUpdatedConsumerTests
     private StripePaymentMethodUpdatedConsumer CreateConsumer() =>
         new(_paymentMethodRepository.Object, _logger.Object);
 
+    [Theory]
+    [InlineData("paypal", PaymentMethodType.PayPal)]
+    [InlineData("apple_pay", PaymentMethodType.ApplePay)]
+    [InlineData("google_pay", PaymentMethodType.GooglePay)]
+    [InlineData("link", PaymentMethodType.Wallet)]
+    public async Task WalletTypeUpdates_MapToDistinctPaymentMethodTypes(string gatewayType, PaymentMethodType expectedType)
+    {
+        var method = new PaymentMethod(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "stripe",
+            "pm_wallet_123",
+            PaymentMethodType.Card,
+            isDefault: false);
+        _paymentMethodRepository
+            .Setup(repository => repository.ListByGatewayIdAsync("stripe", "pm_wallet_123", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { method });
+
+        var consumed = await CreateConsumer().TryConsumeAsync(
+            CreateEvent("payment_method.updated", CreatePayload("pm_wallet_123", brand: "visa", last4: "4242", expMonth: 12, expYear: 2030, fingerprint: null, type: gatewayType)),
+            CancellationToken.None);
+
+        consumed.Should().BeTrue();
+        method.Type.Should().Be(expectedType, "wallet brands refresh to their distinct saved-method family (issue #414)");
+    }
+
     private static VerifiedStripeWebhookEvent CreateEvent(string eventType, string payload) =>
         new()
         {
@@ -140,7 +166,8 @@ public class StripePaymentMethodUpdatedConsumerTests
         string last4,
         int expMonth,
         int expYear,
-        string? fingerprint) =>
+        string? fingerprint,
+        string type = "card") =>
         JsonSerializer.Serialize(new Dictionary<string, object?>
         {
             ["id"] = $"evt_{Guid.NewGuid():N}",
@@ -152,7 +179,7 @@ public class StripePaymentMethodUpdatedConsumerTests
                 {
                     ["id"] = paymentMethodId,
                     ["object"] = "payment_method",
-                    ["type"] = "card",
+                    ["type"] = type,
                     ["card"] = new Dictionary<string, object?>
                     {
                         ["brand"] = brand,

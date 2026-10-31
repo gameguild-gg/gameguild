@@ -78,16 +78,39 @@ a grant of `["courses:grade"]` gets 3 days, `["courses:create"]` gets 14 days, a
 `PermissionExpirationWorker` (a `BackgroundService`) runs two phases per cycle, each in a
 fresh DI scope and bounded by `BatchSize`:
 
-1. **Expired sweep** (`ProcessExpiredAsync`): loads grants with `ExpiresAt <= now`, skips
-   ones already stamped `Metadata["expirationProcessedAt"]` (idempotency), calls
-   `TenantPermission.Expire()` (sets `IsActive = false`), writes a `PermissionAuditLog`
-   entry (`PermissionOperationType.Expire`, system actor), bumps the tenant security
-   version (cache invalidation), and publishes a
+1. **Expired sweep** (`ProcessExpiredAsync`): loads still-active grants with
+   `ExpiresAt <= now` — already-deactivated grants are excluded server-side and
+   ordered oldest-expiry-first, and grants stamped
+   `Metadata["expirationProcessedAt"]` are filtered out *before* the `BatchSize`
+   window is applied, so a backlog larger than one batch drains across cycles
+   instead of the first batch permanently occupying the window. For each batch it
+   first bumps the affected tenants' security versions (cache invalidation), then per
+   grant: writes the `PermissionAuditLog` entry (`PermissionOperationType.Expire`,
+   system actor), calls `TenantPermission.Expire()` (sets `IsActive = false`) with the
+   `expirationProcessedAt` stamp, and publishes a
    `PermissionExpirationNotification(Kind: Expired)`.
 2. **Reminder sweep** (`SendUpcomingExpirationRemindersAsync`): loads grants expiring
    before `now + UpcomingNotificationWindow`, skips ones reminded within
    `MinimumReminderInterval`, stamps `expirationReminderAt`, and publishes a
    `PermissionExpirationNotification(Kind: Upcoming)`.
+
+### Failure and recovery ordering
+
+The expired sweep is ordered so an infrastructure failure can never strand a grant in a
+half-processed state:
+
+- **Tenant security version first.** Versions are incremented before any durable grant
+  mutation. A failed increment aborts the cycle with nothing persisted, so the next
+  cycle retries the entire batch — a failed increment can never be stranded behind
+  grants that were already deactivated (extra increments are harmless: the version only
+  drives cache invalidation).
+- **Audit before deactivation.** The `Expire` audit entry is written before the grant is
+  deactivated and stamped. If persistence then fails, the grant stays eligible and the
+  next cycle retries it — the audit entry may duplicate on retry, but it is never lost,
+  so a deactivated grant always carries its expiration audit trail.
+- **Notification last and best-effort.** Publishing runs after the durable mutation; a
+  publish failure is logged without undoing the deactivation, and the processed stamp
+  keeps the next cycle from touching the grant again (no redelivery guarantee).
 
 Per-grant failures are logged and retried on the next cycle; a cycle that exceeds
 `ExecutionTimeout` is abandoned and retried. The worker exits immediately when
@@ -160,11 +183,19 @@ reminder/processed stamps so the new lifecycle generates fresh notifications.
 ## Tests
 
 - `GameGuild.Identity.Authorization.UnitTests/Services/PermissionExpirationServiceTests.cs` —
-  sweep/reminder logic, idempotency stamps, audit, security-version bumps.
+  sweep/reminder logic, idempotency stamps, audit, security-version bumps, batch
+  progress past already-stamped grants, and failure recovery (audit outage, persistence
+  failure after audit, version-bump failure, publish failure, bump-before-mutation
+  ordering).
 - `GameGuild.Identity.Authorization.UnitTests/PermissionExpirationOptionsTests.cs` —
   defaults resolution, wildcard precedence, validation.
 - `GameGuild.Identity.Authorization.UnitTests/Handlers/PermissionExpirationCommandHandlerTests.cs` —
   administrative command handlers.
+- `GameGuild.Identity.Authentication.IntegrationTests/PermissionExpirationRecoveryPostgreSqlTests.cs` —
+  real-PostgreSQL recovery semantics: multi-batch backlog drainage with ineligible
+  grants (processed/deleted/deactivated/unexpired) skipped server-side, audit-outage
+  retry, and persistence-failure convergence with the audit entry and tenant version
+  intact.
 - `GameGuild.API.UnitTests/Security/PermissionExpirationAlertHandlerTests.cs` — alert
   delivery: config gate, recipient resolution, InApp+Email channels, priority mapping,
   preference-driven suppression tolerance, failure tolerance.
