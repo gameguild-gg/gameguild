@@ -220,6 +220,7 @@ public sealed class FxRateSyncService(
 
         var applied = 0;
         var changed = 0;
+        var created = 0;
         var changes = new List<(string Quote, decimal OldRate, decimal NewRate)>();
         var anomalies = new List<(string Pair, decimal OldRate, decimal NewRate, decimal ChangePercent)>();
 
@@ -274,9 +275,10 @@ public sealed class FxRateSyncService(
             }, cancellationToken).ConfigureAwait(false);
             applied++;
             // A newly introduced quotation changes the persisted pricing state from
-            // "no rate" to a value — count it as changed so markets that had no rate
-            // (first sync, newly listed currency) also get their auto prices refreshed.
-            changed++;
+            // "no rate" to a value — tracked separately from the changed-value metric
+            // so markets that had no rate (first sync, newly listed currency) still
+            // get their auto prices refreshed by the post-sync hook.
+            created++;
         }
 
         run.RatesApplied = applied;
@@ -366,11 +368,11 @@ public sealed class FxRateSyncService(
         await runtimeSource.EnsureSeededAsync(cancellationToken).ConfigureAwait(false);
         runtimeSource.ApplyProviderSet(rateSet);
 
-        // Auto prices follow rate updates (issue #412 spec C): when this pass actually moved
-        // quotations, refresh the auto-calculated localized prices of every tenant that has
-        // any. A recalculation failure must never fail the sync itself — rates are already
-        // persisted and the next pass retries.
-        if (changed > 0)
+        // Auto prices follow rate updates (issue #412 spec C): when this pass moved
+        // quotations or introduced new ones, refresh the auto-calculated localized
+        // prices of every tenant that has any. A recalculation failure must never
+        // fail the sync itself — rates are already persisted and the next pass retries.
+        if (changed > 0 || created > 0)
         {
             await RefreshLocalizedPricesAfterSyncAsync(cancellationToken).ConfigureAwait(false);
         }
