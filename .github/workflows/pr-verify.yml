@@ -221,7 +221,7 @@ jobs:
         run: >-
           dotnet test apps/api/tests/GameGuild.API.IntegrationTests/GameGuild.API.IntegrationTests.csproj
           -c Release --nologo -p:TreatWarningsAsErrors=true
-          --filter "FullyQualifiedName~AuditSnapshotMigrationPostgreSqlTests|FullyQualifiedName~MfaSignInPolicyPostgreSqlTests|FullyQualifiedName~AuditExportPostgreSqlHttpTests.Concurrent_alias_and_versioned_exports_share_the_user_rate_limit"
+          --filter "FullyQualifiedName~AuditSnapshotMigrationPostgreSqlTests|FullyQualifiedName~MfaSignInPolicyPostgreSqlTests|FullyQualifiedName~AuditExportPostgreSqlHttpTests.Concurrent_alias_and_versioned_exports_share_the_user_rate_limit|FullyQualifiedName~PermissionExpirationAdministrationPostgreSqlHttpTests"
           --logger "trx;LogFileName=audit-schema.trx"
           --results-directory artifacts/test-results/affected-api/audit-schema
       - name: Run affected API tests
