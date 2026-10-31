@@ -20,7 +20,19 @@ public sealed class FraudDetectionService(
     /// <inheritdoc />
     public async Task<FraudAssessment> AssessPaymentAsync(
         FraudSignalContext signalContext,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await AssessAsync(signalContext, "payment", cancellationToken).ConfigureAwait(false);
+
+    /// <inheritdoc />
+    public async Task<FraudAssessment> AssessSubscriptionCreationAsync(
+        FraudSignalContext signalContext,
+        CancellationToken cancellationToken = default) =>
+        await AssessAsync(signalContext, "subscription creation", cancellationToken).ConfigureAwait(false);
+
+    private async Task<FraudAssessment> AssessAsync(
+        FraudSignalContext signalContext,
+        string assessmentKind,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(signalContext);
 
@@ -29,8 +41,9 @@ public sealed class FraudDetectionService(
         if (!options.IsEnabled)
         {
             logger.LogDebug(
-                "Fraud assessment disabled for tenant {TenantId}; allowing payment {PaymentId}",
+                "Fraud assessment disabled for tenant {TenantId}; allowing {Kind} {PaymentId}",
                 signalContext.TenantId,
+                assessmentKind,
                 signalContext.PaymentId);
 
             return new FraudAssessment(
@@ -63,8 +76,9 @@ public sealed class FraudDetectionService(
         var reason = BuildReason(decision, score, options, signals);
 
         logger.LogInformation(
-            "Fraud assessment for tenant {TenantId} payment {PaymentId}: decision {Decision}, score {Score}, risk {RiskLevel}, {SignalCount} signal(s)",
+            "Fraud assessment for tenant {TenantId} {Kind} {PaymentId}: decision {Decision}, score {Score}, risk {RiskLevel}, {SignalCount} signal(s)",
             signalContext.TenantId,
+            assessmentKind,
             signalContext.PaymentId,
             decision,
             score,

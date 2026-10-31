@@ -101,6 +101,13 @@ public static class SecurityEventTaxonomy
         [AuditActionTypes.WebhookSourceBlocked] = new(SecurityEventKind.ThreatDetection, AuditRiskLevel.High, false, "Billing webhook source temporarily blocked for suspicious activity."),
         [AuditActionTypes.WebhookDeadLettered] = new(SecurityEventKind.ThreatDetection, AuditRiskLevel.Critical, false, "Billing webhook dead-lettered after exhausting its retry budget; repeated delivery failures require operator attention."),
 
+        // Billing webhook lifecycle (issue #408: an audit-module entry for every webhook
+        // event). Operational trail, not a threat: classified as Other/Low so the events
+        // journal through the standard audit path of the same pipeline entry point.
+        [AuditActionTypes.WebhookEventReceived] = new(SecurityEventKind.Other, AuditRiskLevel.Low, false, "Billing webhook delivery accepted into the durable inbox."),
+        [AuditActionTypes.WebhookEventProcessed] = new(SecurityEventKind.Other, AuditRiskLevel.Low, false, "Billing webhook event completed processing from the durable inbox."),
+        [AuditActionTypes.WebhookEventFailed] = new(SecurityEventKind.Other, AuditRiskLevel.Medium, false, "Billing webhook event recorded a failed processing attempt; the durable inbox schedules its retry."),
+
         // Promo engine abuse detection (issue #418)
         [AuditActionTypes.PromoUsageAnomalyDetected] = new(SecurityEventKind.ThreatDetection, AuditRiskLevel.High, false, "Unusual promo code usage pattern detected (validation or redemption velocity anomaly)."),
 

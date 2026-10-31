@@ -9219,6 +9219,25 @@ export const postBillingWebhooksApplePayEndpoint = {
 } as const;
 
 /**
+ * Handle Braintree webhook events with offline signature verification
+ *
+ * Braintree delivers `application/x-www-form-urlencoded` bodies carrying the
+ * `bt_signature`/`bt_payload` pair. The signature is verified offline against
+ * the gateway's configured public key (issue #408) before any inbox work; failed
+ * verification is rejected fail-closed with a security event. The stored payload is the
+ * privacy-minimized routing projection of the notification.
+ */
+export type PostBillingWebhooksBraintreeInput = void;
+export type PostBillingWebhooksBraintreeOutput = Record<string, unknown>;
+export const postBillingWebhooksBraintreeEndpoint = {
+  operationId: 'postBillingWebhooksBraintree' as const,
+  method: 'POST' as const,
+  path: '/api/v1/billing/webhooks/braintree' as const,
+  tags: ['CommerceBillingWebhooks'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
  * Handle Google Pay webhook events for transaction notifications
  *
  * Processes Google Pay webhook notifications for payment processing, subscription billing,
@@ -10444,13 +10463,14 @@ export const postFraudReviewsBulkDenyEndpoint = {
 /**
  * Get the fraud statistics report for a date window (defaults to the last 30 days).
  *
- * Reports fraud-program statistics over a date window: assessed, flagged and blocked payment counts with rates, the chargeback rate among succeeded payments, the false-positive proxy (held reviews later approved), the manual-review backlog with average time-to-review, and the top fraud signals by frequency. Requires the payments:admin permission.
+ * Reports fraud-program statistics over a date window: assessed, flagged and blocked payment counts with rates, the chargeback rate among succeeded payments, the false-positive proxy (held reviews later approved), the manual-review backlog with average time-to-review, the top fraud signals by frequency, and breakdowns by billing country, gateway provider and subscription plan with a daily/weekly/monthly trend series. Requires the payments:admin permission.
  */
 export interface GetFraudStatisticsInput {
   query?: {
     tenantId?: string;
     fromUtc?: string;
     toUtc?: string;
+    trendGranularity?: Types.CommercePaymentsFraudTrendGranularity;
   };
 }
 export type GetFraudStatisticsOutput = Types.CommercePaymentsFraudStatisticsReport;
@@ -10464,15 +10484,17 @@ export const getFraudStatisticsEndpoint = {
 
 /**
  * Export the fraud statistics report for a date window as CSV (issue #409: export
- * fraud reports). Same authorization and window semantics as the JSON report.
+ * fraud reports, including the trend/granularity views). Same authorization, window
+ * and granularity semantics as the JSON report.
  *
- * Exports the fraud statistics report over a date window as CSV: one summary block plus per-country, per-provider and daily-trend sections. Requires the payments:admin permission.
+ * Exports the fraud statistics report over a date window as CSV: one summary block plus per-country, per-provider, per-plan and trend sections at the requested daily/weekly/monthly granularity. Requires the payments:admin permission.
  */
 export interface GetFraudStatisticsExportInput {
   query?: {
     tenantId?: string;
     fromUtc?: string;
     toUtc?: string;
+    trendGranularity?: Types.CommercePaymentsFraudTrendGranularity;
   };
 }
 export type GetFraudStatisticsExportOutput = void;
@@ -33790,6 +33812,7 @@ export const endpoints = {
   postBillingSubscriptionsPlanChangeOrchestrate: postBillingSubscriptionsPlanChangeOrchestrateEndpoint,
   getBillingSubscriptionsPlanChangeSaga: getBillingSubscriptionsPlanChangeSagaEndpoint,
   postBillingWebhooksApplePay: postBillingWebhooksApplePayEndpoint,
+  postBillingWebhooksBraintree: postBillingWebhooksBraintreeEndpoint,
   postBillingWebhooksGooglePay: postBillingWebhooksGooglePayEndpoint,
   postBillingWebhooksPaypal: postBillingWebhooksPaypalEndpoint,
   postBillingWebhooksSecretsRotate: postBillingWebhooksSecretsRotateEndpoint,

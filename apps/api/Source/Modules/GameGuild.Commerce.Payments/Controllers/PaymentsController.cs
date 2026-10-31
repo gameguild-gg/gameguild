@@ -155,10 +155,16 @@ public sealed class PaymentsController(
 
         // Fraud-signal delivery metadata (issue #409): the client IP of the attempt and the
         // optional device fingerprint header feed the IP/device blacklist signals; the payer
-        // email (optional, from the body) feeds the disposable-email and email blacklist signals.
+        // email (optional, from the body) feeds the disposable-email and email blacklist
+        // signals. The card BIN (optional, from the body — the PCI-permitted non-sensitive
+        // prefix) feeds the high-risk BIN range signal, and the claimed client timezone
+        // header feeds the GeoIP timezone-mismatch signal. AVS/CVV outcomes are NOT accepted
+        // here: they are server-known gateway facts threaded by server-side callers only.
         var sourceIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var deviceFingerprint = Request.Headers["X-Device-Fingerprint"].ToString();
+        var clientTimezone = Request.Headers["X-Client-Timezone"].ToString();
         var payerEmail = string.IsNullOrWhiteSpace(body.PayerEmail) ? null : body.PayerEmail.Trim();
+        var cardBin = NormalizeCardBin(body.CardBin);
 
         var result = await sender.Send(
             new ProcessPaymentCommand(
@@ -170,10 +176,24 @@ public sealed class PaymentsController(
                 body.GatewayProvider,
                 string.IsNullOrWhiteSpace(sourceIpAddress) ? null : sourceIpAddress,
                 string.IsNullOrWhiteSpace(deviceFingerprint) ? null : deviceFingerprint.Trim(),
-                payerEmail), ct).ConfigureAwait(false);
+                payerEmail,
+                cardBin,
+                ClientTimezone: string.IsNullOrWhiteSpace(clientTimezone) ? null : clientTimezone.Trim()), ct).ConfigureAwait(false);
 
         return CreatedAtRoute("GetPaymentById", new { paymentId = result.PaymentId }, result);
     }
+
+    /// <summary>
+    ///     Normalizes an optional card BIN to its 6-8 digit form. Anything malformed is
+    ///     dropped to null (the signal simply does not fire) rather than rejecting the
+    ///     payment request — the fraud gate treats absence as absence of evidence.
+    /// </summary>
+    private static string? NormalizeCardBin(string? cardBin) =>
+        string.IsNullOrWhiteSpace(cardBin)
+        || cardBin.Trim().Length is < 6 or > 8
+        || !cardBin.Trim().All(char.IsDigit)
+            ? null
+            : cardBin.Trim();
 
     /// <summary>
     ///     Creates a Stripe SetupIntent for a subscription checkout.
@@ -859,7 +879,8 @@ public sealed class PaymentsController(
         string PaymentMethodId,
         string? Country = null,
         string? GatewayProvider = null,
-        string? PayerEmail = null);
+        string? PayerEmail = null,
+        string? CardBin = null);
 
     public sealed record CreateSetupIntentRequest(Guid TenantId, Guid SubscriptionId, string? CustomerEmail, string? CustomerName);
 

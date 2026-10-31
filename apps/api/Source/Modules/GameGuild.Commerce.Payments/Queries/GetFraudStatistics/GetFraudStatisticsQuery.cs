@@ -6,6 +6,22 @@ using Microsoft.EntityFrameworkCore;
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
+///     Trend bucket granularity of the fraud statistics report (issue #409: weekly and
+///     monthly trend views alongside the daily default).
+/// </summary>
+public enum FraudTrendGranularity
+{
+    /// <summary>One point per UTC day (the original default).</summary>
+    Daily = 0,
+
+    /// <summary>One point per ISO week (bucketed at Monday 00:00 UTC).</summary>
+    Weekly = 1,
+
+    /// <summary>One point per calendar month (bucketed at the first of the month, UTC).</summary>
+    Monthly = 2
+}
+
+/// <summary>
 ///     Fraud-program statistics over a date window (issue #409 reporting): assessed,
 ///     flagged and blocked payment counts with rates, the chargeback rate among succeeded
 ///     payments, the false-positive proxy (held reviews later approved), the manual-review
@@ -16,11 +32,13 @@ namespace GameGuild.Commerce.Payments;
 /// <param name="TenantId">Optional tenant scope; enforced at the API boundary.</param>
 /// <param name="FromUtc">Inclusive window start; defaults to 30 days ago.</param>
 /// <param name="ToUtc">Inclusive window end; defaults to now.</param>
+/// <param name="TrendGranularity">Bucket size of the trend series (issue #409: weekly/monthly).</param>
 [AuthorizeRequest(PaymentsPermission.Keys.Admin)]
 public sealed record GetFraudStatisticsQuery(
     Guid? TenantId = null,
     DateTime? FromUtc = null,
-    DateTime? ToUtc = null) : IQuery<FraudStatisticsReport>;
+    DateTime? ToUtc = null,
+    FraudTrendGranularity TrendGranularity = FraudTrendGranularity.Daily) : IQuery<FraudStatisticsReport>;
 
 /// <summary>Combined read model of one fraud-statistics reporting pass.</summary>
 public sealed record FraudStatisticsReport
@@ -52,8 +70,14 @@ public sealed record FraudStatisticsReport
     /// <summary>Fraud outcomes by gateway payment provider inside the window (issue #409: fraud by payment method).</summary>
     public required IReadOnlyList<FraudStatisticsMethodRow> ByPaymentMethod { get; init; }
 
-    /// <summary>Daily trend of created/held/blocked payments inside the window (issue #409: trend analysis).</summary>
-    public required IReadOnlyList<FraudStatisticsTrendPoint> DailyTrend { get; init; }
+    /// <summary>Fraud outcomes by subscription plan inside the window (issue #409: fraud by plan).</summary>
+    public required IReadOnlyList<FraudStatisticsPlanRow> ByPlan { get; init; }
+
+    /// <summary>Bucket granularity of <see cref="Trend"/> (issue #409: weekly/monthly views).</summary>
+    public required FraudTrendGranularity TrendGranularity { get; init; }
+
+    /// <summary>Trend of created/held/blocked payments inside the window, bucketed by <see cref="TrendGranularity"/> (issue #409: trend analysis).</summary>
+    public required IReadOnlyList<FraudStatisticsTrendPoint> Trend { get; init; }
 }
 
 /// <summary>Fraud outcomes for one billing country inside the statistics window (issue #409).</summary>
@@ -88,19 +112,38 @@ public record FraudStatisticsMethodRow
     public required int Blocked { get; init; }
 }
 
-/// <summary>One day of the fraud-outcome trend inside the statistics window (issue #409).</summary>
-public record FraudStatisticsTrendPoint
+/// <summary>Fraud outcomes for one subscription plan inside the statistics window (issue #409: fraud by plan).</summary>
+public record FraudStatisticsPlanRow
 {
-    /// <summary>UTC day the point aggregates.</summary>
-    public required DateTime Day { get; init; }
+    /// <summary>Plan the charged subscriptions are on; null when the attempt could not be attributed to a plan.</summary>
+    public required Guid? PlanId { get; init; }
 
-    /// <summary>Payments created on the day.</summary>
+    /// <summary>Display name of the plan; "unknown" when unattributed or the plan no longer exists.</summary>
+    public required string PlanName { get; init; }
+
+    /// <summary>Payments created for the plan in the window.</summary>
     public required int Created { get; init; }
 
-    /// <summary>Assessed payments held for review on the day.</summary>
+    /// <summary>Assessed payments held for review in the window.</summary>
     public required int ReviewHeld { get; init; }
 
-    /// <summary>Assessed payments blocked on the day.</summary>
+    /// <summary>Assessed payments blocked in the window.</summary>
+    public required int Blocked { get; init; }
+}
+
+/// <summary>One bucket of the fraud-outcome trend inside the statistics window (issue #409).</summary>
+public record FraudStatisticsTrendPoint
+{
+    /// <summary>UTC start of the bucket (day, ISO week or month, per the report granularity).</summary>
+    public required DateTime Day { get; init; }
+
+    /// <summary>Payments created in the bucket.</summary>
+    public required int Created { get; init; }
+
+    /// <summary>Assessed payments held for review in the bucket.</summary>
+    public required int ReviewHeld { get; init; }
+
+    /// <summary>Assessed payments blocked in the bucket.</summary>
     public required int Blocked { get; init; }
 }
 
@@ -175,11 +218,16 @@ public record FraudStatisticsSignal
 }
 
 /// <summary>Handler for <see cref="GetFraudStatisticsQuery"/>.</summary>
-public sealed class GetFraudStatisticsQueryHandler(IApplicationDbContext context)
+public sealed class GetFraudStatisticsQueryHandler(
+    IApplicationDbContext context,
+    GameGuild.Commerce.ISubscriptionPaymentContextService? subscriptionContextService = null)
     : IQueryHandler<GetFraudStatisticsQuery, FraudStatisticsReport>
 {
     private const int MaxEvidenceRows = 5000;
     private const int TopSignalCount = 10;
+
+    /// <summary>Bound on the distinct subscriptions resolved to plans for the by-plan view.</summary>
+    private const int MaxPlanSubscriptionResolutions = 2000;
 
     /// <inheritdoc />
     public async Task<FraudStatisticsReport> Handle(GetFraudStatisticsQuery request, CancellationToken cancellationToken)
@@ -298,19 +346,31 @@ public sealed class GetFraudStatisticsQueryHandler(IApplicationDbContext context
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        // Daily trend (issue #409: trend analysis).
-        var dailyTrend = await payments
-            .GroupBy(payment => payment.CreatedAt.Date)
+        // Trend (issue #409: daily, weekly and monthly granularity). The bucketing is
+        // computed over a bounded projection so one code path serves every granularity —
+        // EF cannot translate ISO-week math portably to SQL.
+        var trendProjection = await payments
+            .Select(payment => new { payment.CreatedAt, payment.FraudDecision })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var trend = trendProjection
+            .GroupBy(row => BucketStart(row.CreatedAt, request.TrendGranularity))
             .Select(group => new FraudStatisticsTrendPoint
             {
                 Day = group.Key,
                 Created = group.Count(),
-                ReviewHeld = group.Count(payment => payment.FraudDecision == FraudDecision.Review),
-                Blocked = group.Count(payment => payment.FraudDecision == FraudDecision.Block)
+                ReviewHeld = group.Count(row => row.FraudDecision == FraudDecision.Review),
+                Blocked = group.Count(row => row.FraudDecision == FraudDecision.Block)
             })
             .OrderBy(point => point.Day)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .ToList();
+
+        // Fraud by subscription plan (issue #409): payments carry the subscription id; the
+        // bulk payment-context resolution maps subscriptions to their plans in one round
+        // trip. Without the subscription service (unit hosts) the view degrades to the
+        // unattributed bucket instead of failing the report.
+        var byPlan = await BuildByPlanAsync(payments, cancellationToken).ConfigureAwait(false);
 
         return new FraudStatisticsReport
         {
@@ -347,9 +407,105 @@ public sealed class GetFraudStatisticsQueryHandler(IApplicationDbContext context
             TopSignals = topSignals,
             ByCountry = byCountry,
             ByPaymentMethod = byPaymentMethod,
-            DailyTrend = dailyTrend
+            ByPlan = byPlan,
+            TrendGranularity = request.TrendGranularity,
+            Trend = trend
         };
     }
+
+    /// <summary>
+    ///     Builds the by-plan breakdown (issue #409): groups window payments by subscription,
+    ///     resolves the distinct subscriptions to their plans through the bulk payment-context
+    ///     service and re-aggregates by plan. Payments without a subscription (or beyond the
+    ///     resolution bound) land in the unattributed bucket.
+    /// </summary>
+    private async Task<IReadOnlyList<FraudStatisticsPlanRow>> BuildByPlanAsync(
+        IQueryable<Payment> payments,
+        CancellationToken cancellationToken)
+    {
+        var subscriptionGroups = await payments
+            .GroupBy(payment => payment.SubscriptionId)
+            .Select(group => new
+            {
+                SubscriptionId = group.Key,
+                Created = group.Count(),
+                ReviewHeld = group.Count(payment => payment.FraudDecision == FraudDecision.Review),
+                Blocked = group.Count(payment => payment.FraudDecision == FraudDecision.Block)
+            })
+            .OrderByDescending(group => group.Created)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var planKeys = new Dictionary<Guid, (Guid? PlanId, string PlanName)>();
+        if (subscriptionContextService is not null)
+        {
+            var subscriptionIds = subscriptionGroups
+                .Where(group => group.SubscriptionId.HasValue)
+                .Take(MaxPlanSubscriptionResolutions)
+                .Select(group => group.SubscriptionId!.Value)
+                .ToList();
+
+            if (subscriptionIds.Count > 0)
+            {
+                var contexts = await subscriptionContextService
+                    .GetPaymentContextsAsync(subscriptionIds, cancellationToken)
+                    .ConfigureAwait(false);
+
+                foreach (var paymentContext in contexts)
+                {
+                    planKeys[paymentContext.SubscriptionId] = (
+                        paymentContext.PlanId,
+                        string.IsNullOrWhiteSpace(paymentContext.PlanName) ? "unknown" : paymentContext.PlanName);
+                }
+            }
+        }
+
+        var planRows = subscriptionGroups
+            .Select(group => (Group: group, Plan: ResolvePlanKey(group.SubscriptionId, planKeys)))
+            .GroupBy(entry => entry.Plan)
+            .Select(group => new FraudStatisticsPlanRow
+            {
+                PlanId = group.Key.PlanId,
+                PlanName = group.Key.PlanName,
+                Created = group.Sum(entry => entry.Group.Created),
+                ReviewHeld = group.Sum(entry => entry.Group.ReviewHeld),
+                Blocked = group.Sum(entry => entry.Group.Blocked)
+            })
+            .OrderByDescending(row => row.Blocked)
+            .ThenByDescending(row => row.ReviewHeld)
+            .ThenByDescending(row => row.Created)
+            .ThenBy(row => row.PlanName, StringComparer.Ordinal)
+            .ToList();
+
+        return planRows;
+    }
+
+    private static (Guid? PlanId, string PlanName) ResolvePlanKey(
+        Guid? subscriptionId,
+        IReadOnlyDictionary<Guid, (Guid? PlanId, string PlanName)> planKeys) =>
+        subscriptionId.HasValue && planKeys.TryGetValue(subscriptionId.Value, out var plan)
+            ? plan
+            : (PlanId: null, PlanName: "unknown");
+
+    /// <summary>
+    ///     Start of the trend bucket containing the instant: the day itself, the ISO week
+    ///     (Monday 00:00) or the calendar month, per the requested granularity. ISO-8601
+    ///     week math without calendar-culture variance.
+    /// </summary>
+    internal static DateTime BucketStart(DateTime instantUtc, FraudTrendGranularity granularity)
+    {
+        var date = instantUtc.Date;
+        return granularity switch
+        {
+            FraudTrendGranularity.Weekly => date.AddDays(-IsoDayIndex(date)),
+            FraudTrendGranularity.Monthly => new DateTime(date.Year, date.Month, 1, 0, 0, 0, DateTimeKind.Utc),
+            _ => date
+        };
+    }
+
+    /// <summary>Monday=0 .. Sunday=6 (ISO-8601 day index).</summary>
+    private static int IsoDayIndex(DateTime date) =>
+        date.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)date.DayOfWeek - 1;
 
     private static double? Percent(int numerator, int denominator) =>
         denominator > 0 ? Math.Round(numerator * 100.0 / denominator, 2) : null;

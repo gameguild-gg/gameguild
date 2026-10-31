@@ -32,8 +32,13 @@ public static class ServiceCollectionExtensions
         services.Configure<PayPalSettings>(configuration.GetSection($"{BillingConfiguration.SectionName}:PayPal"));
         services.Configure<ApplePaySettings>(configuration.GetSection($"{BillingConfiguration.SectionName}:ApplePay"));
 
-        // Register repositories
-        services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
+        // Register repositories. The webhook inbox is decorated so every accepted delivery
+        // and every terminal outcome journals into the Compliance.Audit module (issue #408:
+        // an audit-module entry for every webhook event).
+        services.AddScoped<BillingWebhookRepository>();
+        services.AddScoped<IBillingWebhookRepository>(provider => new AuditingBillingWebhookRepository(
+            provider.GetRequiredService<BillingWebhookRepository>(),
+            provider.GetRequiredService<IWebhookLifecycleAuditPublisher>()));
         services.AddScoped<IBillingProviderStateRepository, BillingProviderStateRepository>();
 
         // Pricing-decision ledger (issue #400): durable append-only record of every
@@ -116,12 +121,18 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGooglePayWebhookVerificationService, GooglePayWebhookVerificationService>();
         services.AddScoped<GooglePayBillingWebhookService>();
 
-        // Webhook replay execution arms (issue #408): Stripe and PayPal deliveries that
+        // Braintree webhook ingress (issue #408): offline public-key signature verification
+        // plus the provider webhook service with idempotent inbox, routing and replay arm.
+        services.AddSingleton<IBraintreeWebhookVerificationService, BraintreeWebhookVerificationService>();
+        services.AddScoped<BraintreeBillingWebhookService>();
+
+        // Webhook replay execution arms (issue #408): Stripe, PayPal and Braintree deliveries that
         // were signature-verified at acceptance can be re-routed from the durable inbox
         // by the retry pipeline. Providers without a replay arm (Apple, Google) surface
         // an explicit failure when retried instead of a silent no-op.
         services.AddScoped<IBillingWebhookReplayHandler>(provider => provider.GetRequiredService<StripeBillingWebhookService>());
         services.AddScoped<IBillingWebhookReplayHandler>(provider => provider.GetRequiredService<PayPalBillingWebhookService>());
+        services.AddScoped<IBillingWebhookReplayHandler>(provider => provider.GetRequiredService<BraintreeBillingWebhookService>());
 
         // Register webhook source security controls (IP allowlist, threshold monitor,
         // security-event publishing, and the authorization filter that enforces them).
@@ -150,6 +161,11 @@ public static class ServiceCollectionExtensions
         // agent logging): captured by the filter above, stamped onto the inbox row by the
         // webhook repository.
         services.AddScoped<IWebhookDeliveryContext, WebhookDeliveryContext>();
+
+        // Webhook lifecycle audit journaling (issue #408: an audit-module entry for every
+        // webhook event): publishes through the Compliance.Audit security-event pipeline
+        // entry point; operational entries journal via the standard audit path.
+        services.AddScoped<IWebhookLifecycleAuditPublisher, WebhookLifecycleAuditPublisher>();
         return services;
     }
 
@@ -175,7 +191,10 @@ public static class ServiceCollectionExtensions
         services.AddOptions<BillingConfiguration>();
 
         // Register webhook-specific services
-        services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
+        services.AddScoped<BillingWebhookRepository>();
+        services.AddScoped<IBillingWebhookRepository>(provider => new AuditingBillingWebhookRepository(
+            provider.GetRequiredService<BillingWebhookRepository>(),
+            provider.GetRequiredService<IWebhookLifecycleAuditPublisher>()));
         services.AddSingleton<IWebhookSigningSecretProvider, WebhookSigningSecretProvider>();
         services.AddSingleton<IStripeWebhookVerifier, StripeWebhookVerifier>();
         services.AddScoped<IStripeProviderObjectBindingValidator, StripeProviderObjectBindingValidator>();
@@ -187,6 +206,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ApplePayBillingWebhookService>();
         services.AddSingleton<IGooglePayWebhookVerificationService, GooglePayWebhookVerificationService>();
         services.AddScoped<GooglePayBillingWebhookService>();
+        services.AddSingleton<IBraintreeWebhookVerificationService, BraintreeWebhookVerificationService>();
+        services.AddScoped<BraintreeBillingWebhookService>();
 
         // Register webhook source security controls (IP allowlist, threshold monitor,
         // security-event publishing, and the authorization filter that enforces them).
