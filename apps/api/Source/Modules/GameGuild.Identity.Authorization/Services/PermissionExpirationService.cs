@@ -172,15 +172,15 @@ public sealed class PermissionExpirationService(
         Exception? operationFailure = null;
         try
         {
-            async Task<Result<T>> PerformAsync(CancellationToken token)
+            Func<CancellationToken, Task<Result<T>>> perform = async token =>
             {
                 try { return await operation(token).ConfigureAwait(false); }
                 catch (Exception exception) { operationFailure = exception; throw; }
-            }
+            };
             var result = actor.Maintenance is null
-                ? await mutationExecutor.ExecuteAsync(actor.UserId, tenantId, PerformAsync,
+                ? await mutationExecutor.ExecuteAsync(actor.UserId, tenantId, perform,
                     cancellationToken, shouldCommit, useEntityTenantScope).ConfigureAwait(false)
-                : await mutationExecutor.ExecuteSystemAsync(actor.Maintenance, tenantId, PerformAsync,
+                : await mutationExecutor.ExecuteSystemAsync(actor.Maintenance, tenantId, perform,
                     cancellationToken, shouldCommit, useEntityTenantScope).ConfigureAwait(false);
             if (result.IsFailure)
             {

@@ -7,5 +7,5 @@ namespace GameGuild;
 public sealed record PermissionSystemMutation(string Operation)
 {
     /// <summary>The reviewed maintenance operation for automatic permission expiration.</summary>
-    public const string ExpirationOperation = "PermissionExpiration";
+    public static string ExpirationOperation { get; } = "PermissionExpiration";
 }

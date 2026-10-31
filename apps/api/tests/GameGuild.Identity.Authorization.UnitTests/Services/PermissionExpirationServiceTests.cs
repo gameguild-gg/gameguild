@@ -470,7 +470,55 @@ public class PermissionExpirationServiceTests
         _repoMock.Setup(repository => repository.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<TenantPermission> { CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1)) });
 
-        Assert.Equal(1, await _sut.ProcessExpiredAsync());
+        var executor = new InlineMutationExecutor();
+        Assert.Equal(1, await CreateService(executor).ProcessExpiredAsync());
+        Assert.Equal(2, executor.Calls.Count);
+        Assert.All(executor.Calls, call =>
+        {
+            Assert.Null(call.Identity.UserId);
+            Assert.Equal(TenantA, call.Identity.TenantId);
+            Assert.Equal(PermissionSystemMutation.ExpirationOperation, call.Identity.Maintenance?.Operation);
+            Assert.True(call.CommitRequested);
+        });
+        Assert.Single(executor.Calls, call => call.UseEntityTenantScope);
+        Assert.Single(executor.Calls, call => !call.UseEntityTenantScope);
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_UserAdministratorKeepsItsActualActorAndTenantScope()
+    {
+        var actorId = Guid.NewGuid();
+        _actorAccessorMock.SetupGet(accessor => accessor.ActorContext).Returns(
+            ActorContextBuilder.ForUser(actorId).WithRole("SystemAdmin").Build());
+        _repoMock.Setup(repository => repository.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1)) });
+        var executor = new InlineMutationExecutor();
+
+        Assert.Equal(1, await CreateService(executor).ProcessExpiredAsync());
+        Assert.Equal(2, executor.Calls.Count);
+        Assert.All(executor.Calls, call =>
+        {
+            Assert.Equal(actorId, call.Identity.UserId);
+            Assert.Equal(TenantA, call.Identity.TenantId);
+            Assert.Null(call.Identity.Maintenance);
+            Assert.True(call.CommitRequested);
+        });
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_NoAcceptedGrantDoesNotRequestAGroupCommit()
+    {
+        _repoMock.Setup(repository => repository.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1)) });
+        _repoMock.Setup(repository => repository.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Required update failed"));
+        var executor = new InlineMutationExecutor();
+
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => CreateService(executor).ProcessExpiredAsync());
+        Assert.Equal(0, failure.Data["ProcessedGrantCount"]);
+        var group = Assert.Single(executor.Calls);
+        Assert.True(group.UseEntityTenantScope);
+        Assert.False(group.CommitRequested);
     }
 
     [Theory]
@@ -496,10 +544,12 @@ public class PermissionExpirationServiceTests
     // Component tests isolate orchestration; only the PostgreSQL suite proves rollback.
     private sealed class InlineMutationExecutor(Exception? setupFailure = null) : IPermissionMutationExecutor
     {
+        public List<MutationCall> Calls { get; } = [];
+
         Task<Result<T>> IPermissionMutationExecutor.ExecuteSystemAsync<T>(PermissionSystemMutation maintenance, Guid? tenantId,
             Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
             Func<T, bool>? shouldCommit, bool useEntityTenantScope) =>
-            setupFailure is null ? operation(cancellationToken) : Task.FromException<Result<T>>(setupFailure);
+            ExecuteCoreAsync(new MutationIdentity(null, tenantId, maintenance), operation, cancellationToken, shouldCommit, useEntityTenantScope);
 
         Task<Result<T>> IPermissionMutationExecutor.ExecuteAsync<T>(Guid actorId, Guid? tenantId,
             Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken) =>
@@ -512,6 +562,21 @@ public class PermissionExpirationServiceTests
         Task<Result<T>> IPermissionMutationExecutor.ExecuteAsync<T>(Guid actorId, Guid? tenantId,
             Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
             Func<T, bool>? shouldCommit, bool useEntityTenantScope) =>
-            setupFailure is null ? operation(cancellationToken) : Task.FromException<Result<T>>(setupFailure);
+            ExecuteCoreAsync(new MutationIdentity(actorId, tenantId, null), operation, cancellationToken, shouldCommit, useEntityTenantScope);
+
+        private async Task<Result<T>> ExecuteCoreAsync<T>(MutationIdentity identity,
+            Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
+            Func<T, bool>? shouldCommit, bool useEntityTenantScope)
+        {
+            if (setupFailure is not null) { throw setupFailure; }
+            var result = await operation(cancellationToken);
+            Calls.Add(new MutationCall(identity, useEntityTenantScope,
+                result.IsSuccess && (shouldCommit?.Invoke(result.Value) ?? true)));
+            return result;
+        }
     }
+
+    private sealed record MutationIdentity(Guid? UserId, Guid? TenantId, PermissionSystemMutation? Maintenance);
+
+    private sealed record MutationCall(MutationIdentity Identity, bool UseEntityTenantScope, bool CommitRequested);
 }
