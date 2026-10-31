@@ -11,8 +11,7 @@ namespace GameGuild.Commerce.Payments;
 ///     weak weight; absent outcomes (null) contribute nothing, so flows without
 ///     verification data stay unaffected.
 /// </summary>
-public sealed class AvsCvvFraudSignalProvider(
-    ILogger<AvsCvvFraudSignalProvider> logger) : IFraudSignalProvider
+public sealed class AvsCvvFraudSignalProvider : IFraudSignalProvider
 {
     private const string AvsSignalType = "Avs.Outcome";
     private const string CvvSignalType = "Cvv.Outcome";

@@ -6,6 +6,17 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Command to create a new subscription
 /// </summary>
+/// <param name="TenantId">Tenant the subscription belongs to.</param>
+/// <param name="PlanId">Plan the subscription is created on.</param>
+/// <param name="CreatedByUserId">User creating the subscription.</param>
+/// <param name="BillingCycle">Billing cycle (Monthly, Yearly, ...).</param>
+/// <param name="Amount">Subscription amount.</param>
+/// <param name="FulfilledOrderId">Optional fulfilled order that triggered the subscription (Order→Subscription causality).</param>
+/// <param name="StartDate">Optional start date; defaults to now.</param>
+/// <param name="TrialDays">Optional trial period in days.</param>
+/// <param name="PromoCodes">Optional promo codes applied at creation (issue #418).</param>
+/// <param name="PromoCodeIdempotencyKey">Optional replay-protection key for the promo application.</param>
+/// <param name="ProductId">Optional product context for product-scoped promo codes.</param>
 /// <param name="FraudCountry">Optional ISO 3166-1 alpha-2 billing country; feeds the creation-time fraud signals (issue #409).</param>
 /// <param name="FraudSourceIpAddress">Optional client IP of the creation attempt; feeds the IP blacklist and GeoIP fraud signals (issue #409).</param>
 /// <param name="FraudDeviceFingerprint">Optional device fingerprint; feeds the device blacklist fraud signal (issue #409).</param>

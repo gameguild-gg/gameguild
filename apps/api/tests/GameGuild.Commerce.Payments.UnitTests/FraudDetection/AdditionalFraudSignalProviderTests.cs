@@ -119,7 +119,7 @@ public class AdditionalFraudSignalProviderTests
     public async Task AvsCvv_Should_Fire_Strongly_On_Mismatch()
     {
         var options = Options(new FraudAssessmentOptions());
-        var provider = new AvsCvvFraudSignalProvider(NullLogger<AvsCvvFraudSignalProvider>.Instance);
+        var provider = new AvsCvvFraudSignalProvider();
 
         var signals = await provider.EvaluateAsync(
             Context(avs: FraudVerificationOutcome.Mismatch, cvv: FraudVerificationOutcome.Mismatch),
@@ -134,7 +134,7 @@ public class AdditionalFraudSignalProviderTests
     public async Task AvsCvv_Should_Fire_Weakly_On_NotChecked_And_Not_At_All_On_Match_Or_Absent()
     {
         var options = Options(new FraudAssessmentOptions());
-        var provider = new AvsCvvFraudSignalProvider(NullLogger<AvsCvvFraudSignalProvider>.Instance);
+        var provider = new AvsCvvFraudSignalProvider();
 
         var notChecked = await provider.EvaluateAsync(
             Context(avs: FraudVerificationOutcome.NotChecked), options);
