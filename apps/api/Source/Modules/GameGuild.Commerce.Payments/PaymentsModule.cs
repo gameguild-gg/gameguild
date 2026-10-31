@@ -128,6 +128,15 @@ public static class PaymentsModule
         // high-risk billing countries and the IP/device/email blacklist attributes.
         services.AddScoped<IFraudSignalProvider, DisposableEmailFraudSignalProvider>();
         services.AddScoped<IFraudSignalProvider, HighRiskCountryFraudSignalProvider>();
+        // Fraud model expansion (issue #409 remainder): high-risk card BIN ranges,
+        // server-known AVS/CVV outcomes, and GeoIP anonymizer/timezone signals reusing
+        // the platform geolocation provider's MaxMind anonymizer traits.
+        services.AddScoped<IFraudSignalProvider, BinRangeFraudSignalProvider>();
+        services.AddScoped<IFraudSignalProvider, AvsCvvFraudSignalProvider>();
+        services.AddScoped<IFraudSignalProvider, GeoIpFraudSignalProvider>();
+        // NoOp fallback keeps the GeoIP signal provider resolvable (and silent) in hosts
+        // that have not registered a real geolocation database.
+        services.TryAddSingleton<GameGuild.IGeolocationProvider>(GameGuild.NoOpGeolocationProvider.Instance);
 
         // Failure-code retry policy + automated retry queue (issue #415): classifies gateway
         // failure codes into retriable/non-retriable schedules, and (opt-in) polls due retries

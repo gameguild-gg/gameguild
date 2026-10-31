@@ -122,6 +122,42 @@ public sealed class FraudAssessmentOptions
     [Range(0, 100)]
     public int DisposableEmailWeight { get; set; } = 30;
 
+    /// <summary>
+    ///     High-risk card BIN entries (issue #409: BIN range signal). Each entry is either a
+    ///     6-8 digit prefix (<c>123456</c>) or an inclusive numeric range
+    ///     (<c>400000-400050</c>). Empty by default: deployments opt in with their own list.
+    /// </summary>
+    public string[] HighRiskCardBins { get; set; } = [];
+
+    /// <summary>Score contributed when the presented card BIN matches a high-risk entry
+    /// (issue #409).</summary>
+    [Range(0, 100)]
+    public int CardBinWeight { get; set; } = 20;
+
+    /// <summary>Score contributed per server-known AVS or CVV mismatch (issue #409).</summary>
+    [Range(0, 100)]
+    public int AvsCvvMismatchWeight { get; set; } = 35;
+
+    /// <summary>Score contributed per server-known AVS or CVV "not checked" result
+    /// (issue #409); deliberately small — absent checks are weak evidence.</summary>
+    [Range(0, 100)]
+    public int AvsCvvUncheckedWeight { get; set; } = 10;
+
+    /// <summary>
+    ///     Score contributed when the source IP resolves to a known anonymizing network —
+    ///     VPN endpoint, public proxy, Tor exit node or hosting provider — through the
+    ///     GeoIP anonymizer traits (issue #409).
+    /// </summary>
+    [Range(0, 100)]
+    public int AnonymizerWeight { get; set; } = 35;
+
+    /// <summary>
+    ///     Score contributed when the client-claimed IANA timezone disagrees with the
+    ///     GeoIP-resolved timezone of the source IP (issue #409).
+    /// </summary>
+    [Range(0, 100)]
+    public int TimezoneMismatchWeight { get; set; } = 20;
+
     /// <summary>Whether declining a manual fraud review automatically blacklists the
     /// confirmed-fraud attempt's listable attributes (issue #409: automatic addition on
     /// confirmed fraud).</summary>
@@ -182,6 +218,12 @@ public sealed class FraudAssessmentOptions
             HighRiskCountryWeight = overrideValues.HighRiskCountryWeight ?? HighRiskCountryWeight,
             DisposableEmailDomains = overrideValues.DisposableEmailDomains ?? DisposableEmailDomains,
             DisposableEmailWeight = overrideValues.DisposableEmailWeight ?? DisposableEmailWeight,
+            HighRiskCardBins = overrideValues.HighRiskCardBins ?? HighRiskCardBins,
+            CardBinWeight = overrideValues.CardBinWeight ?? CardBinWeight,
+            AvsCvvMismatchWeight = overrideValues.AvsCvvMismatchWeight ?? AvsCvvMismatchWeight,
+            AvsCvvUncheckedWeight = overrideValues.AvsCvvUncheckedWeight ?? AvsCvvUncheckedWeight,
+            AnonymizerWeight = overrideValues.AnonymizerWeight ?? AnonymizerWeight,
+            TimezoneMismatchWeight = overrideValues.TimezoneMismatchWeight ?? TimezoneMismatchWeight,
             AutoBlacklistOnFraudDecline = overrideValues.AutoBlacklistOnFraudDecline ?? AutoBlacklistOnFraudDecline,
             AutoBlacklistExpiryDays = overrideValues.AutoBlacklistExpiryDays ?? AutoBlacklistExpiryDays,
             ReviewThreshold = overrideValues.ReviewThreshold ?? ReviewThreshold,
@@ -239,6 +281,29 @@ public sealed class FraudAssessmentOverride
     /// <summary>See <see cref="FraudAssessmentOptions.DisposableEmailWeight"/>.</summary>
     [Range(0, 100)]
     public int? DisposableEmailWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.HighRiskCardBins"/>.</summary>
+    public string[]? HighRiskCardBins { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.CardBinWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? CardBinWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.AvsCvvMismatchWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? AvsCvvMismatchWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.AvsCvvUncheckedWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? AvsCvvUncheckedWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.AnonymizerWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? AnonymizerWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.TimezoneMismatchWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? TimezoneMismatchWeight { get; set; }
 
     /// <summary>See <see cref="FraudAssessmentOptions.MaxSignalScore"/>.</summary>
     [Range(1, 100)]

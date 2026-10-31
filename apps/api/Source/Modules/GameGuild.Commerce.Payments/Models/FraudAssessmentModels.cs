@@ -53,6 +53,23 @@ public enum FraudReviewStatus
 /// <param name="Details">Bounded JSON details describing why the signal fired.</param>
 public sealed record FraudSignal(string SignalType, int Weight, string Details);
 
+/// <summary>
+///     Outcome of a cardholder-verification check reported for an attempt (issue #409:
+///     AVS/CVV mismatch signals). Values are server-side facts (gateway verification
+///     results), never client self-reporting.
+/// </summary>
+public enum FraudVerificationOutcome
+{
+    /// <summary>The check matched the issuer's records.</summary>
+    Match = 0,
+
+    /// <summary>The check explicitly mismatched.</summary>
+    Mismatch = 1,
+
+    /// <summary>The check was performed and the issuer returned "not checked"/"not applicable".</summary>
+    NotChecked = 2
+}
+
 /// <summary>The payment attempt being assessed, scoped to one tenant.</summary>
 /// <param name="TenantId">Tenant the attempt belongs to; all signal queries are scoped to it.</param>
 /// <param name="PaymentId">Payment row created for this attempt; excluded from its own velocity counts.</param>
@@ -69,6 +86,16 @@ public sealed record FraudSignal(string SignalType, int Weight, string Details);
 /// <param name="SourceIpAddress">Optional client IP the attempt originated from (issue #409: IP blacklist signal).</param>
 /// <param name="DeviceFingerprint">Optional device fingerprint presented with the attempt (issue #409: device blacklist signal).</param>
 /// <param name="PayerEmail">Optional payer email address on the attempt (issue #409: disposable-email and email blacklist signals).</param>
+/// <param name="CardBin">
+///     Optional 6-8 digit Bank Identification Number prefix of the presented card
+///     (issue #409: high-risk BIN range signal). PCI-permitted non-sensitive prefix.
+/// </param>
+/// <param name="AvsOutcome">Optional server-known Address Verification System result (issue #409).</param>
+/// <param name="CvvOutcome">Optional server-known card security code result (issue #409).</param>
+/// <param name="ClientTimezone">
+///     Optional IANA timezone the client claims to be in (issue #409: timezone-vs-IP
+///     mismatch signal). Compared against the GeoIP-resolved timezone of the source IP.
+/// </param>
 public sealed record FraudSignalContext(
     Guid TenantId,
     Guid PaymentId,
@@ -81,7 +108,11 @@ public sealed record FraudSignalContext(
     string? Country = null,
     string? SourceIpAddress = null,
     string? DeviceFingerprint = null,
-    string? PayerEmail = null);
+    string? PayerEmail = null,
+    string? CardBin = null,
+    FraudVerificationOutcome? AvsOutcome = null,
+    FraudVerificationOutcome? CvvOutcome = null,
+    string? ClientTimezone = null);
 
 /// <summary>Aggregate fraud assessment for one payment attempt.</summary>
 /// <param name="TenantId">Tenant the assessment belongs to.</param>
