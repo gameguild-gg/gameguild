@@ -8275,7 +8275,7 @@ export const getBillingPaymentMethodsEndpoint = {
 /**
  * Register a payment method from a tokenized gateway result.
  *
- * Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.
+ * Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider, and an optional MethodType hint (card, bank_account, paypal, apple_pay, google_pay, wallet) states the family the token vaults. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.
  */
 export interface PostBillingPaymentMethodsInput {
   body?: Types.CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody;
@@ -8355,6 +8355,59 @@ export const postBillingPaymentMethodsSetDefaultEndpoint = {
   operationId: 'postBillingPaymentMethodsSetDefault' as const,
   method: 'POST' as const,
   path: '/api/v1/billing/payment-methods/{paymentMethodId}:set-default' as const,
+  tags: ['CommercePaymentsBillingPaymentMethods'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Current micro-deposit verification state of a bank-account payment method.
+ *
+ * Returns the micro-deposit verification state of a saved bank-account payment method (none, pending, verified, expired or locked) with the challenge deadline and remaining attempts. Owner or system administrator only.
+ */
+export interface GetBillingPaymentMethodsBankVerificationInput {
+  paymentMethodId: string;
+}
+export type GetBillingPaymentMethodsBankVerificationOutput = Types.CommercePaymentsBankAccountVerificationStatusDto;
+export const getBillingPaymentMethodsBankVerificationEndpoint = {
+  operationId: 'getBillingPaymentMethodsBankVerification' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/payment-methods/{paymentMethodId}/bank-verification' as const,
+  tags: ['CommercePaymentsBillingPaymentMethods'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Initiate micro-deposit verification: two random deposits ($0.01-$0.99) are
+ * generated; only salted hashes are stored.
+ *
+ * Generates two random micro-deposits ($0.01-$0.99) for a saved bank-account payment method and returns them once (only salted hashes are stored). The owner has 3 business days and at most 3 failed echo attempts. Idempotent while a challenge is open. Subject to the configurable MFA step-up policy.
+ */
+export interface PostBillingPaymentMethodsBankVerificationInitiateInput {
+  paymentMethodId: string;
+}
+export type PostBillingPaymentMethodsBankVerificationInitiateOutput = Types.CommercePaymentsBankAccountVerificationInitiationDto;
+export const postBillingPaymentMethodsBankVerificationInitiateEndpoint = {
+  operationId: 'postBillingPaymentMethodsBankVerificationInitiate' as const,
+  method: 'POST' as const,
+  path: '/api/v1/billing/payment-methods/{paymentMethodId}/bank-verification/initiate' as const,
+  tags: ['CommercePaymentsBillingPaymentMethods'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Echo the two observed micro-deposit amounts to verify the bank account.
+ *
+ * Echoes the two micro-deposit amounts observed on the bank statement. Both must match within the 3-business-day deadline and the 3-attempt cap; success marks the bank account verified and therefore chargeable. Subject to the configurable MFA step-up policy.
+ */
+export interface PostBillingPaymentMethodsBankVerificationVerifyInput {
+  paymentMethodId: string;
+  body?: Types.CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody;
+}
+export type PostBillingPaymentMethodsBankVerificationVerifyOutput = Types.CommercePaymentsBankAccountVerificationStatusDto;
+export const postBillingPaymentMethodsBankVerificationVerifyEndpoint = {
+  operationId: 'postBillingPaymentMethodsBankVerificationVerify' as const,
+  method: 'POST' as const,
+  path: '/api/v1/billing/payment-methods/{paymentMethodId}/bank-verification/verify' as const,
   tags: ['CommercePaymentsBillingPaymentMethods'] as const,
   requiresAuth: true,
 } as const;
@@ -33349,6 +33402,9 @@ export const endpoints = {
   putBillingPaymentMethods: putBillingPaymentMethodsEndpoint,
   deleteBillingPaymentMethods: deleteBillingPaymentMethodsEndpoint,
   postBillingPaymentMethodsSetDefault: postBillingPaymentMethodsSetDefaultEndpoint,
+  getBillingPaymentMethodsBankVerification: getBillingPaymentMethodsBankVerificationEndpoint,
+  postBillingPaymentMethodsBankVerificationInitiate: postBillingPaymentMethodsBankVerificationInitiateEndpoint,
+  postBillingPaymentMethodsBankVerificationVerify: postBillingPaymentMethodsBankVerificationVerifyEndpoint,
   getBillingPricingDiscountsLedgerForGetBillingPricingDiscountsLedger: getBillingPricingDiscountsLedgerForGetBillingPricingDiscountsLedgerEndpoint,
   postBillingPricingDiscountsLedgerValidateDrift: postBillingPricingDiscountsLedgerValidateDriftEndpoint,
   getBillingPricingDiscountsLedgerForGetBillingPricingDiscountsLedgerByEntryId:
