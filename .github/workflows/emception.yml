@@ -418,7 +418,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="$(node -p "require('./tools/emception/packages/core/package.json').version")"
-          TAG="emception-v${VERSION}"
+          TAG="v${VERSION}"
           if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
             echo "${TAG} already exists; skipping tag creation."
           else
