@@ -188,6 +188,85 @@ export class CommercePaymentsBillingRevenueAuditingModule {
   }
 
   /**
+   * Currency conversion costs analysis (issue #412 spec G): for every non-base
+   * transacted currency, the base value of its net volume at the market rate versus at
+   * the active operator override rate, quantifying what pinned rates cost per market.
+   *
+   * Per-currency comparison of the net volume converted at the market rate versus the operator override rate, with the base-currency cost of each pinned rate.
+   */
+  async getBillingRevenueAuditingConversionCosts(query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    tenantId?: string;
+  }): Promise<Result<Types.CommercePaymentsConversionCostReport, ApiError>> {
+    const url = '/api/v1/billing/revenue/auditing/conversion-costs';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsConversionCostReportSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Base-currency revenue report and reconciliation (issue #412 specs F/G): per-currency
+   * totals of the period converted into the tenant base currency at the period-end rate,
+   * with reconciled grand totals in base currency. Currencies without a period-end
+   * quotation are listed but excluded from base totals (fail closed, never merged).
+   *
+   * Per-currency revenue totals converted into the tenant base currency at the period-end rate with reconciled grand totals — the accounting reconciliation of multi-currency revenue to base.
+   */
+  async getBillingRevenueAuditingCurrenciesBase(query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    tenantId?: string;
+  }): Promise<Result<Types.CommercePaymentsBaseCurrencyRevenueReport, ApiError>> {
+    const url = '/api/v1/billing/revenue/auditing/currencies/base';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsBaseCurrencyRevenueReportSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * CSV (RFC 4180) export of the base-currency revenue report for external accounting.
+   *
+   * Serializes the base-currency revenue report (per-currency totals, applied rates and base equivalents) as RFC 4180 CSV.
+   */
+  async getBillingRevenueAuditingCurrenciesBaseExport(query?: { fromUtc?: string; toUtc?: string; tenantId?: string }): Promise<Result<void, ApiError>> {
+    const url = '/api/v1/billing/revenue/auditing/currencies/base/export';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * Most-transacted currencies over an inclusive period, ranked by transaction count.
    *
    * Returns the currencies of the inclusive period ranked by revenue-event transaction count (ties broken by net volume then code), with per-currency credit, debit and net totals. Amounts are never consolidated across currencies.

@@ -317,7 +317,9 @@ public sealed class PriceLocalizationRecalculationService(
             string? note = null;
             if (applicable is { IsAutoCalculated: false })
             {
-                proposed = null;
+                // The override is preserved, but the preview still shows the
+                // auto-calculated proposal beside it (spec C: override vs auto in
+                // the admin surface) so operators can compare both values.
                 note = "manual-override-preserved";
             }
             else if (proposed is null)

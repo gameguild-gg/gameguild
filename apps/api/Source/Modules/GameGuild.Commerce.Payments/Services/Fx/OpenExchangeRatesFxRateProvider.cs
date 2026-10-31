@@ -54,7 +54,7 @@ public sealed class OpenExchangeRatesFxRateProvider(
         var path = asOfUtc is null
             ? "latest.json"
             : $"historical/{asOfUtc.Value.UtcDateTime:yyyy-MM-dd}.json";
-        var url = $"{settings.BaseUrl.TrimEnd('/')}/{path}?app_id={Uri.EscapeDataString(settings.AppId)}&base={baseCurrency}";
+        var url = $"{settings.BaseUrl.TrimEnd('/')}/{path}?app_id={Uri.EscapeDataString(appId)}&base={baseCurrency}";
 
         using var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
         var raw = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);

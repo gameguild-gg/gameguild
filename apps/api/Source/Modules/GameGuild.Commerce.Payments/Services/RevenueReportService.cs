@@ -555,7 +555,7 @@ public sealed partial class RevenueReportService(
                 Format(entry.DebitTotal),
                 Format(entry.NetTotal),
                 entry.EventCount,
-                entry.Converted,
+                entry.Converted ? "true" : "false",
                 entry.RateUsed is { } rate ? rate.ToString("0.############", CultureInfo.InvariantCulture) : string.Empty,
                 entry.RateEffectiveDateUtc is { } effectiveDate ? effectiveDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : string.Empty,
                 entry.RateProvider is null ? string.Empty : Escape(entry.RateProvider),

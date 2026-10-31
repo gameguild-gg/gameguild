@@ -273,6 +273,10 @@ public sealed class FxRateSyncService(
                 IsOverride = false,
             }, cancellationToken).ConfigureAwait(false);
             applied++;
+            // A newly introduced quotation changes the persisted pricing state from
+            // "no rate" to a value — count it as changed so markets that had no rate
+            // (first sync, newly listed currency) also get their auto prices refreshed.
+            changed++;
         }
 
         run.RatesApplied = applied;

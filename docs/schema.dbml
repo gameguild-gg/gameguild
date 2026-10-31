@@ -3163,6 +3163,8 @@ Table "fx_rate_sync_runs" {
   "Status" integer [not null]
   "RatesApplied" integer [not null]
   "RatesChanged" integer [not null]
+  "AnomalousRatesSkipped" integer [not null]
+  "AnomalyDetails" "character varying(8000)"
   "EffectiveDateUtc" timestamp
   "ConsecutiveFailureCount" integer [not null]
   "ErrorMessage" "character varying(4000)"
@@ -4834,6 +4836,64 @@ Table "posts" {
     MediaAssetReferenceId [name: "IX_posts_MediaAssetReferenceId"]
     TenantId [name: "IX_posts_TenantId"]
     Visibility [name: "IX_posts_Visibility"]
+  }
+}
+
+Table "price_localizations" {
+  "Id" uuid [not null]
+  "TenantId" uuid [not null]
+  "PlanId" uuid [not null]
+  "CurrencyCode" "character varying(3)" [not null]
+  "LocalizedPrice" numeric(28,12) [not null]
+  "IsAutoCalculated" boolean [not null]
+  "LastCalculatedAt" timestamp
+  "ExchangeRateUsed" numeric(28,12)
+  "EffectiveDateUtc" timestamp [not null]
+  "ExpiryDateUtc" timestamp
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+
+  Indexes {
+    Id [pk, name: "PK_price_localizations"]
+    CurrencyCode [name: "IX_price_localizations_CurrencyCode"]
+    EffectiveDateUtc [name: "IX_price_localizations_EffectiveDateUtc"]
+    IsAutoCalculated [name: "IX_price_localizations_IsAutoCalculated"]
+    PlanId [name: "IX_price_localizations_PlanId"]
+    (TenantId, PlanId, CurrencyCode, EffectiveDateUtc) [unique, name: "ix_price_localizations_tenant_plan_currency_effective"]
+    TenantId [name: "IX_price_localizations_TenantId"]
+  }
+}
+
+Table "price_recalculation_runs" {
+  "Id" uuid [not null]
+  "TenantId" uuid [not null]
+  "PlanId" uuid
+  "Status" "character varying(20)" [not null]
+  "TotalItems" integer [not null]
+  "CompletedItems" integer [not null]
+  "UpdatedPrices" integer [not null]
+  "PreservedOverrides" integer [not null]
+  "SkippedForMissingRate" integer [not null]
+  "BeforeSnapshot" "character varying(1000000)" [not null]
+  "TriggeredByUserId" uuid
+  "TriggerReason" "character varying(200)" [not null]
+  "StartedAtUtc" timestamp [not null]
+  "CompletedAtUtc" timestamp
+  "RolledBackAtUtc" timestamp
+  "RolledBackByUserId" uuid
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+
+  Indexes {
+    Id [pk, name: "PK_price_recalculation_runs"]
+    StartedAtUtc [name: "IX_price_recalculation_runs_StartedAtUtc"]
+    Status [name: "IX_price_recalculation_runs_Status"]
+    TenantId [name: "IX_price_recalculation_runs_TenantId"]
+    TriggerReason [name: "IX_price_recalculation_runs_TriggerReason"]
   }
 }
 
