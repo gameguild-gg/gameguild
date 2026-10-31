@@ -108,6 +108,7 @@ public static class AnonymousEndpointRegistry
             ["ProductCategoriesController.GetCategory"] = "Public catalog category detail.",
             ["ProductRecommendationsController.GetRecommendations"] = "Public rule-based frequently-bought-together and bundle-savings hints from published catalog data.",
             ["SubscriptionPlansCrudController.GetSubscriptionPlans"] = "Public pricing plans for the marketing site.",
+            ["CurrenciesController.GetSuggestion"] = "Non-personalized currency suggestion from the edge-proxy country code (a country, never an IP); nothing is stored — GDPR data-minimized display preference for public pricing pages.",
             ["ProgramCrudController.GetPublicPrograms"] = "Public course catalog; only published programs are returned.",
             ["ProgramCrudController.GetProgramBySlug"] = "Public course detail; only published programs are returned.",
             ["ProgramCrudController.GetLinkedProducts"] = "Public storefront products linked to a published course.",

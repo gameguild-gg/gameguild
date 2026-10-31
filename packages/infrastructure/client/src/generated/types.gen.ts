@@ -2612,6 +2612,64 @@ export interface CommercePaymentsBankAccountVerificationStatusDto {
   verifiedAtUtc?: string | null;
 }
 
+/** One per-currency row of the base-currency revenue report (issue #412 spec G). */
+export interface CommercePaymentsBaseCurrencyRevenueEntry {
+  /** Credit total expressed in the base currency. */
+  baseCreditTotal?: number | null;
+  /** Debit total expressed in the base currency. */
+  baseDebitTotal?: number | null;
+  /** Net revenue expressed in the base currency. */
+  baseNetTotal?: number | null;
+  /** Whether the base-currency figures could be computed (a quotation existed at the period-end rate). */
+  converted?: boolean;
+  /** Gross credits in the transaction currency. */
+  creditTotal?: number;
+  /** Transaction currency of the row. */
+  currency?: string | null;
+  /** Gross debits (refunds) in the transaction currency. */
+  debitTotal?: number;
+  /** Revenue events behind the row. */
+  eventCount?: number;
+  /** Net revenue in the transaction currency. */
+  netTotal?: number;
+  /** Why the row is unconverted, when applicable. */
+  note?: string | null;
+  /** Effective date of the applied quotation. */
+  rateEffectiveDateUtc?: string | null;
+  /** Provider of the applied quotation. */
+  rateProvider?: string | null;
+  /** Quotation applied (transaction-currency units per one base unit) when converted. */
+  rateUsed?: number | null;
+}
+
+/** Base-currency revenue report + reconciliation (issue #412 specs F/G): every transacted
+currency of the period with its per-currency totals and the base-currency equivalent
+computed at the period-end rate, plus the reconciled grand totals in base currency.
+Unconvertible currencies are listed fail-closed (never silently merged) and excluded
+from the base totals. */
+export interface CommercePaymentsBaseCurrencyRevenueReport {
+  /** Human-readable attestation naming the rate basis per currency. */
+  attestation?: string | null;
+  /** Grand credit total in base currency (converted rows only). */
+  baseCreditTotal?: number;
+  /** Tenant base (accounting) currency the report is expressed in. */
+  baseCurrency?: string | null;
+  /** Grand debit total in base currency (converted rows only). */
+  baseDebitTotal?: number;
+  /** Grand net total in base currency (converted rows only). */
+  baseNetTotal?: number;
+  /** One row per transacted currency. */
+  entries?: CommercePaymentsBaseCurrencyRevenueEntry[] | null;
+  /** Inclusive period start (UTC). */
+  fromUtc?: string;
+  /** Report generation instant. */
+  generatedAtUtc?: string;
+  /** Inclusive period end (UTC). */
+  toUtc?: string;
+  /** Currencies that could not be converted (no quotation at period end). */
+  unconvertedCurrencies?: number;
+}
+
 /** Data model for Commerce Payments Billing Charges Controller+Cancel Billing Charge Request. */
 export interface CommercePaymentsBillingChargesControllerCancelBillingChargeInput {
   canceledBy?: string | null;
@@ -2644,6 +2702,51 @@ export interface CommercePaymentsCalculateTaxInput {
   jurisdictionCode: string | null;
   productCategory?: string | null;
   transactionDate?: string | null;
+}
+
+/** Request payload for clearing manual overrides. */
+export interface CommercePaymentsClearLocalizedPriceInput {
+  reason?: string | null;
+}
+
+/** One per-currency row of the conversion-cost analysis (issue #412 spec G). */
+export interface CommercePaymentsConversionCostEntry {
+  /** Net volume converted to base at the market rate. */
+  baseAtMarketRate?: number | null;
+  /** Net volume converted to base at the override rate. */
+  baseAtOverrideRate?: number | null;
+  /** Absolute base-currency difference between the two conversion legs — the pricing decision's conversion cost. */
+  costInBase?: number | null;
+  /** Transaction currency of the row. */
+  currency?: string | null;
+  /** Market quotation at period end (transaction-currency units per one base unit). */
+  marketRate?: number | null;
+  /** Effective date of the market quotation. */
+  marketRateEffectiveDateUtc?: string | null;
+  /** Net revenue volume in the transaction currency over the period. */
+  netVolume?: number;
+  /** Why parts of the row are unavailable (e.g. "no-market-rate"). */
+  note?: string | null;
+  /** Active operator override quotation for the same pair, when any. */
+  overrideRate?: number | null;
+}
+
+/** Currency conversion costs analysis (issue #412 spec G): for every non-base transacted
+currency, the base-currency value of its net volume at the market rate versus at the
+operator override rate — quantifying what pinned rates cost (or save) per market. */
+export interface CommercePaymentsConversionCostReport {
+  /** Tenant base currency. */
+  baseCurrency?: string | null;
+  /** One row per transacted non-base currency. */
+  entries?: CommercePaymentsConversionCostEntry[] | null;
+  /** Inclusive period start (UTC). */
+  fromUtc?: string;
+  /** Report generation instant. */
+  generatedAtUtc?: string;
+  /** Sum of per-currency costs in base currency. */
+  totalCostInBase?: number;
+  /** Inclusive period end (UTC). */
+  toUtc?: string;
 }
 
 /** Request payload for the currency conversion endpoint. */
@@ -2796,6 +2899,22 @@ export interface CommercePaymentsCurrencyPopularityReport {
   generatedAtUtc?: string;
   /** End of the period (inclusive). */
   toUtc?: string;
+}
+
+/** Result of the location-based currency suggestion (issue #412 spec E). */
+export interface CommercePaymentsCurrencySuggestionDto {
+  /** Detected ISO 3166-1 alpha-2 country, when available. */
+  country?: string | null;
+  /** Why a non-country currency was suggested, when applicable. */
+  fallbackReason?: string | null;
+  /** Whether the suggested currency is enabled for the caller's tenant (false when anonymous). */
+  isEnabledForTenant?: boolean;
+  /** GDPR data-minimization notice: nothing about the caller is stored. */
+  privacyNotice?: string | null;
+  /** How the suggestion was produced ("edge-header", "tenant-base", "first-enabled", "default"). */
+  source?: string | null;
+  /** ISO 4217 code suggested for the caller. */
+  suggestedCurrency?: string | null;
 }
 
 /** Customer types */
@@ -3405,6 +3524,40 @@ export interface CommercePaymentsFxRateSyncRunDto {
 /** Outcome values for an FX sync run. */
 export type CommercePaymentsFxRateSyncRunStatus = 'Succeeded' | 'Failed' | 'SucceededStale';
 
+/** One row of the FX rate variance report (issue #412 spec G). */
+export interface CommercePaymentsFxRateVarianceEntry {
+  /** Override base code. */
+  baseCurrency?: string | null;
+  /** Whether the variance exceeds the configured anomaly threshold. */
+  exceedsThreshold?: boolean;
+  /** Newest synced market quotation for the same direction (actual rate). */
+  marketRate?: number | null;
+  /** Effective date of the market quotation. */
+  marketRateEffectiveDateUtc?: string | null;
+  /** Provider of the market quotation. */
+  marketRateProvider?: string | null;
+  /** When the override was last set. */
+  overrideAsOfUtc?: string;
+  /** Override expiry, when set. */
+  overrideExpiresAtUtc?: string | null;
+  /** Active operator override (expected rate). */
+  overrideRate?: number;
+  /** Override quote code. */
+  quoteCurrency?: string | null;
+  /** |override − market| / market × 100, when both exist. */
+  variancePercent?: number | null;
+}
+
+/** FX rate variance report: actual (market) vs expected (operator override) rates. */
+export interface CommercePaymentsFxRateVarianceReport {
+  /** One row per active override. */
+  entries?: CommercePaymentsFxRateVarianceEntry[] | null;
+  /** Report generation instant. */
+  generatedAtUtc?: string;
+  /** Configured variance threshold (%). */
+  thresholdPercent?: number;
+}
+
 /** Result of GameGuild.Commerce.Payments.GetFxSyncStatusQuery. */
 export interface CommercePaymentsFxSyncStatusDto {
   /** Non-expired overrides. */
@@ -3650,6 +3803,34 @@ export interface CommercePaymentsGiftsControllerPurchaseGiftRequestBody {
 
 /** Gift subscription status machine (Purchased → Delivered → Redeemed / Expired, plus Refunded). */
 export type CommercePaymentsGiftStatus = 'Purchased' | 'Delivered' | 'Redeemed' | 'Expired' | 'Refunded';
+
+/** One preview row: what a recalculation pass would do, before it is applied. */
+export interface CommercePaymentsLocalizedPricePreviewItem {
+  /** Plan monthly price in the plan currency. */
+  baseMonthlyPrice?: number;
+  /** Plan currency code. */
+  basePlanCurrency?: string | null;
+  /** Localized ISO 4217 code. */
+  currencyCode?: string | null;
+  /** Effective date of the current row. */
+  currentEffectiveDateUtc?: string | null;
+  /** Expiry of the current row, when set. */
+  currentExpiryDateUtc?: string | null;
+  /** Currently effective localized price, when a row applies. */
+  currentPrice?: number | null;
+  /** Proposed minus current price; null when no comparison is possible. */
+  delta?: number | null;
+  /** Whether the effective row is a manual override (recalculation preserves it). */
+  isManualOverride?: boolean;
+  /** Why no proposal is present (e.g. "manual-override-preserved", "no-rate"). */
+  note?: string | null;
+  /** Plan the price belongs to. */
+  planId?: string;
+  /** FX-calculated price the pass would store (absent for overrides and missing rates). */
+  proposedPrice?: number | null;
+  /** Quotation that produces ProposedPrice (target units per one plan-currency unit). */
+  rateUsed?: number | null;
+}
 
 /** Data model for Commerce Payments Lock Wallet Request. */
 export interface CommercePaymentsLockWalletInput {
@@ -4067,6 +4248,81 @@ export interface CommercePaymentsPaymentsControllerRefundInput {
 export type CommercePaymentsPaymentStatus =
   'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'Cancelled' | 'RequiresAction' | 'Refunded' | 'Disputed' | 'PartiallyRefunded';
 
+/** Admin view of one (plan, currency) localization: override vs auto-calculated. */
+export interface CommercePaymentsPlanLocalizedPriceDto {
+  /** Quotation behind AutoPriceToday, when available. */
+  autoPriceRate?: number | null;
+  /** What the FX-calculated auto price would be right now (reference for override comparison). */
+  autoPriceToday?: number | null;
+  /** Localized ISO 4217 code. */
+  currencyCode?: string | null;
+  /** Effective date of the row. */
+  effectiveDateUtc?: string | null;
+  /** Currently effective localized price, when a row applies. */
+  effectivePrice?: number | null;
+  /** Rate that produced the last auto calculation. */
+  exchangeRateUsed?: number | null;
+  /** Expiry of the row, when set. */
+  expiryDateUtc?: string | null;
+  /** Whether the effective row is a manual override. */
+  isManualOverride?: boolean;
+  /** Moment of the last auto calculation. */
+  lastCalculatedAt?: string | null;
+  /** Why a reference price is absent (e.g. "no-rate"). */
+  note?: string | null;
+  /** Plan the row belongs to. */
+  planId?: string;
+}
+
+/** Outcome summary of one localized-price recalculation pass. */
+export interface CommercePaymentsPriceRecalculationOutcome {
+  /** Candidates processed. */
+  completedItems?: number;
+  /** Manual overrides deliberately left untouched. */
+  preservedOverrides?: number;
+  /** Progress/audit run row created for the pass. */
+  runId?: string;
+  /** Candidates kept at their prior value because no FX quotation was available. */
+  skippedForMissingRate?: number;
+  status?: CommercePaymentsPriceRecalculationRunStatus;
+  /** Candidate (plan, currency) pairs considered. */
+  totalItems?: number;
+  /** Auto rows whose stored value changed. */
+  updatedPrices?: number;
+}
+
+/** One recalculation run as exposed to the admin surface (progress + outcome). */
+export interface CommercePaymentsPriceRecalculationRunDto {
+  /** Run identifier. */
+  id?: string;
+  /** Completion instant; null while running. */
+  completedAtUtc?: string | null;
+  /** Processed count (progress). */
+  completedItems?: number;
+  /** Plan scope; null = every plan. */
+  planId?: string | null;
+  /** Manual overrides preserved. */
+  preservedOverrides?: number;
+  /** Rollback instant, when rolled back. */
+  rolledBackAtUtc?: string | null;
+  /** Candidates skipped for lack of a quotation. */
+  skippedForMissingRate?: number;
+  /** Start instant. */
+  startedAtUtc?: string;
+  status?: CommercePaymentsPriceRecalculationRunStatus;
+  /** Candidate count. */
+  totalItems?: number;
+  /** Acting account; null = FX sync worker. */
+  triggeredByUserId?: string | null;
+  /** Why the run happened. */
+  triggerReason?: string | null;
+  /** Auto rows changed. */
+  updatedPrices?: number;
+}
+
+/** Outcome values for a localized-price recalculation run. */
+export type CommercePaymentsPriceRecalculationRunStatus = 'Running' | 'Succeeded' | 'Failed' | 'RolledBack';
+
 /** Add-on priced independently of the plan (issue #417): own unit price, own quantity,
 own currency (converted to the calculation currency through the FX core when they differ). */
 export interface CommercePaymentsPricingAddOnInput {
@@ -4314,12 +4570,27 @@ export interface CommercePaymentsProcessRefundResult {
   status: CommercePaymentsTransactionStatus;
 }
 
+/** HTTP request body for FX provider credential provisioning: carries only the plaintext
+API key; the provider arrives on the route. The value is encrypted (DataProtection,
+AES-256 under the application key ring) before it touches the database and is never
+echoed back or logged. */
+export interface CommercePaymentsProvisionFxProviderApiKeyInput {
+  /** Plaintext provider API key. */
+  value?: string | null;
+}
+
 /** HTTP request body for credential provisioning: carries only the plaintext value; the
 provider and slot arrive on the route so they never duplicate (and the value is never
 echoed back). */
 export interface CommercePaymentsProvisionGatewayCredentialInput {
   /** Plaintext credential value. */
   value?: string | null;
+}
+
+/** Request payload for the bulk recalculation command. */
+export interface CommercePaymentsRecalculateLocalizedPricesInput {
+  planId?: string | null;
+  reason?: string | null;
 }
 
 /** Referral tracking record (issue #410 v1). One opaque referral code is generated per
@@ -4976,6 +5247,19 @@ export interface CommercePaymentsRevenueTrendReport {
   totalsByCurrency?: CommercePaymentsRevenueTrendCurrencyTotal[] | null;
   /** End of the range (inclusive). */
   toUtc?: string;
+}
+
+/** Request payload for the rollback command. */
+export interface CommercePaymentsRollbackRecalculationInput {
+  reason?: string | null;
+}
+
+/** Request payload for the manual localized-price command. */
+export interface CommercePaymentsSetLocalizedPriceInput {
+  effectiveDateUtc?: string | null;
+  expiryDateUtc?: string | null;
+  localizedPrice?: number;
+  reason?: string | null;
 }
 
 /** Request payload for the manual FX rate override command. */
@@ -26954,10 +27238,15 @@ export let CommercePaymentsAccountCreditTypeSchema: z.ZodType<CommercePaymentsAc
 export let CommercePaymentsAppliedDiscountSchema: z.ZodType<CommercePaymentsAppliedDiscount>;
 export let CommercePaymentsBankAccountVerificationInitiationDtoSchema: z.ZodType<CommercePaymentsBankAccountVerificationInitiationDto>;
 export let CommercePaymentsBankAccountVerificationStatusDtoSchema: z.ZodType<CommercePaymentsBankAccountVerificationStatusDto>;
+export let CommercePaymentsBaseCurrencyRevenueEntrySchema: z.ZodType<CommercePaymentsBaseCurrencyRevenueEntry>;
+export let CommercePaymentsBaseCurrencyRevenueReportSchema: z.ZodType<CommercePaymentsBaseCurrencyRevenueReport>;
 export let CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCancelBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCreateBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerRefundBillingChargeInput>;
 export let CommercePaymentsCalculateTaxInputSchema: z.ZodType<CommercePaymentsCalculateTaxInput>;
+export let CommercePaymentsClearLocalizedPriceInputSchema: z.ZodType<CommercePaymentsClearLocalizedPriceInput>;
+export let CommercePaymentsConversionCostEntrySchema: z.ZodType<CommercePaymentsConversionCostEntry>;
+export let CommercePaymentsConversionCostReportSchema: z.ZodType<CommercePaymentsConversionCostReport>;
 export let CommercePaymentsConvertCurrencyInputSchema: z.ZodType<CommercePaymentsConvertCurrencyInput>;
 export let CommercePaymentsConvertCurrencyItemInputSchema: z.ZodType<CommercePaymentsConvertCurrencyItemInput>;
 export let CommercePaymentsCreateTaxJurisdictionInputSchema: z.ZodType<CommercePaymentsCreateTaxJurisdictionInput>;
@@ -26971,6 +27260,7 @@ export let CommercePaymentsCurrencyConversionResultSchema: z.ZodType<CommercePay
 export let CommercePaymentsCurrencyDisplayPreferencesInputSchema: z.ZodType<CommercePaymentsCurrencyDisplayPreferencesInput>;
 export let CommercePaymentsCurrencyPopularityEntrySchema: z.ZodType<CommercePaymentsCurrencyPopularityEntry>;
 export let CommercePaymentsCurrencyPopularityReportSchema: z.ZodType<CommercePaymentsCurrencyPopularityReport>;
+export let CommercePaymentsCurrencySuggestionDtoSchema: z.ZodType<CommercePaymentsCurrencySuggestionDto>;
 export let CommercePaymentsCustomerTypeSchema: z.ZodType<CommercePaymentsCustomerType>;
 export let CommercePaymentsDisableCurrencyInputSchema: z.ZodType<CommercePaymentsDisableCurrencyInput>;
 export let CommercePaymentsDiscountTypeSchema: z.ZodType<CommercePaymentsDiscountType>;
@@ -27021,6 +27311,8 @@ export let CommercePaymentsFxRateDtoSchema: z.ZodType<CommercePaymentsFxRateDto>
 export let CommercePaymentsFxRateSyncResultSchema: z.ZodType<CommercePaymentsFxRateSyncResult>;
 export let CommercePaymentsFxRateSyncRunDtoSchema: z.ZodType<CommercePaymentsFxRateSyncRunDto>;
 export let CommercePaymentsFxRateSyncRunStatusSchema: z.ZodType<CommercePaymentsFxRateSyncRunStatus>;
+export let CommercePaymentsFxRateVarianceEntrySchema: z.ZodType<CommercePaymentsFxRateVarianceEntry>;
+export let CommercePaymentsFxRateVarianceReportSchema: z.ZodType<CommercePaymentsFxRateVarianceReport>;
 export let CommercePaymentsFxSyncStatusDtoSchema: z.ZodType<CommercePaymentsFxSyncStatusDto>;
 export let CommercePaymentsGatewayAnalyticsReportSchema: z.ZodType<CommercePaymentsGatewayAnalyticsReport>;
 export let CommercePaymentsGatewayCircuitSnapshotSchema: z.ZodType<CommercePaymentsGatewayCircuitSnapshot>;
@@ -27037,6 +27329,7 @@ export let CommercePaymentsGiftPublicViewSchema: z.ZodType<CommercePaymentsGiftP
 export let CommercePaymentsGiftPurchaseResultSchema: z.ZodType<CommercePaymentsGiftPurchaseResult>;
 export let CommercePaymentsGiftsControllerPurchaseGiftRequestBodySchema: z.ZodType<CommercePaymentsGiftsControllerPurchaseGiftRequestBody>;
 export let CommercePaymentsGiftStatusSchema: z.ZodType<CommercePaymentsGiftStatus>;
+export let CommercePaymentsLocalizedPricePreviewItemSchema: z.ZodType<CommercePaymentsLocalizedPricePreviewItem>;
 export let CommercePaymentsLockWalletInputSchema: z.ZodType<CommercePaymentsLockWalletInput>;
 export let CommercePaymentsModelsAdjustWalletInputSchema: z.ZodType<CommercePaymentsModelsAdjustWalletInput>;
 export let CommercePaymentsModelsFreezeWalletInputSchema: z.ZodType<CommercePaymentsModelsFreezeWalletInput>;
@@ -27070,6 +27363,10 @@ export let CommercePaymentsPaymentsControllerCreateSetupIntentOutputSchema: z.Zo
 export let CommercePaymentsPaymentsControllerProcessPaymentInputSchema: z.ZodType<CommercePaymentsPaymentsControllerProcessPaymentInput>;
 export let CommercePaymentsPaymentsControllerRefundInputSchema: z.ZodType<CommercePaymentsPaymentsControllerRefundInput>;
 export let CommercePaymentsPaymentStatusSchema: z.ZodType<CommercePaymentsPaymentStatus>;
+export let CommercePaymentsPlanLocalizedPriceDtoSchema: z.ZodType<CommercePaymentsPlanLocalizedPriceDto>;
+export let CommercePaymentsPriceRecalculationOutcomeSchema: z.ZodType<CommercePaymentsPriceRecalculationOutcome>;
+export let CommercePaymentsPriceRecalculationRunDtoSchema: z.ZodType<CommercePaymentsPriceRecalculationRunDto>;
+export let CommercePaymentsPriceRecalculationRunStatusSchema: z.ZodType<CommercePaymentsPriceRecalculationRunStatus>;
 export let CommercePaymentsPricingAddOnInputSchema: z.ZodType<CommercePaymentsPricingAddOnInput>;
 export let CommercePaymentsPricingCalculationInputSchema: z.ZodType<CommercePaymentsPricingCalculationInput>;
 export let CommercePaymentsPricingCalculationResultSchema: z.ZodType<CommercePaymentsPricingCalculationResult>;
@@ -27083,7 +27380,9 @@ export let CommercePaymentsPricingTaxInfoSchema: z.ZodType<CommercePaymentsPrici
 export let CommercePaymentsPricingUsageChargeInputSchema: z.ZodType<CommercePaymentsPricingUsageChargeInput>;
 export let CommercePaymentsPricingUsageTierSchema: z.ZodType<CommercePaymentsPricingUsageTier>;
 export let CommercePaymentsProcessRefundResultSchema: z.ZodType<CommercePaymentsProcessRefundResult>;
+export let CommercePaymentsProvisionFxProviderApiKeyInputSchema: z.ZodType<CommercePaymentsProvisionFxProviderApiKeyInput>;
 export let CommercePaymentsProvisionGatewayCredentialInputSchema: z.ZodType<CommercePaymentsProvisionGatewayCredentialInput>;
+export let CommercePaymentsRecalculateLocalizedPricesInputSchema: z.ZodType<CommercePaymentsRecalculateLocalizedPricesInput>;
 export let CommercePaymentsReferralSchema: z.ZodType<CommercePaymentsReferral>;
 export let CommercePaymentsReferralFunnelMetricsSchema: z.ZodType<CommercePaymentsReferralFunnelMetrics>;
 export let CommercePaymentsReferralsControllerReferralCodeOutputSchema: z.ZodType<CommercePaymentsReferralsControllerReferralCodeOutput>;
@@ -27125,6 +27424,8 @@ export let CommercePaymentsRevenueReconciliationStatusSchema: z.ZodType<Commerce
 export let CommercePaymentsRevenueTrendCurrencyTotalSchema: z.ZodType<CommercePaymentsRevenueTrendCurrencyTotal>;
 export let CommercePaymentsRevenueTrendPointSchema: z.ZodType<CommercePaymentsRevenueTrendPoint>;
 export let CommercePaymentsRevenueTrendReportSchema: z.ZodType<CommercePaymentsRevenueTrendReport>;
+export let CommercePaymentsRollbackRecalculationInputSchema: z.ZodType<CommercePaymentsRollbackRecalculationInput>;
+export let CommercePaymentsSetLocalizedPriceInputSchema: z.ZodType<CommercePaymentsSetLocalizedPriceInput>;
 export let CommercePaymentsSetManualFxRateOverrideInputSchema: z.ZodType<CommercePaymentsSetManualFxRateOverrideInput>;
 export let CommercePaymentsTaxBreakdownSchema: z.ZodType<CommercePaymentsTaxBreakdown>;
 export let CommercePaymentsTaxCalculationResultSchema: z.ZodType<CommercePaymentsTaxCalculationResult>;
@@ -31462,6 +31763,44 @@ CommercePaymentsBankAccountVerificationStatusDtoSchema = z.object({
   verifiedAtUtc: z.string().datetime().nullable().optional(),
 });
 
+/** Zod schema for CommercePaymentsBaseCurrencyRevenueEntry. One per-currency row of the base-currency revenue report (issue #412 spec G). */
+CommercePaymentsBaseCurrencyRevenueEntrySchema = z.object({
+  baseCreditTotal: z.number().nullable().optional(),
+  baseDebitTotal: z.number().nullable().optional(),
+  baseNetTotal: z.number().nullable().optional(),
+  converted: z.boolean().optional(),
+  creditTotal: z.number().optional(),
+  currency: z.string().nullable().optional(),
+  debitTotal: z.number().optional(),
+  eventCount: z.number().int().optional(),
+  netTotal: z.number().optional(),
+  note: z.string().nullable().optional(),
+  rateEffectiveDateUtc: z.string().datetime().nullable().optional(),
+  rateProvider: z.string().nullable().optional(),
+  rateUsed: z.number().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsBaseCurrencyRevenueReport. Base-currency revenue report + reconciliation (issue #412 specs F/G): every transacted
+currency of the period with its per-currency totals and the base-currency equivalent
+computed at the period-end rate, plus the reconciled grand totals in base currency.
+Unconvertible currencies are listed fail-closed (never silently merged) and excluded
+from the base totals. */
+CommercePaymentsBaseCurrencyRevenueReportSchema = z.object({
+  attestation: z.string().nullable().optional(),
+  baseCreditTotal: z.number().optional(),
+  baseCurrency: z.string().nullable().optional(),
+  baseDebitTotal: z.number().optional(),
+  baseNetTotal: z.number().optional(),
+  entries: z
+    .array(z.lazy(() => CommercePaymentsBaseCurrencyRevenueEntrySchema))
+    .nullable()
+    .optional(),
+  fromUtc: z.string().datetime().optional(),
+  generatedAtUtc: z.string().datetime().optional(),
+  toUtc: z.string().datetime().optional(),
+  unconvertedCurrencies: z.number().int().optional(),
+});
+
 /** Zod schema for CommercePaymentsBillingChargesControllerCancelBillingChargeInput. Data model for Commerce Payments Billing Charges Controller+Cancel Billing Charge Request. */
 CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema = z.object({
   canceledBy: z.string().uuid().nullable().optional(),
@@ -31494,6 +31833,39 @@ CommercePaymentsCalculateTaxInputSchema = z.object({
   jurisdictionCode: z.string().nullable(),
   productCategory: z.string().nullable().optional(),
   transactionDate: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsClearLocalizedPriceInput. Request payload for clearing manual overrides. */
+CommercePaymentsClearLocalizedPriceInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsConversionCostEntry. One per-currency row of the conversion-cost analysis (issue #412 spec G). */
+CommercePaymentsConversionCostEntrySchema = z.object({
+  baseAtMarketRate: z.number().nullable().optional(),
+  baseAtOverrideRate: z.number().nullable().optional(),
+  costInBase: z.number().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  marketRate: z.number().nullable().optional(),
+  marketRateEffectiveDateUtc: z.string().datetime().nullable().optional(),
+  netVolume: z.number().optional(),
+  note: z.string().nullable().optional(),
+  overrideRate: z.number().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsConversionCostReport. Currency conversion costs analysis (issue #412 spec G): for every non-base transacted
+currency, the base-currency value of its net volume at the market rate versus at the
+operator override rate — quantifying what pinned rates cost (or save) per market. */
+CommercePaymentsConversionCostReportSchema = z.object({
+  baseCurrency: z.string().nullable().optional(),
+  entries: z
+    .array(z.lazy(() => CommercePaymentsConversionCostEntrySchema))
+    .nullable()
+    .optional(),
+  fromUtc: z.string().datetime().optional(),
+  generatedAtUtc: z.string().datetime().optional(),
+  totalCostInBase: z.number().optional(),
+  toUtc: z.string().datetime().optional(),
 });
 
 /** Zod schema for CommercePaymentsConvertCurrencyInput. Request payload for the currency conversion endpoint. */
@@ -31619,6 +31991,16 @@ CommercePaymentsCurrencyPopularityReportSchema = z.object({
   fromUtc: z.string().datetime().optional(),
   generatedAtUtc: z.string().datetime().optional(),
   toUtc: z.string().datetime().optional(),
+});
+
+/** Zod schema for CommercePaymentsCurrencySuggestionDto. Result of the location-based currency suggestion (issue #412 spec E). */
+CommercePaymentsCurrencySuggestionDtoSchema = z.object({
+  country: z.string().nullable().optional(),
+  fallbackReason: z.string().nullable().optional(),
+  isEnabledForTenant: z.boolean().optional(),
+  privacyNotice: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
+  suggestedCurrency: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsCustomerType. Customer types */
@@ -32082,6 +32464,30 @@ CommercePaymentsFxRateSyncRunDtoSchema = z.object({
 /** Zod schema for CommercePaymentsFxRateSyncRunStatus. Outcome values for an FX sync run. */
 CommercePaymentsFxRateSyncRunStatusSchema = z.enum(['Succeeded', 'Failed', 'SucceededStale']);
 
+/** Zod schema for CommercePaymentsFxRateVarianceEntry. One row of the FX rate variance report (issue #412 spec G). */
+CommercePaymentsFxRateVarianceEntrySchema = z.object({
+  baseCurrency: z.string().nullable().optional(),
+  exceedsThreshold: z.boolean().optional(),
+  marketRate: z.number().nullable().optional(),
+  marketRateEffectiveDateUtc: z.string().datetime().nullable().optional(),
+  marketRateProvider: z.string().nullable().optional(),
+  overrideAsOfUtc: z.string().datetime().optional(),
+  overrideExpiresAtUtc: z.string().datetime().nullable().optional(),
+  overrideRate: z.number().optional(),
+  quoteCurrency: z.string().nullable().optional(),
+  variancePercent: z.number().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsFxRateVarianceReport. FX rate variance report: actual (market) vs expected (operator override) rates. */
+CommercePaymentsFxRateVarianceReportSchema = z.object({
+  entries: z
+    .array(z.lazy(() => CommercePaymentsFxRateVarianceEntrySchema))
+    .nullable()
+    .optional(),
+  generatedAtUtc: z.string().datetime().optional(),
+  thresholdPercent: z.number().optional(),
+});
+
 /** Zod schema for CommercePaymentsFxSyncStatusDto. Result of GameGuild.Commerce.Payments.GetFxSyncStatusQuery. */
 CommercePaymentsFxSyncStatusDtoSchema = z.object({
   activeOverrideCount: z.number().int().optional(),
@@ -32256,6 +32662,22 @@ CommercePaymentsGiftsControllerPurchaseGiftRequestBodySchema = z.object({
 
 /** Zod schema for CommercePaymentsGiftStatus. Gift subscription status machine (Purchased → Delivered → Redeemed / Expired, plus Refunded). */
 CommercePaymentsGiftStatusSchema = z.enum(['Purchased', 'Delivered', 'Redeemed', 'Expired', 'Refunded']);
+
+/** Zod schema for CommercePaymentsLocalizedPricePreviewItem. One preview row: what a recalculation pass would do, before it is applied. */
+CommercePaymentsLocalizedPricePreviewItemSchema = z.object({
+  baseMonthlyPrice: z.number().optional(),
+  basePlanCurrency: z.string().nullable().optional(),
+  currencyCode: z.string().nullable().optional(),
+  currentEffectiveDateUtc: z.string().datetime().nullable().optional(),
+  currentExpiryDateUtc: z.string().datetime().nullable().optional(),
+  currentPrice: z.number().nullable().optional(),
+  delta: z.number().nullable().optional(),
+  isManualOverride: z.boolean().optional(),
+  note: z.string().nullable().optional(),
+  planId: z.string().uuid().optional(),
+  proposedPrice: z.number().nullable().optional(),
+  rateUsed: z.number().nullable().optional(),
+});
 
 /** Zod schema for CommercePaymentsLockWalletInput. Data model for Commerce Payments Lock Wallet Request. */
 CommercePaymentsLockWalletInputSchema = z.object({
@@ -32596,6 +33018,52 @@ CommercePaymentsPaymentStatusSchema = z.enum([
   'PartiallyRefunded',
 ]);
 
+/** Zod schema for CommercePaymentsPlanLocalizedPriceDto. Admin view of one (plan, currency) localization: override vs auto-calculated. */
+CommercePaymentsPlanLocalizedPriceDtoSchema = z.object({
+  autoPriceRate: z.number().nullable().optional(),
+  autoPriceToday: z.number().nullable().optional(),
+  currencyCode: z.string().nullable().optional(),
+  effectiveDateUtc: z.string().datetime().nullable().optional(),
+  effectivePrice: z.number().nullable().optional(),
+  exchangeRateUsed: z.number().nullable().optional(),
+  expiryDateUtc: z.string().datetime().nullable().optional(),
+  isManualOverride: z.boolean().optional(),
+  lastCalculatedAt: z.string().datetime().nullable().optional(),
+  note: z.string().nullable().optional(),
+  planId: z.string().uuid().optional(),
+});
+
+/** Zod schema for CommercePaymentsPriceRecalculationOutcome. Outcome summary of one localized-price recalculation pass. */
+CommercePaymentsPriceRecalculationOutcomeSchema = z.object({
+  completedItems: z.number().int().optional(),
+  preservedOverrides: z.number().int().optional(),
+  runId: z.string().uuid().optional(),
+  skippedForMissingRate: z.number().int().optional(),
+  status: z.lazy(() => CommercePaymentsPriceRecalculationRunStatusSchema).optional(),
+  totalItems: z.number().int().optional(),
+  updatedPrices: z.number().int().optional(),
+});
+
+/** Zod schema for CommercePaymentsPriceRecalculationRunDto. One recalculation run as exposed to the admin surface (progress + outcome). */
+CommercePaymentsPriceRecalculationRunDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  completedAtUtc: z.string().datetime().nullable().optional(),
+  completedItems: z.number().int().optional(),
+  planId: z.string().uuid().nullable().optional(),
+  preservedOverrides: z.number().int().optional(),
+  rolledBackAtUtc: z.string().datetime().nullable().optional(),
+  skippedForMissingRate: z.number().int().optional(),
+  startedAtUtc: z.string().datetime().optional(),
+  status: z.lazy(() => CommercePaymentsPriceRecalculationRunStatusSchema).optional(),
+  totalItems: z.number().int().optional(),
+  triggeredByUserId: z.string().uuid().nullable().optional(),
+  triggerReason: z.string().nullable().optional(),
+  updatedPrices: z.number().int().optional(),
+});
+
+/** Zod schema for CommercePaymentsPriceRecalculationRunStatus. Outcome values for a localized-price recalculation run. */
+CommercePaymentsPriceRecalculationRunStatusSchema = z.enum(['Running', 'Succeeded', 'Failed', 'RolledBack']);
+
 /** Zod schema for CommercePaymentsPricingAddOnInput. Add-on priced independently of the plan (issue #417): own unit price, own quantity,
 own currency (converted to the calculation currency through the FX core when they differ). */
 CommercePaymentsPricingAddOnInputSchema = z.object({
@@ -32790,11 +33258,25 @@ CommercePaymentsProcessRefundResultSchema = z.object({
   status: z.lazy(() => CommercePaymentsTransactionStatusSchema),
 });
 
+/** Zod schema for CommercePaymentsProvisionFxProviderApiKeyInput. HTTP request body for FX provider credential provisioning: carries only the plaintext
+API key; the provider arrives on the route. The value is encrypted (DataProtection,
+AES-256 under the application key ring) before it touches the database and is never
+echoed back or logged. */
+CommercePaymentsProvisionFxProviderApiKeyInputSchema = z.object({
+  value: z.string().nullable().optional(),
+});
+
 /** Zod schema for CommercePaymentsProvisionGatewayCredentialInput. HTTP request body for credential provisioning: carries only the plaintext value; the
 provider and slot arrive on the route so they never duplicate (and the value is never
 echoed back). */
 CommercePaymentsProvisionGatewayCredentialInputSchema = z.object({
   value: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsRecalculateLocalizedPricesInput. Request payload for the bulk recalculation command. */
+CommercePaymentsRecalculateLocalizedPricesInputSchema = z.object({
+  planId: z.string().uuid().nullable().optional(),
+  reason: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsReferral. Referral tracking record (issue #410 v1). One opaque referral code is generated per
@@ -33300,6 +33782,19 @@ CommercePaymentsRevenueTrendReportSchema = z.object({
     .nullable()
     .optional(),
   toUtc: z.string().datetime().optional(),
+});
+
+/** Zod schema for CommercePaymentsRollbackRecalculationInput. Request payload for the rollback command. */
+CommercePaymentsRollbackRecalculationInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsSetLocalizedPriceInput. Request payload for the manual localized-price command. */
+CommercePaymentsSetLocalizedPriceInputSchema = z.object({
+  effectiveDateUtc: z.string().datetime().nullable().optional(),
+  expiryDateUtc: z.string().datetime().nullable().optional(),
+  localizedPrice: z.number().optional(),
+  reason: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsSetManualFxRateOverrideInput. Request payload for the manual FX rate override command. */
@@ -53580,6 +54075,8 @@ export type CommercePaymentsBankAccountVerificationInitiation = CommercePayments
 export { CommercePaymentsBankAccountVerificationInitiationDtoSchema as CommercePaymentsBankAccountVerificationInitiationSchema };
 export type CommercePaymentsBankAccountVerificationStatus = CommercePaymentsBankAccountVerificationStatusDto;
 export { CommercePaymentsBankAccountVerificationStatusDtoSchema as CommercePaymentsBankAccountVerificationStatusSchema };
+export type CommercePaymentsCurrencySuggestion = CommercePaymentsCurrencySuggestionDto;
+export { CommercePaymentsCurrencySuggestionDtoSchema as CommercePaymentsCurrencySuggestionSchema };
 export type CommercePaymentsFxRate = CommercePaymentsFxRateDto;
 export { CommercePaymentsFxRateDtoSchema as CommercePaymentsFxRateSchema };
 export type CommercePaymentsFxRateSyncRun = CommercePaymentsFxRateSyncRunDto;
@@ -53590,6 +54087,10 @@ export type CommercePaymentsPaymentMethod = CommercePaymentsPaymentMethodDto;
 export { CommercePaymentsPaymentMethodDtoSchema as CommercePaymentsPaymentMethodSchema };
 export type CommercePaymentsPaymentRetryAttempt = CommercePaymentsPaymentRetryAttemptDto;
 export { CommercePaymentsPaymentRetryAttemptDtoSchema as CommercePaymentsPaymentRetryAttemptSchema };
+export type CommercePaymentsPlanLocalizedPrice = CommercePaymentsPlanLocalizedPriceDto;
+export { CommercePaymentsPlanLocalizedPriceDtoSchema as CommercePaymentsPlanLocalizedPriceSchema };
+export type CommercePaymentsPriceRecalculationRun = CommercePaymentsPriceRecalculationRunDto;
+export { CommercePaymentsPriceRecalculationRunDtoSchema as CommercePaymentsPriceRecalculationRunSchema };
 export type CommercePaymentsTenantCurrency = CommercePaymentsTenantCurrencyDto;
 export { CommercePaymentsTenantCurrencyDtoSchema as CommercePaymentsTenantCurrencySchema };
 export type CommerceProductsCampaignExpiringCode = CommerceProductsCampaignExpiringCodeDto;

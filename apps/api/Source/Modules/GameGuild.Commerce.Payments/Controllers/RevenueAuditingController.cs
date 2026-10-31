@@ -305,6 +305,74 @@ public sealed class RevenueAuditingController(
         return File(System.Text.Encoding.UTF8.GetBytes(export.Content), export.ContentType, export.FileName);
     }
 
+    /// <summary>
+    ///     Base-currency revenue report and reconciliation (issue #412 specs F/G): per-currency
+    ///     totals of the period converted into the tenant base currency at the period-end rate,
+    ///     with reconciled grand totals in base currency. Currencies without a period-end
+    ///     quotation are listed but excluded from base totals (fail closed, never merged).
+    /// </summary>
+    [HttpGet("currencies/base")]
+    [EndpointSummary("Get the base-currency revenue report")]
+    [EndpointDescription(
+        "Per-currency revenue totals converted into the tenant base currency at the period-end rate with reconciled grand totals — the accounting reconciliation of multi-currency revenue to base.")]
+    [ProducesResponseType<BaseCurrencyRevenueReport>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> GetBaseCurrencyRevenue(
+        [FromQuery] DateTimeOffset fromUtc,
+        [FromQuery] DateTimeOffset toUtc,
+        [FromQuery] Guid? tenantId = null,
+        CancellationToken ct = default)
+    {
+        var result = await sender.Send(
+            new Queries.RevenueAuditingReports.GetBaseCurrencyRevenueReportQuery(fromUtc.UtcDateTime, toUtc.UtcDateTime, tenantId),
+            ct).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     CSV (RFC 4180) export of the base-currency revenue report for external accounting.
+    /// </summary>
+    [HttpGet("currencies/base/export")]
+    [EndpointSummary("Export the base-currency revenue report")]
+    [EndpointDescription("Serializes the base-currency revenue report (per-currency totals, applied rates and base equivalents) as RFC 4180 CSV.")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK, "text/csv")]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ExportBaseCurrencyRevenue(
+        [FromQuery] DateTimeOffset fromUtc,
+        [FromQuery] DateTimeOffset toUtc,
+        [FromQuery] Guid? tenantId = null,
+        CancellationToken ct = default)
+    {
+        var export = await sender.Send(
+            new Queries.RevenueAuditingReports.ExportBaseCurrencyRevenueReportQuery(fromUtc.UtcDateTime, toUtc.UtcDateTime, tenantId),
+            ct).ConfigureAwait(false);
+
+        return File(System.Text.Encoding.UTF8.GetBytes(export.Content), export.ContentType, export.FileName);
+    }
+
+    /// <summary>
+    ///     Currency conversion costs analysis (issue #412 spec G): for every non-base
+    ///     transacted currency, the base value of its net volume at the market rate versus at
+    ///     the active operator override rate, quantifying what pinned rates cost per market.
+    /// </summary>
+    [HttpGet("conversion-costs")]
+    [EndpointSummary("Analyze currency conversion costs")]
+    [EndpointDescription("Per-currency comparison of the net volume converted at the market rate versus the operator override rate, with the base-currency cost of each pinned rate.")]
+    [ProducesResponseType<ConversionCostReport>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetConversionCosts(
+        [FromQuery] DateTimeOffset fromUtc,
+        [FromQuery] DateTimeOffset toUtc,
+        [FromQuery] Guid? tenantId = null,
+        CancellationToken ct = default)
+    {
+        var result = await sender.Send(
+            new Queries.RevenueAuditingReports.GetConversionCostReportQuery(fromUtc.UtcDateTime, toUtc.UtcDateTime, tenantId),
+            ct).ConfigureAwait(false);
+        return Ok(result);
+    }
+
     private IActionResult? RequireSystemAdmin(string operation)
         => actorContextAccessor.ActorContext.IsSystemAdmin
             ? null

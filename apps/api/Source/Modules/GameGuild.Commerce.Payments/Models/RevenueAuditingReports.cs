@@ -135,3 +135,101 @@ public sealed record RevenueComplianceReport(
 /// <param name="ContentType">MIME type of the payload (text/csv or application/json).</param>
 /// <param name="Content">Serialized report content.</param>
 public sealed record RevenueReportExport(string FileName, string ContentType, string Content);
+
+/// <summary>One per-currency row of the base-currency revenue report (issue #412 spec G).</summary>
+/// <param name="Currency">Transaction currency of the row.</param>
+/// <param name="CreditTotal">Gross credits in the transaction currency.</param>
+/// <param name="DebitTotal">Gross debits (refunds) in the transaction currency.</param>
+/// <param name="NetTotal">Net revenue in the transaction currency.</param>
+/// <param name="EventCount">Revenue events behind the row.</param>
+/// <param name="Converted">Whether the base-currency figures could be computed (a quotation existed at the period-end rate).</param>
+/// <param name="RateUsed">Quotation applied (transaction-currency units per one base unit) when converted.</param>
+/// <param name="RateEffectiveDateUtc">Effective date of the applied quotation.</param>
+/// <param name="RateProvider">Provider of the applied quotation.</param>
+/// <param name="BaseCreditTotal">Credit total expressed in the base currency.</param>
+/// <param name="BaseDebitTotal">Debit total expressed in the base currency.</param>
+/// <param name="BaseNetTotal">Net revenue expressed in the base currency.</param>
+/// <param name="Note">Why the row is unconverted, when applicable.</param>
+public sealed record BaseCurrencyRevenueEntry(
+    string Currency,
+    decimal CreditTotal,
+    decimal DebitTotal,
+    decimal NetTotal,
+    int EventCount,
+    bool Converted,
+    decimal? RateUsed,
+    DateTime? RateEffectiveDateUtc,
+    string? RateProvider,
+    decimal? BaseCreditTotal,
+    decimal? BaseDebitTotal,
+    decimal? BaseNetTotal,
+    string? Note);
+
+/// <summary>
+///     Base-currency revenue report + reconciliation (issue #412 specs F/G): every transacted
+///     currency of the period with its per-currency totals and the base-currency equivalent
+///     computed at the period-end rate, plus the reconciled grand totals in base currency.
+///     Unconvertible currencies are listed fail-closed (never silently merged) and excluded
+///     from the base totals.
+/// </summary>
+/// <param name="FromUtc">Inclusive period start (UTC).</param>
+/// <param name="ToUtc">Inclusive period end (UTC).</param>
+/// <param name="BaseCurrency">Tenant base (accounting) currency the report is expressed in.</param>
+/// <param name="GeneratedAtUtc">Report generation instant.</param>
+/// <param name="Entries">One row per transacted currency.</param>
+/// <param name="BaseCreditTotal">Grand credit total in base currency (converted rows only).</param>
+/// <param name="BaseDebitTotal">Grand debit total in base currency (converted rows only).</param>
+/// <param name="BaseNetTotal">Grand net total in base currency (converted rows only).</param>
+/// <param name="UnconvertedCurrencies">Currencies that could not be converted (no quotation at period end).</param>
+/// <param name="Attestation">Human-readable attestation naming the rate basis per currency.</param>
+public sealed record BaseCurrencyRevenueReport(
+    DateTime FromUtc,
+    DateTime ToUtc,
+    string BaseCurrency,
+    DateTime GeneratedAtUtc,
+    IReadOnlyList<BaseCurrencyRevenueEntry> Entries,
+    decimal BaseCreditTotal,
+    decimal BaseDebitTotal,
+    decimal BaseNetTotal,
+    int UnconvertedCurrencies,
+    string Attestation);
+
+/// <summary>One per-currency row of the conversion-cost analysis (issue #412 spec G).</summary>
+/// <param name="Currency">Transaction currency of the row.</param>
+/// <param name="NetVolume">Net revenue volume in the transaction currency over the period.</param>
+/// <param name="MarketRate">Market quotation at period end (transaction-currency units per one base unit).</param>
+/// <param name="MarketRateEffectiveDateUtc">Effective date of the market quotation.</param>
+/// <param name="OverrideRate">Active operator override quotation for the same pair, when any.</param>
+/// <param name="BaseAtMarketRate">Net volume converted to base at the market rate.</param>
+/// <param name="BaseAtOverrideRate">Net volume converted to base at the override rate.</param>
+/// <param name="CostInBase">Absolute base-currency difference between the two conversion legs — the pricing decision's conversion cost.</param>
+/// <param name="Note">Why parts of the row are unavailable (e.g. "no-market-rate").</param>
+public sealed record ConversionCostEntry(
+    string Currency,
+    decimal NetVolume,
+    decimal? MarketRate,
+    DateTime? MarketRateEffectiveDateUtc,
+    decimal? OverrideRate,
+    decimal? BaseAtMarketRate,
+    decimal? BaseAtOverrideRate,
+    decimal? CostInBase,
+    string? Note);
+
+/// <summary>
+///     Currency conversion costs analysis (issue #412 spec G): for every non-base transacted
+///     currency, the base-currency value of its net volume at the market rate versus at the
+///     operator override rate — quantifying what pinned rates cost (or save) per market.
+/// </summary>
+/// <param name="FromUtc">Inclusive period start (UTC).</param>
+/// <param name="ToUtc">Inclusive period end (UTC).</param>
+/// <param name="BaseCurrency">Tenant base currency.</param>
+/// <param name="GeneratedAtUtc">Report generation instant.</param>
+/// <param name="Entries">One row per transacted non-base currency.</param>
+/// <param name="TotalCostInBase">Sum of per-currency costs in base currency.</param>
+public sealed record ConversionCostReport(
+    DateTime FromUtc,
+    DateTime ToUtc,
+    string BaseCurrency,
+    DateTime GeneratedAtUtc,
+    IReadOnlyList<ConversionCostEntry> Entries,
+    decimal TotalCostInBase);

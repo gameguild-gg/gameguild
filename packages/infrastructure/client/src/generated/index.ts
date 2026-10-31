@@ -114,6 +114,7 @@ export * from './modules/commerce-payments-taxes.gen.js';
 export * from './modules/social-posts.gen.js';
 export * from './modules/social-posts-comments.gen.js';
 export * from './modules/social-posts-interactions.gen.js';
+export * from './modules/commerce-payments-price-localization.gen.js';
 export * from './modules/commerce-pricing.gen.js';
 export * from './modules/commerce-payments-referrals.gen.js';
 export * from './modules/commerce-payments-refunds.gen.js';

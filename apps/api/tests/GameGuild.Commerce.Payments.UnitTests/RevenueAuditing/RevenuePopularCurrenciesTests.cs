@@ -17,7 +17,7 @@ public class RevenuePopularCurrenciesTests
     private readonly Mock<IActorContextAccessor> _actorAccessor = new();
 
     private RevenueReportService CreateService()
-        => new(_revenueEvents.Object, _runs.Object);
+        => new(_revenueEvents.Object, _runs.Object, new Mock<IApplicationDbContext>().Object);
 
     private void SetupDailyTotals(params RevenueDailyTotal[] totals)
     {

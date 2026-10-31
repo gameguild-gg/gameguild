@@ -157,3 +157,96 @@ public sealed class ExportRevenueReportQueryHandler(
             GetRevenueComplianceReportQueryHandler.ResolveTenantScope(request.TenantId, actorContextAccessor.ActorContext),
             cancellationToken);
 }
+
+/// <summary>Query (issue #412 specs F/G): base-currency revenue report for an inclusive period.</summary>
+public sealed record GetBaseCurrencyRevenueReportQuery(
+    DateTime FromUtc,
+    DateTime ToUtc,
+    Guid? TenantId = null) : IQuery<BaseCurrencyRevenueReport>;
+
+/// <summary>Query (issue #412 spec G): conversion-cost analysis for an inclusive period.</summary>
+public sealed record GetConversionCostReportQuery(
+    DateTime FromUtc,
+    DateTime ToUtc,
+    Guid? TenantId = null) : IQuery<ConversionCostReport>;
+
+/// <summary>Query (issue #412 spec F): CSV export of the base-currency revenue report.</summary>
+public sealed record ExportBaseCurrencyRevenueReportQuery(
+    DateTime FromUtc,
+    DateTime ToUtc,
+    Guid? TenantId = null) : IQuery<RevenueReportExport>;
+
+/// <summary>Validator for <see cref="GetBaseCurrencyRevenueReportQuery" />.</summary>
+public sealed class GetBaseCurrencyRevenueReportQueryValidator : AbstractValidator<GetBaseCurrencyRevenueReportQuery>
+{
+    /// <summary>Initializes the validator.</summary>
+    public GetBaseCurrencyRevenueReportQueryValidator()
+    {
+        RuleFor(query => query.ToUtc)
+            .GreaterThan(query => query.FromUtc).WithMessage("Period end must be after period start.");
+    }
+}
+
+/// <summary>Validator for <see cref="GetConversionCostReportQuery" />.</summary>
+public sealed class GetConversionCostReportQueryValidator : AbstractValidator<GetConversionCostReportQuery>
+{
+    /// <summary>Initializes the validator.</summary>
+    public GetConversionCostReportQueryValidator()
+    {
+        RuleFor(query => query.ToUtc)
+            .GreaterThan(query => query.FromUtc).WithMessage("Period end must be after period start.");
+    }
+}
+
+/// <summary>Validator for <see cref="ExportBaseCurrencyRevenueReportQuery" />.</summary>
+public sealed class ExportBaseCurrencyRevenueReportQueryValidator : AbstractValidator<ExportBaseCurrencyRevenueReportQuery>
+{
+    /// <summary>Initializes the validator.</summary>
+    public ExportBaseCurrencyRevenueReportQueryValidator()
+    {
+        RuleFor(query => query.ToUtc)
+            .GreaterThan(query => query.FromUtc).WithMessage("Period end must be after period start.");
+    }
+}
+
+/// <summary>Handler for <see cref="GetBaseCurrencyRevenueReportQuery" />.</summary>
+public sealed class GetBaseCurrencyRevenueReportQueryHandler(
+    IRevenueReportService reportService,
+    IActorContextAccessor actorContextAccessor) : IQueryHandler<GetBaseCurrencyRevenueReportQuery, BaseCurrencyRevenueReport>
+{
+    /// <inheritdoc />
+    public Task<BaseCurrencyRevenueReport> Handle(GetBaseCurrencyRevenueReportQuery request, CancellationToken cancellationToken)
+        => reportService.GetBaseCurrencyRevenueReportAsync(
+            request.FromUtc,
+            request.ToUtc,
+            GetRevenueComplianceReportQueryHandler.ResolveTenantScope(request.TenantId, actorContextAccessor.ActorContext),
+            cancellationToken);
+}
+
+/// <summary>Handler for <see cref="GetConversionCostReportQuery" />.</summary>
+public sealed class GetConversionCostReportQueryHandler(
+    IRevenueReportService reportService,
+    IActorContextAccessor actorContextAccessor) : IQueryHandler<GetConversionCostReportQuery, ConversionCostReport>
+{
+    /// <inheritdoc />
+    public Task<ConversionCostReport> Handle(GetConversionCostReportQuery request, CancellationToken cancellationToken)
+        => reportService.GetConversionCostReportAsync(
+            request.FromUtc,
+            request.ToUtc,
+            GetRevenueComplianceReportQueryHandler.ResolveTenantScope(request.TenantId, actorContextAccessor.ActorContext),
+            cancellationToken);
+}
+
+/// <summary>Handler for <see cref="ExportBaseCurrencyRevenueReportQuery" />.</summary>
+public sealed class ExportBaseCurrencyRevenueReportQueryHandler(
+    IRevenueReportService reportService,
+    IActorContextAccessor actorContextAccessor) : IQueryHandler<ExportBaseCurrencyRevenueReportQuery, RevenueReportExport>
+{
+    /// <inheritdoc />
+    public Task<RevenueReportExport> Handle(ExportBaseCurrencyRevenueReportQuery request, CancellationToken cancellationToken)
+        => reportService.ExportBaseCurrencyReportAsync(
+            request.FromUtc,
+            request.ToUtc,
+            GetRevenueComplianceReportQueryHandler.ResolveTenantScope(request.TenantId, actorContextAccessor.ActorContext),
+            cancellationToken);
+}

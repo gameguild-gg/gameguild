@@ -19,7 +19,14 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 /// </summary>
 public sealed class AdaptiveAnomalyDetectionServiceTests : IDisposable
 {
-    private static readonly DateTime TrainStart = new(2026, 10, 1, 9, 0, 0, DateTimeKind.Utc);
+    // Anchored 25 days behind the current date (not a fixed calendar date): the
+    // service compares the stored baseline against the wall clock, so a fixed
+    // TrainStart crosses the StaleBaselineResetDays (30) horizon the moment
+    // real time passes it — resetting the baseline mid-training and breaking the
+    // count assertions. A relative anchor keeps the seeded history permanently
+    // inside the freshness horizon regardless of when the suite runs.
+    private static readonly DateTime TrainStart =
+        DateTime.UtcNow.Date.AddDays(-25).AddHours(9);
     private const string TrainIp = "203.0.113.10";
     private const string ProbeIp = "198.51.100.99";
     private readonly Guid _userId = Guid.NewGuid();

@@ -232,6 +232,14 @@ public static class PaymentsModule
         // data-backed usage probe before this module runs; TryAdd keeps that implementation
         // and falls back to the fail-closed "usage unknown" probe in hosts without it.
         services.TryAddScoped<ICurrencySubscriptionUsageProbe, UnknownCurrencySubscriptionUsageProbe>();
+
+        // Price localization (issue #412 spec C): localized plan prices (manual overrides and
+        // FX-auto-calculated values) resolved ahead of live conversion in the pricing engine,
+        // plus the bulk recalculation engine (progress-tracked, rollback-capable) that the
+        // admin command and the post-sync hook both drive.
+        services.AddScoped<ILocalizedPlanPriceResolver, LocalizedPlanPriceResolver>();
+        services.AddScoped<IPriceLocalizationRecalculationService, PriceLocalizationRecalculationService>();
+
         services.AddScoped<IWalletService, WalletService>();
         services.Replace(ServiceDescriptor.Scoped<IOrderPaymentProcessor, OrderPaymentService>());
         services.Replace(ServiceDescriptor.Scoped<IOrderPaymentAuthority, OrderPaymentService>());

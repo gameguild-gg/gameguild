@@ -19,6 +19,16 @@ public interface IFxRateSyncAlerter
 
     /// <summary>Alerts operators that the newest persisted rates are older than the staleness threshold.</summary>
     Task RaiseStalenessAlertAsync(DateTime newestEffectiveDateUtc, int thresholdDays, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Alerts operators that one or more fetched quotations were quarantined by the
+    ///     rate-reasonableness guard (issue #412 spec H): they moved more than the configured
+    ///     daily-change threshold and were NOT persisted.
+    /// </summary>
+    Task RaiseRateAnomalyAlertAsync(
+        IReadOnlyList<(string Pair, decimal OldRate, decimal NewRate, decimal ChangePercent)> anomalies,
+        decimal thresholdPercent,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>No-op alerter for tests and hosts without the notification pipeline.</summary>
@@ -29,6 +39,12 @@ public sealed class NullFxRateSyncAlerter : IFxRateSyncAlerter
 
     /// <inheritdoc />
     public Task RaiseStalenessAlertAsync(DateTime newestEffectiveDateUtc, int thresholdDays, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+    /// <inheritdoc />
+    public Task RaiseRateAnomalyAlertAsync(
+        IReadOnlyList<(string Pair, decimal OldRate, decimal NewRate, decimal ChangePercent)> anomalies,
+        decimal thresholdPercent,
+        CancellationToken cancellationToken = default) => Task.CompletedTask;
 }
 
 /// <summary>
@@ -93,6 +109,44 @@ public sealed class NotificationFxRateSyncAlerter(
                 $"The newest persisted FX rates are effective {newestEffectiveDateUtc:yyyy-MM-dd} UTC, older than the "
                 + $"{thresholdDays}-day staleness threshold. Conversions served from stale quotations may misprice; "
                 + "check the FX sync worker and provider configuration.",
+            referenceEntityType: "FxRateSnapshots",
+            metadata: metadata,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task RaiseRateAnomalyAlertAsync(
+        IReadOnlyList<(string Pair, decimal OldRate, decimal NewRate, decimal ChangePercent)> anomalies,
+        decimal thresholdPercent,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(anomalies);
+        if (anomalies.Count == 0)
+        {
+            return;
+        }
+
+        var bounded = anomalies.Take(50).ToList();
+        var metadata = JsonSerializer.Serialize(new
+        {
+            thresholdPercent,
+            quarantined = bounded.Select(anomaly => new
+            {
+                pair = anomaly.Pair,
+                oldRate = anomaly.OldRate,
+                newRate = anomaly.NewRate,
+                changePercent = Math.Round(anomaly.ChangePercent, 4),
+            }),
+            raisedAtUtc = SystemClock.UtcNow,
+        });
+
+        var pairs = string.Join(", ", bounded.Take(10).Select(anomaly => anomaly.Pair));
+        await SendAsync(
+            title: "FX rate anomalies quarantined",
+            message:
+                $"{bounded.Count} fetched FX quotation(s) moved more than {thresholdPercent}% against the previously persisted value "
+                + $"and were NOT persisted (rate-reasonableness guard). Affected pairs: {pairs}{(bounded.Count > 10 ? ", …" : ".")} "
+                + "Review the provider feed and pin a manual override if the move is genuine.",
             referenceEntityType: "FxRateSnapshots",
             metadata: metadata,
             cancellationToken: cancellationToken).ConfigureAwait(false);
