@@ -42,6 +42,25 @@ export class CommercePaymentsFraudStatisticsModule {
 
     return result;
   }
+
+  /**
+   * Export the fraud statistics report for a date window as CSV (issue #409: export
+   * fraud reports). Same authorization and window semantics as the JSON report.
+   *
+   * Exports the fraud statistics report over a date window as CSV: one summary block plus per-country, per-provider and daily-trend sections. Requires the payments:admin permission.
+   */
+  async getFraudStatisticsExport(query?: { tenantId?: string; fromUtc?: string; toUtc?: string }): Promise<Result<void, ApiError>> {
+    const url = '/api/v1/fraud/statistics/export';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
 }
 
 export function createCommercePaymentsFraudStatisticsModule(client: ApiClient): CommercePaymentsFraudStatisticsModule {

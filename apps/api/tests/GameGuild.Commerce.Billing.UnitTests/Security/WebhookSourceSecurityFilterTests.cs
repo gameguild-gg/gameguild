@@ -130,6 +130,26 @@ public class WebhookSourceSecurityFilterTests
             .Which.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
     }
 
+    [Fact]
+    public async Task Allowed_Source_Captures_The_Delivery_Source_For_Inbox_Logging()
+    {
+        var deliveryContext = new WebhookDeliveryContext();
+        var (filter, _, _, _) = CreateFilter(
+            allowlistEntries: ["203.0.113.0/24"],
+            remoteIp: IPAddress.Parse("203.0.113.9"),
+            path: "/api/v1/billing/webhooks/stripe",
+            deliveryContext: deliveryContext);
+
+        var context = CreateContext(IPAddress.Parse("203.0.113.9"), "/api/v1/billing/webhooks/stripe");
+        context.HttpContext.Request.Headers.UserAgent = "Stripe/1.0 webhook-agent";
+        await filter.OnAuthorizationAsync(context);
+
+        context.Result.Should().BeNull();
+        deliveryContext.Provider.Should().Be("stripe");
+        deliveryContext.SourceIpAddress.Should().Be("203.0.113.9");
+        deliveryContext.UserAgent.Should().Be("Stripe/1.0 webhook-agent");
+    }
+
     private static (
         WebhookSourceSecurityFilter Filter,
         WebhookSourceIpAllowlist Allowlist,
@@ -138,7 +158,8 @@ public class WebhookSourceSecurityFilterTests
         string[] allowlistEntries,
         IPAddress remoteIp,
         string path,
-        bool isBlocked = false)
+        bool isBlocked = false,
+        WebhookDeliveryContext? deliveryContext = null)
     {
         var allowlist = new WebhookSourceIpAllowlist(Options.Create(new BillingConfiguration
         {
@@ -160,6 +181,7 @@ public class WebhookSourceSecurityFilterTests
             allowlist,
             monitor.Object,
             publisher.Object,
+            deliveryContext ?? new WebhookDeliveryContext(),
             NullLogger<WebhookSourceSecurityFilter>.Instance);
 
         return (filter, allowlist, monitor, publisher);

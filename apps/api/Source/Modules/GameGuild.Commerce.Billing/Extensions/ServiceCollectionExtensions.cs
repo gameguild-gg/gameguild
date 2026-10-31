@@ -104,6 +104,13 @@ public static class ServiceCollectionExtensions
         // payment_intent.succeeded / payment_intent.payment_failed and refund lifecycle events
         // into the local payment and refund aggregates.
         services.AddScoped<IStripeVerifiedEventConsumer, StripePaymentLifecycleEventConsumer>();
+
+        // Stripe trial-ending reminder (issue #408): consumes verified
+        // customer.subscription.trial_will_end events and queues the customer reminder email
+        // (renderer included; the email dispatcher deadletters types without a renderer).
+        services.AddScoped<IStripeVerifiedEventConsumer, StripeTrialWillEndConsumer>();
+        services.AddScoped<StripeTrialWillEndConsumer>();
+        services.AddScoped<GameGuild.Notifications.Services.Email.IEmailRenderer, Services.Email.Renderers.TrialWillEndEmailRenderer>();
         services.AddScoped<PayPalBillingWebhookService>();
         services.AddScoped<ApplePayBillingWebhookService>();
         services.AddSingleton<IGooglePayWebhookVerificationService, GooglePayWebhookVerificationService>();
@@ -138,6 +145,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IWebhookSuspiciousActivityMonitor, WebhookSuspiciousActivityMonitor>();
         services.AddScoped<IWebhookSecurityEventPublisher, WebhookSecurityEventPublisher>();
         services.AddScoped<WebhookSourceSecurityFilter>();
+
+        // Per-request delivery source of a webhook callback (issue #408: IP address and user
+        // agent logging): captured by the filter above, stamped onto the inbox row by the
+        // webhook repository.
+        services.AddScoped<IWebhookDeliveryContext, WebhookDeliveryContext>();
         return services;
     }
 

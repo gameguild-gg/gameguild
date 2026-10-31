@@ -97,6 +97,31 @@ public sealed class FraudAssessmentOptions
     [Range(0, 100)]
     public int BlacklistWeight { get; set; } = 60;
 
+    /// <summary>ISO 3166-1 alpha-2 billing countries treated as elevated fraud risk; attempts
+    /// from a listed country raise the high-risk-country signal (issue #409). Empty by default:
+    /// the capability is opt-in per deployment, never a silent geo-block.</summary>
+    public string[] HighRiskCountries { get; set; } = [];
+
+    /// <summary>Score contributed when the attempt's billing country is listed in
+    /// <see cref="HighRiskCountries"/> (issue #409).</summary>
+    [Range(0, 100)]
+    public int HighRiskCountryWeight { get; set; } = 25;
+
+    /// <summary>Disposable email domains flagged by the payer-email signal (issue #409: flag
+    /// disposable email providers). The defaults cover the widely abused providers; deployments
+    /// extend or replace the list through configuration.</summary>
+    public string[] DisposableEmailDomains { get; set; } =
+    [
+        "mailinator.com", "guerrillamail.com", "10minutemail.com", "temp-mail.org",
+        "yopmail.com", "throwawaymail.com", "getnada.com", "dispostable.com",
+        "sharklasers.com", "maildrop.cc", "trashmail.com", "fakeinbox.com"
+    ];
+
+    /// <summary>Score contributed when the payer email uses a disposable email domain
+    /// (issue #409).</summary>
+    [Range(0, 100)]
+    public int DisposableEmailWeight { get; set; } = 30;
+
     /// <summary>Whether declining a manual fraud review automatically blacklists the
     /// confirmed-fraud attempt's listable attributes (issue #409: automatic addition on
     /// confirmed fraud).</summary>
@@ -153,6 +178,10 @@ public sealed class FraudAssessmentOptions
             BehaviorAnomalyAmountMultiplier = overrideValues.BehaviorAnomalyAmountMultiplier ?? BehaviorAnomalyAmountMultiplier,
             BehaviorAnomalyWeight = overrideValues.BehaviorAnomalyWeight ?? BehaviorAnomalyWeight,
             BlacklistWeight = overrideValues.BlacklistWeight ?? BlacklistWeight,
+            HighRiskCountries = overrideValues.HighRiskCountries ?? HighRiskCountries,
+            HighRiskCountryWeight = overrideValues.HighRiskCountryWeight ?? HighRiskCountryWeight,
+            DisposableEmailDomains = overrideValues.DisposableEmailDomains ?? DisposableEmailDomains,
+            DisposableEmailWeight = overrideValues.DisposableEmailWeight ?? DisposableEmailWeight,
             AutoBlacklistOnFraudDecline = overrideValues.AutoBlacklistOnFraudDecline ?? AutoBlacklistOnFraudDecline,
             AutoBlacklistExpiryDays = overrideValues.AutoBlacklistExpiryDays ?? AutoBlacklistExpiryDays,
             ReviewThreshold = overrideValues.ReviewThreshold ?? ReviewThreshold,
@@ -196,6 +225,20 @@ public sealed class FraudAssessmentOverride
     /// <summary>See <see cref="FraudAssessmentOptions.DisputedPaymentWeight"/>.</summary>
     [Range(0, 100)]
     public int? DisputedPaymentWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.HighRiskCountries"/>.</summary>
+    public string[]? HighRiskCountries { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.HighRiskCountryWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? HighRiskCountryWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.DisposableEmailDomains"/>.</summary>
+    public string[]? DisposableEmailDomains { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.DisposableEmailWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? DisposableEmailWeight { get; set; }
 
     /// <summary>See <see cref="FraudAssessmentOptions.MaxSignalScore"/>.</summary>
     [Range(1, 100)]

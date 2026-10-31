@@ -836,6 +836,8 @@ Table "billing_webhook_events" {
   "SignatureVerifiedAt" timestamp
   "DeadLetteredAt" timestamp
   "DeadLetterReason" "character varying(1000)"
+  "SourceIpAddress" "character varying(64)"
+  "UserAgent" "character varying(512)"
   "TenantId" uuid
   "SubscriptionId" uuid
   "Version" integer [not null]

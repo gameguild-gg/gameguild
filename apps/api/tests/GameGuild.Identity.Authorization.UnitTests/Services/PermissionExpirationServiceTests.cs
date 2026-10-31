@@ -209,6 +209,184 @@ public class PermissionExpirationServiceTests
             Times.Once);
     }
 
+    // Additional #1049 recovery cases reconciled with the shared transaction contract.
+    // These mocks prove orchestration/commit intent; the PostgreSQL suites prove rollback.
+
+    [Fact]
+    public async Task ProcessExpiredAsync_ProcessesGrantsBeyondFirstBatchWhenEarlierOnesAlreadyStamped()
+    {
+        _options.BatchSize = 2;
+        var stampedFirst = CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-4), isActive: false,
+            metadata: new Dictionary<string, object> { ["expirationProcessedAt"] = SystemClock.UtcNow.AddMinutes(-30).ToString("O") });
+        var stampedSecond = CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-3), isActive: false,
+            metadata: new Dictionary<string, object> { ["expirationProcessedAt"] = SystemClock.UtcNow.AddMinutes(-30).ToString("O") });
+        var pendingFirst = CreateGrant(TenantB, SystemClock.UtcNow.AddHours(-2));
+        var pendingSecond = CreateGrant(TenantB, SystemClock.UtcNow.AddHours(-1));
+        _repoMock.Setup(x => x.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { stampedFirst, stampedSecond, pendingFirst, pendingSecond });
+        _repoMock.Setup(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission permission, CancellationToken _) => permission);
+
+        var processed = await _sut.ProcessExpiredAsync();
+
+        processed.Should().Be(2);
+        pendingFirst.IsActive.Should().BeFalse();
+        pendingSecond.IsActive.Should().BeFalse();
+        _repoMock.Verify(x => x.UpdateAsync(It.Is<TenantPermission>(p => ReferenceEquals(p, pendingFirst)), It.IsAny<CancellationToken>()), Times.Once);
+        _repoMock.Verify(x => x.UpdateAsync(It.Is<TenantPermission>(p => ReferenceEquals(p, pendingSecond)), It.IsAny<CancellationToken>()), Times.Once);
+        _repoMock.Verify(x => x.UpdateAsync(It.Is<TenantPermission>(p => ReferenceEquals(p, stampedFirst) || ReferenceEquals(p, stampedSecond)), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_AuditFailure_IsReportedWithoutPublishingOrAcceptingTheFailedTenant()
+    {
+        var failing = CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1));
+        var succeeding = CreateGrant(TenantB, SystemClock.UtcNow.AddHours(-1));
+        var unavailable = new InvalidOperationException("audit unavailable");
+        var executor = new InlineMutationExecutor();
+        _repoMock.Setup(x => x.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { failing, succeeding });
+        _repoMock.Setup(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission permission, CancellationToken _) => permission);
+        _auditMock.Setup(x => x.LogPermissionChangeAsync(
+                It.IsAny<PermissionOperationType>(), It.IsAny<Guid?>(), It.IsAny<Guid>(), It.IsAny<Guid?>(),
+                It.IsAny<string?>(), It.Is<Guid?>(id => id == failing.Id), It.IsAny<string?>(), It.IsAny<string?>(),
+                It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<string?>(),
+                It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(unavailable);
+
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => CreateService(executor).ProcessExpiredAsync());
+
+        failure.InnerExceptions.Should().ContainSingle().Which.Should().BeSameAs(unavailable);
+        failure.Data["ProcessedGrantCount"].Should().Be(1);
+        succeeding.IsActive.Should().BeFalse();
+        executor.Calls.Should().ContainSingle(call => call.Identity.TenantId == TenantA && call.UseEntityTenantScope && !call.CommitRequested);
+        _publisherMock.Verify(x => x.Publish(It.Is<PermissionExpirationNotification>(n => n.PermissionId == failing.Id), It.IsAny<CancellationToken>()), Times.Never);
+        _publisherMock.Verify(x => x.Publish(It.Is<PermissionExpirationNotification>(n => n.PermissionId == succeeding.Id), It.IsAny<CancellationToken>()), Times.Once);
+        // Update was staged before the audit failed; only real PostgreSQL can prove
+        // its rollback. The component fake must not pretend to undo durable state.
+        _repoMock.Verify(x => x.UpdateAsync(It.Is<TenantPermission>(p => ReferenceEquals(p, failing)), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_PersistFailure_IsReportedAndRetriesFromAFreshPersistedSnapshot()
+    {
+        var expiresAt = SystemClock.UtcNow.AddHours(-1);
+        var attempted = CreateGrant(TenantA, expiresAt);
+        var fresh = CreateGrant(TenantA, expiresAt);
+        fresh.Id = attempted.Id;
+        fresh.UserId = attempted.UserId;
+        var unavailable = new InvalidOperationException("database unavailable");
+        _repoMock.SetupSequence(x => x.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { attempted })
+            .ReturnsAsync(new List<TenantPermission> { fresh });
+        _repoMock.SetupSequence(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(unavailable).ReturnsAsync(fresh);
+
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => _sut.ProcessExpiredAsync());
+
+        failure.InnerExceptions.Should().ContainSingle().Which.Should().BeSameAs(unavailable);
+        failure.Data["ProcessedGrantCount"].Should().Be(0);
+        _auditMock.Verify(x => x.LogPermissionChangeAsync(
+            It.IsAny<PermissionOperationType>(), It.IsAny<Guid?>(), It.IsAny<Guid>(), It.IsAny<Guid?>(),
+            It.IsAny<string?>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _versionStoreMock.Verify(x => x.IncrementVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _publisherMock.Verify(x => x.Publish(It.IsAny<PermissionExpirationNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        // The real PostgreSQL cases prove that rollback leaves this persisted
+        // snapshot intact. The component fake supplies a fresh query result here.
+        var secondCycle = await _sut.ProcessExpiredAsync();
+
+        secondCycle.Should().Be(1);
+        fresh.IsActive.Should().BeFalse();
+        fresh.Metadata.Should().ContainKey("expirationProcessedAt");
+        _auditMock.Verify(x => x.LogPermissionChangeAsync(
+            PermissionOperationType.Expire, fresh.UserId, Guid.Empty, TenantA,
+            It.IsAny<string?>(), fresh.Id, It.IsAny<string?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Once);
+        _versionStoreMock.Verify(x => x.IncrementVersionAsync(TenantA.ToString(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_VersionFailure_IsReportedWithoutPublishingTheUnacceptedBatch()
+    {
+        var grant = CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1));
+        var unavailable = new InvalidOperationException("version store unavailable");
+        _repoMock.Setup(x => x.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { grant });
+        _versionStoreMock.Setup(x => x.IncrementVersionAsync(TenantA.ToString(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(unavailable);
+
+        var failure = await Assert.ThrowsAsync<AggregateException>(() => _sut.ProcessExpiredAsync());
+
+        failure.InnerExceptions.Should().ContainSingle().Which.Should().BeSameAs(unavailable);
+        failure.Data["ProcessedGrantCount"].Should().Be(0);
+        _repoMock.Verify(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()), Times.Once);
+        _auditMock.Verify(x => x.LogPermissionChangeAsync(
+            It.IsAny<PermissionOperationType>(), It.IsAny<Guid?>(), It.IsAny<Guid>(), It.IsAny<Guid?>(),
+            It.IsAny<string?>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Once);
+        _publisherMock.Verify(x => x.Publish(It.IsAny<PermissionExpirationNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_PublishFailureAfterPersist_StillCountsGrantAndStaysIdempotent()
+    {
+        var grant = CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1));
+        _repoMock.Setup(x => x.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { grant });
+        _repoMock.Setup(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission permission, CancellationToken _) => permission);
+        _publisherMock.Setup(x => x.Publish(It.IsAny<PermissionExpirationNotification>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("mediator unavailable"));
+
+        var firstCycle = await _sut.ProcessExpiredAsync();
+        var secondCycle = await _sut.ProcessExpiredAsync();
+
+        firstCycle.Should().Be(1);
+        secondCycle.Should().Be(0);
+        grant.IsActive.Should().BeFalse();
+        grant.Metadata.Should().ContainKey("expirationProcessedAt");
+        _repoMock.Verify(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()), Times.Once);
+        _auditMock.Verify(x => x.LogPermissionChangeAsync(
+            PermissionOperationType.Expire, grant.UserId, Guid.Empty, TenantA,
+            It.IsAny<string?>(), grant.Id, It.IsAny<string?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessExpiredAsync_QueuesNotificationsAfterGrantAuditAndVersionStaging()
+    {
+        var grant = CreateGrant(TenantA, SystemClock.UtcNow.AddHours(-1));
+        var order = new List<string>();
+        _repoMock.Setup(x => x.GetExpiredPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<TenantPermission> { grant });
+        _repoMock.Setup(x => x.UpdateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("persist")).ReturnsAsync(grant);
+        _auditMock.Setup(x => x.LogPermissionChangeAsync(
+            It.IsAny<PermissionOperationType>(), It.IsAny<Guid?>(), It.IsAny<Guid>(), It.IsAny<Guid?>(),
+            It.IsAny<string?>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("audit")).ReturnsAsync(new PermissionAuditLog());
+        _versionStoreMock.Setup(x => x.IncrementVersionAsync(TenantA.ToString(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("bump")).ReturnsAsync(1L);
+        _publisherMock.Setup(x => x.Publish(It.IsAny<PermissionExpirationNotification>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("publish")).Returns(Task.CompletedTask);
+
+        await _sut.ProcessExpiredAsync();
+
+        // These are staging calls inside the accepted transaction, not independent
+        // durable commits. Required failures and PostgreSQL rollback are separate cases.
+        order.Should().Equal("persist", "audit", "bump", "publish");
+    }
+
+
     // ── SendUpcomingExpirationRemindersAsync ───────────────────
 
     [Fact]

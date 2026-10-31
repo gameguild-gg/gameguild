@@ -10221,6 +10221,45 @@ export const getFraudBlacklistCheckEndpoint = {
 } as const;
 
 /**
+ * Export the tenant's fraud blacklist entries as CSV (issue #409: import/export blacklists).
+ *
+ * Exports the caller's tenant fraud blacklist and whitelist-override entries as CSV (columns: entry_type,value,kind,reason,expires_at,created_at). Wildcard patterns are exported verbatim so a re-import reproduces them. Requires the payments:admin permission.
+ */
+export interface GetFraudBlacklistExportInput {
+  query?: {
+    entryType?: Types.CommercePaymentsFraudBlacklistEntryType;
+    includeExpired?: boolean;
+  };
+}
+export type GetFraudBlacklistExportOutput = void;
+export const getFraudBlacklistExportEndpoint = {
+  operationId: 'getFraudBlacklistExport' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/blacklist/export' as const,
+  tags: ['CommercePaymentsFraudBlacklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Import fraud blacklist entries from a CSV request body (issue #409: import/export
+ * blacklists). Accepts the file shape produced by `GET /fraud/blacklist/export`
+ * (header row detected and skipped); every row is added through the same idempotent
+ * command as the add endpoint, so re-importing is safe. Rows that fail validation
+ * are reported individually and never abort the rest of the batch.
+ *
+ * Imports fraud blacklist entries from a CSV body (columns: entry_type,value,kind,reason,expires_at; header row optional, * wildcards supported). At most 1000 rows and 1 MB per request; idempotent per (type, value, kind). Requires the payments:admin permission.
+ */
+export type PostFraudBlacklistImportInput = void;
+export type PostFraudBlacklistImportOutput = Types.CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResult;
+export const postFraudBlacklistImportEndpoint = {
+  operationId: 'postFraudBlacklistImport' as const,
+  method: 'POST' as const,
+  path: '/api/v1/fraud/blacklist/import' as const,
+  tags: ['CommercePaymentsFraudBlacklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * List the pending manual fraud reviews, oldest first.
  *
  * Lists payments held by the fraud gate with a pending manual review, oldest first. Supports filtering by minimum score, risk band, charged amount and creation date range. Requires the payments:admin permission.
@@ -10333,6 +10372,28 @@ export const getFraudStatisticsEndpoint = {
   operationId: 'getFraudStatistics' as const,
   method: 'GET' as const,
   path: '/api/v1/fraud/statistics' as const,
+  tags: ['CommercePaymentsFraudStatistics'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Export the fraud statistics report for a date window as CSV (issue #409: export
+ * fraud reports). Same authorization and window semantics as the JSON report.
+ *
+ * Exports the fraud statistics report over a date window as CSV: one summary block plus per-country, per-provider and daily-trend sections. Requires the payments:admin permission.
+ */
+export interface GetFraudStatisticsExportInput {
+  query?: {
+    tenantId?: string;
+    fromUtc?: string;
+    toUtc?: string;
+  };
+}
+export type GetFraudStatisticsExportOutput = void;
+export const getFraudStatisticsExportEndpoint = {
+  operationId: 'getFraudStatisticsExport' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/statistics/export' as const,
   tags: ['CommercePaymentsFraudStatistics'] as const,
   requiresAuth: true,
 } as const;
@@ -33510,12 +33571,15 @@ export const endpoints = {
   postFraudBlacklist: postFraudBlacklistEndpoint,
   deleteFraudBlacklist: deleteFraudBlacklistEndpoint,
   getFraudBlacklistCheck: getFraudBlacklistCheckEndpoint,
+  getFraudBlacklistExport: getFraudBlacklistExportEndpoint,
+  postFraudBlacklistImport: postFraudBlacklistImportEndpoint,
   getFraudReviews: getFraudReviewsEndpoint,
   postFraudReviewsApprove: postFraudReviewsApproveEndpoint,
   postFraudReviewsDeny: postFraudReviewsDenyEndpoint,
   postFraudReviewsBulkApprove: postFraudReviewsBulkApproveEndpoint,
   postFraudReviewsBulkDeny: postFraudReviewsBulkDenyEndpoint,
   getFraudStatistics: getFraudStatisticsEndpoint,
+  getFraudStatisticsExport: getFraudStatisticsExportEndpoint,
   getFxRates: getFxRatesEndpoint,
   postFxRatesOverrides: postFxRatesOverridesEndpoint,
   postFxRatesSync: postFxRatesSyncEndpoint,

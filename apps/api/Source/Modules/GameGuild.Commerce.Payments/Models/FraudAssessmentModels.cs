@@ -65,6 +65,10 @@ public sealed record FraudSignal(string SignalType, int Weight, string Details);
 ///     Billing cycle this attempt settles (1 = the subscription's first-ever charge). Used
 ///     as the customer-tenure proxy for the account-age fraud signal (issue #409).
 /// </param>
+/// <param name="Country">Optional ISO 3166-1 alpha-2 billing country of the attempt (issue #409: high-risk country signal).</param>
+/// <param name="SourceIpAddress">Optional client IP the attempt originated from (issue #409: IP blacklist signal).</param>
+/// <param name="DeviceFingerprint">Optional device fingerprint presented with the attempt (issue #409: device blacklist signal).</param>
+/// <param name="PayerEmail">Optional payer email address on the attempt (issue #409: disposable-email and email blacklist signals).</param>
 public sealed record FraudSignalContext(
     Guid TenantId,
     Guid PaymentId,
@@ -73,7 +77,11 @@ public sealed record FraudSignalContext(
     string? PaymentMethodId,
     decimal Amount,
     string Currency,
-    int BillingCycleNumber = 1);
+    int BillingCycleNumber = 1,
+    string? Country = null,
+    string? SourceIpAddress = null,
+    string? DeviceFingerprint = null,
+    string? PayerEmail = null);
 
 /// <summary>Aggregate fraud assessment for one payment attempt.</summary>
 /// <param name="TenantId">Tenant the assessment belongs to.</param>

@@ -187,6 +187,13 @@ reminder/processed stamps so the new lifecycle generates fresh notifications.
 - When adding a new permission-sensitive surface that issues grants, accept the optional
   `expiresAt` parameter end-to-end instead of forcing callers through later bulk edits.
 
+The repository excludes soft-deleted and inactive grants before returning expired
+work, ordered by expiration and then grant id. The service excludes processed
+checkpoints before applying the bounded batch. Grant, audit, checkpoint and tenant
+(or global) version commit atomically; attempted call order is not a series of
+independent durable writes. Required failures are reported, while alert queueing
+remains best effort after acceptance.
+
 ## Tests
 
 - `GameGuild.Identity.Authorization.UnitTests/Services/PermissionExpirationServiceTests.cs` —
@@ -198,3 +205,15 @@ reminder/processed stamps so the new lifecycle generates fresh notifications.
 - `GameGuild.API.UnitTests/Security/PermissionExpirationAlertHandlerTests.cs` — alert
   delivery: config gate, recipient resolution, InApp+Email channels, priority mapping,
   preference-driven suppression tolerance, failure tolerance.
+
+### Additional standalone PostgreSQL coverage
+
+`GameGuild.Identity.Authentication.IntegrationTests/PermissionExpirationRecoveryPostgreSqlTests.cs`
+keeps three additional cases for deterministic backlog drainage/ineligible rows,
+audit-failure retry and persistence-failure convergence. It uses a standalone
+PostgreSQL schema, the actual shared relational executor and an authenticated
+non-empty SystemAdmin caller. Failed attempts leave zero committed grant/audit/version
+effects and the accepted retry commits exactly one audit/version. These cases do not
+replace the migrated-host recovery/system-identity cases or the real HTTP tenant
+boundary cases. The six additional component cases prove orchestration only;
+PostgreSQL remains the evidence for rollback and durability.

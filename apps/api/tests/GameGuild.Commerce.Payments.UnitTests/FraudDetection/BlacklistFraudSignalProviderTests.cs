@@ -99,13 +99,105 @@ public class BlacklistFraudSignalProviderTests : IAsyncDisposable
         details.TryGetProperty("token", out _).Should().BeFalse("the evidence must stay bounded");
     }
 
+    [Fact]
+    public async Task EvaluateAsync_Should_Flag_Blacklisted_Source_Ip_Address()
+    {
+        await AddBlacklistEntryAsync(FraudBlacklistEntryType.IpAddress, "203.0.113.*");
+
+        var signals = await CreateProvider().EvaluateAsync(
+            Context(sourceIpAddress: "203.0.113.9"),
+            Options(),
+            CancellationToken.None);
+
+        var signal = signals.Should().ContainSingle().Subject;
+        signal.SignalType.Should().Be("Blacklist.IpAddress");
+        signal.Weight.Should().Be(50);
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_Should_Flag_Blacklisted_Device_Fingerprint()
+    {
+        await AddBlacklistEntryAsync(FraudBlacklistEntryType.DeviceFingerprint, "device_bad");
+
+        var signals = await CreateProvider().EvaluateAsync(
+            Context(deviceFingerprint: "device_bad"),
+            Options(),
+            CancellationToken.None);
+
+        signals.Should().ContainSingle().Which.SignalType.Should().Be("Blacklist.DeviceFingerprint");
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_Should_Flag_Blacklisted_Exact_Payer_Email()
+    {
+        await AddBlacklistEntryAsync(FraudBlacklistEntryType.Email, "fraud@example.com");
+
+        var signals = await CreateProvider().EvaluateAsync(
+            Context(payerEmail: "fraud@example.com"),
+            Options(),
+            CancellationToken.None);
+
+        signals.Should().ContainSingle().Which.SignalType.Should().Be("Blacklist.Email");
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_Should_Flag_Blacklisted_Email_Domain_When_Address_Itself_Is_Not_Listed()
+    {
+        await AddBlacklistEntryAsync(FraudBlacklistEntryType.EmailDomain, "malicious.com");
+
+        var signals = await CreateProvider().EvaluateAsync(
+            Context(payerEmail: "someone@malicious.com"),
+            Options(),
+            CancellationToken.None);
+
+        signals.Should().ContainSingle().Which.SignalType.Should().Be("Blacklist.EmailDomain");
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_Should_Not_Double_Flag_When_Both_The_Address_And_Domain_Are_Blacklisted()
+    {
+        await AddBlacklistEntryAsync(FraudBlacklistEntryType.Email, "fraud@bad.example");
+        await AddBlacklistEntryAsync(FraudBlacklistEntryType.EmailDomain, "bad.example");
+
+        var signals = await CreateProvider().EvaluateAsync(
+            Context(payerEmail: "fraud@bad.example"),
+            Options(),
+            CancellationToken.None);
+
+        signals.Should().ContainSingle("the exact address match suppresses the domain check");
+    }
+
+    [Fact]
+    public void EmailDomainOf_Should_Extract_The_Lowercased_Domain()
+    {
+        BlacklistFraudSignalProvider.EmailDomainOf("User@Example.COM").Should().Be("example.com");
+        BlacklistFraudSignalProvider.EmailDomainOf("no-separator").Should().BeNull();
+        BlacklistFraudSignalProvider.EmailDomainOf("@local").Should().BeNull();
+        BlacklistFraudSignalProvider.EmailDomainOf("trailing@").Should().BeNull();
+    }
+
     private BlacklistFraudSignalProvider CreateProvider() =>
         new(_context, CreateBlacklistService(), NullLogger<BlacklistFraudSignalProvider>.Instance);
 
     private FraudSignalContext Context(
         string? externalCustomerId = "cus_regular",
-        string? paymentMethodId = null) =>
-        new(_tenantId, _paymentId, _subscriptionId, externalCustomerId, paymentMethodId, 100m, "USD", 3);
+        string? paymentMethodId = null,
+        string? sourceIpAddress = null,
+        string? deviceFingerprint = null,
+        string? payerEmail = null) =>
+        new(
+            _tenantId,
+            _paymentId,
+            _subscriptionId,
+            externalCustomerId,
+            paymentMethodId,
+            100m,
+            "USD",
+            3,
+            Country: null,
+            SourceIpAddress: sourceIpAddress,
+            DeviceFingerprint: deviceFingerprint,
+            PayerEmail: payerEmail);
 
     private static FraudAssessmentOptions Options() => new();
 
