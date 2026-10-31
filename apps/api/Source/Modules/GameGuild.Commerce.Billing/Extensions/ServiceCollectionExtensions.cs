@@ -116,12 +116,18 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGooglePayWebhookVerificationService, GooglePayWebhookVerificationService>();
         services.AddScoped<GooglePayBillingWebhookService>();
 
-        // Webhook replay execution arms (issue #408): Stripe and PayPal deliveries that
+        // Braintree webhook ingress (issue #408): offline public-key signature verification
+        // plus the provider webhook service with idempotent inbox, routing and replay arm.
+        services.AddSingleton<IBraintreeWebhookVerificationService, BraintreeWebhookVerificationService>();
+        services.AddScoped<BraintreeBillingWebhookService>();
+
+        // Webhook replay execution arms (issue #408): Stripe, PayPal and Braintree deliveries that
         // were signature-verified at acceptance can be re-routed from the durable inbox
         // by the retry pipeline. Providers without a replay arm (Apple, Google) surface
         // an explicit failure when retried instead of a silent no-op.
         services.AddScoped<IBillingWebhookReplayHandler>(provider => provider.GetRequiredService<StripeBillingWebhookService>());
         services.AddScoped<IBillingWebhookReplayHandler>(provider => provider.GetRequiredService<PayPalBillingWebhookService>());
+        services.AddScoped<IBillingWebhookReplayHandler>(provider => provider.GetRequiredService<BraintreeBillingWebhookService>());
 
         // Register webhook source security controls (IP allowlist, threshold monitor,
         // security-event publishing, and the authorization filter that enforces them).
@@ -187,6 +193,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ApplePayBillingWebhookService>();
         services.AddSingleton<IGooglePayWebhookVerificationService, GooglePayWebhookVerificationService>();
         services.AddScoped<GooglePayBillingWebhookService>();
+        services.AddSingleton<IBraintreeWebhookVerificationService, BraintreeWebhookVerificationService>();
+        services.AddScoped<BraintreeBillingWebhookService>();
 
         // Register webhook source security controls (IP allowlist, threshold monitor,
         // security-event publishing, and the authorization filter that enforces them).

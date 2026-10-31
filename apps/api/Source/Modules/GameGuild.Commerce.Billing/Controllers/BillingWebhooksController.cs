@@ -271,6 +271,51 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
     }
 
     /// <summary>
+    ///     Handle Braintree webhook events with offline signature verification
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Webhook processing confirmation</returns>
+    /// <remarks>
+    ///     Braintree delivers <c>application/x-www-form-urlencoded</c> bodies carrying the
+    ///     <c>bt_signature</c>/<c>bt_payload</c> pair. The signature is verified offline against
+    ///     the gateway's configured public key (issue #408) before any inbox work; failed
+    ///     verification is rejected fail-closed with a security event. The stored payload is the
+    ///     privacy-minimized routing projection of the notification.
+    /// </remarks>
+    [HttpPost("braintree")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Webhook)]
+    [ServiceFilter(typeof(WebhookSourceSecurityFilter))]
+    [EndpointSummary("Handle Braintree webhook events with offline signature verification")]
+    [EndpointDescription(
+        "Processes Braintree webhook notifications for subscription charges, failures and lifecycle events. The bt_signature form field is verified offline against the configured gateway public key before any inbox work; failed verification is rejected fail-closed."
+    )]
+    [ProducesResponseType<object>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> HandleBraintreeWebhook(CancellationToken ct)
+    {
+        var form = await Request.ReadFormAsync(ct);
+
+        var btSignature = form["bt_signature"].ToString();
+        var btPayload = form["bt_payload"].ToString();
+
+        if (string.IsNullOrEmpty(btSignature) || string.IsNullOrEmpty(btPayload))
+        {
+            logger.LogWarning("Missing Braintree bt_signature/bt_payload form fields");
+            return BadRequest(new { error = "Missing required Braintree form fields" });
+        }
+
+        var result = await sender.Send(new ProcessBraintreeWebhookCommand(btSignature, btPayload), ct);
+
+        if (result.Processed || result.WasAlreadyProcessed)
+        {
+            return Ok(new { received = true, processed = result.Processed, eventId = result.EventId });
+        }
+
+        return StatusCode(500, new { error = result.ErrorMessage, requiresRetry = result.RequiresRetry });
+    }
+
+    /// <summary>
     ///     Retrieve webhook event details by event ID
     /// </summary>
     /// <param name="eventId">The unique identifier of the webhook event</param>
