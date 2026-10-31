@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.API;
 using GameGuild.API.Database;
+using GameGuild.Commerce.Products;
 using GameGuild.Compliance.Audit;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
@@ -136,6 +137,90 @@ public sealed class FieldAccessReadCaptureFilterTests
         await ExecuteAsync(filterContext, filter);
 
         (await context.Set<FieldAccessAudit>().IgnoreQueryFilters().CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task SupportTicketSurface_RecordsReporterEmailReadsFromTicketResponses()
+    {
+        await using var context = NewContext();
+        var filter = CreateFilter(context);
+        var ticketId = Guid.NewGuid();
+        var ticket = new SupportTicketDto(
+            ticketId,
+            TenantId,
+            Guid.NewGuid(), "Customer Company",
+            Guid.NewGuid(), "Reporter Name", "reporter@example.com",
+            "Cannot access purchased item", null,
+            SupportTicketStatus.Open, SupportTicketPriority.Normal,
+            null, null,
+            DateTime.UtcNow, null, null, null, null, null,
+            DateTime.UtcNow, null, 0,
+            []);
+        var filterContext = CreateContext(
+            new ObjectResult(ticket) { StatusCode = StatusCodes.Status200OK },
+            new DataMaskingResourceTypeAttribute("SupportTicket"));
+
+        await ExecuteAsync(filterContext, filter);
+
+        var rows = await context.Set<FieldAccessAudit>().IgnoreQueryFilters().ToListAsync();
+        rows.Should().NotBeEmpty();
+        rows.Should().Contain(row => row.EntityId == ticketId && row.FieldName == "ReporterEmail" && row.IsSensitiveField);
+        // Bare person names (CustomerName/ReporterName) are not classifier-sensitive; nested
+        // message author emails are not top-level ticket fields.
+        rows.Should().NotContain(row => row.FieldName == "CustomerName" || row.FieldName == "ReporterName");
+    }
+
+    [Fact]
+    public async Task UserProfileSurface_RecordsDisplayNameAndAvatarUrlReads()
+    {
+        await using var context = NewContext();
+        var filter = CreateFilter(context);
+        var profileId = Guid.NewGuid();
+        var profile = new UserProfileDto(
+            profileId,
+            Guid.NewGuid(), "Display Name", "bio", "location", "https://example.com", "title", "company",
+            "https://cdn.example.com/avatar.png", null, null, null,
+            "Private", false, false,
+            DateTimeOffset.UtcNow, null,
+            []);
+        var filterContext = CreateContext(
+            new ObjectResult(profile) { StatusCode = StatusCodes.Status200OK },
+            new DataMaskingResourceTypeAttribute("UserProfile"));
+
+        await ExecuteAsync(filterContext, filter);
+
+        var rows = await context.Set<FieldAccessAudit>().IgnoreQueryFilters().ToListAsync();
+        rows.Should().NotBeEmpty();
+        rows.Should().Contain(row => row.EntityId == profileId && row.FieldName == "DisplayName" && row.IsSensitiveField);
+        rows.Should().Contain(row => row.EntityId == profileId && row.FieldName == "AvatarUrl" && row.IsSensitiveField);
+    }
+
+    /// <summary>
+    /// The read-capture surface must keep covering the controllers that return data-subject PII:
+    /// the annotation is what binds <see cref="FieldAccessReadCaptureFilter"/> (and, separately,
+    /// rule-driven masking) to an endpoint. Regressions that drop the attribute silently disable
+    /// field-level read tracking for that surface.
+    /// </summary>
+    [Fact]
+    public void PiiReturningControllers_AreAnnotatedForFieldLevelReadCapture()
+    {
+        var expectedSurfaces = new Dictionary<Type, string>
+        {
+            [typeof(UsersController)] = "User",
+            [typeof(UserProfilesController)] = "UserProfile",
+            [typeof(SupportTicketsController)] = "SupportTicket",
+            [typeof(MySupportTicketsController)] = "SupportTicket"
+        };
+
+        foreach (var (controller, resourceType) in expectedSurfaces)
+        {
+            var attribute = controller.GetCustomAttributes(typeof(DataMaskingResourceTypeAttribute), inherit: true)
+                .OfType<DataMaskingResourceTypeAttribute>()
+                .SingleOrDefault();
+            attribute.Should().NotBeNull(
+                $"{controller.Name} returns data-subject PII and must carry [DataMaskingResourceType] so field-level read capture (issue #186 criterion 1) applies to its responses");
+            attribute!.ResourceType.Should().Be(resourceType);
+        }
     }
 
     private static ApplicationDbContext NewContext()
