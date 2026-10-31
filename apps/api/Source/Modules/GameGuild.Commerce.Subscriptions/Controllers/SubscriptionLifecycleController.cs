@@ -172,13 +172,21 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     /// <returns>No content on success</returns>
     [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:reactivate")]
     [EndpointSummary("Reactivate subscription")]
-    [EndpointDescription("Reactivates a suspended or cancelled subscription.")]
+    [EndpointDescription("Reactivates a suspended or cancelled subscription. The reactivation attempt runs the fraud signal evaluation (the resubscribe path, issue #409): the client IP, device fingerprint and claimed timezone headers feed the change-time risk scoring.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> ReactivateSubscription(Guid subscriptionId, CancellationToken ct)
     {
-        await sender.Send(new ReactivateSubscriptionCommand(subscriptionId), ct).ConfigureAwait(false);
+        // Change-time fraud metadata (issue #409): same header contract as creation.
+        var (sourceIpAddress, deviceFingerprint, clientTimezone) = ReadFraudAttemptHeaders();
+
+        await sender.Send(new ReactivateSubscriptionCommand(
+            subscriptionId,
+            FraudSourceIpAddress: sourceIpAddress,
+            FraudDeviceFingerprint: deviceFingerprint,
+            FraudClientTimezone: clientTimezone), ct).ConfigureAwait(false);
         return NoContent();
     }
 
@@ -195,14 +203,30 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     /// <returns>Upgrade result</returns>
     [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:upgrade")]
     [EndpointSummary("Upgrade subscription plan")]
-    [EndpointDescription("Upgrades a subscription to a higher-tier plan.")]
+    [EndpointDescription("Upgrades a subscription to a higher-tier plan. The change attempt runs the fraud signal evaluation (issue #409): the client IP, device fingerprint and claimed timezone headers plus the body's payer email, country and card BIN feed the change-time risk scoring.")]
     [ProducesResponseType<SubscriptionUpgradeResult>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> UpgradeSubscription(Guid subscriptionId, [FromBody] UpgradeRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var result = await sender.Send(new UpgradeSubscriptionPlanCommand(subscriptionId, body.NewPlanId, body.EffectiveDate, body.PromoCodes, body.PromoCodeIdempotencyKey), ct).ConfigureAwait(false);
+
+        // Change-time fraud metadata (issue #409): same contract as creation.
+        var (sourceIpAddress, deviceFingerprint, clientTimezone) = ReadFraudAttemptHeaders();
+
+        var result = await sender.Send(new UpgradeSubscriptionPlanCommand(
+            subscriptionId,
+            body.NewPlanId,
+            body.EffectiveDate,
+            body.PromoCodes,
+            body.PromoCodeIdempotencyKey,
+            FraudCountry: body.Country,
+            FraudSourceIpAddress: sourceIpAddress,
+            FraudDeviceFingerprint: deviceFingerprint,
+            FraudPayerEmail: body.PayerEmail,
+            FraudCardBin: body.CardBin,
+            FraudClientTimezone: clientTimezone), ct).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -215,14 +239,30 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     /// <returns>Downgrade result</returns>
     [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:downgrade")]
     [EndpointSummary("Downgrade subscription plan")]
-    [EndpointDescription("Downgrades a subscription to a lower-tier plan.")]
+    [EndpointDescription("Downgrades a subscription to a lower-tier plan. The change attempt runs the fraud signal evaluation (issue #409): the client IP, device fingerprint and claimed timezone headers plus the body's payer email, country and card BIN feed the change-time risk scoring.")]
     [ProducesResponseType<SubscriptionDowngradeResult>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> DowngradeSubscription(Guid subscriptionId, [FromBody] DowngradeRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var result = await sender.Send(new DowngradeSubscriptionPlanCommand(subscriptionId, body.NewPlanId, body.EffectiveDate, body.PromoCodes, body.PromoCodeIdempotencyKey), ct).ConfigureAwait(false);
+
+        // Change-time fraud metadata (issue #409): same contract as creation.
+        var (sourceIpAddress, deviceFingerprint, clientTimezone) = ReadFraudAttemptHeaders();
+
+        var result = await sender.Send(new DowngradeSubscriptionPlanCommand(
+            subscriptionId,
+            body.NewPlanId,
+            body.EffectiveDate,
+            body.PromoCodes,
+            body.PromoCodeIdempotencyKey,
+            FraudCountry: body.Country,
+            FraudSourceIpAddress: sourceIpAddress,
+            FraudDeviceFingerprint: deviceFingerprint,
+            FraudPayerEmail: body.PayerEmail,
+            FraudCardBin: body.CardBin,
+            FraudClientTimezone: clientTimezone), ct).ConfigureAwait(false);
         return Ok(result);
     }
 
@@ -307,9 +347,23 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
 
     public sealed record SuspendRequest(string? Reason);
 
-    public sealed record UpgradeRequest(Guid NewPlanId, DateTime? EffectiveDate, IReadOnlyList<string>? PromoCodes = null, string? PromoCodeIdempotencyKey = null);
+    public sealed record UpgradeRequest(
+        Guid NewPlanId,
+        DateTime? EffectiveDate,
+        IReadOnlyList<string>? PromoCodes = null,
+        string? PromoCodeIdempotencyKey = null,
+        string? Country = null,
+        string? PayerEmail = null,
+        string? CardBin = null);
 
-    public sealed record DowngradeRequest(Guid NewPlanId, DateTime? EffectiveDate, IReadOnlyList<string>? PromoCodes = null, string? PromoCodeIdempotencyKey = null);
+    public sealed record DowngradeRequest(
+        Guid NewPlanId,
+        DateTime? EffectiveDate,
+        IReadOnlyList<string>? PromoCodes = null,
+        string? PromoCodeIdempotencyKey = null,
+        string? Country = null,
+        string? PayerEmail = null,
+        string? CardBin = null);
 
     public sealed record ChangeBillingCycleRequest(BillingCycle BillingCycle);
 
@@ -321,4 +375,21 @@ public sealed class SubscriptionLifecycleController(ISender sender) : BaseApiCon
     public sealed record PauseSubscriptionRequest(DateTime? PauseUntil = null, string? Reason = null);
 
     #endregion
+
+    /// <summary>
+    ///     Reads the change-time fraud attempt headers (issue #409) — the same header
+    ///     contract the subscription creation endpoints use: the client IP from the
+    ///     connection, the device fingerprint and the claimed IANA timezone from headers.
+    /// </summary>
+    private (string? SourceIpAddress, string? DeviceFingerprint, string? ClientTimezone) ReadFraudAttemptHeaders()
+    {
+        var sourceIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var deviceFingerprint = Request.Headers["X-Device-Fingerprint"].ToString();
+        var clientTimezone = Request.Headers["X-Client-Timezone"].ToString();
+
+        return (
+            string.IsNullOrWhiteSpace(sourceIpAddress) ? null : sourceIpAddress,
+            string.IsNullOrWhiteSpace(deviceFingerprint) ? null : deviceFingerprint.Trim(),
+            string.IsNullOrWhiteSpace(clientTimezone) ? null : clientTimezone.Trim());
+    }
 }

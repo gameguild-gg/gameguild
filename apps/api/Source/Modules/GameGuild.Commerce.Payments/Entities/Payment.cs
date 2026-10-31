@@ -217,6 +217,22 @@ public class Payment : EntityBase
     [MaxLength(500)]
     public string? FraudReviewNotes { get; private set; }
 
+    /// <summary>
+    ///     Client IP the attempt originated from (issue #409: review-detail enrichment and
+    ///     cross-account device analysis). Same value the fraud gate assessed; null when the
+    ///     attempt carried no IP.
+    /// </summary>
+    [MaxLength(45)]
+    public string? FraudSourceIpAddress { get; private set; }
+
+    /// <summary>
+    ///     Device fingerprint presented with the attempt (issue #409: same device across
+    ///     multiple accounts). Same non-sensitive identifier the fraud gate assessed; null
+    ///     when the attempt carried no fingerprint.
+    /// </summary>
+    [MaxLength(255)]
+    public string? FraudDeviceFingerprint { get; private set; }
+
     /// <summary>Creates a new payment with proper validation</summary>
     public static Payment Create(
         Guid tenantId,
@@ -754,6 +770,89 @@ public class Payment : EntityBase
         }
 
         Touch();
+    }
+
+    /// <summary>
+    ///     Records the client context the fraud gate assessed (issue #409): the source IP
+    ///     and the device fingerprint of the attempt. Bounded, non-sensitive identifiers —
+    ///     the same values already flowing through the assessment signals; persisted so
+    ///     cross-account device analysis and the review-detail surface can use them.
+    /// </summary>
+    /// <param name="sourceIpAddress">Client IP of the attempt, when known.</param>
+    /// <param name="deviceFingerprint">Device fingerprint of the attempt, when known.</param>
+    public void RecordFraudAttemptContext(string? sourceIpAddress, string? deviceFingerprint)
+    {
+        FraudSourceIpAddress = NormalizeBounded(sourceIpAddress, 45);
+        FraudDeviceFingerprint = NormalizeBounded(deviceFingerprint, 255);
+        Touch();
+    }
+
+    /// <summary>
+    ///     Escalates a previously-recorded fraud decision after the asynchronous background
+    ///     re-scoring pass completed providers the synchronous budget deferred (issue #409:
+    ///     asynchronous scoring for background checks). Only Allow → Review/Block is a valid
+    ///     escalation: an already-held payment never loosens on re-score, and a payment that
+    ///     has since succeeded can only be flagged for review, not retroactively failed.
+    /// </summary>
+    /// <param name="decision">The stricter decision from the background pass.</param>
+    /// <param name="score">Aggregate fraud score (0-100) from the background pass.</param>
+    /// <param name="reason">Bounded decision reason from the background pass.</param>
+    /// <param name="evidenceJson">Bounded JSON evidence bundle from the background pass.</param>
+    public void EscalateFraudAssessment(FraudDecision decision, int score, string reason, string? evidenceJson)
+    {
+        if (score is < 0 or > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(score), "Fraud score must be between 0 and 100.");
+        }
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+
+        if (decision == FraudDecisionCode.Allow)
+        {
+            throw new ArgumentException("An escalation requires a Review or Block decision.", nameof(decision));
+        }
+
+        if (FraudDecision is not FraudDecisionCode.Allow)
+        {
+            // Already held or blocked by the synchronous pass (or already escalated): the
+            // recorded decision stands — escalation is strictly a tightening operation.
+            return;
+        }
+
+        FraudScore = score;
+        FraudDecision = decision;
+        FraudDecisionReason = reason.Length <= 500 ? reason : reason[..500];
+        FraudEvidence = evidenceJson;
+        FraudReviewStatus = decision == FraudDecisionCode.Review ? FraudReviewStateCode.PendingReview : null;
+
+        if (Status is PaymentStatus.Pending or PaymentStatus.Processing or PaymentStatus.RequiresAction)
+        {
+            // The gateway charge never started or has not settled: hold the payment now.
+            TransitionTo(PaymentStatus.Failed);
+            FailureReason = $"Fraud gate escalated after background re-score: {FraudDecisionReason}";
+            ErrorCode = $"fraud_{decision.ToString().ToLowerInvariant()}";
+            ProcessedAt = SystemClock.UtcNow;
+            NextRetryAt = null;
+        }
+        else if (decision == FraudDecisionCode.Review)
+        {
+            // Settled payment: surface the case for manual review without reversing money
+            // movement — reviewers decide the outcome through the existing flows.
+            FraudReviewStatus = FraudReviewStateCode.PendingReview;
+        }
+
+        Touch();
+    }
+
+    private static string? NormalizeBounded(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
     }
 
     /// <summary>

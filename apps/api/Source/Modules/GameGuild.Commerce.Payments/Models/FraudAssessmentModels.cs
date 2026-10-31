@@ -70,6 +70,23 @@ public enum FraudVerificationOutcome
     NotChecked = 2
 }
 
+/// <summary>
+///     Kind of subscription change being assessed by the fraud gate (issue #409: score
+///     subscription creations and changes — upgrades, downgrades and the
+///     cancel-then-resubscribe path).
+/// </summary>
+public enum SubscriptionFraudChangeKind
+{
+    /// <summary>Moving to a higher-tier plan (usually carries a prorated immediate charge).</summary>
+    Upgrade = 0,
+
+    /// <summary>Moving to a lower-tier plan.</summary>
+    Downgrade = 1,
+
+    /// <summary>Reactivating a cancelled or suspended subscription (the resubscribe path).</summary>
+    Reactivation = 2
+}
+
 /// <summary>The payment attempt being assessed, scoped to one tenant.</summary>
 /// <param name="TenantId">Tenant the attempt belongs to; all signal queries are scoped to it.</param>
 /// <param name="PaymentId">Payment row created for this attempt; excluded from its own velocity counts.</param>
@@ -123,6 +140,11 @@ public sealed record FraudSignalContext(
 /// <param name="Reason">Human-readable decision reason (bounded).</param>
 /// <param name="Signals">Signal evidence bundle backing the score.</param>
 /// <param name="AssessedAt">Assessment timestamp (UTC).</param>
+/// <param name="DeferredProviders">
+///     Signal providers whose evaluation exceeded the synchronous budget and was deferred
+///     to the background re-scoring pass (issue #409: non-blocking &lt;200ms synchronous
+///     scoring with asynchronous completion). Empty on the default path.
+/// </param>
 public sealed record FraudAssessment(
     Guid TenantId,
     Guid PaymentId,
@@ -131,10 +153,14 @@ public sealed record FraudAssessment(
     FraudDecision Decision,
     string Reason,
     IReadOnlyList<FraudSignal> Signals,
-    DateTime AssessedAt)
+    DateTime AssessedAt,
+    IReadOnlyList<string>? DeferredProviders = null)
 {
     /// <summary>Maximum length of the serialized evidence bundle persisted on the payment.</summary>
     public const int MaxEvidenceJsonLength = 4000;
+
+    /// <summary>Providers deferred to the background pass; never null.</summary>
+    public IReadOnlyList<string> EffectiveDeferredProviders => DeferredProviders ?? [];
 
     /// <summary>Serializes the signal evidence bundle, bounded to <see cref="MaxEvidenceJsonLength"/> characters.</summary>
     public string ToEvidenceJson()
@@ -151,7 +177,10 @@ public sealed record FraudAssessment(
                 type = signal.SignalType,
                 weight = signal.Weight,
                 details = signal.Details
-            })
+            }),
+            deferredProviders = EffectiveDeferredProviders.Count == 0
+                ? null
+                : EffectiveDeferredProviders
         };
 
         var json = JsonSerializer.Serialize(payload, JsonSerializerOptions.Default);
