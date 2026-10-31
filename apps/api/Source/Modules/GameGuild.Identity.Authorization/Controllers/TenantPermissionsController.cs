@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
 using GameGuild.CQRS.Models;
+using GameGuild.Identity.Context.Actors;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -384,7 +385,7 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
     ///     Gets permission grants expiring within a window (administrative visibility
     ///     for upcoming expirations).
     /// </summary>
-    /// <param name="tenantId">The tenant ID.</param>
+    /// <param name="actorContextAccessor">The authenticated actor and validated request tenant.</param>
     /// <param name="expiresBefore">Optional cutoff; defaults to the configured notification window.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Grants expiring before the cutoff.</returns>
@@ -396,19 +397,31 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetExpiringPermissions(
-        [FromRoute] Guid tenantId,
+        [FromServices] IActorContextAccessor actorContextAccessor,
         [FromQuery] DateTime? expiresBefore,
         CancellationToken cancellationToken)
     {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.TenantId is not Guid tenantId || tenantId == Guid.Empty)
+        {
+            return Forbid();
+        }
+
         var query = new GetExpiringTenantPermissionsQuery
         {
             TenantId = new TenantId(tenantId),
             ExpiresBefore = expiresBefore
         };
 
-        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
-
-        return Ok(result);
+        try
+        {
+            var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
     }
 
     /// <summary>

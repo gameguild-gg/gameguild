@@ -151,7 +151,7 @@ tenant-admin authorized unless noted:
 |---|---|---|
 | Bulk set absolute expiration | `POST permissions:set-expiration` | `expiresAt` must be in the future; `null` clears the expiration (grant becomes permanent) |
 | Bulk extend by period | `POST permissions:extend-expiration` | Extension extends from the later of current `ExpiresAt` / now; must be positive |
-| List expiring grants | `GET {tenantId}/permissions:expiring` | Optional `expiresBefore` cutoff (defaults to the notification window) |
+| List expiring grants | `GET permissions:expiring` | Uses the validated authenticated request tenant (for example, selected with `X-Tenant-Id`); optional `expiresBefore` cutoff defaults to the notification window |
 | Process expired now | `POST permissions:process-expired` | System admin only; runs the expired sweep without waiting for the worker |
 | Send reminders now | `POST permissions:send-expiration-reminders` | System admin only; runs the reminder sweep on demand |
 
