@@ -94,8 +94,7 @@ public sealed class GetFraudDeviceInsightsQueryHandler(
             .Select(payment => new
             {
                 payment.FraudDeviceFingerprint,
-                AccountKey = payment.ExternalCustomerId
-                    ?? (payment.SubscriptionId != null ? payment.SubscriptionId.ToString() : payment.Id.ToString()),
+                AccountKey = payment.ExternalCustomerId ?? (payment.SubscriptionId ?? payment.Id).ToString(),
                 payment.CreatedAt
             })
             .ToListAsync(cancellationToken)
