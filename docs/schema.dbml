@@ -4246,6 +4246,8 @@ Table "payments" {
   "FraudReviewedByUserId" uuid
   "FraudReviewedAt" timestamp
   "FraudReviewNotes" "character varying(500)"
+  "FraudSourceIpAddress" "character varying(45)"
+  "FraudDeviceFingerprint" "character varying(255)"
   "Version" integer [not null]
   "CreatedAt" timestamp [not null]
   "UpdatedAt" timestamp [not null]
@@ -4260,6 +4262,7 @@ Table "payments" {
   Indexes {
     Id [pk, name: "PK_payments"]
     ExternalPaymentId [unique, name: "IX_payments_ExternalPaymentId"]
+    (TenantId, FraudDeviceFingerprint, CreatedAt) [name: "ix_payments_fraud_device_lookup"]
     (TenantId, ExternalCustomerId, CreatedAt) [name: "ix_payments_fraud_velocity_lookup"]
     IdempotencyKey [unique, name: "IX_payments_IdempotencyKey"]
     (TenantId, CreatedAt) [name: "ix_payments_open_fraud_reviews"]
