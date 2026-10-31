@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Commerce.Billing;
 
@@ -18,12 +19,20 @@ namespace GameGuild.Commerce.Billing;
 ///     anonymous endpoint registry and authenticated by provider signatures/secrets
 ///     plus the webhook source security filter); event inspection, manual retry, and
 ///     the security monitoring surface require the SystemAdmin policy.
+///     Every provider callback enforces the explicit sub-5-second response bound
+///     (issue #408): processing that exceeds <see cref="WebhookSettings.ResponseBoundSeconds"/>
+///     is acknowledged as received-and-deferred and completed by the durable inbox
+///     retry pipeline instead of holding the provider's connection open.
 /// </summary>
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/billing/webhooks")]
 [Microsoft.AspNetCore.Http.Tags("billing/webhooks")]
-public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWebhooksController> logger) : BaseApiController
+public sealed class BillingWebhooksController(
+    ISender sender,
+    IOptions<BillingConfiguration> billingConfiguration,
+    ILogger<BillingWebhooksController> logger) : BaseApiController
 {
+    private readonly WebhookSettings _webhookSettings = billingConfiguration.Value.Webhook;
     /// <summary>
     ///     Handle Google Pay webhook events for transaction notifications
     /// </summary>
@@ -86,9 +95,12 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
 
             logger.LogInformation("Processing Google Pay webhook for project: {ProjectId}", LogRedaction.Sanitize(projectId));
 
-            var result = await sender.Send(new ProcessGooglePayWebhookCommand(payload, authHeader, projectId), ct).ConfigureAwait(false);
+            var result = await SendWithResponseBoundAsync(
+                new ProcessGooglePayWebhookCommand(payload, authHeader, projectId), ct);
 
-            return Ok(new { received = true, processed = result.Processed });
+            return result is null
+                ? DeferredAcknowledgement()
+                : Ok(new { received = true, processed = result.Processed });
         }
         catch (InvalidWebhookSignatureException ex)
         {
@@ -141,8 +153,13 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
 
         logger.LogInformation("Processing Apple Pay webhook for merchant: {MerchantId}", LogRedaction.Sanitize(merchantId));
 
-        var result = await sender.Send(
+        var result = await SendWithResponseBoundAsync(
             new ProcessApplePayWebhookCommand(payload, merchantId, signature), ct).ConfigureAwait(false);
+
+        if (result is null)
+        {
+            return DeferredAcknowledgement();
+        }
 
         if (result.Processed || result.WasAlreadyProcessed)
         {
@@ -189,7 +206,13 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
                 return BadRequest(new { error = "Missing signature" });
             }
 
-            var result = await sender.Send(new ProcessStripeWebhookCommand(payload, signature), ct).ConfigureAwait(false);
+            var result = await SendWithResponseBoundAsync(new ProcessStripeWebhookCommand(payload, signature), ct)
+                .ConfigureAwait(false);
+
+            if (result is null)
+            {
+                return DeferredAcknowledgement();
+            }
 
             return result.Processed || result.WasAlreadyProcessed
                 ? Ok(new { received = true, processed = result.Processed, eventId = result.EventId })
@@ -254,13 +277,19 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
             return BadRequest(new { error = "Missing required PayPal headers" });
         }
 
-        var result = await sender.Send(new ProcessPayPalWebhookCommand(
-            payload,
-            transmissionId,
-            transmissionSig,
-            transmissionTime,
-            string.IsNullOrEmpty(certUrl) ? null : certUrl,
-            string.IsNullOrEmpty(authAlgo) ? null : authAlgo), ct);
+        var result = await SendWithResponseBoundAsync(new ProcessPayPalWebhookCommand(
+                payload,
+                transmissionId,
+                transmissionSig,
+                transmissionTime,
+                string.IsNullOrEmpty(certUrl) ? null : certUrl,
+                string.IsNullOrEmpty(authAlgo) ? null : authAlgo), ct)
+            .ConfigureAwait(false);
+
+        if (result is null)
+        {
+            return DeferredAcknowledgement();
+        }
 
         if (result.Processed || result.WasAlreadyProcessed)
         {
@@ -305,7 +334,13 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
             return BadRequest(new { error = "Missing required Braintree form fields" });
         }
 
-        var result = await sender.Send(new ProcessBraintreeWebhookCommand(btSignature, btPayload), ct);
+        var result = await SendWithResponseBoundAsync(new ProcessBraintreeWebhookCommand(btSignature, btPayload), ct)
+            .ConfigureAwait(false);
+
+        if (result is null)
+        {
+            return DeferredAcknowledgement();
+        }
 
         if (result.Processed || result.WasAlreadyProcessed)
         {
@@ -314,6 +349,40 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
 
         return StatusCode(500, new { error = result.ErrorMessage, requiresRetry = result.RequiresRetry });
     }
+
+    /// <summary>
+    ///     Executes a provider webhook command under the explicit response bound
+    ///     (issue #408): a linked cancellation source cancels after
+    ///     <see cref="WebhookSettings.ResponseBoundSeconds"/> (strictly under the 5-second
+    ///     provider tolerance). When the bound fires the endpoint returns <c>null</c> and the
+    ///     caller acknowledges the delivery as received-and-deferred — the durable inbox row
+    ///     and the hosted retry worker complete the work. A client-side disconnect still
+    ///     propagates as cancellation.
+    /// </summary>
+    private async Task<TResponse?> SendWithResponseBoundAsync<TResponse>(
+        ICommand<TResponse> command,
+        CancellationToken ct)
+    {
+        using var boundedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        boundedCts.CancelAfter(TimeSpan.FromSeconds(Math.Max(1, _webhookSettings.ResponseBoundSeconds)));
+
+        try
+        {
+            return await sender.Send(command, boundedCts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (boundedCts.IsCancellationRequested && !ct.IsCancellationRequested)
+        {
+            logger.LogWarning(
+                "Webhook processing exceeded the {BoundSeconds}s response bound; acknowledging as deferred (command {CommandType})",
+                _webhookSettings.ResponseBoundSeconds,
+                command.GetType().Name);
+            return default;
+        }
+    }
+
+    /// <summary>The acknowledgement returned when the response bound deferred processing (issue #408).</summary>
+    private IActionResult DeferredAcknowledgement() =>
+        Ok(new { received = true, processed = false, deferred = true });
 
     /// <summary>
     ///     Retrieve webhook event details by event ID

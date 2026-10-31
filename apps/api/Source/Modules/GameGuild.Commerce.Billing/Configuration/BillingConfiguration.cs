@@ -194,6 +194,15 @@ public class BillingConfiguration : IValidatableObject
                 new[] { $"{nameof(Webhook)}.{nameof(Webhook.ProcessingTimeoutSeconds)}" });
         }
 
+        // Response bound (issue #408): the explicit sub-5-second response contract. The value
+        // must stay strictly under the 5-second provider tolerance, hence the 1-4 window.
+        if (Webhook.ResponseBoundSeconds is < 1 or > 4)
+        {
+            yield return new ValidationResult(
+                "ResponseBoundSeconds must be between 1 and 4 seconds (strictly under the 5-second provider tolerance)",
+                new[] { $"{nameof(Webhook)}.{nameof(Webhook.ResponseBoundSeconds)}" });
+        }
+
         if (Webhook.RetryPolicy.InitialDelaySeconds < 1)
         {
             yield return new ValidationResult(
