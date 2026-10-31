@@ -1,6 +1,6 @@
 'use client';
 
-import { useCurrency } from '@/components/currency/currency-provider';
+import { type CurrencyContextValue, useOptionalCurrency } from '@/components/currency/currency-provider';
 import { normalizeCurrencyCode } from '@/lib/currency/currency-preference';
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
@@ -10,7 +10,8 @@ import { useTranslations } from 'next-intl';
  * listing price exactly as published plus the approximate value in the
  * visitor's selected display currency (converted server-side through the
  * platform FX seam). Hides the converted line — never the original — when a
- * conversion is unavailable.
+ * conversion is unavailable. Renders the original alone outside the app
+ * provider tree so isolated renders never crash.
  */
 export function CurrencyPriceDisplay({
   amount,
@@ -21,7 +22,37 @@ export function CurrencyPriceDisplay({
   currency: string;
   className?: string;
 }) {
-  const { currency: target, format } = useCurrency();
+  const context = useOptionalCurrency();
+  if (!context) {
+    return (
+      <span className={`inline-flex flex-col text-xs leading-tight ${className ?? ''}`} data-testid="currency-price-display">
+        <OriginalPrice amount={amount} currency={normalizeCurrencyCode(currency)} />
+      </span>
+    );
+  }
+  return <CurrencyPriceDisplayConnected amount={amount} currency={currency} className={className} currencyState={context} />;
+}
+
+function OriginalPrice({ amount, currency }: { amount: number; currency: string | null }) {
+  return (
+    <span>
+      {`${new Intl.NumberFormat('en-US', { style: 'currency', currency: currency ?? 'USD' }).format(amount)} ${currency}`}
+    </span>
+  );
+}
+
+function CurrencyPriceDisplayConnected({
+  amount,
+  currency,
+  className,
+  currencyState,
+}: {
+  amount: number;
+  currency: string;
+  className?: string;
+  currencyState: CurrencyContextValue;
+}) {
+  const { currency: target, format } = currencyState;
   const t = useTranslations('currency');
   const source = normalizeCurrencyCode(currency);
   // The latest conversion response, keyed by the inputs it answers for: stale
@@ -64,11 +95,10 @@ export function CurrencyPriceDisplay({
   }, [amount, key, source, target]);
 
   const current = result?.key === key ? result : null;
-  const original = `${new Intl.NumberFormat('en-US', { style: 'currency', currency: source ?? 'USD' }).format(amount)} ${source}`;
 
   return (
     <span className={`inline-flex flex-col text-xs leading-tight ${className ?? ''}`} data-testid="currency-price-display">
-      <span>{original}</span>
+      <OriginalPrice amount={amount} currency={source} />
       {current?.converted != null ? (
         <span className="text-muted-foreground" data-testid="currency-price-converted">
           {t('conversionNote', { converted: format(current.converted) })}

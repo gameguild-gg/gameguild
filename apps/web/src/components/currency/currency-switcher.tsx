@@ -1,6 +1,7 @@
 'use client';
 
-import { useCurrency } from '@/components/currency/currency-provider';
+import { type CurrencyContextValue, useOptionalCurrency } from '@/components/currency/currency-provider';
+import { FALLBACK_CURRENCY_OPTIONS } from '@/lib/currency/currency-preference';
 import { Button } from '@game-guild/ui/components/button';
 import {
   Select,
@@ -11,6 +12,7 @@ import {
 } from '@game-guild/ui/components/select';
 import { MapPin, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import * as React from 'react';
 
 /**
  * Navigation currency indicator + selector (issue #412 spec E): shows the
@@ -18,9 +20,43 @@ import { useTranslations } from 'next-intl';
  * display re-renders through the provider) and surfaces the location-based
  * suggestion with a one-click apply. Responsive: the trigger keeps a compact
  * width in the header and stretches to full width inside mobile menus.
+ *
+ * Renders outside the app provider tree (isolated layout renders/tests) fall
+ * back to an inert switcher over the static currency list so a display-only
+ * concern never crashes the tree.
  */
 export function CurrencySwitcher({ className }: { className?: string }) {
-  const { currency, currencies, suggestion, selectCurrency, acceptSuggestion, ignoreSuggestion } = useCurrency();
+  const context = useOptionalCurrency();
+  if (!context) {
+    return (
+      <div className={`flex items-center ${className ?? ''}`} data-testid="currency-switcher">
+        <span className="sr-only">Currency</span>
+        <Select value="USD" onValueChange={() => {}}>
+          <SelectTrigger aria-label="Display currency" data-testid="currency-switcher-trigger" disabled>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FALLBACK_CURRENCY_OPTIONS.map((option) => (
+              <SelectItem key={option.code} value={option.code}>
+                {option.code}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
+  return <CurrencySwitcherConnected className={className} currencyState={context} />;
+}
+
+function CurrencySwitcherConnected({
+  className,
+  currencyState,
+}: {
+  className?: string;
+  currencyState: CurrencyContextValue;
+}) {
+  const { currency, currencies, suggestion, selectCurrency, acceptSuggestion, ignoreSuggestion } = currencyState;
   const t = useTranslations('currency');
   const selectable = currencies.some((option) => option.code === currency);
 

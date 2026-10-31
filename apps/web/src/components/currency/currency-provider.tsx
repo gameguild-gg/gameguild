@@ -38,6 +38,11 @@ export interface CurrencyContextValue {
   format: (amount: number, code?: string) => string;
 }
 
+/**
+ * Context default is absent on purpose: components that must also render in
+ * isolation (navigation header, price displays) check for the provider and
+ * degrade to an inert static fallback instead of crashing the render tree.
+ */
 const CurrencyContext = React.createContext<CurrencyContextValue | null>(null);
 
 interface CurrencyApiResponse {
@@ -153,6 +158,15 @@ export function CurrencyProvider({
   }, [currencies, currenciesFromTenant, currency, locale, suggestion, suggestionCode]);
 
   return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;
+}
+
+/**
+ * Accesses the currency display state when a provider is mounted, null for
+ * isolated renders (layout tests render header trees without the app
+ * provider). Display components use this to degrade instead of crashing.
+ */
+export function useOptionalCurrency(): CurrencyContextValue | null {
+  return React.useContext(CurrencyContext);
 }
 
 /** Accesses the currency display state; must be used inside {@link CurrencyProvider}. */
