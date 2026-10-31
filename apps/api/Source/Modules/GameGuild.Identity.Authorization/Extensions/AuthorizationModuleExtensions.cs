@@ -309,6 +309,11 @@ public static class AuthorizationModuleExtensions
         services.AddScoped<IPermissionExpirationService, PermissionExpirationService>();
         services.AddHostedService<PermissionExpirationWorker>();
 
+        // Advanced expiration rules + expiration analytics (issue #331): pure rule
+        // evaluation (singleton-safe) and read-only dashboard/trend/report aggregation.
+        services.AddSingleton<IPermissionExpirationRuleEvaluator, PermissionExpirationRuleEvaluator>();
+        services.AddScoped<IPermissionExpirationAnalyticsService, PermissionExpirationAnalyticsService>();
+
         // Tenant membership checker - default fail-closed implementation
         // The Tenants module should override this with an actual implementation
         // Using TryAddScoped so the actual implementation from Tenants module takes precedence

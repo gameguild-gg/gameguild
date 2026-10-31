@@ -14124,6 +14124,17 @@ export interface IdentityAuthorizationEffectivePermissionsOutput {
 /** Status of JIT elevation request */
 export type IdentityAuthorizationElevationRequestStatus = 'None' | 'Pending' | 'Approved' | 'Denied' | 'Active' | 'Expired' | 'Revoked';
 
+/** Per-permission-type aggregation of expiring grants (top offenders for renewal planning). */
+export interface IdentityAuthorizationExpiringPermissionBreakdown {
+  /** Gets the earliest expiration among those grants. */
+  earliestExpiration?: string;
+  /** Gets the number of active grants carrying the permission that expire within the
+analytics window. */
+  expiringCount?: number;
+  /** Gets the permission string. */
+  permission: string | null;
+}
+
 /** A tenant permission grant that is about to expire. */
 export interface IdentityAuthorizationExpiringTenantPermission {
   /** Gets the expiration instant. */
@@ -14206,6 +14217,26 @@ export interface IdentityAuthorizationGetContentTypePermissionGrantsOutput {
   /** Gets the matching grant rows. */
   grants: IdentityAuthorizationContentTypePermissionGrantDto[] | null;
   /** Gets the tenant scope. */
+  tenantId: string;
+}
+
+/** The effective advanced expiration rule for a permission set. */
+export interface IdentityAuthorizationGetEffectiveExpirationRuleOutput {
+  /** Gets whether a matching rule imposes any constraint. */
+  hasConstraints: boolean;
+  /** Gets the configuration keys that contributed to the composed rule ("(global)" for the baseline). */
+  matchedRuleKeys: string[] | null;
+  /** Gets the longest allowed expiration distance from the operation instant, if constrained. */
+  maxDuration?: string | null;
+  /** Gets the longest allowed single-extension period, if constrained. */
+  maxExtension?: string | null;
+  /** Gets the shortest allowed expiration distance from the operation instant, if constrained. */
+  minDuration?: string | null;
+  /** Gets the permission strings the rule was resolved for. */
+  permissions: string[] | null;
+  /** Gets whether the permission set may never be granted permanently. */
+  requireExpiration?: boolean | null;
+  /** Gets the tenant the introspection was scoped to. */
   tenantId: string;
 }
 
@@ -14769,6 +14800,78 @@ export interface IdentityAuthorizationPermissionDelegation {
   updatedAt?: string | null;
   usageCount?: number;
   usageLimit?: number | null;
+}
+
+/**     A time-to-expiry bucket in the expiration dashboard (issue #331 "expiration analytics
+and reporting"). Active temporary grants are counted into exactly one bucket by their
+remaining lifetime; permanent and inactive grants are counted separately. */
+export interface IdentityAuthorizationPermissionExpirationBucket {
+  /** Gets the stable bucket identifier (e.g. `expired-pending-processing`,
+`within-24-hours`, `1-to-3-days`, `3-to-7-days`, `7-to-30-days`,
+`beyond-30-days`, `permanent`, `inactive`). */
+  bucket: string | null;
+  /** Gets the number of grants in the bucket. */
+  count?: number;
+  /** Gets a human-readable label for the bucket. */
+  label: string | null;
+}
+
+/** The combined expiration analytics report (issue #331 "expiration analytics and
+reporting"): dashboard, trends, and top expiring permissions for a period. */
+export interface IdentityAuthorizationPermissionExpirationReport {
+  /** Gets operational health flags derived from the dashboard (empty when healthy).
+Example: expired grants still pending background processing. */
+  attentionFlags: string[] | null;
+  /** Gets the inclusive report period end (UTC). */
+  periodEnd: string;
+  /** Gets the inclusive report period start (UTC). */
+  periodStart: string;
+  summary: IdentityAuthorizationPermissionExpirationSummary;
+  /** Gets the tenant the report covers. */
+  tenantId: string;
+  /** Gets the total manual expiration mutations applied during the period. */
+  totalExpirationMutations?: number;
+  /** Gets the total grants durably expired during the period. */
+  totalExpirationsProcessed?: number;
+  /** Gets the daily expiration funnel across the report period. */
+  trends: IdentityAuthorizationPermissionExpirationTrendPoint[] | null;
+}
+
+/** Expiration dashboard summary for one tenant (issue #331): the full grant population
+bucketed by time-to-expiry plus per-permission breakdown of upcoming expirations. */
+export interface IdentityAuthorizationPermissionExpirationSummary {
+  /** Gets the number of active grants without an expiration (permanent grants). */
+  activePermanent?: number;
+  /** Gets the number of active grants that carry an expiration (temporary grants). */
+  activeTemporary?: number;
+  /** Gets the time-to-expiry buckets (always present, zero-count buckets included). */
+  buckets: IdentityAuthorizationPermissionExpirationBucket[] | null;
+  /** Gets the instant the summary was computed at. */
+  computedAt: string;
+  /** Gets the per-permission breakdown of grants expiring within the analytics window,
+most urgent first. */
+  expiringByPermission: IdentityAuthorizationExpiringPermissionBreakdown[] | null;
+  /** Gets the number of inactive (already deactivated) grants. */
+  inactive?: number;
+  /** Gets the tenant the summary was computed for. */
+  tenantId: string;
+  /** Gets the total number of live (non-deleted) grants in the tenant. */
+  totalGrants?: number;
+}
+
+/** One day of the expiration funnel (issue #331 "expiry-funnel stats"): how many grants
+were durably expired by the sweep, and how many manual expiration mutations were applied. */
+export interface IdentityAuthorizationPermissionExpirationTrendPoint {
+  /** Gets the UTC day the point covers. */
+  date: string;
+  /** Gets the number of manual expiration mutations (bulk set/extend/clear operations on
+tenant permission grants, reconstructed from their old→new expiration audit values). */
+  expirationMutations?: number;
+  /** Gets the number of mutations that cleared an expiration (grant made permanent). */
+  expirationsCleared?: number;
+  /** Gets the number of grants deactivated by automatic expiration processing
+(GameGuild.Identity.Authorization.PermissionOperationType.Expire audit entries). */
+  expirationsProcessed?: number;
 }
 
 /** Effective permission state at a past instant (issue #189: time-based permission
@@ -27848,12 +27951,14 @@ export let IdentityAuthorizationDenyTenantPermissionCommandSchema: z.ZodType<Ide
 export let IdentityAuthorizationEffectivePermissionDtoSchema: z.ZodType<IdentityAuthorizationEffectivePermissionDto>;
 export let IdentityAuthorizationEffectivePermissionsOutputSchema: z.ZodType<IdentityAuthorizationEffectivePermissionsOutput>;
 export let IdentityAuthorizationElevationRequestStatusSchema: z.ZodType<IdentityAuthorizationElevationRequestStatus>;
+export let IdentityAuthorizationExpiringPermissionBreakdownSchema: z.ZodType<IdentityAuthorizationExpiringPermissionBreakdown>;
 export let IdentityAuthorizationExpiringTenantPermissionSchema: z.ZodType<IdentityAuthorizationExpiringTenantPermission>;
 export let IdentityAuthorizationExtendTenantPermissionExpirationCommandSchema: z.ZodType<IdentityAuthorizationExtendTenantPermissionExpirationCommand>;
 export let IdentityAuthorizationExternalPermissionEntrySchema: z.ZodType<IdentityAuthorizationExternalPermissionEntry>;
 export let IdentityAuthorizationExternalPermissionSyncDocumentSchema: z.ZodType<IdentityAuthorizationExternalPermissionSyncDocument>;
 export let IdentityAuthorizationExternalRoleDefinitionSchema: z.ZodType<IdentityAuthorizationExternalRoleDefinition>;
 export let IdentityAuthorizationGetContentTypePermissionGrantsOutputSchema: z.ZodType<IdentityAuthorizationGetContentTypePermissionGrantsOutput>;
+export let IdentityAuthorizationGetEffectiveExpirationRuleOutputSchema: z.ZodType<IdentityAuthorizationGetEffectiveExpirationRuleOutput>;
 export let IdentityAuthorizationGetExpiringTenantPermissionsOutputSchema: z.ZodType<IdentityAuthorizationGetExpiringTenantPermissionsOutput>;
 export let IdentityAuthorizationGetPendingResourceInvitationsOutputSchema: z.ZodType<IdentityAuthorizationGetPendingResourceInvitationsOutput>;
 export let IdentityAuthorizationGetResourceInvitationOutputSchema: z.ZodType<IdentityAuthorizationGetResourceInvitationOutput>;
@@ -27896,6 +28001,10 @@ export let IdentityAuthorizationPermissionApprovalWorkflowSchema: z.ZodType<Iden
 export let IdentityAuthorizationPermissionComplianceBreakdownSchema: z.ZodType<IdentityAuthorizationPermissionComplianceBreakdown>;
 export let IdentityAuthorizationPermissionComplianceReportSchema: z.ZodType<IdentityAuthorizationPermissionComplianceReport>;
 export let IdentityAuthorizationPermissionDelegationSchema: z.ZodType<IdentityAuthorizationPermissionDelegation>;
+export let IdentityAuthorizationPermissionExpirationBucketSchema: z.ZodType<IdentityAuthorizationPermissionExpirationBucket>;
+export let IdentityAuthorizationPermissionExpirationReportSchema: z.ZodType<IdentityAuthorizationPermissionExpirationReport>;
+export let IdentityAuthorizationPermissionExpirationSummarySchema: z.ZodType<IdentityAuthorizationPermissionExpirationSummary>;
+export let IdentityAuthorizationPermissionExpirationTrendPointSchema: z.ZodType<IdentityAuthorizationPermissionExpirationTrendPoint>;
 export let IdentityAuthorizationPermissionHistoryAtSnapshotSchema: z.ZodType<IdentityAuthorizationPermissionHistoryAtSnapshot>;
 export let IdentityAuthorizationPermissionRestorationResultSchema: z.ZodType<IdentityAuthorizationPermissionRestorationResult>;
 export let IdentityAuthorizationPermissionSimulationResultSchema: z.ZodType<IdentityAuthorizationPermissionSimulationResult>;
@@ -41835,6 +41944,13 @@ IdentityAuthorizationEffectivePermissionsOutputSchema = z.object({
 /** Zod schema for IdentityAuthorizationElevationRequestStatus. Status of JIT elevation request */
 IdentityAuthorizationElevationRequestStatusSchema = z.enum(['None', 'Pending', 'Approved', 'Denied', 'Active', 'Expired', 'Revoked']);
 
+/** Zod schema for IdentityAuthorizationExpiringPermissionBreakdown. Per-permission-type aggregation of expiring grants (top offenders for renewal planning). */
+IdentityAuthorizationExpiringPermissionBreakdownSchema = z.object({
+  earliestExpiration: z.string().datetime().optional(),
+  expiringCount: z.number().int().optional(),
+  permission: z.string().nullable(),
+});
+
 /** Zod schema for IdentityAuthorizationExpiringTenantPermission. A tenant permission grant that is about to expire. */
 IdentityAuthorizationExpiringTenantPermissionSchema = z.object({
   expiresAt: z.string().datetime(),
@@ -41895,6 +42011,18 @@ IdentityAuthorizationExternalRoleDefinitionSchema = z.object({
 /** Zod schema for IdentityAuthorizationGetContentTypePermissionGrantsOutput. Response envelope for GameGuild.Identity.Authorization.GetContentTypePermissionGrantsQuery. */
 IdentityAuthorizationGetContentTypePermissionGrantsOutputSchema = z.object({
   grants: z.array(z.lazy(() => IdentityAuthorizationContentTypePermissionGrantDtoSchema)).nullable(),
+  tenantId: z.string().uuid(),
+});
+
+/** Zod schema for IdentityAuthorizationGetEffectiveExpirationRuleOutput. The effective advanced expiration rule for a permission set. */
+IdentityAuthorizationGetEffectiveExpirationRuleOutputSchema = z.object({
+  hasConstraints: z.boolean(),
+  matchedRuleKeys: z.array(z.string()).nullable(),
+  maxDuration: z.string().nullable().optional(),
+  maxExtension: z.string().nullable().optional(),
+  minDuration: z.string().nullable().optional(),
+  permissions: z.array(z.string()).nullable(),
+  requireExpiration: z.boolean().nullable().optional(),
   tenantId: z.string().uuid(),
 });
 
@@ -42359,6 +42487,50 @@ IdentityAuthorizationPermissionDelegationSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
   usageCount: z.number().int().optional(),
   usageLimit: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthorizationPermissionExpirationBucket.     A time-to-expiry bucket in the expiration dashboard (issue #331 "expiration analytics
+and reporting"). Active temporary grants are counted into exactly one bucket by their
+remaining lifetime; permanent and inactive grants are counted separately. */
+IdentityAuthorizationPermissionExpirationBucketSchema = z.object({
+  bucket: z.string().nullable(),
+  count: z.number().int().optional(),
+  label: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthorizationPermissionExpirationReport. The combined expiration analytics report (issue #331 "expiration analytics and
+reporting"): dashboard, trends, and top expiring permissions for a period. */
+IdentityAuthorizationPermissionExpirationReportSchema = z.object({
+  attentionFlags: z.array(z.string()).nullable(),
+  periodEnd: z.string().datetime(),
+  periodStart: z.string().datetime(),
+  summary: z.lazy(() => IdentityAuthorizationPermissionExpirationSummarySchema),
+  tenantId: z.string().uuid(),
+  totalExpirationMutations: z.number().int().optional(),
+  totalExpirationsProcessed: z.number().int().optional(),
+  trends: z.array(z.lazy(() => IdentityAuthorizationPermissionExpirationTrendPointSchema)).nullable(),
+});
+
+/** Zod schema for IdentityAuthorizationPermissionExpirationSummary. Expiration dashboard summary for one tenant (issue #331): the full grant population
+bucketed by time-to-expiry plus per-permission breakdown of upcoming expirations. */
+IdentityAuthorizationPermissionExpirationSummarySchema = z.object({
+  activePermanent: z.number().int().optional(),
+  activeTemporary: z.number().int().optional(),
+  buckets: z.array(z.lazy(() => IdentityAuthorizationPermissionExpirationBucketSchema)).nullable(),
+  computedAt: z.string().datetime(),
+  expiringByPermission: z.array(z.lazy(() => IdentityAuthorizationExpiringPermissionBreakdownSchema)).nullable(),
+  inactive: z.number().int().optional(),
+  tenantId: z.string().uuid(),
+  totalGrants: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityAuthorizationPermissionExpirationTrendPoint. One day of the expiration funnel (issue #331 "expiry-funnel stats"): how many grants
+were durably expired by the sweep, and how many manual expiration mutations were applied. */
+IdentityAuthorizationPermissionExpirationTrendPointSchema = z.object({
+  date: z.string().datetime(),
+  expirationMutations: z.number().int().optional(),
+  expirationsCleared: z.number().int().optional(),
+  expirationsProcessed: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityAuthorizationPermissionHistoryAtSnapshot. Effective permission state at a past instant (issue #189: time-based permission

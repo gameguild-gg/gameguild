@@ -40,7 +40,8 @@ public sealed class PermissionExpirationService(
     ILogger<PermissionExpirationService> logger,
     IPermissionMutationExecutor mutationExecutor,
     IPublisher? publisher = null,
-    IActorContextAccessor? actorContextAccessor = null
+    IActorContextAccessor? actorContextAccessor = null,
+    IPermissionExpirationRuleEvaluator? ruleEvaluator = null
 ) : IPermissionExpirationService
 {
     private const string ReminderStampKey = "expirationReminderAt";
@@ -263,9 +264,19 @@ public sealed class PermissionExpirationService(
             throw new ArgumentException("Expiration must be in the future. Use ProcessExpiredAsync to expire grants now.", nameof(expiresAt));
         }
 
-        return await MutateExpirationAsync(
+        var now = SystemClock.UtcNow;
+        var grants = await repository.GetByIdsInTenantAsync(tenantId, permissionIds, cancellationToken).ConfigureAwait(false);
+
+        // Advanced expiration rules (issue #331): validate every matched grant BEFORE the first
+        // mutation so a violating bulk operation is rejected atomically, with the matched rule
+        // keys cited in the exception.
+        EnsureRulesSatisfied(
+            grants,
+            grant => ruleEvaluator?.ValidateSetExpiration(grant.Permissions, expiresAt, now));
+
+        return await ApplyExpirationMutationsAsync(
             tenantId,
-            permissionIds,
+            grants,
             grant =>
             {
                 grant.ExpiresAt = expiresAt;
@@ -293,10 +304,17 @@ public sealed class PermissionExpirationService(
         }
 
         var now = SystemClock.UtcNow;
+        var grants = await repository.GetByIdsInTenantAsync(tenantId, permissionIds, cancellationToken).ConfigureAwait(false);
 
-        return await MutateExpirationAsync(
+        // Advanced expiration rules (issue #331): cap single extensions and the resulting
+        // expiration distance before any grant is mutated.
+        EnsureRulesSatisfied(
+            grants,
+            grant => ruleEvaluator?.ValidateExtension(grant.Permissions, grant.ExpiresAt, extension, now));
+
+        return await ApplyExpirationMutationsAsync(
             tenantId,
-            permissionIds,
+            grants,
             grant =>
             {
                 var baseline = grant.ExpiresAt is { } current && current > now ? current : now;
@@ -322,15 +340,40 @@ public sealed class PermissionExpirationService(
         return expiring.Where(p => p.TenantId == tenantId).ToList();
     }
 
-    private async Task<List<TenantPermission>> MutateExpirationAsync(
+    /// <summary>
+    ///     Runs the advanced-rule validation for every grant (issue #331) and throws a
+    ///     <see cref="PermissionExpirationRuleViolationException"/> citing all violations when
+    ///     any grant fails. Called before the first mutation so bulk operations are atomic.
+    /// </summary>
+    private void EnsureRulesSatisfied(
+        List<TenantPermission> grants,
+        Func<TenantPermission, IReadOnlyList<PermissionExpirationRuleViolation>?> validate)
+    {
+        if (ruleEvaluator is null)
+        {
+            return;
+        }
+
+        var violations = new List<PermissionExpirationRuleViolation>();
+        foreach (var grant in grants)
+        {
+            violations.AddRange(validate(grant) ?? Array.Empty<PermissionExpirationRuleViolation>());
+        }
+
+        if (violations.Count > 0)
+        {
+            throw new PermissionExpirationRuleViolationException(violations);
+        }
+    }
+
+    private async Task<List<TenantPermission>> ApplyExpirationMutationsAsync(
         Guid tenantId,
-        IReadOnlyCollection<Guid> permissionIds,
+        List<TenantPermission> grants,
         Action<TenantPermission> mutate,
         string operationDescription,
         string? reason,
         CancellationToken cancellationToken)
     {
-        var grants = await repository.GetByIdsInTenantAsync(tenantId, permissionIds, cancellationToken).ConfigureAwait(false);
         var performedBy = Actor.SubjectIdAsGuid ?? Guid.Empty;
         var updated = new List<TenantPermission>(grants.Count);
 
