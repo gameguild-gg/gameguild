@@ -34,8 +34,12 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
     public string ConnectionString { get; }
 
     public static Task<EconomyPostgreSqlTestDatabase> CreateAsync(
+        string databasePrefix) =>
+        CreateAsync(databasePrefix, CancellationToken.None);
+
+    public static Task<EconomyPostgreSqlTestDatabase> CreateAsync(
         string databasePrefix,
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken) =>
         CreateCoreAsync(databasePrefix, useTemplate: true, cancellationToken);
 
     /// <summary>
