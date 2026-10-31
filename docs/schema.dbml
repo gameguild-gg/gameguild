@@ -6920,6 +6920,31 @@ Table "Assessments" {
   }
 }
 
+Table "billing_webhook_raw_deliveries" {
+  "Id" uuid [not null]
+  "BillingWebhookEventId" uuid [not null]
+  "Provider" "character varying(50)" [not null]
+  "ExternalEventId" "character varying(255)" [not null]
+  "RawPayload" text [not null]
+  "RawHeaders" text [not null]
+  "PayloadSha256" "character varying(64)" [not null]
+  "PiiRedacted" boolean [not null]
+  "ReceivedAt" timestamp [not null]
+  "ExpiresAt" timestamp [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_billing_webhook_raw_deliveries"]
+    BillingWebhookEventId [unique, name: "ix_billing_webhook_raw_deliveries_event_id"]
+    ExpiresAt [name: "ix_billing_webhook_raw_deliveries_expires_at"]
+    ReceivedAt [name: "ix_billing_webhook_raw_deliveries_received_at"]
+  }
+}
+
 Table "compliance_financial_crime_case_events" {
   "Id" uuid [not null]
   "CaseId" uuid [not null]
@@ -12535,6 +12560,8 @@ Ref "FK_transformed_assets_asset_contents_SourceContentId":"assets"."asset_conte
 Ref "FK_asset_references_asset_contents_AssetContentId":"assets"."asset_contents"."Id" <? "assets"."asset_references"."AssetContentId" [delete: restrict]
 
 Ref "FK_asset_references_asset_folders_FolderId":"assets"."asset_folders"."Id" ?<? "assets"."asset_references"."FolderId" [delete: set null]
+
+Ref "FK_billing_webhook_raw_deliveries_event":"billing_webhook_events"."Id" <? "billing_webhook_raw_deliveries"."BillingWebhookEventId" [delete: cascade]
 
 Ref "FK_compliance_financial_crime_case_events_compliance_financial~":"compliance_financial_crime_cases"."Id" <? "compliance_financial_crime_case_events"."CaseId" [delete: restrict]
 
