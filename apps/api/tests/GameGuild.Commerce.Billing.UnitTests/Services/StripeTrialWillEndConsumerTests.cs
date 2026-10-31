@@ -98,7 +98,10 @@ public class StripeTrialWillEndConsumerTests
 
         var parsed = StripeTrialWillEndConsumer.ParseTrialEndUtc(payload);
 
-        parsed.Should().Be(trialEnd.UtcDateTime);
+        // Stripe's trial_end is a Unix-seconds timestamp, so the parsed instant carries
+        // whole-second precision: compare against the same value round-tripped through
+        // Unix seconds instead of the sub-second-precise source instant.
+        parsed.Should().Be(DateTimeOffset.FromUnixTimeSeconds(trialEnd.ToUnixTimeSeconds()).UtcDateTime);
     }
 
     [Theory]
