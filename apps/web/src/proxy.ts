@@ -1,4 +1,9 @@
 import { auth } from "@/auth";
+import {
+  LOCALE_COOKIE_MAX_AGE_SECONDS,
+  LOCALE_COOKIE_NAME,
+  resolveLocaleForRequest,
+} from "@/i18n/locale-detection";
 import { routing } from "@/i18n/routing";
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
@@ -49,6 +54,24 @@ function redirectToPath(request: NextRequest, pathname: string): NextResponse {
 }
 
 /**
+ * Canonicalizes an explicit default-locale URL and persists the choice: an
+ * `/en-US/...` visit is a deliberate English request, so the preference
+ * cookie must be written before the redirect is followed. Otherwise
+ * automatic detection (issue #92) would bounce a pt-BR browser right back
+ * to `/pt-BR` on the next request and the switch could never stick
+ * (issue #99).
+ */
+function redirectToUnprefixedPath(request: NextRequest, unprefixedPath: string): NextResponse {
+  const response = redirectToPath(request, unprefixedPath);
+  response.cookies.set(LOCALE_COOKIE_NAME, routing.defaultLocale, {
+    path: "/",
+    maxAge: LOCALE_COOKIE_MAX_AGE_SECONDS,
+    sameSite: "lax",
+  });
+  return response;
+}
+
+/**
  * Keeps the default locale internal while preserving explicit non-default
  * locales. The marker header prevents Next 16 from canonicalizing the
  * internal `/en-US` rewrite back into a redirect loop.
@@ -69,14 +92,14 @@ export function routeRequest(request: NextRequest): NextResponse {
   if (matchesPrefix(pathname, DEFAULT_LOCALE_PREFIX)) {
     const unprefixedPath = pathname.slice(DEFAULT_LOCALE_PREFIX.length) || "/";
     if (unprefixedPath === "/social") {
-      return redirectToPath(request, "/feed");
+      return redirectToUnprefixedPath(request, "/feed");
     }
     // RSC navigation targets the internal locale tree. A canonical browser
     // redirect makes Next request that internal tree again and creates a loop.
     if (request.headers.get("rsc") === "1") {
       return rewriteWithLocale(request, pathname, routing.defaultLocale);
     }
-    return redirectToPath(request, unprefixedPath);
+    return redirectToUnprefixedPath(request, unprefixedPath);
   }
 
   const nonDefaultPrefix = NON_DEFAULT_LOCALE_PREFIXES.find((prefix) => matchesPrefix(pathname, prefix));
@@ -94,6 +117,23 @@ export function routeRequest(request: NextRequest): NextResponse {
 
   if (pathname === "/social") {
     return redirectToPath(request, "/feed");
+  }
+
+  // Automatic locale detection (issue #92): a request without an explicit
+  // locale prefix resolves the visitor's preferred locale — a stored choice
+  // first (issue #99 override), then the browser's Accept-Language, then the
+  // default. A detected non-default locale is served through its canonical
+  // prefixed URL so the browser, history entries and next-intl link
+  // generation all agree on the locale; fetch-based RSC navigations follow
+  // the redirect transparently. The default locale keeps the internal
+  // rewrite so default-locale URLs stay unprefixed.
+  const detectedLocale = resolveLocaleForRequest(
+    request.headers.get("cookie"),
+    request.headers.get("accept-language"),
+  );
+  if (detectedLocale !== routing.defaultLocale) {
+    const suffix = pathname === "/" ? "" : pathname;
+    return redirectToPath(request, `/${detectedLocale}${suffix}`);
   }
 
   const localizedPath = pathname === "/" ? DEFAULT_LOCALE_PREFIX : `${DEFAULT_LOCALE_PREFIX}${pathname}`;
