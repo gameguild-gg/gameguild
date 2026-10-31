@@ -200,19 +200,31 @@ the normal versioned ACL evaluation path and returns only requested, warmed, and
 duplicate counts; it does not return access decisions. This is explicit
 operator-selected prewarming.
 
-Automatic popularity-based warming is enabled by default for subject-based ACL
-evaluations. Each API process keeps a bounded, process-local frequency window
-(`PopularityTrackingCapacity`, default 5,000 distinct pairs). Every
-`AutomaticWarmupIntervalSeconds` (default 60), it selects up to
-`AutomaticWarmupMaxEntriesPerCycle` (default 50) pairs seen at least
-`AutomaticWarmupMinimumAccessCount` times in that window (default 5). Warmup
-evaluates the selected pairs through the normal versioned ACL path, and those
-warmup evaluations are excluded from popularity counts. If the tracking window
-is full, new distinct pairs are ignored until the next cycle; existing pairs
-continue accumulating. Configure `AutomaticWarmupEnabled` to `false` to disable
-both observation and scheduled work. Each replica ranks its own observations;
+Automatic popularity-based warming is disabled by default (opt-in, per the
+issue #353 spec) and applies to subject-based ACL evaluations. Each API process
+keeps a bounded, process-local frequency window (`PopularityTrackingCapacity`,
+default 5,000 distinct pairs). Every `AutomaticWarmupIntervalSeconds`
+(default 60), it selects up to `AutomaticWarmupMaxEntriesPerCycle` (default 50)
+pairs seen at least `AutomaticWarmupMinimumAccessCount` times in that window
+(default 5). Warmup evaluates the selected pairs through the normal versioned
+ACL path, and those warmup evaluations are excluded from popularity counts. If
+the tracking window is full, new distinct pairs are ignored until the next
+cycle; existing pairs continue accumulating. Set
+`Authorization:Cache:AutomaticWarmupEnabled` to `true` to enable both
+observation and scheduled work. Each replica ranks its own observations;
 when Redis L2 is enabled, the usual distributed cache remains shared. A failed
 cycle is logged and a later cycle continues.
+
+Configuration-key reconciliation for issue #353: the popularity-based warm
+scheduler requested in the issue is configured through the existing
+`Authorization:Cache` options section rather than a separate
+`Permissions:CacheWarming` section — `AutomaticWarmupMaxEntriesPerCycle` is the
+"top-N hottest keys per cycle" limit (`PopularKeys`), `AutomaticWarmupIntervalSeconds`
+is the interval, and `AutomaticWarmupEnabled` (default `false`) is the feature
+gate. Frequency is measured per subject/resource pair by the process-local
+popularity tracker; the aggregate `ICacheMetricsService` counters (hits, misses,
+evictions, lookup durations per cache type) do not carry per-key data and are
+used for monitoring, not scheduling.
 
 If an L2 read fails or contains invalid data, the hybrid cache records a warning
 and returns a miss so the calling service can load the authoritative value from
