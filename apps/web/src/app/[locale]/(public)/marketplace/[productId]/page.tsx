@@ -59,7 +59,9 @@ export default async function MarketplaceProductPage({ params }: { params: Promi
               // approximate value in the visitor's selected display currency.
               <span className="flex flex-col gap-1">
                 <span>{`${price.currentPrice} ${price.currency}`}</span>
-                <CurrencyPriceDisplay amount={price.currentPrice} currency={price.currency ?? 'USD'} />
+                {typeof price.currentPrice === 'number' ? (
+                  <CurrencyPriceDisplay amount={price.currentPrice} currency={price.currency ?? 'USD'} />
+                ) : null}
               </span>
             ) : t('priceUnavailable')}
           </CardTitle>
