@@ -30,28 +30,37 @@ public sealed class DowngradeSubscriptionPlanCommandHandler(
 {
     public async Task<SubscriptionDowngradeResult> Handle(DowngradeSubscriptionPlanCommand request, CancellationToken cancellationToken)
     {
-        var subscription = await subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken).ConfigureAwait(false)
-            ?? throw new GameGuild.EntityNotFoundException("Subscription", request.SubscriptionId);
-        var newPlan = await planRepository.GetByIdAsync(request.NewPlanId, cancellationToken).ConfigureAwait(false)
-            ?? throw new GameGuild.EntityNotFoundException("SubscriptionPlan", request.NewPlanId);
+        // Both the fraud gate (issue #409) and the promo path (issue #418) need the
+        // subscription and target plan; load them once, lazily, so hosts without a fraud
+        // service keep the exact legacy load semantics.
+        Subscription? subscription = null;
+        SubscriptionPlan? newPlan = null;
 
-        // Issue #409: subscription-change-time risk scoring, before any mutation.
-        await SubscriptionChangeFraudGate.AssessAsync(
-            fraudDetectionService,
-            logger ?? NullLogger<DowngradeSubscriptionPlanCommandHandler>.Instance,
-            subscriptionRepository,
-            subscription,
-            GameGuild.Commerce.Payments.SubscriptionFraudChangeKind.Downgrade,
-            SubscriptionChangeFraudGate.CycleAmountFor(subscription, newPlan).Amount,
-            newPlan.Currency,
-            request.FraudCountry,
-            request.FraudSourceIpAddress,
-            request.FraudDeviceFingerprint,
-            request.FraudPayerEmail,
-            request.FraudCardBin,
-            request.FraudClientTimezone,
-            reviewTicketCoordinator,
-            cancellationToken).ConfigureAwait(false);
+        if (fraudDetectionService is not null)
+        {
+            subscription = await subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken).ConfigureAwait(false)
+                ?? throw new GameGuild.EntityNotFoundException("Subscription", request.SubscriptionId);
+            newPlan = await planRepository.GetByIdAsync(request.NewPlanId, cancellationToken).ConfigureAwait(false)
+                ?? throw new GameGuild.EntityNotFoundException("SubscriptionPlan", request.NewPlanId);
+
+            // Issue #409: subscription-change-time risk scoring, before any mutation.
+            await SubscriptionChangeFraudGate.AssessAsync(
+                fraudDetectionService,
+                logger ?? NullLogger<DowngradeSubscriptionPlanCommandHandler>.Instance,
+                subscriptionRepository,
+                subscription,
+                GameGuild.Commerce.Payments.SubscriptionFraudChangeKind.Downgrade,
+                SubscriptionChangeFraudGate.CycleAmountFor(subscription, newPlan).Amount,
+                newPlan.Currency,
+                request.FraudCountry,
+                request.FraudSourceIpAddress,
+                request.FraudDeviceFingerprint,
+                request.FraudPayerEmail,
+                request.FraudCardBin,
+                request.FraudClientTimezone,
+                reviewTicketCoordinator,
+                cancellationToken).ConfigureAwait(false);
+        }
 
         // Issue #418: quote promo codes against the target plan before mutating anything.
         GameGuild.Commerce.SubscriptionPromoQuoteResult? promoQuote = null;
@@ -62,6 +71,11 @@ public sealed class DowngradeSubscriptionPlanCommandHandler(
                 throw new InvalidOperationException(
                     "Promo codes were supplied but no promo coordinator is registered for plan downgrades.");
             }
+
+            subscription ??= await subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken).ConfigureAwait(false)
+                ?? throw new GameGuild.EntityNotFoundException("Subscription", request.SubscriptionId);
+            newPlan ??= await planRepository.GetByIdAsync(request.NewPlanId, cancellationToken).ConfigureAwait(false)
+                ?? throw new GameGuild.EntityNotFoundException("SubscriptionPlan", request.NewPlanId);
 
             var cycleAmount = SubscriptionChangeFraudGate.CycleAmountFor(subscription, newPlan);
 

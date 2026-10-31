@@ -23,25 +23,26 @@ public class SubscriptionChangeFraudGateTests
     private readonly Guid _userId = Guid.NewGuid();
     private readonly Guid _planId = Guid.NewGuid();
     private readonly Guid _newPlanId = Guid.NewGuid();
-    private readonly Guid _subscriptionId = Guid.NewGuid();
+    private readonly Subscription _subscription;
 
     public SubscriptionChangeFraudGateTests()
     {
+        _subscription = NewSubscription();
         _planRepository
             .Setup(repository => repository.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SubscriptionPlan("Test Plan", "test-plan", 1900, "USD"));
         _subscriptionRepository
             .Setup(repository => repository.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Subscription());
+            .ReturnsAsync(_subscription);
         _subscriptionRepository
             .Setup(repository => repository.UpdateAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Subscription subscription, CancellationToken _) => subscription);
         _lifecycleService
             .Setup(service => service.UpgradePlanAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new SubscriptionUpgradeResult { Success = true, UpdatedSubscription = Subscription() });
+            .ReturnsAsync(new SubscriptionUpgradeResult { Success = true, UpdatedSubscription = NewSubscription() });
         _lifecycleService
             .Setup(service => service.DowngradePlanAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new SubscriptionDowngradeResult { Success = true, UpdatedSubscription = Subscription() });
+            .ReturnsAsync(new SubscriptionDowngradeResult { Success = true, UpdatedSubscription = NewSubscription() });
     }
 
     [Fact]
@@ -122,7 +123,7 @@ public class SubscriptionChangeFraudGateTests
         _ticketCoordinator.Verify(
             coordinator => coordinator.OpenReviewTicketAsync(
                 It.Is<GameGuild.Commerce.FraudReviewTicketRequest>(request =>
-                    request.SubjectEntityId == _subscriptionId
+                    request.SubjectEntityId == _subscription.Id
                     && request.SubjectEntityType == "Subscription"
                     && request.Score == 55),
                 It.IsAny<CancellationToken>()),
@@ -160,7 +161,7 @@ public class SubscriptionChangeFraudGateTests
 
         captured.Should().NotBeNull();
         captured!.TenantId.Should().Be(_tenantId);
-        captured.SubscriptionId.Should().Be(_subscriptionId);
+        captured.SubscriptionId.Should().Be(_subscription.Id);
         captured.PaymentId.Should().Be(Guid.Empty, "no payment row exists at change time");
         captured.Amount.Should().Be(19m);
         captured.Country.Should().Be("PT");
@@ -221,18 +222,18 @@ public class SubscriptionChangeFraudGateTests
             reviewTicketCoordinator: _ticketCoordinator.Object);
 
     private UpgradeSubscriptionPlanCommand UpgradeCommand() =>
-        new(_subscriptionId, _newPlanId, EffectiveDate: null, PromoCodes: null, PromoCodeIdempotencyKey: null,
+        new(_subscription.Id, _newPlanId, EffectiveDate: null, PromoCodes: null, PromoCodeIdempotencyKey: null,
             FraudCountry: null, FraudSourceIpAddress: null, FraudDeviceFingerprint: null,
             FraudPayerEmail: null, FraudCardBin: null, FraudClientTimezone: null);
 
     private DowngradeSubscriptionPlanCommand DowngradeCommand() =>
-        new(_subscriptionId, _newPlanId, EffectiveDate: null, PromoCodes: null, PromoCodeIdempotencyKey: null,
+        new(_subscription.Id, _newPlanId, EffectiveDate: null, PromoCodes: null, PromoCodeIdempotencyKey: null,
             FraudCountry: null, FraudSourceIpAddress: null, FraudDeviceFingerprint: null,
             FraudPayerEmail: null, FraudCardBin: null, FraudClientTimezone: null);
 
-    private ReactivateSubscriptionCommand ReactivateCommand() => new(_subscriptionId);
+    private ReactivateSubscriptionCommand ReactivateCommand() => new(_subscription.Id);
 
-    private Subscription Subscription() =>
+    private Subscription NewSubscription() =>
         new(_tenantId, _planId, _userId, BillingCycle.Monthly, new Money(19m), SystemClock.UtcNow);
 
     private static FraudAssessment Assessment(FraudDecision decision, int score) =>
