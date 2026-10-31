@@ -246,7 +246,7 @@ export class CommerceSubscriptionsModule {
   /**
    * Downgrade subscription plan
    *
-   * Downgrades a subscription to a lower-tier plan.
+   * Downgrades a subscription to a lower-tier plan. The change attempt runs the fraud signal evaluation (issue #409): the client IP, device fingerprint and claimed timezone headers plus the body's payer email, country and card BIN feed the change-time risk scoring.
    */
   async postSubscriptionsDowngrade(
     subscriptionId: string,
@@ -348,7 +348,7 @@ export class CommerceSubscriptionsModule {
   /**
    * Reactivate subscription
    *
-   * Reactivates a suspended or cancelled subscription.
+   * Reactivates a suspended or cancelled subscription. The reactivation attempt runs the fraud signal evaluation (the resubscribe path, issue #409): the client IP, device fingerprint and claimed timezone headers feed the change-time risk scoring.
    */
   async postSubscriptionsReactivate(subscriptionId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscriptions/${subscriptionId}:reactivate`;
@@ -447,7 +447,7 @@ export class CommerceSubscriptionsModule {
   /**
    * Upgrade subscription plan
    *
-   * Upgrades a subscription to a higher-tier plan.
+   * Upgrades a subscription to a higher-tier plan. The change attempt runs the fraud signal evaluation (issue #409): the client IP, device fingerprint and claimed timezone headers plus the body's payer email, country and card BIN feed the change-time risk scoring.
    */
   async postSubscriptionsUpgrade(
     subscriptionId: string,

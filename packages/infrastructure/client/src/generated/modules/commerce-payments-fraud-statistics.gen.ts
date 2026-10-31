@@ -68,6 +68,32 @@ export class CommercePaymentsFraudStatisticsModule {
 
     return result as Result<void, ApiError>;
   }
+
+  /**
+   * Export the fraud statistics report for a date window as PDF (issue #409: export
+   * fraud reports — CSV and PDF). Follows the repository's minimal PDF writer
+   * precedent (no PDF dependency); sections mirror the CSV export. Same
+   * authorization, window and granularity semantics as the JSON report.
+   *
+   * Exports the fraud statistics report over a date window as a PDF document: one summary block plus review-queue, top-signals, per-country, per-provider, per-plan and trend sections at the requested daily/weekly/monthly granularity. Requires the payments:admin permission.
+   */
+  async getFraudStatisticsExportPdf(query?: {
+    tenantId?: string;
+    fromUtc?: string;
+    toUtc?: string;
+    trendGranularity?: Types.CommercePaymentsFraudTrendGranularity;
+  }): Promise<Result<void, ApiError>> {
+    const url = '/api/v1/fraud/statistics/export/pdf';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
 }
 
 export function createCommercePaymentsFraudStatisticsModule(client: ApiClient): CommercePaymentsFraudStatisticsModule {

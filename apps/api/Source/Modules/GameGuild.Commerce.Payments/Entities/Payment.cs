@@ -793,12 +793,15 @@ public class Payment : EntityBase
     ///     asynchronous scoring for background checks). Only Allow → Review/Block is a valid
     ///     escalation: an already-held payment never loosens on re-score, and a payment that
     ///     has since succeeded can only be flagged for review, not retroactively failed.
+    ///     Returns whether the escalation changed the recorded decision — callers skip the
+    ///     persistence write when it did not.
     /// </summary>
     /// <param name="decision">The stricter decision from the background pass.</param>
     /// <param name="score">Aggregate fraud score (0-100) from the background pass.</param>
     /// <param name="reason">Bounded decision reason from the background pass.</param>
     /// <param name="evidenceJson">Bounded JSON evidence bundle from the background pass.</param>
-    public void EscalateFraudAssessment(FraudDecision decision, int score, string reason, string? evidenceJson)
+    /// <returns>True when the recorded decision was tightened; false when it already stood.</returns>
+    public bool EscalateFraudAssessment(FraudDecision decision, int score, string reason, string? evidenceJson)
     {
         if (score is < 0 or > 100)
         {
@@ -816,7 +819,7 @@ public class Payment : EntityBase
         {
             // Already held or blocked by the synchronous pass (or already escalated): the
             // recorded decision stands — escalation is strictly a tightening operation.
-            return;
+            return false;
         }
 
         FraudScore = score;
@@ -842,6 +845,7 @@ public class Payment : EntityBase
         }
 
         Touch();
+        return true;
     }
 
     private static string? NormalizeBounded(string? value, int maxLength)

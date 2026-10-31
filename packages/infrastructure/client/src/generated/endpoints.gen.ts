@@ -8983,6 +8983,74 @@ export const getBillingRevenueAuditingComplianceReportEndpoint = {
 } as const;
 
 /**
+ * Currency conversion costs analysis (issue #412 spec G): for every non-base
+ * transacted currency, the base value of its net volume at the market rate versus at
+ * the active operator override rate, quantifying what pinned rates cost per market.
+ *
+ * Per-currency comparison of the net volume converted at the market rate versus the operator override rate, with the base-currency cost of each pinned rate.
+ */
+export interface GetBillingRevenueAuditingConversionCostsInput {
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    tenantId?: string;
+  };
+}
+export type GetBillingRevenueAuditingConversionCostsOutput = Types.CommercePaymentsConversionCostReport;
+export const getBillingRevenueAuditingConversionCostsEndpoint = {
+  operationId: 'getBillingRevenueAuditingConversionCosts' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/revenue/auditing/conversion-costs' as const,
+  tags: ['CommercePaymentsBillingRevenueAuditing'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Base-currency revenue report and reconciliation (issue #412 specs F/G): per-currency
+ * totals of the period converted into the tenant base currency at the period-end rate,
+ * with reconciled grand totals in base currency. Currencies without a period-end
+ * quotation are listed but excluded from base totals (fail closed, never merged).
+ *
+ * Per-currency revenue totals converted into the tenant base currency at the period-end rate with reconciled grand totals — the accounting reconciliation of multi-currency revenue to base.
+ */
+export interface GetBillingRevenueAuditingCurrenciesBaseInput {
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    tenantId?: string;
+  };
+}
+export type GetBillingRevenueAuditingCurrenciesBaseOutput = Types.CommercePaymentsBaseCurrencyRevenueReport;
+export const getBillingRevenueAuditingCurrenciesBaseEndpoint = {
+  operationId: 'getBillingRevenueAuditingCurrenciesBase' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/revenue/auditing/currencies/base' as const,
+  tags: ['CommercePaymentsBillingRevenueAuditing'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * CSV (RFC 4180) export of the base-currency revenue report for external accounting.
+ *
+ * Serializes the base-currency revenue report (per-currency totals, applied rates and base equivalents) as RFC 4180 CSV.
+ */
+export interface GetBillingRevenueAuditingCurrenciesBaseExportInput {
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    tenantId?: string;
+  };
+}
+export type GetBillingRevenueAuditingCurrenciesBaseExportOutput = void;
+export const getBillingRevenueAuditingCurrenciesBaseExportEndpoint = {
+  operationId: 'getBillingRevenueAuditingCurrenciesBaseExport' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/revenue/auditing/currencies/base/export' as const,
+  tags: ['CommercePaymentsBillingRevenueAuditing'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Most-transacted currencies over an inclusive period, ranked by transaction count.
  *
  * Returns the currencies of the inclusive period ranked by revenue-event transaction count (ties broken by net volume then code), with per-currency credit, debit and net totals. Amounts are never consolidated across currencies.
@@ -9493,6 +9561,24 @@ export const postCurrenciesSetBaseEndpoint = {
   path: '/api/v1/currencies/{currencyCode}/set-base' as const,
   tags: ['CommercePaymentsCurrencies'] as const,
   requiresAuth: true,
+} as const;
+
+/**
+ * Suggests a display currency for the caller from the country code delivered by the
+ * network edge (issue #412 spec E). GDPR data-minimized: a country code is consumed,
+ * never an IP; nothing is stored and no geolocation database is consulted. Anonymous
+ * callers get the catalog mapping (enablement is checked client-side or after sign-in).
+ *
+ * Maps the edge-proxy country code to an ISO 4217 currency and respects tenant enablement; no IP or location is stored (see the privacy notice in the response).
+ */
+export type GetCurrenciesSuggestionInput = void;
+export type GetCurrenciesSuggestionOutput = Types.CommercePaymentsCurrencySuggestionDto;
+export const getCurrenciesSuggestionEndpoint = {
+  operationId: 'getCurrenciesSuggestion' as const,
+  method: 'GET' as const,
+  path: '/api/v1/currencies/suggestion' as const,
+  tags: ['CommercePaymentsCurrencies'] as const,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -10353,6 +10439,29 @@ export const postFraudBlacklistImportEndpoint = {
 } as const;
 
 /**
+ * List device fingerprints shared across multiple customer accounts.
+ *
+ * Lists device fingerprints presented on multiple customer accounts over a look-back window, with the per-account usage breakdown reviewers use to judge whether the sharing is a household or a fraud ring. Backs the Device.CrossAccountUsage fraud signal. Requires the payments:admin permission.
+ */
+export interface GetFraudDevicesInput {
+  query?: {
+    tenantId?: string;
+    minAccounts?: number;
+    lookbackDays?: number;
+    page?: number;
+    pageSize?: number;
+  };
+}
+export type GetFraudDevicesOutput = Types.CommercePaymentsFraudDeviceInsight[];
+export const getFraudDevicesEndpoint = {
+  operationId: 'getFraudDevices' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/devices' as const,
+  tags: ['CommercePaymentsFraudDevices'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * List the pending manual fraud reviews, oldest first.
  *
  * Lists payments held by the fraud gate with a pending manual review, oldest first. Supports filtering by minimum score, risk band, charged amount and creation date range. Requires the payments:admin permission.
@@ -10410,6 +10519,27 @@ export const postFraudReviewsDenyEndpoint = {
   operationId: 'postFraudReviewsDeny' as const,
   method: 'POST' as const,
   path: '/api/v1/fraud/reviews/{paymentId}:deny' as const,
+  tags: ['CommercePaymentsFraudReviews'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get the full review detail for one held payment (issue #409: manual review
+ * interface enrichment).
+ *
+ * Returns the full manual-review detail for one assessed payment: the review case with its signal evidence, the customer's prior transaction history (count, succeeded count, volume, account-age proxy), the payment details (method, provider, source IP, billing country) and the device fingerprint with the session facts (claimed/resolved timezone, anonymizer detection) recovered from the assessed evidence. Requires the payments:admin permission.
+ */
+export interface GetFraudReviewsDetailInput {
+  paymentId: string;
+  query?: {
+    tenantId?: string;
+  };
+}
+export type GetFraudReviewsDetailOutput = Types.CommercePaymentsFraudReviewDetail;
+export const getFraudReviewsDetailEndpoint = {
+  operationId: 'getFraudReviewsDetail' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/reviews/{paymentId}/detail' as const,
   tags: ['CommercePaymentsFraudReviews'] as const,
   requiresAuth: true,
 } as const;
@@ -10495,6 +10625,31 @@ export const getFraudStatisticsExportEndpoint = {
 } as const;
 
 /**
+ * Export the fraud statistics report for a date window as PDF (issue #409: export
+ * fraud reports — CSV and PDF). Follows the repository's minimal PDF writer
+ * precedent (no PDF dependency); sections mirror the CSV export. Same
+ * authorization, window and granularity semantics as the JSON report.
+ *
+ * Exports the fraud statistics report over a date window as a PDF document: one summary block plus review-queue, top-signals, per-country, per-provider, per-plan and trend sections at the requested daily/weekly/monthly granularity. Requires the payments:admin permission.
+ */
+export interface GetFraudStatisticsExportPdfInput {
+  query?: {
+    tenantId?: string;
+    fromUtc?: string;
+    toUtc?: string;
+    trendGranularity?: Types.CommercePaymentsFraudTrendGranularity;
+  };
+}
+export type GetFraudStatisticsExportPdfOutput = void;
+export const getFraudStatisticsExportPdfEndpoint = {
+  operationId: 'getFraudStatisticsExportPdf' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/statistics/export/pdf' as const,
+  tags: ['CommercePaymentsFraudStatistics'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Lists persisted FX quotations (market snapshots and overrides) with optional pair and
  * effective-date-window filters for historical lookup.
  *
@@ -10519,7 +10674,7 @@ export const getFxRatesEndpoint = {
 } as const;
 
 /**
- * Sets or replaces an operator manual FX rate override for an exact direction
+ *     Sets or replaces an operator manual FX rate override for an exact direction
  * (audit-logged with reason; effective immediately).
  *
  * Persists an audited manual override for one exact currency pair direction; overrides win over synced market rates until replaced or expired.
@@ -10532,6 +10687,45 @@ export const postFxRatesOverridesEndpoint = {
   operationId: 'postFxRatesOverrides' as const,
   method: 'POST' as const,
   path: '/api/v1/fx-rates/overrides' as const,
+  tags: ['CommercePaymentsFxRates'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ *     Provisions the API key of an FX rate provider into the encrypted-at-rest store
+ * (issue #412 spec H): the plaintext key is encrypted with ASP.NET DataProtection
+ * (AES-256 under the application key ring) before it touches the database. Only the
+ * key fingerprint is ever returned or audited.
+ *
+ * Encrypts the provider API key at rest (DataProtection AES-256) and makes it the active credential; the plaintext is never stored, returned or logged.
+ */
+export interface PutFxRatesProviderKeysInput {
+  provider: string;
+  body?: Types.CommercePaymentsProvisionFxProviderApiKeyInput;
+}
+export type PutFxRatesProviderKeysOutput = Types.CommercePaymentsGatewayCredentialProvisionResult;
+export const putFxRatesProviderKeysEndpoint = {
+  operationId: 'putFxRatesProviderKeys' as const,
+  method: 'PUT' as const,
+  path: '/api/v1/fx-rates/provider-keys/{provider}' as const,
+  tags: ['CommercePaymentsFxRates'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Deactivates the active encrypted FX provider API key. The provider falls back to
+ * configuration and fails closed when no key is available from either source.
+ *
+ * Deactivates the active encrypted credential; the encrypted row stays for audit and the provider falls back to configuration.
+ */
+export interface DeleteFxRatesProviderKeysInput {
+  provider: string;
+}
+export type DeleteFxRatesProviderKeysOutput = Record<string, unknown>;
+export const deleteFxRatesProviderKeysEndpoint = {
+  operationId: 'deleteFxRatesProviderKeys' as const,
+  method: 'DELETE' as const,
+  path: '/api/v1/fx-rates/provider-keys/{provider}' as const,
   tags: ['CommercePaymentsFxRates'] as const,
   requiresAuth: true,
 } as const;
@@ -10568,6 +10762,23 @@ export const getFxRatesSyncStatusEndpoint = {
   operationId: 'getFxRatesSyncStatus' as const,
   method: 'GET' as const,
   path: '/api/v1/fx-rates/sync-status' as const,
+  tags: ['CommercePaymentsFxRates'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Exchange rate variance report (issue #412 spec G): every active operator override
+ * against the newest synced market quotation of the same pair (actual vs expected),
+ * with variances beyond the anomaly threshold flagged.
+ *
+ * Compares every active operator rate override (expected) against the newest synced market quotation (actual) of the same pair; variances beyond the configured threshold are flagged.
+ */
+export type GetFxRatesVarianceInput = void;
+export type GetFxRatesVarianceOutput = Types.CommercePaymentsFxRateVarianceReport;
+export const getFxRatesVarianceEndpoint = {
+  operationId: 'getFxRatesVariance' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fx-rates/variance' as const,
   tags: ['CommercePaymentsFxRates'] as const,
   requiresAuth: true,
 } as const;
@@ -11677,6 +11888,143 @@ export const getPostsTrendingEndpoint = {
 } as const;
 
 /**
+ * Effective localized price per (plan, enabled currency), annotated with the live
+ * FX-calculated reference price so operators see override vs auto side by side.
+ *
+ * Effective localization per plan and enabled currency with the current FX-calculated reference price (override vs auto-calculated view).
+ */
+export interface GetPriceLocalizationInput {
+  query?: {
+    planId?: string;
+  };
+}
+export type GetPriceLocalizationOutput = Types.CommercePaymentsPlanLocalizedPriceDto[];
+export const getPriceLocalizationEndpoint = {
+  operationId: 'getPriceLocalization' as const,
+  method: 'GET' as const,
+  path: '/api/v1/price-localization' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Sets a manual localized price (psychological pricing) for a plan in an enabled
+ * currency. Optional effective date schedules a future change; optional expiry ends a
+ * temporary override. Audit-logged.
+ *
+ * Persists an audited manual price override for the plan/currency pair; recalculation runs never touch manual rows.
+ */
+export interface PostPriceLocalizationPlansCurrenciesInput {
+  planId: string;
+  currencyCode: string;
+  body?: Types.CommercePaymentsSetLocalizedPriceInput;
+}
+export type PostPriceLocalizationPlansCurrenciesOutput = Record<string, unknown>;
+export const postPriceLocalizationPlansCurrenciesEndpoint = {
+  operationId: 'postPriceLocalizationPlansCurrencies' as const,
+  method: 'POST' as const,
+  path: '/api/v1/price-localization/plans/{planId}/currencies/{currencyCode}' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Clears the manual overrides of a (plan, currency) pair so pricing falls back to the
+ * auto-calculated/FX-converted price. Audit-logged.
+ *
+ * Removes the manual overrides of the plan/currency pair (including future-dated rows); auto-calculated rows are untouched.
+ */
+export interface DeletePriceLocalizationPlansCurrenciesInput {
+  planId: string;
+  currencyCode: string;
+  body?: Types.CommercePaymentsClearLocalizedPriceInput;
+}
+export type DeletePriceLocalizationPlansCurrenciesOutput = Record<string, unknown>;
+export const deletePriceLocalizationPlansCurrenciesEndpoint = {
+  operationId: 'deletePriceLocalizationPlansCurrencies' as const,
+  method: 'DELETE' as const,
+  path: '/api/v1/price-localization/plans/{planId}/currencies/{currencyCode}' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Runs a bulk recalculation of auto-calculated prices from the current FX quotations
+ * (manual overrides are preserved). Creates a progress-tracked, rollback-capable run.
+ *
+ * Bulk-recalculates auto-calculated localized prices from current FX rates; preserves manual overrides; tracks progress on a run row that can be rolled back.
+ */
+export interface PostPriceLocalizationRecalculateInput {
+  body?: Types.CommercePaymentsRecalculateLocalizedPricesInput;
+}
+export type PostPriceLocalizationRecalculateOutput = Types.CommercePaymentsPriceRecalculationOutcome;
+export const postPriceLocalizationRecalculateEndpoint = {
+  operationId: 'postPriceLocalizationRecalculate' as const,
+  method: 'POST' as const,
+  path: '/api/v1/price-localization/recalculate' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Previews a recalculation pass: proposed auto prices against currently effective
+ * values, with the quotation behind every proposal. Read-only.
+ *
+ * Computes what a recalculation pass would change (proposed auto prices, rates, deltas) without writing anything.
+ */
+export interface GetPriceLocalizationRecalculatePreviewInput {
+  query?: {
+    planId?: string;
+  };
+}
+export type GetPriceLocalizationRecalculatePreviewOutput = Types.CommercePaymentsLocalizedPricePreviewItem[];
+export const getPriceLocalizationRecalculatePreviewEndpoint = {
+  operationId: 'getPriceLocalizationRecalculatePreview' as const,
+  method: 'GET' as const,
+  path: '/api/v1/price-localization/recalculate/preview' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Lists recalculation runs with their progress counters (newest first).
+ *
+ * Recalculation runs with progress counters (total/completed items, updated prices, preserved overrides) and rollback state.
+ */
+export interface GetPriceLocalizationRecalculationsInput {
+  query?: {
+    limit?: number;
+  };
+}
+export type GetPriceLocalizationRecalculationsOutput = Types.CommercePaymentsPriceRecalculationRunDto[];
+export const getPriceLocalizationRecalculationsEndpoint = {
+  operationId: 'getPriceLocalizationRecalculations' as const,
+  method: 'GET' as const,
+  path: '/api/v1/price-localization/recalculations' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Rolls back a finished recalculation run, restoring every auto row it rewrote to its
+ * snapshotted before-value.
+ *
+ * Restores the before-values snapshotted by the run; manual overrides were never touched and stay unchanged.
+ */
+export interface PostPriceLocalizationRecalculationsRollbackInput {
+  runId: string;
+  body?: Types.CommercePaymentsRollbackRecalculationInput;
+}
+export type PostPriceLocalizationRecalculationsRollbackOutput = Record<string, unknown>;
+export const postPriceLocalizationRecalculationsRollbackEndpoint = {
+  operationId: 'postPriceLocalizationRecalculationsRollback' as const,
+  method: 'POST' as const,
+  path: '/api/v1/price-localization/recalculations/{runId}/rollback' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Run a full pricing calculation through the unified engine: base plan or custom
  * amount, add-ons, usage tiers, promo discounts, proration, tax, credits, currency —
  * itemized, explained, self-validated, and recorded in the pricing-decision ledger.
@@ -12615,7 +12963,7 @@ export const postSubscriptionsCancelEndpoint = {
 /**
  * Downgrade subscription plan
  *
- * Downgrades a subscription to a lower-tier plan.
+ * Downgrades a subscription to a lower-tier plan. The change attempt runs the fraud signal evaluation (issue #409): the client IP, device fingerprint and claimed timezone headers plus the body's payer email, country and card BIN feed the change-time risk scoring.
  */
 export interface PostSubscriptionsDowngradeInput {
   subscriptionId: string;
@@ -12687,7 +13035,7 @@ export const postSubscriptionsPauseEndpoint = {
 /**
  * Reactivate subscription
  *
- * Reactivates a suspended or cancelled subscription.
+ * Reactivates a suspended or cancelled subscription. The reactivation attempt runs the fraud signal evaluation (the resubscribe path, issue #409): the client IP, device fingerprint and claimed timezone headers feed the change-time risk scoring.
  */
 export interface PostSubscriptionsReactivateInput {
   subscriptionId: string;
@@ -12774,7 +13122,7 @@ export const postSubscriptionsSuspendEndpoint = {
 /**
  * Upgrade subscription plan
  *
- * Upgrades a subscription to a higher-tier plan.
+ * Upgrades a subscription to a higher-tier plan. The change attempt runs the fraud signal evaluation (issue #409): the client IP, device fingerprint and claimed timezone headers plus the body's payer email, country and card BIN feed the change-time risk scoring.
  */
 export interface PostSubscriptionsUpgradeInput {
   subscriptionId: string;
@@ -33595,6 +33943,9 @@ export const endpoints = {
   getBillingRevenueAuditingAnomalyAlerts: getBillingRevenueAuditingAnomalyAlertsEndpoint,
   postBillingRevenueAuditingAnomalyAlertsAcknowledge: postBillingRevenueAuditingAnomalyAlertsAcknowledgeEndpoint,
   getBillingRevenueAuditingComplianceReport: getBillingRevenueAuditingComplianceReportEndpoint,
+  getBillingRevenueAuditingConversionCosts: getBillingRevenueAuditingConversionCostsEndpoint,
+  getBillingRevenueAuditingCurrenciesBase: getBillingRevenueAuditingCurrenciesBaseEndpoint,
+  getBillingRevenueAuditingCurrenciesBaseExport: getBillingRevenueAuditingCurrenciesBaseExportEndpoint,
   getBillingRevenueAuditingCurrenciesPopular: getBillingRevenueAuditingCurrenciesPopularEndpoint,
   getBillingRevenueAuditingExport: getBillingRevenueAuditingExportEndpoint,
   getRunById: getRunByIdEndpoint,
@@ -33621,6 +33972,7 @@ export const endpoints = {
   postCurrenciesDisable: postCurrenciesDisableEndpoint,
   postCurrenciesEnable: postCurrenciesEnableEndpoint,
   postCurrenciesSetBase: postCurrenciesSetBaseEndpoint,
+  getCurrenciesSuggestion: getCurrenciesSuggestionEndpoint,
   postCurrencyConvert: postCurrencyConvertEndpoint,
   getDisputes: getDisputesEndpoint,
   postDisputes: postDisputesEndpoint,
@@ -33674,17 +34026,23 @@ export const endpoints = {
   getFraudBlacklistCheck: getFraudBlacklistCheckEndpoint,
   getFraudBlacklistExport: getFraudBlacklistExportEndpoint,
   postFraudBlacklistImport: postFraudBlacklistImportEndpoint,
+  getFraudDevices: getFraudDevicesEndpoint,
   getFraudReviews: getFraudReviewsEndpoint,
   postFraudReviewsApprove: postFraudReviewsApproveEndpoint,
   postFraudReviewsDeny: postFraudReviewsDenyEndpoint,
+  getFraudReviewsDetail: getFraudReviewsDetailEndpoint,
   postFraudReviewsBulkApprove: postFraudReviewsBulkApproveEndpoint,
   postFraudReviewsBulkDeny: postFraudReviewsBulkDenyEndpoint,
   getFraudStatistics: getFraudStatisticsEndpoint,
   getFraudStatisticsExport: getFraudStatisticsExportEndpoint,
+  getFraudStatisticsExportPdf: getFraudStatisticsExportPdfEndpoint,
   getFxRates: getFxRatesEndpoint,
   postFxRatesOverrides: postFxRatesOverridesEndpoint,
+  putFxRatesProviderKeys: putFxRatesProviderKeysEndpoint,
+  deleteFxRatesProviderKeys: deleteFxRatesProviderKeysEndpoint,
   postFxRatesSync: postFxRatesSyncEndpoint,
   getFxRatesSyncStatus: getFxRatesSyncStatusEndpoint,
+  getFxRatesVariance: getFxRatesVarianceEndpoint,
   postGifts: postGiftsEndpoint,
   getGifts: getGiftsEndpoint,
   postGiftsRedeem: postGiftsRedeemEndpoint,
@@ -33742,6 +34100,13 @@ export const endpoints = {
   getPostsTagsPopular: getPostsTagsPopularEndpoint,
   getPostsTagsSearch: getPostsTagsSearchEndpoint,
   getPostsTrending: getPostsTrendingEndpoint,
+  getPriceLocalization: getPriceLocalizationEndpoint,
+  postPriceLocalizationPlansCurrencies: postPriceLocalizationPlansCurrenciesEndpoint,
+  deletePriceLocalizationPlansCurrencies: deletePriceLocalizationPlansCurrenciesEndpoint,
+  postPriceLocalizationRecalculate: postPriceLocalizationRecalculateEndpoint,
+  getPriceLocalizationRecalculatePreview: getPriceLocalizationRecalculatePreviewEndpoint,
+  getPriceLocalizationRecalculations: getPriceLocalizationRecalculationsEndpoint,
+  postPriceLocalizationRecalculationsRollback: postPriceLocalizationRecalculationsRollbackEndpoint,
   postPricingCalculate: postPricingCalculateEndpoint,
   postPricingPreview: postPricingPreviewEndpoint,
   getPricingCalculations: getPricingCalculationsEndpoint,

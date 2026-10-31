@@ -129,7 +129,12 @@ public class FraudBackgroundScoringTests
     {
         var worker = CreateWorker();
 
-        var processed = await worker.ProcessOneAsync(CancellationToken.None);
+        // An empty queue makes DequeueAsync wait for the next job; a caller token that
+        // fires releases it and the worker reports "nothing processed". (CancellationToken.
+        // None would wait forever by design — the hosted service always passes its
+        // stopping token.)
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+        var processed = await worker.ProcessOneAsync(cts.Token);
 
         processed.Should().BeFalse();
     }

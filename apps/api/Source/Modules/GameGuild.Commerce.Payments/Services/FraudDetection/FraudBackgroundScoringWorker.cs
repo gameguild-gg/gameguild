@@ -69,11 +69,21 @@ public sealed class FraudBackgroundScoringWorker(
             }
 
             var before = payment.FraudDecision;
-            payment.EscalateFraudAssessment(
+            var escalated = payment.EscalateFraudAssessment(
                 assessment.Decision,
                 assessment.Score,
                 assessment.Reason,
                 assessment.ToEvidenceJson());
+            if (!escalated)
+            {
+                // The recorded decision already stood at Review/Block: no write, no notice.
+                logger?.LogInformation(
+                    "Background fraud re-score for payment {PaymentId} confirmed the recorded {Decision}; nothing to escalate",
+                    job.PaymentId,
+                    before);
+                return true;
+            }
+
             await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
 
             logger?.LogWarning(

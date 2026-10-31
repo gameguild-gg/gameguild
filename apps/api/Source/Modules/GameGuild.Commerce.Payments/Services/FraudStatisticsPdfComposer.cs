@@ -92,8 +92,13 @@ public static class FraudStatisticsPdfComposer
     private static IEnumerable<string> BuildLines(FraudStatisticsReport report)
     {
         yield return "GameGuild fraud statistics report";
-        yield return $"Generated: {report.GeneratedAtUtc:yyyy-MM-dd HH:mm:ss} UTC";
-        yield return $"Window: {report.FromUtc:yyyy-MM-dd} to {report.ToUtc:yyyy-MM-dd} (trend granularity: {report.TrendGranularity})";
+        yield return string.Format(EnUsCulture, "Generated: {0:yyyy-MM-dd HH:mm:ss} UTC", report.GeneratedAtUtc);
+        yield return string.Format(
+            EnUsCulture,
+            "Window: {0:yyyy-MM-dd} to {1:yyyy-MM-dd} (trend granularity: {2})",
+            report.FromUtc,
+            report.ToUtc,
+            report.TrendGranularity);
         yield return string.Empty;
         yield return "Summary";
         yield return $"Payments created: {report.Totals.PaymentsCreated}";
@@ -111,7 +116,9 @@ public static class FraudStatisticsPdfComposer
         yield return "Review queue";
         yield return $"Pending backlog: {report.Reviews.PendingBacklog}";
         yield return $"Resolved in window: {report.Reviews.ResolvedInWindow} (approved {report.Reviews.ApprovedInWindow}, declined {report.Reviews.DeclinedInWindow})";
-        yield return $"Average time to review: {(report.Reviews.AverageReviewHours.HasValue ? $"{report.Reviews.AverageReviewHours.Value:0.0}h" : "n/a")}";
+        yield return report.Reviews.AverageReviewHours.HasValue
+            ? string.Format(EnUsCulture, "Average time to review: {0:0.0}h", report.Reviews.AverageReviewHours.Value)
+            : "Average time to review: n/a";
         yield return string.Empty;
         yield return "Top signals";
         if (report.TopSignals.Count == 0)
@@ -152,12 +159,18 @@ public static class FraudStatisticsPdfComposer
         yield return $"{report.TrendGranularity} trend";
         foreach (var point in report.Trend)
         {
-            yield return $"{point.Day:yyyy-MM-dd}: created {point.Created}, held {point.ReviewHeld}, blocked {point.Blocked}";
+            yield return string.Format(
+                EnUsCulture,
+                "{0:yyyy-MM-dd}: created {1}, held {2}, blocked {3}",
+                point.Day,
+                point.Created,
+                point.ReviewHeld,
+                point.Blocked);
         }
     }
 
     private static string FormatRate(double? rate) =>
-        rate.HasValue ? $"{rate.Value:0.00}%" : "n/a";
+        rate.HasValue ? string.Format(EnUsCulture, "{0:0.00}%", rate.Value) : "n/a";
 
     private static IEnumerable<string> WrapLine(string line, int maxLength)
     {

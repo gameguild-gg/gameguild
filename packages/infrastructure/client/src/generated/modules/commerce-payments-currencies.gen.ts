@@ -94,6 +94,32 @@ export class CommercePaymentsCurrenciesModule {
 
     return result as Result<void, ApiError>;
   }
+
+  /**
+   * Suggests a display currency for the caller from the country code delivered by the
+   * network edge (issue #412 spec E). GDPR data-minimized: a country code is consumed,
+   * never an IP; nothing is stored and no geolocation database is consulted. Anonymous
+   * callers get the catalog mapping (enablement is checked client-side or after sign-in).
+   *
+   * Maps the edge-proxy country code to an ISO 4217 currency and respects tenant enablement; no IP or location is stored (see the privacy notice in the response).
+   */
+  async getCurrenciesSuggestion(): Promise<Result<Types.CommercePaymentsCurrencySuggestionDto, ApiError>> {
+    const url = '/api/v1/currencies/suggestion';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsCurrencySuggestionDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
 }
 
 export function createCommercePaymentsCurrenciesModule(client: ApiClient): CommercePaymentsCurrenciesModule {
