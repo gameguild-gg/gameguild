@@ -134,6 +134,20 @@ public sealed class FraudAssessmentOptions
     [Range(0, 100)]
     public int CardBinWeight { get; set; } = 20;
 
+    /// <summary>
+    ///     BIN-to-issuer-country map (issue #409: BIN check comparing card country to user
+    ///     country). Entries are <c>&lt;prefix-or-range&gt;=&lt;ISO 3166-1 alpha-2&gt;</c>,
+    ///     e.g. <c>530000=NG</c> or <c>400000-400050=US</c>. When the presented BIN maps to a
+    ///     country that differs from the attempt's billing country, the mismatch signal
+    ///     fires. Empty by default: the issuer-country dataset is a deployment decision.
+    /// </summary>
+    public string[] CardBinCountryMap { get; set; } = [];
+
+    /// <summary>Score contributed when the BIN's issuer country disagrees with the attempt's
+    /// billing country (issue #409).</summary>
+    [Range(0, 100)]
+    public int CardBinCountryMismatchWeight { get; set; } = 25;
+
     /// <summary>Score contributed per server-known AVS or CVV mismatch (issue #409).</summary>
     [Range(0, 100)]
     public int AvsCvvMismatchWeight { get; set; } = 35;
@@ -220,6 +234,8 @@ public sealed class FraudAssessmentOptions
             DisposableEmailWeight = overrideValues.DisposableEmailWeight ?? DisposableEmailWeight,
             HighRiskCardBins = overrideValues.HighRiskCardBins ?? HighRiskCardBins,
             CardBinWeight = overrideValues.CardBinWeight ?? CardBinWeight,
+            CardBinCountryMap = overrideValues.CardBinCountryMap ?? CardBinCountryMap,
+            CardBinCountryMismatchWeight = overrideValues.CardBinCountryMismatchWeight ?? CardBinCountryMismatchWeight,
             AvsCvvMismatchWeight = overrideValues.AvsCvvMismatchWeight ?? AvsCvvMismatchWeight,
             AvsCvvUncheckedWeight = overrideValues.AvsCvvUncheckedWeight ?? AvsCvvUncheckedWeight,
             AnonymizerWeight = overrideValues.AnonymizerWeight ?? AnonymizerWeight,
@@ -288,6 +304,13 @@ public sealed class FraudAssessmentOverride
     /// <summary>See <see cref="FraudAssessmentOptions.CardBinWeight"/>.</summary>
     [Range(0, 100)]
     public int? CardBinWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.CardBinCountryMap"/>.</summary>
+    public string[]? CardBinCountryMap { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.CardBinCountryMismatchWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? CardBinCountryMismatchWeight { get; set; }
 
     /// <summary>See <see cref="FraudAssessmentOptions.AvsCvvMismatchWeight"/>.</summary>
     [Range(0, 100)]

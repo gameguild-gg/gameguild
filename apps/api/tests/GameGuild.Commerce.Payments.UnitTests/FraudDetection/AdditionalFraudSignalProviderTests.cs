@@ -83,6 +83,36 @@ public class AdditionalFraudSignalProviderTests
             .Should().BeNull();
     }
 
+    [Fact]
+    public async Task BinRange_Should_Compare_Card_Country_To_User_Country()
+    {
+        var options = Options(new FraudAssessmentOptions
+        {
+            CardBinCountryMap = ["530000=NG", "400000-400050=US"]
+        });
+        var provider = new BinRangeFraudSignalProvider(NullLogger<BinRangeFraudSignalProvider>.Instance);
+
+        var withoutBillingCountry = await provider.EvaluateAsync(Context(cardBin: "530092"), options);
+        var mismatch = await provider.EvaluateAsync(Context(cardBin: "530092", country: "PT"), options);
+        var match = await provider.EvaluateAsync(Context(cardBin: "400012", country: "us"), options);
+        var unmapped = await provider.EvaluateAsync(Context(cardBin: "999999", country: "PT"), options);
+
+        withoutBillingCountry.Should().BeEmpty("country comparison needs a billing country");
+        mismatch.Should().ContainSingle(signal => signal.SignalType == "CardBin.CountryMismatch"
+                                                   && signal.Weight == options.CardBinCountryMismatchWeight);
+        match.Should().BeEmpty("the card country equals the user country");
+        unmapped.Should().BeEmpty("a BIN without a mapped issuer country is not evidence");
+    }
+
+    [Fact]
+    public void BinRange_ResolveIssuerCountry_Should_Ignore_Malformed_Map_Entries()
+    {
+        BinRangeFraudSignalProvider.ResolveIssuerCountry("530092", ["=NG", "530000=", "530000=NGA", "530000=1G", "garbage"])
+            .Should().BeNull();
+        BinRangeFraudSignalProvider.ResolveIssuerCountry("530092", ["530000=ng"])
+            .Should().Be("NG", "country codes normalize to uppercase");
+    }
+
     // ───────────────────────── AVS / CVV ─────────────────────────
 
     [Fact]
@@ -234,7 +264,8 @@ public class AdditionalFraudSignalProviderTests
         FraudVerificationOutcome? avs = null,
         FraudVerificationOutcome? cvv = null,
         string? ip = null,
-        string? timezone = null) => new(
+        string? timezone = null,
+        string? country = null) => new(
         TenantId,
         PaymentId,
         SubscriptionId,
@@ -242,7 +273,7 @@ public class AdditionalFraudSignalProviderTests
         PaymentMethodId: "pm_test",
         Amount: 25m,
         Currency: "USD",
-        Country: null,
+        Country: country,
         SourceIpAddress: ip,
         DeviceFingerprint: null,
         PayerEmail: null,
