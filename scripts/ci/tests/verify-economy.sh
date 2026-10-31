@@ -65,7 +65,7 @@ test_shell_only_ci_policy() {
   grep -q '"ci:economy": "bash scripts/ci/verify-economy.sh"' "$repository_root/package.json" || return 1
   grep -Fq 'pnpm install --frozen-lockfile --ignore-scripts' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'rm -f "$repository_root/node_modules/.pnpm-workspace-state.json"' "$ci_dir/install-and-audit-pnpm.sh" || return 1
-  grep -Fq 'pnpm rebuild braces deepmerge sprintf-js' "$ci_dir/install-and-audit-pnpm.sh" || return 1
+  grep -Fq 'pnpm rebuild braces deepmerge eslint-plugin-import glob minimatch sprintf-js' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'repository pnpm lockfile is required' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -q 'pnpm audit --json' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'audit_stderr_report="$audit_root/audit.stderr.log"' "$ci_dir/install-and-audit-pnpm.sh" || return 1

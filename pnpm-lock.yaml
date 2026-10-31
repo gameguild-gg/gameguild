@@ -14,12 +14,11 @@ overrides:
   '@excalidraw/mermaid-to-excalidraw>nanoid': 5.1.16
   dompurify: 3.4.17
   fast-uri: 3.1.9
+  follow-redirects@<1.16.2: 1.16.2
   hono: 4.13.11
   lodash-es: 4.18.0
-  syncpack>minimatch: 11.0.1
   minimatch@<11.0.1: 11.0.1
-  glob@>=9.0.0 <14.0.2: 14.0.2
-  follow-redirects@<1.16.2: 1.16.2
+  glob@>=9 <14.0.2: 14.0.2
   handlebars: 4.7.10
   icu-minify: 4.9.2
   ip-address: 10.7.4
@@ -59,6 +58,15 @@ patchedDependencies:
   deepmerge@4.3.1:
     hash: ce7bc8c614caad7eae9afd0ccb7c63767c693fed9df668af1a4dbb8516664919
     path: patches/deepmerge@4.3.1.patch
+  eslint-plugin-import@2.32.0:
+    hash: 2ffdfb53c367bdfc823dde00d2cde7c0e39915d90d96c1af9022f1c6e8a10bdc
+    path: patches/eslint-plugin-import@2.32.0.patch
+  glob@7.2.3:
+    hash: 6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375
+    path: patches/glob@7.2.3.patch
+  minimatch@11.0.1:
+    hash: 067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a
+    path: patches/minimatch@11.0.1.patch
   sprintf-js@1.1.3:
     hash: 3bb0134466e1967e01d743c6bb9f42dc45deeb6a2b2e0b986c0f2b0d35e011c8
     path: patches/sprintf-js@1.1.3.patch
@@ -119,8 +127,8 @@ importers:
   apps/web:
     dependencies:
       '@codingame/monaco-vscode-files-service-override':
-        specifier: 37.6.1
-        version: 37.6.1
+        specifier: 38.0.4
+        version: 38.0.4
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -1378,7 +1386,7 @@ importers:
     dependencies:
       '@toruslabs/torus-embed':
         specifier: '*'
-        version: 7.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)
+        version: 7.0.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)
       '@walletconnect/ethereum-provider':
         specifier: '*'
         version: 2.26.0(@azure/identity@4.13.2)(@azure/storage-blob@12.26.0)(@types/react@19.3.0)(immer@11.1.18)(react@19.2.8)(typescript@6.0.3)(use-sync-external-store@1.7.0(react@19.2.8))(zod@4.6.7)
@@ -3635,29 +3643,29 @@ packages:
     resolution: {integrity: sha512-y7/yvZ2TPAnR9+jnc00klvNNLkJiXFFrQA/hlLCcxA9a2A4zQIOimyFQ9XfwYKiGD1fb5GY8vbKIIgO8d5Tb2A==}
     engines: {node: '>= 20.12.0'}
 
-  '@codingame/monaco-vscode-api@37.6.1':
-    resolution: {integrity: sha512-xKEnIdJl1pjkEHbijs+aS7SeBOQBTYEFPbbcVSQoHhzXZima15x7S0QoWMpy5oAlrpT6sFxRrGEhSXMMAYTpZw==}
+  '@codingame/monaco-vscode-api@38.0.4':
+    resolution: {integrity: sha512-RUkk2707MrDIQjQ3W2dny2u+X2kWumfb1rflXrtv5C5gcToKj28yX+lqZn1/vtUWVgaV4TgobW915xnYHRJDqQ==}
 
-  '@codingame/monaco-vscode-base-service-override@37.6.1':
-    resolution: {integrity: sha512-yTMynPR45MDMbpr/ARS43P95uDN1rgE5at2d/+myDPtggrTNdEe+jsVHdsQJPyExLW6b4FeVuL4aXVjwCtj9LQ==}
+  '@codingame/monaco-vscode-base-service-override@38.0.4':
+    resolution: {integrity: sha512-BQm+M1fULrakWQPKbV1cVT1s1UMzh29MD+bRzsWAN7JfuKZVD2R/Nb9PBOD/Ilr/qVmZE6q3m8yu+wWkAFmdXQ==}
 
-  '@codingame/monaco-vscode-environment-service-override@37.6.1':
-    resolution: {integrity: sha512-pYFg/oKECnJ2WX1gIZCaM6c8F+LruOV+L+xkdP9zuxFZgptmNtlFmYyuZrG2TFuUmSWnrJQ9zZmVyX4+Mi+l6A==}
+  '@codingame/monaco-vscode-environment-service-override@38.0.4':
+    resolution: {integrity: sha512-uDzjNDmcnC4Bay9KfH4B2OaRixzJk1KwQbs6gk9XYJDOs75HyGtqvj4QK53EbllAHJ0jGc/Ajw07979q8w2MQQ==}
 
-  '@codingame/monaco-vscode-extensions-service-override@37.6.1':
-    resolution: {integrity: sha512-s8ANOIqL0FtQk5P6M9gkP4Y3ABC5LlTZr7OBxK/LCL1IEyediTCcHs4uN7kFjqebIiw2BxaSQ682UzuRcnyAnA==}
+  '@codingame/monaco-vscode-extensions-service-override@38.0.4':
+    resolution: {integrity: sha512-P1bYDpFYZtRae2RigwGFYJtuT/J1vE6DUa56UdGM45rLJacRLIB0MhHPjXN9PXEmKiFCxbG0qN59nQi30hBDbQ==}
 
-  '@codingame/monaco-vscode-files-service-override@37.6.1':
-    resolution: {integrity: sha512-e+VAoSYGowJQDdcyp1Uw0yCLYqkCvDnJMa9fa+xekcRnAswOYb8MVp4YaHF4vED2rgZ5TxWpCIwdXDAztLuGnQ==}
+  '@codingame/monaco-vscode-files-service-override@38.0.4':
+    resolution: {integrity: sha512-USnvOAVmkFCWpSHhXx/ctY4XNywXijO6imJe4HXuDI9iUArKmbr37dcW63Gn2f3G1t9k3vy0kVyhYhbZnjg5Mw==}
 
-  '@codingame/monaco-vscode-host-service-override@37.6.1':
-    resolution: {integrity: sha512-wam79Wm8VDZPp3FTTX6KrdpdOe7zx7/5/nnzM1RUM+Xa0+0PzMvXf4nhkle9lKxGaUCIt/7PQwGcyjOpy8xdDQ==}
+  '@codingame/monaco-vscode-host-service-override@38.0.4':
+    resolution: {integrity: sha512-/qYMesybOKzy9qsXM/fEEUw9ltlFYjcm2Dr3yS966WQCo5rm6Nwen7H+1rVVbnrySDAR2XJj7tAJQVoFoAV/wg==}
 
-  '@codingame/monaco-vscode-layout-service-override@37.6.1':
-    resolution: {integrity: sha512-LCNwOHcmQeWewcVvIHoLQR8mOP3aDuovCq3uazr3tiO7CP9SRDya44gzDLmmafYcOSTwL1/bAnjLnTj8aWXa6g==}
+  '@codingame/monaco-vscode-layout-service-override@38.0.4':
+    resolution: {integrity: sha512-gaQGPIINCHYAREStQ3Q62CiG2pOxdoqRRYxozZI/UnSFiruW/HVy228mHIs0yusN5miRgEwQl4ZVsH3lqdnNCA==}
 
-  '@codingame/monaco-vscode-quickaccess-service-override@37.6.1':
-    resolution: {integrity: sha512-Td8WPVkVumOMBUTSlg4/aeNJr68b+SaAjYqGapOboe453WQgBba/ld4RBy4PweimDtIXf3B+u9H3/udM8W+r8A==}
+  '@codingame/monaco-vscode-quickaccess-service-override@38.0.4':
+    resolution: {integrity: sha512-cmNWzYTVOtZFavGPGBQIruLV1hI6PdwWFwS8P0WgX9Ej5IWhMSHVHdpJKbThTxTUPq3eHtnJwVsTKEzNoTlXDA==}
 
   '@coinbase/cdp-sdk@1.60.0':
     resolution: {integrity: sha512-cW0KbfcFUJb0oedDiUfxC6kjPBsWxHds2vNFfgDfNYv/MFtbaJBvDqRxkXCUi0Np+9p5W/o6BLfL1yXuWNnQqg==}
@@ -5090,6 +5098,13 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
       '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.4
+
+  '@napi-rs/wasm-runtime@1.2.6':
+    resolution: {integrity: sha512-mRyDmEw9/fCDXCGfL1sbgIw/GUK0PVxRW4YwgPN61F3LQ+fSyoBFarJVzgGyhF6kRzEQZ0FejDqm4WLXSeqQmw==}
+    engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
+    peerDependencies:
+      '@emnapi/core': ^1.7.1 || 2.0.0-beta.2
+      '@emnapi/runtime': ^1.7.1 || 2.0.0-beta.2
 
   '@next/env@16.4.2':
     resolution: {integrity: sha512-nTUTFH7G5/J/fmpkjVLegOkqyKOP0CEsJcMsyO4UCYeN1su+YMW/MfaSErnJskL7XM+UDK6aTvslxsRCyya/sA==}
@@ -6961,18 +6976,18 @@ packages:
     resolution: {integrity: sha512-fO9PLmHdVURcSPUpWCItWAtgKiMwGdJHbovoSEyLplX5sxs2ugvI4CBPTrkkgqhObnZOD0CnWBKDzSVQYBKEyQ==}
     engines: {node: '>=14'}
 
-  '@sentry/core@10.76.2':
-    resolution: {integrity: sha512-vndrQalRiwYatTkjlLWvyf69KocXIb9TKJ4A9oiyWguL8PJYtqIRTlRe4OpkpjLrxS18fvRdV0jEm29c/9p3hQ==}
+  '@sentry/core@10.77.1':
+    resolution: {integrity: sha512-2bEVJKl73kIKJcwPg+n3OkPYqwuOIF2eRXu2IGm6aTsL1B4gfGRb7/nDZrz28C1cgpVnH8jCvcys/Ts3Iq6Suw==}
     engines: {node: '>=18'}
 
-  '@sentry/node-core@10.76.2':
-    resolution: {integrity: sha512-TrgAc/SvU5kQfjw8pz6I8LLIUiblOSf9BPPNkTbS0Dzcqa4yQLVbmsbS3rvGT7ot64m9Vjzn327ZRy63MlI6/w==}
+  '@sentry/node-core@10.77.1':
+    resolution: {integrity: sha512-BufG2tWtz10547qtT8+AfvhUI1VH8nQaoELJXp5Xy7TB6PnVKPGOxujUQWW+6JlGuQPfATaBiSgQBhwmxP7zjA==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@opentelemetry/api': ^1.9.0
+      '@opentelemetry/api': '>=1.9.0 <1.10.0'
       '@opentelemetry/core': ^1.30.1 || ^2.1.0
-      '@opentelemetry/exporter-trace-otlp-http': '>=0.57.0 <1'
-      '@opentelemetry/instrumentation': '>=0.57.1 <1'
+      '@opentelemetry/exporter-trace-otlp-http': '>=0.57.0 <0.300.0'
+      '@opentelemetry/instrumentation': '>=0.57.1 <0.300.0'
       '@opentelemetry/sdk-trace-base': ^1.30.1 || ^2.1.0
     peerDependenciesMeta:
       '@opentelemetry/api':
@@ -6986,20 +7001,20 @@ packages:
       '@opentelemetry/sdk-trace-base':
         optional: true
 
-  '@sentry/node@10.76.2':
-    resolution: {integrity: sha512-LSwGGE/GceTbkDHRoQQr3lq/dpxxA6RdooBbuGTJ/S6BdqKX2kw2FdV7Se9eJzZJJJ5AxCZum37+ejYS7N2pJg==}
+  '@sentry/node@10.77.1':
+    resolution: {integrity: sha512-7YgQN0+3lbhsRRi9cOICk3p17Pl+3IyDux/iqHBcNYnvH7zrh2KYKhaN7eYUBYae+zUzNKoW66LeSh2PhLLtUA==}
     engines: {node: '>=18'}
 
-  '@sentry/opentelemetry@10.76.2':
-    resolution: {integrity: sha512-deqWrKJGaku3nhiZchg34z8W9v6kUwtzoQ4cmEq6CeT8/4X93X4YfeJgoh1dhbswFRpwor4pQ6kj0KttagKtfA==}
+  '@sentry/opentelemetry@10.77.1':
+    resolution: {integrity: sha512-5tbV5+f6BqjxeSTV7dNM/RuTj3dNHC40mJ3VdIFTEGWkKtHReqYCjJ9NR15vDI7DVXIGKE9hId+1AEFjFMmZEQ==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@opentelemetry/api': ^1.9.0
+      '@opentelemetry/api': '>=1.9.0 <1.10.0'
       '@opentelemetry/core': ^1.30.1 || ^2.1.0
       '@opentelemetry/sdk-trace-base': ^1.30.1 || ^2.1.0
 
-  '@sentry/server-utils@10.76.2':
-    resolution: {integrity: sha512-wogj6Trj8fAu+aD7HbpvHEBlyANMOvvO9MP5NFJaiQbprLKugtCdE6rFTxDhofXvRo4nswL9m4Cvysg3k5KcvQ==}
+  '@sentry/server-utils@10.77.1':
+    resolution: {integrity: sha512-GKRQ/9/XF1r6qfo4/GXXlFss1ktdB9EDQNs7EzMfLYsWnAmJOH7L0q8wS+IYD/2YMR4Y5Qs1aL3c8azm5+/Amg==}
     engines: {node: '>=18'}
 
   '@shadcn/react@0.3.1':
@@ -8202,6 +8217,10 @@ packages:
     resolution: {integrity: sha512-y5Ukl3oVp7e/VGxqIoEXoeb/Roj71PAJ4WG/N/RGj+eeDvKRLM15kGr9MijLbN0i03S52zxu31Z98E5gWChJKw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@typescript-eslint/types@8.72.1':
+    resolution: {integrity: sha512-LmE5IhQet1BWOWEXqBrVtBPsMAOQ6Nzk35d+WLh3mk4EUF33sqlfxjio1MdYeSvKSG5skactKKuixBIKXhL4Rw==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
   '@typescript-eslint/typescript-estree@8.71.2':
     resolution: {integrity: sha512-DgNOEsl4pdYzwSL+N/Cl33tX1Hlw3FvId73LnKXfq7jnrF2viOEn7X+P7RBkkSWCVm92gnWd28GIC5vJuLREeA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -8965,6 +8984,11 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
+  baseline-browser-mapping@2.11.34:
+    resolution: {integrity: sha512-Aqr8mA1kIvyJ3UY5YAY7ib8LSo1DmDMbMnVqGPtsKW1LxaFQFwn9Eb3yvq2fUKJsRvaXjnAV7R5osqETapzNiA==}
+    engines: {node: '>=6.0.0'}
+    hasBin: true
+
   bidi-js@1.1.0:
     resolution: {integrity: sha512-fX1Onk0tdVPC7obPWB5EbJ1z7NVhLq4m2xZLq2YXBkxzMXIGRpNMU88n0EPgWseKl12J7zXs7qrDxPK4sRs2fg==}
 
@@ -9030,6 +9054,11 @@ packages:
 
   browserslist@4.29.3:
     resolution: {integrity: sha512-1R4kiYKXGViqEN0CnoDrXc1StD9niAwu+j2dukWzrD4bJgsD4lDmEp0CRbc6E/vYJIfTHwPmwyaKtVSudICdPA==}
+    engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
+    hasBin: true
+
+  browserslist@4.29.5:
+    resolution: {integrity: sha512-khTmKu5NGYTotqcYo8Bew2k4RAE9PuXRSFRXG2lQBrCEQHyeQ/vX6gKMxfokwywBsLiXZMnHsmWMG1pnO8J7uQ==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
@@ -9114,6 +9143,9 @@ packages:
 
   caniuse-lite@1.0.30001816:
     resolution: {integrity: sha512-+8Yx7BXCoqk6IF8yTicjfUR6D/ldJzdlsodlEOiOSPmhK844WIgk67/zIQaGAOxNkZyyvBlrRFnLvqKIoqbAFw==}
+
+  caniuse-lite@1.0.30001819:
+    resolution: {integrity: sha512-LFUqIIAwpzsIuevnKnsR9qnStBcgzPShTX61lBwN9uFkkf8o8zLiebEjbW8AYtZiF+1YKDWfdt/pWDtMuG8Xwg==}
 
   canvas-roundrect-polyfill@0.0.1:
     resolution: {integrity: sha512-yWq+R3U3jE+coOeEb3a3GgE2j/0MMiDKM/QpLb6h9ihf5fGY9UXtvK9o4vNqjWXoZz7/3EaSVU3IX53TvFFUOw==}
@@ -9878,6 +9910,9 @@ packages:
 
   electron-to-chromium@1.5.459:
     resolution: {integrity: sha512-4SC9HHSFjO/liAhifpdOL5hG9b4BP7/5G3y3UPZVO8trlAXr1CaUEEJL0gWK3kOcYcZrOA5rkwG45Gra/lTIgg==}
+
+  electron-to-chromium@1.5.466:
+    resolution: {integrity: sha512-WkgFvScwZjvCPupYGfQr5qlKCv/Tu+GYELGMCGcoBOQbNb6nx/TqGwJyLMwcNAAy2kKJF2agjM7KZKest538JA==}
 
   elkjs@0.9.3:
     resolution: {integrity: sha512-f/ZeWvW/BCXbhGEf1Ujp29EASo/lk1FDnETgNKwJrsVvGZhUWCZyg3xLJjAsxfOmt8KjswHmI5EwCQcPMpOYhQ==}
@@ -10879,8 +10914,8 @@ packages:
     resolution: {integrity: sha512-TR3KfrTZTYLPB6jUjfx6MF9WcWrHL9su5TObK4ZkYgBdWKPOFoSoQIdEuTuR82pmtxH2spWG9h6etwfr1pLBqQ==}
     engines: {node: '>=6'}
 
-  import-in-the-middle@3.5.2:
-    resolution: {integrity: sha512-WseIA/4o56+GYO3RmlOPvejYi771OFeJEeK/ejROsr9bdjW+E5NXTOD1Di8TL40Qgg3JJX9aa97Hf8iiSVIKZw==}
+  import-in-the-middle@3.5.3:
+    resolution: {integrity: sha512-usm/IiY63VtOyx/dm7uEoZV+EsanCDmwRUroQZIkFLGu1NVXZ8mZqIOhaN4QIJ7EsbMTuQbJXwCySCx+ozMA8g==}
     engines: {node: '>=18'}
 
   import-local@3.2.0:
@@ -12352,8 +12387,8 @@ packages:
   minimisted@2.0.1:
     resolution: {integrity: sha512-1oPjfuLQa2caorJUM8HV8lGgWCc0qqAO1MNv/k05G4qslmsndV/5WdNZrqCiyqiz3wohia2Ij2B7w2Dr7/IyrA==}
 
-  minimizer-webpack-plugin@5.13.0:
-    resolution: {integrity: sha512-OO1NF2zHj6sf4CNv2AsUWYcS8WEwkVKQDXxxKzlOxx1Xl+WlqYtVC+oNlGNwGkLAOnpj277BSHypWwRtd9w4JQ==}
+  minimizer-webpack-plugin@5.13.1:
+    resolution: {integrity: sha512-1mhAfvachWYYOm8tpmany5NLuvP+F2wxZWBSX8DC0uFS2wJpM9q3rWgN9wBooAH9d5V12wX0BjyJe4fMjHMarQ==}
     engines: {node: '>= 10.13.0'}
     peerDependencies:
       '@minify-html/node': '*'
@@ -12585,6 +12620,10 @@ packages:
 
   node-releases@2.0.59:
     resolution: {integrity: sha512-5qr2okC4ItAI0hG5SaV0HoYMpnM/Y6+Oqr7AmPYy/2uEoGvS+GbSKLeRxSS1uAdu59yz0ouzcuXievSgg///WA==}
+    engines: {node: '>=18'}
+
+  node-releases@2.0.60:
+    resolution: {integrity: sha512-OmO8+GM1JUZqXET720VrJCwkjUCXmCMQm0Z3UDDRbfNLHS4NEAvY60j5jiFv0tkKw2PNNlqOLhahVmwJIOLDIQ==}
     engines: {node: '>=18'}
 
   normalize-package-data@2.5.0:
@@ -13692,10 +13731,15 @@ packages:
     resolution: {integrity: sha512-pN/yOAvcC+5rQ5nERGuwrjLlYvLTbCibnZ1I7B1LaiAz9BRBlE9GMgE/eqV30P7aJQUf7Ddimy/RsbYO/GrVGg==}
     engines: {node: '>= 10.13.0'}
 
-  schema-utils@4.6.0:
-    resolution: {integrity: sha512-q8cvkEp4bRQdWcLvB3vmxpZAlS25Hxws10nCK+rUxUfuB7e430dYZZJ5z5yAoOGBbbDtve8cUg8DFfc3ue12TA==}
+  schema-utils@4.8.1:
+    resolution: {integrity: sha512-x39pYlJPyH7Uge5QO64B9XGP9zLDc9WNmiQZc+CE3IzZPvMu3lHOuAMGpYNoPixEL7MSWlGhYTg5UlLSL8G6iw==}
     engines: {node: '>= 10.13.0'}
     hasBin: true
+    peerDependencies:
+      webpack: ^5.112.0
+    peerDependenciesMeta:
+      webpack:
+        optional: true
 
   semver@5.7.2:
     resolution: {integrity: sha512-cBznnQ9KjJqU67B52RMC65CMarK2600WFnbkcaiwWq3xy/5haFJlshgnpjovMVJ+Hff49d8GEn0b87C5pDQ10g==}
@@ -15053,8 +15097,8 @@ packages:
     resolution: {integrity: sha512-FlRLb15WwAOz1A9OQDbf6oOKKSiefi5VK0ZRF2wgH9xk3o5SnU11tNPaOnQuAh1Ucr66cwwvVXaeVRaFdRBt5g==}
     hasBin: true
 
-  watchpack@2.6.2:
-    resolution: {integrity: sha512-67nxRd7I5uAyn+KamYsCqU30iVgCgZ4aj8ZOGzmxs7zNPuvlnoYltm6+6JkOjEcD6WVXdu1BfH+gVQs3FUuW7Q==}
+  watchpack@2.6.3:
+    resolution: {integrity: sha512-s3NZy0QpTY9qGqzc0wtz4qI28z3+5qKbbAec4MV4G9N3CfgZ9wgvQRr0cl2jh/tqkWG1NWHkmVMHZpCamev5Wg==}
     engines: {node: '>=10.13.0'}
 
   web-namespaces@2.0.1:
@@ -15853,7 +15897,7 @@ snapshots:
       commander: 6.2.1
       convert-source-map: 2.0.0
       fs-readdir-recursive: 1.1.0
-      glob: 7.2.3
+      glob: 7.2.3(patch_hash=6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375)
       make-dir: 2.1.0
       slash: 2.0.0
     optionalDependencies:
@@ -17688,49 +17732,49 @@ snapshots:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
-  '@codingame/monaco-vscode-api@37.6.1':
+  '@codingame/monaco-vscode-api@38.0.4':
     dependencies:
-      '@codingame/monaco-vscode-base-service-override': 37.6.1
-      '@codingame/monaco-vscode-environment-service-override': 37.6.1
-      '@codingame/monaco-vscode-extensions-service-override': 37.6.1
-      '@codingame/monaco-vscode-files-service-override': 37.6.1
-      '@codingame/monaco-vscode-host-service-override': 37.6.1
-      '@codingame/monaco-vscode-layout-service-override': 37.6.1
-      '@codingame/monaco-vscode-quickaccess-service-override': 37.6.1
+      '@codingame/monaco-vscode-base-service-override': 38.0.4
+      '@codingame/monaco-vscode-environment-service-override': 38.0.4
+      '@codingame/monaco-vscode-extensions-service-override': 38.0.4
+      '@codingame/monaco-vscode-files-service-override': 38.0.4
+      '@codingame/monaco-vscode-host-service-override': 38.0.4
+      '@codingame/monaco-vscode-layout-service-override': 38.0.4
+      '@codingame/monaco-vscode-quickaccess-service-override': 38.0.4
       '@vscode/diff': 0.0.2-7
       '@vscode/iconv-lite-umd': 0.7.1
       dompurify: 3.4.17
       jschardet: 3.1.4
       marked: 14.0.0
 
-  '@codingame/monaco-vscode-base-service-override@37.6.1':
+  '@codingame/monaco-vscode-base-service-override@38.0.4':
     dependencies:
-      '@codingame/monaco-vscode-api': 37.6.1
+      '@codingame/monaco-vscode-api': 38.0.4
 
-  '@codingame/monaco-vscode-environment-service-override@37.6.1':
+  '@codingame/monaco-vscode-environment-service-override@38.0.4':
     dependencies:
-      '@codingame/monaco-vscode-api': 37.6.1
+      '@codingame/monaco-vscode-api': 38.0.4
 
-  '@codingame/monaco-vscode-extensions-service-override@37.6.1':
+  '@codingame/monaco-vscode-extensions-service-override@38.0.4':
     dependencies:
-      '@codingame/monaco-vscode-api': 37.6.1
-      '@codingame/monaco-vscode-files-service-override': 37.6.1
+      '@codingame/monaco-vscode-api': 38.0.4
+      '@codingame/monaco-vscode-files-service-override': 38.0.4
 
-  '@codingame/monaco-vscode-files-service-override@37.6.1':
+  '@codingame/monaco-vscode-files-service-override@38.0.4':
     dependencies:
-      '@codingame/monaco-vscode-api': 37.6.1
+      '@codingame/monaco-vscode-api': 38.0.4
 
-  '@codingame/monaco-vscode-host-service-override@37.6.1':
+  '@codingame/monaco-vscode-host-service-override@38.0.4':
     dependencies:
-      '@codingame/monaco-vscode-api': 37.6.1
+      '@codingame/monaco-vscode-api': 38.0.4
 
-  '@codingame/monaco-vscode-layout-service-override@37.6.1':
+  '@codingame/monaco-vscode-layout-service-override@38.0.4':
     dependencies:
-      '@codingame/monaco-vscode-api': 37.6.1
+      '@codingame/monaco-vscode-api': 38.0.4
 
-  '@codingame/monaco-vscode-quickaccess-service-override@37.6.1':
+  '@codingame/monaco-vscode-quickaccess-service-override@38.0.4':
     dependencies:
-      '@codingame/monaco-vscode-api': 37.6.1
+      '@codingame/monaco-vscode-api': 38.0.4
 
   '@coinbase/cdp-sdk@1.60.0(typescript@6.0.3)':
     dependencies:
@@ -18138,7 +18182,7 @@ snapshots:
     dependencies:
       '@eslint/object-schema': 3.0.5
       debug: 4.4.3
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
     transitivePeerDependencies:
       - supports-color
 
@@ -18159,7 +18203,7 @@ snapshots:
       ignore: 5.3.2
       import-fresh: 3.3.1
       js-yaml: 4.3.2
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
@@ -18687,7 +18731,7 @@ snapshots:
       chalk: 4.1.2
       collect-v8-coverage: 1.0.3
       exit: 0.1.2
-      glob: 7.2.3
+      glob: 7.2.3(patch_hash=6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375)
       graceful-fs: 4.2.11
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-instrument: 6.0.3
@@ -19249,7 +19293,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.4
     optional: true
 
-  '@napi-rs/wasm-runtime@1.2.5(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)':
+  '@napi-rs/wasm-runtime@1.2.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)':
     dependencies:
       '@emnapi/core': 1.11.2
       '@emnapi/runtime': 1.11.2
@@ -19359,7 +19403,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.220.0
-      import-in-the-middle: 3.5.2
+      import-in-the-middle: 3.5.3
       require-in-the-middle: 8.0.1
     transitivePeerDependencies:
       - supports-color
@@ -19500,7 +19544,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.11.2
       '@emnapi/runtime': 1.11.2
-      '@napi-rs/wasm-runtime': 1.2.5(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
+      '@napi-rs/wasm-runtime': 1.2.6(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)
     optional: true
 
   '@oxc-resolver/binding-win32-arm64-msvc@11.24.2':
@@ -21088,50 +21132,50 @@ snapshots:
 
   '@sentry/conventions@0.16.0': {}
 
-  '@sentry/core@10.76.2':
+  '@sentry/core@10.77.1':
     dependencies:
       '@sentry/conventions': 0.16.0
 
-  '@sentry/node-core@10.76.2(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))':
+  '@sentry/node-core@10.77.1(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))':
     dependencies:
       '@sentry/conventions': 0.16.0
-      '@sentry/core': 10.76.2
-      '@sentry/opentelemetry': 10.76.2(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))
-      import-in-the-middle: 3.5.2
+      '@sentry/core': 10.77.1
+      '@sentry/opentelemetry': 10.77.1(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))
+      import-in-the-middle: 3.5.3
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/instrumentation': 0.220.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-base': 2.12.0(@opentelemetry/api@1.9.1)
 
-  '@sentry/node@10.76.2(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))':
+  '@sentry/node@10.77.1(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/instrumentation': 0.220.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-base': 2.12.0(@opentelemetry/api@1.9.1)
       '@sentry/conventions': 0.16.0
-      '@sentry/core': 10.76.2
-      '@sentry/node-core': 10.76.2(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))
-      '@sentry/opentelemetry': 10.76.2(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))
-      '@sentry/server-utils': 10.76.2
-      import-in-the-middle: 3.5.2
+      '@sentry/core': 10.77.1
+      '@sentry/node-core': 10.77.1(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))
+      '@sentry/opentelemetry': 10.77.1(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))
+      '@sentry/server-utils': 10.77.1
+      import-in-the-middle: 3.5.3
     transitivePeerDependencies:
       - '@opentelemetry/core'
       - '@opentelemetry/exporter-trace-otlp-http'
       - supports-color
 
-  '@sentry/opentelemetry@10.76.2(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))':
+  '@sentry/opentelemetry@10.77.1(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-base': 2.12.0(@opentelemetry/api@1.9.1)
       '@sentry/conventions': 0.16.0
-      '@sentry/core': 10.76.2
+      '@sentry/core': 10.77.1
 
-  '@sentry/server-utils@10.76.2':
+  '@sentry/server-utils@10.77.1':
     dependencies:
       '@sentry/conventions': 0.16.0
-      '@sentry/core': 10.76.2
+      '@sentry/core': 10.77.1
 
   '@shadcn/react@0.3.1(@types/react@19.3.0)(react@19.2.8)':
     optionalDependencies:
@@ -21997,13 +22041,13 @@ snapshots:
 
   '@tootallnate/once@2.0.1': {}
 
-  '@toruslabs/base-controllers@9.13.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)':
+  '@toruslabs/base-controllers@9.13.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)':
     dependencies:
       '@babel/runtime': 8.0.7
-      '@toruslabs/broadcast-channel': 13.3.0(@sentry/core@10.76.2)
-      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
-      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
-      '@web3auth/auth': 11.8.3(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)
+      '@toruslabs/broadcast-channel': 13.3.0(@sentry/core@10.77.1)
+      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
+      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
+      '@web3auth/auth': 11.8.3(@babel/runtime@8.0.7)(@sentry/core@10.77.1)(color@5.0.3)
       async-mutex: 0.5.0
       bowser: 2.14.1
       events: 3.3.0
@@ -22019,12 +22063,12 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@toruslabs/broadcast-channel@13.3.0(@sentry/core@10.76.2)':
+  '@toruslabs/broadcast-channel@13.3.0(@sentry/core@10.77.1)':
     dependencies:
       '@babel/runtime': 7.29.10
       '@toruslabs/constants': 16.1.1(@babel/runtime@7.29.10)
       '@toruslabs/eccrypto': 7.0.0
-      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@7.29.10)(@sentry/core@10.76.2)
+      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@7.29.10)(@sentry/core@10.77.1)
       loglevel: 1.9.2
       oblivious-set: 2.0.0
       socket.io-client: 4.8.4
@@ -22042,24 +22086,24 @@ snapshots:
     dependencies:
       '@babel/runtime': 8.0.7
 
-  '@toruslabs/customauth@22.3.3(@babel/runtime@8.0.7)(@sentry/core@10.76.2)':
+  '@toruslabs/customauth@22.3.3(@babel/runtime@8.0.7)(@sentry/core@10.77.1)':
     dependencies:
       '@babel/runtime': 8.0.7
       '@chaitanyapotti/register-service-worker': 1.7.4
-      '@toruslabs/broadcast-channel': 13.3.0(@sentry/core@10.76.2)
+      '@toruslabs/broadcast-channel': 13.3.0(@sentry/core@10.77.1)
       '@toruslabs/constants': 16.1.1(@babel/runtime@8.0.7)
       '@toruslabs/eccrypto': 7.0.0
-      '@toruslabs/fetch-node-details': 16.1.1(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
-      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
-      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
-      '@toruslabs/session-manager': 5.6.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
-      '@toruslabs/torus.js': 17.2.3(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
+      '@toruslabs/fetch-node-details': 16.1.1(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
+      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
+      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
+      '@toruslabs/session-manager': 5.6.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
+      '@toruslabs/torus.js': 17.2.3(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
       bowser: 2.14.1
       deepmerge: 4.3.1(patch_hash=ce7bc8c614caad7eae9afd0ccb7c63767c693fed9df668af1a4dbb8516664919)
       events: 3.3.0
       loglevel: 1.9.2
     optionalDependencies:
-      '@sentry/core': 10.76.2
+      '@sentry/core': 10.77.1
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -22069,12 +22113,12 @@ snapshots:
     dependencies:
       '@noble/curves': 2.4.0
 
-  '@toruslabs/fetch-node-details@16.1.1(@babel/runtime@8.0.7)(@sentry/core@10.76.2)':
+  '@toruslabs/fetch-node-details@16.1.1(@babel/runtime@8.0.7)(@sentry/core@10.77.1)':
     dependencies:
       '@babel/runtime': 8.0.7
       '@toruslabs/constants': 16.1.1(@babel/runtime@8.0.7)
       '@toruslabs/fnd-base': 16.1.1(@babel/runtime@8.0.7)
-      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
+      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
       loglevel: 1.9.2
     transitivePeerDependencies:
       - '@sentry/core'
@@ -22088,52 +22132,52 @@ snapshots:
       '@babel/runtime': 8.0.7
       '@toruslabs/constants': 16.1.1(@babel/runtime@8.0.7)
 
-  '@toruslabs/http-helpers@9.0.0(@babel/runtime@7.29.10)(@sentry/core@10.76.2)':
+  '@toruslabs/http-helpers@9.0.0(@babel/runtime@7.29.10)(@sentry/core@10.77.1)':
     dependencies:
       '@babel/runtime': 7.29.10
       deepmerge: 4.3.1(patch_hash=ce7bc8c614caad7eae9afd0ccb7c63767c693fed9df668af1a4dbb8516664919)
       loglevel: 1.9.2
     optionalDependencies:
-      '@sentry/core': 10.76.2
+      '@sentry/core': 10.77.1
 
-  '@toruslabs/http-helpers@9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)':
+  '@toruslabs/http-helpers@9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)':
     dependencies:
       '@babel/runtime': 8.0.7
       deepmerge: 4.3.1(patch_hash=ce7bc8c614caad7eae9afd0ccb7c63767c693fed9df668af1a4dbb8516664919)
       loglevel: 1.9.2
     optionalDependencies:
-      '@sentry/core': 10.76.2
+      '@sentry/core': 10.77.1
 
-  '@toruslabs/metadata-helpers@8.2.0(@babel/runtime@7.29.10)(@sentry/core@10.76.2)':
+  '@toruslabs/metadata-helpers@8.2.0(@babel/runtime@7.29.10)(@sentry/core@10.77.1)':
     dependencies:
       '@babel/runtime': 7.29.10
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0
       '@scure/base': 2.2.0
       '@toruslabs/eccrypto': 7.0.0
-      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@7.29.10)(@sentry/core@10.76.2)
+      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@7.29.10)(@sentry/core@10.77.1)
       json-stable-stringify: 1.3.0
     transitivePeerDependencies:
       - '@sentry/core'
 
-  '@toruslabs/metadata-helpers@8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)':
+  '@toruslabs/metadata-helpers@8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)':
     dependencies:
       '@babel/runtime': 8.0.7
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0
       '@scure/base': 2.2.0
       '@toruslabs/eccrypto': 7.0.0
-      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
+      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
       json-stable-stringify: 1.3.0
     transitivePeerDependencies:
       - '@sentry/core'
 
-  '@toruslabs/secure-pub-sub@4.3.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)':
+  '@toruslabs/secure-pub-sub@4.3.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)':
     dependencies:
       '@babel/runtime': 8.0.7
       '@toruslabs/eccrypto': 7.0.0
-      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
-      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
+      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
+      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
       loglevel: 1.9.2
       socket.io-client: 4.8.4
     transitivePeerDependencies:
@@ -22142,21 +22186,21 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@toruslabs/session-manager@5.6.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)':
+  '@toruslabs/session-manager@5.6.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)':
     dependencies:
       '@toruslabs/eccrypto': 7.0.0
-      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
-      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
+      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
+      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu': 4.62.5
     transitivePeerDependencies:
       - '@babel/runtime'
       - '@sentry/core'
 
-  '@toruslabs/torus-embed@7.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)':
+  '@toruslabs/torus-embed@7.0.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)':
     dependencies:
       '@babel/runtime': 8.0.7
-      '@web3auth/ws-embed': 6.1.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)
+      '@web3auth/ws-embed': 6.1.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)
     transitivePeerDependencies:
       - '@sentry/core'
       - bufferutil
@@ -22166,13 +22210,13 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@toruslabs/torus.js@17.2.3(@babel/runtime@8.0.7)(@sentry/core@10.76.2)':
+  '@toruslabs/torus.js@17.2.3(@babel/runtime@8.0.7)(@sentry/core@10.77.1)':
     dependencies:
       '@babel/runtime': 8.0.7
       '@toruslabs/constants': 16.1.1(@babel/runtime@8.0.7)
       '@toruslabs/eccrypto': 7.0.0
-      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
-      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
+      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
+      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
       ethereum-cryptography: 3.2.0
       json-stable-stringify: 1.3.0
       loglevel: 1.9.2
@@ -22182,7 +22226,7 @@ snapshots:
   '@ts-morph/common@0.27.0':
     dependencies:
       fast-glob: 3.3.3
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       path-browserify: 1.0.1
 
   '@tsd/typescript@5.9.3': {}
@@ -22558,6 +22602,8 @@ snapshots:
 
   '@typescript-eslint/types@8.71.2': {}
 
+  '@typescript-eslint/types@8.72.1': {}
+
   '@typescript-eslint/typescript-estree@8.71.2(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/project-service': 8.71.2(typescript@6.0.3)
@@ -22565,7 +22611,7 @@ snapshots:
       '@typescript-eslint/types': 8.71.2
       '@typescript-eslint/visitor-keys': 8.71.2
       debug: 4.4.3
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       semver: 7.8.5
       tinyglobby: 0.2.17
       ts-api-utils: 2.5.0(typescript@6.0.3)
@@ -23270,15 +23316,15 @@ snapshots:
       '@walletconnect/window-getters': 1.0.1
       tslib: 1.14.1
 
-  '@web3auth/auth@11.8.3(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)':
+  '@web3auth/auth@11.8.3(@babel/runtime@8.0.7)(@sentry/core@10.77.1)(color@5.0.3)':
     dependencies:
       '@babel/runtime': 8.0.7
       '@toruslabs/constants': 16.1.1(@babel/runtime@8.0.7)
-      '@toruslabs/customauth': 22.3.3(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
+      '@toruslabs/customauth': 22.3.3(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
       '@toruslabs/ffjavascript': 6.0.0(@babel/runtime@8.0.7)
-      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
-      '@toruslabs/secure-pub-sub': 4.3.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
-      '@toruslabs/session-manager': 5.6.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
+      '@toruslabs/metadata-helpers': 8.2.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
+      '@toruslabs/secure-pub-sub': 4.3.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
+      '@toruslabs/session-manager': 5.6.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
       color: 5.0.3
       deep-freeze-strict: 1.1.1
       events: 3.3.0
@@ -23297,14 +23343,14 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@web3auth/ws-embed@6.1.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)':
+  '@web3auth/ws-embed@6.1.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)':
     dependencies:
       '@babel/runtime': 8.0.7
       '@scure/base': 2.2.0
-      '@toruslabs/base-controllers': 9.13.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)
+      '@toruslabs/base-controllers': 9.13.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)(color@5.0.3)(typescript@6.0.3)(zod@4.6.7)
       '@toruslabs/constants': 16.1.1(@babel/runtime@8.0.7)
-      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.76.2)
-      '@web3auth/auth': 11.8.3(@babel/runtime@8.0.7)(@sentry/core@10.76.2)(color@5.0.3)
+      '@toruslabs/http-helpers': 9.0.0(@babel/runtime@8.0.7)(@sentry/core@10.77.1)
+      '@web3auth/auth': 11.8.3(@babel/runtime@8.0.7)(@sentry/core@10.77.1)(color@5.0.3)
       deepmerge: 4.3.1(patch_hash=ce7bc8c614caad7eae9afd0ccb7c63767c693fed9df668af1a4dbb8516664919)
       fast-deep-equal: 3.1.3
       loglevel: 1.9.2
@@ -23913,6 +23959,8 @@ snapshots:
 
   baseline-browser-mapping@2.11.29: {}
 
+  baseline-browser-mapping@2.11.34: {}
+
   bidi-js@1.1.0:
     dependencies:
       require-from-string: 2.0.2
@@ -23983,6 +24031,14 @@ snapshots:
       electron-to-chromium: 1.5.459
       node-releases: 2.0.59
       update-browserslist-db: 1.3.4(browserslist@4.29.3)
+
+  browserslist@4.29.5:
+    dependencies:
+      baseline-browser-mapping: 2.11.34
+      caniuse-lite: 1.0.30001819
+      electron-to-chromium: 1.5.466
+      node-releases: 2.0.60
+      update-browserslist-db: 1.3.4(browserslist@4.29.5)
 
   bs-logger@0.2.6:
     dependencies:
@@ -24066,6 +24122,8 @@ snapshots:
   camelcase@6.3.0: {}
 
   caniuse-lite@1.0.30001816: {}
+
+  caniuse-lite@1.0.30001819: {}
 
   canvas-roundrect-polyfill@0.0.1: {}
 
@@ -24812,6 +24870,8 @@ snapshots:
 
   electron-to-chromium@1.5.459: {}
 
+  electron-to-chromium@1.5.466: {}
+
   elkjs@0.9.3: {}
 
   embla-carousel-react@8.6.0(react@19.2.8):
@@ -25102,7 +25162,7 @@ snapshots:
       eslint: 10.13.0(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@10.13.0(jiti@2.7.0))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.71.2(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(patch_hash=2ffdfb53c367bdfc823dde00d2cde7c0e39915d90d96c1af9022f1c6e8a10bdc)(@typescript-eslint/parser@8.71.2(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@10.13.0(jiti@2.7.0))
       eslint-plugin-react: 7.37.5(eslint@10.13.0(jiti@2.7.0))
       eslint-plugin-react-hooks: 7.1.1(eslint@10.13.0(jiti@2.7.0))
@@ -25122,7 +25182,7 @@ snapshots:
       eslint: 10.13.0(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@10.13.0(jiti@2.7.0))
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(patch_hash=2ffdfb53c367bdfc823dde00d2cde7c0e39915d90d96c1af9022f1c6e8a10bdc)(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@10.13.0(jiti@2.7.0))
       eslint-plugin-react: 7.37.5(eslint@10.13.0(jiti@2.7.0))
       eslint-plugin-react-hooks: 7.1.1(eslint@10.13.0(jiti@2.7.0))
@@ -25170,7 +25230,7 @@ snapshots:
       tinyglobby: 0.2.17
       unrs-resolver: 1.12.2
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(patch_hash=2ffdfb53c367bdfc823dde00d2cde7c0e39915d90d96c1af9022f1c6e8a10bdc)(@typescript-eslint/parser@8.71.2(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0))
     transitivePeerDependencies:
       - supports-color
 
@@ -25185,7 +25245,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.71.2(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0)):
+  eslint-plugin-import@2.32.0(patch_hash=2ffdfb53c367bdfc823dde00d2cde7c0e39915d90d96c1af9022f1c6e8a10bdc)(@typescript-eslint/parser@8.71.2(eslint@10.13.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.2.0
@@ -25200,7 +25260,7 @@ snapshots:
       hasown: 2.0.4
       is-core-module: 2.17.0
       is-glob: 4.0.3
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       object.fromentries: 2.0.8
       object.groupby: 1.0.3
       object.values: 1.2.1
@@ -25214,7 +25274,7 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-import@2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0)):
+  eslint-plugin-import@2.32.0(patch_hash=2ffdfb53c367bdfc823dde00d2cde7c0e39915d90d96c1af9022f1c6e8a10bdc)(eslint-import-resolver-typescript@3.10.1)(eslint@10.13.0(jiti@2.7.0)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.2.0
@@ -25229,7 +25289,7 @@ snapshots:
       hasown: 2.0.4
       is-core-module: 2.17.0
       is-glob: 4.0.3
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       object.fromentries: 2.0.8
       object.groupby: 1.0.3
       object.values: 1.2.1
@@ -25255,7 +25315,7 @@ snapshots:
       hasown: 2.0.4
       jsx-ast-utils: 3.3.5
       language-tags: 1.0.9
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       object.fromentries: 2.0.8
       safe-regex-test: 1.1.0
       string.prototype.includes: 2.0.1
@@ -25292,7 +25352,7 @@ snapshots:
       estraverse: 5.3.0
       hasown: 2.0.4
       jsx-ast-utils: 3.3.5
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       object.entries: 1.1.9
       object.fromentries: 2.0.8
       object.values: 1.2.1
@@ -25351,7 +25411,7 @@ snapshots:
       imurmurhash: 0.1.4
       is-glob: 4.0.3
       json-stable-stringify-without-jsonify: 1.0.1
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       natural-compare: 1.4.0
       optionator: 0.9.4
     optionalDependencies:
@@ -25809,16 +25869,16 @@ snapshots:
 
   glob@14.0.2:
     dependencies:
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       minipass: 7.1.3
       path-scurry: 3.0.0
 
-  glob@7.2.3:
+  glob@7.2.3(patch_hash=6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375):
     dependencies:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       once: 1.4.0
       path-is-absolute: 1.0.1
 
@@ -26184,7 +26244,7 @@ snapshots:
       parent-module: 1.0.1
       resolve-from: 4.0.0
 
-  import-in-the-middle@3.5.2:
+  import-in-the-middle@3.5.3:
     dependencies:
       cjs-module-lexer: 2.3.0
       es-module-lexer: 3.0.4
@@ -26634,7 +26694,7 @@ snapshots:
       chalk: 4.1.2
       ci-info: 3.9.0
       deepmerge: 4.3.1(patch_hash=ce7bc8c614caad7eae9afd0ccb7c63767c693fed9df668af1a4dbb8516664919)
-      glob: 7.2.3
+      glob: 7.2.3(patch_hash=6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375)
       graceful-fs: 4.2.11
       jest-circus: 29.7.0
       jest-environment-node: 29.7.0
@@ -27009,7 +27069,7 @@ snapshots:
       chalk: 4.1.2
       cjs-module-lexer: 1.4.3
       collect-v8-coverage: 1.0.3
-      glob: 7.2.3
+      glob: 7.2.3(patch_hash=6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375)
       graceful-fs: 4.2.11
       jest-haste-map: 29.7.0
       jest-message-util: 29.7.0
@@ -28265,7 +28325,7 @@ snapshots:
 
   minimalistic-assert@1.0.1: {}
 
-  minimatch@11.0.1:
+  minimatch@11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a):
     dependencies:
       '@isaacs/nonrecursive-glob-match': 1.0.3
       brace-expansion: 5.0.12
@@ -28282,22 +28342,22 @@ snapshots:
     dependencies:
       minimist: 1.2.8
 
-  minimizer-webpack-plugin@5.13.0(esbuild@0.28.2)(webpack@5.109.2(esbuild@0.28.2)):
+  minimizer-webpack-plugin@5.13.1(esbuild@0.28.2)(webpack@5.109.2(esbuild@0.28.2)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
-      schema-utils: 4.6.0
+      schema-utils: 4.8.1(webpack@5.109.2(esbuild@0.28.2))
       terser: 5.51.2
       webpack: 5.109.2(esbuild@0.28.2)
     optionalDependencies:
       esbuild: 0.28.2
     optional: true
 
-  minimizer-webpack-plugin@5.13.0(webpack@5.109.2):
+  minimizer-webpack-plugin@5.13.1(webpack@5.109.2):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
-      schema-utils: 4.6.0
+      schema-utils: 4.8.1(webpack@5.109.2)
       terser: 5.51.2
       webpack: 5.109.2
 
@@ -28506,6 +28566,8 @@ snapshots:
 
   node-releases@2.0.59: {}
 
+  node-releases@2.0.60: {}
+
   normalize-package-data@2.5.0:
     dependencies:
       hosted-git-info: 2.8.9
@@ -28528,7 +28590,7 @@ snapshots:
       chalk: 2.4.2
       cross-spawn: 6.0.6
       memorystream: 0.3.1
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
       pidtree: 0.3.1
       read-pkg: 3.0.0
       shell-quote: 1.11.0
@@ -28799,7 +28861,7 @@ snapshots:
   oxlint-plugin-react-doctor@0.9.18:
     dependencies:
       '@shaderfrog/glsl-parser': 7.0.1
-      '@typescript-eslint/types': 8.71.2
+      '@typescript-eslint/types': 8.72.1
       eslint-scope: 9.1.2
       eslint-visitor-keys: 5.0.1
       lightningcss: 1.33.0
@@ -29271,7 +29333,7 @@ snapshots:
   react-doctor@0.9.18(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(eslint@10.13.0(jiti@2.7.0))(react@19.2.8):
     dependencies:
       '@astrojs/compiler': 4.0.0
-      '@sentry/node': 10.76.2(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))
+      '@sentry/node': 10.77.1(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))
       agent-install: 0.0.5
       bippy: 0.6.1(react@19.2.8)
       conf: 15.1.0
@@ -29870,12 +29932,24 @@ snapshots:
       ajv: 6.15.0
       ajv-keywords: 3.5.2(ajv@6.15.0)
 
-  schema-utils@4.6.0:
+  schema-utils@4.8.1(webpack@5.109.2(esbuild@0.28.2)):
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       ajv-keywords: 5.1.0(ajv@8.20.0)
+    optionalDependencies:
+      webpack: 5.109.2(esbuild@0.28.2)
+    optional: true
+
+  schema-utils@4.8.1(webpack@5.109.2):
+    dependencies:
+      '@types/json-schema': 7.0.15
+      ajv: 8.20.0
+      ajv-formats: 3.0.1(ajv@8.20.0)
+      ajv-keywords: 5.1.0(ajv@8.20.0)
+    optionalDependencies:
+      webpack: 5.109.2
 
   semver@5.7.2: {}
 
@@ -30541,14 +30615,14 @@ snapshots:
   test-exclude@6.0.0:
     dependencies:
       '@istanbuljs/schema': 0.1.6
-      glob: 7.2.3
-      minimatch: 11.0.1
+      glob: 7.2.3(patch_hash=6f4cf56a8afceea4c701eb42a77a86faeea3a5385845a0bd147763498f615375)
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
 
   test-exclude@7.0.2:
     dependencies:
       '@istanbuljs/schema': 0.1.6
       glob: 14.0.2
-      minimatch: 11.0.1
+      minimatch: 11.0.1(patch_hash=067e031a866fcf0476a34defca7836f77c92d7894f9952315ad0691b03aa1a4a)
 
   text-hex@1.0.0: {}
 
@@ -30991,6 +31065,12 @@ snapshots:
   update-browserslist-db@1.3.4(browserslist@4.29.3):
     dependencies:
       browserslist: 4.29.3
+      escalade: 3.2.0
+      picocolors: 1.1.1
+
+  update-browserslist-db@1.3.4(browserslist@4.29.5):
+    dependencies:
+      browserslist: 4.29.5
       escalade: 3.2.0
       picocolors: 1.1.1
 
@@ -31490,7 +31570,7 @@ snapshots:
     dependencies:
       '@types/emscripten': 1.39.10
 
-  watchpack@2.6.2:
+  watchpack@2.6.3:
     dependencies:
       graceful-fs: 4.2.11
 
@@ -31517,7 +31597,7 @@ snapshots:
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
       acorn: 8.19.0
-      browserslist: 4.29.3
+      browserslist: 4.29.5
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.26.0
       es-module-lexer: 2.3.2
@@ -31525,11 +31605,11 @@ snapshots:
       events: 3.3.0
       graceful-fs: 4.2.11
       mime-db: 1.54.0
-      minimizer-webpack-plugin: 5.13.0(webpack@5.109.2)
+      minimizer-webpack-plugin: 5.13.1(webpack@5.109.2)
       neo-async: 2.6.2
-      schema-utils: 4.6.0
+      schema-utils: 4.8.1(webpack@5.109.2)
       tapable: 2.3.3
-      watchpack: 2.6.2
+      watchpack: 2.6.3
       webpack-sources: 3.6.0
     transitivePeerDependencies:
       - '@minify-html/node'
@@ -31557,7 +31637,7 @@ snapshots:
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
       acorn: 8.19.0
-      browserslist: 4.29.3
+      browserslist: 4.29.5
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.26.0
       es-module-lexer: 2.3.2
@@ -31565,11 +31645,11 @@ snapshots:
       events: 3.3.0
       graceful-fs: 4.2.11
       mime-db: 1.54.0
-      minimizer-webpack-plugin: 5.13.0(esbuild@0.28.2)(webpack@5.109.2(esbuild@0.28.2))
+      minimizer-webpack-plugin: 5.13.1(esbuild@0.28.2)(webpack@5.109.2(esbuild@0.28.2))
       neo-async: 2.6.2
-      schema-utils: 4.6.0
+      schema-utils: 4.8.1(webpack@5.109.2(esbuild@0.28.2))
       tapable: 2.3.3
-      watchpack: 2.6.2
+      watchpack: 2.6.3
       webpack-sources: 3.6.0
     transitivePeerDependencies:
       - '@minify-html/node'

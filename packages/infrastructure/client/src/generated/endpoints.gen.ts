@@ -7831,7 +7831,6 @@ export const postAuthorizationTenantsGrantEndpoint = {
  * for upcoming expirations).
  */
 export interface GetAuthorizationTenantsPermissionsExpiringInput {
-  tenantId: string;
   query?: {
     expiresBefore?: string;
   };

@@ -186,11 +186,10 @@ export class AccessControlTenantPermissionsModule {
    * Gets permission grants expiring within a window (administrative visibility
    * for upcoming expirations).
    */
-  async getAuthorizationTenantsPermissionsExpiring(
-    tenantId: string,
-    query?: { expiresBefore?: string },
-  ): Promise<Result<Types.IdentityAuthorizationGetExpiringTenantPermissionsOutput, ApiError>> {
-    const url = `/api/v1/authorization/tenants/permissions:expiring`;
+  async getAuthorizationTenantsPermissionsExpiring(query?: {
+    expiresBefore?: string;
+  }): Promise<Result<Types.IdentityAuthorizationGetExpiringTenantPermissionsOutput, ApiError>> {
+    const url = '/api/v1/authorization/tenants/permissions:expiring';
 
     const result = await this.client.request({
       method: 'GET',

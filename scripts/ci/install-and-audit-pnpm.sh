@@ -30,8 +30,8 @@ printf '> pnpm install --frozen-lockfile --ignore-scripts\n'
 pnpm install --frozen-lockfile --ignore-scripts
 # Patch application uses pnpm's dependency build stage. Only these reviewed
 # packages are approved for that stage in the root manifest.
-printf '> pnpm rebuild braces deepmerge sprintf-js\n'
-pnpm rebuild braces deepmerge sprintf-js
+printf '> pnpm rebuild braces deepmerge eslint-plugin-import glob minimatch sprintf-js\n'
+pnpm rebuild braces deepmerge eslint-plugin-import glob minimatch sprintf-js
 lock_hash_after_install="$(sha256sum "$root_lock" | awk '{print $1}')"
 [[ "$lock_hash_before" == "$lock_hash_after_install" ]] || economy_gate_error 'pnpm install unexpectedly changed the repository lockfile'
 [[ -f "$virtual_store_lock" ]] || economy_gate_error "pnpm install did not produce its virtual-store resolution: $virtual_store_lock"
@@ -50,4 +50,4 @@ lock_hash_after_audit="$(sha256sum "$root_lock" | awk '{print $1}')"
 
 printf '> node scripts/ci/validate-pnpm-audit.mjs\n'
 node "$script_dir/validate-pnpm-audit.mjs" "$audit_report" "$audit_exit_code"
-node --test "$script_dir/tests/dependency-security.test.mjs" "$script_dir/tests/next-dev-origin-security.test.mjs"
+node --test "$script_dir/tests/dependency-security.test.mjs" "$script_dir/tests/next-dev-origin-security.test.mjs" "$script_dir/tests/glob-minimatch-security.test.mjs"
