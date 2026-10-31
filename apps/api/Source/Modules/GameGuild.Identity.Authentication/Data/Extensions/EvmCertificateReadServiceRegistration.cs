@@ -17,6 +17,14 @@ public static class EvmCertificateReadServiceRegistration
             throw new ArgumentException(string.Join(" ", errors), nameof(options));
         }
 
+        // Server-side request rules for the registered production endpoint: no loopback/private/reserved
+        // target may receive an RPC call from a registered host. Interop fixtures build transports directly.
+        errors = EvmCertificateRpcEndpointPolicy.Validate(new Uri(options.RpcEndpoint, UriKind.Absolute));
+        if (errors.Count > 0)
+        {
+            throw new ArgumentException(string.Join(" ", errors), nameof(options));
+        }
+
         var snapshot = new EvmCertificateNetworkOptions
         {
             ChainId = options.ChainId,

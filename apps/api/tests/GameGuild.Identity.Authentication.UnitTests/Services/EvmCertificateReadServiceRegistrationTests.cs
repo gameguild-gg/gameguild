@@ -62,6 +62,32 @@ public sealed class EvmCertificateReadServiceRegistrationTests
     }
 
     [Fact]
+    public void LoopbackRpcEndpointFailsRegistrationBeforeAnyPortIsRegistered()
+    {
+        var services = new ServiceCollection();
+        var options = EvmCertificateNetworkOptionsTests.ValidOptions();
+        options.RpcEndpoint = "https://127.0.0.1:8545/";
+        var error = Assert.Throws<ArgumentException>(() => services.AddEvmCertificateVerification(options));
+        Assert.DoesNotContain(error.Message, "127.0.0.1", StringComparison.Ordinal);
+        Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IEvmCertificateRpc));
+        Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IEvmCertificateProofVerifier));
+    }
+
+    [Fact]
+    public void LocalhostNameAndPrivateAddressRpcEndpointsFailRegistration()
+    {
+        foreach (var endpoint in new[] { "https://localhost:8545/", "https://10.1.2.3/" })
+        {
+            var services = new ServiceCollection();
+            var options = EvmCertificateNetworkOptionsTests.ValidOptions();
+            options.RpcEndpoint = endpoint;
+            Assert.Throws<ArgumentException>(() => services.AddEvmCertificatePublicationTransport(options));
+            Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IEvmCertificatePublicationRpc));
+            Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IEvmCertificateRpc));
+        }
+    }
+
+    [Fact]
     public void PublicationTransportIsExplicitAndDoesNotActivateAKeySourceOrSigner()
     {
         var services = new ServiceCollection();
