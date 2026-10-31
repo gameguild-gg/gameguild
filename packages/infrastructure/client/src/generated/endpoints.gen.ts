@@ -8274,7 +8274,7 @@ export const getBillingPaymentMethodsEndpoint = {
 /**
  * Register a payment method from a tokenized gateway result.
  *
- * Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.
+ * Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider, and an optional MethodType hint (card, bank_account, paypal, apple_pay, google_pay, wallet) states the family the token vaults. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.
  */
 export interface PostBillingPaymentMethodsInput {
   body?: Types.CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody;

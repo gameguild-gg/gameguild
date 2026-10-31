@@ -81,7 +81,10 @@ public sealed class StripePaymentMethodUpdatedConsumer(
     {
         "card" => PaymentMethodType.Card,
         "us_bank_account" or "bank_account" => PaymentMethodType.BankAccount,
-        "paypal" or "apple_pay" or "google_pay" => PaymentMethodType.Wallet,
+        "paypal" => PaymentMethodType.PayPal,
+        "apple_pay" => PaymentMethodType.ApplePay,
+        "google_pay" => PaymentMethodType.GooglePay,
+        "link" => PaymentMethodType.Wallet,
         _ => PaymentMethodType.Card
     };
 
