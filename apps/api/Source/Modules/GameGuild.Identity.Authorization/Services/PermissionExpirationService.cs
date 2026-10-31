@@ -121,7 +121,22 @@ public sealed class PermissionExpirationService(
 
                 grant.Expire();
                 SetStamp(grant, ProcessedStampKey);
-                await repository.UpdateAsync(grant, cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    await repository.UpdateAsync(grant, cancellationToken).ConfigureAwait(false);
+                }
+                catch
+                {
+                    // The durable row was never written: roll the in-memory grant
+                    // back so a failed cycle never leaks a half-processed entity.
+                    // The next cycle re-fetches and reprocesses it — the audit
+                    // entry may duplicate, but is never lost.
+                    grant.IsActive = originalIsActive;
+                    grant.Metadata = originalMetadata;
+                    grant.ExpiresAt = originalExpiresAt;
+                    throw;
+                }
+
                 processed++;
 
                 await PublishAsync(
@@ -136,13 +151,6 @@ public sealed class PermissionExpirationService(
             }
             catch (Exception exception)
             {
-                // Roll the in-memory grant back: a failed cycle must never leak a
-                // half-processed entity. The durable row is untouched (persist
-                // failed), so the next cycle re-fetches and reprocesses it — the
-                // audit entry may duplicate, but is never lost.
-                grant.IsActive = originalIsActive;
-                grant.Metadata = originalMetadata;
-                grant.ExpiresAt = originalExpiresAt;
                 logger.LogWarning(exception,
                     "Failed to process expired permission grant {PermissionId}; retrying on the next cycle.",
                     grant.Id);
