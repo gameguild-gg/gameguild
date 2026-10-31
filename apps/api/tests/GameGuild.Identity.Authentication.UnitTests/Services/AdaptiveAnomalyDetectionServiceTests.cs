@@ -17,13 +17,22 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 ///     learned deviation scoring, cold-start abstention, drift adaptation, sensitivity
 ///     configuration, fail-open behavior, and per-subject state persistence.
 /// </summary>
-public sealed class AdaptiveAnomalyDetectionServiceTests
+public sealed class AdaptiveAnomalyDetectionServiceTests : IDisposable
 {
     private static readonly DateTime TrainStart = new(2026, 10, 1, 9, 0, 0, DateTimeKind.Utc);
     private const string TrainIp = "203.0.113.10";
     private const string ProbeIp = "198.51.100.99";
     private readonly Guid _userId = Guid.NewGuid();
     private readonly Guid _tenantId = Guid.NewGuid();
+
+    public AdaptiveAnomalyDetectionServiceTests()
+    {
+        // Keep the learned calendar and staleness clock in the same deterministic
+        // frame. SystemClock's AsyncLocal provider is isolated to this test scope.
+        SystemClock.SetProvider(new TrainingTimeProvider());
+    }
+
+    public void Dispose() => SystemClock.Reset();
 
     // ── Cold start ──────────────────────────────────────────────────────
 
@@ -174,7 +183,7 @@ public sealed class AdaptiveAnomalyDetectionServiceTests
 
         // Backdate the persisted baseline far beyond the staleness window.
         var persisted = await store.GetBySubjectKeyAsync(SubjectKey(), CancellationToken.None);
-        persisted!.LastObservedAtUtc = DateTime.UtcNow.AddDays(-options.StaleBaselineResetDays - 10);
+        persisted!.LastObservedAtUtc = SystemClock.UtcNow.AddDays(-options.StaleBaselineResetDays - 10);
         await store.SaveChangesAsync(CancellationToken.None);
 
         var assessment = await sut.AssessAsync(DeviantProbe(TrainStart.AddDays(300).AddHours(2)), CancellationToken.None);
@@ -376,6 +385,11 @@ public sealed class AdaptiveAnomalyDetectionServiceTests
         IpAddress = ipAddress,
         AttemptedAt = attemptedAt
     };
+
+    private sealed class TrainingTimeProvider : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => new(TrainStart);
+    }
 
     /// <summary>In-memory store wrapping a test DbContext that exposes the adaptive baseline set.</summary>
     private sealed class BaselineStore : IAdaptiveBehaviorBaselineRepository, IDisposable

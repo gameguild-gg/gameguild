@@ -28,6 +28,10 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
     public async Task ExpiredSweepDrainsBacklogAcrossBatchesAndSkipsIneligibleGrants()
     {
         await using var harness = await ExpirationHarness.CreateAsync(batchSize: 2);
+        var initialTenantAVersion = await harness.TenantVersionAsync(harness.TenantA);
+        var initialTenantBVersion = await harness.TenantVersionAsync(harness.TenantB);
+        initialTenantAVersion.Should().Be(1);
+        initialTenantBVersion.Should().Be(1);
 
         var oldest = harness.SeedGrant(harness.TenantA, SystemClock.UtcNow.AddHours(-5));
         var second = harness.SeedGrant(harness.TenantA, SystemClock.UtcNow.AddHours(-4));
@@ -72,8 +76,8 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
             (await harness.AuditCountForAsync(grant.Id)).Should().Be(1);
         }
 
-        (await harness.TenantVersionAsync(harness.TenantA)).Should().Be(2);
-        (await harness.TenantVersionAsync(harness.TenantB)).Should().Be(1);
+        (await harness.TenantVersionAsync(harness.TenantA)).Should().Be(initialTenantAVersion + 2);
+        (await harness.TenantVersionAsync(harness.TenantB)).Should().Be(initialTenantBVersion + 1);
 
         // Ineligible grants are untouched and unaudited.
         var reloadedProcessed = await harness.ReloadAsync(processed);
@@ -192,7 +196,7 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
             var context = new ExpirationRecoveryDbContext(options);
             await context.Database.EnsureCreatedAsync();
 
-            return new ExpirationHarness(context, database)
+            var harness = new ExpirationHarness(context, database)
             {
                 Repository = new TenantPermissionRepository(context),
                 AuditService = new PermissionAuditService(
@@ -204,6 +208,14 @@ public sealed class PermissionExpirationRecoveryPostgreSqlTests
                     Enabled = true
                 }
             };
+            // Existing tenants start at a positive security version. Seed that
+            // baseline explicitly so these cases measure committed increments,
+            // independently of the repository's create-at-one initialization.
+            context.Set<TenantSecurityVersion>().AddRange(
+                new TenantSecurityVersion { TenantId = harness.TenantA, SecurityVersion = 1 },
+                new TenantSecurityVersion { TenantId = harness.TenantB, SecurityVersion = 1 });
+            await harness.SaveChangesAsync();
+            return harness;
         }
 
         public TenantPermission SeedGrant(Guid tenantId, DateTime expiresAt, bool isActive = true)
