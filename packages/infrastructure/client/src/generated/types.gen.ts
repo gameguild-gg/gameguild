@@ -3817,6 +3817,7 @@ export interface CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequ
   billingAddress?: string | null;
   gatewayPaymentMethodId?: string | null;
   gatewayProvider?: string | null;
+  methodType?: string | null;
   nickname?: string | null;
   ownerUserId?: string | null;
   setAsDefault?: boolean;
@@ -32183,6 +32184,7 @@ CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBodySchema = z
   billingAddress: z.string().nullable().optional(),
   gatewayPaymentMethodId: z.string().nullable().optional(),
   gatewayProvider: z.string().nullable().optional(),
+  methodType: z.string().nullable().optional(),
   nickname: z.string().nullable().optional(),
   ownerUserId: z.string().uuid().nullable().optional(),
   setAsDefault: z.boolean().optional(),
