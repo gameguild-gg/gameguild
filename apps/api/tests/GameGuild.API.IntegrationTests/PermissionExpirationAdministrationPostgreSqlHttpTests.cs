@@ -97,10 +97,10 @@ public sealed class PermissionExpirationAdministrationPostgreSqlHttpTests(ApiPos
     {
         await using var scope = fixture.Factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var admin = User.CreateOAuthUser($"expiration-admin-{Guid.NewGuid():N}@example.test", "Expiration administrator");
-        var member = User.CreateOAuthUser($"expiration-member-{Guid.NewGuid():N}@example.test", "Expiration member");
-        var laterMember = User.CreateOAuthUser($"expiration-member-{Guid.NewGuid():N}@example.test", "Later expiration member");
-        var otherMember = User.CreateOAuthUser($"expiration-member-{Guid.NewGuid():N}@example.test", "Other expiration member");
+        var admin = Account("administrator");
+        var member = Account("member");
+        var laterMember = Account("later member");
+        var otherMember = Account("other member");
         var tenant = CreateTenant();
         var otherTenant = CreateTenant();
         var cutoff = DateTime.UtcNow.AddHours(1);
@@ -121,7 +121,26 @@ public sealed class PermissionExpirationAdministrationPostgreSqlHttpTests(ApiPos
             row.TenantId == tenant.Id && row.UserId == admin.Id && row.Role == "TenantAdmin" && row.IsActive));
         Assert.Equal(3, await db.Set<TenantPermission>().AsNoTracking().CountAsync(row =>
             row.Id == grant.Id || row.Id == otherGrant.Id || row.Id == laterGrant.Id));
+        var userIds = new[] { admin.Id, member.Id, laterMember.Id, otherMember.Id };
+        var accounts = await db.Set<User>().AsNoTracking().Where(row => userIds.Contains(row.Id))
+            .Select(row => new { row.Username, row.Email }).ToArrayAsync();
+        Assert.Equal(4, accounts.Length);
+        Assert.All(accounts, account =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(account.Username));
+            Assert.False(string.IsNullOrWhiteSpace(account.Email));
+        });
+        Assert.Equal(4, accounts.Select(account => account.Username).Distinct(StringComparer.OrdinalIgnoreCase).Count());
+        Assert.Equal(4, accounts.Select(account => account.Email).Distinct(StringComparer.OrdinalIgnoreCase).Count());
         return new(tenant.Id, otherTenant.Id, admin.Id, member.Id, grant.Id, otherGrant.Id, laterGrant.Id, cutoff);
+    }
+
+    private static User Account(string label)
+    {
+        var marker = Guid.NewGuid().ToString("N");
+        var user = User.CreateOAuthUser($"expiration-{marker}@example.test", $"Expiration {label} {marker}");
+        user.Username = $"expiration-{marker}";
+        return user;
     }
 
     private static Tenant CreateTenant()
