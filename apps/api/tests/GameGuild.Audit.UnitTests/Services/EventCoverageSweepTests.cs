@@ -15,6 +15,34 @@ public sealed class EventCoverageSweepServiceTests
     private static readonly Lazy<ComprehensiveEventCoverageReport> Sweep =
         new(() => new EventCoverageSweepService().SweepEventCoverage());
 
+    /// <summary>
+    /// Every module project composed into the API application (issue #181's "all system modules"):
+    /// the API project's module references plus the module projects that reach the application
+    /// transitively. The sweep manifest must enumerate all of them — without this pin the sweep
+    /// could stay green over a silently shrunk catalog.
+    /// </summary>
+    public static readonly string[] ComposedSystemModules =
+    [
+        "AI", "Analytics", "Announcements.Contracts", "Assets",
+        "Commerce", "Commerce.Billing", "Commerce.Orders", "Commerce.Payments",
+        "Commerce.Products", "Commerce.Subscriptions", "Compliance.Audit", "Compliance.Consent",
+        "Compliance.FERPA", "Compliance.FinancialCrime", "Compliance.KYC", "Content.Pages",
+        "Features", "Finance.Contracts", "Finance.Economy", "Finance.Economy.AdRewards",
+        "Finance.Economy.AiCredits", "Finance.Economy.Bounties", "Finance.Economy.Marketplace", "Finance.Economy.Payouts",
+        "Finance.Economy.Treasury", "GameJams", "Gamification.Achievements", "Identity.Authentication",
+        "Identity.Authorization", "Identity.Context", "Identity.Provisioning", "Identity.Tenants",
+        "Identity.Users", "LaunchPad", "Learning", "Learning.Assessments",
+        "Learning.Assessments.QuizAdapter", "Learning.Certificates", "Learning.Cohorts", "Learning.Courses",
+        "Learning.Enrollments", "Learning.Experience.Discovery", "Learning.Experience.LearningPaths", "Learning.Experience.Recommendations",
+        "Learning.Experience.Social", "Learning.Lti", "Learning.TestingLab", "Learning.Workspaces",
+        "Localization", "Monitoring.SLA", "Notifications", "ProjectWork",
+        "Projects", "Resources", "Resources.Contents", "SharedKernel",
+        "Social.Announcements", "Social.Assets", "Social.Blog", "Social.Feed",
+        "Social.Follows", "Social.Groups", "Social.Posts", "Social.Profiles",
+        "Social.Reactions", "Tags", "Teams", "TestingLab",
+        "TrustSafety",
+    ];
+
     [Fact]
     public void SweepEnumeratesTheLoadedModuleCatalog()
     {
@@ -22,6 +50,29 @@ public sealed class EventCoverageSweepServiceTests
 
         report.ModuleCount.Should().BeGreaterThan(5, "the test host loads the full module graph through the API project reference");
         report.Modules.Should().OnlyContain(module => module.AssemblyName.StartsWith("GameGuild.", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void ManifestIncludesEveryComposedSystemModule()
+    {
+        var report = Sweep.Value;
+
+        var manifestModules = report.Modules.Select(module => module.ModuleName).ToHashSet(StringComparer.Ordinal);
+        var missing = ComposedSystemModules.Where(module => !manifestModules.Contains(module)).ToList();
+        missing.Should().BeEmpty(
+            "issue #181 requires coverage across ALL system modules; a composed module missing from the manifest means the sweep (and therefore the completeness proof) is blind to it. Missing: {0}",
+            string.Join(", ", missing));
+    }
+
+    [Fact]
+    public void EveryMutationEndpointDispatchesThroughTheCqrsPipeline()
+    {
+        var report = Sweep.Value;
+
+        report.TotalMutationEndpoints.Should().BePositive("the composed catalog exposes mutating endpoints");
+        report.Modules.Should().OnlyContain(module => module.MutationEndpointsWithoutCommandDispatch.Count == 0,
+            "a mutating endpoint whose controller dispatches no command (ISender/IMediator) would let a user interaction bypass the journaled UseCaseOperationBehavior pipeline");
+        report.Modules.SelectMany(module => module.MutationEndpointsWithoutCommandDispatch).Should().BeEmpty();
     }
 
     [Fact]

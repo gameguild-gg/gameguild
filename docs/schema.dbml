@@ -772,6 +772,29 @@ Table "AuditRetentionSimulationRuns" {
   }
 }
 
+Table "bank_account_verifications" {
+  "Id" uuid [not null]
+  "TenantId" uuid
+  "PaymentMethodId" uuid [not null]
+  "Deposit1Hash" "character varying(64)" [not null]
+  "Deposit2Hash" "character varying(64)" [not null]
+  "Salt" "character varying(64)" [not null]
+  "FailedAttempts" integer [not null]
+  "InitiatedAtUtc" timestamp [not null]
+  "ExpiresAtUtc" timestamp [not null]
+  "VerifiedAtUtc" timestamp
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+
+  Indexes {
+    Id [pk, name: "PK_bank_account_verifications"]
+    PaymentMethodId [name: "ix_bank_account_verifications_method"]
+    (PaymentMethodId, InitiatedAtUtc) [unique, name: "ix_bank_account_verifications_method_initiated"]
+  }
+}
+
 Table "billing_provider_states" {
   "Id" uuid [not null]
   "ProviderKey" "character varying(50)" [not null]
