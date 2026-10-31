@@ -43,8 +43,12 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
     ///     model. The configured gate server is retained; its migrated template is not copied.
     /// </summary>
     public static Task<EconomyPostgreSqlTestDatabase> CreateEmptyAsync(
+        string databasePrefix) =>
+        CreateEmptyAsync(databasePrefix, CancellationToken.None);
+
+    public static Task<EconomyPostgreSqlTestDatabase> CreateEmptyAsync(
         string databasePrefix,
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken) =>
         CreateCoreAsync(databasePrefix, useTemplate: false, cancellationToken);
 
     private static async Task<EconomyPostgreSqlTestDatabase> CreateCoreAsync(
