@@ -27,6 +27,15 @@ echo the endpoint, provider error text/data or inner transport exceptions.
 No private signing key is part of these read-service settings. Global tracing
 configuration must also protect any credential-bearing RPC URL.
 
+Registration also enforces `EvmCertificateRpcEndpointPolicy`, the server-side
+request rules for the configured endpoint: absolute HTTPS only, and the host
+must not be the reserved `localhost` name (including `*.localhost`) nor a
+loopback, private, link-local, shared (CGNAT), documentation, reserved or
+multicast address literal, IPv4-mapped forms included. Classification is
+literal-only, performed once at registration without DNS resolution, and
+fail-closed. The isolated loopback HTTPS/Anvil interop fixtures construct their
+transports directly and never pass through this policy.
+
 ## Proof checks
 
 For each observation the verifier:
