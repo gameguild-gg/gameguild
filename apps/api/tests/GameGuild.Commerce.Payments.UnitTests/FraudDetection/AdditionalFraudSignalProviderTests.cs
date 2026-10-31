@@ -21,10 +21,10 @@ public class AdditionalFraudSignalProviderTests
     [Fact]
     public async Task BinRange_Should_Fire_On_Configured_Prefix()
     {
-        var options = Options(new FraudAssessmentOptions { HighRiskCardBins = ["530000"] });
+        var options = Options(new FraudAssessmentOptions { HighRiskCardBins = ["400012"] });
         var provider = new BinRangeFraudSignalProvider(NullLogger<BinRangeFraudSignalProvider>.Instance);
 
-        var signals = await provider.EvaluateAsync(Context(cardBin: "530092"), options);
+        var signals = await provider.EvaluateAsync(Context(cardBin: "40001234"), options);
 
         signals.Should().ContainSingle(signal => signal.SignalType == "CardBin.HighRiskRange"
                                                  && signal.Weight == options.CardBinWeight);
@@ -40,7 +40,7 @@ public class AdditionalFraudSignalProviderTests
         });
         var provider = new BinRangeFraudSignalProvider(NullLogger<BinRangeFraudSignalProvider>.Instance);
 
-        var signals = await provider.EvaluateAsync(Context(cardBin: "4000123456"), options);
+        var signals = await provider.EvaluateAsync(Context(cardBin: "40001234"), options);
 
         signals.Should().ContainSingle(signal => signal.Weight == options.MaxSignalScore);
     }
@@ -88,13 +88,13 @@ public class AdditionalFraudSignalProviderTests
     {
         var options = Options(new FraudAssessmentOptions
         {
-            CardBinCountryMap = ["530000=NG", "400000-400050=US"]
+            CardBinCountryMap = ["400012=NG", "400000-400050=US"]
         });
         var provider = new BinRangeFraudSignalProvider(NullLogger<BinRangeFraudSignalProvider>.Instance);
 
-        var withoutBillingCountry = await provider.EvaluateAsync(Context(cardBin: "530092"), options);
-        var mismatch = await provider.EvaluateAsync(Context(cardBin: "530092", country: "PT"), options);
-        var match = await provider.EvaluateAsync(Context(cardBin: "400012", country: "us"), options);
+        var withoutBillingCountry = await provider.EvaluateAsync(Context(cardBin: "40001234"), options);
+        var mismatch = await provider.EvaluateAsync(Context(cardBin: "40001234", country: "PT"), options);
+        var match = await provider.EvaluateAsync(Context(cardBin: "400030", country: "us"), options);
         var unmapped = await provider.EvaluateAsync(Context(cardBin: "999999", country: "PT"), options);
 
         withoutBillingCountry.Should().BeEmpty("country comparison needs a billing country");
@@ -107,9 +107,9 @@ public class AdditionalFraudSignalProviderTests
     [Fact]
     public void BinRange_ResolveIssuerCountry_Should_Ignore_Malformed_Map_Entries()
     {
-        BinRangeFraudSignalProvider.ResolveIssuerCountry("530092", ["=NG", "530000=", "530000=NGA", "530000=1G", "garbage"])
+        BinRangeFraudSignalProvider.ResolveIssuerCountry("40001234", ["=NG", "400012=", "400012=NGA", "400012=1G", "garbage"])
             .Should().BeNull();
-        BinRangeFraudSignalProvider.ResolveIssuerCountry("530092", ["530000=ng"])
+        BinRangeFraudSignalProvider.ResolveIssuerCountry("40001234", ["400012=ng"])
             .Should().Be("NG", "country codes normalize to uppercase");
     }
 

@@ -376,7 +376,7 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
         csv.Should().Contain("summary,flagged_percent,44.44");
         csv.Should().Contain("by_country,NG,2,1,1");
         csv.Should().Contain("by_payment_method,stripe,9,3,1");
-        csv.Should().Contain("by_plan,\"Creator Pro (00000000-0000-0000-0000-0000000000aa)\",7,2,1");
+        csv.Should().Contain("by_plan,Creator Pro (00000000-0000-0000-0000-0000000000aa),7,2,1");
         csv.Should().Contain("by_plan,unknown,2,1,0");
         csv.Should().Contain("weekly_trend,2026-10-26,5,2,0");
         csv.Should().NotContain("daily_trend,", "the exported trend section honors the report granularity");
