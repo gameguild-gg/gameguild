@@ -677,7 +677,12 @@ for (const packageRoot of installedConsumers("@modelcontextprotocol/sdk")) {
       },
     }), /issuer/i);
     assert.equal(requests, 0, "Issuer mismatch must fail before any credential-bearing request");
-    assert.equal(require(join(packageRoot, "package.json")).version, "1.32.1");
+    const sdkVersion = require(join(packageRoot, "package.json")).version;
+    const [sdkMajor, sdkMinor, sdkPatch] = sdkVersion.split("-")[0].split(".").map(Number);
+    assert.ok(
+      sdkMajor > 1 || (sdkMajor === 1 && (sdkMinor > 32 || (sdkMinor === 32 && sdkPatch >= 1))),
+      `MCP SDK ${sdkVersion} predates the reviewed OAuth issuer-binding fix in 1.32.1`,
+    );
   });
 }
 
