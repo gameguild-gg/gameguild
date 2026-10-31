@@ -67,9 +67,10 @@ public class WebhookRetryWorkerSettings
     public int PollIntervalSeconds { get; set; } = 30;
 
     /// <summary>
-    ///     Maximum number of due events processed per polling cycle.
+    ///     Maximum number of due events processed per polling cycle (issue #408: batches of
+    ///     up to 50 webhooks per cycle).
     /// </summary>
-    public int BatchSize { get; set; } = 20;
+    public int BatchSize { get; set; } = 50;
 
     /// <summary>
     ///     Hard ceiling on retry attempts honored by the worker, matching the

@@ -153,8 +153,24 @@ public sealed class PaymentsController(
             return BadRequest(new { error = GatewayPaymentMethodTokens.ValidationMessage });
         }
 
+        // Fraud-signal delivery metadata (issue #409): the client IP of the attempt and the
+        // optional device fingerprint header feed the IP/device blacklist signals; the payer
+        // email (optional, from the body) feeds the disposable-email and email blacklist signals.
+        var sourceIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var deviceFingerprint = Request.Headers["X-Device-Fingerprint"].ToString();
+        var payerEmail = string.IsNullOrWhiteSpace(body.PayerEmail) ? null : body.PayerEmail.Trim();
+
         var result = await sender.Send(
-            new ProcessPaymentCommand(body.TenantId, body.SubscriptionId, body.Amount, body.PaymentMethodId, body.Country, body.GatewayProvider), ct).ConfigureAwait(false);
+            new ProcessPaymentCommand(
+                body.TenantId,
+                body.SubscriptionId,
+                body.Amount,
+                body.PaymentMethodId,
+                body.Country,
+                body.GatewayProvider,
+                string.IsNullOrWhiteSpace(sourceIpAddress) ? null : sourceIpAddress,
+                string.IsNullOrWhiteSpace(deviceFingerprint) ? null : deviceFingerprint.Trim(),
+                payerEmail), ct).ConfigureAwait(false);
 
         return CreatedAtRoute("GetPaymentById", new { paymentId = result.PaymentId }, result);
     }
@@ -836,7 +852,14 @@ public sealed class PaymentsController(
         return Ok(metrics);
     }
 
-    public sealed record ProcessPaymentRequest(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId, string? Country = null, string? GatewayProvider = null);
+    public sealed record ProcessPaymentRequest(
+        Guid TenantId,
+        Guid SubscriptionId,
+        decimal Amount,
+        string PaymentMethodId,
+        string? Country = null,
+        string? GatewayProvider = null,
+        string? PayerEmail = null);
 
     public sealed record CreateSetupIntentRequest(Guid TenantId, Guid SubscriptionId, string? CustomerEmail, string? CustomerName);
 

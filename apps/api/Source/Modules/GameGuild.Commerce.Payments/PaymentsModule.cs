@@ -124,6 +124,10 @@ public static class PaymentsModule
         services.AddScoped<IFraudSignalProvider, BlacklistFraudSignalProvider>();
         services.AddScoped<FraudReviewAutoBlacklister>();
         services.AddScoped<IFraudDetectionService, FraudDetectionService>();
+        // Fraud model expansion (issue #409): disposable-email domains (mailinator, ...),
+        // high-risk billing countries and the IP/device/email blacklist attributes.
+        services.AddScoped<IFraudSignalProvider, DisposableEmailFraudSignalProvider>();
+        services.AddScoped<IFraudSignalProvider, HighRiskCountryFraudSignalProvider>();
 
         // Failure-code retry policy + automated retry queue (issue #415): classifies gateway
         // failure codes into retriable/non-retriable schedules, and (opt-in) polls due retries

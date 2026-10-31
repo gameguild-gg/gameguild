@@ -8,8 +8,14 @@ namespace GameGuild.Commerce.Billing;
 /// <summary>
 ///     Repository implementation for billing webhook events.
 ///     Uses ExternalEventId as the idempotency key to prevent duplicate processing.
+///     When a new inbox row is persisted inside a provider callback request, the delivery
+///     source captured by <see cref="WebhookSourceSecurityFilter"/> (remote IP + user agent)
+///     is stamped onto the row (issue #408: IP address and user agent logging).
 /// </summary>
-public class BillingWebhookRepository(IApplicationDbContext context, ILogger<BillingWebhookRepository> logger) 
+public class BillingWebhookRepository(
+    IApplicationDbContext context,
+    ILogger<BillingWebhookRepository> logger,
+    IWebhookDeliveryContext? deliveryContext = null)
     : CommerceRepositoryBase<BillingWebhookEvent>(context), IBillingWebhookRepository
 {
     private static readonly HashSet<string> WebhookIdempotencyIndexes = new(StringComparer.Ordinal)
@@ -189,6 +195,16 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
         }
         
         logger.LogInformation("Creating webhook event: {ExternalEventId} for provider: {Provider}", webhookEvent.ExternalEventId, webhookEvent.Provider);
+
+        // Stamp the delivery source captured by the endpoint security filter (issue #408):
+        // remote IP + user agent of the callback request. Outside a callback request (retry
+        // worker, replays) the context is empty and the row keeps its original source.
+        if (deliveryContext is not null
+            && (string.IsNullOrWhiteSpace(webhookEvent.SourceIpAddress) || string.IsNullOrWhiteSpace(webhookEvent.UserAgent)))
+        {
+            webhookEvent.RecordDeliverySource(deliveryContext.SourceIpAddress, deliveryContext.UserAgent);
+        }
+
         await Entities.AddAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
         try
         {

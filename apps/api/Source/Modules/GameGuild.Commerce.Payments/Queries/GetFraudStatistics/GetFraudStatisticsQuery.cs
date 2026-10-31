@@ -45,6 +45,63 @@ public sealed record FraudStatisticsReport
 
     /// <summary>Top fraud signal types by frequency inside the window (top 10).</summary>
     public required IReadOnlyList<FraudStatisticsSignal> TopSignals { get; init; }
+
+    /// <summary>Fraud outcomes by billing country inside the window (issue #409: fraud by country).</summary>
+    public required IReadOnlyList<FraudStatisticsCountryRow> ByCountry { get; init; }
+
+    /// <summary>Fraud outcomes by gateway payment provider inside the window (issue #409: fraud by payment method).</summary>
+    public required IReadOnlyList<FraudStatisticsMethodRow> ByPaymentMethod { get; init; }
+
+    /// <summary>Daily trend of created/held/blocked payments inside the window (issue #409: trend analysis).</summary>
+    public required IReadOnlyList<FraudStatisticsTrendPoint> DailyTrend { get; init; }
+}
+
+/// <summary>Fraud outcomes for one billing country inside the statistics window (issue #409).</summary>
+public record FraudStatisticsCountryRow
+{
+    /// <summary>ISO 3166-1 alpha-2 billing country; "unknown" when the attempt carried none.</summary>
+    public required string Country { get; init; }
+
+    /// <summary>Payments created for the country in the window.</summary>
+    public required int Created { get; init; }
+
+    /// <summary>Assessed payments held for review in the window.</summary>
+    public required int ReviewHeld { get; init; }
+
+    /// <summary>Assessed payments blocked in the window.</summary>
+    public required int Blocked { get; init; }
+}
+
+/// <summary>Fraud outcomes for one gateway payment provider inside the statistics window (issue #409).</summary>
+public record FraudStatisticsMethodRow
+{
+    /// <summary>Gateway provider that processed the attempts (stripe, paypal, ...).</summary>
+    public required string Provider { get; init; }
+
+    /// <summary>Payments created through the provider in the window.</summary>
+    public required int Created { get; init; }
+
+    /// <summary>Assessed payments held for review in the window.</summary>
+    public required int ReviewHeld { get; init; }
+
+    /// <summary>Assessed payments blocked in the window.</summary>
+    public required int Blocked { get; init; }
+}
+
+/// <summary>One day of the fraud-outcome trend inside the statistics window (issue #409).</summary>
+public record FraudStatisticsTrendPoint
+{
+    /// <summary>UTC day the point aggregates.</summary>
+    public required DateTime Day { get; init; }
+
+    /// <summary>Payments created on the day.</summary>
+    public required int Created { get; init; }
+
+    /// <summary>Assessed payments held for review on the day.</summary>
+    public required int ReviewHeld { get; init; }
+
+    /// <summary>Assessed payments blocked on the day.</summary>
+    public required int Blocked { get; init; }
 }
 
 /// <summary>Payment counts inside the statistics window.</summary>
@@ -208,6 +265,53 @@ public sealed class GetFraudStatisticsQueryHandler(IApplicationDbContext context
 
         var resolvedReviewCount = totalsProjection.ReviewsApproved + totalsProjection.ReviewsDeclined;
 
+        // Fraud by billing country (issue #409: fraud by country).
+        var byCountry = await payments
+            .GroupBy(payment => payment.BillingCountry ?? "unknown")
+            .Select(group => new FraudStatisticsCountryRow
+            {
+                Country = group.Key,
+                Created = group.Count(),
+                ReviewHeld = group.Count(payment => payment.FraudDecision == FraudDecision.Review),
+                Blocked = group.Count(payment => payment.FraudDecision == FraudDecision.Block)
+            })
+            .OrderByDescending(row => row.Blocked)
+            .ThenByDescending(row => row.ReviewHeld)
+            .ThenBy(row => row.Country)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // Fraud by payment method (issue #409): the gateway provider is the payment-method
+        // breakdown available on every attempt.
+        var byPaymentMethod = await payments
+            .GroupBy(payment => payment.Provider)
+            .Select(group => new FraudStatisticsMethodRow
+            {
+                Provider = group.Key,
+                Created = group.Count(),
+                ReviewHeld = group.Count(payment => payment.FraudDecision == FraudDecision.Review),
+                Blocked = group.Count(payment => payment.FraudDecision == FraudDecision.Block)
+            })
+            .OrderByDescending(row => row.Blocked)
+            .ThenByDescending(row => row.ReviewHeld)
+            .ThenBy(row => row.Provider)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // Daily trend (issue #409: trend analysis).
+        var dailyTrend = await payments
+            .GroupBy(payment => payment.CreatedAt.Date)
+            .Select(group => new FraudStatisticsTrendPoint
+            {
+                Day = group.Key,
+                Created = group.Count(),
+                ReviewHeld = group.Count(payment => payment.FraudDecision == FraudDecision.Review),
+                Blocked = group.Count(payment => payment.FraudDecision == FraudDecision.Block)
+            })
+            .OrderBy(point => point.Day)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
         return new FraudStatisticsReport
         {
             GeneratedAtUtc = now,
@@ -240,7 +344,10 @@ public sealed class GetFraudStatisticsQueryHandler(IApplicationDbContext context
                     ? totalsProjection.ReviewSecondsTotal / resolvedInWindow / 3600.0
                     : null
             },
-            TopSignals = topSignals
+            TopSignals = topSignals,
+            ByCountry = byCountry,
+            ByPaymentMethod = byPaymentMethod,
+            DailyTrend = dailyTrend
         };
     }
 
