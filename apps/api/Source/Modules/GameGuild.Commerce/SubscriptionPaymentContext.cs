@@ -16,16 +16,26 @@ namespace GameGuild.Commerce;
 ///     User the subscription belongs to; lets the payment path resolve per-user state
 ///     (for example account-credit auto-apply, issue #410) without a Subscriptions reference.
 /// </param>
+/// <param name="PlanId">
+///     Plan the subscription is on (issue #409: fraud statistics by subscription plan).
+///     Populated from the subscription row without extra queries.
+/// </param>
+/// <param name="PlanName">
+///     Display name of <paramref name="PlanId"/>, when known; only the bulk reporting
+///     resolution populates it (the hot payment path does not need it).
+/// </param>
 public sealed record SubscriptionPaymentContext(
     Guid SubscriptionId,
     Guid TenantId,
     decimal Amount,
     string Currency,
-    string? ExternalCustomerId,
+    string? ExternalCustomerId = null,
     int BillingCycleNumber = 1,
     DateTime? BillingPeriodStart = null,
     DateTime? BillingPeriodEnd = null,
-    Guid? OwnerUserId = null);
+    Guid? OwnerUserId = null,
+    Guid? PlanId = null,
+    string? PlanName = null);
 
 /// <summary>
 ///     Provides the payment-facing subscription data needed by the Payments module.
@@ -36,6 +46,15 @@ public interface ISubscriptionPaymentContextService
     ///     Loads the payment-relevant context for a subscription.
     /// </summary>
     Task<SubscriptionPaymentContext?> GetPaymentContextAsync(Guid subscriptionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Bulk variant used by reporting (issue #409: fraud statistics by plan): loads the
+    ///     payment contexts for many subscriptions in one round trip, resolving each
+    ///     subscription's plan id and plan name.
+    /// </summary>
+    Task<IReadOnlyList<SubscriptionPaymentContext>> GetPaymentContextsAsync(
+        IReadOnlyCollection<Guid> subscriptionIds,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Persists the Stripe customer linked to a subscription.
