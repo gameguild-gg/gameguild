@@ -9,6 +9,7 @@ using GameGuild.API.Setup;
 using GameGuild.API.Sms;
 using GameGuild.Commerce.Subscriptions;
 using GameGuild.Email;
+using GameGuild.Notifications.Services.WhatsApp;
 using GameGuild.Push;
 using GameGuild.Sms;
 
@@ -73,6 +74,24 @@ if (builder.Configuration.GetValue<bool>($"{PushDeliveryOptions.SectionName}:Ena
 else
 {
     builder.Services.AddSingleton<IPushSender>(static _ => NoOpPushSender.Instance);
+}
+
+// WhatsApp Business delivery port (issues #54/#55): the real Cloud API adapter when
+// Notifications:WhatsApp:Enabled is true AND the WHATSAPP_APP_ID / WHATSAPP_PHONE_NUMBER_ID /
+// WHATSAPP_ACCESS_TOKEN environment variables are all present (credentials are read from the
+// environment only — never from configuration files); otherwise the no-op default declines
+// every send so notification rows fail closed (retry → deadletter) and broadcasts fail
+// explicitly instead of pretending to deliver.
+builder.Services.Configure<WhatsAppSettings>(builder.Configuration.GetSection(WhatsAppSettings.SectionName));
+builder.Services.AddHttpClient(WhatsAppBusinessApiProvider.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(30));
+if (builder.Configuration.GetValue<bool>($"{WhatsAppSettings.SectionName}:Enabled")
+    && WhatsAppCredentials.FromEnvironment() is not null)
+{
+    builder.Services.AddScoped<IWhatsAppProvider>(static serviceProvider => new WhatsAppBusinessApiProvider(
+        serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<WhatsAppSettings>>(),
+        serviceProvider.GetRequiredService<System.Net.Http.IHttpClientFactory>()
+            .CreateClient(WhatsAppBusinessApiProvider.HttpClientName),
+        new WhatsAppEndpointGuard()));
 }
 
 // Geolocation (issues #242/#278): offline MaxMind GeoLite2 adapter when a database path is
