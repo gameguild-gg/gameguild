@@ -133,7 +133,7 @@ public class WebhookRawDeliveryRedactorTests
         // Construct at runtime: literal provider-secret prefixes trip secret scanners.
         var fakeSecretKey = string.Concat("sk", "_live_", "SYNTHETICKEY000000000000000");
         var fakeWhsec = string.Concat("wh", "sec_", "SYNTHETICWHSEC0000000000000");
-        var payload = $$"""{"type":"account.updated","keys":{"secret":"{{fakeSecretKey}}","webhook":"{{fakeWhsec}}"}}""";
+        var payload = $$"""{"type":"account.updated","keys":{"secret":"{{fakeSecretKey}}","webhook":"{{fakeWhsec}}"}}"""";
 
         var redacted = WebhookRawDeliveryRedactor.RedactPayload(payload, redactPii: true);
 
