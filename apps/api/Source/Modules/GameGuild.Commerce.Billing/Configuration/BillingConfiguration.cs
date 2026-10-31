@@ -228,6 +228,17 @@ public class BillingConfiguration : IValidatableObject
             }
         }
 
+        // Raw-delivery retention (issue #408: capture raw payload and all headers): the
+        // retention window is bounded whether or not retention is enabled, so a stray value
+        // can never silently extend an opt-in window past the 1-365 day range.
+        if (Webhook.Retention.RetentionDays is < WebhookRetentionPolicy.MinRetentionDays
+            or > WebhookRetentionPolicy.MaxRetentionDays)
+        {
+            yield return new ValidationResult(
+                $"Retention.RetentionDays must be between {WebhookRetentionPolicy.MinRetentionDays} and {WebhookRetentionPolicy.MaxRetentionDays} days",
+                new[] { $"{nameof(Webhook)}.{nameof(Webhook.Retention)}.{nameof(Webhook.Retention.RetentionDays)}" });
+        }
+
         // Webhook source security: suspicious-activity thresholds must be positive when enabled.
         if (Webhook.Security.SuspiciousActivity.Enabled)
         {
