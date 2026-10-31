@@ -107,8 +107,8 @@ HTTPS RPC endpoint and environment key reference before activating it. Never com
 credential-bearing RPC endpoint. Only the final certificate digest and contract operation are sent
 on chain; owner/tenant IDs and revocation reasons remain off chain.
 
-The configured RPC endpoint must be a **public** HTTPS host: registration enforces
-`EvmCertificateRpcEndpointPolicy` and rejects the reserved `localhost` name and every loopback,
+The configured RPC endpoint must be a **public** HTTPS host: host activation (`AddCertificateEvmHost`)
+enforces `EvmCertificateRpcEndpointPolicy` and rejects the reserved `localhost` name and every loopback,
 private, link-local, shared (CGNAT), documentation, reserved or multicast address literal before any
 RPC call is made. A local node therefore cannot back an enabled host; use the hosted CI fixtures for
 controlled-boundary Anvil runs.

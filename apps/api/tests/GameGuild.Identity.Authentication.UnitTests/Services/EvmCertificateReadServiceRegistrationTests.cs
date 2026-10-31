@@ -62,29 +62,18 @@ public sealed class EvmCertificateReadServiceRegistrationTests
     }
 
     [Fact]
-    public void LoopbackRpcEndpointFailsRegistrationBeforeAnyPortIsRegistered()
+    public void ModuleRegistrationRemainsReachableForTheIsolatedLoopbackInteropFixtures()
     {
+        // The server-side endpoint rules are enforced by the production host composition
+        // (AddCertificateEvmHost), not by this module transport registration: the hosted Anvil/TLS
+        // interop suites exercise the real worker through this registration against a loopback bridge.
         var services = new ServiceCollection();
         var options = EvmCertificateNetworkOptionsTests.ValidOptions();
         options.RpcEndpoint = "https://127.0.0.1:8545/";
-        var error = Assert.Throws<ArgumentException>(() => services.AddEvmCertificateVerification(options));
-        Assert.DoesNotContain(error.Message, "127.0.0.1", StringComparison.Ordinal);
-        Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IEvmCertificateRpc));
-        Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IEvmCertificateProofVerifier));
-    }
-
-    [Fact]
-    public void LocalhostNameAndPrivateAddressRpcEndpointsFailRegistration()
-    {
-        foreach (var endpoint in new[] { "https://localhost:8545/", "https://10.1.2.3/" })
-        {
-            var services = new ServiceCollection();
-            var options = EvmCertificateNetworkOptionsTests.ValidOptions();
-            options.RpcEndpoint = endpoint;
-            Assert.Throws<ArgumentException>(() => services.AddEvmCertificatePublicationTransport(options));
-            Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IEvmCertificatePublicationRpc));
-            Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IEvmCertificateRpc));
-        }
+        services.AddEvmCertificatePublicationTransport(options);
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        Assert.IsType<EvmCertificatePublicationRpcClient>(scope.ServiceProvider.GetRequiredService<IEvmCertificatePublicationRpc>());
     }
 
     [Fact]

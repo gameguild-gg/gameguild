@@ -32,9 +32,12 @@ request rules for the configured endpoint: absolute HTTPS only, and the host
 must not be the reserved `localhost` name (including `*.localhost`) nor a
 loopback, private, link-local, shared (CGNAT), documentation, reserved or
 multicast address literal, IPv4-mapped forms included. Classification is
-literal-only, performed once at registration without DNS resolution, and
-fail-closed. The isolated loopback HTTPS/Anvil interop fixtures construct their
-transports directly and never pass through this policy.
+literal-only, performed once without DNS resolution, and fail-closed. The
+policy is enforced by the production host composition (`AddCertificateEvmHost`,
+the only activation path of an enabled API host); the module-level transport
+registration above intentionally remains reachable by the isolated loopback
+HTTPS/Anvil interop fixtures, which exercise the real worker against a
+controlled-boundary bridge.
 
 ## Proof checks
 

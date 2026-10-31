@@ -38,8 +38,8 @@ the journal keeps failures visible for this ceremony to observe.
    before deployment can carry the pinned code, and unfinalized history is never
    accepted as evidence).
 5. Production hosts cannot target loopback/private/reserved RPC endpoints
-   (`EvmCertificateRpcEndpointPolicy`, enforced in `AddEvmCertificateVerification`).
-   The loopback Anvil/TLS fixtures are CI-only and construct transports directly.
+   (`EvmCertificateRpcEndpointPolicy`, enforced by host activation in `AddCertificateEvmHost`).
+   The loopback Anvil/TLS fixtures are CI-only, registering the module transport directly.
 6. No mainnet deployment, no payment, no W3C credential signing is part of this
    ceremony or the implementation.
 
