@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using FluentAssertions;
 using GameGuild.Identity.Context.Actors;
@@ -313,6 +314,42 @@ public class FxRateSyncTests
 
         // Unknown legs fail closed.
         (await provider.GetRateAsync("USD", "BRL")).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CachedQuotation_ConversionLatency_StaysWellUnder50Ms()
+    {
+        // Issue #412 spec D budget: "< 50ms for conversion with cached rates". Warms the
+        // TTL cache once (the first resolution pays the seed + source read), then measures
+        // the full quotation-resolution path per operation against the budget.
+        var source = NewRuntimeSource();
+        source.ApplyProviderSet(Grid(("EUR", 0.9m)));
+        var cache = NewCache(ttlMinutes: 60);
+        var provider = new PersistedFxRateProvider(cache, source);
+
+        (await provider.GetRateAsync("USD", "EUR")).Should().NotBeNull();
+
+        const int iterations = 1_000;
+        var worstTicks = 0L;
+        var total = Stopwatch.StartNew();
+        for (var i = 0; i < iterations; i++)
+        {
+            var start = Stopwatch.GetTimestamp();
+            var rate = await provider.GetRateAsync("USD", "EUR");
+            var elapsed = Stopwatch.GetTimestamp() - start;
+            if (elapsed > worstTicks)
+            {
+                worstTicks = elapsed;
+            }
+            rate.Should().NotBeNull();
+        }
+        total.Stop();
+
+        var worstMs = worstTicks * 1000.0 / Stopwatch.Frequency;
+        var meanMs = total.Elapsed.TotalMilliseconds / iterations;
+        // The cached path must clear the 50ms budget with room to spare.
+        worstMs.Should().BeLessThan(50,
+            $"worst observed {worstMs:F3}ms over {iterations} cached resolutions; mean {meanMs:F3}ms");
     }
 
     [Fact]
