@@ -68,6 +68,13 @@ public sealed class SubscriptionPlanPricingResolver : IPlanPricingResolver
         return plan is not null;
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Guid>> GetActivePlanIdsAsync(CancellationToken cancellationToken = default)
+    {
+        var plans = await _planService.GetActiveAsync(cancellationToken).ConfigureAwait(false);
+        return plans.Select(plan => plan.Id).ToList();
+    }
+
     /// <summary>
     ///     Converts cents to Money value object.
     /// </summary>

@@ -20,6 +20,17 @@ public static class SecurityAlertRules
     public static string PermissionChangeBurst { get; } = "security.permission-change-burst";
 
     public static string BulkPermissionChange { get; } = "security.bulk-permission-change";
+
+    /// <summary>Unusual promo code usage pattern (validation/redemption velocity anomaly, issue #418).</summary>
+    public static string PromoUsageAnomaly { get; } = "security.promo-usage-anomaly";
+
+    /// <summary>Webhook security failure burst: too many failed webhook deliveries in the window (issue #408).</summary>
+    public static string WebhookFailureBurst { get; } = "security.webhook-failure-burst";
+
+    /// <summary>A webhook delivery failed provider signature verification (issue #408).</summary>
+    public static string WebhookUnverified { get; } = "security.webhook-unverified";
+
+    public static string BulkExportThresholdExceeded { get; } = "security.bulk-export-threshold-exceeded";
 }
 
 /// <summary>
@@ -92,6 +103,24 @@ public sealed class SecurityAlertRuleEvaluator(
             {
                 await EvaluateFailedAuthenticationBurstAsync(context, securityEvent, cancellationToken).ConfigureAwait(false);
             }
+
+            if (securityEvent.ActionType == AuditActionTypes.PromoUsageAnomalyDetected)
+            {
+                // Issue #418 unusual-usage alerting: the promo engine computed the velocity
+                // anomaly from its own attempt/usage tables and published the event; this rule
+                // turns it into a (deduplicated) SecurityAlert.
+                await RaiseOrMergeAsync(context, securityEvent, classification,
+                    SecurityAlertRules.PromoUsageAnomaly,
+                    AuditRiskLevel.High,
+                    "Unusual promo code usage pattern detected",
+                    securityEvent.ErrorMessage ?? "Promo code validation or redemption velocity exceeded the configured threshold.",
+                    cancellationToken).ConfigureAwait(false);
+            }
+
+            if (IsWebhookSecurityEvent(securityEvent.ActionType))
+            {
+                await EvaluateWebhookSecurityEventsAsync(context, securityEvent, classification, cancellationToken).ConfigureAwait(false);
+            }
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -110,8 +139,74 @@ public sealed class SecurityAlertRuleEvaluator(
         AuditActionTypes.PermissionChanged
     ];
 
+    /// <summary>Webhook security event actions evaluated for alerting (issue #408).</summary>
+    private static readonly string[] WebhookSecurityActions =
+    [
+        AuditActionTypes.WebhookSignatureFailed,
+        AuditActionTypes.WebhookSourceIpRejected,
+        AuditActionTypes.WebhookReplayDetected,
+        AuditActionTypes.WebhookRateLimitExceeded,
+        AuditActionTypes.WebhookSourceBlocked,
+        AuditActionTypes.WebhookDeadLettered
+    ];
+
     private static bool IsPermissionMutation(string actionType) =>
         PermissionMutationActions.Contains(actionType, StringComparer.Ordinal);
+
+    private static bool IsWebhookSecurityEvent(string actionType) =>
+        WebhookSecurityActions.Contains(actionType, StringComparer.Ordinal);
+
+    /// <summary>
+    ///     Issue #408 webhook alerting. Every unverified delivery (failed provider signature
+    ///     verification) raises a <c>security.webhook-unverified</c> alert immediately, and any
+    ///     webhook security failure counted above the configured threshold inside the window
+    ///     raises a <c>security.webhook-failure-burst</c> alert (default: more than 5 failed
+    ///     webhooks in 1 hour). Both alerts deduplicate per tenant through
+    ///     <see cref="RaiseOrMergeAsync"/>.
+    /// </summary>
+    private async Task EvaluateWebhookSecurityEventsAsync(
+        IApplicationDbContext context,
+        AuditLog securityEvent,
+        ClassifiedSecurityEvent classification,
+        CancellationToken cancellationToken)
+    {
+        if (securityEvent.ActionType == AuditActionTypes.WebhookSignatureFailed)
+        {
+            await RaiseOrMergeAsync(context, securityEvent, classification,
+                SecurityAlertRules.WebhookUnverified,
+                AuditRiskLevel.High,
+                "Unverified webhook delivery rejected",
+                $"Webhook delivery from provider '{securityEvent.ResourceId}' failed signature or timestamp verification and was rejected.",
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        var windowMinutes = Math.Clamp(options.WebhookFailureWindowMinutes, 1, 1440);
+        var windowStart = SystemClock.UtcNow.AddMinutes(-windowMinutes);
+        var threshold = Math.Max(1, options.WebhookFailureAlertThreshold);
+
+        var failures = await context.Set<AuditLog>()
+            .AsNoTracking()
+            .CountAsync(log =>
+                log.Category == AuditCategory.Security
+                && !log.Success
+                && WebhookSecurityActions.Contains(log.ActionType)
+                && log.CreatedAt >= windowStart,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        // The current event is in the change tracker, not yet in the database, so it is counted here.
+        failures++;
+
+        if (failures > threshold)
+        {
+            await RaiseOrMergeAsync(context, securityEvent, classification,
+                SecurityAlertRules.WebhookFailureBurst,
+                AuditRiskLevel.Critical,
+                "Webhook failure burst detected",
+                $"{failures} webhook security failures within {windowMinutes} minutes (threshold {threshold}); webhook deliveries are failing at an abnormal rate.",
+                cancellationToken).ConfigureAwait(false);
+        }
+    }
 
     private async Task EvaluatePermissionChangesAsync(
         IApplicationDbContext context,

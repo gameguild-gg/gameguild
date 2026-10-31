@@ -19,5 +19,11 @@ public enum SessionTerminationReason
 
     MaxSessionsExceeded,
 
-    MfaDisabled
+    MfaDisabled,
+
+    /// <summary>
+    ///     The user's password was changed or reset (issue #278): every active session is
+    ///     terminated as part of the credential-change revocation battery.
+    /// </summary>
+    PasswordChanged
 }

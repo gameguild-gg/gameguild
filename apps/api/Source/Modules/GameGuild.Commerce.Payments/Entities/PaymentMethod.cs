@@ -7,12 +7,14 @@ namespace GameGuild.Commerce.Payments;
 /// <summary>
 ///     Tenant-scoped local registry entry for a payment method tokenized at the gateway
 ///     (issue #414). Only gateway references and display metadata are stored — never raw
-///     card data (PCI DSS: tokenization only).
+///     card data (PCI DSS: tokenization only). The gateway reference is stored protected
+///     (DataProtection) with a deterministic lookup hash for equality queries.
 /// </summary>
 [Table("payment_methods")]
 [Index(nameof(TenantId), nameof(UserId), nameof(IsDefault))]
 [Index(nameof(ExpiresAt))]
 [Index(nameof(GatewayPaymentMethodId))]
+[Index(nameof(GatewayPaymentMethodIdHash))]
 public class PaymentMethod : EntityBase
 {
     /// <summary>
@@ -57,22 +59,34 @@ public class PaymentMethod : EntityBase
     public Guid UserId { get; private set; }
 
     /// <summary>
-    ///     Coarse payment-method family (card / bank account / wallet). Stripe-only in v1 wiring.
+    ///     Payment-method family (card / bank account / PayPal / Apple Pay / Google Pay / wallet).
     /// </summary>
     public PaymentMethodType Type { get; private set; }
 
     /// <summary>
-    ///     Gateway provider key (e.g. "stripe"). Multi-provider support is an open extension (#780).
+    ///     Gateway provider key (e.g. "stripe", "paypal", "braintree", "adyen", "authorizenet").
     /// </summary>
     [MaxLength(50)]
     public string GatewayProvider { get; private set; } = string.Empty;
 
     /// <summary>
     ///     Gateway payment method reference (Stripe <c>pm_...</c>). Token reference only —
-    ///     never raw card data.
+    ///     never raw card data. Stored in protected form (DataProtection via
+    ///     <see cref="IGatewayPaymentMethodIdProtector"/>); rows written before that
+    ///     protection carry legacy plaintext until next written. Equality lookups go
+    ///     through <see cref="GatewayPaymentMethodIdHash"/> instead (protection is
+    ///     non-deterministic).
     /// </summary>
-    [MaxLength(255)]
+    [MaxLength(512)]
     public string GatewayPaymentMethodId { get; private set; } = string.Empty;
+
+    /// <summary>
+    ///     Deterministic SHA-256 lookup hash of (gateway provider, gateway payment method id)
+    ///     so the registry can resolve rows by gateway reference while the stored reference
+    ///     stays encrypted. Null only on legacy rows written before hashing existed.
+    /// </summary>
+    [MaxLength(64)]
+    public string? GatewayPaymentMethodIdHash { get; private set; }
 
     /// <summary>
     ///     Whether this is the owner's default payment method within the tenant.
@@ -191,6 +205,28 @@ public class PaymentMethod : EntityBase
         ExpiresAt = ComputeExpiresAt(cardExpMonth, cardExpYear);
         Touch();
     }
+
+    /// <summary>
+    ///     Stores the gateway reference in protected form (DataProtection) together with its
+    ///     deterministic lookup hash, so equality queries do not depend on the ciphertext.
+    /// </summary>
+    public void StoreProtectedGatewayReference(string gatewayPaymentMethodId, string gatewayPaymentMethodIdHash)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(gatewayPaymentMethodId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(gatewayPaymentMethodIdHash);
+        if (gatewayPaymentMethodIdHash.Length > 64)
+            throw new ArgumentException("Gateway payment method id hash cannot exceed 64 characters", nameof(gatewayPaymentMethodIdHash));
+
+        GatewayPaymentMethodId = gatewayPaymentMethodId.Trim();
+        GatewayPaymentMethodIdHash = gatewayPaymentMethodIdHash;
+        Touch();
+    }
+
+    /// <summary>
+    ///     Whether this method can be charged right now (only Active methods are usable;
+    ///     expired and gateway-failed methods are not).
+    /// </summary>
+    public bool IsChargeable => Status == PaymentMethodStatus.Active;
 
     /// <summary>
     ///     Updates user-editable display fields only (nickname, billing address).
@@ -313,18 +349,31 @@ public class PaymentMethod : EntityBase
 }
 
 /// <summary>
-///     Coarse payment-method families. Stripe is the only wired provider in v1.
+///     Payment-method families registrable as saved methods (issue #414): card, bank
+///     account (ACH, verified via micro-deposits), and the wallet family — PayPal billing
+///     agreements plus Apple Pay and Google Pay tokens vaulted at the gateways. Values are
+///     stored as strings; <see cref="Wallet"/> is retained for legacy rows and Link-style
+///     wallets while the three wallet brands above get distinct values.
 /// </summary>
 public enum PaymentMethodType
 {
     /// <summary>Credit or debit card</summary>
     Card = 0,
 
-    /// <summary>Bank account (ACH) — verification flow deferred</summary>
+    /// <summary>Bank account (ACH) — chargeable only after micro-deposit verification</summary>
     BankAccount = 1,
 
-    /// <summary>Wallet (PayPal, Apple Pay, Google Pay)</summary>
-    Wallet = 2
+    /// <summary>Generic wallet (legacy rows, Link-style wallets)</summary>
+    Wallet = 2,
+
+    /// <summary>PayPal billing agreement / vaulted account</summary>
+    PayPal = 3,
+
+    /// <summary>Apple Pay vaulted token</summary>
+    ApplePay = 4,
+
+    /// <summary>Google Pay vaulted token</summary>
+    GooglePay = 5
 }
 
 /// <summary>

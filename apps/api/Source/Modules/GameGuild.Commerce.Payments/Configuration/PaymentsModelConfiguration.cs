@@ -96,11 +96,29 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
             builder.HasIndex(attempt => attempt.PaymentId)
                 .HasDatabaseName("ix_payment_retry_attempts_payment_id");
         });
+
+        // Encrypted-at-rest gateway credentials (issue #413): at most one active row per
+        // (provider, secret name); the value column only ever holds DataProtection payloads.
+        modelBuilder.Entity<GatewayCredential>(builder =>
+        {
+            builder.Property(credential => credential.ProviderKey)
+                .HasMaxLength(50);
+            builder.Property(credential => credential.SecretName)
+                .HasMaxLength(100);
+            builder.Property(credential => credential.Fingerprint)
+                .HasMaxLength(64);
+
+            builder.HasIndex(credential => new { credential.ProviderKey, credential.SecretName })
+                .HasFilter("\"DeactivatedAtUtc\" IS NULL")
+                .IsUnique()
+                .HasDatabaseName("ix_gateway_credentials_active_slot");
+        });
         modelBuilder.ApplyConfiguration(new TaxJurisdictionConfiguration());
         modelBuilder.ApplyConfiguration(new TaxRateConfiguration());
         modelBuilder.ApplyConfiguration(new TaxRuleConfiguration());
         modelBuilder.ApplyConfiguration(new UserWalletConfiguration());
         modelBuilder.ApplyConfiguration(new PaymentMethodConfiguration());
+        modelBuilder.ApplyConfiguration(new BankAccountVerificationConfiguration());
         modelBuilder.ApplyConfiguration(new RefundConfiguration());
 
         // Dispute persistence (issue #419): register the existing dispute entities into the
@@ -170,6 +188,15 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
         modelBuilder.ApplyConfiguration(new CurrencyConfigurationConfiguration());
         modelBuilder.ApplyConfiguration(new FxRateSnapshotConfiguration());
         modelBuilder.ApplyConfiguration(new FxRateSyncRunConfiguration());
+        // Localized plan prices (issue #412 spec C): per-tenant per-market price points
+        // (auto-calculated from the FX seam or manual psychological overrides) plus the
+        // recalculation runs with progress tracking and rollback before-snapshots.
+        modelBuilder.ApplyConfiguration(new PriceLocalizationConfiguration());
+        modelBuilder.ApplyConfiguration(new PriceRecalculationRunConfiguration());
         modelBuilder.ApplyConfiguration(new AuditTrailConfiguration());
+        // Fraud blacklist (issue #409): tenant-scoped entry store with wildcard patterns,
+        // expiry dates and manual whitelist overrides, evaluated as a payment fraud signal
+        // and administered through the fraud/blacklist endpoints.
+        modelBuilder.ApplyConfiguration(new FraudBlacklistEntryConfiguration());
     }
 }

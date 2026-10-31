@@ -77,6 +77,31 @@ public interface IPayPalApiClient
         string signature,
         string webhookId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Accepts a PayPal customer dispute (issue #419), acknowledging it as lost so PayPal
+    ///     returns the funds to the buyer: <c>POST /v1/customer-disputes/{disputeId}/accept</c>.
+    ///     <paramref name="idempotencyKey"/> is sent as the PayPal-Request-Id header.
+    /// </summary>
+    Task<PayPalApiResult> AcceptDisputeAsync(
+        string idempotencyKey,
+        string disputeId,
+        string? note,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Submits merchant evidence to a PayPal customer dispute (issue #419):
+    ///     <c>POST /v1/customer-disputes/{disputeId}/provide-evidence</c>. PayPal's native
+    ///     evidence surface takes hosted document URLs plus notes — unlike Stripe, files are
+    ///     referenced by URL because PayPal fetches them itself.
+    /// </summary>
+    Task<PayPalApiResult> ProvideDisputeEvidenceAsync(
+        string idempotencyKey,
+        string disputeId,
+        string evidenceType,
+        string? notes,
+        IReadOnlyList<string> documentUrls,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -253,6 +278,59 @@ public sealed partial class PayPalApiClient : IPayPalApiClient
             SerializeJson(verifyPayload),
             idempotencyKey: null,
             cancellationToken: cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public Task<PayPalApiResult> AcceptDisputeAsync(
+        string idempotencyKey,
+        string disputeId,
+        string? note,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
+        ArgumentException.ThrowIfNullOrWhiteSpace(disputeId);
+
+        var payload = new { note };
+
+        return SendAsync(
+            HttpMethod.Post,
+            $"/v1/customer-disputes/{Uri.EscapeDataString(disputeId)}/accept",
+            SerializeJson(payload),
+            idempotencyKey,
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<PayPalApiResult> ProvideDisputeEvidenceAsync(
+        string idempotencyKey,
+        string disputeId,
+        string evidenceType,
+        string? notes,
+        IReadOnlyList<string> documentUrls,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
+        ArgumentException.ThrowIfNullOrWhiteSpace(disputeId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(evidenceType);
+        ArgumentNullException.ThrowIfNull(documentUrls);
+
+        // PayPal's provide-evidence surface takes hosted document URLs (PayPal fetches the
+        // files itself) plus free-text notes; at least one of the two must be present.
+        var payload = new
+        {
+            evidence_type = evidenceType,
+            notes = string.IsNullOrWhiteSpace(notes) ? null : notes,
+            documents = documentUrls.Count == 0
+                ? null
+                : documentUrls.Select(url => new { url }).ToArray()
+        };
+
+        return SendAsync(
+            HttpMethod.Post,
+            $"/v1/customer-disputes/{Uri.EscapeDataString(disputeId)}/provide-evidence",
+            SerializeJson(payload),
+            idempotencyKey,
+            cancellationToken);
     }
 
     private static string SerializeJson(object payload) =>

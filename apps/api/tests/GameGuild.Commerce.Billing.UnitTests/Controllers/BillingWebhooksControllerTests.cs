@@ -284,7 +284,8 @@ public class BillingWebhooksControllerTests
             [nameof(BillingWebhooksController.HandleGooglePayWebhook),
              nameof(BillingWebhooksController.HandleApplePayWebhook),
              nameof(BillingWebhooksController.HandleStripeWebhook),
-             nameof(BillingWebhooksController.HandlePayPalWebhook)]);
+             nameof(BillingWebhooksController.HandlePayPalWebhook),
+             nameof(BillingWebhooksController.HandleBraintreeWebhook)]);
     }
 
     [Fact]
@@ -302,6 +303,7 @@ public class BillingWebhooksControllerTests
             [nameof(BillingWebhooksController.GetWebhookEvent),
              nameof(BillingWebhooksController.RetryWebhookEvent),
              nameof(BillingWebhooksController.GetWebhookSecuritySummary),
+             nameof(BillingWebhooksController.GetWebhookStats),
              nameof(BillingWebhooksController.RotateSecret)]);
 
         foreach (var method in controllerType.GetMethods()
@@ -321,7 +323,8 @@ public class BillingWebhooksControllerTests
             nameof(BillingWebhooksController.HandleGooglePayWebhook),
             nameof(BillingWebhooksController.HandleApplePayWebhook),
             nameof(BillingWebhooksController.HandleStripeWebhook),
-            nameof(BillingWebhooksController.HandlePayPalWebhook)
+            nameof(BillingWebhooksController.HandlePayPalWebhook),
+            nameof(BillingWebhooksController.HandleBraintreeWebhook)
         };
 
         foreach (var callback in callbacks)
@@ -337,7 +340,110 @@ public class BillingWebhooksControllerTests
         }
     }
 
-    private static BillingWebhooksController CreateController(ISender sender, string body, IDictionary<string, string> headers)
+    [Fact]
+    public async Task HandleStripeWebhook_Should_Defer_Acknowledgement_When_Processing_Exceeds_The_Response_Bound()
+    {
+        // Issue #408: the endpoint must answer in well under 5 seconds. Processing that
+        // exceeds the configured bound is acknowledged as received-and-deferred; the
+        // durable inbox and the retry worker complete the work.
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(It.IsAny<ProcessStripeWebhookCommand>(), It.IsAny<CancellationToken>()))
+            .Returns(async (ProcessStripeWebhookCommand _, CancellationToken token) =>
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, token);
+                return WebhookProcessingResult.Success("evt");
+            });
+
+        var configuration = new BillingConfiguration();
+        configuration.Webhook.ResponseBoundSeconds = 1;
+        var controller = CreateController(sender.Object, "{}", new Dictionary<string, string>
+        {
+            ["Stripe-Signature"] = "sig"
+        }, configuration);
+
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var result = await controller.HandleStripeWebhook(CancellationToken.None);
+        stopwatch.Stop();
+
+        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+        var body = ok.Value!.GetType().GetProperty("deferred")!.GetValue(ok.Value);
+        body.Should().Be(true, "the bound defers the acknowledgement instead of holding the connection");
+        stopwatch.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(5),
+            "the response bound guarantees the sub-5-second response contract");
+    }
+
+    [Fact]
+    public async Task HandleStripeWebhook_Should_Propagate_ClientDisconnect_Despite_The_Response_Bound()
+    {
+        // The bound must not swallow a client-side disconnect: only work that outran the
+        // bound is deferred; an aborted caller still observes cancellation.
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(It.IsAny<ProcessStripeWebhookCommand>(), It.IsAny<CancellationToken>()))
+            .Returns(async (ProcessStripeWebhookCommand _, CancellationToken token) =>
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, token);
+                return WebhookProcessingResult.Success("evt");
+            });
+
+        using var clientCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+        var configuration = new BillingConfiguration();
+        configuration.Webhook.ResponseBoundSeconds = 4;
+        var controller = CreateController(sender.Object, "{}", new Dictionary<string, string>
+        {
+            ["Stripe-Signature"] = "sig"
+        }, configuration);
+
+        var act = () => controller.HandleStripeWebhook(clientCts.Token);
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task HandleBraintreeWebhook_Should_Reject_Missing_Form_Fields()
+    {
+        var sender = new Mock<ISender>();
+        var controller = CreateController(sender.Object, "", new Dictionary<string, string>());
+
+        var result = await controller.HandleBraintreeWebhook(CancellationToken.None);
+
+        result.Should().BeOfType<BadRequestObjectResult>();
+        sender.Verify(s => s.Send(It.IsAny<ProcessBraintreeWebhookCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleBraintreeWebhook_Should_Return_Ok_When_Processed()
+    {
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(It.IsAny<ProcessBraintreeWebhookCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(WebhookProcessingResult.Success("braintree-evt"));
+
+        var context = new DefaultHttpContext();
+        context.Request.Form = new FormCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
+        {
+            ["bt_signature"] = "key|abcdef",
+            ["bt_payload"] = "cGF5bG9hZA=="
+        });
+
+        var controller = new BillingWebhooksController(
+                sender.Object,
+                Microsoft.Extensions.Options.Options.Create(new BillingConfiguration()),
+                NullLogger<BillingWebhooksController>.Instance)
+        {
+            ControllerContext = new ControllerContext { HttpContext = context }
+        };
+
+        var result = await controller.HandleBraintreeWebhook(CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>();
+    }
+
+    private static BillingWebhooksController CreateController(
+        ISender sender,
+        string body,
+        IDictionary<string, string> headers,
+        BillingConfiguration? configuration = null)
     {
         var context = new DefaultHttpContext();
         context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(body));
@@ -346,7 +452,10 @@ public class BillingWebhooksControllerTests
             context.Request.Headers[header.Key] = header.Value;
         }
 
-        return new BillingWebhooksController(sender, NullLogger<BillingWebhooksController>.Instance)
+        return new BillingWebhooksController(
+                sender,
+                Microsoft.Extensions.Options.Options.Create(configuration ?? new BillingConfiguration()),
+                NullLogger<BillingWebhooksController>.Instance)
         {
             ControllerContext = new ControllerContext { HttpContext = context }
         };

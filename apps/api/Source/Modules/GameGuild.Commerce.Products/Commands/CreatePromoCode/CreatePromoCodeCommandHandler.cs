@@ -1,11 +1,16 @@
 using GameGuild.CQRS;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Commerce.Products;
 
 /// <summary>
-/// Handler for creating a new promo code
+/// Handler for creating a new promo code. Validity edges are normalized to UTC
+/// instants in the code's timezone (or the configured tenant default) before
+/// persistence, so runtime evaluation is timezone-aware end to end (issue #418).
 /// </summary>
-public sealed class CreatePromoCodeCommandHandler(IPromoCodeRepository promoCodeRepository)
+public sealed class CreatePromoCodeCommandHandler(
+    IPromoCodeRepository promoCodeRepository,
+    IOptions<PromoEngineOptions>? engineOptions = null)
     : ICommandHandler<CreatePromoCodeCommand, PromoCodeDto>
 {
     public async Task<PromoCodeDto> Handle(CreatePromoCodeCommand request, CancellationToken cancellationToken)
@@ -17,6 +22,12 @@ public sealed class CreatePromoCodeCommandHandler(IPromoCodeRepository promoCode
         {
             throw new InvalidOperationException($"Promo code '{request.Code}' already exists");
         }
+
+        // Issue #418: resolve the window timezone (code-specific, else tenant default)
+        // and normalize the validity edges to UTC instants before storage.
+        var defaultTimeZoneId = engineOptions?.Value.DefaultTimeZoneId;
+        var (timeZone, _) = PromoValidityWindow.ResolveTimeZone(
+            string.IsNullOrWhiteSpace(request.TimeZoneId) ? defaultTimeZoneId : request.TimeZoneId);
 
         // Create new promo code entity (code is normalized to the stored uppercase form)
         var promoCode = new PromoCode
@@ -36,8 +47,10 @@ public sealed class CreatePromoCodeCommandHandler(IPromoCodeRepository promoCode
             FreeTrialExtensionDays = request.FreeTrialExtensionDays,
             DurationMonths = request.DurationMonths,
             ApplyToRenewal = request.ApplyToRenewal,
-            ValidFrom = request.ValidFrom,
-            ValidUntil = request.ValidUntil,
+            ValidFrom = PromoValidityWindow.NormalizeToUtc(request.ValidFrom, timeZone),
+            ValidUntil = PromoValidityWindow.NormalizeToUtc(request.ValidUntil, timeZone),
+            TimeZoneId = timeZone.Id,
+            EligibleCustomerType = request.EligibleCustomerType,
             IsActive = request.IsActive,
             IsExclusive = request.IsExclusive,
             StackingPriority = request.StackingPriority,

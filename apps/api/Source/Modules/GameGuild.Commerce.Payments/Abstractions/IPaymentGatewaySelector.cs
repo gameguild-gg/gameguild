@@ -43,8 +43,10 @@ public sealed record GatewayRouteContext(
     /// <summary>
     ///     Maps a provider payment method identifier onto a coarse routing type.
     ///     Stripe-prefixed identifiers map to <c>card</c>, PayPal billing agreements
-    ///     (underscore or hyphen style) to <c>paypal</c>; anything else is left untyped
-    ///     so it only matches unrestricted routes.
+    ///     (underscore or hyphen style) to <c>paypal</c>, and the opaque tokens of the
+    ///     card-processing gateways (Authorize.Net opaque data, Braintree nonces, Adyen
+    ///     stored payment methods) to <c>card</c>; anything else is left untyped so it only
+    ///     matches unrestricted routes.
     /// </summary>
     public static string? InferPaymentMethodType(string? paymentMethodId)
     {
@@ -53,15 +55,21 @@ public sealed record GatewayRouteContext(
             return null;
         }
 
+        // Authorize.Net opaque-data tokens carry the Accept.js descriptor prefix.
+        if (paymentMethodId.StartsWith("COMMON.ACCEPT.", StringComparison.OrdinalIgnoreCase))
+        {
+            return "card";
+        }
+
         var separatorIndex = paymentMethodId.IndexOfAny(['_', '-']);
         return separatorIndex > 0
             ? paymentMethodId[..separatorIndex].ToLowerInvariant() switch
             {
-                "pm" or "seti" or "card" => "card",
+                "pm" or "seti" or "card" or "tokencc" => "card",
                 "ba" or "paypal" => "paypal",
                 _ => null
             }
-            : null;
+            : "card"; // Undecorated opaque tokens (Braintree nonces, Adyen stored ids).
     }
 }
 

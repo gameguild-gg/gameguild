@@ -277,17 +277,134 @@ public sealed class PayPalPaymentGateway(
     }
 
     /// <inheritdoc />
-    /// <inheritdoc />
-    public Task<GatewayDisputeActionResult> AcceptDisputeAsync(
+    public async Task<GatewayDisputeActionResult> AcceptDisputeAsync(
         GatewayDisputeActionRequest request,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(DisputeActionsNotSupported());
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.ExternalDisputeId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.IdempotencyKey);
+
+        if (!IsEnabled)
+        {
+            return AdapterDisabledDisputeFailure();
+        }
+
+        if (_options.UseSimulation)
+        {
+            await Task.Delay(1, cancellationToken).ConfigureAwait(false);
+            return new GatewayDisputeActionResult(true, null, null);
+        }
+
+        logger.LogInformation(
+            "Accepting PayPal dispute {DisputeId} with idempotency key {IdempotencyKey}",
+            request.ExternalDisputeId,
+            request.IdempotencyKey);
+
+        var apiResult = await apiClient.AcceptDisputeAsync(
+                request.IdempotencyKey,
+                request.ExternalDisputeId,
+                note: "The merchant accepts this dispute; the disputed funds are returned to the buyer.",
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        return MapDisputeAction(apiResult);
+    }
 
     /// <inheritdoc />
-    public Task<GatewayDisputeActionResult> ChallengeDisputeAsync(
+    public async Task<GatewayDisputeActionResult> ChallengeDisputeAsync(
         GatewayDisputeChallengeRequest request,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(DisputeActionsNotSupported());
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.ExternalDisputeId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.IdempotencyKey);
+
+        if (!IsEnabled)
+        {
+            return AdapterDisabledDisputeFailure();
+        }
+
+        if (_options.UseSimulation)
+        {
+            await Task.Delay(1, cancellationToken).ConfigureAwait(false);
+            return new GatewayDisputeActionResult(true, null, null, SimulatedEvidenceAcceptances(request));
+        }
+
+        // PayPal's native evidence surface: hosted document URLs (PayPal fetches the files
+        // itself) plus the textual bundle as notes. Items whose stored reference is not a
+        // hosted URL stay represented by their entry in the notes.
+        var documentUrls = (request.EvidenceFiles ?? [])
+            .Where(item => !string.IsNullOrWhiteSpace(item.FileUrl))
+            .Select(item => item.FileUrl!)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        logger.LogInformation(
+            "Challenging PayPal dispute {DisputeId} with idempotency key {IdempotencyKey} ({DocumentCount} document(s))",
+            request.ExternalDisputeId,
+            request.IdempotencyKey,
+            documentUrls.Count);
+
+        var apiResult = await apiClient.ProvideDisputeEvidenceAsync(
+                request.IdempotencyKey,
+                request.ExternalDisputeId,
+                evidenceType: "OTHER",
+                notes: string.IsNullOrWhiteSpace(request.EvidenceSummary)
+                    ? "The merchant contests this dispute; the service was delivered and the charge was authorized."
+                    : request.EvidenceSummary,
+                documentUrls: documentUrls,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!apiResult.Success)
+        {
+            return MapDisputeAction(apiResult);
+        }
+
+        // Evidence document references are retained per item (issue #419): PayPal owns the
+        // fetch, so the hosted document URL is the provider evidence reference for the row.
+        var accepted = (request.EvidenceFiles ?? [])
+            .Where(item => !string.IsNullOrWhiteSpace(item.FileUrl))
+            .Select(item => new GatewayDisputeEvidenceAcceptance(
+                item.Key,
+                item.FileUrl,
+                item.ContentDigest,
+                "documents"))
+            .ToList();
+
+        return new GatewayDisputeActionResult(true, null, null, accepted);
+    }
+
+    private static IReadOnlyList<GatewayDisputeEvidenceAcceptance>? SimulatedEvidenceAcceptances(
+        GatewayDisputeChallengeRequest request) =>
+        request.EvidenceFiles is { Count: > 0 } items
+            ? items
+                .Where(item => !string.IsNullOrWhiteSpace(item.FileUrl))
+                .Select(item => new GatewayDisputeEvidenceAcceptance(item.Key, item.FileUrl, item.ContentDigest, "documents"))
+                .ToList()
+            : null;
+
+    private static GatewayDisputeActionResult MapDisputeAction(PayPalApiResult apiResult)
+    {
+        if (apiResult.Success)
+        {
+            return new GatewayDisputeActionResult(true, null, null);
+        }
+
+        var errorCode = apiResult.TransportFailed
+            ? "paypal_transport_failure"
+            : apiResult.ErrorCode ?? $"paypal_http_{apiResult.StatusCode}";
+        return new GatewayDisputeActionResult(
+            false,
+            errorCode,
+            apiResult.ErrorMessage ?? "The PayPal dispute action failed.");
+    }
+
+    private static GatewayDisputeActionResult AdapterDisabledDisputeFailure() => new(
+        Success: false,
+        ErrorCode: "paypal_adapter_disabled",
+        ErrorMessage: AdapterDisabledMessage);
 
     public Task<GatewayCancellationResult> CancelSubscriptionAsync(
         string externalSubscriptionId,
@@ -303,11 +420,6 @@ public sealed class PayPalPaymentGateway(
             ErrorMessage: "PayPal subscription cancellation is handled by the Commerce.Billing subscription integration.",
             EffectiveDate: null));
     }
-
-    private static GatewayDisputeActionResult DisputeActionsNotSupported() => new(
-        Success: false,
-        ErrorCode: "paypal_dispute_actions_unsupported",
-        ErrorMessage: "PayPal dispute actions are not implemented on this adapter; manage the dispute in the PayPal business console.");
 
     private const string AdapterDisabledMessage =
         "The PayPal adapter is disabled (PaymentGateways:PayPal:IsEnabled is false); fail closed.";

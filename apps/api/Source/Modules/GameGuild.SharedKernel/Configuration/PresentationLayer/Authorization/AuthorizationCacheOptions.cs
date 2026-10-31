@@ -63,6 +63,27 @@ public sealed class AuthorizationCacheOptions : BaseOptions
     /// </summary>
     public int MaxL1CacheSize { get; set; } = 5000;
 
+    /// <summary>Adapt the tracked L1 entry budget to the runtime's latest GC memory-load signal.</summary>
+    public bool EnableL1MemoryPressureAdaptation { get; set; } = true;
+
+    /// <summary>Seconds between samples, within the runtime timer range. Sampling never forces a collection.</summary>
+    public int L1MemoryPressureCheckIntervalSeconds { get; set; } = 30;
+
+    /// <summary>Percentage of the GC high-memory threshold that starts reducing the entry budget.</summary>
+    public int L1MemoryPressureHighThresholdPercent { get; set; } = 85;
+
+    /// <summary>Percentage below which the reduced entry budget can recover.</summary>
+    public int L1MemoryPressureRecoveryThresholdPercent { get; set; } = 70;
+
+    /// <summary>Minimum budget as a percentage of MaxL1CacheSize, always at least one entry.</summary>
+    public int L1MemoryPressureMinimumCapacityPercent { get; set; } = 25;
+
+    /// <summary>Percentage removed from the current budget by each high-pressure sample.</summary>
+    public int L1MemoryPressureReductionPercent { get; set; } = 50;
+
+    /// <summary>Percentage of the configured maximum restored by each recovered sample.</summary>
+    public int L1MemoryPressureRecoveryStepPercent { get; set; } = 25;
+
     // ========================
     // DISTRIBUTED CACHE (REDIS)
     // ========================
@@ -153,9 +174,11 @@ public sealed class AuthorizationCacheOptions : BaseOptions
 
     /// <summary>
     ///     Whether to warm frequently accessed subject-based ACL decisions on a schedule.
+    ///     Disabled by default (issue #353 spec: popularity-based scheduling is opt-in); explicit
+    ///     operator-selected warming via <c>POST /v{version}/permissions/cache:warm</c> is always available.
     ///     Tracking is process-local and bounded; warmed decisions still use the normal versioned L1/L2 cache path.
     /// </summary>
-    public bool AutomaticWarmupEnabled { get; set; } = true;
+    public bool AutomaticWarmupEnabled { get; set; } = false;
 
     /// <summary>The number of seconds between automatic warmup cycles.</summary>
     public int AutomaticWarmupIntervalSeconds { get; set; } = 60;
@@ -242,6 +265,8 @@ public sealed class AuthorizationCacheOptions : BaseOptions
             throw new InvalidOperationException("MaxL1CacheSize must be positive.");
         }
 
+        ValidateMemoryPressureSettings();
+
         if (AutomaticWarmupIntervalSeconds <= 0)
         {
             throw new InvalidOperationException("AutomaticWarmupIntervalSeconds must be positive.");
@@ -324,6 +349,37 @@ public sealed class AuthorizationCacheOptions : BaseOptions
         if (DistributedCacheTtlSeconds < longestL1TtlSeconds)
         {
             throw new InvalidOperationException("DistributedCacheTtlSeconds should be >= the longest L1 cache TTL for optimal cache efficiency.");
+        }
+    }
+
+    /// <summary>Validates memory-pressure settings independently of optional Redis configuration.</summary>
+    public void ValidateMemoryPressureSettings()
+    {
+        if (L1MemoryPressureCheckIntervalSeconds <= 0 ||
+            (long)L1MemoryPressureCheckIntervalSeconds * 1000 >= uint.MaxValue)
+        {
+            throw new InvalidOperationException("L1MemoryPressureCheckIntervalSeconds must be between 1 and 4294967.");
+        }
+        if (L1MemoryPressureHighThresholdPercent is < 1 or > 100)
+        {
+            throw new InvalidOperationException("L1MemoryPressureHighThresholdPercent must be between 1 and 100.");
+        }
+        if (L1MemoryPressureRecoveryThresholdPercent < 0 ||
+            L1MemoryPressureRecoveryThresholdPercent >= L1MemoryPressureHighThresholdPercent)
+        {
+            throw new InvalidOperationException("L1MemoryPressureRecoveryThresholdPercent must be nonnegative and below the high threshold.");
+        }
+        if (L1MemoryPressureMinimumCapacityPercent is < 1 or > 100)
+        {
+            throw new InvalidOperationException("L1MemoryPressureMinimumCapacityPercent must be between 1 and 100.");
+        }
+        if (L1MemoryPressureReductionPercent is < 1 or > 100)
+        {
+            throw new InvalidOperationException("L1MemoryPressureReductionPercent must be between 1 and 100.");
+        }
+        if (L1MemoryPressureRecoveryStepPercent is < 1 or > 100)
+        {
+            throw new InvalidOperationException("L1MemoryPressureRecoveryStepPercent must be between 1 and 100.");
         }
     }
 

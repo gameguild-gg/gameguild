@@ -22,6 +22,14 @@ public interface IPaymentGateway
     bool IsEnabled { get; }
 
     /// <summary>
+    ///     Whether authoritative inquiry can verify the received amount and currency
+    ///     before a paid entitlement is activated. This capability check performs no
+    ///     provider operation. Adapters must explicitly opt in; simulation is not proof
+    ///     of settlement. The optional provider identifies the owner in a routing facade.
+    /// </summary>
+    bool SupportsVerifiedSettlement(string? providerId = null) => false;
+
+    /// <summary>
     ///     Processes a payment through this gateway
     /// </summary>
     /// <param name="request">Payment request details</param>
@@ -134,11 +142,16 @@ public sealed record GatewayPaymentRequest(
     string? CustomerId,
     string? PaymentMethodId,
     string? Description,
-    Dictionary<string, string>? Metadata = null);
+    Dictionary<string, string>? Metadata = null,
+    string? GatewayProvider = null);
 
 /// <summary>
 ///     Result of a payment processing attempt
 /// </summary>
+/// <remarks>
+///     SettledAmount and SettledCurrency are verified from the provider's payment
+///     object, never copied from the caller's request; null when unavailable.
+/// </remarks>
 public sealed record GatewayPaymentResult(
     bool Success,
     string? TransactionId,
@@ -150,7 +163,9 @@ public sealed record GatewayPaymentResult(
     string? ClientActionToken = null,
     GatewayProviderMapping? ProviderMapping = null,
     string? ProviderId = null,
-    GatewayFailureKind FailureKind = GatewayFailureKind.NotApplicable);
+    GatewayFailureKind FailureKind = GatewayFailureKind.NotApplicable,
+    decimal? SettledAmount = null,
+    string? SettledCurrency = null);
 
 /// <summary>
 ///     Immutable provider identity for one payment object and monetary leg.
@@ -209,13 +224,27 @@ public sealed record GatewayPaymentCancellationResult(
 /// <summary>
 ///     Request for processing a refund
 /// </summary>
+/// <param name="IdempotencyKey">Idempotency key for the gateway call.</param>
+/// <param name="OriginalTransactionId">Gateway transaction being refunded.</param>
+/// <param name="Amount">Refund amount; null refunds the remaining balance.</param>
+/// <param name="Reason">Optional refund reason.</param>
+/// <param name="ProviderId">Owner gateway for the refunded payment (issue #413 routing rules).</param>
+/// <param name="Currency">Currency of the refunded amount, when known.</param>
+/// <param name="MaxProviderAttempts">
+///     Composed retry budget (issue #419): the maximum provider calls this single execution may
+///     consume, including any retries a routing composite performs internally. Routing composites
+///     clamp their internal retry loop to this value so the total provider attempts across the
+///     whole workflow (caller retries x composite retries) never exceeds the workflow maximum.
+///     Null leaves the composite's configured default unchanged.
+/// </param>
 public sealed record GatewayRefundRequest(
     string IdempotencyKey,
     string OriginalTransactionId,
     decimal? Amount,
     string? Reason,
     string? ProviderId = null,
-    string? Currency = null);
+    string? Currency = null,
+    int? MaxProviderAttempts = null);
 
 /// <summary>
 ///     Result of a refund processing attempt
@@ -251,17 +280,73 @@ public sealed record GatewayDisputeActionRequest(
 /// <param name="ExternalDisputeId">Gateway dispute identifier.</param>
 /// <param name="EvidenceSummary">Free-text evidence bundle submitted with the challenge.</param>
 /// <param name="ProviderId">Owner gateway for the disputed payment (issue #413 routing rules).</param>
+/// <param name="EvidenceFiles">
+///     Structured evidence items (issue #419 provider file delivery): each references one
+///     stored evidence row and, when the stored bytes are authorized for delivery, carries a
+///     content accessor plus a SHA-256 digest. Adapters deliver these through the provider's
+///     native file/evidence fields (Stripe file uploads mapped to typed evidence fields, PayPal
+///     dispute evidence documents) instead of pasting download links into a text field — card
+///     networks do not review external links.
+/// </param>
 public sealed record GatewayDisputeChallengeRequest(
     string IdempotencyKey,
     string ExternalDisputeId,
     string? EvidenceSummary = null,
-    string? ProviderId = null);
+    string? ProviderId = null,
+    IReadOnlyList<GatewayDisputeEvidenceItem>? EvidenceFiles = null);
+
+/// <summary>Authorized content of one stored dispute-evidence file, resolved for provider delivery.</summary>
+/// <param name="Content">Byte stream of the stored file.</param>
+/// <param name="ContentType">Resolved content (MIME) type, when known.</param>
+/// <param name="Length">Content length in bytes, when known.</param>
+public sealed record GatewayDisputeEvidenceContent(Stream Content, string? ContentType, long? Length = null);
+
+/// <summary>
+///     One structured evidence item delivered with a dispute challenge (issue #419). The
+///     <paramref name="Key"/> is the caller's stable identity for the row; adapters echo it in
+///     <see cref="GatewayDisputeEvidenceAcceptance"/> so accepted provider file ids and digests
+///     can be retained on the originating evidence row.
+/// </summary>
+/// <param name="Key">Stable key identifying the originating evidence row.</param>
+/// <param name="FileName">Stored file name, when present.</param>
+/// <param name="FileUrl">Stored file reference/URL, when present.</param>
+/// <param name="MimeType">Stored content type, when present.</param>
+/// <param name="EvidenceTypeKey">Evidence category key (e.g. invoice, receipt, communication).</param>
+/// <param name="ContentDigest">SHA-256 digest (hex) of the deliverable bytes, when resolvable.</param>
+/// <param name="ContentAccessor">Resolves the authorized stored bytes for provider upload; null when the stored content is unavailable.</param>
+public sealed record GatewayDisputeEvidenceItem(
+    string Key,
+    string? FileName,
+    string? FileUrl,
+    string? MimeType,
+    string EvidenceTypeKey,
+    string? ContentDigest = null,
+    Func<CancellationToken, Task<GatewayDisputeEvidenceContent?>>? ContentAccessor = null);
+
+/// <summary>
+///     Provider acceptance record for one delivered evidence item (issue #419): the provider
+///     file/evidence reference that now holds the file (e.g. a Stripe <c>file_...</c> id) and
+///     the digest of the bytes that were delivered, retained for audit replay.
+/// </summary>
+public sealed record GatewayDisputeEvidenceAcceptance(
+    string Key,
+    string? ProviderFileId,
+    string? ContentDigest,
+    string? ProviderField);
 
 /// <summary>Result of a dispute accept or challenge action (issue #419).</summary>
+/// <param name="Success">Whether the provider accepted the action.</param>
+/// <param name="ErrorCode">Provider error code on failure.</param>
+/// <param name="ErrorMessage">Provider error message on failure.</param>
+/// <param name="AcceptedEvidence">
+///     Per-item acceptance records for a successful challenge, when the provider returned or
+///     assigned file/evidence references for the delivered evidence.
+/// </param>
 public sealed record GatewayDisputeActionResult(
     bool Success,
     string? ErrorCode,
-    string? ErrorMessage);
+    string? ErrorMessage,
+    IReadOnlyList<GatewayDisputeEvidenceAcceptance>? AcceptedEvidence = null);
 
 /// <summary>
 ///     Request for creating a customer

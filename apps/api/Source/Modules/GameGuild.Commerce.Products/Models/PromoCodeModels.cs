@@ -19,8 +19,10 @@ namespace GameGuild.Commerce.Products;
 /// <param name="FreeTrialExtensionDays">Trial days granted by FreeTrialExtension codes</param>
 /// <param name="DurationMonths">Free months granted / discount duration</param>
 /// <param name="ApplyToRenewal">Whether the discount applies to renewals</param>
-/// <param name="ValidFrom">Start date</param>
-/// <param name="ValidUntil">End date</param>
+/// <param name="ValidFrom">Validity window start (UTC instant; wall-clock input is converted in <paramref name="TimeZoneId"/>)</param>
+/// <param name="ValidUntil">Validity window end (UTC instant; wall-clock input is converted in <paramref name="TimeZoneId"/>)</param>
+/// <param name="TimeZoneId">IANA timezone the validity window is expressed in (null/empty = UTC)</param>
+/// <param name="EligibleCustomerType">Customer relationship state the code is eligible for (Any = unrestricted)</param>
 /// <param name="IsActive">Whether the code is active</param>
 /// <param name="IsExclusive">Whether the code cannot be stacked</param>
 /// <param name="StackingPriority">Priority for stacking</param>
@@ -57,7 +59,9 @@ public sealed record PromoCodeDto(
     int UsageCount,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? TimeZoneId = null,
+    PromoCustomerType EligibleCustomerType = PromoCustomerType.Any
 );
 
 /// <summary>
@@ -207,6 +211,9 @@ public sealed record PricingCalculationResult(
 /// <param name="ExpiringCodes">Campaign codes expiring within the next 30 days</param>
 /// <param name="TotalValidationAttempts">Validation attempts recorded for campaign codes within the window (conversion denominator)</param>
 /// <param name="ConversionRate">Recorded uses divided by validation attempts (null when no attempts were recorded)</param>
+/// <param name="AcquiredCustomers">Customers whose first purchase was tagged by the campaign (CAC denominator)</param>
+/// <param name="CampaignAcquisitionSpend">Campaign acquisition spend; the CAC numerator (null when the campaign is unmanaged or declares no spend)</param>
+/// <param name="CustomerAcquisitionCost">Acquisition spend ÷ acquired customers (null when not computable)</param>
 public sealed record CampaignPerformanceDto(
     string CampaignId,
     DateTime? WindowStart,
@@ -221,7 +228,10 @@ public sealed record CampaignPerformanceDto(
     IReadOnlyList<CampaignTopCodeDto> TopCodes,
     IReadOnlyList<CampaignExpiringCodeDto> ExpiringCodes,
     int TotalValidationAttempts = 0,
-    decimal? ConversionRate = null
+    decimal? ConversionRate = null,
+    int AcquiredCustomers = 0,
+    decimal? CampaignAcquisitionSpend = null,
+    decimal? CustomerAcquisitionCost = null
 );
 
 /// <summary>

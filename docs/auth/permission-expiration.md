@@ -42,6 +42,21 @@ All knobs live under `Authorization:PermissionExpiration`
       "DefaultExpirationByPermission": {
         "courses:*": "14.00:00:00",
         "monetization:monetize": "7.00:00:00"
+      },
+      "GlobalRule": {
+        "MaxDuration": "90.00:00:00"
+      },
+      "Rules": {
+        "billing:refunds:approve": {
+          "RequireExpiration": true,
+          "MaxDuration": "7.00:00:00"
+        },
+        "economy:*": {
+          "RequireExpiration": true,
+          "MinDuration": "01:00:00",
+          "MaxDuration": "30.00:00:00",
+          "MaxExtension": "7.00:00:00"
+        }
       }
     }
   }
@@ -58,6 +73,8 @@ All knobs live under `Authorization:PermissionExpiration`
 | `ApplyDefaultsOnGrant` | `false` | When true, grants issued without an explicit `ExpiresAt` receive the resolved default period. Opt-in so existing permanent grants keep their semantics. |
 | `DefaultGrantExpiration` | `null` | Global fallback default applied when no per-permission default matches. `null` = no default. |
 | `DefaultExpirationByPermission` | empty | Per-permission-type overrides. Keys are exact permission strings (e.g. `courses:create`) or wildcards (e.g. `courses:*`). |
+| `GlobalRule` | empty | Advanced-rule baseline applied to **every** grant; composes (strictest wins) with matched `Rules` keys. |
+| `Rules` | empty | Advanced expiration rules per permission type; see [Advanced expiration rules](#advanced-expiration-rules-and-conditions). |
 
 ### Default resolution and wildcard precedence
 
@@ -73,24 +90,91 @@ Example: with `{ "courses:*": 14d, "courses:grade": 3d, "DefaultGrantExpiration"
 a grant of `["courses:grade"]` gets 3 days, `["courses:create"]` gets 14 days, and
 `["social:post"]` gets 30 days.
 
+## Advanced expiration rules and conditions
+
+Defaults only pick a period when the caller supplies none. **Rules** (`GlobalRule` +
+`Rules` under `Authorization:PermissionExpiration`) additionally constrain what expirations
+are *allowed at all*, enforced by `PermissionExpirationRuleEvaluator`
+(`IPermissionExpirationRuleEvaluator`, registered singleton):
+
+| Constraint | Semantics |
+|---|---|
+| `RequireExpiration` | Matching grants may never be permanent: clearing `ExpiresAt` is rejected, and grants without a resolvable default fail. |
+| `MinDuration` | Shortest allowed distance from the operation instant for a newly set expiration. |
+| `MaxDuration` | Longest allowed distance from the operation instant for any expiration — a rolling cap that also applies to the *result* of an extension. |
+| `MaxExtension` | Longest allowed period for a single bulk `permissions:extend-expiration` operation. |
+
+Rule resolution mirrors default resolution's key space (exact permission strings and
+`prefix:*` wildcards) but composes differently: **every** matched key contributes, and the
+**strictest** value of each constraint wins (`RequireExpiration` ORs; caps take the minimum;
+floors take the maximum). A grant of `["billing:refunds:approve"]` with
+`GlobalRule.MaxDuration = 90d`, `Rules["billing:*"].RequireExpiration = true` and
+`Rules["billing:refunds:approve"].MaxDuration = 7d` may only be granted temporarily, at
+most 7 days out.
+
+Enforcement points (all reject with `PermissionExpirationRuleViolationException`, surfaced
+as HTTP 422, citing every violation and the matched rule keys):
+
+- **Bulk set/extend** (`PermissionExpirationService.SetExpirationAsync` /
+  `ExtendExpirationAsync`): every matched grant is validated **before** the first mutation,
+  so a violating bulk operation is rejected atomically — no partial application, audit, or
+  version bump.
+- **Grant path** (`PermissionGrantService.GrantTenantPermissionAsync`): a matching
+  `RequireExpiration` rule resolves its own default independently of `ApplyDefaultsOnGrant`
+  (the rule cannot be bypassed by leaving the defaults switch off); the resulting expiration
+  is validated against the duration floor/cap before the grant is persisted.
+
+Inspect the effective rule for a permission set with
+`GET permissions:expiration-rules?permissions=billing:refunds,events:moderate` — the
+response includes the composed constraints, whether any apply, and the matched
+configuration keys (`(global)` marks the baseline contribution).
+
 ## Worker cadence and idempotency
 
 `PermissionExpirationWorker` (a `BackgroundService`) runs two phases per cycle, each in a
 fresh DI scope and bounded by `BatchSize`:
 
-1. **Expired sweep** (`ProcessExpiredAsync`): loads grants with `ExpiresAt <= now`, skips
-   ones already stamped `Metadata["expirationProcessedAt"]` (idempotency), calls
+1. **Expired sweep** (`ProcessExpiredAsync`): loads grants with `ExpiresAt <= now`, excludes
+   ones already stamped `Metadata["expirationProcessedAt"]` **before applying the batch limit**, calls
    `TenantPermission.Expire()` (sets `IsActive = false`), writes a `PermissionAuditLog`
    entry (`PermissionOperationType.Expire`, system actor), bumps the tenant security
    version (cache invalidation), and publishes a
    `PermissionExpirationNotification(Kind: Expired)`.
+   A tenant batch commits accepted grants, checkpoints, required audit and its single
+   version increment atomically. Individual grants use savepoints; failure of the
+   tenant version rolls back that tenant's accepted grants too. Global grants use the
+   shared `Guid.Empty` version scope. A failed required write leaves no completed
+   checkpoint that could suppress a fresh-scope retry.
 2. **Reminder sweep** (`SendUpcomingExpirationRemindersAsync`): loads grants expiring
-   before `now + UpcomingNotificationWindow`, skips ones reminded within
-   `MinimumReminderInterval`, stamps `expirationReminderAt`, and publishes a
+   before `now + UpcomingNotificationWindow`, excludes ones reminded within
+   `MinimumReminderInterval` **before applying the batch limit**, stamps `expirationReminderAt`, and publishes a
    `PermissionExpirationNotification(Kind: Upcoming)`.
 
-Per-grant failures are logged and retried on the next cycle; a cycle that exceeds
-`ExecutionTimeout` is abandoned and retried. The worker exits immediately when
+Required-operation failures are surfaced as an aggregate containing the failures and
+`ProcessedGrantCount`; independent accepted groups may already be committed in the
+standalone worker. A caller-owned transaction retains its own final commit/rollback.
+The worker logs the failure and retries pending grants next cycle. Cancellation and
+unconfirmed rollback/commit failures propagate; rollback cleanup ignores the cancelled
+request token. A cycle exceeding `ExecutionTimeout` is abandoned and retried.
+
+System maintenance has an explicit audit capability. `SystemActor` has subject `system`,
+which is not a user GUID. The internal automatic entry point establishes a bounded
+`ActorContextBuilder.ForSystem("PermissionExpiration")` scope and restores the prior
+context afterwards. An already authenticated system context must name that exact
+operation; an authenticated administrator with a valid user GUID keeps the user path.
+HTTP command handlers retain their authenticated administrator checks.
+
+The host independently validates the actual ambient actor before accepting a system
+mutation scope: authenticated `ActorKind.System`, subject `system`, SystemAdmin role,
+and the reviewed expiration operation. The operation descriptor cannot authorize
+itself. User/anonymous contexts, empty subjects or tenants, and unreviewed operations
+are rejected. The existing user audit-scope overload still rejects `Guid.Empty` actors.
+Hosts without the system capability fail closed. No synthetic user account is created.
+Central permission audit metadata records `SubjectId: system`, `Origin: SystemMaintenance`
+and `OperationName: PermissionExpiration`, with `AuditLog.UserId = null`. The dedicated
+expiration audit retains its established `PerformedBy = Guid.Empty` system marker.
+
+The worker exits immediately when
 `Enabled = false` or the configuration is invalid.
 
 ## Notifications (upcoming and past expirations)
@@ -109,8 +193,10 @@ Notifications delivery stack):
   `Kind = Upcoming` → `NotificationPriority.Normal`. Type is `NotificationType.Security`.
 - Delivery is gated on `Authorization:PermissionExpiration:Enabled` — the same switch as
   the worker — so administrative triggers cannot produce alerts while the feature is off.
-- Queueing failures are logged, not thrown: the publisher stamps dedup metadata before
-  dispatch and has no redelivery mechanism, so rethrowing would not retry the alert.
+- Queueing failures are logged, not treated as failed permission mutations: dedup
+  metadata has no guaranteed-redelivery mechanism. The host queues notification records
+  through its scoped database context, so an enclosing caller transaction still owns
+  their commit. Delivery remains best effort; this does not promise eventual delivery.
 
 ## Administrative endpoints
 
@@ -119,11 +205,38 @@ tenant-admin authorized unless noted:
 
 | Operation | Endpoint | Notes |
 |---|---|---|
-| Bulk set absolute expiration | `POST permissions:set-expiration` | `expiresAt` must be in the future; `null` clears the expiration (grant becomes permanent) |
-| Bulk extend by period | `POST permissions:extend-expiration` | Extension extends from the later of current `ExpiresAt` / now; must be positive |
-| List expiring grants | `GET {tenantId}/permissions:expiring` | Optional `expiresBefore` cutoff (defaults to the notification window) |
+| Bulk set absolute expiration | `POST permissions:set-expiration` | `expiresAt` must be in the future; `null` clears the expiration (grant becomes permanent) — unless an advanced rule requires an expiration |
+| Bulk extend by period | `POST permissions:extend-expiration` | Extension extends from the later of current `ExpiresAt` / now; must be positive and rule-compliant |
+| List expiring grants | `GET permissions:expiring` | Uses the validated authenticated request tenant (for example, selected with `X-Tenant-Id`); optional `expiresBefore` cutoff defaults to the notification window |
 | Process expired now | `POST permissions:process-expired` | System admin only; runs the expired sweep without waiting for the worker |
 | Send reminders now | `POST permissions:send-expiration-reminders` | System admin only; runs the reminder sweep on demand |
+| Effective rule introspection | `GET permissions:expiration-rules` | Composed rule + matched keys for a comma-separated `permissions` list |
+| Expiration dashboard | `GET permissions:expiration-summary` | Time-to-expiry buckets + per-permission expiring breakdown |
+| Expiration funnel trends | `GET permissions:expiration-trends` | Daily automatic expirations and manual mutations over an inclusive `fromDate`/`toDate` |
+| Expiration report | `GET permissions:expiration-report` | Combined dashboard + trends + attention flags over `periodStart`/`periodEnd` |
+
+## Expiration analytics and reporting
+
+`PermissionExpirationAnalyticsService` (`IPermissionExpirationAnalyticsService`) provides
+read-only analytics for the same validated request tenant as the other tenant endpoints:
+
+- **Dashboard** (`permissions:expiration-summary`): the live grant population bucketed by
+  time-to-expiry — `expired-pending-processing`, `within-24-hours`, `1-to-3-days`,
+  `3-to-7-days`, `7-to-30-days`, `beyond-30-days`, plus `permanent`/`inactive` counts —
+  together with a per-permission breakdown of grants expiring within the analytics window
+  (`UpcomingNotificationWindow`), most urgent first.
+- **Funnel trends** (`permissions:expiration-trends`): per-day counts of automatic
+  expirations (`PermissionOperationType.Expire` audit rows) and manual expiration mutations.
+  Mutations are reconstructed from bulk set/extend/clear audit rows — identified by their
+  expiration-shaped old→new values (ISO timestamps or `permanent`) on
+  `TenantPermission` resources — so grant/revoke churn is not double-counted. Cleared
+  expirations (grant made permanent) are broken out separately.
+- **Report** (`permissions:expiration-report`): summary + trends combined with derived
+  attention flags, e.g. expired grants still pending background processing (worker disabled
+  or backlogged) or permanent grants predating a `RequireExpiration` rule.
+
+Analytics queries never mutate state: they read grants and audit rows with `AsNoTracking`
+and do not touch the tenant security version.
 
 Every administrative mutation is audited (`PermissionOperationType.Update`, acting user
 from `IActorContextAccessor`), bumps the tenant security version, and clears the grant's
@@ -157,6 +270,13 @@ reminder/processed stamps so the new lifecycle generates fresh notifications.
 - When adding a new permission-sensitive surface that issues grants, accept the optional
   `expiresAt` parameter end-to-end instead of forcing callers through later bulk edits.
 
+The repository excludes soft-deleted and inactive grants before returning expired
+work, ordered by expiration and then grant id. The service excludes processed
+checkpoints before applying the bounded batch. Grant, audit, checkpoint and tenant
+(or global) version commit atomically; attempted call order is not a series of
+independent durable writes. Required failures are reported, while alert queueing
+remains best effort after acceptance.
+
 ## Tests
 
 - `GameGuild.Identity.Authorization.UnitTests/Services/PermissionExpirationServiceTests.cs` —
@@ -165,6 +285,28 @@ reminder/processed stamps so the new lifecycle generates fresh notifications.
   defaults resolution, wildcard precedence, validation.
 - `GameGuild.Identity.Authorization.UnitTests/Handlers/PermissionExpirationCommandHandlerTests.cs` —
   administrative command handlers.
+- `GameGuild.Identity.Authorization.UnitTests/Services/PermissionExpirationRuleEvaluatorTests.cs` —
+  rule composition (strictest wins), set/extend validation semantics, options validation.
+- `GameGuild.Identity.Authorization.UnitTests/Services/PermissionExpirationRuleEnforcementTests.cs` —
+  atomic pre-mutation rejection in the bulk set/extend paths (no partial application,
+  audit, or version bump on violation).
+- `GameGuild.Identity.Authorization.UnitTests/Services/PermissionExpirationAnalyticsServiceTests.cs` —
+  dashboard bucketing, expiring-by-permission breakdown, audit-log funnel reconstruction,
+  report attention flags.
+- `GameGuild.Identity.Authorization.UnitTests/Handlers/PermissionExpirationAnalyticsQueryHandlerTests.cs` —
+  tenant-admin guard semantics for the analytics/rule query handlers.
 - `GameGuild.API.UnitTests/Security/PermissionExpirationAlertHandlerTests.cs` — alert
   delivery: config gate, recipient resolution, InApp+Email channels, priority mapping,
   preference-driven suppression tolerance, failure tolerance.
+
+### Additional standalone PostgreSQL coverage
+
+`GameGuild.Identity.Authentication.IntegrationTests/PermissionExpirationRecoveryPostgreSqlTests.cs`
+keeps three additional cases for deterministic backlog drainage/ineligible rows,
+audit-failure retry and persistence-failure convergence. It uses a standalone
+PostgreSQL schema, the actual shared relational executor and an authenticated
+non-empty SystemAdmin caller. Failed attempts leave zero committed grant/audit/version
+effects and the accepted retry commits exactly one audit/version. These cases do not
+replace the migrated-host recovery/system-identity cases or the real HTTP tenant
+boundary cases. The six additional component cases prove orchestration only;
+PostgreSQL remains the evidence for rollback and durability.

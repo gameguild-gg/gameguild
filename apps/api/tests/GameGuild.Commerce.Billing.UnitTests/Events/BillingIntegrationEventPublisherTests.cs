@@ -141,4 +141,24 @@ public sealed class BillingIntegrationEventPublisherTests
 
         await act.Should().ThrowAsync<OperationCanceledException>();
     }
+
+    [Theory]
+    [InlineData("step")]
+    [InlineData("completed")]
+    [InlineData("failed")]
+    public async Task SagaEvents_PropagateOutboxFailureSoTheMutationRollsBack(string transition)
+    {
+        _producer.Setup(producer => producer.RecordAsync(It.IsAny<IDurableIntegrationEvent>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("outbox unavailable"));
+        var saga = new SubscriptionChangeSaga(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "test-intent");
+        var publisher = CreatePublisher();
+        Func<Task> act = transition switch
+        {
+            "step" => () => publisher.PublishSubscriptionChangeStepAsync(saga, "Proration", "Succeeded", "test"),
+            "completed" => () => publisher.PublishSubscriptionChangeCompletedAsync(saga),
+            _ => () => publisher.PublishSubscriptionChangeFailedAsync(saga)
+        };
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("outbox unavailable");
+    }
 }

@@ -112,6 +112,23 @@ public static class PromoSqliteTestSupport
                 b.HasKey(x => x.Id);
                 b.HasIndex(x => x.Name).IsUnique();
             });
+
+            // First-purchase campaign attribution (issue #418 CAC): unique per user.
+            modelBuilder.Entity<PromoCampaign>(b =>
+            {
+                b.HasKey(x => x.Id);
+                b.HasIndex(x => new { x.TenantId, x.Key }).IsUnique();
+                b.Ignore(x => x.CreatedByUser);
+            });
+
+            modelBuilder.Entity<PromoCampaignAttribution>(b =>
+            {
+                b.HasKey(x => x.Id);
+                b.HasIndex(x => x.UserId).IsUnique();
+                b.HasIndex(x => x.CampaignKey);
+                b.Property(x => x.CampaignKey).HasMaxLength(100);
+                b.Ignore(x => x.User);
+            });
         }
 
         Task<IDbContextTransaction> IApplicationDbContext.BeginTransactionAsync(CancellationToken cancellationToken) =>

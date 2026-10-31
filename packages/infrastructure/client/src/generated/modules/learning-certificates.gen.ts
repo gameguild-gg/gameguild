@@ -37,6 +37,34 @@ export class LearningCertificatesModule {
   }
 
   /**
+   * Renew a certificate by extending its validity (certificate lifecycle renewal, issue #180)
+   */
+  async postApiCertificatesRenew(
+    id: string,
+    body: Types.LearningCertificatesRenewCertificateInput,
+  ): Promise<Result<Types.LearningCertificatesCertificateDto, ApiError>> {
+    const url = `/api/certificates/${id}/renew`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCertificatesRenewCertificateInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCertificatesCertificateDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Revoke a certificate
    */
   async postApiCertificatesRevoke(id: string, body: Types.LearningCertificatesRevokeCertificateInput): Promise<Result<void, ApiError>> {

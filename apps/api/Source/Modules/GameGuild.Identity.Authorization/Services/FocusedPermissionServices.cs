@@ -23,6 +23,13 @@ namespace GameGuild.Identity.Authorization;
 ///         is enabled and the caller supplies no explicit expiration, grants issued without an expiry receive the
 ///         configured default period (per-permission-type override or global default).
 ///     </para>
+///     <para>
+///         <b>Advanced expiration rules (issue #331):</b> grants whose permissions match a configured
+///         <c>Authorization:PermissionExpiration:Rules</c> entry (or the global rule) are validated at grant
+///         time — <c>RequireExpiration</c> rules resolve their own default expiration, and duration
+///         floors/caps reject out-of-bounds expirations with
+///         <see cref="PermissionExpirationRuleViolationException"/>.
+///     </para>
 /// </remarks>
 public sealed class PermissionGrantService(
     ITenantPermissionRepository repository,
@@ -31,7 +38,8 @@ public sealed class PermissionGrantService(
     IActorContextAccessor actorContextAccessor,
     ILogger<PermissionGrantService> logger,
     IEnumerable<IPermissionChangeNotifier>? changeNotifiers = null,
-    IOptions<PermissionExpirationOptions>? expirationOptions = null
+    IOptions<PermissionExpirationOptions>? expirationOptions = null,
+    IPermissionExpirationRuleEvaluator? ruleEvaluator = null
 ) : IPermissionGrantService
 {
     private ActorContext Actor => actorContextAccessor.ActorContext;
@@ -62,6 +70,45 @@ public sealed class PermissionGrantService(
             if (defaultPeriod is not null)
             {
                 expiresAt = SystemClock.UtcNow + defaultPeriod.Value;
+            }
+        }
+
+        // Advanced expiration rules (issue #331): a matching RequireExpiration rule resolves its
+        // own default independently of ApplyDefaultsOnGrant, so the rule cannot be bypassed by
+        // leaving the defaults switch off; the resulting expiration is validated against the
+        // rule's duration floor/cap before the grant is persisted.
+        if (expirationOptions?.Value is { } ruleOptions && ruleEvaluator is not null)
+        {
+            var now = SystemClock.UtcNow;
+
+            if (expiresAt is null)
+            {
+                var (effectiveRule, matchedKeys) = ruleOptions.ResolveEffectiveRule(permissions);
+                if (effectiveRule.RequireExpiration == true)
+                {
+                    var defaultPeriod = ruleOptions.ResolveDefaultExpiration(permissions);
+                    if (defaultPeriod is null)
+                    {
+                        throw new PermissionExpirationRuleViolationException(new[]
+                        {
+                            new PermissionExpirationRuleViolation(
+                                "RequireExpiration",
+                                "Permissions that require an expiration were granted without one and no default expiration is configured.",
+                                matchedKeys)
+                        });
+                    }
+
+                    expiresAt = now + defaultPeriod.Value;
+                }
+            }
+
+            if (expiresAt is not null)
+            {
+                var violations = ruleEvaluator.ValidateSetExpiration(permissions, expiresAt, now);
+                if (violations.Count > 0)
+                {
+                    throw new PermissionExpirationRuleViolationException(violations);
+                }
             }
         }
 

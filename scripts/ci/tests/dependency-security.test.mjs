@@ -9,6 +9,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { test } from "node:test";
 import { Worker } from "node:worker_threads";
+import { runInNewContext } from "node:vm";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const virtualStore = join(repositoryRoot, "node_modules/.pnpm");
@@ -501,9 +502,9 @@ for (const packageRoot of installedConsumers("@azure/identity")) {
   });
 }
 
-function readRedirectedHeaders(client, url, headers) {
+function readRedirectedHeaders(client, url, headers, sensitiveHeaders) {
   return new Promise((resolveHeaders, rejectHeaders) => {
-    const request = client.get(url, { headers, sensitiveHeaders: ["X-Test-Credential"] }, response => {
+    const request = client.get(url, { headers, sensitiveHeaders }, response => {
       const chunks = [];
       response.on("data", chunk => chunks.push(chunk));
       response.on("error", rejectHeaders);
@@ -523,9 +524,9 @@ function readRedirectedHeaders(client, url, headers) {
 
 for (const packageRoot of installedConsumers("follow-redirects")) {
   for (const arrayHeaders of [false, true]) {
-    for (const crossOrigin of [false, true]) {
-      test(`${packageRoot}: ${arrayHeaders ? "array" : "object"} headers ${crossOrigin ? "strip credentials across origins" : "preserve credentials on the same origin"}`, async context => {
-        assert.equal(require(join(packageRoot, "package.json")).version, "1.16.1");
+    for (const [crossOrigin, crossRealm] of [[false, false], [true, false], [false, true], [true, true]]) {
+      test(`${packageRoot}: ${arrayHeaders ? "array" : "object"} headers with ${crossRealm ? "cross-realm" : "same-realm"} sensitive names ${crossOrigin ? "strip credentials across origins" : "preserve credentials on the same origin"}`, async context => {
+        assert.equal(require(join(packageRoot, "package.json")).version, "1.16.2");
         const client = require(packageRoot).http;
         const capture = (request, response) => {
           request.resume();
@@ -545,7 +546,12 @@ for (const packageRoot of installedConsumers("follow-redirects")) {
         const value = randomBytes(16).toString("hex");
         const credentials = { Authorization: value, "Proxy-Authorization": value, Cookie: `fixture=${value}`, "X-Test-Credential": value };
         const headers = { ...credentials, "X-Ordinary": "retained" };
-        const observed = await readRedirectedHeaders(client, origin, arrayHeaders ? Object.entries(headers).flat() : headers);
+        // GHSA-mrwp-f3q8-3g9p: a genuine other-realm array must retain the
+        // caller's custom sensitive-header policy through redirect processing.
+        const sensitiveHeaders = crossRealm ? runInNewContext('["X-Test-Credential"]') : ["X-Test-Credential"];
+        assert.equal(Array.isArray(sensitiveHeaders), true);
+        assert.equal(sensitiveHeaders instanceof Array, !crossRealm);
+        const observed = await readRedirectedHeaders(client, origin, arrayHeaders ? Object.entries(headers).flat() : headers, sensitiveHeaders);
         for (const [name, expected] of Object.entries(credentials)) {
           assert.equal(observed[name.toLowerCase()], crossOrigin ? undefined : expected);
         }
@@ -682,7 +688,12 @@ for (const packageRoot of installedConsumers("@modelcontextprotocol/sdk")) {
       },
     }), /issuer/i);
     assert.equal(requests, 0, "Issuer mismatch must fail before any credential-bearing request");
-    assert.equal(require(join(packageRoot, "package.json")).version, "1.32.1");
+    const sdkVersion = require(join(packageRoot, "package.json")).version;
+    const [sdkMajor, sdkMinor, sdkPatch] = sdkVersion.split("-")[0].split(".").map(Number);
+    assert.ok(
+      sdkMajor > 1 || (sdkMajor === 1 && (sdkMinor > 32 || (sdkMinor === 32 && sdkPatch >= 1))),
+      `MCP SDK ${sdkVersion} predates the reviewed OAuth issuer-binding fix in 1.32.1`,
+    );
   });
 }
 

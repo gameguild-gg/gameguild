@@ -83,6 +83,36 @@ export class AuthTrustedDevicesModule {
 
     return result;
   }
+
+  /**
+   * Name or rename one of the current user's trusted devices
+   *
+   * Assigns a user-defined name to one of the current user's own trusted devices. The acting user is taken from the authenticated principal, never from the body.
+   */
+  async patchAuthTrustedDevicesName(
+    deviceId: string,
+    body: Types.IdentityAuthenticationRenameTrustedDeviceInput,
+  ): Promise<Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>> {
+    const url = `/v1/auth/trusted-devices/${deviceId}/name`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationRenameTrustedDeviceInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PATCH',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationSessionSuccessOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
 }
 
 export function createAuthTrustedDevicesModule(client: ApiClient): AuthTrustedDevicesModule {

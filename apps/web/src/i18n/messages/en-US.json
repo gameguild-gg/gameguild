@@ -17,6 +17,19 @@
     "walletSigning": "Signing…",
     "walletConnected": "Connected:",
     "walletDisconnect": "Disconnect",
+    "guest": {
+      "continueAsGuest": "Continue as guest",
+      "busy": "Entering guest mode...",
+      "disabledMessage": "Guest access is currently disabled.",
+      "errorMessage": "Could not start a guest session. Please try again.",
+      "bannerTitle": "You are browsing as a guest",
+      "bannerDescription": "You have limited access to public content. Create an account to unlock the full experience and keep your progress.",
+      "upgradeCta": "Create your account",
+      "leaveGuestMode": "Leave guest mode",
+      "sessionLabel": "Guest session",
+      "permissionsLabel": "Permissions",
+      "signUpNotice": "Your guest session will be linked to your new account."
+    },
     "mfa": {
       "title": "Two-factor authentication",
       "description": "Confirm your sign-in with your authenticator app. This sign-in challenge expires after five minutes.",
@@ -823,6 +836,17 @@
     "savePricing": "Save pricing version",
     "publish": "Publish",
     "unpublish": "Deactivate"
+  },
+  "currency": {
+    "label": "Display currency",
+    "switchLabel": "Currency",
+    "suggested": "Suggested: {code}",
+    "apply": "Use {code}",
+    "dismiss": "Dismiss suggestion",
+    "original": "Original price",
+    "conversionNote": "≈ {converted} at the current rate",
+    "conversionUnavailable": "Conversion unavailable in {code}",
+    "privacyNote": "Currency suggestion uses only your country; nothing is stored."
   },
   "emailDeliverability": {
     "title": "Email deliverability",

@@ -123,6 +123,29 @@ export class CommerceBillingEventsModule {
 
     return result;
   }
+
+  /**
+   * Rebuild one subscription's state from the durable billing event log
+   *
+   * Deterministically replays the durable billing events of one subscription (invoice paid, renewal, cancellation, subscription-change saga outcomes) into a projected state and verifies it against the live subscription snapshot, reporting any drift. Unknown future event schemas are listed as skipped instead of failing the replay.
+   */
+  async getBillingEventsSubscriptionsProjection(subscriptionId: string): Promise<Result<Types.CommerceBillingSubscriptionEventProjectionDto, ApiError>> {
+    const url = `/api/v1/billing/events/subscriptions/${subscriptionId}/projection`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceBillingSubscriptionEventProjectionDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
 }
 
 export function createCommerceBillingEventsModule(client: ApiClient): CommerceBillingEventsModule {

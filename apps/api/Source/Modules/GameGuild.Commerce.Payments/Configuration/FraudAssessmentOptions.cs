@@ -92,6 +92,96 @@ public sealed class FraudAssessmentOptions
     [Range(0, 100)]
     public int BehaviorAnomalyWeight { get; set; } = 25;
 
+    /// <summary>Score contributed per payment-attempt attribute (payment-method token, card
+    /// fingerprint, provider customer id) that matches a tenant blacklist entry (issue #409).</summary>
+    [Range(0, 100)]
+    public int BlacklistWeight { get; set; } = 60;
+
+    /// <summary>ISO 3166-1 alpha-2 billing countries treated as elevated fraud risk; attempts
+    /// from a listed country raise the high-risk-country signal (issue #409). Empty by default:
+    /// the capability is opt-in per deployment, never a silent geo-block.</summary>
+    public string[] HighRiskCountries { get; set; } = [];
+
+    /// <summary>Score contributed when the attempt's billing country is listed in
+    /// <see cref="HighRiskCountries"/> (issue #409).</summary>
+    [Range(0, 100)]
+    public int HighRiskCountryWeight { get; set; } = 25;
+
+    /// <summary>Disposable email domains flagged by the payer-email signal (issue #409: flag
+    /// disposable email providers). The defaults cover the widely abused providers; deployments
+    /// extend or replace the list through configuration.</summary>
+    public string[] DisposableEmailDomains { get; set; } =
+    [
+        "mailinator.com", "guerrillamail.com", "10minutemail.com", "temp-mail.org",
+        "yopmail.com", "throwawaymail.com", "getnada.com", "dispostable.com",
+        "sharklasers.com", "maildrop.cc", "trashmail.com", "fakeinbox.com"
+    ];
+
+    /// <summary>Score contributed when the payer email uses a disposable email domain
+    /// (issue #409).</summary>
+    [Range(0, 100)]
+    public int DisposableEmailWeight { get; set; } = 30;
+
+    /// <summary>
+    ///     High-risk card BIN entries (issue #409: BIN range signal). Each entry is either a
+    ///     6-8 digit prefix (<c>123456</c>) or an inclusive numeric range
+    ///     (<c>400000-400050</c>). Empty by default: deployments opt in with their own list.
+    /// </summary>
+    public string[] HighRiskCardBins { get; set; } = [];
+
+    /// <summary>Score contributed when the presented card BIN matches a high-risk entry
+    /// (issue #409).</summary>
+    [Range(0, 100)]
+    public int CardBinWeight { get; set; } = 20;
+
+    /// <summary>
+    ///     BIN-to-issuer-country map (issue #409: BIN check comparing card country to user
+    ///     country). Entries are <c>&lt;prefix-or-range&gt;=&lt;ISO 3166-1 alpha-2&gt;</c>,
+    ///     e.g. <c>530000=NG</c> or <c>400000-400050=US</c>. When the presented BIN maps to a
+    ///     country that differs from the attempt's billing country, the mismatch signal
+    ///     fires. Empty by default: the issuer-country dataset is a deployment decision.
+    /// </summary>
+    public string[] CardBinCountryMap { get; set; } = [];
+
+    /// <summary>Score contributed when the BIN's issuer country disagrees with the attempt's
+    /// billing country (issue #409).</summary>
+    [Range(0, 100)]
+    public int CardBinCountryMismatchWeight { get; set; } = 25;
+
+    /// <summary>Score contributed per server-known AVS or CVV mismatch (issue #409).</summary>
+    [Range(0, 100)]
+    public int AvsCvvMismatchWeight { get; set; } = 35;
+
+    /// <summary>Score contributed per server-known AVS or CVV "not checked" result
+    /// (issue #409); deliberately small — absent checks are weak evidence.</summary>
+    [Range(0, 100)]
+    public int AvsCvvUncheckedWeight { get; set; } = 10;
+
+    /// <summary>
+    ///     Score contributed when the source IP resolves to a known anonymizing network —
+    ///     VPN endpoint, public proxy, Tor exit node or hosting provider — through the
+    ///     GeoIP anonymizer traits (issue #409).
+    /// </summary>
+    [Range(0, 100)]
+    public int AnonymizerWeight { get; set; } = 35;
+
+    /// <summary>
+    ///     Score contributed when the client-claimed IANA timezone disagrees with the
+    ///     GeoIP-resolved timezone of the source IP (issue #409).
+    /// </summary>
+    [Range(0, 100)]
+    public int TimezoneMismatchWeight { get; set; } = 20;
+
+    /// <summary>Whether declining a manual fraud review automatically blacklists the
+    /// confirmed-fraud attempt's listable attributes (issue #409: automatic addition on
+    /// confirmed fraud).</summary>
+    public bool AutoBlacklistOnFraudDecline { get; set; } = true;
+
+    /// <summary>Expiry, in days, applied to automatically added blacklist entries
+    /// (issue #409: blacklist entries with expiry dates).</summary>
+    [Range(1, 3650)]
+    public int AutoBlacklistExpiryDays { get; set; } = 730;
+
     /// <summary>Aggregate score at or above which the gate decision becomes <see cref="FraudDecision.Review"/>.</summary>
     [Range(1, 100)]
     public int ReviewThreshold { get; set; } = 40;
@@ -137,6 +227,21 @@ public sealed class FraudAssessmentOptions
             BehaviorAnomalyMinHistory = overrideValues.BehaviorAnomalyMinHistory ?? BehaviorAnomalyMinHistory,
             BehaviorAnomalyAmountMultiplier = overrideValues.BehaviorAnomalyAmountMultiplier ?? BehaviorAnomalyAmountMultiplier,
             BehaviorAnomalyWeight = overrideValues.BehaviorAnomalyWeight ?? BehaviorAnomalyWeight,
+            BlacklistWeight = overrideValues.BlacklistWeight ?? BlacklistWeight,
+            HighRiskCountries = overrideValues.HighRiskCountries ?? HighRiskCountries,
+            HighRiskCountryWeight = overrideValues.HighRiskCountryWeight ?? HighRiskCountryWeight,
+            DisposableEmailDomains = overrideValues.DisposableEmailDomains ?? DisposableEmailDomains,
+            DisposableEmailWeight = overrideValues.DisposableEmailWeight ?? DisposableEmailWeight,
+            HighRiskCardBins = overrideValues.HighRiskCardBins ?? HighRiskCardBins,
+            CardBinWeight = overrideValues.CardBinWeight ?? CardBinWeight,
+            CardBinCountryMap = overrideValues.CardBinCountryMap ?? CardBinCountryMap,
+            CardBinCountryMismatchWeight = overrideValues.CardBinCountryMismatchWeight ?? CardBinCountryMismatchWeight,
+            AvsCvvMismatchWeight = overrideValues.AvsCvvMismatchWeight ?? AvsCvvMismatchWeight,
+            AvsCvvUncheckedWeight = overrideValues.AvsCvvUncheckedWeight ?? AvsCvvUncheckedWeight,
+            AnonymizerWeight = overrideValues.AnonymizerWeight ?? AnonymizerWeight,
+            TimezoneMismatchWeight = overrideValues.TimezoneMismatchWeight ?? TimezoneMismatchWeight,
+            AutoBlacklistOnFraudDecline = overrideValues.AutoBlacklistOnFraudDecline ?? AutoBlacklistOnFraudDecline,
+            AutoBlacklistExpiryDays = overrideValues.AutoBlacklistExpiryDays ?? AutoBlacklistExpiryDays,
             ReviewThreshold = overrideValues.ReviewThreshold ?? ReviewThreshold,
             BlockThreshold = overrideValues.BlockThreshold ?? BlockThreshold
         };
@@ -179,6 +284,50 @@ public sealed class FraudAssessmentOverride
     [Range(0, 100)]
     public int? DisputedPaymentWeight { get; set; }
 
+    /// <summary>See <see cref="FraudAssessmentOptions.HighRiskCountries"/>.</summary>
+    public string[]? HighRiskCountries { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.HighRiskCountryWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? HighRiskCountryWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.DisposableEmailDomains"/>.</summary>
+    public string[]? DisposableEmailDomains { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.DisposableEmailWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? DisposableEmailWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.HighRiskCardBins"/>.</summary>
+    public string[]? HighRiskCardBins { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.CardBinWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? CardBinWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.CardBinCountryMap"/>.</summary>
+    public string[]? CardBinCountryMap { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.CardBinCountryMismatchWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? CardBinCountryMismatchWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.AvsCvvMismatchWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? AvsCvvMismatchWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.AvsCvvUncheckedWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? AvsCvvUncheckedWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.AnonymizerWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? AnonymizerWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.TimezoneMismatchWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? TimezoneMismatchWeight { get; set; }
+
     /// <summary>See <see cref="FraudAssessmentOptions.MaxSignalScore"/>.</summary>
     [Range(1, 100)]
     public int? MaxSignalScore { get; set; }
@@ -214,6 +363,17 @@ public sealed class FraudAssessmentOverride
     /// <summary>See <see cref="FraudAssessmentOptions.BehaviorAnomalyWeight"/>.</summary>
     [Range(0, 100)]
     public int? BehaviorAnomalyWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.BlacklistWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? BlacklistWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.AutoBlacklistOnFraudDecline"/>.</summary>
+    public bool? AutoBlacklistOnFraudDecline { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.AutoBlacklistExpiryDays"/>.</summary>
+    [Range(1, 3650)]
+    public int? AutoBlacklistExpiryDays { get; set; }
 
     /// <summary>See <see cref="FraudAssessmentOptions.ReviewThreshold"/>.</summary>
     [Range(1, 100)]

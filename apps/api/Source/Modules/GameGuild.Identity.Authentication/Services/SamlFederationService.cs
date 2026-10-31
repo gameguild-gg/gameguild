@@ -16,10 +16,13 @@ namespace GameGuild.Identity.Authentication;
 ///     trust base is exactly what the deployment supplies. Responses are validated
 ///     fail-closed: XML-DSig signatures must verify against at least one currently-valid
 ///     configured certificate (unsigned responses are refused), issuer/audience/destination
-///     must match exactly, lifetimes are clock-skew-bounded, <c>InResponseTo</c> must
-///     correlate with a single-use server-issued AuthnRequest (unless the provider explicitly
-///     allows IdP-initiated SSO), and assertion IDs are single-use through
-///     <see cref="ISamlProtocolStateStore" />.
+///     must match exactly, lifetimes are clock-skew-bounded, the signed bearer
+///     <c>SubjectConfirmationData.InResponseTo</c> must correlate with a single-use
+///     server-issued AuthnRequest (unless the provider explicitly allows IdP-initiated
+///     SSO, in which case it must be absent), the <c>RelayState</c> posted with the
+///     response must be the one issued with that request (browser/provider binding), and
+///     assertion IDs are single-use through <see cref="ISamlProtocolStateStore" /> —
+///     consumed and reserved atomically in the shared database across instances.
 /// </summary>
 public sealed class SamlFederationService(
     ISamlProtocolStateStore protocolStateStore,
@@ -66,9 +69,14 @@ public sealed class SamlFederationService(
 
         authnRequest.Append("</samlp:AuthnRequest>");
 
-        await protocolStateStore.SavePendingAuthnRequestAsync(slug, requestId, AuthnRequestLifetime, cancellationToken).ConfigureAwait(false);
-
         var effectiveRelayState = string.IsNullOrWhiteSpace(relayState) ? Guid.NewGuid().ToString("N") : relayState;
+
+        // The pending request is stored bound to the RelayState handed to the browser:
+        // the callback must present the same RelayState (single use, per provider) for
+        // the request to be consumable — the provider-bound leg of the browser
+        // callback-state binding (the web app's signed state cookie is the browser leg).
+        await protocolStateStore.SavePendingAuthnRequestAsync(slug, requestId, effectiveRelayState, AuthnRequestLifetime, cancellationToken).ConfigureAwait(false);
+
         var redirectUrl = $"{options.IdpSignInServiceUrl}" +
                           $"?SAMLRequest={Uri.EscapeDataString(DeflateEncode(authnRequest.ToString()))}" +
                           $"&RelayState={Uri.EscapeDataString(effectiveRelayState)}";
@@ -77,9 +85,10 @@ public sealed class SamlFederationService(
         return new SamlSignInChallenge { RedirectUrl = redirectUrl, RequestId = requestId, RelayState = effectiveRelayState };
     }
 
-    public async Task<SamlFederatedIdentity> ConsumeAssertionAsync(string slug, string samlResponse, CancellationToken cancellationToken = default)
+    public async Task<SamlFederatedIdentity> ConsumeAssertionAsync(string slug, string samlResponse, string relayState, CancellationToken cancellationToken = default)
     {
         var options = RequireEnabledProvider(slug);
+        ArgumentNullException.ThrowIfNull(relayState);
 
         byte[] decoded;
         try
@@ -143,13 +152,10 @@ public sealed class SamlFederationService(
                 throw new UnauthorizedAccessException($"SAML response for provider '{slug}' lacks InResponseTo correlation (IdP-initiated SSO is disabled).");
             }
         }
-        else
+        else if (string.IsNullOrWhiteSpace(relayState))
         {
-            var correlated = await protocolStateStore.ConsumePendingAuthnRequestAsync(slug, inResponseTo, cancellationToken).ConfigureAwait(false);
-            if (!correlated)
-            {
-                throw new UnauthorizedAccessException($"SAML response for provider '{slug}' correlates with no outstanding AuthnRequest.");
-            }
+            // A solicited response must arrive with the RelayState issued to the browser.
+            throw new UnauthorizedAccessException($"SAML response for provider '{slug}' lacks the RelayState bound to its AuthnRequest.");
         }
 
         ValidateStatus(document, slug);
@@ -173,9 +179,25 @@ public sealed class SamlFederationService(
         }
 
         var notOnOrAfter = ValidateConditions(document, assertion, options, slug);
-        var providerKey = ValidateSubject(document, assertion, options, slug);
+        var providerKey = ValidateSubject(document, assertion, options, slug, inResponseTo);
         var attributes = ReadAttributes(assertion, options);
         var authnContexts = ReadAuthnContextClassRefs(assertion);
+
+        // Correlation is consumed only after the whole response validated: the signed
+        // subject confirmation data must echo the issued AuthnRequest (Web SSO
+        // profile), so a genuinely-signed assertion re-wrapped into a forged unsigned
+        // outer response with a fresh InResponseTo is refused here before any
+        // single-use state is spent. The atomic store operation additionally requires
+        // the RelayState issued with the request (browser/provider binding) and is
+        // single-use across every application instance.
+        if (!string.IsNullOrEmpty(inResponseTo))
+        {
+            var correlated = await protocolStateStore.ConsumePendingAuthnRequestAsync(slug, inResponseTo, relayState, cancellationToken).ConfigureAwait(false);
+            if (!correlated)
+            {
+                throw new UnauthorizedAccessException($"SAML response for provider '{slug}' correlates with no outstanding AuthnRequest.");
+            }
+        }
 
         // Replay protection: the assertion ID is single-use for as long as the assertion
         // could still be inside its validity window.
@@ -529,7 +551,7 @@ public sealed class SamlFederationService(
         throw new UnauthorizedAccessException($"SAML assertion for provider '{slug}' is not addressed to this service provider (audience mismatch).");
     }
 
-    private static string ValidateSubject(XmlDocument document, XmlElement assertion, SamlProviderOptions options, string slug)
+    private static string ValidateSubject(XmlDocument document, XmlElement assertion, SamlProviderOptions options, string slug, string? responseInResponseTo)
     {
         var now = SystemClock.UtcNow;
         var skew = Skew(options);
@@ -567,6 +589,8 @@ public sealed class SamlFederationService(
             throw new UnauthorizedAccessException($"SAML assertion for provider '{slug}' has an expired bearer confirmation.");
         }
 
+        ValidateSubjectCorrelation(confirmationData, slug, responseInResponseTo);
+
         var subject = nameId.InnerText.Trim();
         if (subject.Length == 0)
         {
@@ -574,6 +598,43 @@ public sealed class SamlFederationService(
         }
 
         return subject;
+    }
+
+    /// <summary>
+    ///     Signed subject correlation (Web SSO profile): the bearer
+    ///     <see cref="XmlElement" /> confirmation data is covered by the response or
+    ///     assertion signature, so its <c>InResponseTo</c> is the authenticated
+    ///     correlation — unlike the outer response's unsigned attribute. A solicited
+    ///     response must echo the issued request ID here exactly; a mismatch or a
+    ///     missing value means a genuinely-signed assertion was re-wrapped into a
+    ///     different (typically unsigned) outer response and is refused. An unsolicited
+    ///     (IdP-initiated) assertion must carry no <c>InResponseTo</c> at all.
+    /// </summary>
+    private static void ValidateSubjectCorrelation(XmlElement confirmationData, string slug, string? responseInResponseTo)
+    {
+        var subjectInResponseTo = confirmationData.GetAttribute("InResponseTo");
+
+        if (string.IsNullOrEmpty(responseInResponseTo))
+        {
+            if (subjectInResponseTo.Length > 0)
+            {
+                // Unsolicited on its face, yet solicited by content: an assertion minted
+                // for some other request being passed off as IdP-initiated.
+                throw new UnauthorizedAccessException($"SAML assertion for provider '{slug}' is unsolicited but carries an InResponseTo correlation.");
+            }
+
+            return;
+        }
+
+        if (subjectInResponseTo.Length == 0)
+        {
+            throw new UnauthorizedAccessException($"SAML assertion for provider '{slug}' has no subject-confirmation InResponseTo correlation.");
+        }
+
+        if (!string.Equals(subjectInResponseTo, responseInResponseTo, StringComparison.Ordinal))
+        {
+            throw new UnauthorizedAccessException($"SAML assertion for provider '{slug}' carries an InResponseTo correlation that does not match the response.");
+        }
     }
 
     private static (string? Email, string? Name) ReadAttributes(XmlElement assertion, SamlProviderOptions options)

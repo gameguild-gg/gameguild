@@ -16,6 +16,15 @@ public class WebhookSettings
     public int ProcessingTimeoutSeconds { get; set; } = 30;
 
     /// <summary>
+    ///     Hard upper bound, in seconds, on the HTTP response time of every provider webhook
+    ///     endpoint (issue #408: providers expect a response in well under 5 seconds). When
+    ///     processing exceeds the bound the endpoint acknowledges the delivery immediately
+    ///     (received, deferred) and the durable inbox plus the hosted retry worker complete the
+    ///     work. Must stay strictly below 5; validated to the 1-4 range.
+    /// </summary>
+    public int ResponseBoundSeconds { get; set; } = 4;
+
+    /// <summary>
     ///     Whether to verify webhook signatures
     /// </summary>
     public bool VerifySignatures { get; set; } = true;
@@ -67,9 +76,10 @@ public class WebhookRetryWorkerSettings
     public int PollIntervalSeconds { get; set; } = 30;
 
     /// <summary>
-    ///     Maximum number of due events processed per polling cycle.
+    ///     Maximum number of due events processed per polling cycle (issue #408: batches of
+    ///     up to 50 webhooks per cycle).
     /// </summary>
-    public int BatchSize { get; set; } = 20;
+    public int BatchSize { get; set; } = 50;
 
     /// <summary>
     ///     Hard ceiling on retry attempts honored by the worker, matching the

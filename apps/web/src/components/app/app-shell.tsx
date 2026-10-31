@@ -11,6 +11,7 @@ import {
   type PublicWebsiteUser,
 } from './public-website-nav';
 import { PublicAccountMenu } from './public-account-menu';
+import { CurrencySwitcher } from '@/components/currency/currency-switcher';
 
 const primaryNav = [
   { label: 'Community', href: '/community' },
@@ -188,6 +189,8 @@ export async function PublicWebsiteHeader({
   const user = await getHeaderUser();
   const publicAccountActions = (
     <div className="flex items-center gap-2">
+      {/* Currency indicator in the public navigation bar (issue #412 spec E). */}
+      <CurrencySwitcher className="hidden sm:flex" />
       <a
         href="https://github.com/gameguild-gg/gameguild"
         aria-label="GameGuild on GitHub"

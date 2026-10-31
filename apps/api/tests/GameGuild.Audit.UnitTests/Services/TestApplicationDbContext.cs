@@ -28,6 +28,9 @@ public sealed class NoopPiiRedactionService : IPiiRedactionService
     public Task<PiiRedactionSummary> ApplyToAuditLogAsync(AuditLog entry, IApplicationDbContext context, CancellationToken cancellationToken) =>
         Task.FromResult(new PiiRedactionSummary());
 
+    public Task<PiiRedactionSummary> ApplyToEntityChangeAuditAsync(IEntityChangeAuditRecord record, IApplicationDbContext context, CancellationToken cancellationToken) =>
+        Task.FromResult(new PiiRedactionSummary());
+
     public Task<CreateAuditLogRequest> RedactRequestForDurableFallbackAsync(CreateAuditLogRequest request, CancellationToken cancellationToken) =>
         Task.FromResult(request);
 

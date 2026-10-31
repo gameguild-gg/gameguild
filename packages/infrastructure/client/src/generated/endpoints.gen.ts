@@ -649,6 +649,54 @@ export const getApiAuditCompliancePackagingTemplatesEndpoint = {
 } as const;
 
 /**
+ * Per-family audit trail coverage with evidence; complete when every family reports coverage.
+ */
+export type GetApiAuditComprehensiveCoverageInput = void;
+export type GetApiAuditComprehensiveCoverageOutput = Types.ComplianceAuditComprehensiveAuditTrailCoverageReport;
+export const getApiAuditComprehensiveCoverageEndpoint = {
+  operationId: 'getApiAuditComprehensiveCoverage' as const,
+  method: 'GET' as const,
+  path: '/api/audit/comprehensive-coverage' as const,
+  tags: ['ComplianceAuditCoverage'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Returns the universal entity-change audit history for the current tenant. Tenant
+ * administrators only; supports filtering by entity name, change kind, and actor.
+ */
+export interface GetApiAuditEntityChangesInput {
+  query?: {
+    EntityName?: string;
+    ChangeKind?: string;
+    ActorId?: string;
+    Skip?: number;
+    Take?: number;
+  };
+}
+export type GetApiAuditEntityChangesOutput = Types.ComplianceAuditEntityChangeAuditListOutput;
+export const getApiAuditEntityChangesEndpoint = {
+  operationId: 'getApiAuditEntityChanges' as const,
+  method: 'GET' as const,
+  path: '/api/audit/entity-changes' as const,
+  tags: ['ComplianceAuditEntityChanges'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Per-module event coverage manifest; complete when every mutating command carries a contract and a handler.
+ */
+export type GetApiAuditEventsComprehensiveInput = void;
+export type GetApiAuditEventsComprehensiveOutput = Types.ComplianceAuditComprehensiveEventCoverageReport;
+export const getApiAuditEventsComprehensiveEndpoint = {
+  operationId: 'getApiAuditEventsComprehensive' as const,
+  method: 'GET' as const,
+  path: '/api/audit/events/comprehensive' as const,
+  tags: ['ComplianceAuditCoverage'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Export audit logs (admin only)
  */
 export interface PostApiAuditExportCsvInput {
@@ -690,6 +738,361 @@ export const postApiAuditExportXmlEndpoint = {
   method: 'POST' as const,
   path: '/api/audit/export/xml' as const,
   tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Records a field-level access observation (read or write) with automatic classification and masking.
+ */
+export interface PostApiAuditFieldLevelAccessInput {
+  body?: Types.ComplianceAuditRecordFieldAccessInput;
+}
+export type PostApiAuditFieldLevelAccessOutput = Types.ComplianceAuditFieldAccessAuditOutput;
+export const postApiAuditFieldLevelAccessEndpoint = {
+  operationId: 'postApiAuditFieldLevelAccess' as const,
+  method: 'POST' as const,
+  path: '/api/audit/field-level/access' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Field access history for one entity (or one field of it), newest first.
+ */
+export interface GetApiAuditFieldLevelAccessHistoryInput {
+  entityId: string;
+  query?: {
+    fieldName?: string;
+  };
+}
+export type GetApiAuditFieldLevelAccessHistoryOutput = Types.ComplianceAuditFieldAccessAuditOutput[];
+export const getApiAuditFieldLevelAccessHistoryEndpoint = {
+  operationId: 'getApiAuditFieldLevelAccessHistory' as const,
+  method: 'GET' as const,
+  path: '/api/audit/field-level/access-history/{entityId}' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Anomaly findings from access-pattern analysis, optionally filtered by status.
+ */
+export interface GetApiAuditFieldLevelAnomaliesInput {
+  query?: {
+    status?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiAuditFieldLevelAnomaliesOutput = Types.ComplianceAuditFieldAccessAnomalyOutput[];
+export const getApiAuditFieldLevelAnomaliesEndpoint = {
+  operationId: 'getApiAuditFieldLevelAnomalies' as const,
+  method: 'GET' as const,
+  path: '/api/audit/field-level/anomalies' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Acknowledges an anomaly finding (investigation started).
+ */
+export interface PostApiAuditFieldLevelAnomaliesAcknowledgeInput {
+  id: string;
+}
+export type PostApiAuditFieldLevelAnomaliesAcknowledgeOutput = Types.ComplianceAuditFieldAccessAnomalyOutput;
+export const postApiAuditFieldLevelAnomaliesAcknowledgeEndpoint = {
+  operationId: 'postApiAuditFieldLevelAnomaliesAcknowledge' as const,
+  method: 'POST' as const,
+  path: '/api/audit/field-level/anomalies/{id}/acknowledge' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Resolves an anomaly finding with notes.
+ */
+export interface PostApiAuditFieldLevelAnomaliesResolveInput {
+  id: string;
+  body?: Types.ComplianceAuditResolveFieldAccessAnomalyInput;
+}
+export type PostApiAuditFieldLevelAnomaliesResolveOutput = Types.ComplianceAuditFieldAccessAnomalyOutput;
+export const postApiAuditFieldLevelAnomaliesResolveEndpoint = {
+  operationId: 'postApiAuditFieldLevelAnomaliesResolve' as const,
+  method: 'POST' as const,
+  path: '/api/audit/field-level/anomalies/{id}/resolve' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Runs access-pattern analysis over the recent window and persists detected anomalies.
+ */
+export interface PostApiAuditFieldLevelAnomaliesAnalyzeInput {
+  body?: Types.ComplianceAuditAnalyzeFieldAccessPatternsInput;
+}
+export type PostApiAuditFieldLevelAnomaliesAnalyzeOutput = Types.ComplianceAuditFieldAccessPatternAnalysisResult[];
+export const postApiAuditFieldLevelAnomaliesAnalyzeEndpoint = {
+  operationId: 'postApiAuditFieldLevelAnomaliesAnalyze' as const,
+  method: 'POST' as const,
+  path: '/api/audit/field-level/anomalies/analyze' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Observed bulk exports, optionally only threshold-exceeding ones.
+ */
+export interface GetApiAuditFieldLevelBulkExportsInput {
+  query?: {
+    thresholdExceeded?: boolean;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiAuditFieldLevelBulkExportsOutput = Types.ComplianceAuditBulkExportEvent[];
+export const getApiAuditFieldLevelBulkExportsEndpoint = {
+  operationId: 'getApiAuditFieldLevelBulkExports' as const,
+  method: 'GET' as const,
+  path: '/api/audit/field-level/bulk-exports' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Evaluates an export attempt against the bulk-export thresholds, records it and alerts when exceeded.
+ */
+export interface PostApiAuditFieldLevelBulkExportsEvaluateInput {
+  body?: Types.ComplianceAuditEvaluateBulkExportInput;
+}
+export type PostApiAuditFieldLevelBulkExportsEvaluateOutput = Types.ComplianceAuditBulkExportEvaluationOutput;
+export const postApiAuditFieldLevelBulkExportsEvaluateEndpoint = {
+  operationId: 'postApiAuditFieldLevelBulkExportsEvaluate' as const,
+  method: 'POST' as const,
+  path: '/api/audit/field-level/bulk-exports/evaluate' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * The sensitive-field classification registry.
+ */
+export type GetApiAuditFieldLevelClassificationsInput = void;
+export type GetApiAuditFieldLevelClassificationsOutput = Types.ComplianceAuditSensitiveFieldClassificationOutput[];
+export const getApiAuditFieldLevelClassificationsEndpoint = {
+  operationId: 'getApiAuditFieldLevelClassifications' as const,
+  method: 'GET' as const,
+  path: '/api/audit/field-level/classifications' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Re-scans recent field access observations and upserts automatic classifications.
+ */
+export type PostApiAuditFieldLevelClassificationsScanInput = void;
+export type PostApiAuditFieldLevelClassificationsScanOutput = Types.ComplianceAuditSensitiveFieldScanOutput;
+export const postApiAuditFieldLevelClassificationsScanEndpoint = {
+  operationId: 'postApiAuditFieldLevelClassificationsScan' as const,
+  method: 'POST' as const,
+  path: '/api/audit/field-level/classifications/scan' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Cross-border transfer log, optionally filtered by validation status.
+ */
+export interface GetApiAuditFieldLevelCrossBorderTransfersInput {
+  query?: {
+    status?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiAuditFieldLevelCrossBorderTransfersOutput = Types.ComplianceAuditCrossBorderTransferLog[];
+export const getApiAuditFieldLevelCrossBorderTransfersEndpoint = {
+  operationId: 'getApiAuditFieldLevelCrossBorderTransfers' as const,
+  method: 'GET' as const,
+  path: '/api/audit/field-level/cross-border-transfers' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Validates a prospective cross-border transfer against the jurisdiction policy and logs the outcome.
+ */
+export interface PostApiAuditFieldLevelCrossBorderTransfersValidateInput {
+  body?: Types.ComplianceAuditValidateCrossBorderTransferInput;
+}
+export type PostApiAuditFieldLevelCrossBorderTransfersValidateOutput = Types.ComplianceAuditCrossBorderTransferOutput;
+export const postApiAuditFieldLevelCrossBorderTransfersValidateEndpoint = {
+  operationId: 'postApiAuditFieldLevelCrossBorderTransfersValidate' as const,
+  method: 'POST' as const,
+  path: '/api/audit/field-level/cross-border-transfers/validate' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Data subject rights requests with statutory deadline tracking, optionally filtered by status.
+ */
+export interface GetApiAuditFieldLevelDataSubjectRequestsInput {
+  query?: {
+    status?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiAuditFieldLevelDataSubjectRequestsOutput = Types.ComplianceAuditDataSubjectRequestOutput[];
+export const getApiAuditFieldLevelDataSubjectRequestsEndpoint = {
+  operationId: 'getApiAuditFieldLevelDataSubjectRequests' as const,
+  method: 'GET' as const,
+  path: '/api/audit/field-level/data-subject-requests' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Consent monitoring for one data subject: consent states plus their rights requests.
+ */
+export interface GetApiAuditFieldLevelDataSubjectRequestsSubjectsInput {
+  userId: string;
+}
+export type GetApiAuditFieldLevelDataSubjectRequestsSubjectsOutput = Types.ComplianceAuditDataSubjectConsentMonitoringOutput;
+export const getApiAuditFieldLevelDataSubjectRequestsSubjectsEndpoint = {
+  operationId: 'getApiAuditFieldLevelDataSubjectRequestsSubjects' as const,
+  method: 'GET' as const,
+  path: '/api/audit/field-level/data-subject-requests/subjects/{userId}' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Aggregate monitoring summary: open, fulfilled and overdue requests plus active consents.
+ */
+export type GetApiAuditFieldLevelDataSubjectRequestsSummaryInput = void;
+export type GetApiAuditFieldLevelDataSubjectRequestsSummaryOutput = Types.ComplianceAuditDataSubjectAccessMonitoringSummary;
+export const getApiAuditFieldLevelDataSubjectRequestsSummaryEndpoint = {
+  operationId: 'getApiAuditFieldLevelDataSubjectRequestsSummary' as const,
+  method: 'GET' as const,
+  path: '/api/audit/field-level/data-subject-requests/summary' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * The GDPR Article 30 processing activity register, with completeness gaps listed.
+ */
+export type GetApiAuditFieldLevelGdprArticle30Input = void;
+export type GetApiAuditFieldLevelGdprArticle30Output = Types.ComplianceAuditGdprArticle30Output;
+export const getApiAuditFieldLevelGdprArticle30Endpoint = {
+  operationId: 'getApiAuditFieldLevelGdprArticle30' as const,
+  method: 'GET' as const,
+  path: '/api/audit/field-level/gdpr/article-30' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Creates or updates a processing activity record.
+ */
+export interface PutApiAuditFieldLevelGdprArticle30Input {
+  body?: Types.ComplianceAuditSaveGdprActivityInput;
+}
+export type PutApiAuditFieldLevelGdprArticle30Output = Types.ComplianceAuditGdprProcessingActivityOutput;
+export const putApiAuditFieldLevelGdprArticle30Endpoint = {
+  operationId: 'putApiAuditFieldLevelGdprArticle30' as const,
+  method: 'PUT' as const,
+  path: '/api/audit/field-level/gdpr/article-30' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Deletes a processing activity record.
+ */
+export interface DeleteApiAuditFieldLevelGdprArticle30Input {
+  id: string;
+}
+export type DeleteApiAuditFieldLevelGdprArticle30Output = void;
+export const deleteApiAuditFieldLevelGdprArticle30Endpoint = {
+  operationId: 'deleteApiAuditFieldLevelGdprArticle30' as const,
+  method: 'DELETE' as const,
+  path: '/api/audit/field-level/gdpr/article-30/{id}' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Marks a processing activity reviewed by the current actor.
+ */
+export interface PostApiAuditFieldLevelGdprArticle30ReviewInput {
+  id: string;
+}
+export type PostApiAuditFieldLevelGdprArticle30ReviewOutput = Types.ComplianceAuditGdprProcessingActivityOutput;
+export const postApiAuditFieldLevelGdprArticle30ReviewEndpoint = {
+  operationId: 'postApiAuditFieldLevelGdprArticle30Review' as const,
+  method: 'POST' as const,
+  path: '/api/audit/field-level/gdpr/article-30/{id}/review' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * (Re)derives the platform processing activities for the tenant; manual entries are preserved.
+ */
+export type PostApiAuditFieldLevelGdprArticle30SeedInput = void;
+export type PostApiAuditFieldLevelGdprArticle30SeedOutput = number;
+export const postApiAuditFieldLevelGdprArticle30SeedEndpoint = {
+  operationId: 'postApiAuditFieldLevelGdprArticle30Seed' as const,
+  method: 'POST' as const,
+  path: '/api/audit/field-level/gdpr/article-30/seed' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Per-category sensitive-data retention rules.
+ */
+export type GetApiAuditFieldLevelRetentionInput = void;
+export type GetApiAuditFieldLevelRetentionOutput = Types.ComplianceAuditSensitiveDataRetentionPolicyOutput[];
+export const getApiAuditFieldLevelRetentionEndpoint = {
+  operationId: 'getApiAuditFieldLevelRetention' as const,
+  method: 'GET' as const,
+  path: '/api/audit/field-level/retention' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Configures the retention rule for one sensitive data category.
+ */
+export interface PutApiAuditFieldLevelRetentionInput {
+  body?: Types.ComplianceAuditConfigureSensitiveDataRetentionInput;
+}
+export type PutApiAuditFieldLevelRetentionOutput = Types.ComplianceAuditSensitiveDataRetentionPolicyOutput;
+export const putApiAuditFieldLevelRetentionEndpoint = {
+  operationId: 'putApiAuditFieldLevelRetention' as const,
+  method: 'PUT' as const,
+  path: '/api/audit/field-level/retention' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Enforces the sensitive-data retention policies (purge or mask expired records); dry-run reports without changing data.
+ */
+export interface PostApiAuditFieldLevelRetentionEnforceInput {
+  query?: {
+    dryRun?: boolean;
+  };
+}
+export type PostApiAuditFieldLevelRetentionEnforceOutput = Types.ComplianceAuditSensitiveDataRetentionEnforcementResult;
+export const postApiAuditFieldLevelRetentionEnforceEndpoint = {
+  operationId: 'postApiAuditFieldLevelRetentionEnforce' as const,
+  method: 'POST' as const,
+  path: '/api/audit/field-level/retention/enforce' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
   requiresAuth: true,
 } as const;
 
@@ -1489,6 +1892,22 @@ export const getApiCertificatesEvmProofEndpoint = {
   method: 'GET' as const,
   path: '/api/certificates/{id}/evm/proof' as const,
   tags: ['ApiSecurityCertificates'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Renew a certificate by extending its validity (certificate lifecycle renewal, issue #180)
+ */
+export interface PostApiCertificatesRenewInput {
+  id: string;
+  body?: Types.LearningCertificatesRenewCertificateInput;
+}
+export type PostApiCertificatesRenewOutput = Types.LearningCertificatesCertificateDto;
+export const postApiCertificatesRenewEndpoint = {
+  operationId: 'postApiCertificatesRenew' as const,
+  method: 'POST' as const,
+  path: '/api/certificates/{id}/renew' as const,
+  tags: ['LearningCertificates'] as const,
   requiresAuth: true,
 } as const;
 
@@ -7408,11 +7827,84 @@ export const postAuthorizationTenantsGrantEndpoint = {
 } as const;
 
 /**
+ * Generates the combined expiration report for the request tenant (issue #331
+ * "expiration analytics and reporting"): dashboard, daily funnel trends, and
+ * operational attention flags across an inclusive period.
+ */
+export interface GetAuthorizationTenantsPermissionsExpirationReportInput {
+  query?: {
+    periodStart?: string;
+    periodEnd?: string;
+  };
+}
+export type GetAuthorizationTenantsPermissionsExpirationReportOutput = Types.IdentityAuthorizationPermissionExpirationReport;
+export const getAuthorizationTenantsPermissionsExpirationReportEndpoint = {
+  operationId: 'getAuthorizationTenantsPermissionsExpirationReport' as const,
+  method: 'GET' as const,
+  path: '/api/v1/authorization/tenants/permissions:expiration-report' as const,
+  tags: ['AccessControlTenantPermissions'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Describes the effective advanced expiration rule for a set of permissions
+ * (issue #331): the composed constraint (global baseline + every matching
+ * per-permission key, strictest wins) and the matched configuration keys.
+ */
+export interface GetAuthorizationTenantsPermissionsExpirationRulesInput {
+  query?: {
+    permissions?: string;
+  };
+}
+export type GetAuthorizationTenantsPermissionsExpirationRulesOutput = Types.IdentityAuthorizationGetEffectiveExpirationRuleOutput;
+export const getAuthorizationTenantsPermissionsExpirationRulesEndpoint = {
+  operationId: 'getAuthorizationTenantsPermissionsExpirationRules' as const,
+  method: 'GET' as const,
+  path: '/api/v1/authorization/tenants/permissions:expiration-rules' as const,
+  tags: ['AccessControlTenantPermissions'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets the expiration dashboard for the request tenant (issue #331 "expiration
+ * analytics and reporting"): the grant population bucketed by time-to-expiry plus
+ * the per-permission breakdown of grants expiring within the analytics window.
+ */
+export type GetAuthorizationTenantsPermissionsExpirationSummaryInput = void;
+export type GetAuthorizationTenantsPermissionsExpirationSummaryOutput = Types.IdentityAuthorizationPermissionExpirationSummary;
+export const getAuthorizationTenantsPermissionsExpirationSummaryEndpoint = {
+  operationId: 'getAuthorizationTenantsPermissionsExpirationSummary' as const,
+  method: 'GET' as const,
+  path: '/api/v1/authorization/tenants/permissions:expiration-summary' as const,
+  tags: ['AccessControlTenantPermissions'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets the daily expiration funnel for the request tenant across an inclusive period
+ * (issue #331): automatic expirations processed and manual expiration mutations
+ * applied per day, reconstructed from the permission audit log.
+ */
+export interface GetAuthorizationTenantsPermissionsExpirationTrendsInput {
+  query?: {
+    fromDate?: string;
+    toDate?: string;
+  };
+}
+export type GetAuthorizationTenantsPermissionsExpirationTrendsOutput = Types.IdentityAuthorizationPermissionExpirationTrendPoint[];
+export const getAuthorizationTenantsPermissionsExpirationTrendsEndpoint = {
+  operationId: 'getAuthorizationTenantsPermissionsExpirationTrends' as const,
+  method: 'GET' as const,
+  path: '/api/v1/authorization/tenants/permissions:expiration-trends' as const,
+  tags: ['AccessControlTenantPermissions'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Gets permission grants expiring within a window (administrative visibility
  * for upcoming expirations).
  */
 export interface GetAuthorizationTenantsPermissionsExpiringInput {
-  tenantId: string;
   query?: {
     expiresBefore?: string;
   };
@@ -7686,6 +8178,23 @@ export const getBillingEventsOutboxForGetBillingEventsOutboxByEventIdEndpoint = 
 } as const;
 
 /**
+ * Rebuild one subscription's state from the durable billing event log
+ *
+ * Deterministically replays the durable billing events of one subscription (invoice paid, renewal, cancellation, subscription-change saga outcomes) into a projected state and verifies it against the live subscription snapshot, reporting any drift. Unknown future event schemas are listed as skipped instead of failing the replay.
+ */
+export interface GetBillingEventsSubscriptionsProjectionInput {
+  subscriptionId: string;
+}
+export type GetBillingEventsSubscriptionsProjectionOutput = Types.CommerceBillingSubscriptionEventProjectionDto;
+export const getBillingEventsSubscriptionsProjectionEndpoint = {
+  operationId: 'getBillingEventsSubscriptionsProjection' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/events/subscriptions/{subscriptionId}/projection' as const,
+  tags: ['CommerceBillingEvents'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * List the configured external billing providers with health and enabled state
  *
  * Returns one entry per supported external billing provider (stripe, paypal, applepay,
@@ -7839,7 +8348,7 @@ export const getBillingPaymentMethodsEndpoint = {
 /**
  * Register a payment method from a tokenized gateway result.
  *
- * Registers a payment method from a Stripe payment method token (pm_...) produced by Stripe.js/Elements or a confirmed SetupIntent. Raw card data is never accepted; only display metadata returned by the gateway is stored.
+ * Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider, and an optional MethodType hint (card, bank_account, paypal, apple_pay, google_pay, wallet) states the family the token vaults. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.
  */
 export interface PostBillingPaymentMethodsInput {
   body?: Types.CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody;
@@ -7889,12 +8398,13 @@ export const putBillingPaymentMethodsEndpoint = {
 } as const;
 
 /**
- * Remove a payment method (soft delete).
+ * Remove a payment method (soft delete, explicit confirmation required).
  *
- * Soft-deletes a payment method. Fails closed with 409 Conflict while any active subscription still bills with it; set a new default first to re-point subscriptions.
+ * Soft-deletes a payment method after explicit confirmation (body confirm=true). Without confirmation the request fails with 400. Fails closed with 409 Conflict while any active subscription still bills with it; set a new default first to re-point subscriptions.
  */
 export interface DeleteBillingPaymentMethodsInput {
   paymentMethodId: string;
+  body?: Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody;
 }
 export type DeleteBillingPaymentMethodsOutput = void;
 export const deleteBillingPaymentMethodsEndpoint = {
@@ -7918,6 +8428,59 @@ export const postBillingPaymentMethodsSetDefaultEndpoint = {
   operationId: 'postBillingPaymentMethodsSetDefault' as const,
   method: 'POST' as const,
   path: '/api/v1/billing/payment-methods/{paymentMethodId}:set-default' as const,
+  tags: ['CommercePaymentsBillingPaymentMethods'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Current micro-deposit verification state of a bank-account payment method.
+ *
+ * Returns the micro-deposit verification state of a saved bank-account payment method (none, pending, verified, expired or locked) with the challenge deadline and remaining attempts. Owner or system administrator only.
+ */
+export interface GetBillingPaymentMethodsBankVerificationInput {
+  paymentMethodId: string;
+}
+export type GetBillingPaymentMethodsBankVerificationOutput = Types.CommercePaymentsBankAccountVerificationStatusDto;
+export const getBillingPaymentMethodsBankVerificationEndpoint = {
+  operationId: 'getBillingPaymentMethodsBankVerification' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/payment-methods/{paymentMethodId}/bank-verification' as const,
+  tags: ['CommercePaymentsBillingPaymentMethods'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Initiate micro-deposit verification: two random deposits ($0.01-$0.99) are
+ * generated; only salted hashes are stored.
+ *
+ * Generates two random micro-deposits ($0.01-$0.99) for a saved bank-account payment method and returns them once (only salted hashes are stored). The owner has 3 business days and at most 3 failed echo attempts. Idempotent while a challenge is open. Subject to the configurable MFA step-up policy.
+ */
+export interface PostBillingPaymentMethodsBankVerificationInitiateInput {
+  paymentMethodId: string;
+}
+export type PostBillingPaymentMethodsBankVerificationInitiateOutput = Types.CommercePaymentsBankAccountVerificationInitiationDto;
+export const postBillingPaymentMethodsBankVerificationInitiateEndpoint = {
+  operationId: 'postBillingPaymentMethodsBankVerificationInitiate' as const,
+  method: 'POST' as const,
+  path: '/api/v1/billing/payment-methods/{paymentMethodId}/bank-verification/initiate' as const,
+  tags: ['CommercePaymentsBillingPaymentMethods'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Echo the two observed micro-deposit amounts to verify the bank account.
+ *
+ * Echoes the two micro-deposit amounts observed on the bank statement. Both must match within the 3-business-day deadline and the 3-attempt cap; success marks the bank account verified and therefore chargeable. Subject to the configurable MFA step-up policy.
+ */
+export interface PostBillingPaymentMethodsBankVerificationVerifyInput {
+  paymentMethodId: string;
+  body?: Types.CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody;
+}
+export type PostBillingPaymentMethodsBankVerificationVerifyOutput = Types.CommercePaymentsBankAccountVerificationStatusDto;
+export const postBillingPaymentMethodsBankVerificationVerifyEndpoint = {
+  operationId: 'postBillingPaymentMethodsBankVerificationVerify' as const,
+  method: 'POST' as const,
+  path: '/api/v1/billing/payment-methods/{paymentMethodId}/bank-verification/verify' as const,
   tags: ['CommercePaymentsBillingPaymentMethods'] as const,
   requiresAuth: true,
 } as const;
@@ -8420,6 +8983,96 @@ export const getBillingRevenueAuditingComplianceReportEndpoint = {
 } as const;
 
 /**
+ * Currency conversion costs analysis (issue #412 spec G): for every non-base
+ * transacted currency, the base value of its net volume at the market rate versus at
+ * the active operator override rate, quantifying what pinned rates cost per market.
+ *
+ * Per-currency comparison of the net volume converted at the market rate versus the operator override rate, with the base-currency cost of each pinned rate.
+ */
+export interface GetBillingRevenueAuditingConversionCostsInput {
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    tenantId?: string;
+  };
+}
+export type GetBillingRevenueAuditingConversionCostsOutput = Types.CommercePaymentsConversionCostReport;
+export const getBillingRevenueAuditingConversionCostsEndpoint = {
+  operationId: 'getBillingRevenueAuditingConversionCosts' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/revenue/auditing/conversion-costs' as const,
+  tags: ['CommercePaymentsBillingRevenueAuditing'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Base-currency revenue report and reconciliation (issue #412 specs F/G): per-currency
+ * totals of the period converted into the tenant base currency at the period-end rate,
+ * with reconciled grand totals in base currency. Currencies without a period-end
+ * quotation are listed but excluded from base totals (fail closed, never merged).
+ *
+ * Per-currency revenue totals converted into the tenant base currency at the period-end rate with reconciled grand totals — the accounting reconciliation of multi-currency revenue to base.
+ */
+export interface GetBillingRevenueAuditingCurrenciesBaseInput {
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    tenantId?: string;
+  };
+}
+export type GetBillingRevenueAuditingCurrenciesBaseOutput = Types.CommercePaymentsBaseCurrencyRevenueReport;
+export const getBillingRevenueAuditingCurrenciesBaseEndpoint = {
+  operationId: 'getBillingRevenueAuditingCurrenciesBase' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/revenue/auditing/currencies/base' as const,
+  tags: ['CommercePaymentsBillingRevenueAuditing'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * CSV (RFC 4180) export of the base-currency revenue report for external accounting.
+ *
+ * Serializes the base-currency revenue report (per-currency totals, applied rates and base equivalents) as RFC 4180 CSV.
+ */
+export interface GetBillingRevenueAuditingCurrenciesBaseExportInput {
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    tenantId?: string;
+  };
+}
+export type GetBillingRevenueAuditingCurrenciesBaseExportOutput = void;
+export const getBillingRevenueAuditingCurrenciesBaseExportEndpoint = {
+  operationId: 'getBillingRevenueAuditingCurrenciesBaseExport' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/revenue/auditing/currencies/base/export' as const,
+  tags: ['CommercePaymentsBillingRevenueAuditing'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Most-transacted currencies over an inclusive period, ranked by transaction count.
+ *
+ * Returns the currencies of the inclusive period ranked by revenue-event transaction count (ties broken by net volume then code), with per-currency credit, debit and net totals. Amounts are never consolidated across currencies.
+ */
+export interface GetBillingRevenueAuditingCurrenciesPopularInput {
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    tenantId?: string;
+    limit?: number;
+  };
+}
+export type GetBillingRevenueAuditingCurrenciesPopularOutput = Types.CommercePaymentsCurrencyPopularityReport;
+export const getBillingRevenueAuditingCurrenciesPopularEndpoint = {
+  operationId: 'getBillingRevenueAuditingCurrenciesPopular' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/revenue/auditing/currencies/popular' as const,
+  tags: ['CommercePaymentsBillingRevenueAuditing'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Export the audit report for a period as CSV (RFC 4180) or JSON for external
  * accounting and ERP systems.
  *
@@ -8587,6 +9240,41 @@ export const postBillingSubscriptionsRenewEndpoint = {
 } as const;
 
 /**
+ * Run the orchestrated plan change for one subscription
+ *
+ * Orchestrates the plan change as a saga: proration, invoice, confirmed gateway payment and activation. EffectiveDateUtc is required as an explicit UTC timestamp and must be reused unchanged on retries. Local state and required billing events commit together. Activation requires provider-verified settlement amount and currency; providers without that evidence require reconciliation. Confirmed business failures trigger compensation; uncertain persistence or provider outcomes require reconciliation and retry with the same effective date and payment parameters.
+ */
+export interface PostBillingSubscriptionsPlanChangeOrchestrateInput {
+  subscriptionId: string;
+  body?: Types.CommerceBillingOrchestrateSubscriptionPlanChangeInput;
+}
+export type PostBillingSubscriptionsPlanChangeOrchestrateOutput = Types.CommerceBillingSubscriptionChangeSagaResult;
+export const postBillingSubscriptionsPlanChangeOrchestrateEndpoint = {
+  operationId: 'postBillingSubscriptionsPlanChangeOrchestrate' as const,
+  method: 'POST' as const,
+  path: '/api/v1/billing/subscriptions/{subscriptionId}/plan-change:orchestrate' as const,
+  tags: ['CommerceBillingSubscriptionChanges'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Read the latest saga state of one subscription
+ *
+ * Returns the most recent durable saga of the subscription — status, current step, proration amounts, payment reference, failure reason, compensations applied — plus the journaled step trail in execution order. 404 when the subscription never went through an orchestrated plan change.
+ */
+export interface GetBillingSubscriptionsPlanChangeSagaInput {
+  subscriptionId: string;
+}
+export type GetBillingSubscriptionsPlanChangeSagaOutput = Types.CommerceBillingSubscriptionChangeSagaDto;
+export const getBillingSubscriptionsPlanChangeSagaEndpoint = {
+  operationId: 'getBillingSubscriptionsPlanChangeSaga' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/subscriptions/{subscriptionId}/plan-change:saga' as const,
+  tags: ['CommerceBillingSubscriptionChanges'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Handle Apple Pay webhook events
  *
  * Processes Apple Pay webhook notifications for payment processing and transaction updates.
@@ -8600,6 +9288,25 @@ export const postBillingWebhooksApplePayEndpoint = {
   operationId: 'postBillingWebhooksApplePay' as const,
   method: 'POST' as const,
   path: '/api/v1/billing/webhooks/apple-pay' as const,
+  tags: ['CommerceBillingWebhooks'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Handle Braintree webhook events with offline signature verification
+ *
+ * Braintree delivers `application/x-www-form-urlencoded` bodies carrying the
+ * `bt_signature`/`bt_payload` pair. The signature is verified offline against
+ * the gateway's configured public key (issue #408) before any inbox work; failed
+ * verification is rejected fail-closed with a security event. The stored payload is the
+ * privacy-minimized routing projection of the notification.
+ */
+export type PostBillingWebhooksBraintreeInput = void;
+export type PostBillingWebhooksBraintreeOutput = Record<string, unknown>;
+export const postBillingWebhooksBraintreeEndpoint = {
+  operationId: 'postBillingWebhooksBraintree' as const,
+  method: 'POST' as const,
+  path: '/api/v1/billing/webhooks/braintree' as const,
   tags: ['CommerceBillingWebhooks'] as const,
   requiresAuth: false,
 } as const;
@@ -8689,6 +9396,28 @@ export const getBillingWebhooksSecurityEndpoint = {
   operationId: 'getBillingWebhooksSecurity' as const,
   method: 'GET' as const,
   path: '/api/v1/billing/webhooks/security' as const,
+  tags: ['CommerceBillingWebhooks'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get the billing webhook processing statistics (issue #408)
+ *
+ * Admin-facing webhook activity dashboard (issue #408): events received, processed and
+ * failed in the window, the processing success rate, the average received-to-processed
+ * latency, the dead-lettered and unverified counts, and a per-provider breakdown.
+ */
+export interface GetBillingWebhooksStatsInput {
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+  };
+}
+export type GetBillingWebhooksStatsOutput = Types.CommerceBillingBillingWebhookStatsDto;
+export const getBillingWebhooksStatsEndpoint = {
+  operationId: 'getBillingWebhooksStats' as const,
+  method: 'GET' as const,
+  path: '/api/v1/billing/webhooks/stats' as const,
   tags: ['CommerceBillingWebhooks'] as const,
   requiresAuth: true,
 } as const;
@@ -8831,6 +9560,44 @@ export const postCurrenciesSetBaseEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/currencies/{currencyCode}/set-base' as const,
   tags: ['CommercePaymentsCurrencies'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Suggests a display currency for the caller from the country code delivered by the
+ * network edge (issue #412 spec E). GDPR data-minimized: a country code is consumed,
+ * never an IP; nothing is stored and no geolocation database is consulted. Anonymous
+ * callers get the catalog mapping (enablement is checked client-side or after sign-in).
+ *
+ * Maps the edge-proxy country code to an ISO 4217 currency and respects tenant enablement; no IP or location is stored (see the privacy notice in the response).
+ */
+export type GetCurrenciesSuggestionInput = void;
+export type GetCurrenciesSuggestionOutput = Types.CommercePaymentsCurrencySuggestionDto;
+export const getCurrenciesSuggestionEndpoint = {
+  operationId: 'getCurrenciesSuggestion' as const,
+  method: 'GET' as const,
+  path: '/api/v1/currencies/suggestion' as const,
+  tags: ['CommercePaymentsCurrencies'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Converts a batch of amounts (1..50 entries) into the target currency. Entries keep
+ * their own source currency; same-currency entries are identity conversions. Per-item
+ * failures (unknown code, disabled currency, missing quotation) are reported on the
+ * item, never aborting the batch.
+ *
+ * Converts one or many amounts into the target currency through the platform FX seam (operator overrides and synced market grids, TTL-cached). Supply asOfUtc to convert with the persisted historical snapshot effective at that date. Both currencies must be enabled for the tenant.
+ */
+export interface PostCurrencyConvertInput {
+  body?: Types.CommercePaymentsConvertCurrencyInput;
+}
+export type PostCurrencyConvertOutput = Types.CommercePaymentsCurrencyConversionResult;
+export const postCurrencyConvertEndpoint = {
+  operationId: 'postCurrencyConvert' as const,
+  method: 'POST' as const,
+  path: '/api/v1/currency/convert' as const,
+  tags: ['CommercePaymentsCurrency'] as const,
   requiresAuth: true,
 } as const;
 
@@ -9556,6 +10323,122 @@ export const deleteEmailDeliverySuppressionsEndpoint = {
 } as const;
 
 /**
+ * List the tenant's fraud blacklist entries, newest first.
+ *
+ * Lists the caller's tenant fraud blacklist and whitelist-override entries, newest first, with optional entry-type and expiry filters. Requires the payments:admin permission.
+ */
+export interface GetFraudBlacklistInput {
+  query?: {
+    entryType?: Types.CommercePaymentsFraudBlacklistEntryType;
+    includeExpired?: boolean;
+    page?: number;
+    pageSize?: number;
+  };
+}
+export type GetFraudBlacklistOutput = Types.CommercePaymentsFraudBlacklistPage;
+export const getFraudBlacklistEndpoint = {
+  operationId: 'getFraudBlacklist' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/blacklist' as const,
+  tags: ['CommercePaymentsFraudBlacklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Add a blacklist entry or a manual whitelist override for the caller's tenant.
+ *
+ * Adds a fraud blacklist entry (or a manual whitelist override) for the caller's tenant. Values support * wildcard patterns (e.g. *.malicious.com, 192.168.*) and optional expiry dates. Idempotent per (type, value, kind). Requires the payments:admin permission.
+ */
+export interface PostFraudBlacklistInput {
+  body?: Types.CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInput;
+}
+export type PostFraudBlacklistOutput = Types.CommercePaymentsFraudBlacklistEntryResult;
+export const postFraudBlacklistEndpoint = {
+  operationId: 'postFraudBlacklist' as const,
+  method: 'POST' as const,
+  path: '/api/v1/fraud/blacklist' as const,
+  tags: ['CommercePaymentsFraudBlacklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Remove a blacklist entry owned by the caller's tenant.
+ *
+ * Removes (soft-deletes) a fraud blacklist entry owned by the caller's tenant. Requires the payments:admin permission.
+ */
+export interface DeleteFraudBlacklistInput {
+  entryId: string;
+}
+export type DeleteFraudBlacklistOutput = Types.CommercePaymentsRemoveFraudBlacklistEntryResult;
+export const deleteFraudBlacklistEndpoint = {
+  operationId: 'deleteFraudBlacklist' as const,
+  method: 'DELETE' as const,
+  path: '/api/v1/fraud/blacklist/{entryId}' as const,
+  tags: ['CommercePaymentsFraudBlacklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Check whether a concrete value matches the tenant blacklist (same evaluation the
+ * payment fraud gate performs).
+ *
+ * Evaluates a concrete value (IP address, email domain, card BIN, device fingerprint, payment-method token, card fingerprint or provider customer id) against the caller's tenant blacklist, honoring wildcard patterns, expiry dates and manual whitelist overrides. Requires the payments:admin permission.
+ */
+export interface GetFraudBlacklistCheckInput {
+  query?: {
+    entryType?: Types.CommercePaymentsFraudBlacklistEntryType;
+    value?: string;
+  };
+}
+export type GetFraudBlacklistCheckOutput = Types.CommercePaymentsFraudBlacklistCheckResult;
+export const getFraudBlacklistCheckEndpoint = {
+  operationId: 'getFraudBlacklistCheck' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/blacklist/check' as const,
+  tags: ['CommercePaymentsFraudBlacklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Export the tenant's fraud blacklist entries as CSV (issue #409: import/export blacklists).
+ *
+ * Exports the caller's tenant fraud blacklist and whitelist-override entries as CSV (columns: entry_type,value,kind,reason,expires_at,created_at). Wildcard patterns are exported verbatim so a re-import reproduces them. Requires the payments:admin permission.
+ */
+export interface GetFraudBlacklistExportInput {
+  query?: {
+    entryType?: Types.CommercePaymentsFraudBlacklistEntryType;
+    includeExpired?: boolean;
+  };
+}
+export type GetFraudBlacklistExportOutput = void;
+export const getFraudBlacklistExportEndpoint = {
+  operationId: 'getFraudBlacklistExport' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/blacklist/export' as const,
+  tags: ['CommercePaymentsFraudBlacklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Import fraud blacklist entries from a CSV request body (issue #409: import/export
+ * blacklists). Accepts the file shape produced by `GET /fraud/blacklist/export`
+ * (header row detected and skipped); every row is added through the same idempotent
+ * command as the add endpoint, so re-importing is safe. Rows that fail validation
+ * are reported individually and never abort the rest of the batch.
+ *
+ * Imports fraud blacklist entries from a CSV body (columns: entry_type,value,kind,reason,expires_at; header row optional, * wildcards supported). At most 1000 rows and 1 MB per request; idempotent per (type, value, kind). Requires the payments:admin permission.
+ */
+export type PostFraudBlacklistImportInput = void;
+export type PostFraudBlacklistImportOutput = Types.CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResult;
+export const postFraudBlacklistImportEndpoint = {
+  operationId: 'postFraudBlacklistImport' as const,
+  method: 'POST' as const,
+  path: '/api/v1/fraud/blacklist/import' as const,
+  tags: ['CommercePaymentsFraudBlacklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * List the pending manual fraud reviews, oldest first.
  *
  * Lists payments held by the fraud gate with a pending manual review, oldest first. Supports filtering by minimum score, risk band, charged amount and creation date range. Requires the payments:admin permission.
@@ -9652,6 +10535,52 @@ export const postFraudReviewsBulkDenyEndpoint = {
 } as const;
 
 /**
+ * Get the fraud statistics report for a date window (defaults to the last 30 days).
+ *
+ * Reports fraud-program statistics over a date window: assessed, flagged and blocked payment counts with rates, the chargeback rate among succeeded payments, the false-positive proxy (held reviews later approved), the manual-review backlog with average time-to-review, the top fraud signals by frequency, and breakdowns by billing country, gateway provider and subscription plan with a daily/weekly/monthly trend series. Requires the payments:admin permission.
+ */
+export interface GetFraudStatisticsInput {
+  query?: {
+    tenantId?: string;
+    fromUtc?: string;
+    toUtc?: string;
+    trendGranularity?: Types.CommercePaymentsFraudTrendGranularity;
+  };
+}
+export type GetFraudStatisticsOutput = Types.CommercePaymentsFraudStatisticsReport;
+export const getFraudStatisticsEndpoint = {
+  operationId: 'getFraudStatistics' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/statistics' as const,
+  tags: ['CommercePaymentsFraudStatistics'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Export the fraud statistics report for a date window as CSV (issue #409: export
+ * fraud reports, including the trend/granularity views). Same authorization, window
+ * and granularity semantics as the JSON report.
+ *
+ * Exports the fraud statistics report over a date window as CSV: one summary block plus per-country, per-provider, per-plan and trend sections at the requested daily/weekly/monthly granularity. Requires the payments:admin permission.
+ */
+export interface GetFraudStatisticsExportInput {
+  query?: {
+    tenantId?: string;
+    fromUtc?: string;
+    toUtc?: string;
+    trendGranularity?: Types.CommercePaymentsFraudTrendGranularity;
+  };
+}
+export type GetFraudStatisticsExportOutput = void;
+export const getFraudStatisticsExportEndpoint = {
+  operationId: 'getFraudStatisticsExport' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/statistics/export' as const,
+  tags: ['CommercePaymentsFraudStatistics'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Lists persisted FX quotations (market snapshots and overrides) with optional pair and
  * effective-date-window filters for historical lookup.
  *
@@ -9676,7 +10605,7 @@ export const getFxRatesEndpoint = {
 } as const;
 
 /**
- * Sets or replaces an operator manual FX rate override for an exact direction
+ *     Sets or replaces an operator manual FX rate override for an exact direction
  * (audit-logged with reason; effective immediately).
  *
  * Persists an audited manual override for one exact currency pair direction; overrides win over synced market rates until replaced or expired.
@@ -9689,6 +10618,45 @@ export const postFxRatesOverridesEndpoint = {
   operationId: 'postFxRatesOverrides' as const,
   method: 'POST' as const,
   path: '/api/v1/fx-rates/overrides' as const,
+  tags: ['CommercePaymentsFxRates'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ *     Provisions the API key of an FX rate provider into the encrypted-at-rest store
+ * (issue #412 spec H): the plaintext key is encrypted with ASP.NET DataProtection
+ * (AES-256 under the application key ring) before it touches the database. Only the
+ * key fingerprint is ever returned or audited.
+ *
+ * Encrypts the provider API key at rest (DataProtection AES-256) and makes it the active credential; the plaintext is never stored, returned or logged.
+ */
+export interface PutFxRatesProviderKeysInput {
+  provider: string;
+  body?: Types.CommercePaymentsProvisionFxProviderApiKeyInput;
+}
+export type PutFxRatesProviderKeysOutput = Types.CommercePaymentsGatewayCredentialProvisionResult;
+export const putFxRatesProviderKeysEndpoint = {
+  operationId: 'putFxRatesProviderKeys' as const,
+  method: 'PUT' as const,
+  path: '/api/v1/fx-rates/provider-keys/{provider}' as const,
+  tags: ['CommercePaymentsFxRates'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Deactivates the active encrypted FX provider API key. The provider falls back to
+ * configuration and fails closed when no key is available from either source.
+ *
+ * Deactivates the active encrypted credential; the encrypted row stays for audit and the provider falls back to configuration.
+ */
+export interface DeleteFxRatesProviderKeysInput {
+  provider: string;
+}
+export type DeleteFxRatesProviderKeysOutput = Record<string, unknown>;
+export const deleteFxRatesProviderKeysEndpoint = {
+  operationId: 'deleteFxRatesProviderKeys' as const,
+  method: 'DELETE' as const,
+  path: '/api/v1/fx-rates/provider-keys/{provider}' as const,
   tags: ['CommercePaymentsFxRates'] as const,
   requiresAuth: true,
 } as const;
@@ -9725,6 +10693,23 @@ export const getFxRatesSyncStatusEndpoint = {
   operationId: 'getFxRatesSyncStatus' as const,
   method: 'GET' as const,
   path: '/api/v1/fx-rates/sync-status' as const,
+  tags: ['CommercePaymentsFxRates'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Exchange rate variance report (issue #412 spec G): every active operator override
+ * against the newest synced market quotation of the same pair (actual vs expected),
+ * with variances beyond the anomaly threshold flagged.
+ *
+ * Compares every active operator rate override (expected) against the newest synced market quotation (actual) of the same pair; variances beyond the configured threshold are flagged.
+ */
+export type GetFxRatesVarianceInput = void;
+export type GetFxRatesVarianceOutput = Types.CommercePaymentsFxRateVarianceReport;
+export const getFxRatesVarianceEndpoint = {
+  operationId: 'getFxRatesVariance' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fx-rates/variance' as const,
   tags: ['CommercePaymentsFxRates'] as const,
   requiresAuth: true,
 } as const;
@@ -10137,6 +11122,94 @@ export const getPaymentsRetryAttemptsEndpoint = {
   operationId: 'getPaymentsRetryAttempts' as const,
   method: 'GET' as const,
   path: '/api/v1/payments/{paymentId}:retry-attempts' as const,
+  tags: ['CommercePayments'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Provisions one payment-gateway credential into the encrypted-at-rest store (issue
+ * #413): the plaintext value is encrypted with ASP.NET DataProtection (AES-256 under
+ * the application key ring) before it touches the database, and any previously active
+ * credential of the same slot is deactivated atomically. Requires the
+ * `payments:admin` permission. The response carries only a SHA-256 fingerprint —
+ * the plaintext is never persisted, returned or logged.
+ *
+ * Stores a gateway API credential encrypted at rest (ASP.NET DataProtection, AES-256 under the application key ring) and deactivates the previously active credential of the same slot. The response contains identity metadata and a SHA-256 fingerprint of the plaintext for equality checks — the plaintext itself is never persisted, returned or logged. Requires the payments:admin permission.
+ */
+export interface PutPaymentsGatewaysCredentialsInput {
+  providerId: string;
+  secretName: string;
+  body?: Types.CommercePaymentsProvisionGatewayCredentialInput;
+}
+export type PutPaymentsGatewaysCredentialsOutput = Types.CommercePaymentsGatewayCredentialProvisionResult;
+export const putPaymentsGatewaysCredentialsEndpoint = {
+  operationId: 'putPaymentsGatewaysCredentials' as const,
+  method: 'PUT' as const,
+  path: '/api/v1/payments/gateways/{providerId}/credentials/{secretName}' as const,
+  tags: ['CommercePayments'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Deactivates the active credential of one (provider, secret name) slot (issue #413).
+ * The encrypted row stays for audit; the slot resolves to "no credential" afterwards
+ * so the gateway falls back to its configuration credential or fails closed. Requires
+ * the `payments:admin` permission.
+ *
+ * Deactivates the active encrypted credential of the (provider, secret name) slot. The encrypted row is retained for audit; reads of the slot resolve to no credential, so the gateway falls back to its configuration credential or fails closed. Idempotent: deactivating a slot without an active credential reports Deactivated=false. Requires the payments:admin permission.
+ */
+export interface DeletePaymentsGatewaysCredentialsInput {
+  providerId: string;
+  secretName: string;
+}
+export type DeletePaymentsGatewaysCredentialsOutput = Types.CommercePaymentsGatewayCredentialDeactivationResult;
+export const deletePaymentsGatewaysCredentialsEndpoint = {
+  operationId: 'deletePaymentsGatewaysCredentials' as const,
+  method: 'DELETE' as const,
+  path: '/api/v1/payments/gateways/{providerId}/credentials/{secretName}' as const,
+  tags: ['CommercePayments'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Validates one gateway's API credentials with a cheap provider round trip (issue
+ * #413): Stripe `GET /v1/balance`, the PayPal OAuth2 token request, or the
+ * respective probe of the other registered adapters. The effective credential is
+ * resolved from the encrypted credential store first and the configuration fallback
+ * second. Requires the `payments:admin` permission. Fail-closed semantics: an
+ * unknown provider is a 404, a disabled adapter or missing credentials is an explicit
+ * failed result — never a simulated pass outside simulation mode.
+ *
+ * Performs the cheapest authenticated call of the gateway (for example Stripe GET /v1/balance or the PayPal OAuth2 token request) to validate that the effective credentials — encrypted-store first, configuration fallback second — actually work. Requires the payments:admin permission. An unknown provider fails with 404; a disabled adapter or a missing credential returns an explicit failed result.
+ */
+export interface PostPaymentsGatewaysTestConnectionInput {
+  providerId: string;
+}
+export type PostPaymentsGatewaysTestConnectionOutput = Types.CommercePaymentsGatewayConnectionTestResult;
+export const postPaymentsGatewaysTestConnectionEndpoint = {
+  operationId: 'postPaymentsGatewaysTestConnection' as const,
+  method: 'POST' as const,
+  path: '/api/v1/payments/gateways/{providerId}/test-connection' as const,
+  tags: ['CommercePayments'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Expanded per-gateway analytics (issue #413 analytics remainders): error rate by
+ * type (failed payments grouped by gateway error code), cost analysis (succeeded
+ * volume priced through the configured per-gateway fee schedule) and geographic
+ * performance (attempts and success rate per billing country), each over the rolling
+ * 24h/7d/30d windows. Requires the `payments:admin` permission; non-admin actors
+ * are scoped to their own tenant.
+ *
+ * Returns the expanded per-gateway analytics: the error-rate-by-type breakdown (failed payments grouped by gateway error code), the per-gateway cost analysis (succeeded volume priced through the configured fee schedule, 30d window) and the geographic performance breakdown (attempts and success rate per billing country), each over the rolling 24h/7d/30d windows. Requires the payments:admin permission; non-admin actors are scoped to their own tenant.
+ */
+export type GetPaymentsGatewaysAnalyticsInput = void;
+export type GetPaymentsGatewaysAnalyticsOutput = Types.CommercePaymentsGatewayAnalyticsReport;
+export const getPaymentsGatewaysAnalyticsEndpoint = {
+  operationId: 'getPaymentsGatewaysAnalytics' as const,
+  method: 'GET' as const,
+  path: '/api/v1/payments/gateways/analytics' as const,
   tags: ['CommercePayments'] as const,
   requiresAuth: true,
 } as const;
@@ -10743,6 +11816,143 @@ export const getPostsTrendingEndpoint = {
   path: '/api/v1/posts/trending' as const,
   tags: ['SocialPosts'] as const,
   requiresAuth: false,
+} as const;
+
+/**
+ * Effective localized price per (plan, enabled currency), annotated with the live
+ * FX-calculated reference price so operators see override vs auto side by side.
+ *
+ * Effective localization per plan and enabled currency with the current FX-calculated reference price (override vs auto-calculated view).
+ */
+export interface GetPriceLocalizationInput {
+  query?: {
+    planId?: string;
+  };
+}
+export type GetPriceLocalizationOutput = Types.CommercePaymentsPlanLocalizedPriceDto[];
+export const getPriceLocalizationEndpoint = {
+  operationId: 'getPriceLocalization' as const,
+  method: 'GET' as const,
+  path: '/api/v1/price-localization' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Sets a manual localized price (psychological pricing) for a plan in an enabled
+ * currency. Optional effective date schedules a future change; optional expiry ends a
+ * temporary override. Audit-logged.
+ *
+ * Persists an audited manual price override for the plan/currency pair; recalculation runs never touch manual rows.
+ */
+export interface PostPriceLocalizationPlansCurrenciesInput {
+  planId: string;
+  currencyCode: string;
+  body?: Types.CommercePaymentsSetLocalizedPriceInput;
+}
+export type PostPriceLocalizationPlansCurrenciesOutput = Record<string, unknown>;
+export const postPriceLocalizationPlansCurrenciesEndpoint = {
+  operationId: 'postPriceLocalizationPlansCurrencies' as const,
+  method: 'POST' as const,
+  path: '/api/v1/price-localization/plans/{planId}/currencies/{currencyCode}' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Clears the manual overrides of a (plan, currency) pair so pricing falls back to the
+ * auto-calculated/FX-converted price. Audit-logged.
+ *
+ * Removes the manual overrides of the plan/currency pair (including future-dated rows); auto-calculated rows are untouched.
+ */
+export interface DeletePriceLocalizationPlansCurrenciesInput {
+  planId: string;
+  currencyCode: string;
+  body?: Types.CommercePaymentsClearLocalizedPriceInput;
+}
+export type DeletePriceLocalizationPlansCurrenciesOutput = Record<string, unknown>;
+export const deletePriceLocalizationPlansCurrenciesEndpoint = {
+  operationId: 'deletePriceLocalizationPlansCurrencies' as const,
+  method: 'DELETE' as const,
+  path: '/api/v1/price-localization/plans/{planId}/currencies/{currencyCode}' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Runs a bulk recalculation of auto-calculated prices from the current FX quotations
+ * (manual overrides are preserved). Creates a progress-tracked, rollback-capable run.
+ *
+ * Bulk-recalculates auto-calculated localized prices from current FX rates; preserves manual overrides; tracks progress on a run row that can be rolled back.
+ */
+export interface PostPriceLocalizationRecalculateInput {
+  body?: Types.CommercePaymentsRecalculateLocalizedPricesInput;
+}
+export type PostPriceLocalizationRecalculateOutput = Types.CommercePaymentsPriceRecalculationOutcome;
+export const postPriceLocalizationRecalculateEndpoint = {
+  operationId: 'postPriceLocalizationRecalculate' as const,
+  method: 'POST' as const,
+  path: '/api/v1/price-localization/recalculate' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Previews a recalculation pass: proposed auto prices against currently effective
+ * values, with the quotation behind every proposal. Read-only.
+ *
+ * Computes what a recalculation pass would change (proposed auto prices, rates, deltas) without writing anything.
+ */
+export interface GetPriceLocalizationRecalculatePreviewInput {
+  query?: {
+    planId?: string;
+  };
+}
+export type GetPriceLocalizationRecalculatePreviewOutput = Types.CommercePaymentsLocalizedPricePreviewItem[];
+export const getPriceLocalizationRecalculatePreviewEndpoint = {
+  operationId: 'getPriceLocalizationRecalculatePreview' as const,
+  method: 'GET' as const,
+  path: '/api/v1/price-localization/recalculate/preview' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Lists recalculation runs with their progress counters (newest first).
+ *
+ * Recalculation runs with progress counters (total/completed items, updated prices, preserved overrides) and rollback state.
+ */
+export interface GetPriceLocalizationRecalculationsInput {
+  query?: {
+    limit?: number;
+  };
+}
+export type GetPriceLocalizationRecalculationsOutput = Types.CommercePaymentsPriceRecalculationRunDto[];
+export const getPriceLocalizationRecalculationsEndpoint = {
+  operationId: 'getPriceLocalizationRecalculations' as const,
+  method: 'GET' as const,
+  path: '/api/v1/price-localization/recalculations' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Rolls back a finished recalculation run, restoring every auto row it rewrote to its
+ * snapshotted before-value.
+ *
+ * Restores the before-values snapshotted by the run; manual overrides were never touched and stay unchanged.
+ */
+export interface PostPriceLocalizationRecalculationsRollbackInput {
+  runId: string;
+  body?: Types.CommercePaymentsRollbackRecalculationInput;
+}
+export type PostPriceLocalizationRecalculationsRollbackOutput = Record<string, unknown>;
+export const postPriceLocalizationRecalculationsRollbackEndpoint = {
+  operationId: 'postPriceLocalizationRecalculationsRollback' as const,
+  method: 'POST' as const,
+  path: '/api/v1/price-localization/recalculations/{runId}/rollback' as const,
+  tags: ['CommercePaymentsPriceLocalization'] as const,
+  requiresAuth: true,
 } as const;
 
 /**
@@ -16345,6 +17555,409 @@ export const getAuditCompliancePackagingTemplatesEndpoint = {
 } as const;
 
 /**
+ * Per-family audit trail coverage with evidence; complete when every family reports coverage.
+ */
+export type GetAuditComprehensiveCoverageInput = void;
+export type GetAuditComprehensiveCoverageOutput = Types.ComplianceAuditComprehensiveAuditTrailCoverageReport;
+export const getAuditComprehensiveCoverageEndpoint = {
+  operationId: 'getAuditComprehensiveCoverage' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/comprehensive-coverage' as const,
+  tags: ['ComplianceAuditCoverage'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Returns the universal entity-change audit history for the current tenant. Tenant
+ * administrators only; supports filtering by entity name, change kind, and actor.
+ */
+export interface GetAuditEntityChangesInput {
+  query?: {
+    EntityName?: string;
+    ChangeKind?: string;
+    ActorId?: string;
+    Skip?: number;
+    Take?: number;
+  };
+}
+export type GetAuditEntityChangesOutput = Types.ComplianceAuditEntityChangeAuditListOutput;
+export const getAuditEntityChangesEndpoint = {
+  operationId: 'getAuditEntityChanges' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/entity-changes' as const,
+  tags: ['ComplianceAuditEntityChanges'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Per-module event coverage manifest; complete when every mutating command carries a contract and a handler.
+ */
+export type GetAuditEventsComprehensiveInput = void;
+export type GetAuditEventsComprehensiveOutput = Types.ComplianceAuditComprehensiveEventCoverageReport;
+export const getAuditEventsComprehensiveEndpoint = {
+  operationId: 'getAuditEventsComprehensive' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/events/comprehensive' as const,
+  tags: ['ComplianceAuditCoverage'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Records a field-level access observation (read or write) with automatic classification and masking.
+ */
+export interface PostAuditFieldLevelAccessInput {
+  body?: Types.ComplianceAuditRecordFieldAccessInput;
+}
+export type PostAuditFieldLevelAccessOutput = Types.ComplianceAuditFieldAccessAuditOutput;
+export const postAuditFieldLevelAccessEndpoint = {
+  operationId: 'postAuditFieldLevelAccess' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/field-level/access' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Field access history for one entity (or one field of it), newest first.
+ */
+export interface GetAuditFieldLevelAccessHistoryInput {
+  entityId: string;
+  query?: {
+    fieldName?: string;
+  };
+}
+export type GetAuditFieldLevelAccessHistoryOutput = Types.ComplianceAuditFieldAccessAuditOutput[];
+export const getAuditFieldLevelAccessHistoryEndpoint = {
+  operationId: 'getAuditFieldLevelAccessHistory' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/field-level/access-history/{entityId}' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Anomaly findings from access-pattern analysis, optionally filtered by status.
+ */
+export interface GetAuditFieldLevelAnomaliesInput {
+  query?: {
+    status?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetAuditFieldLevelAnomaliesOutput = Types.ComplianceAuditFieldAccessAnomalyOutput[];
+export const getAuditFieldLevelAnomaliesEndpoint = {
+  operationId: 'getAuditFieldLevelAnomalies' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/field-level/anomalies' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Acknowledges an anomaly finding (investigation started).
+ */
+export interface PostAuditFieldLevelAnomaliesAcknowledgeInput {
+  id: string;
+}
+export type PostAuditFieldLevelAnomaliesAcknowledgeOutput = Types.ComplianceAuditFieldAccessAnomalyOutput;
+export const postAuditFieldLevelAnomaliesAcknowledgeEndpoint = {
+  operationId: 'postAuditFieldLevelAnomaliesAcknowledge' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/field-level/anomalies/{id}/acknowledge' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Resolves an anomaly finding with notes.
+ */
+export interface PostAuditFieldLevelAnomaliesResolveInput {
+  id: string;
+  body?: Types.ComplianceAuditResolveFieldAccessAnomalyInput;
+}
+export type PostAuditFieldLevelAnomaliesResolveOutput = Types.ComplianceAuditFieldAccessAnomalyOutput;
+export const postAuditFieldLevelAnomaliesResolveEndpoint = {
+  operationId: 'postAuditFieldLevelAnomaliesResolve' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/field-level/anomalies/{id}/resolve' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Runs access-pattern analysis over the recent window and persists detected anomalies.
+ */
+export interface PostAuditFieldLevelAnomaliesAnalyzeInput {
+  body?: Types.ComplianceAuditAnalyzeFieldAccessPatternsInput;
+}
+export type PostAuditFieldLevelAnomaliesAnalyzeOutput = Types.ComplianceAuditFieldAccessPatternAnalysisResult[];
+export const postAuditFieldLevelAnomaliesAnalyzeEndpoint = {
+  operationId: 'postAuditFieldLevelAnomaliesAnalyze' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/field-level/anomalies/analyze' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Observed bulk exports, optionally only threshold-exceeding ones.
+ */
+export interface GetAuditFieldLevelBulkExportsInput {
+  query?: {
+    thresholdExceeded?: boolean;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetAuditFieldLevelBulkExportsOutput = Types.ComplianceAuditBulkExportEvent[];
+export const getAuditFieldLevelBulkExportsEndpoint = {
+  operationId: 'getAuditFieldLevelBulkExports' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/field-level/bulk-exports' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Evaluates an export attempt against the bulk-export thresholds, records it and alerts when exceeded.
+ */
+export interface PostAuditFieldLevelBulkExportsEvaluateInput {
+  body?: Types.ComplianceAuditEvaluateBulkExportInput;
+}
+export type PostAuditFieldLevelBulkExportsEvaluateOutput = Types.ComplianceAuditBulkExportEvaluationOutput;
+export const postAuditFieldLevelBulkExportsEvaluateEndpoint = {
+  operationId: 'postAuditFieldLevelBulkExportsEvaluate' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/field-level/bulk-exports/evaluate' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * The sensitive-field classification registry.
+ */
+export type GetAuditFieldLevelClassificationsInput = void;
+export type GetAuditFieldLevelClassificationsOutput = Types.ComplianceAuditSensitiveFieldClassificationOutput[];
+export const getAuditFieldLevelClassificationsEndpoint = {
+  operationId: 'getAuditFieldLevelClassifications' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/field-level/classifications' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Re-scans recent field access observations and upserts automatic classifications.
+ */
+export type PostAuditFieldLevelClassificationsScanInput = void;
+export type PostAuditFieldLevelClassificationsScanOutput = Types.ComplianceAuditSensitiveFieldScanOutput;
+export const postAuditFieldLevelClassificationsScanEndpoint = {
+  operationId: 'postAuditFieldLevelClassificationsScan' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/field-level/classifications/scan' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Cross-border transfer log, optionally filtered by validation status.
+ */
+export interface GetAuditFieldLevelCrossBorderTransfersInput {
+  query?: {
+    status?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetAuditFieldLevelCrossBorderTransfersOutput = Types.ComplianceAuditCrossBorderTransferLog[];
+export const getAuditFieldLevelCrossBorderTransfersEndpoint = {
+  operationId: 'getAuditFieldLevelCrossBorderTransfers' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/field-level/cross-border-transfers' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Validates a prospective cross-border transfer against the jurisdiction policy and logs the outcome.
+ */
+export interface PostAuditFieldLevelCrossBorderTransfersValidateInput {
+  body?: Types.ComplianceAuditValidateCrossBorderTransferInput;
+}
+export type PostAuditFieldLevelCrossBorderTransfersValidateOutput = Types.ComplianceAuditCrossBorderTransferOutput;
+export const postAuditFieldLevelCrossBorderTransfersValidateEndpoint = {
+  operationId: 'postAuditFieldLevelCrossBorderTransfersValidate' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/field-level/cross-border-transfers/validate' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Data subject rights requests with statutory deadline tracking, optionally filtered by status.
+ */
+export interface GetAuditFieldLevelDataSubjectRequestsInput {
+  query?: {
+    status?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetAuditFieldLevelDataSubjectRequestsOutput = Types.ComplianceAuditDataSubjectRequestOutput[];
+export const getAuditFieldLevelDataSubjectRequestsEndpoint = {
+  operationId: 'getAuditFieldLevelDataSubjectRequests' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/field-level/data-subject-requests' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Consent monitoring for one data subject: consent states plus their rights requests.
+ */
+export interface GetAuditFieldLevelDataSubjectRequestsSubjectsInput {
+  userId: string;
+}
+export type GetAuditFieldLevelDataSubjectRequestsSubjectsOutput = Types.ComplianceAuditDataSubjectConsentMonitoringOutput;
+export const getAuditFieldLevelDataSubjectRequestsSubjectsEndpoint = {
+  operationId: 'getAuditFieldLevelDataSubjectRequestsSubjects' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/field-level/data-subject-requests/subjects/{userId}' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Aggregate monitoring summary: open, fulfilled and overdue requests plus active consents.
+ */
+export type GetAuditFieldLevelDataSubjectRequestsSummaryInput = void;
+export type GetAuditFieldLevelDataSubjectRequestsSummaryOutput = Types.ComplianceAuditDataSubjectAccessMonitoringSummary;
+export const getAuditFieldLevelDataSubjectRequestsSummaryEndpoint = {
+  operationId: 'getAuditFieldLevelDataSubjectRequestsSummary' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/field-level/data-subject-requests/summary' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * The GDPR Article 30 processing activity register, with completeness gaps listed.
+ */
+export type GetAuditFieldLevelGdprArticle30Input = void;
+export type GetAuditFieldLevelGdprArticle30Output = Types.ComplianceAuditGdprArticle30Output;
+export const getAuditFieldLevelGdprArticle30Endpoint = {
+  operationId: 'getAuditFieldLevelGdprArticle30' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/field-level/gdpr/article-30' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Creates or updates a processing activity record.
+ */
+export interface PutAuditFieldLevelGdprArticle30Input {
+  body?: Types.ComplianceAuditSaveGdprActivityInput;
+}
+export type PutAuditFieldLevelGdprArticle30Output = Types.ComplianceAuditGdprProcessingActivityOutput;
+export const putAuditFieldLevelGdprArticle30Endpoint = {
+  operationId: 'putAuditFieldLevelGdprArticle30' as const,
+  method: 'PUT' as const,
+  path: '/v1/audit/field-level/gdpr/article-30' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Deletes a processing activity record.
+ */
+export interface DeleteAuditFieldLevelGdprArticle30Input {
+  id: string;
+}
+export type DeleteAuditFieldLevelGdprArticle30Output = void;
+export const deleteAuditFieldLevelGdprArticle30Endpoint = {
+  operationId: 'deleteAuditFieldLevelGdprArticle30' as const,
+  method: 'DELETE' as const,
+  path: '/v1/audit/field-level/gdpr/article-30/{id}' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Marks a processing activity reviewed by the current actor.
+ */
+export interface PostAuditFieldLevelGdprArticle30ReviewInput {
+  id: string;
+}
+export type PostAuditFieldLevelGdprArticle30ReviewOutput = Types.ComplianceAuditGdprProcessingActivityOutput;
+export const postAuditFieldLevelGdprArticle30ReviewEndpoint = {
+  operationId: 'postAuditFieldLevelGdprArticle30Review' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/field-level/gdpr/article-30/{id}/review' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * (Re)derives the platform processing activities for the tenant; manual entries are preserved.
+ */
+export type PostAuditFieldLevelGdprArticle30SeedInput = void;
+export type PostAuditFieldLevelGdprArticle30SeedOutput = number;
+export const postAuditFieldLevelGdprArticle30SeedEndpoint = {
+  operationId: 'postAuditFieldLevelGdprArticle30Seed' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/field-level/gdpr/article-30/seed' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Per-category sensitive-data retention rules.
+ */
+export type GetAuditFieldLevelRetentionInput = void;
+export type GetAuditFieldLevelRetentionOutput = Types.ComplianceAuditSensitiveDataRetentionPolicyOutput[];
+export const getAuditFieldLevelRetentionEndpoint = {
+  operationId: 'getAuditFieldLevelRetention' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/field-level/retention' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Configures the retention rule for one sensitive data category.
+ */
+export interface PutAuditFieldLevelRetentionInput {
+  body?: Types.ComplianceAuditConfigureSensitiveDataRetentionInput;
+}
+export type PutAuditFieldLevelRetentionOutput = Types.ComplianceAuditSensitiveDataRetentionPolicyOutput;
+export const putAuditFieldLevelRetentionEndpoint = {
+  operationId: 'putAuditFieldLevelRetention' as const,
+  method: 'PUT' as const,
+  path: '/v1/audit/field-level/retention' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Enforces the sensitive-data retention policies (purge or mask expired records); dry-run reports without changing data.
+ */
+export interface PostAuditFieldLevelRetentionEnforceInput {
+  query?: {
+    dryRun?: boolean;
+  };
+}
+export type PostAuditFieldLevelRetentionEnforceOutput = Types.ComplianceAuditSensitiveDataRetentionEnforcementResult;
+export const postAuditFieldLevelRetentionEnforceEndpoint = {
+  operationId: 'postAuditFieldLevelRetentionEnforce' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/field-level/retention/enforce' as const,
+  tags: ['ComplianceAuditFieldLevel'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Pipeline status: cached rule snapshots, enabled rule counts (global and tenant), vault size,
  * and the last rule-refresh outcome.
  */
@@ -18802,6 +20415,24 @@ export const deleteAuthTrustedDevicesEndpoint = {
   operationId: 'deleteAuthTrustedDevices' as const,
   method: 'DELETE' as const,
   path: '/v1/auth/trusted-devices/{deviceId}' as const,
+  tags: ['AuthTrustedDevices'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Name or rename one of the current user's trusted devices
+ *
+ * Assigns a user-defined name to one of the current user's own trusted devices. The acting user is taken from the authenticated principal, never from the body.
+ */
+export interface PatchAuthTrustedDevicesNameInput {
+  deviceId: string;
+  body?: Types.IdentityAuthenticationRenameTrustedDeviceInput;
+}
+export type PatchAuthTrustedDevicesNameOutput = Types.IdentityAuthenticationSessionSuccessOutput;
+export const patchAuthTrustedDevicesNameEndpoint = {
+  operationId: 'patchAuthTrustedDevicesName' as const,
+  method: 'PATCH' as const,
+  path: '/v1/auth/trusted-devices/{deviceId}/name' as const,
   tags: ['AuthTrustedDevices'] as const,
   requiresAuth: true,
 } as const;
@@ -25323,6 +26954,181 @@ export const getProjectsSlugEndpoint = {
 } as const;
 
 /**
+ * List campaigns (paged) with optional status filter and search
+ */
+export interface GetPromoCampaignsForGetPromoCampaignsInput {
+  query?: {
+    status?: Types.CommerceProductsPromoCampaignStatus;
+    searchTerm?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetPromoCampaignsForGetPromoCampaignsOutput = Types.PagedResultPromoCampaignDto;
+export const getPromoCampaignsForGetPromoCampaignsEndpoint = {
+  operationId: 'getPromoCampaignsForGetPromoCampaigns' as const,
+  method: 'GET' as const,
+  path: '/v1/promo-campaigns' as const,
+  tags: ['CommerceProductsPromoCampaigns'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Create a campaign (starts in Draft)
+ */
+export interface PostPromoCampaignsInput {
+  body?: Types.CommerceProductsCreatePromoCampaignInput;
+}
+export type PostPromoCampaignsOutput = Types.CommerceProductsPromoCampaignDto;
+export const postPromoCampaignsEndpoint = {
+  operationId: 'postPromoCampaigns' as const,
+  method: 'POST' as const,
+  path: '/v1/promo-campaigns' as const,
+  tags: ['CommerceProductsPromoCampaigns'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get a campaign by ID
+ */
+export interface GetPromoCampaignsForGetPromoCampaignsByCampaignIdInput {
+  campaignId: string;
+}
+export type GetPromoCampaignsForGetPromoCampaignsByCampaignIdOutput = Types.CommerceProductsPromoCampaignDto;
+export const getPromoCampaignsForGetPromoCampaignsByCampaignIdEndpoint = {
+  operationId: 'getPromoCampaignsForGetPromoCampaignsByCampaignId' as const,
+  method: 'GET' as const,
+  path: '/v1/promo-campaigns/{campaignId}' as const,
+  tags: ['CommerceProductsPromoCampaigns'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Update a campaign (key and lifecycle status are immutable here)
+ */
+export interface PutPromoCampaignsInput {
+  campaignId: string;
+  body?: Types.CommerceProductsUpdatePromoCampaignInput;
+}
+export type PutPromoCampaignsOutput = Types.CommerceProductsPromoCampaignDto;
+export const putPromoCampaignsEndpoint = {
+  operationId: 'putPromoCampaigns' as const,
+  method: 'PUT' as const,
+  path: '/v1/promo-campaigns/{campaignId}' as const,
+  tags: ['CommerceProductsPromoCampaigns'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Delete a campaign. Fails closed while promo codes still reference its key.
+ */
+export interface DeletePromoCampaignsInput {
+  campaignId: string;
+}
+export type DeletePromoCampaignsOutput = void;
+export const deletePromoCampaignsEndpoint = {
+  operationId: 'deletePromoCampaigns' as const,
+  method: 'DELETE' as const,
+  path: '/v1/promo-campaigns/{campaignId}' as const,
+  tags: ['CommerceProductsPromoCampaigns'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Activate a draft or paused campaign
+ */
+export interface PostPromoCampaignsActivateInput {
+  campaignId: string;
+}
+export type PostPromoCampaignsActivateOutput = Types.CommerceProductsPromoCampaignDto;
+export const postPromoCampaignsActivateEndpoint = {
+  operationId: 'postPromoCampaignsActivate' as const,
+  method: 'POST' as const,
+  path: '/v1/promo-campaigns/{campaignId}:activate' as const,
+  tags: ['CommerceProductsPromoCampaigns'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Archive a completed or cancelled campaign
+ */
+export interface PostPromoCampaignsArchiveInput {
+  campaignId: string;
+}
+export type PostPromoCampaignsArchiveOutput = Types.CommerceProductsPromoCampaignDto;
+export const postPromoCampaignsArchiveEndpoint = {
+  operationId: 'postPromoCampaignsArchive' as const,
+  method: 'POST' as const,
+  path: '/v1/promo-campaigns/{campaignId}:archive' as const,
+  tags: ['CommerceProductsPromoCampaigns'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Cancel a draft, active, or paused campaign
+ */
+export interface PostPromoCampaignsCancelInput {
+  campaignId: string;
+}
+export type PostPromoCampaignsCancelOutput = Types.CommerceProductsPromoCampaignDto;
+export const postPromoCampaignsCancelEndpoint = {
+  operationId: 'postPromoCampaignsCancel' as const,
+  method: 'POST' as const,
+  path: '/v1/promo-campaigns/{campaignId}:cancel' as const,
+  tags: ['CommerceProductsPromoCampaigns'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Complete an active or paused campaign
+ */
+export interface PostPromoCampaignsCompleteInput {
+  campaignId: string;
+}
+export type PostPromoCampaignsCompleteOutput = Types.CommerceProductsPromoCampaignDto;
+export const postPromoCampaignsCompleteEndpoint = {
+  operationId: 'postPromoCampaignsComplete' as const,
+  method: 'POST' as const,
+  path: '/v1/promo-campaigns/{campaignId}:complete' as const,
+  tags: ['CommerceProductsPromoCampaigns'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Pause an active campaign
+ */
+export interface PostPromoCampaignsPauseInput {
+  campaignId: string;
+}
+export type PostPromoCampaignsPauseOutput = Types.CommerceProductsPromoCampaignDto;
+export const postPromoCampaignsPauseEndpoint = {
+  operationId: 'postPromoCampaignsPause' as const,
+  method: 'POST' as const,
+  path: '/v1/promo-campaigns/{campaignId}:pause' as const,
+  tags: ['CommerceProductsPromoCampaigns'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Campaign performance report (uses, discount, conversion, CAC attribution) within an optional window
+ */
+export interface GetPromoCampaignsPerformanceInput {
+  campaignId: string;
+  query?: {
+    from?: string;
+    to?: string;
+  };
+}
+export type GetPromoCampaignsPerformanceOutput = Types.CommerceProductsCampaignPerformanceDto;
+export const getPromoCampaignsPerformanceEndpoint = {
+  operationId: 'getPromoCampaignsPerformance' as const,
+  method: 'GET' as const,
+  path: '/v1/promo-campaigns/{campaignId}/performance' as const,
+  tags: ['CommerceProductsPromoCampaigns'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Get all promo codes (paginated) with optional status filter
  */
 export interface GetPromoCodesForGetPromoCodesInput {
@@ -25393,7 +27199,9 @@ export const postPromoCodesGenerateBulkEndpoint = {
 } as const;
 
 /**
- * Validate a promo code
+ * Validate a promo code. Untrusted (anonymous) contexts are CAPTCHA-gated when the
+ * promo redemption CAPTCHA gate is enabled (issue #418 anti-farming): a missing or
+ * unverifiable token is rejected before any code lookup, fail closed.
  */
 export interface PostPromoCodesValidateInput {
   body?: Types.CommerceProductsValidatePromoCodeInput;
@@ -31504,9 +33312,35 @@ export const endpoints = {
     getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsByIdEndpoint,
   postApiAuditCompliancePackagingDocumentsReview: postApiAuditCompliancePackagingDocumentsReviewEndpoint,
   getApiAuditCompliancePackagingTemplates: getApiAuditCompliancePackagingTemplatesEndpoint,
+  getApiAuditComprehensiveCoverage: getApiAuditComprehensiveCoverageEndpoint,
+  getApiAuditEntityChanges: getApiAuditEntityChangesEndpoint,
+  getApiAuditEventsComprehensive: getApiAuditEventsComprehensiveEndpoint,
   postApiAuditExportCsv: postApiAuditExportCsvEndpoint,
   postApiAuditExportJson: postApiAuditExportJsonEndpoint,
   postApiAuditExportXml: postApiAuditExportXmlEndpoint,
+  postApiAuditFieldLevelAccess: postApiAuditFieldLevelAccessEndpoint,
+  getApiAuditFieldLevelAccessHistory: getApiAuditFieldLevelAccessHistoryEndpoint,
+  getApiAuditFieldLevelAnomalies: getApiAuditFieldLevelAnomaliesEndpoint,
+  postApiAuditFieldLevelAnomaliesAcknowledge: postApiAuditFieldLevelAnomaliesAcknowledgeEndpoint,
+  postApiAuditFieldLevelAnomaliesResolve: postApiAuditFieldLevelAnomaliesResolveEndpoint,
+  postApiAuditFieldLevelAnomaliesAnalyze: postApiAuditFieldLevelAnomaliesAnalyzeEndpoint,
+  getApiAuditFieldLevelBulkExports: getApiAuditFieldLevelBulkExportsEndpoint,
+  postApiAuditFieldLevelBulkExportsEvaluate: postApiAuditFieldLevelBulkExportsEvaluateEndpoint,
+  getApiAuditFieldLevelClassifications: getApiAuditFieldLevelClassificationsEndpoint,
+  postApiAuditFieldLevelClassificationsScan: postApiAuditFieldLevelClassificationsScanEndpoint,
+  getApiAuditFieldLevelCrossBorderTransfers: getApiAuditFieldLevelCrossBorderTransfersEndpoint,
+  postApiAuditFieldLevelCrossBorderTransfersValidate: postApiAuditFieldLevelCrossBorderTransfersValidateEndpoint,
+  getApiAuditFieldLevelDataSubjectRequests: getApiAuditFieldLevelDataSubjectRequestsEndpoint,
+  getApiAuditFieldLevelDataSubjectRequestsSubjects: getApiAuditFieldLevelDataSubjectRequestsSubjectsEndpoint,
+  getApiAuditFieldLevelDataSubjectRequestsSummary: getApiAuditFieldLevelDataSubjectRequestsSummaryEndpoint,
+  getApiAuditFieldLevelGdprArticle30: getApiAuditFieldLevelGdprArticle30Endpoint,
+  putApiAuditFieldLevelGdprArticle30: putApiAuditFieldLevelGdprArticle30Endpoint,
+  deleteApiAuditFieldLevelGdprArticle30: deleteApiAuditFieldLevelGdprArticle30Endpoint,
+  postApiAuditFieldLevelGdprArticle30Review: postApiAuditFieldLevelGdprArticle30ReviewEndpoint,
+  postApiAuditFieldLevelGdprArticle30Seed: postApiAuditFieldLevelGdprArticle30SeedEndpoint,
+  getApiAuditFieldLevelRetention: getApiAuditFieldLevelRetentionEndpoint,
+  putApiAuditFieldLevelRetention: putApiAuditFieldLevelRetentionEndpoint,
+  postApiAuditFieldLevelRetentionEnforce: postApiAuditFieldLevelRetentionEnforceEndpoint,
   getApiAuditRedactionPipeline: getApiAuditRedactionPipelineEndpoint,
   getApiAuditRedactionPipelineRulesForGetApiAuditRedactionPipelineRules: getApiAuditRedactionPipelineRulesForGetApiAuditRedactionPipelineRulesEndpoint,
   postApiAuditRedactionPipelineRules: postApiAuditRedactionPipelineRulesEndpoint,
@@ -31558,6 +33392,7 @@ export const endpoints = {
   getApiCertificates: getApiCertificatesEndpoint,
   getApiCertificatesEvm: getApiCertificatesEvmEndpoint,
   getApiCertificatesEvmProof: getApiCertificatesEvmProofEndpoint,
+  postApiCertificatesRenew: postApiCertificatesRenewEndpoint,
   postApiCertificatesRevoke: postApiCertificatesRevokeEndpoint,
   getApiCertificatesCourse: getApiCertificatesCourseEndpoint,
   getApiCertificatesExpiring: getApiCertificatesExpiringEndpoint,
@@ -31972,6 +33807,10 @@ export const endpoints = {
   postAuthorizationTenantsDenyRemove: postAuthorizationTenantsDenyRemoveEndpoint,
   postAuthorizationTenantsGlobalDefaults: postAuthorizationTenantsGlobalDefaultsEndpoint,
   postAuthorizationTenantsGrant: postAuthorizationTenantsGrantEndpoint,
+  getAuthorizationTenantsPermissionsExpirationReport: getAuthorizationTenantsPermissionsExpirationReportEndpoint,
+  getAuthorizationTenantsPermissionsExpirationRules: getAuthorizationTenantsPermissionsExpirationRulesEndpoint,
+  getAuthorizationTenantsPermissionsExpirationSummary: getAuthorizationTenantsPermissionsExpirationSummaryEndpoint,
+  getAuthorizationTenantsPermissionsExpirationTrends: getAuthorizationTenantsPermissionsExpirationTrendsEndpoint,
   getAuthorizationTenantsPermissionsExpiring: getAuthorizationTenantsPermissionsExpiringEndpoint,
   postAuthorizationTenantsPermissionsExtendExpiration: postAuthorizationTenantsPermissionsExtendExpirationEndpoint,
   postAuthorizationTenantsPermissionsProcessExpired: postAuthorizationTenantsPermissionsProcessExpiredEndpoint,
@@ -31988,6 +33827,7 @@ export const endpoints = {
   getBillingEventsForGetBillingEventsByEventId: getBillingEventsForGetBillingEventsByEventIdEndpoint,
   getBillingEventsOutboxForGetBillingEventsOutbox: getBillingEventsOutboxForGetBillingEventsOutboxEndpoint,
   getBillingEventsOutboxForGetBillingEventsOutboxByEventId: getBillingEventsOutboxForGetBillingEventsOutboxByEventIdEndpoint,
+  getBillingEventsSubscriptionsProjection: getBillingEventsSubscriptionsProjectionEndpoint,
   getBillingExternalProvidersForGetBillingExternalProviders: getBillingExternalProvidersForGetBillingExternalProvidersEndpoint,
   getBillingExternalProvidersForGetBillingExternalProvidersByProviderKey: getBillingExternalProvidersForGetBillingExternalProvidersByProviderKeyEndpoint,
   postBillingExternalProvidersDisable: postBillingExternalProvidersDisableEndpoint,
@@ -32001,6 +33841,9 @@ export const endpoints = {
   putBillingPaymentMethods: putBillingPaymentMethodsEndpoint,
   deleteBillingPaymentMethods: deleteBillingPaymentMethodsEndpoint,
   postBillingPaymentMethodsSetDefault: postBillingPaymentMethodsSetDefaultEndpoint,
+  getBillingPaymentMethodsBankVerification: getBillingPaymentMethodsBankVerificationEndpoint,
+  postBillingPaymentMethodsBankVerificationInitiate: postBillingPaymentMethodsBankVerificationInitiateEndpoint,
+  postBillingPaymentMethodsBankVerificationVerify: postBillingPaymentMethodsBankVerificationVerifyEndpoint,
   getBillingPricingDiscountsLedgerForGetBillingPricingDiscountsLedger: getBillingPricingDiscountsLedgerForGetBillingPricingDiscountsLedgerEndpoint,
   postBillingPricingDiscountsLedgerValidateDrift: postBillingPricingDiscountsLedgerValidateDriftEndpoint,
   getBillingPricingDiscountsLedgerForGetBillingPricingDiscountsLedgerByEntryId:
@@ -32031,6 +33874,10 @@ export const endpoints = {
   getBillingRevenueAuditingAnomalyAlerts: getBillingRevenueAuditingAnomalyAlertsEndpoint,
   postBillingRevenueAuditingAnomalyAlertsAcknowledge: postBillingRevenueAuditingAnomalyAlertsAcknowledgeEndpoint,
   getBillingRevenueAuditingComplianceReport: getBillingRevenueAuditingComplianceReportEndpoint,
+  getBillingRevenueAuditingConversionCosts: getBillingRevenueAuditingConversionCostsEndpoint,
+  getBillingRevenueAuditingCurrenciesBase: getBillingRevenueAuditingCurrenciesBaseEndpoint,
+  getBillingRevenueAuditingCurrenciesBaseExport: getBillingRevenueAuditingCurrenciesBaseExportEndpoint,
+  getBillingRevenueAuditingCurrenciesPopular: getBillingRevenueAuditingCurrenciesPopularEndpoint,
   getBillingRevenueAuditingExport: getBillingRevenueAuditingExportEndpoint,
   getRunById: getRunByIdEndpoint,
   getBillingRevenueAuditingRunsDiscrepancies: getBillingRevenueAuditingRunsDiscrepanciesEndpoint,
@@ -32040,11 +33887,15 @@ export const endpoints = {
   getBillingSubscriptionById: getBillingSubscriptionByIdEndpoint,
   postBillingSubscriptionsCancel: postBillingSubscriptionsCancelEndpoint,
   postBillingSubscriptionsRenew: postBillingSubscriptionsRenewEndpoint,
+  postBillingSubscriptionsPlanChangeOrchestrate: postBillingSubscriptionsPlanChangeOrchestrateEndpoint,
+  getBillingSubscriptionsPlanChangeSaga: getBillingSubscriptionsPlanChangeSagaEndpoint,
   postBillingWebhooksApplePay: postBillingWebhooksApplePayEndpoint,
+  postBillingWebhooksBraintree: postBillingWebhooksBraintreeEndpoint,
   postBillingWebhooksGooglePay: postBillingWebhooksGooglePayEndpoint,
   postBillingWebhooksPaypal: postBillingWebhooksPaypalEndpoint,
   postBillingWebhooksSecretsRotate: postBillingWebhooksSecretsRotateEndpoint,
   getBillingWebhooksSecurity: getBillingWebhooksSecurityEndpoint,
+  getBillingWebhooksStats: getBillingWebhooksStatsEndpoint,
   postBillingWebhooksStripe: postBillingWebhooksStripeEndpoint,
   getBillingWebhooksWebhookEvents: getBillingWebhooksWebhookEventsEndpoint,
   postBillingWebhooksWebhookEventsRetry: postBillingWebhooksWebhookEventsRetryEndpoint,
@@ -32052,6 +33903,8 @@ export const endpoints = {
   postCurrenciesDisable: postCurrenciesDisableEndpoint,
   postCurrenciesEnable: postCurrenciesEnableEndpoint,
   postCurrenciesSetBase: postCurrenciesSetBaseEndpoint,
+  getCurrenciesSuggestion: getCurrenciesSuggestionEndpoint,
+  postCurrencyConvert: postCurrencyConvertEndpoint,
   getDisputes: getDisputesEndpoint,
   postDisputes: postDisputesEndpoint,
   getDisputeById: getDisputeByIdEndpoint,
@@ -32098,15 +33951,26 @@ export const endpoints = {
   getEmailDeliveryNotificationsTimeline: getEmailDeliveryNotificationsTimelineEndpoint,
   getEmailDeliverySuppressions: getEmailDeliverySuppressionsEndpoint,
   deleteEmailDeliverySuppressions: deleteEmailDeliverySuppressionsEndpoint,
+  getFraudBlacklist: getFraudBlacklistEndpoint,
+  postFraudBlacklist: postFraudBlacklistEndpoint,
+  deleteFraudBlacklist: deleteFraudBlacklistEndpoint,
+  getFraudBlacklistCheck: getFraudBlacklistCheckEndpoint,
+  getFraudBlacklistExport: getFraudBlacklistExportEndpoint,
+  postFraudBlacklistImport: postFraudBlacklistImportEndpoint,
   getFraudReviews: getFraudReviewsEndpoint,
   postFraudReviewsApprove: postFraudReviewsApproveEndpoint,
   postFraudReviewsDeny: postFraudReviewsDenyEndpoint,
   postFraudReviewsBulkApprove: postFraudReviewsBulkApproveEndpoint,
   postFraudReviewsBulkDeny: postFraudReviewsBulkDenyEndpoint,
+  getFraudStatistics: getFraudStatisticsEndpoint,
+  getFraudStatisticsExport: getFraudStatisticsExportEndpoint,
   getFxRates: getFxRatesEndpoint,
   postFxRatesOverrides: postFxRatesOverridesEndpoint,
+  putFxRatesProviderKeys: putFxRatesProviderKeysEndpoint,
+  deleteFxRatesProviderKeys: deleteFxRatesProviderKeysEndpoint,
   postFxRatesSync: postFxRatesSyncEndpoint,
   getFxRatesSyncStatus: getFxRatesSyncStatusEndpoint,
+  getFxRatesVariance: getFxRatesVarianceEndpoint,
   postGifts: postGiftsEndpoint,
   getGifts: getGiftsEndpoint,
   postGiftsRedeem: postGiftsRedeemEndpoint,
@@ -32125,6 +33989,10 @@ export const endpoints = {
   postPaymentsRefund: postPaymentsRefundEndpoint,
   postPaymentsRetry: postPaymentsRetryEndpoint,
   getPaymentsRetryAttempts: getPaymentsRetryAttemptsEndpoint,
+  putPaymentsGatewaysCredentials: putPaymentsGatewaysCredentialsEndpoint,
+  deletePaymentsGatewaysCredentials: deletePaymentsGatewaysCredentialsEndpoint,
+  postPaymentsGatewaysTestConnection: postPaymentsGatewaysTestConnectionEndpoint,
+  getPaymentsGatewaysAnalytics: getPaymentsGatewaysAnalyticsEndpoint,
   getPaymentsGatewaysMetrics: getPaymentsGatewaysMetricsEndpoint,
   getPaymentsRecoveryMetrics: getPaymentsRecoveryMetricsEndpoint,
   getPaymentsRefundsMetrics: getPaymentsRefundsMetricsEndpoint,
@@ -32160,6 +34028,13 @@ export const endpoints = {
   getPostsTagsPopular: getPostsTagsPopularEndpoint,
   getPostsTagsSearch: getPostsTagsSearchEndpoint,
   getPostsTrending: getPostsTrendingEndpoint,
+  getPriceLocalization: getPriceLocalizationEndpoint,
+  postPriceLocalizationPlansCurrencies: postPriceLocalizationPlansCurrenciesEndpoint,
+  deletePriceLocalizationPlansCurrencies: deletePriceLocalizationPlansCurrenciesEndpoint,
+  postPriceLocalizationRecalculate: postPriceLocalizationRecalculateEndpoint,
+  getPriceLocalizationRecalculatePreview: getPriceLocalizationRecalculatePreviewEndpoint,
+  getPriceLocalizationRecalculations: getPriceLocalizationRecalculationsEndpoint,
+  postPriceLocalizationRecalculationsRollback: postPriceLocalizationRecalculationsRollbackEndpoint,
   postPricingCalculate: postPricingCalculateEndpoint,
   postPricingPreview: postPricingPreviewEndpoint,
   getPricingCalculations: getPricingCalculationsEndpoint,
@@ -32505,6 +34380,32 @@ export const endpoints = {
     getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsByIdEndpoint,
   postAuditCompliancePackagingDocumentsReview: postAuditCompliancePackagingDocumentsReviewEndpoint,
   getAuditCompliancePackagingTemplates: getAuditCompliancePackagingTemplatesEndpoint,
+  getAuditComprehensiveCoverage: getAuditComprehensiveCoverageEndpoint,
+  getAuditEntityChanges: getAuditEntityChangesEndpoint,
+  getAuditEventsComprehensive: getAuditEventsComprehensiveEndpoint,
+  postAuditFieldLevelAccess: postAuditFieldLevelAccessEndpoint,
+  getAuditFieldLevelAccessHistory: getAuditFieldLevelAccessHistoryEndpoint,
+  getAuditFieldLevelAnomalies: getAuditFieldLevelAnomaliesEndpoint,
+  postAuditFieldLevelAnomaliesAcknowledge: postAuditFieldLevelAnomaliesAcknowledgeEndpoint,
+  postAuditFieldLevelAnomaliesResolve: postAuditFieldLevelAnomaliesResolveEndpoint,
+  postAuditFieldLevelAnomaliesAnalyze: postAuditFieldLevelAnomaliesAnalyzeEndpoint,
+  getAuditFieldLevelBulkExports: getAuditFieldLevelBulkExportsEndpoint,
+  postAuditFieldLevelBulkExportsEvaluate: postAuditFieldLevelBulkExportsEvaluateEndpoint,
+  getAuditFieldLevelClassifications: getAuditFieldLevelClassificationsEndpoint,
+  postAuditFieldLevelClassificationsScan: postAuditFieldLevelClassificationsScanEndpoint,
+  getAuditFieldLevelCrossBorderTransfers: getAuditFieldLevelCrossBorderTransfersEndpoint,
+  postAuditFieldLevelCrossBorderTransfersValidate: postAuditFieldLevelCrossBorderTransfersValidateEndpoint,
+  getAuditFieldLevelDataSubjectRequests: getAuditFieldLevelDataSubjectRequestsEndpoint,
+  getAuditFieldLevelDataSubjectRequestsSubjects: getAuditFieldLevelDataSubjectRequestsSubjectsEndpoint,
+  getAuditFieldLevelDataSubjectRequestsSummary: getAuditFieldLevelDataSubjectRequestsSummaryEndpoint,
+  getAuditFieldLevelGdprArticle30: getAuditFieldLevelGdprArticle30Endpoint,
+  putAuditFieldLevelGdprArticle30: putAuditFieldLevelGdprArticle30Endpoint,
+  deleteAuditFieldLevelGdprArticle30: deleteAuditFieldLevelGdprArticle30Endpoint,
+  postAuditFieldLevelGdprArticle30Review: postAuditFieldLevelGdprArticle30ReviewEndpoint,
+  postAuditFieldLevelGdprArticle30Seed: postAuditFieldLevelGdprArticle30SeedEndpoint,
+  getAuditFieldLevelRetention: getAuditFieldLevelRetentionEndpoint,
+  putAuditFieldLevelRetention: putAuditFieldLevelRetentionEndpoint,
+  postAuditFieldLevelRetentionEnforce: postAuditFieldLevelRetentionEnforceEndpoint,
   getAuditRedactionPipeline: getAuditRedactionPipelineEndpoint,
   getAuditRedactionPipelineRulesForGetAuditRedactionPipelineRules: getAuditRedactionPipelineRulesForGetAuditRedactionPipelineRulesEndpoint,
   postAuditRedactionPipelineRules: postAuditRedactionPipelineRulesEndpoint,
@@ -32655,6 +34556,7 @@ export const endpoints = {
   getAuthTrustedDevices: getAuthTrustedDevicesEndpoint,
   postAuthTrustedDevices: postAuthTrustedDevicesEndpoint,
   deleteAuthTrustedDevices: deleteAuthTrustedDevicesEndpoint,
+  patchAuthTrustedDevicesName: patchAuthTrustedDevicesNameEndpoint,
   postAuthWeb3Verify: postAuthWeb3VerifyEndpoint,
   postAuthWeb3Challenge: postAuthWeb3ChallengeEndpoint,
   getAuthWebauthn: getAuthWebauthnEndpoint,
@@ -33074,6 +34976,17 @@ export const endpoints = {
   getProjectsRolesPermissions: getProjectsRolesPermissionsEndpoint,
   getProjectsSearch: getProjectsSearchEndpoint,
   getProjectsSlug: getProjectsSlugEndpoint,
+  getPromoCampaignsForGetPromoCampaigns: getPromoCampaignsForGetPromoCampaignsEndpoint,
+  postPromoCampaigns: postPromoCampaignsEndpoint,
+  getPromoCampaignsForGetPromoCampaignsByCampaignId: getPromoCampaignsForGetPromoCampaignsByCampaignIdEndpoint,
+  putPromoCampaigns: putPromoCampaignsEndpoint,
+  deletePromoCampaigns: deletePromoCampaignsEndpoint,
+  postPromoCampaignsActivate: postPromoCampaignsActivateEndpoint,
+  postPromoCampaignsArchive: postPromoCampaignsArchiveEndpoint,
+  postPromoCampaignsCancel: postPromoCampaignsCancelEndpoint,
+  postPromoCampaignsComplete: postPromoCampaignsCompleteEndpoint,
+  postPromoCampaignsPause: postPromoCampaignsPauseEndpoint,
+  getPromoCampaignsPerformance: getPromoCampaignsPerformanceEndpoint,
   getPromoCodesForGetPromoCodes: getPromoCodesForGetPromoCodesEndpoint,
   postPromoCodes: postPromoCodesEndpoint,
   postPromoCodesApply: postPromoCodesApplyEndpoint,

@@ -106,8 +106,49 @@ public static class ProductMappingExtensions
             usageCount ?? promoCode.CurrentUses,
             promoCode.CreatedAt,
             promoCode.UpdatedAt,
-            promoCode.PlanId
+            promoCode.PlanId,
+            promoCode.TimeZoneId,
+            promoCode.EligibleCustomerType
         );
+    }
+
+    /// <summary>
+    /// Maps a PromoCampaign entity to PromoCampaignDto (issue #418). Wall-clock window
+    /// values are rendered in the campaign's timezone; CAC is acquisition spend divided
+    /// by attributed customers when both sides exist.
+    /// </summary>
+    public static PromoCampaignDto ToDto(
+        this PromoCampaign campaign,
+        int codeCount,
+        int attributedCustomers,
+        decimal? acquisitionSpend = null)
+    {
+        var (timeZone, _) = PromoValidityWindow.ResolveTimeZone(campaign.TimeZoneId);
+        var spend = acquisitionSpend ?? campaign.AcquisitionSpend;
+        decimal? cac = spend is > 0 && attributedCustomers > 0
+            ? Math.Round(spend.Value / attributedCustomers, 2, MidpointRounding.AwayFromZero)
+            : null;
+
+        return new PromoCampaignDto(
+            campaign.Id,
+            campaign.Name,
+            campaign.Key,
+            campaign.Description,
+            campaign.Status,
+            campaign.StartsAtUtc,
+            campaign.EndsAtUtc,
+            PromoValidityWindow.ToWallClock(campaign.StartsAtUtc, timeZone),
+            PromoValidityWindow.ToWallClock(campaign.EndsAtUtc, timeZone),
+            timeZone.Id,
+            campaign.Budget,
+            campaign.AcquisitionSpend,
+            campaign.Currency,
+            codeCount,
+            attributedCustomers,
+            cac,
+            campaign.Status == PromoCampaignStatus.Active && campaign.IsWindowOpen(),
+            campaign.CreatedAt,
+            campaign.UpdatedAt);
     }
 
     /// <summary>

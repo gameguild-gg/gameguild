@@ -47,6 +47,27 @@ public sealed record GeolocationResult
 
     /// <summary>Timezone identifier (America/New_York, Europe/London, etc.).</summary>
     public string? Timezone { get; init; }
+
+    /// <summary>
+    ///     Whether the address is a known anonymizing VPN endpoint. <c>null</c> means the
+    ///     provider has no anonymous-IP data for this address (unknown), <c>false</c> means
+    ///     the anonymous database is available and the address is not listed.
+    /// </summary>
+    public bool? IsAnonymousVpn { get; init; }
+
+    /// <summary>
+    ///     Whether the address is a known public proxy. <c>null</c> = unknown (see
+    ///     <see cref="IsAnonymousVpn"/>).
+    /// </summary>
+    public bool? IsPublicProxy { get; init; }
+
+    /// <summary>Whether the address is a known Tor exit node. <c>null</c> = unknown.</summary>
+    public bool? IsTorExitNode { get; init; }
+
+    /// <summary>
+    ///     Whether the address belongs to a hosting provider or datacenter. <c>null</c> = unknown.
+    /// </summary>
+    public bool? IsHostingProvider { get; init; }
 }
 
 /// <summary>

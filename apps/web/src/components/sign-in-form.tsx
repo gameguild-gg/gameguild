@@ -32,12 +32,15 @@ export function SignInForm({
   magicLinkLabel,
   emailCodeLabel,
   providers,
+  guestEntry,
   ...props
 }: React.ComponentProps<"div"> & {
   redirectTo?: string;
   magicLinkLabel?: string;
   emailCodeLabel?: string;
   providers?: React.ReactNode;
+  /** Capability-gated "Continue as guest" affordance (issue #213); rendered by the page. */
+  guestEntry?: React.ReactNode;
 }) {
   const router = useRouter();
   const { signIn, isLoading, error, clearError } = useAuth();
@@ -243,6 +246,16 @@ export function SignInForm({
               </Field>
             </FieldGroup>
           </form>
+          {guestEntry ? (
+            <>
+              <div className="mt-4 flex w-full items-center gap-3 text-xs text-slate-400">
+                <div className="h-px flex-1 bg-white/10" />
+                <span>or</span>
+                <div className="h-px flex-1 bg-white/10" />
+              </div>
+              <div className="mt-4">{guestEntry}</div>
+            </>
+          ) : null}
         </CardContent>
       </Card>
     </div>

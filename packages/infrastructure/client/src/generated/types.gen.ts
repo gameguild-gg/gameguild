@@ -1641,8 +1641,12 @@ export interface CommerceBillingBillingWebhookEventDto {
   processedAt?: string | null;
   processingAttempts?: number;
   provider?: string | null;
+  /** Source IP address the delivery was accepted from (issue #408). */
+  sourceIpAddress?: string | null;
   subscriptionId?: string | null;
   tenantId?: string | null;
+  /** Bounded user agent of the delivery (issue #408). */
+  userAgent?: string | null;
 }
 
 /** List item of the billing webhook inbox event feed (issue #396). Payloads are excluded. */
@@ -1673,6 +1677,22 @@ export interface CommerceBillingBillingWebhookEventListItemDto {
   tenantId?: string | null;
 }
 
+/** Per-provider webhook activity inside the statistics window. */
+export interface CommerceBillingBillingWebhookProviderStatsDto {
+  /** Events dead-lettered in the window. */
+  deadLettered: number;
+  /** Events currently failed and awaiting retry. */
+  failedPendingRetry: number;
+  /** Events processed successfully in the window. */
+  processed: number;
+  /** Provider that sent the events (stripe, paypal, ...). */
+  provider: string | null;
+  /** Events received from the provider in the window. */
+  received: number;
+  /** Events received in the window whose signature did not verify. */
+  unverified: number;
+}
+
 /** Request body for the webhook signing-secret rotation. */
 export interface CommerceBillingBillingWebhooksControllerRotateWebhookSecretInput {
   /** The new signing secret exactly as configured at the provider. */
@@ -1701,6 +1721,33 @@ export interface CommerceBillingBillingWebhookSecuritySummaryDto {
   securityEventPipeline?: ComplianceAuditSecurityEventDeliveryStatusOutput;
   sourceIpAllowlist?: CommerceBillingBillingWebhookAllowlistStatusDto;
   suspiciousActivity?: CommerceBillingBillingWebhookSuspiciousActivityStatusDto;
+}
+
+/** Read model of one webhook-statistics reporting pass. */
+export interface CommerceBillingBillingWebhookStatsDto {
+  /** Average processing latency (received -> processed) in seconds over the events
+processed in the window; null when none. */
+  averageProcessingSeconds?: number | null;
+  /** Events dead-lettered in the window after exhausting the retry budget. */
+  deadLetteredInWindow: number;
+  /** Events currently failed and awaiting retry (not dead-lettered). */
+  failedPendingRetry: number;
+  /** Inclusive window start used for the aggregates. */
+  fromUtc: string;
+  /** UTC instant the report was generated. */
+  generatedAtUtc: string;
+  /** Per-provider breakdown of the window aggregates. */
+  perProvider: CommerceBillingBillingWebhookProviderStatsDto[] | null;
+  /** Events processed successfully in the window. */
+  processedInWindow: number;
+  /** Events received into the inbox in the window. */
+  receivedInWindow: number;
+  /** Processing success rate: processed / received, 0-100; null when nothing was received. */
+  successRatePercent?: number | null;
+  /** Inclusive window end used for the aggregates. */
+  toUtc: string;
+  /** Events received in the window whose provider signature did not verify. */
+  unverifiedInWindow: number;
 }
 
 /** State of the suspicious-activity auto-blocking monitor. */
@@ -1787,6 +1834,15 @@ export interface CommerceBillingInvoicePaymentRetryResult {
 
 /** Invoice status enumeration with monotonic transitions */
 export type CommerceBillingInvoiceStatus = 'Draft' | 'Open' | 'Paid' | 'Void' | 'PastDue' | 'Uncollectible';
+
+/** Request body for GameGuild.Commerce.Billing.OrchestrateSubscriptionPlanChangeCommand (issue #396
+workflow orchestration). The acting user is never part of the body: the handler
+resolves it from the ambient actor context. */
+export interface CommerceBillingOrchestrateSubscriptionPlanChangeInput {
+  effectiveDateUtc?: string | null;
+  newPlanId?: string | null;
+  paymentMethodId?: string | null;
+}
 
 /** Validation outcome for one stored calculation (issue #417). */
 export interface CommerceBillingPricingCalculationValidationResult {
@@ -1976,6 +2032,119 @@ export interface CommerceBillingStackingOutcomeRow {
   decisions?: number;
   /** Rule name, or "(no stacking rule)" for single/default resolution. */
   stackingRuleName?: string | null;
+}
+
+/** Read model returned by GameGuild.Commerce.Billing.GetSubscriptionChangeSagaQuery (issue #396
+workflow-orchestration observability): the durable saga row — status, current step,
+proration amounts, payment reference, failure and compensation record — plus the
+journaled step trail in execution order. */
+export interface CommerceBillingSubscriptionChangeSagaDto {
+  id?: string;
+  chargeForNew?: number;
+  compensationsApplied?: string | null;
+  completedAtUtc?: string | null;
+  creditForUnused?: number;
+  currency?: string | null;
+  currentStep?: string | null;
+  failedStep?: string | null;
+  failureReason?: string | null;
+  fromPlanId?: string;
+  idempotencyKey?: string | null;
+  initiatedByActorId?: string;
+  invoiceId?: string | null;
+  netAdjustment?: number;
+  paymentTransactionId?: string | null;
+  prorationEffectiveDateUtc?: string;
+  startedAtUtc?: string;
+  status?: string | null;
+  steps?: CommerceBillingSubscriptionChangeSagaStepDto[] | null;
+  subscriptionId?: string;
+  tenantId?: string;
+  toPlanId?: string;
+}
+
+/** Terminal result of the orchestrated subscription plan change: the saga state, the
+executed steps and, on failure, the compensating actions that were applied. */
+export interface CommerceBillingSubscriptionChangeSagaResult {
+  compensationsApplied?: string | null;
+  currency?: string | null;
+  failedStep?: string | null;
+  failureReason?: string | null;
+  fromPlanId?: string;
+  invoiceId?: string | null;
+  netAdjustment?: number;
+  paymentTransactionId?: string | null;
+  sagaId?: string;
+  status?: CommerceBillingSubscriptionChangeSagaStatus;
+  steps?: CommerceBillingSubscriptionChangeSagaStepResult[] | null;
+  subscriptionId?: string;
+  /** The saga completed: the subscription is on the new plan. */
+  succeeded?: boolean;
+  toPlanId?: string;
+}
+
+/** Lifecycle status of an orchestrated subscription plan change saga (issue #396
+workflow orchestration). The saga moves GameGuild.Commerce.Billing.SubscriptionChangeSagaStatus.Running through the steps
+(proration, invoice, payment, activation) and lands in GameGuild.Commerce.Billing.SubscriptionChangeSagaStatus.Completed or,
+after compensating actions, GameGuild.Commerce.Billing.SubscriptionChangeSagaStatus.Failed. */
+export type CommerceBillingSubscriptionChangeSagaStatus = 'Pending' | 'Running' | 'Completed' | 'Compensating' | 'Failed';
+
+/** One journaled saga step attempt, in execution order. */
+export interface CommerceBillingSubscriptionChangeSagaStepDto {
+  detail?: string | null;
+  occurredAtUtc?: string;
+  outcome?: string | null;
+  sequence?: number;
+  step?: string | null;
+}
+
+/** Outcome of one executed saga step, in execution order. */
+export interface CommerceBillingSubscriptionChangeSagaStepResult {
+  detail?: string | null;
+  occurredAtUtc?: string;
+  outcome?: string | null;
+  step?: string | null;
+}
+
+/** Read model returned by GameGuild.Commerce.Billing.GetSubscriptionEventProjectionQuery (issue #396
+state reconstruction): the state rebuilt from the durable billing event log, the
+verification against the live subscription snapshot, and the replayed event trail. */
+export interface CommerceBillingSubscriptionEventProjectionDto {
+  appliedEventCount?: number;
+  cancelledAtUtc?: string | null;
+  currentPlanId?: string | null;
+  events?: CommerceBillingSubscriptionProjectionEventDto[] | null;
+  lastChangeOutcome?: string | null;
+  lastChangeSagaId?: string | null;
+  lastPaymentAmount?: number | null;
+  lastPaymentAtUtc?: string | null;
+  lastPaymentCurrency?: string | null;
+  lastProvider?: string | null;
+  paymentCount?: number;
+  planChangeCount?: number;
+  projectedStatus?: string | null;
+  renewalCount?: number;
+  skippedEvents?: string[] | null;
+  subscriptionId?: string;
+  tenantId?: string;
+  totalPaidAmount?: number;
+  verificationConsistent?: boolean;
+  verificationDrifts?: CommerceBillingSubscriptionStateDriftDto[] | null;
+}
+
+/** One replayed durable billing event, in replay order. */
+export interface CommerceBillingSubscriptionProjectionEventDto {
+  eventId?: string;
+  eventName?: string | null;
+  occurredAtUtc?: string;
+  schemaVersion?: number;
+}
+
+/** One drift between the projected state and the live subscription snapshot. */
+export interface CommerceBillingSubscriptionStateDriftDto {
+  fact?: string | null;
+  live?: string | null;
+  projected?: string | null;
 }
 
 /** Request body for the drift-validation endpoint. */
@@ -2414,6 +2583,93 @@ export interface CommercePaymentsAppliedDiscount {
   type?: CommercePaymentsDiscountType;
 }
 
+/** Initiation result (issue #414): the challenge status plus the two generated deposit
+amounts. The amounts are surfaced once here — the same visibility a gateway sandbox
+gives the operator — and never again: the stored challenge keeps only salted hashes. */
+export interface CommercePaymentsBankAccountVerificationInitiationDto {
+  /** First generated deposit amount. */
+  deposit1Amount?: number;
+  /** Second generated deposit amount. */
+  deposit2Amount?: number;
+  status?: CommercePaymentsBankAccountVerificationStatusDto;
+}
+
+/** Verification state of a saved bank-account payment method (issue #414). */
+export interface CommercePaymentsBankAccountVerificationStatusDto {
+  /** UTC deadline (3 business days); null when no challenge exists. */
+  expiresAtUtc?: string | null;
+  /** Failed echo attempts against the current challenge. */
+  failedAttempts?: number;
+  /** UTC instant the two deposits were generated; null when no challenge exists. */
+  initiatedAtUtc?: string | null;
+  /** Bank-account payment method the challenge belongs to. */
+  paymentMethodId?: string;
+  /** Echo attempts left before the challenge locks. */
+  remainingAttempts?: number;
+  /** One of `none`, `pending`, `verified`, `expired`, `locked`. */
+  status?: string | null;
+  /** UTC instant of the successful echo; null until verified. */
+  verifiedAtUtc?: string | null;
+}
+
+/** One per-currency row of the base-currency revenue report (issue #412 spec G). */
+export interface CommercePaymentsBaseCurrencyRevenueEntry {
+  /** Credit total expressed in the base currency. */
+  baseCreditTotal?: number | null;
+  /** Debit total expressed in the base currency. */
+  baseDebitTotal?: number | null;
+  /** Net revenue expressed in the base currency. */
+  baseNetTotal?: number | null;
+  /** Whether the base-currency figures could be computed (a quotation existed at the period-end rate). */
+  converted?: boolean;
+  /** Gross credits in the transaction currency. */
+  creditTotal?: number;
+  /** Transaction currency of the row. */
+  currency?: string | null;
+  /** Gross debits (refunds) in the transaction currency. */
+  debitTotal?: number;
+  /** Revenue events behind the row. */
+  eventCount?: number;
+  /** Net revenue in the transaction currency. */
+  netTotal?: number;
+  /** Why the row is unconverted, when applicable. */
+  note?: string | null;
+  /** Effective date of the applied quotation. */
+  rateEffectiveDateUtc?: string | null;
+  /** Provider of the applied quotation. */
+  rateProvider?: string | null;
+  /** Quotation applied (transaction-currency units per one base unit) when converted. */
+  rateUsed?: number | null;
+}
+
+/** Base-currency revenue report + reconciliation (issue #412 specs F/G): every transacted
+currency of the period with its per-currency totals and the base-currency equivalent
+computed at the period-end rate, plus the reconciled grand totals in base currency.
+Unconvertible currencies are listed fail-closed (never silently merged) and excluded
+from the base totals. */
+export interface CommercePaymentsBaseCurrencyRevenueReport {
+  /** Human-readable attestation naming the rate basis per currency. */
+  attestation?: string | null;
+  /** Grand credit total in base currency (converted rows only). */
+  baseCreditTotal?: number;
+  /** Tenant base (accounting) currency the report is expressed in. */
+  baseCurrency?: string | null;
+  /** Grand debit total in base currency (converted rows only). */
+  baseDebitTotal?: number;
+  /** Grand net total in base currency (converted rows only). */
+  baseNetTotal?: number;
+  /** One row per transacted currency. */
+  entries?: CommercePaymentsBaseCurrencyRevenueEntry[] | null;
+  /** Inclusive period start (UTC). */
+  fromUtc?: string;
+  /** Report generation instant. */
+  generatedAtUtc?: string;
+  /** Inclusive period end (UTC). */
+  toUtc?: string;
+  /** Currencies that could not be converted (no quotation at period end). */
+  unconvertedCurrencies?: number;
+}
+
 /** Data model for Commerce Payments Billing Charges Controller+Cancel Billing Charge Request. */
 export interface CommercePaymentsBillingChargesControllerCancelBillingChargeInput {
   canceledBy?: string | null;
@@ -2423,6 +2679,7 @@ export interface CommercePaymentsBillingChargesControllerCancelBillingChargeInpu
 /** Data model for Commerce Payments Billing Charges Controller+Create Billing Charge Request. */
 export interface CommercePaymentsBillingChargesControllerCreateBillingChargeInput {
   amount?: number;
+  country?: string | null;
   paymentMethodId?: string | null;
   subscriptionId?: string;
   tenantId?: string;
@@ -2445,6 +2702,69 @@ export interface CommercePaymentsCalculateTaxInput {
   jurisdictionCode: string | null;
   productCategory?: string | null;
   transactionDate?: string | null;
+}
+
+/** Request payload for clearing manual overrides. */
+export interface CommercePaymentsClearLocalizedPriceInput {
+  reason?: string | null;
+}
+
+/** One per-currency row of the conversion-cost analysis (issue #412 spec G). */
+export interface CommercePaymentsConversionCostEntry {
+  /** Net volume converted to base at the market rate. */
+  baseAtMarketRate?: number | null;
+  /** Net volume converted to base at the override rate. */
+  baseAtOverrideRate?: number | null;
+  /** Absolute base-currency difference between the two conversion legs — the pricing decision's conversion cost. */
+  costInBase?: number | null;
+  /** Transaction currency of the row. */
+  currency?: string | null;
+  /** Market quotation at period end (transaction-currency units per one base unit). */
+  marketRate?: number | null;
+  /** Effective date of the market quotation. */
+  marketRateEffectiveDateUtc?: string | null;
+  /** Net revenue volume in the transaction currency over the period. */
+  netVolume?: number;
+  /** Why parts of the row are unavailable (e.g. "no-market-rate"). */
+  note?: string | null;
+  /** Active operator override quotation for the same pair, when any. */
+  overrideRate?: number | null;
+}
+
+/** Currency conversion costs analysis (issue #412 spec G): for every non-base transacted
+currency, the base-currency value of its net volume at the market rate versus at the
+operator override rate — quantifying what pinned rates cost (or save) per market. */
+export interface CommercePaymentsConversionCostReport {
+  /** Tenant base currency. */
+  baseCurrency?: string | null;
+  /** One row per transacted non-base currency. */
+  entries?: CommercePaymentsConversionCostEntry[] | null;
+  /** Inclusive period start (UTC). */
+  fromUtc?: string;
+  /** Report generation instant. */
+  generatedAtUtc?: string;
+  /** Sum of per-currency costs in base currency. */
+  totalCostInBase?: number;
+  /** Inclusive period end (UTC). */
+  toUtc?: string;
+}
+
+/** Request payload for the currency conversion endpoint. */
+export interface CommercePaymentsConvertCurrencyInput {
+  /** Optional historical instant (UTC); omit for current quotations. */
+  asOfUtc?: string | null;
+  /** Entries to convert (1..50), each with its own source currency. */
+  items?: CommercePaymentsConvertCurrencyItemInput[] | null;
+  /** ISO 4217 code every amount is converted into. */
+  targetCurrency?: string | null;
+}
+
+/** One entry of a conversion request. */
+export interface CommercePaymentsConvertCurrencyItemInput {
+  /** Amount to convert (≥ 0). */
+  amount?: number;
+  /** ISO 4217 code the amount is denominated in. */
+  currency?: string | null;
 }
 
 /** Request to create a tax jurisdiction */
@@ -2508,10 +2828,93 @@ export interface CommercePaymentsCreditMetrics {
   usageRate?: number | null;
 }
 
+/** Per-item conversion outcome (issue #412 spec D). Successful items carry the converted
+amount rounded to the target currency's ISO 4217 minor-unit exponent and the quotation
+metadata that produced it; failed items carry Error instead so one
+bad entry never aborts a batch. */
+export interface CommercePaymentsCurrencyConversionItemResult {
+  /** Converted amount in TargetCurrency (minor-unit rounded), when the item succeeded. */
+  convertedAmount?: number | null;
+  /** Failure reason for this item, when it failed; null on success. */
+  error?: string | null;
+  /** True when source equals target and no FX quotation was involved. */
+  isIdentity?: boolean;
+  /** Quotation used (quote units per one source unit); null for same-currency identity items. */
+  rate?: number | null;
+  /** Moment the quotation was published; null for identity items. */
+  rateAsOfUtc?: string | null;
+  /** Effective (data) date of the quotation, when known (historical lookups); otherwise null. */
+  rateEffectiveDateUtc?: string | null;
+  /** Provider that produced the quotation, when known (historical lookups); otherwise null. */
+  rateProvider?: string | null;
+  /** Provenance label of the quotation (e.g. "manual-override", provider label); null for identity items. */
+  rateSource?: string | null;
+  /** Requested amount, unchanged. */
+  sourceAmount?: number;
+  /** Normalized source ISO 4217 code. */
+  sourceCurrency?: string | null;
+  /** Normalized target ISO 4217 code. */
+  targetCurrency?: string | null;
+}
+
+/** Batch conversion response. */
+export interface CommercePaymentsCurrencyConversionResult {
+  /** Historical lookup date, when requested; null means current quotations. */
+  asOfUtc?: string | null;
+  /** One outcome per requested entry, in request order. */
+  items?: CommercePaymentsCurrencyConversionItemResult[] | null;
+  /** Normalized target ISO 4217 code shared by every item. */
+  targetCurrency?: string | null;
+}
+
 /** Optional display preferences supplied when enabling a currency. */
 export interface CommercePaymentsCurrencyDisplayPreferencesInput {
   displayOrder?: number | null;
   displaySymbol?: string | null;
+}
+
+/** One ranked currency in the popularity report (issue #412 spec G). */
+export interface CommercePaymentsCurrencyPopularityEntry {
+  /** ISO-4217 currency code the entry is denominated in. */
+  currency?: string | null;
+  /** Rank position (1 = most transacted). */
+  rank?: number;
+  /** Credit-side total in Currency. */
+  totalCredit?: number;
+  /** Debit-side total in Currency. */
+  totalDebit?: number;
+  /** Net total in Currency; never consolidated across currencies. */
+  totalNet?: number;
+  /** Revenue events counted in this currency over the period. */
+  transactionCount?: number;
+}
+
+/** Most-transacted currencies over an inclusive period (issue #412 spec G). */
+export interface CommercePaymentsCurrencyPopularityReport {
+  /** Currencies ranked by transaction count (then net volume, then code), limited to the requested size. */
+  currencies?: CommercePaymentsCurrencyPopularityEntry[] | null;
+  /** Start of the period (inclusive). */
+  fromUtc?: string;
+  /** Moment the report was produced. */
+  generatedAtUtc?: string;
+  /** End of the period (inclusive). */
+  toUtc?: string;
+}
+
+/** Result of the location-based currency suggestion (issue #412 spec E). */
+export interface CommercePaymentsCurrencySuggestionDto {
+  /** Detected ISO 3166-1 alpha-2 country, when available. */
+  country?: string | null;
+  /** Why a non-country currency was suggested, when applicable. */
+  fallbackReason?: string | null;
+  /** Whether the suggested currency is enabled for the caller's tenant (false when anonymous). */
+  isEnabledForTenant?: boolean;
+  /** GDPR data-minimization notice: nothing about the caller is stored. */
+  privacyNotice?: string | null;
+  /** How the suggestion was produced ("edge-header", "tenant-base", "first-enabled", "default"). */
+  source?: string | null;
+  /** ISO 4217 code suggested for the caller. */
+  suggestedCurrency?: string | null;
 }
 
 /** Customer types */
@@ -2544,6 +2947,10 @@ export interface CommercePaymentsDisputeEvidence {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** SHA-256 digest (hex) of the bytes delivered to the provider for this row (issue #419
+provider file delivery), retained so an accepted submission can be audited against the
+stored content. Null when the stored bytes could not be resolved for delivery. */
+  contentDigest?: string | null;
   /** Timestamp when the entity was created.
 Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
@@ -2580,6 +2987,10 @@ first submission wins so each row keeps the timestamp of when it reached the gat
   metadata?: string | null;
   /** MIME type */
   mimeType?: string | null;
+  /** Provider file/evidence reference that now holds this file after a successful bundle
+submission (issue #419 provider file delivery), e.g. a Stripe `file_...` id or a
+PayPal dispute-evidence document reference. Null until the provider accepted the file. */
+  providerFileId?: string | null;
   /** Submitted timestamp */
   submittedAt?: string;
   /** Submitted by user ID */
@@ -2752,6 +3163,87 @@ export type CommercePaymentsEvidenceType =
   | 'Invoice'
   | 'SubscriptionRecord';
 
+/** Result of a blacklist check. */
+export interface CommercePaymentsFraudBlacklistCheckResult {
+  entryType: CommercePaymentsFraudBlacklistEntryType;
+  evaluation: CommercePaymentsFraudBlacklistEvaluation;
+  /** Expiry of the matching entry; null = no expiry. */
+  expiresAt?: string | null;
+  /** Stored pattern that matched, when blacklisted. */
+  matchedPattern?: string | null;
+  /** Bounded reason recorded with the matching entry. */
+  reason?: string | null;
+  source?: CommercePaymentsFraudBlacklistSource;
+}
+
+/** Request body for adding a blacklist entry. */
+export interface CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInput {
+  /** Entry kind (IpAddress, EmailDomain, Email, CardBin, DeviceFingerprint, PaymentMethodToken, CardFingerprint, ExternalCustomerId). */
+  entryType?: string | null;
+  /** Optional expiry instant (ISO-8601). */
+  expiresAt?: string | null;
+  /** True for a manual whitelist override. */
+  isWhitelist?: boolean;
+  /** Optional bounded reason. */
+  reason?: string | null;
+  /** Pattern to store; * wildcards supported. */
+  value?: string | null;
+}
+
+/** Summary of a blacklist CSV import. */
+export interface CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResult {
+  /** Bounded per-row error messages, one per failed row. */
+  errors?: string[] | null;
+  /** Rows that were rejected or failed to store. */
+  failed?: number;
+  /** Rows successfully stored (or already present — the add is idempotent). */
+  imported?: number;
+}
+
+/** Read model for a stored blacklist entry. */
+export interface CommercePaymentsFraudBlacklistEntryResult {
+  /** Entry id. */
+  id: string;
+  /** When the entry was created. */
+  createdAt: string;
+  entryType: CommercePaymentsFraudBlacklistEntryType;
+  /** Expiry instant; null = no expiry. */
+  expiresAt?: string | null;
+  /** Whether this is a whitelist override. */
+  isWhitelist: boolean;
+  /** Bounded reason, when recorded. */
+  reason?: string | null;
+  source: CommercePaymentsFraudBlacklistSource;
+  /** Owning tenant. */
+  tenantId: string;
+  /** Stored (normalized) pattern. */
+  value: string | null;
+}
+
+/** Kind of value stored in a GameGuild.Commerce.Payments.FraudBlacklistEntry (issue #409). The store is
+intentionally generic: every entry type supports the same wildcard patterns, expiry and
+whitelist override semantics, so new attribute kinds need no schema change. */
+export type CommercePaymentsFraudBlacklistEntryType =
+  'IpAddress' | 'EmailDomain' | 'Email' | 'CardBin' | 'DeviceFingerprint' | 'PaymentMethodToken' | 'CardFingerprint' | 'ExternalCustomerId';
+
+/** Outcome of evaluating a value against the tenant blacklist (issue #409). */
+export type CommercePaymentsFraudBlacklistEvaluation = 'NoMatch' | 'Blacklisted' | 'Whitelisted';
+
+/** Paged read model of the tenant's blacklist entries. */
+export interface CommercePaymentsFraudBlacklistPage {
+  /** Entries on the current page, newest first. */
+  items: CommercePaymentsFraudBlacklistEntryResult[] | null;
+  /** Current page number (1-based). */
+  page: number;
+  /** Page size used for the query. */
+  pageSize: number;
+  /** Total matching entries for the filter. */
+  totalCount: number;
+}
+
+/** How a blacklist entry came to exist. */
+export type CommercePaymentsFraudBlacklistSource = 'Manual' | 'AutoFraudDecline';
+
 /** Read model for one pending fraud review. */
 export interface CommercePaymentsFraudReviewListItem {
   /** Charged amount. */
@@ -2835,6 +3327,136 @@ export type CommercePaymentsFraudReviewStatus = 'PendingReview' | 'Approved' | '
 /** Risk band derived from the aggregate fraud score. */
 export type CommercePaymentsFraudRiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 
+/** Fraud outcomes for one billing country inside the statistics window (issue #409). */
+export interface CommercePaymentsFraudStatisticsCountryRow {
+  /** Assessed payments blocked in the window. */
+  blocked: number;
+  /** ISO 3166-1 alpha-2 billing country; "unknown" when the attempt carried none. */
+  country: string | null;
+  /** Payments created for the country in the window. */
+  created: number;
+  /** Assessed payments held for review in the window. */
+  reviewHeld: number;
+}
+
+/** Fraud outcomes for one gateway payment provider inside the statistics window (issue #409). */
+export interface CommercePaymentsFraudStatisticsMethodRow {
+  /** Assessed payments blocked in the window. */
+  blocked: number;
+  /** Payments created through the provider in the window. */
+  created: number;
+  /** Gateway provider that processed the attempts (stripe, paypal, ...). */
+  provider: string | null;
+  /** Assessed payments held for review in the window. */
+  reviewHeld: number;
+}
+
+/** Fraud outcomes for one subscription plan inside the statistics window (issue #409: fraud by plan). */
+export interface CommercePaymentsFraudStatisticsPlanRow {
+  /** Assessed payments blocked in the window. */
+  blocked: number;
+  /** Payments created for the plan in the window. */
+  created: number;
+  /** Plan the charged subscriptions are on; null when the attempt could not be attributed to a plan. */
+  planId: string | null;
+  /** Display name of the plan; "unknown" when unattributed or the plan no longer exists. */
+  planName: string | null;
+  /** Assessed payments held for review in the window. */
+  reviewHeld: number;
+}
+
+/** Derived fraud-program rates; null when the denominator is zero. */
+export interface CommercePaymentsFraudStatisticsRates {
+  /** Blocked rate: blocked / assessed, 0-100. */
+  blockedPercent?: number | null;
+  /** Chargeback rate: disputed / succeeded, 0-100. */
+  chargebackPercent?: number | null;
+  /** False-positive proxy: held reviews later approved / resolved reviews, 0-100. */
+  falsePositivePercent?: number | null;
+  /** Flagged rate: (held + blocked) / assessed, 0-100. */
+  flaggedPercent?: number | null;
+}
+
+/** Combined read model of one fraud-statistics reporting pass. */
+export interface CommercePaymentsFraudStatisticsReport {
+  /** Fraud outcomes by billing country inside the window (issue #409: fraud by country). */
+  byCountry: CommercePaymentsFraudStatisticsCountryRow[] | null;
+  /** Fraud outcomes by gateway payment provider inside the window (issue #409: fraud by payment method). */
+  byPaymentMethod: CommercePaymentsFraudStatisticsMethodRow[] | null;
+  /** Fraud outcomes by subscription plan inside the window (issue #409: fraud by plan). */
+  byPlan: CommercePaymentsFraudStatisticsPlanRow[] | null;
+  /** Inclusive window start used for the aggregates. */
+  fromUtc: string;
+  /** UTC instant the report was generated. */
+  generatedAtUtc: string;
+  rates: CommercePaymentsFraudStatisticsRates;
+  reviews: CommercePaymentsFraudStatisticsReviews;
+  /** Top fraud signal types by frequency inside the window (top 10). */
+  topSignals: CommercePaymentsFraudStatisticsSignal[] | null;
+  totals: CommercePaymentsFraudStatisticsTotals;
+  /** Inclusive window end used for the aggregates. */
+  toUtc: string;
+  /** Trend of created/held/blocked payments inside the window, bucketed by GameGuild.Commerce.Payments.FraudStatisticsReport.TrendGranularity (issue #409: trend analysis). */
+  trend: CommercePaymentsFraudStatisticsTrendPoint[] | null;
+  trendGranularity: CommercePaymentsFraudTrendGranularity;
+}
+
+/** Manual-review queue statistics (issue #409: backlog and average time to review). */
+export interface CommercePaymentsFraudStatisticsReviews {
+  /** Resolved reviews that were approved (held transactions that were legitimate). */
+  approvedInWindow: number;
+  /** Average hours from payment creation to review resolution in the window; null when none. */
+  averageReviewHours?: number | null;
+  /** Resolved reviews that were declined (confirmed fraud). */
+  declinedInWindow: number;
+  /** Reviews currently awaiting a decision (all time; the live queue). */
+  pendingBacklog: number;
+  /** Reviews resolved in the window. */
+  resolvedInWindow: number;
+}
+
+/** One fraud signal type with its frequency inside the window. */
+export interface CommercePaymentsFraudStatisticsSignal {
+  /** How often the signal fired in the window. */
+  count: number;
+  /** Stable signal identifier, e.g. `Velocity.PaymentFrequency`. */
+  signalType: string | null;
+}
+
+/** Payment counts inside the statistics window. */
+export interface CommercePaymentsFraudStatisticsTotals {
+  /** Assessed payments the gate allowed. */
+  allowed: number;
+  /** Payments that went through the fraud gate in the window. */
+  assessed: number;
+  /** Assessed payments the gate blocked. */
+  blocked: number;
+  /** Payments that ended disputed (chargebacks) in the window. */
+  disputed: number;
+  /** Payments created in the window. */
+  paymentsCreated: number;
+  /** Assessed payments the gate held for manual review. */
+  reviewHeld: number;
+  /** Payments that succeeded in the window. */
+  succeeded: number;
+}
+
+/** One bucket of the fraud-outcome trend inside the statistics window (issue #409). */
+export interface CommercePaymentsFraudStatisticsTrendPoint {
+  /** Assessed payments blocked in the bucket. */
+  blocked: number;
+  /** Payments created in the bucket. */
+  created: number;
+  /** UTC start of the bucket (day, ISO week or month, per the report granularity). */
+  day: string;
+  /** Assessed payments held for review in the bucket. */
+  reviewHeld: number;
+}
+
+/** Trend bucket granularity of the fraud statistics report (issue #409: weekly and
+monthly trend views alongside the daily default). */
+export type CommercePaymentsFraudTrendGranularity = 'Daily' | 'Weekly' | 'Monthly';
+
 /** One persisted FX quotation as exposed by the admin surface. */
 export interface CommercePaymentsFxRateDto {
   /** Moment the provider quoted it. */
@@ -2902,6 +3524,40 @@ export interface CommercePaymentsFxRateSyncRunDto {
 /** Outcome values for an FX sync run. */
 export type CommercePaymentsFxRateSyncRunStatus = 'Succeeded' | 'Failed' | 'SucceededStale';
 
+/** One row of the FX rate variance report (issue #412 spec G). */
+export interface CommercePaymentsFxRateVarianceEntry {
+  /** Override base code. */
+  baseCurrency?: string | null;
+  /** Whether the variance exceeds the configured anomaly threshold. */
+  exceedsThreshold?: boolean;
+  /** Newest synced market quotation for the same direction (actual rate). */
+  marketRate?: number | null;
+  /** Effective date of the market quotation. */
+  marketRateEffectiveDateUtc?: string | null;
+  /** Provider of the market quotation. */
+  marketRateProvider?: string | null;
+  /** When the override was last set. */
+  overrideAsOfUtc?: string;
+  /** Override expiry, when set. */
+  overrideExpiresAtUtc?: string | null;
+  /** Active operator override (expected rate). */
+  overrideRate?: number;
+  /** Override quote code. */
+  quoteCurrency?: string | null;
+  /** |override − market| / market × 100, when both exist. */
+  variancePercent?: number | null;
+}
+
+/** FX rate variance report: actual (market) vs expected (operator override) rates. */
+export interface CommercePaymentsFxRateVarianceReport {
+  /** One row per active override. */
+  entries?: CommercePaymentsFxRateVarianceEntry[] | null;
+  /** Report generation instant. */
+  generatedAtUtc?: string;
+  /** Configured variance threshold (%). */
+  thresholdPercent?: number;
+}
+
 /** Result of GameGuild.Commerce.Payments.GetFxSyncStatusQuery. */
 export interface CommercePaymentsFxSyncStatusDto {
   /** Non-expired overrides. */
@@ -2926,6 +3582,22 @@ export interface CommercePaymentsFxSyncStatusDto {
   workerEnabled?: boolean;
 }
 
+/** Expanded per-gateway analytics over the rolling windows (issue #413 analytics
+remainders): window aggregates, error-type breakdown, cost analysis and geographic
+breakdown in one report. */
+export interface CommercePaymentsGatewayAnalyticsReport {
+  /** Per-provider succeeded volume priced through the configured fee schedule (30d window). */
+  costAnalysis?: CommercePaymentsGatewayCostMetrics[] | null;
+  /** Failed-payment counts per provider, window and gateway error code. */
+  errorBreakdown?: CommercePaymentsGatewayErrorTypeMetrics[] | null;
+  /** UTC instant the report was generated. */
+  generatedAtUtc?: string;
+  /** Attempts and success rate per provider, window and billing country. */
+  geographicBreakdown?: CommercePaymentsGatewayGeoMetrics[] | null;
+  /** Rolling-window aggregates per provider with payments in the window. */
+  windows?: CommercePaymentsGatewayWindowMetrics[] | null;
+}
+
 /** Health snapshot of one gateway circuit (issue #413). */
 export interface CommercePaymentsGatewayCircuitSnapshot {
   /** Consecutive retriable failures recorded while closed. */
@@ -2941,6 +3613,103 @@ export interface CommercePaymentsGatewayCircuitSnapshot {
 
 /** Circuit state of one payment gateway. */
 export type CommercePaymentsGatewayCircuitState = 'Closed' | 'Open' | 'HalfOpen';
+
+/** Outcome of one gateway connection test (issue #413): whether the gateway's API
+credentials are usable, through the cheapest authenticated call the provider
+offers. Never contains a credential value. */
+export interface CommercePaymentsGatewayConnectionTestResult {
+  /** UTC instant the test ran. */
+  checkedAtUtc?: string;
+  /** Stable error code when Succeeded is false. */
+  errorCode?: string | null;
+  /** Human-readable failure detail; never contains credentials. */
+  errorMessage?: string | null;
+  /** Wall-clock duration of the provider round trip; 0 in simulation mode. */
+  latencyMs?: number;
+  /** Credential mode exercised: `simulation` or `live`. */
+  mode?: string | null;
+  /** Gateway provider identifier that was tested. */
+  providerId?: string | null;
+  /** Whether the credential check passed. */
+  succeeded?: boolean;
+}
+
+/** Cost-analysis row (issue #413): one provider's succeeded payment volume in the 30d
+window priced through its configured fee schedule. Providers without a complete fee
+schedule report the raw volume with a null estimate (unknown cost is never zero). */
+export interface CommercePaymentsGatewayCostMetrics {
+  /** Fixed fee x succeeded count + percentage fee x volume; null without a complete schedule. */
+  estimatedFee?: number | null;
+  /** Configured per-transaction fixed fee; null when no schedule is configured. */
+  feeFixedAmount?: number | null;
+  /** Configured percentage fee in basis points (100 bp = 1%); null when no schedule is configured. */
+  feePercentBasisPoints?: number | null;
+  /** Provider identifier of the gateway. */
+  providerId?: string | null;
+  /** Succeeded payments in the 30d window. */
+  succeededCount?: number;
+  /** Sum of the succeeded payment amounts (major units) in the 30d window. */
+  succeededVolume?: number;
+}
+
+/** Outcome of a credential deactivation. */
+export interface CommercePaymentsGatewayCredentialDeactivationResult {
+  /** Whether an active credential was deactivated. */
+  deactivated?: boolean;
+  /** UTC instant of the deactivation; null when nothing was active. */
+  deactivatedAtUtc?: string | null;
+  /** Gateway provider identifier (normalized lowercase). */
+  providerKey?: string | null;
+  /** Credential slot that was addressed (normalized lowercase). */
+  secretName?: string | null;
+}
+
+/** Result of provisioning a gateway credential: identity metadata of the new active
+row. Deliberately carries no plaintext — the value exists only encrypted at rest. */
+export interface CommercePaymentsGatewayCredentialProvisionResult {
+  /** UTC instant the new credential became active. */
+  activatedAtUtc?: string;
+  /** Whether a previously active credential was deactivated by this provisioning. */
+  deactivatedPrevious?: boolean;
+  /** SHA-256 fingerprint (hex prefix) of the provisioned plaintext. */
+  fingerprint?: string | null;
+  /** Gateway provider identifier (normalized lowercase). */
+  providerKey?: string | null;
+  /** Credential slot that was provisioned (normalized lowercase). */
+  secretName?: string | null;
+}
+
+/** Error-rate-by-type row (issue #413): failed payments of one provider in one window,
+grouped by the gateway error code recorded on the payment. */
+export interface CommercePaymentsGatewayErrorTypeMetrics {
+  /** Failed payments with that error code inside the window. */
+  count?: number;
+  /** Gateway error code; `(unclassified)` when none was recorded. */
+  errorCode?: string | null;
+  /** Provider identifier of the gateway. */
+  providerId?: string | null;
+  /** Count divided by the provider's failed payments in the window. */
+  shareOfFailures?: number;
+  /** Window label (24h, 7d or 30d). */
+  window?: string | null;
+}
+
+/** Geographic performance row (issue #413): attempts and success rate of one provider in
+one window, grouped by the billing country recorded on the payment. */
+export interface CommercePaymentsGatewayGeoMetrics {
+  /** Payments of that country inside the window. */
+  attempts?: number;
+  /** ISO 3166-1 alpha-2 billing country; `(unknown)` when the payment recorded none. */
+  country?: string | null;
+  /** Provider identifier of the gateway. */
+  providerId?: string | null;
+  /** Succeeded payments of that country inside the window. */
+  succeeded?: number;
+  /** Succeeded / Attempts; 0 when no attempts. */
+  successRate?: number;
+  /** Window label (24h, 7d or 30d). */
+  window?: string | null;
+}
 
 /** Combined read model of one reporting pass: rolling-window aggregates per gateway
 plus the current circuit-breaker snapshot of every known gateway. */
@@ -3034,6 +3803,34 @@ export interface CommercePaymentsGiftsControllerPurchaseGiftRequestBody {
 
 /** Gift subscription status machine (Purchased → Delivered → Redeemed / Expired, plus Refunded). */
 export type CommercePaymentsGiftStatus = 'Purchased' | 'Delivered' | 'Redeemed' | 'Expired' | 'Refunded';
+
+/** One preview row: what a recalculation pass would do, before it is applied. */
+export interface CommercePaymentsLocalizedPricePreviewItem {
+  /** Plan monthly price in the plan currency. */
+  baseMonthlyPrice?: number;
+  /** Plan currency code. */
+  basePlanCurrency?: string | null;
+  /** Localized ISO 4217 code. */
+  currencyCode?: string | null;
+  /** Effective date of the current row. */
+  currentEffectiveDateUtc?: string | null;
+  /** Expiry of the current row, when set. */
+  currentExpiryDateUtc?: string | null;
+  /** Currently effective localized price, when a row applies. */
+  currentPrice?: number | null;
+  /** Proposed minus current price; null when no comparison is possible. */
+  delta?: number | null;
+  /** Whether the effective row is a manual override (recalculation preserves it). */
+  isManualOverride?: boolean;
+  /** Why no proposal is present (e.g. "manual-override-preserved", "no-rate"). */
+  note?: string | null;
+  /** Plan the price belongs to. */
+  planId?: string;
+  /** FX-calculated price the pass would store (absent for overrides and missing rates). */
+  proposedPrice?: number | null;
+  /** Quotation that produces ProposedPrice (target units per one plan-currency unit). */
+  rateUsed?: number | null;
+}
 
 /** Data model for Commerce Payments Lock Wallet Request. */
 export interface CommercePaymentsLockWalletInput {
@@ -3167,6 +3964,16 @@ gateway values overwrite only while the dispute is unresolved. */
   evidence?: CommercePaymentsDisputeEvidence[] | null;
   /** Deadline by which evidence must be submitted to the gateway, when provided. */
   evidenceDueBy?: string | null;
+  /** Frozen manifest of the evidence bundle accepted by the gateway (issue #419 replay-safe
+submission): JSON list of `{ evidenceId, providerFileId, contentDigest }` entries
+captured at submission time. The gateway's final evidence response cannot be amended
+with additional files, so later submissions are validated against this manifest — an
+identical manifest replays idempotently, an added/changed one is rejected. */
+  evidenceManifest?: string | null;
+  /** SHA-256 digest (hex) of the frozen GameGuild.Commerce.Payments.PaymentDispute.EvidenceManifest (issue #419): binds
+the dispute's idempotency key to the exact accepted evidence set, so a retry after a
+crash between the gateway call and the local persist replays the same provider request. */
+  evidenceManifestHash?: string | null;
   /** When the merchant evidence bundle was submitted to the gateway (issue #419 evidence
 submission tracking). Null while no bundle has been submitted; refreshed by every
 successful submission so the deadline reminder surface can distinguish disputes whose
@@ -3267,16 +4074,29 @@ export interface CommercePaymentsPaymentMethodDto {
 export interface CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody {
   billingAddress?: string | null;
   gatewayPaymentMethodId?: string | null;
+  gatewayProvider?: string | null;
+  methodType?: string | null;
   nickname?: string | null;
   ownerUserId?: string | null;
   setAsDefault?: boolean;
   tenantId?: string;
 }
 
+/** Request body for removing a payment method (destructive action; issue #414). */
+export interface CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody {
+  confirm?: boolean;
+}
+
 /** Request body for updating payment-method display fields. */
 export interface CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBody {
   billingAddress?: string | null;
   nickname?: string | null;
+}
+
+/** Request body for echoing the two observed micro-deposit amounts (issue #414). */
+export interface CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody {
+  deposit1Amount?: number;
+  deposit2Amount?: number;
 }
 
 /** Payment success and failed-payment recovery metrics for an inclusive window (issue #403).
@@ -3409,6 +4229,10 @@ export interface CommercePaymentsPaymentsControllerCreateSetupIntentOutput {
 /** Data model for Commerce Payments Payments Controller+Process Payment Request. */
 export interface CommercePaymentsPaymentsControllerProcessPaymentInput {
   amount?: number;
+  cardBin?: string | null;
+  country?: string | null;
+  gatewayProvider?: string | null;
+  payerEmail?: string | null;
   paymentMethodId?: string | null;
   subscriptionId?: string;
   tenantId?: string;
@@ -3423,6 +4247,81 @@ export interface CommercePaymentsPaymentsControllerRefundInput {
 /** Payment processing status */
 export type CommercePaymentsPaymentStatus =
   'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'Cancelled' | 'RequiresAction' | 'Refunded' | 'Disputed' | 'PartiallyRefunded';
+
+/** Admin view of one (plan, currency) localization: override vs auto-calculated. */
+export interface CommercePaymentsPlanLocalizedPriceDto {
+  /** Quotation behind AutoPriceToday, when available. */
+  autoPriceRate?: number | null;
+  /** What the FX-calculated auto price would be right now (reference for override comparison). */
+  autoPriceToday?: number | null;
+  /** Localized ISO 4217 code. */
+  currencyCode?: string | null;
+  /** Effective date of the row. */
+  effectiveDateUtc?: string | null;
+  /** Currently effective localized price, when a row applies. */
+  effectivePrice?: number | null;
+  /** Rate that produced the last auto calculation. */
+  exchangeRateUsed?: number | null;
+  /** Expiry of the row, when set. */
+  expiryDateUtc?: string | null;
+  /** Whether the effective row is a manual override. */
+  isManualOverride?: boolean;
+  /** Moment of the last auto calculation. */
+  lastCalculatedAt?: string | null;
+  /** Why a reference price is absent (e.g. "no-rate"). */
+  note?: string | null;
+  /** Plan the row belongs to. */
+  planId?: string;
+}
+
+/** Outcome summary of one localized-price recalculation pass. */
+export interface CommercePaymentsPriceRecalculationOutcome {
+  /** Candidates processed. */
+  completedItems?: number;
+  /** Manual overrides deliberately left untouched. */
+  preservedOverrides?: number;
+  /** Progress/audit run row created for the pass. */
+  runId?: string;
+  /** Candidates kept at their prior value because no FX quotation was available. */
+  skippedForMissingRate?: number;
+  status?: CommercePaymentsPriceRecalculationRunStatus;
+  /** Candidate (plan, currency) pairs considered. */
+  totalItems?: number;
+  /** Auto rows whose stored value changed. */
+  updatedPrices?: number;
+}
+
+/** One recalculation run as exposed to the admin surface (progress + outcome). */
+export interface CommercePaymentsPriceRecalculationRunDto {
+  /** Run identifier. */
+  id?: string;
+  /** Completion instant; null while running. */
+  completedAtUtc?: string | null;
+  /** Processed count (progress). */
+  completedItems?: number;
+  /** Plan scope; null = every plan. */
+  planId?: string | null;
+  /** Manual overrides preserved. */
+  preservedOverrides?: number;
+  /** Rollback instant, when rolled back. */
+  rolledBackAtUtc?: string | null;
+  /** Candidates skipped for lack of a quotation. */
+  skippedForMissingRate?: number;
+  /** Start instant. */
+  startedAtUtc?: string;
+  status?: CommercePaymentsPriceRecalculationRunStatus;
+  /** Candidate count. */
+  totalItems?: number;
+  /** Acting account; null = FX sync worker. */
+  triggeredByUserId?: string | null;
+  /** Why the run happened. */
+  triggerReason?: string | null;
+  /** Auto rows changed. */
+  updatedPrices?: number;
+}
+
+/** Outcome values for a localized-price recalculation run. */
+export type CommercePaymentsPriceRecalculationRunStatus = 'Running' | 'Succeeded' | 'Failed' | 'RolledBack';
 
 /** Add-on priced independently of the plan (issue #417): own unit price, own quantity,
 own currency (converted to the calculation currency through the FX core when they differ). */
@@ -3615,6 +4514,11 @@ Without tiers the charge is Quantity × PerUnitPrice;
 with tiers each quantity band is priced at its own per-unit price (utility-style
 progressive banding), the last open-ended band absorbing any remainder. */
 export interface CommercePaymentsPricingUsageChargeInput {
+  /** Optional ISO 4217 code the per-unit prices (flat and tiered) are denominated in.
+Null (default) means they are already in the calculation currency. When set and
+different from the calculation currency, every per-unit price is converted through the
+FX core before the charge is computed (issue #412 spec F). */
+  currency?: string | null;
   /** Metric name (display/line-item key) */
   metric?: string | null;
   /** Flat per-unit price used when no tiers are supplied */
@@ -3664,6 +4568,29 @@ export interface CommercePaymentsProcessRefundResult {
   /** Unique identifier for the refund transaction */
   refundId: string;
   status: CommercePaymentsTransactionStatus;
+}
+
+/** HTTP request body for FX provider credential provisioning: carries only the plaintext
+API key; the provider arrives on the route. The value is encrypted (DataProtection,
+AES-256 under the application key ring) before it touches the database and is never
+echoed back or logged. */
+export interface CommercePaymentsProvisionFxProviderApiKeyInput {
+  /** Plaintext provider API key. */
+  value?: string | null;
+}
+
+/** HTTP request body for credential provisioning: carries only the plaintext value; the
+provider and slot arrive on the route so they never duplicate (and the value is never
+echoed back). */
+export interface CommercePaymentsProvisionGatewayCredentialInput {
+  /** Plaintext credential value. */
+  value?: string | null;
+}
+
+/** Request payload for the bulk recalculation command. */
+export interface CommercePaymentsRecalculateLocalizedPricesInput {
+  planId?: string | null;
+  reason?: string | null;
 }
 
 /** Referral tracking record (issue #410 v1). One opaque referral code is generated per
@@ -4006,6 +4933,16 @@ export interface CommercePaymentsRejectedPromoDiscount {
   reason?: string | null;
 }
 
+/** Result of a blacklist-entry removal. */
+export interface CommercePaymentsRemoveFraudBlacklistEntryResult {
+  /** Entry that was removed. */
+  entryId: string;
+  /** Failure reason when GameGuild.Commerce.Payments.RemoveFraudBlacklistEntryResult.Success is false. */
+  failureReason?: string | null;
+  /** Whether an entry was removed. */
+  success: boolean;
+}
+
 /** Result of creating a refund request. */
 export interface CommercePaymentsRequestRefundResult {
   /** Failure reason when GameGuild.Commerce.Payments.RequestRefundResult.Success is false. */
@@ -4310,6 +5247,19 @@ export interface CommercePaymentsRevenueTrendReport {
   totalsByCurrency?: CommercePaymentsRevenueTrendCurrencyTotal[] | null;
   /** End of the range (inclusive). */
   toUtc?: string;
+}
+
+/** Request payload for the rollback command. */
+export interface CommercePaymentsRollbackRecalculationInput {
+  reason?: string | null;
+}
+
+/** Request payload for the manual localized-price command. */
+export interface CommercePaymentsSetLocalizedPriceInput {
+  effectiveDateUtc?: string | null;
+  expiryDateUtc?: string | null;
+  localizedPrice?: number;
+  reason?: string | null;
 }
 
 /** Request payload for the manual FX rate override command. */
@@ -4821,6 +5771,7 @@ export interface CommerceProductsAppliedPromoCode {
 
 /** Request to apply promo codes to an order */
 export interface CommerceProductsApplyPromoCodesInput {
+  captchaToken?: string | null;
   idempotencyKey?: string | null;
   orderAmount?: number;
   orderId?: string | null;
@@ -4908,14 +5859,20 @@ export interface CommerceProductsCampaignExpiringCodeDto {
 
 /** Aggregated performance for a promo campaign within a window */
 export interface CommerceProductsCampaignPerformanceDto {
+  /** Customers whose first purchase was tagged by the campaign (CAC denominator) */
+  acquiredCustomers?: number;
   /** Number of currently active codes */
   activeCodes?: number;
   /** Average discount per use */
   averageDiscountPerUse?: number;
+  /** Campaign acquisition spend; the CAC numerator (null when the campaign is unmanaged or declares no spend) */
+  campaignAcquisitionSpend?: number | null;
   /** Campaign identifier */
   campaignId?: string | null;
   /** Recorded uses divided by validation attempts (null when no attempts were recorded) */
   conversionRate?: number | null;
+  /** Acquisition spend ÷ acquired customers (null when not computable) */
+  customerAcquisitionCost?: number | null;
   /** Campaign codes expiring within the next 30 days */
   expiringCodes?: CommerceProductsCampaignExpiringCodeDto[] | null;
   /** Uses divided by total MaxUses capacity (null when no code declares limits) */
@@ -5054,6 +6011,19 @@ export interface CommerceProductsCreateProductInput {
   type?: CommerceProductsProductType;
 }
 
+/** Request to create a promotional campaign */
+export interface CommerceProductsCreatePromoCampaignInput {
+  acquisitionSpend?: number | null;
+  budget?: number | null;
+  currency?: string | null;
+  description?: string | null;
+  endsAt?: string | null;
+  key?: string | null;
+  name?: string | null;
+  startsAt?: string | null;
+  timeZoneId?: string | null;
+}
+
 /** Request to create a promo code */
 export interface CommerceProductsCreatePromoCodeInput {
   applyToRenewal?: boolean;
@@ -5064,6 +6034,7 @@ export interface CommerceProductsCreatePromoCodeInput {
   discountAmount?: number | null;
   discountPercentage?: number | null;
   durationMonths?: number | null;
+  eligibleCustomerType?: CommerceProductsPromoCustomerType;
   freeTrialExtensionDays?: number | null;
   isActive?: boolean;
   isExclusive?: boolean;
@@ -5075,6 +6046,7 @@ export interface CommerceProductsCreatePromoCodeInput {
   planId?: string | null;
   productId?: string | null;
   stackingPriority?: number;
+  timeZoneId?: string | null;
   type?: CommerceProductsPromoCodeType;
   validFrom?: string | null;
   validUntil?: string | null;
@@ -5132,6 +6104,7 @@ export interface CommerceProductsGenerateBulkPromoCodesInput {
   discountAmount?: number | null;
   discountPercentage?: number | null;
   durationMonths?: number | null;
+  eligibleCustomerType?: CommerceProductsPromoCustomerType;
   freeTrialExtensionDays?: number | null;
   maxDiscountAmount?: number | null;
   maxUses?: number | null;
@@ -5142,6 +6115,7 @@ export interface CommerceProductsGenerateBulkPromoCodesInput {
   prefix?: string | null;
   productId?: string | null;
   stackingPriority?: number;
+  timeZoneId?: string | null;
   type?: CommerceProductsPromoCodeType;
   validFrom?: string | null;
   validUntil?: string | null;
@@ -5182,6 +6156,7 @@ export interface CommerceProductsPatchPromoCodeInput {
   discountAmount?: number | null;
   discountPercentage?: number | null;
   durationMonths?: number | null;
+  eligibleCustomerType?: CommerceProductsPromoCustomerType;
   freeTrialExtensionDays?: number | null;
   isActive?: boolean | null;
   isExclusive?: boolean | null;
@@ -5193,6 +6168,7 @@ export interface CommerceProductsPatchPromoCodeInput {
   planId?: string | null;
   productId?: string | null;
   stackingPriority?: number | null;
+  timeZoneId?: string | null;
   type?: CommerceProductsPromoCodeType;
   validFrom?: string | null;
   validUntil?: string | null;
@@ -5592,6 +6568,50 @@ export type CommerceProductsProductType =
   | 'LearningPathway'
   | 'Other';
 
+/** Promo campaign DTO (issue #418 campaign management). */
+export interface CommerceProductsPromoCampaignDto {
+  /** Campaign id */
+  id?: string;
+  /** Acquisition spend; numerator of CAC */
+  acquisitionSpend?: number | null;
+  /** Customers whose first purchase the campaign tagged */
+  attributedCustomers?: number;
+  /** Planned spend */
+  budget?: number | null;
+  /** Codes grouped under the campaign key */
+  codeCount?: number;
+  /** Creation timestamp */
+  createdAt?: string;
+  /** Currency of the spend fields */
+  currency?: string | null;
+  /** AcquisitionSpend ÷ attributed customers (null when not computable) */
+  customerAcquisitionCost?: number | null;
+  /** What the campaign is about */
+  description?: string | null;
+  /** Window end rendered in the campaign timezone (null when unbounded) */
+  endsAtLocal?: string | null;
+  /** Window end (UTC instant; null = unbounded) */
+  endsAtUtc?: string | null;
+  /** The grouping key promo codes reference as `CampaignId` */
+  key?: string | null;
+  /** Display name */
+  name?: string | null;
+  /** Window start rendered in the campaign timezone (null when unbounded) */
+  startsAtLocal?: string | null;
+  /** Window start (UTC instant; null = unbounded) */
+  startsAtUtc?: string | null;
+  status?: CommerceProductsPromoCampaignStatus;
+  /** IANA timezone the window is expressed in (default UTC) */
+  timeZoneId?: string | null;
+  /** Last update timestamp */
+  updatedAt?: string;
+  /** Whether the campaign window is currently open */
+  windowOpen?: boolean;
+}
+
+/** Lifecycle status of a promotional campaign (issue #418). */
+export type CommerceProductsPromoCampaignStatus = 'Draft' | 'Active' | 'Paused' | 'Completed' | 'Cancelled' | 'Archived';
+
 /** Result of applying one or more promo codes */
 export interface CommerceProductsPromoCodeApplicationResult {
   /** List of codes that were applied */
@@ -5634,6 +6654,7 @@ export interface CommerceProductsPromoCodeDto {
   discountPercentage?: number | null;
   /** Free months granted / discount duration */
   durationMonths?: number | null;
+  eligibleCustomerType?: CommerceProductsPromoCustomerType;
   /** Trial days granted by FreeTrialExtension codes */
   freeTrialExtensionDays?: number | null;
   /** Whether the code is active */
@@ -5656,14 +6677,16 @@ export interface CommerceProductsPromoCodeDto {
   productId?: string | null;
   /** Priority for stacking */
   stackingPriority?: number;
+  /** IANA timezone the validity window is expressed in (null/empty = UTC) */
+  timeZoneId?: string | null;
   type?: CommerceProductsPromoCodeType;
   /** Last update timestamp */
   updatedAt?: string;
   /** Current usage count */
   usageCount?: number;
-  /** Start date */
+  /** Validity window start (UTC instant; wall-clock input is converted in TimeZoneId) */
   validFrom?: string | null;
-  /** End date */
+  /** Validity window end (UTC instant; wall-clock input is converted in TimeZoneId) */
   validUntil?: string | null;
 }
 
@@ -5709,7 +6732,10 @@ export type CommerceProductsPromoCodeValidationOutcome =
   | 'MinimumOrderAmountNotMet'
   | 'MaxUsesReached'
   | 'MaxUsesPerUserReached'
-  | 'Invalid';
+  | 'Invalid'
+  | 'NotYetValid'
+  | 'CustomerNotEligible'
+  | 'CaptchaRequired';
 
 /** Result of validating a promo code */
 export interface CommerceProductsPromoCodeValidationResult {
@@ -5731,6 +6757,10 @@ export interface CommerceProductsPromoCodeValidationResult {
   /** Trial days granted (FreeTrialExtension codes only) */
   trialExtensionDays?: number | null;
 }
+
+/** Customer relationship state a promo code is eligible for (issue #418).
+The default (GameGuild.Commerce.Products.PromoCustomerType.Any) keeps unrestricted codes working unchanged. */
+export type CommerceProductsPromoCustomerType = 'Any' | 'New' | 'Existing' | 'Churned';
 
 /** Promo stacking rule DTO */
 export interface CommerceProductsPromoStackingRuleDto {
@@ -5938,6 +6968,18 @@ export interface CommerceProductsUpdateProductInput {
   type?: CommerceProductsProductType;
 }
 
+/** Request to update a promotional campaign */
+export interface CommerceProductsUpdatePromoCampaignInput {
+  acquisitionSpend?: number | null;
+  budget?: number | null;
+  currency?: string | null;
+  description?: string | null;
+  endsAt?: string | null;
+  name?: string | null;
+  startsAt?: string | null;
+  timeZoneId?: string | null;
+}
+
 /** Request to update a promo code */
 export interface CommerceProductsUpdatePromoCodeInput {
   applyToRenewal?: boolean | null;
@@ -5947,6 +6989,7 @@ export interface CommerceProductsUpdatePromoCodeInput {
   discountAmount?: number | null;
   discountPercentage?: number | null;
   durationMonths?: number | null;
+  eligibleCustomerType?: CommerceProductsPromoCustomerType;
   freeTrialExtensionDays?: number | null;
   isActive?: boolean | null;
   isExclusive?: boolean | null;
@@ -5958,6 +7001,7 @@ export interface CommerceProductsUpdatePromoCodeInput {
   planId?: string | null;
   productId?: string | null;
   stackingPriority?: number | null;
+  timeZoneId?: string | null;
   type?: CommerceProductsPromoCodeType;
   validFrom?: string | null;
   validUntil?: string | null;
@@ -5977,10 +7021,35 @@ export interface CommerceProductsUpdatePromoStackingRuleInput {
 
 /** Request to validate a promo code */
 export interface CommerceProductsValidatePromoCodeInput {
+  captchaToken?: string | null;
   code?: string | null;
   orderAmount?: number;
   planId?: string | null;
   productId?: string | null;
+}
+
+/** One promo code that applied to a subscription quote (issue #418). Self-contained in
+the base Commerce module so the Subscriptions and Billing projects can consume promo
+outcomes without referencing the Products project graph. */
+export interface CommerceSubscriptionPromoCodeApplication {
+  /** Promo code string. */
+  code?: string | null;
+  /** Discount the code contributes to the current charge. */
+  discountAmount?: number;
+  /** Promo code type name (e.g. `PercentageOff`). */
+  discountType?: string | null;
+  /** Billing periods granted (FreeMonths codes only). */
+  freeMonthsGranted?: number | null;
+  /** Promo code identifier. */
+  promoCodeId?: string;
+  /** Trial days granted (FreeTrialExtension codes only). */
+  trialExtensionDays?: number | null;
+}
+
+/** A promo code that was rejected during a subscription quote, with the reason. */
+export interface CommerceSubscriptionPromoRejectedCode {
+  code?: string | null;
+  reason?: string | null;
 }
 
 /** DTO for billing history information */
@@ -6007,8 +7076,11 @@ export interface CommerceSubscriptionsBillingSubscriptionsControllerCancelBillin
 export interface CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput {
   amount?: number;
   billingCycle?: BillingCycle;
+  cardBin?: string | null;
+  country?: string | null;
   createdByUserId?: string;
   fulfilledOrderId?: string | null;
+  payerEmail?: string | null;
   planId?: string;
   productId?: string | null;
   promoCodeIdempotencyKey?: string | null;
@@ -6159,11 +7231,18 @@ export interface CommerceSubscriptionsSubscriptionChurnReportDto {
   totalSubscriptions?: number;
 }
 
-/** Result of subscription downgrade */
+/** Result of subscription downgrade. Promo fields (issue #418) are populated when
+promo codes were supplied with the plan change. */
 export interface CommerceSubscriptionsSubscriptionDowngradeResult {
+  /** Promo codes applied to the downgrade charge (issue #418). */
+  appliedPromoCodes?: CommerceSubscriptionPromoCodeApplication[] | null;
   creditIssued?: Money;
   effectiveDate?: string | null;
   failureReason?: string | null;
+  /** Total discount applied by promo codes to the downgrade charge (issue #418). */
+  promoDiscountApplied?: number;
+  /** Promo codes that were quoted but not applied, with reasons (issue #418). */
+  rejectedPromoCodes?: CommerceSubscriptionPromoRejectedCode[] | null;
   success?: boolean;
   updatedSubscription?: CommerceSubscriptionsSubscription;
 }
@@ -6184,6 +7263,8 @@ export interface CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput {
   effectiveDate?: string | null;
   newPlanId?: string;
+  promoCodeIdempotencyKey?: string | null;
+  promoCodes?: string[] | null;
 }
 
 /** Data model for Commerce Subscriptions Subscription Lifecycle Controller+End Trial Request. */
@@ -6217,6 +7298,8 @@ export interface CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInpu
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput {
   effectiveDate?: string | null;
   newPlanId?: string;
+  promoCodeIdempotencyKey?: string | null;
+  promoCodes?: string[] | null;
 }
 
 /** Data model for Commerce Subscriptions Subscription Notification Dto. */
@@ -6417,12 +7500,18 @@ export interface CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionI
   /** The subscription amount */
   amount?: number;
   billingCycle?: BillingCycle;
+  /** Optional 6-8 digit card BIN prefix; feeds the creation-time BIN-range fraud signal (issue #409) */
+  cardBin?: string | null;
+  /** Optional ISO 3166-1 alpha-2 billing country; feeds the creation-time fraud signals (issue #409) */
+  country?: string | null;
   /** The user who created the subscription */
   createdByUserId?: string;
   /** The currency code */
   currency?: string | null;
   /** Optional Order ID that triggered this subscription (Economic Model: Order→Subscription causality) */
   fulfilledOrderId?: string | null;
+  /** Optional payer email; feeds the creation-time disposable-email/blacklist fraud signals (issue #409) */
+  payerEmail?: string | null;
   /** The subscription plan ID */
   planId?: string;
   /** Optional product context for product-scoped promo codes */
@@ -6461,11 +7550,19 @@ export interface CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInpu
 /** Subscription status enumeration */
 export type CommerceSubscriptionsSubscriptionStatus = 'PendingActivation' | 'Active' | 'Trialing' | 'PastDue' | 'Suspended' | 'Cancelled' | 'Expired';
 
-/** Result of subscription upgrade */
+/** Result of subscription upgrade. Promo fields (issue #418) are populated when
+promo codes were applied to the prorated upgrade charge. */
 export interface CommerceSubscriptionsSubscriptionUpgradeResult {
+  /** Promo codes applied to the upgrade charge (issue #418). */
+  appliedPromoCodes?: CommerceSubscriptionPromoCodeApplication[] | null;
   creditApplied?: Money;
+  discountedProratedAmount?: Money;
   failureReason?: string | null;
+  /** Total discount applied by promo codes to the prorated charge (issue #418). */
+  promoDiscountApplied?: number;
   proratedAmount?: Money;
+  /** Promo codes that were quoted but not applied, with reasons (issue #418). */
+  rejectedPromoCodes?: CommerceSubscriptionPromoRejectedCode[] | null;
   success?: boolean;
   updatedSubscription?: CommerceSubscriptionsSubscription;
 }
@@ -6491,6 +7588,14 @@ export interface ComplianceAuditAcknowledgeSecurityAlertInput {
 /** Data model for Compliance Audit Acknowledge Transfer Request. */
 export interface ComplianceAuditAcknowledgeTransferInput {
   notes?: string | null;
+}
+
+/** Data model for Compliance Audit Analyze Field Access Patterns Request. */
+export interface ComplianceAuditAnalyzeFieldAccessPatternsInput {
+  baselineHours?: number;
+  tenantId?: string | null;
+  userId?: string | null;
+  windowHours?: number;
 }
 
 /** One page of archived audit rows plus the total archived count. */
@@ -7199,6 +8304,15 @@ export interface ComplianceAuditAuditStorageTierPrice {
   tier?: ComplianceAuditAuditStorageTier;
 }
 
+/** One audit trail coverage family with its evidence, answering issue #180. */
+export interface ComplianceAuditAuditTrailCoverageFamily {
+  actionTypes?: string[] | null;
+  coverage?: string | null;
+  evidence?: string[] | null;
+  family?: string | null;
+  isCovered?: boolean;
+}
+
 /** Authentication audit entry. */
 export interface ComplianceAuditAuthenticationAuditEntry {
   id?: string;
@@ -7238,6 +8352,62 @@ export interface ComplianceAuditBuildCustodyPackageInput {
   /** Legal hold whose preserved evidence set should be packaged. */
   legalHoldId?: string | null;
 }
+
+/** Data model for Compliance Audit Bulk Export Evaluation Response. */
+export interface ComplianceAuditBulkExportEvaluationOutput {
+  alertRaised?: boolean;
+  blocked?: boolean;
+  dailyThresholdExceeded?: boolean;
+  dailyTotal?: number;
+  eventId?: string;
+  recordCount?: number;
+  threshold?: number;
+  thresholdExceeded?: boolean;
+}
+
+/** One observed bulk data export with the tenant threshold it was evaluated against. Exceeding rows
+are flagged and raise a security alert; every export is recorded so threshold changes can be
+investigated against historical volumes. */
+export interface ComplianceAuditBulkExportEvent {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
+  id?: string;
+  alertRaised?: boolean;
+  correlationId?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
+  createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
+  deletedAt?: string | null;
+  destination?: string | null;
+  /** Domain events raised by this entity */
+  domainEvents?: CQRSIDomainEvent[] | null;
+  integrationEvents?: IDurableIntegrationEvent[] | null;
+  ipAddress?: string | null;
+  /** Checks if this entity is soft-deleted */
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
+  isNew?: boolean;
+  occurredAtUtc?: string;
+  recordCount?: number;
+  scope?: ComplianceAuditBulkExportScope;
+  tenantId?: string;
+  threshold?: number;
+  thresholdExceeded?: boolean;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
+  updatedAt: string;
+  userId?: string | null;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
+  version?: number;
+}
+
+/** OpenAPI schema for Compliance Audit Bulk Export Scope. */
+export type ComplianceAuditBulkExportScope = 'AuditLogExport' | 'FieldAccessExport' | 'QueryDslExport' | 'ScheduledExport' | 'Other';
 
 /** Data model for Compliance Audit Capture Audit Replay Request. */
 export interface ComplianceAuditCaptureAuditReplayInput {
@@ -7426,6 +8596,25 @@ export interface ComplianceAuditComplianceScopeExclusion {
   rationale: string;
 }
 
+/** Report answering issue #180's comprehensive audit trail coverage across business functions. */
+export interface ComplianceAuditComprehensiveAuditTrailCoverageReport {
+  families?: ComplianceAuditAuditTrailCoverageFamily[] | null;
+  generatedAtUtc?: string;
+  isComplete?: boolean;
+}
+
+/** Report answering issue #181's "complete event coverage" criterion. */
+export interface ComplianceAuditComprehensiveEventCoverageReport {
+  gaps?: string[] | null;
+  generatedAtUtc?: string;
+  isComplete?: boolean;
+  moduleCount?: number;
+  modules?: ComplianceAuditModuleEventCoverageEntry[] | null;
+  totalCommandContracts?: number;
+  totalMutatingCommands?: number;
+  totalMutationEndpoints?: number;
+}
+
 /** Data model for Compliance Audit Configure Audit Retention Request. */
 export interface ComplianceAuditConfigureAuditRetentionInput {
   baseline: ComplianceAuditAuditRetentionScenario;
@@ -7455,12 +8644,29 @@ strictly shorter than GameGuild.Compliance.Audit.ConfigureSecurityLogRetentionRe
   retentionDays?: number;
 }
 
+/** Data model for Compliance Audit Configure Sensitive Data Retention Request. */
+export interface ComplianceAuditConfigureSensitiveDataRetentionInput {
+  action?: string | null;
+  category?: string | null;
+  retentionDays?: number;
+}
+
 /** Data model for Compliance Audit Configure Value Snapshot Retention Request. */
 export interface ComplianceAuditConfigureValueSnapshotRetentionInput {
   archiveAfterDays?: number;
   entityOverrides?: Record<string, number> | null;
   legalHoldUntilUtc?: string | null;
   retentionDays?: number;
+}
+
+/** Data model for Compliance Audit Consent State Response. */
+export interface ComplianceAuditConsentStateOutput {
+  id?: string;
+  consentGivenAt?: string;
+  consentMethod?: string | null;
+  consentRevokedAt?: string | null;
+  isGranted?: boolean;
+  policyVersionId?: string;
 }
 
 /** Data model for Compliance Audit Court Admissible Package Response. */
@@ -7523,6 +8729,59 @@ export interface ComplianceAuditCreateValueSnapshotRollbackPlanInput {
   keyId: string | null;
 }
 
+/** Log of one cross-border data movement with the jurisdiction validation outcome. Rows are written
+for every evaluated transfer attempt, allowed or blocked, so regulators can reconstruct the
+transfer history (issue #186 cross-border criterion). */
+export interface ComplianceAuditCrossBorderTransferLog {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
+  id?: string;
+  correlationId?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
+  createdAt: string;
+  dataCategories?: string | null;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
+  deletedAt?: string | null;
+  destinationJurisdiction?: string | null;
+  /** Domain events raised by this entity */
+  domainEvents?: CQRSIDomainEvent[] | null;
+  integrationEvents?: IDurableIntegrationEvent[] | null;
+  /** Checks if this entity is soft-deleted */
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
+  isNew?: boolean;
+  occurredAtUtc?: string;
+  purpose?: string | null;
+  reason?: string | null;
+  recordCount?: number;
+  status?: ComplianceAuditCrossBorderTransferStatus;
+  tenantId?: string;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
+  updatedAt: string;
+  userId?: string | null;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
+  version?: number;
+}
+
+/** Data model for Compliance Audit Cross Border Transfer Response. */
+export interface ComplianceAuditCrossBorderTransferOutput {
+  destinationJurisdiction?: string | null;
+  isCrossBorder?: boolean;
+  logId?: string;
+  occurredAtUtc?: string;
+  reason?: string | null;
+  status?: string | null;
+}
+
+/** Outcome of cross-border transfer validation. */
+export type ComplianceAuditCrossBorderTransferStatus = 'Allowed' | 'Blocked' | 'RequiresReview';
+
 /** Data model for Compliance Audit Custody Event Response. */
 export interface ComplianceAuditCustodyEventOutput {
   id?: string;
@@ -7574,6 +8833,37 @@ export interface ComplianceAuditDailyActivityTrend {
   totalEvents?: number;
 }
 
+/** Aggregate data subject request monitoring counters. */
+export interface ComplianceAuditDataSubjectAccessMonitoringSummary {
+  activeConsents?: number;
+  fulfilledRequests?: number;
+  openRequests?: number;
+  overdueRequests?: number;
+  totalRequests?: number;
+}
+
+/** Consent monitoring snapshot for one data subject. */
+export interface ComplianceAuditDataSubjectConsentMonitoringOutput {
+  consents?: ComplianceAuditConsentStateOutput[] | null;
+  grantedCount?: number;
+  hasOpenRequests?: boolean;
+  requests?: ComplianceAuditDataSubjectRequestOutput[] | null;
+  revokedCount?: number;
+  userId?: string;
+}
+
+/** Data model for Compliance Audit Data Subject Request Response. */
+export interface ComplianceAuditDataSubjectRequestOutput {
+  id?: string;
+  deadline?: string;
+  isOverdue?: boolean;
+  processedAt?: string | null;
+  processingNotes?: string | null;
+  requestType?: string | null;
+  status?: string | null;
+  userId?: string;
+}
+
 /** Data model for Compliance Audit Enforce Security Log Retention Request. */
 export interface ComplianceAuditEnforceSecurityLogRetentionInput {
   /** When true, the pass only reports what would be deleted; no rows are removed. */
@@ -7584,6 +8874,35 @@ export interface ComplianceAuditEnforceSecurityLogRetentionInput {
 export interface ComplianceAuditEnforceValueSnapshotRetentionInput {
   dryRun?: boolean;
   includeCompaction?: boolean;
+}
+
+/** Read model over the universal entity-change audit store, served by the host. */
+export interface ComplianceAuditEntityChangeAuditEntry {
+  id?: string;
+  actorId?: string | null;
+  afterValues?: string | null;
+  beforeValues?: string | null;
+  changeKind?: string | null;
+  correlationId?: string | null;
+  entityName?: string | null;
+  keyId?: string | null;
+  occurredAtUtc?: string;
+  tenantId?: string | null;
+}
+
+/** One page of universal entity-change audit records plus the total for the filter. */
+export interface ComplianceAuditEntityChangeAuditListOutput {
+  changes?: ComplianceAuditEntityChangeAuditEntry[] | null;
+  totalCount?: number;
+}
+
+/** Data model for Compliance Audit Evaluate Bulk Export Request. */
+export interface ComplianceAuditEvaluateBulkExportInput {
+  correlationId?: string | null;
+  destination?: string | null;
+  ipAddress?: string | null;
+  recordCount?: number;
+  scope?: ComplianceAuditBulkExportScope;
 }
 
 /** Data model for Compliance Audit Evidence Custodian Response. */
@@ -7640,6 +8959,131 @@ export interface ComplianceAuditFailureReasonCount {
   reason?: string | null;
 }
 
+/** One detected access-pattern anomaly for a user in an analysis window: the observed metric, the
+baseline it is compared against, the risk score and the investigation lifecycle. */
+export interface ComplianceAuditFieldAccessAnomaly {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
+  id?: string;
+  acknowledgedByUserId?: string | null;
+  anomalyType?: ComplianceAuditFieldAccessAnomalyType;
+  baselineValue?: number;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
+  createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
+  deletedAt?: string | null;
+  detail?: string | null;
+  detectedAtUtc?: string;
+  /** Domain events raised by this entity */
+  domainEvents?: CQRSIDomainEvent[] | null;
+  entityType?: string | null;
+  integrationEvents?: IDurableIntegrationEvent[] | null;
+  /** Checks if this entity is soft-deleted */
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
+  isNew?: boolean;
+  observedValue?: number;
+  resolutionNotes?: string | null;
+  resolvedAtUtc?: string | null;
+  score?: number;
+  status?: ComplianceAuditFieldAccessAnomalyStatus;
+  tenantId?: string;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
+  updatedAt: string;
+  userId?: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
+  version?: number;
+  windowEndUtc?: string;
+  windowStartUtc?: string;
+}
+
+/** Data model for Compliance Audit Field Access Anomaly Response. */
+export interface ComplianceAuditFieldAccessAnomalyOutput {
+  id?: string;
+  anomalyType?: string | null;
+  baselineValue?: number;
+  detail?: string | null;
+  detectedAtUtc?: string;
+  observedValue?: number;
+  score?: number;
+  status?: string | null;
+  tenantId?: string;
+  userId?: string;
+  windowEndUtc?: string;
+  windowStartUtc?: string;
+}
+
+/** OpenAPI schema for Compliance Audit Field Access Anomaly Status. */
+export type ComplianceAuditFieldAccessAnomalyStatus = 'Open' | 'Acknowledged' | 'Resolved';
+
+/** Kind of unusual data-access behaviour identified by the access-pattern analysis. */
+export type ComplianceAuditFieldAccessAnomalyType = 'UnusualVolume' | 'ExcessiveDistinctEntities' | 'SensitiveReadRatio' | 'OffHoursAccess';
+
+/** Data model for Compliance Audit Field Access Audit Response. */
+export interface ComplianceAuditFieldAccessAuditOutput {
+  id?: string;
+  accessedAt?: string;
+  accessType?: string | null;
+  entityId?: string;
+  entityType?: string | null;
+  fieldName?: string | null;
+  isSensitiveField?: boolean;
+  maskedNewValue?: string | null;
+  maskedOldValue?: string | null;
+  sensitivityLevel?: string | null;
+  tenantId?: string | null;
+  userId?: string;
+}
+
+/** Result of one access-pattern analysis run for one user window. */
+export interface ComplianceAuditFieldAccessPatternAnalysisResult {
+  anomalies?: ComplianceAuditFieldAccessAnomaly[] | null;
+  baselineAccesses?: number;
+  distinctEntities?: number;
+  hasAnomalies?: boolean;
+  observedAccesses?: number;
+  offHoursRatio?: number;
+  sensitiveReadRatio?: number;
+  tenantId?: string;
+  userId?: string;
+  windowEndUtc?: string;
+  windowStartUtc?: string;
+}
+
+/** OpenAPI schema for Compliance Audit Field Access Type. */
+export type ComplianceAuditFieldAccessType = 'Read' | 'Write' | 'Delete' | 'Export' | 'Anonymize' | 'Encrypt' | 'Decrypt';
+
+/** The Article 30 register with its completeness gaps. */
+export interface ComplianceAuditGdprArticle30Output {
+  activities?: ComplianceAuditGdprProcessingActivityOutput[] | null;
+  completenessGaps?: string[] | null;
+}
+
+/** Data model for Compliance Audit Gdpr Processing Activity Response. */
+export interface ComplianceAuditGdprProcessingActivityOutput {
+  id?: string;
+  activityName?: string | null;
+  categoriesOfDataSubjects?: string | null;
+  categoriesOfPersonalData?: string | null;
+  involvesCrossBorderTransfers?: boolean;
+  isAutoDerived?: boolean;
+  lastReviewedAtUtc?: string | null;
+  lastReviewedByUserId?: string | null;
+  legalBasis?: string | null;
+  purpose?: string | null;
+  recipients?: string | null;
+  retentionPeriod?: string | null;
+  securityMeasures?: string | null;
+  tenantId?: string | null;
+  transferDestinations?: string | null;
+}
+
 /** Data model for Compliance Audit Initiate Transfer Request. */
 export interface ComplianceAuditInitiateTransferInput {
   evidenceId?: string;
@@ -7674,6 +9118,23 @@ export interface ComplianceAuditLegalHoldOutput {
   releasedByUserId?: string | null;
   releaseReason?: string | null;
   status?: string | null;
+}
+
+/** Per-module event coverage entry produced by the coverage sweep. */
+export interface ComplianceAuditModuleEventCoverageEntry {
+  assemblyName?: string | null;
+  commandContractCount?: number;
+  commandsDuplicateHandlers?: string[] | null;
+  commandsMissingHandlers?: string[] | null;
+  commandsWithoutContracts?: string[] | null;
+  coverageChannel?: string | null;
+  handlerCount?: number;
+  isFullyCovered?: boolean;
+  moduleName?: string | null;
+  mutatingCommandCount?: number;
+  mutationEndpointCount?: number;
+  mutationEndpointsWithoutCommandDispatch?: string[] | null;
+  unavailableCommands?: string[] | null;
 }
 
 /** Data model for Compliance Audit Notification Target. */
@@ -7819,6 +9280,16 @@ export interface ComplianceAuditReconstructAuditReplayInput {
   sha256?: string | null;
 }
 
+/** Data model for Compliance Audit Record Field Access Request. */
+export interface ComplianceAuditRecordFieldAccessInput {
+  accessType?: ComplianceAuditFieldAccessType;
+  entityId?: string;
+  entityType?: string | null;
+  fieldNames?: string[] | null;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}
+
 /** Data model for Compliance Audit Register Custodian Request. */
 export interface ComplianceAuditRegisterCustodianInput {
   displayName: string | null;
@@ -7834,6 +9305,12 @@ export interface ComplianceAuditReleaseEvidenceInput {
 /** Data model for Compliance Audit Release Hold Request. */
 export interface ComplianceAuditReleaseHoldInput {
   reason: string | null;
+}
+
+/** Data model for Compliance Audit Resolve Field Access Anomaly Request. */
+export interface ComplianceAuditResolveFieldAccessAnomalyInput {
+  id?: string;
+  notes?: string | null;
 }
 
 /** Body of `POST /api/audit/security-events/alerts/{id}:resolve`. */
@@ -7892,6 +9369,21 @@ export interface ComplianceAuditSavedAuditQueryViewOutput {
   /** Canonical query DSL JSON — this is what execute-by-id runs. */
   queryJson?: string | null;
   updatedAt?: string;
+}
+
+/** Data model for Compliance Audit Save Gdpr Activity Request. */
+export interface ComplianceAuditSaveGdprActivityInput {
+  id?: string | null;
+  activityName?: string | null;
+  categoriesOfDataSubjects?: string | null;
+  categoriesOfPersonalData?: string | null;
+  involvesCrossBorderTransfers?: boolean;
+  legalBasis?: string | null;
+  purpose?: string | null;
+  recipients?: string | null;
+  retentionPeriod?: string | null;
+  securityMeasures?: string | null;
+  transferDestinations?: string | null;
 }
 
 /** API request for creating or updating a saved audit query view. */
@@ -8065,6 +9557,52 @@ export interface ComplianceAuditSecurityLogStorageTierReportOutput {
   tenantId?: string;
 }
 
+/** Categories of data recognized by the sensitive-field classification system (issue #186). */
+export type ComplianceAuditSensitiveDataCategory = 'None' | 'PII' | 'PHI' | 'Financial' | 'Credentials';
+
+/** Result of one sensitive-data retention enforcement pass. */
+export interface ComplianceAuditSensitiveDataRetentionEnforcementResult {
+  categoriesEnforced?: ComplianceAuditSensitiveDataCategory[] | null;
+  dryRun?: boolean;
+  executedAtUtc?: string;
+  expiredClassifications?: number;
+  maskedFieldAccessRecords?: number;
+  purgedFieldAccessRecords?: number;
+}
+
+/** Data model for Compliance Audit Sensitive Data Retention Policy Response. */
+export interface ComplianceAuditSensitiveDataRetentionPolicyOutput {
+  id?: string;
+  action?: string | null;
+  category?: string | null;
+  configuredAtUtc?: string;
+  lastEnforcedAtUtc?: string | null;
+  lastEnforcedCount?: number;
+  retentionDays?: number;
+  tenantId?: string | null;
+}
+
+/** Data model for Compliance Audit Sensitive Field Classification Response. */
+export interface ComplianceAuditSensitiveFieldClassificationOutput {
+  id?: string;
+  category?: string | null;
+  confidence?: number;
+  detectionRule?: string | null;
+  entityType?: string | null;
+  fieldName?: string | null;
+  firstSeenAt?: string;
+  isConfirmed?: boolean;
+  lastSeenAt?: string;
+  observationCount?: number;
+  sensitivity?: string | null;
+}
+
+/** Data model for Compliance Audit Sensitive Field Scan Response. */
+export interface ComplianceAuditSensitiveFieldScanOutput {
+  classifications?: ComplianceAuditSensitiveFieldClassificationOutput[] | null;
+  scannedObservations?: number;
+}
+
 /** Defines sensitivity levels for data access auditing */
 export type ComplianceAuditSensitivityLevel = 'Public' | 'Internal' | 'Confidential' | 'Restricted' | 'HighlyRestricted';
 
@@ -8192,6 +9730,15 @@ export interface ComplianceAuditUpsertPiiRedactionRuleInput {
   ruleName?: string | null;
   scope?: ComplianceAuditPiiRuleScope;
   targetFields?: string[] | null;
+}
+
+/** Data model for Compliance Audit Validate Cross Border Transfer Request. */
+export interface ComplianceAuditValidateCrossBorderTransferInput {
+  correlationId?: string | null;
+  dataCategories?: string | null;
+  destinationJurisdiction?: string | null;
+  purpose?: string | null;
+  recordCount?: number;
 }
 
 /** Point-in-time value history entry for one entity field. */
@@ -11590,6 +13137,8 @@ export interface IdentityAuthenticationLocationInfo {
   isp?: string | null;
   /** Whether the IP is from a known proxy/VPN. */
   isProxy?: boolean | null;
+  /** Whether the IP is a known Tor exit node. */
+  isTor?: boolean | null;
   /** Geographic latitude coordinate. */
   latitude?: number | null;
   /** Geographic longitude coordinate. */
@@ -11921,6 +13470,12 @@ export interface IdentityAuthenticationRemoveRoleFromUserInput {
 /** Request to name or rename one of the current user's own sessions */
 export interface IdentityAuthenticationRenameSessionInput {
   /** User-defined session name (1–64 characters, trimmed) */
+  name: string | null;
+}
+
+/** Request to name or rename one of the current user's own trusted devices */
+export interface IdentityAuthenticationRenameTrustedDeviceInput {
+  /** User-defined trusted device name (1–200 characters, trimmed) */
   name: string | null;
 }
 
@@ -12853,6 +14408,17 @@ export interface IdentityAuthorizationEffectivePermissionsOutput {
 /** Status of JIT elevation request */
 export type IdentityAuthorizationElevationRequestStatus = 'None' | 'Pending' | 'Approved' | 'Denied' | 'Active' | 'Expired' | 'Revoked';
 
+/** Per-permission-type aggregation of expiring grants (top offenders for renewal planning). */
+export interface IdentityAuthorizationExpiringPermissionBreakdown {
+  /** Gets the earliest expiration among those grants. */
+  earliestExpiration?: string;
+  /** Gets the number of active grants carrying the permission that expire within the
+analytics window. */
+  expiringCount?: number;
+  /** Gets the permission string. */
+  permission: string | null;
+}
+
 /** A tenant permission grant that is about to expire. */
 export interface IdentityAuthorizationExpiringTenantPermission {
   /** Gets the expiration instant. */
@@ -12935,6 +14501,26 @@ export interface IdentityAuthorizationGetContentTypePermissionGrantsOutput {
   /** Gets the matching grant rows. */
   grants: IdentityAuthorizationContentTypePermissionGrantDto[] | null;
   /** Gets the tenant scope. */
+  tenantId: string;
+}
+
+/** The effective advanced expiration rule for a permission set. */
+export interface IdentityAuthorizationGetEffectiveExpirationRuleOutput {
+  /** Gets whether a matching rule imposes any constraint. */
+  hasConstraints: boolean;
+  /** Gets the configuration keys that contributed to the composed rule ("(global)" for the baseline). */
+  matchedRuleKeys: string[] | null;
+  /** Gets the longest allowed expiration distance from the operation instant, if constrained. */
+  maxDuration?: string | null;
+  /** Gets the longest allowed single-extension period, if constrained. */
+  maxExtension?: string | null;
+  /** Gets the shortest allowed expiration distance from the operation instant, if constrained. */
+  minDuration?: string | null;
+  /** Gets the permission strings the rule was resolved for. */
+  permissions: string[] | null;
+  /** Gets whether the permission set may never be granted permanently. */
+  requireExpiration?: boolean | null;
+  /** Gets the tenant the introspection was scoped to. */
   tenantId: string;
 }
 
@@ -13498,6 +15084,78 @@ export interface IdentityAuthorizationPermissionDelegation {
   updatedAt?: string | null;
   usageCount?: number;
   usageLimit?: number | null;
+}
+
+/**     A time-to-expiry bucket in the expiration dashboard (issue #331 "expiration analytics
+and reporting"). Active temporary grants are counted into exactly one bucket by their
+remaining lifetime; permanent and inactive grants are counted separately. */
+export interface IdentityAuthorizationPermissionExpirationBucket {
+  /** Gets the stable bucket identifier (e.g. `expired-pending-processing`,
+`within-24-hours`, `1-to-3-days`, `3-to-7-days`, `7-to-30-days`,
+`beyond-30-days`, `permanent`, `inactive`). */
+  bucket: string | null;
+  /** Gets the number of grants in the bucket. */
+  count?: number;
+  /** Gets a human-readable label for the bucket. */
+  label: string | null;
+}
+
+/** The combined expiration analytics report (issue #331 "expiration analytics and
+reporting"): dashboard, trends, and top expiring permissions for a period. */
+export interface IdentityAuthorizationPermissionExpirationReport {
+  /** Gets operational health flags derived from the dashboard (empty when healthy).
+Example: expired grants still pending background processing. */
+  attentionFlags: string[] | null;
+  /** Gets the inclusive report period end (UTC). */
+  periodEnd: string;
+  /** Gets the inclusive report period start (UTC). */
+  periodStart: string;
+  summary: IdentityAuthorizationPermissionExpirationSummary;
+  /** Gets the tenant the report covers. */
+  tenantId: string;
+  /** Gets the total manual expiration mutations applied during the period. */
+  totalExpirationMutations?: number;
+  /** Gets the total grants durably expired during the period. */
+  totalExpirationsProcessed?: number;
+  /** Gets the daily expiration funnel across the report period. */
+  trends: IdentityAuthorizationPermissionExpirationTrendPoint[] | null;
+}
+
+/** Expiration dashboard summary for one tenant (issue #331): the full grant population
+bucketed by time-to-expiry plus per-permission breakdown of upcoming expirations. */
+export interface IdentityAuthorizationPermissionExpirationSummary {
+  /** Gets the number of active grants without an expiration (permanent grants). */
+  activePermanent?: number;
+  /** Gets the number of active grants that carry an expiration (temporary grants). */
+  activeTemporary?: number;
+  /** Gets the time-to-expiry buckets (always present, zero-count buckets included). */
+  buckets: IdentityAuthorizationPermissionExpirationBucket[] | null;
+  /** Gets the instant the summary was computed at. */
+  computedAt: string;
+  /** Gets the per-permission breakdown of grants expiring within the analytics window,
+most urgent first. */
+  expiringByPermission: IdentityAuthorizationExpiringPermissionBreakdown[] | null;
+  /** Gets the number of inactive (already deactivated) grants. */
+  inactive?: number;
+  /** Gets the tenant the summary was computed for. */
+  tenantId: string;
+  /** Gets the total number of live (non-deleted) grants in the tenant. */
+  totalGrants?: number;
+}
+
+/** One day of the expiration funnel (issue #331 "expiry-funnel stats"): how many grants
+were durably expired by the sweep, and how many manual expiration mutations were applied. */
+export interface IdentityAuthorizationPermissionExpirationTrendPoint {
+  /** Gets the UTC day the point covers. */
+  date: string;
+  /** Gets the number of manual expiration mutations (bulk set/extend/clear operations on
+tenant permission grants, reconstructed from their old→new expiration audit values). */
+  expirationMutations?: number;
+  /** Gets the number of mutations that cleared an expiration (grant made permanent). */
+  expirationsCleared?: number;
+  /** Gets the number of grants deactivated by automatic expiration processing
+(GameGuild.Identity.Authorization.PermissionOperationType.Expire audit entries). */
+  expirationsProcessed?: number;
 }
 
 /** Effective permission state at a past instant (issue #189: time-based permission
@@ -17846,6 +19504,11 @@ export interface LearningCertificatesIssueCertificateInput {
   userId?: string;
 }
 
+/** Request to renew a certificate by extending its validity */
+export interface LearningCertificatesRenewCertificateInput {
+  newExpiresAt?: string;
+}
+
 /** Request to revoke a certificate */
 export interface LearningCertificatesRevokeCertificateInput {
   reason?: string | null;
@@ -20520,6 +22183,29 @@ export interface PagedResultProductDto {
   hasPreviousPage?: boolean;
   /** The items in the current page. */
   items?: CommerceProductsProductDto[] | null;
+  /** Current page number (1-based). */
+  pageNumber?: number;
+  /** Number of items per page. */
+  pageSize?: number;
+  /** Number of items skipped (offset). */
+  skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
+  take?: number;
+  /** Total number of items across all pages. */
+  totalCount?: number;
+  /** Total number of pages. */
+  totalPages?: number;
+}
+
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+export interface PagedResultPromoCampaignDto {
+  /** Whether there are more items after this page. */
+  hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
+  hasPreviousPage?: boolean;
+  /** The items in the current page. */
+  items?: CommerceProductsPromoCampaignDto[] | null;
   /** Current page number (1-based). */
   pageNumber?: number;
   /** Number of items per page. */
@@ -25482,15 +27168,18 @@ export let CommerceBillingBillingWebhookAllowlistStatusDtoSchema: z.ZodType<Comm
 export let CommerceBillingBillingWebhookBlockedSourceDtoSchema: z.ZodType<CommerceBillingBillingWebhookBlockedSourceDto>;
 export let CommerceBillingBillingWebhookEventDtoSchema: z.ZodType<CommerceBillingBillingWebhookEventDto>;
 export let CommerceBillingBillingWebhookEventListItemDtoSchema: z.ZodType<CommerceBillingBillingWebhookEventListItemDto>;
+export let CommerceBillingBillingWebhookProviderStatsDtoSchema: z.ZodType<CommerceBillingBillingWebhookProviderStatsDto>;
 export let CommerceBillingBillingWebhooksControllerRotateWebhookSecretInputSchema: z.ZodType<CommerceBillingBillingWebhooksControllerRotateWebhookSecretInput>;
 export let CommerceBillingBillingWebhookSecurityAlertDtoSchema: z.ZodType<CommerceBillingBillingWebhookSecurityAlertDto>;
 export let CommerceBillingBillingWebhookSecuritySummaryDtoSchema: z.ZodType<CommerceBillingBillingWebhookSecuritySummaryDto>;
+export let CommerceBillingBillingWebhookStatsDtoSchema: z.ZodType<CommerceBillingBillingWebhookStatsDto>;
 export let CommerceBillingBillingWebhookSuspiciousActivityStatusDtoSchema: z.ZodType<CommerceBillingBillingWebhookSuspiciousActivityStatusDto>;
 export let CommerceBillingDriftOutcomeRowSchema: z.ZodType<CommerceBillingDriftOutcomeRow>;
 export let CommerceBillingExternalBillingProviderStatusDtoSchema: z.ZodType<CommerceBillingExternalBillingProviderStatusDto>;
 export let CommerceBillingInvoiceAccountCreditSettlementResultSchema: z.ZodType<CommerceBillingInvoiceAccountCreditSettlementResult>;
 export let CommerceBillingInvoicePaymentRetryResultSchema: z.ZodType<CommerceBillingInvoicePaymentRetryResult>;
 export let CommerceBillingInvoiceStatusSchema: z.ZodType<CommerceBillingInvoiceStatus>;
+export let CommerceBillingOrchestrateSubscriptionPlanChangeInputSchema: z.ZodType<CommerceBillingOrchestrateSubscriptionPlanChangeInput>;
 export let CommerceBillingPricingCalculationValidationResultSchema: z.ZodType<CommerceBillingPricingCalculationValidationResult>;
 export let CommerceBillingPricingDecisionLedgerEntryDetailDtoSchema: z.ZodType<CommerceBillingPricingDecisionLedgerEntryDetailDto>;
 export let CommerceBillingPricingDecisionLedgerEntryDtoSchema: z.ZodType<CommerceBillingPricingDecisionLedgerEntryDto>;
@@ -25501,6 +27190,14 @@ export let CommerceBillingPricingLedgerTotalsSchema: z.ZodType<CommerceBillingPr
 export let CommerceBillingPricingRuleImpactRowSchema: z.ZodType<CommerceBillingPricingRuleImpactRow>;
 export let CommerceBillingPromoCodeEffectivenessRowSchema: z.ZodType<CommerceBillingPromoCodeEffectivenessRow>;
 export let CommerceBillingStackingOutcomeRowSchema: z.ZodType<CommerceBillingStackingOutcomeRow>;
+export let CommerceBillingSubscriptionChangeSagaDtoSchema: z.ZodType<CommerceBillingSubscriptionChangeSagaDto>;
+export let CommerceBillingSubscriptionChangeSagaResultSchema: z.ZodType<CommerceBillingSubscriptionChangeSagaResult>;
+export let CommerceBillingSubscriptionChangeSagaStatusSchema: z.ZodType<CommerceBillingSubscriptionChangeSagaStatus>;
+export let CommerceBillingSubscriptionChangeSagaStepDtoSchema: z.ZodType<CommerceBillingSubscriptionChangeSagaStepDto>;
+export let CommerceBillingSubscriptionChangeSagaStepResultSchema: z.ZodType<CommerceBillingSubscriptionChangeSagaStepResult>;
+export let CommerceBillingSubscriptionEventProjectionDtoSchema: z.ZodType<CommerceBillingSubscriptionEventProjectionDto>;
+export let CommerceBillingSubscriptionProjectionEventDtoSchema: z.ZodType<CommerceBillingSubscriptionProjectionEventDto>;
+export let CommerceBillingSubscriptionStateDriftDtoSchema: z.ZodType<CommerceBillingSubscriptionStateDriftDto>;
 export let CommerceBillingValidatePricingLedgerDriftInputSchema: z.ZodType<CommerceBillingValidatePricingLedgerDriftInput>;
 export let CommerceBillingWebhookSecretRotationResultSchema: z.ZodType<CommerceBillingWebhookSecretRotationResult>;
 export let CommerceOrderChargeStateSchema: z.ZodType<CommerceOrderChargeState>;
@@ -25539,17 +27236,31 @@ export let CommercePaymentsAccountCreditTransactionSchema: z.ZodType<CommercePay
 export let CommercePaymentsAccountCreditTransactionTypeSchema: z.ZodType<CommercePaymentsAccountCreditTransactionType>;
 export let CommercePaymentsAccountCreditTypeSchema: z.ZodType<CommercePaymentsAccountCreditType>;
 export let CommercePaymentsAppliedDiscountSchema: z.ZodType<CommercePaymentsAppliedDiscount>;
+export let CommercePaymentsBankAccountVerificationInitiationDtoSchema: z.ZodType<CommercePaymentsBankAccountVerificationInitiationDto>;
+export let CommercePaymentsBankAccountVerificationStatusDtoSchema: z.ZodType<CommercePaymentsBankAccountVerificationStatusDto>;
+export let CommercePaymentsBaseCurrencyRevenueEntrySchema: z.ZodType<CommercePaymentsBaseCurrencyRevenueEntry>;
+export let CommercePaymentsBaseCurrencyRevenueReportSchema: z.ZodType<CommercePaymentsBaseCurrencyRevenueReport>;
 export let CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCancelBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCreateBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerRefundBillingChargeInput>;
 export let CommercePaymentsCalculateTaxInputSchema: z.ZodType<CommercePaymentsCalculateTaxInput>;
+export let CommercePaymentsClearLocalizedPriceInputSchema: z.ZodType<CommercePaymentsClearLocalizedPriceInput>;
+export let CommercePaymentsConversionCostEntrySchema: z.ZodType<CommercePaymentsConversionCostEntry>;
+export let CommercePaymentsConversionCostReportSchema: z.ZodType<CommercePaymentsConversionCostReport>;
+export let CommercePaymentsConvertCurrencyInputSchema: z.ZodType<CommercePaymentsConvertCurrencyInput>;
+export let CommercePaymentsConvertCurrencyItemInputSchema: z.ZodType<CommercePaymentsConvertCurrencyItemInput>;
 export let CommercePaymentsCreateTaxJurisdictionInputSchema: z.ZodType<CommercePaymentsCreateTaxJurisdictionInput>;
 export let CommercePaymentsCreateTaxRuleInputSchema: z.ZodType<CommercePaymentsCreateTaxRuleInput>;
 export let CommercePaymentsCreateWalletInputSchema: z.ZodType<CommercePaymentsCreateWalletInput>;
 export let CommercePaymentsCreditApplicationResultSchema: z.ZodType<CommercePaymentsCreditApplicationResult>;
 export let CommercePaymentsCreditCurrencyMetricsSchema: z.ZodType<CommercePaymentsCreditCurrencyMetrics>;
 export let CommercePaymentsCreditMetricsSchema: z.ZodType<CommercePaymentsCreditMetrics>;
+export let CommercePaymentsCurrencyConversionItemResultSchema: z.ZodType<CommercePaymentsCurrencyConversionItemResult>;
+export let CommercePaymentsCurrencyConversionResultSchema: z.ZodType<CommercePaymentsCurrencyConversionResult>;
 export let CommercePaymentsCurrencyDisplayPreferencesInputSchema: z.ZodType<CommercePaymentsCurrencyDisplayPreferencesInput>;
+export let CommercePaymentsCurrencyPopularityEntrySchema: z.ZodType<CommercePaymentsCurrencyPopularityEntry>;
+export let CommercePaymentsCurrencyPopularityReportSchema: z.ZodType<CommercePaymentsCurrencyPopularityReport>;
+export let CommercePaymentsCurrencySuggestionDtoSchema: z.ZodType<CommercePaymentsCurrencySuggestionDto>;
 export let CommercePaymentsCustomerTypeSchema: z.ZodType<CommercePaymentsCustomerType>;
 export let CommercePaymentsDisableCurrencyInputSchema: z.ZodType<CommercePaymentsDisableCurrencyInput>;
 export let CommercePaymentsDiscountTypeSchema: z.ZodType<CommercePaymentsDiscountType>;
@@ -25570,6 +27281,14 @@ export let CommercePaymentsDisputeStatisticsSchema: z.ZodType<CommercePaymentsDi
 export let CommercePaymentsDisputeStatusSchema: z.ZodType<CommercePaymentsDisputeStatus>;
 export let CommercePaymentsDisputeTypeSchema: z.ZodType<CommercePaymentsDisputeType>;
 export let CommercePaymentsEvidenceTypeSchema: z.ZodType<CommercePaymentsEvidenceType>;
+export let CommercePaymentsFraudBlacklistCheckResultSchema: z.ZodType<CommercePaymentsFraudBlacklistCheckResult>;
+export let CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInputSchema: z.ZodType<CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInput>;
+export let CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResultSchema: z.ZodType<CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResult>;
+export let CommercePaymentsFraudBlacklistEntryResultSchema: z.ZodType<CommercePaymentsFraudBlacklistEntryResult>;
+export let CommercePaymentsFraudBlacklistEntryTypeSchema: z.ZodType<CommercePaymentsFraudBlacklistEntryType>;
+export let CommercePaymentsFraudBlacklistEvaluationSchema: z.ZodType<CommercePaymentsFraudBlacklistEvaluation>;
+export let CommercePaymentsFraudBlacklistPageSchema: z.ZodType<CommercePaymentsFraudBlacklistPage>;
+export let CommercePaymentsFraudBlacklistSourceSchema: z.ZodType<CommercePaymentsFraudBlacklistSource>;
 export let CommercePaymentsFraudReviewListItemSchema: z.ZodType<CommercePaymentsFraudReviewListItem>;
 export let CommercePaymentsFraudReviewResolutionResultSchema: z.ZodType<CommercePaymentsFraudReviewResolutionResult>;
 export let CommercePaymentsFraudReviewsBulkItemResultSchema: z.ZodType<CommercePaymentsFraudReviewsBulkItemResult>;
@@ -25578,19 +27297,39 @@ export let CommercePaymentsFraudReviewsControllerResolveFraudReviewInputSchema: 
 export let CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInputSchema: z.ZodType<CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInput>;
 export let CommercePaymentsFraudReviewStatusSchema: z.ZodType<CommercePaymentsFraudReviewStatus>;
 export let CommercePaymentsFraudRiskLevelSchema: z.ZodType<CommercePaymentsFraudRiskLevel>;
+export let CommercePaymentsFraudStatisticsCountryRowSchema: z.ZodType<CommercePaymentsFraudStatisticsCountryRow>;
+export let CommercePaymentsFraudStatisticsMethodRowSchema: z.ZodType<CommercePaymentsFraudStatisticsMethodRow>;
+export let CommercePaymentsFraudStatisticsPlanRowSchema: z.ZodType<CommercePaymentsFraudStatisticsPlanRow>;
+export let CommercePaymentsFraudStatisticsRatesSchema: z.ZodType<CommercePaymentsFraudStatisticsRates>;
+export let CommercePaymentsFraudStatisticsReportSchema: z.ZodType<CommercePaymentsFraudStatisticsReport>;
+export let CommercePaymentsFraudStatisticsReviewsSchema: z.ZodType<CommercePaymentsFraudStatisticsReviews>;
+export let CommercePaymentsFraudStatisticsSignalSchema: z.ZodType<CommercePaymentsFraudStatisticsSignal>;
+export let CommercePaymentsFraudStatisticsTotalsSchema: z.ZodType<CommercePaymentsFraudStatisticsTotals>;
+export let CommercePaymentsFraudStatisticsTrendPointSchema: z.ZodType<CommercePaymentsFraudStatisticsTrendPoint>;
+export let CommercePaymentsFraudTrendGranularitySchema: z.ZodType<CommercePaymentsFraudTrendGranularity>;
 export let CommercePaymentsFxRateDtoSchema: z.ZodType<CommercePaymentsFxRateDto>;
 export let CommercePaymentsFxRateSyncResultSchema: z.ZodType<CommercePaymentsFxRateSyncResult>;
 export let CommercePaymentsFxRateSyncRunDtoSchema: z.ZodType<CommercePaymentsFxRateSyncRunDto>;
 export let CommercePaymentsFxRateSyncRunStatusSchema: z.ZodType<CommercePaymentsFxRateSyncRunStatus>;
+export let CommercePaymentsFxRateVarianceEntrySchema: z.ZodType<CommercePaymentsFxRateVarianceEntry>;
+export let CommercePaymentsFxRateVarianceReportSchema: z.ZodType<CommercePaymentsFxRateVarianceReport>;
 export let CommercePaymentsFxSyncStatusDtoSchema: z.ZodType<CommercePaymentsFxSyncStatusDto>;
+export let CommercePaymentsGatewayAnalyticsReportSchema: z.ZodType<CommercePaymentsGatewayAnalyticsReport>;
 export let CommercePaymentsGatewayCircuitSnapshotSchema: z.ZodType<CommercePaymentsGatewayCircuitSnapshot>;
 export let CommercePaymentsGatewayCircuitStateSchema: z.ZodType<CommercePaymentsGatewayCircuitState>;
+export let CommercePaymentsGatewayConnectionTestResultSchema: z.ZodType<CommercePaymentsGatewayConnectionTestResult>;
+export let CommercePaymentsGatewayCostMetricsSchema: z.ZodType<CommercePaymentsGatewayCostMetrics>;
+export let CommercePaymentsGatewayCredentialDeactivationResultSchema: z.ZodType<CommercePaymentsGatewayCredentialDeactivationResult>;
+export let CommercePaymentsGatewayCredentialProvisionResultSchema: z.ZodType<CommercePaymentsGatewayCredentialProvisionResult>;
+export let CommercePaymentsGatewayErrorTypeMetricsSchema: z.ZodType<CommercePaymentsGatewayErrorTypeMetrics>;
+export let CommercePaymentsGatewayGeoMetricsSchema: z.ZodType<CommercePaymentsGatewayGeoMetrics>;
 export let CommercePaymentsGatewayMetricsReportSchema: z.ZodType<CommercePaymentsGatewayMetricsReport>;
 export let CommercePaymentsGatewayWindowMetricsSchema: z.ZodType<CommercePaymentsGatewayWindowMetrics>;
 export let CommercePaymentsGiftPublicViewSchema: z.ZodType<CommercePaymentsGiftPublicView>;
 export let CommercePaymentsGiftPurchaseResultSchema: z.ZodType<CommercePaymentsGiftPurchaseResult>;
 export let CommercePaymentsGiftsControllerPurchaseGiftRequestBodySchema: z.ZodType<CommercePaymentsGiftsControllerPurchaseGiftRequestBody>;
 export let CommercePaymentsGiftStatusSchema: z.ZodType<CommercePaymentsGiftStatus>;
+export let CommercePaymentsLocalizedPricePreviewItemSchema: z.ZodType<CommercePaymentsLocalizedPricePreviewItem>;
 export let CommercePaymentsLockWalletInputSchema: z.ZodType<CommercePaymentsLockWalletInput>;
 export let CommercePaymentsModelsAdjustWalletInputSchema: z.ZodType<CommercePaymentsModelsAdjustWalletInput>;
 export let CommercePaymentsModelsFreezeWalletInputSchema: z.ZodType<CommercePaymentsModelsFreezeWalletInput>;
@@ -25608,7 +27347,9 @@ export let CommercePaymentsPaymentFailureReasonBucketSchema: z.ZodType<CommerceP
 export let CommercePaymentsPaymentFailureReasonDistributionSchema: z.ZodType<CommercePaymentsPaymentFailureReasonDistribution>;
 export let CommercePaymentsPaymentMethodDtoSchema: z.ZodType<CommercePaymentsPaymentMethodDto>;
 export let CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBodySchema: z.ZodType<CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody>;
+export let CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBodySchema: z.ZodType<CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody>;
 export let CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBodySchema: z.ZodType<CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBody>;
+export let CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBodySchema: z.ZodType<CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody>;
 export let CommercePaymentsPaymentRecoveryMetricsSchema: z.ZodType<CommercePaymentsPaymentRecoveryMetrics>;
 export let CommercePaymentsPaymentResultSchema: z.ZodType<CommercePaymentsPaymentResult>;
 export let CommercePaymentsPaymentRetryAttemptDtoSchema: z.ZodType<CommercePaymentsPaymentRetryAttemptDto>;
@@ -25622,6 +27363,10 @@ export let CommercePaymentsPaymentsControllerCreateSetupIntentOutputSchema: z.Zo
 export let CommercePaymentsPaymentsControllerProcessPaymentInputSchema: z.ZodType<CommercePaymentsPaymentsControllerProcessPaymentInput>;
 export let CommercePaymentsPaymentsControllerRefundInputSchema: z.ZodType<CommercePaymentsPaymentsControllerRefundInput>;
 export let CommercePaymentsPaymentStatusSchema: z.ZodType<CommercePaymentsPaymentStatus>;
+export let CommercePaymentsPlanLocalizedPriceDtoSchema: z.ZodType<CommercePaymentsPlanLocalizedPriceDto>;
+export let CommercePaymentsPriceRecalculationOutcomeSchema: z.ZodType<CommercePaymentsPriceRecalculationOutcome>;
+export let CommercePaymentsPriceRecalculationRunDtoSchema: z.ZodType<CommercePaymentsPriceRecalculationRunDto>;
+export let CommercePaymentsPriceRecalculationRunStatusSchema: z.ZodType<CommercePaymentsPriceRecalculationRunStatus>;
 export let CommercePaymentsPricingAddOnInputSchema: z.ZodType<CommercePaymentsPricingAddOnInput>;
 export let CommercePaymentsPricingCalculationInputSchema: z.ZodType<CommercePaymentsPricingCalculationInput>;
 export let CommercePaymentsPricingCalculationResultSchema: z.ZodType<CommercePaymentsPricingCalculationResult>;
@@ -25635,6 +27380,9 @@ export let CommercePaymentsPricingTaxInfoSchema: z.ZodType<CommercePaymentsPrici
 export let CommercePaymentsPricingUsageChargeInputSchema: z.ZodType<CommercePaymentsPricingUsageChargeInput>;
 export let CommercePaymentsPricingUsageTierSchema: z.ZodType<CommercePaymentsPricingUsageTier>;
 export let CommercePaymentsProcessRefundResultSchema: z.ZodType<CommercePaymentsProcessRefundResult>;
+export let CommercePaymentsProvisionFxProviderApiKeyInputSchema: z.ZodType<CommercePaymentsProvisionFxProviderApiKeyInput>;
+export let CommercePaymentsProvisionGatewayCredentialInputSchema: z.ZodType<CommercePaymentsProvisionGatewayCredentialInput>;
+export let CommercePaymentsRecalculateLocalizedPricesInputSchema: z.ZodType<CommercePaymentsRecalculateLocalizedPricesInput>;
 export let CommercePaymentsReferralSchema: z.ZodType<CommercePaymentsReferral>;
 export let CommercePaymentsReferralFunnelMetricsSchema: z.ZodType<CommercePaymentsReferralFunnelMetrics>;
 export let CommercePaymentsReferralsControllerReferralCodeOutputSchema: z.ZodType<CommercePaymentsReferralsControllerReferralCodeOutput>;
@@ -25656,6 +27404,7 @@ export let CommercePaymentsRefundsControllerRequestRefundHttpInputSchema: z.ZodT
 export let CommercePaymentsRefundStatisticsSchema: z.ZodType<CommercePaymentsRefundStatistics>;
 export let CommercePaymentsRefundStatusSchema: z.ZodType<CommercePaymentsRefundStatus>;
 export let CommercePaymentsRejectedPromoDiscountSchema: z.ZodType<CommercePaymentsRejectedPromoDiscount>;
+export let CommercePaymentsRemoveFraudBlacklistEntryResultSchema: z.ZodType<CommercePaymentsRemoveFraudBlacklistEntryResult>;
 export let CommercePaymentsRequestRefundResultSchema: z.ZodType<CommercePaymentsRequestRefundResult>;
 export let CommercePaymentsRevenueAnomalyAlertSchema: z.ZodType<CommercePaymentsRevenueAnomalyAlert>;
 export let CommercePaymentsRevenueAnomalyKindSchema: z.ZodType<CommercePaymentsRevenueAnomalyKind>;
@@ -25675,6 +27424,8 @@ export let CommercePaymentsRevenueReconciliationStatusSchema: z.ZodType<Commerce
 export let CommercePaymentsRevenueTrendCurrencyTotalSchema: z.ZodType<CommercePaymentsRevenueTrendCurrencyTotal>;
 export let CommercePaymentsRevenueTrendPointSchema: z.ZodType<CommercePaymentsRevenueTrendPoint>;
 export let CommercePaymentsRevenueTrendReportSchema: z.ZodType<CommercePaymentsRevenueTrendReport>;
+export let CommercePaymentsRollbackRecalculationInputSchema: z.ZodType<CommercePaymentsRollbackRecalculationInput>;
+export let CommercePaymentsSetLocalizedPriceInputSchema: z.ZodType<CommercePaymentsSetLocalizedPriceInput>;
 export let CommercePaymentsSetManualFxRateOverrideInputSchema: z.ZodType<CommercePaymentsSetManualFxRateOverrideInput>;
 export let CommercePaymentsTaxBreakdownSchema: z.ZodType<CommercePaymentsTaxBreakdown>;
 export let CommercePaymentsTaxCalculationResultSchema: z.ZodType<CommercePaymentsTaxCalculationResult>;
@@ -25723,6 +27474,7 @@ export let CommerceProductsCreatePricingExperimentInputSchema: z.ZodType<Commerc
 export let CommerceProductsCreatePricingRuleInputSchema: z.ZodType<CommerceProductsCreatePricingRuleInput>;
 export let CommerceProductsCreateProductCategoryInputSchema: z.ZodType<CommerceProductsCreateProductCategoryInput>;
 export let CommerceProductsCreateProductInputSchema: z.ZodType<CommerceProductsCreateProductInput>;
+export let CommerceProductsCreatePromoCampaignInputSchema: z.ZodType<CommerceProductsCreatePromoCampaignInput>;
 export let CommerceProductsCreatePromoCodeInputSchema: z.ZodType<CommerceProductsCreatePromoCodeInput>;
 export let CommerceProductsCreatePromoStackingRuleInputSchema: z.ZodType<CommerceProductsCreatePromoStackingRuleInput>;
 export let CommerceProductsCreateSupportTicketInputSchema: z.ZodType<CommerceProductsCreateSupportTicketInput>;
@@ -25750,12 +27502,15 @@ export let CommerceProductsProductDtoSchema: z.ZodType<CommerceProductsProductDt
 export let CommerceProductsProductInventoryDtoSchema: z.ZodType<CommerceProductsProductInventoryDto>;
 export let CommerceProductsProductPricingDtoSchema: z.ZodType<CommerceProductsProductPricingDto>;
 export let CommerceProductsProductTypeSchema: z.ZodType<CommerceProductsProductType>;
+export let CommerceProductsPromoCampaignDtoSchema: z.ZodType<CommerceProductsPromoCampaignDto>;
+export let CommerceProductsPromoCampaignStatusSchema: z.ZodType<CommerceProductsPromoCampaignStatus>;
 export let CommerceProductsPromoCodeApplicationResultSchema: z.ZodType<CommerceProductsPromoCodeApplicationResult>;
 export let CommerceProductsPromoCodeDtoSchema: z.ZodType<CommerceProductsPromoCodeDto>;
 export let CommerceProductsPromoCodeTypeSchema: z.ZodType<CommerceProductsPromoCodeType>;
 export let CommerceProductsPromoCodeUsageDtoSchema: z.ZodType<CommerceProductsPromoCodeUsageDto>;
 export let CommerceProductsPromoCodeValidationOutcomeSchema: z.ZodType<CommerceProductsPromoCodeValidationOutcome>;
 export let CommerceProductsPromoCodeValidationResultSchema: z.ZodType<CommerceProductsPromoCodeValidationResult>;
+export let CommerceProductsPromoCustomerTypeSchema: z.ZodType<CommerceProductsPromoCustomerType>;
 export let CommerceProductsPromoStackingRuleDtoSchema: z.ZodType<CommerceProductsPromoStackingRuleDto>;
 export let CommerceProductsRecordExperimentOutcomeInputSchema: z.ZodType<CommerceProductsRecordExperimentOutcomeInput>;
 export let CommerceProductsRejectedPromoCodeSchema: z.ZodType<CommerceProductsRejectedPromoCode>;
@@ -25773,9 +27528,12 @@ export let CommerceProductsSupportTicketSummaryDtoSchema: z.ZodType<CommerceProd
 export let CommerceProductsUpdatePricingRuleInputSchema: z.ZodType<CommerceProductsUpdatePricingRuleInput>;
 export let CommerceProductsUpdateProductCategoryInputSchema: z.ZodType<CommerceProductsUpdateProductCategoryInput>;
 export let CommerceProductsUpdateProductInputSchema: z.ZodType<CommerceProductsUpdateProductInput>;
+export let CommerceProductsUpdatePromoCampaignInputSchema: z.ZodType<CommerceProductsUpdatePromoCampaignInput>;
 export let CommerceProductsUpdatePromoCodeInputSchema: z.ZodType<CommerceProductsUpdatePromoCodeInput>;
 export let CommerceProductsUpdatePromoStackingRuleInputSchema: z.ZodType<CommerceProductsUpdatePromoStackingRuleInput>;
 export let CommerceProductsValidatePromoCodeInputSchema: z.ZodType<CommerceProductsValidatePromoCodeInput>;
+export let CommerceSubscriptionPromoCodeApplicationSchema: z.ZodType<CommerceSubscriptionPromoCodeApplication>;
+export let CommerceSubscriptionPromoRejectedCodeSchema: z.ZodType<CommerceSubscriptionPromoRejectedCode>;
 export let CommerceSubscriptionsBillingHistoryDtoSchema: z.ZodType<CommerceSubscriptionsBillingHistoryDto>;
 export let CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInput>;
 export let CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput>;
@@ -25818,6 +27576,7 @@ export let CommerceSubscriptionsSubscriptionUpgradeResultSchema: z.ZodType<Comme
 export let CommerceSubscriptionsSubscriptionUsageDtoSchema: z.ZodType<CommerceSubscriptionsSubscriptionUsageDto>;
 export let ComplianceAuditAcknowledgeSecurityAlertInputSchema: z.ZodType<ComplianceAuditAcknowledgeSecurityAlertInput>;
 export let ComplianceAuditAcknowledgeTransferInputSchema: z.ZodType<ComplianceAuditAcknowledgeTransferInput>;
+export let ComplianceAuditAnalyzeFieldAccessPatternsInputSchema: z.ZodType<ComplianceAuditAnalyzeFieldAccessPatternsInput>;
 export let ComplianceAuditArchivedSecurityLogListOutputSchema: z.ZodType<ComplianceAuditArchivedSecurityLogListOutput>;
 export let ComplianceAuditArchivedSecurityLogOutputSchema: z.ZodType<ComplianceAuditArchivedSecurityLogOutput>;
 export let ComplianceAuditAuditAccessAgeBucketSchema: z.ZodType<ComplianceAuditAuditAccessAgeBucket>;
@@ -25891,10 +27650,14 @@ export let ComplianceAuditAuditStatisticsOutputSchema: z.ZodType<ComplianceAudit
 export let ComplianceAuditAuditStorageDailyCohortSchema: z.ZodType<ComplianceAuditAuditStorageDailyCohort>;
 export let ComplianceAuditAuditStorageTierSchema: z.ZodType<ComplianceAuditAuditStorageTier>;
 export let ComplianceAuditAuditStorageTierPriceSchema: z.ZodType<ComplianceAuditAuditStorageTierPrice>;
+export let ComplianceAuditAuditTrailCoverageFamilySchema: z.ZodType<ComplianceAuditAuditTrailCoverageFamily>;
 export let ComplianceAuditAuthenticationAuditEntrySchema: z.ZodType<ComplianceAuditAuthenticationAuditEntry>;
 export let ComplianceAuditAuthenticationAuditOutputSchema: z.ZodType<ComplianceAuditAuthenticationAuditOutput>;
 export let ComplianceAuditBreakSealInputSchema: z.ZodType<ComplianceAuditBreakSealInput>;
 export let ComplianceAuditBuildCustodyPackageInputSchema: z.ZodType<ComplianceAuditBuildCustodyPackageInput>;
+export let ComplianceAuditBulkExportEvaluationOutputSchema: z.ZodType<ComplianceAuditBulkExportEvaluationOutput>;
+export let ComplianceAuditBulkExportEventSchema: z.ZodType<ComplianceAuditBulkExportEvent>;
+export let ComplianceAuditBulkExportScopeSchema: z.ZodType<ComplianceAuditBulkExportScope>;
 export let ComplianceAuditCaptureAuditReplayInputSchema: z.ZodType<ComplianceAuditCaptureAuditReplayInput>;
 export let ComplianceAuditChangeImpactChangeSchema: z.ZodType<ComplianceAuditChangeImpactChange>;
 export let ComplianceAuditChangeImpactOutputSchema: z.ZodType<ComplianceAuditChangeImpactOutput>;
@@ -25916,20 +27679,33 @@ export let ComplianceAuditCompliancePackageOutputSchema: z.ZodType<ComplianceAud
 export let ComplianceAuditCompliancePackageSummarySchema: z.ZodType<ComplianceAuditCompliancePackageSummary>;
 export let ComplianceAuditCompliancePackageValidationReportSchema: z.ZodType<ComplianceAuditCompliancePackageValidationReport>;
 export let ComplianceAuditComplianceScopeExclusionSchema: z.ZodType<ComplianceAuditComplianceScopeExclusion>;
+export let ComplianceAuditComprehensiveAuditTrailCoverageReportSchema: z.ZodType<ComplianceAuditComprehensiveAuditTrailCoverageReport>;
+export let ComplianceAuditComprehensiveEventCoverageReportSchema: z.ZodType<ComplianceAuditComprehensiveEventCoverageReport>;
 export let ComplianceAuditConfigureAuditRetentionInputSchema: z.ZodType<ComplianceAuditConfigureAuditRetentionInput>;
 export let ComplianceAuditConfigureSecurityLogRetentionInputSchema: z.ZodType<ComplianceAuditConfigureSecurityLogRetentionInput>;
+export let ComplianceAuditConfigureSensitiveDataRetentionInputSchema: z.ZodType<ComplianceAuditConfigureSensitiveDataRetentionInput>;
 export let ComplianceAuditConfigureValueSnapshotRetentionInputSchema: z.ZodType<ComplianceAuditConfigureValueSnapshotRetentionInput>;
+export let ComplianceAuditConsentStateOutputSchema: z.ZodType<ComplianceAuditConsentStateOutput>;
 export let ComplianceAuditCourtAdmissiblePackageOutputSchema: z.ZodType<ComplianceAuditCourtAdmissiblePackageOutput>;
 export let ComplianceAuditCreateCompliancePackageInputSchema: z.ZodType<ComplianceAuditCreateCompliancePackageInput>;
 export let ComplianceAuditCreateLegalHoldInputSchema: z.ZodType<ComplianceAuditCreateLegalHoldInput>;
 export let ComplianceAuditCreateScheduledAuditExportInputSchema: z.ZodType<ComplianceAuditCreateScheduledAuditExportInput>;
 export let ComplianceAuditCreateValueSnapshotRollbackPlanInputSchema: z.ZodType<ComplianceAuditCreateValueSnapshotRollbackPlanInput>;
+export let ComplianceAuditCrossBorderTransferLogSchema: z.ZodType<ComplianceAuditCrossBorderTransferLog>;
+export let ComplianceAuditCrossBorderTransferOutputSchema: z.ZodType<ComplianceAuditCrossBorderTransferOutput>;
+export let ComplianceAuditCrossBorderTransferStatusSchema: z.ZodType<ComplianceAuditCrossBorderTransferStatus>;
 export let ComplianceAuditCustodyEventOutputSchema: z.ZodType<ComplianceAuditCustodyEventOutput>;
 export let ComplianceAuditCustodyEvidenceOutputSchema: z.ZodType<ComplianceAuditCustodyEvidenceOutput>;
 export let ComplianceAuditCustodyPackageVerificationSchema: z.ZodType<ComplianceAuditCustodyPackageVerification>;
 export let ComplianceAuditDailyActivityTrendSchema: z.ZodType<ComplianceAuditDailyActivityTrend>;
+export let ComplianceAuditDataSubjectAccessMonitoringSummarySchema: z.ZodType<ComplianceAuditDataSubjectAccessMonitoringSummary>;
+export let ComplianceAuditDataSubjectConsentMonitoringOutputSchema: z.ZodType<ComplianceAuditDataSubjectConsentMonitoringOutput>;
+export let ComplianceAuditDataSubjectRequestOutputSchema: z.ZodType<ComplianceAuditDataSubjectRequestOutput>;
 export let ComplianceAuditEnforceSecurityLogRetentionInputSchema: z.ZodType<ComplianceAuditEnforceSecurityLogRetentionInput>;
 export let ComplianceAuditEnforceValueSnapshotRetentionInputSchema: z.ZodType<ComplianceAuditEnforceValueSnapshotRetentionInput>;
+export let ComplianceAuditEntityChangeAuditEntrySchema: z.ZodType<ComplianceAuditEntityChangeAuditEntry>;
+export let ComplianceAuditEntityChangeAuditListOutputSchema: z.ZodType<ComplianceAuditEntityChangeAuditListOutput>;
+export let ComplianceAuditEvaluateBulkExportInputSchema: z.ZodType<ComplianceAuditEvaluateBulkExportInput>;
 export let ComplianceAuditEvidenceCustodianOutputSchema: z.ZodType<ComplianceAuditEvidenceCustodianOutput>;
 export let ComplianceAuditEvidenceIntegrityOutputSchema: z.ZodType<ComplianceAuditEvidenceIntegrityOutput>;
 export let ComplianceAuditEvidenceTransferOutputSchema: z.ZodType<ComplianceAuditEvidenceTransferOutput>;
@@ -25937,9 +27713,19 @@ export let ComplianceAuditExecuteValueSnapshotRollbackInputSchema: z.ZodType<Com
 export let ComplianceAuditExportFormatSchema: z.ZodType<ComplianceAuditExportFormat>;
 export let ComplianceAuditExportStatusSchema: z.ZodType<ComplianceAuditExportStatus>;
 export let ComplianceAuditFailureReasonCountSchema: z.ZodType<ComplianceAuditFailureReasonCount>;
+export let ComplianceAuditFieldAccessAnomalySchema: z.ZodType<ComplianceAuditFieldAccessAnomaly>;
+export let ComplianceAuditFieldAccessAnomalyOutputSchema: z.ZodType<ComplianceAuditFieldAccessAnomalyOutput>;
+export let ComplianceAuditFieldAccessAnomalyStatusSchema: z.ZodType<ComplianceAuditFieldAccessAnomalyStatus>;
+export let ComplianceAuditFieldAccessAnomalyTypeSchema: z.ZodType<ComplianceAuditFieldAccessAnomalyType>;
+export let ComplianceAuditFieldAccessAuditOutputSchema: z.ZodType<ComplianceAuditFieldAccessAuditOutput>;
+export let ComplianceAuditFieldAccessPatternAnalysisResultSchema: z.ZodType<ComplianceAuditFieldAccessPatternAnalysisResult>;
+export let ComplianceAuditFieldAccessTypeSchema: z.ZodType<ComplianceAuditFieldAccessType>;
+export let ComplianceAuditGdprArticle30OutputSchema: z.ZodType<ComplianceAuditGdprArticle30Output>;
+export let ComplianceAuditGdprProcessingActivityOutputSchema: z.ZodType<ComplianceAuditGdprProcessingActivityOutput>;
 export let ComplianceAuditInitiateTransferInputSchema: z.ZodType<ComplianceAuditInitiateTransferInput>;
 export let ComplianceAuditLegalHoldNotificationOutputSchema: z.ZodType<ComplianceAuditLegalHoldNotificationOutput>;
 export let ComplianceAuditLegalHoldOutputSchema: z.ZodType<ComplianceAuditLegalHoldOutput>;
+export let ComplianceAuditModuleEventCoverageEntrySchema: z.ZodType<ComplianceAuditModuleEventCoverageEntry>;
 export let ComplianceAuditNotificationTargetSchema: z.ZodType<ComplianceAuditNotificationTarget>;
 export let ComplianceAuditPermissionAuditEntrySchema: z.ZodType<ComplianceAuditPermissionAuditEntry>;
 export let ComplianceAuditPermissionAuditOutputSchema: z.ZodType<ComplianceAuditPermissionAuditOutput>;
@@ -25956,15 +27742,18 @@ export let ComplianceAuditPiiTokenResolutionOutputSchema: z.ZodType<ComplianceAu
 export let ComplianceAuditPreservationTargetSchema: z.ZodType<ComplianceAuditPreservationTarget>;
 export let ComplianceAuditPreserveEvidenceInputSchema: z.ZodType<ComplianceAuditPreserveEvidenceInput>;
 export let ComplianceAuditReconstructAuditReplayInputSchema: z.ZodType<ComplianceAuditReconstructAuditReplayInput>;
+export let ComplianceAuditRecordFieldAccessInputSchema: z.ZodType<ComplianceAuditRecordFieldAccessInput>;
 export let ComplianceAuditRegisterCustodianInputSchema: z.ZodType<ComplianceAuditRegisterCustodianInput>;
 export let ComplianceAuditReleaseEvidenceInputSchema: z.ZodType<ComplianceAuditReleaseEvidenceInput>;
 export let ComplianceAuditReleaseHoldInputSchema: z.ZodType<ComplianceAuditReleaseHoldInput>;
+export let ComplianceAuditResolveFieldAccessAnomalyInputSchema: z.ZodType<ComplianceAuditResolveFieldAccessAnomalyInput>;
 export let ComplianceAuditResolveSecurityAlertInputSchema: z.ZodType<ComplianceAuditResolveSecurityAlertInput>;
 export let ComplianceAuditReviewComplianceDocumentInputSchema: z.ZodType<ComplianceAuditReviewComplianceDocumentInput>;
 export let ComplianceAuditRevokeCustodianInputSchema: z.ZodType<ComplianceAuditRevokeCustodianInput>;
 export let ComplianceAuditRunAuditRetentionSimulationInputSchema: z.ZodType<ComplianceAuditRunAuditRetentionSimulationInput>;
 export let ComplianceAuditSavedAuditQueryRevisionOutputSchema: z.ZodType<ComplianceAuditSavedAuditQueryRevisionOutput>;
 export let ComplianceAuditSavedAuditQueryViewOutputSchema: z.ZodType<ComplianceAuditSavedAuditQueryViewOutput>;
+export let ComplianceAuditSaveGdprActivityInputSchema: z.ZodType<ComplianceAuditSaveGdprActivityInput>;
 export let ComplianceAuditSaveSavedAuditQueryApiInputSchema: z.ZodType<ComplianceAuditSaveSavedAuditQueryApiInput>;
 export let ComplianceAuditScheduledAuditExportOutputSchema: z.ZodType<ComplianceAuditScheduledAuditExportOutput>;
 export let ComplianceAuditSecurityAlertOutputSchema: z.ZodType<ComplianceAuditSecurityAlertOutput>;
@@ -25978,6 +27767,11 @@ export let ComplianceAuditSecurityEventTaxonomyOutputSchema: z.ZodType<Complianc
 export let ComplianceAuditSecurityLogRetentionExecutionOutputSchema: z.ZodType<ComplianceAuditSecurityLogRetentionExecutionOutput>;
 export let ComplianceAuditSecurityLogRetentionPolicyOutputSchema: z.ZodType<ComplianceAuditSecurityLogRetentionPolicyOutput>;
 export let ComplianceAuditSecurityLogStorageTierReportOutputSchema: z.ZodType<ComplianceAuditSecurityLogStorageTierReportOutput>;
+export let ComplianceAuditSensitiveDataCategorySchema: z.ZodType<ComplianceAuditSensitiveDataCategory>;
+export let ComplianceAuditSensitiveDataRetentionEnforcementResultSchema: z.ZodType<ComplianceAuditSensitiveDataRetentionEnforcementResult>;
+export let ComplianceAuditSensitiveDataRetentionPolicyOutputSchema: z.ZodType<ComplianceAuditSensitiveDataRetentionPolicyOutput>;
+export let ComplianceAuditSensitiveFieldClassificationOutputSchema: z.ZodType<ComplianceAuditSensitiveFieldClassificationOutput>;
+export let ComplianceAuditSensitiveFieldScanOutputSchema: z.ZodType<ComplianceAuditSensitiveFieldScanOutput>;
 export let ComplianceAuditSensitivityLevelSchema: z.ZodType<ComplianceAuditSensitivityLevel>;
 export let ComplianceAuditTopIpActivitySchema: z.ZodType<ComplianceAuditTopIpActivity>;
 export let ComplianceAuditTopUserActivitySchema: z.ZodType<ComplianceAuditTopUserActivity>;
@@ -25986,6 +27780,7 @@ export let ComplianceAuditUnifiedSecurityAuditInputSchema: z.ZodType<ComplianceA
 export let ComplianceAuditUnifiedSecurityAuditOutputSchema: z.ZodType<ComplianceAuditUnifiedSecurityAuditOutput>;
 export let ComplianceAuditUploadComplianceDocumentInputSchema: z.ZodType<ComplianceAuditUploadComplianceDocumentInput>;
 export let ComplianceAuditUpsertPiiRedactionRuleInputSchema: z.ZodType<ComplianceAuditUpsertPiiRedactionRuleInput>;
+export let ComplianceAuditValidateCrossBorderTransferInputSchema: z.ZodType<ComplianceAuditValidateCrossBorderTransferInput>;
 export let ComplianceAuditValueHistoryEntrySchema: z.ZodType<ComplianceAuditValueHistoryEntry>;
 export let ComplianceAuditValueHistoryOutputSchema: z.ZodType<ComplianceAuditValueHistoryOutput>;
 export let ComplianceAuditValueSnapshotFieldDiffOutputSchema: z.ZodType<ComplianceAuditValueSnapshotFieldDiffOutput>;
@@ -26365,6 +28160,7 @@ export let IdentityAuthenticationPushMfaRespondInputSchema: z.ZodType<IdentityAu
 export let IdentityAuthenticationRefreshTokenInputSchema: z.ZodType<IdentityAuthenticationRefreshTokenInput>;
 export let IdentityAuthenticationRemoveRoleFromUserInputSchema: z.ZodType<IdentityAuthenticationRemoveRoleFromUserInput>;
 export let IdentityAuthenticationRenameSessionInputSchema: z.ZodType<IdentityAuthenticationRenameSessionInput>;
+export let IdentityAuthenticationRenameTrustedDeviceInputSchema: z.ZodType<IdentityAuthenticationRenameTrustedDeviceInput>;
 export let IdentityAuthenticationRequestEmailCodeInputSchema: z.ZodType<IdentityAuthenticationRequestEmailCodeInput>;
 export let IdentityAuthenticationRequestMagicLinkInputSchema: z.ZodType<IdentityAuthenticationRequestMagicLinkInput>;
 export let IdentityAuthenticationRequestPasswordResetInputSchema: z.ZodType<IdentityAuthenticationRequestPasswordResetInput>;
@@ -26456,12 +28252,14 @@ export let IdentityAuthorizationDenyTenantPermissionCommandSchema: z.ZodType<Ide
 export let IdentityAuthorizationEffectivePermissionDtoSchema: z.ZodType<IdentityAuthorizationEffectivePermissionDto>;
 export let IdentityAuthorizationEffectivePermissionsOutputSchema: z.ZodType<IdentityAuthorizationEffectivePermissionsOutput>;
 export let IdentityAuthorizationElevationRequestStatusSchema: z.ZodType<IdentityAuthorizationElevationRequestStatus>;
+export let IdentityAuthorizationExpiringPermissionBreakdownSchema: z.ZodType<IdentityAuthorizationExpiringPermissionBreakdown>;
 export let IdentityAuthorizationExpiringTenantPermissionSchema: z.ZodType<IdentityAuthorizationExpiringTenantPermission>;
 export let IdentityAuthorizationExtendTenantPermissionExpirationCommandSchema: z.ZodType<IdentityAuthorizationExtendTenantPermissionExpirationCommand>;
 export let IdentityAuthorizationExternalPermissionEntrySchema: z.ZodType<IdentityAuthorizationExternalPermissionEntry>;
 export let IdentityAuthorizationExternalPermissionSyncDocumentSchema: z.ZodType<IdentityAuthorizationExternalPermissionSyncDocument>;
 export let IdentityAuthorizationExternalRoleDefinitionSchema: z.ZodType<IdentityAuthorizationExternalRoleDefinition>;
 export let IdentityAuthorizationGetContentTypePermissionGrantsOutputSchema: z.ZodType<IdentityAuthorizationGetContentTypePermissionGrantsOutput>;
+export let IdentityAuthorizationGetEffectiveExpirationRuleOutputSchema: z.ZodType<IdentityAuthorizationGetEffectiveExpirationRuleOutput>;
 export let IdentityAuthorizationGetExpiringTenantPermissionsOutputSchema: z.ZodType<IdentityAuthorizationGetExpiringTenantPermissionsOutput>;
 export let IdentityAuthorizationGetPendingResourceInvitationsOutputSchema: z.ZodType<IdentityAuthorizationGetPendingResourceInvitationsOutput>;
 export let IdentityAuthorizationGetResourceInvitationOutputSchema: z.ZodType<IdentityAuthorizationGetResourceInvitationOutput>;
@@ -26504,6 +28302,10 @@ export let IdentityAuthorizationPermissionApprovalWorkflowSchema: z.ZodType<Iden
 export let IdentityAuthorizationPermissionComplianceBreakdownSchema: z.ZodType<IdentityAuthorizationPermissionComplianceBreakdown>;
 export let IdentityAuthorizationPermissionComplianceReportSchema: z.ZodType<IdentityAuthorizationPermissionComplianceReport>;
 export let IdentityAuthorizationPermissionDelegationSchema: z.ZodType<IdentityAuthorizationPermissionDelegation>;
+export let IdentityAuthorizationPermissionExpirationBucketSchema: z.ZodType<IdentityAuthorizationPermissionExpirationBucket>;
+export let IdentityAuthorizationPermissionExpirationReportSchema: z.ZodType<IdentityAuthorizationPermissionExpirationReport>;
+export let IdentityAuthorizationPermissionExpirationSummarySchema: z.ZodType<IdentityAuthorizationPermissionExpirationSummary>;
+export let IdentityAuthorizationPermissionExpirationTrendPointSchema: z.ZodType<IdentityAuthorizationPermissionExpirationTrendPoint>;
 export let IdentityAuthorizationPermissionHistoryAtSnapshotSchema: z.ZodType<IdentityAuthorizationPermissionHistoryAtSnapshot>;
 export let IdentityAuthorizationPermissionRestorationResultSchema: z.ZodType<IdentityAuthorizationPermissionRestorationResult>;
 export let IdentityAuthorizationPermissionSimulationResultSchema: z.ZodType<IdentityAuthorizationPermissionSimulationResult>;
@@ -26849,6 +28651,7 @@ export let LearningCertificatesCertificateTemplateDtoSchema: z.ZodType<LearningC
 export let LearningCertificatesCertificateVerificationResultSchema: z.ZodType<LearningCertificatesCertificateVerificationResult>;
 export let LearningCertificatesCreateCertificateTemplateInputSchema: z.ZodType<LearningCertificatesCreateCertificateTemplateInput>;
 export let LearningCertificatesIssueCertificateInputSchema: z.ZodType<LearningCertificatesIssueCertificateInput>;
+export let LearningCertificatesRenewCertificateInputSchema: z.ZodType<LearningCertificatesRenewCertificateInput>;
 export let LearningCertificatesRevokeCertificateInputSchema: z.ZodType<LearningCertificatesRevokeCertificateInput>;
 export let LearningCertificatesUpdateCertificateTemplateInputSchema: z.ZodType<LearningCertificatesUpdateCertificateTemplateInput>;
 export let LearningCohortsApplyCohortScheduleInputSchema: z.ZodType<LearningCohortsApplyCohortScheduleInput>;
@@ -27108,6 +28911,7 @@ export let PagedResultPricingDecisionLedgerEntryDtoSchema: z.ZodType<PagedResult
 export let PagedResultPricingExperimentDtoSchema: z.ZodType<PagedResultPricingExperimentDto>;
 export let PagedResultPricingRuleDtoSchema: z.ZodType<PagedResultPricingRuleDto>;
 export let PagedResultProductDtoSchema: z.ZodType<PagedResultProductDto>;
+export let PagedResultPromoCampaignDtoSchema: z.ZodType<PagedResultPromoCampaignDto>;
 export let PagedResultPromoCodeDtoSchema: z.ZodType<PagedResultPromoCodeDto>;
 export let PagedResultReferralSchema: z.ZodType<PagedResultReferral>;
 export let PagedResultRevenueAnomalyAlertSchema: z.ZodType<PagedResultRevenueAnomalyAlert>;
@@ -29147,8 +30951,10 @@ CommerceBillingBillingWebhookEventDtoSchema = z.object({
   processedAt: z.string().datetime().nullable().optional(),
   processingAttempts: z.number().int().optional(),
   provider: z.string().nullable().optional(),
+  sourceIpAddress: z.string().nullable().optional(),
   subscriptionId: z.string().uuid().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
+  userAgent: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceBillingBillingWebhookEventListItemDto. List item of the billing webhook inbox event feed (issue #396). Payloads are excluded. */
@@ -29165,6 +30971,16 @@ CommerceBillingBillingWebhookEventListItemDtoSchema = z.object({
   provider: z.string().nullable().optional(),
   subscriptionId: z.string().uuid().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for CommerceBillingBillingWebhookProviderStatsDto. Per-provider webhook activity inside the statistics window. */
+CommerceBillingBillingWebhookProviderStatsDtoSchema = z.object({
+  deadLettered: z.number().int(),
+  failedPendingRetry: z.number().int(),
+  processed: z.number().int(),
+  provider: z.string().nullable(),
+  received: z.number().int(),
+  unverified: z.number().int(),
 });
 
 /** Zod schema for CommerceBillingBillingWebhooksControllerRotateWebhookSecretInput. Request body for the webhook signing-secret rotation. */
@@ -29194,6 +31010,21 @@ CommerceBillingBillingWebhookSecuritySummaryDtoSchema = z.object({
   securityEventPipeline: z.lazy(() => ComplianceAuditSecurityEventDeliveryStatusOutputSchema).optional(),
   sourceIpAllowlist: z.lazy(() => CommerceBillingBillingWebhookAllowlistStatusDtoSchema).optional(),
   suspiciousActivity: z.lazy(() => CommerceBillingBillingWebhookSuspiciousActivityStatusDtoSchema).optional(),
+});
+
+/** Zod schema for CommerceBillingBillingWebhookStatsDto. Read model of one webhook-statistics reporting pass. */
+CommerceBillingBillingWebhookStatsDtoSchema = z.object({
+  averageProcessingSeconds: z.number().nullable().optional(),
+  deadLetteredInWindow: z.number().int(),
+  failedPendingRetry: z.number().int(),
+  fromUtc: z.string().datetime(),
+  generatedAtUtc: z.string().datetime(),
+  perProvider: z.array(z.lazy(() => CommerceBillingBillingWebhookProviderStatsDtoSchema)).nullable(),
+  processedInWindow: z.number().int(),
+  receivedInWindow: z.number().int(),
+  successRatePercent: z.number().nullable().optional(),
+  toUtc: z.string().datetime(),
+  unverifiedInWindow: z.number().int(),
 });
 
 /** Zod schema for CommerceBillingBillingWebhookSuspiciousActivityStatusDto. State of the suspicious-activity auto-blocking monitor. */
@@ -29255,6 +31086,15 @@ CommerceBillingInvoicePaymentRetryResultSchema = z.object({
 
 /** Zod schema for CommerceBillingInvoiceStatus. Invoice status enumeration with monotonic transitions */
 CommerceBillingInvoiceStatusSchema = z.enum(['Draft', 'Open', 'Paid', 'Void', 'PastDue', 'Uncollectible']);
+
+/** Zod schema for CommerceBillingOrchestrateSubscriptionPlanChangeInput. Request body for GameGuild.Commerce.Billing.OrchestrateSubscriptionPlanChangeCommand (issue #396
+workflow orchestration). The acting user is never part of the body: the handler
+resolves it from the ambient actor context. */
+CommerceBillingOrchestrateSubscriptionPlanChangeInputSchema = z.object({
+  effectiveDateUtc: z.string().datetime().nullable().optional(),
+  newPlanId: z.string().uuid().nullable().optional(),
+  paymentMethodId: z.string().uuid().nullable().optional(),
+});
 
 /** Zod schema for CommerceBillingPricingCalculationValidationResult. Validation outcome for one stored calculation (issue #417). */
 CommerceBillingPricingCalculationValidationResultSchema = z.object({
@@ -29386,6 +31226,130 @@ CommerceBillingPromoCodeEffectivenessRowSchema = z.object({
 CommerceBillingStackingOutcomeRowSchema = z.object({
   decisions: z.number().int().optional(),
   stackingRuleName: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceBillingSubscriptionChangeSagaDto. Read model returned by GameGuild.Commerce.Billing.GetSubscriptionChangeSagaQuery (issue #396
+workflow-orchestration observability): the durable saga row — status, current step,
+proration amounts, payment reference, failure and compensation record — plus the
+journaled step trail in execution order. */
+CommerceBillingSubscriptionChangeSagaDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  chargeForNew: z.number().optional(),
+  compensationsApplied: z.string().nullable().optional(),
+  completedAtUtc: z.string().datetime().nullable().optional(),
+  creditForUnused: z.number().optional(),
+  currency: z.string().nullable().optional(),
+  currentStep: z.string().nullable().optional(),
+  failedStep: z.string().nullable().optional(),
+  failureReason: z.string().nullable().optional(),
+  fromPlanId: z.string().uuid().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  initiatedByActorId: z.string().uuid().optional(),
+  invoiceId: z.string().uuid().nullable().optional(),
+  netAdjustment: z.number().optional(),
+  paymentTransactionId: z.string().nullable().optional(),
+  prorationEffectiveDateUtc: z.string().datetime().optional(),
+  startedAtUtc: z.string().datetime().optional(),
+  status: z.string().nullable().optional(),
+  steps: z
+    .array(z.lazy(() => CommerceBillingSubscriptionChangeSagaStepDtoSchema))
+    .nullable()
+    .optional(),
+  subscriptionId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+  toPlanId: z.string().uuid().optional(),
+});
+
+/** Zod schema for CommerceBillingSubscriptionChangeSagaResult. Terminal result of the orchestrated subscription plan change: the saga state, the
+executed steps and, on failure, the compensating actions that were applied. */
+CommerceBillingSubscriptionChangeSagaResultSchema = z.object({
+  compensationsApplied: z.string().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  failedStep: z.string().nullable().optional(),
+  failureReason: z.string().nullable().optional(),
+  fromPlanId: z.string().uuid().optional(),
+  invoiceId: z.string().uuid().nullable().optional(),
+  netAdjustment: z.number().optional(),
+  paymentTransactionId: z.string().nullable().optional(),
+  sagaId: z.string().uuid().optional(),
+  status: z.lazy(() => CommerceBillingSubscriptionChangeSagaStatusSchema).optional(),
+  steps: z
+    .array(z.lazy(() => CommerceBillingSubscriptionChangeSagaStepResultSchema))
+    .nullable()
+    .optional(),
+  subscriptionId: z.string().uuid().optional(),
+  succeeded: z.boolean().optional(),
+  toPlanId: z.string().uuid().optional(),
+});
+
+/** Zod schema for CommerceBillingSubscriptionChangeSagaStatus. Lifecycle status of an orchestrated subscription plan change saga (issue #396
+workflow orchestration). The saga moves GameGuild.Commerce.Billing.SubscriptionChangeSagaStatus.Running through the steps
+(proration, invoice, payment, activation) and lands in GameGuild.Commerce.Billing.SubscriptionChangeSagaStatus.Completed or,
+after compensating actions, GameGuild.Commerce.Billing.SubscriptionChangeSagaStatus.Failed. */
+CommerceBillingSubscriptionChangeSagaStatusSchema = z.enum(['Pending', 'Running', 'Completed', 'Compensating', 'Failed']);
+
+/** Zod schema for CommerceBillingSubscriptionChangeSagaStepDto. One journaled saga step attempt, in execution order. */
+CommerceBillingSubscriptionChangeSagaStepDtoSchema = z.object({
+  detail: z.string().nullable().optional(),
+  occurredAtUtc: z.string().datetime().optional(),
+  outcome: z.string().nullable().optional(),
+  sequence: z.number().int().optional(),
+  step: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceBillingSubscriptionChangeSagaStepResult. Outcome of one executed saga step, in execution order. */
+CommerceBillingSubscriptionChangeSagaStepResultSchema = z.object({
+  detail: z.string().nullable().optional(),
+  occurredAtUtc: z.string().datetime().optional(),
+  outcome: z.string().nullable().optional(),
+  step: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceBillingSubscriptionEventProjectionDto. Read model returned by GameGuild.Commerce.Billing.GetSubscriptionEventProjectionQuery (issue #396
+state reconstruction): the state rebuilt from the durable billing event log, the
+verification against the live subscription snapshot, and the replayed event trail. */
+CommerceBillingSubscriptionEventProjectionDtoSchema = z.object({
+  appliedEventCount: z.number().int().optional(),
+  cancelledAtUtc: z.string().datetime().nullable().optional(),
+  currentPlanId: z.string().uuid().nullable().optional(),
+  events: z
+    .array(z.lazy(() => CommerceBillingSubscriptionProjectionEventDtoSchema))
+    .nullable()
+    .optional(),
+  lastChangeOutcome: z.string().nullable().optional(),
+  lastChangeSagaId: z.string().uuid().nullable().optional(),
+  lastPaymentAmount: z.number().nullable().optional(),
+  lastPaymentAtUtc: z.string().datetime().nullable().optional(),
+  lastPaymentCurrency: z.string().nullable().optional(),
+  lastProvider: z.string().nullable().optional(),
+  paymentCount: z.number().int().optional(),
+  planChangeCount: z.number().int().optional(),
+  projectedStatus: z.string().nullable().optional(),
+  renewalCount: z.number().int().optional(),
+  skippedEvents: z.array(z.string()).nullable().optional(),
+  subscriptionId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+  totalPaidAmount: z.number().optional(),
+  verificationConsistent: z.boolean().optional(),
+  verificationDrifts: z
+    .array(z.lazy(() => CommerceBillingSubscriptionStateDriftDtoSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for CommerceBillingSubscriptionProjectionEventDto. One replayed durable billing event, in replay order. */
+CommerceBillingSubscriptionProjectionEventDtoSchema = z.object({
+  eventId: z.string().uuid().optional(),
+  eventName: z.string().nullable().optional(),
+  occurredAtUtc: z.string().datetime().optional(),
+  schemaVersion: z.number().int().optional(),
+});
+
+/** Zod schema for CommerceBillingSubscriptionStateDriftDto. One drift between the projected state and the live subscription snapshot. */
+CommerceBillingSubscriptionStateDriftDtoSchema = z.object({
+  fact: z.string().nullable().optional(),
+  live: z.string().nullable().optional(),
+  projected: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceBillingValidatePricingLedgerDriftInput. Request body for the drift-validation endpoint. */
@@ -29779,6 +31743,64 @@ CommercePaymentsAppliedDiscountSchema = z.object({
   type: z.lazy(() => CommercePaymentsDiscountTypeSchema).optional(),
 });
 
+/** Zod schema for CommercePaymentsBankAccountVerificationInitiationDto. Initiation result (issue #414): the challenge status plus the two generated deposit
+amounts. The amounts are surfaced once here — the same visibility a gateway sandbox
+gives the operator — and never again: the stored challenge keeps only salted hashes. */
+CommercePaymentsBankAccountVerificationInitiationDtoSchema = z.object({
+  deposit1Amount: z.number().optional(),
+  deposit2Amount: z.number().optional(),
+  status: z.lazy(() => CommercePaymentsBankAccountVerificationStatusDtoSchema).optional(),
+});
+
+/** Zod schema for CommercePaymentsBankAccountVerificationStatusDto. Verification state of a saved bank-account payment method (issue #414). */
+CommercePaymentsBankAccountVerificationStatusDtoSchema = z.object({
+  expiresAtUtc: z.string().datetime().nullable().optional(),
+  failedAttempts: z.number().int().optional(),
+  initiatedAtUtc: z.string().datetime().nullable().optional(),
+  paymentMethodId: z.string().uuid().optional(),
+  remainingAttempts: z.number().int().optional(),
+  status: z.string().nullable().optional(),
+  verifiedAtUtc: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsBaseCurrencyRevenueEntry. One per-currency row of the base-currency revenue report (issue #412 spec G). */
+CommercePaymentsBaseCurrencyRevenueEntrySchema = z.object({
+  baseCreditTotal: z.number().nullable().optional(),
+  baseDebitTotal: z.number().nullable().optional(),
+  baseNetTotal: z.number().nullable().optional(),
+  converted: z.boolean().optional(),
+  creditTotal: z.number().optional(),
+  currency: z.string().nullable().optional(),
+  debitTotal: z.number().optional(),
+  eventCount: z.number().int().optional(),
+  netTotal: z.number().optional(),
+  note: z.string().nullable().optional(),
+  rateEffectiveDateUtc: z.string().datetime().nullable().optional(),
+  rateProvider: z.string().nullable().optional(),
+  rateUsed: z.number().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsBaseCurrencyRevenueReport. Base-currency revenue report + reconciliation (issue #412 specs F/G): every transacted
+currency of the period with its per-currency totals and the base-currency equivalent
+computed at the period-end rate, plus the reconciled grand totals in base currency.
+Unconvertible currencies are listed fail-closed (never silently merged) and excluded
+from the base totals. */
+CommercePaymentsBaseCurrencyRevenueReportSchema = z.object({
+  attestation: z.string().nullable().optional(),
+  baseCreditTotal: z.number().optional(),
+  baseCurrency: z.string().nullable().optional(),
+  baseDebitTotal: z.number().optional(),
+  baseNetTotal: z.number().optional(),
+  entries: z
+    .array(z.lazy(() => CommercePaymentsBaseCurrencyRevenueEntrySchema))
+    .nullable()
+    .optional(),
+  fromUtc: z.string().datetime().optional(),
+  generatedAtUtc: z.string().datetime().optional(),
+  toUtc: z.string().datetime().optional(),
+  unconvertedCurrencies: z.number().int().optional(),
+});
+
 /** Zod schema for CommercePaymentsBillingChargesControllerCancelBillingChargeInput. Data model for Commerce Payments Billing Charges Controller+Cancel Billing Charge Request. */
 CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema = z.object({
   canceledBy: z.string().uuid().nullable().optional(),
@@ -29788,6 +31810,7 @@ CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema = z.objec
 /** Zod schema for CommercePaymentsBillingChargesControllerCreateBillingChargeInput. Data model for Commerce Payments Billing Charges Controller+Create Billing Charge Request. */
 CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema = z.object({
   amount: z.number().optional(),
+  country: z.string().nullable().optional(),
   paymentMethodId: z.string().nullable().optional(),
   subscriptionId: z.string().uuid().optional(),
   tenantId: z.string().uuid().optional(),
@@ -29810,6 +31833,55 @@ CommercePaymentsCalculateTaxInputSchema = z.object({
   jurisdictionCode: z.string().nullable(),
   productCategory: z.string().nullable().optional(),
   transactionDate: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsClearLocalizedPriceInput. Request payload for clearing manual overrides. */
+CommercePaymentsClearLocalizedPriceInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsConversionCostEntry. One per-currency row of the conversion-cost analysis (issue #412 spec G). */
+CommercePaymentsConversionCostEntrySchema = z.object({
+  baseAtMarketRate: z.number().nullable().optional(),
+  baseAtOverrideRate: z.number().nullable().optional(),
+  costInBase: z.number().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  marketRate: z.number().nullable().optional(),
+  marketRateEffectiveDateUtc: z.string().datetime().nullable().optional(),
+  netVolume: z.number().optional(),
+  note: z.string().nullable().optional(),
+  overrideRate: z.number().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsConversionCostReport. Currency conversion costs analysis (issue #412 spec G): for every non-base transacted
+currency, the base-currency value of its net volume at the market rate versus at the
+operator override rate — quantifying what pinned rates cost (or save) per market. */
+CommercePaymentsConversionCostReportSchema = z.object({
+  baseCurrency: z.string().nullable().optional(),
+  entries: z
+    .array(z.lazy(() => CommercePaymentsConversionCostEntrySchema))
+    .nullable()
+    .optional(),
+  fromUtc: z.string().datetime().optional(),
+  generatedAtUtc: z.string().datetime().optional(),
+  totalCostInBase: z.number().optional(),
+  toUtc: z.string().datetime().optional(),
+});
+
+/** Zod schema for CommercePaymentsConvertCurrencyInput. Request payload for the currency conversion endpoint. */
+CommercePaymentsConvertCurrencyInputSchema = z.object({
+  asOfUtc: z.string().datetime().nullable().optional(),
+  items: z
+    .array(z.lazy(() => CommercePaymentsConvertCurrencyItemInputSchema))
+    .nullable()
+    .optional(),
+  targetCurrency: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsConvertCurrencyItemInput. One entry of a conversion request. */
+CommercePaymentsConvertCurrencyItemInputSchema = z.object({
+  amount: z.number().optional(),
+  currency: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsCreateTaxJurisdictionInput. Request to create a tax jurisdiction */
@@ -29866,10 +31938,69 @@ CommercePaymentsCreditMetricsSchema = z.object({
   usageRate: z.number().nullable().optional(),
 });
 
+/** Zod schema for CommercePaymentsCurrencyConversionItemResult. Per-item conversion outcome (issue #412 spec D). Successful items carry the converted
+amount rounded to the target currency's ISO 4217 minor-unit exponent and the quotation
+metadata that produced it; failed items carry Error instead so one
+bad entry never aborts a batch. */
+CommercePaymentsCurrencyConversionItemResultSchema = z.object({
+  convertedAmount: z.number().nullable().optional(),
+  error: z.string().nullable().optional(),
+  isIdentity: z.boolean().optional(),
+  rate: z.number().nullable().optional(),
+  rateAsOfUtc: z.string().datetime().nullable().optional(),
+  rateEffectiveDateUtc: z.string().datetime().nullable().optional(),
+  rateProvider: z.string().nullable().optional(),
+  rateSource: z.string().nullable().optional(),
+  sourceAmount: z.number().optional(),
+  sourceCurrency: z.string().nullable().optional(),
+  targetCurrency: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsCurrencyConversionResult. Batch conversion response. */
+CommercePaymentsCurrencyConversionResultSchema = z.object({
+  asOfUtc: z.string().datetime().nullable().optional(),
+  items: z
+    .array(z.lazy(() => CommercePaymentsCurrencyConversionItemResultSchema))
+    .nullable()
+    .optional(),
+  targetCurrency: z.string().nullable().optional(),
+});
+
 /** Zod schema for CommercePaymentsCurrencyDisplayPreferencesInput. Optional display preferences supplied when enabling a currency. */
 CommercePaymentsCurrencyDisplayPreferencesInputSchema = z.object({
   displayOrder: z.number().int().nullable().optional(),
   displaySymbol: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsCurrencyPopularityEntry. One ranked currency in the popularity report (issue #412 spec G). */
+CommercePaymentsCurrencyPopularityEntrySchema = z.object({
+  currency: z.string().nullable().optional(),
+  rank: z.number().int().optional(),
+  totalCredit: z.number().optional(),
+  totalDebit: z.number().optional(),
+  totalNet: z.number().optional(),
+  transactionCount: z.number().int().optional(),
+});
+
+/** Zod schema for CommercePaymentsCurrencyPopularityReport. Most-transacted currencies over an inclusive period (issue #412 spec G). */
+CommercePaymentsCurrencyPopularityReportSchema = z.object({
+  currencies: z
+    .array(z.lazy(() => CommercePaymentsCurrencyPopularityEntrySchema))
+    .nullable()
+    .optional(),
+  fromUtc: z.string().datetime().optional(),
+  generatedAtUtc: z.string().datetime().optional(),
+  toUtc: z.string().datetime().optional(),
+});
+
+/** Zod schema for CommercePaymentsCurrencySuggestionDto. Result of the location-based currency suggestion (issue #412 spec E). */
+CommercePaymentsCurrencySuggestionDtoSchema = z.object({
+  country: z.string().nullable().optional(),
+  fallbackReason: z.string().nullable().optional(),
+  isEnabledForTenant: z.boolean().optional(),
+  privacyNotice: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
+  suggestedCurrency: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsCustomerType. Customer types */
@@ -29897,6 +32028,7 @@ CommercePaymentsDisputeActionResultSchema = z.object({
 /** Zod schema for CommercePaymentsDisputeEvidence. Entity representing dispute evidence */
 CommercePaymentsDisputeEvidenceSchema = z.object({
   id: z.string().uuid().optional(),
+  contentDigest: z.string().max(128).nullable().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   description: z.string().max(2000).nullable().optional(),
@@ -29921,6 +32053,7 @@ CommercePaymentsDisputeEvidenceSchema = z.object({
   isNew: z.boolean().optional(),
   metadata: z.string().max(2000).nullable().optional(),
   mimeType: z.string().max(100).nullable().optional(),
+  providerFileId: z.string().max(255).nullable().optional(),
   submittedAt: z.string().datetime().optional(),
   submittedBy: z.string().uuid(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -30077,6 +32210,73 @@ CommercePaymentsEvidenceTypeSchema = z.enum([
   'SubscriptionRecord',
 ]);
 
+/** Zod schema for CommercePaymentsFraudBlacklistCheckResult. Result of a blacklist check. */
+CommercePaymentsFraudBlacklistCheckResultSchema = z.object({
+  entryType: z.lazy(() => CommercePaymentsFraudBlacklistEntryTypeSchema),
+  evaluation: z.lazy(() => CommercePaymentsFraudBlacklistEvaluationSchema),
+  expiresAt: z.string().datetime().nullable().optional(),
+  matchedPattern: z.string().nullable().optional(),
+  reason: z.string().nullable().optional(),
+  source: z.lazy(() => CommercePaymentsFraudBlacklistSourceSchema).optional(),
+});
+
+/** Zod schema for CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInput. Request body for adding a blacklist entry. */
+CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInputSchema = z.object({
+  entryType: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  isWhitelist: z.boolean().optional(),
+  reason: z.string().nullable().optional(),
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResult. Summary of a blacklist CSV import. */
+CommercePaymentsFraudBlacklistControllerFraudBlacklistImportResultSchema = z.object({
+  errors: z.array(z.string()).nullable().optional(),
+  failed: z.number().int().optional(),
+  imported: z.number().int().optional(),
+});
+
+/** Zod schema for CommercePaymentsFraudBlacklistEntryResult. Read model for a stored blacklist entry. */
+CommercePaymentsFraudBlacklistEntryResultSchema = z.object({
+  id: z.string().uuid(),
+  createdAt: z.string().datetime(),
+  entryType: z.lazy(() => CommercePaymentsFraudBlacklistEntryTypeSchema),
+  expiresAt: z.string().datetime().nullable().optional(),
+  isWhitelist: z.boolean(),
+  reason: z.string().nullable().optional(),
+  source: z.lazy(() => CommercePaymentsFraudBlacklistSourceSchema),
+  tenantId: z.string().uuid(),
+  value: z.string().nullable(),
+});
+
+/** Zod schema for CommercePaymentsFraudBlacklistEntryType. Kind of value stored in a GameGuild.Commerce.Payments.FraudBlacklistEntry (issue #409). The store is
+intentionally generic: every entry type supports the same wildcard patterns, expiry and
+whitelist override semantics, so new attribute kinds need no schema change. */
+CommercePaymentsFraudBlacklistEntryTypeSchema = z.enum([
+  'IpAddress',
+  'EmailDomain',
+  'Email',
+  'CardBin',
+  'DeviceFingerprint',
+  'PaymentMethodToken',
+  'CardFingerprint',
+  'ExternalCustomerId',
+]);
+
+/** Zod schema for CommercePaymentsFraudBlacklistEvaluation. Outcome of evaluating a value against the tenant blacklist (issue #409). */
+CommercePaymentsFraudBlacklistEvaluationSchema = z.enum(['NoMatch', 'Blacklisted', 'Whitelisted']);
+
+/** Zod schema for CommercePaymentsFraudBlacklistPage. Paged read model of the tenant's blacklist entries. */
+CommercePaymentsFraudBlacklistPageSchema = z.object({
+  items: z.array(z.lazy(() => CommercePaymentsFraudBlacklistEntryResultSchema)).nullable(),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  totalCount: z.number().int(),
+});
+
+/** Zod schema for CommercePaymentsFraudBlacklistSource. How a blacklist entry came to exist. */
+CommercePaymentsFraudBlacklistSourceSchema = z.enum(['Manual', 'AutoFraudDecline']);
+
 /** Zod schema for CommercePaymentsFraudReviewListItem. Read model for one pending fraud review. */
 CommercePaymentsFraudReviewListItemSchema = z.object({
   amount: z.number(),
@@ -30135,6 +32335,93 @@ CommercePaymentsFraudReviewStatusSchema = z.enum(['PendingReview', 'Approved', '
 /** Zod schema for CommercePaymentsFraudRiskLevel. Risk band derived from the aggregate fraud score. */
 CommercePaymentsFraudRiskLevelSchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
+/** Zod schema for CommercePaymentsFraudStatisticsCountryRow. Fraud outcomes for one billing country inside the statistics window (issue #409). */
+CommercePaymentsFraudStatisticsCountryRowSchema = z.object({
+  blocked: z.number().int(),
+  country: z.string().nullable(),
+  created: z.number().int(),
+  reviewHeld: z.number().int(),
+});
+
+/** Zod schema for CommercePaymentsFraudStatisticsMethodRow. Fraud outcomes for one gateway payment provider inside the statistics window (issue #409). */
+CommercePaymentsFraudStatisticsMethodRowSchema = z.object({
+  blocked: z.number().int(),
+  created: z.number().int(),
+  provider: z.string().nullable(),
+  reviewHeld: z.number().int(),
+});
+
+/** Zod schema for CommercePaymentsFraudStatisticsPlanRow. Fraud outcomes for one subscription plan inside the statistics window (issue #409: fraud by plan). */
+CommercePaymentsFraudStatisticsPlanRowSchema = z.object({
+  blocked: z.number().int(),
+  created: z.number().int(),
+  planId: z.string().uuid().nullable(),
+  planName: z.string().nullable(),
+  reviewHeld: z.number().int(),
+});
+
+/** Zod schema for CommercePaymentsFraudStatisticsRates. Derived fraud-program rates; null when the denominator is zero. */
+CommercePaymentsFraudStatisticsRatesSchema = z.object({
+  blockedPercent: z.number().nullable().optional(),
+  chargebackPercent: z.number().nullable().optional(),
+  falsePositivePercent: z.number().nullable().optional(),
+  flaggedPercent: z.number().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsFraudStatisticsReport. Combined read model of one fraud-statistics reporting pass. */
+CommercePaymentsFraudStatisticsReportSchema = z.object({
+  byCountry: z.array(z.lazy(() => CommercePaymentsFraudStatisticsCountryRowSchema)).nullable(),
+  byPaymentMethod: z.array(z.lazy(() => CommercePaymentsFraudStatisticsMethodRowSchema)).nullable(),
+  byPlan: z.array(z.lazy(() => CommercePaymentsFraudStatisticsPlanRowSchema)).nullable(),
+  fromUtc: z.string().datetime(),
+  generatedAtUtc: z.string().datetime(),
+  rates: z.lazy(() => CommercePaymentsFraudStatisticsRatesSchema),
+  reviews: z.lazy(() => CommercePaymentsFraudStatisticsReviewsSchema),
+  topSignals: z.array(z.lazy(() => CommercePaymentsFraudStatisticsSignalSchema)).nullable(),
+  totals: z.lazy(() => CommercePaymentsFraudStatisticsTotalsSchema),
+  toUtc: z.string().datetime(),
+  trend: z.array(z.lazy(() => CommercePaymentsFraudStatisticsTrendPointSchema)).nullable(),
+  trendGranularity: z.lazy(() => CommercePaymentsFraudTrendGranularitySchema),
+});
+
+/** Zod schema for CommercePaymentsFraudStatisticsReviews. Manual-review queue statistics (issue #409: backlog and average time to review). */
+CommercePaymentsFraudStatisticsReviewsSchema = z.object({
+  approvedInWindow: z.number().int(),
+  averageReviewHours: z.number().nullable().optional(),
+  declinedInWindow: z.number().int(),
+  pendingBacklog: z.number().int(),
+  resolvedInWindow: z.number().int(),
+});
+
+/** Zod schema for CommercePaymentsFraudStatisticsSignal. One fraud signal type with its frequency inside the window. */
+CommercePaymentsFraudStatisticsSignalSchema = z.object({
+  count: z.number().int(),
+  signalType: z.string().nullable(),
+});
+
+/** Zod schema for CommercePaymentsFraudStatisticsTotals. Payment counts inside the statistics window. */
+CommercePaymentsFraudStatisticsTotalsSchema = z.object({
+  allowed: z.number().int(),
+  assessed: z.number().int(),
+  blocked: z.number().int(),
+  disputed: z.number().int(),
+  paymentsCreated: z.number().int(),
+  reviewHeld: z.number().int(),
+  succeeded: z.number().int(),
+});
+
+/** Zod schema for CommercePaymentsFraudStatisticsTrendPoint. One bucket of the fraud-outcome trend inside the statistics window (issue #409). */
+CommercePaymentsFraudStatisticsTrendPointSchema = z.object({
+  blocked: z.number().int(),
+  created: z.number().int(),
+  day: z.string().datetime(),
+  reviewHeld: z.number().int(),
+});
+
+/** Zod schema for CommercePaymentsFraudTrendGranularity. Trend bucket granularity of the fraud statistics report (issue #409: weekly and
+monthly trend views alongside the daily default). */
+CommercePaymentsFraudTrendGranularitySchema = z.enum(['Daily', 'Weekly', 'Monthly']);
+
 /** Zod schema for CommercePaymentsFxRateDto. One persisted FX quotation as exposed by the admin surface. */
 CommercePaymentsFxRateDtoSchema = z.object({
   asOfUtc: z.string().datetime().optional(),
@@ -30177,6 +32464,30 @@ CommercePaymentsFxRateSyncRunDtoSchema = z.object({
 /** Zod schema for CommercePaymentsFxRateSyncRunStatus. Outcome values for an FX sync run. */
 CommercePaymentsFxRateSyncRunStatusSchema = z.enum(['Succeeded', 'Failed', 'SucceededStale']);
 
+/** Zod schema for CommercePaymentsFxRateVarianceEntry. One row of the FX rate variance report (issue #412 spec G). */
+CommercePaymentsFxRateVarianceEntrySchema = z.object({
+  baseCurrency: z.string().nullable().optional(),
+  exceedsThreshold: z.boolean().optional(),
+  marketRate: z.number().nullable().optional(),
+  marketRateEffectiveDateUtc: z.string().datetime().nullable().optional(),
+  marketRateProvider: z.string().nullable().optional(),
+  overrideAsOfUtc: z.string().datetime().optional(),
+  overrideExpiresAtUtc: z.string().datetime().nullable().optional(),
+  overrideRate: z.number().optional(),
+  quoteCurrency: z.string().nullable().optional(),
+  variancePercent: z.number().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsFxRateVarianceReport. FX rate variance report: actual (market) vs expected (operator override) rates. */
+CommercePaymentsFxRateVarianceReportSchema = z.object({
+  entries: z
+    .array(z.lazy(() => CommercePaymentsFxRateVarianceEntrySchema))
+    .nullable()
+    .optional(),
+  generatedAtUtc: z.string().datetime().optional(),
+  thresholdPercent: z.number().optional(),
+});
+
 /** Zod schema for CommercePaymentsFxSyncStatusDto. Result of GameGuild.Commerce.Payments.GetFxSyncStatusQuery. */
 CommercePaymentsFxSyncStatusDtoSchema = z.object({
   activeOverrideCount: z.number().int().optional(),
@@ -30194,6 +32505,29 @@ CommercePaymentsFxSyncStatusDtoSchema = z.object({
   workerEnabled: z.boolean().optional(),
 });
 
+/** Zod schema for CommercePaymentsGatewayAnalyticsReport. Expanded per-gateway analytics over the rolling windows (issue #413 analytics
+remainders): window aggregates, error-type breakdown, cost analysis and geographic
+breakdown in one report. */
+CommercePaymentsGatewayAnalyticsReportSchema = z.object({
+  costAnalysis: z
+    .array(z.lazy(() => CommercePaymentsGatewayCostMetricsSchema))
+    .nullable()
+    .optional(),
+  errorBreakdown: z
+    .array(z.lazy(() => CommercePaymentsGatewayErrorTypeMetricsSchema))
+    .nullable()
+    .optional(),
+  generatedAtUtc: z.string().datetime().optional(),
+  geographicBreakdown: z
+    .array(z.lazy(() => CommercePaymentsGatewayGeoMetricsSchema))
+    .nullable()
+    .optional(),
+  windows: z
+    .array(z.lazy(() => CommercePaymentsGatewayWindowMetricsSchema))
+    .nullable()
+    .optional(),
+});
+
 /** Zod schema for CommercePaymentsGatewayCircuitSnapshot. Health snapshot of one gateway circuit (issue #413). */
 CommercePaymentsGatewayCircuitSnapshotSchema = z.object({
   consecutiveFailures: z.number().int().optional(),
@@ -30205,6 +32539,70 @@ CommercePaymentsGatewayCircuitSnapshotSchema = z.object({
 
 /** Zod schema for CommercePaymentsGatewayCircuitState. Circuit state of one payment gateway. */
 CommercePaymentsGatewayCircuitStateSchema = z.enum(['Closed', 'Open', 'HalfOpen']);
+
+/** Zod schema for CommercePaymentsGatewayConnectionTestResult. Outcome of one gateway connection test (issue #413): whether the gateway's API
+credentials are usable, through the cheapest authenticated call the provider
+offers. Never contains a credential value. */
+CommercePaymentsGatewayConnectionTestResultSchema = z.object({
+  checkedAtUtc: z.string().datetime().optional(),
+  errorCode: z.string().nullable().optional(),
+  errorMessage: z.string().nullable().optional(),
+  latencyMs: z.number().int().optional(),
+  mode: z.string().nullable().optional(),
+  providerId: z.string().nullable().optional(),
+  succeeded: z.boolean().optional(),
+});
+
+/** Zod schema for CommercePaymentsGatewayCostMetrics. Cost-analysis row (issue #413): one provider's succeeded payment volume in the 30d
+window priced through its configured fee schedule. Providers without a complete fee
+schedule report the raw volume with a null estimate (unknown cost is never zero). */
+CommercePaymentsGatewayCostMetricsSchema = z.object({
+  estimatedFee: z.number().nullable().optional(),
+  feeFixedAmount: z.number().nullable().optional(),
+  feePercentBasisPoints: z.number().int().nullable().optional(),
+  providerId: z.string().nullable().optional(),
+  succeededCount: z.number().int().optional(),
+  succeededVolume: z.number().optional(),
+});
+
+/** Zod schema for CommercePaymentsGatewayCredentialDeactivationResult. Outcome of a credential deactivation. */
+CommercePaymentsGatewayCredentialDeactivationResultSchema = z.object({
+  deactivated: z.boolean().optional(),
+  deactivatedAtUtc: z.string().datetime().nullable().optional(),
+  providerKey: z.string().nullable().optional(),
+  secretName: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsGatewayCredentialProvisionResult. Result of provisioning a gateway credential: identity metadata of the new active
+row. Deliberately carries no plaintext — the value exists only encrypted at rest. */
+CommercePaymentsGatewayCredentialProvisionResultSchema = z.object({
+  activatedAtUtc: z.string().datetime().optional(),
+  deactivatedPrevious: z.boolean().optional(),
+  fingerprint: z.string().nullable().optional(),
+  providerKey: z.string().nullable().optional(),
+  secretName: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsGatewayErrorTypeMetrics. Error-rate-by-type row (issue #413): failed payments of one provider in one window,
+grouped by the gateway error code recorded on the payment. */
+CommercePaymentsGatewayErrorTypeMetricsSchema = z.object({
+  count: z.number().int().optional(),
+  errorCode: z.string().nullable().optional(),
+  providerId: z.string().nullable().optional(),
+  shareOfFailures: z.number().optional(),
+  window: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsGatewayGeoMetrics. Geographic performance row (issue #413): attempts and success rate of one provider in
+one window, grouped by the billing country recorded on the payment. */
+CommercePaymentsGatewayGeoMetricsSchema = z.object({
+  attempts: z.number().int().optional(),
+  country: z.string().nullable().optional(),
+  providerId: z.string().nullable().optional(),
+  succeeded: z.number().int().optional(),
+  successRate: z.number().optional(),
+  window: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommercePaymentsGatewayMetricsReport. Combined read model of one reporting pass: rolling-window aggregates per gateway
 plus the current circuit-breaker snapshot of every known gateway. */
@@ -30264,6 +32662,22 @@ CommercePaymentsGiftsControllerPurchaseGiftRequestBodySchema = z.object({
 
 /** Zod schema for CommercePaymentsGiftStatus. Gift subscription status machine (Purchased → Delivered → Redeemed / Expired, plus Refunded). */
 CommercePaymentsGiftStatusSchema = z.enum(['Purchased', 'Delivered', 'Redeemed', 'Expired', 'Refunded']);
+
+/** Zod schema for CommercePaymentsLocalizedPricePreviewItem. One preview row: what a recalculation pass would do, before it is applied. */
+CommercePaymentsLocalizedPricePreviewItemSchema = z.object({
+  baseMonthlyPrice: z.number().optional(),
+  basePlanCurrency: z.string().nullable().optional(),
+  currencyCode: z.string().nullable().optional(),
+  currentEffectiveDateUtc: z.string().datetime().nullable().optional(),
+  currentExpiryDateUtc: z.string().datetime().nullable().optional(),
+  currentPrice: z.number().nullable().optional(),
+  delta: z.number().nullable().optional(),
+  isManualOverride: z.boolean().optional(),
+  note: z.string().nullable().optional(),
+  planId: z.string().uuid().optional(),
+  proposedPrice: z.number().nullable().optional(),
+  rateUsed: z.number().nullable().optional(),
+});
 
 /** Zod schema for CommercePaymentsLockWalletInput. Data model for Commerce Payments Lock Wallet Request. */
 CommercePaymentsLockWalletInputSchema = z.object({
@@ -30367,6 +32781,8 @@ CommercePaymentsPaymentDisputeSchema = z.object({
     .nullable()
     .optional(),
   evidenceDueBy: z.string().datetime().nullable().optional(),
+  evidenceManifest: z.string().max(4000).nullable().optional(),
+  evidenceManifestHash: z.string().max(128).nullable().optional(),
   evidenceSubmittedAt: z.string().datetime().nullable().optional(),
   gatewayDisputeId: z.string().max(255).nullable().optional(),
   gatewayName: z.string().max(50).nullable().optional(),
@@ -30443,16 +32859,29 @@ CommercePaymentsPaymentMethodDtoSchema = z.object({
 CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBodySchema = z.object({
   billingAddress: z.string().nullable().optional(),
   gatewayPaymentMethodId: z.string().nullable().optional(),
+  gatewayProvider: z.string().nullable().optional(),
+  methodType: z.string().nullable().optional(),
   nickname: z.string().nullable().optional(),
   ownerUserId: z.string().uuid().nullable().optional(),
   setAsDefault: z.boolean().optional(),
   tenantId: z.string().uuid().optional(),
 });
 
+/** Zod schema for CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody. Request body for removing a payment method (destructive action; issue #414). */
+CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBodySchema = z.object({
+  confirm: z.boolean().optional(),
+});
+
 /** Zod schema for CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBody. Request body for updating payment-method display fields. */
 CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBodySchema = z.object({
   billingAddress: z.string().nullable().optional(),
   nickname: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody. Request body for echoing the two observed micro-deposit amounts (issue #414). */
+CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBodySchema = z.object({
+  deposit1Amount: z.number().optional(),
+  deposit2Amount: z.number().optional(),
 });
 
 /** Zod schema for CommercePaymentsPaymentRecoveryMetrics. Payment success and failed-payment recovery metrics for an inclusive window (issue #403).
@@ -30561,6 +32990,10 @@ CommercePaymentsPaymentsControllerCreateSetupIntentOutputSchema = z.object({
 /** Zod schema for CommercePaymentsPaymentsControllerProcessPaymentInput. Data model for Commerce Payments Payments Controller+Process Payment Request. */
 CommercePaymentsPaymentsControllerProcessPaymentInputSchema = z.object({
   amount: z.number().optional(),
+  cardBin: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  gatewayProvider: z.string().nullable().optional(),
+  payerEmail: z.string().nullable().optional(),
   paymentMethodId: z.string().nullable().optional(),
   subscriptionId: z.string().uuid().optional(),
   tenantId: z.string().uuid().optional(),
@@ -30584,6 +33017,52 @@ CommercePaymentsPaymentStatusSchema = z.enum([
   'Disputed',
   'PartiallyRefunded',
 ]);
+
+/** Zod schema for CommercePaymentsPlanLocalizedPriceDto. Admin view of one (plan, currency) localization: override vs auto-calculated. */
+CommercePaymentsPlanLocalizedPriceDtoSchema = z.object({
+  autoPriceRate: z.number().nullable().optional(),
+  autoPriceToday: z.number().nullable().optional(),
+  currencyCode: z.string().nullable().optional(),
+  effectiveDateUtc: z.string().datetime().nullable().optional(),
+  effectivePrice: z.number().nullable().optional(),
+  exchangeRateUsed: z.number().nullable().optional(),
+  expiryDateUtc: z.string().datetime().nullable().optional(),
+  isManualOverride: z.boolean().optional(),
+  lastCalculatedAt: z.string().datetime().nullable().optional(),
+  note: z.string().nullable().optional(),
+  planId: z.string().uuid().optional(),
+});
+
+/** Zod schema for CommercePaymentsPriceRecalculationOutcome. Outcome summary of one localized-price recalculation pass. */
+CommercePaymentsPriceRecalculationOutcomeSchema = z.object({
+  completedItems: z.number().int().optional(),
+  preservedOverrides: z.number().int().optional(),
+  runId: z.string().uuid().optional(),
+  skippedForMissingRate: z.number().int().optional(),
+  status: z.lazy(() => CommercePaymentsPriceRecalculationRunStatusSchema).optional(),
+  totalItems: z.number().int().optional(),
+  updatedPrices: z.number().int().optional(),
+});
+
+/** Zod schema for CommercePaymentsPriceRecalculationRunDto. One recalculation run as exposed to the admin surface (progress + outcome). */
+CommercePaymentsPriceRecalculationRunDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  completedAtUtc: z.string().datetime().nullable().optional(),
+  completedItems: z.number().int().optional(),
+  planId: z.string().uuid().nullable().optional(),
+  preservedOverrides: z.number().int().optional(),
+  rolledBackAtUtc: z.string().datetime().nullable().optional(),
+  skippedForMissingRate: z.number().int().optional(),
+  startedAtUtc: z.string().datetime().optional(),
+  status: z.lazy(() => CommercePaymentsPriceRecalculationRunStatusSchema).optional(),
+  totalItems: z.number().int().optional(),
+  triggeredByUserId: z.string().uuid().nullable().optional(),
+  triggerReason: z.string().nullable().optional(),
+  updatedPrices: z.number().int().optional(),
+});
+
+/** Zod schema for CommercePaymentsPriceRecalculationRunStatus. Outcome values for a localized-price recalculation run. */
+CommercePaymentsPriceRecalculationRunStatusSchema = z.enum(['Running', 'Succeeded', 'Failed', 'RolledBack']);
 
 /** Zod schema for CommercePaymentsPricingAddOnInput. Add-on priced independently of the plan (issue #417): own unit price, own quantity,
 own currency (converted to the calculation currency through the FX core when they differ). */
@@ -30743,6 +33222,7 @@ Without tiers the charge is Quantity × PerUnitPrice;
 with tiers each quantity band is priced at its own per-unit price (utility-style
 progressive banding), the last open-ended band absorbing any remainder. */
 CommercePaymentsPricingUsageChargeInputSchema = z.object({
+  currency: z.string().nullable().optional(),
   metric: z.string().nullable().optional(),
   perUnitPrice: z.number().optional(),
   quantity: z.number().optional(),
@@ -30776,6 +33256,27 @@ CommercePaymentsProcessRefundResultSchema = z.object({
   refundedAmount: z.number(),
   refundId: z.string().uuid(),
   status: z.lazy(() => CommercePaymentsTransactionStatusSchema),
+});
+
+/** Zod schema for CommercePaymentsProvisionFxProviderApiKeyInput. HTTP request body for FX provider credential provisioning: carries only the plaintext
+API key; the provider arrives on the route. The value is encrypted (DataProtection,
+AES-256 under the application key ring) before it touches the database and is never
+echoed back or logged. */
+CommercePaymentsProvisionFxProviderApiKeyInputSchema = z.object({
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsProvisionGatewayCredentialInput. HTTP request body for credential provisioning: carries only the plaintext value; the
+provider and slot arrive on the route so they never duplicate (and the value is never
+echoed back). */
+CommercePaymentsProvisionGatewayCredentialInputSchema = z.object({
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsRecalculateLocalizedPricesInput. Request payload for the bulk recalculation command. */
+CommercePaymentsRecalculateLocalizedPricesInputSchema = z.object({
+  planId: z.string().uuid().nullable().optional(),
+  reason: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsReferral. Referral tracking record (issue #410 v1). One opaque referral code is generated per
@@ -31033,6 +33534,13 @@ CommercePaymentsRejectedPromoDiscountSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
+/** Zod schema for CommercePaymentsRemoveFraudBlacklistEntryResult. Result of a blacklist-entry removal. */
+CommercePaymentsRemoveFraudBlacklistEntryResultSchema = z.object({
+  entryId: z.string().uuid(),
+  failureReason: z.string().nullable().optional(),
+  success: z.boolean(),
+});
+
 /** Zod schema for CommercePaymentsRequestRefundResult. Result of creating a refund request. */
 CommercePaymentsRequestRefundResultSchema = z.object({
   failureReason: z.string().nullable().optional(),
@@ -31274,6 +33782,19 @@ CommercePaymentsRevenueTrendReportSchema = z.object({
     .nullable()
     .optional(),
   toUtc: z.string().datetime().optional(),
+});
+
+/** Zod schema for CommercePaymentsRollbackRecalculationInput. Request payload for the rollback command. */
+CommercePaymentsRollbackRecalculationInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommercePaymentsSetLocalizedPriceInput. Request payload for the manual localized-price command. */
+CommercePaymentsSetLocalizedPriceInputSchema = z.object({
+  effectiveDateUtc: z.string().datetime().nullable().optional(),
+  expiryDateUtc: z.string().datetime().nullable().optional(),
+  localizedPrice: z.number().optional(),
+  reason: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsSetManualFxRateOverrideInput. Request payload for the manual FX rate override command. */
@@ -31672,6 +34193,7 @@ CommerceProductsAppliedPromoCodeSchema = z.object({
 
 /** Zod schema for CommerceProductsApplyPromoCodesInput. Request to apply promo codes to an order */
 CommerceProductsApplyPromoCodesInputSchema = z.object({
+  captchaToken: z.string().nullable().optional(),
   idempotencyKey: z.string().nullable().optional(),
   orderAmount: z.number().optional(),
   orderId: z.string().uuid().nullable().optional(),
@@ -31744,10 +34266,13 @@ CommerceProductsCampaignExpiringCodeDtoSchema = z.object({
 
 /** Zod schema for CommerceProductsCampaignPerformanceDto. Aggregated performance for a promo campaign within a window */
 CommerceProductsCampaignPerformanceDtoSchema = z.object({
+  acquiredCustomers: z.number().int().optional(),
   activeCodes: z.number().int().optional(),
   averageDiscountPerUse: z.number().optional(),
+  campaignAcquisitionSpend: z.number().nullable().optional(),
   campaignId: z.string().nullable().optional(),
   conversionRate: z.number().nullable().optional(),
+  customerAcquisitionCost: z.number().nullable().optional(),
   expiringCodes: z
     .array(z.lazy(() => CommerceProductsCampaignExpiringCodeDtoSchema))
     .nullable()
@@ -31871,6 +34396,19 @@ CommerceProductsCreateProductInputSchema = z.object({
   type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
 });
 
+/** Zod schema for CommerceProductsCreatePromoCampaignInput. Request to create a promotional campaign */
+CommerceProductsCreatePromoCampaignInputSchema = z.object({
+  acquisitionSpend: z.number().nullable().optional(),
+  budget: z.number().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  key: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
+  timeZoneId: z.string().nullable().optional(),
+});
+
 /** Zod schema for CommerceProductsCreatePromoCodeInput. Request to create a promo code */
 CommerceProductsCreatePromoCodeInputSchema = z.object({
   applyToRenewal: z.boolean().optional(),
@@ -31881,6 +34419,7 @@ CommerceProductsCreatePromoCodeInputSchema = z.object({
   discountAmount: z.number().nullable().optional(),
   discountPercentage: z.number().nullable().optional(),
   durationMonths: z.number().int().nullable().optional(),
+  eligibleCustomerType: z.lazy(() => CommerceProductsPromoCustomerTypeSchema).optional(),
   freeTrialExtensionDays: z.number().int().nullable().optional(),
   isActive: z.boolean().optional(),
   isExclusive: z.boolean().optional(),
@@ -31892,6 +34431,7 @@ CommerceProductsCreatePromoCodeInputSchema = z.object({
   planId: z.string().uuid().nullable().optional(),
   productId: z.string().uuid().nullable().optional(),
   stackingPriority: z.number().int().optional(),
+  timeZoneId: z.string().nullable().optional(),
   type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
   validFrom: z.string().datetime().nullable().optional(),
   validUntil: z.string().datetime().nullable().optional(),
@@ -31949,6 +34489,7 @@ CommerceProductsGenerateBulkPromoCodesInputSchema = z.object({
   discountAmount: z.number().nullable().optional(),
   discountPercentage: z.number().nullable().optional(),
   durationMonths: z.number().int().nullable().optional(),
+  eligibleCustomerType: z.lazy(() => CommerceProductsPromoCustomerTypeSchema).optional(),
   freeTrialExtensionDays: z.number().int().nullable().optional(),
   maxDiscountAmount: z.number().nullable().optional(),
   maxUses: z.number().int().nullable().optional(),
@@ -31959,6 +34500,7 @@ CommerceProductsGenerateBulkPromoCodesInputSchema = z.object({
   prefix: z.string().nullable().optional(),
   productId: z.string().uuid().nullable().optional(),
   stackingPriority: z.number().int().optional(),
+  timeZoneId: z.string().nullable().optional(),
   type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
   validFrom: z.string().datetime().nullable().optional(),
   validUntil: z.string().datetime().nullable().optional(),
@@ -31999,6 +34541,7 @@ CommerceProductsPatchPromoCodeInputSchema = z.object({
   discountAmount: z.number().nullable().optional(),
   discountPercentage: z.number().nullable().optional(),
   durationMonths: z.number().int().nullable().optional(),
+  eligibleCustomerType: z.lazy(() => CommerceProductsPromoCustomerTypeSchema).optional(),
   freeTrialExtensionDays: z.number().int().nullable().optional(),
   isActive: z.boolean().nullable().optional(),
   isExclusive: z.boolean().nullable().optional(),
@@ -32010,6 +34553,7 @@ CommerceProductsPatchPromoCodeInputSchema = z.object({
   planId: z.string().uuid().nullable().optional(),
   productId: z.string().uuid().nullable().optional(),
   stackingPriority: z.number().int().nullable().optional(),
+  timeZoneId: z.string().nullable().optional(),
   type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
   validFrom: z.string().datetime().nullable().optional(),
   validUntil: z.string().datetime().nullable().optional(),
@@ -32269,6 +34813,32 @@ CommerceProductsProductTypeSchema = z.enum([
   'Other',
 ]);
 
+/** Zod schema for CommerceProductsPromoCampaignDto. Promo campaign DTO (issue #418 campaign management). */
+CommerceProductsPromoCampaignDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  acquisitionSpend: z.number().nullable().optional(),
+  attributedCustomers: z.number().int().optional(),
+  budget: z.number().nullable().optional(),
+  codeCount: z.number().int().optional(),
+  createdAt: z.string().datetime().optional(),
+  currency: z.string().nullable().optional(),
+  customerAcquisitionCost: z.number().nullable().optional(),
+  description: z.string().nullable().optional(),
+  endsAtLocal: z.string().datetime().nullable().optional(),
+  endsAtUtc: z.string().datetime().nullable().optional(),
+  key: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  startsAtLocal: z.string().datetime().nullable().optional(),
+  startsAtUtc: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => CommerceProductsPromoCampaignStatusSchema).optional(),
+  timeZoneId: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
+  windowOpen: z.boolean().optional(),
+});
+
+/** Zod schema for CommerceProductsPromoCampaignStatus. Lifecycle status of a promotional campaign (issue #418). */
+CommerceProductsPromoCampaignStatusSchema = z.enum(['Draft', 'Active', 'Paused', 'Completed', 'Cancelled', 'Archived']);
+
 /** Zod schema for CommerceProductsPromoCodeApplicationResult. Result of applying one or more promo codes */
 CommerceProductsPromoCodeApplicationResultSchema = z.object({
   appliedCodes: z
@@ -32299,6 +34869,7 @@ CommerceProductsPromoCodeDtoSchema = z.object({
   discountAmount: z.number().nullable().optional(),
   discountPercentage: z.number().nullable().optional(),
   durationMonths: z.number().int().nullable().optional(),
+  eligibleCustomerType: z.lazy(() => CommerceProductsPromoCustomerTypeSchema).optional(),
   freeTrialExtensionDays: z.number().int().nullable().optional(),
   isActive: z.boolean().optional(),
   isExclusive: z.boolean().optional(),
@@ -32310,6 +34881,7 @@ CommerceProductsPromoCodeDtoSchema = z.object({
   planId: z.string().uuid().nullable().optional(),
   productId: z.string().uuid().nullable().optional(),
   stackingPriority: z.number().int().optional(),
+  timeZoneId: z.string().nullable().optional(),
   type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
   updatedAt: z.string().datetime().optional(),
   usageCount: z.number().int().optional(),
@@ -32358,6 +34930,9 @@ CommerceProductsPromoCodeValidationOutcomeSchema = z.enum([
   'MaxUsesReached',
   'MaxUsesPerUserReached',
   'Invalid',
+  'NotYetValid',
+  'CustomerNotEligible',
+  'CaptchaRequired',
 ]);
 
 /** Zod schema for CommerceProductsPromoCodeValidationResult. Result of validating a promo code */
@@ -32372,6 +34947,10 @@ CommerceProductsPromoCodeValidationResultSchema = z.object({
   promoCodeId: z.string().uuid().nullable().optional(),
   trialExtensionDays: z.number().int().nullable().optional(),
 });
+
+/** Zod schema for CommerceProductsPromoCustomerType. Customer relationship state a promo code is eligible for (issue #418).
+The default (GameGuild.Commerce.Products.PromoCustomerType.Any) keeps unrestricted codes working unchanged. */
+CommerceProductsPromoCustomerTypeSchema = z.enum(['Any', 'New', 'Existing', 'Churned']);
 
 /** Zod schema for CommerceProductsPromoStackingRuleDto. Promo stacking rule DTO */
 CommerceProductsPromoStackingRuleDtoSchema = z.object({
@@ -32559,6 +35138,18 @@ CommerceProductsUpdateProductInputSchema = z.object({
   type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
 });
 
+/** Zod schema for CommerceProductsUpdatePromoCampaignInput. Request to update a promotional campaign */
+CommerceProductsUpdatePromoCampaignInputSchema = z.object({
+  acquisitionSpend: z.number().nullable().optional(),
+  budget: z.number().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  name: z.string().nullable().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
+  timeZoneId: z.string().nullable().optional(),
+});
+
 /** Zod schema for CommerceProductsUpdatePromoCodeInput. Request to update a promo code */
 CommerceProductsUpdatePromoCodeInputSchema = z.object({
   applyToRenewal: z.boolean().nullable().optional(),
@@ -32568,6 +35159,7 @@ CommerceProductsUpdatePromoCodeInputSchema = z.object({
   discountAmount: z.number().nullable().optional(),
   discountPercentage: z.number().nullable().optional(),
   durationMonths: z.number().int().nullable().optional(),
+  eligibleCustomerType: z.lazy(() => CommerceProductsPromoCustomerTypeSchema).optional(),
   freeTrialExtensionDays: z.number().int().nullable().optional(),
   isActive: z.boolean().nullable().optional(),
   isExclusive: z.boolean().nullable().optional(),
@@ -32579,6 +35171,7 @@ CommerceProductsUpdatePromoCodeInputSchema = z.object({
   planId: z.string().uuid().nullable().optional(),
   productId: z.string().uuid().nullable().optional(),
   stackingPriority: z.number().int().nullable().optional(),
+  timeZoneId: z.string().nullable().optional(),
   type: z.lazy(() => CommerceProductsPromoCodeTypeSchema).optional(),
   validFrom: z.string().datetime().nullable().optional(),
   validUntil: z.string().datetime().nullable().optional(),
@@ -32598,10 +35191,29 @@ CommerceProductsUpdatePromoStackingRuleInputSchema = z.object({
 
 /** Zod schema for CommerceProductsValidatePromoCodeInput. Request to validate a promo code */
 CommerceProductsValidatePromoCodeInputSchema = z.object({
+  captchaToken: z.string().nullable().optional(),
   code: z.string().nullable().optional(),
   orderAmount: z.number().optional(),
   planId: z.string().uuid().nullable().optional(),
   productId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionPromoCodeApplication. One promo code that applied to a subscription quote (issue #418). Self-contained in
+the base Commerce module so the Subscriptions and Billing projects can consume promo
+outcomes without referencing the Products project graph. */
+CommerceSubscriptionPromoCodeApplicationSchema = z.object({
+  code: z.string().nullable().optional(),
+  discountAmount: z.number().optional(),
+  discountType: z.string().nullable().optional(),
+  freeMonthsGranted: z.number().int().nullable().optional(),
+  promoCodeId: z.string().uuid().optional(),
+  trialExtensionDays: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for CommerceSubscriptionPromoRejectedCode. A promo code that was rejected during a subscription quote, with the reason. */
+CommerceSubscriptionPromoRejectedCodeSchema = z.object({
+  code: z.string().nullable().optional(),
+  reason: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsBillingHistoryDto. DTO for billing history information */
@@ -32628,8 +35240,11 @@ CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInpu
 CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInputSchema = z.object({
   amount: z.number().optional(),
   billingCycle: z.lazy(() => BillingCycleSchema).optional(),
+  cardBin: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
   createdByUserId: z.string().uuid().optional(),
   fulfilledOrderId: z.string().uuid().nullable().optional(),
+  payerEmail: z.string().nullable().optional(),
   planId: z.string().uuid().optional(),
   productId: z.string().uuid().nullable().optional(),
   promoCodeIdempotencyKey: z.string().nullable().optional(),
@@ -32743,11 +35358,21 @@ CommerceSubscriptionsSubscriptionChurnReportDtoSchema = z.object({
   totalSubscriptions: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionDowngradeResult. Result of subscription downgrade */
+/** Zod schema for CommerceSubscriptionsSubscriptionDowngradeResult. Result of subscription downgrade. Promo fields (issue #418) are populated when
+promo codes were supplied with the plan change. */
 CommerceSubscriptionsSubscriptionDowngradeResultSchema = z.object({
+  appliedPromoCodes: z
+    .array(z.lazy(() => CommerceSubscriptionPromoCodeApplicationSchema))
+    .nullable()
+    .optional(),
   creditIssued: z.lazy(() => MoneySchema).optional(),
   effectiveDate: z.string().datetime().nullable().optional(),
   failureReason: z.string().nullable().optional(),
+  promoDiscountApplied: z.number().optional(),
+  rejectedPromoCodes: z
+    .array(z.lazy(() => CommerceSubscriptionPromoRejectedCodeSchema))
+    .nullable()
+    .optional(),
   success: z.boolean().optional(),
   updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
 });
@@ -32768,6 +35393,8 @@ CommerceSubscriptionsSubscriptionLifecycleControllerCancelInputSchema = z.object
 CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInputSchema = z.object({
   effectiveDate: z.string().datetime().nullable().optional(),
   newPlanId: z.string().uuid().optional(),
+  promoCodeIdempotencyKey: z.string().nullable().optional(),
+  promoCodes: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInput. Data model for Commerce Subscriptions Subscription Lifecycle Controller+End Trial Request. */
@@ -32801,6 +35428,8 @@ CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInputSchema = z.objec
 CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema = z.object({
   effectiveDate: z.string().datetime().nullable().optional(),
   newPlanId: z.string().uuid().optional(),
+  promoCodeIdempotencyKey: z.string().nullable().optional(),
+  promoCodes: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionNotificationDto. Data model for Commerce Subscriptions Subscription Notification Dto. */
@@ -32973,9 +35602,12 @@ CommerceSubscriptionsSubscriptionPlanTypeSchema = z.enum(['Free', 'Paid', 'Enter
 CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema = z.object({
   amount: z.number().optional(),
   billingCycle: z.lazy(() => BillingCycleSchema).optional(),
+  cardBin: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
   createdByUserId: z.string().uuid().optional(),
   currency: z.string().nullable().optional(),
   fulfilledOrderId: z.string().uuid().nullable().optional(),
+  payerEmail: z.string().nullable().optional(),
   planId: z.string().uuid().optional(),
   productId: z.string().uuid().nullable().optional(),
   promoCodeIdempotencyKey: z.string().nullable().optional(),
@@ -33007,11 +35639,22 @@ CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema = z.objec
 /** Zod schema for CommerceSubscriptionsSubscriptionStatus. Subscription status enumeration */
 CommerceSubscriptionsSubscriptionStatusSchema = z.enum(['PendingActivation', 'Active', 'Trialing', 'PastDue', 'Suspended', 'Cancelled', 'Expired']);
 
-/** Zod schema for CommerceSubscriptionsSubscriptionUpgradeResult. Result of subscription upgrade */
+/** Zod schema for CommerceSubscriptionsSubscriptionUpgradeResult. Result of subscription upgrade. Promo fields (issue #418) are populated when
+promo codes were applied to the prorated upgrade charge. */
 CommerceSubscriptionsSubscriptionUpgradeResultSchema = z.object({
+  appliedPromoCodes: z
+    .array(z.lazy(() => CommerceSubscriptionPromoCodeApplicationSchema))
+    .nullable()
+    .optional(),
   creditApplied: z.lazy(() => MoneySchema).optional(),
+  discountedProratedAmount: z.lazy(() => MoneySchema).optional(),
   failureReason: z.string().nullable().optional(),
+  promoDiscountApplied: z.number().optional(),
   proratedAmount: z.lazy(() => MoneySchema).optional(),
+  rejectedPromoCodes: z
+    .array(z.lazy(() => CommerceSubscriptionPromoRejectedCodeSchema))
+    .nullable()
+    .optional(),
   success: z.boolean().optional(),
   updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
 });
@@ -33037,6 +35680,14 @@ ComplianceAuditAcknowledgeSecurityAlertInputSchema = z.object({
 /** Zod schema for ComplianceAuditAcknowledgeTransferInput. Data model for Compliance Audit Acknowledge Transfer Request. */
 ComplianceAuditAcknowledgeTransferInputSchema = z.object({
   notes: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditAnalyzeFieldAccessPatternsInput. Data model for Compliance Audit Analyze Field Access Patterns Request. */
+ComplianceAuditAnalyzeFieldAccessPatternsInputSchema = z.object({
+  baselineHours: z.number().int().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  userId: z.string().uuid().nullable().optional(),
+  windowHours: z.number().int().optional(),
 });
 
 /** Zod schema for ComplianceAuditArchivedSecurityLogListOutput. One page of archived audit rows plus the total archived count. */
@@ -33795,6 +36446,15 @@ ComplianceAuditAuditStorageTierPriceSchema = z.object({
   tier: z.lazy(() => ComplianceAuditAuditStorageTierSchema).optional(),
 });
 
+/** Zod schema for ComplianceAuditAuditTrailCoverageFamily. One audit trail coverage family with its evidence, answering issue #180. */
+ComplianceAuditAuditTrailCoverageFamilySchema = z.object({
+  actionTypes: z.array(z.string()).nullable().optional(),
+  coverage: z.string().nullable().optional(),
+  evidence: z.array(z.string()).nullable().optional(),
+  family: z.string().nullable().optional(),
+  isCovered: z.boolean().optional(),
+});
+
 /** Zod schema for ComplianceAuditAuthenticationAuditEntry. Authentication audit entry. */
 ComplianceAuditAuthenticationAuditEntrySchema = z.object({
   id: z.string().uuid().optional(),
@@ -33835,6 +36495,54 @@ ComplianceAuditBuildCustodyPackageInputSchema = z.object({
   evidenceId: z.string().uuid().nullable().optional(),
   legalHoldId: z.string().uuid().nullable().optional(),
 });
+
+/** Zod schema for ComplianceAuditBulkExportEvaluationOutput. Data model for Compliance Audit Bulk Export Evaluation Response. */
+ComplianceAuditBulkExportEvaluationOutputSchema = z.object({
+  alertRaised: z.boolean().optional(),
+  blocked: z.boolean().optional(),
+  dailyThresholdExceeded: z.boolean().optional(),
+  dailyTotal: z.number().int().optional(),
+  eventId: z.string().uuid().optional(),
+  recordCount: z.number().int().optional(),
+  threshold: z.number().int().optional(),
+  thresholdExceeded: z.boolean().optional(),
+});
+
+/** Zod schema for ComplianceAuditBulkExportEvent. One observed bulk data export with the tenant threshold it was evaluated against. Exceeding rows
+are flagged and raise a security alert; every export is recorded so threshold changes can be
+investigated against historical volumes. */
+ComplianceAuditBulkExportEventSchema = z.object({
+  id: z.string().uuid().optional(),
+  alertRaised: z.boolean().optional(),
+  correlationId: z.string().nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  destination: z.string().nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
+  ipAddress: z.string().nullable().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  occurredAtUtc: z.string().datetime().optional(),
+  recordCount: z.number().int().optional(),
+  scope: z.lazy(() => ComplianceAuditBulkExportScopeSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  threshold: z.number().int().optional(),
+  thresholdExceeded: z.boolean().optional(),
+  updatedAt: z.string().datetime(),
+  userId: z.string().uuid().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditBulkExportScope. OpenAPI schema for Compliance Audit Bulk Export Scope. */
+ComplianceAuditBulkExportScopeSchema = z.enum(['AuditLogExport', 'FieldAccessExport', 'QueryDslExport', 'ScheduledExport', 'Other']);
 
 /** Zod schema for ComplianceAuditCaptureAuditReplayInput. Data model for Compliance Audit Capture Audit Replay Request. */
 ComplianceAuditCaptureAuditReplayInputSchema = z.object({
@@ -34053,6 +36761,31 @@ ComplianceAuditComplianceScopeExclusionSchema = z.object({
   rationale: z.string().min(1).max(2000),
 });
 
+/** Zod schema for ComplianceAuditComprehensiveAuditTrailCoverageReport. Report answering issue #180's comprehensive audit trail coverage across business functions. */
+ComplianceAuditComprehensiveAuditTrailCoverageReportSchema = z.object({
+  families: z
+    .array(z.lazy(() => ComplianceAuditAuditTrailCoverageFamilySchema))
+    .nullable()
+    .optional(),
+  generatedAtUtc: z.string().datetime().optional(),
+  isComplete: z.boolean().optional(),
+});
+
+/** Zod schema for ComplianceAuditComprehensiveEventCoverageReport. Report answering issue #181's "complete event coverage" criterion. */
+ComplianceAuditComprehensiveEventCoverageReportSchema = z.object({
+  gaps: z.array(z.string()).nullable().optional(),
+  generatedAtUtc: z.string().datetime().optional(),
+  isComplete: z.boolean().optional(),
+  moduleCount: z.number().int().optional(),
+  modules: z
+    .array(z.lazy(() => ComplianceAuditModuleEventCoverageEntrySchema))
+    .nullable()
+    .optional(),
+  totalCommandContracts: z.number().int().optional(),
+  totalMutatingCommands: z.number().int().optional(),
+  totalMutationEndpoints: z.number().int().optional(),
+});
+
 /** Zod schema for ComplianceAuditConfigureAuditRetentionInput. Data model for Compliance Audit Configure Audit Retention Request. */
 ComplianceAuditConfigureAuditRetentionInputSchema = z.object({
   baseline: z.lazy(() => ComplianceAuditAuditRetentionScenarioSchema),
@@ -34081,12 +36814,29 @@ ComplianceAuditConfigureSecurityLogRetentionInputSchema = z.object({
   retentionDays: z.number().int().min(30).max(3650).optional(),
 });
 
+/** Zod schema for ComplianceAuditConfigureSensitiveDataRetentionInput. Data model for Compliance Audit Configure Sensitive Data Retention Request. */
+ComplianceAuditConfigureSensitiveDataRetentionInputSchema = z.object({
+  action: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  retentionDays: z.number().int().optional(),
+});
+
 /** Zod schema for ComplianceAuditConfigureValueSnapshotRetentionInput. Data model for Compliance Audit Configure Value Snapshot Retention Request. */
 ComplianceAuditConfigureValueSnapshotRetentionInputSchema = z.object({
   archiveAfterDays: z.number().int().optional(),
   entityOverrides: z.record(z.string(), z.number().int()).nullable().optional(),
   legalHoldUntilUtc: z.string().datetime().nullable().optional(),
   retentionDays: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditConsentStateOutput. Data model for Compliance Audit Consent State Response. */
+ComplianceAuditConsentStateOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  consentGivenAt: z.string().datetime().optional(),
+  consentMethod: z.string().nullable().optional(),
+  consentRevokedAt: z.string().datetime().nullable().optional(),
+  isGranted: z.boolean().optional(),
+  policyVersionId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceAuditCourtAdmissiblePackageOutput. Data model for Compliance Audit Court Admissible Package Response. */
@@ -34151,6 +36901,51 @@ ComplianceAuditCreateValueSnapshotRollbackPlanInputSchema = z.object({
   keyId: z.string().nullable(),
 });
 
+/** Zod schema for ComplianceAuditCrossBorderTransferLog. Log of one cross-border data movement with the jurisdiction validation outcome. Rows are written
+for every evaluated transfer attempt, allowed or blocked, so regulators can reconstruct the
+transfer history (issue #186 cross-border criterion). */
+ComplianceAuditCrossBorderTransferLogSchema = z.object({
+  id: z.string().uuid().optional(),
+  correlationId: z.string().nullable().optional(),
+  createdAt: z.string().datetime(),
+  dataCategories: z.string().nullable().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  destinationJurisdiction: z.string().nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  occurredAtUtc: z.string().datetime().optional(),
+  purpose: z.string().nullable().optional(),
+  reason: z.string().nullable().optional(),
+  recordCount: z.number().int().optional(),
+  status: z.lazy(() => ComplianceAuditCrossBorderTransferStatusSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  updatedAt: z.string().datetime(),
+  userId: z.string().uuid().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditCrossBorderTransferOutput. Data model for Compliance Audit Cross Border Transfer Response. */
+ComplianceAuditCrossBorderTransferOutputSchema = z.object({
+  destinationJurisdiction: z.string().nullable().optional(),
+  isCrossBorder: z.boolean().optional(),
+  logId: z.string().uuid().optional(),
+  occurredAtUtc: z.string().datetime().optional(),
+  reason: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditCrossBorderTransferStatus. Outcome of cross-border transfer validation. */
+ComplianceAuditCrossBorderTransferStatusSchema = z.enum(['Allowed', 'Blocked', 'RequiresReview']);
+
 /** Zod schema for ComplianceAuditCustodyEventOutput. Data model for Compliance Audit Custody Event Response. */
 ComplianceAuditCustodyEventOutputSchema = z.object({
   id: z.string().uuid().optional(),
@@ -34205,6 +37000,43 @@ ComplianceAuditDailyActivityTrendSchema = z.object({
   totalEvents: z.number().int().optional(),
 });
 
+/** Zod schema for ComplianceAuditDataSubjectAccessMonitoringSummary. Aggregate data subject request monitoring counters. */
+ComplianceAuditDataSubjectAccessMonitoringSummarySchema = z.object({
+  activeConsents: z.number().int().optional(),
+  fulfilledRequests: z.number().int().optional(),
+  openRequests: z.number().int().optional(),
+  overdueRequests: z.number().int().optional(),
+  totalRequests: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditDataSubjectConsentMonitoringOutput. Consent monitoring snapshot for one data subject. */
+ComplianceAuditDataSubjectConsentMonitoringOutputSchema = z.object({
+  consents: z
+    .array(z.lazy(() => ComplianceAuditConsentStateOutputSchema))
+    .nullable()
+    .optional(),
+  grantedCount: z.number().int().optional(),
+  hasOpenRequests: z.boolean().optional(),
+  requests: z
+    .array(z.lazy(() => ComplianceAuditDataSubjectRequestOutputSchema))
+    .nullable()
+    .optional(),
+  revokedCount: z.number().int().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for ComplianceAuditDataSubjectRequestOutput. Data model for Compliance Audit Data Subject Request Response. */
+ComplianceAuditDataSubjectRequestOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  deadline: z.string().datetime().optional(),
+  isOverdue: z.boolean().optional(),
+  processedAt: z.string().datetime().nullable().optional(),
+  processingNotes: z.string().nullable().optional(),
+  requestType: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+});
+
 /** Zod schema for ComplianceAuditEnforceSecurityLogRetentionInput. Data model for Compliance Audit Enforce Security Log Retention Request. */
 ComplianceAuditEnforceSecurityLogRetentionInputSchema = z.object({
   dryRun: z.boolean().optional(),
@@ -34214,6 +37046,38 @@ ComplianceAuditEnforceSecurityLogRetentionInputSchema = z.object({
 ComplianceAuditEnforceValueSnapshotRetentionInputSchema = z.object({
   dryRun: z.boolean().optional(),
   includeCompaction: z.boolean().optional(),
+});
+
+/** Zod schema for ComplianceAuditEntityChangeAuditEntry. Read model over the universal entity-change audit store, served by the host. */
+ComplianceAuditEntityChangeAuditEntrySchema = z.object({
+  id: z.string().uuid().optional(),
+  actorId: z.string().uuid().nullable().optional(),
+  afterValues: z.string().nullable().optional(),
+  beforeValues: z.string().nullable().optional(),
+  changeKind: z.string().nullable().optional(),
+  correlationId: z.string().nullable().optional(),
+  entityName: z.string().nullable().optional(),
+  keyId: z.string().nullable().optional(),
+  occurredAtUtc: z.string().datetime().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditEntityChangeAuditListOutput. One page of universal entity-change audit records plus the total for the filter. */
+ComplianceAuditEntityChangeAuditListOutputSchema = z.object({
+  changes: z
+    .array(z.lazy(() => ComplianceAuditEntityChangeAuditEntrySchema))
+    .nullable()
+    .optional(),
+  totalCount: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditEvaluateBulkExportInput. Data model for Compliance Audit Evaluate Bulk Export Request. */
+ComplianceAuditEvaluateBulkExportInputSchema = z.object({
+  correlationId: z.string().nullable().optional(),
+  destination: z.string().nullable().optional(),
+  ipAddress: z.string().nullable().optional(),
+  recordCount: z.number().int().optional(),
+  scope: z.lazy(() => ComplianceAuditBulkExportScopeSchema).optional(),
 });
 
 /** Zod schema for ComplianceAuditEvidenceCustodianOutput. Data model for Compliance Audit Evidence Custodian Response. */
@@ -34269,6 +37133,129 @@ ComplianceAuditFailureReasonCountSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
+/** Zod schema for ComplianceAuditFieldAccessAnomaly. One detected access-pattern anomaly for a user in an analysis window: the observed metric, the
+baseline it is compared against, the risk score and the investigation lifecycle. */
+ComplianceAuditFieldAccessAnomalySchema = z.object({
+  id: z.string().uuid().optional(),
+  acknowledgedByUserId: z.string().uuid().nullable().optional(),
+  anomalyType: z.lazy(() => ComplianceAuditFieldAccessAnomalyTypeSchema).optional(),
+  baselineValue: z.number().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  detail: z.string().nullable().optional(),
+  detectedAtUtc: z.string().datetime().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  entityType: z.string().nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  observedValue: z.number().optional(),
+  resolutionNotes: z.string().nullable().optional(),
+  resolvedAtUtc: z.string().datetime().nullable().optional(),
+  score: z.number().optional(),
+  status: z.lazy(() => ComplianceAuditFieldAccessAnomalyStatusSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  updatedAt: z.string().datetime(),
+  userId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+  windowEndUtc: z.string().datetime().optional(),
+  windowStartUtc: z.string().datetime().optional(),
+});
+
+/** Zod schema for ComplianceAuditFieldAccessAnomalyOutput. Data model for Compliance Audit Field Access Anomaly Response. */
+ComplianceAuditFieldAccessAnomalyOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  anomalyType: z.string().nullable().optional(),
+  baselineValue: z.number().optional(),
+  detail: z.string().nullable().optional(),
+  detectedAtUtc: z.string().datetime().optional(),
+  observedValue: z.number().optional(),
+  score: z.number().optional(),
+  status: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  windowEndUtc: z.string().datetime().optional(),
+  windowStartUtc: z.string().datetime().optional(),
+});
+
+/** Zod schema for ComplianceAuditFieldAccessAnomalyStatus. OpenAPI schema for Compliance Audit Field Access Anomaly Status. */
+ComplianceAuditFieldAccessAnomalyStatusSchema = z.enum(['Open', 'Acknowledged', 'Resolved']);
+
+/** Zod schema for ComplianceAuditFieldAccessAnomalyType. Kind of unusual data-access behaviour identified by the access-pattern analysis. */
+ComplianceAuditFieldAccessAnomalyTypeSchema = z.enum(['UnusualVolume', 'ExcessiveDistinctEntities', 'SensitiveReadRatio', 'OffHoursAccess']);
+
+/** Zod schema for ComplianceAuditFieldAccessAuditOutput. Data model for Compliance Audit Field Access Audit Response. */
+ComplianceAuditFieldAccessAuditOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  accessedAt: z.string().datetime().optional(),
+  accessType: z.string().nullable().optional(),
+  entityId: z.string().uuid().optional(),
+  entityType: z.string().nullable().optional(),
+  fieldName: z.string().nullable().optional(),
+  isSensitiveField: z.boolean().optional(),
+  maskedNewValue: z.string().nullable().optional(),
+  maskedOldValue: z.string().nullable().optional(),
+  sensitivityLevel: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for ComplianceAuditFieldAccessPatternAnalysisResult. Result of one access-pattern analysis run for one user window. */
+ComplianceAuditFieldAccessPatternAnalysisResultSchema = z.object({
+  anomalies: z
+    .array(z.lazy(() => ComplianceAuditFieldAccessAnomalySchema))
+    .nullable()
+    .optional(),
+  baselineAccesses: z.number().int().optional(),
+  distinctEntities: z.number().int().optional(),
+  hasAnomalies: z.boolean().optional(),
+  observedAccesses: z.number().int().optional(),
+  offHoursRatio: z.number().optional(),
+  sensitiveReadRatio: z.number().optional(),
+  tenantId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  windowEndUtc: z.string().datetime().optional(),
+  windowStartUtc: z.string().datetime().optional(),
+});
+
+/** Zod schema for ComplianceAuditFieldAccessType. OpenAPI schema for Compliance Audit Field Access Type. */
+ComplianceAuditFieldAccessTypeSchema = z.enum(['Read', 'Write', 'Delete', 'Export', 'Anonymize', 'Encrypt', 'Decrypt']);
+
+/** Zod schema for ComplianceAuditGdprArticle30Output. The Article 30 register with its completeness gaps. */
+ComplianceAuditGdprArticle30OutputSchema = z.object({
+  activities: z
+    .array(z.lazy(() => ComplianceAuditGdprProcessingActivityOutputSchema))
+    .nullable()
+    .optional(),
+  completenessGaps: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditGdprProcessingActivityOutput. Data model for Compliance Audit Gdpr Processing Activity Response. */
+ComplianceAuditGdprProcessingActivityOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  activityName: z.string().nullable().optional(),
+  categoriesOfDataSubjects: z.string().nullable().optional(),
+  categoriesOfPersonalData: z.string().nullable().optional(),
+  involvesCrossBorderTransfers: z.boolean().optional(),
+  isAutoDerived: z.boolean().optional(),
+  lastReviewedAtUtc: z.string().datetime().nullable().optional(),
+  lastReviewedByUserId: z.string().uuid().nullable().optional(),
+  legalBasis: z.string().nullable().optional(),
+  purpose: z.string().nullable().optional(),
+  recipients: z.string().nullable().optional(),
+  retentionPeriod: z.string().nullable().optional(),
+  securityMeasures: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  transferDestinations: z.string().nullable().optional(),
+});
+
 /** Zod schema for ComplianceAuditInitiateTransferInput. Data model for Compliance Audit Initiate Transfer Request. */
 ComplianceAuditInitiateTransferInputSchema = z.object({
   evidenceId: z.string().uuid().optional(),
@@ -34312,6 +37299,23 @@ ComplianceAuditLegalHoldOutputSchema = z.object({
   releasedByUserId: z.string().uuid().nullable().optional(),
   releaseReason: z.string().nullable().optional(),
   status: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditModuleEventCoverageEntry. Per-module event coverage entry produced by the coverage sweep. */
+ComplianceAuditModuleEventCoverageEntrySchema = z.object({
+  assemblyName: z.string().nullable().optional(),
+  commandContractCount: z.number().int().optional(),
+  commandsDuplicateHandlers: z.array(z.string()).nullable().optional(),
+  commandsMissingHandlers: z.array(z.string()).nullable().optional(),
+  commandsWithoutContracts: z.array(z.string()).nullable().optional(),
+  coverageChannel: z.string().nullable().optional(),
+  handlerCount: z.number().int().optional(),
+  isFullyCovered: z.boolean().optional(),
+  moduleName: z.string().nullable().optional(),
+  mutatingCommandCount: z.number().int().optional(),
+  mutationEndpointCount: z.number().int().optional(),
+  mutationEndpointsWithoutCommandDispatch: z.array(z.string()).nullable().optional(),
+  unavailableCommands: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for ComplianceAuditNotificationTarget. Data model for Compliance Audit Notification Target. */
@@ -34458,6 +37462,16 @@ ComplianceAuditReconstructAuditReplayInputSchema = z.object({
   sha256: z.string().nullable().optional(),
 });
 
+/** Zod schema for ComplianceAuditRecordFieldAccessInput. Data model for Compliance Audit Record Field Access Request. */
+ComplianceAuditRecordFieldAccessInputSchema = z.object({
+  accessType: z.lazy(() => ComplianceAuditFieldAccessTypeSchema).optional(),
+  entityId: z.string().uuid().optional(),
+  entityType: z.string().nullable().optional(),
+  fieldNames: z.array(z.string()).nullable().optional(),
+  ipAddress: z.string().nullable().optional(),
+  userAgent: z.string().nullable().optional(),
+});
+
 /** Zod schema for ComplianceAuditRegisterCustodianInput. Data model for Compliance Audit Register Custodian Request. */
 ComplianceAuditRegisterCustodianInputSchema = z.object({
   displayName: z.string().nullable(),
@@ -34473,6 +37487,12 @@ ComplianceAuditReleaseEvidenceInputSchema = z.object({
 /** Zod schema for ComplianceAuditReleaseHoldInput. Data model for Compliance Audit Release Hold Request. */
 ComplianceAuditReleaseHoldInputSchema = z.object({
   reason: z.string().nullable(),
+});
+
+/** Zod schema for ComplianceAuditResolveFieldAccessAnomalyInput. Data model for Compliance Audit Resolve Field Access Anomaly Request. */
+ComplianceAuditResolveFieldAccessAnomalyInputSchema = z.object({
+  id: z.string().uuid().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 /** Zod schema for ComplianceAuditResolveSecurityAlertInput. Body of `POST /api/audit/security-events/alerts/{id}:resolve`. */
@@ -34531,6 +37551,21 @@ ComplianceAuditSavedAuditQueryViewOutputSchema = z.object({
   name: z.string().nullable().optional(),
   queryJson: z.string().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for ComplianceAuditSaveGdprActivityInput. Data model for Compliance Audit Save Gdpr Activity Request. */
+ComplianceAuditSaveGdprActivityInputSchema = z.object({
+  id: z.string().uuid().nullable().optional(),
+  activityName: z.string().nullable().optional(),
+  categoriesOfDataSubjects: z.string().nullable().optional(),
+  categoriesOfPersonalData: z.string().nullable().optional(),
+  involvesCrossBorderTransfers: z.boolean().optional(),
+  legalBasis: z.string().nullable().optional(),
+  purpose: z.string().nullable().optional(),
+  recipients: z.string().nullable().optional(),
+  retentionPeriod: z.string().nullable().optional(),
+  securityMeasures: z.string().nullable().optional(),
+  transferDestinations: z.string().nullable().optional(),
 });
 
 /** Zod schema for ComplianceAuditSaveSavedAuditQueryApiInput. API request for creating or updating a saved audit query view. */
@@ -34712,6 +37747,58 @@ ComplianceAuditSecurityLogStorageTierReportOutputSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
+/** Zod schema for ComplianceAuditSensitiveDataCategory. Categories of data recognized by the sensitive-field classification system (issue #186). */
+ComplianceAuditSensitiveDataCategorySchema = z.enum(['None', 'PII', 'PHI', 'Financial', 'Credentials']);
+
+/** Zod schema for ComplianceAuditSensitiveDataRetentionEnforcementResult. Result of one sensitive-data retention enforcement pass. */
+ComplianceAuditSensitiveDataRetentionEnforcementResultSchema = z.object({
+  categoriesEnforced: z
+    .array(z.lazy(() => ComplianceAuditSensitiveDataCategorySchema))
+    .nullable()
+    .optional(),
+  dryRun: z.boolean().optional(),
+  executedAtUtc: z.string().datetime().optional(),
+  expiredClassifications: z.number().int().optional(),
+  maskedFieldAccessRecords: z.number().int().optional(),
+  purgedFieldAccessRecords: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditSensitiveDataRetentionPolicyOutput. Data model for Compliance Audit Sensitive Data Retention Policy Response. */
+ComplianceAuditSensitiveDataRetentionPolicyOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  action: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  configuredAtUtc: z.string().datetime().optional(),
+  lastEnforcedAtUtc: z.string().datetime().nullable().optional(),
+  lastEnforcedCount: z.number().int().optional(),
+  retentionDays: z.number().int().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditSensitiveFieldClassificationOutput. Data model for Compliance Audit Sensitive Field Classification Response. */
+ComplianceAuditSensitiveFieldClassificationOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  category: z.string().nullable().optional(),
+  confidence: z.number().optional(),
+  detectionRule: z.string().nullable().optional(),
+  entityType: z.string().nullable().optional(),
+  fieldName: z.string().nullable().optional(),
+  firstSeenAt: z.string().datetime().optional(),
+  isConfirmed: z.boolean().optional(),
+  lastSeenAt: z.string().datetime().optional(),
+  observationCount: z.number().int().optional(),
+  sensitivity: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditSensitiveFieldScanOutput. Data model for Compliance Audit Sensitive Field Scan Response. */
+ComplianceAuditSensitiveFieldScanOutputSchema = z.object({
+  classifications: z
+    .array(z.lazy(() => ComplianceAuditSensitiveFieldClassificationOutputSchema))
+    .nullable()
+    .optional(),
+  scannedObservations: z.number().int().optional(),
+});
+
 /** Zod schema for ComplianceAuditSensitivityLevel. Defines sensitivity levels for data access auditing */
 ComplianceAuditSensitivityLevelSchema = z.enum(['Public', 'Internal', 'Confidential', 'Restricted', 'HighlyRestricted']);
 
@@ -34817,6 +37904,15 @@ ComplianceAuditUpsertPiiRedactionRuleInputSchema = z.object({
   ruleName: z.string().nullable().optional(),
   scope: z.lazy(() => ComplianceAuditPiiRuleScopeSchema).optional(),
   targetFields: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditValidateCrossBorderTransferInput. Data model for Compliance Audit Validate Cross Border Transfer Request. */
+ComplianceAuditValidateCrossBorderTransferInputSchema = z.object({
+  correlationId: z.string().nullable().optional(),
+  dataCategories: z.string().nullable().optional(),
+  destinationJurisdiction: z.string().nullable().optional(),
+  purpose: z.string().nullable().optional(),
+  recordCount: z.number().int().optional(),
 });
 
 /** Zod schema for ComplianceAuditValueHistoryEntry. Point-in-time value history entry for one entity field. */
@@ -38279,6 +41375,7 @@ IdentityAuthenticationLocationInfoSchema = z.object({
   isHosting: z.boolean().nullable().optional(),
   isp: z.string().nullable().optional(),
   isProxy: z.boolean().nullable().optional(),
+  isTor: z.boolean().nullable().optional(),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
   organization: z.string().nullable().optional(),
@@ -38546,6 +41643,11 @@ IdentityAuthenticationRemoveRoleFromUserInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationRenameSessionInput. Request to name or rename one of the current user's own sessions */
 IdentityAuthenticationRenameSessionInputSchema = z.object({
+  name: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationRenameTrustedDeviceInput. Request to name or rename one of the current user's own trusted devices */
+IdentityAuthenticationRenameTrustedDeviceInputSchema = z.object({
   name: z.string().nullable(),
 });
 
@@ -39337,6 +42439,13 @@ IdentityAuthorizationEffectivePermissionsOutputSchema = z.object({
 /** Zod schema for IdentityAuthorizationElevationRequestStatus. Status of JIT elevation request */
 IdentityAuthorizationElevationRequestStatusSchema = z.enum(['None', 'Pending', 'Approved', 'Denied', 'Active', 'Expired', 'Revoked']);
 
+/** Zod schema for IdentityAuthorizationExpiringPermissionBreakdown. Per-permission-type aggregation of expiring grants (top offenders for renewal planning). */
+IdentityAuthorizationExpiringPermissionBreakdownSchema = z.object({
+  earliestExpiration: z.string().datetime().optional(),
+  expiringCount: z.number().int().optional(),
+  permission: z.string().nullable(),
+});
+
 /** Zod schema for IdentityAuthorizationExpiringTenantPermission. A tenant permission grant that is about to expire. */
 IdentityAuthorizationExpiringTenantPermissionSchema = z.object({
   expiresAt: z.string().datetime(),
@@ -39397,6 +42506,18 @@ IdentityAuthorizationExternalRoleDefinitionSchema = z.object({
 /** Zod schema for IdentityAuthorizationGetContentTypePermissionGrantsOutput. Response envelope for GameGuild.Identity.Authorization.GetContentTypePermissionGrantsQuery. */
 IdentityAuthorizationGetContentTypePermissionGrantsOutputSchema = z.object({
   grants: z.array(z.lazy(() => IdentityAuthorizationContentTypePermissionGrantDtoSchema)).nullable(),
+  tenantId: z.string().uuid(),
+});
+
+/** Zod schema for IdentityAuthorizationGetEffectiveExpirationRuleOutput. The effective advanced expiration rule for a permission set. */
+IdentityAuthorizationGetEffectiveExpirationRuleOutputSchema = z.object({
+  hasConstraints: z.boolean(),
+  matchedRuleKeys: z.array(z.string()).nullable(),
+  maxDuration: z.string().nullable().optional(),
+  maxExtension: z.string().nullable().optional(),
+  minDuration: z.string().nullable().optional(),
+  permissions: z.array(z.string()).nullable(),
+  requireExpiration: z.boolean().nullable().optional(),
   tenantId: z.string().uuid(),
 });
 
@@ -39861,6 +42982,50 @@ IdentityAuthorizationPermissionDelegationSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
   usageCount: z.number().int().optional(),
   usageLimit: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthorizationPermissionExpirationBucket.     A time-to-expiry bucket in the expiration dashboard (issue #331 "expiration analytics
+and reporting"). Active temporary grants are counted into exactly one bucket by their
+remaining lifetime; permanent and inactive grants are counted separately. */
+IdentityAuthorizationPermissionExpirationBucketSchema = z.object({
+  bucket: z.string().nullable(),
+  count: z.number().int().optional(),
+  label: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthorizationPermissionExpirationReport. The combined expiration analytics report (issue #331 "expiration analytics and
+reporting"): dashboard, trends, and top expiring permissions for a period. */
+IdentityAuthorizationPermissionExpirationReportSchema = z.object({
+  attentionFlags: z.array(z.string()).nullable(),
+  periodEnd: z.string().datetime(),
+  periodStart: z.string().datetime(),
+  summary: z.lazy(() => IdentityAuthorizationPermissionExpirationSummarySchema),
+  tenantId: z.string().uuid(),
+  totalExpirationMutations: z.number().int().optional(),
+  totalExpirationsProcessed: z.number().int().optional(),
+  trends: z.array(z.lazy(() => IdentityAuthorizationPermissionExpirationTrendPointSchema)).nullable(),
+});
+
+/** Zod schema for IdentityAuthorizationPermissionExpirationSummary. Expiration dashboard summary for one tenant (issue #331): the full grant population
+bucketed by time-to-expiry plus per-permission breakdown of upcoming expirations. */
+IdentityAuthorizationPermissionExpirationSummarySchema = z.object({
+  activePermanent: z.number().int().optional(),
+  activeTemporary: z.number().int().optional(),
+  buckets: z.array(z.lazy(() => IdentityAuthorizationPermissionExpirationBucketSchema)).nullable(),
+  computedAt: z.string().datetime(),
+  expiringByPermission: z.array(z.lazy(() => IdentityAuthorizationExpiringPermissionBreakdownSchema)).nullable(),
+  inactive: z.number().int().optional(),
+  tenantId: z.string().uuid(),
+  totalGrants: z.number().int().optional(),
+});
+
+/** Zod schema for IdentityAuthorizationPermissionExpirationTrendPoint. One day of the expiration funnel (issue #331 "expiry-funnel stats"): how many grants
+were durably expired by the sweep, and how many manual expiration mutations were applied. */
+IdentityAuthorizationPermissionExpirationTrendPointSchema = z.object({
+  date: z.string().datetime(),
+  expirationMutations: z.number().int().optional(),
+  expirationsCleared: z.number().int().optional(),
+  expirationsProcessed: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityAuthorizationPermissionHistoryAtSnapshot. Effective permission state at a past instant (issue #189: time-based permission
@@ -43741,6 +46906,11 @@ LearningCertificatesIssueCertificateInputSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
+/** Zod schema for LearningCertificatesRenewCertificateInput. Request to renew a certificate by extending its validity */
+LearningCertificatesRenewCertificateInputSchema = z.object({
+  newExpiresAt: z.string().datetime().optional(),
+});
+
 /** Zod schema for LearningCertificatesRevokeCertificateInput. Request to revoke a certificate */
 LearningCertificatesRevokeCertificateInputSchema = z.object({
   reason: z.string().nullable().optional(),
@@ -46495,6 +49665,23 @@ PagedResultProductDtoSchema = z.object({
   hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => CommerceProductsProductDtoSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultPromoCampaignDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+PagedResultPromoCampaignDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => CommerceProductsPromoCampaignDtoSchema))
     .nullable()
     .optional(),
   pageNumber: z.number().int().optional(),
@@ -50836,10 +54023,14 @@ export type CommerceBillingBillingWebhookEvent = CommerceBillingBillingWebhookEv
 export { CommerceBillingBillingWebhookEventDtoSchema as CommerceBillingBillingWebhookEventSchema };
 export type CommerceBillingBillingWebhookEventListItem = CommerceBillingBillingWebhookEventListItemDto;
 export { CommerceBillingBillingWebhookEventListItemDtoSchema as CommerceBillingBillingWebhookEventListItemSchema };
+export type CommerceBillingBillingWebhookProviderStats = CommerceBillingBillingWebhookProviderStatsDto;
+export { CommerceBillingBillingWebhookProviderStatsDtoSchema as CommerceBillingBillingWebhookProviderStatsSchema };
 export type CommerceBillingBillingWebhookSecurityAlert = CommerceBillingBillingWebhookSecurityAlertDto;
 export { CommerceBillingBillingWebhookSecurityAlertDtoSchema as CommerceBillingBillingWebhookSecurityAlertSchema };
 export type CommerceBillingBillingWebhookSecuritySummary = CommerceBillingBillingWebhookSecuritySummaryDto;
 export { CommerceBillingBillingWebhookSecuritySummaryDtoSchema as CommerceBillingBillingWebhookSecuritySummarySchema };
+export type CommerceBillingBillingWebhookStats = CommerceBillingBillingWebhookStatsDto;
+export { CommerceBillingBillingWebhookStatsDtoSchema as CommerceBillingBillingWebhookStatsSchema };
 export type CommerceBillingBillingWebhookSuspiciousActivityStatus = CommerceBillingBillingWebhookSuspiciousActivityStatusDto;
 export { CommerceBillingBillingWebhookSuspiciousActivityStatusDtoSchema as CommerceBillingBillingWebhookSuspiciousActivityStatusSchema };
 export type CommerceBillingExternalBillingProviderStatus = CommerceBillingExternalBillingProviderStatusDto;
@@ -50848,6 +54039,16 @@ export type CommerceBillingPricingDecisionLedgerEntryDetail = CommerceBillingPri
 export { CommerceBillingPricingDecisionLedgerEntryDetailDtoSchema as CommerceBillingPricingDecisionLedgerEntryDetailSchema };
 export type CommerceBillingPricingDecisionLedgerEntry = CommerceBillingPricingDecisionLedgerEntryDto;
 export { CommerceBillingPricingDecisionLedgerEntryDtoSchema as CommerceBillingPricingDecisionLedgerEntrySchema };
+export type CommerceBillingSubscriptionChangeSaga = CommerceBillingSubscriptionChangeSagaDto;
+export { CommerceBillingSubscriptionChangeSagaDtoSchema as CommerceBillingSubscriptionChangeSagaSchema };
+export type CommerceBillingSubscriptionChangeSagaStep = CommerceBillingSubscriptionChangeSagaStepDto;
+export { CommerceBillingSubscriptionChangeSagaStepDtoSchema as CommerceBillingSubscriptionChangeSagaStepSchema };
+export type CommerceBillingSubscriptionEventProjection = CommerceBillingSubscriptionEventProjectionDto;
+export { CommerceBillingSubscriptionEventProjectionDtoSchema as CommerceBillingSubscriptionEventProjectionSchema };
+export type CommerceBillingSubscriptionProjectionEvent = CommerceBillingSubscriptionProjectionEventDto;
+export { CommerceBillingSubscriptionProjectionEventDtoSchema as CommerceBillingSubscriptionProjectionEventSchema };
+export type CommerceBillingSubscriptionStateDrift = CommerceBillingSubscriptionStateDriftDto;
+export { CommerceBillingSubscriptionStateDriftDtoSchema as CommerceBillingSubscriptionStateDriftSchema };
 export type CommerceOrdersBundleRecommendation = CommerceOrdersBundleRecommendationDto;
 export { CommerceOrdersBundleRecommendationDtoSchema as CommerceOrdersBundleRecommendationSchema };
 export type CommerceOrdersCoPurchaseRecommendation = CommerceOrdersCoPurchaseRecommendationDto;
@@ -50870,6 +54071,12 @@ export type CommerceOrdersOrderLineItem = CommerceOrdersOrderLineItemDto;
 export { CommerceOrdersOrderLineItemDtoSchema as CommerceOrdersOrderLineItemSchema };
 export type CommerceOrdersProductRecommendations = CommerceOrdersProductRecommendationsDto;
 export { CommerceOrdersProductRecommendationsDtoSchema as CommerceOrdersProductRecommendationsSchema };
+export type CommercePaymentsBankAccountVerificationInitiation = CommercePaymentsBankAccountVerificationInitiationDto;
+export { CommercePaymentsBankAccountVerificationInitiationDtoSchema as CommercePaymentsBankAccountVerificationInitiationSchema };
+export type CommercePaymentsBankAccountVerificationStatus = CommercePaymentsBankAccountVerificationStatusDto;
+export { CommercePaymentsBankAccountVerificationStatusDtoSchema as CommercePaymentsBankAccountVerificationStatusSchema };
+export type CommercePaymentsCurrencySuggestion = CommercePaymentsCurrencySuggestionDto;
+export { CommercePaymentsCurrencySuggestionDtoSchema as CommercePaymentsCurrencySuggestionSchema };
 export type CommercePaymentsFxRate = CommercePaymentsFxRateDto;
 export { CommercePaymentsFxRateDtoSchema as CommercePaymentsFxRateSchema };
 export type CommercePaymentsFxRateSyncRun = CommercePaymentsFxRateSyncRunDto;
@@ -50880,6 +54087,10 @@ export type CommercePaymentsPaymentMethod = CommercePaymentsPaymentMethodDto;
 export { CommercePaymentsPaymentMethodDtoSchema as CommercePaymentsPaymentMethodSchema };
 export type CommercePaymentsPaymentRetryAttempt = CommercePaymentsPaymentRetryAttemptDto;
 export { CommercePaymentsPaymentRetryAttemptDtoSchema as CommercePaymentsPaymentRetryAttemptSchema };
+export type CommercePaymentsPlanLocalizedPrice = CommercePaymentsPlanLocalizedPriceDto;
+export { CommercePaymentsPlanLocalizedPriceDtoSchema as CommercePaymentsPlanLocalizedPriceSchema };
+export type CommercePaymentsPriceRecalculationRun = CommercePaymentsPriceRecalculationRunDto;
+export { CommercePaymentsPriceRecalculationRunDtoSchema as CommercePaymentsPriceRecalculationRunSchema };
 export type CommercePaymentsTenantCurrency = CommercePaymentsTenantCurrencyDto;
 export { CommercePaymentsTenantCurrencyDtoSchema as CommercePaymentsTenantCurrencySchema };
 export type CommerceProductsCampaignExpiringCode = CommerceProductsCampaignExpiringCodeDto;
@@ -50908,6 +54119,8 @@ export type CommerceProductsProductInventory = CommerceProductsProductInventoryD
 export { CommerceProductsProductInventoryDtoSchema as CommerceProductsProductInventorySchema };
 export type CommerceProductsProductPricing = CommerceProductsProductPricingDto;
 export { CommerceProductsProductPricingDtoSchema as CommerceProductsProductPricingSchema };
+export type CommerceProductsPromoCampaign = CommerceProductsPromoCampaignDto;
+export { CommerceProductsPromoCampaignDtoSchema as CommerceProductsPromoCampaignSchema };
 export type CommerceProductsPromoCode = CommerceProductsPromoCodeDto;
 export { CommerceProductsPromoCodeDtoSchema as CommerceProductsPromoCodeSchema };
 export type CommerceProductsPromoCodeUsage = CommerceProductsPromoCodeUsageDto;
@@ -51408,6 +54621,8 @@ export type PagedResultPricingRule = PagedResultPricingRuleDto;
 export { PagedResultPricingRuleDtoSchema as PagedResultPricingRuleSchema };
 export type PagedResultProduct = PagedResultProductDto;
 export { PagedResultProductDtoSchema as PagedResultProductSchema };
+export type PagedResultPromoCampaign = PagedResultPromoCampaignDto;
+export { PagedResultPromoCampaignDtoSchema as PagedResultPromoCampaignSchema };
 export type PagedResultPromoCode = PagedResultPromoCodeDto;
 export { PagedResultPromoCodeDtoSchema as PagedResultPromoCodeSchema };
 export type PagedResultSubscriptionNotification = PagedResultSubscriptionNotificationDto;

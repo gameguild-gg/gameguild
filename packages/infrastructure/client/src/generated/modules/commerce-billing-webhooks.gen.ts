@@ -36,6 +36,27 @@ export class CommerceBillingWebhooksModule {
   }
 
   /**
+   * Handle Braintree webhook events with offline signature verification
+   *
+   * Braintree delivers `application/x-www-form-urlencoded` bodies carrying the
+   * `bt_signature`/`bt_payload` pair. The signature is verified offline against
+   * the gateway's configured public key (issue #408) before any inbox work; failed
+   * verification is rejected fail-closed with a security event. The stored payload is the
+   * privacy-minimized routing projection of the notification.
+   */
+  async postBillingWebhooksBraintree(): Promise<Result<Record<string, unknown>, ApiError>> {
+    const url = '/api/v1/billing/webhooks/braintree';
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: false,
+    });
+
+    return result as Result<Record<string, unknown>, ApiError>;
+  }
+
+  /**
    * Handle Google Pay webhook events for transaction notifications
    *
    * Processes Google Pay webhook notifications for payment processing, subscription billing,
@@ -142,6 +163,32 @@ export class CommerceBillingWebhooksModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.CommerceBillingBillingWebhookSecuritySummaryDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Get the billing webhook processing statistics (issue #408)
+   *
+   * Admin-facing webhook activity dashboard (issue #408): events received, processed and
+   * failed in the window, the processing success rate, the average received-to-processed
+   * latency, the dead-lettered and unverified counts, and a per-provider breakdown.
+   */
+  async getBillingWebhooksStats(query?: { fromUtc?: string; toUtc?: string }): Promise<Result<Types.CommerceBillingBillingWebhookStatsDto, ApiError>> {
+    const url = '/api/v1/billing/webhooks/stats';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceBillingBillingWebhookStatsDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

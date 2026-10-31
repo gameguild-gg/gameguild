@@ -29,6 +29,8 @@ namespace GameGuild.Commerce.Products;
 /// <param name="ProductId">Specific product ID (null = all products)</param>
 /// <param name="PlanId">Specific subscription plan ID (null = not plan-scoped; issue #418)</param>
 /// <param name="CreatedBy">User ID of the creator</param>
+/// <param name="TimeZoneId">IANA timezone the validity window is expressed in (issue #418; null = tenant default)</param>
+/// <param name="EligibleCustomerType">Customer relationship state eligible for this code (issue #418; Any = unrestricted)</param>
 [RequiresQuota(ResourceUsageType.PromoCodes, 1, Source = "CreatePromoCode")]
 public sealed record CreatePromoCodeCommand(
     string Code,
@@ -53,5 +55,7 @@ public sealed record CreatePromoCodeCommand(
     string? CampaignId = null,
     Guid? ProductId = null,
     Guid? CreatedBy = null,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? TimeZoneId = null,
+    PromoCustomerType EligibleCustomerType = PromoCustomerType.Any
 ) : ICommand<PromoCodeDto>;

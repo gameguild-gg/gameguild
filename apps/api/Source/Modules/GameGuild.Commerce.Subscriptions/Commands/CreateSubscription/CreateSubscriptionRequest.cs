@@ -16,6 +16,9 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <param name="PromoCodes">Optional promo codes applied at creation (issue #418)</param>
 /// <param name="PromoCodeIdempotencyKey">Optional replay-protection key for the promo application</param>
 /// <param name="ProductId">Optional product context for product-scoped promo codes</param>
+/// <param name="Country">Optional ISO 3166-1 alpha-2 billing country; feeds the creation-time fraud signals (issue #409)</param>
+/// <param name="PayerEmail">Optional payer email; feeds the creation-time disposable-email/blacklist fraud signals (issue #409)</param>
+/// <param name="CardBin">Optional 6-8 digit card BIN prefix; feeds the creation-time BIN-range fraud signal (issue #409)</param>
 public sealed record CreateSubscriptionRequest(
     Guid TenantId,
     Guid PlanId,
@@ -28,4 +31,7 @@ public sealed record CreateSubscriptionRequest(
     int? TrialDays = null,
     IReadOnlyList<string>? PromoCodes = null,
     string? PromoCodeIdempotencyKey = null,
-    Guid? ProductId = null);
+    Guid? ProductId = null,
+    string? Country = null,
+    string? PayerEmail = null,
+    string? CardBin = null);

@@ -499,13 +499,14 @@ export function createHandlers(config: ResolvedAuthConfig) {
   }
 
   async function handleSignUp(body: Record<string, unknown>, responseCookies: ResponseCookies): Promise<Response> {
-    const { username, email, password, firstName, lastName, tenantId } = body as {
+    const { username, email, password, firstName, lastName, tenantId, guestAccessToken } = body as {
       username?: string;
       email?: string;
       password?: string;
       firstName?: string;
       lastName?: string;
       tenantId?: string;
+      guestAccessToken?: string;
     };
 
     if (!username || !email || !password) {
@@ -524,6 +525,10 @@ export function createHandlers(config: ResolvedAuthConfig) {
     if (firstName) signUpBody.firstName = firstName;
     if (lastName) signUpBody.lastName = lastName;
     if (tenantId) signUpBody.tenantId = tenantId;
+    // Guest upgrade (issue #213): forwarding the guest bearer lets the backend
+    // link the fresh authenticated session to the guest session; an invalid
+    // token never blocks registration.
+    if (guestAccessToken) signUpBody.guestAccessToken = guestAccessToken;
 
     const response = await fetch(`${config.apiUrl}/v1/auth/sign-up`, {
       method: 'POST',

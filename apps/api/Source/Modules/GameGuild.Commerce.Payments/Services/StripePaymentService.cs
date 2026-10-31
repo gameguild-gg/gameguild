@@ -25,13 +25,17 @@ public class StripePaymentService(
     private readonly Func<string, DisputeUpdateOptions, RequestOptions, CancellationToken, Task<Dispute>>
         _updateDisputeAsync = static (disputeId, updateOptions, requestOptions, cancellationToken) =>
             new Stripe.DisputeService().UpdateAsync(disputeId, updateOptions, requestOptions, cancellationToken);
+    private readonly Func<FileCreateOptions, RequestOptions, CancellationToken, Task<Stripe.File>>
+        _uploadEvidenceFileAsync = static (createOptions, requestOptions, cancellationToken) =>
+            new Stripe.FileService().CreateAsync(createOptions, requestOptions, cancellationToken);
 
     internal StripePaymentService(
         IOptions<StripeGatewayOptions> options,
         ILogger<StripePaymentService> logger,
         Func<PaymentIntentCreateOptions, RequestOptions, CancellationToken, Task<PaymentIntent>>? createPaymentIntentAsync = null,
         Func<string, DisputeCloseOptions, RequestOptions, CancellationToken, Task<Dispute>>? closeDisputeAsync = null,
-        Func<string, DisputeUpdateOptions, RequestOptions, CancellationToken, Task<Dispute>>? updateDisputeAsync = null)
+        Func<string, DisputeUpdateOptions, RequestOptions, CancellationToken, Task<Dispute>>? updateDisputeAsync = null,
+        Func<FileCreateOptions, RequestOptions, CancellationToken, Task<Stripe.File>>? uploadEvidenceFileAsync = null)
         : this(options, logger)
     {
         // The payment-intent factory is mandatory (fail-fast wiring contract asserted by
@@ -48,6 +52,11 @@ public class StripePaymentService(
         if (updateDisputeAsync is not null)
         {
             _updateDisputeAsync = updateDisputeAsync;
+        }
+
+        if (uploadEvidenceFileAsync is not null)
+        {
+            _uploadEvidenceFileAsync = uploadEvidenceFileAsync;
         }
     }
 
@@ -326,10 +335,46 @@ public class StripePaymentService(
             "Challenging Stripe dispute {DisputeId} with idempotency key {IdempotencyKey} (Simulation: {IsSimulation})",
             request.ExternalDisputeId, request.IdempotencyKey, _options.UseSimulation);
 
+        // Provider file delivery (issue #419): banks do not review external download links, so
+        // every content-bearing evidence item is uploaded through the Stripe Files API and the
+        // resulting file id is delivered in a typed evidence field. Items whose stored bytes
+        // are unavailable stay referenced by the textual bundle.
+        var evidenceOptions = new DisputeEvidenceOptions
+        {
+            UncategorizedText = string.IsNullOrWhiteSpace(request.EvidenceSummary)
+                ? "The merchant contests this dispute; the service was delivered and the charge was authorized."
+                : request.EvidenceSummary
+        };
+
+        List<GatewayDisputeEvidenceAcceptance>? acceptedEvidence = null;
+        if (request.EvidenceFiles is { Count: > 0 } items)
+        {
+            try
+            {
+                acceptedEvidence = await UploadDisputeEvidenceFilesAsync(request, evidenceOptions, items, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (StripeException ex)
+            {
+                logger.LogError(ex,
+                    "Stripe dispute evidence upload failed for dispute {DisputeId}: {ErrorCode} - {ErrorMessage}",
+                    request.ExternalDisputeId, ex.StripeError?.Code, ex.StripeError?.Message);
+                return new GatewayDisputeActionResult(
+                    false,
+                    ex.StripeError?.Code ?? "stripe_evidence_upload_failed",
+                    ex.StripeError?.Message ?? ex.Message);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Unexpected error uploading Stripe dispute evidence for {DisputeId}", request.ExternalDisputeId);
+                return new GatewayDisputeActionResult(false, "unexpected_error", ex.Message);
+            }
+        }
+
         if (_options.UseSimulation)
         {
             await Task.Delay(1, cancellationToken).ConfigureAwait(false);
-            return new GatewayDisputeActionResult(true, null, null);
+            return new GatewayDisputeActionResult(true, null, null, acceptedEvidence);
         }
 
         try
@@ -337,12 +382,7 @@ public class StripePaymentService(
             var updateOptions = new DisputeUpdateOptions
             {
                 Submit = true,
-                Evidence = new DisputeEvidenceOptions
-                {
-                    UncategorizedText = string.IsNullOrWhiteSpace(request.EvidenceSummary)
-                        ? "The merchant contests this dispute; the service was delivered and the charge was authorized."
-                        : request.EvidenceSummary
-                }
+                Evidence = evidenceOptions
             };
 
             await _updateDisputeAsync(
@@ -356,7 +396,7 @@ public class StripePaymentService(
                     cancellationToken)
                 .ConfigureAwait(false);
 
-            return new GatewayDisputeActionResult(true, null, null);
+            return new GatewayDisputeActionResult(true, null, null, acceptedEvidence);
         }
         catch (StripeException ex)
         {
@@ -374,6 +414,165 @@ public class StripePaymentService(
             return new GatewayDisputeActionResult(false, "unexpected_error", ex.Message);
         }
     }
+
+    /// <summary>
+    ///     Typed Stripe evidence fields that accept an uploaded file id (issue #419): Stripe
+    ///     exposes one file slot per evidence category, so each field keeps the first item
+    ///     assigned to it and later items overflow to <see cref="StripeEvidenceField.UncategorizedFile"/>.
+    /// </summary>
+    private enum StripeEvidenceField
+    {
+        Receipt,
+        CustomerCommunication,
+        ServiceDocumentation,
+        ShippingDocumentation,
+        DuplicateChargeDocumentation,
+        UncategorizedFile
+    }
+
+    private static StripeEvidenceField MapEvidenceTypeToField(string evidenceTypeKey) => evidenceTypeKey switch
+    {
+        nameof(EvidenceType.Receipt) or nameof(EvidenceType.Invoice) or nameof(EvidenceType.SubscriptionRecord)
+            or nameof(EvidenceType.BankStatement) => StripeEvidenceField.Receipt,
+        nameof(EvidenceType.Communication) => StripeEvidenceField.CustomerCommunication,
+        nameof(EvidenceType.ShippingInfo) => StripeEvidenceField.ShippingDocumentation,
+        nameof(EvidenceType.Documentation) or nameof(EvidenceType.Contract) or nameof(EvidenceType.Photo)
+            or nameof(EvidenceType.Video) or nameof(EvidenceType.Other) => StripeEvidenceField.ServiceDocumentation,
+        "Duplicate" => StripeEvidenceField.DuplicateChargeDocumentation,
+        _ => StripeEvidenceField.UncategorizedFile
+    };
+
+    /// <summary>
+    ///     Uploads every content-bearing evidence item to Stripe (purpose
+    ///     <c>dispute_evidence</c>) and maps the accepted file ids into the typed evidence
+    ///     fields (issue #419 provider file delivery). All-or-nothing: a failed upload aborts
+    ///     the challenge so no partial evidence response is ever submitted to Stripe — the
+    ///     final response cannot be amended later.
+    /// </summary>
+    private async Task<List<GatewayDisputeEvidenceAcceptance>> UploadDisputeEvidenceFilesAsync(
+        GatewayDisputeChallengeRequest request,
+        DisputeEvidenceOptions evidenceOptions,
+        IReadOnlyList<GatewayDisputeEvidenceItem> items,
+        CancellationToken cancellationToken)
+    {
+        var accepted = new List<GatewayDisputeEvidenceAcceptance>();
+        var occupied = new HashSet<StripeEvidenceField>();
+        foreach (var item in items)
+        {
+            if (item.ContentAccessor is null)
+            {
+                // Stored bytes unavailable: the item keeps its textual reference only.
+                continue;
+            }
+
+            var content = await item.ContentAccessor(cancellationToken).ConfigureAwait(false);
+            if (content is null)
+            {
+                continue;
+            }
+
+            using (content.Content)
+            {
+                string providerFileId;
+                if (_options.UseSimulation)
+                {
+                    await Task.Delay(1, cancellationToken).ConfigureAwait(false);
+                    var compactKey = item.Key.Replace("-", string.Empty, StringComparison.Ordinal);
+                    providerFileId = $"file_simulated_{(compactKey.Length <= 12 ? compactKey : compactKey[..12])}";
+                }
+                else
+                {
+                    var uploaded = await _uploadEvidenceFileAsync(
+                            new FileCreateOptions
+                            {
+                                Purpose = "dispute_evidence",
+                                File = content.Content
+                            },
+                            new RequestOptions
+                            {
+                                // Per-file idempotency derived from the challenge key + item so a
+                                // crash-replayed bundle re-uploads nothing.
+                                IdempotencyKey = $"{request.IdempotencyKey}:file:{item.Key}",
+                                StripeAccount = ResolveConnectedAccountId()
+                            },
+                            cancellationToken)
+                        .ConfigureAwait(false);
+                    providerFileId = uploaded.Id;
+                }
+
+                var target = MapEvidenceTypeToField(item.EvidenceTypeKey);
+                if (occupied.Contains(target))
+                {
+                    // Stripe holds one file per evidence field: overflow items move to the
+                    // uncategorized file slot while it is free.
+                    if (!occupied.Contains(StripeEvidenceField.UncategorizedFile))
+                    {
+                        target = StripeEvidenceField.UncategorizedFile;
+                    }
+                    else
+                    {
+                        // Every file slot is taken: the uploaded file stays accepted by Stripe
+                        // but is not attached to a typed field, so the item remains referenced
+                        // in the textual bundle (never silently dropped).
+                        logger.LogWarning(
+                            "Stripe dispute {DisputeId}: evidence item {Key} exceeded the typed field capacity; it remains referenced in the textual bundle only",
+                            request.ExternalDisputeId,
+                            item.Key);
+                        accepted.Add(new GatewayDisputeEvidenceAcceptance(item.Key, providerFileId, item.ContentDigest, null));
+                        continue;
+                    }
+                }
+
+                occupied.Add(target);
+                AssignEvidenceFile(evidenceOptions, target, providerFileId);
+                accepted.Add(new GatewayDisputeEvidenceAcceptance(
+                    item.Key,
+                    providerFileId,
+                    item.ContentDigest,
+                    FieldName(target)));
+            }
+        }
+
+        return accepted;
+    }
+
+    private static void AssignEvidenceFile(DisputeEvidenceOptions options, StripeEvidenceField field, string providerFileId)
+    {
+        switch (field)
+        {
+            case StripeEvidenceField.Receipt:
+                options.Receipt ??= providerFileId;
+                break;
+            case StripeEvidenceField.CustomerCommunication:
+                options.CustomerCommunication ??= providerFileId;
+                break;
+            case StripeEvidenceField.ServiceDocumentation:
+                options.ServiceDocumentation ??= providerFileId;
+                break;
+            case StripeEvidenceField.ShippingDocumentation:
+                options.ShippingDocumentation ??= providerFileId;
+                break;
+            case StripeEvidenceField.DuplicateChargeDocumentation:
+                options.DuplicateChargeDocumentation ??= providerFileId;
+                break;
+            case StripeEvidenceField.UncategorizedFile:
+                options.UncategorizedFile ??= providerFileId;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(field), field, "Unknown Stripe evidence field.");
+        }
+    }
+
+    private static string FieldName(StripeEvidenceField field) => field switch
+    {
+        StripeEvidenceField.Receipt => nameof(DisputeEvidenceOptions.Receipt),
+        StripeEvidenceField.CustomerCommunication => nameof(DisputeEvidenceOptions.CustomerCommunication),
+        StripeEvidenceField.ServiceDocumentation => nameof(DisputeEvidenceOptions.ServiceDocumentation),
+        StripeEvidenceField.ShippingDocumentation => nameof(DisputeEvidenceOptions.ShippingDocumentation),
+        StripeEvidenceField.DuplicateChargeDocumentation => nameof(DisputeEvidenceOptions.DuplicateChargeDocumentation),
+        StripeEvidenceField.UncategorizedFile => nameof(DisputeEvidenceOptions.UncategorizedFile),
+        _ => field.ToString()
+    };
 
     /// <inheritdoc />
     public Task<bool> ValidateWebhookSignatureAsync(
@@ -442,7 +641,7 @@ public class StripePaymentService(
         }
     }
 
-    private GatewayPaymentResult MapPaymentIntent(PaymentIntent paymentIntent)
+    internal GatewayPaymentResult MapPaymentIntent(PaymentIntent paymentIntent)
     {
         var status = StripeStatusMapper.MapPaymentStatus(paymentIntent.Status);
         return new GatewayPaymentResult(
@@ -454,7 +653,12 @@ public class StripePaymentService(
             Status: status,
             ProcessedAt: SystemClock.UtcNow,
             ClientActionToken: status == PaymentStatus.RequiresAction ? paymentIntent.ClientSecret : null,
-            ProviderMapping: CreateProviderMapping(paymentIntent.Id));
+            ProviderMapping: CreateProviderMapping(paymentIntent.Id),
+            SettledAmount: status == PaymentStatus.Succeeded && !string.IsNullOrWhiteSpace(paymentIntent.Currency)
+                ? StripeAmountConverter.FromStripeAmount(paymentIntent.AmountReceived, paymentIntent.Currency)
+                : null,
+            SettledCurrency: status == PaymentStatus.Succeeded && !string.IsNullOrWhiteSpace(paymentIntent.Currency)
+                ? paymentIntent.Currency : null);
     }
 
     private GatewayProviderMapping CreateProviderMapping(string paymentIntentId) =>

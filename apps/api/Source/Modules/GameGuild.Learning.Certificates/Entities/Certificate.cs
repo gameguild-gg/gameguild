@@ -124,6 +124,27 @@ public class Certificate : EntityBase
         RevocationReason = reason;
         UpdatedAt = SystemClock.UtcNow;
     }
+
+    /// <summary>
+    /// Extends the validity of an active or expired certificate (certificate lifecycle renewal,
+    /// issue #180). A revoked certificate can never be renewed: revocation is terminal.
+    /// </summary>
+    public void Renew(DateTime newExpiresAt)
+    {
+        if (Status == CertificateStatus.Revoked)
+        {
+            throw new InvalidOperationException("A revoked certificate cannot be renewed.");
+        }
+
+        if (newExpiresAt <= SystemClock.UtcNow)
+        {
+            throw new ArgumentOutOfRangeException(nameof(newExpiresAt), "The renewed expiry must be in the future.");
+        }
+
+        ExpiresAt = newExpiresAt;
+        Status = CertificateStatus.Active;
+        UpdatedAt = SystemClock.UtcNow;
+    }
 }
 
 public enum CertificateStatus

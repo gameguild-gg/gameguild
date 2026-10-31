@@ -83,7 +83,7 @@ public class ProcessPaymentCommandValidatorTests
         var cmd = new ProcessPaymentCommand(Guid.NewGuid(), Guid.NewGuid(), 99.99m, "4242 4242 4242 4242");
         var result = _validator.TestValidate(cmd);
         result.ShouldHaveValidationErrorFor(x => x.PaymentMethodId)
-            .WithErrorMessage(StripePaymentMethodIdentifier.ValidationMessage);
+            .WithErrorMessage(GatewayPaymentMethodTokens.ValidationMessage);
     }
 }
 

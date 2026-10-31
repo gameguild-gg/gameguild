@@ -171,9 +171,10 @@ public static class DataDependencyInjection
         services.AddScoped<IOidcFederationService, OidcFederationService>();
         // SAML 2.0 federation (enterprise IdPs, issue #268) — config-supplied IdP certificates,
         // SP metadata + Assertion Consumer Service validation with single-use InResponseTo
-        // correlation and assertion-ID replay protection in IDistributedCache; config-gated per
-        // Authentication:ExternalProviders:Saml:<slug> (fail closed).
-        services.AddScoped<ISamlProtocolStateStore, DistributedCacheSamlProtocolStateStore>();
+        // correlation (bound to the issued RelayState) and assertion-ID replay protection,
+        // persisted atomically in the shared PostgreSQL schema across instances; config-gated
+        // per Authentication:ExternalProviders:Saml:<slug> (fail closed).
+        services.AddScoped<ISamlProtocolStateStore, PostgreSqlSamlProtocolStateStore>();
         services.AddScoped<ISamlFederationService, SamlFederationService>();
         services.AddScoped<IWeb3Service, Web3Service>();
         services.AddScoped<IServiceAccountService, ServiceAccountService>();
@@ -222,6 +223,10 @@ public static class DataDependencyInjection
 
         // Session management
         services.AddScoped<ISessionManagementService, SessionManagementService>();
+        // Password change/reset revocation battery (issue #278): mirrors the
+        // terminate-everywhere command — refresh tokens revoked, sessions terminated with an
+        // audited PasswordChanged reason, and a versioned cutoff covering legacy access tokens.
+        services.AddScoped<IPasswordChangeRevocationService, PasswordChangeRevocationService>();
 
         // Guest access (issue #213): anonymous guest sessions in their own identity namespace —
         // short-lived tokens in a dedicated audience, an IDistributedCache-backed session

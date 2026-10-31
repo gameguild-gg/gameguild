@@ -123,7 +123,7 @@ jobs:
           node --test scripts/ci/tests/classify-release-changes.test.mjs scripts/ci/tests/select-affected-dotnet-tests.test.mjs scripts/ci/tests/postgres-images.test.mjs scripts/ci/tests/pull-ci-image.test.mjs scripts/ci/tests/emception-web-artifacts.test.mjs apps/web/scripts/coding-cycle-editor-support.test.mjs apps/web/scripts/coding-cycle-toolchain-support.test.mjs
           node --test scripts/ci/tests/dotnet-cache-policy.test.mjs
           node --test scripts/ci/tests/api-integration-filter.test.mjs
-          node --test scripts/ci/tests/pr-required-gate.test.mjs
+          node --max-old-space-size=128 --test scripts/ci/tests/required-artifact-upload.test.mjs
           python3 -m unittest discover -s scripts/ci/tests -p 'acquire_emception_release_test.py'
       - name: Test docker build-context invariants
         run: node --test scripts/ci/tests/dockerignore-pnpm-patches.test.mjs scripts/ci/tests/dockerignore-api-analyzer-config.test.mjs
@@ -276,7 +276,7 @@ jobs:
         run: >-
           dotnet test apps/api/tests/GameGuild.API.IntegrationTests/GameGuild.API.IntegrationTests.csproj
           -c Release --nologo -p:TreatWarningsAsErrors=true
-          --filter "FullyQualifiedName~AuditSnapshotMigrationPostgreSqlTests|FullyQualifiedName~MfaSignInPolicyPostgreSqlTests|FullyQualifiedName~AuditExportPostgreSqlHttpTests.Concurrent_alias_and_versioned_exports_share_the_user_rate_limit"
+          --filter "FullyQualifiedName~AuditSnapshotMigrationPostgreSqlTests|FullyQualifiedName~MfaSignInPolicyPostgreSqlTests|FullyQualifiedName~AuditExportPostgreSqlHttpTests.Concurrent_alias_and_versioned_exports_share_the_user_rate_limit|FullyQualifiedName~PermissionExpirationAdministrationPostgreSqlHttpTests"
           --logger "trx;LogFileName=audit-schema.trx"
           --results-directory artifacts/test-results/affected-api/audit-schema
       - name: Run affected API tests
@@ -287,11 +287,10 @@ jobs:
           --head "${{ needs.classify.outputs.headSha }}"
       - name: Upload affected API test evidence
         if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        uses: ./.github/actions/upload-required-artifact
         with:
           name: affected-api-${{ github.event.pull_request.head.sha }}
           path: artifacts/test-results/affected-api
-          if-no-files-found: warn
       - name: Build full-application OpenAPI HTTP tests
         run: >-
           dotnet build apps/api/tests/GameGuild.API.IntegrationTests/GameGuild.API.IntegrationTests.csproj
@@ -311,11 +310,10 @@ jobs:
           --results-directory artifacts/test-results/full-application-openapi
       - name: Upload full-application OpenAPI HTTP evidence
         if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        uses: ./.github/actions/upload-required-artifact
         with:
           name: full-application-openapi-${{ github.event.pull_request.head.sha }}
           path: artifacts/test-results/full-application-openapi
-          if-no-files-found: warn
 
   testing-lab:
     name: Testing Lab critical flow
@@ -412,6 +410,34 @@ jobs:
       - uses: ./.github/actions/setup-dotnet
       - run: dotnet tool restore
       - run: dotnet restore apps/api/Source/GameGuild.API/GameGuild.API.csproj
+      - name: Verify the committed EF model snapshot
+        shell: bash
+        run: |
+          mkdir -p artifacts/model-drift
+          git -c core.commitGraph=false show -s --format='%H%n%T' HEAD > artifacts/model-drift/checkout.txt
+          git -c core.commitGraph=false cat-file -p HEAD | sed -n 's/^parent //p' | paste -sd ' ' >> artifacts/model-drift/checkout.txt
+          if dotnet ef migrations has-pending-model-changes \
+            --project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
+            --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj; then
+            exit 0
+          fi
+          # Scaffold diagnostic source on the hosted runner for review. This does not
+          # accept or apply the generated migration; a changed snapshot fails this gate.
+          dotnet ef migrations add ReconcileBranchSyncModel \
+            --project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
+            --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
+            --output-dir Database/Migrations
+          cp apps/api/Source/GameGuild.API/Database/Migrations/*ReconcileBranchSyncModel*.cs artifacts/model-drift/
+          cp apps/api/Source/GameGuild.API/Database/Migrations/ApplicationDbContextModelSnapshot.cs artifacts/model-drift/
+          echo '::error::The committed snapshot does not match the application model. Review and commit a complete migration.'
+          exit 1
+      - name: Preserve EF model diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: migration-model-diagnostics
+          path: artifacts/model-drift
+          if-no-files-found: error
       - name: Apply migrations to a clean database
         run: >-
           dotnet ef database update
@@ -419,6 +445,21 @@ jobs:
           --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj
       - name: Verify model and migrated schema agree
         run: pnpm db:dbml:verify
+      - name: Verify generated schema documentation
+        shell: bash
+        run: |
+          mkdir -p artifacts/schema-model
+          cp artifacts/model-drift/checkout.txt artifacts/schema-model/checkout.txt
+          pnpm db:dbml
+          cp docs/schema.dbml artifacts/schema-model/schema.dbml
+          git -c core.commitGraph=false diff --exit-code -- docs/schema.dbml
+      - name: Preserve generated schema documentation
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: schema-model-diagnostics
+          path: artifacts/schema-model
+          if-no-files-found: warn
 
   economy:
     name: Economy Release Gate
@@ -619,33 +660,38 @@ jobs:
           ECONOMY_REGRESSION: ${{ needs.economy-regression.result }}
           ECONOMY_SELECTED: ${{ needs.classify.outputs.economyCritical }}
         run: |
-          fail=0; missing=""
-          check() { case "$2" in success) ;; *) missing="$missing $1=$2"; fail=1 ;; esac; }
-          check classify "$CLASSIFY"
-          check secret-scan "$SECRET_SCAN"
-          check repository-policy "$REPOSITORY_POLICY"
-          case "$WEB_SELECTED:$WEB" in
-            false:skipped) ;;
-            *) check web "$WEB" ;;
-          esac
-          case "$API_SELECTED:$API" in
-            false:skipped) ;;
-            *) check api "$API" ;;
-          esac
-          if [ "$ECONOMY_SELECTED" = "true" ]; then
-            for g in economy economy-api economy-client economy-coverage economy-regression; do
-              case "$g" in
-                economy) r="$ECONOMY" ;;
-                economy-api) r="$ECONOMY_API" ;;
-                economy-client) r="$ECONOMY_CLIENT" ;;
-                economy-coverage) r="$ECONOMY_COVERAGE" ;;
-                economy-regression) r="$ECONOMY_REGRESSION" ;;
-              esac
-              case "$r" in success) ;; *) missing="$missing $g=$r"; fail=1 ;; esac
-            done
-          fi
-          if [ "$fail" -ne 0 ]; then
-            echo "Required PR gates failed:$missing" >&2
-            exit 1
-          fi
-          echo 'Every selected PR gate passed or was intentionally skipped.'
+          node - <<'NODE'
+          const gates = {
+            classify: process.env.CLASSIFY,
+            'secret-scan': process.env.SECRET_SCAN,
+            'repository-policy': process.env.REPOSITORY_POLICY,
+            web: process.env.WEB,
+            api: process.env.API,
+            'testing-lab': process.env.TESTING_LAB,
+            openapi: process.env.OPENAPI,
+            migration: process.env.MIGRATION,
+            economy: process.env.ECONOMY,
+            'economy-api': process.env.ECONOMY_API,
+            'economy-client': process.env.ECONOMY_CLIENT,
+            'economy-coverage': process.env.ECONOMY_COVERAGE,
+            'economy-regression': process.env.ECONOMY_REGRESSION,
+          };
+          const failed = Object.entries(gates)
+            .filter(([, result]) => result === 'failure' || result === 'cancelled')
+            .map(([name, result]) => `${name}=${result}`);
+          if (gates['secret-scan'] !== 'success' && !failed.some(item => item.startsWith('secret-scan='))) {
+            failed.push(`secret-scan=${gates['secret-scan']}`);
+          }
+          if (process.env.ECONOMY_SELECTED === 'true') {
+            for (const name of ['economy', 'economy-api', 'economy-client', 'economy-coverage', 'economy-regression']) {
+              if (gates[name] !== 'success' && !failed.some(item => item.startsWith(`${name}=`))) {
+                failed.push(`${name}=${gates[name]}`);
+              }
+            }
+          }
+          if (failed.length) {
+            console.error(`Required PR gates failed: ${failed.join(', ')}`);
+            process.exit(1);
+          }
+          console.log('Every selected PR gate passed or was intentionally skipped.');
+          NODE

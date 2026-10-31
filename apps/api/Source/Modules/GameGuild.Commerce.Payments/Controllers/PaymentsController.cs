@@ -148,15 +148,52 @@ public sealed class PaymentsController(
             return BadRequest(new { error = "PaymentMethodId is required" });
         }
 
-        if (!StripePaymentMethodIdentifier.IsValid(body.PaymentMethodId))
+        if (!GatewayPaymentMethodTokens.IsKnownGatewayToken(body.PaymentMethodId, body.GatewayProvider))
         {
-            return BadRequest(new { error = StripePaymentMethodIdentifier.ValidationMessage });
+            return BadRequest(new { error = GatewayPaymentMethodTokens.ValidationMessage });
         }
 
-        var result = await sender.Send(new ProcessPaymentCommand(body.TenantId, body.SubscriptionId, body.Amount, body.PaymentMethodId), ct).ConfigureAwait(false);
+        // Fraud-signal delivery metadata (issue #409): the client IP of the attempt and the
+        // optional device fingerprint header feed the IP/device blacklist signals; the payer
+        // email (optional, from the body) feeds the disposable-email and email blacklist
+        // signals. The card BIN (optional, from the body — the PCI-permitted non-sensitive
+        // prefix) feeds the high-risk BIN range signal, and the claimed client timezone
+        // header feeds the GeoIP timezone-mismatch signal. AVS/CVV outcomes are NOT accepted
+        // here: they are server-known gateway facts threaded by server-side callers only.
+        var sourceIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var deviceFingerprint = Request.Headers["X-Device-Fingerprint"].ToString();
+        var clientTimezone = Request.Headers["X-Client-Timezone"].ToString();
+        var payerEmail = string.IsNullOrWhiteSpace(body.PayerEmail) ? null : body.PayerEmail.Trim();
+        var cardBin = NormalizeCardBin(body.CardBin);
+
+        var result = await sender.Send(
+            new ProcessPaymentCommand(
+                body.TenantId,
+                body.SubscriptionId,
+                body.Amount,
+                body.PaymentMethodId,
+                body.Country,
+                body.GatewayProvider,
+                string.IsNullOrWhiteSpace(sourceIpAddress) ? null : sourceIpAddress,
+                string.IsNullOrWhiteSpace(deviceFingerprint) ? null : deviceFingerprint.Trim(),
+                payerEmail,
+                cardBin,
+                ClientTimezone: string.IsNullOrWhiteSpace(clientTimezone) ? null : clientTimezone.Trim()), ct).ConfigureAwait(false);
 
         return CreatedAtRoute("GetPaymentById", new { paymentId = result.PaymentId }, result);
     }
+
+    /// <summary>
+    ///     Normalizes an optional card BIN to its 6-8 digit form. Anything malformed is
+    ///     dropped to null (the signal simply does not fire) rather than rejecting the
+    ///     payment request — the fraud gate treats absence as absence of evidence.
+    /// </summary>
+    private static string? NormalizeCardBin(string? cardBin) =>
+        string.IsNullOrWhiteSpace(cardBin)
+        || cardBin.Trim().Length is < 6 or > 8
+        || !cardBin.Trim().All(char.IsDigit)
+            ? null
+            : cardBin.Trim();
 
     /// <summary>
     ///     Creates a Stripe SetupIntent for a subscription checkout.
@@ -645,6 +682,148 @@ public sealed class PaymentsController(
     }
 
     /// <summary>
+    ///     Expanded per-gateway analytics (issue #413 analytics remainders): error rate by
+    ///     type (failed payments grouped by gateway error code), cost analysis (succeeded
+    ///     volume priced through the configured per-gateway fee schedule) and geographic
+    ///     performance (attempts and success rate per billing country), each over the rolling
+    ///     24h/7d/30d windows. Requires the <c>payments:admin</c> permission; non-admin actors
+    ///     are scoped to their own tenant.
+    /// </summary>
+    [HttpGet("gateways/analytics")]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
+    [EndpointSummary("Get expanded per-gateway analytics")]
+    [EndpointDescription(
+        "Returns the expanded per-gateway analytics: the error-rate-by-type breakdown (failed payments grouped by gateway error code), the per-gateway cost analysis (succeeded volume priced through the configured fee schedule, 30d window) and the geographic performance breakdown (attempts and success rate per billing country), each over the rolling 24h/7d/30d windows. Requires the payments:admin permission; non-admin actors are scoped to their own tenant."
+    )]
+    [ProducesResponseType<GatewayAnalyticsReport>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetGatewayAnalytics(CancellationToken ct)
+    {
+        Guid? tenantId = null;
+        var actorContext = actorContextAccessor.ActorContext;
+        if (actorContext.IsAuthenticated && !actorContext.IsSystemAdmin)
+        {
+            if (actorContext.TenantId is null)
+            {
+                return new ObjectResult(new { error = "A tenant context is required to read gateway analytics." })
+                {
+                    StatusCode = StatusCodes.Status403Forbidden
+                };
+            }
+
+            tenantId = actorContext.TenantId;
+        }
+
+        var analytics = await sender.Send(new GetGatewayAnalyticsQuery(tenantId), ct).ConfigureAwait(false);
+
+        return Ok(analytics);
+    }
+
+    /// <summary>
+    ///     Validates one gateway's API credentials with a cheap provider round trip (issue
+    ///     #413): Stripe <c>GET /v1/balance</c>, the PayPal OAuth2 token request, or the
+    ///     respective probe of the other registered adapters. The effective credential is
+    ///     resolved from the encrypted credential store first and the configuration fallback
+    ///     second. Requires the <c>payments:admin</c> permission. Fail-closed semantics: an
+    ///     unknown provider is a 404, a disabled adapter or missing credentials is an explicit
+    ///     failed result — never a simulated pass outside simulation mode.
+    /// </summary>
+    /// <param name="providerId">Registered gateway provider identifier (stripe, paypal, authorizenet, braintree, adyen).</param>
+    /// <param name="ct">Cancellation token.</param>
+    [HttpPost("gateways/{providerId}/test-connection")]
+    [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
+    [EndpointSummary("Validate a payment gateway's API credentials")]
+    [EndpointDescription(
+        "Performs the cheapest authenticated call of the gateway (for example Stripe GET /v1/balance or the PayPal OAuth2 token request) to validate that the effective credentials — encrypted-store first, configuration fallback second — actually work. Requires the payments:admin permission. An unknown provider fails with 404; a disabled adapter or a missing credential returns an explicit failed result."
+    )]
+    [ProducesResponseType<GatewayConnectionTestResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> TestGatewayConnection([FromRoute] string providerId, CancellationToken ct)
+    {
+        try
+        {
+            var result = await sender.Send(new TestGatewayConnectionCommand(providerId), ct).ConfigureAwait(false);
+            return Ok(result);
+        }
+        catch (GatewaySelectionFailedException exception)
+        {
+            return NotFound(new { error = exception.Message });
+        }
+    }
+
+    /// <summary>
+    ///     Provisions one payment-gateway credential into the encrypted-at-rest store (issue
+    ///     #413): the plaintext value is encrypted with ASP.NET DataProtection (AES-256 under
+    ///     the application key ring) before it touches the database, and any previously active
+    ///     credential of the same slot is deactivated atomically. Requires the
+    ///     <c>payments:admin</c> permission. The response carries only a SHA-256 fingerprint —
+    ///     the plaintext is never persisted, returned or logged.
+    /// </summary>
+    /// <param name="providerId">Registered gateway provider identifier.</param>
+    /// <param name="secretName">Credential slot on that gateway (api_key, client_secret, transaction_key, ...).</param>
+    /// <param name="body">Provisioning request carrying the plaintext credential value.</param>
+    /// <param name="ct">Cancellation token.</param>
+    [HttpPut("gateways/{providerId}/credentials/{secretName}")]
+    [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
+    [EndpointSummary("Provision an encrypted gateway credential")]
+    [EndpointDescription(
+        "Stores a gateway API credential encrypted at rest (ASP.NET DataProtection, AES-256 under the application key ring) and deactivates the previously active credential of the same slot. The response contains identity metadata and a SHA-256 fingerprint of the plaintext for equality checks — the plaintext itself is never persisted, returned or logged. Requires the payments:admin permission."
+    )]
+    [ProducesResponseType<GatewayCredentialProvisionResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ProvisionGatewayCredential(
+        [FromRoute] string providerId,
+        [FromRoute] string secretName,
+        [FromBody] ProvisionGatewayCredentialRequest body,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(body?.Value))
+        {
+            return BadRequest(new { error = "A credential value is required." });
+        }
+
+        try
+        {
+            var result = await sender.Send(
+                new ProvisionGatewayCredentialCommand(providerId, secretName, body.Value), ct).ConfigureAwait(false);
+            return Ok(result);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+    }
+
+    /// <summary>
+    ///     Deactivates the active credential of one (provider, secret name) slot (issue #413).
+    ///     The encrypted row stays for audit; the slot resolves to "no credential" afterwards
+    ///     so the gateway falls back to its configuration credential or fails closed. Requires
+    ///     the <c>payments:admin</c> permission.
+    /// </summary>
+    /// <param name="providerId">Registered gateway provider identifier.</param>
+    /// <param name="secretName">Credential slot to deactivate.</param>
+    /// <param name="ct">Cancellation token.</param>
+    [HttpDelete("gateways/{providerId}/credentials/{secretName}")]
+    [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
+    [EndpointSummary("Deactivate an encrypted gateway credential")]
+    [EndpointDescription(
+        "Deactivates the active encrypted credential of the (provider, secret name) slot. The encrypted row is retained for audit; reads of the slot resolve to no credential, so the gateway falls back to its configuration credential or fails closed. Idempotent: deactivating a slot without an active credential reports Deactivated=false. Requires the payments:admin permission."
+    )]
+    [ProducesResponseType<GatewayCredentialDeactivationResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> DeactivateGatewayCredential(
+        [FromRoute] string providerId,
+        [FromRoute] string secretName,
+        CancellationToken ct)
+    {
+        var result = await sender.Send(
+            new DeactivateGatewayCredentialCommand(providerId, secretName), ct).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
     ///     Refund and dispute analytics for an inclusive window (issue #419 follow-up):
     ///     refund counts and amounts by status, currency and UTC day, dispute resolution
     ///     rates and the average time to resolution. Requires the
@@ -693,7 +872,15 @@ public sealed class PaymentsController(
         return Ok(metrics);
     }
 
-    public sealed record ProcessPaymentRequest(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId);
+    public sealed record ProcessPaymentRequest(
+        Guid TenantId,
+        Guid SubscriptionId,
+        decimal Amount,
+        string PaymentMethodId,
+        string? Country = null,
+        string? GatewayProvider = null,
+        string? PayerEmail = null,
+        string? CardBin = null);
 
     public sealed record CreateSetupIntentRequest(Guid TenantId, Guid SubscriptionId, string? CustomerEmail, string? CustomerName);
 
