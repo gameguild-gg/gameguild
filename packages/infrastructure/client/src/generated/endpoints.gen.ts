@@ -7827,6 +7827,80 @@ export const postAuthorizationTenantsGrantEndpoint = {
 } as const;
 
 /**
+ * Generates the combined expiration report for the request tenant (issue #331
+ * "expiration analytics and reporting"): dashboard, daily funnel trends, and
+ * operational attention flags across an inclusive period.
+ */
+export interface GetAuthorizationTenantsPermissionsExpirationReportInput {
+  query?: {
+    periodStart?: string;
+    periodEnd?: string;
+  };
+}
+export type GetAuthorizationTenantsPermissionsExpirationReportOutput = Types.IdentityAuthorizationPermissionExpirationReport;
+export const getAuthorizationTenantsPermissionsExpirationReportEndpoint = {
+  operationId: 'getAuthorizationTenantsPermissionsExpirationReport' as const,
+  method: 'GET' as const,
+  path: '/api/v1/authorization/tenants/permissions:expiration-report' as const,
+  tags: ['AccessControlTenantPermissions'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Describes the effective advanced expiration rule for a set of permissions
+ * (issue #331): the composed constraint (global baseline + every matching
+ * per-permission key, strictest wins) and the matched configuration keys.
+ */
+export interface GetAuthorizationTenantsPermissionsExpirationRulesInput {
+  query?: {
+    permissions?: string;
+  };
+}
+export type GetAuthorizationTenantsPermissionsExpirationRulesOutput = Types.IdentityAuthorizationGetEffectiveExpirationRuleOutput;
+export const getAuthorizationTenantsPermissionsExpirationRulesEndpoint = {
+  operationId: 'getAuthorizationTenantsPermissionsExpirationRules' as const,
+  method: 'GET' as const,
+  path: '/api/v1/authorization/tenants/permissions:expiration-rules' as const,
+  tags: ['AccessControlTenantPermissions'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets the expiration dashboard for the request tenant (issue #331 "expiration
+ * analytics and reporting"): the grant population bucketed by time-to-expiry plus
+ * the per-permission breakdown of grants expiring within the analytics window.
+ */
+export type GetAuthorizationTenantsPermissionsExpirationSummaryInput = void;
+export type GetAuthorizationTenantsPermissionsExpirationSummaryOutput = Types.IdentityAuthorizationPermissionExpirationSummary;
+export const getAuthorizationTenantsPermissionsExpirationSummaryEndpoint = {
+  operationId: 'getAuthorizationTenantsPermissionsExpirationSummary' as const,
+  method: 'GET' as const,
+  path: '/api/v1/authorization/tenants/permissions:expiration-summary' as const,
+  tags: ['AccessControlTenantPermissions'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets the daily expiration funnel for the request tenant across an inclusive period
+ * (issue #331): automatic expirations processed and manual expiration mutations
+ * applied per day, reconstructed from the permission audit log.
+ */
+export interface GetAuthorizationTenantsPermissionsExpirationTrendsInput {
+  query?: {
+    fromDate?: string;
+    toDate?: string;
+  };
+}
+export type GetAuthorizationTenantsPermissionsExpirationTrendsOutput = Types.IdentityAuthorizationPermissionExpirationTrendPoint[];
+export const getAuthorizationTenantsPermissionsExpirationTrendsEndpoint = {
+  operationId: 'getAuthorizationTenantsPermissionsExpirationTrends' as const,
+  method: 'GET' as const,
+  path: '/api/v1/authorization/tenants/permissions:expiration-trends' as const,
+  tags: ['AccessControlTenantPermissions'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Gets permission grants expiring within a window (administrative visibility
  * for upcoming expirations).
  */
@@ -33432,6 +33506,10 @@ export const endpoints = {
   postAuthorizationTenantsDenyRemove: postAuthorizationTenantsDenyRemoveEndpoint,
   postAuthorizationTenantsGlobalDefaults: postAuthorizationTenantsGlobalDefaultsEndpoint,
   postAuthorizationTenantsGrant: postAuthorizationTenantsGrantEndpoint,
+  getAuthorizationTenantsPermissionsExpirationReport: getAuthorizationTenantsPermissionsExpirationReportEndpoint,
+  getAuthorizationTenantsPermissionsExpirationRules: getAuthorizationTenantsPermissionsExpirationRulesEndpoint,
+  getAuthorizationTenantsPermissionsExpirationSummary: getAuthorizationTenantsPermissionsExpirationSummaryEndpoint,
+  getAuthorizationTenantsPermissionsExpirationTrends: getAuthorizationTenantsPermissionsExpirationTrendsEndpoint,
   getAuthorizationTenantsPermissionsExpiring: getAuthorizationTenantsPermissionsExpiringEndpoint,
   postAuthorizationTenantsPermissionsExtendExpiration: postAuthorizationTenantsPermissionsExtendExpirationEndpoint,
   postAuthorizationTenantsPermissionsProcessExpired: postAuthorizationTenantsPermissionsProcessExpiredEndpoint,
