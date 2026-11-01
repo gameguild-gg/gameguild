@@ -19,6 +19,10 @@ vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => '/content-creators/apply'),
 }));
 
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
+}));
+
 import ApplyPage from './page';
 
 describe('/content-creators/apply wizard (issue #105)', () => {
