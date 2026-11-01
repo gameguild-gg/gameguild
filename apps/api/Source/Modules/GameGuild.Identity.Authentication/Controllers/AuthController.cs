@@ -727,6 +727,52 @@ public sealed class AuthController(ISender sender) : BaseApiController
     }
 
     /// <summary>
+    ///     Sign out the authenticated caller (issue #1154): sends the LogoutCommand, which
+    ///     revokes the caller's current access token (JTI) and, with logoutEverywhere, revokes
+    ///     every refresh token and terminates every session for the account.
+    /// </summary>
+    /// <param name="body">Optional sign-out options; an empty body signs out only the current token</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Logout outcome with the number of invalidated sessions</returns>
+    [Authorize]
+    [HttpPost("v{version:apiVersion}/auth/sign-out")]
+    [EndpointSummary("Sign out")]
+    [EndpointDescription("Signs out the authenticated caller by revoking the current access token; with logoutEverywhere it revokes all refresh tokens and terminates every session for the account.")]
+    [ProducesResponseType<LogoutResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SignOut([FromBody] SignOutRequest? body, CancellationToken ct)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value
+            ?? User.FindFirst("user_id")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Unauthorized",
+                Detail = "Sign-out requires an authenticated caller."
+            });
+        }
+
+        var command = new LogoutCommand
+        {
+            UserId = userId,
+            CurrentTokenJti = User.FindFirst("jti")?.Value,
+            CurrentTokenExpiresAt = long.TryParse(User.FindFirst("exp")?.Value, out var expiresAtUnix)
+                ? DateTimeOffset.FromUnixTimeSeconds(expiresAtUnix).UtcDateTime
+                : null,
+            LogoutEverywhere = body?.LogoutEverywhere ?? false,
+            Reason = body?.LogoutEverywhere == true ? "User initiated sign-out everywhere" : "User initiated sign-out",
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+        };
+
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        return Ok(result);
+    }
+
+    /// <summary>
     ///     Read the caller's current authentication state (issue #221): session validity and
     ///     expiry, token version, active-session count and MFA enrollment state.
     /// </summary>
