@@ -201,10 +201,12 @@ export default async function Page({ params, searchParams }: PageProps<'/[locale
           {communityStats.map((stat) => (
             <div
               key={stat.label}
-              className="rounded-3xl border border-border bg-card p-6 text-card-foreground"
+              className="flex flex-col rounded-3xl border border-border bg-card p-6 text-card-foreground"
             >
-              <dd className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{stat.value}</dd>
-              <dt className="mt-2 text-sm text-muted-foreground">{stat.label}</dt>
+              <dt className="order-2 mt-2 text-sm text-muted-foreground">{stat.label}</dt>
+              <dd className="order-1 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                {stat.value}
+              </dd>
             </div>
           ))}
         </dl>
