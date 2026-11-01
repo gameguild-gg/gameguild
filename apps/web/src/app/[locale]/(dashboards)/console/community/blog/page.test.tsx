@@ -45,7 +45,7 @@ function post(overrides: Record<string, unknown> = {}) {
     status: 'Published' as const,
     publishedAt: '2026-01-15T10:00:00Z',
     updatedAt: '2026-02-01T10:00:00Z',
-    commentsCount: 2,
+    commentsCount: 3,
     viewsCount: 10,
     allowComments: true,
     tags: ['news'],
