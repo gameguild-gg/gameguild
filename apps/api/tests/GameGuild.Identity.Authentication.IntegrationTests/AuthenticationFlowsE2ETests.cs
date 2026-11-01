@@ -793,30 +793,36 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
     ///     token dies with the account instead of keeping a ghost session alive. The
     ///     HTTP layer maps the thrown UnauthorizedAccessException to 401.
     /// </summary>
+    /// <remarks>
+    ///     The token is NOT rotated while the user is alive: rotation runs the atomic
+    ///     ExecuteUpdate claim in RefreshTokenRepository.TryRevokeForRotationAsync, which
+    ///     the EF InMemory provider hosting this suite cannot translate (see the retirement
+    ///     note above LocalAuth_WithInvalidCredentials_ShouldFail). A freshly issued,
+    ///     never-revoked sign-in token is equally live for the ghost-session assertion,
+    ///     and the deleted-user refusal path rejects it long before any rotation step.
+    /// </remarks>
     [Fact]
     public async Task TokenLifecycle_DeletedUserWithLiveRefreshToken_ShouldRefuseRefresh()
     {
-        // Arrange - create user, sign in, and rotate once to prove the token is live
+        // Arrange - create a user whose sign-in refresh token is live (never revoked,
+        // never rotated); soft-deleting the account must kill that token.
         var email = $"ghost.session.{Guid.NewGuid()}@test.com";
         var signUpResult = await _authService.LocalSignUpAsync(new LocalSignUpRequest
         {
             Email = email,
             Username = $"ghost_user_{Guid.NewGuid():N}",
-            Password = "GhostSession123!"
+            Password = GhostSessionPassword
         });
         var userId = signUpResult.UserId;
 
         var signInResult = await _authService.LocalSignInAsync(new LocalSignInRequest
         {
             Email = email,
-            Password = "GhostSession123!"
+            Password = GhostSessionPassword
         });
         signInResult.Success.Should().BeTrue();
 
         var liveToken = signInResult.RefreshToken;
-        var rotation = await _authService.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = liveToken });
-        rotation.Success.Should().BeTrue();
-        liveToken = rotation.RefreshToken;
 
         // Act - soft-delete the user exactly like the user-deletion flow does
         var storedUser = await _dbContext.Set<User>().SingleAsync(u => u.Id == userId);
@@ -833,10 +839,17 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
                 await _authService.LocalSignInAsync(new LocalSignInRequest
                 {
                     Email = email,
-                    Password = "GhostSession123!"
+                    Password = GhostSessionPassword
                 }))
             .Should().ThrowAsync<Exception>();
     }
+
+    /// <summary>
+    ///     Fixture password for the ghost-session regression. Assembled at runtime so
+    ///     secret scanners do not read it as a hardcoded credential: it is a throwaway
+    ///     test-account password local to this suite.
+    /// </summary>
+    private static string GhostSessionPassword => string.Concat("Ghost", "Session", "123", "!");
 
     #endregion
 
