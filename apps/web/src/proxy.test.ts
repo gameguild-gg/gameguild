@@ -317,6 +317,19 @@ describe("GameGuild internationalization proxy", () => {
       expect(response.headers.get("location")).toBe("https://gameguild.gg/feed?tab=playtests");
       expect(response.headers.get("set-cookie")).toContain("NEXT_LOCALE=en-US");
     });
+
+    it("stays cookie-free on default-locale canonicalization without a detection conflict", () => {
+      const response = routeRequest(
+        new NextRequest("https://gameguild.gg/en-US/testing-lab/events/test?joinAs=developer", {
+          headers: { cookie: "gameguild.session-token=opaque-session" },
+        }),
+      );
+
+      expect(response.headers.get("location")).toBe(
+        "https://gameguild.gg/testing-lab/events/test?joinAs=developer",
+      );
+      expect(response.headers.get("set-cookie")).toBeNull();
+    });
   });
 
   describe("request origin preservation with URL normalization disabled", () => {

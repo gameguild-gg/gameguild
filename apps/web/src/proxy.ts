@@ -54,20 +54,30 @@ function redirectToPath(request: NextRequest, pathname: string): NextResponse {
 }
 
 /**
- * Canonicalizes an explicit default-locale URL and persists the choice: an
- * `/en-US/...` visit is a deliberate English request, so the preference
- * cookie must be written before the redirect is followed. Otherwise
- * automatic detection (issue #92) would bounce a pt-BR browser right back
- * to `/pt-BR` on the next request and the switch could never stick
- * (issue #99).
+ * Canonicalizes an explicit default-locale URL and persists the choice when
+ * it conflicts with what automatic detection would otherwise serve: an
+ * `/en-US/...` visit from a pt-BR browser (or with a pt-BR preference
+ * stored) is a deliberate English request, so the preference cookie must be
+ * written before the redirect is followed. Otherwise detection (issue #92)
+ * would bounce that visitor right back to `/pt-BR` on the next request and
+ * the switch could never stick (issue #99). Without a conflict the response
+ * stays cookie-free, preserving the session-cookie contract of plain
+ * canonicalization redirects.
  */
 function redirectToUnprefixedPath(request: NextRequest, unprefixedPath: string): NextResponse {
   const response = redirectToPath(request, unprefixedPath);
-  response.cookies.set(LOCALE_COOKIE_NAME, routing.defaultLocale, {
-    path: "/",
-    maxAge: LOCALE_COOKIE_MAX_AGE_SECONDS,
-    sameSite: "lax",
-  });
+  const wouldAutoDetectNonDefault =
+    resolveLocaleForRequest(
+      request.headers.get("cookie"),
+      request.headers.get("accept-language"),
+    ) !== routing.defaultLocale;
+  if (wouldAutoDetectNonDefault) {
+    response.cookies.set(LOCALE_COOKIE_NAME, routing.defaultLocale, {
+      path: "/",
+      maxAge: LOCALE_COOKIE_MAX_AGE_SECONDS,
+      sameSite: "lax",
+    });
+  }
   return response;
 }
 
