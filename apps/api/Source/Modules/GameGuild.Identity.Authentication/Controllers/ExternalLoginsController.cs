@@ -28,6 +28,10 @@ public sealed class ExternalLoginsController(ISender sender) : BaseApiController
     /// <param name="ct">Cancellation token</param>
     /// <returns>Metadata-only response: providers reported via the X-Linked-Providers header, no body</returns>
     [HttpHead("v{version:apiVersion}/auth/external-logins")]
+    // Issue #1035: fired on every account-settings server render (and again on every
+    // server-action re-render); keeping it on the Authentication policy let this read
+    // crowd out credential mutations' 10/min budget. Rides the general Api policy.
+    [EnableRateLimiting(RateLimitPolicies.Api)]
     [EndpointSummary("List linked external logins")]
     [EndpointDescription("HEAD request per Google REST guidance: safe, metadata-only response with no body. Linked providers and their linked-at timestamps are conveyed in the X-Linked-Providers response header as comma-separated 'provider=iso8601-timestamp' pairs, newest first. The header is omitted when no providers are linked. Granted OAuth scopes (issue #250) are conveyed in the X-Granted-Scopes header as comma-separated 'provider=iso8601-consent-timestamp|consent-version|url-encoded-space-separated-scopes' triples, one entry per link with a recorded consent (consent-version 0 marks a legacy row); the header is omitted when no consents are recorded.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
