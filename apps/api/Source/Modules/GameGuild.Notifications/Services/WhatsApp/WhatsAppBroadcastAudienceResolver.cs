@@ -37,7 +37,7 @@ public sealed class WhatsAppBroadcastAudienceResolver(IApplicationDbContext cont
         bool activeMembersOnly,
         CancellationToken cancellationToken = default)
     {
-        var memberships = context.Set<TenantMember>().IgnoreQueryFilters()
+        var memberships = context.Set<TenantMember>()
             .Where(m => m.TenantId == tenantId);
 
         if (activeMembersOnly)
@@ -50,7 +50,7 @@ public sealed class WhatsAppBroadcastAudienceResolver(IApplicationDbContext cont
             memberships = memberships.Where(m => m.Role == segmentRole);
         }
 
-        var users = context.Set<User>().IgnoreQueryFilters()
+        var users = context.Set<User>()
             .Where(u => u.IsActive && u.PhoneNumber != null && u.PhoneNumber != "");
 
         var candidates = await memberships

@@ -96,20 +96,23 @@ public sealed class WhatsAppBusinessApiProvider(
             .Select(pair => new { type = "text", text = pair.Value })
             .ToArray();
 
-        var payload = new
+        var template = new Dictionary<string, object?>
         {
-            messaging_product = "whatsapp",
-            recipient_type = "individual",
-            to,
-            type = "template",
-            template = new
-            {
-                name = message.TemplateName.Trim(),
-                language = new { code = string.IsNullOrWhiteSpace(message.LanguageCode) ? "en_US" : message.LanguageCode.Trim() },
-                components = parameters.Length == 0
-                    ? null
-                    : new[] { new { type = "body", parameters } }
-            }
+            ["name"] = message.TemplateName.Trim(),
+            ["language"] = new { code = string.IsNullOrWhiteSpace(message.LanguageCode) ? "en_US" : message.LanguageCode.Trim() }
+        };
+        if (parameters.Length > 0)
+        {
+            template["components"] = new[] { new { type = "body", parameters } };
+        }
+
+        var payload = new Dictionary<string, object?>
+        {
+            ["messaging_product"] = "whatsapp",
+            ["recipient_type"] = "individual",
+            ["to"] = to,
+            ["type"] = "template",
+            ["template"] = template
         };
 
         return await SendRequestAsync(to, payload, $"template '{message.TemplateName.Trim()}'", cancellationToken).ConfigureAwait(false);

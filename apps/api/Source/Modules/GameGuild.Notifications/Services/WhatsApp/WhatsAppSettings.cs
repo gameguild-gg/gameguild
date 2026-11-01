@@ -136,7 +136,9 @@ public sealed class WhatsAppSettingsValidator : IValidateOptions<WhatsAppSetting
         {
             failures.Add($"{nameof(WhatsAppSettings.ApiVersion)} is required.");
         }
-        else if (!options.ApiVersion.StartsWith('v') || !options.ApiVersion.Skip(1).All(char.IsDigit) || !options.ApiVersion.Contains('.'))
+        else if (!options.ApiVersion.StartsWith('v')
+            || !options.ApiVersion.Skip(1).All(static c => char.IsDigit(c) || c == '.')
+            || !options.ApiVersion.Contains('.'))
         {
             failures.Add($"{nameof(WhatsAppSettings.ApiVersion)} must look like 'v21.0'.");
         }

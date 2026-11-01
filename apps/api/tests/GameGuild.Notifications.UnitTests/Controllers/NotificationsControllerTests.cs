@@ -214,7 +214,7 @@ public class NotificationsControllerTests
         service.SetupSequence(x => x.GetPreferencesAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(preference))
             .ReturnsAsync(Result.Failure<NotificationPreference>(Error.Failure("Notifications.Failed", "failed")));
-        service.SetupSequence(x => x.UpdatePreferencesAsync(userId, false, true, false, true, false, true, false, true, It.IsAny<CancellationToken>()))
+        service.SetupSequence(x => x.UpdatePreferencesAsync(userId, false, true, false, true, false, true, false, true, It.IsAny<bool?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(preference))
             .ReturnsAsync(Result.Failure<NotificationPreference>(Error.Failure("Notifications.Failed", "failed")));
         service.SetupSequence(x => x.SetQuietHoursAsync(userId, new TimeOnly(22, 0), new TimeOnly(7, 0), "UTC", It.IsAny<CancellationToken>()))

@@ -86,7 +86,7 @@ public sealed class WhatsAppEndpointGuard(Func<string, IPAddress[]>? dnsResolver
     ///     private, reserved nor multicast. IPv4-mapped IPv6 addresses are unwrapped so
     ///     ::ffff:10.0.0.1 cannot sneak through.
     /// </summary>
-    internal static bool IsPublicUnicast(IPAddress address)
+    public static bool IsPublicUnicast(IPAddress address)
     {
         ArgumentNullException.ThrowIfNull(address);
 

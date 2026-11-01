@@ -7,10 +7,10 @@ namespace GameGuild.Notifications;
 /// <summary>
 ///     A WhatsApp broadcast campaign (issue #55): one admin-authored template message
 ///     delivered to a filtered segment of a tenant's members. Tenant-scoped by
-///     construction (the inherited <see cref="EntityBase.TenantId"/> is required),
-///     bounded by the configured maximum recipient count, and only sendable through
-///     templates on the configured allowlist (WhatsApp requires pre-approved templates
-///     for business-initiated conversations).
+///     construction (the inherited TenantId is required), bounded by the configured
+///     maximum recipient count, and only sendable through templates on the configured
+///     allowlist (WhatsApp requires pre-approved templates for business-initiated
+///     conversations).
 /// </summary>
 [Table("WhatsAppBroadcasts")]
 [Index(nameof(TenantId), nameof(Status))]

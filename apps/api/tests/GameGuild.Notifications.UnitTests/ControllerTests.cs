@@ -130,7 +130,7 @@ public class ControllerTests
         _svc.Setup(s => s.UpdatePreferencesAsync(uid,
             req.EmailEnabled, req.PushEnabled, req.InAppEnabled, req.SmsEnabled,
             req.MarketingEnabled, req.SocialEnabled, req.LearningEnabled, req.AchievementsEnabled,
-            It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(NotificationPreference.CreateDefault(uid)));
+            It.IsAny<bool?>(), It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(NotificationPreference.CreateDefault(uid)));
         var r = await CreateController(uid).UpdatePreferences(req, CancellationToken.None);
         r.Should().BeOfType<OkObjectResult>();
     }
