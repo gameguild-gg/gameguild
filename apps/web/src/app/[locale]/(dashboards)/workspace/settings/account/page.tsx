@@ -8,7 +8,7 @@ import { PasswordCard } from '@/components/password-card';
 import { SessionStateCard } from '@/components/auth/session-state-card';
 import { parseGrantedScopesHeader } from '@/lib/auth/external-login-consent';
 import { redirect } from '@/i18n/navigation';
-import { createServerClient } from '@game-guild/client';
+import { createServerClient, GeneratedApi } from '@game-guild/client';
 import { getTranslations } from 'next-intl/server';
 import React from 'react';
 
@@ -64,6 +64,13 @@ export default async function AccountSettingsPage({
     auth: { getAccessToken: () => getToken() },
   });
 
+  // Issue #106 phase 1: the session-state projection is fetched with the
+  // session's bearer on the server, so the card renders filled on first
+  // paint instead of fetching from a mount effect.
+  const authModule = new GeneratedApi.AuthModule(client);
+  const sessionStateResult = await authModule.getAuthSessionState();
+  const sessionState = sessionStateResult.ok ? sessionStateResult.data : null;
+
   let linkedAccounts: LinkedAccount[] = [];
   const result = await client.requestRaw<void>({
     method: 'HEAD',
@@ -107,7 +114,7 @@ export default async function AccountSettingsPage({
         <p className="text-muted-foreground">{t('accountDescription')}</p>
       </header>
       <ConnectedAccountsCard linkedAccounts={linkedAccounts} banner={banner} />
-      <SessionStateCard />
+      <SessionStateCard initialState={sessionState} />
       <PasswordCard />
     </div>
   );
