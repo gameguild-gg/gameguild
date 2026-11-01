@@ -1,5 +1,6 @@
 import { hasLocale } from 'next-intl';
 import { getRequestConfig } from 'next-intl/server';
+import { loadMessagesForLocale } from './load-messages';
 import { routing } from './routing';
 
 export default getRequestConfig(async ({ requestLocale }) => {
@@ -8,6 +9,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale: locale,
-    messages: (await import(`./messages/${locale}.json`)).default,
+    // Non-default locales are deep-merged over the default catalog so keys
+    // missing from a translation fall back to English gracefully (issue #92).
+    messages: await loadMessagesForLocale(locale),
   };
 });
