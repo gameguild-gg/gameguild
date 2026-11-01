@@ -8,11 +8,11 @@ import { Textarea } from '@game-guild/ui/components/textarea';
 import { cn } from '@game-guild/ui/lib/utils';
 import { usePathname } from 'next/navigation';
 import React, { type FormEvent, useState, useTransition } from 'react';
+import { submitContentCreatorApplicationAction } from '@/lib/content-creators/actions';
 import {
-    submitContentCreatorApplicationAction,
     validateContentCreatorApplicationStep,
     type ContentCreatorApplicationInput,
-} from '@/lib/content-creators/actions';
+} from '@/lib/content-creators/validation';
 
 const focusAreas = [
     'Game design',
