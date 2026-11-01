@@ -12868,6 +12868,8 @@ Ref "FK_refreshtoken_usersession_SessionId":"gameguild.authentication"."usersess
 
 Ref "FK_session_mfa_evidence_usersession_session_id":"gameguild.authentication"."usersession"."id" <? "gameguild.authentication"."session_mfa_evidence"."session_id" [delete: cascade]
 
+Ref "FK_WhatsAppBroadcastRecipients_WhatsAppBroadcasts_BroadcastId":"WhatsAppBroadcasts"."Id" <? "WhatsAppBroadcastRecipients"."BroadcastId" [delete: cascade]
+
 Ref "FK_AssessmentTestRunSubjects_AssessmentTestRuns_TestRunId":"AssessmentTestRuns"."Id" <? "AssessmentTestRunSubjects"."TestRunId" [delete: cascade]
 
 Ref "FK_InteractiveVideoAssessmentCues_Assessments_AssessmentId":"Assessments"."Id" <? "InteractiveVideoAssessmentCues"."AssessmentId" [delete: cascade]
