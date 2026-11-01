@@ -1,5 +1,6 @@
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Identity.Authentication;
+using Xunit;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Services;
 

@@ -55,7 +55,7 @@ public class TurnstileVerificationServiceTests
     [Fact]
     public async Task VerifyAsync_CloudflareAccepts_Succeeds()
     {
-        var handler = CapturingHandler(Responds("{\"success\":true}"));
+        var handler = CaptureWith(Responds("{\"success\":true}"));
         var sut = BuildSut(SecretConfigured(), handler);
 
         var result = await sut.VerifyAsync("token", "203.0.113.7");
@@ -80,8 +80,7 @@ public class TurnstileVerificationServiceTests
     [Fact]
     public async Task VerifyAsync_NetworkFailure_FailsOpen()
     {
-        var handler = CapturingHandler(_ => throw new HttpRequestException("siteverify unreachable"));
-        var sut = BuildSut(SecretConfigured(), handler);
+        var sut = BuildSut(SecretConfigured(), _ => throw new HttpRequestException("siteverify unreachable"));
 
         var result = await sut.VerifyAsync("token");
 
@@ -106,7 +105,10 @@ public class TurnstileVerificationServiceTests
         TurnstileSiteVerifyUrl = VerifyUrl
     };
 
-    private static TurnstileVerificationService BuildSut(AuthenticationSecurityOptions options, HttpMessageHandler handler)
+    private static TurnstileVerificationService BuildSut(AuthenticationSecurityOptions options, Func<HttpRequestMessage, HttpResponseMessage> respond)
+        => BuildSut(options, new CapturingHandler(respond));
+
+    private static TurnstileVerificationService BuildSut(AuthenticationSecurityOptions options, CapturingHandler handler)
     {
         var client = new HttpClient(handler);
         var factory = Mock.Of<IHttpClientFactory>(f => f.CreateClient(It.IsAny<string>()) == client);
@@ -116,7 +118,7 @@ public class TurnstileVerificationServiceTests
     private static Func<HttpRequestMessage, HttpResponseMessage> Responds(string body, HttpStatusCode status = HttpStatusCode.OK) =>
         _ => new HttpResponseMessage(status) { Content = new StringContent(body) };
 
-    private static CapturingHandler CapturingHandler(Func<HttpRequestMessage, HttpResponseMessage> respond) => new(respond);
+    private static CapturingHandler CaptureWith(Func<HttpRequestMessage, HttpResponseMessage> respond) => new(respond);
 
     private sealed class CapturingHandler(Func<HttpRequestMessage, HttpResponseMessage> respond) : HttpMessageHandler
     {
