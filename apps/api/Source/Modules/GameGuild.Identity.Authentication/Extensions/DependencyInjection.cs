@@ -55,6 +55,8 @@ public static class DependencyInjection
         services.AddScoped<IEmailRenderer, PasswordResetRenderer>();
         services.AddScoped<IEmailRenderer, MagicLinkRenderer>();
         services.AddScoped<IEmailRenderer, EmailCodeRenderer>();
+        services.AddScoped<IEmailRenderer, MfaRecoveryRenderer>();
+        services.AddScoped<IEmailRenderer, MfaRecoveryConfirmationRenderer>();
 
         // Each durable listener is invoked with its own transactional inbox receipt.
         services.AddScoped<SendWelcomeEmailHandler>();

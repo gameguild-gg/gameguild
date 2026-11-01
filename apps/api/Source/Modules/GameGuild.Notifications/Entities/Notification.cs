@@ -476,6 +476,12 @@ public enum NotificationType
     /// <summary>Legal hold requires a custodian's or stakeholder's attention (issue #177)</summary>
     LegalHoldNotice = 36,
 
+    /// <summary>Lost-MFA-device recovery was opened and waits out its cooling-off window (issue #1155)</summary>
+    MfaRecovery = 37,
+
+    /// <summary>MFA recovery confirmation link, actionable once, expires in one hour (issue #1155)</summary>
+    MfaRecoveryConfirmation = 38,
+
     /// <summary>Custom/other notification type</summary>
     Custom = 99
 }
