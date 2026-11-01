@@ -6,6 +6,7 @@ import { cn } from '@game-guild/ui/lib/utils';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useState, useTransition } from 'react';
+import { Link } from '@/i18n/navigation';
 import {
     cancelMentorshipSessionAction,
     completeMentorshipSessionAction,
@@ -76,16 +77,16 @@ export function MentorshipSessionsPanel({
             <CardHeader>
                 <CardTitle className="text-xl">My mentorship sessions</CardTitle>
                 <CardDescription>
-                    Sessions where you are the mentor or the advisee. Cancelled slots return to the mentor's calendar.
+                    Sessions where you are the mentor or the advisee. Cancelled slots return to the mentor calendar.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 {sorted.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
                         No sessions yet. Book an introductory call from the{' '}
-                        <a href="/mentorship" className="font-medium text-primary hover:underline">
+                        <Link href="/mentorship" className="font-medium text-primary hover:underline">
                             mentorship directory
-                        </a>
+                        </Link>
                         .
                     </p>
                 ) : (
