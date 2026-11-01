@@ -105,4 +105,14 @@ public interface IBillingWebhookRepository
     ///     Check if a webhook event with the given external ID already exists
     /// </summary>
     Task<bool> ExistsAsync(string externalEventId, string provider, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Purges retained raw deliveries whose retention window elapsed (issue #408:
+    ///     capture raw payload and all headers). Only runs against rows written by the
+    ///     opt-in retention policy; a no-op returning zero when retention is disabled.
+    /// </summary>
+    /// <param name="utcNow">Current UTC time (deadline comparison base).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Number of purged raw-delivery rows.</returns>
+    Task<int> PurgeExpiredRawDeliveriesAsync(DateTime utcNow, CancellationToken cancellationToken = default);
 }

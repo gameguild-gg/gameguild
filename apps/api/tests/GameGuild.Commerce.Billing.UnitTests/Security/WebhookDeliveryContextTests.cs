@@ -81,4 +81,45 @@ public class WebhookDeliveryContextTests
         webhookEvent.SourceIpAddress.Should().Be("203.0.113.9");
         webhookEvent.UserAgent.Should().Be("Stripe/1.0");
     }
+
+    [Fact]
+    public void CaptureRawDelivery_Should_Store_The_First_Capture()
+    {
+        var context = new WebhookDeliveryContext();
+
+        context.CaptureRawDelivery("{\"id\":\"evt_1\"}", new Dictionary<string, string> { ["User-Agent"] = "Stripe/1.0" });
+        context.CaptureRawDelivery("{\"id\":\"evt_2\"}", new Dictionary<string, string> { ["User-Agent"] = "Other" });
+
+        context.RawPayload.Should().Be("{\"id\":\"evt_1\"}");
+        context.RawHeaders!.Should().ContainSingle()
+            .Which.Should().Be(new KeyValuePair<string, string>("User-Agent", "Stripe/1.0"));
+    }
+
+    [Fact]
+    public void CaptureRawDelivery_Should_Bound_The_Payload_And_Headers()
+    {
+        var context = new WebhookDeliveryContext();
+
+        context.CaptureRawDelivery(
+            new string('p', WebhookDeliveryContext.MaxRawPayloadLength + 10),
+            new Dictionary<string, string>
+            {
+                ["X-Long"] = new string('h', WebhookDeliveryContext.MaxRawHeaderValueLength + 10)
+            });
+
+        context.RawPayload.Should().HaveLength(WebhookDeliveryContext.MaxRawPayloadLength);
+        context.RawHeaders!.Should().ContainSingle();
+        context.RawHeaders![0].Value.Should().HaveLength(WebhookDeliveryContext.MaxRawHeaderValueLength);
+    }
+
+    [Fact]
+    public void CaptureRawDelivery_Should_Ignore_Empty_Input()
+    {
+        var context = new WebhookDeliveryContext();
+
+        context.CaptureRawDelivery(null, null);
+
+        context.RawPayload.Should().BeNull();
+        context.RawHeaders.Should().BeNull();
+    }
 }
