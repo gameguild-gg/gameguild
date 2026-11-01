@@ -128,6 +128,29 @@ public class LockServiceAccountRequest
 }
 
 /// <summary>
+///     Request to bind (or clear) the X.509 client certificate used for mTLS authentication.
+/// </summary>
+public class BindServiceAccountCertificateRequest
+{
+    /// <summary>
+    ///     SHA-1 thumbprint (40 hexadecimal characters, no separators) of the X.509 client
+    ///     certificate. Null or empty clears the binding; the account then authenticates by
+    ///     client secret only.
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.RegularExpression("^[a-fA-F0-9]{40}$",
+        ErrorMessage = "Thumbprint must be exactly 40 hexadecimal characters.")]
+    public string? Thumbprint { get; set; }
+
+    /// <summary>
+    ///     SHA-256 hex hash (64 hexadecimal characters) of the certificate's Subject Public Key
+    ///     Info, bound as an additional key pin. Cleared together with the thumbprint.
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.RegularExpression("^[a-fA-F0-9]{64}$",
+        ErrorMessage = "SpkiSha256 must be exactly 64 hexadecimal characters.")]
+    public string? SpkiSha256 { get; set; }
+}
+
+/// <summary>
 ///     Response for service account audit log.
 /// </summary>
 public class ServiceAccountAuditLogResponse

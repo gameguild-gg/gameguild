@@ -311,6 +311,38 @@ public sealed class ServiceAccountService : IServiceAccountService
     }
 
     /// <inheritdoc />
+    public async Task BindCertificateAsync(
+        Guid serviceAccountId,
+        string? thumbprint,
+        string? spkiSha256,
+        CancellationToken cancellationToken = default)
+    {
+        var serviceAccount = await _repository.GetByIdAsync(serviceAccountId, cancellationToken)
+                             ?? throw new InvalidOperationException($"Service account {serviceAccountId} not found");
+
+        if (string.IsNullOrWhiteSpace(thumbprint))
+        {
+            serviceAccount.UnbindCertificate();
+            _logger.LogInformation(
+                "Unbound client certificate from service account {ServiceAccountId}",
+                LogRedaction.RedactId(serviceAccountId, "sac"));
+        }
+        else
+        {
+            // The thumbprint never authenticates by itself; certificate matching at sign-in is
+            // case-insensitive, so the binding stores the trimmed values as provided.
+            serviceAccount.BindCertificate(
+                thumbprint.Trim(),
+                string.IsNullOrWhiteSpace(spkiSha256) ? null : spkiSha256.Trim());
+            _logger.LogInformation(
+                "Bound client certificate to service account {ServiceAccountId}",
+                LogRedaction.RedactId(serviceAccountId, "sac"));
+        }
+
+        await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
     public Task<ServiceAccount?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => _repository.GetByIdAsync(id, cancellationToken);
 

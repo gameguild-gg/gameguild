@@ -266,6 +266,70 @@ public sealed class ServiceAccountOperationsControllerTests
         result.Should().BeOfType<NotFoundResult>();
     }
 
+    [Fact]
+    public async Task BindCertificate_ShouldReturnNoContent_AndForwardToService()
+    {
+        var service = new Mock<IServiceAccountService>();
+        var serviceAccountId = Guid.NewGuid();
+        var thumbprint = new string('A', 40);
+        var spkiSha256 = new string('b', 64);
+
+        service
+            .Setup(x => x.BindCertificateAsync(serviceAccountId, thumbprint, spkiSha256, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var controller = CreateController(service);
+
+        var result = await controller.BindCertificate(
+            serviceAccountId,
+            new BindServiceAccountCertificateRequest { Thumbprint = thumbprint, SpkiSha256 = spkiSha256 },
+            CancellationToken.None);
+
+        result.Should().BeOfType<NoContentResult>();
+        service.VerifyAll();
+    }
+
+    [Fact]
+    public async Task BindCertificate_WithEmptyThumbprint_ShouldClearTheBinding()
+    {
+        var service = new Mock<IServiceAccountService>();
+        var serviceAccountId = Guid.NewGuid();
+
+        service
+            .Setup(x => x.BindCertificateAsync(serviceAccountId, null, null, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var controller = CreateController(service);
+
+        var result = await controller.BindCertificate(
+            serviceAccountId,
+            new BindServiceAccountCertificateRequest(),
+            CancellationToken.None);
+
+        result.Should().BeOfType<NoContentResult>();
+        service.VerifyAll();
+    }
+
+    [Fact]
+    public async Task BindCertificate_ShouldReturnNotFound_WhenServiceThrowsInvalidOperation()
+    {
+        var service = new Mock<IServiceAccountService>();
+        var serviceAccountId = Guid.NewGuid();
+
+        service
+            .Setup(x => x.BindCertificateAsync(serviceAccountId, It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException());
+
+        var controller = CreateController(service);
+
+        var result = await controller.BindCertificate(
+            serviceAccountId,
+            new BindServiceAccountCertificateRequest { Thumbprint = new string('A', 40) },
+            CancellationToken.None);
+
+        result.Should().BeOfType<NotFoundResult>();
+    }
+
     private static ServiceAccountOperationsController CreateController(Mock<IServiceAccountService> service)
     {
         return new ServiceAccountOperationsController(service.Object, new CommandHandlerSender(service.Object, Mock.Of<IJwtTokenService>()));

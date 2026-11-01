@@ -106,6 +106,22 @@ public interface IServiceAccountService
     Task UpdateScopesAsync(Guid serviceAccountId, string scopes, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Binds an X.509 client certificate (thumbprint and optional SPKI key pin) to a service
+    ///     account for mTLS authentication, replacing any previous binding. A null or whitespace
+    ///     thumbprint clears the binding; the account then authenticates by client secret only.
+    /// </summary>
+    /// <param name="serviceAccountId">Service account ID</param>
+    /// <param name="thumbprint">SHA-1 thumbprint (40 hex characters) of the certificate; null clears the binding</param>
+    /// <param name="spkiSha256">Optional SHA-256 hex hash of the certificate's Subject Public Key Info</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <exception cref="InvalidOperationException">Thrown when the service account does not exist.</exception>
+    Task BindCertificateAsync(
+        Guid serviceAccountId,
+        string? thumbprint,
+        string? spkiSha256,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Gets a service account by ID.
     /// </summary>
     Task<ServiceAccount?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);

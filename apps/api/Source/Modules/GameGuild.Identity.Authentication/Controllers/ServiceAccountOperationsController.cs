@@ -211,4 +211,35 @@ public class ServiceAccountOperationsController(
             return NotFound();
         }
     }
+
+    /// <summary>
+    ///     Binds or clears the X.509 client certificate (mTLS) for a service account (issue #1146).
+    /// </summary>
+    /// <remarks>
+    ///     The token endpoint already enforces certificate binding, but no API surface could set
+    ///     it; this is that surface. Binding replaces any previous binding. An empty thumbprint
+    ///     clears the binding, after which the account authenticates by client secret only.
+    /// </remarks>
+    [HttpPatch("{serviceAccountId:guid}/certificate")]
+    [Authorize(Policy = "RequireAdminRole")]
+    [EndpointSummary("Bind or clear service account client certificate")]
+    [EndpointDescription("Binds an X.509 client certificate (SHA-1 thumbprint and optional SPKI SHA-256 key pin) to a service account for mTLS client-certificate authentication, replacing any previous binding. An empty thumbprint clears the binding; the account then authenticates by client secret only.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> BindCertificate(Guid serviceAccountId, [FromBody] BindServiceAccountCertificateRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        try
+        {
+            await sender.Send(
+                new BindServiceAccountCertificateCommand(serviceAccountId, request.Thumbprint, request.SpkiSha256),
+                cancellationToken).ConfigureAwait(false);
+            return NoContent();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+    }
 }
