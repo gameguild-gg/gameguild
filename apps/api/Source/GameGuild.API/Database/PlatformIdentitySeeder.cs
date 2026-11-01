@@ -152,8 +152,8 @@ internal static class PlatformIdentitySeeder
         if (changed)
         {
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
-                logger?.LogInformation("Repaired application administrator: {Email}", LogRedaction.MaskEmail(normalizedEmail));
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
+            logger?.LogInformation("Repaired application administrator: {Email}", LogRedaction.MaskEmail(normalizedEmail));
         }
 
         return adminUser;

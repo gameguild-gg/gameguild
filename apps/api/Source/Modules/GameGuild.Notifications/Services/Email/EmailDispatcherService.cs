@@ -165,7 +165,9 @@ public sealed class EmailDispatcherService(
             notification.MarkDeadLettered($"suppressed: {activeSuppression.Reason}");
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             logger.LogWarning("Deadlettered notification to suppressed address. NotificationId: {NotificationId}, Recipient: {RecipientEmail}, Reason: {Reason}",
-                notification.Id, LogRedaction.MaskEmail(toEmail), activeSuppression.Reason);
+                notification.Id,
+                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
+                LogRedaction.MaskEmail(toEmail), activeSuppression.Reason);
             return;
         }
 
@@ -206,7 +208,9 @@ public sealed class EmailDispatcherService(
         notification.MarkDeliverySent(providerMessageId);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Email delivered. NotificationId: {NotificationId}, Type: {Type}, Recipient: {RecipientEmail}",
-            notification.Id, notification.Type, LogRedaction.MaskEmail(toEmail));
+            notification.Id, notification.Type,
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
+            LogRedaction.MaskEmail(toEmail));
     }
 
     private async Task ProtectLegacyMetadataAsync(int batchSize, CancellationToken cancellationToken)
