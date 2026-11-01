@@ -311,6 +311,20 @@ public sealed class ServiceAccountService : IServiceAccountService
     }
 
     /// <inheritdoc />
+    public async Task<ServiceAccount> UpdateAsync(ServiceAccount account, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(account);
+
+        account.UpdatedAt = SystemClock.UtcNow;
+        await _repository.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
+
+        _logger.LogInformation("Updated service account {ServiceAccountId}",
+            LogRedaction.RedactId(account.Id, "sac"));
+
+        return account;
+    }
+
+    /// <inheritdoc />
     public Task<ServiceAccount?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => _repository.GetByIdAsync(id, cancellationToken);
 

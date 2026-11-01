@@ -106,6 +106,13 @@ public interface IServiceAccountService
     Task UpdateScopesAsync(Guid serviceAccountId, string scopes, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Persists changes made to a service account entity (name, description, scopes,
+    ///     expiry — issue #1142). Without this, PATCH mutated a tracked entity that
+    ///     nothing ever saved.
+    /// </summary>
+    Task<ServiceAccount> UpdateAsync(ServiceAccount account, CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Gets a service account by ID.
     /// </summary>
     Task<ServiceAccount?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
