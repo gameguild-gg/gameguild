@@ -64,6 +64,38 @@ async function assertRouteRenders(page, label, route) {
   await assertNoErrorOverlay(page, label);
 }
 
+// Issue #97 regression check: the document must be the only vertical
+// scrolling surface. A nested element that can scroll on its own (computed
+// overflow-y auto/scroll with actual overflow) renders a second scrollbar
+// next to the page scrollbar. Viewport-height fixed panes are exempt: they
+// never add document overflow.
+async function assertSingleVerticalScrollbar(page, label) {
+  const audit = await page.evaluate(() => {
+    const doc = document.documentElement;
+    const nestedScrollers = [];
+    for (const el of Array.from(document.body.querySelectorAll('*'))) {
+      const style = window.getComputedStyle(el);
+      if (style.overflowY !== 'auto' && style.overflowY !== 'scroll') continue;
+      if (style.position === 'fixed' && el.clientHeight >= window.innerHeight) continue;
+      if (el.clientHeight <= 0) continue;
+      if (el.scrollHeight <= el.clientHeight + 1) continue;
+      nestedScrollers.push(`${el.tagName}.${String(el.className).slice(0, 120)}`);
+    }
+    return {
+      nestedScrollers,
+      horizontalOverflow: doc.scrollWidth > doc.clientWidth + 1,
+    };
+  });
+
+  if (audit.nestedScrollers.length > 0) {
+    throw new Error(`${label}: nested vertical scroll containers detected (issue #97): ${audit.nestedScrollers.join(' | ')}`);
+  }
+
+  if (audit.horizontalOverflow) {
+    throw new Error(`${label}: document-level horizontal overflow detected`);
+  }
+}
+
 async function waitForClientHydration(page) {
   await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => undefined);
   await page.locator('script[src*="/_next/static"]').first().waitFor({ timeout: 20_000 }).catch(() => undefined);
@@ -166,6 +198,7 @@ async function main() {
     await page.getByRole('menu').getByRole('menuitem', { name: 'Courses', exact: true }).click();
     await page.waitForURL('**/courses');
     await page.getByRole('heading', { name: /Build the game development portfolio/i }).waitFor();
+    await assertSingleVerticalScrollbar(page, 'Courses (desktop 1440px)');
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(routeUrl('/'), { waitUntil: 'domcontentloaded' });
@@ -174,6 +207,12 @@ async function main() {
     await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Testing Lab' }).click();
     await page.waitForURL('**/testing-lab');
     await page.getByRole('heading', { name: 'Test. Play. Earn.', exact: true, level: 1 }).waitFor();
+
+    // Issue #97 was reported at a ~428px mobile width: keep the single-
+    // scrollbar guarantee on the courses catalog at mobile size too.
+    await page.goto(routeUrl('/courses'), { waitUntil: 'domcontentloaded' });
+    await assertNoErrorOverlay(page, 'Courses (mobile 390px)');
+    await assertSingleVerticalScrollbar(page, 'Courses (mobile 390px)');
 
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(routeUrl('/sign-in'), { waitUntil: 'domcontentloaded' });

@@ -4068,6 +4068,7 @@ Table "NotificationPreferences" {
   "PushEnabled" boolean [not null]
   "InAppEnabled" boolean [not null]
   "SmsEnabled" boolean [not null]
+  "WhatsAppEnabled" boolean [not null]
   "MarketingEnabled" boolean [not null]
   "SocialEnabled" boolean [not null]
   "LearningEnabled" boolean [not null]
@@ -4248,6 +4249,8 @@ Table "payments" {
   "FraudReviewedByUserId" uuid
   "FraudReviewedAt" timestamp
   "FraudReviewNotes" "character varying(500)"
+  "FraudSourceIpAddress" "character varying(45)"
+  "FraudDeviceFingerprint" "character varying(255)"
   "Version" integer [not null]
   "CreatedAt" timestamp [not null]
   "UpdatedAt" timestamp [not null]
@@ -4262,6 +4265,7 @@ Table "payments" {
   Indexes {
     Id [pk, name: "PK_payments"]
     ExternalPaymentId [unique, name: "IX_payments_ExternalPaymentId"]
+    (TenantId, FraudDeviceFingerprint, CreatedAt) [name: "ix_payments_fraud_device_lookup"]
     (TenantId, ExternalCustomerId, CreatedAt) [name: "ix_payments_fraud_velocity_lookup"]
     IdempotencyKey [unique, name: "IX_payments_IdempotencyKey"]
     (TenantId, CreatedAt) [name: "ix_payments_open_fraud_reviews"]
@@ -6727,6 +6731,34 @@ Table "WebhookSecretRotations" {
   }
 }
 
+Table "WhatsAppBroadcasts" {
+  "Id" uuid [not null]
+  "Title" "character varying(200)" [not null]
+  "TemplateName" "character varying(100)" [not null]
+  "LanguageCode" "character varying(10)" [not null]
+  "VariablesJson" "character varying(4000)"
+  "SegmentRole" "character varying(100)"
+  "SegmentActiveMembersOnly" boolean [not null]
+  "Status" "character varying(50)" [not null]
+  "ScheduledAtUtc" timestamp
+  "SentAtUtc" timestamp
+  "RecipientCount" integer [not null]
+  "CreatedBy" uuid [not null]
+  "Error" "character varying(1000)"
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_WhatsAppBroadcasts"]
+    ScheduledAtUtc [name: "IX_WhatsAppBroadcasts_ScheduledAtUtc"]
+    (TenantId, CreatedAt) [name: "IX_WhatsAppBroadcasts_TenantId_CreatedAt"]
+    (TenantId, Status) [name: "IX_WhatsAppBroadcasts_TenantId_Status"]
+  }
+}
+
 Table "AcademicOutboxDeliveries" {
   "Id" uuid [not null]
   "OutboxMessageId" uuid [not null]
@@ -6917,6 +6949,31 @@ Table "Assessments" {
     CourseId [name: "IX_Assessments_CourseId"]
     (PublishedDefinitionRevisionId, Id) [name: "IX_Assessments_PublishedDefinitionRevisionId_Id"]
     Slug [name: "IX_Assessments_Slug"]
+  }
+}
+
+Table "billing_webhook_raw_deliveries" {
+  "Id" uuid [not null]
+  "BillingWebhookEventId" uuid [not null]
+  "Provider" "character varying(50)" [not null]
+  "ExternalEventId" "character varying(255)" [not null]
+  "RawPayload" text [not null]
+  "RawHeaders" text [not null]
+  "PayloadSha256" "character varying(64)" [not null]
+  "PiiRedacted" boolean [not null]
+  "ReceivedAt" timestamp [not null]
+  "ExpiresAt" timestamp [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_billing_webhook_raw_deliveries"]
+    BillingWebhookEventId [unique, name: "ix_billing_webhook_raw_deliveries_event_id"]
+    ExpiresAt [name: "ix_billing_webhook_raw_deliveries_expires_at"]
+    ReceivedAt [name: "ix_billing_webhook_raw_deliveries_received_at"]
   }
 }
 
@@ -9651,6 +9708,31 @@ Table "UserProfiles" {
   Indexes {
     Id [pk, name: "PK_UserProfiles"]
     UserId [unique, name: "IX_UserProfiles_UserId"]
+  }
+}
+
+Table "WhatsAppBroadcastRecipients" {
+  "Id" uuid [not null]
+  "BroadcastId" uuid [not null]
+  "RecipientTenantId" uuid [not null]
+  "UserId" uuid [not null]
+  "PhoneNumber" "character varying(20)" [not null]
+  "Status" "character varying(50)" [not null]
+  "ProviderMessageId" "character varying(100)"
+  "Error" "character varying(1000)"
+  "AttemptCount" integer [not null]
+  "SentAtUtc" timestamp
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_WhatsAppBroadcastRecipients"]
+    BroadcastId [name: "IX_WhatsAppBroadcastRecipients_BroadcastId"]
+    (BroadcastId, Status) [name: "IX_WhatsAppBroadcastRecipients_BroadcastId_Status"]
+    UserId [name: "IX_WhatsAppBroadcastRecipients_UserId"]
   }
 }
 
@@ -12536,6 +12618,8 @@ Ref "FK_asset_references_asset_contents_AssetContentId":"assets"."asset_contents
 
 Ref "FK_asset_references_asset_folders_FolderId":"assets"."asset_folders"."Id" ?<? "assets"."asset_references"."FolderId" [delete: set null]
 
+Ref "FK_billing_webhook_raw_deliveries_event":"billing_webhook_events"."Id" <? "billing_webhook_raw_deliveries"."BillingWebhookEventId" [delete: cascade]
+
 Ref "FK_compliance_financial_crime_case_events_compliance_financial~":"compliance_financial_crime_cases"."Id" <? "compliance_financial_crime_case_events"."CaseId" [delete: restrict]
 
 Ref "FK_compliance_financial_crime_decisions_compliance_financial_c~":"compliance_financial_crime_cases"."Id" <? "compliance_financial_crime_decisions"."CaseId" [delete: restrict]
@@ -12813,6 +12897,8 @@ Ref "FK_refreshtoken_refreshtoken_ParentTokenId":"gameguild.authentication"."ref
 Ref "FK_refreshtoken_usersession_SessionId":"gameguild.authentication"."usersession"."id" ?<? "gameguild.authentication"."refreshtoken"."SessionId" [delete: restrict]
 
 Ref "FK_session_mfa_evidence_usersession_session_id":"gameguild.authentication"."usersession"."id" <? "gameguild.authentication"."session_mfa_evidence"."session_id" [delete: cascade]
+
+Ref "FK_WhatsAppBroadcastRecipients_WhatsAppBroadcasts_BroadcastId":"WhatsAppBroadcasts"."Id" <? "WhatsAppBroadcastRecipients"."BroadcastId" [delete: cascade]
 
 Ref "FK_AssessmentTestRunSubjects_AssessmentTestRuns_TestRunId":"AssessmentTestRuns"."Id" <? "AssessmentTestRunSubjects"."TestRunId" [delete: cascade]
 

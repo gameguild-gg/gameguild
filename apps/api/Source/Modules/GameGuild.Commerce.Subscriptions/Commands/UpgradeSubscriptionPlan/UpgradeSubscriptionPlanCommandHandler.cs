@@ -1,5 +1,6 @@
 using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace GameGuild.Commerce.Subscriptions;
 
@@ -13,16 +14,56 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     charge (capped at the charge), one usage row per applied code is recorded against the
 ///     subscription, and the discounted amount is returned.
 /// </summary>
+/// <remarks>
+///     Issue #409 remainder: the upgrade attempt runs the fraud signal evaluation through
+///     <see cref="SubscriptionChangeFraudGate"/> BEFORE anything is mutated — Block refuses
+///     the upgrade (422), Review persists the bounded evidence on the subscription so
+///     reviewers see it before the prorated charge clears the payment gate.
+/// </remarks>
 public sealed class UpgradeSubscriptionPlanCommandHandler(
     ISubscriptionLifecycleService lifecycleService,
     ISubscriptionPlanRepository planRepository,
     ISubscriptionRepository subscriptionRepository,
     ILogger<UpgradeSubscriptionPlanCommandHandler>? logger = null,
-    GameGuild.Commerce.ISubscriptionPromoCoordinator? promoCoordinator = null)
+    GameGuild.Commerce.ISubscriptionPromoCoordinator? promoCoordinator = null,
+    GameGuild.Commerce.Payments.IFraudDetectionService? fraudDetectionService = null,
+    GameGuild.Commerce.IFraudReviewTicketCoordinator? reviewTicketCoordinator = null)
     : ICommandHandler<UpgradeSubscriptionPlanCommand, SubscriptionUpgradeResult>
 {
     public async Task<SubscriptionUpgradeResult> Handle(UpgradeSubscriptionPlanCommand request, CancellationToken cancellationToken)
     {
+        // Both the fraud gate (issue #409) and the promo path (issue #418) need the
+        // subscription and target plan; load them once, lazily, so hosts without a fraud
+        // service keep the exact legacy load semantics.
+        Subscription? subscription = null;
+        SubscriptionPlan? newPlan = null;
+
+        if (fraudDetectionService is not null)
+        {
+            subscription = await subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken).ConfigureAwait(false)
+                ?? throw new GameGuild.EntityNotFoundException("Subscription", request.SubscriptionId);
+            newPlan = await planRepository.GetByIdAsync(request.NewPlanId, cancellationToken).ConfigureAwait(false)
+                ?? throw new GameGuild.EntityNotFoundException("SubscriptionPlan", request.NewPlanId);
+
+            // Issue #409: subscription-change-time risk scoring, before any mutation.
+            await SubscriptionChangeFraudGate.AssessAsync(
+                fraudDetectionService,
+                logger ?? NullLogger<UpgradeSubscriptionPlanCommandHandler>.Instance,
+                subscriptionRepository,
+                subscription,
+                GameGuild.Commerce.Payments.SubscriptionFraudChangeKind.Upgrade,
+                SubscriptionChangeFraudGate.CycleAmountFor(subscription, newPlan).Amount,
+                newPlan.Currency,
+                request.FraudCountry,
+                request.FraudSourceIpAddress,
+                request.FraudDeviceFingerprint,
+                request.FraudPayerEmail,
+                request.FraudCardBin,
+                request.FraudClientTimezone,
+                reviewTicketCoordinator,
+                cancellationToken).ConfigureAwait(false);
+        }
+
         // Issue #418: quote promo codes against the new plan's cycle price before mutating
         // anything, so an unusable code fails the command with no partial state.
         GameGuild.Commerce.SubscriptionPromoQuoteResult? promoQuote = null;
@@ -34,21 +75,14 @@ public sealed class UpgradeSubscriptionPlanCommandHandler(
                     "Promo codes were supplied but no promo coordinator is registered for plan upgrades.");
             }
 
-            var subscription = await subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken).ConfigureAwait(false)
+            subscription ??= await subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken).ConfigureAwait(false)
                 ?? throw new GameGuild.EntityNotFoundException("Subscription", request.SubscriptionId);
-            var newPlan = await planRepository.GetByIdAsync(request.NewPlanId, cancellationToken).ConfigureAwait(false)
+            newPlan ??= await planRepository.GetByIdAsync(request.NewPlanId, cancellationToken).ConfigureAwait(false)
                 ?? throw new GameGuild.EntityNotFoundException("SubscriptionPlan", request.NewPlanId);
+
             // Quote basis: the new plan's price for the subscription's billing cycle —
             // the same amount the lifecycle service charges on (mirrors its static mapping).
-            var monthly = newPlan.GetMonthlyPrice();
-            var cycleAmount = subscription.BillingCycle switch
-            {
-                BillingCycle.Annually => newPlan.GetAnnualPrice() ?? monthly * 12,
-                BillingCycle.Quarterly => monthly * 3,
-                BillingCycle.SemiAnnually => monthly * 6,
-                BillingCycle.Biannually => monthly * 24,
-                _ => monthly
-            };
+            var cycleAmount = SubscriptionChangeFraudGate.CycleAmountFor(subscription, newPlan);
 
             promoQuote = await promoCoordinator.QuoteForPlanChangeAsync(
                 new GameGuild.Commerce.SubscriptionPlanChangePromoQuoteRequest(

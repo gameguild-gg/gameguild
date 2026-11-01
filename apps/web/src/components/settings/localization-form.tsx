@@ -1,5 +1,6 @@
 'use client';
 
+import { setPreferredLocaleCookie } from '@/i18n/locale-detection';
 import { updateLocalizationPreferenceAction } from '@/lib/user-settings/actions';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import type { LocalizationPreferenceData } from '@/lib/user-settings/preferences-mappers';
@@ -90,6 +91,12 @@ export function LocalizationForm({ defaultValues }: LocalizationFormProps) {
       if (result.success) {
         toast.success(t('saved'));
         if (values.language === 'en-US' || values.language === 'pt-BR') {
+          // Persist the explicit choice before navigating (issues #92/#99):
+          // the proxy's automatic locale detection reads this cookie and
+          // must not bounce the visitor back to their browser locale once
+          // they deliberately picked a language. Without it, switching to
+          // the unprefixed default locale loses the choice on reload.
+          setPreferredLocaleCookie(values.language);
           router.replace(pathname, { locale: values.language });
         }
       } else {

@@ -3244,6 +3244,67 @@ export interface CommercePaymentsFraudBlacklistPage {
 /** How a blacklist entry came to exist. */
 export type CommercePaymentsFraudBlacklistSource = 'Manual' | 'AutoFraudDecline';
 
+/** Usage of one shared device by one customer account (issue #409). */
+export interface CommercePaymentsFraudDeviceAccountUsage {
+  /** External customer id, or the subscription id for unbound attempts. */
+  accountKey?: string | null;
+  /** Payment attempts this account made with the device. */
+  attemptCount?: number;
+  /** Latest of those attempts. */
+  lastSeenAt?: string;
+}
+
+/** One device fingerprint seen across multiple customer accounts (issue #409). */
+export interface CommercePaymentsFraudDeviceInsight {
+  /** Distinct customer accounts that presented this device in the window. */
+  accountCount: number;
+  /** Per-account breakdown: account key, its attempts and latest activity. */
+  accounts: CommercePaymentsFraudDeviceAccountUsage[] | null;
+  /** Payment attempts that presented this device in the window. */
+  attemptCount: number;
+  /** The shared device fingerprint (opaque client identifier, not PII). */
+  deviceFingerprint: string | null;
+  /** Earliest attempt carrying this device in the window. */
+  firstSeenAt: string;
+  /** Latest attempt carrying this device in the window. */
+  lastSeenAt: string;
+}
+
+/** Customer history for a review case (issue #409: show user history — previous
+transactions, account age). Account age is proxied by the customer's earliest
+recorded payment in the tenant: the payments module has no identity-module access,
+and for fraud purposes the charging history IS the account's relevant tenure. */
+export interface CommercePaymentsFraudReviewCustomerHistory {
+  /** Days between the customer's earliest recorded payment and the held attempt; null when this is the first. */
+  accountAgeDays: number | null;
+  /** Prior payment attempts by this customer (excluding the held one). */
+  priorAttemptCount: number;
+  /** Count of the customer's prior attempts that succeeded. */
+  priorSucceededCount: number;
+  /** Cumulative volume of the customer's prior non-cancelled attempts. */
+  priorVolume: number;
+}
+
+/** Full manual-review read model for one held payment (issue #409). */
+export interface CommercePaymentsFraudReviewDetail {
+  case: CommercePaymentsFraudReviewListItem;
+  deviceContext: CommercePaymentsFraudReviewDeviceContext;
+  history: CommercePaymentsFraudReviewCustomerHistory;
+  paymentContext: CommercePaymentsFraudReviewPaymentContext;
+}
+
+/** Device fingerprint and session data of the held attempt (issue #409). */
+export interface CommercePaymentsFraudReviewDeviceContext {
+  /** Whether the source IP resolved to a known anonymizer (VPN/proxy/Tor/hosting). */
+  anonymizerDetected: boolean | null;
+  /** Client-claimed IANA timezone, recovered from the assessed signal evidence. */
+  clientTimezone: string | null;
+  /** Device fingerprint presented with the attempt, when captured. */
+  deviceFingerprint: string | null;
+  /** GeoIP-resolved timezone of the source IP, recovered from the assessed signal evidence. */
+  resolvedTimezone: string | null;
+}
+
 /** Read model for one pending fraud review. */
 export interface CommercePaymentsFraudReviewListItem {
   /** Charged amount. */
@@ -3267,6 +3328,20 @@ export interface CommercePaymentsFraudReviewListItem {
   subscriptionId?: string | null;
   /** Tenant that owns the payment. */
   tenantId: string;
+}
+
+/** Payment details of the held attempt (issue #409: amount, method, IP, location). */
+export interface CommercePaymentsFraudReviewPaymentContext {
+  /** ISO 3166-1 alpha-2 billing country of the attempt, when captured. */
+  billingCountry: string | null;
+  /** External (provider) customer reference, when bound. */
+  externalCustomerId: string | null;
+  /** Payment-method token presented for the attempt. */
+  paymentMethodId: string | null;
+  /** Gateway provider the attempt was routed to. */
+  provider: string | null;
+  /** Client IP the attempt originated from, when captured. */
+  sourceIpAddress: string | null;
 }
 
 /** Result of resolving a fraud review. */
@@ -7261,8 +7336,11 @@ export interface CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput
 
 /** Data model for Commerce Subscriptions Subscription Lifecycle Controller+Downgrade Request. */
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput {
+  cardBin?: string | null;
+  country?: string | null;
   effectiveDate?: string | null;
   newPlanId?: string;
+  payerEmail?: string | null;
   promoCodeIdempotencyKey?: string | null;
   promoCodes?: string[] | null;
 }
@@ -7296,8 +7374,11 @@ export interface CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInpu
 
 /** Data model for Commerce Subscriptions Subscription Lifecycle Controller+Upgrade Request. */
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput {
+  cardBin?: string | null;
+  country?: string | null;
   effectiveDate?: string | null;
   newPlanId?: string;
+  payerEmail?: string | null;
   promoCodeIdempotencyKey?: string | null;
   promoCodes?: string[] | null;
 }
@@ -21713,6 +21794,22 @@ export interface NodesJsonNodeOptions {
   propertyNameCaseInsensitive?: boolean;
 }
 
+/** Data model for Notifications Controllers Cancel Whats App Broadcast Request. */
+export interface NotificationsControllersCancelWhatsAppBroadcastInput {
+  tenantId?: string;
+}
+
+/** Data model for Notifications Controllers Create Whats App Broadcast Request. */
+export interface NotificationsControllersCreateWhatsAppBroadcastInput {
+  languageCode?: string | null;
+  segmentActiveMembersOnly?: boolean | null;
+  segmentRole?: string | null;
+  templateName?: string | null;
+  tenantId?: string;
+  title?: string | null;
+  variablesJson?: string | null;
+}
+
 /** Data model for Notifications Controllers Dead Letter Dto. */
 export interface NotificationsControllersDeadLetterDto {
   id?: string;
@@ -21822,6 +21919,17 @@ export interface NotificationsControllersRequeueOutput {
   requeueCount?: number;
 }
 
+/** Data model for Notifications Controllers Schedule Whats App Broadcast Request. */
+export interface NotificationsControllersScheduleWhatsAppBroadcastInput {
+  scheduledAtUtc?: string;
+  tenantId?: string;
+}
+
+/** Data model for Notifications Controllers Send Whats App Broadcast Request. */
+export interface NotificationsControllersSendWhatsAppBroadcastInput {
+  tenantId?: string;
+}
+
 /** Data model for Notifications Controllers Set Quiet Hours Request. */
 export interface NotificationsControllersSetQuietHoursInput {
   end?: string | null;
@@ -21870,8 +21978,55 @@ export interface NotificationsControllersUpdatePreferencesInput {
   socialEnabled?: boolean | null;
 }
 
+/** Data model for Notifications Controllers Whats App Broadcast Dto. */
+export interface NotificationsControllersWhatsAppBroadcastDto {
+  id?: string;
+  createdAt?: string;
+  createdBy?: string;
+  error?: string | null;
+  languageCode?: string | null;
+  recipientCount?: number;
+  scheduledAtUtc?: string | null;
+  segmentActiveMembersOnly?: boolean;
+  segmentRole?: string | null;
+  sentAtUtc?: string | null;
+  status?: string | null;
+  templateName?: string | null;
+  tenantId?: string;
+  title?: string | null;
+}
+
+/** Data model for Notifications Controllers Whats App Broadcast Recipient Dto. */
+export interface NotificationsControllersWhatsAppBroadcastRecipientDto {
+  id?: string;
+  attemptCount?: number;
+  broadcastId?: string;
+  error?: string | null;
+  phoneNumber?: string | null;
+  providerMessageId?: string | null;
+  sentAtUtc?: string | null;
+  status?: string | null;
+  userId?: string;
+}
+
+/** Data model for Notifications Controllers Whats App Broadcast Send Report Dto. */
+export interface NotificationsControllersWhatsAppBroadcastSendReportDto {
+  attempted?: number;
+  broadcastId?: string;
+  failed?: number;
+  sent?: number;
+  skipped?: number;
+}
+
+/** Data model for Notifications Controllers Whats App Channel Status Dto. */
+export interface NotificationsControllersWhatsAppChannelStatusDto {
+  allowlistedTemplates?: string[] | null;
+  enabled?: boolean;
+  isConfigured?: boolean;
+}
+
 /** Delivery channels for notifications */
-export type NotificationsNotificationChannel = 'InApp' | 'Email' | 'Push' | 'Sms' | 'Slack' | 'Discord' | 'Webhook';
+export type NotificationsNotificationChannel = 'InApp' | 'Email' | 'Push' | 'Sms' | 'Slack' | 'Discord' | 'Webhook' | 'WhatsApp';
 
 /** OpenAPI schema for Objects Attestation Conveyance Preference. */
 export type ObjectsAttestationConveyancePreference = 'None' | 'Indirect' | 'Direct' | 'Enterprise';
@@ -22505,6 +22660,52 @@ export interface PagedResultUserProfileDto {
   hasPreviousPage?: boolean;
   /** The items in the current page. */
   items?: IdentityUsersUserProfileDto[] | null;
+  /** Current page number (1-based). */
+  pageNumber?: number;
+  /** Number of items per page. */
+  pageSize?: number;
+  /** Number of items skipped (offset). */
+  skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
+  take?: number;
+  /** Total number of items across all pages. */
+  totalCount?: number;
+  /** Total number of pages. */
+  totalPages?: number;
+}
+
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+export interface PagedResultWhatsAppBroadcastDto {
+  /** Whether there are more items after this page. */
+  hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
+  hasPreviousPage?: boolean;
+  /** The items in the current page. */
+  items?: NotificationsControllersWhatsAppBroadcastDto[] | null;
+  /** Current page number (1-based). */
+  pageNumber?: number;
+  /** Number of items per page. */
+  pageSize?: number;
+  /** Number of items skipped (offset). */
+  skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
+  take?: number;
+  /** Total number of items across all pages. */
+  totalCount?: number;
+  /** Total number of pages. */
+  totalPages?: number;
+}
+
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+export interface PagedResultWhatsAppBroadcastRecipientDto {
+  /** Whether there are more items after this page. */
+  hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
+  hasPreviousPage?: boolean;
+  /** The items in the current page. */
+  items?: NotificationsControllersWhatsAppBroadcastRecipientDto[] | null;
   /** Current page number (1-based). */
   pageNumber?: number;
   /** Number of items per page. */
@@ -27289,7 +27490,13 @@ export let CommercePaymentsFraudBlacklistEntryTypeSchema: z.ZodType<CommercePaym
 export let CommercePaymentsFraudBlacklistEvaluationSchema: z.ZodType<CommercePaymentsFraudBlacklistEvaluation>;
 export let CommercePaymentsFraudBlacklistPageSchema: z.ZodType<CommercePaymentsFraudBlacklistPage>;
 export let CommercePaymentsFraudBlacklistSourceSchema: z.ZodType<CommercePaymentsFraudBlacklistSource>;
+export let CommercePaymentsFraudDeviceAccountUsageSchema: z.ZodType<CommercePaymentsFraudDeviceAccountUsage>;
+export let CommercePaymentsFraudDeviceInsightSchema: z.ZodType<CommercePaymentsFraudDeviceInsight>;
+export let CommercePaymentsFraudReviewCustomerHistorySchema: z.ZodType<CommercePaymentsFraudReviewCustomerHistory>;
+export let CommercePaymentsFraudReviewDetailSchema: z.ZodType<CommercePaymentsFraudReviewDetail>;
+export let CommercePaymentsFraudReviewDeviceContextSchema: z.ZodType<CommercePaymentsFraudReviewDeviceContext>;
 export let CommercePaymentsFraudReviewListItemSchema: z.ZodType<CommercePaymentsFraudReviewListItem>;
+export let CommercePaymentsFraudReviewPaymentContextSchema: z.ZodType<CommercePaymentsFraudReviewPaymentContext>;
 export let CommercePaymentsFraudReviewResolutionResultSchema: z.ZodType<CommercePaymentsFraudReviewResolutionResult>;
 export let CommercePaymentsFraudReviewsBulkItemResultSchema: z.ZodType<CommercePaymentsFraudReviewsBulkItemResult>;
 export let CommercePaymentsFraudReviewsBulkResolutionResultSchema: z.ZodType<CommercePaymentsFraudReviewsBulkResolutionResult>;
@@ -28865,6 +29072,8 @@ export let MvcProblemDetailsSchema: z.ZodType<MvcProblemDetails>;
 export let MvcValidationProblemDetailsSchema: z.ZodType<MvcValidationProblemDetails>;
 export let NodesJsonNodeSchema: z.ZodType<NodesJsonNode>;
 export let NodesJsonNodeOptionsSchema: z.ZodType<NodesJsonNodeOptions>;
+export let NotificationsControllersCancelWhatsAppBroadcastInputSchema: z.ZodType<NotificationsControllersCancelWhatsAppBroadcastInput>;
+export let NotificationsControllersCreateWhatsAppBroadcastInputSchema: z.ZodType<NotificationsControllersCreateWhatsAppBroadcastInput>;
 export let NotificationsControllersDeadLetterDtoSchema: z.ZodType<NotificationsControllersDeadLetterDto>;
 export let NotificationsControllersDeletedCountOutputSchema: z.ZodType<NotificationsControllersDeletedCountOutput>;
 export let NotificationsControllersDigestFrequencyOutputSchema: z.ZodType<NotificationsControllersDigestFrequencyOutput>;
@@ -28876,6 +29085,8 @@ export let NotificationsControllersNotificationPreferenceDtoSchema: z.ZodType<No
 export let NotificationsControllersNotificationTimelineDtoSchema: z.ZodType<NotificationsControllersNotificationTimelineDto>;
 export let NotificationsControllersNotificationTypeCatalogEntrySchema: z.ZodType<NotificationsControllersNotificationTypeCatalogEntry>;
 export let NotificationsControllersRequeueOutputSchema: z.ZodType<NotificationsControllersRequeueOutput>;
+export let NotificationsControllersScheduleWhatsAppBroadcastInputSchema: z.ZodType<NotificationsControllersScheduleWhatsAppBroadcastInput>;
+export let NotificationsControllersSendWhatsAppBroadcastInputSchema: z.ZodType<NotificationsControllersSendWhatsAppBroadcastInput>;
 export let NotificationsControllersSetQuietHoursInputSchema: z.ZodType<NotificationsControllersSetQuietHoursInput>;
 export let NotificationsControllersUnreadCountOutputSchema: z.ZodType<NotificationsControllersUnreadCountOutput>;
 export let NotificationsControllersUnsubscribeOutputSchema: z.ZodType<NotificationsControllersUnsubscribeOutput>;
@@ -28883,6 +29094,10 @@ export let NotificationsControllersUnsuppressOutputSchema: z.ZodType<Notificatio
 export let NotificationsControllersUpdateDigestFrequencyInputSchema: z.ZodType<NotificationsControllersUpdateDigestFrequencyInput>;
 export let NotificationsControllersUpdateMutedTypesInputSchema: z.ZodType<NotificationsControllersUpdateMutedTypesInput>;
 export let NotificationsControllersUpdatePreferencesInputSchema: z.ZodType<NotificationsControllersUpdatePreferencesInput>;
+export let NotificationsControllersWhatsAppBroadcastDtoSchema: z.ZodType<NotificationsControllersWhatsAppBroadcastDto>;
+export let NotificationsControllersWhatsAppBroadcastRecipientDtoSchema: z.ZodType<NotificationsControllersWhatsAppBroadcastRecipientDto>;
+export let NotificationsControllersWhatsAppBroadcastSendReportDtoSchema: z.ZodType<NotificationsControllersWhatsAppBroadcastSendReportDto>;
+export let NotificationsControllersWhatsAppChannelStatusDtoSchema: z.ZodType<NotificationsControllersWhatsAppChannelStatusDto>;
 export let NotificationsNotificationChannelSchema: z.ZodType<NotificationsNotificationChannel>;
 export let ObjectsAttestationConveyancePreferenceSchema: z.ZodType<ObjectsAttestationConveyancePreference>;
 export let ObjectsAttestationStatementFormatIdentifierSchema: z.ZodType<ObjectsAttestationStatementFormatIdentifier>;
@@ -28925,6 +29140,8 @@ export let PagedResultTenantAuditLogEntrySchema: z.ZodType<PagedResultTenantAudi
 export let PagedResultUserDtoSchema: z.ZodType<PagedResultUserDto>;
 export let PagedResultUserNotificationDtoSchema: z.ZodType<PagedResultUserNotificationDto>;
 export let PagedResultUserProfileDtoSchema: z.ZodType<PagedResultUserProfileDto>;
+export let PagedResultWhatsAppBroadcastDtoSchema: z.ZodType<PagedResultWhatsAppBroadcastDto>;
+export let PagedResultWhatsAppBroadcastRecipientDtoSchema: z.ZodType<PagedResultWhatsAppBroadcastRecipientDto>;
 export let ProgramCategorySchema: z.ZodType<ProgramCategory>;
 export let ProjectsAddCollaboratorInputSchema: z.ZodType<ProjectsAddCollaboratorInput>;
 export let ProjectsAddProjectCollaboratorInputSchema: z.ZodType<ProjectsAddProjectCollaboratorInput>;
@@ -32277,6 +32494,50 @@ CommercePaymentsFraudBlacklistPageSchema = z.object({
 /** Zod schema for CommercePaymentsFraudBlacklistSource. How a blacklist entry came to exist. */
 CommercePaymentsFraudBlacklistSourceSchema = z.enum(['Manual', 'AutoFraudDecline']);
 
+/** Zod schema for CommercePaymentsFraudDeviceAccountUsage. Usage of one shared device by one customer account (issue #409). */
+CommercePaymentsFraudDeviceAccountUsageSchema = z.object({
+  accountKey: z.string().nullable().optional(),
+  attemptCount: z.number().int().optional(),
+  lastSeenAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for CommercePaymentsFraudDeviceInsight. One device fingerprint seen across multiple customer accounts (issue #409). */
+CommercePaymentsFraudDeviceInsightSchema = z.object({
+  accountCount: z.number().int(),
+  accounts: z.array(z.lazy(() => CommercePaymentsFraudDeviceAccountUsageSchema)).nullable(),
+  attemptCount: z.number().int(),
+  deviceFingerprint: z.string().nullable(),
+  firstSeenAt: z.string().datetime(),
+  lastSeenAt: z.string().datetime(),
+});
+
+/** Zod schema for CommercePaymentsFraudReviewCustomerHistory. Customer history for a review case (issue #409: show user history — previous
+transactions, account age). Account age is proxied by the customer's earliest
+recorded payment in the tenant: the payments module has no identity-module access,
+and for fraud purposes the charging history IS the account's relevant tenure. */
+CommercePaymentsFraudReviewCustomerHistorySchema = z.object({
+  accountAgeDays: z.number().int().nullable(),
+  priorAttemptCount: z.number().int(),
+  priorSucceededCount: z.number().int(),
+  priorVolume: z.number(),
+});
+
+/** Zod schema for CommercePaymentsFraudReviewDetail. Full manual-review read model for one held payment (issue #409). */
+CommercePaymentsFraudReviewDetailSchema = z.object({
+  case: z.lazy(() => CommercePaymentsFraudReviewListItemSchema),
+  deviceContext: z.lazy(() => CommercePaymentsFraudReviewDeviceContextSchema),
+  history: z.lazy(() => CommercePaymentsFraudReviewCustomerHistorySchema),
+  paymentContext: z.lazy(() => CommercePaymentsFraudReviewPaymentContextSchema),
+});
+
+/** Zod schema for CommercePaymentsFraudReviewDeviceContext. Device fingerprint and session data of the held attempt (issue #409). */
+CommercePaymentsFraudReviewDeviceContextSchema = z.object({
+  anonymizerDetected: z.boolean().nullable(),
+  clientTimezone: z.string().nullable(),
+  deviceFingerprint: z.string().nullable(),
+  resolvedTimezone: z.string().nullable(),
+});
+
 /** Zod schema for CommercePaymentsFraudReviewListItem. Read model for one pending fraud review. */
 CommercePaymentsFraudReviewListItemSchema = z.object({
   amount: z.number(),
@@ -32290,6 +32551,15 @@ CommercePaymentsFraudReviewListItemSchema = z.object({
   score: z.number().int(),
   subscriptionId: z.string().uuid().nullable().optional(),
   tenantId: z.string().uuid(),
+});
+
+/** Zod schema for CommercePaymentsFraudReviewPaymentContext. Payment details of the held attempt (issue #409: amount, method, IP, location). */
+CommercePaymentsFraudReviewPaymentContextSchema = z.object({
+  billingCountry: z.string().nullable(),
+  externalCustomerId: z.string().nullable(),
+  paymentMethodId: z.string().nullable(),
+  provider: z.string().nullable(),
+  sourceIpAddress: z.string().nullable(),
 });
 
 /** Zod schema for CommercePaymentsFraudReviewResolutionResult. Result of resolving a fraud review. */
@@ -35391,8 +35661,11 @@ CommerceSubscriptionsSubscriptionLifecycleControllerCancelInputSchema = z.object
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput. Data model for Commerce Subscriptions Subscription Lifecycle Controller+Downgrade Request. */
 CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInputSchema = z.object({
+  cardBin: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
   effectiveDate: z.string().datetime().nullable().optional(),
   newPlanId: z.string().uuid().optional(),
+  payerEmail: z.string().nullable().optional(),
   promoCodeIdempotencyKey: z.string().nullable().optional(),
   promoCodes: z.array(z.string()).nullable().optional(),
 });
@@ -35426,8 +35699,11 @@ CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInputSchema = z.objec
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput. Data model for Commerce Subscriptions Subscription Lifecycle Controller+Upgrade Request. */
 CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema = z.object({
+  cardBin: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
   effectiveDate: z.string().datetime().nullable().optional(),
   newPlanId: z.string().uuid().optional(),
+  payerEmail: z.string().nullable().optional(),
   promoCodeIdempotencyKey: z.string().nullable().optional(),
   promoCodes: z.array(z.string()).nullable().optional(),
 });
@@ -49251,6 +49527,22 @@ NodesJsonNodeOptionsSchema = z.object({
   propertyNameCaseInsensitive: z.boolean().optional(),
 });
 
+/** Zod schema for NotificationsControllersCancelWhatsAppBroadcastInput. Data model for Notifications Controllers Cancel Whats App Broadcast Request. */
+NotificationsControllersCancelWhatsAppBroadcastInputSchema = z.object({
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for NotificationsControllersCreateWhatsAppBroadcastInput. Data model for Notifications Controllers Create Whats App Broadcast Request. */
+NotificationsControllersCreateWhatsAppBroadcastInputSchema = z.object({
+  languageCode: z.string().nullable().optional(),
+  segmentActiveMembersOnly: z.boolean().nullable().optional(),
+  segmentRole: z.string().nullable().optional(),
+  templateName: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  variablesJson: z.string().nullable().optional(),
+});
+
 /** Zod schema for NotificationsControllersDeadLetterDto. Data model for Notifications Controllers Dead Letter Dto. */
 NotificationsControllersDeadLetterDtoSchema = z.object({
   id: z.string().uuid().optional(),
@@ -49363,6 +49655,17 @@ NotificationsControllersRequeueOutputSchema = z.object({
   requeueCount: z.number().int().optional(),
 });
 
+/** Zod schema for NotificationsControllersScheduleWhatsAppBroadcastInput. Data model for Notifications Controllers Schedule Whats App Broadcast Request. */
+NotificationsControllersScheduleWhatsAppBroadcastInputSchema = z.object({
+  scheduledAtUtc: z.string().datetime().optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for NotificationsControllersSendWhatsAppBroadcastInput. Data model for Notifications Controllers Send Whats App Broadcast Request. */
+NotificationsControllersSendWhatsAppBroadcastInputSchema = z.object({
+  tenantId: z.string().uuid().optional(),
+});
+
 /** Zod schema for NotificationsControllersSetQuietHoursInput. Data model for Notifications Controllers Set Quiet Hours Request. */
 NotificationsControllersSetQuietHoursInputSchema = z.object({
   end: z.string().nullable().optional(),
@@ -49411,8 +49714,55 @@ NotificationsControllersUpdatePreferencesInputSchema = z.object({
   socialEnabled: z.boolean().nullable().optional(),
 });
 
+/** Zod schema for NotificationsControllersWhatsAppBroadcastDto. Data model for Notifications Controllers Whats App Broadcast Dto. */
+NotificationsControllersWhatsAppBroadcastDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  createdBy: z.string().uuid().optional(),
+  error: z.string().nullable().optional(),
+  languageCode: z.string().nullable().optional(),
+  recipientCount: z.number().int().optional(),
+  scheduledAtUtc: z.string().datetime().nullable().optional(),
+  segmentActiveMembersOnly: z.boolean().optional(),
+  segmentRole: z.string().nullable().optional(),
+  sentAtUtc: z.string().datetime().nullable().optional(),
+  status: z.string().nullable().optional(),
+  templateName: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersWhatsAppBroadcastRecipientDto. Data model for Notifications Controllers Whats App Broadcast Recipient Dto. */
+NotificationsControllersWhatsAppBroadcastRecipientDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  attemptCount: z.number().int().optional(),
+  broadcastId: z.string().uuid().optional(),
+  error: z.string().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+  providerMessageId: z.string().nullable().optional(),
+  sentAtUtc: z.string().datetime().nullable().optional(),
+  status: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for NotificationsControllersWhatsAppBroadcastSendReportDto. Data model for Notifications Controllers Whats App Broadcast Send Report Dto. */
+NotificationsControllersWhatsAppBroadcastSendReportDtoSchema = z.object({
+  attempted: z.number().int().optional(),
+  broadcastId: z.string().uuid().optional(),
+  failed: z.number().int().optional(),
+  sent: z.number().int().optional(),
+  skipped: z.number().int().optional(),
+});
+
+/** Zod schema for NotificationsControllersWhatsAppChannelStatusDto. Data model for Notifications Controllers Whats App Channel Status Dto. */
+NotificationsControllersWhatsAppChannelStatusDtoSchema = z.object({
+  allowlistedTemplates: z.array(z.string()).nullable().optional(),
+  enabled: z.boolean().optional(),
+  isConfigured: z.boolean().optional(),
+});
+
 /** Zod schema for NotificationsNotificationChannel. Delivery channels for notifications */
-NotificationsNotificationChannelSchema = z.enum(['InApp', 'Email', 'Push', 'Sms', 'Slack', 'Discord', 'Webhook']);
+NotificationsNotificationChannelSchema = z.enum(['InApp', 'Email', 'Push', 'Sms', 'Slack', 'Discord', 'Webhook', 'WhatsApp']);
 
 /** Zod schema for ObjectsAttestationConveyancePreference. OpenAPI schema for Objects Attestation Conveyance Preference. */
 ObjectsAttestationConveyancePreferenceSchema = z.enum(['None', 'Indirect', 'Direct', 'Enterprise']);
@@ -49903,6 +50253,40 @@ PagedResultUserProfileDtoSchema = z.object({
   hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => IdentityUsersUserProfileDtoSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultWhatsAppBroadcastDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+PagedResultWhatsAppBroadcastDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => NotificationsControllersWhatsAppBroadcastDtoSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultWhatsAppBroadcastRecipientDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+PagedResultWhatsAppBroadcastRecipientDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => NotificationsControllersWhatsAppBroadcastRecipientDtoSchema))
     .nullable()
     .optional(),
   pageNumber: z.number().int().optional(),
@@ -54603,6 +54987,14 @@ export type NotificationsControllersNotificationPreference = NotificationsContro
 export { NotificationsControllersNotificationPreferenceDtoSchema as NotificationsControllersNotificationPreferenceSchema };
 export type NotificationsControllersNotificationTimeline = NotificationsControllersNotificationTimelineDto;
 export { NotificationsControllersNotificationTimelineDtoSchema as NotificationsControllersNotificationTimelineSchema };
+export type NotificationsControllersWhatsAppBroadcast = NotificationsControllersWhatsAppBroadcastDto;
+export { NotificationsControllersWhatsAppBroadcastDtoSchema as NotificationsControllersWhatsAppBroadcastSchema };
+export type NotificationsControllersWhatsAppBroadcastRecipient = NotificationsControllersWhatsAppBroadcastRecipientDto;
+export { NotificationsControllersWhatsAppBroadcastRecipientDtoSchema as NotificationsControllersWhatsAppBroadcastRecipientSchema };
+export type NotificationsControllersWhatsAppBroadcastSendReport = NotificationsControllersWhatsAppBroadcastSendReportDto;
+export { NotificationsControllersWhatsAppBroadcastSendReportDtoSchema as NotificationsControllersWhatsAppBroadcastSendReportSchema };
+export type NotificationsControllersWhatsAppChannelStatus = NotificationsControllersWhatsAppChannelStatusDto;
+export { NotificationsControllersWhatsAppChannelStatusDtoSchema as NotificationsControllersWhatsAppChannelStatusSchema };
 export type PagedResultBillingOutboxEvent = PagedResultBillingOutboxEventDto;
 export { PagedResultBillingOutboxEventDtoSchema as PagedResultBillingOutboxEventSchema };
 export type PagedResultBillingWebhookEventListItem = PagedResultBillingWebhookEventListItemDto;
@@ -54635,6 +55027,10 @@ export type PagedResultUserNotification = PagedResultUserNotificationDto;
 export { PagedResultUserNotificationDtoSchema as PagedResultUserNotificationSchema };
 export type PagedResultUserProfile = PagedResultUserProfileDto;
 export { PagedResultUserProfileDtoSchema as PagedResultUserProfileSchema };
+export type PagedResultWhatsAppBroadcast = PagedResultWhatsAppBroadcastDto;
+export { PagedResultWhatsAppBroadcastDtoSchema as PagedResultWhatsAppBroadcastSchema };
+export type PagedResultWhatsAppBroadcastRecipient = PagedResultWhatsAppBroadcastRecipientDto;
+export { PagedResultWhatsAppBroadcastRecipientDtoSchema as PagedResultWhatsAppBroadcastRecipientSchema };
 export type ProjectsCollaborator = ProjectsCollaboratorDto;
 export { ProjectsCollaboratorDtoSchema as ProjectsCollaboratorSchema };
 export type ProjectsProjectInvitation = ProjectsProjectInvitationDto;

@@ -10439,6 +10439,29 @@ export const postFraudBlacklistImportEndpoint = {
 } as const;
 
 /**
+ * List device fingerprints shared across multiple customer accounts.
+ *
+ * Lists device fingerprints presented on multiple customer accounts over a look-back window, with the per-account usage breakdown reviewers use to judge whether the sharing is a household or a fraud ring. Backs the Device.CrossAccountUsage fraud signal. Requires the payments:admin permission.
+ */
+export interface GetFraudDevicesInput {
+  query?: {
+    tenantId?: string;
+    minAccounts?: number;
+    lookbackDays?: number;
+    page?: number;
+    pageSize?: number;
+  };
+}
+export type GetFraudDevicesOutput = Types.CommercePaymentsFraudDeviceInsight[];
+export const getFraudDevicesEndpoint = {
+  operationId: 'getFraudDevices' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/devices' as const,
+  tags: ['CommercePaymentsFraudDevices'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * List the pending manual fraud reviews, oldest first.
  *
  * Lists payments held by the fraud gate with a pending manual review, oldest first. Supports filtering by minimum score, risk band, charged amount and creation date range. Requires the payments:admin permission.
@@ -10496,6 +10519,27 @@ export const postFraudReviewsDenyEndpoint = {
   operationId: 'postFraudReviewsDeny' as const,
   method: 'POST' as const,
   path: '/api/v1/fraud/reviews/{paymentId}:deny' as const,
+  tags: ['CommercePaymentsFraudReviews'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get the full review detail for one held payment (issue #409: manual review
+ * interface enrichment).
+ *
+ * Returns the full manual-review detail for one assessed payment: the review case with its signal evidence, the customer's prior transaction history (count, succeeded count, volume, account-age proxy), the payment details (method, provider, source IP, billing country) and the device fingerprint with the session facts (claimed/resolved timezone, anonymizer detection) recovered from the assessed evidence. Requires the payments:admin permission.
+ */
+export interface GetFraudReviewsDetailInput {
+  paymentId: string;
+  query?: {
+    tenantId?: string;
+  };
+}
+export type GetFraudReviewsDetailOutput = Types.CommercePaymentsFraudReviewDetail;
+export const getFraudReviewsDetailEndpoint = {
+  operationId: 'getFraudReviewsDetail' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/reviews/{paymentId}/detail' as const,
   tags: ['CommercePaymentsFraudReviews'] as const,
   requiresAuth: true,
 } as const;
@@ -10576,6 +10620,31 @@ export const getFraudStatisticsExportEndpoint = {
   operationId: 'getFraudStatisticsExport' as const,
   method: 'GET' as const,
   path: '/api/v1/fraud/statistics/export' as const,
+  tags: ['CommercePaymentsFraudStatistics'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Export the fraud statistics report for a date window as PDF (issue #409: export
+ * fraud reports — CSV and PDF). Follows the repository's minimal PDF writer
+ * precedent (no PDF dependency); sections mirror the CSV export. Same
+ * authorization, window and granularity semantics as the JSON report.
+ *
+ * Exports the fraud statistics report over a date window as a PDF document: one summary block plus review-queue, top-signals, per-country, per-provider, per-plan and trend sections at the requested daily/weekly/monthly granularity. Requires the payments:admin permission.
+ */
+export interface GetFraudStatisticsExportPdfInput {
+  query?: {
+    tenantId?: string;
+    fromUtc?: string;
+    toUtc?: string;
+    trendGranularity?: Types.CommercePaymentsFraudTrendGranularity;
+  };
+}
+export type GetFraudStatisticsExportPdfOutput = void;
+export const getFraudStatisticsExportPdfEndpoint = {
+  operationId: 'getFraudStatisticsExportPdf' as const,
+  method: 'GET' as const,
+  path: '/api/v1/fraud/statistics/export/pdf' as const,
   tags: ['CommercePaymentsFraudStatistics'] as const,
   requiresAuth: true,
 } as const;
@@ -12894,7 +12963,7 @@ export const postSubscriptionsCancelEndpoint = {
 /**
  * Downgrade subscription plan
  *
- * Downgrades a subscription to a lower-tier plan.
+ * Downgrades a subscription to a lower-tier plan. The change attempt runs the fraud signal evaluation (issue #409): the client IP, device fingerprint and claimed timezone headers plus the body's payer email, country and card BIN feed the change-time risk scoring.
  */
 export interface PostSubscriptionsDowngradeInput {
   subscriptionId: string;
@@ -12966,7 +13035,7 @@ export const postSubscriptionsPauseEndpoint = {
 /**
  * Reactivate subscription
  *
- * Reactivates a suspended or cancelled subscription.
+ * Reactivates a suspended or cancelled subscription. The reactivation attempt runs the fraud signal evaluation (the resubscribe path, issue #409): the client IP, device fingerprint and claimed timezone headers feed the change-time risk scoring.
  */
 export interface PostSubscriptionsReactivateInput {
   subscriptionId: string;
@@ -13053,7 +13122,7 @@ export const postSubscriptionsSuspendEndpoint = {
 /**
  * Upgrade subscription plan
  *
- * Upgrades a subscription to a higher-tier plan.
+ * Upgrades a subscription to a higher-tier plan. The change attempt runs the fraud signal evaluation (issue #409): the client IP, device fingerprint and claimed timezone headers plus the body's payer email, country and card BIN feed the change-time risk scoring.
  */
 export interface PostSubscriptionsUpgradeInput {
   subscriptionId: string;
@@ -13648,6 +13717,139 @@ export const getWalletsReconciliationEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/wallets/reconciliation' as const,
   tags: ['CommercePaymentsWallets'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Lists broadcast campaigns for a tenant (newest first).
+ */
+export interface GetWhatsappBroadcastsForGetWhatsappBroadcastsInput {
+  query?: {
+    tenantId?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetWhatsappBroadcastsForGetWhatsappBroadcastsOutput = Types.PagedResultWhatsAppBroadcastDto;
+export const getWhatsappBroadcastsForGetWhatsappBroadcastsEndpoint = {
+  operationId: 'getWhatsappBroadcastsForGetWhatsappBroadcasts' as const,
+  method: 'GET' as const,
+  path: '/api/v1/whatsapp/broadcasts' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Creates a draft broadcast campaign. The template must be on the configured allowlist.
+ */
+export interface PostWhatsappBroadcastsInput {
+  body?: Types.NotificationsControllersCreateWhatsAppBroadcastInput;
+}
+export type PostWhatsappBroadcastsOutput = Types.NotificationsControllersWhatsAppBroadcastDto;
+export const postWhatsappBroadcastsEndpoint = {
+  operationId: 'postWhatsappBroadcasts' as const,
+  method: 'POST' as const,
+  path: '/api/v1/whatsapp/broadcasts' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets one broadcast campaign.
+ */
+export interface GetWhatsappBroadcastsForGetWhatsappBroadcastsByIdInput {
+  id: string;
+  query?: {
+    tenantId?: string;
+  };
+}
+export type GetWhatsappBroadcastsForGetWhatsappBroadcastsByIdOutput = Types.NotificationsControllersWhatsAppBroadcastDto;
+export const getWhatsappBroadcastsForGetWhatsappBroadcastsByIdEndpoint = {
+  operationId: 'getWhatsappBroadcastsForGetWhatsappBroadcastsById' as const,
+  method: 'GET' as const,
+  path: '/api/v1/whatsapp/broadcasts/{id}' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Cancels a draft or scheduled broadcast.
+ */
+export interface PostWhatsappBroadcastsCancelInput {
+  id: string;
+  body?: Types.NotificationsControllersCancelWhatsAppBroadcastInput;
+}
+export type PostWhatsappBroadcastsCancelOutput = Types.NotificationsControllersWhatsAppBroadcastDto;
+export const postWhatsappBroadcastsCancelEndpoint = {
+  operationId: 'postWhatsappBroadcastsCancel' as const,
+  method: 'POST' as const,
+  path: '/api/v1/whatsapp/broadcasts/{id}:cancel' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Schedules a draft broadcast for a future send time.
+ */
+export interface PostWhatsappBroadcastsScheduleInput {
+  id: string;
+  body?: Types.NotificationsControllersScheduleWhatsAppBroadcastInput;
+}
+export type PostWhatsappBroadcastsScheduleOutput = Types.NotificationsControllersWhatsAppBroadcastDto;
+export const postWhatsappBroadcastsScheduleEndpoint = {
+  operationId: 'postWhatsappBroadcastsSchedule' as const,
+  method: 'POST' as const,
+  path: '/api/v1/whatsapp/broadcasts/{id}:schedule' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Sends a draft or due scheduled broadcast now and returns the send summary.
+ */
+export interface PostWhatsappBroadcastsSendInput {
+  id: string;
+  body?: Types.NotificationsControllersSendWhatsAppBroadcastInput;
+}
+export type PostWhatsappBroadcastsSendOutput = Types.NotificationsControllersWhatsAppBroadcastSendReportDto;
+export const postWhatsappBroadcastsSendEndpoint = {
+  operationId: 'postWhatsappBroadcastsSend' as const,
+  method: 'POST' as const,
+  path: '/api/v1/whatsapp/broadcasts/{id}:send' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets the delivery-tracking rows of one broadcast campaign (oldest first).
+ */
+export interface GetWhatsappBroadcastsRecipientsInput {
+  id: string;
+  query?: {
+    tenantId?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetWhatsappBroadcastsRecipientsOutput = Types.PagedResultWhatsAppBroadcastRecipientDto;
+export const getWhatsappBroadcastsRecipientsEndpoint = {
+  operationId: 'getWhatsappBroadcastsRecipients' as const,
+  method: 'GET' as const,
+  path: '/api/v1/whatsapp/broadcasts/{id}/recipients' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets the WhatsApp channel status: whether the Business API integration is configured and which templates are allowlisted.
+ */
+export type GetWhatsappStatusInput = void;
+export type GetWhatsappStatusOutput = Types.NotificationsControllersWhatsAppChannelStatusDto;
+export const getWhatsappStatusEndpoint = {
+  operationId: 'getWhatsappStatus' as const,
+  method: 'GET' as const,
+  path: '/api/v1/whatsapp/status' as const,
+  tags: ['Notifications'] as const,
   requiresAuth: true,
 } as const;
 
@@ -33957,13 +34159,16 @@ export const endpoints = {
   getFraudBlacklistCheck: getFraudBlacklistCheckEndpoint,
   getFraudBlacklistExport: getFraudBlacklistExportEndpoint,
   postFraudBlacklistImport: postFraudBlacklistImportEndpoint,
+  getFraudDevices: getFraudDevicesEndpoint,
   getFraudReviews: getFraudReviewsEndpoint,
   postFraudReviewsApprove: postFraudReviewsApproveEndpoint,
   postFraudReviewsDeny: postFraudReviewsDenyEndpoint,
+  getFraudReviewsDetail: getFraudReviewsDetailEndpoint,
   postFraudReviewsBulkApprove: postFraudReviewsBulkApproveEndpoint,
   postFraudReviewsBulkDeny: postFraudReviewsBulkDenyEndpoint,
   getFraudStatistics: getFraudStatisticsEndpoint,
   getFraudStatisticsExport: getFraudStatisticsExportEndpoint,
+  getFraudStatisticsExportPdf: getFraudStatisticsExportPdfEndpoint,
   getFxRates: getFxRatesEndpoint,
   postFxRatesOverrides: postFxRatesOverridesEndpoint,
   putFxRatesProviderKeys: putFxRatesProviderKeysEndpoint,
@@ -34132,6 +34337,14 @@ export const endpoints = {
   getWalletsAuditLog: getWalletsAuditLogEndpoint,
   getWalletsMetrics: getWalletsMetricsEndpoint,
   getWalletsReconciliation: getWalletsReconciliationEndpoint,
+  getWhatsappBroadcastsForGetWhatsappBroadcasts: getWhatsappBroadcastsForGetWhatsappBroadcastsEndpoint,
+  postWhatsappBroadcasts: postWhatsappBroadcastsEndpoint,
+  getWhatsappBroadcastsForGetWhatsappBroadcastsById: getWhatsappBroadcastsForGetWhatsappBroadcastsByIdEndpoint,
+  postWhatsappBroadcastsCancel: postWhatsappBroadcastsCancelEndpoint,
+  postWhatsappBroadcastsSchedule: postWhatsappBroadcastsScheduleEndpoint,
+  postWhatsappBroadcastsSend: postWhatsappBroadcastsSendEndpoint,
+  getWhatsappBroadcastsRecipients: getWhatsappBroadcastsRecipientsEndpoint,
+  getWhatsappStatus: getWhatsappStatusEndpoint,
   getAssetsForGetAssetsByReferenceIdByToken: getAssetsForGetAssetsByReferenceIdByTokenEndpoint,
   getE: getEEndpoint,
   getHealth: getHealthEndpoint,

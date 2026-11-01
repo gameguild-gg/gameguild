@@ -1383,6 +1383,78 @@ namespace GameGuild.API.Database.Migrations
                         });
                 });
 
+            modelBuilder.Entity("GameGuild.Commerce.Billing.BillingWebhookRawDelivery", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BillingWebhookEventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExternalEventId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PayloadSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("PiiRedacted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("RawHeaders")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RawPayload")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BillingWebhookEventId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_billing_webhook_raw_deliveries_event_id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_billing_webhook_raw_deliveries_expires_at");
+
+                    b.HasIndex("ReceivedAt")
+                        .HasDatabaseName("ix_billing_webhook_raw_deliveries_received_at");
+
+                    b.ToTable("billing_webhook_raw_deliveries", (string)null);
+                });
+
             modelBuilder.Entity("GameGuild.Commerce.Billing.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3090,6 +3162,10 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("FraudDeviceFingerprint")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<string>("FraudEvidence")
                         .HasColumnType("jsonb");
 
@@ -3108,6 +3184,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.Property<int?>("FraudScore")
                         .HasColumnType("integer");
+
+                    b.Property<string>("FraudSourceIpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
 
                     b.Property<string>("IdempotencyKey")
                         .IsRequired()
@@ -3221,6 +3301,11 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId", "ExternalCustomerId", "CreatedAt")
                         .HasDatabaseName("ix_payments_fraud_velocity_lookup")
                         .HasFilter("\"Status\" <> 4 AND (\"FraudDecision\" IS NULL OR \"FraudDecision\" = 0)")
+                        .HasAnnotation("Npgsql:CreatedConcurrently", true);
+
+                    b.HasIndex("TenantId", "FraudDeviceFingerprint", "CreatedAt")
+                        .HasDatabaseName("ix_payments_fraud_device_lookup")
+                        .HasFilter("\"FraudDeviceFingerprint\" IS NOT NULL")
                         .HasAnnotation("Npgsql:CreatedConcurrently", true);
 
                     b.HasIndex("Provider", "ProviderEnvironment", "ProviderAccountId", "ProviderObjectId", "ProviderMonetaryLeg")
@@ -29831,6 +29916,9 @@ namespace GameGuild.API.Database.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("integer");
 
+                    b.Property<bool>("WhatsAppEnabled")
+                        .HasColumnType("boolean");
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId")
@@ -29931,6 +30019,152 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("Type");
 
                     b.ToTable("NotificationTemplates");
+                });
+
+            modelBuilder.Entity("GameGuild.Notifications.WhatsAppBroadcast", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("RecipientCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ScheduledAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("SegmentActiveMembersOnly")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SegmentRole")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("SentAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TemplateName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VariablesJson")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScheduledAtUtc");
+
+                    b.HasIndex("TenantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "Status");
+
+                    b.ToTable("WhatsAppBroadcasts");
+                });
+
+            modelBuilder.Entity("GameGuild.Notifications.WhatsAppBroadcastRecipient", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("BroadcastId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ProviderMessageId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("RecipientTenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("SentAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BroadcastId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("BroadcastId", "Status");
+
+                    b.ToTable("WhatsAppBroadcastRecipients");
                 });
 
             modelBuilder.Entity("GameGuild.ProjectWork.ProjectBoard", b =>
@@ -37060,6 +37294,16 @@ namespace GameGuild.API.Database.Migrations
                     b.Navigation("SourceContent");
                 });
 
+            modelBuilder.Entity("GameGuild.Commerce.Billing.BillingWebhookRawDelivery", b =>
+                {
+                    b.HasOne("GameGuild.Commerce.Billing.BillingWebhookEvent", null)
+                        .WithMany()
+                        .HasForeignKey("BillingWebhookEventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_billing_webhook_raw_deliveries_event");
+                });
+
             modelBuilder.Entity("GameGuild.Commerce.Billing.SubscriptionChangeSagaStep", b =>
                 {
                     b.HasOne("GameGuild.Commerce.Billing.SubscriptionChangeSaga", null)
@@ -39424,6 +39668,15 @@ namespace GameGuild.API.Database.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("GameGuild.Notifications.WhatsAppBroadcastRecipient", b =>
+                {
+                    b.HasOne("GameGuild.Notifications.WhatsAppBroadcast", null)
+                        .WithMany()
+                        .HasForeignKey("BroadcastId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GameGuild.ProjectWork.ProjectBoard", b =>

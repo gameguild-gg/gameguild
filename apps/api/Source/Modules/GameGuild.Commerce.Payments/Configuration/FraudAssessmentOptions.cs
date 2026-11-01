@@ -190,6 +190,64 @@ public sealed class FraudAssessmentOptions
     [Range(2, 100)]
     public int BlockThreshold { get; set; } = 70;
 
+    /// <summary>
+    ///     Wall-clock budget, in milliseconds, shared by the synchronous fraud evaluation
+    ///     (issue #409: complete scoring in under 200ms, non-blocking). Providers that
+    ///     exceed it are deferred to the background re-scoring pass instead of blocking the
+    ///     request. Default 150ms — the remaining headroom keeps the whole gate inside the
+    ///     200ms target once request overhead is added. Upper bound 200 enforces the target.
+    /// </summary>
+    [Range(10, 200)]
+    public int SyncEvaluationBudgetMilliseconds { get; set; } = 150;
+
+    /// <summary>
+    ///     Whether the background re-scoring worker completes providers deferred by the
+    ///     synchronous budget (issue #409: asynchronous scoring for background checks).
+    ///     Safe default: enabled — deferred signals are re-evaluated out-of-band and can
+    ///     only escalate a previously-allowed payment, never silently drop evidence.
+    /// </summary>
+    public bool BackgroundRescoringEnabled { get; set; } = true;
+
+    /// <summary>
+    ///     Capacity of the in-memory background re-scoring queue (issue #409). When full,
+    ///     new deferred work is dropped with a warning — the synchronous decision stands
+    ///     and the queue never blocks or rejects the payment path.
+    /// </summary>
+    [Range(16, 100000)]
+    public int BackgroundRescoringQueueCapacity { get; set; } = 1000;
+
+    /// <summary>
+    ///     Distinct customer accounts a device fingerprint must have been seen on before
+    ///     the cross-account device signal fires (issue #409: same device across multiple
+    ///     accounts). Default 2 — the first shared account is already cross-account use.
+    /// </summary>
+    [Range(2, 100)]
+    public int CrossAccountDeviceMinAccounts { get; set; } = 2;
+
+    /// <summary>
+    ///     Look-back window, in days, of the cross-account device fingerprint analysis
+    ///     (issue #409). Longer than the velocity window because device sharing across
+    ///     accounts is a durable pattern, not a burst.
+    /// </summary>
+    [Range(1, 365)]
+    public int CrossAccountDeviceLookbackDays { get; set; } = 30;
+
+    /// <summary>
+    ///     Base score contributed when the presented device fingerprint was already seen
+    ///     on other customer accounts (issue #409: device fingerprint dupe). Scales with
+    ///     the number of extra accounts, capped per signal at <see cref="MaxSignalScore"/>.
+    /// </summary>
+    [Range(0, 100)]
+    public int CrossAccountDeviceWeight { get; set; } = 30;
+
+    /// <summary>
+    ///     Opt-in email leg of the suspicious-activity customer notice (issue #409). The
+    ///     delivered default is the in-app notice only — sending email to the account's
+    ///     address can tip off a fraudster holding the account, so deployments must
+    ///     explicitly enable this. Default <c>false</c>.
+    /// </summary>
+    public bool CustomerNoticeEmailEnabled { get; set; }
+
     /// <summary>Velocity look-back window as a time span.</summary>
     public TimeSpan VelocityWindow => TimeSpan.FromMinutes(VelocityWindowMinutes);
 
@@ -243,7 +301,14 @@ public sealed class FraudAssessmentOptions
             AutoBlacklistOnFraudDecline = overrideValues.AutoBlacklistOnFraudDecline ?? AutoBlacklistOnFraudDecline,
             AutoBlacklistExpiryDays = overrideValues.AutoBlacklistExpiryDays ?? AutoBlacklistExpiryDays,
             ReviewThreshold = overrideValues.ReviewThreshold ?? ReviewThreshold,
-            BlockThreshold = overrideValues.BlockThreshold ?? BlockThreshold
+            BlockThreshold = overrideValues.BlockThreshold ?? BlockThreshold,
+            SyncEvaluationBudgetMilliseconds = overrideValues.SyncEvaluationBudgetMilliseconds ?? SyncEvaluationBudgetMilliseconds,
+            BackgroundRescoringEnabled = overrideValues.BackgroundRescoringEnabled ?? BackgroundRescoringEnabled,
+            BackgroundRescoringQueueCapacity = overrideValues.BackgroundRescoringQueueCapacity ?? BackgroundRescoringQueueCapacity,
+            CrossAccountDeviceMinAccounts = overrideValues.CrossAccountDeviceMinAccounts ?? CrossAccountDeviceMinAccounts,
+            CrossAccountDeviceLookbackDays = overrideValues.CrossAccountDeviceLookbackDays ?? CrossAccountDeviceLookbackDays,
+            CrossAccountDeviceWeight = overrideValues.CrossAccountDeviceWeight ?? CrossAccountDeviceWeight,
+            CustomerNoticeEmailEnabled = overrideValues.CustomerNoticeEmailEnabled ?? CustomerNoticeEmailEnabled
         };
 
         return resolved;
@@ -382,4 +447,30 @@ public sealed class FraudAssessmentOverride
     /// <summary>See <see cref="FraudAssessmentOptions.BlockThreshold"/>.</summary>
     [Range(2, 100)]
     public int? BlockThreshold { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.SyncEvaluationBudgetMilliseconds"/>.</summary>
+    [Range(10, 200)]
+    public int? SyncEvaluationBudgetMilliseconds { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.BackgroundRescoringEnabled"/>.</summary>
+    public bool? BackgroundRescoringEnabled { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.BackgroundRescoringQueueCapacity"/>.</summary>
+    [Range(16, 100000)]
+    public int? BackgroundRescoringQueueCapacity { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.CrossAccountDeviceMinAccounts"/>.</summary>
+    [Range(2, 100)]
+    public int? CrossAccountDeviceMinAccounts { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.CrossAccountDeviceLookbackDays"/>.</summary>
+    [Range(1, 365)]
+    public int? CrossAccountDeviceLookbackDays { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.CrossAccountDeviceWeight"/>.</summary>
+    [Range(0, 100)]
+    public int? CrossAccountDeviceWeight { get; set; }
+
+    /// <summary>See <see cref="FraudAssessmentOptions.CustomerNoticeEmailEnabled"/>.</summary>
+    public bool? CustomerNoticeEmailEnabled { get; set; }
 }

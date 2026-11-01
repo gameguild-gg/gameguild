@@ -138,6 +138,7 @@ public interface INotificationService
         bool? socialEnabled = null,
         bool? learningEnabled = null,
         bool? achievementsEnabled = null,
+        bool? whatsAppEnabled = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

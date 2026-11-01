@@ -30,6 +30,7 @@ namespace GameGuild.Commerce.Billing;
 public sealed class BillingWebhooksController(
     ISender sender,
     IOptions<BillingConfiguration> billingConfiguration,
+    IWebhookDeliveryContext deliveryContext,
     ILogger<BillingWebhooksController> logger) : BaseApiController
 {
     private readonly WebhookSettings _webhookSettings = billingConfiguration.Value.Webhook;
@@ -74,6 +75,7 @@ public sealed class BillingWebhooksController(
         {
             using var reader = new StreamReader(Request.Body);
             var payload = await reader.ReadToEndAsync(ct);
+            CaptureRawDeliveryForRetention(payload);
 
             // Get authorization header for JWT verification
             var authHeader = Request.Headers["Authorization"].ToString();
@@ -135,6 +137,7 @@ public sealed class BillingWebhooksController(
     {
         using var reader = new StreamReader(Request.Body);
         var payload = await reader.ReadToEndAsync(ct);
+        CaptureRawDeliveryForRetention(payload);
 
         var merchantId = Request.Headers["Apple-Pay-Merchant-Id"].ToString();
         var signature = Request.Headers["Apple-Pay-Signature"].ToString();
@@ -196,6 +199,7 @@ public sealed class BillingWebhooksController(
         {
             using var reader = new StreamReader(Request.Body);
             var payload = await reader.ReadToEndAsync(ct);
+            CaptureRawDeliveryForRetention(payload);
 
             var signature = Request.Headers["Stripe-Signature"].ToString();
 
@@ -261,6 +265,7 @@ public sealed class BillingWebhooksController(
     {
         using var reader = new StreamReader(Request.Body);
         var payload = await reader.ReadToEndAsync(ct);
+        CaptureRawDeliveryForRetention(payload);
 
         // PayPal webhook requires specific headers for signature verification
         var transmissionId = Request.Headers["PayPal-Transmission-Id"].ToString();
@@ -323,6 +328,22 @@ public sealed class BillingWebhooksController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> HandleBraintreeWebhook(CancellationToken ct)
     {
+        // Opt-in raw-delivery retention (issue #408: capture raw payload and all headers):
+        // snapshot the urlencoded body verbatim before the form parser consumes it. No-op
+        // (no buffering, no extra read) when the retention policy is disabled.
+        if (_webhookSettings.Retention.Enabled)
+        {
+            Request.EnableBuffering();
+            string rawBody;
+            using (var rawReader = new StreamReader(Request.Body, leaveOpen: true))
+            {
+                rawBody = await rawReader.ReadToEndAsync(ct);
+            }
+
+            Request.Body.Seek(0, SeekOrigin.Begin);
+            CaptureRawDeliveryForRetention(rawBody);
+        }
+
         IFormCollection form;
         try
         {
@@ -394,6 +415,32 @@ public sealed class BillingWebhooksController(
     /// <summary>The acknowledgement returned when the response bound deferred processing (issue #408).</summary>
     private IActionResult DeferredAcknowledgement() =>
         Ok(new { received = true, processed = false, deferred = true });
+
+    /// <summary>
+    ///     Captures the raw delivery (raw body + full header set) of the current provider
+    ///     callback into the scoped delivery context for the opt-in raw-delivery retention
+    ///     (issue #408: capture raw payload and all headers). A strict no-op when the
+    ///     retention policy is disabled — the default — so production behavior is unchanged
+    ///     until the policy is explicitly enabled. The redaction pass and the
+    ///     after-verification persistence gate live downstream (see
+    ///     <see cref="BillingWebhookRepository"/> and <see cref="WebhookRawDeliveryRedactor"/>).
+    /// </summary>
+    /// <param name="rawPayload">The raw HTTP body exactly as received from the provider.</param>
+    private void CaptureRawDeliveryForRetention(string rawPayload)
+    {
+        if (!_webhookSettings.Retention.Enabled)
+        {
+            return;
+        }
+
+        var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (key, values) in Request.Headers)
+        {
+            headers[key] = values.ToString();
+        }
+
+        deliveryContext.CaptureRawDelivery(rawPayload, headers);
+    }
 
     /// <summary>
     ///     Retrieve webhook event details by event ID

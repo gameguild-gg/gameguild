@@ -73,6 +73,38 @@ public sealed class FraudReviewsController(
     }
 
     /// <summary>
+    ///     Get the full review detail for one held payment (issue #409: manual review
+    ///     interface enrichment).
+    /// </summary>
+    /// <param name="paymentId">Held payment whose review detail is requested.</param>
+    /// <param name="tenantId">Optional tenant filter (system administrators only; other callers are scoped to their own tenant).</param>
+    /// <param name="ct">Cancellation token.</param>
+    [HttpGet("{paymentId:guid}/detail")]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
+    [EndpointSummary("Get fraud review detail")]
+    [EndpointDescription("Returns the full manual-review detail for one assessed payment: the review case with its signal evidence, the customer's prior transaction history (count, succeeded count, volume, account-age proxy), the payment details (method, provider, source IP, billing country) and the device fingerprint with the session facts (claimed/resolved timezone, anonymizer detection) recovered from the assessed evidence. Requires the payments:admin permission.")]
+    [ProducesResponseType<FraudReviewDetail>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetReviewDetail(
+        Guid paymentId,
+        [FromQuery] Guid? tenantId = null,
+        CancellationToken ct = default)
+    {
+        var actorContext = actorContextAccessor.ActorContext;
+        if (actorContext.IsAuthenticated && !actorContext.IsSystemAdmin)
+        {
+            tenantId = actorContext.TenantId;
+        }
+
+        var detail = await sender.Send(
+            new GetFraudReviewDetailQuery(paymentId, tenantId),
+            ct).ConfigureAwait(false);
+
+        return detail is null ? NotFound() : Ok(detail);
+    }
+
+    /// <summary>
     ///     Approve a pending fraud review, releasing the fraud hold so the payment may be retried.
     /// </summary>
     /// <param name="paymentId">Payment whose review is approved.</param>

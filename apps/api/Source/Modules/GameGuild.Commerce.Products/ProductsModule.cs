@@ -34,6 +34,9 @@ public static class ProductsModule
         services.AddScoped<IPromoCodeService, PromoCodeService>();
         services.AddScoped<IPromoCodeUsageRecorder, PromoCodeUsageRecorder>();
         services.AddScoped<GameGuild.Commerce.ISubscriptionPromoCoordinator, SubscriptionPromoCoordinator>();
+        // Fraud manual-review cases raise an in-app support ticket on the shared ticket
+        // system (issue #409), so reviews surface in the support queue staff already work.
+        services.AddScoped<GameGuild.Commerce.IFraudReviewTicketCoordinator, FraudReviewSupportTicketCoordinator>();
         services.AddScoped<IPromoCodeAuditLogger, PromoCodeAuditLogger>();
         services.AddScoped<IPromoCustomerStateResolver, PromoCustomerStateResolver>();
         services.AddScoped<IPromoRedemptionCaptchaGate, PromoRedemptionCaptchaGate>();

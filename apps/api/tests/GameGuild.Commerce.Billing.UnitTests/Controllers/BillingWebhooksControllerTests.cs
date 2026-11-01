@@ -429,6 +429,7 @@ public class BillingWebhooksControllerTests
         var controller = new BillingWebhooksController(
                 sender.Object,
                 Microsoft.Extensions.Options.Options.Create(new BillingConfiguration()),
+                new WebhookDeliveryContext(),
                 NullLogger<BillingWebhooksController>.Instance)
         {
             ControllerContext = new ControllerContext { HttpContext = context }
@@ -455,6 +456,7 @@ public class BillingWebhooksControllerTests
         return new BillingWebhooksController(
                 sender,
                 Microsoft.Extensions.Options.Options.Create(configuration ?? new BillingConfiguration()),
+                new WebhookDeliveryContext(),
                 NullLogger<BillingWebhooksController>.Instance)
         {
             ControllerContext = new ControllerContext { HttpContext = context }

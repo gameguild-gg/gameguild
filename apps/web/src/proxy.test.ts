@@ -179,6 +179,159 @@ describe("GameGuild internationalization proxy", () => {
     expect(response.headers.get("x-middleware-rewrite")).toBeNull();
   });
 
+  describe("automatic locale detection (issue #92)", () => {
+    it("redirects a first-time pt-BR visitor to the prefixed locale route", () => {
+      const response = routeRequest(
+        new NextRequest("https://gameguild.gg/learn/courses/game-ai/content?module=2", {
+          headers: { "accept-language": "pt-BR,pt;q=0.9,en;q=0.8" },
+        }),
+      );
+
+      expect(response.headers.get("location")).toBe(
+        "https://gameguild.gg/pt-BR/learn/courses/game-ai/content?module=2",
+      );
+      expect(response.headers.get("x-middleware-rewrite")).toBeNull();
+    });
+
+    it("redirects the site root for a pt-BR browser", () => {
+      const response = routeRequest(
+        new NextRequest("https://gameguild.gg/", {
+          headers: { "accept-language": "pt-BR" },
+        }),
+      );
+
+      expect(response.headers.get("location")).toBe("https://gameguild.gg/pt-BR");
+    });
+
+    it("maps a bare or regionally-variant Portuguese header onto pt-BR", () => {
+      expect(
+        routeRequest(
+          new NextRequest("https://gameguild.gg/feed", { headers: { "accept-language": "pt" } }),
+        ).headers.get("location"),
+      ).toBe("https://gameguild.gg/pt-BR/feed");
+
+      expect(
+        routeRequest(
+          new NextRequest("https://gameguild.gg/feed", { headers: { "accept-language": "pt-PT,pt;q=0.9" } }),
+        ).headers.get("location"),
+      ).toBe("https://gameguild.gg/pt-BR/feed");
+    });
+
+    it("serves an unsupported browser locale in the default locale (issue #99 German report)", () => {
+      const response = routeRequest(
+        new NextRequest("https://gameguild.gg/feed?tab=following", {
+          headers: { "accept-language": "de-DE,de;q=0.9,en;q=0.8" },
+        }),
+      );
+
+      expect(response.headers.get("location")).toBeNull();
+      expect(response.headers.get("x-middleware-rewrite")).toBe(
+        "https://gameguild.gg/en-US/feed?tab=following",
+      );
+    });
+
+    it("lets the stored preference override browser detection (issue #99)", () => {
+      const response = routeRequest(
+        new NextRequest("https://gameguild.gg/workspace/settings/security", {
+          headers: {
+            "accept-language": "pt-BR,pt;q=0.9",
+            cookie: "NEXT_LOCALE=en-US",
+          },
+        }),
+      );
+
+      expect(response.headers.get("location")).toBeNull();
+      expect(response.headers.get("x-middleware-rewrite")).toBe(
+        "https://gameguild.gg/en-US/workspace/settings/security",
+      );
+    });
+
+    it("redirects to the stored pt-BR preference even without a matching browser header", () => {
+      const response = routeRequest(
+        new NextRequest("https://gameguild.gg/workspace", {
+          headers: { cookie: "session=opaque; NEXT_LOCALE=pt-BR" },
+        }),
+      );
+
+      expect(response.headers.get("location")).toBe("https://gameguild.gg/pt-BR/workspace");
+    });
+
+    it("ignores an unsupported stored preference and falls back to detection", () => {
+      const response = routeRequest(
+        new NextRequest("https://gameguild.gg/feed", {
+          headers: { cookie: "NEXT_LOCALE=de", "accept-language": "pt-BR" },
+        }),
+      );
+
+      expect(response.headers.get("location")).toBe("https://gameguild.gg/pt-BR/feed");
+    });
+
+    it("keeps RSC navigation on the detected locale via a followed redirect", () => {
+      const response = routeRequest(
+        new NextRequest("https://gameguild.gg/workspace?_rsc=pt", {
+          headers: { rsc: "1", "accept-language": "pt-BR" },
+        }),
+      );
+
+      expect(response.headers.get("location")).toBe("https://gameguild.gg/pt-BR/workspace?_rsc=pt");
+      expect(response.headers.get("x-middleware-rewrite")).toBeNull();
+    });
+
+    it("keeps the legacy /social canonicalization ahead of locale detection", () => {
+      const response = routeRequest(
+        new NextRequest("https://gameguild.gg/social?tab=playtests", {
+          headers: { "accept-language": "pt-BR" },
+        }),
+      );
+
+      expect(response.headers.get("location")).toBe("https://gameguild.gg/feed?tab=playtests");
+    });
+
+    it("persists an explicit default-locale URL as an English choice (issue #99 escape hatch)", () => {
+      const response = routeRequest(
+        new NextRequest("https://gameguild.gg/en-US/projects?view=grid", {
+          headers: { "accept-language": "pt-BR" },
+        }),
+      );
+
+      expect(response.headers.get("location")).toBe("https://gameguild.gg/projects?view=grid");
+      expect(response.headers.get("set-cookie")).toContain("NEXT_LOCALE=en-US");
+
+      // The stored choice then wins over browser detection.
+      const followUp = routeRequest(
+        new NextRequest("https://gameguild.gg/projects?view=grid", {
+          headers: { "accept-language": "pt-BR", cookie: "NEXT_LOCALE=en-US" },
+        }),
+      );
+      expect(followUp.headers.get("location")).toBeNull();
+      expect(followUp.headers.get("x-middleware-rewrite")).toBe(
+        "https://gameguild.gg/en-US/projects?view=grid",
+      );
+    });
+
+    it("pins the English choice when an explicit default-locale URL hits the legacy social redirect", () => {
+      const response = routeRequest(new NextRequest("https://gameguild.gg/en-US/social?tab=playtests", {
+        headers: { "accept-language": "pt-BR" },
+      }));
+
+      expect(response.headers.get("location")).toBe("https://gameguild.gg/feed?tab=playtests");
+      expect(response.headers.get("set-cookie")).toContain("NEXT_LOCALE=en-US");
+    });
+
+    it("stays cookie-free on default-locale canonicalization without a detection conflict", () => {
+      const response = routeRequest(
+        new NextRequest("https://gameguild.gg/en-US/testing-lab/events/test?joinAs=developer", {
+          headers: { cookie: "gameguild.session-token=opaque-session" },
+        }),
+      );
+
+      expect(response.headers.get("location")).toBe(
+        "https://gameguild.gg/testing-lab/events/test?joinAs=developer",
+      );
+      expect(response.headers.get("set-cookie")).toBeNull();
+    });
+  });
+
   describe("request origin preservation with URL normalization disabled", () => {
     beforeEach(() => {
       vi.stubEnv("__NEXT_NO_MIDDLEWARE_URL_NORMALIZE", "true");

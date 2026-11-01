@@ -96,6 +96,46 @@ public sealed class FraudStatisticsController(
             "text/csv; charset=utf-8",
             $"fraud-statistics-{report.TrendGranularity.ToString().ToLowerInvariant()}-{report.FromUtc:yyyyMMdd}-{report.ToUtc:yyyyMMdd}.csv");
     }
+
+    /// <summary>
+    ///     Export the fraud statistics report for a date window as PDF (issue #409: export
+    ///     fraud reports — CSV and PDF). Follows the repository's minimal PDF writer
+    ///     precedent (no PDF dependency); sections mirror the CSV export. Same
+    ///     authorization, window and granularity semantics as the JSON report.
+    /// </summary>
+    /// <param name="tenantId">Optional tenant filter (system administrators only; other callers are scoped to their own tenant).</param>
+    /// <param name="fromUtc">Optional inclusive window start (ISO-8601); defaults to 30 days ago.</param>
+    /// <param name="toUtc">Optional inclusive window end (ISO-8601); defaults to now.</param>
+    /// <param name="trendGranularity">Trend bucket size exported: daily (default), weekly or monthly (issue #409).</param>
+    /// <param name="ct">Cancellation token.</param>
+    [HttpGet("export/pdf")]
+    [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
+    [EndpointSummary("Export fraud statistics as PDF")]
+    [EndpointDescription("Exports the fraud statistics report over a date window as a PDF document: one summary block plus review-queue, top-signals, per-country, per-provider, per-plan and trend sections at the requested daily/weekly/monthly granularity. Requires the payments:admin permission.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ExportStatisticsPdf(
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] DateTime? fromUtc = null,
+        [FromQuery] DateTime? toUtc = null,
+        [FromQuery] FraudTrendGranularity trendGranularity = FraudTrendGranularity.Daily,
+        CancellationToken ct = default)
+    {
+        var actorContext = actorContextAccessor.ActorContext;
+        if (actorContext.IsAuthenticated && !actorContext.IsSystemAdmin)
+        {
+            tenantId = actorContext.TenantId;
+        }
+
+        var report = await sender.Send(
+            new GetFraudStatisticsQuery(tenantId, fromUtc, toUtc, trendGranularity),
+            ct).ConfigureAwait(false);
+
+        return File(
+            FraudStatisticsPdfComposer.Compose(report),
+            "application/pdf",
+            $"fraud-statistics-{report.TrendGranularity.ToString().ToLowerInvariant()}-{report.FromUtc:yyyyMMdd}-{report.ToUtc:yyyyMMdd}.pdf");
+    }
 }
 
 /// <summary>
