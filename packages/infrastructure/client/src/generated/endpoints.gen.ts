@@ -27140,6 +27140,23 @@ export const postProjectsInvitationsDeclineEndpoint = {
 } as const;
 
 /**
+ * Create (or return) the caller's workspace project for a game jam. The acting user is
+ * taken from the authenticated context; the optional body only carries a title override.
+ */
+export interface PostProjectsJamInput {
+  jamId: string;
+  body?: Types.ProjectsCreateJamProjectInput;
+}
+export type PostProjectsJamOutput = Types.ProjectsProjectApiOutput;
+export const postProjectsJamEndpoint = {
+  operationId: 'postProjectsJam' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/jam/{jamId}' as const,
+  tags: ['Projects'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Gets the Projects that belong to the authenticated user's actual workspace relationship.
  * This scope intentionally does not expand for tenant or system administrators.
  */
@@ -35315,6 +35332,7 @@ export const endpoints = {
   getProjectsFeatured: getProjectsFeaturedEndpoint,
   postProjectsInvitationsAccept: postProjectsInvitationsAcceptEndpoint,
   postProjectsInvitationsDecline: postProjectsInvitationsDeclineEndpoint,
+  postProjectsJam: postProjectsJamEndpoint,
   getProjectsMine: getProjectsMineEndpoint,
   getProjectsMyInvitations: getProjectsMyInvitationsEndpoint,
   getProjectsPopular: getProjectsPopularEndpoint,
