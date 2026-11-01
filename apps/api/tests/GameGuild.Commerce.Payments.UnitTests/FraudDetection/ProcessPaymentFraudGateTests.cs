@@ -193,6 +193,15 @@ public class ProcessPaymentFraudGateTests
         public Task<FraudAssessment> AssessSubscriptionCreationAsync(FraudSignalContext signalContext, CancellationToken cancellationToken = default) =>
             Task.FromResult(Allow(signalContext));
 
+        public Task<FraudAssessment> AssessSubscriptionChangeAsync(
+            FraudSignalContext signalContext,
+            SubscriptionFraudChangeKind changeKind,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(Allow(signalContext));
+
+        public Task<FraudAssessment> AssessPaymentForBackgroundAsync(FraudSignalContext signalContext, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Allow(signalContext));
+
         private static FraudAssessment Allow(FraudSignalContext signalContext) => new(
             signalContext.TenantId,
             signalContext.PaymentId,
@@ -282,6 +291,15 @@ public class ProcessPaymentFraudGateTests
         }
 
         public Task<FraudAssessment> AssessSubscriptionCreationAsync(FraudSignalContext signalContext, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Outcome(signalContext));
+
+        public Task<FraudAssessment> AssessSubscriptionChangeAsync(
+            FraudSignalContext signalContext,
+            SubscriptionFraudChangeKind changeKind,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(Outcome(signalContext));
+
+        public Task<FraudAssessment> AssessPaymentForBackgroundAsync(FraudSignalContext signalContext, CancellationToken cancellationToken = default) =>
             Task.FromResult(Outcome(signalContext));
 
         private FraudAssessment Outcome(FraudSignalContext signalContext) => new(

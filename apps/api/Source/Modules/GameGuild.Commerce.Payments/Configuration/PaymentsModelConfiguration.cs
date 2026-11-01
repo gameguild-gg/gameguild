@@ -83,6 +83,25 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
                 .HasFilter("\"FraudDecision\" = 1 AND \"FraudReviewStatus\" = 0")
                 .IsCreatedConcurrently()
                 .HasDatabaseName("ix_payments_open_fraud_reviews");
+
+            // Attempt context the fraud gate assessed (issue #409: review-detail enrichment
+            // and cross-account device analysis): bounded, non-sensitive identifiers.
+            builder.Property(payment => payment.FraudSourceIpAddress)
+                .HasMaxLength(45);
+            builder.Property(payment => payment.FraudDeviceFingerprint)
+                .HasMaxLength(255);
+
+            // Partial index backing the cross-account device lookup: attempts that carried
+            // a device fingerprint, per tenant.
+            builder.HasIndex(payment => new
+                {
+                    payment.TenantId,
+                    payment.FraudDeviceFingerprint,
+                    payment.CreatedAt
+                })
+                .HasFilter("\"FraudDeviceFingerprint\" IS NOT NULL")
+                .IsCreatedConcurrently()
+                .HasDatabaseName("ix_payments_fraud_device_lookup");
         });
         // Retry-attempt history for the automated retry queue (issue #415): one row per
         // executed retry attempt, written by RetryPaymentCommandHandler.

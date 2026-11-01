@@ -103,6 +103,7 @@ export * from './modules/economy-bounties.gen.js';
 export * from './modules/economy-kyc.gen.js';
 export * from './modules/economy-marketplace.gen.js';
 export * from './modules/commerce-payments-fraud-blacklist.gen.js';
+export * from './modules/commerce-payments-fraud-devices.gen.js';
 export * from './modules/commerce-payments-fraud-reviews.gen.js';
 export * from './modules/commerce-payments-fraud-statistics.gen.js';
 export * from './modules/commerce-payments-fx-rates.gen.js';

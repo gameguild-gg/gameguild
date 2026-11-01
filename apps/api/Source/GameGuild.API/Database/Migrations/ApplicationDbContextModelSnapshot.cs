@@ -3090,6 +3090,10 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("FraudDeviceFingerprint")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<string>("FraudEvidence")
                         .HasColumnType("jsonb");
 
@@ -3108,6 +3112,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.Property<int?>("FraudScore")
                         .HasColumnType("integer");
+
+                    b.Property<string>("FraudSourceIpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
 
                     b.Property<string>("IdempotencyKey")
                         .IsRequired()
@@ -3221,6 +3229,11 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId", "ExternalCustomerId", "CreatedAt")
                         .HasDatabaseName("ix_payments_fraud_velocity_lookup")
                         .HasFilter("\"Status\" <> 4 AND (\"FraudDecision\" IS NULL OR \"FraudDecision\" = 0)")
+                        .HasAnnotation("Npgsql:CreatedConcurrently", true);
+
+                    b.HasIndex("TenantId", "FraudDeviceFingerprint", "CreatedAt")
+                        .HasDatabaseName("ix_payments_fraud_device_lookup")
+                        .HasFilter("\"FraudDeviceFingerprint\" IS NOT NULL")
                         .HasAnnotation("Npgsql:CreatedConcurrently", true);
 
                     b.HasIndex("Provider", "ProviderEnvironment", "ProviderAccountId", "ProviderObjectId", "ProviderMonetaryLeg")

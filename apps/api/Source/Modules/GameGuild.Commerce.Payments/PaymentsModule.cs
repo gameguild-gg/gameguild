@@ -134,6 +134,17 @@ public static class PaymentsModule
         services.AddScoped<IFraudSignalProvider, BinRangeFraudSignalProvider>();
         services.AddScoped<IFraudSignalProvider, AvsCvvFraudSignalProvider>();
         services.AddScoped<IFraudSignalProvider, GeoIpFraudSignalProvider>();
+        // Cross-account device fingerprint signal (issue #409 remainder): same device
+        // presented on multiple customer accounts, backed by the payments device-lookup
+        // partial index.
+        services.AddScoped<IFraudSignalProvider, DeviceFingerprintFraudSignalProvider>();
+        // Asynchronous fraud scoring (issue #409 remainder): a bounded queue plus a worker
+        // completing the providers the synchronous <200ms budget deferred. Enqueue happens
+        // after the synchronous decision is persisted, so queue behavior never blocks or
+        // rejects the payment path.
+        services.AddSingleton<IFraudBackgroundScoringQueue, FraudBackgroundScoringQueue>();
+        services.AddScoped<IFraudBackgroundScoringWorker, FraudBackgroundScoringWorker>();
+        services.AddHostedService<FraudBackgroundScoringHostedService>();
         // NoOp fallback keeps the GeoIP signal provider resolvable (and silent) in hosts
         // that have not registered a real geolocation database.
         services.TryAddSingleton<GameGuild.IGeolocationProvider>(GameGuild.NoOpGeolocationProvider.Instance);
