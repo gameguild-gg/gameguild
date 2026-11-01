@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -110,6 +110,54 @@ describe('contextual root page', () => {
     expect(screen.getByRole('heading', { name: 'Latest from the community' })).toBeInTheDocument();
     expect(screen.getByText('Game Feel Foundations')).toBeInTheDocument();
     expect(screen.getByText('Shipping a Jam Game')).toBeInTheDocument();
+  });
+
+  it('communicates every platform feature including game jams and mentorship (issue #123)', async () => {
+    mocks.auth.mockResolvedValue(null);
+
+    render(await RootPage(props));
+
+    expect(screen.getByRole('heading', { name: 'Everything You Need to Succeed' })).toBeInTheDocument();
+    for (const feature of [
+      'Interactive Courses',
+      'Game Jams',
+      'Community Studio',
+      'Mentorship',
+      'Testing Lab',
+      'Launch Pad',
+    ]) {
+      expect(screen.getByRole('heading', { name: feature })).toBeInTheDocument();
+    }
+    // Feature cards double as navigation to the live public surfaces.
+    expect(screen.getByRole('link', { name: /join a jam/i })).toHaveAttribute('href', '/community');
+    expect(screen.getByRole('link', { name: /find a mentor/i })).toHaveAttribute('href', '/jobs');
+  });
+
+  it('renders the community stats band derived from live public data (issue #123)', async () => {
+    mocks.auth.mockResolvedValue(null);
+
+    render(await RootPage(props));
+
+    const stats = screen.getByRole('region', { name: 'Community stats' });
+    expect(stats).toBeInTheDocument();
+    expect(screen.getByText('Published courses')).toBeInTheDocument();
+    expect(screen.getByText('Projects in the showcase')).toBeInTheDocument();
+    expect(screen.getByText('Upcoming playtests')).toBeInTheDocument();
+    expect(screen.getByText('Members in the spotlight')).toBeInTheDocument();
+  });
+
+  it('presents a strong sign-up call to action (issue #123)', async () => {
+    mocks.auth.mockResolvedValue(null);
+
+    render(await RootPage(props));
+
+    expect(screen.getByRole('link', { name: /join gameguild/i })).toHaveAttribute('href', '/sign-up');
+    const cta = screen.getByRole('region', { name: 'Join GameGuild' });
+    expect(within(cta).getByRole('heading', { name: 'Ready to ship your first game?' })).toBeInTheDocument();
+    expect(within(cta).getByRole('link', { name: /create your free account/i })).toHaveAttribute(
+      'href',
+      '/sign-up',
+    );
   });
 
   it('keeps the landing usable when the course catalog or blog are unavailable', async () => {
