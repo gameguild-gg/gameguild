@@ -733,6 +733,10 @@ public sealed class AuthController(ISender sender) : BaseApiController
     /// <param name="ct">Cancellation token</param>
     /// <returns>The session-state projection of the authenticated caller</returns>
     [HttpGet("v{version:apiVersion}/auth/session-state")]
+    // Issue #1035: this read fans out from every account-settings render (and each
+    // server-action re-render), so it must not share the 10/min brute-force budget
+    // with credential mutations — it rides the general Api policy instead.
+    [EnableRateLimiting(RateLimitPolicies.Api)]
     [EndpointSummary("Get current authentication session state")]
     [EndpointDescription("Returns the caller's current session validity, session expiry, token version, active-session count and MFA enrollment state. Anonymous access is not viable: the state describes the authenticated caller's own session.")]
     [ProducesResponseType<AuthSessionStateDto>(StatusCodes.Status200OK)]

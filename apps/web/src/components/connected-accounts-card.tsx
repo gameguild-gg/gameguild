@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Callout } from '@/components/ui/callout';
 import { revokeProviderScopes, unlinkProvider } from '@/lib/auth/external-logins-actions';
+import { recoverFromStaleServerAction } from '@/lib/auth/server-action-errors';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, Loader2, ShieldCheck, Unlink, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -82,7 +83,12 @@ function UnlinkButton({ provider }: { provider: 'google' | 'discord' }) {
       } else {
         toast.error(t('errors.generic'));
       }
-    } catch {
+    } catch (error) {
+      // Issue #1035: stale action bundle — recover with a one-time reload instead of
+      // a generic toast the user would retry into the same 409.
+      if (recoverFromStaleServerAction(error)) {
+        return;
+      }
       toast.error(t('errors.generic'));
     } finally {
       setPending(false);
@@ -131,7 +137,12 @@ function ScopeRevokeButton({
       } else {
         toast.error(t('errors.generic'));
       }
-    } catch {
+    } catch (error) {
+      // Issue #1035: stale action bundle — recover with a one-time reload instead of
+      // a generic toast the user would retry into the same 409.
+      if (recoverFromStaleServerAction(error)) {
+        return;
+      }
       toast.error(t('errors.generic'));
     } finally {
       setPending(false);
