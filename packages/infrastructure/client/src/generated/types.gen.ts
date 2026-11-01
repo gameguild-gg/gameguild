@@ -24901,6 +24901,139 @@ export interface SocialGroupsUpdateSocialGroupInput {
   visibility?: SocialGroupsSocialGroupVisibility;
 }
 
+/** Public booking payload; MenteeUserId is only honored for published matchmakers. */
+export interface SocialMentorshipBookMentorshipSessionInput {
+  meetingChannel?: SocialMentorshipMentorshipMeetingChannel;
+  menteeUserId?: string | null;
+  notes?: string | null;
+  slotId?: string;
+  topic?: string | null;
+}
+
+/** Data model for Social Mentorship Cancel Mentorship Session Request. */
+export interface SocialMentorshipCancelMentorshipSessionInput {
+  reason?: string | null;
+}
+
+/** Data model for Social Mentorship Mentor Availability Range Request. */
+export interface SocialMentorshipMentorAvailabilityRangeInput {
+  endsAt?: string;
+  startsAt?: string;
+}
+
+/** Data model for Social Mentorship Mentor Availability Slot Dto. */
+export interface SocialMentorshipMentorAvailabilitySlotDto {
+  id?: string;
+  endsAt?: string;
+  mentorProfileId?: string;
+  startsAt?: string;
+  status?: SocialMentorshipMentorAvailabilitySlotStatus;
+}
+
+/** OpenAPI schema for Social Mentorship Mentor Availability Slot Status. */
+export type SocialMentorshipMentorAvailabilitySlotStatus = 'Open' | 'Booked' | 'Cancelled';
+
+/** OpenAPI schema for Social Mentorship Mentor Booking Mode. */
+export type SocialMentorshipMentorBookingMode = 'Public' | 'MatchmakerOnly';
+
+/** Data model for Social Mentorship Mentor Dashboard Dto. */
+export interface SocialMentorshipMentorDashboardDto {
+  completedSessionCount?: number;
+  openSlotCount?: number;
+  profile?: SocialMentorshipMentorProfileDto;
+  totalSessionCount?: number;
+  upcomingSessionCount?: number;
+  upcomingSessions?: SocialMentorshipMentorshipSessionDto[] | null;
+}
+
+/** OpenAPI schema for Social Mentorship Mentor Pricing Model. */
+export type SocialMentorshipMentorPricingModel = 'Free' | 'Paid';
+
+/** Data model for Social Mentorship Mentor Profile Dto. */
+export interface SocialMentorshipMentorProfileDto {
+  id?: string;
+  bio?: string | null;
+  bookingMode?: SocialMentorshipMentorBookingMode;
+  createdAt?: string;
+  displayName?: string | null;
+  freeContributionReason?: string | null;
+  headline?: string | null;
+  introductoryCallMinutes?: number;
+  offersIntroductoryCall?: boolean;
+  pricingModel?: SocialMentorshipMentorPricingModel;
+  publishedAt?: string | null;
+  role?: SocialMentorshipMentorshipProgramRole;
+  skills?: SocialMentorshipMentorSkillDto[] | null;
+  status?: SocialMentorshipMentorProfileStatus;
+  timezoneId?: string | null;
+  updatedAt?: string;
+  userId?: string;
+}
+
+/** OpenAPI schema for Social Mentorship Mentor Profile Status. */
+export type SocialMentorshipMentorProfileStatus = 'Draft' | 'Published' | 'Paused';
+
+/** OpenAPI schema for Social Mentorship Mentorship Meeting Channel. */
+export type SocialMentorshipMentorshipMeetingChannel = 'InPlatform' | 'Discord' | 'GoogleCalendar';
+
+/** OpenAPI schema for Social Mentorship Mentorship Program Role. */
+export type SocialMentorshipMentorshipProgramRole = 'Mentor' | 'Advisor' | 'Matchmaker';
+
+/** Data model for Social Mentorship Mentorship Session Dto. */
+export interface SocialMentorshipMentorshipSessionDto {
+  id?: string;
+  cancellationReason?: string | null;
+  cancelledAt?: string | null;
+  completedAt?: string | null;
+  createdAt?: string;
+  endsAt?: string;
+  isIntroductory?: boolean;
+  meetingChannel?: SocialMentorshipMentorshipMeetingChannel;
+  meetingUrl?: string | null;
+  menteeUserId?: string;
+  mentorProfileId?: string;
+  mentorUserId?: string;
+  notes?: string | null;
+  slotId?: string | null;
+  startsAt?: string;
+  status?: SocialMentorshipMentorshipSessionStatus;
+  topic?: string | null;
+}
+
+/** OpenAPI schema for Social Mentorship Mentorship Session Status. */
+export type SocialMentorshipMentorshipSessionStatus = 'Booked' | 'Cancelled' | 'Completed';
+
+/** Data model for Social Mentorship Mentor Skill Dto. */
+export interface SocialMentorshipMentorSkillDto {
+  id?: string;
+  skill?: string | null;
+}
+
+/** Data model for Social Mentorship Publish Mentor Availability Request. */
+export interface SocialMentorshipPublishMentorAvailabilityInput {
+  slots?: SocialMentorshipMentorAvailabilityRangeInput[] | null;
+}
+
+/** Data model for Social Mentorship Set Mentor Profile Status Request. */
+export interface SocialMentorshipSetMentorProfileStatusInput {
+  status?: SocialMentorshipMentorProfileStatus;
+}
+
+/** Data model for Social Mentorship Upsert Mentor Profile Request. */
+export interface SocialMentorshipUpsertMentorProfileInput {
+  bio?: string | null;
+  bookingMode?: SocialMentorshipMentorBookingMode;
+  displayName?: string | null;
+  freeContributionReason?: string | null;
+  headline?: string | null;
+  introductoryCallMinutes?: number;
+  offersIntroductoryCall?: boolean;
+  pricingModel?: SocialMentorshipMentorPricingModel;
+  role?: SocialMentorshipMentorshipProgramRole;
+  skills?: string[] | null;
+  timezoneId?: string | null;
+}
+
 /** Data model for Social Posts Controllers Add Comment Request. */
 export interface SocialPostsControllersAddCommentInput {
   content?: string | null;
@@ -29304,6 +29437,24 @@ export let SocialGroupsSocialGroupStatusSchema: z.ZodType<SocialGroupsSocialGrou
 export let SocialGroupsSocialGroupTypeSchema: z.ZodType<SocialGroupsSocialGroupType>;
 export let SocialGroupsSocialGroupVisibilitySchema: z.ZodType<SocialGroupsSocialGroupVisibility>;
 export let SocialGroupsUpdateSocialGroupInputSchema: z.ZodType<SocialGroupsUpdateSocialGroupInput>;
+export let SocialMentorshipBookMentorshipSessionInputSchema: z.ZodType<SocialMentorshipBookMentorshipSessionInput>;
+export let SocialMentorshipCancelMentorshipSessionInputSchema: z.ZodType<SocialMentorshipCancelMentorshipSessionInput>;
+export let SocialMentorshipMentorAvailabilityRangeInputSchema: z.ZodType<SocialMentorshipMentorAvailabilityRangeInput>;
+export let SocialMentorshipMentorAvailabilitySlotDtoSchema: z.ZodType<SocialMentorshipMentorAvailabilitySlotDto>;
+export let SocialMentorshipMentorAvailabilitySlotStatusSchema: z.ZodType<SocialMentorshipMentorAvailabilitySlotStatus>;
+export let SocialMentorshipMentorBookingModeSchema: z.ZodType<SocialMentorshipMentorBookingMode>;
+export let SocialMentorshipMentorDashboardDtoSchema: z.ZodType<SocialMentorshipMentorDashboardDto>;
+export let SocialMentorshipMentorPricingModelSchema: z.ZodType<SocialMentorshipMentorPricingModel>;
+export let SocialMentorshipMentorProfileDtoSchema: z.ZodType<SocialMentorshipMentorProfileDto>;
+export let SocialMentorshipMentorProfileStatusSchema: z.ZodType<SocialMentorshipMentorProfileStatus>;
+export let SocialMentorshipMentorshipMeetingChannelSchema: z.ZodType<SocialMentorshipMentorshipMeetingChannel>;
+export let SocialMentorshipMentorshipProgramRoleSchema: z.ZodType<SocialMentorshipMentorshipProgramRole>;
+export let SocialMentorshipMentorshipSessionDtoSchema: z.ZodType<SocialMentorshipMentorshipSessionDto>;
+export let SocialMentorshipMentorshipSessionStatusSchema: z.ZodType<SocialMentorshipMentorshipSessionStatus>;
+export let SocialMentorshipMentorSkillDtoSchema: z.ZodType<SocialMentorshipMentorSkillDto>;
+export let SocialMentorshipPublishMentorAvailabilityInputSchema: z.ZodType<SocialMentorshipPublishMentorAvailabilityInput>;
+export let SocialMentorshipSetMentorProfileStatusInputSchema: z.ZodType<SocialMentorshipSetMentorProfileStatusInput>;
+export let SocialMentorshipUpsertMentorProfileInputSchema: z.ZodType<SocialMentorshipUpsertMentorProfileInput>;
 export let SocialPostsControllersAddCommentInputSchema: z.ZodType<SocialPostsControllersAddCommentInput>;
 export let SocialPostsControllersCreatePostInputSchema: z.ZodType<SocialPostsControllersCreatePostInput>;
 export let SocialPostsControllersCreateRepostInputSchema: z.ZodType<SocialPostsControllersCreateRepostInput>;
@@ -52267,6 +52418,148 @@ SocialGroupsUpdateSocialGroupInputSchema = z.object({
   visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
 });
 
+/** Zod schema for SocialMentorshipBookMentorshipSessionInput. Public booking payload; MenteeUserId is only honored for published matchmakers. */
+SocialMentorshipBookMentorshipSessionInputSchema = z.object({
+  meetingChannel: z.lazy(() => SocialMentorshipMentorshipMeetingChannelSchema).optional(),
+  menteeUserId: z.string().uuid().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  slotId: z.string().uuid().optional(),
+  topic: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialMentorshipCancelMentorshipSessionInput. Data model for Social Mentorship Cancel Mentorship Session Request. */
+SocialMentorshipCancelMentorshipSessionInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialMentorshipMentorAvailabilityRangeInput. Data model for Social Mentorship Mentor Availability Range Request. */
+SocialMentorshipMentorAvailabilityRangeInputSchema = z.object({
+  endsAt: z.string().datetime().optional(),
+  startsAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for SocialMentorshipMentorAvailabilitySlotDto. Data model for Social Mentorship Mentor Availability Slot Dto. */
+SocialMentorshipMentorAvailabilitySlotDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  endsAt: z.string().datetime().optional(),
+  mentorProfileId: z.string().uuid().optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => SocialMentorshipMentorAvailabilitySlotStatusSchema).optional(),
+});
+
+/** Zod schema for SocialMentorshipMentorAvailabilitySlotStatus. OpenAPI schema for Social Mentorship Mentor Availability Slot Status. */
+SocialMentorshipMentorAvailabilitySlotStatusSchema = z.enum(['Open', 'Booked', 'Cancelled']);
+
+/** Zod schema for SocialMentorshipMentorBookingMode. OpenAPI schema for Social Mentorship Mentor Booking Mode. */
+SocialMentorshipMentorBookingModeSchema = z.enum(['Public', 'MatchmakerOnly']);
+
+/** Zod schema for SocialMentorshipMentorDashboardDto. Data model for Social Mentorship Mentor Dashboard Dto. */
+SocialMentorshipMentorDashboardDtoSchema = z.object({
+  completedSessionCount: z.number().int().optional(),
+  openSlotCount: z.number().int().optional(),
+  profile: z.lazy(() => SocialMentorshipMentorProfileDtoSchema).optional(),
+  totalSessionCount: z.number().int().optional(),
+  upcomingSessionCount: z.number().int().optional(),
+  upcomingSessions: z
+    .array(z.lazy(() => SocialMentorshipMentorshipSessionDtoSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for SocialMentorshipMentorPricingModel. OpenAPI schema for Social Mentorship Mentor Pricing Model. */
+SocialMentorshipMentorPricingModelSchema = z.enum(['Free', 'Paid']);
+
+/** Zod schema for SocialMentorshipMentorProfileDto. Data model for Social Mentorship Mentor Profile Dto. */
+SocialMentorshipMentorProfileDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  bio: z.string().nullable().optional(),
+  bookingMode: z.lazy(() => SocialMentorshipMentorBookingModeSchema).optional(),
+  createdAt: z.string().datetime().optional(),
+  displayName: z.string().nullable().optional(),
+  freeContributionReason: z.string().nullable().optional(),
+  headline: z.string().nullable().optional(),
+  introductoryCallMinutes: z.number().int().optional(),
+  offersIntroductoryCall: z.boolean().optional(),
+  pricingModel: z.lazy(() => SocialMentorshipMentorPricingModelSchema).optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  role: z.lazy(() => SocialMentorshipMentorshipProgramRoleSchema).optional(),
+  skills: z
+    .array(z.lazy(() => SocialMentorshipMentorSkillDtoSchema))
+    .nullable()
+    .optional(),
+  status: z.lazy(() => SocialMentorshipMentorProfileStatusSchema).optional(),
+  timezoneId: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for SocialMentorshipMentorProfileStatus. OpenAPI schema for Social Mentorship Mentor Profile Status. */
+SocialMentorshipMentorProfileStatusSchema = z.enum(['Draft', 'Published', 'Paused']);
+
+/** Zod schema for SocialMentorshipMentorshipMeetingChannel. OpenAPI schema for Social Mentorship Mentorship Meeting Channel. */
+SocialMentorshipMentorshipMeetingChannelSchema = z.enum(['InPlatform', 'Discord', 'GoogleCalendar']);
+
+/** Zod schema for SocialMentorshipMentorshipProgramRole. OpenAPI schema for Social Mentorship Mentorship Program Role. */
+SocialMentorshipMentorshipProgramRoleSchema = z.enum(['Mentor', 'Advisor', 'Matchmaker']);
+
+/** Zod schema for SocialMentorshipMentorshipSessionDto. Data model for Social Mentorship Mentorship Session Dto. */
+SocialMentorshipMentorshipSessionDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  cancellationReason: z.string().nullable().optional(),
+  cancelledAt: z.string().datetime().nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  endsAt: z.string().datetime().optional(),
+  isIntroductory: z.boolean().optional(),
+  meetingChannel: z.lazy(() => SocialMentorshipMentorshipMeetingChannelSchema).optional(),
+  meetingUrl: z.string().nullable().optional(),
+  menteeUserId: z.string().uuid().optional(),
+  mentorProfileId: z.string().uuid().optional(),
+  mentorUserId: z.string().uuid().optional(),
+  notes: z.string().nullable().optional(),
+  slotId: z.string().uuid().nullable().optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => SocialMentorshipMentorshipSessionStatusSchema).optional(),
+  topic: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialMentorshipMentorshipSessionStatus. OpenAPI schema for Social Mentorship Mentorship Session Status. */
+SocialMentorshipMentorshipSessionStatusSchema = z.enum(['Booked', 'Cancelled', 'Completed']);
+
+/** Zod schema for SocialMentorshipMentorSkillDto. Data model for Social Mentorship Mentor Skill Dto. */
+SocialMentorshipMentorSkillDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  skill: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialMentorshipPublishMentorAvailabilityInput. Data model for Social Mentorship Publish Mentor Availability Request. */
+SocialMentorshipPublishMentorAvailabilityInputSchema = z.object({
+  slots: z
+    .array(z.lazy(() => SocialMentorshipMentorAvailabilityRangeInputSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for SocialMentorshipSetMentorProfileStatusInput. Data model for Social Mentorship Set Mentor Profile Status Request. */
+SocialMentorshipSetMentorProfileStatusInputSchema = z.object({
+  status: z.lazy(() => SocialMentorshipMentorProfileStatusSchema).optional(),
+});
+
+/** Zod schema for SocialMentorshipUpsertMentorProfileInput. Data model for Social Mentorship Upsert Mentor Profile Request. */
+SocialMentorshipUpsertMentorProfileInputSchema = z.object({
+  bio: z.string().nullable().optional(),
+  bookingMode: z.lazy(() => SocialMentorshipMentorBookingModeSchema).optional(),
+  displayName: z.string().nullable().optional(),
+  freeContributionReason: z.string().nullable().optional(),
+  headline: z.string().nullable().optional(),
+  introductoryCallMinutes: z.number().int().optional(),
+  offersIntroductoryCall: z.boolean().optional(),
+  pricingModel: z.lazy(() => SocialMentorshipMentorPricingModelSchema).optional(),
+  role: z.lazy(() => SocialMentorshipMentorshipProgramRoleSchema).optional(),
+  skills: z.array(z.string()).nullable().optional(),
+  timezoneId: z.string().nullable().optional(),
+});
+
 /** Zod schema for SocialPostsControllersAddCommentInput. Data model for Social Posts Controllers Add Comment Request. */
 SocialPostsControllersAddCommentInputSchema = z.object({
   content: z.string().nullable().optional(),
@@ -55097,6 +55390,16 @@ export type SocialGroupsSocialGroup = SocialGroupsSocialGroupDto;
 export { SocialGroupsSocialGroupDtoSchema as SocialGroupsSocialGroupSchema };
 export type SocialGroupsSocialGroupMember = SocialGroupsSocialGroupMemberDto;
 export { SocialGroupsSocialGroupMemberDtoSchema as SocialGroupsSocialGroupMemberSchema };
+export type SocialMentorshipMentorAvailabilitySlot = SocialMentorshipMentorAvailabilitySlotDto;
+export { SocialMentorshipMentorAvailabilitySlotDtoSchema as SocialMentorshipMentorAvailabilitySlotSchema };
+export type SocialMentorshipMentorDashboard = SocialMentorshipMentorDashboardDto;
+export { SocialMentorshipMentorDashboardDtoSchema as SocialMentorshipMentorDashboardSchema };
+export type SocialMentorshipMentorProfile = SocialMentorshipMentorProfileDto;
+export { SocialMentorshipMentorProfileDtoSchema as SocialMentorshipMentorProfileSchema };
+export type SocialMentorshipMentorshipSession = SocialMentorshipMentorshipSessionDto;
+export { SocialMentorshipMentorshipSessionDtoSchema as SocialMentorshipMentorshipSessionSchema };
+export type SocialMentorshipMentorSkill = SocialMentorshipMentorSkillDto;
+export { SocialMentorshipMentorSkillDtoSchema as SocialMentorshipMentorSkillSchema };
 export type SocialProfilesProfilePortfolioItem = SocialProfilesProfilePortfolioItemDto;
 export { SocialProfilesProfilePortfolioItemDtoSchema as SocialProfilesProfilePortfolioItemSchema };
 export type SocialProfilesProfileSkill = SocialProfilesProfileSkillDto;
