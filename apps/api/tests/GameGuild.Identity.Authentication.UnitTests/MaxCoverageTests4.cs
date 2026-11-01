@@ -549,7 +549,7 @@ public sealed class JwtTokenServiceRetryTests
 // ════════════════════════════════════════════════════════════════════════════
 public sealed class EmailVerificationBranchTests
 {
-    private readonly MemoryCache _cache;
+    private readonly DistributedMemoryCache _cache;
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IPublisher> _publisher = new();
     private readonly EmailVerificationService _sut;
@@ -557,7 +557,7 @@ public sealed class EmailVerificationBranchTests
 
     public EmailVerificationBranchTests()
     {
-        _cache = new MemoryCache(new MemoryCacheOptions());
+        _cache = new DistributedMemoryCache(Options.Create(new DistributedCacheOptions()));
         _publisher.Setup(p => p.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _sut = new EmailVerificationService(

@@ -15,6 +15,7 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -695,8 +696,9 @@ public sealed class EmailVerificationCatchBlockTests
     [Fact]
     public async Task GenerateToken_CacheThrows_PropagatesException()
     {
-        var mockCache = new Mock<IMemoryCache>();
-        mockCache.Setup(c => c.CreateEntry(It.IsAny<object>()))
+        var mockCache = new Mock<IDistributedCache>();
+        mockCache.Setup(c => c.SetAsync(It.IsAny<byte[]>(), It.IsAny<byte[]>(),
+                It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>()))
             .Throws(new InvalidOperationException("Cache error"));
 
         var publisher = new Mock<IPublisher>();
@@ -716,9 +718,8 @@ public sealed class EmailVerificationCatchBlockTests
     [Fact]
     public async Task VerifyToken_CacheThrows_ReturnsFalse()
     {
-        var mockCache = new Mock<IMemoryCache>();
-        object? outVal = null;
-        mockCache.Setup(c => c.TryGetValue(It.IsAny<object>(), out outVal))
+        var mockCache = new Mock<IDistributedCache>();
+        mockCache.Setup(c => c.GetStringAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Throws(new InvalidOperationException("Cache error"));
 
         var publisher = new Mock<IPublisher>();
@@ -738,7 +739,7 @@ public sealed class EmailVerificationCatchBlockTests
     [Fact]
     public async Task IsEmailVerified_RepoThrows_ReturnsFalse()
     {
-        var mockCache = new Mock<IMemoryCache>();
+        var mockCache = new Mock<IDistributedCache>();
         var mockRepo = new Mock<IUserRepository>();
         mockRepo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("DB error"));
@@ -761,9 +762,8 @@ public sealed class EmailVerificationCatchBlockTests
     [Fact]
     public async Task ResendVerification_CacheThrows_ReturnsFalse()
     {
-        var mockCache = new Mock<IMemoryCache>();
-        object? outVal = null;
-        mockCache.Setup(c => c.TryGetValue(It.IsAny<object>(), out outVal))
+        var mockCache = new Mock<IDistributedCache>();
+        mockCache.Setup(c => c.GetStringAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Throws(new InvalidOperationException("Cache error"));
 
         var publisher = new Mock<IPublisher>();
@@ -783,9 +783,8 @@ public sealed class EmailVerificationCatchBlockTests
     [Fact]
     public async Task IsTokenValid_CacheThrows_ReturnsFalse()
     {
-        var mockCache = new Mock<IMemoryCache>();
-        object? outVal = null;
-        mockCache.Setup(c => c.TryGetValue(It.IsAny<object>(), out outVal))
+        var mockCache = new Mock<IDistributedCache>();
+        mockCache.Setup(c => c.GetStringAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Throws(new InvalidOperationException("Cache error"));
 
         var publisher = new Mock<IPublisher>();

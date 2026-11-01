@@ -30,7 +30,7 @@ public sealed class AuthenticationCoverageCompletionTests
     [Fact]
     public async Task EmailVerificationService_CoversTypedTokensAndValidationBranches()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = new DistributedMemoryCache(Options.Create(new DistributedCacheOptions()));
         var publisher = new Mock<IPublisher>();
         publisher.Setup(x => x.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -1089,23 +1089,26 @@ public sealed class AuthenticationCoverageCompletionTests
     }
 
     private static void SetTokenInfo(
-        IMemoryCache cache,
+        Microsoft.Extensions.Caching.Distributed.IDistributedCache cache,
         string token,
         Guid userId,
         string email,
         string type,
         DateTime expiresAt)
     {
-        var tokenInfoType = typeof(EmailVerificationService).Assembly
-            .GetType("GameGuild.Identity.Authentication.TokenInfo", throwOnError: true)!;
-        var tokenInfo = Activator.CreateInstance(tokenInfoType)!;
+        // Tokens now live in the distributed cache as JSON payloads (issue #1151), planted here
+        // with the same wire shape the service writes (Web defaults: camelCase, ISO dates).
+        var payload = JsonSerializer.Serialize(new Dictionary<string, object>
+        {
+            ["userId"] = userId,
+            ["email"] = email,
+            ["type"] = type,
+            ["expiresAt"] = expiresAt
+        }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
-        tokenInfoType.GetProperty("UserId")!.SetValue(tokenInfo, userId);
-        tokenInfoType.GetProperty("Email")!.SetValue(tokenInfo, email);
-        tokenInfoType.GetProperty("Type")!.SetValue(tokenInfo, type);
-        tokenInfoType.GetProperty("ExpiresAt")!.SetValue(tokenInfo, expiresAt);
-
-        cache.Set("emailverify:token:" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token))), tokenInfo);
+        cache.SetStringAsync(
+            "emailverify:token:" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token))),
+            payload).GetAwaiter().GetResult();
     }
 
     private static IApplicationDbContext ContextWithSet<TEntity>()

@@ -1029,7 +1029,7 @@ public sealed class EmailVerificationServiceCoverageTests
 
     public EmailVerificationServiceCoverageTests()
     {
-        MemoryCache cache = new MemoryCache(new MemoryCacheOptions());
+        DistributedMemoryCache cache = new(Options.Create(new DistributedCacheOptions()));
         _publisher.Setup(p => p.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _sut = new EmailVerificationService(

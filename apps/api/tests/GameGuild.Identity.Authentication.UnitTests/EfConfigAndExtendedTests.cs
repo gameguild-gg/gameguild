@@ -233,7 +233,7 @@ public class EfConfigAndExtendedTests
             .Returns(Task.CompletedTask);
         var svc = new EmailVerificationService(
             Mock.Of<ILogger<EmailVerificationService>>(),
-            new MemoryCache(new MemoryCacheOptions()),
+            new DistributedMemoryCache(Microsoft.Extensions.Options.Options.Create(new DistributedCacheOptions())),
             publisher.Object,
             magicLinkTokenStore: new global::GameGuild.Identity.Authentication.UnitTests.Services.EmailVerificationServiceTests.InMemoryMagicLinkTokenStore());
         svc.Should().NotBeNull();

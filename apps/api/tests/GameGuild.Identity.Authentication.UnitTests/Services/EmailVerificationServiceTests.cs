@@ -1,35 +1,38 @@
+using System.Collections.Concurrent;
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
-using System.Collections.Concurrent;
 using Xunit;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Services;
 
 public class EmailVerificationServiceTests
 {
-    private readonly Mock<ILogger<EmailVerificationService>> _loggerMock;
     private readonly Mock<IPublisher> _publisherMock;
     private readonly InMemoryMagicLinkTokenStore _magicLinkTokenStore;
     private readonly EmailVerificationService _service;
 
     public EmailVerificationServiceTests()
     {
-        _loggerMock = new Mock<ILogger<EmailVerificationService>>();
         _publisherMock = new Mock<IPublisher>();
         _publisherMock.Setup(x => x.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _magicLinkTokenStore = new InMemoryMagicLinkTokenStore();
-        var memoryCache = new MemoryCache(new MemoryCacheOptions());
         _service = new EmailVerificationService(
-            _loggerMock.Object,
-            memoryCache,
+            NullLogger<EmailVerificationService>.Instance,
+            CreateCache(),
             _publisherMock.Object,
             magicLinkTokenStore: _magicLinkTokenStore);
     }
+
+    internal static DistributedMemoryCache CreateCache() =>
+        new(Options.Create(new DistributedCacheOptions()));
 
     [Fact]
     public async Task GenerateVerificationTokenAsync_GeneratesValidToken()
@@ -62,27 +65,30 @@ public class EmailVerificationServiceTests
     }
 
     [Fact]
-    public async Task GenerateVerificationTokenAsync_WorksWithSizeLimitedMemoryCache()
+    public async Task GenerateVerificationTokenAsync_TokenSurvivesAcrossServiceInstances()
     {
-        // Arrange
-        var sizedCache = new MemoryCache(new MemoryCacheOptions { SizeLimit = 1024 });
-        var sizedService = new EmailVerificationService(_loggerMock.Object, sizedCache, _publisherMock.Object,
-            magicLinkTokenStore: new global::GameGuild.Identity.Authentication.UnitTests.Services.EmailVerificationServiceTests.InMemoryMagicLinkTokenStore());
+        // The distributed store replaces the process-local cache (issue #1151): a token minted
+        // through one service scope must be consumable through a fresh instance, as happens when
+        // a load balancer moves the user to another node.
         var userId = Guid.NewGuid();
-        var email = "test@example.com";
+        var sharedCache = CreateCache();
+        var minting = new EmailVerificationService(
+            NullLogger<EmailVerificationService>.Instance, sharedCache, _publisherMock.Object,
+            magicLinkTokenStore: new InMemoryMagicLinkTokenStore());
+        var consuming = new EmailVerificationService(
+            NullLogger<EmailVerificationService>.Instance, sharedCache, _publisherMock.Object,
+            magicLinkTokenStore: new InMemoryMagicLinkTokenStore());
 
-        // Act
-        var act = async () => await sizedService.GenerateVerificationTokenAsync(userId, email);
+        var token = await minting.GenerateVerificationTokenAsync(userId, "test@example.com");
+        var result = await consuming.VerifyEmailTokenAsync(userId, token);
 
-        // Assert
-        await act.Should().NotThrowAsync();
+        result.Should().BeTrue();
     }
 
     [Fact]
     public async Task GenerateMagicLinkTokenAsync_RejectsMissingPersistentStorage()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
-        var service = new EmailVerificationService(_loggerMock.Object, cache, _publisherMock.Object);
+        var service = new EmailVerificationService(NullLogger<EmailVerificationService>.Instance, CreateCache(), _publisherMock.Object);
 
         var operation = () => service.GenerateMagicLinkTokenAsync(Guid.NewGuid(), "fixture@example.test");
 
@@ -132,6 +138,66 @@ public class EmailVerificationServiceTests
             DateTimeOffset now,
             CancellationToken cancellationToken = default)
             => Task.FromResult(_tokens.TryGetValue(token, out var entry) && entry.ExpiresAt > now && entry.ConsumedAt is null);
+    }
+
+    /// <summary>
+    ///     A real <see cref="DistributedMemoryCache"/> that also records every key it has seen,
+    ///     standing in for cache introspection the distributed abstraction does not expose.
+    /// </summary>
+    internal sealed class RecordingDistributedCache : IDistributedCache
+    {
+        private readonly DistributedMemoryCache _inner = new(Options.Create(new DistributedCacheOptions()));
+        private readonly ConcurrentDictionary<string, byte> _keys = new();
+
+        public IReadOnlyCollection<string> Keys => _keys.Keys.ToArray();
+
+        public byte[]? Get(string key)
+        {
+            _keys[key] = 1;
+            return _inner.Get(key);
+        }
+
+        public Task<byte[]?> GetAsync(string key, CancellationToken token = default)
+        {
+            _keys[key] = 1;
+            return _inner.GetAsync(key, token);
+        }
+
+        public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
+        {
+            _keys[key] = 1;
+            _inner.Set(key, value, options);
+        }
+
+        public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
+        {
+            _keys[key] = 1;
+            return _inner.SetAsync(key, value, options, token);
+        }
+
+        public void Refresh(string key)
+        {
+            _keys[key] = 1;
+            _inner.Refresh(key);
+        }
+
+        public Task RefreshAsync(string key, CancellationToken token = default)
+        {
+            _keys[key] = 1;
+            return _inner.RefreshAsync(key, token);
+        }
+
+        public void Remove(string key)
+        {
+            _keys[key] = 1;
+            _inner.Remove(key);
+        }
+
+        public Task RemoveAsync(string key, CancellationToken token = default)
+        {
+            _keys[key] = 1;
+            return _inner.RemoveAsync(key, token);
+        }
     }
 
     [Fact]

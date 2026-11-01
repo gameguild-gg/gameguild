@@ -281,7 +281,7 @@ public sealed class NotificationTokenStoragePostgreSqlTests(NotificationTokenSto
     private static async Task<(Notification Notification, string Token)> Queue(ApplicationDbContext context, string kind)
     {
         var user = await CreateUser(context);
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = new DistributedMemoryCache(Options.Create(new DistributedCacheOptions()));
         var generator = new EmailVerificationService(NullLogger<EmailVerificationService>.Instance, cache, Mock.Of<IPublisher>(),
             magicLinkTokenStore: new DatabaseMagicLinkTokenStore(context));
         var token = kind switch
