@@ -21794,6 +21794,22 @@ export interface NodesJsonNodeOptions {
   propertyNameCaseInsensitive?: boolean;
 }
 
+/** Data model for Notifications Controllers Cancel Whats App Broadcast Request. */
+export interface NotificationsControllersCancelWhatsAppBroadcastInput {
+  tenantId?: string;
+}
+
+/** Data model for Notifications Controllers Create Whats App Broadcast Request. */
+export interface NotificationsControllersCreateWhatsAppBroadcastInput {
+  languageCode?: string | null;
+  segmentActiveMembersOnly?: boolean | null;
+  segmentRole?: string | null;
+  templateName?: string | null;
+  tenantId?: string;
+  title?: string | null;
+  variablesJson?: string | null;
+}
+
 /** Data model for Notifications Controllers Dead Letter Dto. */
 export interface NotificationsControllersDeadLetterDto {
   id?: string;
@@ -21903,6 +21919,17 @@ export interface NotificationsControllersRequeueOutput {
   requeueCount?: number;
 }
 
+/** Data model for Notifications Controllers Schedule Whats App Broadcast Request. */
+export interface NotificationsControllersScheduleWhatsAppBroadcastInput {
+  scheduledAtUtc?: string;
+  tenantId?: string;
+}
+
+/** Data model for Notifications Controllers Send Whats App Broadcast Request. */
+export interface NotificationsControllersSendWhatsAppBroadcastInput {
+  tenantId?: string;
+}
+
 /** Data model for Notifications Controllers Set Quiet Hours Request. */
 export interface NotificationsControllersSetQuietHoursInput {
   end?: string | null;
@@ -21951,8 +21978,55 @@ export interface NotificationsControllersUpdatePreferencesInput {
   socialEnabled?: boolean | null;
 }
 
+/** Data model for Notifications Controllers Whats App Broadcast Dto. */
+export interface NotificationsControllersWhatsAppBroadcastDto {
+  id?: string;
+  createdAt?: string;
+  createdBy?: string;
+  error?: string | null;
+  languageCode?: string | null;
+  recipientCount?: number;
+  scheduledAtUtc?: string | null;
+  segmentActiveMembersOnly?: boolean;
+  segmentRole?: string | null;
+  sentAtUtc?: string | null;
+  status?: string | null;
+  templateName?: string | null;
+  tenantId?: string;
+  title?: string | null;
+}
+
+/** Data model for Notifications Controllers Whats App Broadcast Recipient Dto. */
+export interface NotificationsControllersWhatsAppBroadcastRecipientDto {
+  id?: string;
+  attemptCount?: number;
+  broadcastId?: string;
+  error?: string | null;
+  phoneNumber?: string | null;
+  providerMessageId?: string | null;
+  sentAtUtc?: string | null;
+  status?: string | null;
+  userId?: string;
+}
+
+/** Data model for Notifications Controllers Whats App Broadcast Send Report Dto. */
+export interface NotificationsControllersWhatsAppBroadcastSendReportDto {
+  attempted?: number;
+  broadcastId?: string;
+  failed?: number;
+  sent?: number;
+  skipped?: number;
+}
+
+/** Data model for Notifications Controllers Whats App Channel Status Dto. */
+export interface NotificationsControllersWhatsAppChannelStatusDto {
+  allowlistedTemplates?: string[] | null;
+  enabled?: boolean;
+  isConfigured?: boolean;
+}
+
 /** Delivery channels for notifications */
-export type NotificationsNotificationChannel = 'InApp' | 'Email' | 'Push' | 'Sms' | 'Slack' | 'Discord' | 'Webhook';
+export type NotificationsNotificationChannel = 'InApp' | 'Email' | 'Push' | 'Sms' | 'Slack' | 'Discord' | 'Webhook' | 'WhatsApp';
 
 /** OpenAPI schema for Objects Attestation Conveyance Preference. */
 export type ObjectsAttestationConveyancePreference = 'None' | 'Indirect' | 'Direct' | 'Enterprise';
@@ -22586,6 +22660,52 @@ export interface PagedResultUserProfileDto {
   hasPreviousPage?: boolean;
   /** The items in the current page. */
   items?: IdentityUsersUserProfileDto[] | null;
+  /** Current page number (1-based). */
+  pageNumber?: number;
+  /** Number of items per page. */
+  pageSize?: number;
+  /** Number of items skipped (offset). */
+  skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
+  take?: number;
+  /** Total number of items across all pages. */
+  totalCount?: number;
+  /** Total number of pages. */
+  totalPages?: number;
+}
+
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+export interface PagedResultWhatsAppBroadcastDto {
+  /** Whether there are more items after this page. */
+  hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
+  hasPreviousPage?: boolean;
+  /** The items in the current page. */
+  items?: NotificationsControllersWhatsAppBroadcastDto[] | null;
+  /** Current page number (1-based). */
+  pageNumber?: number;
+  /** Number of items per page. */
+  pageSize?: number;
+  /** Number of items skipped (offset). */
+  skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
+  take?: number;
+  /** Total number of items across all pages. */
+  totalCount?: number;
+  /** Total number of pages. */
+  totalPages?: number;
+}
+
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+export interface PagedResultWhatsAppBroadcastRecipientDto {
+  /** Whether there are more items after this page. */
+  hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
+  hasPreviousPage?: boolean;
+  /** The items in the current page. */
+  items?: NotificationsControllersWhatsAppBroadcastRecipientDto[] | null;
   /** Current page number (1-based). */
   pageNumber?: number;
   /** Number of items per page. */
@@ -28952,6 +29072,8 @@ export let MvcProblemDetailsSchema: z.ZodType<MvcProblemDetails>;
 export let MvcValidationProblemDetailsSchema: z.ZodType<MvcValidationProblemDetails>;
 export let NodesJsonNodeSchema: z.ZodType<NodesJsonNode>;
 export let NodesJsonNodeOptionsSchema: z.ZodType<NodesJsonNodeOptions>;
+export let NotificationsControllersCancelWhatsAppBroadcastInputSchema: z.ZodType<NotificationsControllersCancelWhatsAppBroadcastInput>;
+export let NotificationsControllersCreateWhatsAppBroadcastInputSchema: z.ZodType<NotificationsControllersCreateWhatsAppBroadcastInput>;
 export let NotificationsControllersDeadLetterDtoSchema: z.ZodType<NotificationsControllersDeadLetterDto>;
 export let NotificationsControllersDeletedCountOutputSchema: z.ZodType<NotificationsControllersDeletedCountOutput>;
 export let NotificationsControllersDigestFrequencyOutputSchema: z.ZodType<NotificationsControllersDigestFrequencyOutput>;
@@ -28963,6 +29085,8 @@ export let NotificationsControllersNotificationPreferenceDtoSchema: z.ZodType<No
 export let NotificationsControllersNotificationTimelineDtoSchema: z.ZodType<NotificationsControllersNotificationTimelineDto>;
 export let NotificationsControllersNotificationTypeCatalogEntrySchema: z.ZodType<NotificationsControllersNotificationTypeCatalogEntry>;
 export let NotificationsControllersRequeueOutputSchema: z.ZodType<NotificationsControllersRequeueOutput>;
+export let NotificationsControllersScheduleWhatsAppBroadcastInputSchema: z.ZodType<NotificationsControllersScheduleWhatsAppBroadcastInput>;
+export let NotificationsControllersSendWhatsAppBroadcastInputSchema: z.ZodType<NotificationsControllersSendWhatsAppBroadcastInput>;
 export let NotificationsControllersSetQuietHoursInputSchema: z.ZodType<NotificationsControllersSetQuietHoursInput>;
 export let NotificationsControllersUnreadCountOutputSchema: z.ZodType<NotificationsControllersUnreadCountOutput>;
 export let NotificationsControllersUnsubscribeOutputSchema: z.ZodType<NotificationsControllersUnsubscribeOutput>;
@@ -28970,6 +29094,10 @@ export let NotificationsControllersUnsuppressOutputSchema: z.ZodType<Notificatio
 export let NotificationsControllersUpdateDigestFrequencyInputSchema: z.ZodType<NotificationsControllersUpdateDigestFrequencyInput>;
 export let NotificationsControllersUpdateMutedTypesInputSchema: z.ZodType<NotificationsControllersUpdateMutedTypesInput>;
 export let NotificationsControllersUpdatePreferencesInputSchema: z.ZodType<NotificationsControllersUpdatePreferencesInput>;
+export let NotificationsControllersWhatsAppBroadcastDtoSchema: z.ZodType<NotificationsControllersWhatsAppBroadcastDto>;
+export let NotificationsControllersWhatsAppBroadcastRecipientDtoSchema: z.ZodType<NotificationsControllersWhatsAppBroadcastRecipientDto>;
+export let NotificationsControllersWhatsAppBroadcastSendReportDtoSchema: z.ZodType<NotificationsControllersWhatsAppBroadcastSendReportDto>;
+export let NotificationsControllersWhatsAppChannelStatusDtoSchema: z.ZodType<NotificationsControllersWhatsAppChannelStatusDto>;
 export let NotificationsNotificationChannelSchema: z.ZodType<NotificationsNotificationChannel>;
 export let ObjectsAttestationConveyancePreferenceSchema: z.ZodType<ObjectsAttestationConveyancePreference>;
 export let ObjectsAttestationStatementFormatIdentifierSchema: z.ZodType<ObjectsAttestationStatementFormatIdentifier>;
@@ -29012,6 +29140,8 @@ export let PagedResultTenantAuditLogEntrySchema: z.ZodType<PagedResultTenantAudi
 export let PagedResultUserDtoSchema: z.ZodType<PagedResultUserDto>;
 export let PagedResultUserNotificationDtoSchema: z.ZodType<PagedResultUserNotificationDto>;
 export let PagedResultUserProfileDtoSchema: z.ZodType<PagedResultUserProfileDto>;
+export let PagedResultWhatsAppBroadcastDtoSchema: z.ZodType<PagedResultWhatsAppBroadcastDto>;
+export let PagedResultWhatsAppBroadcastRecipientDtoSchema: z.ZodType<PagedResultWhatsAppBroadcastRecipientDto>;
 export let ProgramCategorySchema: z.ZodType<ProgramCategory>;
 export let ProjectsAddCollaboratorInputSchema: z.ZodType<ProjectsAddCollaboratorInput>;
 export let ProjectsAddProjectCollaboratorInputSchema: z.ZodType<ProjectsAddProjectCollaboratorInput>;
@@ -49397,6 +49527,22 @@ NodesJsonNodeOptionsSchema = z.object({
   propertyNameCaseInsensitive: z.boolean().optional(),
 });
 
+/** Zod schema for NotificationsControllersCancelWhatsAppBroadcastInput. Data model for Notifications Controllers Cancel Whats App Broadcast Request. */
+NotificationsControllersCancelWhatsAppBroadcastInputSchema = z.object({
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for NotificationsControllersCreateWhatsAppBroadcastInput. Data model for Notifications Controllers Create Whats App Broadcast Request. */
+NotificationsControllersCreateWhatsAppBroadcastInputSchema = z.object({
+  languageCode: z.string().nullable().optional(),
+  segmentActiveMembersOnly: z.boolean().nullable().optional(),
+  segmentRole: z.string().nullable().optional(),
+  templateName: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  variablesJson: z.string().nullable().optional(),
+});
+
 /** Zod schema for NotificationsControllersDeadLetterDto. Data model for Notifications Controllers Dead Letter Dto. */
 NotificationsControllersDeadLetterDtoSchema = z.object({
   id: z.string().uuid().optional(),
@@ -49509,6 +49655,17 @@ NotificationsControllersRequeueOutputSchema = z.object({
   requeueCount: z.number().int().optional(),
 });
 
+/** Zod schema for NotificationsControllersScheduleWhatsAppBroadcastInput. Data model for Notifications Controllers Schedule Whats App Broadcast Request. */
+NotificationsControllersScheduleWhatsAppBroadcastInputSchema = z.object({
+  scheduledAtUtc: z.string().datetime().optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for NotificationsControllersSendWhatsAppBroadcastInput. Data model for Notifications Controllers Send Whats App Broadcast Request. */
+NotificationsControllersSendWhatsAppBroadcastInputSchema = z.object({
+  tenantId: z.string().uuid().optional(),
+});
+
 /** Zod schema for NotificationsControllersSetQuietHoursInput. Data model for Notifications Controllers Set Quiet Hours Request. */
 NotificationsControllersSetQuietHoursInputSchema = z.object({
   end: z.string().nullable().optional(),
@@ -49557,8 +49714,55 @@ NotificationsControllersUpdatePreferencesInputSchema = z.object({
   socialEnabled: z.boolean().nullable().optional(),
 });
 
+/** Zod schema for NotificationsControllersWhatsAppBroadcastDto. Data model for Notifications Controllers Whats App Broadcast Dto. */
+NotificationsControllersWhatsAppBroadcastDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  createdBy: z.string().uuid().optional(),
+  error: z.string().nullable().optional(),
+  languageCode: z.string().nullable().optional(),
+  recipientCount: z.number().int().optional(),
+  scheduledAtUtc: z.string().datetime().nullable().optional(),
+  segmentActiveMembersOnly: z.boolean().optional(),
+  segmentRole: z.string().nullable().optional(),
+  sentAtUtc: z.string().datetime().nullable().optional(),
+  status: z.string().nullable().optional(),
+  templateName: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersWhatsAppBroadcastRecipientDto. Data model for Notifications Controllers Whats App Broadcast Recipient Dto. */
+NotificationsControllersWhatsAppBroadcastRecipientDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  attemptCount: z.number().int().optional(),
+  broadcastId: z.string().uuid().optional(),
+  error: z.string().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+  providerMessageId: z.string().nullable().optional(),
+  sentAtUtc: z.string().datetime().nullable().optional(),
+  status: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for NotificationsControllersWhatsAppBroadcastSendReportDto. Data model for Notifications Controllers Whats App Broadcast Send Report Dto. */
+NotificationsControllersWhatsAppBroadcastSendReportDtoSchema = z.object({
+  attempted: z.number().int().optional(),
+  broadcastId: z.string().uuid().optional(),
+  failed: z.number().int().optional(),
+  sent: z.number().int().optional(),
+  skipped: z.number().int().optional(),
+});
+
+/** Zod schema for NotificationsControllersWhatsAppChannelStatusDto. Data model for Notifications Controllers Whats App Channel Status Dto. */
+NotificationsControllersWhatsAppChannelStatusDtoSchema = z.object({
+  allowlistedTemplates: z.array(z.string()).nullable().optional(),
+  enabled: z.boolean().optional(),
+  isConfigured: z.boolean().optional(),
+});
+
 /** Zod schema for NotificationsNotificationChannel. Delivery channels for notifications */
-NotificationsNotificationChannelSchema = z.enum(['InApp', 'Email', 'Push', 'Sms', 'Slack', 'Discord', 'Webhook']);
+NotificationsNotificationChannelSchema = z.enum(['InApp', 'Email', 'Push', 'Sms', 'Slack', 'Discord', 'Webhook', 'WhatsApp']);
 
 /** Zod schema for ObjectsAttestationConveyancePreference. OpenAPI schema for Objects Attestation Conveyance Preference. */
 ObjectsAttestationConveyancePreferenceSchema = z.enum(['None', 'Indirect', 'Direct', 'Enterprise']);
@@ -50049,6 +50253,40 @@ PagedResultUserProfileDtoSchema = z.object({
   hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => IdentityUsersUserProfileDtoSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultWhatsAppBroadcastDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+PagedResultWhatsAppBroadcastDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => NotificationsControllersWhatsAppBroadcastDtoSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultWhatsAppBroadcastRecipientDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
+PagedResultWhatsAppBroadcastRecipientDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => NotificationsControllersWhatsAppBroadcastRecipientDtoSchema))
     .nullable()
     .optional(),
   pageNumber: z.number().int().optional(),
@@ -54749,6 +54987,14 @@ export type NotificationsControllersNotificationPreference = NotificationsContro
 export { NotificationsControllersNotificationPreferenceDtoSchema as NotificationsControllersNotificationPreferenceSchema };
 export type NotificationsControllersNotificationTimeline = NotificationsControllersNotificationTimelineDto;
 export { NotificationsControllersNotificationTimelineDtoSchema as NotificationsControllersNotificationTimelineSchema };
+export type NotificationsControllersWhatsAppBroadcast = NotificationsControllersWhatsAppBroadcastDto;
+export { NotificationsControllersWhatsAppBroadcastDtoSchema as NotificationsControllersWhatsAppBroadcastSchema };
+export type NotificationsControllersWhatsAppBroadcastRecipient = NotificationsControllersWhatsAppBroadcastRecipientDto;
+export { NotificationsControllersWhatsAppBroadcastRecipientDtoSchema as NotificationsControllersWhatsAppBroadcastRecipientSchema };
+export type NotificationsControllersWhatsAppBroadcastSendReport = NotificationsControllersWhatsAppBroadcastSendReportDto;
+export { NotificationsControllersWhatsAppBroadcastSendReportDtoSchema as NotificationsControllersWhatsAppBroadcastSendReportSchema };
+export type NotificationsControllersWhatsAppChannelStatus = NotificationsControllersWhatsAppChannelStatusDto;
+export { NotificationsControllersWhatsAppChannelStatusDtoSchema as NotificationsControllersWhatsAppChannelStatusSchema };
 export type PagedResultBillingOutboxEvent = PagedResultBillingOutboxEventDto;
 export { PagedResultBillingOutboxEventDtoSchema as PagedResultBillingOutboxEventSchema };
 export type PagedResultBillingWebhookEventListItem = PagedResultBillingWebhookEventListItemDto;
@@ -54781,6 +55027,10 @@ export type PagedResultUserNotification = PagedResultUserNotificationDto;
 export { PagedResultUserNotificationDtoSchema as PagedResultUserNotificationSchema };
 export type PagedResultUserProfile = PagedResultUserProfileDto;
 export { PagedResultUserProfileDtoSchema as PagedResultUserProfileSchema };
+export type PagedResultWhatsAppBroadcast = PagedResultWhatsAppBroadcastDto;
+export { PagedResultWhatsAppBroadcastDtoSchema as PagedResultWhatsAppBroadcastSchema };
+export type PagedResultWhatsAppBroadcastRecipient = PagedResultWhatsAppBroadcastRecipientDto;
+export { PagedResultWhatsAppBroadcastRecipientDtoSchema as PagedResultWhatsAppBroadcastRecipientSchema };
 export type ProjectsCollaborator = ProjectsCollaboratorDto;
 export { ProjectsCollaboratorDtoSchema as ProjectsCollaboratorSchema };
 export type ProjectsProjectInvitation = ProjectsProjectInvitationDto;

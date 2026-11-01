@@ -528,7 +528,10 @@ public enum NotificationChannel
     Discord = 5,
 
     /// <summary>Webhook notification</summary>
-    Webhook = 6
+    Webhook = 6,
+
+    /// <summary>WhatsApp Business Cloud API message (issue #54)</summary>
+    WhatsApp = 7
 }
 
 /// <summary>

@@ -474,6 +474,214 @@ export class NotificationsModule {
 
     return result;
   }
+
+  /**
+   * Lists broadcast campaigns for a tenant (newest first).
+   */
+  async getWhatsappBroadcastsForGetWhatsappBroadcasts(query?: {
+    tenantId?: string;
+    skip?: number;
+    take?: number;
+  }): Promise<Result<Types.PagedResultWhatsAppBroadcastDto, ApiError>> {
+    const url = '/api/v1/whatsapp/broadcasts';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.PagedResultWhatsAppBroadcastDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Creates a draft broadcast campaign. The template must be on the configured allowlist.
+   */
+  async postWhatsappBroadcasts(
+    body: Types.NotificationsControllersCreateWhatsAppBroadcastInput,
+  ): Promise<Result<Types.NotificationsControllersWhatsAppBroadcastDto, ApiError>> {
+    const url = '/api/v1/whatsapp/broadcasts';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.NotificationsControllersCreateWhatsAppBroadcastInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.NotificationsControllersWhatsAppBroadcastDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Gets one broadcast campaign.
+   */
+  async getWhatsappBroadcastsForGetWhatsappBroadcastsById(
+    id: string,
+    query?: { tenantId?: string },
+  ): Promise<Result<Types.NotificationsControllersWhatsAppBroadcastDto, ApiError>> {
+    const url = `/api/v1/whatsapp/broadcasts/${id}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.NotificationsControllersWhatsAppBroadcastDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Cancels a draft or scheduled broadcast.
+   */
+  async postWhatsappBroadcastsCancel(
+    id: string,
+    body: Types.NotificationsControllersCancelWhatsAppBroadcastInput,
+  ): Promise<Result<Types.NotificationsControllersWhatsAppBroadcastDto, ApiError>> {
+    const url = `/api/v1/whatsapp/broadcasts/${id}:cancel`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.NotificationsControllersCancelWhatsAppBroadcastInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.NotificationsControllersWhatsAppBroadcastDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Schedules a draft broadcast for a future send time.
+   */
+  async postWhatsappBroadcastsSchedule(
+    id: string,
+    body: Types.NotificationsControllersScheduleWhatsAppBroadcastInput,
+  ): Promise<Result<Types.NotificationsControllersWhatsAppBroadcastDto, ApiError>> {
+    const url = `/api/v1/whatsapp/broadcasts/${id}:schedule`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.NotificationsControllersScheduleWhatsAppBroadcastInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.NotificationsControllersWhatsAppBroadcastDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Sends a draft or due scheduled broadcast now and returns the send summary.
+   */
+  async postWhatsappBroadcastsSend(
+    id: string,
+    body: Types.NotificationsControllersSendWhatsAppBroadcastInput,
+  ): Promise<Result<Types.NotificationsControllersWhatsAppBroadcastSendReportDto, ApiError>> {
+    const url = `/api/v1/whatsapp/broadcasts/${id}:send`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.NotificationsControllersSendWhatsAppBroadcastInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.NotificationsControllersWhatsAppBroadcastSendReportDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Gets the delivery-tracking rows of one broadcast campaign (oldest first).
+   */
+  async getWhatsappBroadcastsRecipients(
+    id: string,
+    query?: { tenantId?: string; skip?: number; take?: number },
+  ): Promise<Result<Types.PagedResultWhatsAppBroadcastRecipientDto, ApiError>> {
+    const url = `/api/v1/whatsapp/broadcasts/${id}/recipients`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.PagedResultWhatsAppBroadcastRecipientDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Gets the WhatsApp channel status: whether the Business API integration is configured and which templates are allowlisted.
+   */
+  async getWhatsappStatus(): Promise<Result<Types.NotificationsControllersWhatsAppChannelStatusDto, ApiError>> {
+    const url = '/api/v1/whatsapp/status';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.NotificationsControllersWhatsAppChannelStatusDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
 }
 
 export function createNotificationsModule(client: ApiClient): NotificationsModule {

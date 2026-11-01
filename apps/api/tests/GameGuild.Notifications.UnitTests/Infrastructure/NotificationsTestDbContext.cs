@@ -12,6 +12,15 @@ internal sealed class NotificationsTestDbContext(DbContextOptions<NotificationsT
 
     public DbSet<EmailSuppression> EmailSuppressions => Set<EmailSuppression>();
 
+    public DbSet<WhatsAppBroadcast> WhatsAppBroadcasts => Set<WhatsAppBroadcast>();
+
+    public DbSet<WhatsAppBroadcastRecipient> WhatsAppBroadcastRecipients => Set<WhatsAppBroadcastRecipient>();
+
+    // Cross-module audience sources for the broadcast engine (InMemory mapping only).
+    public DbSet<GameGuild.Identity.Users.User> Users => Set<GameGuild.Identity.Users.User>();
+
+    public DbSet<GameGuild.Identity.Tenants.TenantMember> TenantMembers => Set<GameGuild.Identity.Tenants.TenantMember>();
+
     // BeginTransactionAsync is a Relational facade extension, not a DbContext member, so it needs an explicit impl.
     Task<IDbContextTransaction> IApplicationDbContext.BeginTransactionAsync(CancellationToken cancellationToken)
         => throw new NotSupportedException("InMemory test context does not support transactions");
@@ -23,6 +32,8 @@ internal sealed class NotificationsTestDbContext(DbContextOptions<NotificationsT
         new NotificationPreferenceConfiguration().Configure(modelBuilder.Entity<NotificationPreference>());
         new EmailDeliveryEventConfiguration().Configure(modelBuilder.Entity<EmailDeliveryEvent>());
         new EmailSuppressionConfiguration().Configure(modelBuilder.Entity<EmailSuppression>());
+        new WhatsAppBroadcastConfiguration().Configure(modelBuilder.Entity<WhatsAppBroadcast>());
+        new WhatsAppBroadcastRecipientConfiguration().Configure(modelBuilder.Entity<WhatsAppBroadcastRecipient>());
         base.OnModelCreating(modelBuilder);
     }
 }
