@@ -6,6 +6,7 @@ import {
 } from '@/components/connected-accounts-card';
 import { PasswordCard } from '@/components/password-card';
 import { SessionStateCard } from '@/components/auth/session-state-card';
+import type { AuthSessionState } from '@/hooks/use-auth-state';
 import { parseGrantedScopesHeader } from '@/lib/auth/external-login-consent';
 import { redirect } from '@/i18n/navigation';
 import { createServerClient, GeneratedApi } from '@game-guild/client';
@@ -42,6 +43,27 @@ function parseLinkedProviders(header: string): LinkedAccount[] {
     })
     .filter((row) => row.provider !== '' && row.linkedAt !== '');
 }
+
+/**
+ * Normalizes the generated DTO (all-optional fields) into the strict client
+ * projection the session-state card renders (issue #106 phase 1).
+ */
+function toAuthSessionState(dto: GeneratedApi.IdentityAuthenticationAuthSessionStateDto): AuthSessionState {
+  return {
+    userId: dto.userId ?? '',
+    sessionId: dto.sessionId ?? null,
+    sessionValid: dto.sessionValid ?? false,
+    sessionExpiresAtUtc: dto.sessionExpiresAtUtc ?? null,
+    sessionLastUsedAtUtc: dto.sessionLastUsedAtUtc ?? null,
+    sessionTerminationReason: dto.sessionTerminationReason ?? null,
+    tokenVersion: dto.tokenVersion ?? null,
+    tokenRevoked: dto.tokenRevoked ?? null,
+    activeSessionCount: dto.activeSessionCount ?? 0,
+    mfaEnrolled: dto.mfaEnrolled ?? false,
+    mfaVerifiedInCurrentToken: dto.mfaVerifiedInCurrentToken ?? false,
+  };
+}
+
 export default async function AccountSettingsPage({
   params,
   searchParams,
@@ -69,7 +91,7 @@ export default async function AccountSettingsPage({
   // paint instead of fetching from a mount effect.
   const authModule = new GeneratedApi.AuthModule(client);
   const sessionStateResult = await authModule.getAuthSessionState();
-  const sessionState = sessionStateResult.ok ? sessionStateResult.data : null;
+  const sessionState = sessionStateResult.ok ? toAuthSessionState(sessionStateResult.data) : null;
 
   let linkedAccounts: LinkedAccount[] = [];
   const result = await client.requestRaw<void>({
