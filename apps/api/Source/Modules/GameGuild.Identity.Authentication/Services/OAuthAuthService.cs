@@ -670,6 +670,16 @@ public class OAuthAuthService(
         {
             return await authenticate().ConfigureAwait(false);
         }
+        catch (Exception exception) when (exception is not OperationCanceledException &&
+                                          OAuthProviderUnavailableException.IsProviderUnavailability(exception))
+        {
+            // Issue #1116: distinguish "the provider is down" (connection errors, timeouts,
+            // 5xx) from "the provider rejected this credential". The failed-attempt audit
+            // still records the outage; the typed exception lets the API layer answer with
+            // a 503 that advertises the magic-link fallback for OAuth-only accounts.
+            await RecordFailedOAuthAttemptAsync(authenticationMethod, stopwatch, exception).ConfigureAwait(false);
+            throw new OAuthProviderUnavailableException(authenticationMethod, exception);
+        }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             await RecordFailedOAuthAttemptAsync(authenticationMethod, stopwatch, exception).ConfigureAwait(false);
@@ -721,6 +731,12 @@ public class OAuthAuthService(
     /// </summary>
     private async Task<User> ResolveExternalUserAsync(string provider, string email, string providerKey, string? name, bool emailVerified, string[] grantedScopes, CancellationToken cancellationToken)
     {
+        // Email case normalization (issue #1118): providers may return mixed-case addresses
+        // (User@Gmail.com) while accounts are stored lowercase. Normalize before any
+        // matching so a casing change never mints a duplicate account or breaks linking;
+        // every other surface (sign-up, magic link, password reset) already normalizes.
+        email = email.Trim().ToLowerInvariant();
+
         var existingLink = await externalLoginRepository
             .GetByProviderKeyAsync(provider, providerKey, cancellationToken)
             .ConfigureAwait(false);

@@ -1,4 +1,5 @@
 using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -80,6 +81,159 @@ public sealed class LoginLocationHistoryRiskTests
         Assert.False(await service.DetectImpossibleTravelAsync(Guid.NewGuid(), new LocationInfo { Country = "Brazil", CountryCode = "BR" },
             new LocationInfo { Country = "United States", CountryCode = "US" }, TimeSpan.FromMinutes(minutes)));
         siem.VerifyNoOtherCalls();
+    }
+
+    // ── Issue #1115: user-declared travel windows suppress the GeoVelocity alert ──
+
+    [Fact]
+    public async Task DeclaredTravelWindowCoveringSignInSuppressesImpossibleTravel()
+    {
+        var now = new DateTime(2026, 11, 1, 12, 0, 0, DateTimeKind.Utc);
+        using var clock = FakeClock.At(now);
+        var user = Guid.NewGuid();
+        var siem = Siem();
+        var preferences = PreferencesWithTravelWindows($$"""[{"start":"2026-10-31","end":"2026-11-05"}]""");
+        var service = CreateService(siem.Object, preferences);
+
+        var suspicious = await service.DetectImpossibleTravelAsync(user,
+            new LocationInfo { Country = "United States", CountryCode = "US" },
+            new LocationInfo { Country = "Brazil", CountryCode = "BR" }, TimeSpan.FromMinutes(30));
+
+        Assert.False(suspicious);
+        siem.Verify(port => port.SendImpossibleTravelEventAsync(It.IsAny<Guid>(), It.IsAny<LocationInfo>(), It.IsAny<LocationInfo>(),
+            It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never());
+    }
+
+    [Fact]
+    public async Task DeclaredTravelWindowOutsideSignInStillAlerts()
+    {
+        var now = new DateTime(2026, 11, 1, 12, 0, 0, DateTimeKind.Utc);
+        using var clock = FakeClock.At(now);
+        var user = Guid.NewGuid();
+        var siem = Siem();
+        // Window ended two weeks before the sign-in.
+        var preferences = PreferencesWithTravelWindows($$"""[{"start":"2026-10-01","end":"2026-10-15"}]""");
+        var service = CreateService(siem.Object, preferences);
+
+        var suspicious = await service.DetectImpossibleTravelAsync(user,
+            new LocationInfo { Country = "United States", CountryCode = "US" },
+            new LocationInfo { Country = "Brazil", CountryCode = "BR" }, TimeSpan.FromMinutes(30));
+
+        Assert.True(suspicious);
+        siem.Verify(port => port.SendImpossibleTravelEventAsync(user, It.IsAny<LocationInfo>(), It.IsAny<LocationInfo>(),
+            It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Once());
+    }
+
+    [Fact]
+    public async Task OverlongDeclaredWindowIsIgnoredAndStillAlerts()
+    {
+        var now = new DateTime(2026, 11, 1, 12, 0, 0, DateTimeKind.Utc);
+        using var clock = FakeClock.At(now);
+        var user = Guid.NewGuid();
+        var siem = Siem();
+        // 60-day window exceeds the 31-day cap and must not suppress the alert.
+        var preferences = PreferencesWithTravelWindows($$"""[{"start":"2026-10-01","end":"2026-11-30"}]""");
+        var service = CreateService(siem.Object, preferences);
+
+        var suspicious = await service.DetectImpossibleTravelAsync(user,
+            new LocationInfo { Country = "United States", CountryCode = "US" },
+            new LocationInfo { Country = "Brazil", CountryCode = "BR" }, TimeSpan.FromMinutes(30));
+
+        Assert.True(suspicious);
+    }
+
+    [Theory]
+    [InlineData("[{\"start\":\"garbage\"}]")]
+    [InlineData("[]")]
+    [InlineData("[123]")]
+    [InlineData("{\"start\":\"2026-01-01\",\"end\":\"2026-01-02\"}")]
+    public async Task MalformedDeclaredWindowsFailClosedAndStillAlert(string preferenceJson)
+    {
+        var now = new DateTime(2026, 11, 1, 12, 0, 0, DateTimeKind.Utc);
+        using var clock = FakeClock.At(now);
+        var user = Guid.NewGuid();
+        var siem = Siem();
+        var preferences = PreferencesWithTravelWindows(preferenceJson);
+        var service = CreateService(siem.Object, preferences);
+
+        var suspicious = await service.DetectImpossibleTravelAsync(user,
+            new LocationInfo { Country = "United States", CountryCode = "US" },
+            new LocationInfo { Country = "Brazil", CountryCode = "BR" }, TimeSpan.FromMinutes(30));
+
+        Assert.True(suspicious);
+    }
+
+    [Fact]
+    public async Task PreferencesStoreFailureFailsClosedAndStillAlerts()
+    {
+        var user = Guid.NewGuid();
+        var siem = Siem();
+        var preferencesRepository = new Mock<IUserPreferencesRepository>(MockBehavior.Strict);
+        preferencesRepository
+            .Setup(port => port.GetByUserIdAsync(user, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("store unavailable"));
+        var service = new ThreatDetectionService(Mock.Of<IAuthenticationAttemptRepository>(), NullLogger<ThreatDetectionService>.Instance,
+            new ConfigurationBuilder().Build(), siem.Object, preferencesRepository.Object);
+
+        var suspicious = await service.DetectImpossibleTravelAsync(user,
+            new LocationInfo { Country = "United States", CountryCode = "US" },
+            new LocationInfo { Country = "Brazil", CountryCode = "BR" }, TimeSpan.FromMinutes(30));
+
+        Assert.True(suspicious);
+    }
+
+    [Fact]
+    public async Task NoPreferencesRepositoryKeepsLegacyAlertingBehavior()
+    {
+        var siem = Siem();
+        var service = new ThreatDetectionService(Mock.Of<IAuthenticationAttemptRepository>(), NullLogger<ThreatDetectionService>.Instance,
+            new ConfigurationBuilder().Build(), siem.Object);
+
+        var suspicious = await service.DetectImpossibleTravelAsync(Guid.NewGuid(),
+            new LocationInfo { Country = "United States", CountryCode = "US" },
+            new LocationInfo { Country = "Brazil", CountryCode = "BR" }, TimeSpan.FromMinutes(30));
+
+        Assert.True(suspicious);
+    }
+
+    private static ThreatDetectionService CreateService(ISiemIntegrationService siem, UserPreferences? preferences)
+    {
+        var preferencesRepository = new Mock<IUserPreferencesRepository>();
+        preferencesRepository
+            .Setup(port => port.GetByUserIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(preferences);
+        return new ThreatDetectionService(Mock.Of<IAuthenticationAttemptRepository>(), NullLogger<ThreatDetectionService>.Instance,
+            new ConfigurationBuilder().Build(), siem, preferencesRepository.Object);
+    }
+
+    private static UserPreferences? PreferencesWithTravelWindows(string windowsJson)
+    {
+        if (string.IsNullOrEmpty(windowsJson))
+        {
+            return null;
+        }
+
+        var preferences = UserPreferences.Create(Guid.NewGuid());
+        preferences.SetGeneralPreferences(new Dictionary<string, object?>
+        {
+            [DeclaredTravelWindow.PreferencesKey] = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(windowsJson)
+        });
+        return preferences;
+    }
+
+    private sealed class FakeClock : IDisposable
+    {
+        public FakeClock(DateTime instant)
+        {
+            SystemClock.SetProvider(new FixedTimeProvider(instant));
+        }
+
+        public void Dispose() => SystemClock.Reset();
+    }
+
+    private sealed class FixedTimeProvider(DateTime instant) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => new DateTimeOffset(instant, TimeSpan.Zero);
     }
 
     private static Mock<ISiemIntegrationService> Siem()

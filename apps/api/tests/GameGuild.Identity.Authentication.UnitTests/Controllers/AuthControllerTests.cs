@@ -136,4 +136,55 @@ public class AuthControllerTests
         capturedCommand.Nonce.Should().Be("nonce-12345678");
         capturedCommand.ChainId.Should().Be("5");
     }
+
+    // ── Issue #1116: provider outage answers 503 and advertises the magic-link fallback ──
+
+    [Fact]
+    public async Task GoogleIdTokenSignIn_ShouldReturnServiceUnavailableWithMagicLinkFallback_WhenProviderIsDown()
+    {
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(It.IsAny<GoogleIdTokenSignInCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OAuthProviderUnavailableException(
+                "GoogleIdToken",
+                new HttpRequestException("connection refused")));
+
+        var controller = new AuthController(sender.Object);
+
+        var result = await controller.GoogleIdTokenSignIn(new GoogleIdTokenRequestDto
+        {
+            IdToken = "id-token"
+        }, CancellationToken.None);
+
+        var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
+        objectResult.StatusCode.Should().Be(503);
+        var problem = objectResult.Value.Should().BeOfType<ProblemDetails>().Subject;
+        problem.Status.Should().Be(503);
+        problem.Extensions.Should().ContainKey("magicLinkFallback").WhoseValue.Should().Be(true);
+        problem.Extensions.Should().ContainKey("errorCode").WhoseValue.Should().Be("oauth_provider_unavailable");
+        problem.Extensions.Should().ContainKey("provider").WhoseValue.Should().Be("GoogleIdToken");
+    }
+
+    [Fact]
+    public async Task GitHubCallback_ShouldReturnServiceUnavailableWithMagicLinkFallback_WhenProviderIsDown()
+    {
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(It.IsAny<GitHubCallbackCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OAuthProviderUnavailableException(
+                "GitHub",
+                new HttpRequestException("connection refused")));
+
+        var controller = new AuthController(sender.Object);
+
+        var result = await controller.GitHubCallback(new GitHubCallbackRequestDto
+        {
+            Code = "callback-code"
+        }, CancellationToken.None);
+
+        var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
+        objectResult.StatusCode.Should().Be(503);
+        var problem = objectResult.Value.Should().BeOfType<ProblemDetails>().Subject;
+        problem.Extensions.Should().ContainKey("magicLinkFallback").WhoseValue.Should().Be(true);
+    }
 }

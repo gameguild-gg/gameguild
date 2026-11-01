@@ -786,6 +786,58 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
         userTokens.Should().AllSatisfy(token => token.IsRevoked.Should().BeTrue());
     }
 
+    /// <summary>
+    ///     Ghost-session regression (issue #1119): a soft-deleted user's live refresh token
+    ///     must be refused on rotation. The refresh path re-reads the user through the
+    ///     repository (which filters DeletedAt) and rejects unavailable users, so the
+    ///     token dies with the account instead of keeping a ghost session alive. The
+    ///     HTTP layer maps the thrown UnauthorizedAccessException to 401.
+    /// </summary>
+    [Fact]
+    public async Task TokenLifecycle_DeletedUserWithLiveRefreshToken_ShouldRefuseRefresh()
+    {
+        // Arrange - create user, sign in, and rotate once to prove the token is live
+        var email = $"ghost.session.{Guid.NewGuid()}@test.com";
+        var signUpResult = await _authService.LocalSignUpAsync(new LocalSignUpRequest
+        {
+            Email = email,
+            Username = $"ghost_user_{Guid.NewGuid():N}",
+            Password = "GhostSession123!"
+        });
+        var userId = signUpResult.UserId;
+
+        var signInResult = await _authService.LocalSignInAsync(new LocalSignInRequest
+        {
+            Email = email,
+            Password = "GhostSession123!"
+        });
+        signInResult.Success.Should().BeTrue();
+
+        var liveToken = signInResult.RefreshToken;
+        var rotation = await _authService.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = liveToken });
+        rotation.Success.Should().BeTrue();
+        liveToken = rotation.RefreshToken;
+
+        // Act - soft-delete the user exactly like the user-deletion flow does
+        var storedUser = await _dbContext.Set<User>().SingleAsync(u => u.Id == userId);
+        storedUser.MarkDeleted();
+        await _dbContext.SaveChangesAsync();
+
+        // Assert - the still-live refresh token must now be refused (401 path)
+        await FluentActions.Invoking(async () =>
+                await _authService.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = liveToken }))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+
+        // And the ghost cannot resurrect itself through sign-in either.
+        await FluentActions.Invoking(async () =>
+                await _authService.LocalSignInAsync(new LocalSignInRequest
+                {
+                    Email = email,
+                    Password = "GhostSession123!"
+                }))
+            .Should().ThrowAsync<Exception>();
+    }
+
     #endregion
 
     public void Dispose()

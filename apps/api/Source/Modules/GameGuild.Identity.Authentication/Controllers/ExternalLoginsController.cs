@@ -272,6 +272,18 @@ public sealed class ExternalLoginsController(ISender sender) : BaseApiController
     {
         return ex switch
         {
+            // Issue #1116: provider outage during a link/link-callback is a 503 with the
+            // outage marker, not a bare failure — the caller can retry or come back later.
+            OAuthProviderUnavailableException e => new ObjectResult(new ProblemDetails
+            {
+                Status = StatusCodes.Status503ServiceUnavailable,
+                Title = "OAuth provider unavailable",
+                Detail = e.Message,
+                Extensions = { ["errorCode"] = "oauth_provider_unavailable", ["provider"] = e.Provider }
+            })
+            {
+                StatusCode = StatusCodes.Status503ServiceUnavailable
+            },
             UnauthorizedAccessException e => Unauthorized(new ProblemDetails
             {
                 Status = StatusCodes.Status401Unauthorized,
