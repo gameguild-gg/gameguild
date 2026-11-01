@@ -13,7 +13,7 @@ function createFakeRuntime(overrides: Partial<PyodideRuntime> = {}): PyodideRunt
   writtenFiles: Record<string, string>
   createdDirs: string[]
 } {
-  const state = {
+  const runtime = {
     programs: [] as string[],
     stdoutBatched: null as ((text: string) => void) | null,
     stderrBatched: null as ((text: string) => void) | null,
@@ -21,47 +21,48 @@ function createFakeRuntime(overrides: Partial<PyodideRuntime> = {}): PyodideRunt
     interruptBuffer: null as Int32Array | null,
     writtenFiles: {} as Record<string, string>,
     createdDirs: [] as string[],
-  }
 
-  const runtime: PyodideRuntime = {
     async runPythonAsync(code: string) {
-      state.programs.push(code)
+      runtime.programs.push(code)
     },
-    setStdout(options) {
-      state.stdoutBatched = options.batched
+    setStdout(options: { batched: (text: string) => void }) {
+      runtime.stdoutBatched = options.batched
     },
-    setStderr(options) {
-      state.stderrBatched = options.batched
+    setStderr(options: { batched: (text: string) => void }) {
+      runtime.stderrBatched = options.batched
     },
-    setStdin(options) {
-      state.stdinFn = options.stdin
+    setStdin(options: { stdin: () => string | null }) {
+      runtime.stdinFn = options.stdin
     },
-    setInterruptBuffer(buffer) {
-      state.interruptBuffer = buffer
+    setInterruptBuffer(buffer: Int32Array) {
+      runtime.interruptBuffer = buffer
     },
     FS: {
       writeFile(path: string, data: string) {
-        state.writtenFiles[path] = data
+        runtime.writtenFiles[path] = data
       },
       mkdir(path: string) {
-        state.createdDirs.push(path)
+        runtime.createdDirs.push(path)
       },
     },
     ...overrides,
   }
 
-  return Object.assign(runtime as PyodideRuntime, state)
+  return runtime as PyodideRuntime & typeof runtime
 }
 
 function createHarness(runtimeOverrides: Partial<PyodideRuntime> = {}, loaderError: Error | null = null) {
   const posted: PyodideWorkerMessage[] = []
   const post: PostWorkerMessage = (message) => posted.push(message)
+  const runtimes: Array<ReturnType<typeof createFakeRuntime>> = []
   const loadRuntime = vi.fn(async () => {
     if (loaderError) throw loaderError
-    return createFakeRuntime(runtimeOverrides)
+    const runtime = createFakeRuntime(runtimeOverrides)
+    runtimes.push(runtime)
+    return runtime
   })
   const core = new PyodideWorkerCore(post, loadRuntime)
-  return { core, posted, loadRuntime }
+  return { core, posted, loadRuntime, runtimes }
 }
 
 function bootRequest(id = 1): PyodideWorkerRequest {
@@ -110,7 +111,7 @@ describe('PyodideWorkerCore', () => {
     harness.core.handleMessage({ type: 'run', id: 2, payload: { code: 'print(input())', stdin: 'alpha\nbeta' } })
     await vi.waitFor(() => expect(harness.posted.some((m) => m.type === 'runOk')).toBe(true))
 
-    const runtime = harness.loadRuntime.mock.results[0]?.value as ReturnType<typeof createFakeRuntime>
+    const runtime = harness.runtimes[0]
     expect(runtime.programs).toEqual(['print(input())'])
     expect(runtime.stdinFn?.()).toBe('alpha\n')
     expect(runtime.stdinFn?.()).toBe('beta\n')
@@ -159,7 +160,7 @@ describe('PyodideWorkerCore', () => {
     })
     await vi.waitFor(() => expect(harness.posted.some((m) => m.type === 'runOk')).toBe(true))
 
-    const runtime = harness.loadRuntime.mock.results[0]?.value as ReturnType<typeof createFakeRuntime>
+    const runtime = harness.runtimes[0]
     expect(runtime.writtenFiles).toEqual({ 'main.py': 'print("main")', 'lib/util.py': 'FLAG = True' })
     expect(runtime.createdDirs).toEqual(['lib'])
     expect(runtime.programs).toEqual(['print("main")'])
@@ -182,7 +183,7 @@ describe('PyodideWorkerCore', () => {
     await bootOk(harness)
 
     harness.core.handleMessage({ type: 'interrupt', id: 6 })
-    const runtime = harness.loadRuntime.mock.results[0]?.value as ReturnType<typeof createFakeRuntime>
+    const runtime = harness.runtimes[0]
 
     expect(runtime.interruptBuffer).not.toBeNull()
     expect(Atomics.load(runtime.interruptBuffer as Int32Array, 0)).toBe(2)

@@ -50,8 +50,8 @@ async function loadPyodideScriptModule(scriptUrl: string): Promise<LoadPyodideFn
     // `webpackIgnore`/`turbopackIgnore` keep the bundler from trying to
     // resolve the runtime-generated blob URL at build time (same trick as the
     // Emception worker uses for its brotli module).
-    const module = (await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ blobUrl)) as { default?: LoadPyodideFn };
-    const loadPyodide = module.default ?? (self as unknown as { loadPyodide?: LoadPyodideFn }).loadPyodide;
+    const imported = (await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ blobUrl)) as { default?: LoadPyodideFn };
+    const loadPyodide = imported.default ?? (self as unknown as { loadPyodide?: LoadPyodideFn }).loadPyodide;
     if (typeof loadPyodide !== 'function') {
       throw new Error('Pyodide script did not expose a loadPyodide function');
     }

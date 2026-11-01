@@ -244,7 +244,7 @@ describe('PyodideWorkerClient', () => {
 
     await expect(promise).rejects.toThrow(/client disposed/)
     expect(worker.terminated).toBe(true)
-    expect(() => client.run({ code: 'pass' })).toThrow(/disposed/)
+    await expect(client.run({ code: 'pass' })).rejects.toThrow(/disposed/)
   })
 
   it('interrupts through the shared buffer when available', async () => {

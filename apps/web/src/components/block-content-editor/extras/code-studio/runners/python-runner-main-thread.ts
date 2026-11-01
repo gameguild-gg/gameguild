@@ -14,7 +14,7 @@ import { loadCompressedScript } from './wasm-loader'
 
 // Pyodide module interface
 interface PyodideModule {
-  runPythonAsync(code: string): Promise<any>
+  runPythonAsync(code: string): Promise<unknown>
   setStdout(options: { batched: (text: string) => void }): void
   setStderr(options: { batched: (text: string) => void }): void
   setStdin(options: { stdin: () => string | null }): void
@@ -28,7 +28,7 @@ interface PyodideModule {
     unlink(path: string): void
   }
   globals: {
-    get(key: string): any
+    get(key: string): unknown
   }
 }
 
@@ -281,13 +281,14 @@ export class MainThreadPythonRunner implements CodeRunner {
     }
   }
 
-  async interrupt(): Promise<void> {
+  interrupt(): Promise<void> {
     this.isInterrupted = true
     if (pyodideInstance) {
       const interruptBuffer = new Int32Array(new SharedArrayBuffer(4))
       interruptBuffer[0] = 2
       pyodideInstance.setInterruptBuffer(interruptBuffer)
     }
+    return Promise.resolve()
   }
 
   dispose(): void {

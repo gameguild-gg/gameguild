@@ -263,7 +263,9 @@ export class PyodideWorkerClient {
       }
       case 'booted': {
         this.interruptBuffer = message.interruptBuffer ? new Int32Array(message.interruptBuffer) : null;
-        this.bootPromise = null;
+        // Keep the resolved boot promise: subsequent runs must reuse the
+        // booted worker instead of restarting the handshake. It is reset only
+        // by failures (bootInternal catch), termination (dropWorker) or dispose.
         const waiters = this.bootWaiters;
         this.bootWaiters = [];
         for (const waiter of waiters) {

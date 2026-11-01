@@ -84,8 +84,11 @@ The legacy source-code editor transpiles each visible TypeScript file with the i
 ### ✅ Python
 - **Engine**: Pyodide (CPython 3.12 compiled to WASM)
 - **Sandbox**: Complete isolation
+- **Execution**: Dedicated Web Worker (`runners/pyodide-worker/`) — off the main thread, so blocked programs never freeze the page (#111)
 - **Features**: Full standard library, scientific packages (numpy, pandas via micropip)
-- **Timeout**: 30s (configurable)
+- **Timeout**: 30s (configurable); a timeout terminates and reloads the worker, which is the only way to stop a blocked interpreter
+- **Stdin/Stdout**: stdin is batched per run; stdout/stderr stream over the typed worker protocol for live output and test automation
+- **Fallback**: environments without Web Workers degrade to the legacy main-thread runner (`python-runner-main-thread.ts`)
 - **Size**: ~2.7MB WASM (compressed) + ~6MB runtime
 - **Source**: `/wasm/pyodide.asm.wasm.gz` + `/pyodide/` (local CDN mirror)
 - **Version**: 0.26.4

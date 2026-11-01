@@ -85,7 +85,7 @@ export class PyodideWorkerCore {
     return buffer;
   }
 
-  private async ensureRuntime(id: number): Promise<PyodideRuntime> {
+  private requireRuntime(id: number): PyodideRuntime {
     if (this.runtime) return this.runtime;
     throw new Error(`Pyodide runtime not booted (request ${id})`);
   }
@@ -93,7 +93,7 @@ export class PyodideWorkerCore {
   private async handleRun(id: number, payload: PyodideExecPayload): Promise<void> {
     let runtime: PyodideRuntime;
     try {
-      runtime = await this.ensureRuntime(id);
+      runtime = this.requireRuntime(id);
     } catch (error: unknown) {
       this.post({ type: 'runError', id, error: error instanceof Error ? error.message : String(error) });
       return;

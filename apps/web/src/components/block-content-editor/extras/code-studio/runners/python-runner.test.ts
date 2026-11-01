@@ -86,10 +86,13 @@ function freshWorker(): FakeWorkerStub {
 
 /** Resolves a full run on the fake worker: boot, optional stream, runOk. */
 async function completeRun(worker: FakeWorkerStub, result: { stdout: string; stderr: string; exitCode: number }, stream?: Array<{ type: 'stdout' | 'stderr'; text: string }>) {
-  await vi.waitFor(() => expect(worker.posted.some((m) => m.type === 'boot')).toBe(true))
+  // Poll fast (1ms) so scripted responses land well inside short run timeouts.
+  const poll = { interval: 1, timeout: 5_000 }
+  await vi.waitFor(() => expect(worker.posted.some((m) => m.type === 'boot')).toBe(true), poll)
   worker.emitMessage({ type: 'booted', id: worker.bootRequest()!.id, interruptBuffer: null })
-  await vi.waitFor(() => expect(worker.runRequest()?.type).toBe('run'))
+  await vi.waitFor(() => expect(worker.runRequest()?.type).toBe('run'), poll)
   const run = worker.runRequest() as { id: number }
+  worker.emitMessage({ type: 'progress', message: 'Running Python code...' })
   if (stream) {
     for (const chunk of stream) {
       worker.emitMessage({ type: chunk.type, id: run.id, text: chunk.text })
@@ -162,13 +165,13 @@ describe('PythonRunner (worker bridge)', () => {
 
   it('hard-times-out: terminates the worker, returns exit code 1, reloads for the next run', async () => {
     const first = freshWorker()
-    const runner = new PythonRunner({ timeout: 30 })
+    const runner = new PythonRunner({ timeout: 60 })
 
     // Boot the first worker, then let the run hang forever.
     const timingOut = runner.execute('while True: pass')
-    await vi.waitFor(() => expect(first.posted.some((m) => m.type === 'boot')).toBe(true))
+    await vi.waitFor(() => expect(first.posted.some((m) => m.type === 'boot')).toBe(true), { interval: 1 })
     first.emitMessage({ type: 'booted', id: first.bootRequest()!.id, interruptBuffer: null })
-    await vi.waitFor(() => expect(first.runRequest()?.type).toBe('run'))
+    await vi.waitFor(() => expect(first.runRequest()?.type).toBe('run'), { interval: 1 })
     // No runOk is ever emitted.
 
     const result = await timingOut
