@@ -9,13 +9,19 @@ namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Handles verification/reset token generation, validation, and email dispatch coordination.
+///     Verification and password-reset tokens are persisted through <see cref="IVerificationTokenStore"/>
+///     when registered (issue #1151 — the database-backed store survives restarts and shares state
+///     across load-balanced nodes, mirroring the magic-link token store); the in-process cache
+///     remains as a fallback for hosts that do not register the store, and still backs the
+///     verified flag and the resend rate limiter.
 /// </summary>
 public class EmailVerificationService(
     ILogger<EmailVerificationService> logger,
     IMemoryCache memoryCache,
     IPublisher publisher,
     IUserRepository? userRepository = null,
-    IMagicLinkTokenStore? magicLinkTokenStore = null) : IEmailVerificationService
+    IMagicLinkTokenStore? magicLinkTokenStore = null,
+    IVerificationTokenStore? verificationTokenStore = null) : IEmailVerificationService
 {
     private const string TokenKeyPrefix = "emailverify:token:";
     private const string VerifiedKeyPrefix = "emailverify:verified:";
@@ -44,26 +50,36 @@ public class EmailVerificationService(
         return token;
     }
 
-    private Task<string> GenerateTokenAsync(Guid userId, string email, string tokenType, TimeSpan lifetime)
+    private async Task<string> GenerateTokenAsync(Guid userId, string email, string tokenType, TimeSpan lifetime)
     {
         try
         {
             var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(16)).ToLowerInvariant();
-            var tokenInfo = new TokenInfo
-            {
-                UserId = userId,
-                Email = email.ToLowerInvariant(),
-                Type = tokenType,
-                ExpiresAt = SystemClock.UtcNow.Add(lifetime)
-            };
+            var expiresAt = SystemClock.UtcNow.Add(lifetime);
 
-            memoryCache.Set(GetTokenCacheKey(token), tokenInfo, new MemoryCacheEntryOptions
+            if (verificationTokenStore is not null)
             {
-                AbsoluteExpiration = tokenInfo.ExpiresAt
-            }.SetSize(1));
+                await verificationTokenStore.AddAsync(token, userId, email, tokenType, expiresAt)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                var tokenInfo = new TokenInfo
+                {
+                    UserId = userId,
+                    Email = email.ToLowerInvariant(),
+                    Type = tokenType,
+                    ExpiresAt = expiresAt
+                };
+
+                memoryCache.Set(GetTokenCacheKey(token), tokenInfo, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpiration = tokenInfo.ExpiresAt
+                }.SetSize(1));
+            }
 
             logger.LogInformation("Generated {TokenType} token for user {UserId}", tokenType, LogRedaction.RedactId(userId, "uid"));
-            return Task.FromResult(token);
+            return token;
         }
         catch (Exception ex)
         {
@@ -154,7 +170,7 @@ public class EmailVerificationService(
         }
     }
 
-    private Task<TokenValidationResult> ValidateAndConsumeTokenAsync(
+    private async Task<TokenValidationResult> ValidateAndConsumeTokenAsync(
         string token,
         string expectedType,
         Guid? expectedUserId,
@@ -165,14 +181,37 @@ public class EmailVerificationService(
             if (string.IsNullOrWhiteSpace(token))
             {
                 logger.LogWarning("Empty {TokenType} token used", expectedType);
-                return Task.FromResult(TokenValidationResult.Failed("Token is required"));
+                return TokenValidationResult.Failed("Token is required");
+            }
+
+            if (verificationTokenStore is not null)
+            {
+                var durableResult = await verificationTokenStore
+                    .ConsumeAsync(token, expectedType, expectedUserId, SystemClock.UtcNow)
+                    .ConfigureAwait(false);
+
+                if (durableResult.Success && markEmailVerified)
+                {
+                    memoryCache.Set(VerifiedKeyPrefix + durableResult.UserId, true, new MemoryCacheEntryOptions().SetSize(1));
+                }
+
+                if (durableResult.Success)
+                {
+                    logger.LogInformation("{TokenType} token consumed successfully for user {UserId}", expectedType, LogRedaction.RedactId(durableResult.UserId, "uid"));
+                }
+                else
+                {
+                    logger.LogWarning("{TokenType} token rejected: {FailureReason}", expectedType, durableResult.FailureReason);
+                }
+
+                return durableResult;
             }
 
             var tokenKey = GetTokenCacheKey(token);
             if (!memoryCache.TryGetValue(tokenKey, out TokenInfo? tokenInfo) || tokenInfo == null)
             {
                 logger.LogWarning("Invalid {TokenType} token used", expectedType);
-                return Task.FromResult(TokenValidationResult.Failed("Invalid token"));
+                return TokenValidationResult.Failed("Invalid token");
             }
 
             if (expectedUserId.HasValue && tokenInfo.UserId != expectedUserId.Value)
@@ -182,14 +221,14 @@ public class EmailVerificationService(
                     LogRedaction.RedactId(expectedUserId, "uid"),
                     LogRedaction.RedactId(tokenInfo.UserId, "uid"));
 
-                return Task.FromResult(TokenValidationResult.Failed("Token does not belong to the requested user"));
+                return TokenValidationResult.Failed("Token does not belong to the requested user");
             }
 
             if (tokenInfo.ExpiresAt < SystemClock.UtcNow)
             {
                 memoryCache.Remove(tokenKey);
                 logger.LogWarning("Expired {TokenType} token used for user {UserId}", expectedType, LogRedaction.RedactId(tokenInfo.UserId, "uid"));
-                return Task.FromResult(TokenValidationResult.Failed("Expired token"));
+                return TokenValidationResult.Failed("Expired token");
             }
 
             if (tokenInfo.Type != expectedType)
@@ -199,13 +238,13 @@ public class EmailVerificationService(
                     tokenInfo.Type,
                     expectedType);
 
-                return Task.FromResult(TokenValidationResult.Failed("Invalid token type"));
+                return TokenValidationResult.Failed("Invalid token type");
             }
 
             if (!tokenInfo.TryConsume())
             {
                 logger.LogWarning("Already consumed {TokenType} token used", expectedType);
-                return Task.FromResult(TokenValidationResult.Failed("Invalid token"));
+                return TokenValidationResult.Failed("Invalid token");
             }
 
             if (markEmailVerified)
@@ -216,12 +255,12 @@ public class EmailVerificationService(
             memoryCache.Remove(tokenKey);
 
             logger.LogInformation("{TokenType} token consumed successfully for user {UserId}", expectedType, LogRedaction.RedactId(tokenInfo.UserId, "uid"));
-            return Task.FromResult(new TokenValidationResult(true, tokenInfo.UserId, tokenInfo.Email));
+            return new TokenValidationResult(true, tokenInfo.UserId, tokenInfo.Email);
         }
         catch (Exception ex)
         {
             logger.LogError("Error verifying {TokenType} token: {ErrorType}", expectedType, ex.GetType().FullName);
-            return Task.FromResult(TokenValidationResult.Failed("Token verification failed"));
+            return TokenValidationResult.Failed("Token verification failed");
         }
     }
 
@@ -305,6 +344,11 @@ public class EmailVerificationService(
                 await magicLinkTokenStore.IsValidAsync(token, SystemClock.UtcNow).ConfigureAwait(false))
             {
                 return true;
+            }
+
+            if (verificationTokenStore is not null)
+            {
+                return await verificationTokenStore.IsValidAsync(token, SystemClock.UtcNow).ConfigureAwait(false);
             }
 
             if (!memoryCache.TryGetValue(GetTokenCacheKey(token), out TokenInfo? tokenInfo) || tokenInfo is null)

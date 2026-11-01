@@ -88,3 +88,19 @@ public class RatingSummaryEntityConfiguration : IEntityTypeConfiguration<RatingS
         builder.HasIndex(e => e.TotalRatings);
     }
 }
+
+/// <summary>
+/// EF Core model configuration bridge for the Social.Ratings module (issue #1158).
+/// Discovered by ApplicationDbContext via IModelConfiguration assembly scanning —
+/// without this bridge the module's IEntityTypeConfiguration classes never reach
+/// the model, so the ratings tables never materialize.
+/// </summary>
+public sealed class RatingsModelConfiguration : IModelConfiguration
+{
+    public void Configure(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new RatingEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new RatingHelpfulVoteEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new RatingSummaryEntityConfiguration());
+    }
+}

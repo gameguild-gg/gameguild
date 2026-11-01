@@ -55,6 +55,9 @@ public static class DependencyInjection
         services.AddScoped<IEmailRenderer, PasswordResetRenderer>();
         services.AddScoped<IEmailRenderer, MagicLinkRenderer>();
         services.AddScoped<IEmailRenderer, EmailCodeRenderer>();
+        // MFA recovery emails ride the durable notification queue (issue #1155).
+        services.AddScoped<IEmailRenderer, MfaRecoveryStartedRenderer>();
+        services.AddScoped<IEmailRenderer, MfaRecoveryConfirmationRenderer>();
 
         // Each durable listener is invoked with its own transactional inbox receipt.
         services.AddScoped<SendWelcomeEmailHandler>();

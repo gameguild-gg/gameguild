@@ -313,6 +313,9 @@ public static class DataDependencyInjection
         // Facade that preserves the original IAuthenticationAnomalyDetectionService contract
         services.AddScoped<AuthenticationAnomalyDetectionService>();
         services.AddScoped<IMagicLinkTokenStore, DatabaseMagicLinkTokenStore>();
+        // Durable verification/password-reset token storage (issue #1151): mirrors the magic-link
+        // store so pending tokens survive restarts and are shared across load-balanced nodes.
+        services.AddScoped<IVerificationTokenStore, DatabaseVerificationTokenStore>();
         services.AddScoped<IEmailVerificationService, EmailVerificationService>();
         services.AddScoped<IEmailCodeService, EmailCodeService>();
         services.AddScoped<IAuthenticationAnomalyDetectionService, AuthenticationAnomalyDetectionService>();
