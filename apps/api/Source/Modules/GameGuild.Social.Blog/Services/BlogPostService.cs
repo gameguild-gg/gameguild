@@ -22,8 +22,17 @@ public interface IBlogPostService
     Task<BlogPost> PublishAsync(Guid actorUserId, Guid postId, Guid? ogImageAssetReferenceId, CancellationToken ct = default);
     Task<BlogPost> UnpublishAsync(Guid actorUserId, Guid postId, CancellationToken ct = default);
     Task DeleteAsync(Guid actorUserId, Guid postId, CancellationToken ct = default);
-    Task<BlogComment> AddCommentAsync(Guid actorUserId, Guid postId, string content, Guid? parentCommentId, CancellationToken ct = default);
+    Task<BlogComment> AddCommentAsync(Guid actorUserId, Guid postId, string content, Guid? parentCommentId = null, CancellationToken ct = default);
     Task DeleteCommentAsync(Guid actorUserId, Guid commentId, CancellationToken ct = default);
+
+    /// <summary>SystemAdmin takedown: force-unpublish any post regardless of authorship (issue #96 admin surface).</summary>
+    Task<BlogPost> AdminUnpublishAsync(Guid moderatorUserId, Guid postId, CancellationToken ct = default);
+
+    /// <summary>SystemAdmin removal: soft-delete any post regardless of authorship (issue #96 admin surface).</summary>
+    Task AdminDeletePostAsync(Guid moderatorUserId, Guid postId, CancellationToken ct = default);
+
+    /// <summary>SystemAdmin moderation: soft-delete any comment; the moderator id is recorded on the row (issue #96 admin surface).</summary>
+    Task AdminDeleteCommentAsync(Guid moderatorUserId, Guid commentId, CancellationToken ct = default);
 
     Task<BlogPost?> GetForAuthorAsync(Guid actorUserId, Guid postId, CancellationToken ct = default);
     Task<IReadOnlyList<BlogPost>> ListMineAsync(Guid actorUserId, int page, CancellationToken ct = default);
@@ -310,6 +319,54 @@ public sealed class BlogPostService(
         }
 
         comment.Delete(actorUserId);
+        post.DecrementComments();
+        await context.SaveChangesAsync(ct).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// SystemAdmin takedown (issue #96 admin surface). Force-unpublishes any live post —
+    /// the author permission matrix is deliberately bypassed; the controller policy is the gate.
+    /// </summary>
+    public async Task<BlogPost> AdminUnpublishAsync(Guid moderatorUserId, Guid postId, CancellationToken ct = default)
+    {
+        var post = await RequirePostAsync(postId, ct).ConfigureAwait(false);
+        if (post.Status == BlogPostStatus.Published)
+        {
+            post.Unpublish();
+            await context.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+
+        return post;
+    }
+
+    /// <summary>
+    /// SystemAdmin removal (issue #96 admin surface). Soft-deletes any live post —
+    /// the author permission matrix is deliberately bypassed; the controller policy is the gate.
+    /// </summary>
+    public async Task AdminDeletePostAsync(Guid moderatorUserId, Guid postId, CancellationToken ct = default)
+    {
+        var post = await RequirePostAsync(postId, ct).ConfigureAwait(false);
+        post.SoftDelete();
+        await context.SaveChangesAsync(ct).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// SystemAdmin moderation (issue #96 admin surface). Soft-deletes any comment and
+    /// records <paramref name="moderatorUserId"/> as the deleting actor.
+    /// </summary>
+    public async Task AdminDeleteCommentAsync(Guid moderatorUserId, Guid commentId, CancellationToken ct = default)
+    {
+        var comment = await context.Set<BlogComment>()
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.DeletedAt == null, ct)
+            .ConfigureAwait(false)
+            ?? throw new KeyNotFoundException($"Blog comment {commentId} was not found.");
+
+        var post = await context.Set<BlogPost>()
+            .FirstOrDefaultAsync(p => p.Id == comment.BlogPostId && p.DeletedAt == null, ct)
+            .ConfigureAwait(false)
+            ?? throw new KeyNotFoundException($"Blog post {comment.BlogPostId} was not found.");
+
+        comment.Delete(moderatorUserId);
         post.DecrementComments();
         await context.SaveChangesAsync(ct).ConfigureAwait(false);
     }
