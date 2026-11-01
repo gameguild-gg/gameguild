@@ -6,7 +6,16 @@ import { DevelopmentReactDiagnostics } from '@/components/app/development-react-
 import { AnalyticsConsent } from '@/components/app/analytics-consent';
 import '@/styles/globals.css';
 
+/**
+ * Canonical site origin (issue #103): resolves relative metadata URLs
+ * (canonical links, Open Graph) onto the canonical host, mirroring
+ * `app/sitemap.ts` and `app/robots.ts`. Same expression as the blog SEO
+ * helper (`lib/blogs/seo.ts`).
+ */
+const SITE_BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://gameguild.gg';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_BASE_URL),
   applicationName: 'GameGuild',
   title: {
     default: 'GameGuild',

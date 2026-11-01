@@ -387,3 +387,49 @@ describe("GameGuild internationalization proxy", () => {
     });
   });
 });
+
+describe("canonical host redirect (issue #103)", () => {
+  it("permanently redirects the legacy web.gameguild.gg alias to the canonical host, preserving path and query", () => {
+    const response = routeRequest(new NextRequest("https://web.gameguild.gg/learn/courses?track=ai"));
+
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe("https://gameguild.gg/learn/courses?track=ai");
+  });
+
+  it("preserves non-default locale prefixes when redirecting the legacy alias", () => {
+    const response = routeRequest(new NextRequest("https://web.gameguild.gg/pt-BR/workspace"));
+
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe("https://gameguild.gg/pt-BR/workspace");
+  });
+
+  it("matches the legacy alias case-insensitively", () => {
+    const response = routeRequest(new NextRequest("https://WEB.GameGuild.GG/projects"));
+
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe("https://gameguild.gg/projects");
+  });
+
+  it("does not redirect the canonical host", () => {
+    const response = routeRequest(new NextRequest("https://gameguild.gg/projects"));
+
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("ignores spoofed x-forwarded-host values (same posture as the origin-trust test)", () => {
+    const response = routeRequest(new NextRequest("https://gameguild.gg/projects", {
+      headers: { "x-forwarded-host": "web.gameguild.gg" },
+    }));
+
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it.each(["http://localhost:3000", "http://127.0.0.1:44025"])(
+    "never redirects local development origins (%s)",
+    (origin) => {
+      const response = routeRequest(new NextRequest(`${origin}/workspace`));
+
+      expect(response.headers.get("location")).toBeNull();
+    },
+  );
+});

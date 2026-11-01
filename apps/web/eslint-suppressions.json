@@ -346,7 +346,7 @@
   },
   "src/app/[locale]/layout.tsx": {
     "@typescript-eslint/require-await": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/[locale]/learn/courses/[slug]/activities/[activityId]/page.tsx": {

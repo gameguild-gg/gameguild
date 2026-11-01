@@ -17,6 +17,12 @@ const DEFAULT_LOCALE_PREFIX = `/${routing.defaultLocale}`;
 const NON_DEFAULT_LOCALE_PREFIXES = routing.locales
   .filter((locale) => locale !== routing.defaultLocale)
   .map((locale) => `/${locale}`);
+// Canonical web origin (issue #103): the legacy `web.` host alias must never
+// serve duplicate content — it is permanently redirected to the canonical
+// domain so crawlers consolidate on a single host.
+const CANONICAL_ORIGIN = (process.env.NEXT_PUBLIC_APP_URL || "https://gameguild.gg").replace(/\/+$/, "");
+const CANONICAL_HOST = new URL(CANONICAL_ORIGIN).host;
+const LEGACY_HOST_ALIASES = new Set(["web.gameguild.gg"]);
 
 function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
@@ -82,11 +88,32 @@ function redirectToUnprefixedPath(request: NextRequest, unprefixedPath: string):
 }
 
 /**
+ * Permanent host canonicalization (issue #103): `web.gameguild.gg` historically
+ * served the same pages as `gameguild.gg`, duplicating content and splitting
+ * SEO signals across hosts. Requests arriving on a legacy alias are redirected
+ * to the canonical host with path and query preserved. Only the actual request
+ * host is trusted — client-provided forwarding headers must not influence
+ * routing (same posture as the origin-trust behavior below).
+ */
+function redirectToCanonicalHost(request: NextRequest): NextResponse | null {
+  const host = (request.headers.get("host") ?? request.nextUrl.host).split(",")[0]?.trim().toLowerCase();
+  if (!host || !LEGACY_HOST_ALIASES.has(host)) return null;
+
+  const url = new URL(request.url);
+  url.protocol = CANONICAL_ORIGIN.startsWith("http://") ? "http:" : "https:";
+  url.host = CANONICAL_HOST;
+  return NextResponse.redirect(url, 308);
+}
+
+/**
  * Keeps the default locale internal while preserving explicit non-default
  * locales. The marker header prevents Next 16 from canonicalizing the
  * internal `/en-US` rewrite back into a redirect loop.
  */
 export function routeRequest(request: NextRequest): NextResponse {
+  const canonicalRedirect = redirectToCanonicalHost(request);
+  if (canonicalRedirect) return canonicalRedirect;
+
   const pathname = request.nextUrl.pathname;
 
   // Server Action redirects inherit the rewritten request's headers. Only

@@ -351,22 +351,43 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
             <AlertDialogTitle>{t('disable.title')}</AlertDialogTitle>
             <AlertDialogDescription>{t('disable.description')}</AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="grid gap-2">
-            <Label htmlFor="mfa-disable-password">{t('disable.passwordLabel')}</Label>
-            <Input
-              id="mfa-disable-password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPassword('')}>{t('disable.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void handleDisable()} disabled={busy || password.length === 0} data-testid="mfa-disable-confirm">
-              {t('disable.confirm')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!busy && password.length > 0) {
+                void handleDisable();
+              }
+            }}
+          >
+            <div className="grid gap-2">
+              <Label htmlFor="mfa-disable-password">{t('disable.passwordLabel')}</Label>
+              <Input
+                id="mfa-disable-password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setPassword('')}>{t('disable.cancel')}</AlertDialogCancel>
+              {/* Issue #864: preventDefault keeps the dialog open while the password is
+                  verified — Radix closes it on click by default, which threw the user out
+                  on every wrong password and forced retyping from scratch. Success closes
+                  it via setDisableOpen(false) in handleDisable. */}
+              <AlertDialogAction
+                type="submit"
+                onClick={(event) => {
+                  event.preventDefault();
+                  void handleDisable();
+                }}
+                disabled={busy || password.length === 0}
+                data-testid="mfa-disable-confirm"
+              >
+                {t('disable.confirm')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </form>
         </AlertDialogContent>
       </AlertDialog>
     </div>

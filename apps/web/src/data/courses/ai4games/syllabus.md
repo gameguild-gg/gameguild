@@ -13,7 +13,7 @@ This course provides a technical introduction to the core concepts of artifical 
 
 ## Student-centered Learning Outcomes
 
-[![Bloom's Taxonomy](https://cdn.vanderbilt.edu/vu-wp0/wp-content/uploads/sites/59/2019/03/27124326/Blooms-Taxonomy-650x366.jpg)](https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/) [image source](https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/)
+[![Bloom's Taxonomy](/assets/images/courses/blooms-taxonomy.jpg)](https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/) [image source](https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/)
 
 Upon completion of the AI for Games, students should be able to:
 
