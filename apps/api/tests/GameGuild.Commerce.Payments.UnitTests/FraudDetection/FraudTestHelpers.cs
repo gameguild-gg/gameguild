@@ -36,6 +36,23 @@ public static class FraudTestHelpers
             return Task.FromResult(Assessment(signalContext));
         }
 
+        public Task<FraudAssessment> AssessSubscriptionChangeAsync(
+            FraudSignalContext signalContext,
+            SubscriptionFraudChangeKind changeKind,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(Assessment(signalContext));
+        }
+
+        public Task<FraudAssessment> AssessPaymentForBackgroundAsync(
+            FraudSignalContext signalContext,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(Assessment(signalContext));
+        }
+
         private FraudAssessment Assessment(FraudSignalContext signalContext) => new(
             signalContext.TenantId,
             signalContext.PaymentId,

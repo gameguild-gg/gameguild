@@ -2980,14 +2980,6 @@
       "count": 8
     }
   },
-  "src/i18n/request.ts": {
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 1
-    }
-  },
   "src/lib/__tests__/api-client-integration.test.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1

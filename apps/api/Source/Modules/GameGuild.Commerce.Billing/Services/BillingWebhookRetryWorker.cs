@@ -35,6 +35,13 @@ public sealed class BillingWebhookRetryWorker(
     public async Task<int> ProcessDueAsync(CancellationToken cancellationToken = default)
     {
         var settings = billingConfiguration.Value.Webhook.RetryWorker;
+
+        // TTL cleanup (issue #408: capture raw payload and all headers): expired raw
+        // deliveries are purged every cycle, independently of the retry loop below, so the
+        // retention window holds even when retries are turned off. A no-op when the
+        // opt-in retention policy is disabled.
+        await PurgeExpiredRawDeliveriesAsync(cancellationToken).ConfigureAwait(false);
+
         if (!settings.Enabled)
         {
             return 0;
@@ -135,6 +142,38 @@ public sealed class BillingWebhookRetryWorker(
     }
 
     /// <summary>
+    ///     Purges retained raw webhook deliveries whose retention window elapsed (issue
+    ///     #408: capture raw payload and all headers). Runs only when the opt-in retention
+    ///     policy is enabled; a purge failure is logged and never aborts the cycle (the
+    ///     next poll retries it).
+    /// </summary>
+    private async Task PurgeExpiredRawDeliveriesAsync(CancellationToken cancellationToken)
+    {
+        var retention = billingConfiguration.Value.Webhook.Retention;
+        if (!retention.Enabled)
+        {
+            return;
+        }
+
+        try
+        {
+            var purged = await webhookRepository
+                .PurgeExpiredRawDeliveriesAsync(SystemClock.UtcNow, cancellationToken)
+                .ConfigureAwait(false);
+            if (purged > 0)
+            {
+                logger.LogInformation(
+                    "Billing webhook raw-delivery retention purge removed {Count} record(s).",
+                    purged);
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogError(exception, "Billing webhook raw-delivery retention purge failed.");
+        }
+    }
+
+    /// <summary>
     ///     Dead-letters rows that exhausted their retry budget but were left behind by the
     ///     requeue path (their attempt count no longer matches the candidates filter).
     ///     Each dead-letter raises a critical security event for operator alerting.
@@ -172,7 +211,9 @@ public sealed class BillingWebhookRetryWorker(
 ///     Hosted service that polls failed billing webhook inbox events and requeues the ones
 ///     past their exponential-backoff next-attempt time through the existing retry path
 ///     (issues #396, #408). Honors the retry worker ceiling (default 5 attempts, matching the
-///     manual retry path), dead-letters exhausted events, and stops polling when disabled
+///     manual retry path), dead-letters exhausted events, purges expired raw deliveries
+///     when the opt-in retention policy is enabled (issue #408: capture raw payload and
+///     all headers), and stops polling when both the retry loop and retention are disabled
 ///     by configuration.
 /// </summary>
 public sealed class BillingWebhookRetryBackgroundService(
@@ -183,7 +224,8 @@ public sealed class BillingWebhookRetryBackgroundService(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var settings = billingConfiguration.Value.Webhook.RetryWorker;
-        if (!settings.Enabled)
+        var retention = billingConfiguration.Value.Webhook.Retention;
+        if (!settings.Enabled && !retention.Enabled)
         {
             logger.LogInformation("Billing webhook retry worker is disabled by configuration.");
             return;

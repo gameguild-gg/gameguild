@@ -1383,6 +1383,78 @@ namespace GameGuild.API.Database.Migrations
                         });
                 });
 
+            modelBuilder.Entity("GameGuild.Commerce.Billing.BillingWebhookRawDelivery", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BillingWebhookEventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExternalEventId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PayloadSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("PiiRedacted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("RawHeaders")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RawPayload")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BillingWebhookEventId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_billing_webhook_raw_deliveries_event_id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_billing_webhook_raw_deliveries_expires_at");
+
+                    b.HasIndex("ReceivedAt")
+                        .HasDatabaseName("ix_billing_webhook_raw_deliveries_received_at");
+
+                    b.ToTable("billing_webhook_raw_deliveries", (string)null);
+                });
+
             modelBuilder.Entity("GameGuild.Commerce.Billing.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3090,6 +3162,10 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("FraudDeviceFingerprint")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<string>("FraudEvidence")
                         .HasColumnType("jsonb");
 
@@ -3108,6 +3184,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.Property<int?>("FraudScore")
                         .HasColumnType("integer");
+
+                    b.Property<string>("FraudSourceIpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
 
                     b.Property<string>("IdempotencyKey")
                         .IsRequired()
@@ -3221,6 +3301,11 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId", "ExternalCustomerId", "CreatedAt")
                         .HasDatabaseName("ix_payments_fraud_velocity_lookup")
                         .HasFilter("\"Status\" <> 4 AND (\"FraudDecision\" IS NULL OR \"FraudDecision\" = 0)")
+                        .HasAnnotation("Npgsql:CreatedConcurrently", true);
+
+                    b.HasIndex("TenantId", "FraudDeviceFingerprint", "CreatedAt")
+                        .HasDatabaseName("ix_payments_fraud_device_lookup")
+                        .HasFilter("\"FraudDeviceFingerprint\" IS NOT NULL")
                         .HasAnnotation("Npgsql:CreatedConcurrently", true);
 
                     b.HasIndex("Provider", "ProviderEnvironment", "ProviderAccountId", "ProviderObjectId", "ProviderMonetaryLeg")
@@ -37207,6 +37292,16 @@ namespace GameGuild.API.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("SourceContent");
+                });
+
+            modelBuilder.Entity("GameGuild.Commerce.Billing.BillingWebhookRawDelivery", b =>
+                {
+                    b.HasOne("GameGuild.Commerce.Billing.BillingWebhookEvent", null)
+                        .WithMany()
+                        .HasForeignKey("BillingWebhookEventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_billing_webhook_raw_deliveries_event");
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Billing.SubscriptionChangeSagaStep", b =>

@@ -56,6 +56,66 @@ public class WebhookSettings
     ///     automatically deprecated. Default 24 hours.
     /// </summary>
     public int SecretRotationWindowHours { get; set; } = 24;
+
+    /// <summary>
+    ///     Opt-in raw-delivery retention policy (issue #408: capture raw payload and all
+    ///     headers). Disabled by default: production behavior is unchanged until the
+    ///     operator explicitly turns it on. When enabled, every accepted provider webhook
+    ///     keeps a redacted copy of its raw payload and full headers alongside the
+    ///     minimized inbox record, purged after the retention window.
+    /// </summary>
+    public WebhookRetentionPolicy Retention { get; set; } = new();
+}
+
+/// <summary>
+///     Opt-in retention policy for raw webhook deliveries (issue #408: capture raw payload
+///     and all headers). The default is OFF so nothing changes in production until the
+///     operator explicitly enables it. When enabled, the raw HTTP payload and the full
+///     header set of each accepted delivery are persisted <c>after</c> passing a redaction
+///     pass (emails masked, tokens/authorization/signature headers replaced by SHA-256
+///     hashes — signature values remain verifiable-by-hash) and are purged once the
+///     retention window elapses.
+/// </summary>
+public class WebhookRetentionPolicy
+{
+    /// <summary>
+    ///     Upper bound (inclusive) on <see cref="RetentionDays"/>. Bounded so an operator
+    ///     typo cannot silently retain raw billing payloads forever.
+    /// </summary>
+    public const int MaxRetentionDays = 365;
+
+    /// <summary>
+    ///     Lower bound (inclusive) on <see cref="RetentionDays"/>.
+    /// </summary>
+    public const int MinRetentionDays = 1;
+
+    /// <summary>
+    ///     Default retention window in days.
+    /// </summary>
+    public const int DefaultRetentionDays = 30;
+
+    /// <summary>
+    ///     Whether raw deliveries (raw payload + full headers, redacted) are persisted at
+    ///     all. Default <c>false</c>: no raw bytes are stored anywhere until this is
+    ///     explicitly enabled by configuration.
+    /// </summary>
+    public bool Enabled { get; set; }
+
+    /// <summary>
+    ///     How long a raw delivery is retained before the cleanup worker purges it.
+    ///     Default 30 days; bounded to the 1-365 range (validated in
+    ///     <see cref="BillingConfiguration.Validate"/>).
+    /// </summary>
+    public int RetentionDays { get; set; } = DefaultRetentionDays;
+
+    /// <summary>
+    ///     Whether the redaction pass masks personally identifiable information (customer
+    ///     email addresses) in the retained raw payload. Default <c>true</c>. Secrets
+    ///     (tokens, authorization and signature headers) are ALWAYS hashed regardless of
+    ///     this switch — turning PII redaction off only keeps non-secret identity fields
+    ///     readable for debugging.
+    /// </summary>
+    public bool RedactPii { get; set; } = true;
 }
 
 /// <summary>

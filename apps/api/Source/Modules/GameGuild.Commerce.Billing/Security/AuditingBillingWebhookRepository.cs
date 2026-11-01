@@ -108,4 +108,8 @@ public sealed class AuditingBillingWebhookRepository(
     /// <inheritdoc />
     public Task<bool> ExistsAsync(string externalEventId, string provider, CancellationToken cancellationToken = default) =>
         inner.ExistsAsync(externalEventId, provider, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<int> PurgeExpiredRawDeliveriesAsync(DateTime utcNow, CancellationToken cancellationToken = default) =>
+        inner.PurgeExpiredRawDeliveriesAsync(utcNow, cancellationToken);
 }

@@ -45,6 +45,17 @@ public sealed class FraudAssessmentOptionsValidator : IValidateOptions<FraudAsse
             failures.Add("Payments:FraudAssessment BehaviorAnomalyMinHistory must be at least 1.");
         }
 
+        // Issue #409: the synchronous budget must respect the <200ms scoring target.
+        if (options.SyncEvaluationBudgetMilliseconds is < 10 or > 200)
+        {
+            failures.Add("Payments:FraudAssessment SyncEvaluationBudgetMilliseconds must be between 10 and 200 so the synchronous gate stays inside the 200ms target.");
+        }
+
+        if (options.CrossAccountDeviceMinAccounts < 2)
+        {
+            failures.Add("Payments:FraudAssessment CrossAccountDeviceMinAccounts must be at least 2 — the device signal compares across accounts.");
+        }
+
         if (options.TenantOverrides.Count == 0)
         {
             return failures.Count > 0
