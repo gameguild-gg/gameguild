@@ -148,6 +148,9 @@ public static class DataDependencyInjection
         // Issue #1150: server-side Turnstile verification on sign-up; enforced exactly
         // when a secret is configured (Turnstile:SecretKey / TURNSTILE_SECRET_KEY).
         services.AddScoped<ITurnstileVerificationService, TurnstileVerificationService>();
+        // Issue #1153: password step-up shared by backup-code regeneration and push-device
+        // registration (same hardening the MFA disable flow applies).
+        services.AddScoped<IMfaReverificationService, MfaReverificationService>();
         // Issue #1141: process-wide validation-key snapshot shared by JwtTokenService and
         // the bearer middleware; refreshed by the key-rotation store on every key change.
         // TryAdd: the API's security setup registers the same singleton; exactly one

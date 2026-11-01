@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using System.ComponentModel.DataAnnotations;
 using GameGuild.Sms;
 using GameGuild.Push;
 using Microsoft.AspNetCore.Authorization;
@@ -165,17 +166,27 @@ public sealed class MfaController(
     /// <summary>
     ///     Generate new backup codes (invalidates existing ones)
     /// </summary>
+    /// <param name="body">Regenerate request with the account password to re-verify</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>New backup codes</returns>
     [HttpPost("v{version:apiVersion}/auth/mfa/backup-codes:regenerate")]
     [EndpointSummary("Regenerate backup codes")]
-    [EndpointDescription("Generates a new set of backup codes, invalidating any previously generated codes.")]
+    [EndpointDescription("Generates a new set of backup codes after password re-verification (issue #1153), invalidating any previously generated codes.")]
     [ProducesResponseType<BackupCodesResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<MfaErrorResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> RegenerateBackupCodes(CancellationToken ct)
+    public async Task<IActionResult> RegenerateBackupCodes([FromBody] RegenerateBackupCodesRequest body, CancellationToken ct)
     {
+        ArgumentNullException.ThrowIfNull(body);
         var userId = GetCurrentUserId();
-        var backupCodes = await sender.Send(new RegenerateMfaBackupCodesCommand(userId), ct).ConfigureAwait(false);
+        var backupCodes = await sender.Send(new RegenerateMfaBackupCodesCommand(userId, body.Password), ct).ConfigureAwait(false);
+
+        // Empty set = the password re-verification refused the mutation (issued
+        // backup-code sets are never legitimately empty).
+        if (backupCodes.Length == 0)
+        {
+            return BadRequest(new MfaErrorResponse { Error = "Password verification failed. Backup codes were not regenerated." });
+        }
 
         return Ok(new BackupCodesResponse
         {
@@ -287,7 +298,7 @@ public sealed class MfaController(
     /// <returns>Registration result</returns>
     [HttpPost("v{version:apiVersion}/auth/mfa/push:register-device")]
     [EndpointSummary("Register push MFA device")]
-    [EndpointDescription("Registers (or replaces) the mobile device registration token used to deliver push MFA approval challenges.")]
+    [EndpointDescription("Registers (or replaces) the mobile device registration token used to deliver push MFA approval challenges, after password re-verification (issue #1153).")]
     [ProducesResponseType<MfaSuccessResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<MfaErrorResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -295,11 +306,11 @@ public sealed class MfaController(
     {
         ArgumentNullException.ThrowIfNull(body);
         var userId = GetCurrentUserId();
-        var result = await sender.Send(new RegisterPushMfaDeviceCommand(userId, body.DeviceToken), ct).ConfigureAwait(false);
+        var result = await sender.Send(new RegisterPushMfaDeviceCommand(userId, body.DeviceToken, body.Password), ct).ConfigureAwait(false);
 
         if (!result)
         {
-            return BadRequest(new MfaErrorResponse { Error = "Failed to register push device (invalid token or no MFA configuration)" });
+            return BadRequest(new MfaErrorResponse { Error = "Failed to register push device (invalid token, no MFA configuration, or password verification failed)" });
         }
 
         return Ok(new MfaSuccessResponse { Message = "Push device registered successfully" });
@@ -551,6 +562,19 @@ public sealed record SmsMfaChallengeRequest
 }
 
 /// <summary>
+///     Request to regenerate backup codes
+/// </summary>
+public sealed record RegenerateBackupCodesRequest
+{
+    /// <summary>
+    ///     The account password, re-verified before new backup codes are issued
+    ///     (issue #1153 — a bearer token alone must not rotate recovery codes).
+    /// </summary>
+    [Required]
+    public string Password { get; init; } = string.Empty;
+}
+
+/// <summary>
 ///     Request to register a push MFA device
 /// </summary>
 public sealed record PushMfaDeviceRequest
@@ -559,6 +583,13 @@ public sealed record PushMfaDeviceRequest
     ///     Device registration token from the mobile platform (FCM/APNs)
     /// </summary>
     public required string DeviceToken { get; init; }
+
+    /// <summary>
+    ///     The account password, re-verified before the device token is replaced
+    ///     (issue #1153 — a stolen bearer token must not hijack push delivery).
+    /// </summary>
+    [Required]
+    public string Password { get; init; } = string.Empty;
 }
 
 /// <summary>
