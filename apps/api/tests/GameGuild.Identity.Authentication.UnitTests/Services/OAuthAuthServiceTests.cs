@@ -1028,19 +1028,30 @@ public class OAuthAuthServiceTests
 
         var act = () => CreateSut().GitHubSignInAsync(new OAuthSignInRequest { AccessToken = "gh-token" });
 
-        await act.Should().ThrowAsync<HttpRequestException>().Which.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
+        var thrown = await act.Should().ThrowAsync<HttpRequestException>();
+        thrown.Which.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
     }
 
     [Theory]
     [InlineData(true, typeof(HttpRequestException))]       // transport failure, no status
     [InlineData(true, typeof(TimeoutException))]
-    [InlineData(true, typeof(TaskCanceledException))]      // HttpClient timeout
-    [InlineData(false, typeof(OperationCanceledException))] // genuine cancellation (never reaches the check)
+    [InlineData(true, typeof(TaskCanceledException))]      // HttpClient timeout (token never cancelled)
+    [InlineData(true, typeof(OperationCanceledException))] // timeout shape with no requested token
     public void IsProviderUnavailability_ClassifiesTransportAndTimeoutsOnly(bool expected, Type exceptionType)
     {
         var exception = (Exception)Activator.CreateInstance(exceptionType)!;
 
         OAuthProviderUnavailableException.IsProviderUnavailability(exception).Should().Be(expected);
+    }
+
+    [Fact]
+    public void IsProviderUnavailability_GenuineCallerCancellationIsNotAnOutage()
+    {
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+        var cancellation = new OperationCanceledException(cancellationTokenSource.Token);
+
+        OAuthProviderUnavailableException.IsProviderUnavailability(cancellation).Should().BeFalse();
     }
 
     [Fact]

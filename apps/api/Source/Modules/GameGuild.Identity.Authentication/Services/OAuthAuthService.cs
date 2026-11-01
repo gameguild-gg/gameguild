@@ -670,13 +670,14 @@ public class OAuthAuthService(
         {
             return await authenticate().ConfigureAwait(false);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException &&
-                                          OAuthProviderUnavailableException.IsProviderUnavailability(exception))
+        catch (Exception exception) when (OAuthProviderUnavailableException.IsProviderUnavailability(exception))
         {
             // Issue #1116: distinguish "the provider is down" (connection errors, timeouts,
             // 5xx) from "the provider rejected this credential". The failed-attempt audit
             // still records the outage; the typed exception lets the API layer answer with
             // a 503 that advertises the magic-link fallback for OAuth-only accounts.
+            // Genuine caller cancellations carry a requested token, are not classified as
+            // outages, and keep flowing untouched.
             await RecordFailedOAuthAttemptAsync(authenticationMethod, stopwatch, exception).ConfigureAwait(false);
             throw new OAuthProviderUnavailableException(authenticationMethod, exception);
         }

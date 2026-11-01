@@ -24,14 +24,15 @@ public sealed class OAuthProviderUnavailableException : Exception
     ///     provider unavailability rather than an authentication failure:
     ///     transport-level <see cref="HttpRequestException" /> without a status code
     ///     (DNS/refused/reset), provider 5xx responses, and HttpClient timeouts.
-    ///     Genuine caller cancellations are already filtered by the caller because
-    ///     <see cref="OperationCanceledException" /> (the base of
-    ///     <see cref="TaskCanceledException" />) never reaches this check.
+    ///     Timeouts surface as <see cref="TaskCanceledException" /> (a subclass of
+    ///     <see cref="OperationCanceledException" />) carrying a token that was never
+    ///     actually cancelled — a genuine caller cancellation carries a requested token
+    ///     and is deliberately not classified as an outage.
     /// </summary>
     public static bool IsProviderUnavailability(Exception exception) => exception switch
     {
         TimeoutException => true,
-        TaskCanceledException => true, // HttpClient timeout (real cancellations never reach here)
+        OperationCanceledException canceled when !canceled.CancellationToken.IsCancellationRequested => true, // HttpClient timeout
         HttpRequestException { StatusCode: null } => true, // transport failure (DNS, refused, reset)
         HttpRequestException { StatusCode: { } status } when (int)status >= 500 => true, // provider outage page
         _ => false

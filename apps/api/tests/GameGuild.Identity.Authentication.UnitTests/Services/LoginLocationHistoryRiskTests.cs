@@ -228,6 +228,8 @@ public sealed class LoginLocationHistoryRiskTests
             SystemClock.SetProvider(new FixedTimeProvider(instant));
         }
 
+        public static FakeClock At(DateTime instant) => new(instant);
+
         public void Dispose() => SystemClock.Reset();
     }
 
