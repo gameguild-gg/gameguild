@@ -134,12 +134,13 @@ try {
   await cookiesFor(authenticated, encrypted);
   const page = await authenticated.newPage();
   page.setDefaultTimeout(timeout);
-  const first = page.waitForResponse(isState, { timeout });
+  // Issue #106 phase 1: the account page fetches the session-state projection on
+  // the server (with the session's bearer) and renders the card filled on first
+  // paint, so no browser request to /api/auth/session-state is expected during the
+  // load. The browser→Next-BFF path stays covered by the anonymous and tampered
+  // denials above and by the explicit Refresh, foreign-identity and post-revocation
+  // scenarios below.
   await page.goto(webUrl + '/workspace/settings/account', { waitUntil: 'domcontentloaded', timeout });
-  const initial = await first;
-  assert.equal(initial.status(), 200);
-  assert.equal(initial.headers()['cache-control'], 'no-store');
-  assertState(await initial.json());
   const card = page.getByTestId('session-state-card');
   const fields = card.getByTestId('session-state-fields');
   await fields.waitFor({ state: 'visible', timeout });
@@ -152,7 +153,7 @@ try {
     assert.equal((await field.innerText()).trim(), value);
   }
   await card.screenshot({ path: path.join(evidence, 'session-state-valid.png') });
-  passed('Real account page renders the persisted owner session through Next BFF and API');
+  passed('Real account page renders the persisted owner session from the server-fetched projection');
   await verifyMetadataRoutes({ webUrl, page, evidence });
 
   const refresh = page.waitForResponse(isState, { timeout });
@@ -246,9 +247,8 @@ try {
     productionBuildAcceptance: false,
   }, null, 2));
   // Resume the original seven session-state scenarios on their actual account page.
-  const returned = page.waitForResponse(isState, { timeout });
+  // The card is server-rendered filled again (issue #106 phase 1); no mount fetch.
   await page.goto(webUrl + '/workspace/settings/account', { waitUntil: 'domcontentloaded', timeout });
-  assert.equal((await returned).status(), 200);
   await fields.waitFor({ state: 'visible', timeout });
 
   const revoke = await fetch(apiUrl + '/v1/auth/sessions/' + account.sessionId, {

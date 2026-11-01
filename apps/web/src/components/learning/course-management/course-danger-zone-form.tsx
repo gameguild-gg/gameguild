@@ -28,6 +28,13 @@ export function CourseDangerZoneForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Optimistic lifecycle flag: archiving hides the archive card immediately, while
+  // router.refresh() reconciles the server-fetched course prop afterwards. This
+  // mirrors the pre-conversion client page, which updated its local course state
+  // (status -> 'archived') on a successful archive.
+  const [archivedAfterAction, setArchivedAfterAction] = useState(false);
+  const isArchived = course.status === 'archived' || archivedAfterAction;
+
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -41,6 +48,7 @@ export function CourseDangerZoneForm({
     try {
       const result = await archiveCourse(course.id);
       if (result.success) {
+        setArchivedAfterAction(true);
         setSuccess('Archived successfully.');
         router.refresh();
       } else {
@@ -162,7 +170,7 @@ export function CourseDangerZoneForm({
       </Card>
 
       {/* Archive */}
-      {course.status !== 'archived' && (
+      {!isArchived && (
         <Card className="border-amber-200 dark:border-amber-900">
           <CardHeader>
             <div className="flex items-center gap-2">
