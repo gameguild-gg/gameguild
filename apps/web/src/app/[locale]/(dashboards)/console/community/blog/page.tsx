@@ -5,7 +5,6 @@ import {
   getBlogAdminComments,
   getBlogAdminPosts,
   getBlogAdminStats,
-  type BlogAdminComment,
   type BlogAdminPost,
 } from '@/lib/blogs/admin';
 import {

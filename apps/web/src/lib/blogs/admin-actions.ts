@@ -31,9 +31,18 @@ function revalidateBlogAdmin() {
   revalidatePath('/blogs');
 }
 
+function readText(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function readPage(formData: FormData) {
+  return Number(readText(formData, 'page')) || 0;
+}
+
 export async function unpublishPostAction(formData: FormData) {
-  const postId = String(formData.get('postId') ?? '');
-  const page = Number(formData.get('page') ?? 0) || 0;
+  const postId = readText(formData, 'postId');
+  const page = readPage(formData);
   if (!postId) redirect(buildHref('posts', { page, error: 'Missing post id.' }));
 
   const result = await adminUnpublishPost(postId);
@@ -46,8 +55,8 @@ export async function unpublishPostAction(formData: FormData) {
 }
 
 export async function deletePostAction(formData: FormData) {
-  const postId = String(formData.get('postId') ?? '');
-  const page = Number(formData.get('page') ?? 0) || 0;
+  const postId = readText(formData, 'postId');
+  const page = readPage(formData);
   if (!postId) redirect(buildHref('posts', { page, error: 'Missing post id.' }));
 
   const result = await adminDeletePost(postId);
@@ -60,8 +69,8 @@ export async function deletePostAction(formData: FormData) {
 }
 
 export async function deleteCommentAction(formData: FormData) {
-  const commentId = String(formData.get('commentId') ?? '');
-  const page = Number(formData.get('page') ?? 0) || 0;
+  const commentId = readText(formData, 'commentId');
+  const page = readPage(formData);
   if (!commentId) redirect(buildHref('comments', { page, error: 'Missing comment id.' }));
 
   const result = await adminDeleteComment(commentId);
@@ -75,7 +84,7 @@ export async function deleteCommentAction(formData: FormData) {
 
 export async function importGhostAction(formData: FormData) {
   const file = formData.get('exportFile');
-  const pasted = String(formData.get('exportJson') ?? '').trim();
+  const pasted = readText(formData, 'exportJson');
   const dryRun = formData.get('dryRun') === 'on';
   const publishImported = formData.get('publishImported') !== null;
 
