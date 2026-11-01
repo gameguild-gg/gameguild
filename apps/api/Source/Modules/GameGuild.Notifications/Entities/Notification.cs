@@ -482,6 +482,15 @@ public enum NotificationType
     /// <summary>MFA recovery confirmation link, actionable once, expires in one hour (issue #1155)</summary>
     MfaRecoveryConfirmation = 38,
 
+    /// <summary>Trusted-contact invite with a single-use confirmation token (issue #1145)</summary>
+    TrustedContactInvite = 39,
+
+    /// <summary>Single-use recovery approval code mailed to a confirmed trusted contact (issue #1145)</summary>
+    TrustedContactRecoveryCode = 40,
+
+    /// <summary>Notice to the account owner that a delegated recovery was requested (issue #1145)</summary>
+    AccountRecoveryOwnerNotice = 41,
+
     /// <summary>Custom/other notification type</summary>
     Custom = 99
 }

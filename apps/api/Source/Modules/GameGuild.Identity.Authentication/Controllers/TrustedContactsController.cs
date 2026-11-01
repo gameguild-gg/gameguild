@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -70,10 +71,14 @@ public sealed class TrustedContactsController(
     /// <returns>Generic outcome; does not reveal token state</returns>
     [AllowAnonymous]
     [HttpPost("confirm")]
+    // Anonymous token redemption is a brute-force surface: give it the per-IP authentication
+    // budget (issue #1145) instead of sharing the general API policy's bucket.
+    [EnableRateLimiting(RateLimitPolicies.Authentication)]
     [EndpointSummary("Confirm a trusted-contact invite")]
-    [EndpointDescription("Consumes the single-use, expiring invite token emailed to the contact. Denials are generic and never reveal token state.")]
+    [EndpointDescription("Consumes the single-use, expiring invite token emailed to the contact. Denials are generic and never reveal token state. Rate limited per IP against the authentication budget.")]
     [ProducesResponseType<TrustedContactConfirmResult>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> ConfirmTrustedContact([FromBody] ConfirmTrustedContactRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);

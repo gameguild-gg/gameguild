@@ -1,9 +1,9 @@
 using FluentAssertions;
-using GameGuild.Email;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -26,17 +26,38 @@ public sealed class AccountRecoveryRequestHandlersTests
         ConfirmedAt = SystemClock.UtcNow.AddDays(-2)
     };
 
+    private static Mock<INotificationService> CreateNotifications()
+    {
+        var notifications = new Mock<INotificationService>();
+        notifications
+            .Setup(service => service.SendAsync(
+                It.IsAny<Guid?>(),
+                It.IsAny<NotificationType>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<NotificationChannel>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<NotificationPriority>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GameGuild.SharedKernel.Models.Result.Success<Notification>(null!));
+        return notifications;
+    }
+
     private static RequestAccountRecoveryCommandHandler CreateHandler(
         Mock<IUserRepository> users,
         Mock<ITrustedContactStore> contacts,
         Mock<IAccountRecoveryStore> recoveries,
         Mock<IWebAuthnCredentialRepository> webAuthn,
-        Mock<IEmailSender> email,
+        Mock<INotificationService> notifications,
         IMemoryCache cache,
         AccountRecoveryOptions? options = null) => new(
-            users.Object, contacts.Object, recoveries.Object, webAuthn.Object, email.Object, cache,
+            users.Object, contacts.Object, recoveries.Object, webAuthn.Object, notifications.Object, cache,
             Options.Create(options ?? new AccountRecoveryOptions()),
-            new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>()).Build(),
             Mock.Of<IAuthenticationAuditEventSink>(),
             NullLogger<RequestAccountRecoveryCommandHandler>.Instance);
 
@@ -47,16 +68,20 @@ public sealed class AccountRecoveryRequestHandlersTests
         var contacts = new Mock<ITrustedContactStore>();
         var recoveries = new Mock<IAccountRecoveryStore>();
         var webAuthn = new Mock<IWebAuthnCredentialRepository>();
-        var email = new Mock<IEmailSender>();
+        var notifications = CreateNotifications();
         users.Setup(r => r.GetByEmailAsync("ghost@test.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
-        var handler = CreateHandler(users, contacts, recoveries, webAuthn, email, new MemoryCache(new MemoryCacheOptions()));
+        var handler = CreateHandler(users, contacts, recoveries, webAuthn, notifications, new MemoryCache(new MemoryCacheOptions()));
         var result = await handler.Handle(new RequestAccountRecoveryCommand { Email = "ghost@test.com" }, CancellationToken.None);
 
         result.Success.Should().BeTrue();
         recoveries.Verify(s => s.AddWithApprovalsAsync(It.IsAny<AccountRecoveryRequest>(), It.IsAny<IReadOnlyList<RecoveryApproval>>(), It.IsAny<CancellationToken>()), Times.Never);
-        email.Verify(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        notifications.Verify(s => s.SendAsync(
+            It.IsAny<Guid?>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -67,18 +92,22 @@ public sealed class AccountRecoveryRequestHandlersTests
         var contacts = new Mock<ITrustedContactStore>();
         var recoveries = new Mock<IAccountRecoveryStore>();
         var webAuthn = new Mock<IWebAuthnCredentialRepository>();
-        var email = new Mock<IEmailSender>();
+        var notifications = CreateNotifications();
         users.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>())).ReturnsAsync(user);
         contacts.Setup(s => s.GetActiveByOwnerAsync(user.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<TrustedContact> { new() { Id = Guid.NewGuid(), OwnerUserId = user.Id, Status = TrustedContactStatus.Invited } });
         webAuthn.Setup(w => w.HasActiveCredentialsAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
-        var handler = CreateHandler(users, contacts, recoveries, webAuthn, email, new MemoryCache(new MemoryCacheOptions()));
+        var handler = CreateHandler(users, contacts, recoveries, webAuthn, notifications, new MemoryCache(new MemoryCacheOptions()));
         var result = await handler.Handle(new RequestAccountRecoveryCommand { Email = user.Email }, CancellationToken.None);
 
         result.Success.Should().BeTrue();
         recoveries.Verify(s => s.AddWithApprovalsAsync(It.IsAny<AccountRecoveryRequest>(), It.IsAny<IReadOnlyList<RecoveryApproval>>(), It.IsAny<CancellationToken>()), Times.Never);
-        email.Verify(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        notifications.Verify(s => s.SendAsync(
+            It.IsAny<Guid?>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -91,7 +120,7 @@ public sealed class AccountRecoveryRequestHandlersTests
         var contacts = new Mock<ITrustedContactStore>();
         var recoveries = new Mock<IAccountRecoveryStore>();
         var webAuthn = new Mock<IWebAuthnCredentialRepository>();
-        var email = new Mock<IEmailSender>();
+        var notifications = CreateNotifications();
         users.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>())).ReturnsAsync(user);
         contacts.Setup(s => s.GetActiveByOwnerAsync(user.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<TrustedContact> { confirmed, invited });
@@ -106,7 +135,7 @@ public sealed class AccountRecoveryRequestHandlersTests
             .Returns(Task.CompletedTask);
 
         // Configured K=5 must clamp to the 2 available factors (1 contact + passkey).
-        var handler = CreateHandler(users, contacts, recoveries, webAuthn, email,
+        var handler = CreateHandler(users, contacts, recoveries, webAuthn, notifications,
             new MemoryCache(new MemoryCacheOptions()), new AccountRecoveryOptions { RequiredApprovals = 5 });
         var result = await handler.Handle(new RequestAccountRecoveryCommand { Email = user.Email }, CancellationToken.None);
 
@@ -120,8 +149,36 @@ public sealed class AccountRecoveryRequestHandlersTests
         persistedApprovals[0].TrustedContactId.Should().Be(confirmed.Id);
         persistedApprovals[0].ApprovalCodeHash.Should().MatchRegex("^[a-f0-9]{64}$");
         persistedApprovals[0].ApprovedAt.Should().BeNull();
-        // One code email to the confirmed contact and one notice to the owner.
-        email.Verify(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        // One approval code to the confirmed contact and one notice to the owner, both through
+        // the durable outbox (issue #1145).
+        notifications.Verify(s => s.SendAsync(
+            null,
+            NotificationType.TrustedContactRecoveryCode,
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            NotificationChannel.Email,
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(),
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.Is<string?>(metadata => metadata != null && metadata.Contains("code")),
+            "contact@test.com",
+            It.IsAny<CancellationToken>()), Times.Once);
+        notifications.Verify(s => s.SendAsync(
+            user.Id,
+            NotificationType.AccountRecoveryOwnerNotice,
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            NotificationChannel.Email,
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(),
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            user.Email,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -134,7 +191,7 @@ public sealed class AccountRecoveryRequestHandlersTests
             new Mock<ITrustedContactStore>(),
             new Mock<IAccountRecoveryStore>(),
             new Mock<IWebAuthnCredentialRepository>(),
-            new Mock<IEmailSender>(),
+            CreateNotifications(),
             new MemoryCache(new MemoryCacheOptions()));
 
         var first = await handler.Handle(new RequestAccountRecoveryCommand { Email = user.Email }, CancellationToken.None);
@@ -153,7 +210,7 @@ public sealed class AccountRecoveryRequestHandlersTests
         var contacts = new Mock<ITrustedContactStore>();
         var recoveries = new Mock<IAccountRecoveryStore>();
         var webAuthn = new Mock<IWebAuthnCredentialRepository>();
-        var email = new Mock<IEmailSender>();
+        var notifications = CreateNotifications();
         users.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>())).ReturnsAsync(user);
         contacts.Setup(s => s.GetActiveByOwnerAsync(user.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<TrustedContact> { CreateConfirmedContact(user.Id) });
@@ -161,12 +218,16 @@ public sealed class AccountRecoveryRequestHandlersTests
         recoveries.Setup(s => s.FindLiveByOwnerAsync(user.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AccountRecoveryRequest { Id = Guid.NewGuid(), OwnerUserId = user.Id, Status = AccountRecoveryStatus.PendingApprovals });
 
-        var handler = CreateHandler(users, contacts, recoveries, webAuthn, email, new MemoryCache(new MemoryCacheOptions()));
+        var handler = CreateHandler(users, contacts, recoveries, webAuthn, notifications, new MemoryCache(new MemoryCacheOptions()));
         var result = await handler.Handle(new RequestAccountRecoveryCommand { Email = user.Email }, CancellationToken.None);
 
         result.Success.Should().BeTrue();
         recoveries.Verify(s => s.AddWithApprovalsAsync(It.IsAny<AccountRecoveryRequest>(), It.IsAny<IReadOnlyList<RecoveryApproval>>(), It.IsAny<CancellationToken>()), Times.Never);
-        email.Verify(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        notifications.Verify(s => s.SendAsync(
+            It.IsAny<Guid?>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
