@@ -26,6 +26,7 @@ vi.mock('@/lib/community/public-community-queries', () => ({
 }));
 vi.mock('@/lib/projects/public-projects', () => ({
   getPublishedProjects: vi.fn().mockResolvedValue([]),
+  PUBLIC_PROJECT_PAGE_SIZE: 24,
 }));
 vi.mock('@/lib/courses/services/course.service', () => ({
   getPublicCourseCatalog: vi.fn().mockResolvedValue({ success: true, data: [] }),
