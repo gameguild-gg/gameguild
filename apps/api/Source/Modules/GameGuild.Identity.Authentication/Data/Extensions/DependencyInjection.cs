@@ -145,6 +145,9 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthService, AuthService>();
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        // Issue #1150: server-side Turnstile verification on sign-up; enforced exactly
+        // when a secret is configured (Turnstile:SecretKey / TURNSTILE_SECRET_KEY).
+        services.AddScoped<ITurnstileVerificationService, TurnstileVerificationService>();
         // Issue #1141: process-wide validation-key snapshot shared by JwtTokenService and
         // the bearer middleware; refreshed by the key-rotation store on every key change.
         // TryAdd: the API's security setup registers the same singleton; exactly one
