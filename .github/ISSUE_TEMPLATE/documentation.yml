@@ -1,0 +1,62 @@
+name: "📚 Documentation Issue"
+description: "Report missing, incorrect, or outdated documentation for GameGuild."
+title: "[Documentation]: "
+labels: ["documentation", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
+        > **Use this template to report problems with GameGuild's documentation** — the README, API docs, architecture docs, or tutorials.
+        > Before opening a new issue, please check the [existing issues](https://github.com/gameguild-gg/website/issues) to see if it has already been reported.
+
+        # 💎 Bounty Program
+        You can prioritize the resolution of this issue by adding a bounty through our [Bounty Program](https://console.algora.io/org/GameGuild/bounties/new).
+
+  - type: dropdown
+    id: doc_area
+    attributes:
+      label: "Affected Documentation"
+      description: "Which documentation is affected?"
+      options:
+        - "README"
+        - "API docs"
+        - "Architecture docs (docs/architecture)"
+        - "Tutorials / guides"
+        - "Code comments / inline docs"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: whats_wrong
+    attributes:
+      label: "What's Missing or Wrong"
+      description: "Describe what is missing, incorrect, or outdated. Include the file path or section heading, and quote the offending text if possible."
+      placeholder: |
+        File: docs/architecture/overview.md, section "Modules"
+        The module list is outdated: it omits the game-jams module added in v1.2.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested_improvement
+    attributes:
+      label: "Suggested Improvement"
+      description: "What should the documentation say instead? A rough draft, an outline, or even a bullet list of the points to cover all help."
+      placeholder: "Add the game-jams module to the module list, with a one-paragraph description of its Commands and Handlers."
+    validations:
+      required: true
+
+  - type: input
+    id: doc_link
+    attributes:
+      label: "Link to Documentation (Optional)"
+      description: "Link to the page, file, or section, if available."
+      placeholder: "https://github.com/gameguild-gg/gameguild/blob/develop/docs/..."
+
+  - type: textarea
+    attributes:
+      label: "Additional Information (Optional)"
+      description: "Anything else relevant — screenshots, related issues, or why this matters to you."
+      placeholder: "Additional context."
