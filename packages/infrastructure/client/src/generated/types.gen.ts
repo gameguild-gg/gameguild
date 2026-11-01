@@ -22769,6 +22769,11 @@ export interface ProjectsCollaboratorDto {
   userName?: string | null;
 }
 
+/** Optional title override for the auto-created jam entry project */
+export interface ProjectsCreateJamProjectInput {
+  title?: string | null;
+}
+
 /** Request DTOs for REST API */
 export interface ProjectsCreateProjectInput {
   categoryId?: string | null;
@@ -29146,6 +29151,7 @@ export let ProgramCategorySchema: z.ZodType<ProgramCategory>;
 export let ProjectsAddCollaboratorInputSchema: z.ZodType<ProjectsAddCollaboratorInput>;
 export let ProjectsAddProjectCollaboratorInputSchema: z.ZodType<ProjectsAddProjectCollaboratorInput>;
 export let ProjectsCollaboratorDtoSchema: z.ZodType<ProjectsCollaboratorDto>;
+export let ProjectsCreateJamProjectInputSchema: z.ZodType<ProjectsCreateJamProjectInput>;
 export let ProjectsCreateProjectInputSchema: z.ZodType<ProjectsCreateProjectInput>;
 export let ProjectsCreateProjectVersionInputSchema: z.ZodType<ProjectsCreateProjectVersionInput>;
 export let ProjectsDevelopmentStatusSchema: z.ZodType<ProjectsDevelopmentStatus>;
@@ -50348,6 +50354,11 @@ ProjectsCollaboratorDtoSchema = z.object({
   role: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
   userName: z.string().nullable().optional(),
+});
+
+/** Zod schema for ProjectsCreateJamProjectInput. Optional title override for the auto-created jam entry project */
+ProjectsCreateJamProjectInputSchema = z.object({
+  title: z.string().min(1).max(255).nullable().optional(),
 });
 
 /** Zod schema for ProjectsCreateProjectInput. Request DTOs for REST API */
