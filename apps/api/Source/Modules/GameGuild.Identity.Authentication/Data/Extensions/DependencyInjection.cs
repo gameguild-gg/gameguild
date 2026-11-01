@@ -92,6 +92,15 @@ public static class DataDependencyInjection
             .Validate(static options => options.IsValid(), "Email-verification tenant identifiers must be non-empty.")
             .ValidateOnStart();
 
+        // Per-IP budget for passwordless sign-in delivery requests (issue #1090): magic-link
+        // and email-code requests share one fixed window per client IP, stored in the
+        // distributed cache (Redis in production) so the budget spans API instances.
+        services.AddOptions<PasswordlessRequestIpRateLimitOptions>()
+            .Bind(configuration.GetSection(PasswordlessRequestIpRateLimitOptions.SectionName))
+            .Validate(static options => options.IsValid(), "The passwordless per-IP rate limit must have a positive request count and window.")
+            .ValidateOnStart();
+        services.AddScoped<IPasswordlessRequestIpRateLimiter, DistributedCachePasswordlessRequestIpRateLimiter>();
+
         // Configure JWT options from configuration
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
 
