@@ -169,6 +169,7 @@ public static class AnonymousEndpointRegistry
             ["BlogPublicController.GetAuthorPosts"] = "Public blog reading surface — published content only.",
             ["BlogPublicController.GetPostDetail"] = "Public blog reading surface — published content only.",
             ["BlogPublicController.ResolveRoute"] = "Public blog reading surface — published content only.",
+            ["BlogPublicController.ResolveLegacySlug"] = "Public blog reading surface — legacy Ghost slug resolution for permanent redirects; published content only, ambiguous slugs 404.",
             ["BlogPublicController.GetIndex"] = "Public blog reading surface — published content only.",
             ["BlogPublicController.RecordView"] = "Public blog reading surface — published content only; atomic view counter with PerIp rate limiting.",
             ["BlogPublicController.GetComments"] = "Public blog reading surface — published content only.",

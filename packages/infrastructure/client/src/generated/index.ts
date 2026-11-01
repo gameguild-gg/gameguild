@@ -46,6 +46,7 @@ export * from './modules/learning-enrollments.gen.js';
 export * from './modules/analytics-metrics-product.gen.js';
 export * from './modules/notifications.gen.js';
 export * from './modules/learning-courses-prerequisites.gen.js';
+export * from './modules/social-blog-admin.gen.js';
 export * from './modules/social-blog-comments.gen.js';
 export * from './modules/social-blog-authoring.gen.js';
 export * from './modules/social-blog-ai.gen.js';

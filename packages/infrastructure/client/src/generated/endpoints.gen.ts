@@ -3840,6 +3840,116 @@ export const getApiReadyEndpoint = {
 } as const;
 
 /**
+ * Lists the newest comments platform-wide for moderation.
+ */
+export interface GetApiSocialBlogAdminCommentsInput {
+  query?: {
+    page?: number;
+  };
+}
+export type GetApiSocialBlogAdminCommentsOutput = Types.SocialBlogQueriesBlogAdminCommentPage;
+export const getApiSocialBlogAdminCommentsEndpoint = {
+  operationId: 'getApiSocialBlogAdminComments' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/admin/comments' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Soft-deletes any comment; the moderator id is recorded on the row.
+ */
+export interface DeleteApiSocialBlogAdminCommentsInput {
+  commentId: string;
+}
+export type DeleteApiSocialBlogAdminCommentsOutput = void;
+export const deleteApiSocialBlogAdminCommentsEndpoint = {
+  operationId: 'deleteApiSocialBlogAdminComments' as const,
+  method: 'DELETE' as const,
+  path: '/api/social/blog/admin/comments/{commentId}' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Imports a Ghost export JSON into the internal blogging system (issue #96 "port all old
+ * content"). Idempotent: re-running skips posts whose (author, slug) already exist. Pass
+ * `dryRun: true` to plan without persisting.
+ */
+export interface PostApiSocialBlogAdminImportGhostInput {
+  body?: Types.SocialBlogControllersGhostImportInput;
+}
+export type PostApiSocialBlogAdminImportGhostOutput = Types.SocialBlogServicesGhostImportReport;
+export const postApiSocialBlogAdminImportGhostEndpoint = {
+  operationId: 'postApiSocialBlogAdminImportGhost' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/admin/import/ghost' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Lists every live post (any status, any author), newest edit first.
+ */
+export interface GetApiSocialBlogAdminPostsInput {
+  query?: {
+    page?: number;
+    status?: Types.SocialBlogBlogPostStatus;
+  };
+}
+export type GetApiSocialBlogAdminPostsOutput = Types.SocialBlogQueriesBlogAdminPostPage;
+export const getApiSocialBlogAdminPostsEndpoint = {
+  operationId: 'getApiSocialBlogAdminPosts' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/admin/posts' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Soft-deletes a post regardless of authorship.
+ */
+export interface DeleteApiSocialBlogAdminPostsInput {
+  id: string;
+}
+export type DeleteApiSocialBlogAdminPostsOutput = void;
+export const deleteApiSocialBlogAdminPostsEndpoint = {
+  operationId: 'deleteApiSocialBlogAdminPosts' as const,
+  method: 'DELETE' as const,
+  path: '/api/social/blog/admin/posts/{id}' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Force-unpublishes a post regardless of authorship (takedown).
+ */
+export interface PostApiSocialBlogAdminPostsUnpublishInput {
+  id: string;
+}
+export type PostApiSocialBlogAdminPostsUnpublishOutput = Types.SocialBlogBlogPost;
+export const postApiSocialBlogAdminPostsUnpublishEndpoint = {
+  operationId: 'postApiSocialBlogAdminPostsUnpublish' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/admin/posts/{id}/unpublish' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Platform-wide blog counters for the admin console header.
+ */
+export type GetApiSocialBlogAdminStatsInput = void;
+export type GetApiSocialBlogAdminStatsOutput = Types.SocialBlogQueriesBlogAdminStatsDto;
+export const getApiSocialBlogAdminStatsEndpoint = {
+  operationId: 'getApiSocialBlogAdminStats' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/admin/stats' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Soft-deletes a comment (comment author, post primary, or any co-author; others → 403).
  */
 export interface DeleteApiSocialBlogCommentsInput {
@@ -4253,6 +4363,22 @@ export const postApiSocialBlogPublicPostsViewsEndpoint = {
   operationId: 'postApiSocialBlogPublicPostsViews' as const,
   method: 'POST' as const,
   path: '/api/social/blog/public/posts/{id}/views' as const,
+  tags: ['SocialBlogPublic'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Resolves a legacy Ghost slug (no author segment, issues #91/#96) to the canonical internal
+ * route for permanent redirects; missing or ambiguous slugs → indistinguishable 404.
+ */
+export interface GetApiSocialBlogPublicResolveLegacyInput {
+  slug: string;
+}
+export type GetApiSocialBlogPublicResolveLegacyOutput = Types.SocialBlogQueriesBlogRouteResolutionDto;
+export const getApiSocialBlogPublicResolveLegacyEndpoint = {
+  operationId: 'getApiSocialBlogPublicResolveLegacy' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/public/resolve-legacy/{slug}' as const,
   tags: ['SocialBlogPublic'] as const,
   requiresAuth: false,
 } as const;
@@ -33724,6 +33850,13 @@ export const endpoints = {
   getApiPrerequisitesCourseWouldCreateCycle: getApiPrerequisitesCourseWouldCreateCycleEndpoint,
   getApiPrerequisitesDependents: getApiPrerequisitesDependentsEndpoint,
   getApiReady: getApiReadyEndpoint,
+  getApiSocialBlogAdminComments: getApiSocialBlogAdminCommentsEndpoint,
+  deleteApiSocialBlogAdminComments: deleteApiSocialBlogAdminCommentsEndpoint,
+  postApiSocialBlogAdminImportGhost: postApiSocialBlogAdminImportGhostEndpoint,
+  getApiSocialBlogAdminPosts: getApiSocialBlogAdminPostsEndpoint,
+  deleteApiSocialBlogAdminPosts: deleteApiSocialBlogAdminPostsEndpoint,
+  postApiSocialBlogAdminPostsUnpublish: postApiSocialBlogAdminPostsUnpublishEndpoint,
+  getApiSocialBlogAdminStats: getApiSocialBlogAdminStatsEndpoint,
   deleteApiSocialBlogComments: deleteApiSocialBlogCommentsEndpoint,
   postApiSocialBlogPosts: postApiSocialBlogPostsEndpoint,
   getApiSocialBlogPosts: getApiSocialBlogPostsEndpoint,
@@ -33751,6 +33884,7 @@ export const endpoints = {
   getApiSocialBlogPublicPosts: getApiSocialBlogPublicPostsEndpoint,
   getApiSocialBlogPublicPostsComments: getApiSocialBlogPublicPostsCommentsEndpoint,
   postApiSocialBlogPublicPostsViews: postApiSocialBlogPublicPostsViewsEndpoint,
+  getApiSocialBlogPublicResolveLegacy: getApiSocialBlogPublicResolveLegacyEndpoint,
   getApiSocialBlogPublicResolve: getApiSocialBlogPublicResolveEndpoint,
   getApiSocialCoursesContentDiscussions: getApiSocialCoursesContentDiscussionsEndpoint,
   getApiSocialCoursesDiscussions: getApiSocialCoursesDiscussionsEndpoint,
