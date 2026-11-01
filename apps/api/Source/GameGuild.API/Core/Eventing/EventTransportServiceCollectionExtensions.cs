@@ -21,6 +21,9 @@ internal static class EventTransportServiceCollectionExtensions
         // Issue #278: ordinary new sign-ins notify the owner only when they opted in
         // (default off; the per-user preference is evaluated host-side, fail-closed).
         services.AddScoped<IIntegrationEventHandler<NewLoginDetectedV1>, NewLoginAlertHandler>();
+        // Issue #1091: password change/reset terminated every other session — queue the
+        // owner confirmation (InApp always, Email per delivery preferences).
+        services.AddScoped<IIntegrationEventHandler<OtherSessionsTerminatedV1>, SessionsTerminatedAlertHandler>();
         // Issue #406: completed provider invoice payments credit the paying user's billing
         // wallet (idempotent per provider event identifier).
         services.AddScoped<IIntegrationEventHandler<BillingInvoicePaidV1>, BillingInvoicePaidWalletCreditHandler>();

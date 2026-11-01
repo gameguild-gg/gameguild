@@ -140,6 +140,10 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthAttemptService, AuthAttemptService>();
         services.AddScoped<ISuspiciousLoginAlertPublisher, SuspiciousLoginAlertPublisher>();
         services.AddScoped<INewLoginAlertPublisher, NewLoginAlertPublisher>();
+        // Sessions-terminated owner notification (issue #1091): recorded when a password
+        // change/reset terminates the account's other sessions; the host-side notification
+        // bridge turns the durable event into the confirmation email.
+        services.AddScoped<IOtherSessionsTerminatedAlertPublisher, OtherSessionsTerminatedAlertPublisher>();
         // Server-side device metadata: dependency-free user-agent parsing for every session;
         // geolocation stays a pure abstraction (SharedKernel) with a no-op default so a host
         // can plug in an offline GeoIP provider without touching this module.
