@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { PyodideWorkerClient } from './pyodide-worker-client'
 import {
   isPyodideWorkerInfrastructureError,
+  PYODIDE_WORKER_NAME,
   PyodideExecutionTimeoutError,
   PyodideWorkerInfrastructureError,
   type PyodideWorkerMessage,
@@ -269,5 +272,15 @@ describe('PyodideWorkerClient', () => {
 
     expect(worker.posted.some((m) => m.type === 'interrupt')).toBe(true)
     client.dispose()
+  })
+
+  it('names the worker chunk with a string literal matching the protocol constant', () => {
+    // webpack's Worker parser only applies `name` to the emitted chunk
+    // filename (static/chunks/pyodide-runtime.<hash>.js, which the COI header
+    // rule in next.config.ts matches) when the option is a static string
+    // literal — an identifier reference silently leaves the chunk numeric.
+    const source = readFileSync(resolve(process.cwd(), 'src/components/block-content-editor/extras/code-studio/runners/pyodide-worker/create-pyodide-worker.ts'), 'utf8');
+    expect(PYODIDE_WORKER_NAME).toBe('pyodide-runtime');
+    expect(source).toContain(`{ type: 'module', name: '${PYODIDE_WORKER_NAME}' }`);
   })
 })
