@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   getDashboardNotificationSummary: vi.fn(),
   getDashboardContexts: vi.fn(),
   getMfaStatus: vi.fn(),
+  fetchRepositoryStarCount: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({
@@ -47,6 +48,10 @@ vi.mock('@/components/settings/two-factor-nudge-banner', () => ({
 vi.mock('@/components/community/github-star-prompt', () => ({
   GitHubStarPrompt: () => null,
 }));
+vi.mock('@/lib/community/github-star-prompt', () => ({
+  isGitHubLinkedAction: vi.fn(),
+  fetchRepositoryStarCount: mocks.fetchRepositoryStarCount,
+}));
 
 import Layout from './layout';
 
@@ -72,6 +77,7 @@ describe('dashboard layout unauthenticated guard callbackUrl (issue #864)', () =
     mocks.getDashboardNotificationSummary.mockResolvedValue({});
     mocks.getDashboardContexts.mockResolvedValue({ capabilities: [], contexts: [] });
     mocks.getMfaStatus.mockResolvedValue({ ok: true, data: { isEnabled: false } });
+    mocks.fetchRepositoryStarCount.mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -153,6 +159,7 @@ describe('dashboard layout session-cookie retry (issue #864 post-MFA flash)', ()
     mocks.getDashboardNotificationSummary.mockResolvedValue({});
     mocks.getDashboardContexts.mockResolvedValue({ capabilities: [], contexts: [] });
     mocks.getMfaStatus.mockResolvedValue({ ok: true, data: { isEnabled: false } });
+    mocks.fetchRepositoryStarCount.mockResolvedValue(null);
   });
 
   afterEach(() => {
