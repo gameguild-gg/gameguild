@@ -1093,6 +1093,97 @@ public class SessionManagementServiceTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    // ── Trusted-device associated-IP tracking (issue #1144) ────────────────────────
+
+    [Fact]
+    public async Task TrustDeviceAsync_SeedsTheAssociatedIpHistoryOnFirstTrust()
+    {
+        var userId = Guid.NewGuid();
+        _trustedDeviceRepositoryMock
+            .Setup(x => x.GetByUserAndFingerprintAsync(userId, "fp-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TrustedDevice?)null);
+
+        await _service.TrustDeviceAsync(userId, "fp-1", "Workstation", null, "203.0.113.7");
+
+        _trustedDeviceRepositoryMock.Verify(x => x.CreateAsync(
+            It.Is<TrustedDevice>(d => d.AssociatedIpAddresses == """["203.0.113.7"]"""),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TrustDeviceAsync_MergesNewIpsIntoTheHistoryWithoutDuplicates()
+    {
+        var userId = Guid.NewGuid();
+        var existing = new TrustedDevice
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            DeviceFingerprint = "fp-1",
+            DeviceName = "Workstation",
+            IsActive = true,
+            AssociatedIpAddresses = """["198.51.100.10","203.0.113.7"]"""
+        };
+        _trustedDeviceRepositoryMock
+            .Setup(x => x.GetByUserAndFingerprintAsync(userId, "fp-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existing);
+        _trustedDeviceRepositoryMock
+            .Setup(x => x.UpdateAsync(It.IsAny<TrustedDevice>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TrustedDevice device, CancellationToken _) => device);
+
+        await _service.TrustDeviceAsync(userId, "fp-1", "Workstation", null, "203.0.113.7");
+        // Re-trusting from a new address appends it; the duplicate keeps a single entry.
+        await _service.TrustDeviceAsync(userId, "fp-1", "Workstation", null, "192.0.2.55");
+
+        existing.AssociatedIpAddresses.Should().Be("""["198.51.100.10","203.0.113.7","192.0.2.55"]""");
+    }
+
+    [Fact]
+    public async Task TrustDeviceAsync_ReplacesUnparsableIpHistoryInsteadOfFailing()
+    {
+        var userId = Guid.NewGuid();
+        var existing = new TrustedDevice
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            DeviceFingerprint = "fp-1",
+            DeviceName = "Workstation",
+            IsActive = true,
+            AssociatedIpAddresses = "not-json"
+        };
+        _trustedDeviceRepositoryMock
+            .Setup(x => x.GetByUserAndFingerprintAsync(userId, "fp-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existing);
+        _trustedDeviceRepositoryMock
+            .Setup(x => x.UpdateAsync(It.IsAny<TrustedDevice>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TrustedDevice device, CancellationToken _) => device);
+
+        await _service.TrustDeviceAsync(userId, "fp-1", "Workstation", null, "203.0.113.7");
+
+        existing.AssociatedIpAddresses.Should().Be("""["203.0.113.7"]""");
+    }
+
+    [Fact]
+    public void MergeAssociatedIpAddress_CapsTheHistoryAtTheColumnLimit()
+    {
+        // Two-character addresses keep the fixture short; the point is the cap, not the format.
+        var merged = SessionManagementService.MergeAssociatedIpAddress(
+            """["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"]""",
+            "41");
+
+        merged.Should().NotBeNull();
+        merged!.Length.Should().BeLessOrEqualTo(SessionManagementService.TrustedDeviceIpHistoryMaxLength);
+        merged.Should().NotContain("\"01\"").And.Contain("\"41\"");
+    }
+
+    [Fact]
+    public void MergeAssociatedIpAddress_WithoutAnAddressKeepsTheHistoryUnchanged()
+    {
+        const string history = """["203.0.113.7"]""";
+
+        SessionManagementService.MergeAssociatedIpAddress(history, null).Should().Be(history);
+        SessionManagementService.MergeAssociatedIpAddress(history, "  ").Should().Be(history);
+    }
+
     [Fact]
     public async Task TrustDeviceAsync_RefreshingTrustKeepsPreviouslyCapturedDeviceInfo()
     {

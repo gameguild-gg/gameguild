@@ -464,7 +464,8 @@ public class TrustedDevicesControllerCovTests
 
     public TrustedDevicesControllerCovTests()
     {
-        _controller = new TrustedDevicesController(_sessionService.Object, new CommandHandlerSender(_sessionService.Object));
+        _controller = new TrustedDevicesController(_sessionService.Object, new CommandHandlerSender(
+            _sessionService.Object, Mock.Of<IStepUpReceiptService>()));
         _controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext
@@ -513,11 +514,11 @@ public class TrustedDevicesControllerCovTests
     public async Task TrustCurrentDevice_Success_ReturnsOk()
     {
         _sessionService.Setup(s => s.TrustDeviceAsync(
-            _userId, It.IsAny<string>(), "My Phone", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            _userId, It.IsAny<string>(), "My Phone", It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var result = await _controller.TrustCurrentDevice(
-            new TrustDeviceRequest { DeviceName = "My Phone" }, CancellationToken.None);
+            new TrustDeviceRequest { DeviceName = "My Phone", StepUpReceipt = "step-up-receipt" }, CancellationToken.None);
         result.Should().BeOfType<OkObjectResult>();
     }
 
@@ -525,12 +526,25 @@ public class TrustedDevicesControllerCovTests
     public async Task TrustCurrentDevice_Failure_ReturnsBadRequest()
     {
         _sessionService.Setup(s => s.TrustDeviceAsync(
-            _userId, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            _userId, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         var result = await _controller.TrustCurrentDevice(
-            new TrustDeviceRequest { DeviceName = "Device" }, CancellationToken.None);
+            new TrustDeviceRequest { DeviceName = "Device", StepUpReceipt = "step-up-receipt" }, CancellationToken.None);
         result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task TrustCurrentDevice_WithoutStepUpReceipt_ReturnsForbidden()
+    {
+        // Fresh verification gate (issue #1144): trusting a device requires a step-up receipt.
+        var result = await _controller.TrustCurrentDevice(
+            new TrustDeviceRequest { DeviceName = "My Phone" }, CancellationToken.None);
+        var forbidden = result.Should().BeOfType<ObjectResult>().Subject;
+        forbidden.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        _sessionService.Verify(s => s.TrustDeviceAsync(
+            It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

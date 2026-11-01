@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging;
 
@@ -363,7 +364,7 @@ public sealed class SessionManagementService(
         }
     }
 
-    public async Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, string? deviceInfo = null, CancellationToken cancellationToken = default)
+    public async Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, string? deviceInfo = null, string? ipAddress = null, CancellationToken cancellationToken = default)
     {
         if (!_sessionOptions.EnableDeviceFingerprinting || string.IsNullOrWhiteSpace(deviceFingerprint))
         {
@@ -389,6 +390,8 @@ public sealed class SessionManagementService(
             {
                 existingDevice.DeviceInfo = TruncateDeviceInfo(deviceInfo);
             }
+
+            existingDevice.AssociatedIpAddresses = MergeAssociatedIpAddress(existingDevice.AssociatedIpAddresses, ipAddress);
             existingDevice.LastUsedAt = now;
             existingDevice.ExpiresAt = now.AddDays(_sessionOptions.TrustedDeviceDurationDays);
             existingDevice.UpdatedAt = now;
@@ -405,6 +408,7 @@ public sealed class SessionManagementService(
             DeviceFingerprint = deviceFingerprint,
             DeviceName = deviceName,
             DeviceInfo = string.IsNullOrWhiteSpace(deviceInfo) ? string.Empty : TruncateDeviceInfo(deviceInfo),
+            AssociatedIpAddresses = MergeAssociatedIpAddress(null, ipAddress),
             TrustedAt = now,
             LastUsedAt = now,
             ExpiresAt = now.AddDays(_sessionOptions.TrustedDeviceDurationDays),
@@ -428,6 +432,47 @@ public sealed class SessionManagementService(
 
     /// <summary>The maximum persisted length of a trusted device's metadata JSON (column limit).</summary>
     public const int TrustedDeviceInfoMaxLength = 2000;
+
+    /// <summary>The maximum persisted length of a trusted device's associated-IP JSON array (column limit).</summary>
+    public const int TrustedDeviceIpHistoryMaxLength = 1000;
+
+    /// <summary>
+    ///     Merges the trusting session's IP into the device's associated-IP history (issue #1144):
+    ///     a JSON array of the most recently seen unique addresses, oldest dropped first when the
+    ///     column limit is reached. Unparsable history is replaced rather than merged so a corrupt
+    ///     row self-heals on the next trust.
+    /// </summary>
+    internal static string? MergeAssociatedIpAddress(string? existingJson, string? ipAddress)
+    {
+        if (string.IsNullOrWhiteSpace(ipAddress))
+        {
+            return existingJson;
+        }
+
+        List<string> history;
+        try
+        {
+            history = string.IsNullOrWhiteSpace(existingJson)
+                ? []
+                : JsonSerializer.Deserialize<List<string>>(existingJson) ?? [];
+        }
+        catch (JsonException)
+        {
+            history = [];
+        }
+
+        history.RemoveAll(existing => string.Equals(existing, ipAddress, StringComparison.Ordinal));
+        history.Add(ipAddress);
+
+        var serialized = JsonSerializer.Serialize(history);
+        while (serialized.Length > TrustedDeviceIpHistoryMaxLength && history.Count > 1)
+        {
+            history.RemoveAt(0);
+            serialized = JsonSerializer.Serialize(history);
+        }
+
+        return history.Count == 0 ? null : serialized;
+    }
 
     public async Task<bool> IsDeviceTrustedAsync(Guid userId, string deviceFingerprint, CancellationToken cancellationToken = default)
     {

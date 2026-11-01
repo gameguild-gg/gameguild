@@ -120,6 +120,8 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthenticationFlowStateRepository, AuthenticationFlowStateRepository>();
         services.AddScoped<IAuthenticationOrchestrationService, AuthenticationOrchestrationService>();
         services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
+        // Expired/revoked trusted-device pruning (issue #1144); fails soft and retries per interval.
+        services.AddHostedService<TrustedDeviceCleanupBackgroundService>();
         services.AddScoped<IMfaAttemptRepository, MfaAttemptRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<GameGuild.Identity.Authorization.IAuthorizationRolePermissionProvider, RolePermissionProvider>();

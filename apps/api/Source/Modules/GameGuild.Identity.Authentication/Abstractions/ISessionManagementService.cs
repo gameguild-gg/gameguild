@@ -44,8 +44,10 @@ public interface ISessionManagementService
     ///     Marks a device as trusted for the user. <paramref name="deviceInfo"/> carries the
     ///     persisted device metadata (JSON) captured by the session being trusted, so the
     ///     trusted-device list can present browser/OS details; pass null to leave it unset.
+    ///     <paramref name="ipAddress"/> is merged into the device's associated-IP history
+    ///     (issue #1144); pass null to leave the history unchanged.
     /// </summary>
-    Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, string? deviceInfo = null, CancellationToken cancellationToken = default);
+    Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, string? deviceInfo = null, string? ipAddress = null, CancellationToken cancellationToken = default);
 
     Task<bool> IsDeviceTrustedAsync(Guid userId, string deviceFingerprint, CancellationToken cancellationToken = default);
 
