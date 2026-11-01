@@ -285,7 +285,7 @@ export function ReviewWorkspaceForm({ review }: { review: LearningAssessmentsAno
         </div>
       )}
 
-      <Button type="button" onClick={handleSubmit} disabled={!canSubmit} data-testid="submit-review">
+      <Button type="button" onClick={() => void handleSubmit()} disabled={!canSubmit} data-testid="submit-review">
         Submit review
       </Button>
     </div>

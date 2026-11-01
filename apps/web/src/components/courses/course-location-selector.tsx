@@ -21,7 +21,7 @@ export function CourseLocationSelector({ locations, onLocationSelected }: Course
   const [selectedLocation, setSelectedLocation] = useState<TestingLocationFull | null>(null);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
 
-  const handleLocationChange = async (locationId: string) => {
+  const handleLocationChange = (locationId: string) => {
     const location = locations.find((loc) => loc.id === locationId);
     if (!location) return;
 
