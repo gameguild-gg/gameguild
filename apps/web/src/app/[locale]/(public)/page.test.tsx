@@ -141,10 +141,11 @@ describe('contextual root page', () => {
 
     const stats = screen.getByRole('region', { name: 'Community stats' });
     expect(stats).toBeInTheDocument();
-    expect(screen.getByText('Published courses')).toBeInTheDocument();
-    expect(screen.getByText('Projects in the showcase')).toBeInTheDocument();
-    expect(screen.getByText('Upcoming playtests')).toBeInTheDocument();
-    expect(screen.getByText('Members in the spotlight')).toBeInTheDocument();
+    expect(within(stats).getByText('Published courses')).toBeInTheDocument();
+    expect(within(stats).getByText('Projects in the showcase')).toBeInTheDocument();
+    // The community pulse section reuses this heading text; scope to the band.
+    expect(within(stats).getByText('Upcoming playtests')).toBeInTheDocument();
+    expect(within(stats).getByText('Members in the spotlight')).toBeInTheDocument();
   });
 
   it('presents a strong sign-up call to action (issue #123)', async () => {
