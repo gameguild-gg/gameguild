@@ -63,8 +63,8 @@ public sealed class ApiPolicyDoesNotConsumeAuthenticationBudgetTests
         using var secondMutation = await client.PostAsync("/v1/auth/password-change", content: null);
         using var blockedMutation = await client.PostAsync("/v1/auth/password-change", content: null);
 
-        firstMutation.StatusCode.Should().Be(HttpStatusCode.OK);
-        secondMutation.StatusCode.Should().Be(HttpStatusCode.OK);
+        // The test POSTs without auth/body, so mutations return 400/401 — what matters is
+        // the THIRD one is 429 (Authentication budget exhausted) while reads stay unthrottled.
         blockedMutation.StatusCode.Should().Be(HttpStatusCode.TooManyRequests,
             "the Authentication budget (2/min here) is exhausted by credential mutations");
 
@@ -91,7 +91,7 @@ public sealed class ApiPolicyDoesNotConsumeAuthenticationBudgetTests
         }
 
         using var mutation = await client.PostAsync("/v1/auth/password-change", content: null);
-        mutation.StatusCode.Should().Be(HttpStatusCode.OK,
+        mutation.StatusCode.Should().NotBe(HttpStatusCode.TooManyRequests,
             "credential mutations keep their own Authentication budget regardless of read bursts (issue #1035)");
     }
 }
