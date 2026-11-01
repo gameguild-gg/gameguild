@@ -69,5 +69,12 @@ public class UserMfaConfigurationConfiguration : IEntityTypeConfiguration<UserMf
 
         // Configure indexes
         builder.HasIndex(x => x.UserId).IsUnique().HasDatabaseName("ix_user_mfa_configuration_user_id");
+
+        // Issue #1156: principal user relationship; Restrict because user removal is
+        // soft-delete and must never cascade MFA enrollment away.
+        builder.HasOne<GameGuild.Identity.Users.User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

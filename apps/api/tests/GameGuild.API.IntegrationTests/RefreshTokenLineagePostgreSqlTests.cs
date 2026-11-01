@@ -312,6 +312,23 @@ public sealed class RefreshTokenLineagePostgreSqlTests(ApiPostgreSqlFixture fixt
     {
         using var scope = fixture.Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        // UserId columns reference the principal Users table (issue #1156), so every
+        // synthetic owner (including the "other owner" scenarios) needs a user row.
+        var owners = tokens.Select(token => token.UserId)
+            .Concat(sessions.Select(session => session.UserId))
+            .Distinct()
+            .ToList();
+        var existing = await db.Set<GameGuild.Identity.Users.User>()
+            .Where(user => owners.Contains(user.Id))
+            .Select(user => user.Id)
+            .ToListAsync();
+        foreach (var ownerId in owners.Where(id => !existing.Contains(id)))
+        {
+            var owner = GameGuild.Identity.Users.User.Create($"lineage-{ownerId:N}@example.test", "Synthetic lineage owner");
+            owner.Id = ownerId;
+            db.Set<GameGuild.Identity.Users.User>().Add(owner);
+        }
+
         db.Set<UserSession>().AddRange(sessions);
         db.Set<RefreshToken>().AddRange(tokens);
         await db.SaveChangesAsync();

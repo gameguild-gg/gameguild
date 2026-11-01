@@ -199,6 +199,11 @@ public sealed class RefreshTokenCleanupPostgreSqlTests(ApiPostgreSqlFixture fixt
         }
         using var scope = fixture.Factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        // UserId columns reference the principal Users table (issue #1156), so the
+        // synthetic chain owner needs a persisted user row.
+        var ownerUser = GameGuild.Identity.Users.User.Create($"cleanup-{owner:N}@example.test", "Synthetic cleanup owner");
+        ownerUser.Id = owner;
+        db.Set<GameGuild.Identity.Users.User>().Add(ownerUser);
         db.Set<UserSession>().Add(expiredSession);
         if (liveSession is not null) { db.Set<UserSession>().Add(liveSession); }
         db.Set<RefreshToken>().AddRange([root, leaf, .. retained]);
