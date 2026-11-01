@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { LearningAssessmentsAnonymousReviewSubmission, LearningAssessmentsRubricCriterion } from '@game-guild/client';
 import { parseQuizAnswerEnvelope, QUIZ_ASSESSMENT_TYPE_ADAPTER } from '@game-guild/grading-adapter-quiz';
 import { createEmptyQuizAnswer, parseQuizLearnerEntry, type QuizAnswer, type QuizLearnerEntry } from '@game-guild/quiz';
@@ -13,7 +13,7 @@ import { TextViewer } from '@/app/[locale]/(speedgrader)/speedgrader/assessments
 import { UrlViewer } from '@/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/url-viewer';
 import { FileViewer } from '@/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/file-viewer';
 import { MediaViewer } from '@/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/media-viewer';
-import { fetchPeerReviewWorkspace, submitPeerReview } from '@/lib/learning/actions-peer-review';
+import { submitPeerReview } from '@/lib/learning/actions-peer-review';
 import { pointsToScoreUnits, scoreUnitsToPoints } from '@/lib/learning/academic-values';
 import { parseScoreValue } from '@game-guild/grading';
 import { useRouter } from '@/i18n/navigation';
@@ -43,47 +43,15 @@ function sortedCriteria(rubric: LearningAssessmentsAnonymousReviewSubmission['ru
 }
 
 /**
- * Student peer-review workspace. The DTO carries no identity fields and this
- * component renders none — the header names the submission "Anonymous".
- * Viewers are imported from the (speedgrader) route folder (single source).
+ * Student peer-review workspace (issue #106 phase 1). The review DTO is
+ * fetched by the server page and arrives as a prop, so the submission renders
+ * in the initial server response; only grading inputs and submission stay on
+ * the client. The DTO carries no identity fields and this component renders
+ * none — the header names the submission "Anonymous". Viewers are imported
+ * from the (speedgrader) route folder (single source).
  */
-export function ReviewWorkspace({ reviewId }: { reviewId: string }): React.JSX.Element {
+export function ReviewWorkspaceForm({ review }: { review: LearningAssessmentsAnonymousReviewSubmission }): React.JSX.Element {
   const router = useRouter();
-  const [review, setReview] = useState<LearningAssessmentsAnonymousReviewSubmission | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setReview(null);
-    setLoadError(null);
-    fetchPeerReviewWorkspace(reviewId).then((result) => {
-      if (cancelled) return;
-      if (result.ok) {
-        setReview(result.review);
-      } else {
-        setLoadError(result.error);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [reviewId]);
-
-  if (loadError) {
-    return (
-      <div role="alert" className="p-4 text-sm text-destructive">
-        {loadError}
-      </div>
-    );
-  }
-  if (!review) {
-    return <p className="p-4 text-sm text-muted-foreground">Loading review…</p>;
-  }
-
-  return <WorkspaceForm key={reviewId} review={review} onDone={() => router.push('/learn/reviews')} />;
-}
-
-function WorkspaceForm({ review, onDone }: { review: LearningAssessmentsAnonymousReviewSubmission; onDone: () => void }): React.JSX.Element {
   const criteria = useMemo(() => sortedCriteria(review.rubric), [review.rubric]);
   const canonicalQuizItems = useMemo(
     () => readCanonicalQuizSubmission(review.deliveryCanonicalJson, review.responseEnvelopeCanonicalJson),
@@ -163,7 +131,7 @@ function WorkspaceForm({ review, onDone }: { review: LearningAssessmentsAnonymou
       setSubmitting(false);
       return;
     }
-    onDone();
+    router.push('/learn/reviews');
   }
 
   if (review.status === 'Submitted') {
