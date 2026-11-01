@@ -420,6 +420,7 @@ describe('SignupForm guest upgrade', () => {
       firstName: 'Jo',
       lastName: 'Do',
       redirectTo: '/',
+      turnstileToken: null,
     });
   }, 10000);
 
@@ -432,7 +433,6 @@ describe('SignupForm guest upgrade', () => {
     const { user } = renderWithUser(
       <SignupForm guestSessionId={guestSessionId} />,
     );
->>>>>>> origin/develop
     await user.type(screen.getByLabelText('Full Name'), 'Jo Do');
     await user.type(screen.getByLabelText('Email'), 'jo@e.co');
     await user.type(screen.getByLabelText('Password'), '12345678');
