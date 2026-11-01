@@ -427,6 +427,26 @@ public class MfaControllerCovTests
     }
 
     [Fact]
+    public async Task ListMfaMethods_DoesNotAdvertiseUnimplementedEmailMfa()
+    {
+        // Issue #1152: Email MFA is advertised but not implemented (no enrollment command, no
+        // verify branch) — the advertised surface must not claim it.
+        _mfaService.Setup(s => s.GetMfaConfigurationAsync(
+            _userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MfaConfigurationResponse
+            {
+                EnabledMethods = new[] { "totp", "email" },
+                BackupCodesRemaining = 5
+            });
+
+        var result = await _controller.ListMfaMethods(CancellationToken.None);
+        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = ok.Value.Should().BeOfType<MfaMethodsResponse>().Subject;
+        response.Methods.Should().NotContain(method => method.Method == MfaMethod.Email);
+        response.DefaultMethod.Should().NotBe(MfaMethod.Email);
+    }
+
+    [Fact]
     public async Task DisableMfa_Success_ReturnsOk()
     {
         _mfaService.Setup(s => s.DisableMfaAsync(

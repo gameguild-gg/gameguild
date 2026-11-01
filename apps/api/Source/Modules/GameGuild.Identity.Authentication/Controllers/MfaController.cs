@@ -403,15 +403,9 @@ public sealed class MfaController(
                 IsAvailable = smsAvailable,
                 Priority = 2
             },
-            new()
-            {
-                Method = MfaMethod.Email,
-                Name = "Email",
-                Description = "Receive verification codes via email",
-                IsEnabled = enabledMethods.Contains("email", StringComparer.OrdinalIgnoreCase),
-                IsAvailable = true,
-                Priority = 3
-            },
+            // Email MFA is deliberately NOT advertised (issue #1152): no command enrolls it and
+            // VerifyMfaAsync has no Email branch, so listing it claimed a capability that does
+            // not exist. It returns when a real email-factor implementation lands.
             new()
             {
                 Method = MfaMethod.Push,
@@ -419,7 +413,7 @@ public sealed class MfaController(
                 Description = "Approve sign-in requests on your enrolled mobile device",
                 IsEnabled = enabledMethods.Contains("push", StringComparer.OrdinalIgnoreCase),
                 IsAvailable = pushAvailable,
-                Priority = 4
+                Priority = 3
             },
             new()
             {
@@ -428,14 +422,13 @@ public sealed class MfaController(
                 Description = "One-time use codes for emergency access",
                 IsEnabled = configuration.BackupCodesRemaining > 0,
                 IsAvailable = true,
-                Priority = 5
+                Priority = 4
             }
         };
 
         var defaultMethod = enabledMethods.Contains("totp", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Totp :
                            enabledMethods.Contains("sms", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Sms :
-                           enabledMethods.Contains("push", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Push :
-                           enabledMethods.Contains("email", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Email : (MfaMethod?)null;
+                           enabledMethods.Contains("push", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Push : (MfaMethod?)null;
 
         return Ok(new MfaMethodsResponse
         {
