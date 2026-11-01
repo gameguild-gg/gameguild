@@ -143,6 +143,31 @@ try {
   await page.goto(webUrl + '/workspace/settings/account', { waitUntil: 'domcontentloaded', timeout });
   const card = page.getByTestId('session-state-card');
   const fields = card.getByTestId('session-state-fields');
+  // Issue #106 phase 1 made the account page server-rendered: the fields are
+  // present in the server HTML before React attaches its event handlers in the
+  // development server, and a Refresh click landing in that gap dispatches on
+  // an inert button without producing any browser request. Click-and-wait is
+  // therefore retried within the original ~120s budget until the page is
+  // interactive; the refresh request itself is an idempotent GET.
+  async function refreshAndAwaitSessionState() {
+    let lastError;
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      const pending = page.waitForResponse(isState, { timeout: 10_000 });
+      try {
+        await card.getByRole('button', { name: 'Refresh', exact: true }).click({ timeout: 10_000 });
+      } catch (error) {
+        lastError = error;
+        await pending.catch(() => {});
+        continue;
+      }
+      try {
+        return await pending;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError;
+  }
   await fields.waitFor({ state: 'visible', timeout });
   assert.equal(await fields.getByText('Valid', { exact: true }).count(), 1);
   for (const [label, value] of [
@@ -156,9 +181,7 @@ try {
   passed('Real account page renders the persisted owner session from the server-fetched projection');
   await verifyMetadataRoutes({ webUrl, page, evidence });
 
-  const refresh = page.waitForResponse(isState, { timeout });
-  await card.getByRole('button', { name: 'Refresh', exact: true }).click();
-  const refreshed = await refresh;
+  const refreshed = await refreshAndAwaitSessionState();
   assert.equal(refreshed.status(), 200);
   assert.equal(refreshed.headers()['cache-control'], 'no-store');
   assertState(await refreshed.json());
@@ -259,9 +282,8 @@ try {
   });
   assert.equal(revoke.status, 200);
   passed('Actual API revokes the authenticated session');
-  const rejected = page.waitForResponse(isState, { timeout });
-  await card.getByRole('button', { name: 'Refresh', exact: true }).click();
-  assert.equal((await rejected).status(), 401);
+  const rejected = await refreshAndAwaitSessionState();
+  assert.equal(rejected.status(), 401);
   const error = card.getByTestId('session-state-error');
   await error.waitFor({ state: 'visible', timeout });
   assert.ok((await error.innerText()).trim().length > 0);
