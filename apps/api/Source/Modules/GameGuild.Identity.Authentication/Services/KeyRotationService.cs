@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -8,7 +9,8 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public class KeyRotationService(
     IApplicationDbContext dbContext,
-    ILogger<KeyRotationService> logger) : IKeyRotationService
+    ILogger<KeyRotationService> logger,
+    IJwtSigningKeyCache? signingKeyCache = null) : IKeyRotationService
 {
     private readonly IApplicationDbContext _dbContext = dbContext;
 
@@ -71,6 +73,11 @@ public class KeyRotationService(
 
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
+        // Issue #1141: validators must learn the new key set as soon as it changes, so
+        // tokens signed by the fresh active key validate immediately while tokens from
+        // the rotated-out key keep validating for the rest of their lifetime.
+        await RefreshValidationKeyCacheAsync(cancellationToken).ConfigureAwait(false);
+
         return newKey;
     }
 
@@ -94,6 +101,8 @@ public class KeyRotationService(
         logger.LogInformation("Cleaned up {Count} expired JWT signing keys older than {CutoffDate}",
             expiredKeys.Count, cutoffDate);
 
+        await RefreshValidationKeyCacheAsync(cancellationToken).ConfigureAwait(false);
+
         return expiredKeys.Count;
     }
 
@@ -110,5 +119,28 @@ public class KeyRotationService(
             logger.LogInformation("JWT signing key initialized. Active key: {KeyId}, expires: {ExpiresAt}",
                 activeKey.KeyId, activeKey.ExpiresAt);
         }
+
+        await RefreshValidationKeyCacheAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Publishes the currently valid key set to the process-wide validation-key cache
+    ///     (issue #1141). A missing cache (unit tests, static-key-only hosts) is not an
+    ///     error — validation then keeps using the statically configured secret.
+    /// </summary>
+    private async Task RefreshValidationKeyCacheAsync(CancellationToken cancellationToken)
+    {
+        if (signingKeyCache is null)
+        {
+            return;
+        }
+
+        var validKeys = await GetValidationKeysAsync(cancellationToken).ConfigureAwait(false);
+        var securityKeys = validKeys
+            .Select(JwtSigningKeyMapper.ToSecurityKey)
+            .OfType<SymmetricSecurityKey>()
+            .ToArray();
+
+        signingKeyCache.Update(securityKeys);
     }
 }

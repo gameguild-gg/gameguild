@@ -145,6 +145,15 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthService, AuthService>();
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        // Issue #1141: process-wide validation-key snapshot shared by JwtTokenService and
+        // the bearer middleware; refreshed by the key-rotation store on every key change.
+        // TryAdd: the API's security setup registers the same singleton; exactly one
+        // instance must exist so rotation refreshes are visible to every reader.
+        services.TryAddSingleton<IJwtSigningKeyCache, JwtSigningKeyCache>();
+        // Issue #1141: run the scheduled JWT key rotation (initializes the store with the
+        // first signing key and rotates before expiry). Previously the background service
+        // existed but was never registered, so the rotation store stayed empty.
+        services.AddHostedService<KeyRotationBackgroundService>();
         services.AddScoped<IAuthenticatedSessionIssuer, AuthenticatedSessionIssuer>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IOAuthService, OAuthService>();

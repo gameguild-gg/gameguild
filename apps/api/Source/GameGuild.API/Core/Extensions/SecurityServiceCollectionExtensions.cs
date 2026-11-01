@@ -186,6 +186,19 @@ public static class SecurityServiceCollectionExtensions
             };
         });
 
+        // Issue #1141: bearer validation must accept signing keys from the JWT key
+        // rotation store, not only the statically configured secret. The cache is a
+        // process-wide singleton refreshed by the rotation store whenever the valid key
+        // set changes; the resolver runs for every validated token and always includes
+        // the static key, so pre-rotation tokens keep validating across rollover.
+        services.TryAddSingleton<IJwtSigningKeyCache, JwtSigningKeyCache>();
+        services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<IJwtSigningKeyCache>((options, keyCache) =>
+            {
+                options.TokenValidationParameters.IssuerSigningKeyResolver =
+                    (_, _, _, _) => keyCache.GetValidationKeys(securityKey);
+            });
+
         if (options.EnableApiKeyAuthentication)
         {
             authenticationBuilder.AddApiKeyAuthentication(apiKeyOptions =>
