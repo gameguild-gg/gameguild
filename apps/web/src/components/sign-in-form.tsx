@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useEffect, useState, useSyncExternalStore } from "react";
+import { type FormEvent, useState, useSyncExternalStore } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@game-guild/client/react";
 import { cn } from "@/lib/utils";
@@ -82,15 +82,6 @@ export function SignInForm({
   const captchaRequired =
     failedAttempts >= TURNSTILE_FAILURE_THRESHOLD || isCaptchaRequiredError(error);
 
-  useEffect(() => {
-    if (!error) {
-      return;
-    }
-    setFailedAttempts((count) => count + 1);
-    // Single-use tokens never survive a failed submission: force a fresh one.
-    setTurnstileToken(null);
-  }, [error]);
-
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     clearError();
@@ -136,13 +127,18 @@ export function SignInForm({
       // app-wide useAuth state (mfaChallenge) survives the navigation.
       // redirectTo rides along so the challenge returns to the caller's
       // original target (issue #864 callbackUrl flow).
-      if (
-        err instanceof Error &&
-        "type" in err &&
-        err.type === "MfaRequired"
-      ) {
+      const mfaRequired =
+        err instanceof Error && "type" in err && err.type === "MfaRequired";
+      if (mfaRequired) {
         form.reset();
         router.replace({ pathname: "/sign-in/2fa", query: { redirectTo } });
+      } else {
+        // A failed submission (issue #1082): count it toward the local CAPTCHA
+        // threshold here, in the failure handler of the submit event — not in
+        // an effect reacting to the shared error state, which would cascade
+        // renders (react-hooks/set-state-in-effect). An MFA redirect is a
+        // challenge, not a credential failure, so it does not count.
+        setFailedAttempts((count) => count + 1);
       }
       // error state is set by useAuth
     }

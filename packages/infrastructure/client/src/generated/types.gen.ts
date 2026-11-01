@@ -13181,6 +13181,9 @@ instead of the standard one. Null or false keeps the standard lifetime. */
   rememberMe?: boolean | null;
   /** Optional tenant ID to use for the sign-in. If not provided, will use the first available tenant for the user */
   tenantId?: string | null;
+  /** Cloudflare Turnstile token (issue #1082). Required once the source IP crossed
+the configured failed-sign-in threshold; ignored otherwise. */
+  turnstileToken?: string | null;
   username?: string | null;
 }
 
@@ -13494,6 +13497,9 @@ a valid guest session is upgraded into the issued authenticated session. */
   /** When true, issues a persistent ("remember me") refresh token using the persistent lifetime. */
   rememberMe?: boolean | null;
   tenantId?: string | null;
+  /** Cloudflare Turnstile token (issue #1082). Required once the source IP crossed
+the configured failed-sign-in threshold; ignored otherwise. */
+  turnstileToken?: string | null;
 }
 
 /** Request body to satisfy one challenge step of an orchestrated authentication flow.
@@ -41626,6 +41632,7 @@ IdentityAuthenticationLocalSignInInputSchema = z.object({
   password: z.string().min(1),
   rememberMe: z.boolean().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
+  turnstileToken: z.string().nullable().optional(),
   username: z.string().nullable().optional(),
 });
 
@@ -41872,6 +41879,7 @@ IdentityAuthenticationPolymorphicSignInInputSchema = z.object({
   password: z.string().nullable().optional(),
   rememberMe: z.boolean().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
+  turnstileToken: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationProcessOrchestratedAuthenticationStepRequestDto. Request body to satisfy one challenge step of an orchestrated authentication flow.
