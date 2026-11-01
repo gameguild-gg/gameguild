@@ -62,7 +62,8 @@ public sealed class NotificationMutationCommandHandler(
             command.SocialEnabled,
             command.LearningEnabled,
             command.AchievementsEnabled,
-            cancellationToken);
+            whatsAppEnabled: null,
+            cancellationToken: cancellationToken);
 
     public Task<Result> Handle(SetNotificationQuietHoursCommand command, CancellationToken cancellationToken) =>
         notificationService.SetQuietHoursAsync(

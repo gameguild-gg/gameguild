@@ -4068,6 +4068,7 @@ Table "NotificationPreferences" {
   "PushEnabled" boolean [not null]
   "InAppEnabled" boolean [not null]
   "SmsEnabled" boolean [not null]
+  "WhatsAppEnabled" boolean [not null]
   "MarketingEnabled" boolean [not null]
   "SocialEnabled" boolean [not null]
   "LearningEnabled" boolean [not null]
@@ -6727,6 +6728,34 @@ Table "WebhookSecretRotations" {
   Indexes {
     Id [pk, name: "PK_WebhookSecretRotations"]
     (ProviderKey, RotatedAtUtc) [name: "ix_webhook_secret_rotations_provider_rotated_at"]
+  }
+}
+
+Table "WhatsAppBroadcasts" {
+  "Id" uuid [not null]
+  "Title" "character varying(200)" [not null]
+  "TemplateName" "character varying(100)" [not null]
+  "LanguageCode" "character varying(10)" [not null]
+  "VariablesJson" "character varying(4000)"
+  "SegmentRole" "character varying(100)"
+  "SegmentActiveMembersOnly" boolean [not null]
+  "Status" "character varying(50)" [not null]
+  "ScheduledAtUtc" timestamp
+  "SentAtUtc" timestamp
+  "RecipientCount" integer [not null]
+  "CreatedBy" uuid [not null]
+  "Error" "character varying(1000)"
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_WhatsAppBroadcasts"]
+    ScheduledAtUtc [name: "IX_WhatsAppBroadcasts_ScheduledAtUtc"]
+    (TenantId, CreatedAt) [name: "IX_WhatsAppBroadcasts_TenantId_CreatedAt"]
+    (TenantId, Status) [name: "IX_WhatsAppBroadcasts_TenantId_Status"]
   }
 }
 
@@ -9679,6 +9708,31 @@ Table "UserProfiles" {
   Indexes {
     Id [pk, name: "PK_UserProfiles"]
     UserId [unique, name: "IX_UserProfiles_UserId"]
+  }
+}
+
+Table "WhatsAppBroadcastRecipients" {
+  "Id" uuid [not null]
+  "BroadcastId" uuid [not null]
+  "RecipientTenantId" uuid [not null]
+  "UserId" uuid [not null]
+  "PhoneNumber" "character varying(20)" [not null]
+  "Status" "character varying(50)" [not null]
+  "ProviderMessageId" "character varying(100)"
+  "Error" "character varying(1000)"
+  "AttemptCount" integer [not null]
+  "SentAtUtc" timestamp
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_WhatsAppBroadcastRecipients"]
+    BroadcastId [name: "IX_WhatsAppBroadcastRecipients_BroadcastId"]
+    (BroadcastId, Status) [name: "IX_WhatsAppBroadcastRecipients_BroadcastId_Status"]
+    UserId [name: "IX_WhatsAppBroadcastRecipients_UserId"]
   }
 }
 
@@ -12843,6 +12897,8 @@ Ref "FK_refreshtoken_refreshtoken_ParentTokenId":"gameguild.authentication"."ref
 Ref "FK_refreshtoken_usersession_SessionId":"gameguild.authentication"."usersession"."id" ?<? "gameguild.authentication"."refreshtoken"."SessionId" [delete: restrict]
 
 Ref "FK_session_mfa_evidence_usersession_session_id":"gameguild.authentication"."usersession"."id" <? "gameguild.authentication"."session_mfa_evidence"."session_id" [delete: cascade]
+
+Ref "FK_WhatsAppBroadcastRecipients_WhatsAppBroadcasts_BroadcastId":"WhatsAppBroadcasts"."Id" <? "WhatsAppBroadcastRecipients"."BroadcastId" [delete: cascade]
 
 Ref "FK_AssessmentTestRunSubjects_AssessmentTestRuns_TestRunId":"AssessmentTestRuns"."Id" <? "AssessmentTestRunSubjects"."TestRunId" [delete: cascade]
 

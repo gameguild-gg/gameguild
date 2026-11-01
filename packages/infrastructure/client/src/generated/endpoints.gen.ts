@@ -13721,6 +13721,139 @@ export const getWalletsReconciliationEndpoint = {
 } as const;
 
 /**
+ * Lists broadcast campaigns for a tenant (newest first).
+ */
+export interface GetWhatsappBroadcastsForGetWhatsappBroadcastsInput {
+  query?: {
+    tenantId?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetWhatsappBroadcastsForGetWhatsappBroadcastsOutput = Types.PagedResultWhatsAppBroadcastDto;
+export const getWhatsappBroadcastsForGetWhatsappBroadcastsEndpoint = {
+  operationId: 'getWhatsappBroadcastsForGetWhatsappBroadcasts' as const,
+  method: 'GET' as const,
+  path: '/api/v1/whatsapp/broadcasts' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Creates a draft broadcast campaign. The template must be on the configured allowlist.
+ */
+export interface PostWhatsappBroadcastsInput {
+  body?: Types.NotificationsControllersCreateWhatsAppBroadcastInput;
+}
+export type PostWhatsappBroadcastsOutput = Types.NotificationsControllersWhatsAppBroadcastDto;
+export const postWhatsappBroadcastsEndpoint = {
+  operationId: 'postWhatsappBroadcasts' as const,
+  method: 'POST' as const,
+  path: '/api/v1/whatsapp/broadcasts' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets one broadcast campaign.
+ */
+export interface GetWhatsappBroadcastsForGetWhatsappBroadcastsByIdInput {
+  id: string;
+  query?: {
+    tenantId?: string;
+  };
+}
+export type GetWhatsappBroadcastsForGetWhatsappBroadcastsByIdOutput = Types.NotificationsControllersWhatsAppBroadcastDto;
+export const getWhatsappBroadcastsForGetWhatsappBroadcastsByIdEndpoint = {
+  operationId: 'getWhatsappBroadcastsForGetWhatsappBroadcastsById' as const,
+  method: 'GET' as const,
+  path: '/api/v1/whatsapp/broadcasts/{id}' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Cancels a draft or scheduled broadcast.
+ */
+export interface PostWhatsappBroadcastsCancelInput {
+  id: string;
+  body?: Types.NotificationsControllersCancelWhatsAppBroadcastInput;
+}
+export type PostWhatsappBroadcastsCancelOutput = Types.NotificationsControllersWhatsAppBroadcastDto;
+export const postWhatsappBroadcastsCancelEndpoint = {
+  operationId: 'postWhatsappBroadcastsCancel' as const,
+  method: 'POST' as const,
+  path: '/api/v1/whatsapp/broadcasts/{id}:cancel' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Schedules a draft broadcast for a future send time.
+ */
+export interface PostWhatsappBroadcastsScheduleInput {
+  id: string;
+  body?: Types.NotificationsControllersScheduleWhatsAppBroadcastInput;
+}
+export type PostWhatsappBroadcastsScheduleOutput = Types.NotificationsControllersWhatsAppBroadcastDto;
+export const postWhatsappBroadcastsScheduleEndpoint = {
+  operationId: 'postWhatsappBroadcastsSchedule' as const,
+  method: 'POST' as const,
+  path: '/api/v1/whatsapp/broadcasts/{id}:schedule' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Sends a draft or due scheduled broadcast now and returns the send summary.
+ */
+export interface PostWhatsappBroadcastsSendInput {
+  id: string;
+  body?: Types.NotificationsControllersSendWhatsAppBroadcastInput;
+}
+export type PostWhatsappBroadcastsSendOutput = Types.NotificationsControllersWhatsAppBroadcastSendReportDto;
+export const postWhatsappBroadcastsSendEndpoint = {
+  operationId: 'postWhatsappBroadcastsSend' as const,
+  method: 'POST' as const,
+  path: '/api/v1/whatsapp/broadcasts/{id}:send' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets the delivery-tracking rows of one broadcast campaign (oldest first).
+ */
+export interface GetWhatsappBroadcastsRecipientsInput {
+  id: string;
+  query?: {
+    tenantId?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetWhatsappBroadcastsRecipientsOutput = Types.PagedResultWhatsAppBroadcastRecipientDto;
+export const getWhatsappBroadcastsRecipientsEndpoint = {
+  operationId: 'getWhatsappBroadcastsRecipients' as const,
+  method: 'GET' as const,
+  path: '/api/v1/whatsapp/broadcasts/{id}/recipients' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets the WhatsApp channel status: whether the Business API integration is configured and which templates are allowlisted.
+ */
+export type GetWhatsappStatusInput = void;
+export type GetWhatsappStatusOutput = Types.NotificationsControllersWhatsAppChannelStatusDto;
+export const getWhatsappStatusEndpoint = {
+  operationId: 'getWhatsappStatus' as const,
+  method: 'GET' as const,
+  path: '/api/v1/whatsapp/status' as const,
+  tags: ['Notifications'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Serve asset content with path-based token (CDN-friendly).
  *
  * URL format: /assets/{referenceId}/{token}
@@ -34204,6 +34337,14 @@ export const endpoints = {
   getWalletsAuditLog: getWalletsAuditLogEndpoint,
   getWalletsMetrics: getWalletsMetricsEndpoint,
   getWalletsReconciliation: getWalletsReconciliationEndpoint,
+  getWhatsappBroadcastsForGetWhatsappBroadcasts: getWhatsappBroadcastsForGetWhatsappBroadcastsEndpoint,
+  postWhatsappBroadcasts: postWhatsappBroadcastsEndpoint,
+  getWhatsappBroadcastsForGetWhatsappBroadcastsById: getWhatsappBroadcastsForGetWhatsappBroadcastsByIdEndpoint,
+  postWhatsappBroadcastsCancel: postWhatsappBroadcastsCancelEndpoint,
+  postWhatsappBroadcastsSchedule: postWhatsappBroadcastsScheduleEndpoint,
+  postWhatsappBroadcastsSend: postWhatsappBroadcastsSendEndpoint,
+  getWhatsappBroadcastsRecipients: getWhatsappBroadcastsRecipientsEndpoint,
+  getWhatsappStatus: getWhatsappStatusEndpoint,
   getAssetsForGetAssetsByReferenceIdByToken: getAssetsForGetAssetsByReferenceIdByTokenEndpoint,
   getE: getEEndpoint,
   getHealth: getHealthEndpoint,
