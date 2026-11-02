@@ -64,6 +64,7 @@ public sealed class PolymorphicSignInHandler(
             TenantId = command.TenantId,
             DeviceFingerprint = command.DeviceFingerprint,
             RememberMe = command.RememberMe,
+            TurnstileToken = command.TurnstileToken,
             CredentialResolutionFailed = account is null,
             ResolvedUserId = account?.Id,
             TimingOrigin = timingOrigin
@@ -72,7 +73,8 @@ public sealed class PolymorphicSignInHandler(
         // Resolve username/phone to the same account key used by email sign-in.
         // Missing/ambiguous identifiers still consume the source-IP admission budget.
         await using var admission = await admissionService.AdmitAsync(
-            localSignInRequest.Email, httpContextAccessor?.HttpContext, timingOrigin, cancellationToken).ConfigureAwait(false);
+            localSignInRequest.Email, httpContextAccessor?.HttpContext, timingOrigin, cancellationToken,
+            command.TurnstileToken).ConfigureAwait(false);
         var domainResult = await authService.LocalSignInAsync(localSignInRequest, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Polymorphic password flow returned; success: {Success}", domainResult.Success);

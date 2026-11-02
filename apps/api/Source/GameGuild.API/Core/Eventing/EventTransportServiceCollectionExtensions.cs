@@ -18,6 +18,15 @@ internal static class EventTransportServiceCollectionExtensions
         services.AddScoped<IIntegrationEventHandler<RefreshTokenReplayContainedV1>, RefreshTokenReplayAlertHandler>();
         services.AddScoped<IIntegrationEventHandler<SuspiciousLoginDetectedV1>, SuspiciousLoginAlertHandler>();
         services.AddScoped<IIntegrationEventHandler<SuspiciousLoginDetectedV1>, RiskEventSessionRevocationHandler>();
+        // Issue #1083: a fresh account lockout emails the owner with the reason, the
+        // unlock timeline and a support contact.
+        services.AddScoped<IIntegrationEventHandler<AccountLockoutDetectedV1>, AccountLockoutAlertHandler>();
+        // Issue #1086: sessions evicted by the concurrent session limit notify the owner
+        // and point them at the session management surface.
+        services.AddScoped<IIntegrationEventHandler<SessionEvictionDetectedV1>, SessionEvictionAlertHandler>();
+        // Issue #1085: a sign-in from a first-seen device fingerprint alerts the owner
+        // with the device summary, coarse location and a path to terminate the session.
+        services.AddScoped<IIntegrationEventHandler<NewDeviceSignInDetectedV1>, NewDeviceSignInAlertHandler>();
         // Issue #278: ordinary new sign-ins notify the owner only when they opted in
         // (default off; the per-user preference is evaluated host-side, fail-closed).
         services.AddScoped<IIntegrationEventHandler<NewLoginDetectedV1>, NewLoginAlertHandler>();

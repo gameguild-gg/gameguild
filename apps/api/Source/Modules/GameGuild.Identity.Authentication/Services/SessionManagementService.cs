@@ -17,7 +17,10 @@ public sealed class SessionManagementService(
     SessionOptions? sessionOptions = null,
     IAuthenticationAuditEventSink? auditEventSink = null,
     IUserAgentParser? userAgentParser = null,
-    IGeolocationProvider? geolocationProvider = null) : ISessionManagementService
+    IGeolocationProvider? geolocationProvider = null,
+    ISessionEvictionAlertPublisher? sessionEvictionAlerts = null,
+    IUserDeviceFingerprintRepository? fingerprintRepository = null,
+    INewDeviceSignInAlertPublisher? newDeviceAlerts = null) : ISessionManagementService
 {
     private readonly SessionOptions _sessionOptions = sessionOptions ?? new SessionOptions();
     private readonly IUserAgentParser _userAgentParser = userAgentParser ?? UserAgentParser.Shared;
@@ -80,8 +83,80 @@ public sealed class SessionManagementService(
         {
             await RequireTokenBindingAsync(userId, refreshTokenHash, createdSession.Id, cancellationToken).ConfigureAwait(false);
         }
+        await RegisterDeviceFingerprintAsync(userId, deviceFingerprint, createdSession, cancellationToken).ConfigureAwait(false);
         await ForwardSessionAuditEventAsync(createdSession, "Authentication.SessionCreated", cancellationToken).ConfigureAwait(false);
         return createdSession;
+    }
+
+    /// <summary>
+    ///     First-seen device detection (issue #1085): a session created with a device
+    ///     fingerprint the user has never signed in from before records the device in the
+    ///     per-user seen-device registry and raises the new-device owner alert (device
+    ///     summary plus coarse GeoIP location, with a path to terminate the session).
+    ///     Known devices refresh their last-seen timestamp. The registry update and the
+    ///     alert are defense-in-depth: failures are swallowed so they can never fail
+    ///     session creation, and the unique (user, fingerprint) index deduplicates
+    ///     concurrent first sign-ins to a single alert.
+    /// </summary>
+    private async Task RegisterDeviceFingerprintAsync(
+        Guid userId, string? deviceFingerprint, UserSession session, CancellationToken cancellationToken)
+    {
+        if (fingerprintRepository is null || string.IsNullOrWhiteSpace(deviceFingerprint))
+        {
+            return;
+        }
+
+        try
+        {
+            var existing = await fingerprintRepository
+                .GetByUserAndFingerprintAsync(userId, deviceFingerprint, cancellationToken).ConfigureAwait(false);
+            if (existing is null)
+            {
+                await fingerprintRepository.CreateAsync(new UserDeviceFingerprint
+                {
+                    UserId = userId,
+                    DeviceFingerprint = deviceFingerprint
+                }, cancellationToken).ConfigureAwait(false);
+
+                if (newDeviceAlerts is not null)
+                {
+                    await newDeviceAlerts.RecordAsync(
+                        userId,
+                        session.Id,
+                        SessionEnrichmentJson.DeserializeDeviceInfo(session.DeviceInfo)?.DeviceName,
+                        ResolveCoarseLocation(session.Location),
+                        cancellationToken).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                await fingerprintRepository.UpdateAsync(existing, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception,
+                "Could not update the seen-device registry for user {UserId}; the session itself is unaffected",
+                userId);
+        }
+    }
+
+    /// <summary>Reduces a persisted session location to a coarse "City, Country" summary.</summary>
+    private static string? ResolveCoarseLocation(string? locationJson)
+    {
+        var location = SessionEnrichmentJson.DeserializeLocation(locationJson);
+        if (location is null)
+        {
+            return null;
+        }
+
+        var summary = string.Join(", ", new[] { location.City, location.Country }
+            .Where(part => !string.IsNullOrWhiteSpace(part)));
+        return summary.Length == 0 ? null : summary;
     }
 
     public async Task<UserSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default) { return await sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false); }
@@ -569,6 +644,18 @@ public sealed class SessionManagementService(
             session.TerminatedAt = SystemClock.UtcNow;
             await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
             await ForwardSessionAuditEventAsync(session, "Authentication.SessionTerminated", cancellationToken, session.TerminationReason).ConfigureAwait(false);
+            // Issue #1086: notify the owner that a session was evicted by the concurrent
+            // session limit. The publisher records durably and swallows its own failures,
+            // so the notice can never fail session creation.
+            if (sessionEvictionAlerts is not null)
+            {
+                await sessionEvictionAlerts.RecordAsync(
+                    session.UserId,
+                    session.Id,
+                    SessionEnrichmentJson.DeserializeDeviceInfo(session.DeviceInfo)?.DeviceName,
+                    _sessionOptions.MaxConcurrentSessions,
+                    cancellationToken).ConfigureAwait(false);
+            }
         }
 
         var evictedCount = sessionsToTerminate.Count();

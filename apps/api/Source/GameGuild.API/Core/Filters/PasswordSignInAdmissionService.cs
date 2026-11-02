@@ -19,16 +19,28 @@ public sealed class PasswordSignInAdmissionService(
     ApplicationDbContext database,
     AuthenticationSecurityOptions options,
     IUserEnumerationProtectionService protection,
-    ILogger<PasswordSignInAdmissionService> logger) : IPasswordSignInAdmissionService
+    ILogger<PasswordSignInAdmissionService> logger,
+    IAccountLockoutAlertPublisher? lockoutAlertPublisher = null,
+    GameGuild.Identity.Users.IUserRepository? userRepository = null,
+    ITurnstileVerificationService? turnstileVerification = null) : IPasswordSignInAdmissionService
 {
     private static readonly TimeSpan FailedAttemptWindow = TimeSpan.FromHours(1);
+
+    /// <summary>
+    ///     A lockout alert (issue #1083) is emitted only while the lockout is fresh: an
+    ///     attack that keeps retrying during the lockout window must not spam the owner
+    ///     on every denied attempt. Fresh means the lockout end is (nearly) the full
+    ///     duration away, i.e. the threshold-crossing failure just happened.
+    /// </summary>
+    private static readonly TimeSpan LockoutAlertFreshnessTolerance = TimeSpan.FromMinutes(1);
+
     private static readonly SemaphoreSlim[] InProcessLockStripes = Enumerable.Range(0, 128)
         .Select(_ => new SemaphoreSlim(1, 1))
         .ToArray();
 
     public async Task<IAsyncDisposable> AdmitAsync(
         string identifier, HttpContext? context, AuthenticationTimingOrigin timingOrigin,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, string? turnstileToken = null)
     {
         ArgumentNullException.ThrowIfNull(identifier);
         cancellationToken.ThrowIfCancellationRequested();
@@ -53,19 +65,30 @@ public sealed class PasswordSignInAdmissionService(
         try
         {
             var now = DateTime.UtcNow;
-            if (options.EnableIpThrottling && IPAddress.TryParse(normalizedIpAddress, out _))
+            var turnstileThreshold = options.TurnstileRequiredAfterFailedAttempts;
+            if ((options.EnableIpThrottling || turnstileThreshold > 0) && IPAddress.TryParse(normalizedIpAddress, out _))
             {
+                // One query serves both the hourly throttle ceiling and the (lower)
+                // Turnstile threshold (issue #1082); each check reads the same rows.
+                var failureProbeLimit = options.EnableIpThrottling
+                    ? Math.Max(options.MaxAttemptsPerIpPerHour, turnstileThreshold)
+                    : turnstileThreshold;
                 var recentIpFailures = await database.Set<AuthenticationAttempt>()
                     .Where(attempt => attempt.IpAddress == normalizedIpAddress &&
                         !attempt.IsSuccessful && attempt.AttemptedAt >= now.Subtract(FailedAttemptWindow))
                     .OrderByDescending(attempt => attempt.AttemptedAt)
                     .Select(attempt => attempt.AttemptedAt)
-                    .Take(options.MaxAttemptsPerIpPerHour)
+                    .Take(failureProbeLimit)
                     .ToListAsync(cancellationToken).ConfigureAwait(false);
-                if (recentIpFailures.Count >= options.MaxAttemptsPerIpPerHour)
+                if (options.EnableIpThrottling && recentIpFailures.Count >= options.MaxAttemptsPerIpPerHour)
                 {
                     logger.LogWarning("Password sign-in throttled after reaching the source-IP hourly failure limit");
                     throw await CreateDenialAsync(timingOrigin, cancellationToken).ConfigureAwait(false);
+                }
+                if (turnstileThreshold > 0 && recentIpFailures.Count >= turnstileThreshold)
+                {
+                    await RequireTurnstileAsync(turnstileToken, normalizedIpAddress!, timingOrigin, cancellationToken)
+                        .ConfigureAwait(false);
                 }
             }
 
@@ -84,6 +107,7 @@ public sealed class PasswordSignInAdmissionService(
                 var identifierHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalizedEmail)));
                 logger.LogWarning("Password sign-in lockout enforced for identifier hash {IdentifierHash} until {LockoutEndsAtUtc}",
                     identifierHash, lockoutEndsAt);
+                await PublishLockoutAlertAsync(normalizedEmail, lockoutEndsAt, now, cancellationToken).ConfigureAwait(false);
                 throw await CreateDenialAsync(timingOrigin, cancellationToken).ConfigureAwait(false);
             }
 
@@ -94,6 +118,109 @@ public sealed class PasswordSignInAdmissionService(
         {
             await lease.DisposeAsync().ConfigureAwait(false);
             throw;
+        }
+    }
+
+    /// <summary>
+    ///     Enforces the Turnstile challenge (issue #1082) once the source IP crossed the
+    ///     configured failed-attempt threshold: the request must present a token that
+    ///     verifies server-side. A missing or rejected token denies the request with a
+    ///     captcha-specific marker; a missing verification service skips the challenge
+    ///     (hosts that do not register the verifier keep the pre-existing behavior).
+    /// </summary>
+    private async Task RequireTurnstileAsync(
+        string? turnstileToken, string normalizedIpAddress,
+        AuthenticationTimingOrigin timingOrigin, CancellationToken cancellationToken)
+    {
+        if (turnstileVerification is null)
+        {
+            return;
+        }
+
+        TurnstileVerificationResult verification;
+        try
+        {
+            verification = await turnstileVerification.VerifyAsync(turnstileToken, normalizedIpAddress, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            // Verification infrastructure failure must not become a 500 on the sign-in path.
+            logger.LogError(exception, "Turnstile verification threw for source IP {IpAddress}; denying conservatively",
+                normalizedIpAddress);
+            verification = TurnstileVerificationResult.VerifyFailed;
+        }
+
+        if (verification is not { Success: true })
+        {
+            logger.LogWarning(
+                "Password sign-in CAPTCHA challenge enforced for source IP {IpAddress} ({Reason})",
+                normalizedIpAddress, verification.Reason ?? "unknown");
+            // Timing compensation keeps the captcha denial consistent with the generic denial.
+            if (protection is IAuthenticationTimingProtection timingProtection)
+            {
+                await timingProtection.CompleteAuthenticationTimingAsync(timingOrigin, false, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await protection.AddTimingProtectionDelayAsync(false, timingOrigin.StartedAtUtc).WaitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new PasswordSignInCaptchaRequiredException();
+        }
+    }
+
+    /// <summary>
+    ///     Notifies the account owner that the lockout policy engaged (issue #1083), but
+    ///     only when the lockout just began (see <see cref="LockoutAlertFreshnessTolerance"/>)
+    ///     so a sustained attack does not email the owner on every denied attempt. The
+    ///     notification is recorded durably by the module publisher and delivered by the
+    ///     host-side notification bridge; every failure here is swallowed because the
+    ///     sign-in denial itself must not depend on the alert path.
+    /// </summary>
+    private async Task PublishLockoutAlertAsync(
+        string normalizedEmail, DateTime lockoutEndsAt, DateTime now, CancellationToken cancellationToken)
+    {
+        if (lockoutAlertPublisher is null || userRepository is null)
+        {
+            return;
+        }
+
+        var lockoutDuration = TimeSpan.FromMinutes(options.AccountLockoutDurationMinutes);
+        if (lockoutEndsAt - now < lockoutDuration.Subtract(LockoutAlertFreshnessTolerance))
+        {
+            // The lockout is not fresh: the threshold-crossing failure happened more than
+            // the tolerance ago, so the owner was (or will be) alerted by the request that
+            // first observed the fresh lockout.
+            return;
+        }
+
+        try
+        {
+            var user = await userRepository.GetByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false);
+            // Unknown and deleted accounts have no owner to notify; their lockouts still deny.
+            if (user is null || user.IsDeleted)
+            {
+                return;
+            }
+
+            await lockoutAlertPublisher.RecordAsync(
+                user.Id, lockoutEndsAt.ToUniversalTime(), options.MaxFailedAttemptsPerHour, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception,
+                "Could not queue the account-lockout owner notification for identifier hash {IdentifierHash}",
+                Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalizedEmail))));
         }
     }
 
