@@ -22,7 +22,15 @@ public sealed record LockServiceAccountCommand(Guid ServiceAccountId, string Rea
 public sealed record DeactivateServiceAccountCommand(Guid ServiceAccountId) : ICommand;
 public sealed record ReactivateServiceAccountCommand(Guid ServiceAccountId) : ICommand;
 public sealed record UpdateServiceAccountScopesCommand(Guid ServiceAccountId, string Scopes) : ICommand;
-public sealed record BindServiceAccountCertificateCommand(Guid ServiceAccountId, string? Thumbprint, string? SpkiSha256) : ICommand;
+/// <summary>
+///     Binds an X.509 client certificate to a service account so the certificate can authenticate
+///     in lieu of the client secret (issue #1146). The thumbprint and optional SPKI key pin are
+///     normalized to the authentication-time form before persistence.
+/// </summary>
+public sealed record BindServiceAccountCertificateCommand(
+    Guid ServiceAccountId,
+    string Thumbprint,
+    string? SpkiSha256) : ICommand;
 public sealed record IssueServiceAccountTokenCommand(
     string ClientId,
     string ClientSecret,

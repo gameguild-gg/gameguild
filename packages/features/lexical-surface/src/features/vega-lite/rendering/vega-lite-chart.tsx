@@ -7,8 +7,12 @@ import {
   LIGHT_THEME_OVERRIDES,
 } from "../theme/vega-theme-overrides";
 
-const THEME_MAP: Record<string, string> = {
-  default: "default",
+type VegaThemeName = Exclude<keyof typeof import("vega-themes"), "version">;
+type VegaThemeConfig = (typeof import("vega-themes"))["dark"];
+type VegaThemeView = Pick<import("vega-lite").Config, "view">;
+
+// The default theme is handled by the renderer; mapped names are SDK exports.
+const THEME_MAP: Record<string, VegaThemeName> = {
   dark: "dark",
   excel: "excel",
   ggplot2: "ggplot2",
@@ -47,7 +51,7 @@ const VEGA_VIEW_KEYS = ["marks", "scales", "signals", "projections"] as const;
 
 // Heuristic mirroring content-rendering: $schema URL disambiguates when
 // present; Vega-Lite view keys win otherwise, Vega-Lite stays the default.
-export function isPlainVegaSpec(spec: Record<string, any>): boolean {
+export function isPlainVegaSpec(spec: Record<string, unknown>): boolean {
   const schema = typeof spec.$schema === "string" ? spec.$schema : "";
   if (schema.includes("/schema/vega-lite/")) return false;
   if (schema.includes("/schema/vega/")) return true;
@@ -61,11 +65,15 @@ function nextRenderGeneration(container: HTMLElement): number {
   return generation;
 }
 
-function createDarkTheme(baseTheme: Record<string, any>) {
+function createDarkTheme(baseTheme: VegaThemeConfig) {
   return {
     ...baseTheme,
     background: "#1a1a1a",
-    view: { ...baseTheme.view, fill: "#1a1a1a", stroke: "#404040" },
+    view: {
+      ...(baseTheme as VegaThemeView).view,
+      fill: "#1a1a1a",
+      stroke: "#404040",
+    },
     axis: {
       ...baseTheme.axis,
       domainColor: "#666666",
@@ -85,7 +93,7 @@ function createDarkTheme(baseTheme: Record<string, any>) {
 }
 
 interface VegaChartData {
-  parsedSpec: Record<string, any> | null;
+  parsedSpec: Record<string, unknown> | null;
   isLoading: boolean;
   error: string;
   vegaRef: React.RefObject<HTMLDivElement | null>;
@@ -102,7 +110,7 @@ export function useVegaLiteChart({
 }): VegaChartData {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [parsedSpec, setParsedSpec] = useState<Record<string, any> | null>(
+  const [parsedSpec, setParsedSpec] = useState<Record<string, unknown> | null>(
     null,
   );
   const vegaRef = useRef<HTMLDivElement>(null);
@@ -117,7 +125,7 @@ export function useVegaLiteChart({
 
     setIsLoading(true);
     try {
-      const parsed = JSON.parse(spec) as Record<string, any>;
+      const parsed = JSON.parse(spec) as Record<string, unknown>;
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
         throw new Error("Specification must be a JSON object");
       }
@@ -159,7 +167,7 @@ export function useVegaLiteChart({
 
 export async function renderVegaChart(
   container: HTMLElement,
-  parsedSpec: Record<string, any>,
+  parsedSpec: Record<string, unknown>,
   layout: "square" | "rectangular" = "rectangular",
   theme = "default",
 ): Promise<() => void> {
@@ -174,12 +182,11 @@ export async function renderVegaChart(
   if (!isCurrent()) return () => undefined;
 
   let specWithTheme = { ...parsedSpec };
-  if (theme !== "default" && THEME_MAP[theme]) {
+  const themeName = THEME_MAP[theme];
+  if (theme !== "default" && themeName) {
     const isDarkTheme = theme.endsWith("-dark");
     const baseThemeName = isDarkTheme ? theme.replace("-dark", "") : theme;
-    const themeConfig = (vegaThemes as unknown as Record<string, any>)[
-      THEME_MAP[theme]
-    ];
+    const themeConfig = vegaThemes[themeName];
     if (themeConfig) {
       let finalThemeConfig =
         isDarkTheme && baseThemeName !== "dark"
@@ -193,7 +200,10 @@ export async function renderVegaChart(
       }
       specWithTheme = {
         ...specWithTheme,
-        config: { ...specWithTheme.config, ...finalThemeConfig },
+        config: {
+          ...(specWithTheme.config as Record<string, unknown> | undefined),
+          ...finalThemeConfig,
+        },
       };
     }
   }
@@ -202,13 +212,16 @@ export async function renderVegaChart(
     ? specWithTheme
     : await import("vega-lite").then((vegaLite) =>
         vegaLite.compile(
-          specWithTheme as Parameters<typeof vegaLite.compile>[0],
+          specWithTheme as unknown as Parameters<typeof vegaLite.compile>[0],
         ).spec,
       );
   if (!isCurrent()) return () => undefined;
 
   container.replaceChildren();
-  const view = new vega.View(vega.parse(vegaSpec), { renderer: "svg" });
+  const view = new vega.View(
+    vega.parse(vegaSpec as unknown as Parameters<typeof vega.parse>[0]),
+    { renderer: "svg" },
+  );
   view.initialize(container);
 
   try {

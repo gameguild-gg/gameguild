@@ -1,3 +1,5 @@
+import { verifyTurnstileToken } from "@/lib/antibot/turnstile";
+import { forwardedIpHeaders } from "@/lib/server/forwarded-headers";
 import { NextResponse } from "next/server";
 
 const WEB3_CHALLENGE_PATH = "/v1/auth/web3/challenge";
@@ -19,7 +21,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  const payload = (body ?? {}) as { walletAddress?: unknown; chainId?: unknown };
+  const payload = (body ?? {}) as { walletAddress?: unknown; chainId?: unknown; turnstileToken?: unknown };
   const walletAddress =
     typeof payload.walletAddress === "string" ? payload.walletAddress.trim() : "";
   if (!/^0x[0-9a-fA-F]{40}$/.test(walletAddress)) {
@@ -29,6 +31,16 @@ export async function POST(request: Request): Promise<NextResponse> {
     typeof payload.chainId === "string" && payload.chainId.trim().length > 0
       ? payload.chainId.trim()
       : "1";
+
+  // Anti-bot gate for this public write surface: verify before proxying. The
+  // token is consumed here and never included in the forwarded body below;
+  // validation and rate limiting remain the backend's responsibility.
+  const verification = await verifyTurnstileToken(
+    typeof payload.turnstileToken === "string" ? payload.turnstileToken : undefined,
+  );
+  if (!verification.success) {
+    return NextResponse.json({ error: "bot-check-failed" }, { status: 403 });
+  }
 
   const apiUrl = (
     process.env.API_URL ||
@@ -40,7 +52,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     response = await fetch(new URL(WEB3_CHALLENGE_PATH, `${apiUrl}/`), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(await forwardedIpHeaders()) },
       body: JSON.stringify({ walletAddress, chainId }),
       cache: "no-store",
     });

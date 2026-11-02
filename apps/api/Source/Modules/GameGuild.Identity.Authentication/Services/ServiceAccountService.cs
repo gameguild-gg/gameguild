@@ -222,6 +222,72 @@ public sealed class ServiceAccountService : IServiceAccountService
     }
 
     /// <inheritdoc />
+    public async Task BindCertificateAsync(
+        Guid serviceAccountId,
+        string thumbprint,
+        string? spkiSha256,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(thumbprint);
+
+        // Normalize exactly like the authentication-time values so a certificate that was
+        // presented for binding always matches on the next authentication attempt.
+        var normalizedThumbprint = NormalizeHexPin(thumbprint)
+            ?? throw new ArgumentException("Certificate thumbprint must be 40 (SHA-1) or 64 (SHA-256) hex characters.", nameof(thumbprint));
+        var normalizedSpki = spkiSha256 is null
+            ? null
+            : NormalizeHexPin(spkiSha256, 64)
+              ?? throw new ArgumentException("SPKI pin must be 64 hex characters (SHA-256).", nameof(spkiSha256));
+
+        var serviceAccount = await _repository.GetByIdAsync(serviceAccountId, cancellationToken)
+                             ?? throw new InvalidOperationException($"Service account {serviceAccountId} not found");
+
+        serviceAccount.BindCertificate(normalizedThumbprint, normalizedSpki);
+        await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
+
+        _logger.LogInformation(
+            "Bound client certificate {Thumbprint} to service account {ServiceAccountId}",
+            LogRedaction.Sanitize(normalizedThumbprint), LogRedaction.RedactId(serviceAccount.Id, "sac"));
+    }
+
+    /// <summary>
+    ///     Normalizes a hex pin the same way <see cref="ClientCertificateAuthenticationUtilities.GetNormalizedThumbprint" />
+    ///     normalizes presented certificates: separators (colon, space, tab) stripped, uppercased.
+    ///     Returns null when the remaining characters are not pure hex of the expected length.
+    /// </summary>
+    internal static string? NormalizeHexPin(string value, int expectedLength)
+    {
+        var stripped = StripHexPin(value);
+        return stripped is not null && stripped.Length == expectedLength ? stripped : null;
+    }
+
+    /// <summary>Thumbprint variant: accepts SHA-1 (40) or SHA-256 (64) hex pins after stripping.</summary>
+    private static string? NormalizeHexPin(string value) =>
+        StripHexPin(value) is { Length: 40 or 64 } stripped ? stripped : null;
+
+    private static string? StripHexPin(string value)
+    {
+        Span<char> compact = stackalloc char[value.Length];
+        var length = 0;
+        foreach (var character in value)
+        {
+            if (character is ':' or ' ' or '\t' or '\r' or '\n')
+            {
+                continue;
+            }
+
+            if (!Uri.IsHexDigit(character))
+            {
+                return null;
+            }
+
+            compact[length++] = char.ToUpperInvariant(character);
+        }
+
+        return new string(compact[..length]);
+    }
+
+    /// <inheritdoc />
     public async Task UnlockAsync(Guid serviceAccountId, CancellationToken cancellationToken = default)
     {
         var serviceAccount = await _repository.GetByIdAsync(serviceAccountId, cancellationToken)
@@ -308,38 +374,6 @@ public sealed class ServiceAccountService : IServiceAccountService
         _logger.LogInformation(
             "Updated scopes for service account {ServiceAccountId} to: {Scopes}",
             LogRedaction.RedactId(serviceAccountId, "sac"), LogRedaction.Sanitize(scopes));
-    }
-
-    /// <inheritdoc />
-    public async Task BindCertificateAsync(
-        Guid serviceAccountId,
-        string? thumbprint,
-        string? spkiSha256,
-        CancellationToken cancellationToken = default)
-    {
-        var serviceAccount = await _repository.GetByIdAsync(serviceAccountId, cancellationToken)
-                             ?? throw new InvalidOperationException($"Service account {serviceAccountId} not found");
-
-        if (string.IsNullOrWhiteSpace(thumbprint))
-        {
-            serviceAccount.UnbindCertificate();
-            _logger.LogInformation(
-                "Unbound client certificate from service account {ServiceAccountId}",
-                LogRedaction.RedactId(serviceAccountId, "sac"));
-        }
-        else
-        {
-            // The thumbprint never authenticates by itself; certificate matching at sign-in is
-            // case-insensitive, so the binding stores the trimmed values as provided.
-            serviceAccount.BindCertificate(
-                thumbprint.Trim(),
-                string.IsNullOrWhiteSpace(spkiSha256) ? null : spkiSha256.Trim());
-            _logger.LogInformation(
-                "Bound client certificate to service account {ServiceAccountId}",
-                LogRedaction.RedactId(serviceAccountId, "sac"));
-        }
-
-        await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />

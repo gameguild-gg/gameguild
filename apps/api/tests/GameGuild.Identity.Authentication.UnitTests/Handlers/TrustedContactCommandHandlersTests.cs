@@ -3,6 +3,7 @@ using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
 using GameGuild.Notifications;
 using GameGuild.Notifications.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -38,13 +39,16 @@ public sealed class TrustedContactCommandHandlersTests
         return notifications;
     }
 
-    [Fact]
-    public async Task AddTrustedContact_CreatesInvitedContactWithDigestAndQueuesInviteEmail()
+    [Theory]
+    [InlineData("Friend@Test.com")]
+    [InlineData(" friend@test.com ")]
+    public async Task AddTrustedContact_CreatesInvitedContactWithDigestAndQueuesInviteEmailWithoutLoggingContactDetails(string contactEmail)
     {
         var owner = CreateOwner();
         var contacts = new Mock<ITrustedContactStore>();
         var users = new Mock<IUserRepository>();
         var notifications = CreateNotifications();
+        var logger = new Mock<ILogger<AddTrustedContactCommandHandler>>();
         users.Setup(r => r.GetByIdAsync(owner.Id, It.IsAny<CancellationToken>())).ReturnsAsync(owner);
         contacts.Setup(s => s.CountActiveByOwnerAsync(owner.Id, It.IsAny<CancellationToken>())).ReturnsAsync(0);
         contacts.Setup(s => s.FindActiveByOwnerAndEmailAsync(owner.Id, "friend@test.com", It.IsAny<CancellationToken>()))
@@ -58,12 +62,12 @@ public sealed class TrustedContactCommandHandlersTests
         var handler = new AddTrustedContactCommandHandler(
             contacts.Object, users.Object, notifications.Object,
             Options.Create(new AccountRecoveryOptions()),
-            Mock.Of<IAuthenticationAuditEventSink>(), NullLogger<AddTrustedContactCommandHandler>.Instance);
+            Mock.Of<IAuthenticationAuditEventSink>(), logger.Object);
 
         var result = await handler.Handle(new AddTrustedContactCommand
         {
             OwnerUserId = owner.Id,
-            Email = "Friend@Test.com",
+            Email = contactEmail,
             Relation = "spouse"
         }, CancellationToken.None);
 
@@ -89,6 +93,25 @@ public sealed class TrustedContactCommandHandlersTests
             It.Is<string?>(metadata => metadata != null && metadata.Contains("token")),
             "friend@test.com",
             It.IsAny<CancellationToken>()), Times.Once);
+
+        // Log-redaction guard carried over from the direct-send implementation: the invite log
+        // must never carry the contact address, the owner address, or the invite token itself.
+        var queuedMetadata = notifications.Invocations
+            .Where(invocation => invocation.Method.Name == nameof(INotificationService.SendAsync))
+            .Select(invocation => invocation.Arguments[10]?.ToString() ?? string.Empty)
+            .ToArray();
+        var tokenMatch = System.Text.RegularExpressions.Regex.Match(
+            queuedMetadata.FirstOrDefault() ?? string.Empty, "\"token\":\"([A-Za-z0-9_-]+)\"");
+        tokenMatch.Success.Should().BeTrue();
+        var messages = logger.Invocations.Where(invocation => invocation.Method.Name == nameof(ILogger.Log))
+            .Select(invocation => invocation.Arguments[2].ToString() ?? string.Empty).ToArray();
+        messages.Should().Contain(message => message.Contains("Trusted contact invite issued", StringComparison.Ordinal));
+        foreach (var message in messages)
+        {
+            message.Should().NotContainEquivalentOf(contactEmail.Trim())
+                .And.NotContain(owner.Email)
+                .And.NotContain(tokenMatch.Groups[1].Value);
+        }
     }
 
     [Fact]

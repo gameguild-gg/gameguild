@@ -5955,6 +5955,35 @@ Table "social_groups" {
   }
 }
 
+Table "social_mentor_profiles" {
+  "Id" uuid [not null]
+  "UserId" uuid [not null]
+  "DisplayName" "character varying(120)" [not null]
+  "Headline" "character varying(200)"
+  "Bio" "character varying(2000)"
+  "Role" integer [not null]
+  "PricingModel" integer [not null]
+  "FreeContributionReason" "character varying(500)"
+  "Status" integer [not null]
+  "BookingMode" integer [not null]
+  "OffersIntroductoryCall" boolean [not null]
+  "IntroductoryCallMinutes" integer [not null]
+  "TimezoneId" "character varying(100)" [not null]
+  "PublishedAt" timestamp
+  "TenantId" uuid
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+
+  Indexes {
+    Id [pk, name: "PK_social_mentor_profiles"]
+    (Status, Role) [name: "IX_social_mentor_profiles_Status_Role"]
+    TenantId [name: "IX_social_mentor_profiles_TenantId"]
+    UserId [unique, name: "IX_social_mentor_profiles_UserId"]
+  }
+}
+
 Table "social_profiles" {
   "Id" uuid [not null]
   "UserId" uuid [not null]
@@ -8753,6 +8782,47 @@ Table "social_group_members" {
   }
 }
 
+Table "social_mentor_availability_slots" {
+  "Id" uuid [not null]
+  "MentorProfileId" uuid [not null]
+  "MentorUserId" uuid [not null]
+  "StartsAt" timestamp [not null]
+  "EndsAt" timestamp [not null]
+  "Status" integer [not null]
+  "SessionId" uuid
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_social_mentor_availability_slots"]
+    (MentorProfileId, StartsAt) [name: "IX_social_mentor_availability_slots_MentorProfileId_StartsAt"]
+    MentorUserId [name: "IX_social_mentor_availability_slots_MentorUserId"]
+    SessionId [name: "IX_social_mentor_availability_slots_SessionId"]
+    (Status, StartsAt) [name: "IX_social_mentor_availability_slots_Status_StartsAt"]
+  }
+}
+
+Table "social_mentor_skills" {
+  "Id" uuid [not null]
+  "MentorProfileId" uuid [not null]
+  "Skill" "character varying(80)" [not null]
+  "NormalizedSkill" "character varying(80)" [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_social_mentor_skills"]
+    (MentorProfileId, NormalizedSkill) [unique, name: "IX_social_mentor_skills_MentorProfileId_NormalizedSkill"]
+    NormalizedSkill [name: "IX_social_mentor_skills_NormalizedSkill"]
+  }
+}
+
 Table "social_profile_portfolio_items" {
   "Id" uuid [not null]
   "ProfileId" uuid [not null]
@@ -10470,6 +10540,38 @@ Table "program_content_drafts" {
     Id [pk, name: "PK_program_content_drafts"]
     ContentId [unique, name: "IX_program_content_drafts_ContentId"]
     (TenantId, ProgramId) [name: "IX_program_content_drafts_TenantId_ProgramId"]
+  }
+}
+
+Table "social_mentorship_sessions" {
+  "Id" uuid [not null]
+  "MentorProfileId" uuid [not null]
+  "MentorUserId" uuid [not null]
+  "MenteeUserId" uuid [not null]
+  "SlotId" uuid
+  "Topic" "character varying(200)" [not null]
+  "Notes" "character varying(2000)"
+  "StartsAt" timestamp [not null]
+  "EndsAt" timestamp [not null]
+  "Status" integer [not null]
+  "MeetingChannel" integer [not null]
+  "MeetingUrl" "character varying(2000)"
+  "IsIntroductory" boolean [not null]
+  "CancellationReason" "character varying(500)"
+  "CancelledByUserId" uuid
+  "CancelledAt" timestamp
+  "CompletedAt" timestamp
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_social_mentorship_sessions"]
+    (MenteeUserId, StartsAt) [name: "IX_social_mentorship_sessions_MenteeUserId_StartsAt"]
+    (MentorUserId, StartsAt) [name: "IX_social_mentorship_sessions_MentorUserId_StartsAt"]
+    SlotId [name: "IX_social_mentorship_sessions_SlotId"]
   }
 }
 
@@ -12800,6 +12902,10 @@ Ref "FK_slo_violations_service_level_objectives_ServiceLevelObjecti~":"gameguild
 
 Ref "FK_social_group_members_social_groups_GroupId":"social_groups"."Id" <? "social_group_members"."GroupId" [delete: cascade]
 
+Ref "FK_social_mentor_availability_slots_social_mentor_profiles_Men~":"social_mentor_profiles"."Id" <? "social_mentor_availability_slots"."MentorProfileId" [delete: cascade]
+
+Ref "FK_social_mentor_skills_social_mentor_profiles_MentorProfileId":"social_mentor_profiles"."Id" <? "social_mentor_skills"."MentorProfileId" [delete: cascade]
+
 Ref "FK_social_profile_portfolio_items_social_profiles_ProfileId":"social_profiles"."Id" <? "social_profile_portfolio_items"."ProfileId" [delete: cascade]
 
 Ref "FK_social_profile_skills_social_profiles_ProfileId":"social_profiles"."Id" <? "social_profile_skills"."ProfileId" [delete: cascade]
@@ -13011,6 +13117,8 @@ Ref "FK_learning_cohort_schedule_items_learning_cohort_schedules_Co~":"learning_
 Ref "FK_learning_cohort_schedule_items_program_contents_ProgramCont~":"program_contents"."Id" ?<? "learning_cohort_schedule_items"."ProgramContentId" [delete: restrict]
 
 Ref "FK_program_content_drafts_program_contents_ContentId":"program_contents"."Id" <? "program_content_drafts"."ContentId" [delete: cascade]
+
+Ref "FK_social_mentorship_sessions_social_mentor_availability_slots~":"social_mentor_availability_slots"."Id" ?<? "social_mentorship_sessions"."SlotId" [delete: set null]
 
 Ref "FK_tax_rules_tax_jurisdictions_TaxJurisdictionId":"tax_jurisdictions"."Id" <? "tax_rules"."TaxJurisdictionId" [delete: cascade]
 
@@ -14001,6 +14109,7 @@ Table "gameguild.authentication"."user_mfa_configuration" {
   "setup_expires_at" timestamp
   "sms_phone_number" "character varying(32)"
   "push_device_token" "character varying(512)"
+  "email_mfa_address" "character varying(256)"
   "created_at" timestamp [not null]
   "updated_at" timestamp [not null]
 

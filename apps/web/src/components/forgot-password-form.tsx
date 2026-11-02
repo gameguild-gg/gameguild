@@ -7,11 +7,12 @@ import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@game-guild/ui/components/field';
 import { Input } from '@game-guild/ui/components/input';
+import { TurnstileWidget } from '@/components/antibot/turnstile-widget';
 
 type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
 
 interface ForgotPasswordFormProps extends React.ComponentProps<'div'> {
-  onRequestReset?: (email: string) => Promise<ActionResult<void>>;
+  onRequestReset?: (email: string, turnstileToken?: string | null) => Promise<ActionResult<void>>;
   initialEmail?: string;
 }
 
@@ -20,6 +21,7 @@ export function ForgotPasswordForm({ className, initialEmail = '', onRequestRese
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,13 +36,15 @@ export function ForgotPasswordForm({ className, initialEmail = '', onRequestRese
 
     try {
       if (onRequestReset) {
-        const result = await onRequestReset(email.trim());
+        const result = await onRequestReset(email.trim(), turnstileToken);
         if (!result.success) {
           throw new Error(result.error);
         }
       }
       setIsSubmitted(true);
     } catch (err) {
+      // Single-use token: reset on failure so the widget re-issues a fresh one.
+      setTurnstileToken(null);
       setError(err instanceof Error ? err.message : 'Something went wrong.');
     } finally {
       setIsLoading(false);
@@ -107,6 +111,7 @@ export function ForgotPasswordForm({ className, initialEmail = '', onRequestRese
                 {error && <FieldError>{error}</FieldError>}
               </Field>
               <Field>
+                <TurnstileWidget onToken={setTurnstileToken} action="forgot-password" id="forgot-password-turnstile" />
                 <Button type="submit" disabled={isLoading}>
                   {isLoading ? 'Sending...' : 'Send Reset Link'}
                 </Button>

@@ -256,17 +256,16 @@ export class AuthServiceAccountsModule {
   }
 
   /**
-   * Binds or clears the X.509 client certificate (mTLS) for a service account (issue #1146).
+   * Binds an X.509 client certificate to a service account so the certificate can
+   * authenticate in lieu of the client secret (issue #1146).
    *
-   * The token endpoint already enforces certificate binding, but no API surface could set
-   * it; this is that surface. Binding replaces any previous binding. An empty thumbprint
-   * clears the binding, after which the account authenticates by client secret only.
+   * Binds an X.509 client certificate (thumbprint plus optional SPKI key pin) to a service account, allowing certificate authentication in lieu of the client secret. Pins are normalized to the authentication-time form; a later certificate presentation matches on either the thumbprint or the SPKI pin.
    */
-  async patchAuthServiceAccountsCertificate(
+  async patchAuthServiceAccountsClientCertificate(
     serviceAccountId: string,
     body: Types.IdentityAuthenticationBindServiceAccountCertificateInput,
   ): Promise<Result<void, ApiError>> {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}/certificate`;
+    const url = `/v1/auth/service-accounts/${serviceAccountId}/client-certificate`;
 
     // Validate request body
     const validatedBody = safeParse(Types.IdentityAuthenticationBindServiceAccountCertificateInputSchema, body, 'request');

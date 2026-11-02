@@ -28,6 +28,7 @@ import {
   DrawerTitle,
 } from "@game-guild/ui/components/drawer";
 import { Textarea } from "@game-guild/ui/components/textarea";
+import { TurnstileWidget } from "@/components/antibot/turnstile-widget";
 import { Loader2, Send } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
@@ -283,6 +284,7 @@ function CommentsPanel({
   const [editPending, setEditPending] = React.useState(false);
   const [deletePendingIds, setDeletePendingIds] = React.useState<Set<string>>(new Set());
   const [error, setError] = React.useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = React.useState<string | null>(null);
   const pagePendingRef = React.useRef(false);
   const commentPendingRef = React.useRef(false);
   const editPendingRef = React.useRef(false);
@@ -355,10 +357,12 @@ function CommentsPanel({
     commentPendingRef.current = true;
     setCommentPending(true);
     setError(null);
+    const spentToken = turnstileToken;
     try {
       const persisted = await createPostComment(postId, {
         content: value,
         ...(replyingTo ? { parentCommentId: replyingTo.id } : {}),
+        turnstileToken,
       });
       setComments((current) => {
         if (!persisted.parentCommentId) return [persisted, ...current];
@@ -372,6 +376,9 @@ function CommentsPanel({
       setError(message);
       toast.error(message);
     } finally {
+      // Single-use token: consumed by this submit regardless of outcome —
+      // unless the widget already re-issued a fresh one during the await.
+      setTurnstileToken((current) => (current === spentToken ? null : current));
       commentPendingRef.current = false;
       setCommentPending(false);
     }
@@ -468,6 +475,7 @@ function CommentsPanel({
             placeholder={replyingTo ? "Add a reply…" : "Add a comment…"}
             className="min-h-10 resize-none"
           />
+          <TurnstileWidget onToken={setTurnstileToken} id="post-comment-turnstile" />
         </div>
         <Button type="submit" size="icon" disabled={commentPending || !commentText.trim()} aria-label={replyingTo ? "Publish reply" : "Publish comment"}>
           <Send className="size-4" />

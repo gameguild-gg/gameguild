@@ -213,21 +213,21 @@ public class ServiceAccountOperationsController(
     }
 
     /// <summary>
-    ///     Binds or clears the X.509 client certificate (mTLS) for a service account (issue #1146).
+    ///     Binds an X.509 client certificate to a service account so the certificate can
+    ///     authenticate in lieu of the client secret (issue #1146).
     /// </summary>
-    /// <remarks>
-    ///     The token endpoint already enforces certificate binding, but no API surface could set
-    ///     it; this is that surface. Binding replaces any previous binding. An empty thumbprint
-    ///     clears the binding, after which the account authenticates by client secret only.
-    /// </remarks>
-    [HttpPatch("{serviceAccountId:guid}/certificate")]
+    /// <param name="serviceAccountId">Service account ID</param>
+    /// <param name="request">Certificate thumbprint and optional SPKI key pin</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPatch("{serviceAccountId:guid}/client-certificate")]
     [Authorize(Policy = "RequireAdminRole")]
-    [EndpointSummary("Bind or clear service account client certificate")]
-    [EndpointDescription("Binds an X.509 client certificate (SHA-1 thumbprint and optional SPKI SHA-256 key pin) to a service account for mTLS client-certificate authentication, replacing any previous binding. An empty thumbprint clears the binding; the account then authenticates by client secret only.")]
+    [EndpointSummary("Bind client certificate")]
+    [EndpointDescription("Binds an X.509 client certificate (thumbprint plus optional SPKI key pin) to a service account, allowing certificate authentication in lieu of the client secret. Pins are normalized to the authentication-time form; a later certificate presentation matches on either the thumbprint or the SPKI pin.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> BindCertificate(Guid serviceAccountId, [FromBody] BindServiceAccountCertificateRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> BindClientCertificate(Guid serviceAccountId, [FromBody] BindServiceAccountCertificateRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         try

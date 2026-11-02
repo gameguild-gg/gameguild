@@ -19536,6 +19536,55 @@ export const postAuthMfaBackupCodesRegenerateEndpoint = {
 } as const;
 
 /**
+ * Send a fresh email sign-in code to the enrolled address
+ *
+ * Sends a fresh verification code to the enrolled email address before MFA verification. Generic failure payload; throttled to one code per minute per user.
+ */
+export interface PostAuthMfaEmailChallengeInput {
+  body?: Types.IdentityAuthenticationEmailMfaChallengeInput;
+}
+export type PostAuthMfaEmailChallengeOutput = Types.IdentityAuthenticationEmailMfaSetupOutput;
+export const postAuthMfaEmailChallengeEndpoint = {
+  operationId: 'postAuthMfaEmailChallenge' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/mfa/email:challenge' as const,
+  tags: ['AuthMultiFactor'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Complete email MFA setup by verifying the code
+ *
+ * Completes email MFA setup by verifying the code sent to the account's address, enrolling the verified address as an email factor.
+ */
+export interface PostAuthMfaEmailCompleteInput {
+  body?: Types.IdentityAuthenticationCompleteMfaSetupInput;
+}
+export type PostAuthMfaEmailCompleteOutput = Types.IdentityAuthenticationMfaSuccessOutput;
+export const postAuthMfaEmailCompleteEndpoint = {
+  operationId: 'postAuthMfaEmailComplete' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/mfa/email:complete' as const,
+  tags: ['AuthMultiFactor'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Initiate email-based MFA setup
+ *
+ * Initiates email-based MFA setup by sending a verification code to the account's email address. Delivery rides the email notification channel; codes are six digits, single-use, and expire in ten minutes.
+ */
+export type PostAuthMfaEmailSetupInput = void;
+export type PostAuthMfaEmailSetupOutput = Types.IdentityAuthenticationEmailMfaSetupOutput;
+export const postAuthMfaEmailSetupEndpoint = {
+  operationId: 'postAuthMfaEmailSetup' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/mfa/email:setup' as const,
+  tags: ['AuthMultiFactor'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * List available MFA methods
  *
  * Returns all available MFA methods and their configuration status for the current user.
@@ -20333,21 +20382,20 @@ export const getAuthServiceAccountsAuditLogEndpoint = {
 } as const;
 
 /**
- * Binds or clears the X.509 client certificate (mTLS) for a service account (issue #1146).
+ * Binds an X.509 client certificate to a service account so the certificate can
+ * authenticate in lieu of the client secret (issue #1146).
  *
- * The token endpoint already enforces certificate binding, but no API surface could set
- * it; this is that surface. Binding replaces any previous binding. An empty thumbprint
- * clears the binding, after which the account authenticates by client secret only.
+ * Binds an X.509 client certificate (thumbprint plus optional SPKI key pin) to a service account, allowing certificate authentication in lieu of the client secret. Pins are normalized to the authentication-time form; a later certificate presentation matches on either the thumbprint or the SPKI pin.
  */
-export interface PatchAuthServiceAccountsCertificateInput {
+export interface PatchAuthServiceAccountsClientCertificateInput {
   serviceAccountId: string;
   body?: Types.IdentityAuthenticationBindServiceAccountCertificateInput;
 }
-export type PatchAuthServiceAccountsCertificateOutput = void;
-export const patchAuthServiceAccountsCertificateEndpoint = {
-  operationId: 'patchAuthServiceAccountsCertificate' as const,
+export type PatchAuthServiceAccountsClientCertificateOutput = void;
+export const patchAuthServiceAccountsClientCertificateEndpoint = {
+  operationId: 'patchAuthServiceAccountsClientCertificate' as const,
   method: 'PATCH' as const,
-  path: '/v1/auth/service-accounts/{serviceAccountId}/certificate' as const,
+  path: '/v1/auth/service-accounts/{serviceAccountId}/client-certificate' as const,
   tags: ['AuthServiceAccounts'] as const,
   requiresAuth: true,
 } as const;
@@ -20512,11 +20560,9 @@ export const postAuthSignInEndpoint = {
 } as const;
 
 /**
- * Sign out the authenticated caller (issue #1154): sends the LogoutCommand, which
- * revokes the caller's current access token (JTI) and, with logoutEverywhere, revokes
- * every refresh token and terminates every session for the account.
+ * Sign out the caller, revoking the current access token (and optionally every session)
  *
- * Signs out the authenticated caller by revoking the current access token; with logoutEverywhere it revokes all refresh tokens and terminates every session for the account.
+ * Signs out the authenticated caller by revoking the current access token; with logoutEverywhere it also revokes every refresh token and terminates every session for the account (issue #1154).
  */
 export interface PostAuthSignOutInput {
   body?: Types.IdentityAuthenticationSignOutInput;
@@ -25064,6 +25110,175 @@ export const getMeTasksEndpoint = {
   method: 'GET' as const,
   path: '/v1/me/tasks' as const,
   tags: ['LearningAssessmentsTasks'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetMentorshipMentorsInput {
+  query?: {
+    skill?: string;
+    role?: Types.SocialMentorshipMentorshipProgramRole;
+    search?: string;
+    offersIntroductoryCall?: boolean;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetMentorshipMentorsOutput = Types.SocialMentorshipMentorProfileDto[];
+export const getMentorshipMentorsEndpoint = {
+  operationId: 'getMentorshipMentors' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/mentors' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: false,
+} as const;
+
+export interface GetMentorProfileByIdInput {
+  profileId: string;
+}
+export type GetMentorProfileByIdOutput = Types.SocialMentorshipMentorProfileDto;
+export const getMentorProfileByIdEndpoint = {
+  operationId: 'getMentorProfileById' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/mentors/{profileId}' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: false,
+} as const;
+
+export interface GetMentorshipMentorsAvailabilityInput {
+  profileId: string;
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+  };
+}
+export type GetMentorshipMentorsAvailabilityOutput = Types.SocialMentorshipMentorAvailabilitySlotDto[];
+export const getMentorshipMentorsAvailabilityEndpoint = {
+  operationId: 'getMentorshipMentorsAvailability' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/mentors/{profileId}/availability' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: false,
+} as const;
+
+export type GetMentorshipProfileInput = void;
+export type GetMentorshipProfileOutput = Types.SocialMentorshipMentorProfileDto;
+export const getMentorshipProfileEndpoint = {
+  operationId: 'getMentorshipProfile' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/profile' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutMentorshipProfileInput {
+  body?: Types.SocialMentorshipUpsertMentorProfileInput;
+}
+export type PutMentorshipProfileOutput = Types.SocialMentorshipMentorProfileDto;
+export const putMentorshipProfileEndpoint = {
+  operationId: 'putMentorshipProfile' as const,
+  method: 'PUT' as const,
+  path: '/v1/mentorship/profile' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipProfileAvailabilityInput {
+  body?: Types.SocialMentorshipPublishMentorAvailabilityInput;
+}
+export type PostMentorshipProfileAvailabilityOutput = Types.SocialMentorshipMentorAvailabilitySlotDto[];
+export const postMentorshipProfileAvailabilityEndpoint = {
+  operationId: 'postMentorshipProfileAvailability' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/profile/availability' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteMentorshipProfileAvailabilityInput {
+  slotId: string;
+}
+export type DeleteMentorshipProfileAvailabilityOutput = void;
+export const deleteMentorshipProfileAvailabilityEndpoint = {
+  operationId: 'deleteMentorshipProfileAvailability' as const,
+  method: 'DELETE' as const,
+  path: '/v1/mentorship/profile/availability/{slotId}' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetMentorshipProfileDashboardInput = void;
+export type GetMentorshipProfileDashboardOutput = Types.SocialMentorshipMentorDashboardDto;
+export const getMentorshipProfileDashboardEndpoint = {
+  operationId: 'getMentorshipProfileDashboard' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/profile/dashboard' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipProfileStatusInput {
+  body?: Types.SocialMentorshipSetMentorProfileStatusInput;
+}
+export type PostMentorshipProfileStatusOutput = Types.SocialMentorshipMentorProfileDto;
+export const postMentorshipProfileStatusEndpoint = {
+  operationId: 'postMentorshipProfileStatus' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/profile/status' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetMentorshipSessionsInput {
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    status?: Types.SocialMentorshipMentorshipSessionStatus;
+    asMentorOnly?: boolean;
+  };
+}
+export type GetMentorshipSessionsOutput = Types.SocialMentorshipMentorshipSessionDto[];
+export const getMentorshipSessionsEndpoint = {
+  operationId: 'getMentorshipSessions' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/sessions' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipSessionsInput {
+  body?: Types.SocialMentorshipBookMentorshipSessionInput;
+}
+export type PostMentorshipSessionsOutput = Types.SocialMentorshipMentorshipSessionDto;
+export const postMentorshipSessionsEndpoint = {
+  operationId: 'postMentorshipSessions' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/sessions' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipSessionsCancelInput {
+  sessionId: string;
+  body?: Types.SocialMentorshipCancelMentorshipSessionInput;
+}
+export type PostMentorshipSessionsCancelOutput = Types.SocialMentorshipMentorshipSessionDto;
+export const postMentorshipSessionsCancelEndpoint = {
+  operationId: 'postMentorshipSessionsCancel' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/sessions/{sessionId}/cancel' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipSessionsCompleteInput {
+  sessionId: string;
+}
+export type PostMentorshipSessionsCompleteOutput = Types.SocialMentorshipMentorshipSessionDto;
+export const postMentorshipSessionsCompleteEndpoint = {
+  operationId: 'postMentorshipSessionsComplete' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/sessions/{sessionId}/complete' as const,
+  tags: ['SocialMentorship'] as const,
   requiresAuth: true,
 } as const;
 
@@ -34890,6 +35105,9 @@ export const endpoints = {
   postAuthMfaDisable: postAuthMfaDisableEndpoint,
   getAuthMfaBackupCodes: getAuthMfaBackupCodesEndpoint,
   postAuthMfaBackupCodesRegenerate: postAuthMfaBackupCodesRegenerateEndpoint,
+  postAuthMfaEmailChallenge: postAuthMfaEmailChallengeEndpoint,
+  postAuthMfaEmailComplete: postAuthMfaEmailCompleteEndpoint,
+  postAuthMfaEmailSetup: postAuthMfaEmailSetupEndpoint,
   getAuthMfaMethods: getAuthMfaMethodsEndpoint,
   postAuthMfaPushChallenge: postAuthMfaPushChallengeEndpoint,
   postAuthMfaPushRegisterDevice: postAuthMfaPushRegisterDeviceEndpoint,
@@ -34937,7 +35155,7 @@ export const endpoints = {
   postAuthServiceAccountsRotateSecret: postAuthServiceAccountsRotateSecretEndpoint,
   postAuthServiceAccountsUnlock: postAuthServiceAccountsUnlockEndpoint,
   getAuthServiceAccountsAuditLog: getAuthServiceAccountsAuditLogEndpoint,
-  patchAuthServiceAccountsCertificate: patchAuthServiceAccountsCertificateEndpoint,
+  patchAuthServiceAccountsClientCertificate: patchAuthServiceAccountsClientCertificateEndpoint,
   patchAuthServiceAccountsScopes: patchAuthServiceAccountsScopesEndpoint,
   getAuthSessionState: getAuthSessionStateEndpoint,
   getAuthSessions: getAuthSessionsEndpoint,
@@ -35241,6 +35459,19 @@ export const endpoints = {
   postMarketingLeads: postMarketingLeadsEndpoint,
   getMarketingLeadById: getMarketingLeadByIdEndpoint,
   getMeTasks: getMeTasksEndpoint,
+  getMentorshipMentors: getMentorshipMentorsEndpoint,
+  getMentorProfileById: getMentorProfileByIdEndpoint,
+  getMentorshipMentorsAvailability: getMentorshipMentorsAvailabilityEndpoint,
+  getMentorshipProfile: getMentorshipProfileEndpoint,
+  putMentorshipProfile: putMentorshipProfileEndpoint,
+  postMentorshipProfileAvailability: postMentorshipProfileAvailabilityEndpoint,
+  deleteMentorshipProfileAvailability: deleteMentorshipProfileAvailabilityEndpoint,
+  getMentorshipProfileDashboard: getMentorshipProfileDashboardEndpoint,
+  postMentorshipProfileStatus: postMentorshipProfileStatusEndpoint,
+  getMentorshipSessions: getMentorshipSessionsEndpoint,
+  postMentorshipSessions: postMentorshipSessionsEndpoint,
+  postMentorshipSessionsCancel: postMentorshipSessionsCancelEndpoint,
+  postMentorshipSessionsComplete: postMentorshipSessionsCompleteEndpoint,
   postOauthToken: postOauthTokenEndpoint,
   getOg: getOgEndpoint,
   getOrdersForGetOrders: getOrdersForGetOrdersEndpoint,

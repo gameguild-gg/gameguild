@@ -1013,11 +1013,9 @@ export class AuthModule {
   }
 
   /**
-   * Sign out the authenticated caller (issue #1154): sends the LogoutCommand, which
-   * revokes the caller's current access token (JTI) and, with logoutEverywhere, revokes
-   * every refresh token and terminates every session for the account.
+   * Sign out the caller, revoking the current access token (and optionally every session)
    *
-   * Signs out the authenticated caller by revoking the current access token; with logoutEverywhere it revokes all refresh tokens and terminates every session for the account.
+   * Signs out the authenticated caller by revoking the current access token; with logoutEverywhere it also revokes every refresh token and terminates every session for the account (issue #1154).
    */
   async postAuthSignOut(body: Types.IdentityAuthenticationSignOutInput): Promise<Result<Types.IdentityAuthenticationLogoutOutput, ApiError>> {
     const url = '/v1/auth/sign-out';

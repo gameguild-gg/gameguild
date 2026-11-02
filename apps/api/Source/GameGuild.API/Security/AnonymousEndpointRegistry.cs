@@ -87,6 +87,7 @@ public static class AnonymousEndpointRegistry
             ["AccountRecoveryController.CompletePasskeyApproval"] = "Records one recovery approval after cryptographic assertion verification; replays and unknown requests fail closed (issue #209).",
             ["AccountRecoveryController.CompleteReset"] = "Consumes the single-use forced-reset token minted at the approval threshold; unknown, expired or consumed tokens fail closed (issue #209).",
             ["MfaController.SendSmsChallenge"] = "Sends a throttled one-time code to the already-enrolled phone; the code itself is the credential and unknown users get a generic failure.",
+            ["MfaController.SendEmailChallenge"] = "Sends a throttled one-time code to the already-enrolled email address; the code itself is the credential and unknown users get a generic failure (issue #1152).",
             ["MfaController.IssuePushChallenge"] = "Issues a short-lived approval challenge to the already-enrolled device; the challenge bearer is the credential.",
             ["MfaController.RespondPushChallenge"] = "Records the device's decision for a pending, unexpired challenge; unknown or expired challenges fail closed.",
             ["WebAuthnController.BeginAuthentication"] = "First half of the passkey ceremony; returns only a challenge.",
@@ -164,6 +165,11 @@ public static class AnonymousEndpointRegistry
             ["DiscussionsController.GetContentDiscussions"] = "Public discussions under published content.",
             ["RepliesController.GetDiscussionReplies"] = "Public replies under a public discussion.",
             ["LikesController.GetCourseLikeCount"] = "Aggregate public like count for a course.",
+
+            // ── Public mentorship directory (published profiles only, issue #102) ──
+            ["MentorsController.List"] = "Public mentor/advisor directory; anonymous callers see published profiles only.",
+            ["MentorsController.Get"] = "Public mentor profile detail; anonymous callers see published profiles only.",
+            ["MentorsController.Availability"] = "Public open-availability listing for a published mentor profile.",
 
             // ── Public blog reading surface (published content only) ──
             ["BlogPublicController.GetAuthorPosts"] = "Public blog reading surface — published content only.",

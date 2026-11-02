@@ -277,6 +277,95 @@ public sealed class MfaController(
 
     #endregion
 
+    #region Email MFA Operations - /v1/auth/mfa/email (v1: issue #1152)
+
+    /// <summary>
+    ///     Initiate email-based MFA setup
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Setup initiation result</returns>
+    [HttpPost("v{version:apiVersion}/auth/mfa/email:setup")]
+    [EndpointSummary("Setup email MFA")]
+    [EndpointDescription("Initiates email-based MFA setup by sending a verification code to the account's email address. Delivery rides the email notification channel; codes are six digits, single-use, and expire in ten minutes.")]
+    [ProducesResponseType<EmailMfaSetupResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<MfaErrorResponse>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> InitiateEmailSetup(CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var result = await sender.Send(new StartEmailMfaEnrollmentCommand(userId), ct).ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return BadRequest(new MfaErrorResponse { Error = result.Message ?? "Failed to start email MFA setup" });
+        }
+
+        return Ok(new EmailMfaSetupResponse
+        {
+            Message = "Verification code sent",
+            EmailMasked = result.EmailMasked,
+            ExpiresInSeconds = result.ExpiresInSeconds
+        });
+    }
+
+    /// <summary>
+    ///     Complete email MFA setup by verifying the code
+    /// </summary>
+    /// <param name="body">Verification code received by email</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Setup completion result</returns>
+    [HttpPost("v{version:apiVersion}/auth/mfa/email:complete")]
+    [EndpointSummary("Complete email MFA setup")]
+    [EndpointDescription("Completes email MFA setup by verifying the code sent to the account's address, enrolling the verified address as an email factor.")]
+    [ProducesResponseType<MfaSuccessResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<MfaErrorResponse>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> CompleteEmailSetup([FromBody] CompleteMfaSetupRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var userId = GetCurrentUserId();
+        var result = await sender.Send(new CompleteEmailMfaEnrollmentCommand(userId, body.Code), ct).ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return BadRequest(new MfaErrorResponse { Error = result.Message ?? "Failed to complete email MFA setup" });
+        }
+
+        return Ok(new MfaSuccessResponse { Message = "Email MFA setup completed successfully" });
+    }
+
+    /// <summary>
+    ///     Send a fresh email sign-in code to the enrolled address
+    /// </summary>
+    /// <param name="body">Identifier of the user requesting the challenge</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Challenge initiation result</returns>
+    [AllowAnonymous]
+    [HttpPost("v{version:apiVersion}/auth/mfa/email:challenge")]
+    [EndpointSummary("Send email MFA challenge")]
+    [EndpointDescription("Sends a fresh verification code to the enrolled email address before MFA verification. Generic failure payload; throttled to one code per minute per user.")]
+    [ProducesResponseType<EmailMfaSetupResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SendEmailChallenge([FromBody] EmailMfaChallengeRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var result = await sender.Send(new SendEmailMfaChallengeCommand(body.UserId), ct).ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return BadRequest(new MfaErrorResponse { Error = result.Message ?? "Failed to send email challenge" });
+        }
+
+        return Ok(new EmailMfaSetupResponse
+        {
+            Message = "Verification code sent",
+            EmailMasked = result.EmailMasked,
+            ExpiresInSeconds = result.ExpiresInSeconds
+        });
+    }
+
+    #endregion
+
     #region Push MFA Operations - /v1/auth/mfa/push (v1: issue #259)
 
     /// <summary>
@@ -403,9 +492,15 @@ public sealed class MfaController(
                 IsAvailable = smsAvailable,
                 Priority = 2
             },
-            // Email MFA is deliberately NOT advertised (issue #1152): no command enrolls it and
-            // VerifyMfaAsync has no Email branch, so listing it claimed a capability that does
-            // not exist. It returns when a real email-factor implementation lands.
+            new()
+            {
+                Method = MfaMethod.Email,
+                Name = "Email",
+                Description = "Receive verification codes via email",
+                IsEnabled = enabledMethods.Contains("email", StringComparer.OrdinalIgnoreCase),
+                IsAvailable = true,
+                Priority = 3
+            },
             new()
             {
                 Method = MfaMethod.Push,
@@ -413,7 +508,7 @@ public sealed class MfaController(
                 Description = "Approve sign-in requests on your enrolled mobile device",
                 IsEnabled = enabledMethods.Contains("push", StringComparer.OrdinalIgnoreCase),
                 IsAvailable = pushAvailable,
-                Priority = 3
+                Priority = 4
             },
             new()
             {
@@ -422,13 +517,14 @@ public sealed class MfaController(
                 Description = "One-time use codes for emergency access",
                 IsEnabled = configuration.BackupCodesRemaining > 0,
                 IsAvailable = true,
-                Priority = 4
+                Priority = 5
             }
         };
 
         var defaultMethod = enabledMethods.Contains("totp", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Totp :
                            enabledMethods.Contains("sms", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Sms :
-                           enabledMethods.Contains("push", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Push : (MfaMethod?)null;
+                           enabledMethods.Contains("push", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Push :
+                           enabledMethods.Contains("email", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Email : (MfaMethod?)null;
 
         return Ok(new MfaMethodsResponse
         {
@@ -541,6 +637,38 @@ public sealed record SmsMfaChallengeRequest
     ///     User identifier whose enrolled phone receives the code
     /// </summary>
     public required Guid UserId { get; init; }
+}
+
+/// <summary>
+///     Request for an email MFA sign-in challenge (issue #1152)
+/// </summary>
+public sealed record EmailMfaChallengeRequest
+{
+    /// <summary>
+    ///     User identifier whose enrolled email address receives the code
+    /// </summary>
+    public required Guid UserId { get; init; }
+}
+
+/// <summary>
+///     Response for email MFA setup initiation (issue #1152)
+/// </summary>
+public sealed record EmailMfaSetupResponse
+{
+    /// <summary>
+    ///     Status message
+    /// </summary>
+    public required string Message { get; init; }
+
+    /// <summary>
+    ///     Masked email address for confirmation
+    /// </summary>
+    public required string EmailMasked { get; init; }
+
+    /// <summary>
+    ///     Time in seconds until code expires
+    /// </summary>
+    public required int ExpiresInSeconds { get; init; }
 }
 
 /// <summary>

@@ -77,21 +77,6 @@
       "count": 4
     }
   },
-  "src/app/[locale]/(dashboards)/console/learning/courses/[course]/listing/access/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    }
-  },
-  "src/app/[locale]/(dashboards)/console/learning/courses/[course]/listing/info/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    }
-  },
-  "src/app/[locale]/(dashboards)/console/learning/courses/[course]/listing/media/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    }
-  },
   "src/app/[locale]/(dashboards)/console/learning/courses/[course]/not-found.tsx": {
     "react/no-unescaped-entities": {
       "count": 2
@@ -99,11 +84,6 @@
   },
   "src/app/[locale]/(dashboards)/console/learning/courses/[course]/overview/page.tsx": {
     "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
-  "src/app/[locale]/(dashboards)/console/learning/courses/[course]/settings/danger/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
       "count": 1
     }
   },
@@ -152,29 +132,9 @@
       "count": 4
     }
   },
-  "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/access/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    }
-  },
-  "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/info/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    }
-  },
-  "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/media/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    }
-  },
   "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/not-found.tsx": {
     "react/no-unescaped-entities": {
       "count": 2
-    }
-  },
-  "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/settings/danger/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
     }
   },
   "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/students/page.tsx": {
@@ -369,17 +329,6 @@
       "count": 2
     }
   },
-  "src/app/[locale]/learn/reviews/[reviewId]/review-workspace.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    },
-    "@typescript-eslint/no-misused-promises": {
-      "count": 1
-    },
-    "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
   "src/app/[locale]/learn/reviews/reviews-client.tsx": {
     "@typescript-eslint/no-misused-promises": {
       "count": 1
@@ -411,20 +360,8 @@
     }
   },
   "src/app/api/courses/content-reports/route.ts": {
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 2
-    },
     "@typescript-eslint/no-unsafe-assignment": {
-      "count": 8
-    },
-    "@typescript-eslint/no-unsafe-call": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 17
-    },
-    "@typescript-eslint/no-unsafe-return": {
-      "count": 3
+      "count": 1
     }
   },
   "src/app/api/health/route.ts": {
@@ -444,11 +381,6 @@
   },
   "src/app/manifest.ts": {
     "@typescript-eslint/require-await": {
-      "count": 1
-    }
-  },
-  "src/components/__tests__/forgot-password-form.test.tsx": {
-    "@typescript-eslint/no-unused-vars": {
       "count": 1
     }
   },
@@ -1388,57 +1320,6 @@
     },
     "@typescript-eslint/no-unused-vars": {
       "count": 9
-    }
-  },
-  "src/components/block-content-editor/extras/source-code/cpp/cpp-completion-provider.tsx": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 73
-    },
-    "@typescript-eslint/no-unsafe-call": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 73
-    },
-    "@typescript-eslint/no-unsafe-return": {
-      "count": 1
-    }
-  },
-  "src/components/block-content-editor/extras/source-code/cpp/cpp-language-service.tsx": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-call": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 1
-    }
-  },
-  "src/components/block-content-editor/extras/source-code/cpp/cpp-syntax-highlighter.tsx": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-call": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-return": {
-      "count": 1
     }
   },
   "src/components/block-content-editor/extras/source-code/dialogs/import-file-dialog.tsx": {
@@ -2442,26 +2323,6 @@
       "count": 7
     },
     "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "src/components/courses/course-location-selector.tsx": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    },
-    "@typescript-eslint/no-misused-promises": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 1
-    },
-    "@typescript-eslint/require-await": {
       "count": 1
     }
   },
