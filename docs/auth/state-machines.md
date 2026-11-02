@@ -146,7 +146,7 @@ TOTP lifecycle (`Services/TotpMfaService.cs`): setup writes the encrypted secret
 
 ```mermaid
 stateDiagram-v2
-    [*] : per method NotEnrolled
+    [*] --> NotEnrolled : per method
     NotEnrolled --> PendingSetup : SetupTotpAsync stores secret IsEnabled false - TotpMfaService.cs 29
     NotEnrolled --> ChallengeSent : StartEnrollmentAsync emails code - EmailMfaService.cs 41
     PendingSetup --> Enrolled : first VerifyTotpAsync success - TotpMfaService.cs 146
