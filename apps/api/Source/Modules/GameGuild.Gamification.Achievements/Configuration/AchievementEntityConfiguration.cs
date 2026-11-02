@@ -129,3 +129,21 @@ public class AchievementProgressConfiguration : IEntityTypeConfiguration<Achieve
             .IsUnique();
     }
 }
+
+/// <summary>
+/// EF Core model configuration bridge for the Gamification.Achievements module (issue #1158).
+/// Discovered by ApplicationDbContext via IModelConfiguration assembly scanning —
+/// without this bridge the module's IEntityTypeConfiguration classes never reach
+/// the model, so the achievement tables never materialize.
+/// </summary>
+public sealed class AchievementsModelConfiguration : IModelConfiguration
+{
+    public void Configure(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new AchievementConfiguration());
+        modelBuilder.ApplyConfiguration(new UserAchievementConfiguration());
+        modelBuilder.ApplyConfiguration(new AchievementLevelConfiguration());
+        modelBuilder.ApplyConfiguration(new AchievementPrerequisiteConfiguration());
+        modelBuilder.ApplyConfiguration(new AchievementProgressConfiguration());
+    }
+}
