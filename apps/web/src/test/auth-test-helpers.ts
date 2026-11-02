@@ -15,7 +15,11 @@ import { vi } from "vitest";
 /* ------------------------------------------------------------------ */
 
 export interface MockUseAuthReturn {
-  mfaChallenge: { mfaToken: string; availableMethods: string[] } | null;
+  mfaChallenge: {
+    mfaToken: string;
+    availableMethods: string[];
+    mfaEnrollment?: { secretKey: string; qrCodeUri: string; expiresAt: string };
+  } | null;
   clearMfa: ReturnType<typeof vi.fn>;
   signIn: ReturnType<typeof vi.fn>;
   signUp: ReturnType<typeof vi.fn>;

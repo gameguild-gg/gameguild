@@ -5,6 +5,30 @@
  * Inspired by next-auth's error system but tailored for our use case.
  */
 
+import type { IdentityAuthenticationSignInMfaEnrollmentOffer } from '../../generated/types.gen.js';
+
+/**
+ * Validate and normalize the one-time TOTP enrollment offer that may ride a
+ * pending sign-in response (`mfaEnrollment`, present only for required-MFA
+ * subjects with no enrolled factor). Returns undefined for absent, partial,
+ * or malformed payloads so callers can treat the offer as all-or-nothing.
+ */
+export function parseMfaEnrollmentOffer(value: unknown): IdentityAuthenticationSignInMfaEnrollmentOffer | undefined {
+  if (typeof value !== 'object' || value === null) return undefined;
+  const candidate = value as Record<string, unknown>;
+  if (
+    typeof candidate.secretKey !== 'string' ||
+    !candidate.secretKey ||
+    typeof candidate.qrCodeUri !== 'string' ||
+    !candidate.qrCodeUri.startsWith('otpauth://totp/') ||
+    typeof candidate.expiresAt !== 'string' ||
+    !Number.isFinite(Date.parse(candidate.expiresAt))
+  ) {
+    return undefined;
+  }
+  return { secretKey: candidate.secretKey, qrCodeUri: candidate.qrCodeUri, expiresAt: candidate.expiresAt };
+}
+
 /**
  * Base class for all authentication errors.
  */
@@ -78,17 +102,32 @@ export class MfaRequiredError extends AuthError {
   readonly mfaSessionId?: string;
   /** Available MFA methods */
   readonly availableMethods?: string[];
+  /** One-time TOTP provisioning offer; present only when the subject must enroll at sign-in. */
+  readonly mfaEnrollment?: IdentityAuthenticationSignInMfaEnrollmentOffer;
 
-  constructor(message = 'Multi-factor authentication required', options?: { mfaSessionId?: string; mfaToken?: string; availableMethods?: string[] }) {
+  constructor(
+    message = 'Multi-factor authentication required',
+    options?: {
+      mfaSessionId?: string;
+      mfaToken?: string;
+      availableMethods?: string[];
+      mfaEnrollment?: IdentityAuthenticationSignInMfaEnrollmentOffer;
+    },
+  ) {
     super(message, { type: 'MfaRequired', status: 403 });
     this.name = 'MfaRequiredError';
     this.mfaSessionId = options?.mfaSessionId;
     this.mfaToken = options?.mfaToken;
     this.availableMethods = options?.availableMethods;
+    this.mfaEnrollment = options?.mfaEnrollment;
   }
 
-  override toJSON(): ReturnType<AuthError['toJSON']> & { mfaToken?: string; availableMethods?: string[] } {
-    return { ...super.toJSON(), mfaToken: this.mfaToken, availableMethods: this.availableMethods };
+  override toJSON(): ReturnType<AuthError['toJSON']> & {
+    mfaToken?: string;
+    availableMethods?: string[];
+    mfaEnrollment?: IdentityAuthenticationSignInMfaEnrollmentOffer;
+  } {
+    return { ...super.toJSON(), mfaToken: this.mfaToken, availableMethods: this.availableMethods, mfaEnrollment: this.mfaEnrollment };
   }
 }
 

@@ -96,6 +96,7 @@ export {
   CredentialsSignInError,
   AccountLockedError,
   MfaRequiredError,
+  parseMfaEnrollmentOffer,
   SignUpError,
   SessionExpiredError,
   InvalidSessionError,
@@ -161,6 +162,7 @@ export type { RequestConfig, ApiResponse, Interceptor } from './runtime/transpor
 // ─── Next.js Integration ─────────────────────────────────────────
 export { GameGuildAuth } from './integrations/next/auth.js';
 export { parseCookieHeader, parseBackendAuthResponse } from './integrations/next/handlers.js';
+export { createMfaEnrollmentCompleteAction, type MfaEnrollmentCompleteResult } from './integrations/next/actions.js';
 export type { OAuthProviderWithMethods } from './integrations/next/oauth-helpers.js';
 export {
   createNextClient,
