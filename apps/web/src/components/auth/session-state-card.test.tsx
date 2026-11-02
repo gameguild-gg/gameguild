@@ -50,4 +50,16 @@ describe('SessionStateCard', () => {
     await waitFor(() => expect(screen.getByTestId('session-state-error')).toBeInTheDocument());
     expect(screen.getByTestId('session-state-error')).toHaveTextContent('Authentication required.');
   });
+
+  it('renders the server-provided state without any mount fetch (issue #106 phase 1)', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<SessionStateCard initialState={sessionStateBody() as never} />);
+
+    // The fields render synchronously from props; no client fetch happens.
+    expect(screen.getByTestId('session-state-fields')).toBeInTheDocument();
+    expect(screen.getByText('Valid')).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

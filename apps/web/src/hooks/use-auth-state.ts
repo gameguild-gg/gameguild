@@ -28,11 +28,15 @@ export type UseAuthStateResult = Readonly<{
  * useAuthState (issue #221): surfaces the authenticated caller's own session state —
  * validity, expiry, token version, active-session count and MFA enrollment — through the
  * same-origin /api/auth/session-state proxy. The request is never cached.
+ *
+ * Issue #106 phase 1: server components can pass the session state they
+ * already fetched (via the generated auth module) as `initialState`; the hook
+ * then skips the mount fetch and only re-reads on explicit refresh.
  */
-export function useAuthState(): UseAuthStateResult {
-  const [state, setState] = useState<AuthSessionState | null>(null);
+export function useAuthState(initialState?: AuthSessionState | null): UseAuthStateResult {
+  const [state, setState] = useState<AuthSessionState | null>(initialState ?? null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialState == null);
 
   const load = useCallback(async (): Promise<void> => {
     setError(null);
@@ -58,8 +62,10 @@ export function useAuthState(): UseAuthStateResult {
   }, []);
 
   // Initial synchronization with the session-state endpoint. All state updates happen
-  // after the first await, never synchronously during the effect body.
+  // after the first await, never synchronously during the effect body. Skipped when
+  // a server component already supplied the state (issue #106 phase 1).
   useEffect(() => {
+    if (initialState != null) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -86,7 +92,7 @@ export function useAuthState(): UseAuthStateResult {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialState]);
 
   return { state, error, loading, refresh: load };
 }
