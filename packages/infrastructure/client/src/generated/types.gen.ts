@@ -12706,6 +12706,17 @@ export interface IdentityAuthenticationBeginWebAuthnRegistrationInput {
   preferredAuthenticatorType?: IdentityAuthenticationWebAuthnAuthenticatorType;
 }
 
+/** Request to bind (or clear) the X.509 client certificate used for mTLS authentication. */
+export interface IdentityAuthenticationBindServiceAccountCertificateInput {
+  /** SHA-256 hex hash (64 hexadecimal characters) of the certificate's Subject Public Key
+Info, bound as an additional key pin. Cleared together with the thumbprint. */
+  spkiSha256?: string | null;
+  /** SHA-1 thumbprint (40 hexadecimal characters, no separators) of the X.509 client
+certificate. Null or empty clears the binding; the account then authenticates by
+client secret only. */
+  thumbprint?: string | null;
+}
+
 /** Assigns one role to multiple users in a single bounded operation. */
 export interface IdentityAuthenticationBulkAssignRolesCommand {
   /** Optional expiration shared by every assignment. */
@@ -13237,6 +13248,16 @@ export interface IdentityAuthenticationLocationInfo {
 /** Request to lock a service account. */
 export interface IdentityAuthenticationLockServiceAccountInput {
   reason?: string | null;
+}
+
+/** Response from logout command */
+export interface IdentityAuthenticationLogoutOutput {
+  /** Message describing the result */
+  message?: string | null;
+  /** Number of sessions invalidated */
+  sessionsInvalidated?: number;
+  /** Whether the logout was successful */
+  success?: boolean;
 }
 
 /** Data model for Identity Authentication Magic Link Request Result. */
@@ -13864,6 +13885,13 @@ the guest session itself ends at that point. */
   userId?: string;
 }
 
+/** Request for signing out the authenticated caller. */
+export interface IdentityAuthenticationSignOutInput {
+  /** When true, revokes every refresh token and terminates every session for the account
+(logout everywhere) instead of only the caller's current access token. */
+  logoutEverywhere?: boolean;
+}
+
 /** Request for an SMS sign-in challenge */
 export interface IdentityAuthenticationSmsMfaChallengeInput {
   /** User identifier whose enrolled phone receives the code */
@@ -13901,6 +13929,10 @@ export interface IdentityAuthenticationStepUpReceiptOutput {
 /** Request to trust a device */
 export interface IdentityAuthenticationTrustDeviceInput {
   deviceName?: string | null;
+  /** Fresh step-up receipt proving the caller just re-verified with an MFA factor for the
+`trust-device` operation (issue #1144). Obtain it from the step-up challenge
+flow bound to this device name. */
+  stepUpReceipt?: string | null;
 }
 
 /** Outcome of a trusted-contact mutation by the owner. */
@@ -28358,6 +28390,7 @@ export let IdentityAuthenticationBackupCodesStatusOutputSchema: z.ZodType<Identi
 export let IdentityAuthenticationBeginPasskeyApprovalInputSchema: z.ZodType<IdentityAuthenticationBeginPasskeyApprovalInput>;
 export let IdentityAuthenticationBeginWebAuthnAuthenticationInputSchema: z.ZodType<IdentityAuthenticationBeginWebAuthnAuthenticationInput>;
 export let IdentityAuthenticationBeginWebAuthnRegistrationInputSchema: z.ZodType<IdentityAuthenticationBeginWebAuthnRegistrationInput>;
+export let IdentityAuthenticationBindServiceAccountCertificateInputSchema: z.ZodType<IdentityAuthenticationBindServiceAccountCertificateInput>;
 export let IdentityAuthenticationBulkAssignRolesCommandSchema: z.ZodType<IdentityAuthenticationBulkAssignRolesCommand>;
 export let IdentityAuthenticationBulkRoleAssignmentItemResultSchema: z.ZodType<IdentityAuthenticationBulkRoleAssignmentItemResult>;
 export let IdentityAuthenticationBulkRoleAssignmentResultSchema: z.ZodType<IdentityAuthenticationBulkRoleAssignmentResult>;
@@ -28415,6 +28448,7 @@ export let IdentityAuthenticationLocalSignInInputSchema: z.ZodType<IdentityAuthe
 export let IdentityAuthenticationLocalSignUpInputSchema: z.ZodType<IdentityAuthenticationLocalSignUpInput>;
 export let IdentityAuthenticationLocationInfoSchema: z.ZodType<IdentityAuthenticationLocationInfo>;
 export let IdentityAuthenticationLockServiceAccountInputSchema: z.ZodType<IdentityAuthenticationLockServiceAccountInput>;
+export let IdentityAuthenticationLogoutOutputSchema: z.ZodType<IdentityAuthenticationLogoutOutput>;
 export let IdentityAuthenticationMagicLinkRequestResultSchema: z.ZodType<IdentityAuthenticationMagicLinkRequestResult>;
 export let IdentityAuthenticationMfaConfigurationOutputSchema: z.ZodType<IdentityAuthenticationMfaConfigurationOutput>;
 export let IdentityAuthenticationMfaErrorOutputSchema: z.ZodType<IdentityAuthenticationMfaErrorOutput>;
@@ -28480,6 +28514,7 @@ export let IdentityAuthenticationSessionSecurityAnalysisSchema: z.ZodType<Identi
 export let IdentityAuthenticationSessionSuccessOutputSchema: z.ZodType<IdentityAuthenticationSessionSuccessOutput>;
 export let IdentityAuthenticationSessionTerminationOutputSchema: z.ZodType<IdentityAuthenticationSessionTerminationOutput>;
 export let IdentityAuthenticationSignInOutputSchema: z.ZodType<IdentityAuthenticationSignInOutput>;
+export let IdentityAuthenticationSignOutInputSchema: z.ZodType<IdentityAuthenticationSignOutInput>;
 export let IdentityAuthenticationSmsMfaChallengeInputSchema: z.ZodType<IdentityAuthenticationSmsMfaChallengeInput>;
 export let IdentityAuthenticationSmsMfaSetupInputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupInput>;
 export let IdentityAuthenticationSmsMfaSetupOutputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupOutput>;
@@ -41312,6 +41347,20 @@ IdentityAuthenticationBeginWebAuthnRegistrationInputSchema = z.object({
   preferredAuthenticatorType: z.lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema).optional(),
 });
 
+/** Zod schema for IdentityAuthenticationBindServiceAccountCertificateInput. Request to bind (or clear) the X.509 client certificate used for mTLS authentication. */
+IdentityAuthenticationBindServiceAccountCertificateInputSchema = z.object({
+  spkiSha256: z
+    .string()
+    .regex(/^[a-fA-F0-9]{64}$/)
+    .nullable()
+    .optional(),
+  thumbprint: z
+    .string()
+    .regex(/^[a-fA-F0-9]{40}$/)
+    .nullable()
+    .optional(),
+});
+
 /** Zod schema for IdentityAuthenticationBulkAssignRolesCommand. Assigns one role to multiple users in a single bounded operation. */
 IdentityAuthenticationBulkAssignRolesCommandSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
@@ -41758,6 +41807,13 @@ IdentityAuthenticationLocationInfoSchema = z.object({
 /** Zod schema for IdentityAuthenticationLockServiceAccountInput. Request to lock a service account. */
 IdentityAuthenticationLockServiceAccountInputSchema = z.object({
   reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationLogoutOutput. Response from logout command */
+IdentityAuthenticationLogoutOutputSchema = z.object({
+  message: z.string().nullable().optional(),
+  sessionsInvalidated: z.number().int().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationMagicLinkRequestResult. Data model for Identity Authentication Magic Link Request Result. */
@@ -42264,6 +42320,11 @@ IdentityAuthenticationSignInOutputSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
+/** Zod schema for IdentityAuthenticationSignOutInput. Request for signing out the authenticated caller. */
+IdentityAuthenticationSignOutInputSchema = z.object({
+  logoutEverywhere: z.boolean().optional(),
+});
+
 /** Zod schema for IdentityAuthenticationSmsMfaChallengeInput. Request for an SMS sign-in challenge */
 IdentityAuthenticationSmsMfaChallengeInputSchema = z.object({
   userId: z.string().uuid(),
@@ -42296,6 +42357,7 @@ IdentityAuthenticationStepUpReceiptOutputSchema = z.object({
 /** Zod schema for IdentityAuthenticationTrustDeviceInput. Request to trust a device */
 IdentityAuthenticationTrustDeviceInputSchema = z.object({
   deviceName: z.string().nullable().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationTrustedContactActionResult. Outcome of a trusted-contact mutation by the owner. */

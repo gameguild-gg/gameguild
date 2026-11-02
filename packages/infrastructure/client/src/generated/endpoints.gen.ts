@@ -20333,6 +20333,26 @@ export const getAuthServiceAccountsAuditLogEndpoint = {
 } as const;
 
 /**
+ * Binds or clears the X.509 client certificate (mTLS) for a service account (issue #1146).
+ *
+ * The token endpoint already enforces certificate binding, but no API surface could set
+ * it; this is that surface. Binding replaces any previous binding. An empty thumbprint
+ * clears the binding, after which the account authenticates by client secret only.
+ */
+export interface PatchAuthServiceAccountsCertificateInput {
+  serviceAccountId: string;
+  body?: Types.IdentityAuthenticationBindServiceAccountCertificateInput;
+}
+export type PatchAuthServiceAccountsCertificateOutput = void;
+export const patchAuthServiceAccountsCertificateEndpoint = {
+  operationId: 'patchAuthServiceAccountsCertificate' as const,
+  method: 'PATCH' as const,
+  path: '/v1/auth/service-accounts/{serviceAccountId}/certificate' as const,
+  tags: ['AuthServiceAccounts'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Updates the scopes for a service account.
  */
 export interface PatchAuthServiceAccountsScopesInput {
@@ -20489,6 +20509,25 @@ export const postAuthSignInEndpoint = {
   path: '/v1/auth/sign-in' as const,
   tags: ['Auth'] as const,
   requiresAuth: false,
+} as const;
+
+/**
+ * Sign out the authenticated caller (issue #1154): sends the LogoutCommand, which
+ * revokes the caller's current access token (JTI) and, with logoutEverywhere, revokes
+ * every refresh token and terminates every session for the account.
+ *
+ * Signs out the authenticated caller by revoking the current access token; with logoutEverywhere it revokes all refresh tokens and terminates every session for the account.
+ */
+export interface PostAuthSignOutInput {
+  body?: Types.IdentityAuthenticationSignOutInput;
+}
+export type PostAuthSignOutOutput = Types.IdentityAuthenticationLogoutOutput;
+export const postAuthSignOutEndpoint = {
+  operationId: 'postAuthSignOut' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/sign-out' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
 } as const;
 
 /**
@@ -20684,7 +20723,7 @@ export const deleteAuthTrustedContactsEndpoint = {
 /**
  * Redeems a trusted-contact invite token; the contact confirms participation.
  *
- * Consumes the single-use, expiring invite token emailed to the contact. Denials are generic and never reveal token state.
+ * Consumes the single-use, expiring invite token emailed to the contact. Denials are generic and never reveal token state. Rate limited per IP against the authentication budget.
  */
 export interface PostAuthTrustedContactsConfirmInput {
   body?: Types.IdentityAuthenticationConfirmTrustedContactInput;
@@ -20716,7 +20755,11 @@ export const getAuthTrustedDevicesEndpoint = {
 /**
  * Trust the current device
  *
- * Marks the current device as trusted, allowing faster authentication in the future.
+ * Trusting a device is a security-sensitive grant, so it requires fresh verification
+ * (issue #1144): create a step-up challenge (POST /v1/auth/step-up/challenges) with
+ * operation type "trust-device", target reference "current-session", and payload hash
+ * SHA-256 of the trimmed device name; verify it with any MFA method and pass the
+ * returned receipt as `stepUpReceipt`.
  */
 export interface PostAuthTrustedDevicesInput {
   body?: Types.IdentityAuthenticationTrustDeviceInput;
@@ -34894,6 +34937,7 @@ export const endpoints = {
   postAuthServiceAccountsRotateSecret: postAuthServiceAccountsRotateSecretEndpoint,
   postAuthServiceAccountsUnlock: postAuthServiceAccountsUnlockEndpoint,
   getAuthServiceAccountsAuditLog: getAuthServiceAccountsAuditLogEndpoint,
+  patchAuthServiceAccountsCertificate: patchAuthServiceAccountsCertificateEndpoint,
   patchAuthServiceAccountsScopes: patchAuthServiceAccountsScopesEndpoint,
   getAuthSessionState: getAuthSessionStateEndpoint,
   getAuthSessions: getAuthSessionsEndpoint,
@@ -34904,6 +34948,7 @@ export const endpoints = {
   deleteAuthSessions: deleteAuthSessionsEndpoint,
   patchAuthSessionsName: patchAuthSessionsNameEndpoint,
   postAuthSignIn: postAuthSignInEndpoint,
+  postAuthSignOut: postAuthSignOutEndpoint,
   postAuthSignUp: postAuthSignUpEndpoint,
   getAuthSigningKeys: getAuthSigningKeysEndpoint,
   postAuthSigningKeysCleanup: postAuthSigningKeysCleanupEndpoint,

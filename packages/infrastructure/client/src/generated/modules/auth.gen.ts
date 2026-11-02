@@ -1013,6 +1013,35 @@ export class AuthModule {
   }
 
   /**
+   * Sign out the authenticated caller (issue #1154): sends the LogoutCommand, which
+   * revokes the caller's current access token (JTI) and, with logoutEverywhere, revokes
+   * every refresh token and terminates every session for the account.
+   *
+   * Signs out the authenticated caller by revoking the current access token; with logoutEverywhere it revokes all refresh tokens and terminates every session for the account.
+   */
+  async postAuthSignOut(body: Types.IdentityAuthenticationSignOutInput): Promise<Result<Types.IdentityAuthenticationLogoutOutput, ApiError>> {
+    const url = '/v1/auth/sign-out';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationSignOutInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationLogoutOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Register a new user with email and password
    *
    * Creates a new user account with email and password credentials, returning authentication tokens on success.
