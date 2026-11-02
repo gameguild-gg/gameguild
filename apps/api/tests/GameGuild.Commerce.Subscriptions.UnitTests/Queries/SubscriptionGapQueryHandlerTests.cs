@@ -176,10 +176,11 @@ public class GetSubscriptionPlanUsageStatisticsHandlerTests
 
         var result = await handler.Handle(new GetSubscriptionPlanUsageStatisticsQuery(planId), CancellationToken.None);
 
-        result.Should().NotBeNull();
-        result!.ActiveSubscriptions.Should().Be(1);
-        result.CancelledSubscriptions.Should().Be(1);
-        result.TotalRevenue.Should().Be(59.98m);
+        result.Should().NotBeNull().And.BeOfType<PlanUsageStatistics>();
+        var statistics = (PlanUsageStatistics)result!;
+        statistics.ActiveSubscriptions.Should().Be(1);
+        statistics.CancelledSubscriptions.Should().Be(1);
+        statistics.TotalRevenue.Should().Be(59.98m);
     }
 }
 

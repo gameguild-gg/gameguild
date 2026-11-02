@@ -275,9 +275,11 @@ public sealed class InvoiceGenerationService(
 
         var paymentId = ResolvePaymentId(request);
         if (paymentId.HasValue &&
-            existing.Status == InvoiceStatus.Open &&
+            existing.Status is InvoiceStatus.Open or InvoiceStatus.PastDue &&
             existing.PaymentId is null)
         {
+            // Issue #1205 G-11 (invoice half): a PastDue invoice whose payment finally
+            // succeeds heals to Paid — the FSM allows PastDue → Paid via RecordPayment.
             existing.RecordPayment(paymentId.Value, request.Amount, request.ProcessedAtUtc);
             changed = true;
         }
