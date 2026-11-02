@@ -1,8 +1,18 @@
 # Background worker inventory (operational reference)
 
-Last audited: 2026-11-02 against `develop` (`74e9bba4c`). Scope: every class in
+Last audited: 2026-11-02 against `develop` (`ac959fd8f`). Scope: every class in
 `apps/api/Source` implementing `BackgroundService` or `IHostedService`, plus every
 registration site (`AddHostedService` / `TryAddEnumerable(IHostedService)`).
+The audit ran against `74e9bba4c` and was re-verified after develop advanced
+through PRs #1185–#1201 (docs packages + `feat/auth-security-batch1`): no
+hosted-service implementation or registration changed — the 45 + 1 registrations
+and 47 implementations below are current.
+
+Companion package documents (server-side wiring, merged alongside this one):
+`docs/auth/wiring-matrix.md` (#1194), `docs/authorization/` (#1200),
+`docs/commerce/billing-orders/` (#1201), `docs/commerce/payments/` (#1193).
+Where a package gap register describes work that *no* worker performs, it is
+cross-referenced below rather than restated.
 
 **Headline numbers**
 
@@ -55,6 +65,12 @@ All file paths below are relative to `apps/api/Source`. Line numbers reference t
 | `DisputeDeadlineReminderBackgroundService` (`Services/DisputeDeadlineReminderBackgroundService.cs:23`, reg `PaymentsModule.cs:79`) | 24 h; **default off** + requires `TeamAlertEmails` (`Payments:Disputes`) | Emails the disputes team for `EvidenceDueBy` inside the reminder window | Open dispute rows | Yes — window predicate | n/a | Token-aware, per-item `ThrowIfCancellationRequested` | Log + next cycle | |
 | `RevenueAnomalyDetectionBackgroundService` (`Services/RevenueAnomalyDetectionBackgroundService.cs:21`, reg `PaymentsModule.cs:99`) | configurable minutes; **default off** (`RevenueAuditing`) | Trailing-window anomaly detection on the global revenue aggregate; persists alerts | Revenue aggregate/alert tables | Yes — alerts persist idempotently | n/a | Token-aware | Log + next tick | |
 | `FraudBackgroundScoringHostedService` (`Services/FraudDetection/FraudBackgroundScoringWorker.cs:180`, reg `PaymentsModule.cs:147`) | continuous drain; 500 ms idle backoff, 5 s error backoff | Completes fraud provider signals deferred by the synchronous <200 ms decision budget | **In-memory** bounded channel `FraudBackgroundScoringQueue` (`FraudDetection/FraudBackgroundScoringQueue.cs:47-51`, capacity >=16, `DropWrite`) | No — deferred jobs are lost on restart and silently dropped when full | None — dropped writes are unlogged as such | Token-aware | Immediate re-poll; **G3** | **G3** |
+
+The payments package gap register (PR #1193, `docs/commerce/payments/06-gaps.md`)
+covers the *semantics* of the background re-score (K4: no-op persistence write —
+fixed; K6: can only tighten an Allow, never loosen — deliberate). G3 below is the
+complementary *transport* gap: even a correct re-score is lost when the process
+recycles mid-queue.
 | `PaymentRetryQueueBackgroundService` (`Services/PaymentRetryQueueWorker.cs:122`, reg `PaymentsModule.cs:163`) | 60 min poll; **default off** (`Payments:RetryQueue`) | Re-dispatches failed payments past their next-retry time via `RetryPaymentCommand` as the `PaymentRetryQueue` system actor | Payment rows due for retry | Yes — per-payment retry state | Payment retry schedule itself caps attempts | Token-aware | Per-item isolation; next-cycle retry | |
 | `PaymentMethodExpiryMonitorBackgroundService` (`Services/PaymentMethodExpiryMonitorBackgroundService.cs:21`, reg `PaymentsModule.cs:271`) | 24 h (`PaymentMethodExpiry`, default on) | Card-expiry horizon notifications (30/14/7 d) and auto-expiry of passed cards | Payment-method rows | Yes — horizon predicate | n/a | Token-aware | Log + next tick | |
 | `WalletBalanceAlertMonitorBackgroundService` (`Services/WalletBalanceAlertMonitorBackgroundService.cs:20`, reg `PaymentsModule.cs:280`) | configurable hours (`Wallets`, default on) | Low-balance notifications with re-arm after recovery | Wallet rows | Yes — re-arm state | n/a | Token-aware | Log + next tick | |
@@ -68,6 +84,15 @@ All file paths below are relative to `apps/api/Source`. Line numbers reference t
 | `BillingWebhookRetryBackgroundService` (`Modules/GameGuild.Commerce.Billing/Services/BillingWebhookRetryWorker.cs:224`, reg `Extensions/ServiceCollectionExtensions.cs:59`) | 30 s poll, batch 50 (`Webhook:RetryWorker`, default on; also gated by retention settings) | Requeues failed webhook inbox events on exponential backoff; dead-letters exhausted rows with a security event; prunes raw-delivery retention | Billing webhook inbox/raw-delivery tables | Yes — per-event attempt state | **Yes** — `BillingWebhookDeadLetterService`, `MaxRetryAttempts = 5` (`Configuration/WebhookSettings.cs:149`) | Token-aware | Explicit exponential backoff gate | reference implementation |
 | `PricingSchedulingBackgroundService` (`Modules/GameGuild.Commerce.Products/BackgroundServices/PricingSchedulingBackgroundService.cs:23`, reg `ProductsModule.cs:54`) | configurable minutes (`PricingScheduling`, default on) | Activates/deactivates price rules; starts/completes experiments | Price rule / experiment rows | Yes — due predicate | n/a | Token-aware | Log + next tick | |
 | `MonthlyStatementDispatchBackgroundService` (`Modules/GameGuild.Commerce.Subscriptions/Services/MonthlyStatementDispatchBackgroundService.cs:27`, reg `Extensions/DependencyInjection.cs:175`) | 1 h poll; acts on day 1 of month; 1 s DB probe | Queues previous-month statements for every active subscription | Subscription + notification rows | **Yes — per-period guard**: skips if any `MonthlyStatement` notification already carries the period's `fromDate` metadata (`:90-105`); accepts a crash mid-run over re-publishing | n/a | Token-aware | Log + next tick; pauses when DB unreachable | |
+
+Missing-worker note (from the billing-orders package, PR #1201): the invoice
+lifecycle has **no background coverage at all** — nothing sweeps `DueDate`, so
+`Invoice.MarkPastDue` / `MarkUncollectible` are unreachable in production
+(`docs/commerce/billing-orders/gaps.md` G-2), and the manual invoice-retry
+endpoint acknowledges an "accepted for local scheduling" that no scheduler or
+worker ever performs (G-1, `Commands/RetryInvoicePayment/RetryInvoicePaymentHandler.cs:27-37`).
+A dunning/aging worker is the natural fix for both; when it lands it belongs in
+this table.
 
 ## Compliance — Audit
 
@@ -94,6 +119,13 @@ All file paths below are relative to `apps/api/Source`. Line numbers reference t
 | `PermissionCacheMemoryPressureMonitor` (`.../Caching/PermissionCacheMemoryPressureMonitor.cs:75`, reg `Caching/CachingServiceExtensions.cs:64`) | `PeriodicTimer(L1MemoryPressureCheckIntervalSeconds)` | Watches process memory pressure and trims L1 permission cache | in-process memory counters | Yes | n/a | Token-aware (timer) | n/a | |
 | `AutomaticPermissionCacheWarmupService` (`.../Caching/AutomaticPermissionCacheWarmupService.cs:52`, reg `Extensions/AuthorizationModuleExtensions.cs:147` — **only inside the caching-enabled branch**) | `PeriodicTimer(AutomaticWarmupIntervalSeconds)`; gated by `AutomaticWarmupEnabled` | Drains the popularity tracker and pre-warms hot permission-cache entries | in-process popularity tracker | Yes | n/a | Token-aware (timer) | Log + later cycle | |
 | `RedisPermissionCacheInvalidationSubscriber` (`.../Caching/RedisPermissionCacheInvalidationSubscriber.cs:43`, reg `Caching/CachingServiceExtensions.cs:165-166` via `TryAddEnumerable(IHostedService)` — **only when Redis pub/sub invalidation is composed**) | event-driven subscribe; holds with infinite delay; 5 s reconnect | Applies cross-node permission-cache invalidations from the Redis channel | Redis pub/sub channel | Yes — idempotent cache invalidation | n/a | Token-aware; explicit `StopAsync` cleanup | 5 s reconnect loop | |
+
+The authorization package (PR #1200) documents these workers in their runtime
+context: grant expiry flow in
+`docs/authorization/flows/permission-grant-lifecycle-flow.md` (lazy evaluation +
+the `PermissionExpirationWorker` durable leg) and the best-effort invalidation
+fan-out in `docs/authorization/event-flows.md` (Redis message loss self-heals via
+the durable version row — which is why the subscriber needs no DLQ).
 
 ## Learning — Assessments, Courses; Social — Blog
 

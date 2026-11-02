@@ -1,14 +1,18 @@
 # API contract matrix — OpenAPI surface × web client usage
 
-Last audited: 2026-11-02 against `develop` (`74e9bba4c`).
+Last audited: 2026-11-02 against `develop` (`ac959fd8f`). The endpoint scan ran
+against `74e9bba4c` and was re-verified after develop advanced (PRs #1185–#1201):
+the only client regeneration in that window (`d3e340865`) added Cloudflare
+Turnstile request fields for issue #1082 — `endpoints.gen.ts` is unchanged, so
+every count below stands.
 
 Sources of truth:
 
 - **Client surface**: `packages/infrastructure/client/src/generated/endpoints.gen.ts`
   (2,115 endpoint definitions; 224 module classes in `generated/modules/`), generated
   from the API OpenAPI document — `.metadata.json` records
-  `apiVersion 4.4.0`, hash `4576ad34…c5177c6`, generated `2026-11-01T17:27:30Z`
-  (commit `4db4ca6e2`).
+  `apiVersion 4.4.0`, hash `a60945fa…25d158`, generated `2026-11-01T22:48:05Z`
+  (commit `d3e340865`).
 - **Server surface**: controller route attributes across `apps/api/Source`
   (267 files, 2,283 route/action pairs incl. dual-route actions).
 - **Usage**: full scan of `apps/web/src` (1,992 TS/TSX files) for generated-module
@@ -42,6 +46,27 @@ Sources of truth:
 - **VERSIONED-DIFF** — the generated client and the live controllers disagree:
   controller actions missing from the client, or endpoints excluded from the
   versioned OpenAPI document.
+
+## Companion server-side matrices (do not redo here)
+
+Four module packages merged alongside this document document the **server side**
+of the same surface — route → command/query → validator → handler wiring. This
+matrix is deliberately the complementary half: it answers "who actually calls
+the endpoint from the web client", which the server-side matrices cannot. Read
+them together: an endpoint that is dead server-side **and** has no caller here
+is the safest deletion candidate of all.
+
+| Package doc | PR | Scope |
+| --- | --- | --- |
+| `docs/auth/wiring-matrix.md` | #1194 | all 46 auth + authorization controllers, CQRS pipeline cell by cell |
+| `docs/authorization/cqrs-wiring-matrix.md` + `docs/authorization/gaps.md` | #1200 | 24 controllers / 177 endpoints; gaps B1–B4: **31 endpoints dead server-side** (16 answer 422 planned, 15 answer 500 with no handler — issue #1203) |
+| `docs/commerce/billing-orders/cqrs-wiring-matrix.md` + `docs/commerce/billing-orders/gaps.md` | #1201 | billing, orders, subscriptions handlers and FSM gaps |
+| `docs/commerce/payments/02-cqrs-wiring-matrix.md` + `docs/commerce/payments/06-gaps.md` | #1193 | payments command/query wiring and money-critical gaps |
+
+The 31 dead authorization endpoints of issue #1203 live inside the 95
+deliberately-hidden `IgnoreApi` policy controllers catalogued in F6 below —
+dead on the server (no handler), hidden from the contract (no client method),
+and uncalled by the web app: a triple-confirmed removal backlog.
 
 ## Auth module — full matrix (139 endpoints, 34 called)
 
@@ -366,13 +391,18 @@ generated methods, so contract drift here is invisible to TypeScript:
 
 ### F4 — password sign-in itself is not the generated method
 
-`packages/infrastructure/client/src/runtime/auth/providers/credentials.ts:38-108`
+`packages/infrastructure/client/src/runtime/auth/providers/credentials.ts:38-111`
 defaults to `fetch`-posting `/v1/auth/sign-in` (falling back to
 `/v1/auth/mfa/sign-in/complete`), and `apps/web/src/lib/auth/web3-credentials.ts`,
 `email-code-credentials.ts`, `magic-link-credentials.ts` do the same for their
 flows. `postAuthSignIn` (`endpoints.gen.ts`, `AuthModule`) has zero callers. This
 is F3's highest-impact instance: the single most security-critical endpoint in the
 contract is validated by neither the generated types nor `safeParse` schemas.
+The gap is widening, not closing: the Cloudflare Turnstile hardening
+(`d3e340865`, issue #1082) added `turnstileToken` to this raw-fetch body
+(`credentials.ts:82,108`) and to the generated request types — but the runtime
+still posts by hand, so the next CAPTCHA-related change can again ship without
+the pipeline noticing.
 
 ### F5 — VERSIONED-DIFF: 7 live Orders actions missing from the generated client
 
@@ -396,7 +426,9 @@ diff, never hand-splice.
   `AccessReviewItemController`, `AccessReviewAnalyticsController`,
   `AccessReviewCampaignController`, `PolicyBundlesController` in
   `Identity.Authorization`). Intentional, but they are live authenticated routes
-  with no client and no contract tests.
+  with no client and no contract tests — and the authorization package audit
+  (PR #1200, issue #1203) proved 31 of them dead server-side (422 planned /
+  500 no handler), so this cluster is hidden *and* broken.
 - **56 unversioned actions** — controllers with no `[ApiVersion]` are excluded from
   the versioned OpenAPI document and therefore from the client:
   `Social.Ratings/Controllers/RatingsController.cs` (`api/[controller]`, 21 actions),
