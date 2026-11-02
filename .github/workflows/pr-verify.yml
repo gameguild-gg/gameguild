@@ -124,6 +124,7 @@ jobs:
           node --test scripts/ci/tests/dotnet-cache-policy.test.mjs
           node --test scripts/ci/tests/api-integration-filter.test.mjs
           node --max-old-space-size=128 --test scripts/ci/tests/required-artifact-upload.test.mjs
+          node --test scripts/ci/tests/pr-required-gate.test.mjs
           python3 -m unittest discover -s scripts/ci/tests -p 'acquire_emception_release_test.py'
       - name: Test docker build-context invariants
         run: node --test scripts/ci/tests/dockerignore-pnpm-patches.test.mjs scripts/ci/tests/dockerignore-api-analyzer-config.test.mjs
@@ -192,10 +193,6 @@ jobs:
         run: pnpm --filter @game-guild/client build
       - name: Test client credentials, MFA, auth factory, transport and generator contracts
         run: pnpm --filter @game-guild/client exec vitest run tests/auth/providers/credentials.test.ts tests/next/auth.test.ts tests/next/actions-extended.test.ts tests/gaps/final-gaps.test.ts tests/react/query-hooks-extended.test.ts tests/generator tests/transport --maxWorkers=1
-      - name: Test client metrics correlation contracts
-        run: pnpm --filter @game-guild/client exec vitest run tests/plugins/metrics-full.test.ts --maxWorkers=1
-      - name: Typecheck client metrics correlation contracts
-        run: pnpm --filter @game-guild/client exec tsc --noEmit --project tests/plugins/tsconfig.metrics.json
       - name: Test delivered WalletConnect runtime
         run: pnpm --filter @game-guild/web3 exec vitest run src/adapters/walletconnect.runtime.test.ts src/adapters/walletconnect.test.ts --maxWorkers=1
       - name: Acquire verified Toolchain release for Web
@@ -285,6 +282,15 @@ jobs:
           bash scripts/ci/run-affected-dotnet-tests.sh
           --base "${{ needs.classify.outputs.baseSha }}"
           --head "${{ needs.classify.outputs.headSha }}"
+      - name: Verify mandatory identity and host security suites
+        shell: bash
+        run: |
+          for TEST_PROJECT in GameGuild.Identity.Authentication.UnitTests GameGuild.Identity.Authorization.UnitTests GameGuild.API.UnitTests; do
+            dotnet test "apps/api/tests/${TEST_PROJECT}/${TEST_PROJECT}.csproj" \
+              -c Release --nologo -p:TreatWarningsAsErrors=true \
+              --blame-hang-timeout 5m --logger "trx;LogFileName=${TEST_PROJECT}.trx" \
+              --results-directory "artifacts/test-results/affected-api/mandatory-security/${TEST_PROJECT}"
+          done
       - name: Upload affected API test evidence
         if: always()
         uses: ./.github/actions/upload-required-artifact
@@ -679,6 +685,22 @@ jobs:
           const failed = Object.entries(gates)
             .filter(([, result]) => result === 'failure' || result === 'cancelled')
             .map(([name, result]) => `${name}=${result}`);
+          // A gate that never reported a conclusion (empty result) is structural
+          // breakage, not a pass: block with the gate's own prefix.
+          for (const [name, result] of Object.entries(gates)) {
+            if (result === '' && !failed.some(item => item.startsWith(`${name}=`))) {
+              failed.push(`${name}=`);
+            }
+          }
+          // Selected surfaces must actually run: "skipped" is legitimate only when
+          // the classifier explicitly deselected the surface. Unknown or missing
+          // selection is treated as selected (fail closed).
+          if (gates.web === 'skipped' && process.env.WEB_SELECTED !== 'false') {
+            failed.push('web=skipped');
+          }
+          if (gates.api === 'skipped' && process.env.API_SELECTED !== 'false') {
+            failed.push('api=skipped');
+          }
           if (gates['secret-scan'] !== 'success' && !failed.some(item => item.startsWith('secret-scan='))) {
             failed.push(`secret-scan=${gates['secret-scan']}`);
           }

@@ -433,6 +433,7 @@ describe('SignupForm guest upgrade', () => {
     const { user } = renderWithUser(
       <SignupForm guestSessionId={guestSessionId} />,
     );
+
     await user.type(screen.getByLabelText('Full Name'), 'Jo Do');
     await user.type(screen.getByLabelText('Email'), 'jo@e.co');
     await user.type(screen.getByLabelText('Password'), '12345678');
@@ -446,7 +447,7 @@ describe('SignupForm guest upgrade', () => {
 });
 
 /* ------------------------------------------------------------------ */
-/*  Turnstile anti-bot (single-use token)                              */
+/*  Turnstile antibot (single-use token contract)                      */
 /* ------------------------------------------------------------------ */
 
 describe('SignupForm Turnstile', () => {

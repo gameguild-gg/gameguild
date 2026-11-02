@@ -3,45 +3,25 @@
 import { Badge } from '@game-guild/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { getTestingLocations } from '@/lib/api/testing-lab';
 import type { TestingLocation as TestingLocationFull } from '@/lib/api/testing-types';
 import { AlertCircle, CheckCircle, FolderOpen, MapPin, Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface CourseLocationSelectorProps {
+  /**
+   * Active testing locations, fetched by a server component (issue #106
+   * phase 1): the browser no longer calls the API from a mount effect — the
+   * list arrives with the server response, filtered to status === 1 (active).
+   */
+  locations: TestingLocationFull[];
   onLocationSelected: (location: TestingLocationFull, maxTests: number, maxProjects: number) => void;
 }
 
-export function CourseLocationSelector({ onLocationSelected }: CourseLocationSelectorProps) {
-  const [locations, setLocations] = useState<TestingLocationFull[]>([]);
+export function CourseLocationSelector({ locations, onLocationSelected }: CourseLocationSelectorProps) {
   const [selectedLocation, setSelectedLocation] = useState<TestingLocationFull | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadLocations = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const testingLocations = await getTestingLocations(0, 50);
-
-        // Filter to active locations only and cast to full type with status property
-        const activeLocations = testingLocations.filter((location: any) => location.status === 1) as TestingLocationFull[]; // Active status
-
-        setLocations(activeLocations);
-      } catch (err) {
-        console.error('Failed to load testing locations:', err);
-        setError('Failed to load testing locations');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadLocations();
-  }, []);
-
-  const handleLocationChange = async (locationId: string) => {
+  const handleLocationChange = (locationId: string) => {
     const location = locations.find((loc) => loc.id === locationId);
     if (!location) return;
 
@@ -82,26 +62,7 @@ export function CourseLocationSelector({ onLocationSelected }: CourseLocationSel
     }
   };
 
-  if (isLoading) {
-    return (
-      <Card className="bg-gray-900 border-gray-800">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Testing Location
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse">
-            <div className="h-10 bg-gray-700 rounded mb-4"></div>
-            <div className="h-4 bg-gray-700 rounded w-3/4"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
+  if (locations.length === 0) {
     return (
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
@@ -113,7 +74,7 @@ export function CourseLocationSelector({ onLocationSelected }: CourseLocationSel
         <CardContent>
           <div className="flex items-center gap-2 text-red-400">
             <AlertCircle className="h-4 w-4" />
-            <span className="text-sm">{error}</span>
+            <span className="text-sm">No active testing locations available</span>
           </div>
         </CardContent>
       </Card>
@@ -200,12 +161,6 @@ export function CourseLocationSelector({ onLocationSelected }: CourseLocationSel
                 <span>Loading content based on location capacity...</span>
               </div>
             )}
-          </div>
-        )}
-
-        {locations.length === 0 && (
-          <div className="text-center py-4">
-            <p className="text-sm text-gray-400">No active testing locations available</p>
           </div>
         )}
       </CardContent>

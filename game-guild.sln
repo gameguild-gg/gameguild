@@ -261,6 +261,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Social.Groups", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Social.Groups.UnitTests", "apps\api\tests\GameGuild.Social.Groups.UnitTests\GameGuild.Social.Groups.UnitTests.csproj", "{49CDEAFB-0CC3-4140-AA05-E4EEA0D69AA5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Social.Mentorship", "apps\api\Source\Modules\GameGuild.Social.Mentorship\GameGuild.Social.Mentorship.csproj", "{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Social.Mentorship.UnitTests", "apps\api\tests\GameGuild.Social.Mentorship.UnitTests\GameGuild.Social.Mentorship.UnitTests.csproj", "{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Finance.Economy", "apps\api\Source\Modules\GameGuild.Finance.Economy\GameGuild.Finance.Economy.csproj", "{70FC34E8-3C49-4522-ADAD-DF0E5728810C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Finance.Economy.UnitTests", "apps\api\tests\GameGuild.Finance.Economy.UnitTests\GameGuild.Finance.Economy.UnitTests.csproj", "{79722226-BA42-4E20-82FA-D2C59413F42D}"
@@ -1755,6 +1759,30 @@ Global
 		{EC34191C-71E0-4061-AD08-C9A0326EFC9E}.Release|x64.Build.0 = Release|Any CPU
 		{EC34191C-71E0-4061-AD08-C9A0326EFC9E}.Release|x86.ActiveCfg = Release|Any CPU
 		{EC34191C-71E0-4061-AD08-C9A0326EFC9E}.Release|x86.Build.0 = Release|Any CPU
+		{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}.Debug|x64.Build.0 = Debug|Any CPU
+		{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}.Debug|x86.Build.0 = Debug|Any CPU
+		{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}.Release|x64.ActiveCfg = Release|Any CPU
+		{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}.Release|x64.Build.0 = Release|Any CPU
+		{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}.Release|x86.ActiveCfg = Release|Any CPU
+		{8A4E9B21-6C0D-4A3F-9F31-4D02C57B1A66}.Release|x86.Build.0 = Release|Any CPU
+		{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}.Debug|x64.Build.0 = Debug|Any CPU
+		{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}.Debug|x86.Build.0 = Debug|Any CPU
+		{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}.Release|x64.ActiveCfg = Release|Any CPU
+		{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}.Release|x64.Build.0 = Release|Any CPU
+		{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}.Release|x86.ActiveCfg = Release|Any CPU
+		{3F5A7C11-8B2E-4D84-9A6B-5C1D2E7F9A33}.Release|x86.Build.0 = Release|Any CPU
 		{49CDEAFB-0CC3-4140-AA05-E4EEA0D69AA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{49CDEAFB-0CC3-4140-AA05-E4EEA0D69AA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49CDEAFB-0CC3-4140-AA05-E4EEA0D69AA5}.Debug|x64.ActiveCfg = Debug|Any CPU

@@ -1,0 +1,92 @@
+name: "♿ Accessibility Barrier"
+description: "Report an accessibility barrier that prevents you from using GameGuild."
+title: "[Accessibility]: "
+labels: ["accessibility", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
+        > **Use this template to report anything that prevents you from using GameGuild with assistive technology** — a screen reader that announces nothing, a control that cannot be reached by keyboard, a contrast problem, and so on.
+        > See our [accessibility statement](https://github.com/gameguild-gg/gameguild/blob/develop/ACCESSIBILITY.md) for our WCAG 2.1 AA target, supported browsers, and known limitations. You can also email [accessibility@gameguild.gg](mailto:accessibility@gameguild.gg).
+
+  - type: dropdown
+    id: assistive_tech
+    attributes:
+      label: "Assistive Technology Used"
+      description: "What were you using when you hit the barrier? Select the closest match."
+      options:
+        - "NVDA (screen reader)"
+        - "JAWS (screen reader)"
+        - "VoiceOver (screen reader)"
+        - "Narrator (screen reader)"
+        - "Screen magnification / zoom"
+        - "Keyboard only"
+        - "Switch / voice control"
+        - "Other (describe below)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: "Browser"
+      description: "Which browser were you using?"
+      options:
+        - "Chrome"
+        - "Firefox"
+        - "Safari"
+        - "Edge"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: route_url
+    attributes:
+      label: "Page or Route with the Barrier"
+      description: "Where does the barrier occur? Provide the route or a URL if possible."
+      placeholder: "https://gameguild.gg/the_route_goes_here"
+
+  - type: input
+    id: wcag_criterion
+    attributes:
+      label: "WCAG Criterion Violated (Optional)"
+      description: "If you know it, cite the WCAG 2.1 success criterion, e.g. `1.4.3 Contrast (Minimum)` or `2.1.1 Keyboard`."
+      placeholder: "2.1.1 Keyboard (Level A)"
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Step-by-step: what you did, in order, starting from the page you were on."
+      placeholder: |
+        1. Navigate to the game jam page with NVDA running
+        2. Press Tab to move through the submission form
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected Behavior"
+      description: "What did you expect to happen (hear, see, or be able to do)?"
+      placeholder: "Each form field should be announced with its label when focused."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Actual Behavior"
+      description: "What happened instead? Include what your assistive technology announced or showed."
+      placeholder: "The field is announced only as 'edit text', with no label."
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: "Additional Information (Optional)"
+      description: "Anything else that helps — screenshots, screen recordings, AT version, workarounds you found."
+      placeholder: "NVDA 2024.4 + Chrome 130. Workaround: none found."

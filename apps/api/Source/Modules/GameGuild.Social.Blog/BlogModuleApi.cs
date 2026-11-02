@@ -18,6 +18,7 @@ public static class BlogDependencyInjection
         services.AddScoped<BlogAssetManifestService>();
         services.AddScoped<IBlogPostService>(provider => ActivatorUtilities.CreateInstance<BlogPostService>(provider));
         services.AddScoped<IBlogViewCounterService, BlogViewCounterService>();
+        services.AddScoped<IGhostImportService, GhostImportService>();
         services.AddScoped<GameGuild.Assets.IAssetUsageGuard, Services.BlogAssetUsageGuard>();
 
         services.AddSingleton<IBlogAuthoringAiRunQueue, BlogAuthoringAiRunQueue>();
@@ -54,6 +55,14 @@ public static class BlogDependencyInjection
         services.AddScoped<IRequestHandler<AddBlogCommentCommand, BlogComment>>(sp => sp.GetRequiredService<ICommandHandler<AddBlogCommentCommand, BlogComment>>());
         services.AddScoped<ICommandHandler<DeleteBlogCommentCommand, Unit>, DeleteBlogCommentCommandHandler>();
         services.AddScoped<IRequestHandler<DeleteBlogCommentCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<DeleteBlogCommentCommand, Unit>>());
+        services.AddScoped<ICommandHandler<AdminUnpublishBlogPostCommand, BlogPost>, AdminUnpublishBlogPostCommandHandler>();
+        services.AddScoped<IRequestHandler<AdminUnpublishBlogPostCommand, BlogPost>>(sp => sp.GetRequiredService<ICommandHandler<AdminUnpublishBlogPostCommand, BlogPost>>());
+        services.AddScoped<ICommandHandler<AdminDeleteBlogPostCommand, Unit>, AdminDeleteBlogPostCommandHandler>();
+        services.AddScoped<IRequestHandler<AdminDeleteBlogPostCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<AdminDeleteBlogPostCommand, Unit>>());
+        services.AddScoped<ICommandHandler<AdminDeleteBlogCommentCommand, Unit>, AdminDeleteBlogCommentCommandHandler>();
+        services.AddScoped<IRequestHandler<AdminDeleteBlogCommentCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<AdminDeleteBlogCommentCommand, Unit>>());
+        services.AddScoped<ICommandHandler<ImportGhostContentCommand, GhostImportReport>, ImportGhostContentCommandHandler>();
+        services.AddScoped<IRequestHandler<ImportGhostContentCommand, GhostImportReport>>(sp => sp.GetRequiredService<ICommandHandler<ImportGhostContentCommand, GhostImportReport>>());
 
         services.AddScoped<IQueryHandler<GetBlogPostForAuthorQuery, BlogPost?>, GetBlogPostForAuthorQueryHandler>();
         services.AddScoped<IRequestHandler<GetBlogPostForAuthorQuery, BlogPost?>>(sp => sp.GetRequiredService<IQueryHandler<GetBlogPostForAuthorQuery, BlogPost?>>());
@@ -80,6 +89,15 @@ public static class BlogDependencyInjection
         services.AddScoped<IRequestHandler<ResolveBlogRouteForRedirectQuery, BlogRouteResolutionDto?>>(sp => sp.GetRequiredService<IQueryHandler<ResolveBlogRouteForRedirectQuery, BlogRouteResolutionDto?>>());
         services.AddScoped<IQueryHandler<IsBlogPostPublishedQuery, bool>, IsBlogPostPublishedQueryHandler>();
         services.AddScoped<IRequestHandler<IsBlogPostPublishedQuery, bool>>(sp => sp.GetRequiredService<IQueryHandler<IsBlogPostPublishedQuery, bool>>());
+        services.AddScoped<IQueryHandler<ResolveLegacyBlogSlugQuery, BlogRouteResolutionDto?>, ResolveLegacyBlogSlugQueryHandler>();
+        services.AddScoped<IRequestHandler<ResolveLegacyBlogSlugQuery, BlogRouteResolutionDto?>>(sp => sp.GetRequiredService<IQueryHandler<ResolveLegacyBlogSlugQuery, BlogRouteResolutionDto?>>());
+
+        services.AddScoped<IQueryHandler<ListBlogAdminPostsQuery, BlogAdminPostPage>, ListBlogAdminPostsQueryHandler>();
+        services.AddScoped<IRequestHandler<ListBlogAdminPostsQuery, BlogAdminPostPage>>(sp => sp.GetRequiredService<IQueryHandler<ListBlogAdminPostsQuery, BlogAdminPostPage>>());
+        services.AddScoped<IQueryHandler<ListBlogAdminCommentsQuery, BlogAdminCommentPage>, ListBlogAdminCommentsQueryHandler>();
+        services.AddScoped<IRequestHandler<ListBlogAdminCommentsQuery, BlogAdminCommentPage>>(sp => sp.GetRequiredService<IQueryHandler<ListBlogAdminCommentsQuery, BlogAdminCommentPage>>());
+        services.AddScoped<IQueryHandler<GetBlogAdminStatsQuery, BlogAdminStatsDto>, GetBlogAdminStatsQueryHandler>();
+        services.AddScoped<IRequestHandler<GetBlogAdminStatsQuery, BlogAdminStatsDto>>(sp => sp.GetRequiredService<IQueryHandler<GetBlogAdminStatsQuery, BlogAdminStatsDto>>());
 
         return services;
     }

@@ -1,0 +1,74 @@
+name: "🔒 Security Vulnerability"
+description: "Report a security vulnerability in GameGuild. Sensitive details must go through private vulnerability reporting, not this issue."
+title: "[Security]: "
+labels: ["security", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!WARNING]
+        > **This issue tracker is NOT for public disclosure of security vulnerabilities.**
+        > Do **not** post exploit details, proof-of-concept code, or steps to reproduce a vulnerability here.
+        >
+        > Report vulnerabilities privately via [GitHub's private vulnerability reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-reviewing/privately-reporting-a-security-vulnerability) for this repository: **Security → Report a vulnerability**. See our [security policy](https://github.com/gameguild-gg/gameguild/blob/develop/SECURITY.md) for scope and what to include. You should receive an acknowledgement within 72 hours.
+
+        Use this template only to file a **non-sensitive tracking issue** for an already-reported vulnerability (e.g. after a fix has shipped or coordinated disclosure has concluded).
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: "Severity"
+      description: "Your estimate of the severity of the vulnerability."
+      options:
+        - "Critical"
+        - "High"
+        - "Medium"
+        - "Low"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: "Affected Component"
+      description: "Which part of GameGuild is affected?"
+      options:
+        - "API (apps/api)"
+        - "Web app (apps/web)"
+        - "Authentication / authorization"
+        - "Billing / economy"
+        - "In-browser code editor"
+        - "Shared packages"
+        - "Infrastructure / CI"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: cvss
+    attributes:
+      label: "CVSS Score / Vector (Optional)"
+      description: "If you have one, provide the CVSS v3.1 score and vector, e.g. `CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N` (7.5)."
+      placeholder: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N (7.5)"
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: "Non-sensitive Summary"
+      description: "A high-level summary ONLY — no exploit details, no reproduction steps, no PoC. Point to the private report for the full write-up."
+      placeholder: "An issue in session handling was privately reported and fixed in v1.2.3. Tracking the public advisory here."
+    validations:
+      required: true
+
+  - type: input
+    id: affected_versions
+    attributes:
+      label: "Affected Versions (Optional)"
+      description: "Which versions or commits are affected, if known?"
+      placeholder: "develop @ <commit sha>, or v1.2.0 – v1.2.3"
+
+  - type: textarea
+    attributes:
+      label: "🔗 Related Issues / Advisories (Optional)"
+      description: "Link the GHSA advisory, the private report reference, or related issues."
+      placeholder: "GHSA-xxxx-xxxx-xxxx, #123"

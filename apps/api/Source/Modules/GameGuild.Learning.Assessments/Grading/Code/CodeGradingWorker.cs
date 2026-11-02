@@ -9,6 +9,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace GameGuild.Learning.Assessments.Grading.Code;
+public sealed class CodeGradingHistoricalAssets
+{
+    public string? RuntimeDirectory { get; set; }
+    public string? CdnDirectory { get; set; }
+}
+
 public sealed class CodeGradingWorkerOptions
 {
     public static string Section { get; } = "CodeGradingWorker";
@@ -18,6 +24,9 @@ public sealed class CodeGradingWorkerOptions
     public string? CdnDirectory { get; set; }
     public string? Version1RuntimeDirectory { get; set; }
     public string? Version1CdnDirectory { get; set; }
+    public string? Version2RuntimeDirectory { get; set; }
+    public string? Version2CdnDirectory { get; set; }
+    public Dictionary<string, CodeGradingHistoricalAssets> HistoricalToolchains { get; set; } = new(StringComparer.Ordinal);
     public string? BrowserDirectory { get; set; }
     public string? BrowserChannel { get; set; }
     public int DeadlineSeconds { get; set; } = 300;
@@ -173,7 +182,7 @@ public sealed class CodeGradingWorker(IOptions<CodeGradingWorkerOptions> configu
     }
 
     internal static ProcessStartInfo CreateStartInfo(CodeGradingWorkerOptions options) =>
-        CreateStartInfo(options, CodeToolchainIdentity.Version2);
+        CreateStartInfo(options, CodeToolchainIdentity.Version3);
 
     internal static ProcessStartInfo CreateStartInfo(CodeGradingWorkerOptions options, CodeToolchainIdentity toolchain)
     {
@@ -234,9 +243,24 @@ public sealed class CodeGradingWorker(IOptions<CodeGradingWorkerOptions> configu
     private static (string? Runtime, string? Cdn) SelectArtifactDirectories(
         CodeGradingWorkerOptions options, CodeToolchainIdentity toolchain)
     {
-        if (toolchain == CodeToolchainIdentity.Version2)
+        if (toolchain == CodeToolchainIdentity.Version3)
         {
             return (options.RuntimeDirectory, options.CdnDirectory);
+        }
+
+        if (!CodeToolchainIdentity.IsKnown(toolchain))
+        {
+            throw new InvalidOperationException("The trusted Code worker requires a supported frozen toolchain identity.");
+        }
+
+        if (options.HistoricalToolchains.TryGetValue(toolchain.ArtifactVersion, out var retained) && retained is not null)
+        {
+            return (retained.RuntimeDirectory, retained.CdnDirectory);
+        }
+
+        if (toolchain == CodeToolchainIdentity.Version2)
+        {
+            return (options.Version2RuntimeDirectory, options.Version2CdnDirectory);
         }
 
         if (toolchain == CodeToolchainIdentity.Version1)
@@ -245,7 +269,7 @@ public sealed class CodeGradingWorker(IOptions<CodeGradingWorkerOptions> configu
             return (options.Version1RuntimeDirectory, options.Version1CdnDirectory);
         }
 
-        throw new InvalidOperationException("The trusted Code worker requires a supported frozen toolchain identity.");
+        throw new InvalidOperationException("Retained Code toolchain assets are not configured for this frozen release.");
     }
 
     private static string RequireAbsoluteFile(string? path, string expectedName)

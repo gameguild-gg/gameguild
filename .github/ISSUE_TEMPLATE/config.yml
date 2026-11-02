@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Discussions
+    url: https://github.com/gameguild-gg/gameguild/discussions
+    about: Start or join a discussion — ideas, show and tell, announcements, and community conversation.
+  - name: ❓ Ask a Question
+    url: https://github.com/gameguild-gg/gameguild/discussions/categories/q-a
+    about: Ask the community and maintainers for help using or setting up GameGuild. Questions get the `question` label when tracked in issues.
+  - name: 📚 Documentation
+    url: https://github.com/gameguild-gg/gameguild/tree/develop/docs
+    about: Architecture, authorization, billing, and brand documentation before opening a documentation issue.

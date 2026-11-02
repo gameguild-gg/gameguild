@@ -11,6 +11,7 @@ public static class DashboardCapabilities
     public const string CommunityManageSupport = "Community.ManageSupport";
     public const string CommunityManageTeams = "Community.ManageTeams";
     public const string CommunityManageProjects = "Community.ManageProjects";
+    public const string CommunityManageBlog = "Community.ManageBlog";
     public const string PlatformManageRoles = "Platform.ManageRoles";
     public const string LearningManage = "Learning.Manage";
     public const string TestingLabManageEvents = "TestingLab.ManageEvents";
@@ -46,6 +47,7 @@ public static class DashboardCapabilities
         CommunityManageSupport,
         CommunityManageTeams,
         CommunityManageProjects,
+        CommunityManageBlog,
         PlatformManageRoles,
         LearningManage,
         TestingLabManageEvents,
@@ -89,7 +91,15 @@ public static class DashboardCapabilityResolver
 
         if (actor.IsTenantAdmin)
         {
-            return new HashSet<string>(DashboardCapabilities.All, StringComparer.Ordinal);
+            var tenantCapabilities = new HashSet<string>(DashboardCapabilities.All, StringComparer.Ordinal);
+            // Blog moderation is platform scope (global, user-scoped content — issue #96), not
+            // tenant scope: tenant admins without the SystemAdmin role do not get it.
+            if (!actor.IsSystemAdmin)
+            {
+                tenantCapabilities.Remove(DashboardCapabilities.CommunityManageBlog);
+            }
+
+            return tenantCapabilities;
         }
 
         var capabilities = new HashSet<string>(StringComparer.Ordinal);
@@ -102,6 +112,12 @@ public static class DashboardCapabilityResolver
 
     private static void AddActorCapabilities(ActorContext actor, ISet<string> capabilities)
     {
+        // Blog administration (SystemAdmin-gated API surface, issue #96) is platform scope.
+        if (actor.IsSystemAdmin)
+        {
+            capabilities.Add(DashboardCapabilities.CommunityManageBlog);
+        }
+
         if (actor.HasAnyPermission("users:read", "users:update", "users:roles", "groups:read", "groups:update"))
         {
             capabilities.Add(DashboardCapabilities.CommunityManage);

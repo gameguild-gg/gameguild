@@ -1,5 +1,9 @@
 # emception
 
+## 4.5.2
+
+No changes in this release.
+
 ## 4.5.1
 
 ### Patch Changes

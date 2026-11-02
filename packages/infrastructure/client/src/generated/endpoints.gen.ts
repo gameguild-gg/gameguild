@@ -3840,6 +3840,116 @@ export const getApiReadyEndpoint = {
 } as const;
 
 /**
+ * Lists the newest comments platform-wide for moderation.
+ */
+export interface GetApiSocialBlogAdminCommentsInput {
+  query?: {
+    page?: number;
+  };
+}
+export type GetApiSocialBlogAdminCommentsOutput = Types.SocialBlogQueriesBlogAdminCommentPage;
+export const getApiSocialBlogAdminCommentsEndpoint = {
+  operationId: 'getApiSocialBlogAdminComments' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/admin/comments' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Soft-deletes any comment; the moderator id is recorded on the row.
+ */
+export interface DeleteApiSocialBlogAdminCommentsInput {
+  commentId: string;
+}
+export type DeleteApiSocialBlogAdminCommentsOutput = void;
+export const deleteApiSocialBlogAdminCommentsEndpoint = {
+  operationId: 'deleteApiSocialBlogAdminComments' as const,
+  method: 'DELETE' as const,
+  path: '/api/social/blog/admin/comments/{commentId}' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Imports a Ghost export JSON into the internal blogging system (issue #96 "port all old
+ * content"). Idempotent: re-running skips posts whose (author, slug) already exist. Pass
+ * `dryRun: true` to plan without persisting.
+ */
+export interface PostApiSocialBlogAdminImportGhostInput {
+  body?: Types.SocialBlogControllersGhostImportInput;
+}
+export type PostApiSocialBlogAdminImportGhostOutput = Types.SocialBlogServicesGhostImportReport;
+export const postApiSocialBlogAdminImportGhostEndpoint = {
+  operationId: 'postApiSocialBlogAdminImportGhost' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/admin/import/ghost' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Lists every live post (any status, any author), newest edit first.
+ */
+export interface GetApiSocialBlogAdminPostsInput {
+  query?: {
+    page?: number;
+    status?: Types.SocialBlogBlogPostStatus;
+  };
+}
+export type GetApiSocialBlogAdminPostsOutput = Types.SocialBlogQueriesBlogAdminPostPage;
+export const getApiSocialBlogAdminPostsEndpoint = {
+  operationId: 'getApiSocialBlogAdminPosts' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/admin/posts' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Soft-deletes a post regardless of authorship.
+ */
+export interface DeleteApiSocialBlogAdminPostsInput {
+  id: string;
+}
+export type DeleteApiSocialBlogAdminPostsOutput = void;
+export const deleteApiSocialBlogAdminPostsEndpoint = {
+  operationId: 'deleteApiSocialBlogAdminPosts' as const,
+  method: 'DELETE' as const,
+  path: '/api/social/blog/admin/posts/{id}' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Force-unpublishes a post regardless of authorship (takedown).
+ */
+export interface PostApiSocialBlogAdminPostsUnpublishInput {
+  id: string;
+}
+export type PostApiSocialBlogAdminPostsUnpublishOutput = Types.SocialBlogBlogPost;
+export const postApiSocialBlogAdminPostsUnpublishEndpoint = {
+  operationId: 'postApiSocialBlogAdminPostsUnpublish' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/admin/posts/{id}/unpublish' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Platform-wide blog counters for the admin console header.
+ */
+export type GetApiSocialBlogAdminStatsInput = void;
+export type GetApiSocialBlogAdminStatsOutput = Types.SocialBlogQueriesBlogAdminStatsDto;
+export const getApiSocialBlogAdminStatsEndpoint = {
+  operationId: 'getApiSocialBlogAdminStats' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/admin/stats' as const,
+  tags: ['SocialBlogAdmin'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Soft-deletes a comment (comment author, post primary, or any co-author; others → 403).
  */
 export interface DeleteApiSocialBlogCommentsInput {
@@ -4253,6 +4363,22 @@ export const postApiSocialBlogPublicPostsViewsEndpoint = {
   operationId: 'postApiSocialBlogPublicPostsViews' as const,
   method: 'POST' as const,
   path: '/api/social/blog/public/posts/{id}/views' as const,
+  tags: ['SocialBlogPublic'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Resolves a legacy Ghost slug (no author segment, issues #91/#96) to the canonical internal
+ * route for permanent redirects; missing or ambiguous slugs → indistinguishable 404.
+ */
+export interface GetApiSocialBlogPublicResolveLegacyInput {
+  slug: string;
+}
+export type GetApiSocialBlogPublicResolveLegacyOutput = Types.SocialBlogQueriesBlogRouteResolutionDto;
+export const getApiSocialBlogPublicResolveLegacyEndpoint = {
+  operationId: 'getApiSocialBlogPublicResolveLegacy' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/public/resolve-legacy/{slug}' as const,
   tags: ['SocialBlogPublic'] as const,
   requiresAuth: false,
 } as const;
@@ -24898,6 +25024,175 @@ export const getMeTasksEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetMentorshipMentorsInput {
+  query?: {
+    skill?: string;
+    role?: Types.SocialMentorshipMentorshipProgramRole;
+    search?: string;
+    offersIntroductoryCall?: boolean;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetMentorshipMentorsOutput = Types.SocialMentorshipMentorProfileDto[];
+export const getMentorshipMentorsEndpoint = {
+  operationId: 'getMentorshipMentors' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/mentors' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: false,
+} as const;
+
+export interface GetMentorProfileByIdInput {
+  profileId: string;
+}
+export type GetMentorProfileByIdOutput = Types.SocialMentorshipMentorProfileDto;
+export const getMentorProfileByIdEndpoint = {
+  operationId: 'getMentorProfileById' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/mentors/{profileId}' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: false,
+} as const;
+
+export interface GetMentorshipMentorsAvailabilityInput {
+  profileId: string;
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+  };
+}
+export type GetMentorshipMentorsAvailabilityOutput = Types.SocialMentorshipMentorAvailabilitySlotDto[];
+export const getMentorshipMentorsAvailabilityEndpoint = {
+  operationId: 'getMentorshipMentorsAvailability' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/mentors/{profileId}/availability' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: false,
+} as const;
+
+export type GetMentorshipProfileInput = void;
+export type GetMentorshipProfileOutput = Types.SocialMentorshipMentorProfileDto;
+export const getMentorshipProfileEndpoint = {
+  operationId: 'getMentorshipProfile' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/profile' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutMentorshipProfileInput {
+  body?: Types.SocialMentorshipUpsertMentorProfileInput;
+}
+export type PutMentorshipProfileOutput = Types.SocialMentorshipMentorProfileDto;
+export const putMentorshipProfileEndpoint = {
+  operationId: 'putMentorshipProfile' as const,
+  method: 'PUT' as const,
+  path: '/v1/mentorship/profile' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipProfileAvailabilityInput {
+  body?: Types.SocialMentorshipPublishMentorAvailabilityInput;
+}
+export type PostMentorshipProfileAvailabilityOutput = Types.SocialMentorshipMentorAvailabilitySlotDto[];
+export const postMentorshipProfileAvailabilityEndpoint = {
+  operationId: 'postMentorshipProfileAvailability' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/profile/availability' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteMentorshipProfileAvailabilityInput {
+  slotId: string;
+}
+export type DeleteMentorshipProfileAvailabilityOutput = void;
+export const deleteMentorshipProfileAvailabilityEndpoint = {
+  operationId: 'deleteMentorshipProfileAvailability' as const,
+  method: 'DELETE' as const,
+  path: '/v1/mentorship/profile/availability/{slotId}' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetMentorshipProfileDashboardInput = void;
+export type GetMentorshipProfileDashboardOutput = Types.SocialMentorshipMentorDashboardDto;
+export const getMentorshipProfileDashboardEndpoint = {
+  operationId: 'getMentorshipProfileDashboard' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/profile/dashboard' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipProfileStatusInput {
+  body?: Types.SocialMentorshipSetMentorProfileStatusInput;
+}
+export type PostMentorshipProfileStatusOutput = Types.SocialMentorshipMentorProfileDto;
+export const postMentorshipProfileStatusEndpoint = {
+  operationId: 'postMentorshipProfileStatus' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/profile/status' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetMentorshipSessionsInput {
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    status?: Types.SocialMentorshipMentorshipSessionStatus;
+    asMentorOnly?: boolean;
+  };
+}
+export type GetMentorshipSessionsOutput = Types.SocialMentorshipMentorshipSessionDto[];
+export const getMentorshipSessionsEndpoint = {
+  operationId: 'getMentorshipSessions' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/sessions' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipSessionsInput {
+  body?: Types.SocialMentorshipBookMentorshipSessionInput;
+}
+export type PostMentorshipSessionsOutput = Types.SocialMentorshipMentorshipSessionDto;
+export const postMentorshipSessionsEndpoint = {
+  operationId: 'postMentorshipSessions' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/sessions' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipSessionsCancelInput {
+  sessionId: string;
+  body?: Types.SocialMentorshipCancelMentorshipSessionInput;
+}
+export type PostMentorshipSessionsCancelOutput = Types.SocialMentorshipMentorshipSessionDto;
+export const postMentorshipSessionsCancelEndpoint = {
+  operationId: 'postMentorshipSessionsCancel' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/sessions/{sessionId}/cancel' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipSessionsCompleteInput {
+  sessionId: string;
+}
+export type PostMentorshipSessionsCompleteOutput = Types.SocialMentorshipMentorshipSessionDto;
+export const postMentorshipSessionsCompleteEndpoint = {
+  operationId: 'postMentorshipSessionsComplete' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/sessions/{sessionId}/complete' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
 /**
  * OAuth2 client_credentials grant - authenticates a service account and returns a JWT token.
  *
@@ -27009,6 +27304,23 @@ export const postProjectsInvitationsDeclineEndpoint = {
   operationId: 'postProjectsInvitationsDecline' as const,
   method: 'POST' as const,
   path: '/v1/projects/invitations/{invitationToken}:decline' as const,
+  tags: ['Projects'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Create (or return) the caller's workspace project for a game jam. The acting user is
+ * taken from the authenticated context; the optional body only carries a title override.
+ */
+export interface PostProjectsJamInput {
+  jamId: string;
+  body?: Types.ProjectsCreateJamProjectInput;
+}
+export type PostProjectsJamOutput = Types.ProjectsProjectApiOutput;
+export const postProjectsJamEndpoint = {
+  operationId: 'postProjectsJam' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/jam/{jamId}' as const,
   tags: ['Projects'] as const,
   requiresAuth: true,
 } as const;
@@ -33724,6 +34036,13 @@ export const endpoints = {
   getApiPrerequisitesCourseWouldCreateCycle: getApiPrerequisitesCourseWouldCreateCycleEndpoint,
   getApiPrerequisitesDependents: getApiPrerequisitesDependentsEndpoint,
   getApiReady: getApiReadyEndpoint,
+  getApiSocialBlogAdminComments: getApiSocialBlogAdminCommentsEndpoint,
+  deleteApiSocialBlogAdminComments: deleteApiSocialBlogAdminCommentsEndpoint,
+  postApiSocialBlogAdminImportGhost: postApiSocialBlogAdminImportGhostEndpoint,
+  getApiSocialBlogAdminPosts: getApiSocialBlogAdminPostsEndpoint,
+  deleteApiSocialBlogAdminPosts: deleteApiSocialBlogAdminPostsEndpoint,
+  postApiSocialBlogAdminPostsUnpublish: postApiSocialBlogAdminPostsUnpublishEndpoint,
+  getApiSocialBlogAdminStats: getApiSocialBlogAdminStatsEndpoint,
   deleteApiSocialBlogComments: deleteApiSocialBlogCommentsEndpoint,
   postApiSocialBlogPosts: postApiSocialBlogPostsEndpoint,
   getApiSocialBlogPosts: getApiSocialBlogPostsEndpoint,
@@ -33751,6 +34070,7 @@ export const endpoints = {
   getApiSocialBlogPublicPosts: getApiSocialBlogPublicPostsEndpoint,
   getApiSocialBlogPublicPostsComments: getApiSocialBlogPublicPostsCommentsEndpoint,
   postApiSocialBlogPublicPostsViews: postApiSocialBlogPublicPostsViewsEndpoint,
+  getApiSocialBlogPublicResolveLegacy: getApiSocialBlogPublicResolveLegacyEndpoint,
   getApiSocialBlogPublicResolve: getApiSocialBlogPublicResolveEndpoint,
   getApiSocialCoursesContentDiscussions: getApiSocialCoursesContentDiscussionsEndpoint,
   getApiSocialCoursesDiscussions: getApiSocialCoursesDiscussionsEndpoint,
@@ -35045,6 +35365,19 @@ export const endpoints = {
   postMarketingLeads: postMarketingLeadsEndpoint,
   getMarketingLeadById: getMarketingLeadByIdEndpoint,
   getMeTasks: getMeTasksEndpoint,
+  getMentorshipMentors: getMentorshipMentorsEndpoint,
+  getMentorProfileById: getMentorProfileByIdEndpoint,
+  getMentorshipMentorsAvailability: getMentorshipMentorsAvailabilityEndpoint,
+  getMentorshipProfile: getMentorshipProfileEndpoint,
+  putMentorshipProfile: putMentorshipProfileEndpoint,
+  postMentorshipProfileAvailability: postMentorshipProfileAvailabilityEndpoint,
+  deleteMentorshipProfileAvailability: deleteMentorshipProfileAvailabilityEndpoint,
+  getMentorshipProfileDashboard: getMentorshipProfileDashboardEndpoint,
+  postMentorshipProfileStatus: postMentorshipProfileStatusEndpoint,
+  getMentorshipSessions: getMentorshipSessionsEndpoint,
+  postMentorshipSessions: postMentorshipSessionsEndpoint,
+  postMentorshipSessionsCancel: postMentorshipSessionsCancelEndpoint,
+  postMentorshipSessionsComplete: postMentorshipSessionsCompleteEndpoint,
   postOauthToken: postOauthTokenEndpoint,
   getOg: getOgEndpoint,
   getOrdersForGetOrders: getOrdersForGetOrdersEndpoint,
@@ -35181,6 +35514,7 @@ export const endpoints = {
   getProjectsFeatured: getProjectsFeaturedEndpoint,
   postProjectsInvitationsAccept: postProjectsInvitationsAcceptEndpoint,
   postProjectsInvitationsDecline: postProjectsInvitationsDeclineEndpoint,
+  postProjectsJam: postProjectsJamEndpoint,
   getProjectsMine: getProjectsMineEndpoint,
   getProjectsMyInvitations: getProjectsMyInvitationsEndpoint,
   getProjectsPopular: getProjectsPopularEndpoint,

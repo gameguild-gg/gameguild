@@ -15,23 +15,15 @@ import { GitHubStarPrompt } from './github-star-prompt';
 const DISMISSED_KEY = 'gg-github-star-prompt-dismissed';
 const SESSION_KEY = 'gg-github-star-prompt-checked';
 
-function mockRepoResponse(stargazersCount = 128) {
-  return {
-    ok: true,
-    json: async () => ({ stargazersCount, full_name: 'gameguild-gg/gameguild' }),
-  } as unknown as Response;
-}
-
 describe('GitHubStarPrompt (issue #90)', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     localStorage.clear();
     sessionStorage.clear();
     mocks.isGitHubLinked.mockReset();
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(mockRepoResponse()),
-    );
+    // Issue #106 phase 1: the repository metadata fetch lives on the server
+    // now — the browser stub asserts the client never calls api.github.com.
+    vi.stubGlobal('fetch', vi.fn());
   });
 
   afterEach(() => {
@@ -39,10 +31,10 @@ describe('GitHubStarPrompt (issue #90)', () => {
     vi.unstubAllGlobals();
   });
 
-  it('shows the prompt with the live star count for GitHub-linked members', async () => {
+  it('shows the prompt with the server-provided star count for GitHub-linked members', async () => {
     mocks.isGitHubLinked.mockResolvedValue(true);
 
-    render(<GitHubStarPrompt />);
+    render(<GitHubStarPrompt starCount={128} />);
 
     const prompt = await screen.findByTestId('github-star-prompt');
     expect(prompt).toBeInTheDocument();
@@ -51,16 +43,23 @@ describe('GitHubStarPrompt (issue #90)', () => {
       'href',
       'https://github.com/gameguild-gg/gameguild',
     );
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      'https://api.github.com/repos/gameguild-gg/gameguild',
-      expect.objectContaining({ headers: expect.anything() }),
-    );
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('renders without a count when the server lookup failed (starCount null)', async () => {
+    mocks.isGitHubLinked.mockResolvedValue(true);
+
+    render(<GitHubStarPrompt starCount={null} />);
+
+    const prompt = await screen.findByTestId('github-star-prompt');
+    expect(prompt).toBeInTheDocument();
+    expect(screen.queryByText(/stargazers/)).not.toBeInTheDocument();
   });
 
   it('never renders for members without a GitHub link', async () => {
     mocks.isGitHubLinked.mockResolvedValue(false);
 
-    render(<GitHubStarPrompt />);
+    render(<GitHubStarPrompt starCount={128} />);
 
     await waitFor(() => expect(mocks.isGitHubLinked).toHaveBeenCalledTimes(1));
     expect(screen.queryByTestId('github-star-prompt')).not.toBeInTheDocument();
@@ -70,7 +69,7 @@ describe('GitHubStarPrompt (issue #90)', () => {
     mocks.isGitHubLinked.mockResolvedValue(true);
     sessionStorage.setItem(SESSION_KEY, '1');
 
-    render(<GitHubStarPrompt />);
+    render(<GitHubStarPrompt starCount={128} />);
 
     // The session guard short-circuits before any server call.
     await new Promise((resolve) => setTimeout(resolve, 25));
@@ -82,7 +81,7 @@ describe('GitHubStarPrompt (issue #90)', () => {
     mocks.isGitHubLinked.mockResolvedValue(true);
     localStorage.setItem(DISMISSED_KEY, '1');
 
-    render(<GitHubStarPrompt />);
+    render(<GitHubStarPrompt starCount={128} />);
 
     await new Promise((resolve) => setTimeout(resolve, 25));
     expect(mocks.isGitHubLinked).not.toHaveBeenCalled();
@@ -92,25 +91,12 @@ describe('GitHubStarPrompt (issue #90)', () => {
   it('dismissal from the banner persists and hides it', async () => {
     mocks.isGitHubLinked.mockResolvedValue(true);
 
-    render(<GitHubStarPrompt />);
+    render(<GitHubStarPrompt starCount={128} />);
     await screen.findByTestId('github-star-prompt');
 
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss star prompt' }));
 
     expect(localStorage.getItem(DISMISSED_KEY)).toBe('1');
-    expect(screen.queryByTestId('github-star-prompt')).not.toBeInTheDocument();
-  });
-
-  it('silently skips when the GitHub API is unreachable', async () => {
-    mocks.isGitHubLinked.mockResolvedValue(true);
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({ ok: false, json: async () => ({}) } as unknown as Response),
-    );
-
-    render(<GitHubStarPrompt />);
-
-    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
     expect(screen.queryByTestId('github-star-prompt')).not.toBeInTheDocument();
   });
 });
