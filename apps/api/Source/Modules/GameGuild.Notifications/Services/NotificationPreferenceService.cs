@@ -144,9 +144,7 @@ public class NotificationPreferenceService(
         NotificationType.EmailCode,
         NotificationType.TenantInvite,
         NotificationType.SmsMfaCode,
-        NotificationType.PushMfaChallenge,
-        NotificationType.MfaRecoveryStarted,
-        NotificationType.MfaRecoveryConfirmation
+        NotificationType.PushMfaChallenge
     ];
 
     public async Task<NotificationDeliveryDecision> DecideDeliveryAsync(

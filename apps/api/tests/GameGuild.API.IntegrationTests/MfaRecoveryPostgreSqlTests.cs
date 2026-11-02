@@ -2,18 +2,17 @@ using System.Security.Cryptography;
 using System.Text;
 using GameGuild.API.Database;
 using GameGuild.API.IntegrationTests.Infrastructure;
+using GameGuild.Email;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Microsoft.AspNetCore.Http;
 using GameGuild.Configuration.ApplicationLayer;
-using GameGuild.Notifications;
-using GameGuild.Notifications.Services.Email;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -271,14 +270,17 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         var marker = Guid.NewGuid().ToString("N");
         var email = $"lost-device-{marker}@example.test";
         var (userId, tenantId) = await SeedRecoveryActorAsync(email);
-        var factory = fixture.Factory;
+        var spy = new SpyEmailSender();
+        using var factory = fixture.CreateFactory(builder => builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(spy);
+        }));
         using var client = factory.CreateClient();
 
         using var requested = await client.PostAsJsonAsync("/v1/auth/mfa/recovery:request", new { email });
         Assert.True(requested.StatusCode == HttpStatusCode.OK, await requested.Content.ReadAsStringAsync());
-        // Issue #1155: recovery emails ride the durable notification queue; the tokens now
-        // live in the protected metadata of queued notification rows instead of inline sends.
-        var requestToken = await ExtractQueuedTokenAsync(factory, userId, NotificationType.MfaRecoveryStarted);
+        var requestToken = ExtractToken(Assert.Single(spy.Sent), "token=");
 
         using (var scope = factory.Services.CreateScope())
         {
@@ -293,7 +295,7 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         Assert.True(continued.StatusCode == HttpStatusCode.OK, await continued.Content.ReadAsStringAsync());
         using var continuedBody = JsonDocument.Parse(await continued.Content.ReadAsStringAsync());
         Assert.True(continuedBody.RootElement.GetProperty("success").GetBoolean());
-        var confirmationToken = await ExtractQueuedTokenAsync(factory, userId, NotificationType.MfaRecoveryConfirmation);
+        var confirmationToken = ExtractToken(spy.Sent[1], "confirm=");
 
         using var confirmed = await client.PostAsJsonAsync("/v1/auth/mfa/recovery:confirm", new { confirmationToken });
         Assert.True(confirmed.StatusCode == HttpStatusCode.OK, await confirmed.Content.ReadAsStringAsync());
@@ -311,27 +313,6 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         Assert.NotNull(recovery.ConsumedAt);
         var revocation = factory.Services.GetRequiredService<ITokenRevocationService>();
         Assert.True(await revocation.IsUserTokenRevokedAsync(userId, DateTime.UtcNow.AddMinutes(-5)));
-    }
-
-    /// <summary>
-    /// Reads the durable notification row queued for the recovery stage and decrypts its
-    /// protected metadata to recover the one-time token (issue #1155 contract: recovery
-    /// tokens are queued, never sent inline).
-    /// </summary>
-    private static async Task<string> ExtractQueuedTokenAsync(
-        WebApplicationFactory<Program> factory, Guid userId, NotificationType type)
-    {
-        using var scope = factory.Services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var notification = await context.Set<Notification>().AsNoTracking()
-            .SingleAsync(value => value.RecipientId == userId && value.Type == type && value.Channel == NotificationChannel.Email);
-        Assert.StartsWith(NotificationMetadataProtector.ProtectedPrefix, notification.Metadata!, StringComparison.Ordinal);
-        var protector = scope.ServiceProvider.GetRequiredService<NotificationMetadataProtector>();
-        var metadata = protector.GetForRendering(notification, type);
-        using var parsed = JsonDocument.Parse(metadata!);
-        var token = parsed.RootElement.GetProperty("token").GetString();
-        Assert.False(string.IsNullOrWhiteSpace(token));
-        return token!;
     }
 
     [Fact]
@@ -419,5 +400,26 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         await context.SaveChangesAsync();
         return (user.Id, tenant.Id);
     }
-}
 
+    private static string ExtractToken(EmailMessage message, string marker)
+    {
+        var start = message.PlainTextContent.IndexOf(marker, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"No '{marker}' link in: {message.PlainTextContent}");
+        var token = message.PlainTextContent[(start + marker.Length)..];
+        var end = token.IndexOfAny([' ', '\n', '\r']);
+        return end < 0 ? token : token[..end];
+    }
+
+    private sealed class SpyEmailSender : IEmailSender
+    {
+        private readonly List<EmailMessage> _sent = [];
+
+        public IReadOnlyList<EmailMessage> Sent => _sent;
+
+        public Task<string?> SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
+        {
+            _sent.Add(message);
+            return Task.FromResult<string?>("spy-sender");
+        }
+    }
+}

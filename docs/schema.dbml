@@ -14390,21 +14390,6 @@ Table "gameguild.authentication"."usersession" {
   }
 }
 
-Table "gameguild.authentication"."verification_tokens" {
-  "token_hash" character(64) [not null]
-  "user_id" uuid [not null]
-  "email" "character varying(320)" [not null]
-  "token_type" "character varying(50)" [not null]
-  "expires_at" timestamp [not null]
-  "consumed_at" timestamp
-
-  Indexes {
-    token_hash [pk, name: "PK_verification_tokens"]
-    expires_at [name: "ix_verification_tokens_expires_at"]
-    token_type [name: "ix_verification_tokens_token_type"]
-  }
-}
-
 Table "gameguild.authentication"."user_role" {
   "id" uuid [not null]
   "user_id" uuid [not null]

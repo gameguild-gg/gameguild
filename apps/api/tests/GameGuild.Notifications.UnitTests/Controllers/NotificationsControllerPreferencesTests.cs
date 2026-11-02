@@ -112,8 +112,7 @@ public class NotificationsControllerPreferencesTests
         catalog.Should().OnlyContain(e => knownCategories.Contains(e.Category));
 
         var transactional = catalog.Where(e => !e.Suppressible).Select(e => e.Type).ToList();
-        transactional.Should().BeEquivalentTo(["EmailVerification", "PasswordReset", "MagicLink", "EmailCode", "TenantInvite", "SmsMfaCode", "PushMfaChallenge",
-            "MfaRecoveryStarted", "MfaRecoveryConfirmation"]);
+        transactional.Should().BeEquivalentTo(["EmailVerification", "PasswordReset", "MagicLink", "EmailCode", "TenantInvite", "SmsMfaCode", "PushMfaChallenge"]);
 
         // Issue #244: one-time SMS MFA codes are Transactional (never suppressible — an account
         // security factor must never be muted by channel preferences).
@@ -125,15 +124,6 @@ public class NotificationsControllerPreferencesTests
         var pushMfaChallenge = catalog.Single(e => e.Type == "PushMfaChallenge");
         pushMfaChallenge.Category.Should().Be("Transactional");
         pushMfaChallenge.Suppressible.Should().BeFalse();
-
-        // Issue #1155: lost-MFA-device recovery emails are Transactional (account-critical,
-        // queued on the durable notification pipeline and never suppressible).
-        var mfaRecoveryStarted = catalog.Single(e => e.Type == "MfaRecoveryStarted");
-        mfaRecoveryStarted.Category.Should().Be("Transactional");
-        mfaRecoveryStarted.Suppressible.Should().BeFalse();
-        var mfaRecoveryConfirmation = catalog.Single(e => e.Type == "MfaRecoveryConfirmation");
-        mfaRecoveryConfirmation.Category.Should().Be("Transactional");
-        mfaRecoveryConfirmation.Suppressible.Should().BeFalse();
 
         var monthlyStatement = catalog.Single(e => e.Type == "MonthlyStatement");
         monthlyStatement.Category.Should().Be("Billing");

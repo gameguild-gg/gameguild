@@ -21460,49 +21460,6 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("UserWebAuthnCredentials", "auth");
                 });
 
-            modelBuilder.Entity("GameGuild.Identity.Authentication.VerificationToken", b =>
-                {
-                    b.Property<string>("TokenHash")
-                        .HasMaxLength(64)
-                        .HasColumnType("character(64)")
-                        .HasColumnName("token_hash")
-                        .IsFixedLength();
-
-                    b.Property<DateTimeOffset?>("ConsumedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("consumed_at");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(320)
-                        .HasColumnType("character varying(320)")
-                        .HasColumnName("email");
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<string>("TokenType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("token_type");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("TokenHash");
-
-                    b.HasIndex("ExpiresAt")
-                        .HasDatabaseName("ix_verification_tokens_expires_at");
-
-                    b.HasIndex("TokenType")
-                        .HasDatabaseName("ix_verification_tokens_token_type");
-
-                    b.ToTable("verification_tokens", "gameguild.authentication");
-                });
-
             modelBuilder.Entity("GameGuild.Identity.Authorization.AbacPolicy", b =>
                 {
                     b.Property<Guid>("Id")

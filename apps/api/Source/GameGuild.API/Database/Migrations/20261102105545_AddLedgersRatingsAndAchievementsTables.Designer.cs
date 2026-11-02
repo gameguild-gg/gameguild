@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameGuild.API.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261102003330_AddLedgersRatingsAchievementsVerificationTokens")]
-    partial class AddLedgersRatingsAchievementsVerificationTokens
+    [Migration("20261102105545_AddLedgersRatingsAndAchievementsTables")]
+    partial class AddLedgersRatingsAndAchievementsTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -929,6 +929,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("ParentResourceType", "ParentResourceId")
                         .HasDatabaseName("IX_AssetReferences_Parent");
+
+                    b.HasIndex("ParentResourceType", "ParentResourceId", "CreatedAt")
+                        .HasDatabaseName("ix_asset_references_parent_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("asset_references", "assets");
                 });
@@ -4685,6 +4689,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("WalletId");
 
+                    b.HasIndex("WalletId", "CreatedAt")
+                        .HasDatabaseName("ix_wallet_transactions_wallet_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("wallet_transactions");
                 });
 
@@ -7225,6 +7233,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("CreatedAt", "TenantId")
+                        .HasDatabaseName("ix_audit_logs_created_tenant_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex("TenantId", "CreatedAt");
 
@@ -21124,6 +21136,12 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("EmailMfaAddress")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("email_mfa_address");
+
                     b.Property<DateTime?>("EnabledAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("enabled_at");
@@ -21443,49 +21461,6 @@ namespace GameGuild.API.Database.Migrations
                         .HasDatabaseName("IX_UserWebAuthnCredentials_UserId_IsActive");
 
                     b.ToTable("UserWebAuthnCredentials", "auth");
-                });
-
-            modelBuilder.Entity("GameGuild.Identity.Authentication.VerificationToken", b =>
-                {
-                    b.Property<string>("TokenHash")
-                        .HasMaxLength(64)
-                        .HasColumnType("character(64)")
-                        .HasColumnName("token_hash")
-                        .IsFixedLength();
-
-                    b.Property<DateTimeOffset?>("ConsumedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("consumed_at");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(320)
-                        .HasColumnType("character varying(320)")
-                        .HasColumnName("email");
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<string>("TokenType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("token_type");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("TokenHash");
-
-                    b.HasIndex("ExpiresAt")
-                        .HasDatabaseName("ix_verification_tokens_expires_at");
-
-                    b.HasIndex("TokenType")
-                        .HasDatabaseName("ix_verification_tokens_token_type");
-
-                    b.ToTable("verification_tokens", "gameguild.authentication");
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.AbacPolicy", b =>
@@ -24545,6 +24520,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("Type");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "CreatedAt")
+                        .HasDatabaseName("ix_user_notifications_user_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex("UserId", "IsArchived");
 
@@ -28271,6 +28250,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId");
 
+                    b.HasIndex("Status", "Visibility")
+                        .HasDatabaseName("ix_programs_status_visibility_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("programs", t =>
                         {
                             t.HasCheckConstraint("CK_programs_PassingScore_Canonical", "\"PassingScore\" >= 0 AND \"PassingScore\" <= 10000");
@@ -28364,6 +28347,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("Type");
+
+                    b.HasIndex("ProgramId", "SortOrder")
+                        .HasDatabaseName("ix_program_contents_program_sort_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("program_contents", t =>
                         {
@@ -34293,6 +34280,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("PrimaryAuthorId", "Status", "PublishedAt");
 
+                    b.HasIndex("Status", "PublishedAt", "Id")
+                        .HasDatabaseName("ix_social_blog_posts_status_published_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("social_blog_posts", (string)null);
                 });
 
@@ -34483,6 +34474,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("UserId", "PostId")
                         .IsUnique();
 
+                    b.HasIndex("UserId", "CreatedAt", "Id")
+                        .HasDatabaseName("ix_social_saved_posts_user_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("social_saved_posts", (string)null);
                 });
 
@@ -34526,6 +34521,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("AssetReferenceId");
 
                     b.HasIndex("AuthorId", "ExpiresAt");
+
+                    b.HasIndex("AuthorId", "ExpiresAt", "CreatedAt")
+                        .HasDatabaseName("ix_social_stories_author_expires_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("social_stories", (string)null);
                 });
@@ -34917,6 +34916,270 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("social_group_members", (string)null);
                 });
 
+            modelBuilder.Entity("GameGuild.Social.Mentorship.MentorAvailabilitySlot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("EndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MentorProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MentorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MentorUserId");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("MentorProfileId", "StartsAt");
+
+                    b.HasIndex("Status", "StartsAt");
+
+                    b.ToTable("social_mentor_availability_slots", (string)null);
+                });
+
+            modelBuilder.Entity("GameGuild.Social.Mentorship.MentorProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("BookingMode")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("FreeContributionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Headline")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("IntroductoryCallMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("OffersIntroductoryCall")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("PricingModel")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TimezoneId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "Role");
+
+                    b.ToTable("social_mentor_profiles", (string)null);
+                });
+
+            modelBuilder.Entity("GameGuild.Social.Mentorship.MentorSkill", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MentorProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedSkill")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Skill")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedSkill");
+
+                    b.HasIndex("MentorProfileId", "NormalizedSkill")
+                        .IsUnique();
+
+                    b.ToTable("social_mentor_skills", (string)null);
+                });
+
+            modelBuilder.Entity("GameGuild.Social.Mentorship.MentorshipSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CancelledByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("EndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsIntroductory")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MeetingChannel")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MeetingUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("MenteeUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MentorProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MentorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid?>("SlotId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Topic")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SlotId");
+
+                    b.HasIndex("MenteeUserId", "StartsAt");
+
+                    b.HasIndex("MentorUserId", "StartsAt");
+
+                    b.ToTable("social_mentorship_sessions", (string)null);
+                });
+
             modelBuilder.Entity("GameGuild.Social.Posts.Post", b =>
                 {
                     b.Property<Guid>("Id")
@@ -35001,9 +35264,17 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("Visibility");
 
+                    b.HasIndex("AuthorId", "CreatedAt")
+                        .HasDatabaseName("ix_posts_author_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.HasIndex("AuthorId", "RepostOfPostId")
                         .IsUnique()
                         .HasFilter("\"RepostOfPostId\" IS NOT NULL AND \"DeletedAt\" IS NULL");
+
+                    b.HasIndex("TenantId", "CreatedAt")
+                        .HasDatabaseName("ix_posts_tenant_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("posts", (string)null);
                 });
@@ -35060,6 +35331,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("ParentCommentId");
 
                     b.HasIndex("PostId");
+
+                    b.HasIndex("PostId", "CreatedAt")
+                        .HasDatabaseName("ix_post_comments_post_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("post_comments", (string)null);
                 });
@@ -36262,6 +36537,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TeamId", "UserId")
                         .IsUnique();
 
+                    b.HasIndex("UserId", "TenantId")
+                        .HasDatabaseName("ix_team_members_user_tenant_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("project_collaboration_team_members", (string)null);
                 });
 
@@ -36755,6 +37034,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("RecurrenceSeriesId", "RecurrenceOccurrence")
                         .HasDatabaseName("IX_testing_events_recurrence_series_occurrence");
+
+                    b.HasIndex("TenantId", "StartsAt")
+                        .HasDatabaseName("ix_testing_events_tenant_starts_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex("TenantId", "Status", "StartsAt");
 
@@ -37444,6 +37727,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserId");
 
+                    b.HasIndex("TestingRequestId", "TenantId")
+                        .HasDatabaseName("ix_testing_participants_request_tenant_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("testing_participants", (string)null);
                 });
 
@@ -37702,6 +37989,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId");
 
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("ix_testing_requests_status_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("testing_requests", (string)null);
                 });
 
@@ -37796,6 +38087,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("TestingRequestId");
+
+                    b.HasIndex("TenantId", "SessionDate")
+                        .HasDatabaseName("ix_testing_sessions_tenant_session_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("testing_sessions", (string)null);
                 });
@@ -41101,6 +41396,32 @@ namespace GameGuild.API.Database.Migrations
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Social.Mentorship.MentorAvailabilitySlot", b =>
+                {
+                    b.HasOne("GameGuild.Social.Mentorship.MentorProfile", null)
+                        .WithMany()
+                        .HasForeignKey("MentorProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Social.Mentorship.MentorSkill", b =>
+                {
+                    b.HasOne("GameGuild.Social.Mentorship.MentorProfile", null)
+                        .WithMany()
+                        .HasForeignKey("MentorProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Social.Mentorship.MentorshipSession", b =>
+                {
+                    b.HasOne("GameGuild.Social.Mentorship.MentorAvailabilitySlot", null)
+                        .WithMany()
+                        .HasForeignKey("SlotId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("GameGuild.Social.Profiles.ProfilePortfolioItem", b =>

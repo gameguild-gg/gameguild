@@ -9,19 +9,13 @@ namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Handles verification/reset token generation, validation, and email dispatch coordination.
-///     Verification and password-reset tokens are persisted through <see cref="IVerificationTokenStore"/>
-///     when registered (issue #1151 — the database-backed store survives restarts and shares state
-///     across load-balanced nodes, mirroring the magic-link token store); the in-process cache
-///     remains as a fallback for hosts that do not register the store, and still backs the
-///     verified flag and the resend rate limiter.
 /// </summary>
 public class EmailVerificationService(
     ILogger<EmailVerificationService> logger,
     IMemoryCache memoryCache,
     IPublisher publisher,
     IUserRepository? userRepository = null,
-    IMagicLinkTokenStore? magicLinkTokenStore = null,
-    IVerificationTokenStore? verificationTokenStore = null) : IEmailVerificationService
+    IMagicLinkTokenStore? magicLinkTokenStore = null) : IEmailVerificationService
 {
     private const string TokenKeyPrefix = "emailverify:token:";
     private const string VerifiedKeyPrefix = "emailverify:verified:";
@@ -50,38 +44,28 @@ public class EmailVerificationService(
         return token;
     }
 
-    private async Task<string> GenerateTokenAsync(Guid userId, string email, string tokenType, TimeSpan lifetime)
+    private Task<string> GenerateTokenAsync(Guid userId, string email, string tokenType, TimeSpan lifetime)
     {
         try
         {
             var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(16)).ToLowerInvariant();
-            var expiresAt = SystemClock.UtcNow.Add(lifetime);
-
-            if (verificationTokenStore is not null)
+            var tokenInfo = new TokenInfo
             {
-                await verificationTokenStore.AddAsync(token, userId, email, tokenType, expiresAt)
-                    .ConfigureAwait(false);
-            }
-            else
-            {
-                var tokenInfo = new TokenInfo
-                {
-                    UserId = userId,
-                    Email = email.ToLowerInvariant(),
-                    Type = tokenType,
-                    ExpiresAt = expiresAt
-                };
+                UserId = userId,
+                Email = email.ToLowerInvariant(),
+                Type = tokenType,
+                ExpiresAt = SystemClock.UtcNow.Add(lifetime)
+            };
 
-                memoryCache.Set(GetTokenCacheKey(token), tokenInfo, new MemoryCacheEntryOptions
-                {
-                    AbsoluteExpiration = tokenInfo.ExpiresAt
-                }.SetSize(1));
-            }
+            memoryCache.Set(GetTokenCacheKey(token), tokenInfo, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpiration = tokenInfo.ExpiresAt
+            }.SetSize(1));
 
             // codeql[cs/cleartext-storage-of-sensitive-information] tokenType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
             // codeql[cs/exposure-of-sensitive-information] tokenType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
             logger.LogInformation("Generated {TokenType} token for user {UserId}", tokenType, LogRedaction.RedactId(userId, "uid"));
-            return token;
+            return Task.FromResult(token);
         }
         catch (Exception ex)
         {
@@ -176,7 +160,7 @@ public class EmailVerificationService(
         }
     }
 
-    private async Task<TokenValidationResult> ValidateAndConsumeTokenAsync(
+    private Task<TokenValidationResult> ValidateAndConsumeTokenAsync(
         string token,
         string expectedType,
         Guid? expectedUserId,
@@ -189,30 +173,7 @@ public class EmailVerificationService(
                 // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
                 // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                 logger.LogWarning("Empty {TokenType} token used", expectedType);
-                return TokenValidationResult.Failed("Token is required");
-            }
-
-            if (verificationTokenStore is not null)
-            {
-                var durableResult = await verificationTokenStore
-                    .ConsumeAsync(token, expectedType, expectedUserId, SystemClock.UtcNow)
-                    .ConfigureAwait(false);
-
-                if (durableResult.Success && markEmailVerified)
-                {
-                    memoryCache.Set(VerifiedKeyPrefix + durableResult.UserId, true, new MemoryCacheEntryOptions().SetSize(1));
-                }
-
-                if (durableResult.Success)
-                {
-                    logger.LogInformation("{TokenType} token consumed successfully for user {UserId}", expectedType, LogRedaction.RedactId(durableResult.UserId, "uid"));
-                }
-                else
-                {
-                    logger.LogWarning("{TokenType} token rejected: {FailureReason}", expectedType, durableResult.FailureReason);
-                }
-
-                return durableResult;
+                return Task.FromResult(TokenValidationResult.Failed("Token is required"));
             }
 
             var tokenKey = GetTokenCacheKey(token);
@@ -221,7 +182,7 @@ public class EmailVerificationService(
                 // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
                 // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                 logger.LogWarning("Invalid {TokenType} token used", expectedType);
-                return TokenValidationResult.Failed("Invalid token");
+                return Task.FromResult(TokenValidationResult.Failed("Invalid token"));
             }
 
             if (expectedUserId.HasValue && tokenInfo.UserId != expectedUserId.Value)
@@ -231,7 +192,7 @@ public class EmailVerificationService(
                     LogRedaction.RedactId(expectedUserId, "uid"),
                     LogRedaction.RedactId(tokenInfo.UserId, "uid"));
 
-                return TokenValidationResult.Failed("Token does not belong to the requested user");
+                return Task.FromResult(TokenValidationResult.Failed("Token does not belong to the requested user"));
             }
 
             if (tokenInfo.ExpiresAt < SystemClock.UtcNow)
@@ -240,7 +201,7 @@ public class EmailVerificationService(
                 // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
                 // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                 logger.LogWarning("Expired {TokenType} token used for user {UserId}", expectedType, LogRedaction.RedactId(tokenInfo.UserId, "uid"));
-                return TokenValidationResult.Failed("Expired token");
+                return Task.FromResult(TokenValidationResult.Failed("Expired token"));
             }
 
             if (tokenInfo.Type != expectedType)
@@ -252,7 +213,7 @@ public class EmailVerificationService(
                     // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                     expectedType);
 
-                return TokenValidationResult.Failed("Invalid token type");
+                return Task.FromResult(TokenValidationResult.Failed("Invalid token type"));
             }
 
             if (!tokenInfo.TryConsume())
@@ -260,7 +221,7 @@ public class EmailVerificationService(
                 // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
                 // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                 logger.LogWarning("Already consumed {TokenType} token used", expectedType);
-                return TokenValidationResult.Failed("Invalid token");
+                return Task.FromResult(TokenValidationResult.Failed("Invalid token"));
             }
 
             if (markEmailVerified)
@@ -273,14 +234,14 @@ public class EmailVerificationService(
             // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
             // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
             logger.LogInformation("{TokenType} token consumed successfully for user {UserId}", expectedType, LogRedaction.RedactId(tokenInfo.UserId, "uid"));
-            return new TokenValidationResult(true, tokenInfo.UserId, tokenInfo.Email);
+            return Task.FromResult(new TokenValidationResult(true, tokenInfo.UserId, tokenInfo.Email));
         }
         catch (Exception ex)
         {
             // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
             // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
             logger.LogError("Error verifying {TokenType} token: {ErrorType}", expectedType, ex.GetType().FullName);
-            return TokenValidationResult.Failed("Token verification failed");
+            return Task.FromResult(TokenValidationResult.Failed("Token verification failed"));
         }
     }
 
@@ -364,11 +325,6 @@ public class EmailVerificationService(
                 await magicLinkTokenStore.IsValidAsync(token, SystemClock.UtcNow).ConfigureAwait(false))
             {
                 return true;
-            }
-
-            if (verificationTokenStore is not null)
-            {
-                return await verificationTokenStore.IsValidAsync(token, SystemClock.UtcNow).ConfigureAwait(false);
             }
 
             if (!memoryCache.TryGetValue(GetTokenCacheKey(token), out TokenInfo? tokenInfo) || tokenInfo is null)

@@ -278,8 +278,6 @@ public class NotificationPreferenceServiceTests
     [InlineData(NotificationType.PasswordReset)]
     [InlineData(NotificationType.MagicLink)]
     [InlineData(NotificationType.TenantInvite)]
-    [InlineData(NotificationType.MfaRecoveryStarted)]
-    [InlineData(NotificationType.MfaRecoveryConfirmation)]
     public async Task DecideDeliveryAsync_Should_Bypass_All_Preferences_For_Transactional_Types(NotificationType type)
     {
         using var context = CreateContext();

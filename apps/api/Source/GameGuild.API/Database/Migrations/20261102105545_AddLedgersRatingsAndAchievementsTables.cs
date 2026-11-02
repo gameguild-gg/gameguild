@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GameGuild.API.Database.Migrations
 {
     /// <inheritdoc />
-    public partial class AddLedgersRatingsAchievementsVerificationTokens : Migration
+    public partial class AddLedgersRatingsAndAchievementsTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -164,23 +164,6 @@ namespace GameGuild.API.Database.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ratings", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "verification_tokens",
-                schema: "gameguild.authentication",
-                columns: table => new
-                {
-                    token_hash = table.Column<string>(type: "character(64)", fixedLength: true, maxLength: 64, nullable: false),
-                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    email = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
-                    token_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    expires_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    consumed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_verification_tokens", x => x.token_hash);
                 });
 
             migrationBuilder.CreateTable(
@@ -696,18 +679,6 @@ namespace GameGuild.API.Database.Migrations
                 name: "IX_user_achievements_UserId_IsNotified",
                 table: "user_achievements",
                 columns: new[] { "UserId", "IsNotified" });
-
-            migrationBuilder.CreateIndex(
-                name: "ix_verification_tokens_expires_at",
-                schema: "gameguild.authentication",
-                table: "verification_tokens",
-                column: "expires_at");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_verification_tokens_token_type",
-                schema: "gameguild.authentication",
-                table: "verification_tokens",
-                column: "token_type");
         }
 
         /// <inheritdoc />
@@ -741,10 +712,6 @@ namespace GameGuild.API.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "user_achievements");
-
-            migrationBuilder.DropTable(
-                name: "verification_tokens",
-                schema: "gameguild.authentication");
 
             migrationBuilder.DropTable(
                 name: "Ledgers",
