@@ -410,7 +410,8 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
     /// <summary>
     ///     Seeds an active subscription and returns its id together with the owner id, so
     ///     actor-gated endpoints can be exercised as the owning user via X-Test-Subject
-    ///     (issue #1205 G-1 ownership contract).
+    ///     (issue #1205 G-1 ownership contract). The owner is registered as an active
+    ///     tenant member — the tenant middleware rejects GUID subjects without membership.
     /// </summary>
     private async Task<(Guid SubscriptionId, Guid OwnerId)> SeedActiveSubscriptionWithOwnerAsync()
     {
@@ -423,6 +424,16 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
             .FirstOrDefaultAsync(s => s.Id == subscriptionId);
         if (subscription is null)
             throw new InvalidOperationException($"Subscription {subscriptionId} not found");
+
+        dbContext.Set<GameGuild.Identity.Tenants.TenantMember>().Add(
+            new GameGuild.Identity.Tenants.TenantMember
+            {
+                UserId = subscription.CreatedByUserId,
+                TenantId = subscription.TenantId!.Value,
+                Role = "Member",
+                IsActive = true
+            });
+        await dbContext.SaveChangesAsync();
 
         return (subscriptionId, subscription.CreatedByUserId);
     }
