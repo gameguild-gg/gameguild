@@ -311,7 +311,10 @@ public sealed class AccessReviewGovernanceIntegrationTests : IClassFixture<WebAp
     private static async Task<TenantPermission?> LoadGrantAsync(IServiceScope scope, Guid userId, Guid tenantId)
     {
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        // Soft-deleted rows are excluded by the entity's global query filter
+        // (DeletedAt == null); IsDeleted is an unmapped computed member and cannot
+        // appear in a translatable predicate.
         return await context.Set<TenantPermission>()
-            .FirstOrDefaultAsync(p => p.UserId == userId && p.TenantId == tenantId && !p.IsDeleted);
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.TenantId == tenantId);
     }
 }
