@@ -142,6 +142,87 @@ export class AuthMultiFactorModule {
   }
 
   /**
+   * Send a fresh email sign-in code to the enrolled address
+   *
+   * Sends a fresh verification code to the enrolled email address before MFA verification. Generic failure payload; throttled to one code per minute per user.
+   */
+  async postAuthMfaEmailChallenge(
+    body: Types.IdentityAuthenticationEmailMfaChallengeInput,
+  ): Promise<Result<Types.IdentityAuthenticationEmailMfaSetupOutput, ApiError>> {
+    const url = '/v1/auth/mfa/email:challenge';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationEmailMfaChallengeInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationEmailMfaSetupOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Complete email MFA setup by verifying the code
+   *
+   * Completes email MFA setup by verifying the code sent to the account's address, enrolling the verified address as an email factor.
+   */
+  async postAuthMfaEmailComplete(
+    body: Types.IdentityAuthenticationCompleteMfaSetupInput,
+  ): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
+    const url = '/v1/auth/mfa/email:complete';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteMfaSetupInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationMfaSuccessOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Initiate email-based MFA setup
+   *
+   * Initiates email-based MFA setup by sending a verification code to the account's email address. Delivery rides the email notification channel; codes are six digits, single-use, and expire in ten minutes.
+   */
+  async postAuthMfaEmailSetup(): Promise<Result<Types.IdentityAuthenticationEmailMfaSetupOutput, ApiError>> {
+    const url = '/v1/auth/mfa/email:setup';
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationEmailMfaSetupOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * List available MFA methods
    *
    * Returns all available MFA methods and their configuration status for the current user.

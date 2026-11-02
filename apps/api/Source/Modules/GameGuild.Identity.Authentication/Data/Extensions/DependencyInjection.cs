@@ -217,6 +217,9 @@ public static class DataDependencyInjection
         // SMS OTP factor (issue #244): code lifecycle + delivery through the Notifications SMS
         // channel; the provider port (ISmsSender) is host-configured, fail-closed NoOp default.
         services.AddScoped<ISmsMfaService, SmsMfaService>();
+        // Email OTP factor (issue #1152): same code lifecycle posture as SMS, delivered to the
+        // account's verified address through the Notifications email channel.
+        services.AddScoped<IEmailMfaService, EmailMfaService>();
         // Push approval factor, v1 contract (issue #259): challenge state in IDistributedCache
         // (Redis path in production, mirroring the token revocation store).
         services.AddScoped<IPushMfaService, PushMfaService>();

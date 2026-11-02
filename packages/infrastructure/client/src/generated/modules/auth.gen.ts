@@ -1013,6 +1013,33 @@ export class AuthModule {
   }
 
   /**
+   * Sign out the caller, revoking the current access token (and optionally every session)
+   *
+   * Signs out the authenticated caller by revoking the current access token; with logoutEverywhere it also revokes every refresh token and terminates every session for the account (issue #1154).
+   */
+  async postAuthSignOut(body: Types.IdentityAuthenticationSignOutInput): Promise<Result<Types.IdentityAuthenticationLogoutOutput, ApiError>> {
+    const url = '/v1/auth/sign-out';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationSignOutInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationLogoutOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Register a new user with email and password
    *
    * Creates a new user account with email and password credentials, returning authentication tokens on success. When Turnstile is configured (TURNSTILE_SECRET_KEY), turnstileToken is required and verified server-side (issue #1150).

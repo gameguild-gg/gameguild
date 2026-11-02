@@ -22,6 +22,15 @@ public sealed record LockServiceAccountCommand(Guid ServiceAccountId, string Rea
 public sealed record DeactivateServiceAccountCommand(Guid ServiceAccountId) : ICommand;
 public sealed record ReactivateServiceAccountCommand(Guid ServiceAccountId) : ICommand;
 public sealed record UpdateServiceAccountScopesCommand(Guid ServiceAccountId, string Scopes) : ICommand;
+/// <summary>
+///     Binds an X.509 client certificate to a service account so the certificate can authenticate
+///     in lieu of the client secret (issue #1146). The thumbprint and optional SPKI key pin are
+///     normalized to the authentication-time form before persistence.
+/// </summary>
+public sealed record BindServiceAccountCertificateCommand(
+    Guid ServiceAccountId,
+    string Thumbprint,
+    string? SpkiSha256) : ICommand;
 public sealed record IssueServiceAccountTokenCommand(
     string ClientId,
     string ClientSecret,
@@ -43,6 +52,7 @@ public sealed class ServiceAccountMutationCommandHandler(
     ICommandHandler<DeactivateServiceAccountCommand>,
     ICommandHandler<ReactivateServiceAccountCommand>,
     ICommandHandler<UpdateServiceAccountScopesCommand>,
+    ICommandHandler<BindServiceAccountCertificateCommand>,
     ICommandHandler<IssueServiceAccountTokenCommand, ServiceAccountTokenCommandResult>
 {
     public Task<(ServiceAccount Account, string ClientSecret)> Handle(
@@ -127,6 +137,16 @@ public sealed class ServiceAccountMutationCommandHandler(
         await serviceAccountService.UpdateScopesAsync(
             command.ServiceAccountId,
             command.Scopes,
+            cancellationToken).ConfigureAwait(false);
+        return Unit.Value;
+    }
+
+    public async Task<Unit> Handle(BindServiceAccountCertificateCommand command, CancellationToken cancellationToken)
+    {
+        await serviceAccountService.BindCertificateAsync(
+            command.ServiceAccountId,
+            command.Thumbprint,
+            command.SpkiSha256,
             cancellationToken).ConfigureAwait(false);
         return Unit.Value;
     }

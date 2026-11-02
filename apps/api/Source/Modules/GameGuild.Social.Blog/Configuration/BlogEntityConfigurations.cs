@@ -34,6 +34,13 @@ public sealed class BlogPostConfiguration : IEntityTypeConfiguration<BlogPost>
         builder.HasIndex(post => new { post.PrimaryAuthorId, post.Slug }).IsUnique();
         builder.HasIndex(post => new { post.PrimaryAuthorId, post.Status, post.PublishedAt });
         builder.HasIndex(post => new { post.Status, post.PublishedAt });
+
+        // Public listing keyset (Status == Published, DeletedAt == null, newest-first
+        // on (PublishedAt, Id)) — issue #1157. Distinct property list from the
+        // unfiltered (Status, PublishedAt) index above so EF keeps both.
+        builder.HasIndex(post => new { post.Status, post.PublishedAt, post.Id })
+            .HasDatabaseName("ix_social_blog_posts_status_published_live")
+            .HasFilter("\"DeletedAt\" IS NULL");
     }
 }
 

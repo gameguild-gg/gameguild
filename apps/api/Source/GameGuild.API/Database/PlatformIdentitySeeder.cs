@@ -71,6 +71,7 @@ internal static class PlatformIdentitySeeder
                 await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false);
             }
 
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
             logger?.LogInformation("Seeded deterministic TOTP secret for administrator: {Email}", LogRedaction.MaskEmail(options.AdminEmail));
         }
 
@@ -99,6 +100,7 @@ internal static class PlatformIdentitySeeder
             adminUser.VerifyEmail();
             dbContext.Set<AppUser>().Add(adminUser);
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
             logger?.LogInformation("Created application administrator: {Email}", LogRedaction.MaskEmail(normalizedEmail));
             return adminUser;
         }
@@ -150,6 +152,7 @@ internal static class PlatformIdentitySeeder
         if (changed)
         {
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
             logger?.LogInformation("Repaired application administrator: {Email}", LogRedaction.MaskEmail(normalizedEmail));
         }
 

@@ -13,6 +13,7 @@ public sealed class UserSignedInEventHandler(ILogger<UserSignedInEventHandler> l
         logger.LogInformation(
             "User {UserId} ({Email}) signed in via {AuthMethod} from {IpAddress} at {Timestamp}",
             LogRedaction.RedactId(notification.UserId, "uid"),
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
             LogRedaction.MaskEmail(notification.Email),
             LogRedaction.Sanitize(notification.AuthMethod),
             notification.IpAddress is null ? "Unknown" : LogRedaction.RedactId(notification.IpAddress, "ip"),

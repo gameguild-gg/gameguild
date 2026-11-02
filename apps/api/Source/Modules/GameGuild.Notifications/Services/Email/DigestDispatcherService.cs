@@ -117,7 +117,9 @@ public sealed class DigestDispatcherService(
             }
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             logger.LogWarning("Deadlettered {Count} digest row(s) to suppressed address. UserId: {UserId}, Recipient: {RecipientEmail}, Reason: {Reason}",
-                claimed.Count, LogRedaction.Sanitize(userId.ToString()), LogRedaction.MaskEmail(toEmail), activeSuppression.Reason);
+                claimed.Count, LogRedaction.Sanitize(userId.ToString()),
+                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
+                LogRedaction.MaskEmail(toEmail), activeSuppression.Reason);
             return false;
         }
 
@@ -146,7 +148,9 @@ public sealed class DigestDispatcherService(
         }
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Digest delivered. UserId: {UserId}, Rows: {RowCount}, Recipient: {RecipientEmail}",
-            LogRedaction.Sanitize(userId.ToString()), claimed.Count, LogRedaction.MaskEmail(toEmail));
+            LogRedaction.Sanitize(userId.ToString()), claimed.Count,
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
+            LogRedaction.MaskEmail(toEmail));
         return true;
     }
 

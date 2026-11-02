@@ -270,4 +270,59 @@ public sealed class ServiceAccountOperationsControllerTests
     {
         return new ServiceAccountOperationsController(service.Object, new CommandHandlerSender(service.Object, Mock.Of<IJwtTokenService>()));
     }
+
+    [Fact]
+    public async Task BindClientCertificate_ShouldReturnNoContent_WhenServiceSucceeds()
+    {
+        var service = new Mock<IServiceAccountService>();
+        var serviceAccountId = Guid.NewGuid();
+        service
+            .Setup(x => x.BindCertificateAsync(
+                serviceAccountId,
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var controller = CreateController(service);
+
+        var result = await controller.BindClientCertificate(
+            serviceAccountId,
+            new BindServiceAccountCertificateRequest
+            {
+                Thumbprint = "aa11bb22cc33dd44ee55ff66778899aabbccddee",
+                SpkiSha256 = null
+            },
+            CancellationToken.None);
+
+        result.Should().BeOfType<NoContentResult>();
+        service.Verify(x => x.BindCertificateAsync(
+            serviceAccountId,
+            "aa11bb22cc33dd44ee55ff66778899aabbccddee",
+            null,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task BindClientCertificate_ShouldReturnNotFound_WhenServiceThrowsInvalidOperation()
+    {
+        var service = new Mock<IServiceAccountService>();
+        var serviceAccountId = Guid.NewGuid();
+        service
+            .Setup(x => x.BindCertificateAsync(
+                serviceAccountId,
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException());
+
+        var controller = CreateController(service);
+
+        var result = await controller.BindClientCertificate(
+            serviceAccountId,
+            new BindServiceAccountCertificateRequest { Thumbprint = "aa11bb22cc33dd44ee55ff66778899aabbccddee" },
+            CancellationToken.None);
+
+        result.Should().BeOfType<NotFoundResult>();
+    }
 }

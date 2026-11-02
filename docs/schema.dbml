@@ -720,6 +720,7 @@ Table "AuditLogs" {
 
   Indexes {
     Id [pk, name: "PK_AuditLogs"]
+    (CreatedAt, TenantId) [name: "ix_audit_logs_created_tenant_live"]
     ActionType [name: "IX_AuditLogs_ActionType"]
     CorrelationId [name: "IX_AuditLogs_CorrelationId"]
     CreatedAt [name: "IX_AuditLogs_CreatedAt"]
@@ -4652,6 +4653,7 @@ Table "post_comments" {
     Id [pk, name: "PK_post_comments"]
     AuthorId [name: "IX_post_comments_AuthorId"]
     ParentCommentId [name: "IX_post_comments_ParentCommentId"]
+    (PostId, CreatedAt) [name: "ix_post_comments_post_created_live"]
     PostId [name: "IX_post_comments_PostId"]
   }
 }
@@ -4835,11 +4837,13 @@ Table "posts" {
 
   Indexes {
     Id [pk, name: "PK_posts"]
+    (AuthorId, CreatedAt) [name: "ix_posts_author_created_live"]
     AuthorId [name: "IX_posts_AuthorId"]
     (AuthorId, RepostOfPostId) [unique, name: "IX_posts_AuthorId_RepostOfPostId"]
     CreatedAt [name: "IX_posts_CreatedAt"]
     IsPinned [name: "IX_posts_IsPinned"]
     MediaAssetReferenceId [name: "IX_posts_MediaAssetReferenceId"]
+    (TenantId, CreatedAt) [name: "ix_posts_tenant_created_live"]
     TenantId [name: "IX_posts_TenantId"]
     Visibility [name: "IX_posts_Visibility"]
   }
@@ -5099,6 +5103,7 @@ Table "programs" {
     EnrollmentStatus [name: "IX_programs_EnrollmentStatus"]
     Slug [unique, name: "IX_programs_Slug"]
     Status [name: "IX_programs_Status"]
+    (Status, Visibility) [name: "ix_programs_status_visibility_live"]
     TenantId [name: "IX_programs_TenantId"]
   }
 }
@@ -5882,6 +5887,7 @@ Table "social_blog_posts" {
     Id [pk, name: "PK_social_blog_posts"]
     (PrimaryAuthorId, Slug) [unique, name: "IX_social_blog_posts_PrimaryAuthorId_Slug"]
     (PrimaryAuthorId, Status, PublishedAt) [name: "IX_social_blog_posts_PrimaryAuthorId_Status_PublishedAt"]
+    (Status, PublishedAt, Id) [name: "ix_social_blog_posts_status_published_live"]
     (Status, PublishedAt) [name: "IX_social_blog_posts_Status_PublishedAt"]
   }
 }
@@ -6053,6 +6059,7 @@ Table "social_saved_posts" {
 
   Indexes {
     Id [pk, name: "PK_social_saved_posts"]
+    (UserId, CreatedAt, Id) [name: "ix_social_saved_posts_user_created_live"]
     (UserId, CreatedAt) [name: "IX_social_saved_posts_UserId_CreatedAt"]
     (UserId, PostId) [unique, name: "IX_social_saved_posts_UserId_PostId"]
   }
@@ -6073,6 +6080,7 @@ Table "social_stories" {
   Indexes {
     Id [pk, name: "PK_social_stories"]
     AssetReferenceId [name: "IX_social_stories_AssetReferenceId"]
+    (AuthorId, ExpiresAt, CreatedAt) [name: "ix_social_stories_author_expires_live"]
     (AuthorId, ExpiresAt) [name: "IX_social_stories_AuthorId_ExpiresAt"]
   }
 }
@@ -8675,6 +8683,7 @@ Table "program_contents" {
     Id [pk, name: "PK_program_contents"]
     IsRequired [name: "IX_program_contents_IsRequired"]
     ParentId [name: "IX_program_contents_ParentId"]
+    (ProgramId, SortOrder) [name: "ix_program_contents_program_sort_live"]
     ProgramId [name: "IX_program_contents_ProgramId"]
     Slug [name: "IX_program_contents_Slug"]
     SortOrder [name: "IX_program_contents_SortOrder"]
@@ -9282,6 +9291,7 @@ Table "wallet_transactions" {
     ReferenceId [name: "IX_wallet_transactions_ReferenceId"]
     Status [name: "IX_wallet_transactions_Status"]
     Type [name: "IX_wallet_transactions_Type"]
+    (WalletId, CreatedAt) [name: "ix_wallet_transactions_wallet_created_live"]
     WalletId [name: "IX_wallet_transactions_WalletId"]
   }
 }
@@ -9472,6 +9482,7 @@ Table "project_collaboration_team_members" {
     Id [pk, name: "PK_project_collaboration_team_members"]
     (TeamId, UserId) [unique, name: "IX_project_collaboration_team_members_TeamId_UserId"]
     UserId [name: "IX_project_collaboration_team_members_UserId"]
+    (UserId, TenantId) [name: "ix_team_members_user_tenant_live"]
   }
 }
 
@@ -9674,6 +9685,7 @@ Table "testing_events" {
     ManagerUserId [name: "IX_testing_events_ManagerUserId"]
     (RecurrenceSeriesId, RecurrenceOccurrence) [name: "IX_testing_events_recurrence_series_occurrence"]
     SourceTemplateRevisionId [name: "IX_testing_events_SourceTemplateRevisionId"]
+    (TenantId, StartsAt) [name: "ix_testing_events_tenant_starts_live"]
     TenantId [name: "IX_testing_events_TenantId"]
     (TenantId, Status, StartsAt) [name: "IX_testing_events_TenantId_Status_StartsAt"]
   }
@@ -9723,6 +9735,7 @@ Table "UserNotifications" {
 
   Indexes {
     Id [pk, name: "PK_UserNotifications"]
+    (UserId, CreatedAt) [name: "ix_user_notifications_user_created_live"]
     CreatedAt [name: "IX_UserNotifications_CreatedAt"]
     IsRead [name: "IX_UserNotifications_IsRead"]
     Priority [name: "IX_UserNotifications_Priority"]
@@ -11735,6 +11748,7 @@ Table "testing_requests" {
     ProjectVersionId [name: "IX_testing_requests_ProjectVersionId"]
     StartDate [name: "IX_testing_requests_StartDate"]
     Status [name: "IX_testing_requests_Status"]
+    (Status, CreatedAt) [name: "ix_testing_requests_status_created_live"]
     TenantId [name: "IX_testing_requests_TenantId"]
   }
 }
@@ -11971,6 +11985,7 @@ Table "testing_participants" {
     Id [pk, name: "PK_testing_participants"]
     CompletedAt [name: "IX_testing_participants_CompletedAt"]
     InstructionsAcknowledged [name: "IX_testing_participants_InstructionsAcknowledged"]
+    (TestingRequestId, TenantId) [name: "ix_testing_participants_request_tenant_live"]
     StartedAt [name: "IX_testing_participants_StartedAt"]
     TenantId [name: "IX_testing_participants_TenantId"]
     TestingRequestId [name: "IX_testing_participants_TestingRequestId"]
@@ -12010,6 +12025,7 @@ Table "testing_sessions" {
     ManagerId [name: "IX_testing_sessions_ManagerId"]
     SessionDate [name: "IX_testing_sessions_SessionDate"]
     Status [name: "IX_testing_sessions_Status"]
+    (TenantId, SessionDate) [name: "ix_testing_sessions_tenant_session_live"]
     TenantId [name: "IX_testing_sessions_TenantId"]
     TestingRequestId [name: "IX_testing_sessions_TestingRequestId"]
   }
@@ -14134,6 +14150,7 @@ Table "gameguild.authentication"."user_mfa_configuration" {
   "setup_expires_at" timestamp
   "sms_phone_number" "character varying(32)"
   "push_device_token" "character varying(512)"
+  "email_mfa_address" "character varying(256)"
   "created_at" timestamp [not null]
   "updated_at" timestamp [not null]
 
@@ -14600,6 +14617,7 @@ Table "assets"."asset_references" {
   Indexes {
     Id [pk, name: "PK_asset_references"]
     FolderId [name: "IX_asset_references_FolderId"]
+    (ParentResourceType, ParentResourceId, CreatedAt) [name: "ix_asset_references_parent_created_live"]
     AccessPolicy [name: "IX_AssetReferences_AccessPolicy"]
     AssetContentId [name: "IX_AssetReferences_ContentId"]
     (ParentResourceType, ParentResourceId) [name: "IX_AssetReferences_Parent"]

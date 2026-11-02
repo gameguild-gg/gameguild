@@ -19538,6 +19538,55 @@ export const postAuthMfaBackupCodesRegenerateEndpoint = {
 } as const;
 
 /**
+ * Send a fresh email sign-in code to the enrolled address
+ *
+ * Sends a fresh verification code to the enrolled email address before MFA verification. Generic failure payload; throttled to one code per minute per user.
+ */
+export interface PostAuthMfaEmailChallengeInput {
+  body?: Types.IdentityAuthenticationEmailMfaChallengeInput;
+}
+export type PostAuthMfaEmailChallengeOutput = Types.IdentityAuthenticationEmailMfaSetupOutput;
+export const postAuthMfaEmailChallengeEndpoint = {
+  operationId: 'postAuthMfaEmailChallenge' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/mfa/email:challenge' as const,
+  tags: ['AuthMultiFactor'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Complete email MFA setup by verifying the code
+ *
+ * Completes email MFA setup by verifying the code sent to the account's address, enrolling the verified address as an email factor.
+ */
+export interface PostAuthMfaEmailCompleteInput {
+  body?: Types.IdentityAuthenticationCompleteMfaSetupInput;
+}
+export type PostAuthMfaEmailCompleteOutput = Types.IdentityAuthenticationMfaSuccessOutput;
+export const postAuthMfaEmailCompleteEndpoint = {
+  operationId: 'postAuthMfaEmailComplete' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/mfa/email:complete' as const,
+  tags: ['AuthMultiFactor'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Initiate email-based MFA setup
+ *
+ * Initiates email-based MFA setup by sending a verification code to the account's email address. Delivery rides the email notification channel; codes are six digits, single-use, and expire in ten minutes.
+ */
+export type PostAuthMfaEmailSetupInput = void;
+export type PostAuthMfaEmailSetupOutput = Types.IdentityAuthenticationEmailMfaSetupOutput;
+export const postAuthMfaEmailSetupEndpoint = {
+  operationId: 'postAuthMfaEmailSetup' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/mfa/email:setup' as const,
+  tags: ['AuthMultiFactor'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * List available MFA methods
  *
  * Returns all available MFA methods and their configuration status for the current user.
@@ -20335,6 +20384,25 @@ export const getAuthServiceAccountsAuditLogEndpoint = {
 } as const;
 
 /**
+ * Binds an X.509 client certificate to a service account so the certificate can
+ * authenticate in lieu of the client secret (issue #1146).
+ *
+ * Binds an X.509 client certificate (thumbprint plus optional SPKI key pin) to a service account, allowing certificate authentication in lieu of the client secret. Pins are normalized to the authentication-time form; a later certificate presentation matches on either the thumbprint or the SPKI pin.
+ */
+export interface PatchAuthServiceAccountsClientCertificateInput {
+  serviceAccountId: string;
+  body?: Types.IdentityAuthenticationBindServiceAccountCertificateInput;
+}
+export type PatchAuthServiceAccountsClientCertificateOutput = void;
+export const patchAuthServiceAccountsClientCertificateEndpoint = {
+  operationId: 'patchAuthServiceAccountsClientCertificate' as const,
+  method: 'PATCH' as const,
+  path: '/v1/auth/service-accounts/{serviceAccountId}/client-certificate' as const,
+  tags: ['AuthServiceAccounts'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Updates the scopes for a service account.
  */
 export interface PatchAuthServiceAccountsScopesInput {
@@ -20491,6 +20559,23 @@ export const postAuthSignInEndpoint = {
   path: '/v1/auth/sign-in' as const,
   tags: ['Auth'] as const,
   requiresAuth: false,
+} as const;
+
+/**
+ * Sign out the caller, revoking the current access token (and optionally every session)
+ *
+ * Signs out the authenticated caller by revoking the current access token; with logoutEverywhere it also revokes every refresh token and terminates every session for the account (issue #1154).
+ */
+export interface PostAuthSignOutInput {
+  body?: Types.IdentityAuthenticationSignOutInput;
+}
+export type PostAuthSignOutOutput = Types.IdentityAuthenticationLogoutOutput;
+export const postAuthSignOutEndpoint = {
+  operationId: 'postAuthSignOut' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/sign-out' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
 } as const;
 
 /**
@@ -35018,6 +35103,9 @@ export const endpoints = {
   postAuthMfaDisable: postAuthMfaDisableEndpoint,
   getAuthMfaBackupCodes: getAuthMfaBackupCodesEndpoint,
   postAuthMfaBackupCodesRegenerate: postAuthMfaBackupCodesRegenerateEndpoint,
+  postAuthMfaEmailChallenge: postAuthMfaEmailChallengeEndpoint,
+  postAuthMfaEmailComplete: postAuthMfaEmailCompleteEndpoint,
+  postAuthMfaEmailSetup: postAuthMfaEmailSetupEndpoint,
   getAuthMfaMethods: getAuthMfaMethodsEndpoint,
   postAuthMfaPushChallenge: postAuthMfaPushChallengeEndpoint,
   postAuthMfaPushRegisterDevice: postAuthMfaPushRegisterDeviceEndpoint,
@@ -35065,6 +35153,7 @@ export const endpoints = {
   postAuthServiceAccountsRotateSecret: postAuthServiceAccountsRotateSecretEndpoint,
   postAuthServiceAccountsUnlock: postAuthServiceAccountsUnlockEndpoint,
   getAuthServiceAccountsAuditLog: getAuthServiceAccountsAuditLogEndpoint,
+  patchAuthServiceAccountsClientCertificate: patchAuthServiceAccountsClientCertificateEndpoint,
   patchAuthServiceAccountsScopes: patchAuthServiceAccountsScopesEndpoint,
   getAuthSessionState: getAuthSessionStateEndpoint,
   getAuthSessions: getAuthSessionsEndpoint,
@@ -35075,6 +35164,7 @@ export const endpoints = {
   deleteAuthSessions: deleteAuthSessionsEndpoint,
   patchAuthSessionsName: patchAuthSessionsNameEndpoint,
   postAuthSignIn: postAuthSignInEndpoint,
+  postAuthSignOut: postAuthSignOutEndpoint,
   postAuthSignUp: postAuthSignUpEndpoint,
   getAuthSigningKeys: getAuthSigningKeysEndpoint,
   postAuthSigningKeysCleanup: postAuthSigningKeysCleanupEndpoint,

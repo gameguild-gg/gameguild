@@ -42,6 +42,7 @@ public class StripeCustomerService(
         CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Creating Stripe customer for email {Email} (Simulation: {IsSimulation})",
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
             LogRedaction.MaskEmail(request.Email), _options.UseSimulation);
 
         if (_options.UseSimulation)
@@ -74,6 +75,7 @@ public class StripeCustomerService(
         catch (StripeException ex)
         {
             logger.LogError("Stripe customer creation failed for email {Email}: {ErrorCode} ({ErrorType})",
+                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
                 LogRedaction.MaskEmail(request.Email), LogRedaction.Sanitize(ex.StripeError?.Code), ex.GetType().FullName);
 
             return new GatewayCustomerResult(
@@ -85,6 +87,7 @@ public class StripeCustomerService(
         catch (Exception ex)
         {
             logger.LogError("Unexpected error during Stripe customer creation for email {Email}: {ErrorType}",
+                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
                 LogRedaction.MaskEmail(request.Email), ex.GetType().FullName);
             return SimulatedPaymentResultFactory.CustomerFailure(ex.Message, "unexpected_error");
         }

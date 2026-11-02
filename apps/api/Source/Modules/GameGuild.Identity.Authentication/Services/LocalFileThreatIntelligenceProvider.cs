@@ -177,6 +177,7 @@ public sealed class LocalFileThreatIntelligenceProvider : IThreatIntelligencePro
             {
                 _logger.LogWarning(
                     "Threat intelligence feed {FilePath} contained {InvalidEntryCount} invalid entries that were skipped",
+                    // codeql[cs/cleartext-storage-of-sensitive-information] feed path is operator-configured diagnostics, not user data; the taint source is a unit-test helper
                     _options.FilePath,
                     invalidEntries);
             }
@@ -202,6 +203,7 @@ public sealed class LocalFileThreatIntelligenceProvider : IThreatIntelligencePro
         {
             _logger.LogInformation(
                 "Threat intelligence feed {FilePath} loaded: {CidrCount} IP blocklist CIDRs, {HashCount} breached-password hashes",
+                // codeql[cs/cleartext-storage-of-sensitive-information] feed path is operator-configured diagnostics, not user data; the taint source is a unit-test helper
                 _options.FilePath,
                 newState.MaliciousCidrCount,
                 newState.BreachedHashCount);
@@ -212,6 +214,7 @@ public sealed class LocalFileThreatIntelligenceProvider : IThreatIntelligencePro
         _logger.LogWarning(
             "Threat intelligence feed {FilePath} could not be loaded ({LoadError}); serving last-good data: {ServingLastGood}. Authentication fails open for this signal.",
             _options.FilePath,
+            // codeql[cs/cleartext-storage-of-sensitive-information] truncated loader error text may embed the operator-configured path; no user data is involved
             Truncate(loadError),
             newState.HasUsableData);
 
