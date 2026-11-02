@@ -4,6 +4,7 @@ import { buttonVariants } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import { PUBLIC_PROGRAM_PACKAGES, getCoursesForProgram, getPublicProgramPackage } from '@/lib/courses/public-programs';
+import { buildPageMetadata } from '@/lib/seo';
 import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock, GraduationCap, Layers3, Target } from 'lucide-react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -31,10 +32,11 @@ export async function generateMetadata({ params }: ProgramDetailPageProps) {
     };
   }
 
-  return {
-    title: `${program.title} | GameGuild Programs`,
+  return buildPageMetadata({
+    path: `/programs/${slug}`,
+    title: `${program.title} — GameGuild`,
     description: program.summary,
-  };
+  });
 }
 
 export default async function ProgramDetailPage({ params }: ProgramDetailPageProps) {

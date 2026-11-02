@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { BlogPostCard } from '@/components/blogs/blog-post-card';
 import { BLOG_INDEX_PATH } from '@/lib/blogs/seo';
 import { getBlogIndex } from '@/lib/blogs/queries';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Blog',
+export const metadata: Metadata = buildPageMetadata({
+  path: BLOG_INDEX_PATH,
+  title: 'Blog — GameGuild',
   description: 'Posts from the GameGuild community — tutorials, devlogs, and deep dives from working game developers.',
-  robots: { index: true, follow: true },
-};
+});
 
 interface BlogIndexPageProps {
   readonly searchParams: Promise<{ before?: string; beforeId?: string }>;

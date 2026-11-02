@@ -3,6 +3,14 @@ import { getPublicLaunchPadEvents, type LaunchPadEvent } from '@/lib/launch-pad/
 import { ArrowRight, CalendarDays, Clock3, Rocket } from 'lucide-react';
 import React from 'react';
 
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata = buildPageMetadata({
+  path: '/launch-pad',
+  title: 'Launch Pad — GameGuild',
+  description: 'Release and marketing support for shipping games: launch events, wishlisting campaigns, and community momentum from the GameGuild Launch Pad.',
+});
+
 const eventStatusNames = ['Draft', 'ApplicationsOpen', 'ApplicationsClosed', 'Scheduled', 'Active', 'Completed', 'Cancelled', 'Archived'];
 
 function getStatusKey(status: LaunchPadEvent['status']): string {

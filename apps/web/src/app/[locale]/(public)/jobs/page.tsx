@@ -3,6 +3,14 @@ import { communityOpportunities } from '@/lib/community/public-community';
 import { ArrowRight, BriefcaseBusiness, ClipboardCheck, MessageSquareText, UsersRound } from 'lucide-react';
 import React from 'react';
 
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata = buildPageMetadata({
+  path: '/jobs',
+  title: 'Community Opportunities — GameGuild',
+  description: 'Mentor builders, review projects, and support community sessions — practical GameGuild roles that help members improve projects while building professional credibility.',
+});
+
 const contributionTracks = [
   {
     title: 'Mentor builders',

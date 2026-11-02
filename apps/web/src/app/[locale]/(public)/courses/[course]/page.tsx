@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation';
 import { getProductsContainingCourse } from '@/lib/courses/actions/enrollment.actions';
 import { getCourseViewerAccess } from '@/lib/courses/services/course-viewer-access';
 import { getCachedPublicCourseBySlug } from '@/lib/courses/cached-public-course';
+import { buildPageMetadata } from '@/lib/seo';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
@@ -34,15 +35,12 @@ export async function generateMetadata({ params }: { params: Promise<{ course: s
     notFound();
   }
 
-  return {
-    title: course.title,
-    description: course.description,
-    openGraph: {
-      title: course.title,
-      description: course.description,
-      ...(course.thumbnail ? { images: [course.thumbnail] } : {}),
-    },
-  };
+  return buildPageMetadata({
+    path: `/courses/${slug}`,
+    title: `${course.title ?? 'Course'} — GameGuild`,
+    description: course.description ?? 'GameGuild course.',
+    ogImage: typeof course.thumbnail === 'string' ? course.thumbnail : undefined,
+  });
 }
 
 interface CourseDetailPageProps {
