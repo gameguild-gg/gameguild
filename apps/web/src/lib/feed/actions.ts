@@ -1,6 +1,7 @@
 "use server";
 
 import { getSession, getToken } from "@/auth";
+import { verifyTurnstileToken } from "@/lib/antibot/turnstile";
 import {
   createServerClient,
   type SocialAssetsSocialMediaSocialMediaAssetDescriptor,
@@ -206,10 +207,23 @@ export async function setPostReaction(
   }
 }
 
+/**
+ * Public comment write surface. `turnstileToken` is verified before the API
+ * request and stripped from the forwarded body; visitor IP forwarding is
+ * handled by the server client's forwarded-IP interceptor.
+ */
 export async function createPostComment(
   postId: string,
-  input: { content: string; parentCommentId?: string | null },
+  input: { content: string; parentCommentId?: string | null; turnstileToken?: string | null },
 ): Promise<PostComment> {
+  const verification = await verifyTurnstileToken(input.turnstileToken);
+  if (!verification.success) {
+    throw new FeedMutationError({
+      status: 403,
+      code: "FORBIDDEN",
+      message: "Bot check failed. Please refresh and try again.",
+    });
+  }
   const data = await request<PostComment>({
     method: "POST",
     path: `/api/v1/posts/${postId}/comments`,

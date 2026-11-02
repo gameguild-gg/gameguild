@@ -385,6 +385,21 @@ public class ProjectsController : BaseApiController {
         return ToActionResult(Result.Failure<ProjectApiResponse>(result.Error));
   }
 
+  /// <summary>
+  /// Create (or return) the caller's workspace project for a game jam. The acting user is
+  /// taken from the authenticated context; the optional body only carries a title override.
+  /// </summary>
+  [HttpPost("jam/{jamId:guid}")]
+  public async Task<ActionResult<ProjectApiResponse>> CreateJamProject(Guid jamId, [FromBody] CreateJamProjectRequest? request) {
+    if (!ModelState.IsValid) { return BadRequest(ModelState); }
+
+    var result = await _mediator.Send(new CreateJamProjectCommand(jamId, request?.Title)).ConfigureAwait(false);
+
+    return result.IsSuccess
+      ? CreatedAtAction(nameof(GetProject), new { id = result.Value.Id }, ProjectApiResponse.FromProject(result.Value))
+      : ToActionResult(Result.Failure<ProjectApiResponse>(result.Error));
+  }
+
   /// <summary> Update an existing project </summary>
   [HttpPut("{id:guid}")]
   public async Task<ActionResult<ProjectApiResponse>> UpdateProject(Guid id, [FromBody] UpdateProjectRequest request) {
@@ -1135,6 +1150,12 @@ public sealed record CreateProjectRequest {
   public List<string>? Tags { get; init; }
 
   public Guid? OwnerTeamId { get; init; }
+}
+
+/// <summary> Optional title override for the auto-created jam entry project </summary>
+public sealed record CreateJamProjectRequest {
+  [StringLength(255, MinimumLength = 1, ErrorMessage = "Title must be between 1 and 255 characters")]
+  public string? Title { get; init; }
 }
 
 public sealed class CreateProjectVersionRequest {

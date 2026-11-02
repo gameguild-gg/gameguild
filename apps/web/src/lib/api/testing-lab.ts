@@ -31,3 +31,13 @@ export async function getTestingLocations(skip = 0, take = 50): Promise<TestingL
     return [];
   }
 }
+
+/**
+ * Active testing locations for server components (issue #106 phase 1): pages
+ * fetch this on the server and hand the list to client widgets as a prop, so
+ * the browser never calls the locations endpoint from a mount effect.
+ */
+export async function getActiveTestingLocations(skip = 0, take = 50): Promise<TestingLocation[]> {
+  const locations = await getTestingLocations(skip, take);
+  return locations.filter((location: TestingLocation) => location.status === 1);
+}

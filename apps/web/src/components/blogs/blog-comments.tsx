@@ -2,6 +2,7 @@
 
 import { addComment, deleteComment, getBlogPostCommentsPage } from "@/lib/blogs/actions";
 import type { BlogComment } from "@/lib/blogs/types";
+import { TurnstileWidget } from "@/components/antibot/turnstile-widget";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -194,6 +195,7 @@ export function BlogComments(props: BlogCommentsProps): React.JSX.Element {
   const [replyingTo, setReplyingTo] = React.useState<CommentNode | null>(null);
   const [submitPending, setSubmitPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = React.useState<string | null>(null);
   const pagePendingRef = React.useRef(false);
   const submitPendingRef = React.useRef(false);
 
@@ -251,8 +253,13 @@ export function BlogComments(props: BlogCommentsProps): React.JSX.Element {
     submitPendingRef.current = true;
     setSubmitPending(true);
     setError(null);
+    const spentToken = turnstileToken;
     try {
-      const result = await addComment(postId, { content: value, ...(replyingTo ? { parentCommentId: replyingTo.id } : {}) });
+      const result = await addComment(postId, {
+        content: value,
+        ...(replyingTo ? { parentCommentId: replyingTo.id } : {}),
+        turnstileToken,
+      });
       if (result.success) {
         setThreads((current) => attach(current, [result.data]));
         setCommentText("");
@@ -267,6 +274,9 @@ export function BlogComments(props: BlogCommentsProps): React.JSX.Element {
       setError(message);
       toast.error(message);
     } finally {
+      // Single-use token: consumed by this submit regardless of outcome —
+      // unless the widget already re-issued a fresh one during the await.
+      setTurnstileToken((current) => (current === spentToken ? null : current));
       submitPendingRef.current = false;
       setSubmitPending(false);
     }
@@ -359,6 +369,7 @@ export function BlogComments(props: BlogCommentsProps): React.JSX.Element {
               placeholder={replyingTo ? "Add a reply…" : "Add a comment…"}
               className="min-h-10 resize-none"
             />
+            <TurnstileWidget onToken={setTurnstileToken} id="blog-comment-turnstile" />
           </div>
           <Button type="submit" size="icon" disabled={submitPending || !commentText.trim()} aria-label={replyingTo ? "Publish reply" : "Publish comment"}>
             {submitPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Send className="size-4" aria-hidden="true" />}

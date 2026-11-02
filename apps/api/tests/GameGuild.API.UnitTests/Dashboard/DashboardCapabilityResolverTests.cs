@@ -103,7 +103,25 @@ public sealed class DashboardCapabilityResolverTests
 
         var result = DashboardCapabilityResolver.Resolve(actor, []);
 
-        result.Should().BeEquivalentTo(DashboardCapabilities.All);
+        // Blog moderation is platform scope (issue #96): a tenant admin without the SystemAdmin
+        // role gets everything except Community.ManageBlog.
+        result.Should().BeEquivalentTo(
+            DashboardCapabilities.All.Except([DashboardCapabilities.CommunityManageBlog]));
+    }
+
+    [Fact]
+    public void Resolve_GrantsBlogModerationOnlyToSystemAdmin()
+    {
+        var systemAdmin = Actor(roles: Set("SystemAdmin"));
+        var tenantAdmin = Actor(roles: Set("TenantAdmin"));
+        var member = Actor(roles: Set("Member"), permissions: Set("users:read"));
+
+        DashboardCapabilityResolver.Resolve(systemAdmin, [])
+            .Should().Contain(DashboardCapabilities.CommunityManageBlog);
+        DashboardCapabilityResolver.Resolve(tenantAdmin, [])
+            .Should().NotContain(DashboardCapabilities.CommunityManageBlog);
+        DashboardCapabilityResolver.Resolve(member, [])
+            .Should().NotContain(DashboardCapabilities.CommunityManageBlog);
     }
 
     private static TestingLabUserPermission Permission(

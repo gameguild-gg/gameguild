@@ -46,6 +46,7 @@ export * from './modules/learning-enrollments.gen.js';
 export * from './modules/analytics-metrics-product.gen.js';
 export * from './modules/notifications.gen.js';
 export * from './modules/learning-courses-prerequisites.gen.js';
+export * from './modules/social-blog-admin.gen.js';
 export * from './modules/social-blog-comments.gen.js';
 export * from './modules/social-blog-authoring.gen.js';
 export * from './modules/social-blog-ai.gen.js';
@@ -187,6 +188,7 @@ export * from './modules/learning-experience-learning-paths-learning-path.gen.js
 export * from './modules/learning-workspaces-learner-workspace.gen.js';
 export * from './modules/content-marketing-leads.gen.js';
 export * from './modules/learning-assessments-tasks.gen.js';
+export * from './modules/social-mentorship.gen.js';
 export * from './modules/auth-service-accounts-tokens.gen.js';
 export * from './modules/content-pages-open-graph.gen.js';
 export * from './modules/commerce-orders.gen.js';

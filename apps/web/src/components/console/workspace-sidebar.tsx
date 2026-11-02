@@ -88,6 +88,12 @@ export const workspaceNavigationData: WorkspaceNavGroup[] = [
         requiredCapabilities: ['Community.ManageProjects'],
       },
       {
+        title: 'Blog',
+        url: '/console/community/blog',
+        icon: FileText,
+        requiredCapabilities: ['Community.ManageBlog'],
+      },
+      {
         title: 'Testing Lab',
         icon: FlaskConical,
         requiredCapabilities: [

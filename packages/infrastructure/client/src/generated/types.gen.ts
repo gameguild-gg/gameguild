@@ -22769,6 +22769,11 @@ export interface ProjectsCollaboratorDto {
   userName?: string | null;
 }
 
+/** Optional title override for the auto-created jam entry project */
+export interface ProjectsCreateJamProjectInput {
+  title?: string | null;
+}
+
 /** Request DTOs for REST API */
 export interface ProjectsCreateProjectInput {
   categoryId?: string | null;
@@ -24474,6 +24479,13 @@ export interface SocialBlogControllersCreateBlogPostInput {
   title?: string | null;
 }
 
+/** Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAdminController.ImportGhost(GameGuild.Social.Blog.Controllers.GhostImportRequest,System.Threading.CancellationToken); the moderator comes from the actor context. */
+export interface SocialBlogControllersGhostImportInput {
+  dryRun?: boolean;
+  exportJson?: string | null;
+  publishImported?: boolean;
+}
+
 /** Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAuthoringController.TransferPrimary(System.Guid,GameGuild.Social.Blog.Controllers.TransferBlogPrimaryRequest,System.Threading.CancellationToken). */
 export interface SocialBlogControllersTransferBlogPrimaryInput {
   newPrimaryUserId?: string;
@@ -24494,6 +24506,55 @@ export interface SocialBlogControllersUpdateBlogPostDraftInput {
   tags?: string[] | null;
   title?: string | null;
   twitterCard?: string | null;
+}
+
+/** Admin moderation row for one comment: the comment plus enough post/author context
+to review and act on it without extra round trips. */
+export interface SocialBlogQueriesBlogAdminCommentDto {
+  id?: string;
+  authorHandle?: string | null;
+  blogPostId?: string;
+  content?: string | null;
+  createdAt?: string;
+  parentCommentId?: string | null;
+  postHandle?: string | null;
+  postSlug?: string | null;
+  postTitle?: string | null;
+}
+
+/** Page of admin comment rows, newest first. */
+export interface SocialBlogQueriesBlogAdminCommentPage {
+  hasMore?: boolean;
+  items?: SocialBlogQueriesBlogAdminCommentDto[] | null;
+}
+
+/** Admin card row for one post across ALL authors (drafts included). List surfaces
+never ship the body. Gated by the SystemAdmin policy on GameGuild.Social.Blog.Controllers.BlogAdminController. */
+export interface SocialBlogQueriesBlogAdminPostDto {
+  id?: string;
+  allowComments?: boolean;
+  commentsCount?: number;
+  primaryAuthorHandle?: string | null;
+  publishedAt?: string | null;
+  slug?: string | null;
+  status?: SocialBlogBlogPostStatus;
+  tags?: string[] | null;
+  title?: string | null;
+  updatedAt?: string;
+  viewsCount?: number;
+}
+
+/** Page of admin post rows, newest edit first. */
+export interface SocialBlogQueriesBlogAdminPostPage {
+  hasMore?: boolean;
+  items?: SocialBlogQueriesBlogAdminPostDto[] | null;
+}
+
+/** Platform-wide blog counters for the admin console header. */
+export interface SocialBlogQueriesBlogAdminStatsDto {
+  commentsLast30Days?: number;
+  draftPosts?: number;
+  publishedPosts?: number;
 }
 
 /** A published comment with its author handle resolved via Social.Profiles. */
@@ -24569,6 +24630,30 @@ export interface SocialBlogQueriesBlogPostSummaryPage {
 export interface SocialBlogQueriesBlogRouteResolutionDto {
   handle?: string | null;
   slug?: string | null;
+}
+
+/** Per-post import outcome with enough context for an admin report. */
+export interface SocialBlogServicesGhostImportPostOutcome {
+  authorHandle?: string | null;
+  note?: string | null;
+  result?: SocialBlogServicesGhostImportPostResult;
+  slug?: string | null;
+  title?: string | null;
+}
+
+/** Outcome for one Ghost post in an import run (issue #96 content migration). */
+export type SocialBlogServicesGhostImportPostResult = 'Imported' | 'SkippedDuplicate' | 'SkippedNoAuthor' | 'SkippedNonPost';
+
+/** Aggregate report of one Ghost export import (issue #96 content migration). */
+export interface SocialBlogServicesGhostImportReport {
+  commentsInExport?: number;
+  dryRun?: boolean;
+  imported?: number;
+  outcomes?: SocialBlogServicesGhostImportPostOutcome[] | null;
+  postsInExport?: number;
+  skippedDuplicate?: number;
+  skippedNoAuthor?: number;
+  skippedNonPost?: number;
 }
 
 /** Data model for Social Feed Add Feed Item Request. */
@@ -24899,6 +24984,139 @@ export interface SocialGroupsUpdateSocialGroupInput {
   slug?: string | null;
   type?: SocialGroupsSocialGroupType;
   visibility?: SocialGroupsSocialGroupVisibility;
+}
+
+/** Public booking payload; MenteeUserId is only honored for published matchmakers. */
+export interface SocialMentorshipBookMentorshipSessionInput {
+  meetingChannel?: SocialMentorshipMentorshipMeetingChannel;
+  menteeUserId?: string | null;
+  notes?: string | null;
+  slotId?: string;
+  topic?: string | null;
+}
+
+/** Data model for Social Mentorship Cancel Mentorship Session Request. */
+export interface SocialMentorshipCancelMentorshipSessionInput {
+  reason?: string | null;
+}
+
+/** Data model for Social Mentorship Mentor Availability Range Request. */
+export interface SocialMentorshipMentorAvailabilityRangeInput {
+  endsAt?: string;
+  startsAt?: string;
+}
+
+/** Data model for Social Mentorship Mentor Availability Slot Dto. */
+export interface SocialMentorshipMentorAvailabilitySlotDto {
+  id?: string;
+  endsAt?: string;
+  mentorProfileId?: string;
+  startsAt?: string;
+  status?: SocialMentorshipMentorAvailabilitySlotStatus;
+}
+
+/** OpenAPI schema for Social Mentorship Mentor Availability Slot Status. */
+export type SocialMentorshipMentorAvailabilitySlotStatus = 'Open' | 'Booked' | 'Cancelled';
+
+/** OpenAPI schema for Social Mentorship Mentor Booking Mode. */
+export type SocialMentorshipMentorBookingMode = 'Public' | 'MatchmakerOnly';
+
+/** Data model for Social Mentorship Mentor Dashboard Dto. */
+export interface SocialMentorshipMentorDashboardDto {
+  completedSessionCount?: number;
+  openSlotCount?: number;
+  profile?: SocialMentorshipMentorProfileDto;
+  totalSessionCount?: number;
+  upcomingSessionCount?: number;
+  upcomingSessions?: SocialMentorshipMentorshipSessionDto[] | null;
+}
+
+/** OpenAPI schema for Social Mentorship Mentor Pricing Model. */
+export type SocialMentorshipMentorPricingModel = 'Free' | 'Paid';
+
+/** Data model for Social Mentorship Mentor Profile Dto. */
+export interface SocialMentorshipMentorProfileDto {
+  id?: string;
+  bio?: string | null;
+  bookingMode?: SocialMentorshipMentorBookingMode;
+  createdAt?: string;
+  displayName?: string | null;
+  freeContributionReason?: string | null;
+  headline?: string | null;
+  introductoryCallMinutes?: number;
+  offersIntroductoryCall?: boolean;
+  pricingModel?: SocialMentorshipMentorPricingModel;
+  publishedAt?: string | null;
+  role?: SocialMentorshipMentorshipProgramRole;
+  skills?: SocialMentorshipMentorSkillDto[] | null;
+  status?: SocialMentorshipMentorProfileStatus;
+  timezoneId?: string | null;
+  updatedAt?: string;
+  userId?: string;
+}
+
+/** OpenAPI schema for Social Mentorship Mentor Profile Status. */
+export type SocialMentorshipMentorProfileStatus = 'Draft' | 'Published' | 'Paused';
+
+/** OpenAPI schema for Social Mentorship Mentorship Meeting Channel. */
+export type SocialMentorshipMentorshipMeetingChannel = 'InPlatform' | 'Discord' | 'GoogleCalendar';
+
+/** OpenAPI schema for Social Mentorship Mentorship Program Role. */
+export type SocialMentorshipMentorshipProgramRole = 'Mentor' | 'Advisor' | 'Matchmaker';
+
+/** Data model for Social Mentorship Mentorship Session Dto. */
+export interface SocialMentorshipMentorshipSessionDto {
+  id?: string;
+  cancellationReason?: string | null;
+  cancelledAt?: string | null;
+  completedAt?: string | null;
+  createdAt?: string;
+  endsAt?: string;
+  isIntroductory?: boolean;
+  meetingChannel?: SocialMentorshipMentorshipMeetingChannel;
+  meetingUrl?: string | null;
+  menteeUserId?: string;
+  mentorProfileId?: string;
+  mentorUserId?: string;
+  notes?: string | null;
+  slotId?: string | null;
+  startsAt?: string;
+  status?: SocialMentorshipMentorshipSessionStatus;
+  topic?: string | null;
+}
+
+/** OpenAPI schema for Social Mentorship Mentorship Session Status. */
+export type SocialMentorshipMentorshipSessionStatus = 'Booked' | 'Cancelled' | 'Completed';
+
+/** Data model for Social Mentorship Mentor Skill Dto. */
+export interface SocialMentorshipMentorSkillDto {
+  id?: string;
+  skill?: string | null;
+}
+
+/** Data model for Social Mentorship Publish Mentor Availability Request. */
+export interface SocialMentorshipPublishMentorAvailabilityInput {
+  slots?: SocialMentorshipMentorAvailabilityRangeInput[] | null;
+}
+
+/** Data model for Social Mentorship Set Mentor Profile Status Request. */
+export interface SocialMentorshipSetMentorProfileStatusInput {
+  status?: SocialMentorshipMentorProfileStatus;
+}
+
+/** Data model for Social Mentorship Upsert Mentor Profile Request. */
+export interface SocialMentorshipUpsertMentorProfileInput {
+  bio?: string | null;
+  bookingMode?: SocialMentorshipMentorBookingMode;
+  displayName?: string | null;
+  freeContributionReason?: string | null;
+  headline?: string | null;
+  introductoryCallMinutes?: number;
+  offersIntroductoryCall?: boolean;
+  pricingModel?: SocialMentorshipMentorPricingModel;
+  role?: SocialMentorshipMentorshipProgramRole;
+  skills?: string[] | null;
+  timezoneId?: string | null;
 }
 
 /** Data model for Social Posts Controllers Add Comment Request. */
@@ -29146,6 +29364,7 @@ export let ProgramCategorySchema: z.ZodType<ProgramCategory>;
 export let ProjectsAddCollaboratorInputSchema: z.ZodType<ProjectsAddCollaboratorInput>;
 export let ProjectsAddProjectCollaboratorInputSchema: z.ZodType<ProjectsAddProjectCollaboratorInput>;
 export let ProjectsCollaboratorDtoSchema: z.ZodType<ProjectsCollaboratorDto>;
+export let ProjectsCreateJamProjectInputSchema: z.ZodType<ProjectsCreateJamProjectInput>;
 export let ProjectsCreateProjectInputSchema: z.ZodType<ProjectsCreateProjectInput>;
 export let ProjectsCreateProjectVersionInputSchema: z.ZodType<ProjectsCreateProjectVersionInput>;
 export let ProjectsDevelopmentStatusSchema: z.ZodType<ProjectsDevelopmentStatus>;
@@ -29256,14 +29475,23 @@ export let SocialBlogControllersAddBlogCommentInputSchema: z.ZodType<SocialBlogC
 export let SocialBlogControllersBlogCoauthorInputSchema: z.ZodType<SocialBlogControllersBlogCoauthorInput>;
 export let SocialBlogControllersChangeBlogPostSlugInputSchema: z.ZodType<SocialBlogControllersChangeBlogPostSlugInput>;
 export let SocialBlogControllersCreateBlogPostInputSchema: z.ZodType<SocialBlogControllersCreateBlogPostInput>;
+export let SocialBlogControllersGhostImportInputSchema: z.ZodType<SocialBlogControllersGhostImportInput>;
 export let SocialBlogControllersTransferBlogPrimaryInputSchema: z.ZodType<SocialBlogControllersTransferBlogPrimaryInput>;
 export let SocialBlogControllersUpdateBlogPostDraftInputSchema: z.ZodType<SocialBlogControllersUpdateBlogPostDraftInput>;
+export let SocialBlogQueriesBlogAdminCommentDtoSchema: z.ZodType<SocialBlogQueriesBlogAdminCommentDto>;
+export let SocialBlogQueriesBlogAdminCommentPageSchema: z.ZodType<SocialBlogQueriesBlogAdminCommentPage>;
+export let SocialBlogQueriesBlogAdminPostDtoSchema: z.ZodType<SocialBlogQueriesBlogAdminPostDto>;
+export let SocialBlogQueriesBlogAdminPostPageSchema: z.ZodType<SocialBlogQueriesBlogAdminPostPage>;
+export let SocialBlogQueriesBlogAdminStatsDtoSchema: z.ZodType<SocialBlogQueriesBlogAdminStatsDto>;
 export let SocialBlogQueriesBlogCommentDtoSchema: z.ZodType<SocialBlogQueriesBlogCommentDto>;
 export let SocialBlogQueriesBlogCommentPageSchema: z.ZodType<SocialBlogQueriesBlogCommentPage>;
 export let SocialBlogQueriesBlogPostDetailDtoSchema: z.ZodType<SocialBlogQueriesBlogPostDetailDto>;
 export let SocialBlogQueriesBlogPostSummaryDtoSchema: z.ZodType<SocialBlogQueriesBlogPostSummaryDto>;
 export let SocialBlogQueriesBlogPostSummaryPageSchema: z.ZodType<SocialBlogQueriesBlogPostSummaryPage>;
 export let SocialBlogQueriesBlogRouteResolutionDtoSchema: z.ZodType<SocialBlogQueriesBlogRouteResolutionDto>;
+export let SocialBlogServicesGhostImportPostOutcomeSchema: z.ZodType<SocialBlogServicesGhostImportPostOutcome>;
+export let SocialBlogServicesGhostImportPostResultSchema: z.ZodType<SocialBlogServicesGhostImportPostResult>;
+export let SocialBlogServicesGhostImportReportSchema: z.ZodType<SocialBlogServicesGhostImportReport>;
 export let SocialFeedAddFeedItemInputSchema: z.ZodType<SocialFeedAddFeedItemInput>;
 export let SocialFeedCreateStoryInputSchema: z.ZodType<SocialFeedCreateStoryInput>;
 export let SocialFeedFeedAuthorDtoSchema: z.ZodType<SocialFeedFeedAuthorDto>;
@@ -29304,6 +29532,24 @@ export let SocialGroupsSocialGroupStatusSchema: z.ZodType<SocialGroupsSocialGrou
 export let SocialGroupsSocialGroupTypeSchema: z.ZodType<SocialGroupsSocialGroupType>;
 export let SocialGroupsSocialGroupVisibilitySchema: z.ZodType<SocialGroupsSocialGroupVisibility>;
 export let SocialGroupsUpdateSocialGroupInputSchema: z.ZodType<SocialGroupsUpdateSocialGroupInput>;
+export let SocialMentorshipBookMentorshipSessionInputSchema: z.ZodType<SocialMentorshipBookMentorshipSessionInput>;
+export let SocialMentorshipCancelMentorshipSessionInputSchema: z.ZodType<SocialMentorshipCancelMentorshipSessionInput>;
+export let SocialMentorshipMentorAvailabilityRangeInputSchema: z.ZodType<SocialMentorshipMentorAvailabilityRangeInput>;
+export let SocialMentorshipMentorAvailabilitySlotDtoSchema: z.ZodType<SocialMentorshipMentorAvailabilitySlotDto>;
+export let SocialMentorshipMentorAvailabilitySlotStatusSchema: z.ZodType<SocialMentorshipMentorAvailabilitySlotStatus>;
+export let SocialMentorshipMentorBookingModeSchema: z.ZodType<SocialMentorshipMentorBookingMode>;
+export let SocialMentorshipMentorDashboardDtoSchema: z.ZodType<SocialMentorshipMentorDashboardDto>;
+export let SocialMentorshipMentorPricingModelSchema: z.ZodType<SocialMentorshipMentorPricingModel>;
+export let SocialMentorshipMentorProfileDtoSchema: z.ZodType<SocialMentorshipMentorProfileDto>;
+export let SocialMentorshipMentorProfileStatusSchema: z.ZodType<SocialMentorshipMentorProfileStatus>;
+export let SocialMentorshipMentorshipMeetingChannelSchema: z.ZodType<SocialMentorshipMentorshipMeetingChannel>;
+export let SocialMentorshipMentorshipProgramRoleSchema: z.ZodType<SocialMentorshipMentorshipProgramRole>;
+export let SocialMentorshipMentorshipSessionDtoSchema: z.ZodType<SocialMentorshipMentorshipSessionDto>;
+export let SocialMentorshipMentorshipSessionStatusSchema: z.ZodType<SocialMentorshipMentorshipSessionStatus>;
+export let SocialMentorshipMentorSkillDtoSchema: z.ZodType<SocialMentorshipMentorSkillDto>;
+export let SocialMentorshipPublishMentorAvailabilityInputSchema: z.ZodType<SocialMentorshipPublishMentorAvailabilityInput>;
+export let SocialMentorshipSetMentorProfileStatusInputSchema: z.ZodType<SocialMentorshipSetMentorProfileStatusInput>;
+export let SocialMentorshipUpsertMentorProfileInputSchema: z.ZodType<SocialMentorshipUpsertMentorProfileInput>;
 export let SocialPostsControllersAddCommentInputSchema: z.ZodType<SocialPostsControllersAddCommentInput>;
 export let SocialPostsControllersCreatePostInputSchema: z.ZodType<SocialPostsControllersCreatePostInput>;
 export let SocialPostsControllersCreateRepostInputSchema: z.ZodType<SocialPostsControllersCreateRepostInput>;
@@ -50350,6 +50596,11 @@ ProjectsCollaboratorDtoSchema = z.object({
   userName: z.string().nullable().optional(),
 });
 
+/** Zod schema for ProjectsCreateJamProjectInput. Optional title override for the auto-created jam entry project */
+ProjectsCreateJamProjectInputSchema = z.object({
+  title: z.string().min(1).max(255).nullable().optional(),
+});
+
 /** Zod schema for ProjectsCreateProjectInput. Request DTOs for REST API */
 ProjectsCreateProjectInputSchema = z.object({
   categoryId: z.string().uuid().nullable().optional(),
@@ -51831,6 +52082,13 @@ SocialBlogControllersCreateBlogPostInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
+/** Zod schema for SocialBlogControllersGhostImportInput. Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAdminController.ImportGhost(GameGuild.Social.Blog.Controllers.GhostImportRequest,System.Threading.CancellationToken); the moderator comes from the actor context. */
+SocialBlogControllersGhostImportInputSchema = z.object({
+  dryRun: z.boolean().optional(),
+  exportJson: z.string().nullable().optional(),
+  publishImported: z.boolean().optional(),
+});
+
 /** Zod schema for SocialBlogControllersTransferBlogPrimaryInput. Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAuthoringController.TransferPrimary(System.Guid,GameGuild.Social.Blog.Controllers.TransferBlogPrimaryRequest,System.Threading.CancellationToken). */
 SocialBlogControllersTransferBlogPrimaryInputSchema = z.object({
   newPrimaryUserId: z.string().uuid().optional(),
@@ -51851,6 +52109,61 @@ SocialBlogControllersUpdateBlogPostDraftInputSchema = z.object({
   tags: z.array(z.string()).nullable().optional(),
   title: z.string().nullable().optional(),
   twitterCard: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialBlogQueriesBlogAdminCommentDto. Admin moderation row for one comment: the comment plus enough post/author context
+to review and act on it without extra round trips. */
+SocialBlogQueriesBlogAdminCommentDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  authorHandle: z.string().nullable().optional(),
+  blogPostId: z.string().uuid().optional(),
+  content: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  parentCommentId: z.string().uuid().nullable().optional(),
+  postHandle: z.string().nullable().optional(),
+  postSlug: z.string().nullable().optional(),
+  postTitle: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialBlogQueriesBlogAdminCommentPage. Page of admin comment rows, newest first. */
+SocialBlogQueriesBlogAdminCommentPageSchema = z.object({
+  hasMore: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => SocialBlogQueriesBlogAdminCommentDtoSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for SocialBlogQueriesBlogAdminPostDto. Admin card row for one post across ALL authors (drafts included). List surfaces
+never ship the body. Gated by the SystemAdmin policy on GameGuild.Social.Blog.Controllers.BlogAdminController. */
+SocialBlogQueriesBlogAdminPostDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  allowComments: z.boolean().optional(),
+  commentsCount: z.number().int().optional(),
+  primaryAuthorHandle: z.string().nullable().optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  status: z.lazy(() => SocialBlogBlogPostStatusSchema).optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  title: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
+  viewsCount: z.number().int().optional(),
+});
+
+/** Zod schema for SocialBlogQueriesBlogAdminPostPage. Page of admin post rows, newest edit first. */
+SocialBlogQueriesBlogAdminPostPageSchema = z.object({
+  hasMore: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => SocialBlogQueriesBlogAdminPostDtoSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for SocialBlogQueriesBlogAdminStatsDto. Platform-wide blog counters for the admin console header. */
+SocialBlogQueriesBlogAdminStatsDtoSchema = z.object({
+  commentsLast30Days: z.number().int().optional(),
+  draftPosts: z.number().int().optional(),
+  publishedPosts: z.number().int().optional(),
 });
 
 /** Zod schema for SocialBlogQueriesBlogCommentDto. A published comment with its author handle resolved via Social.Profiles. */
@@ -51932,6 +52245,33 @@ SocialBlogQueriesBlogPostSummaryPageSchema = z.object({
 SocialBlogQueriesBlogRouteResolutionDtoSchema = z.object({
   handle: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialBlogServicesGhostImportPostOutcome. Per-post import outcome with enough context for an admin report. */
+SocialBlogServicesGhostImportPostOutcomeSchema = z.object({
+  authorHandle: z.string().nullable().optional(),
+  note: z.string().nullable().optional(),
+  result: z.lazy(() => SocialBlogServicesGhostImportPostResultSchema).optional(),
+  slug: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialBlogServicesGhostImportPostResult. Outcome for one Ghost post in an import run (issue #96 content migration). */
+SocialBlogServicesGhostImportPostResultSchema = z.enum(['Imported', 'SkippedDuplicate', 'SkippedNoAuthor', 'SkippedNonPost']);
+
+/** Zod schema for SocialBlogServicesGhostImportReport. Aggregate report of one Ghost export import (issue #96 content migration). */
+SocialBlogServicesGhostImportReportSchema = z.object({
+  commentsInExport: z.number().int().optional(),
+  dryRun: z.boolean().optional(),
+  imported: z.number().int().optional(),
+  outcomes: z
+    .array(z.lazy(() => SocialBlogServicesGhostImportPostOutcomeSchema))
+    .nullable()
+    .optional(),
+  postsInExport: z.number().int().optional(),
+  skippedDuplicate: z.number().int().optional(),
+  skippedNoAuthor: z.number().int().optional(),
+  skippedNonPost: z.number().int().optional(),
 });
 
 /** Zod schema for SocialFeedAddFeedItemInput. Data model for Social Feed Add Feed Item Request. */
@@ -52265,6 +52605,148 @@ SocialGroupsUpdateSocialGroupInputSchema = z.object({
   slug: z.string().nullable().optional(),
   type: z.lazy(() => SocialGroupsSocialGroupTypeSchema).optional(),
   visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
+});
+
+/** Zod schema for SocialMentorshipBookMentorshipSessionInput. Public booking payload; MenteeUserId is only honored for published matchmakers. */
+SocialMentorshipBookMentorshipSessionInputSchema = z.object({
+  meetingChannel: z.lazy(() => SocialMentorshipMentorshipMeetingChannelSchema).optional(),
+  menteeUserId: z.string().uuid().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  slotId: z.string().uuid().optional(),
+  topic: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialMentorshipCancelMentorshipSessionInput. Data model for Social Mentorship Cancel Mentorship Session Request. */
+SocialMentorshipCancelMentorshipSessionInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialMentorshipMentorAvailabilityRangeInput. Data model for Social Mentorship Mentor Availability Range Request. */
+SocialMentorshipMentorAvailabilityRangeInputSchema = z.object({
+  endsAt: z.string().datetime().optional(),
+  startsAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for SocialMentorshipMentorAvailabilitySlotDto. Data model for Social Mentorship Mentor Availability Slot Dto. */
+SocialMentorshipMentorAvailabilitySlotDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  endsAt: z.string().datetime().optional(),
+  mentorProfileId: z.string().uuid().optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => SocialMentorshipMentorAvailabilitySlotStatusSchema).optional(),
+});
+
+/** Zod schema for SocialMentorshipMentorAvailabilitySlotStatus. OpenAPI schema for Social Mentorship Mentor Availability Slot Status. */
+SocialMentorshipMentorAvailabilitySlotStatusSchema = z.enum(['Open', 'Booked', 'Cancelled']);
+
+/** Zod schema for SocialMentorshipMentorBookingMode. OpenAPI schema for Social Mentorship Mentor Booking Mode. */
+SocialMentorshipMentorBookingModeSchema = z.enum(['Public', 'MatchmakerOnly']);
+
+/** Zod schema for SocialMentorshipMentorDashboardDto. Data model for Social Mentorship Mentor Dashboard Dto. */
+SocialMentorshipMentorDashboardDtoSchema = z.object({
+  completedSessionCount: z.number().int().optional(),
+  openSlotCount: z.number().int().optional(),
+  profile: z.lazy(() => SocialMentorshipMentorProfileDtoSchema).optional(),
+  totalSessionCount: z.number().int().optional(),
+  upcomingSessionCount: z.number().int().optional(),
+  upcomingSessions: z
+    .array(z.lazy(() => SocialMentorshipMentorshipSessionDtoSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for SocialMentorshipMentorPricingModel. OpenAPI schema for Social Mentorship Mentor Pricing Model. */
+SocialMentorshipMentorPricingModelSchema = z.enum(['Free', 'Paid']);
+
+/** Zod schema for SocialMentorshipMentorProfileDto. Data model for Social Mentorship Mentor Profile Dto. */
+SocialMentorshipMentorProfileDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  bio: z.string().nullable().optional(),
+  bookingMode: z.lazy(() => SocialMentorshipMentorBookingModeSchema).optional(),
+  createdAt: z.string().datetime().optional(),
+  displayName: z.string().nullable().optional(),
+  freeContributionReason: z.string().nullable().optional(),
+  headline: z.string().nullable().optional(),
+  introductoryCallMinutes: z.number().int().optional(),
+  offersIntroductoryCall: z.boolean().optional(),
+  pricingModel: z.lazy(() => SocialMentorshipMentorPricingModelSchema).optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  role: z.lazy(() => SocialMentorshipMentorshipProgramRoleSchema).optional(),
+  skills: z
+    .array(z.lazy(() => SocialMentorshipMentorSkillDtoSchema))
+    .nullable()
+    .optional(),
+  status: z.lazy(() => SocialMentorshipMentorProfileStatusSchema).optional(),
+  timezoneId: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for SocialMentorshipMentorProfileStatus. OpenAPI schema for Social Mentorship Mentor Profile Status. */
+SocialMentorshipMentorProfileStatusSchema = z.enum(['Draft', 'Published', 'Paused']);
+
+/** Zod schema for SocialMentorshipMentorshipMeetingChannel. OpenAPI schema for Social Mentorship Mentorship Meeting Channel. */
+SocialMentorshipMentorshipMeetingChannelSchema = z.enum(['InPlatform', 'Discord', 'GoogleCalendar']);
+
+/** Zod schema for SocialMentorshipMentorshipProgramRole. OpenAPI schema for Social Mentorship Mentorship Program Role. */
+SocialMentorshipMentorshipProgramRoleSchema = z.enum(['Mentor', 'Advisor', 'Matchmaker']);
+
+/** Zod schema for SocialMentorshipMentorshipSessionDto. Data model for Social Mentorship Mentorship Session Dto. */
+SocialMentorshipMentorshipSessionDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  cancellationReason: z.string().nullable().optional(),
+  cancelledAt: z.string().datetime().nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  endsAt: z.string().datetime().optional(),
+  isIntroductory: z.boolean().optional(),
+  meetingChannel: z.lazy(() => SocialMentorshipMentorshipMeetingChannelSchema).optional(),
+  meetingUrl: z.string().nullable().optional(),
+  menteeUserId: z.string().uuid().optional(),
+  mentorProfileId: z.string().uuid().optional(),
+  mentorUserId: z.string().uuid().optional(),
+  notes: z.string().nullable().optional(),
+  slotId: z.string().uuid().nullable().optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => SocialMentorshipMentorshipSessionStatusSchema).optional(),
+  topic: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialMentorshipMentorshipSessionStatus. OpenAPI schema for Social Mentorship Mentorship Session Status. */
+SocialMentorshipMentorshipSessionStatusSchema = z.enum(['Booked', 'Cancelled', 'Completed']);
+
+/** Zod schema for SocialMentorshipMentorSkillDto. Data model for Social Mentorship Mentor Skill Dto. */
+SocialMentorshipMentorSkillDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  skill: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialMentorshipPublishMentorAvailabilityInput. Data model for Social Mentorship Publish Mentor Availability Request. */
+SocialMentorshipPublishMentorAvailabilityInputSchema = z.object({
+  slots: z
+    .array(z.lazy(() => SocialMentorshipMentorAvailabilityRangeInputSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for SocialMentorshipSetMentorProfileStatusInput. Data model for Social Mentorship Set Mentor Profile Status Request. */
+SocialMentorshipSetMentorProfileStatusInputSchema = z.object({
+  status: z.lazy(() => SocialMentorshipMentorProfileStatusSchema).optional(),
+});
+
+/** Zod schema for SocialMentorshipUpsertMentorProfileInput. Data model for Social Mentorship Upsert Mentor Profile Request. */
+SocialMentorshipUpsertMentorProfileInputSchema = z.object({
+  bio: z.string().nullable().optional(),
+  bookingMode: z.lazy(() => SocialMentorshipMentorBookingModeSchema).optional(),
+  displayName: z.string().nullable().optional(),
+  freeContributionReason: z.string().nullable().optional(),
+  headline: z.string().nullable().optional(),
+  introductoryCallMinutes: z.number().int().optional(),
+  offersIntroductoryCall: z.boolean().optional(),
+  pricingModel: z.lazy(() => SocialMentorshipMentorPricingModelSchema).optional(),
+  role: z.lazy(() => SocialMentorshipMentorshipProgramRoleSchema).optional(),
+  skills: z.array(z.string()).nullable().optional(),
+  timezoneId: z.string().nullable().optional(),
 });
 
 /** Zod schema for SocialPostsControllersAddCommentInput. Data model for Social Posts Controllers Add Comment Request. */
@@ -55053,6 +55535,12 @@ export type SocialBlogAuthoringBlogAiRun = SocialBlogAuthoringBlogAiRunDto;
 export { SocialBlogAuthoringBlogAiRunDtoSchema as SocialBlogAuthoringBlogAiRunSchema };
 export type SocialBlogAuthoringBlogPost = SocialBlogAuthoringBlogPostDto;
 export { SocialBlogAuthoringBlogPostDtoSchema as SocialBlogAuthoringBlogPostSchema };
+export type SocialBlogQueriesBlogAdminComment = SocialBlogQueriesBlogAdminCommentDto;
+export { SocialBlogQueriesBlogAdminCommentDtoSchema as SocialBlogQueriesBlogAdminCommentSchema };
+export type SocialBlogQueriesBlogAdminPost = SocialBlogQueriesBlogAdminPostDto;
+export { SocialBlogQueriesBlogAdminPostDtoSchema as SocialBlogQueriesBlogAdminPostSchema };
+export type SocialBlogQueriesBlogAdminStats = SocialBlogQueriesBlogAdminStatsDto;
+export { SocialBlogQueriesBlogAdminStatsDtoSchema as SocialBlogQueriesBlogAdminStatsSchema };
 export type SocialBlogQueriesBlogComment = SocialBlogQueriesBlogCommentDto;
 export { SocialBlogQueriesBlogCommentDtoSchema as SocialBlogQueriesBlogCommentSchema };
 export type SocialBlogQueriesBlogPostDetail = SocialBlogQueriesBlogPostDetailDto;
@@ -55097,6 +55585,16 @@ export type SocialGroupsSocialGroup = SocialGroupsSocialGroupDto;
 export { SocialGroupsSocialGroupDtoSchema as SocialGroupsSocialGroupSchema };
 export type SocialGroupsSocialGroupMember = SocialGroupsSocialGroupMemberDto;
 export { SocialGroupsSocialGroupMemberDtoSchema as SocialGroupsSocialGroupMemberSchema };
+export type SocialMentorshipMentorAvailabilitySlot = SocialMentorshipMentorAvailabilitySlotDto;
+export { SocialMentorshipMentorAvailabilitySlotDtoSchema as SocialMentorshipMentorAvailabilitySlotSchema };
+export type SocialMentorshipMentorDashboard = SocialMentorshipMentorDashboardDto;
+export { SocialMentorshipMentorDashboardDtoSchema as SocialMentorshipMentorDashboardSchema };
+export type SocialMentorshipMentorProfile = SocialMentorshipMentorProfileDto;
+export { SocialMentorshipMentorProfileDtoSchema as SocialMentorshipMentorProfileSchema };
+export type SocialMentorshipMentorshipSession = SocialMentorshipMentorshipSessionDto;
+export { SocialMentorshipMentorshipSessionDtoSchema as SocialMentorshipMentorshipSessionSchema };
+export type SocialMentorshipMentorSkill = SocialMentorshipMentorSkillDto;
+export { SocialMentorshipMentorSkillDtoSchema as SocialMentorshipMentorSkillSchema };
 export type SocialProfilesProfilePortfolioItem = SocialProfilesProfilePortfolioItemDto;
 export { SocialProfilesProfilePortfolioItemDtoSchema as SocialProfilesProfilePortfolioItemSchema };
 export type SocialProfilesProfileSkill = SocialProfilesProfileSkillDto;
