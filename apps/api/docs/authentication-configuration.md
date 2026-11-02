@@ -49,7 +49,7 @@ The API binds the `Mfa`, `Session`, and `ThreatIntelligence` sections when the A
 | --- | --- |
 | `IdleTimeoutMinutes` | Rejects a session that has had no activity for this long. |
 | `AbsoluteTimeoutMinutes` | Caps session expiration from creation, including when a session is refreshed. |
-| `MaxConcurrentSessions` | Deactivates the least recently used sessions before creating a session above this limit. |
+| `MaxConcurrentSessions` | Deactivates the least recently used sessions before creating a session above this limit. The owner is notified when a session is evicted: InApp always, Email per delivery preferences (issue #1086). |
 | `TrustedDeviceDurationDays`, `MaxTrustedDevices` | Set the trusted-device lifetime and maximum active device count. Re-trusting a device renews its expiry. |
 | `TerminateSessionsOnPasswordChange` | Terminates the user's sessions after a password change or reset. |
 | `TerminateSessionsOnMfaDisable` | Terminates the user's sessions when MFA is disabled. |
@@ -57,6 +57,26 @@ The API binds the `Mfa`, `Session`, and `ThreatIntelligence` sections when the A
 | `EnableLocationTracking` | Controls whether the session stores the supplied IP address; when disabled it stores `unknown`. |
 
 `RequireTrustedDeviceForSensitiveOps` is present in the options model but is not yet enforced by sensitive-operation authorization. Do not rely on it as a security control until that integration is implemented.
+
+## Sign-in hardening settings
+
+The `AuthenticationSecurity` section (see the [account lockout architecture](../../../docs/architecture/authentication-lockout.md)) carries the sign-in hardening knobs added for issues #1082–#1084:
+
+| Setting | Runtime behavior |
+| --- | --- |
+| `EnableProgressiveDelay` | Enables the exponential backoff on failed password sign-in attempts (issue #1084). The delay is applied per account identifier before credential verification; it throttles distributed attacks against one account regardless of source IP. |
+| `ProgressiveDelayBaseSeconds` | First-step delay in seconds; each additional recent failure doubles it. |
+| `ProgressiveDelayMaxSeconds` | Ceiling of the backoff schedule. Defaults produce 1s, 2s, 4s, 8s, 8s, ... |
+| `TurnstileRequiredAfterFailedAttempts` | Number of failed sign-ins from one source IP (within the one-hour failure window) after which password sign-in must present a Cloudflare Turnstile token (issue #1082). `0` disables the challenge. |
+| `TurnstileSecretKey` | Server secret for Turnstile token verification. Empty/unset disables the challenge entirely (development default). |
+| `TurnstileSiteVerifyUrl` | Siteverify endpoint; overridable for tests. |
+
+Owner notifications ride the durable-event notification bridge: a fresh account lockout
+emails the owner with the reason, unlock timeline and support contact (issue #1083), and a
+session created from a first-seen device fingerprint triggers a new-device alert with the
+device summary, coarse GeoIP location and the session-management path (issue #1085). Both
+are gated by `Authentication:SecurityNotifications:Enabled` / `Authentication:DeviceNotifications:Enabled`
+respectively; session-limit eviction notices by `Authentication:SessionNotifications:Enabled` (all default on).
 
 This configuration documents the MFA and session runtime wiring only. Scheme registration, typed
 authentication options, and provider configuration are covered in

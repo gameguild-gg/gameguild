@@ -6,23 +6,26 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for logout command that immediately revokes tokens.
 /// </summary>
-public sealed class LogoutHandler : IRequestHandler<LogoutCommand, LogoutResponse>
+public sealed class LogoutHandler : ICommandHandler<LogoutCommand, LogoutResponse>
 {
     private readonly ITokenRevocationService _tokenRevocationService;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUserSessionRepository _userSessionRepository;
     private readonly ILogger<LogoutHandler> _logger;
+    private readonly IPublisher? _eventPublisher;
 
     public LogoutHandler(
         ITokenRevocationService tokenRevocationService,
         IRefreshTokenRepository refreshTokenRepository,
         IUserSessionRepository userSessionRepository,
-        ILogger<LogoutHandler> logger)
+        ILogger<LogoutHandler> logger,
+        IPublisher? eventPublisher = null)
     {
         _tokenRevocationService = tokenRevocationService ?? throw new ArgumentNullException(nameof(tokenRevocationService));
         _refreshTokenRepository = refreshTokenRepository ?? throw new ArgumentNullException(nameof(refreshTokenRepository));
         _userSessionRepository = userSessionRepository ?? throw new ArgumentNullException(nameof(userSessionRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<LogoutResponse> Handle(LogoutCommand command, CancellationToken cancellationToken)
@@ -45,8 +48,17 @@ public sealed class LogoutHandler : IRequestHandler<LogoutCommand, LogoutRespons
 
                 // Revoke all refresh tokens in database
                 await _refreshTokenRepository.RevokeAllForUserAsync(
-                    command.UserId, 
-                    command.IpAddress, 
+                    command.UserId,
+                    command.IpAddress,
+                    cancellationToken).ConfigureAwait(false);
+
+                // In-process refresh-token lifecycle telemetry (issue #1199): logout-everywhere
+                // revokes the account's whole refresh-token set, so the token id is the "all"
+                // sentinel rather than a single row id.
+                await AuthenticationEventDispatch.PublishAsync(
+                    _eventPublisher,
+                    new RefreshTokenRevokedEvent("all", command.UserId, command.Reason ?? "LogoutEverywhere", SystemClock.UtcNow),
+                    _logger,
                     cancellationToken).ConfigureAwait(false);
 
                 // Terminate all user sessions

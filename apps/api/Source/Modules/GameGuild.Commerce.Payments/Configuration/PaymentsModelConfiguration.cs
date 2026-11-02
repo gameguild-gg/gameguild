@@ -162,6 +162,17 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
             builder.Property(evidence => evidence.EvidenceType).HasConversion<string>().IsRequired();
         });
 
+        // Wallet statement reads filter DeletedAt == null per wallet and page
+        // newest-first on CreatedAt (WalletRepository.GetTransactionsAsync) —
+        // issue #1157. Composite property list keeps the annotation-declared
+        // single-column WalletId index untouched.
+        modelBuilder.Entity<WalletTransaction>(builder =>
+        {
+            builder.HasIndex(transaction => new { transaction.WalletId, transaction.CreatedAt })
+                .HasDatabaseName("ix_wallet_transactions_wallet_created_live")
+                .HasFilter("\"DeletedAt\" IS NULL");
+        });
+
         // Revenue auditing (issue #404): the audited revenue events themselves plus the
         // reconciliation runs, their discrepancies and the anomaly alerts.
         modelBuilder.Entity<RevenueEvent>(builder =>

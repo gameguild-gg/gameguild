@@ -500,58 +500,10 @@ public class JwtClaimTypesTests
 
 #region Event Tests
 
-public class SealedEventTests
-{
-    [Fact]
-    public void MfaVerifiedEvent_ShouldStoreProperties()
-    {
-        var userId = Guid.NewGuid();
-        var now = DateTime.UtcNow;
-        var evt = new MfaVerifiedEvent(userId, "Totp", "1.2.3.4", now);
-
-        evt.UserId.Should().Be(userId);
-        evt.Method.Should().Be("Totp");
-        evt.IpAddress.Should().Be("1.2.3.4");
-        evt.Timestamp.Should().Be(now);
-    }
-
-    [Fact]
-    public void TokenRefreshedEvent_ShouldStoreProperties()
-    {
-        var userId = Guid.NewGuid();
-        var now = DateTime.UtcNow;
-        var evt = new TokenRefreshedEvent(userId, "5.6.7.8", now);
-
-        evt.UserId.Should().Be(userId);
-        evt.IpAddress.Should().Be("5.6.7.8");
-        evt.Timestamp.Should().Be(now);
-    }
-
-    [Fact]
-    public void TokenRevokedEvent_ShouldStoreProperties()
-    {
-        var userId = Guid.NewGuid();
-        var now = DateTime.UtcNow;
-        var evt = new TokenRevokedEvent(userId, "token-123", null, now);
-
-        evt.UserId.Should().Be(userId);
-        evt.TokenId.Should().Be("token-123");
-        evt.IpAddress.Should().BeNull();
-        evt.Timestamp.Should().Be(now);
-    }
-
-    [Fact]
-    public void UserSignedUpEvent_ShouldStoreProperties()
-    {
-        var userId = Guid.NewGuid();
-        var now = DateTime.UtcNow;
-        var evt = new UserSignedUpEvent(userId, "user@test.com", "Email", now);
-
-        evt.UserId.Should().Be(userId);
-        evt.Email.Should().Be("user@test.com");
-        evt.AuthMethod.Should().Be("Email");
-        evt.Timestamp.Should().Be(now);
-    }
-}
+// The four fully orphaned event definitions (MfaVerifiedEvent, TokenRefreshedEvent,
+// TokenRevokedEvent, UserSignedUpEvent — no producer and no consumer) were removed with
+// issue #1199; their shape-duplicate live events (MfaVerificationSucceededEvent,
+// RefreshTokenUsedEvent, RefreshTokenRevokedEvent, durable UserCreatedEvent) are wired
+// instead. Producer-path coverage now lives in Services/AuthEventEmissionTests.cs.
 
 #endregion

@@ -45,6 +45,7 @@ public sealed class InitiateOrchestratedAuthenticationHandler(
         logger.LogInformation(
             "Orchestrated authentication flow {FlowId} initiated for identifier {Identifier} with {StepCount} required steps",
             flowState.FlowId,
+            // codeql[cs/exposure-of-sensitive-information] identifier is redacted by LogRedaction.MaskEmail before entering the structured log
             LogRedaction.MaskEmail(command.Identifier),
             flowState.RequiredSteps.Count);
 

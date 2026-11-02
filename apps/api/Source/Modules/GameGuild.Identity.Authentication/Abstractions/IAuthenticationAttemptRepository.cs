@@ -27,6 +27,13 @@ public interface IAuthenticationAttemptRepository
     Task<List<AuthenticationAttempt>> GetFailedAttemptsAsync(string identifier, DateTime since, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Counts failed password sign-in attempts for a normalized account identifier
+    ///     (email) since the given UTC timestamp. Used by the progressive sign-in
+    ///     backoff (issue #1084); the count is per account, not per source IP.
+    /// </summary>
+    Task<int> CountRecentFailedAttemptsAsync(string email, DateTime since, CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Gets suspicious authentication attempts for analysis.
     /// </summary>
     Task<List<AuthenticationAttempt>> GetSuspiciousAttemptsAsync(DateTime since, CancellationToken cancellationToken = default);

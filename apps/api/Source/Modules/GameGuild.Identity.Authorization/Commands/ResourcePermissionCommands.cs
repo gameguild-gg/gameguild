@@ -345,6 +345,7 @@ public sealed class DeclineResourceInvitationCommandHandler(
         {
             logger.LogWarning(
                 "User with email {Email} attempted to decline invitation {InvitationId} for another recipient",
+                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
                 LogRedaction.MaskEmail(email),
                 request.InvitationId);
 

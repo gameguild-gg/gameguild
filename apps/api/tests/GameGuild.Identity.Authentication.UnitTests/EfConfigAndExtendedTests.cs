@@ -240,31 +240,8 @@ public class EfConfigAndExtendedTests
     }
 
     // ── Event Records ───────────────────────────────────────────────────
-    [Fact]
-    public void TokenRefreshedEvent_CanBeCreated()
-    {
-        var e = new TokenRefreshedEvent(Guid.NewGuid(), "refresh_tok", DateTime.UtcNow);
-        e.Should().NotBeNull();
-    }
-
-    [Fact]
-    public void UserSignedUpEvent_CanBeCreated()
-    {
-        var e = new UserSignedUpEvent(Guid.NewGuid(), "test@example.com", "TestUser", DateTime.UtcNow);
-        e.Should().NotBeNull();
-    }
-
-    [Fact]
-    public void MfaVerifiedEvent_CanBeCreated()
-    {
-        var e = new MfaVerifiedEvent(Guid.NewGuid(), "totp", "device123", DateTime.UtcNow);
-        e.Should().NotBeNull();
-    }
-
-    [Fact]
-    public void TokenRevokedEvent_CanBeCreated()
-    {
-        var e = new TokenRevokedEvent(Guid.NewGuid(), "refresh", "manual", DateTime.UtcNow);
-        e.Should().NotBeNull();
-    }
+    // The four fully orphaned event records (TokenRefreshedEvent, UserSignedUpEvent,
+    // MfaVerifiedEvent, TokenRevokedEvent) were removed with issue #1199 — they had no
+    // producer and no consumer. Producer-path coverage for the live events lives in
+    // Services/AuthEventEmissionTests.cs.
 }

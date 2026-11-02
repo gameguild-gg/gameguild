@@ -28,6 +28,15 @@ public class AuthenticationAttemptRepository(IApplicationDbContext context) : IA
             .ToListAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<int> CountRecentFailedAttemptsAsync(string email, DateTime since, CancellationToken cancellationToken = default)
+    {
+        var normalizedEmail = email.ToLowerInvariant();
+        return await AuthenticationAttempts
+            .CountAsync(a => a.Email == normalizedEmail && !a.IsSuccessful && a.AttemptedAt >= since, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public async Task<AuthenticationAttempt?> GetLastSuccessfulAttemptAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await AuthenticationAttempts.Where(a => a.UserId == userId && a.IsSuccessful).OrderByDescending(a => a.AttemptedAt).FirstOrDefaultAsync(cancellationToken);

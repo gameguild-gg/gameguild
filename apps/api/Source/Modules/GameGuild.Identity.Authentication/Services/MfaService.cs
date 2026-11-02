@@ -1,12 +1,13 @@
 using GameGuild.Configuration.ApplicationLayer;
+using GameGuild.CQRS;
 using GameGuild.Identity.Users;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-///     MFA orchestrator that coordinates TOTP, backup-code, SMS-OTP, push-challenge and
-///     attempt-tracking sub-services. Kept for backward compatibility with code that depends
+///     MFA orchestrator that coordinates TOTP, backup-code, SMS-OTP, email-OTP, push-challenge
+///     and attempt-tracking sub-services. Kept for backward compatibility with code that depends
 ///     on IMfaService.
 /// </summary>
 public sealed class MfaService(
@@ -17,8 +18,10 @@ public sealed class MfaService(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     ISmsMfaService? smsMfaService = null,
+    IEmailMfaService? emailMfaService = null,
     IPushMfaService? pushMfaService = null,
-    MfaOptions? mfaOptions = null) : IMfaService
+    MfaOptions? mfaOptions = null,
+    IPublisher? eventPublisher = null) : IMfaService
 {
     private readonly MfaOptions _mfaOptions = mfaOptions ?? new MfaOptions();
 
@@ -60,6 +63,26 @@ public sealed class MfaService(
         var isValid = await totpMfaService.VerifyTotpAsync(userId, totpCode, null, cancellationToken).ConfigureAwait(false);
         MfaEnrollmentMetrics.RecordEnrollment(MfaMethod.Totp, isValid ? "enrolled" : "verify-failed");
 
+        // In-process MFA lifecycle telemetry (issue #1199): the first successful TOTP
+        // verification is the instant the factor becomes enabled; a failed one is a
+        // verification failure during enrollment.
+        if (isValid)
+        {
+            await AuthenticationEventDispatch.PublishAsync(
+                eventPublisher,
+                new MfaEnabledEvent(userId, MfaMethod.Totp.ToString(), SystemClock.UtcNow),
+                logger,
+                cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await AuthenticationEventDispatch.PublishAsync(
+                eventPublisher,
+                new MfaVerificationFailedEvent(userId, MfaMethod.Totp.ToString(), "Enrollment verification failed", SystemClock.UtcNow),
+                logger,
+                cancellationToken).ConfigureAwait(false);
+        }
+
         return new MfaVerificationResult { Success = isValid, Message = isValid ? "MFA setup completed successfully" : "Invalid TOTP code" };
     }
 
@@ -68,36 +91,73 @@ public sealed class MfaService(
     {
         try
         {
-            bool isValid;
+            MfaVerificationResult result;
 
-            if (method == MfaMethod.Totp) { isValid = await totpMfaService.VerifyTotpAsync(userId, code, null, cancellationToken).ConfigureAwait(false); }
-            else if (method == MfaMethod.BackupCode) { isValid = await backupCodeMfaService.VerifyBackupCodeAsync(userId, code, null, cancellationToken).ConfigureAwait(false); }
-            else if (method == MfaMethod.Sms)
-            {
-                if (smsMfaService is null) { isValid = false; }
-                else { isValid = await smsMfaService.VerifyCodeAsync(userId, code, cancellationToken).ConfigureAwait(false); }
-            }
-            else if (method == MfaMethod.Push)
+            if (method == MfaMethod.Push)
             {
                 // Push verification is challenge-id driven (no typed code); delegate to the
                 // push service which resolves the user's outstanding challenge and its TTL.
-                if (pushMfaService is null) { isValid = false; }
-                else { return await pushMfaService.VerifyAsync(userId, cancellationToken).ConfigureAwait(false); }
+                result = pushMfaService is null
+                    ? new MfaVerificationResult { Success = false, Message = "Invalid MFA code" }
+                    : await pushMfaService.VerifyAsync(userId, cancellationToken).ConfigureAwait(false);
             }
-            else { isValid = false; }
-
-            MfaEnrollmentMetrics.RecordVerification(method, isValid);
-            return new MfaVerificationResult
+            else
             {
-                Success = isValid,
-                RequiresAdditionalVerification = false,
-                Message = isValid ? "MFA verification successful" : "Invalid MFA code"
-            };
+                bool isValid;
+
+                if (method == MfaMethod.Totp) { isValid = await totpMfaService.VerifyTotpAsync(userId, code, null, cancellationToken).ConfigureAwait(false); }
+                else if (method == MfaMethod.BackupCode) { isValid = await backupCodeMfaService.VerifyBackupCodeAsync(userId, code, null, cancellationToken).ConfigureAwait(false); }
+                else if (method == MfaMethod.Sms)
+                {
+                    if (smsMfaService is null) { isValid = false; }
+                    else { isValid = await smsMfaService.VerifyCodeAsync(userId, code, cancellationToken).ConfigureAwait(false); }
+                }
+                else if (method == MfaMethod.Email)
+                {
+                    if (emailMfaService is null) { isValid = false; }
+                    else { isValid = await emailMfaService.VerifyCodeAsync(userId, code, cancellationToken).ConfigureAwait(false); }
+                }
+                else { isValid = false; }
+
+                MfaEnrollmentMetrics.RecordVerification(method, isValid);
+                result = new MfaVerificationResult
+                {
+                    Success = isValid,
+                    RequiresAdditionalVerification = false,
+                    Message = isValid ? "MFA verification successful" : "Invalid MFA code"
+                };
+            }
+
+            // In-process MFA verification telemetry (issue #1199).
+            if (result.Success)
+            {
+                await AuthenticationEventDispatch.PublishAsync(
+                    eventPublisher,
+                    new MfaVerificationSucceededEvent(userId, method.ToString(), SystemClock.UtcNow),
+                    logger,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await AuthenticationEventDispatch.PublishAsync(
+                    eventPublisher,
+                    new MfaVerificationFailedEvent(userId, method.ToString(), result.Message ?? "Invalid MFA code", SystemClock.UtcNow),
+                    logger,
+                    cancellationToken).ConfigureAwait(false);
+            }
+
+            return result;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to verify MFA for user: {UserId}", userId);
+
+            await AuthenticationEventDispatch.PublishAsync(
+                eventPublisher,
+                new MfaVerificationFailedEvent(userId, method.ToString(), ex.Message ?? "MFA verification failed", SystemClock.UtcNow),
+                logger,
+                cancellationToken).ConfigureAwait(false);
 
             return new MfaVerificationResult { Success = false, Message = ex.Message };
         }
@@ -128,6 +188,13 @@ public sealed class MfaService(
         if (disabled)
         {
             MfaEnrollmentMetrics.RecordEnrollment(MfaMethod.Totp, "disabled");
+
+            // In-process MFA lifecycle telemetry (issue #1199): the factor is confirmed disabled.
+            await AuthenticationEventDispatch.PublishAsync(
+                eventPublisher,
+                new MfaDisabledEvent(userId, MfaMethod.Totp.ToString(), SystemClock.UtcNow),
+                logger,
+                cancellationToken).ConfigureAwait(false);
         }
 
         return disabled;

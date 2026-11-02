@@ -274,7 +274,8 @@ public class NotificationsController : BaseApiController
             request.MarketingEnabled,
             request.SocialEnabled,
             request.LearningEnabled,
-            request.AchievementsEnabled),
+            request.AchievementsEnabled,
+            request.WhatsAppEnabled),
             cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
@@ -427,6 +428,7 @@ public class NotificationsController : BaseApiController
             preference.SocialEnabled,
             preference.LearningEnabled,
             preference.AchievementsEnabled,
+            preference.WhatsAppEnabled,
             preference.QuietHoursStart,
             preference.QuietHoursEnd,
             preference.Timezone,
@@ -463,6 +465,7 @@ public sealed record NotificationPreferenceDto(
     bool SocialEnabled,
     bool LearningEnabled,
     bool AchievementsEnabled,
+    bool WhatsAppEnabled,
     TimeOnly? QuietHoursStart,
     TimeOnly? QuietHoursEnd,
     string? Timezone,
@@ -481,7 +484,8 @@ public sealed record UpdatePreferencesRequest(
     bool? MarketingEnabled,
     bool? SocialEnabled,
     bool? LearningEnabled,
-    bool? AchievementsEnabled);
+    bool? AchievementsEnabled,
+    bool? WhatsAppEnabled = null);
 
 public sealed record SetQuietHoursRequest(
     TimeOnly? Start,
