@@ -372,7 +372,7 @@ public class RevenueReportServiceTests
     private readonly Mock<IRevenueReconciliationRepository> _runs = new();
 
     private RevenueReportService CreateService()
-        => new(_revenueEvents.Object, _runs.Object);
+        => new(_revenueEvents.Object, _runs.Object, new Mock<IApplicationDbContext>().Object);
 
     [Fact]
     public async Task GetComplianceReportAsync_AggregatesTotalsUncountedAndReconciliation()

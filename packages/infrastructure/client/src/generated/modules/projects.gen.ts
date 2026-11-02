@@ -622,6 +622,32 @@ export class ProjectsModule {
   }
 
   /**
+   * Create (or return) the caller's workspace project for a game jam. The acting user is
+   * taken from the authenticated context; the optional body only carries a title override.
+   */
+  async postProjectsJam(jamId: string, body: Types.ProjectsCreateJamProjectInput): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
+    const url = `/v1/projects/jam/${jamId}`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.ProjectsCreateJamProjectInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ProjectsProjectApiOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Gets the Projects that belong to the authenticated user's actual workspace relationship.
    * This scope intentionally does not expand for tenant or system administrators.
    */

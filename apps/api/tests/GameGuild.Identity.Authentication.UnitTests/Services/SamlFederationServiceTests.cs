@@ -6,8 +6,7 @@ using System.Text;
 using System.Xml;
 using FluentAssertions;
 using GameGuild.Configuration.PresentationLayer.Authentication;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.DependencyInjection;
+using GameGuild.Identity.Authentication.UnitTests.Infrastructure;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
@@ -28,8 +27,6 @@ public sealed class SamlFederationServiceTests : IDisposable
     private const string IdpEntityId = "https://sts.corp.example.test";
     private const string IdpSignInUrl = "https://sts.corp.example.test/sso";
 
-    private readonly IServiceProvider _services = new ServiceCollection().AddDistributedMemoryCache().BuildServiceProvider();
-
     private readonly RSA _idpKey = RSA.Create(2048);
     private readonly RSA _rotationKey = RSA.Create(2048);
     private readonly RSA _foreignKey = RSA.Create(2048);
@@ -41,13 +38,23 @@ public sealed class SamlFederationServiceTests : IDisposable
         _foreignKey.Dispose();
     }
 
-    private IDistributedCache Cache => _services.GetRequiredService<IDistributedCache>();
+    private readonly InMemorySamlProtocolStateStore _protocolState = new();
+
+    /// <summary>RelayState issued by the most recent <see cref="IssuePendingRequestIdAsync" /> call.</summary>
+    private string _lastIssuedRelayState = string.Empty;
 
     private SamlFederationService CreateSut(AuthenticationOptions options) =>
         new(
-            new DistributedCacheSamlProtocolStateStore(Cache),
+            _protocolState,
             options,
             NullLogger<SamlFederationService>.Instance);
+
+    /// <summary>
+    ///     Consumes with the RelayState issued by the latest initiation (the value a
+    ///     well-behaved browser echoes back); relay-mismatch tests pass an explicit value.
+    /// </summary>
+    private Task<SamlFederatedIdentity> Consume(SamlFederationService sut, string samlResponse, string? relayState = null) =>
+        sut.ConsumeAssertionAsync(Slug, samlResponse, relayState ?? _lastIssuedRelayState);
 
     private string CertificateBase64(RSA key, DateTimeOffset notBefore, DateTimeOffset notAfter)
     {
@@ -97,6 +104,7 @@ public sealed class SamlFederationServiceTests : IDisposable
     private async Task<string> IssuePendingRequestIdAsync(SamlFederationService sut)
     {
         var challenge = await sut.BuildSignInRedirectAsync(Slug, null);
+        _lastIssuedRelayState = challenge.RelayState;
         return challenge.RequestId;
     }
 
@@ -161,7 +169,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var identity = await sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId }));
+        var identity = await Consume(sut, BuildResponse(o => o with { InResponseTo = requestId }));
 
         identity.Slug.Should().Be(Slug);
         identity.ProviderKey.Should().Be("jane@corp.example.test");
@@ -179,7 +187,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var identity = await sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId, SignAssertion = false, SignResponse = true }));
+        var identity = await Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, SignAssertion = false, SignResponse = true }));
 
         identity.ProviderKey.Should().Be("jane@corp.example.test");
     }
@@ -197,7 +205,7 @@ public sealed class SamlFederationServiceTests : IDisposable
 
         // The IdP model emits the attribute names the mapping expects ("mail" and
         // "displayName"); the service must resolve them onto email/name.
-        var identity = await sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with
+        var identity = await Consume(sut, BuildResponse(o => o with
         {
             InResponseTo = requestId,
             EmailAttributeName = "mail",
@@ -216,7 +224,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(options));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var identity = await sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId }));
+        var identity = await Consume(sut, BuildResponse(o => o with { InResponseTo = requestId }));
 
         identity.EmailVerified.Should().BeTrue();
     }
@@ -229,7 +237,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId, SignAssertion = false }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, SignAssertion = false }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*unsigned*");
     }
@@ -240,7 +248,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId, SigningKey = _foreignKey }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, SigningKey = _foreignKey }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*failed verification*");
     }
@@ -254,7 +262,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(options));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*expired*");
     }
@@ -270,7 +278,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(options));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var identity = await sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId, SigningKey = _rotationKey }));
+        var identity = await Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, SigningKey = _rotationKey }));
 
         identity.ProviderKey.Should().Be("jane@corp.example.test");
     }
@@ -286,7 +294,7 @@ public sealed class SamlFederationServiceTests : IDisposable
 
         var samlResponse = BuildResponse(o => o with { InResponseTo = requestId, SignAssertion = false, SignResponse = true }, referenceUriOverride: "assertion");
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, samlResponse);
+        var act = () => Consume(sut, samlResponse);
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*failed verification*");
     }
@@ -299,7 +307,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId, Issuer = "https://evil.example.test" }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, Issuer = "https://evil.example.test" }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*issuer*");
     }
@@ -310,7 +318,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId, Audience = "https://other-sp.example.test" }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, Audience = "https://other-sp.example.test" }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*audience*");
     }
@@ -321,7 +329,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId, OmitAudienceRestriction = true }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, OmitAudienceRestriction = true }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*audience*");
     }
@@ -334,7 +342,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId, Destination = destination }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, Destination = destination }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*Destination*");
     }
@@ -347,7 +355,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with
+        var act = () => Consume(sut, BuildResponse(o => o with
         {
             InResponseTo = requestId,
             ConditionsNotOnOrAfter = DateTimeOffset.UtcNow.AddMinutes(-5),
@@ -363,7 +371,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId, ConditionsNotBefore = DateTimeOffset.UtcNow.AddHours(1) }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, ConditionsNotBefore = DateTimeOffset.UtcNow.AddHours(1) }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*not yet valid*");
     }
@@ -374,7 +382,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId, OmitConditionsNotOnOrAfter = true }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, OmitConditionsNotOnOrAfter = true }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*NotOnOrAfter*");
     }
@@ -387,7 +395,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(options));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var identity = await sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with
+        var identity = await Consume(sut, BuildResponse(o => o with
         {
             InResponseTo = requestId,
             ConditionsNotBefore = DateTimeOffset.UtcNow.AddSeconds(-1),
@@ -407,7 +415,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = "_never-issued" }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = "_never-issued" }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*no outstanding AuthnRequest*");
     }
@@ -419,11 +427,11 @@ public sealed class SamlFederationServiceTests : IDisposable
         var requestId = await IssuePendingRequestIdAsync(sut);
         var samlResponse = BuildResponse(o => o with { InResponseTo = requestId });
 
-        await sut.ConsumeAssertionAsync(Slug, samlResponse);
+        await Consume(sut, samlResponse);
 
         // Replay with a fresh pending request but the same assertion ID: still refused.
         var secondRequestId = await IssuePendingRequestIdAsync(sut);
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = secondRequestId, AssertionId = ExtractAssertionId(samlResponse) }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = secondRequestId, AssertionId = ExtractAssertionId(samlResponse) }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*replay*");
     }
@@ -434,12 +442,41 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        await sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId }));
+        await Consume(sut, BuildResponse(o => o with { InResponseTo = requestId }));
 
         // Same InResponseTo again (with a fresh assertion) must fail: the request was consumed.
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*no outstanding AuthnRequest*");
+    }
+
+    [Fact]
+    public async Task ConsumeAssertionAsync_ConcurrentReplayOfSameResponse_ExactlyOneSucceeds()
+    {
+        // Issue #268 acceptance, review item 3: two consumers racing with the very
+        // same (genuinely signed) response — the atomic store must let exactly one
+        // of them win; the loser is refused on single-use state, never duplicated.
+        var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
+        var requestId = await IssuePendingRequestIdAsync(sut);
+        var samlResponse = BuildResponse(o => o with { InResponseTo = requestId });
+        var relayState = _lastIssuedRelayState;
+
+        var attempts = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => TryConsume()));
+
+        attempts.Count(success => success).Should().Be(1, "a signed SAML response is single-use however many consumers race");
+
+        async Task<bool> TryConsume()
+        {
+            try
+            {
+                await sut.ConsumeAssertionAsync(Slug, samlResponse, relayState);
+                return true;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return false;
+            }
+        }
     }
 
     [Fact]
@@ -447,7 +484,7 @@ public sealed class SamlFederationServiceTests : IDisposable
     {
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = null }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = null }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*InResponseTo*");
     }
@@ -457,8 +494,128 @@ public sealed class SamlFederationServiceTests : IDisposable
     {
         var sut = CreateSut(AuthOptionsWith(ProviderOptions(allowIdpInitiated: true)));
 
-        var identity = await sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = null }));
+        var identity = await Consume(sut, BuildResponse(o => o with { InResponseTo = null }));
 
+        identity.ProviderKey.Should().Be("jane@corp.example.test");
+    }
+
+    // ── Signed subject correlation (Web SSO profile) ───────────────────────────
+
+    [Fact]
+    public async Task ConsumeAssertionAsync_SubjectCorrelationMismatch_Rejected()
+    {
+        // The outer Response says it answers this service's request, but the SIGNED
+        // SubjectConfirmationData answers a different one — the authenticated
+        // correlation disagrees with the unsigned outer attribute.
+        var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
+        var requestId = await IssuePendingRequestIdAsync(sut);
+
+        var act = () => Consume(sut, BuildResponse(o => o with
+        {
+            InResponseTo = requestId,
+            SubjectInResponseTo = "_someone-elses-request"
+        }));
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*does not match the response*");
+    }
+
+    [Fact]
+    public async Task ConsumeAssertionAsync_SubjectCorrelationMissing_Rejected()
+    {
+        var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
+        var requestId = await IssuePendingRequestIdAsync(sut);
+
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, OmitSubjectInResponseTo = true }));
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*no subject-confirmation InResponseTo*");
+    }
+
+    [Fact]
+    public async Task ConsumeAssertionAsync_SignedAssertionReplayedThroughUnsignedResponse_RejectedAndPendingPreserved()
+    {
+        // Signature-wrapping vector from the acceptance review: a genuinely-signed
+        // assertion (minted for request A) is re-wrapped into a forged, unsigned outer
+        // response whose InResponseTo points at the attacker's own fresh pending
+        // request B. The response-level check alone would accept this; the signed
+        // subject correlation refuses it — before B's pending state is consumed.
+        var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
+        var requestIdA = await IssuePendingRequestIdAsync(sut);
+        var relayA = _lastIssuedRelayState;
+        var requestIdB = await IssuePendingRequestIdAsync(sut);
+        var relayB = _lastIssuedRelayState;
+
+        var act = () => Consume(sut, BuildResponse(o => o with
+        {
+            InResponseTo = requestIdB,
+            SubjectInResponseTo = requestIdA,
+            SignAssertion = true,
+            SignResponse = false
+        }), relayB);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*does not match the response*");
+
+        // Correlation is validated BEFORE pending state is consumed, so the attacker's
+        // own pending request B is still intact and can still complete a legitimate flow.
+        var identity = await Consume(sut, BuildResponse(o => o with { InResponseTo = requestIdB }), relayB);
+        identity.ProviderKey.Should().Be("jane@corp.example.test");
+
+        // Request A's pending state was never burned by the failed attack either: the
+        // wrapped attempt never reached the store, so A can still complete legitimately.
+        var identityA = await Consume(sut, BuildResponse(o => o with { InResponseTo = requestIdA }), relayA);
+        identityA.ProviderKey.Should().Be("jane@corp.example.test");
+    }
+
+    [Fact]
+    public async Task ConsumeAssertionAsync_IdpInitiated_WithSubjectCorrelation_Rejected()
+    {
+        // An unsolicited response must not carry any InResponseTo: an assertion minted
+        // for some other request cannot be passed off as IdP-initiated.
+        var sut = CreateSut(AuthOptionsWith(ProviderOptions(allowIdpInitiated: true)));
+
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = null, SubjectInResponseTo = "_some-request" }));
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*unsolicited but carries an InResponseTo*");
+    }
+
+    // ── RelayState callback binding ────────────────────────────────────────────
+
+    [Fact]
+    public async Task ConsumeAssertionAsync_ForeignRelayState_Rejected()
+    {
+        // State issued to another browser/provider round-trip: the RelayState posted
+        // with the response does not match the one bound to the pending request.
+        var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
+        var requestId = await IssuePendingRequestIdAsync(sut);
+
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId }), "relay-from-another-browser");
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*no outstanding AuthnRequest*");
+    }
+
+    [Fact]
+    public async Task ConsumeAssertionAsync_MissingRelayState_Rejected()
+    {
+        var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
+        var requestId = await IssuePendingRequestIdAsync(sut);
+
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId }), string.Empty);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*lacks the RelayState*");
+    }
+
+    [Fact]
+    public async Task ConsumeAssertionAsync_WrongRelayStateDoesNotBurnPendingRequest()
+    {
+        // Like the production conditional DELETE, a failed RelayState match must not
+        // consume the pending request — the legitimate browser can still complete.
+        var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
+        var requestId = await IssuePendingRequestIdAsync(sut);
+        var relayState = _lastIssuedRelayState;
+
+        var wrongRelay = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, AssertionId = "_assert-first" }), "wrong-relay");
+        await wrongRelay.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*no outstanding AuthnRequest*");
+
+        var identity = await Consume(sut, BuildResponse(o => o with { InResponseTo = requestId, AssertionId = "_assert-second" }), relayState);
         identity.ProviderKey.Should().Be("jane@corp.example.test");
     }
 
@@ -470,7 +627,7 @@ public sealed class SamlFederationServiceTests : IDisposable
     {
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, payload);
+        var act = () => Consume(sut, payload);
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*Base64*");
     }
@@ -480,7 +637,7 @@ public sealed class SamlFederationServiceTests : IDisposable
     {
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, Convert.ToBase64String("<not-saml/>"u8.ToArray()));
+        var act = () => Consume(sut, Convert.ToBase64String("<not-saml/>"u8.ToArray()));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*samlp:Response*");
     }
@@ -491,7 +648,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var payload = "<?xml version=\"1.0\"?><!DOCTYPE samlp:Response [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><samlp:Response xmlns:samlp=\"urn:oasis:names:tc:SAML:2.0:protocol\"/>";
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, Convert.ToBase64String(Encoding.UTF8.GetBytes(payload)));
+        var act = () => Consume(sut, Convert.ToBase64String(Encoding.UTF8.GetBytes(payload)));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*DTD*");
     }
@@ -503,7 +660,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var requestId = await IssuePendingRequestIdAsync(sut);
         var samlResponse = BuildResponse(o => o with { InResponseTo = requestId }, duplicateAssertion: true);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, samlResponse);
+        var act = () => Consume(sut, samlResponse);
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*exactly one assertion*");
     }
@@ -516,7 +673,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions()));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var identity = await sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with
+        var identity = await Consume(sut, BuildResponse(o => o with
         {
             InResponseTo = requestId,
             AuthnContextClassRef = "urn:oasis:names:tc:SAML:2.0:ac:classes:TimeSyncToken"
@@ -531,7 +688,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions(mfaContexts: ["urn:corp:acr:custom-mfa"])));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var standardMfa = await sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with
+        var standardMfa = await Consume(sut, BuildResponse(o => o with
         {
             InResponseTo = requestId,
             AuthnContextClassRef = "urn:oasis:names:tc:SAML:2.0:ac:classes:TimeSyncToken"
@@ -539,7 +696,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         standardMfa.HasMfaProof.Should().BeFalse("the standard class is not in this provider's configured MFA set");
 
         var secondRequestId = await IssuePendingRequestIdAsync(sut);
-        var customMfa = await sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with
+        var customMfa = await Consume(sut, BuildResponse(o => o with
         {
             InResponseTo = secondRequestId,
             AuthnContextClassRef = "urn:corp:acr:custom-mfa"
@@ -553,7 +710,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions(emailDomains: ["corp.example.test"])));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with
+        var act = () => Consume(sut, BuildResponse(o => o with
         {
             InResponseTo = requestId,
             NameId = "intruder@attacker.example.test",
@@ -569,7 +726,7 @@ public sealed class SamlFederationServiceTests : IDisposable
         var sut = CreateSut(AuthOptionsWith(ProviderOptions(nameIdFormat: "urn:oasis:names:tc:SAML:1.1:nameid-format:persistent")));
         var requestId = await IssuePendingRequestIdAsync(sut);
 
-        var act = () => sut.ConsumeAssertionAsync(Slug, BuildResponse(o => o with { InResponseTo = requestId }));
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId }));
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("*NameID format*");
     }
@@ -669,7 +826,9 @@ public sealed class SamlFederationServiceTests : IDisposable
         bool OmitConditionsNotOnOrAfter = false,
         bool OmitAudienceRestriction = false,
         string AuthnContextClassRef = "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport",
-        string? AssertionId = null);
+        string? AssertionId = null,
+        string? SubjectInResponseTo = null,
+        bool OmitSubjectInResponseTo = false);
 
     private string BuildResponse(Func<ResponseScenario, ResponseScenario> configure, string? referenceUriOverride = null, bool duplicateAssertion = false)
     {
@@ -691,6 +850,11 @@ public sealed class SamlFederationServiceTests : IDisposable
         var notOnOrAfter = scenario.OmitConditionsNotOnOrAfter
             ? string.Empty
             : $" NotOnOrAfter=\"{XmlConvert.ToString(scenario.ConditionsNotOnOrAfter ?? DateTimeOffset.UtcNow.AddMinutes(5))}\"";
+        var subjectInResponseTo = scenario.OmitSubjectInResponseTo
+            ? string.Empty
+            : (scenario.SubjectInResponseTo ?? scenario.InResponseTo) is { } correlation
+                ? $" InResponseTo=\"{correlation}\""
+                : string.Empty;
         var audienceXml = scenario.OmitAudienceRestriction
             ? string.Empty
             : $"<saml:AudienceRestriction><saml:Audience>{scenario.Audience}</saml:Audience></saml:AudienceRestriction>";
@@ -714,7 +878,7 @@ public sealed class SamlFederationServiceTests : IDisposable
     <saml:Subject>
       <saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">{scenario.NameId}</saml:NameID>
       <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
-        <saml:SubjectConfirmationData NotOnOrAfter="{XmlConvert.ToString(scenario.SubjectNotOnOrAfter ?? DateTimeOffset.UtcNow.AddMinutes(5))}" Recipient="{AcsUrl}"/>
+        <saml:SubjectConfirmationData{subjectInResponseTo} NotOnOrAfter="{XmlConvert.ToString(scenario.SubjectNotOnOrAfter ?? DateTimeOffset.UtcNow.AddMinutes(5))}" Recipient="{AcsUrl}"/>
       </saml:SubjectConfirmation>
     </saml:Subject>
     <saml:Conditions{notBefore}{notOnOrAfter}>{audienceXml}</saml:Conditions>

@@ -71,6 +71,19 @@ public class DisputeEvidenceConfiguration : IEntityTypeConfiguration<DisputeEvid
             .HasColumnName("metadata")
             .HasMaxLength(2000);
 
+        builder.Property(x => x.GatewaySubmittedAt)
+            .HasColumnName("gateway_submitted_at");
+
+        // Provider file delivery tracking (issue #419): the provider file/evidence reference
+        // accepted for this row and the digest of the bytes that were delivered.
+        builder.Property(x => x.ProviderFileId)
+            .HasColumnName("provider_file_id")
+            .HasMaxLength(255);
+
+        builder.Property(x => x.ContentDigest)
+            .HasColumnName("content_digest")
+            .HasMaxLength(128);
+
         // Configure relationship to PaymentDispute
         builder.HasOne(x => x.Dispute)
             .WithMany(d => d.Evidence)

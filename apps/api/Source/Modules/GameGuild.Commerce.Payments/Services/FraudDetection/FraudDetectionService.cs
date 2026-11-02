@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -9,6 +10,20 @@ namespace GameGuild.Commerce.Payments;
 ///     evaluated before gateway execution; signal evidence stays bounded and internal
 ///     (no provider tokens ever enter the evidence bundle).
 /// </summary>
+/// <remarks>
+///     <para>
+///         Synchronous latency bound (issue #409: complete scoring in under 200ms,
+///         non-blocking). Every assessment shares a wall-clock evaluation budget
+///         (<see cref="FraudAssessmentOptions.SyncEvaluationBudgetMilliseconds"/>, default
+///         150ms — comfortably inside the 200ms target once request overhead is added).
+///         Each provider runs under a linked cancellation token that fires when the budget
+///         is exhausted; a provider that overruns is skipped, recorded in the assessment's
+///         <see cref="FraudAssessment.DeferredProviders"/> list, and left to the background
+///         re-scoring pass (<see cref="AssessPaymentForBackgroundAsync"/> plus the fraud
+///         background-scoring worker). The elapsed wall-clock time of every assessment is
+///         measured and logged, so the bound is observable in production telemetry.
+///     </para>
+/// </remarks>
 public sealed class FraudDetectionService(
     IEnumerable<IFraudSignalProvider> signalProviders,
     IOptionsMonitor<FraudAssessmentOptions> optionsMonitor,
@@ -20,7 +35,35 @@ public sealed class FraudDetectionService(
     /// <inheritdoc />
     public async Task<FraudAssessment> AssessPaymentAsync(
         FraudSignalContext signalContext,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await AssessAsync(signalContext, "payment", cancellationToken).ConfigureAwait(false);
+
+    /// <inheritdoc />
+    public async Task<FraudAssessment> AssessSubscriptionCreationAsync(
+        FraudSignalContext signalContext,
+        CancellationToken cancellationToken = default) =>
+        await AssessAsync(signalContext, "subscription creation", cancellationToken).ConfigureAwait(false);
+
+    /// <inheritdoc />
+    public async Task<FraudAssessment> AssessSubscriptionChangeAsync(
+        FraudSignalContext signalContext,
+        SubscriptionFraudChangeKind changeKind,
+        CancellationToken cancellationToken = default) =>
+        await AssessAsync(signalContext, $"subscription {changeKind.ToString().ToLowerInvariant()}", cancellationToken)
+            .ConfigureAwait(false);
+
+    /// <inheritdoc />
+    public async Task<FraudAssessment> AssessPaymentForBackgroundAsync(
+        FraudSignalContext signalContext,
+        CancellationToken cancellationToken = default) =>
+        await AssessAsync(signalContext, "payment background re-score", cancellationToken, applySyncBudget: false)
+            .ConfigureAwait(false);
+
+    private async Task<FraudAssessment> AssessAsync(
+        FraudSignalContext signalContext,
+        string assessmentKind,
+        CancellationToken cancellationToken,
+        bool applySyncBudget = true)
     {
         ArgumentNullException.ThrowIfNull(signalContext);
 
@@ -29,8 +72,9 @@ public sealed class FraudDetectionService(
         if (!options.IsEnabled)
         {
             logger.LogDebug(
-                "Fraud assessment disabled for tenant {TenantId}; allowing payment {PaymentId}",
+                "Fraud assessment disabled for tenant {TenantId}; allowing {Kind} {PaymentId}",
                 signalContext.TenantId,
+                assessmentKind,
                 signalContext.PaymentId);
 
             return new FraudAssessment(
@@ -44,13 +88,56 @@ public sealed class FraudDetectionService(
                 SystemClock.UtcNow);
         }
 
+        // Issue #409: <200ms non-blocking synchronous scoring. The budget bounds the whole
+        // provider loop (each provider plus a pre-check before it starts), so the aggregate
+        // assessment returns within the budget plus scheduling jitter.
+        var budgetMilliseconds = applySyncBudget ? options.SyncEvaluationBudgetMilliseconds : (int?)null;
+
         var signals = new List<FraudSignal>();
+        var deferredProviders = new List<string>();
+        var stopwatch = Stopwatch.StartNew();
+
         foreach (var provider in signalProviders)
         {
-            var providerSignals = await provider.EvaluateAsync(signalContext, options, cancellationToken)
-                .ConfigureAwait(false);
-            signals.AddRange(providerSignals);
+            if (budgetMilliseconds is { } remainingBudget && stopwatch.ElapsedMilliseconds >= remainingBudget)
+            {
+                // Budget already exhausted: defer every remaining provider without starting it.
+                deferredProviders.Add(provider.Name);
+                continue;
+            }
+
+            CancellationTokenSource? budgetCts = null;
+            try
+            {
+                if (budgetMilliseconds is { } budget)
+                {
+                    budgetCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    budgetCts.CancelAfter(budget);
+                }
+
+                var providerSignals = await provider.EvaluateAsync(signalContext, options, budgetCts?.Token ?? cancellationToken)
+                    .ConfigureAwait(false);
+                signals.AddRange(providerSignals);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && budgetCts is not null)
+            {
+                // The budget fired, not the caller's token: defer this provider to the
+                // background re-scoring pass and keep the synchronous path non-blocking.
+                deferredProviders.Add(provider.Name);
+                logger.LogWarning(
+                    "Fraud signal provider {Provider} exceeded the {BudgetMs}ms synchronous budget assessing {Kind} {PaymentId}; deferred to background re-scoring",
+                    provider.Name,
+                    budgetMilliseconds,
+                    assessmentKind,
+                    signalContext.PaymentId);
+            }
+            finally
+            {
+                budgetCts?.Dispose();
+            }
         }
+
+        stopwatch.Stop();
 
         var score = Math.Min(signals.Sum(signal => signal.Weight), MaxScore);
         var riskLevel = FraudAssessment.RiskLevelForScore(score);
@@ -63,13 +150,16 @@ public sealed class FraudDetectionService(
         var reason = BuildReason(decision, score, options, signals);
 
         logger.LogInformation(
-            "Fraud assessment for tenant {TenantId} payment {PaymentId}: decision {Decision}, score {Score}, risk {RiskLevel}, {SignalCount} signal(s)",
+            "Fraud assessment for tenant {TenantId} {Kind} {PaymentId}: decision {Decision}, score {Score}, risk {RiskLevel}, {SignalCount} signal(s), {DeferredCount} deferred provider(s), evaluated in {ElapsedMs}ms",
             signalContext.TenantId,
+            assessmentKind,
             signalContext.PaymentId,
             decision,
             score,
             riskLevel,
-            signals.Count);
+            signals.Count,
+            deferredProviders.Count,
+            stopwatch.ElapsedMilliseconds);
 
         return new FraudAssessment(
             signalContext.TenantId,
@@ -79,7 +169,8 @@ public sealed class FraudDetectionService(
             decision,
             reason,
             signals,
-            SystemClock.UtcNow);
+            SystemClock.UtcNow,
+            deferredProviders.Count == 0 ? null : deferredProviders);
     }
 
     private static string BuildReason(

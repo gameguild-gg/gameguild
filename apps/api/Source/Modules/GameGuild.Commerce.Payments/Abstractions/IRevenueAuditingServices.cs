@@ -111,6 +111,24 @@ public interface IRevenueReportService
         Guid? tenantId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Rank the most-transacted currencies over an inclusive period (issue #412 spec G):
+    /// per-currency transaction counts and credit/debit/net totals, ordered by transaction
+    /// count (then net volume, then code). Amounts are never consolidated across currencies.
+    /// </summary>
+    /// <param name="fromUtc">Inclusive period start (UTC).</param>
+    /// <param name="toUtc">Inclusive period end (UTC).</param>
+    /// <param name="tenantId">Optional tenant scope.</param>
+    /// <param name="limit">Maximum ranked entries (1..50, default 10).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The ranked popularity report.</returns>
+    Task<CurrencyPopularityReport> GetPopularCurrenciesAsync(
+        DateTime fromUtc,
+        DateTime toUtc,
+        Guid? tenantId,
+        int limit = 10,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Serialize the compliance and trend reports for external delivery.</summary>
     /// <param name="fromUtc">Inclusive period start (UTC).</param>
     /// <param name="toUtc">Inclusive period end (UTC).</param>
@@ -123,6 +141,56 @@ public interface IRevenueReportService
         DateTime fromUtc,
         DateTime toUtc,
         string format,
+        Guid? tenantId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Base-currency revenue report + reconciliation (issue #412 specs F/G): per-currency
+    /// totals converted to the tenant base currency at the period-end rate, with reconciled
+    /// grand totals. Unconvertible currencies stay listed but excluded from base totals.
+    /// </summary>
+    /// <param name="fromUtc">Inclusive period start (UTC).</param>
+    /// <param name="toUtc">Inclusive period end (UTC).</param>
+    /// <param name="tenantId">Tenant scope (required: the base currency is per tenant).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The base-currency revenue report.</returns>
+    /// <exception cref="BusinessRuleViolationException">
+    /// Thrown when the tenant has no base currency configured or no tenant scope is given.
+    /// </exception>
+    Task<BaseCurrencyRevenueReport> GetBaseCurrencyRevenueReportAsync(
+        DateTime fromUtc,
+        DateTime toUtc,
+        Guid? tenantId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Currency conversion costs analysis (issue #412 spec G): per non-base transacted
+    /// currency, the base value of its net volume at the market rate versus at the active
+    /// operator override rate, quantifying the cost of pinned rates per market.
+    /// </summary>
+    /// <param name="fromUtc">Inclusive period start (UTC).</param>
+    /// <param name="toUtc">Inclusive period end (UTC).</param>
+    /// <param name="tenantId">Tenant scope (required: the base currency is per tenant).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The conversion-cost report.</returns>
+    /// <exception cref="BusinessRuleViolationException">
+    /// Thrown when the tenant has no base currency configured or no tenant scope is given.
+    /// </exception>
+    Task<ConversionCostReport> GetConversionCostReportAsync(
+        DateTime fromUtc,
+        DateTime toUtc,
+        Guid? tenantId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Serializes the base-currency revenue report as RFC 4180 CSV.</summary>
+    /// <param name="fromUtc">Inclusive period start (UTC).</param>
+    /// <param name="toUtc">Inclusive period end (UTC).</param>
+    /// <param name="tenantId">Tenant scope.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The CSV export with file name and content type.</returns>
+    Task<RevenueReportExport> ExportBaseCurrencyReportAsync(
+        DateTime fromUtc,
+        DateTime toUtc,
         Guid? tenantId,
         CancellationToken cancellationToken = default);
 }

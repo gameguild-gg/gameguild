@@ -878,3 +878,109 @@ public sealed class GetExpiringTenantPermissionsQueryHandler(
         };
     }
 }
+
+// ============================================================================
+// ADVANCED EXPIRATION RULE INTROSPECTION (issue #331)
+// ============================================================================
+
+/// <summary>
+///     Query to describe the effective advanced expiration rule for a set of permissions
+///     (issue #331 "advanced expiration rules and conditions"): the composed constraint
+///     (global baseline + every matching per-permission key, strictest wins) and the matched
+///     configuration keys.
+/// </summary>
+public sealed record GetEffectiveExpirationRuleQuery : IQuery<GetEffectiveExpirationRuleResponse>
+{
+    /// <summary>
+    ///     Gets the tenant the introspection is scoped to (authorization only; rules are global).
+    /// </summary>
+    public required TenantId TenantId { get; init; }
+
+    /// <summary>
+    ///     Gets the permission strings to resolve the effective rule for (comma semantics:
+    ///     every rule matched by ANY listed permission composes into the result).
+    /// </summary>
+    public required string[] Permissions { get; init; }
+}
+
+/// <summary>
+///     The effective advanced expiration rule for a permission set.
+/// </summary>
+public sealed record GetEffectiveExpirationRuleResponse
+{
+    /// <summary>
+    ///     Gets the tenant the introspection was scoped to.
+    /// </summary>
+    public required Guid TenantId { get; init; }
+
+    /// <summary>
+    ///     Gets the permission strings the rule was resolved for.
+    /// </summary>
+    public required string[] Permissions { get; init; }
+
+    /// <summary>
+    ///     Gets whether a matching rule imposes any constraint.
+    /// </summary>
+    public required bool HasConstraints { get; init; }
+
+    /// <summary>
+    ///     Gets whether the permission set may never be granted permanently.
+    /// </summary>
+    public bool? RequireExpiration { get; init; }
+
+    /// <summary>
+    ///     Gets the shortest allowed expiration distance from the operation instant, if constrained.
+    /// </summary>
+    public TimeSpan? MinDuration { get; init; }
+
+    /// <summary>
+    ///     Gets the longest allowed expiration distance from the operation instant, if constrained.
+    /// </summary>
+    public TimeSpan? MaxDuration { get; init; }
+
+    /// <summary>
+    ///     Gets the longest allowed single-extension period, if constrained.
+    /// </summary>
+    public TimeSpan? MaxExtension { get; init; }
+
+    /// <summary>
+    ///     Gets the configuration keys that contributed to the composed rule ("(global)" for the baseline).
+    /// </summary>
+    public required string[] MatchedRuleKeys { get; init; }
+}
+
+/// <summary>
+///     Handler for GetEffectiveExpirationRuleQuery.
+/// </summary>
+public sealed class GetEffectiveExpirationRuleQueryHandler(
+    IPermissionExpirationRuleEvaluator ruleEvaluator,
+    IActorContextAccessor actorContextAccessor,
+    ILogger<GetEffectiveExpirationRuleQueryHandler> logger)
+    : IQueryHandler<GetEffectiveExpirationRuleQuery, GetEffectiveExpirationRuleResponse>
+{
+    private ActorContext Actor => actorContextAccessor.ActorContext;
+
+    public Task<GetEffectiveExpirationRuleResponse> Handle(GetEffectiveExpirationRuleQuery request, CancellationToken cancellationToken)
+    {
+        PermissionExpirationCommandGuards.EnsureCanManageTenant(Actor, request.TenantId.Value, "view expiration rules");
+
+        logger.LogInformation(
+            "Resolving effective expiration rule for {PermissionCount} permissions in tenant {TenantId}",
+            request.Permissions.Length,
+            request.TenantId);
+
+        var effective = ruleEvaluator.Describe(request.Permissions);
+
+        return Task.FromResult(new GetEffectiveExpirationRuleResponse
+        {
+            TenantId = request.TenantId.Value,
+            Permissions = request.Permissions.ToArray(),
+            HasConstraints = !effective.Rule.IsEmpty,
+            RequireExpiration = effective.Rule.RequireExpiration,
+            MinDuration = effective.Rule.MinDuration,
+            MaxDuration = effective.Rule.MaxDuration,
+            MaxExtension = effective.Rule.MaxExtension,
+            MatchedRuleKeys = effective.MatchedRuleKeys.ToArray()
+        });
+    }
+}

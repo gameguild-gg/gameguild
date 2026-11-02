@@ -10,12 +10,14 @@ namespace GameGuild.Commerce.Payments;
 ///     actions). Guarded (the <c>payments:admin</c> permission plus an authenticated
 ///     reviewer and tenant match) and audited (a payment audit-trail entry records each
 ///     transition). One invalid item never fails the batch: it is skipped with a reason.
+///     Declined (confirmed-fraud) items are auto-blacklisted like the single-item flow.
 /// </summary>
 public sealed class ResolveFraudReviewsBulkCommandHandler(
     IPaymentRepository paymentRepository,
     IRevenueAuditService revenueAuditService,
     IActorContextAccessor actorContextAccessor,
-    ILogger<ResolveFraudReviewsBulkCommandHandler> logger) : ICommandHandler<ResolveFraudReviewsBulkCommand, FraudReviewsBulkResolutionResult>
+    ILogger<ResolveFraudReviewsBulkCommandHandler> logger,
+    FraudReviewAutoBlacklister? autoBlacklister = null) : ICommandHandler<ResolveFraudReviewsBulkCommand, FraudReviewsBulkResolutionResult>
 {
     private const int MaxBatchSize = 100;
 
@@ -98,6 +100,11 @@ public sealed class ResolveFraudReviewsBulkCommandHandler(
                 }),
                 reason: request.Notes,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
+
+            if (!request.Approve)
+            {
+                await (autoBlacklister?.RunAsync(payment, reviewedByUserId, cancellationToken) ?? Task.FromResult(0)).ConfigureAwait(false);
+            }
 
             resolved++;
             items.Add(new FraudReviewsBulkItemResult { PaymentId = paymentId, Success = true });

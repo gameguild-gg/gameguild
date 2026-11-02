@@ -9,6 +9,10 @@ vi.mock('next/headers', () => ({
   cookies: vi.fn(async () => ({ get: () => undefined })),
 }));
 
+vi.mock('next-intl/server', () => ({
+  getTranslations: async (namespace: string) => (key: string) => `${namespace}.${key}`,
+}));
+
 vi.mock('@/i18n', () => ({
   Link: ({ href, children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
     <a href={href} {...props}>
@@ -34,6 +38,7 @@ vi.mock('@/lib/community/public-community-queries', () => ({
 
 vi.mock('@/lib/projects/public-projects', () => ({
   getPublishedProjects: vi.fn().mockResolvedValue([]),
+  PUBLIC_PROJECT_PAGE_SIZE: 24,
 }));
 
 import LicensesPage from './[locale]/(legal)/legal/licenses/page';

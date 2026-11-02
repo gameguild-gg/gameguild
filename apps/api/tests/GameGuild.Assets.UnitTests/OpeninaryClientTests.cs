@@ -250,6 +250,33 @@ public sealed class OpeninaryClientTests
     }
 
     [Fact]
+    public void ModuleRegistration_RetryHandlerIsNotSharedAcrossResolutions()
+    {
+        // IHttpClientFactory requires DelegatingHandler instances to be
+        // transient: a shared instance keeps its InnerHandler set after the
+        // first pipeline build and throws InvalidOperationException when the
+        // pipeline is built again ("must not be reused or cached").
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Assets:Openinary:BaseUrl"] = "http://cfg.test",
+                ["Assets:Openinary:ApiKey"] = "cfg-key"
+            })
+            .Build();
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(config);
+        services.AddLogging();
+
+        services.AddAssetsModule(config);
+        using var provider = services.BuildServiceProvider();
+
+        var first = provider.GetRequiredService<OpeninaryRetryHandler>();
+        var second = provider.GetRequiredService<OpeninaryRetryHandler>();
+
+        Assert.NotSame(first, second);
+    }
+
+    [Fact]
     public void ModuleRegistration_DefaultsWhenConfigAbsent()
     {
         var config = new ConfigurationBuilder().AddInMemoryCollection([]).Build();

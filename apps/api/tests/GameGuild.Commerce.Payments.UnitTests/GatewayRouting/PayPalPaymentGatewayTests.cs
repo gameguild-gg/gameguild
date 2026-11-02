@@ -49,6 +49,120 @@ public class PayPalPaymentGatewayTests
         }
         """;
 
+    /// <summary>PayPal dispute actions (issue #419): accept and challenge go through the
+    /// PayPal customer-disputes API instead of the removed "unsupported" stub.</summary>
+    [Fact]
+    public async Task AcceptDispute_WhenAdapterDisabled_FailsClosed()
+    {
+        var sut = CreateSut(new PayPalGatewayOptions());
+
+        var result = await sut.AcceptDisputeAsync(new GatewayDisputeActionRequest("idem-dispute-1", "PP-D-123"));
+
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be("paypal_adapter_disabled");
+        _apiClient.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task AcceptDispute_InSimulation_Succeeds_WithoutProviderCalls()
+    {
+        var sut = CreateSut(Enabled(simulation: true));
+
+        var result = await sut.AcceptDisputeAsync(new GatewayDisputeActionRequest("idem-dispute-1", "PP-D-123"));
+
+        result.Success.Should().BeTrue();
+        _apiClient.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task AcceptDispute_InvokesTheCustomerDisputesAcceptEndpoint_WithIdempotencyHeader()
+    {
+        var sut = CreateSut(Enabled(simulation: false));
+        _apiClient
+            .Setup(client => client.AcceptDisputeAsync("idem-dispute-1", "PP-D-123", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PayPalApiResult(true, 204, "{}", null, null, TransportFailed: false));
+
+        var result = await sut.AcceptDisputeAsync(new GatewayDisputeActionRequest("idem-dispute-1", "PP-D-123"));
+
+        result.Success.Should().BeTrue();
+        _apiClient.Verify(
+            client => client.AcceptDisputeAsync("idem-dispute-1", "PP-D-123", It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AcceptDispute_WhenPayPalRejects_SurfacesTheErrorCode()
+    {
+        var sut = CreateSut(Enabled(simulation: false));
+        _apiClient
+            .Setup(client => client.AcceptDisputeAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PayPalApiResult(false, 422, "{\"name\": \"UNPROCESSABLE_ENTITY\"}", "UNPROCESSABLE_ENTITY", "dispute already decided", TransportFailed: false));
+
+        var result = await sut.AcceptDisputeAsync(new GatewayDisputeActionRequest("idem-dispute-1", "PP-D-123"));
+
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be("UNPROCESSABLE_ENTITY");
+        result.ErrorMessage.Should().Contain("dispute already decided");
+    }
+
+    [Fact]
+    public async Task ChallengeDispute_SubmitsEvidenceThroughTheProviderEvidenceSurface()
+    {
+        var sut = CreateSut(Enabled(simulation: false));
+        _apiClient
+            .Setup(client => client.ProvideDisputeEvidenceAsync(
+                "idem-evidence-1", "PP-D-456", It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PayPalApiResult(true, 204, "{}", null, null, TransportFailed: false));
+        var request = new GatewayDisputeChallengeRequest(
+            "idem-evidence-1",
+            "PP-D-456",
+            EvidenceSummary: "merchant evidence follows",
+            EvidenceFiles:
+            [
+                new GatewayDisputeEvidenceItem("evidence-1", "invoice.pdf", "https://files/invoice.pdf", "application/pdf", "Invoice", "digest-1"),
+                new GatewayDisputeEvidenceItem("evidence-2", null, null, null, "Receipt", "digest-2")
+            ]);
+
+        var result = await sut.ChallengeDisputeAsync(request);
+
+        result.Success.Should().BeTrue();
+        // PayPal's native evidence surface: hosted document URLs for the files that have one.
+        _apiClient.Verify(
+            client => client.ProvideDisputeEvidenceAsync(
+                "idem-evidence-1",
+                "PP-D-456",
+                It.IsAny<string>(),
+                It.Is<string?>(notes => notes!.Contains("merchant evidence follows", StringComparison.Ordinal)),
+                It.Is<IReadOnlyList<string>>(documents => documents.Count == 1 && documents[0] == "https://files/invoice.pdf"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        // The hosted document reference and digest are retained per item (issue #419).
+        result.AcceptedEvidence.Should().ContainSingle(acceptance =>
+            acceptance.Key == "evidence-1" &&
+            acceptance.ProviderFileId == "https://files/invoice.pdf" &&
+            acceptance.ContentDigest == "digest-1");
+    }
+
+    [Fact]
+    public async Task ChallengeDispute_InSimulation_RetainsDocumentReferencesPerItem()
+    {
+        var sut = CreateSut(Enabled(simulation: true));
+        var request = new GatewayDisputeChallengeRequest(
+            "idem-evidence-2",
+            "PP-D-789",
+            EvidenceFiles:
+            [
+                new GatewayDisputeEvidenceItem("evidence-1", "receipt.pdf", "https://files/receipt.pdf", "application/pdf", "Receipt", "digest-1")
+            ]);
+
+        var result = await sut.ChallengeDisputeAsync(request);
+
+        result.Success.Should().BeTrue();
+        result.AcceptedEvidence.Should().ContainSingle(acceptance =>
+            acceptance.Key == "evidence-1" && acceptance.ProviderFileId == "https://files/receipt.pdf");
+        _apiClient.VerifyNoOtherCalls();
+    }
+
     [Fact]
     public void Defaults_AreFailClosedAndSandboxFirst()
     {

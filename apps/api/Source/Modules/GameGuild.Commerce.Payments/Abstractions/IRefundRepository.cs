@@ -47,16 +47,22 @@ public interface IRefundRepository
 
     /// <summary>
     ///     Lists refunds due for the automated refund workflow (issue #419): approved refunds
-    ///     waiting for execution, and failed refunds that still have execution attempts left and
-    ///     whose retry delay has elapsed.
+    ///     waiting for execution, and failed refunds that still have execution attempts left,
+    ///     whose retry delay has elapsed and whose last failure classification is retryable
+    ///     (permanent declines and outcome-unknown attempts are never replayed by the worker).
     /// </summary>
     /// <param name="maxExecutionAttempts">Total execution-attempt budget per refund (default 3).</param>
     /// <param name="failedBeforeUtc">Failed refunds are retried only after their last failure timestamp passes this instant.</param>
     /// <param name="take">Maximum number of refunds to return.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="processingStaleBeforeUtc">
+    ///     When set, refunds stuck in <see cref="RefundStatus.Processing"/> since this instant
+    ///     (interrupted executions, issue #419 crash recovery) are included for reconciliation.
+    /// </param>
     Task<IReadOnlyList<Refund>> ListDueForWorkflowAsync(
         int maxExecutionAttempts,
         DateTime failedBeforeUtc,
         int take = 50,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        DateTime? processingStaleBeforeUtc = null);
 }

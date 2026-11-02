@@ -3,6 +3,25 @@ using System.ComponentModel.DataAnnotations;
 namespace GameGuild.Configuration.ApplicationLayer;
 
 /// <summary>
+///     How strictly a persisted session's IP address must match the request's client IP
+///     (issue #278: session IP-binding options).
+/// </summary>
+public enum SessionIpAddressBinding
+{
+    /// <summary>
+    ///     No IP comparison: a session stays valid from any address. Default.
+    /// </summary>
+    Off = 0,
+
+    /// <summary>
+    ///     Strict binding: every authenticated request must originate from the exact IP
+    ///     recorded for the session (after IPv4-mapped IPv6 normalization). A request from
+    ///     any other address — or a session without a resolvable recorded IP — is rejected.
+    /// </summary>
+    Strict = 1
+}
+
+/// <summary>
 ///     Configuration options for Session Management
 /// </summary>
 public sealed class SessionOptions : BaseOptions
@@ -64,6 +83,13 @@ public sealed class SessionOptions : BaseOptions
     /// </summary>
     public bool RequireTrustedDeviceForSensitiveOps { get; set; } = false;
 
+    /// <summary>
+    ///     How strictly the request's client IP must match the session's recorded IP
+    ///     (issue #278). <see cref="SessionIpAddressBinding.Strict"/> requires location
+    ///     tracking so sessions carry a real address instead of "unknown".
+    /// </summary>
+    public SessionIpAddressBinding IpAddressBinding { get; set; } = SessionIpAddressBinding.Off;
+
     public bool IsValid
     {
         get => Validate().IsValid;
@@ -101,6 +127,11 @@ public sealed class SessionOptions : BaseOptions
         if (IdleTimeoutMinutes > AbsoluteTimeoutMinutes)
         {
             errors.Add("IdleTimeoutMinutes cannot be greater than AbsoluteTimeoutMinutes");
+        }
+
+        if (IpAddressBinding == SessionIpAddressBinding.Strict && !EnableLocationTracking)
+        {
+            errors.Add("IpAddressBinding Strict requires EnableLocationTracking so sessions record a real client address");
         }
 
         return (errors.Count == 0, errors.ToArray());

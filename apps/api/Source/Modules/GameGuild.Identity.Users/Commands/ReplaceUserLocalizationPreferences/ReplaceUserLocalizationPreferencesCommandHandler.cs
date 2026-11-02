@@ -25,7 +25,11 @@ public sealed class ReplaceUserLocalizationPreferencesCommandHandler(IUserReposi
             await preferencesRepository.AddAsync(preferences, cancellationToken).ConfigureAwait(false);
         }
 
-        preferences.SetLocalizationPreferences(JsonValueDictionary.ToObjects(request.Request.LocalizationPreferences));
+        // Preferred-currency validation (issue #412 spec E): unknown ISO 4217 codes fail
+        // closed, known codes are stored normalized (upper-case).
+        preferences.SetLocalizationPreferences(
+            UserCurrencyPreference.NormalizeAndValidate(
+                JsonValueDictionary.ToObjects(request.Request.LocalizationPreferences)));
 
         await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
         await preferencesRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

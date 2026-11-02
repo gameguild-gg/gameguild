@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using GameGuild.GameJams;
 using GameGuild.Projects;
 using GameGuild.Identity.Users;
 using GameGuild.Identity.Tenants;
@@ -26,6 +27,8 @@ public class TestProjectsDbContext : DbContext, IApplicationDbContext
     public DbSet<ProjectRelease> ProjectReleases { get; set; } = null!;
     public DbSet<ProjectTeam> ProjectTeams { get; set; } = null!;
     public DbSet<ProjectVersion> ProjectVersions { get; set; } = null!;
+    public DbSet<ProjectJamSubmission> ProjectJamSubmissions { get; set; } = null!;
+    public DbSet<Jam> Jams { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<TenantMember> TenantMembers { get; set; } = null!;
 
@@ -56,6 +59,19 @@ public class TestProjectsDbContext : DbContext, IApplicationDbContext
         });
 
         modelBuilder.Entity<ProjectMetadata>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+        });
+
+        modelBuilder.Entity<ProjectJamSubmission>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Ignore(e => e.Project);
+            entity.Ignore(e => e.Jam);
+            entity.Ignore(e => e.Scores);
+        });
+
+        modelBuilder.Entity<Jam>(entity =>
         {
             entity.HasKey(e => e.Id);
         });

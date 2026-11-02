@@ -108,6 +108,7 @@ public static class AnonymousEndpointRegistry
             ["ProductCategoriesController.GetCategory"] = "Public catalog category detail.",
             ["ProductRecommendationsController.GetRecommendations"] = "Public rule-based frequently-bought-together and bundle-savings hints from published catalog data.",
             ["SubscriptionPlansCrudController.GetSubscriptionPlans"] = "Public pricing plans for the marketing site.",
+            ["CurrenciesController.GetSuggestion"] = "Non-personalized currency suggestion from the edge-proxy country code (a country, never an IP); nothing is stored — GDPR data-minimized display preference for public pricing pages.",
             ["ProgramCrudController.GetPublicPrograms"] = "Public course catalog; only published programs are returned.",
             ["ProgramCrudController.GetProgramBySlug"] = "Public course detail; only published programs are returned.",
             ["ProgramCrudController.GetLinkedProducts"] = "Public storefront products linked to a published course.",
@@ -164,10 +165,16 @@ public static class AnonymousEndpointRegistry
             ["RepliesController.GetDiscussionReplies"] = "Public replies under a public discussion.",
             ["LikesController.GetCourseLikeCount"] = "Aggregate public like count for a course.",
 
+            // ── Public mentorship directory (published profiles only, issue #102) ──
+            ["MentorsController.List"] = "Public mentor/advisor directory; anonymous callers see published profiles only.",
+            ["MentorsController.Get"] = "Public mentor profile detail; anonymous callers see published profiles only.",
+            ["MentorsController.Availability"] = "Public open-availability listing for a published mentor profile.",
+
             // ── Public blog reading surface (published content only) ──
             ["BlogPublicController.GetAuthorPosts"] = "Public blog reading surface — published content only.",
             ["BlogPublicController.GetPostDetail"] = "Public blog reading surface — published content only.",
             ["BlogPublicController.ResolveRoute"] = "Public blog reading surface — published content only.",
+            ["BlogPublicController.ResolveLegacySlug"] = "Public blog reading surface — legacy Ghost slug resolution for permanent redirects; published content only, ambiguous slugs 404.",
             ["BlogPublicController.GetIndex"] = "Public blog reading surface — published content only.",
             ["BlogPublicController.RecordView"] = "Public blog reading surface — published content only; atomic view counter with PerIp rate limiting.",
             ["BlogPublicController.GetComments"] = "Public blog reading surface — published content only.",
@@ -191,6 +198,7 @@ public static class AnonymousEndpointRegistry
             ["BillingWebhooksController.HandleApplePayWebhook"] = "Provider billing webhook; receipt/signature verified inside the handler.",
             ["BillingWebhooksController.HandleStripeWebhook"] = "Provider billing webhook; Stripe signature verified with the webhook secret inside the handler.",
             ["BillingWebhooksController.HandlePayPalWebhook"] = "Provider billing webhook; PayPal transmission signature verified inside the handler.",
+            ["BillingWebhooksController.HandleBraintreeWebhook"] = "Provider billing webhook; Braintree bt_signature verified offline against the configured gateway public key inside the handler.",
             ["EmailEventsController.*"] = "Email delivery-events webhook; SNS signature verified with a pinned signing-cert host.",
             ["EconomySumSubWebhookController.Ingest"] = "KYC provider webhook; request signature is validated against the provider secret.",
             ["EconomyStripeConnectWebhookController.Ingest"] = "Payout provider webhook; Stripe signature is validated against the configured secret.",

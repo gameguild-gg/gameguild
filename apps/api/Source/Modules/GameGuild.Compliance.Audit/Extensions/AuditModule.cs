@@ -124,6 +124,10 @@ public static class AuditModule
         services.AddScoped<ISecurityLogRetentionService, SecurityLogRetentionService>();
         services.AddHostedService<SecurityLogRetentionBackgroundService>();
 
+        // Universal entity-change audit query surface (issue #166): the host registers the
+        // IEntityChangeAuditStore bridge over its capture store; this module serves it.
+        services.AddScoped<IEntityChangeAuditQueryService, EntityChangeAuditQueryService>();
+
         services.AddSingleton<AuditRetentionSimulationEngine>();
         services.AddScoped<IAuditRetentionSimulationRepository, AuditRetentionSimulationRepository>();
         services.AddScoped<IAuditRetentionSimulationService, AuditRetentionSimulationService>();
@@ -138,6 +142,26 @@ public static class AuditModule
         services.AddScoped<GameGuild.Content.Pages.IContentPagesAuditEventSink, CentralContentPagesAuditEventSink>();
         services.AddScoped<GameGuild.Learning.ILearningAuditEventSink, CentralLearningAuditEventSink>();
         services.AddScoped<GameGuild.Teams.ITeamsAuditEventSink, CentralTeamsAuditEventSink>();
+        // Central bridge for consent / data subject request lifecycle events (issue #186): consent
+        // state changes and DSAR transitions are privacy events in the security event pipeline.
+        services.AddScoped<GameGuild.Compliance.Consent.IConsentAuditEventSink, CentralConsentAuditEventSink>();
+
+        // Field-level data access auditing family (issue #186): field access service with
+        // classification-driven masking, access-pattern anomaly analysis, bulk export monitoring with
+        // threshold alerting, cross-border transfer validation, the GDPR Article 30 register, data
+        // subject access monitoring over the consent records, and the sensitive-data retention
+        // lifecycle.
+        services.AddScoped<FieldAccessAuditService>();
+        services.AddScoped<IFieldAccessAuditService>(provider => provider.GetRequiredService<FieldAccessAuditService>());
+        services.AddScoped<IFieldAccessPatternAnalysisService, FieldAccessPatternAnalysisService>();
+        services.AddScoped<IBulkExportMonitoringService, BulkExportMonitoringService>();
+        services.AddScoped<ICrossBorderTransferService, CrossBorderTransferService>();
+        services.AddScoped<IGdprArticle30Service, GdprArticle30Service>();
+        services.AddScoped<IDataSubjectAccessMonitoringService, DataSubjectAccessMonitoringService>();
+        services.AddScoped<ISensitiveDataRetentionService, SensitiveDataRetentionService>();
+        services.AddScoped<IEventCoverageSweepService, EventCoverageSweepService>();
+        services.AddOptions<FieldLevelAuditOptions>().BindConfiguration(FieldLevelAuditOptions.SectionName);
+
         services.AddScoped<IAuditActionTypeSearchService, AuditActionTypeSearchService>();
         services.AddSingleton<IAuditExportProgressTracker, DistributedAuditExportProgressTracker>();
         services.AddScoped<IAuditExportCronSchedule, AuditExportCronSchedule>();

@@ -28,4 +28,10 @@ public class BillingWebhookEventDto
     public Guid? TenantId { get; set; }
 
     public Guid? SubscriptionId { get; set; }
+
+    /// <summary>Source IP address the delivery was accepted from (issue #408).</summary>
+    public string? SourceIpAddress { get; set; }
+
+    /// <summary>Bounded user agent of the delivery (issue #408).</summary>
+    public string? UserAgent { get; set; }
 }

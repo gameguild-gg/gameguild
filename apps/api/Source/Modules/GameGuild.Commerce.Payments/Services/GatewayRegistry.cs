@@ -19,15 +19,19 @@ public interface IGatewayRegistry
 
 /// <summary>
 ///     Default <see cref="IGatewayRegistry" />: holds the concrete adapter instances the
-///     module registers (Stripe, PayPal). Adding a third gateway means adding it to this
-///     constructor and to the module registration — the registry is intentionally explicit
-///     so no adapter is ever routed to by accident.
+///     module registers (Stripe, PayPal, Authorize.Net, Braintree, Adyen). Adding another
+///     gateway means adding it to this constructor and to the module registration — the
+///     registry is intentionally explicit so no adapter is ever routed to by accident.
 /// </summary>
 public sealed class GatewayRegistry(
     StripePaymentGateway stripe,
-    PayPalPaymentGateway payPal) : IGatewayRegistry
+    PayPalPaymentGateway payPal,
+    AuthorizeNetPaymentGateway authorizeNet,
+    BraintreePaymentGateway braintree,
+    AdyenPaymentGateway adyen) : IGatewayRegistry
 {
-    private readonly IReadOnlyList<IPaymentGateway> _gateways = new IPaymentGateway[] { stripe, payPal };
+    private readonly IReadOnlyList<IPaymentGateway> _gateways =
+        new IPaymentGateway[] { stripe, payPal, authorizeNet, braintree, adyen };
 
     /// <inheritdoc />
     public IReadOnlyList<IPaymentGateway> Gateways => _gateways;

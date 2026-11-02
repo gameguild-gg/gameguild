@@ -15,7 +15,7 @@ public sealed class ProcessPaymentCommandValidator : AbstractValidator<ProcessPa
         RuleFor(x => x.PaymentMethodId)
             .NotEmpty().WithMessage("Payment method ID is required")
             .MaximumLength(100).WithMessage("Payment method ID cannot exceed 100 characters")
-            .Must(StripePaymentMethodIdentifier.IsValid)
-            .WithMessage(StripePaymentMethodIdentifier.ValidationMessage);
+            .Must((command, token) => GatewayPaymentMethodTokens.IsKnownGatewayToken(token, command.GatewayProvider))
+            .WithMessage(GatewayPaymentMethodTokens.ValidationMessage);
     }
 }

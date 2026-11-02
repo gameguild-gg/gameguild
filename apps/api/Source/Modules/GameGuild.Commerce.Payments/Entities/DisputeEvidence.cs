@@ -74,4 +74,31 @@ public class DisputeEvidence : EntityBase
     ///     first submission wins so each row keeps the timestamp of when it reached the gateway.
     /// </summary>
     public DateTime? GatewaySubmittedAt { get; set; }
+
+    /// <summary>
+    ///     Provider file/evidence reference that now holds this file after a successful bundle
+    ///     submission (issue #419 provider file delivery), e.g. a Stripe <c>file_...</c> id or a
+    ///     PayPal dispute-evidence document reference. Null until the provider accepted the file.
+    /// </summary>
+    [MaxLength(255)]
+    public string? ProviderFileId { get; set; }
+
+    /// <summary>
+    ///     SHA-256 digest (hex) of the bytes delivered to the provider for this row (issue #419
+    ///     provider file delivery), retained so an accepted submission can be audited against the
+    ///     stored content. Null when the stored bytes could not be resolved for delivery.
+    /// </summary>
+    [MaxLength(128)]
+    public string? ContentDigest { get; set; }
+
+    /// <summary>
+    ///     Records the provider acceptance for this row after a successful bundle submission
+    ///     (issue #419): the provider file/evidence reference and the digest of the delivered
+    ///     bytes. Idempotent: the first acceptance is kept.
+    /// </summary>
+    public void RecordProviderAcceptance(string? providerFileId, string? contentDigest)
+    {
+        ProviderFileId ??= string.IsNullOrWhiteSpace(providerFileId) ? null : providerFileId.Trim();
+        ContentDigest ??= string.IsNullOrWhiteSpace(contentDigest) ? null : contentDigest.Trim();
+    }
 }

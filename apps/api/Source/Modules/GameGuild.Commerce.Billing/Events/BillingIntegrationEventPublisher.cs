@@ -7,6 +7,8 @@ namespace GameGuild.Commerce.Billing;
 ///     Publication is best-effort from the webhook processing path: a recording failure is
 ///     logged and never changes the webhook processing outcome, mirroring the
 ///     <see cref="IWebhookSecurityEventPublisher" /> reliability contract.
+///     Saga transitions require their outbox event: failures propagate to roll back
+///     the local subscription-change transaction.
 /// </summary>
 public interface IBillingIntegrationEventPublisher
 {
@@ -44,6 +46,24 @@ public interface IBillingIntegrationEventPublisher
         Guid? tenantId,
         string provider,
         string externalEventId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Records one saga step transition of the orchestrated subscription plan change (issue #396).</summary>
+    Task PublishSubscriptionChangeStepAsync(
+        SubscriptionChangeSaga saga,
+        string step,
+        string outcome,
+        string detail,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Records the completion of an orchestrated subscription plan change (issue #396).</summary>
+    Task PublishSubscriptionChangeCompletedAsync(
+        SubscriptionChangeSaga saga,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Records the failure and compensations of an orchestrated subscription plan change (issue #396).</summary>
+    Task PublishSubscriptionChangeFailedAsync(
+        SubscriptionChangeSaga saga,
         CancellationToken cancellationToken = default);
 }
 
@@ -135,7 +155,64 @@ public sealed class BillingIntegrationEventPublisher(
             },
             cancellationToken);
 
-    private async Task RecordAsync<TEvent>(TEvent integrationEvent, CancellationToken cancellationToken)
+    public Task PublishSubscriptionChangeStepAsync(
+        SubscriptionChangeSaga saga,
+        string step,
+        string outcome,
+        string detail,
+        CancellationToken cancellationToken = default) =>
+        RecordAsync(
+            new BillingSubscriptionChangeStepV1(saga.Id, saga.SubscriptionId, step, outcome, detail)
+            {
+                TenantId = saga.TenantId ?? DurableIntegrationEventTenants.Platform,
+                ActorId = saga.InitiatedByActorId,
+                AggregateType = "Subscription",
+                AggregateId = saga.SubscriptionId.ToString()
+            },
+            cancellationToken, required: true);
+
+    public Task PublishSubscriptionChangeCompletedAsync(
+        SubscriptionChangeSaga saga,
+        CancellationToken cancellationToken = default) =>
+        RecordAsync(
+            new BillingSubscriptionChangeCompletedV1(
+                saga.Id,
+                saga.SubscriptionId,
+                saga.FromPlanId,
+                saga.ToPlanId,
+                saga.InvoiceId ?? Guid.Empty,
+                saga.PaymentTransactionId ?? string.Empty,
+                saga.NetAdjustment,
+                saga.Currency)
+            {
+                TenantId = saga.TenantId ?? DurableIntegrationEventTenants.Platform,
+                ActorId = saga.InitiatedByActorId,
+                AggregateType = "Subscription",
+                AggregateId = saga.SubscriptionId.ToString()
+            },
+            cancellationToken, required: true);
+
+    public Task PublishSubscriptionChangeFailedAsync(
+        SubscriptionChangeSaga saga,
+        CancellationToken cancellationToken = default) =>
+        RecordAsync(
+            new BillingSubscriptionChangeFailedV1(
+                saga.Id,
+                saga.SubscriptionId,
+                saga.FromPlanId,
+                saga.ToPlanId,
+                saga.FailedStep ?? string.Empty,
+                saga.FailureReason ?? string.Empty,
+                saga.CompensationsApplied ?? string.Empty)
+            {
+                TenantId = saga.TenantId ?? DurableIntegrationEventTenants.Platform,
+                ActorId = saga.InitiatedByActorId,
+                AggregateType = "Subscription",
+                AggregateId = saga.SubscriptionId.ToString()
+            },
+            cancellationToken, required: true);
+
+    private async Task RecordAsync<TEvent>(TEvent integrationEvent, CancellationToken cancellationToken, bool required = false)
         where TEvent : DurableIntegrationEventBase
     {
         try
@@ -155,7 +232,7 @@ public sealed class BillingIntegrationEventPublisher(
 
             await durableEvents.RecordAsync(integrationEvent, cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        catch (Exception exception) when (!required && exception is not OperationCanceledException)
         {
             logger.LogError(
                 exception,

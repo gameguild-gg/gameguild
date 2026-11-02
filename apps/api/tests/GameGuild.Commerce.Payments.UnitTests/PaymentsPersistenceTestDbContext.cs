@@ -29,6 +29,7 @@ internal sealed class PaymentsPersistenceTestDbContext(DbContextOptions<Payments
         modelBuilder.Entity<Referral>();
         modelBuilder.Entity<Refund>();
         modelBuilder.Entity<PaymentDispute>();
+        modelBuilder.Entity<FraudBlacklistEntry>();
         base.OnModelCreating(modelBuilder);
     }
 }

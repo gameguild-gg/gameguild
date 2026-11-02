@@ -88,6 +88,12 @@ export interface UseAuthReturn {
     firstName?: string;
     lastName?: string;
     tenantId?: string;
+    /**
+     * Guest bearer token presented when registering from a guest session
+     * (issue #213). A valid guest session is upgraded into the issued
+     * authenticated session; an invalid token never blocks registration.
+     */
+    guestAccessToken?: string;
     redirectTo?: string;
     redirect?: boolean;
   }) => Promise<void>;
@@ -245,6 +251,7 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
       firstName?: string;
       lastName?: string;
       tenantId?: string;
+      guestAccessToken?: string;
       redirectTo?: string;
       redirect?: boolean;
     }): Promise<void> => {

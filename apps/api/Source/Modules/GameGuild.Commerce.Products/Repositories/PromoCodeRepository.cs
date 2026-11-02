@@ -306,6 +306,63 @@ public class PromoCodeRepository(IApplicationDbContext context)
     }
 
     /// <inheritdoc />
+    public async Task<int> CountRecentValidationAttemptsAsync(
+        Guid? userId,
+        string? normalizedCode,
+        DateTime windowStartUtc,
+        CancellationToken cancellationToken = default)
+    {
+        var start = windowStartUtc.ToUniversalTime();
+        var query = ValidationAttempts.AsNoTracking()
+            .Where(a => a.AttemptedAt >= start);
+
+        if (userId.HasValue && userId.Value != Guid.Empty)
+        {
+            query = query.Where(a => a.UserId == userId.Value);
+        }
+        else if (!string.IsNullOrWhiteSpace(normalizedCode))
+        {
+            // Anonymous farming pattern: repeated probes of the same code string.
+            query = query.Where(a => a.UserId == null && a.Code == normalizedCode);
+        }
+        else
+        {
+            return 0;
+        }
+
+        return await query.CountAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<int> CountRecentUsagesAsync(
+        Guid userId,
+        DateTime windowStartUtc,
+        CancellationToken cancellationToken = default)
+    {
+        var start = windowStartUtc.ToUniversalTime();
+        return await PromoCodeUses
+            .AsNoTracking()
+            .CountAsync(u => u.UserId == userId && u.UsedAt >= start, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> HasUserRecordedUsageAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await PromoCodeUses
+            .AsNoTracking()
+            .AnyAsync(u => u.UserId == userId, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task RecordFirstPurchaseAttributionAsync(PromoCampaignAttribution attribution, CancellationToken cancellationToken = default)
+    {
+        await Context.Set<PromoCampaignAttribution>().AddAsync(attribution, cancellationToken).ConfigureAwait(false);
+        await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
     public async Task<List<PromoCode>> GetByIdsAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default)
     {
         if (ids.Count == 0)
@@ -516,6 +573,24 @@ public class PromoCodeRepository(IApplicationDbContext context)
             .Select(c => new CampaignExpiringCodeDto(c.Code, c.Id, c.ValidUntil!.Value))
             .ToList();
 
+        // Issue #418 CAC attribution: acquired customers are the users whose first
+        // purchase was tagged by this campaign; the managed campaign's acquisition
+        // spend (when one exists) is the CAC numerator.
+        var acquiredCustomers = await Context.Set<PromoCampaignAttribution>()
+            .AsNoTracking()
+            .CountAsync(a => a.CampaignKey == campaignId, cancellationToken)
+            .ConfigureAwait(false);
+
+        var campaign = await Context.Set<PromoCampaign>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Key == campaignId, cancellationToken)
+            .ConfigureAwait(false);
+
+        decimal? acquisitionSpend = campaign?.AcquisitionSpend;
+        decimal? cac = acquisitionSpend is > 0 && acquiredCustomers > 0
+            ? Math.Round(acquisitionSpend.Value / acquiredCustomers, 2, MidpointRounding.AwayFromZero)
+            : null;
+
         return new CampaignPerformanceDto(
             campaignId,
             from,
@@ -530,7 +605,10 @@ public class PromoCodeRepository(IApplicationDbContext context)
             topCodes,
             expiringCodes,
             totalValidationAttempts,
-            conversionRate
+            conversionRate,
+            acquiredCustomers,
+            acquisitionSpend,
+            cac
         );
     }
 

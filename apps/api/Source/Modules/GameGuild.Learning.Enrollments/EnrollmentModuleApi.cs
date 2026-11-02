@@ -204,13 +204,25 @@ public sealed class EnrollmentService(
                 throw new ArgumentOutOfRangeException(nameof(status), status, null);
         }
 
-        await SaveWithAuditAsync(enrollment, "Learning.Enrollments.StatusChanged",
-            $"Enrollment status changed to {status}", new { Status = status.ToString() }, cancellationToken).ConfigureAwait(false);
+        await SaveWithAuditAsync(
+            enrollment,
+            "Learning.Enrollments.StatusChanged",
+            $"Enrollment status changed to {status}",
+            new { Status = status.ToString() },
+            cancellationToken,
+            completionActionType: status == EnrollmentStatus.Completed ? "Learning.Enrollments.EnrollmentCompleted" : null,
+            completionDescription: $"Enrollment completed for course {enrollment.CourseId}").ConfigureAwait(false);
         return ToDto(enrollment);
     }
 
     private async Task SaveWithAuditAsync(
-        Enrollment enrollment, string actionType, string description, object metadata, CancellationToken cancellationToken)
+        Enrollment enrollment,
+        string actionType,
+        string description,
+        object metadata,
+        CancellationToken cancellationToken,
+        string? completionActionType = null,
+        string? completionDescription = null)
     {
         var transaction = await context.BeginAuditedMutationTransactionAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -219,6 +231,17 @@ public sealed class EnrollmentService(
             await auditSink.RecordAsync(new LearningAuditEvent(
                 actionType, "Enrollment", enrollment.Id.ToString(), ActingUserId, enrollment.TenantId,
                 description, Metadata: metadata), cancellationToken).ConfigureAwait(false);
+            // Completion is the program-completion event of its own lifecycle (issue #180 program
+            // management tracking): a dedicated EnrollmentCompleted event is journaled in the same
+            // transaction as the status change so completion reporting never depends on parsing
+            // StatusChanged payloads.
+            if (completionActionType is not null)
+            {
+                await auditSink.RecordAsync(new LearningAuditEvent(
+                    completionActionType, "Enrollment", enrollment.Id.ToString(), ActingUserId, enrollment.TenantId,
+                    completionDescription, Metadata: metadata), cancellationToken).ConfigureAwait(false);
+            }
+
             await transaction.CommitAuditedMutationAsync(cancellationToken).ConfigureAwait(false);
         }
         finally

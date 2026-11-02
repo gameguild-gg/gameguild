@@ -39,6 +39,13 @@ public class NotificationPreference : EntityBase
     public bool SmsEnabled { get; private set; } = false;
 
     /// <summary>
+    /// Whether to receive WhatsApp notifications (issue #54). Opt-in like SMS: the
+    /// channel stays off until the user turns it on, and broadcasts (#55) additionally
+    /// require the marketing category to be enabled.
+    /// </summary>
+    public bool WhatsAppEnabled { get; private set; } = false;
+
+    /// <summary>
     /// Whether to receive marketing/promotional notifications
     /// </summary>
     public bool MarketingEnabled { get; private set; } = true;
@@ -108,6 +115,7 @@ public class NotificationPreference : EntityBase
             PushEnabled = true,
             InAppEnabled = true,
             SmsEnabled = false,
+            WhatsAppEnabled = false,
             MarketingEnabled = true,
             SocialEnabled = true,
             LearningEnabled = true,
@@ -129,6 +137,16 @@ public class NotificationPreference : EntityBase
         PushEnabled = pushEnabled;
         InAppEnabled = inAppEnabled;
         SmsEnabled = smsEnabled;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets the WhatsApp channel toggle (issue #54) without disturbing the other
+    /// channel preferences.
+    /// </summary>
+    public void SetWhatsAppEnabled(bool whatsAppEnabled)
+    {
+        WhatsAppEnabled = whatsAppEnabled;
         UpdatedAt = SystemClock.UtcNow;
     }
 

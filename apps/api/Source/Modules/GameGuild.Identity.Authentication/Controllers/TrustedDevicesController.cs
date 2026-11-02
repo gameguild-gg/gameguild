@@ -103,6 +103,44 @@ public sealed class TrustedDevicesController(ISessionManagementService sessionSe
         return Ok(new SessionSuccessResponse { Message = "Device trust revoked successfully" });
     }
 
+    /// <summary>
+    ///     Name or rename one of the current user's trusted devices
+    /// </summary>
+    /// <param name="deviceId">Device identifier to name</param>
+    /// <param name="body">Rename request carrying the new device name</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Success confirmation</returns>
+    [HttpPatch("{deviceId:guid}/name")]
+    [EndpointSummary("Name or rename a trusted device")]
+    [EndpointDescription("Assigns a user-defined name to one of the current user's own trusted devices. The acting user is taken from the authenticated principal, never from the body.")]
+    [ProducesResponseType<SessionSuccessResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<SessionRenameErrorResponse>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> RenameTrustedDevice(Guid deviceId, [FromBody] RenameTrustedDeviceRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var userId = GetCurrentUserId();
+
+        var name = body.Name?.Trim() ?? string.Empty;
+        if (name.Length is < 1 or > SessionManagementService.MaxTrustedDeviceNameLength)
+        {
+            return BadRequest(new SessionRenameErrorResponse
+            {
+                Error = $"Trusted device name must be between 1 and {SessionManagementService.MaxTrustedDeviceNameLength} characters"
+            });
+        }
+
+        var success = await sender.Send(new RenameTrustedDeviceCommand(userId, deviceId, name), ct).ConfigureAwait(false);
+
+        if (!success)
+        {
+            return NotFound(new SessionErrorResponse { Error = "Trusted device not found" });
+        }
+
+        return Ok(new SessionSuccessResponse { Message = "Trusted device renamed successfully" });
+    }
+
     #region Private Helpers
 
     private static DeviceInfo? ParseDeviceInfo(string? deviceInfoJson)

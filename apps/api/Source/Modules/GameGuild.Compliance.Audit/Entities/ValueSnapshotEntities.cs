@@ -66,7 +66,9 @@ public sealed class MutationValueSnapshot : EntityBase
     /// <summary>Storage encoding: <c>Full</c> for Added/Deleted state, <c>Delta</c> for changed-field-only updates.</summary>
     public string StorageMode { get; set; } = "Full";
 
-    /// <summary>When this snapshot was moved to the archive tier (inline payloads stripped, checksums retained).</summary>
+    /// <summary>When this snapshot was moved to the archive tier. Stripping only happens after the
+    ///     complete payload copy was persisted to <see cref="MutationValueSnapshotArchive"/>, and it
+    ///     never happens while a legal hold is active on the retention policy.</summary>
     public DateTime? ArchivedAtUtc { get; set; }
 
     public Guid? ActorId { get; set; }
@@ -95,6 +97,61 @@ public sealed class MutationValuePayloadChunk : EntityBase
 
     /// <summary>Number of snapshot payload references pointing at this chunk.</summary>
     public long RefCount { get; set; }
+}
+
+/// <summary>
+///     Durable archive copy of one value snapshot, persisted by the retention pass in the same
+///     transaction that strips the hot representation (issue #176): the complete stored
+///     before/after payloads — inline or resolved from their deduplication chunks — move here
+///     before the hot row is reduced to checksums, so archived snapshots keep recoverable
+///     values instead of losing them. Detail, history, search, and rollback read from this copy.
+/// </summary>
+public sealed class MutationValueSnapshotArchive : EntityBase
+{
+    /// <summary>The archived hot-row snapshot this copy was made from — unique per tenant.</summary>
+    public Guid SnapshotId { get; set; }
+
+    public required string EntityName { get; set; }
+
+    public required string KeyId { get; set; }
+
+    public required string ChangeKind { get; set; }
+
+    public string? BeforeIntegritySha256 { get; set; }
+
+    public string? AfterIntegritySha256 { get; set; }
+
+    public string? BeforeStoredSha256 { get; set; }
+
+    public string? AfterStoredSha256 { get; set; }
+
+    public int BeforeBytes { get; set; }
+
+    public int AfterBytes { get; set; }
+
+    /// <summary>Complete stored before payload (inline content or the referenced chunk's content).</summary>
+    public string? BeforePayload { get; set; }
+
+    /// <summary>Complete stored after payload (inline content or the referenced chunk's content).</summary>
+    public string? AfterPayload { get; set; }
+
+    public bool BeforePayloadTruncated { get; set; }
+
+    public bool AfterPayloadTruncated { get; set; }
+
+    public string StructuredDiffJson { get; set; } = "[]";
+
+    public int DiffCount { get; set; }
+
+    public string StorageMode { get; set; } = "Full";
+
+    public Guid? ActorId { get; set; }
+
+    public string? CorrelationId { get; set; }
+
+    public DateTimeOffset OccurredAtUtc { get; set; }
+
+    public DateTime ArchivedAtUtc { get; set; }
 }
 
 /// <summary>

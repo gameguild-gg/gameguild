@@ -351,5 +351,8 @@ public enum PiiRedactionSource
     StructuredLog = 1,
 
     /// <summary>Applied by an explicit call (test run or manual redaction).</summary>
-    Manual = 2
+    Manual = 2,
+
+    /// <summary>Applied by the EF save interceptor over universal entity-change audit snapshots (issue #166).</summary>
+    EntityChangeCapture = 3
 }

@@ -91,6 +91,106 @@ public class CertificateAuditEmissionTests
         stored.Status.Should().NotBe(CertificateStatus.Revoked);
     }
 
+    [Fact]
+    public async Task RenewingACertificateEmitsItsAuditEvent()
+    {
+        // Issue #180 certificate lifecycle: renewal extends validity and journals
+        // Learning.Certificates.CertificateRenewed.
+        await using var context = CreateSqliteContext();
+        var sink = new RecordingLearningAuditEventSink();
+        var service = new CertificateService(context, NullLogger<CertificateService>.Instance, sink);
+        var (templateId, enrollmentId, userId, courseId) = await SeedAsync(context);
+        var issued = await service.IssueCertificateAsync(templateId, enrollmentId, userId, courseId);
+        issued.IsSuccess.Should().BeTrue();
+
+        var newExpiry = DateTime.UtcNow.AddYears(2);
+        var renewed = await service.RenewCertificateAsync(issued.Value.Id, newExpiry);
+
+        renewed.IsSuccess.Should().BeTrue();
+        renewed.Value.Status.Should().Be(CertificateStatus.Active);
+        renewed.Value.ExpiresAt.Should().Be(newExpiry);
+        sink.Events.Select(auditEvent => auditEvent.ActionType).Should().Equal(
+            "Learning.Certificates.CertificateIssued",
+            "Learning.Certificates.CertificateRenewed");
+    }
+
+    [Fact]
+    public async Task RenewingARevokedCertificateFails()
+    {
+        await using var context = CreateSqliteContext();
+        var sink = new RecordingLearningAuditEventSink();
+        var service = new CertificateService(context, NullLogger<CertificateService>.Instance, sink);
+        var (templateId, enrollmentId, userId, courseId) = await SeedAsync(context);
+        var issued = await service.IssueCertificateAsync(templateId, enrollmentId, userId, courseId);
+        (await service.RevokeCertificateAsync(issued.Value.Id, "compliance hold")).IsSuccess.Should().BeTrue();
+
+        var renewed = await service.RenewCertificateAsync(issued.Value.Id, DateTime.UtcNow.AddYears(1));
+
+        renewed.IsSuccess.Should().BeFalse();
+        sink.Events.Select(auditEvent => auditEvent.ActionType).Should().NotContain("Learning.Certificates.CertificateRenewed");
+    }
+
+    [Fact]
+    public async Task AuditEmissionFailureBlocksCertificateRenewal()
+    {
+        await using var context = CreateSqliteContext();
+        var issuing = new CertificateService(context, NullLogger<CertificateService>.Instance, new RecordingLearningAuditEventSink());
+        var (templateId, enrollmentId, userId, courseId) = await SeedAsync(context);
+        var issued = await issuing.IssueCertificateAsync(templateId, enrollmentId, userId, courseId);
+        issued.IsSuccess.Should().BeTrue();
+
+        var renewing = new CertificateService(context, NullLogger<CertificateService>.Instance, new ThrowingLearningAuditEventSink());
+        var result = await renewing.RenewCertificateAsync(issued.Value.Id, DateTime.UtcNow.AddYears(1));
+
+        result.IsSuccess.Should().BeFalse();
+        var stored = await context.Set<Certificate>().AsNoTracking().SingleAsync(certificate => certificate.Id == issued.Value.Id);
+        stored.ExpiresAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task VerifyingACertificateEmitsItsAuditEvent()
+    {
+        // Issue #180 certificate lifecycle: validation attempts (including unknown numbers) are
+        // audited with their outcome.
+        await using var context = CreateSqliteContext();
+        var sink = new RecordingLearningAuditEventSink();
+        var service = new CertificateService(context, NullLogger<CertificateService>.Instance, sink);
+        var (templateId, enrollmentId, userId, courseId) = await SeedAsync(context);
+        var issued = await service.IssueCertificateAsync(templateId, enrollmentId, userId, courseId);
+        issued.IsSuccess.Should().BeTrue();
+
+        var verified = await service.VerifyCertificateAsync(issued.Value.CertificateNumber);
+        var unknown = await service.VerifyCertificateAsync("CERT-00000000-UNKNOWN");
+
+        verified.Value.IsValid.Should().BeTrue();
+        unknown.Value.IsValid.Should().BeFalse();
+        var verificationEvents = sink.Events
+            .Where(auditEvent => auditEvent.ActionType == "Learning.Certificates.CertificateVerified")
+            .ToList();
+        verificationEvents.Should().HaveCount(2);
+        verificationEvents[0].Success.Should().BeTrue();
+        verificationEvents[1].Success.Should().BeFalse();
+        verificationEvents.Should().OnlyContain(auditEvent => auditEvent.ResourceType == "Certificate");
+    }
+
+    [Fact]
+    public async Task VerificationStillAnswersWhenItsAuditCannotBePersisted()
+    {
+        // Verification is a read: its audit emission is best effort and never breaks the public
+        // verification endpoint.
+        await using var context = CreateSqliteContext();
+        var issuing = new CertificateService(context, NullLogger<CertificateService>.Instance, new RecordingLearningAuditEventSink());
+        var (templateId, enrollmentId, userId, courseId) = await SeedAsync(context);
+        var issued = await issuing.IssueCertificateAsync(templateId, enrollmentId, userId, courseId);
+        issued.IsSuccess.Should().BeTrue();
+
+        var verifying = new CertificateService(context, NullLogger<CertificateService>.Instance, new ThrowingLearningAuditEventSink());
+        var verified = await verifying.VerifyCertificateAsync(issued.Value.CertificateNumber);
+
+        verified.IsSuccess.Should().BeTrue();
+        verified.Value.IsValid.Should().BeTrue();
+    }
+
     private static async Task<(Guid TemplateId, Guid EnrollmentId, Guid UserId, Guid CourseId)> SeedAsync(CertificateAuditSqliteContext context)
     {
         var userId = Guid.NewGuid();

@@ -77,21 +77,6 @@
       "count": 4
     }
   },
-  "src/app/[locale]/(dashboards)/console/learning/courses/[course]/listing/access/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    }
-  },
-  "src/app/[locale]/(dashboards)/console/learning/courses/[course]/listing/info/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    }
-  },
-  "src/app/[locale]/(dashboards)/console/learning/courses/[course]/listing/media/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    }
-  },
   "src/app/[locale]/(dashboards)/console/learning/courses/[course]/not-found.tsx": {
     "react/no-unescaped-entities": {
       "count": 2
@@ -99,11 +84,6 @@
   },
   "src/app/[locale]/(dashboards)/console/learning/courses/[course]/overview/page.tsx": {
     "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
-  "src/app/[locale]/(dashboards)/console/learning/courses/[course]/settings/danger/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
       "count": 1
     }
   },
@@ -152,29 +132,9 @@
       "count": 4
     }
   },
-  "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/access/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    }
-  },
-  "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/info/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    }
-  },
-  "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/media/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    }
-  },
   "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/not-found.tsx": {
     "react/no-unescaped-entities": {
       "count": 2
-    }
-  },
-  "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/settings/danger/page.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
     }
   },
   "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/students/page.tsx": {
@@ -346,7 +306,7 @@
   },
   "src/app/[locale]/layout.tsx": {
     "@typescript-eslint/require-await": {
-      "count": 2
+      "count": 1
     }
   },
   "src/app/[locale]/learn/courses/[slug]/activities/[activityId]/page.tsx": {
@@ -367,17 +327,6 @@
   "src/app/[locale]/learn/reviews/[reviewId]/peer-review-workspace.test.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 2
-    }
-  },
-  "src/app/[locale]/learn/reviews/[reviewId]/review-workspace.tsx": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    },
-    "@typescript-eslint/no-misused-promises": {
-      "count": 1
-    },
-    "react-hooks/set-state-in-effect": {
-      "count": 1
     }
   },
   "src/app/[locale]/learn/reviews/reviews-client.tsx": {
@@ -699,14 +648,6 @@
       "count": 1
     }
   },
-  "src/components/block-content-editor/extras/code-studio/runners/python-runner.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    },
-    "@typescript-eslint/require-await": {
-      "count": 1
-    }
-  },
   "src/components/block-content-editor/extras/code-studio/runners/python-wasi-runner.ts": {
     "@typescript-eslint/no-floating-promises": {
       "count": 2
@@ -762,88 +703,14 @@
       "count": 2
     }
   },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/crypto.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/date.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/document.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/dom.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
     "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/js.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 8
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unsafe-return": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 2
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/math.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/number.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/object.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 6
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 3
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/performance.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/reflect.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-return": {
-      "count": 1
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/string.ts": {
-    "@typescript-eslint/no-explicit-any": {
       "count": 1
     }
   },
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/window.ts": {
     "@typescript-eslint/no-unused-vars": {
-      "count": 9
+      "count": 8
     }
   },
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/gameguild/debug.ts": {
@@ -856,38 +723,9 @@
       "count": 2
     }
   },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/index.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 3
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/legacy/assemblyscript.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/legacy/env.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/legacy/go.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
     "@typescript-eslint/no-unused-vars": {
       "count": 2
-    }
-  },
-  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/legacy/wasi.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 128
     }
   },
   "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/wasi/clocks.ts": {
@@ -2488,26 +2326,6 @@
       "count": 1
     }
   },
-  "src/components/courses/course-location-selector.tsx": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    },
-    "@typescript-eslint/no-misused-promises": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 1
-    },
-    "@typescript-eslint/require-await": {
-      "count": 1
-    }
-  },
   "src/components/courses/course/course-header.tsx": {
     "@typescript-eslint/no-unnecessary-type-assertion": {
       "count": 2
@@ -3013,14 +2831,6 @@
     },
     "@typescript-eslint/no-unsafe-member-access": {
       "count": 8
-    }
-  },
-  "src/i18n/request.ts": {
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 1
     }
   },
   "src/lib/__tests__/api-client-integration.test.ts": {

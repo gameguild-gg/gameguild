@@ -51,7 +51,7 @@ import { verifyCodingCycleToolchain } from "./coding-cycle-toolchain-support.mjs
 import { assertRenderedEditorSource } from "./coding-cycle-editor-support.mjs";
 import { evaluateGradingTransport } from "./coding-cycle-grading-transport.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { existsSync, readFileSync, writeFileSync, createWriteStream, rmSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, createWriteStream, rmSync, appendFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient, GeneratedApi } from "@game-guild/client";
 import { chromium } from "playwright";
@@ -850,6 +850,61 @@ async function assertNoErrorSurface(page, label) {
   }
 }
 
+function recordJourneyFailure(label, error, kind) {
+  // Never query the browser or serialize operation arguments to preserve a cause.
+  // Keep the first line only and redact credentials/URLs/opaque values from messages.
+  try {
+    const rawName = typeof error?.name === "string" ? error.name : "Error";
+    const name = /^(?:[A-Za-z][A-Za-z0-9_]{0,60}Error|Error)$/.test(rawName) ? rawName : "Error";
+    const message = String(error?.message ?? "No diagnostic message").split(/\r?\n/, 1)[0]
+      .replace(/https?:\/\/\S+/gi, "[url]")
+      .replace(/\bBearer\s+\S+/gi, "Bearer [redacted]")
+      .replace(/\b[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g, "[jwt]")
+      .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email]")
+      .replace(/\b([A-Za-z_]*(?:password|passwd|secret|token|cookie|authorization|apikey|credential)[A-Za-z_]*)\b["']?\s*[:=]\s*(?:"[^"]*"|'[^']*'|[^\s,;}]+)/gi, "$1=[redacted]")
+      .replace(/\b[A-Za-z0-9_+\/=\-]{32,}\b/g, "[opaque]")
+      .replace(/[\r\n\t]/g, " ").slice(0, 600);
+    const entry = { at: new Date().toISOString(), kind, label, name, message };
+    const line = JSON.stringify(entry);
+    console.error("[coding-cycle-e2e failure] " + line);
+    try {
+      appendFileSync(resolve(ARTIFACTS, "await-failures.jsonl"), line + "\n", "utf8");
+    } catch {
+      console.error("[coding-cycle-e2e failure] forensic file unavailable");
+    }
+  } catch {
+    // Diagnostic failure must never replace the original domain/cleanup error.
+    try { console.error("[coding-cycle-e2e failure] safe cause unavailable"); } catch {}
+  }
+}
+
+async function observeJourneyAwait(label, operation, timeoutMs) {
+  const started = Date.now();
+  log(`await start: ${label}`);
+  let timer;
+  try {
+    const pending = Promise.resolve().then(operation);
+    const value = timeoutMs === undefined ? await pending : await Promise.race([
+      pending,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          const error = new Error(`${label} exceeded its ${timeoutMs}ms operation budget`);
+          error.name = "JourneyAwaitTimeoutError";
+          reject(error);
+        }, timeoutMs);
+      }),
+    ]);
+    log(`await complete: ${label}; elapsedMs=${Date.now() - started}`);
+    return value;
+  } catch (error) {
+    log(`await failed: ${label}; elapsedMs=${Date.now() - started}; error=${error?.name ?? "Error"}`);
+    recordJourneyFailure(label, error, "operation");
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function signIn(page, email, password) {
   await page.goto(`${WEB_BASE}/sign-in`, { waitUntil: "domcontentloaded" });
   await assertNoErrorSurface(page, "sign-in");
@@ -857,7 +912,7 @@ async function signIn(page, email, password) {
   // its CSRF and cookie storage. This keeps the coding-cycle test focused on
   // activity creation/execution instead of coupling it to an unrelated cold
   // route hydration race in the general-purpose sign-in form.
-  const result = await page.evaluate(async ({ email: emailValue, password: passwordValue }) => {
+  const result = await observeJourneyAwait("browser credentials fetch", () => page.evaluate(async ({ email: emailValue, password: passwordValue }) => {
     const csrfResponse = await fetch("/api/auth/csrf", { credentials: "include" });
     const csrf = await csrfResponse.json().catch(() => null);
     if (!csrfResponse.ok || typeof csrf?.csrfToken !== "string") {
@@ -878,14 +933,14 @@ async function signIn(page, email, password) {
     });
     const data = await response.json().catch(() => ({}));
     return { ok: response.ok, stage: "credentials", status: response.status, data };
-  }, { email, password });
+  }, { email, password }), 300_000);
 
   if (!result.ok && result.data?.error !== "MfaRequired") {
     throw new Error(`browser credentials sign-in failed at ${result.stage} (HTTP ${result.status})`);
   }
   if (result.data?.error === "MfaRequired") {
     await continueMfaSignIn(result.data, async (action, body) => {
-      const continued = await page.evaluate(async ({ action, body }) => {
+      const continued = await observeJourneyAwait("browser MFA fetch", () => page.evaluate(async ({ action, body }) => {
         const csrfResponse = await fetch("/api/auth/csrf", { credentials: "include" });
         const csrf = await csrfResponse.json().catch(() => null);
         if (!csrfResponse.ok || typeof csrf?.csrfToken !== "string") return { ok: false, status: csrfResponse.status };
@@ -894,7 +949,7 @@ async function signIn(page, email, password) {
           body: JSON.stringify({ ...body, csrfToken: csrf.csrfToken, redirect: false }),
         });
         return { ok: response.ok, status: response.status, data: await response.json().catch(() => ({})) };
-      }, { action, body });
+      }, { action, body }), 300_000);
       if (!continued.ok) throw new Error(`browser MFA ${action} failed (HTTP ${continued.status})`);
       return continued.data;
     }, email);
@@ -1009,8 +1064,8 @@ async function captureJourneyFailure(page, label, errorTracking, error) {
 // ---------------------------------------------------------------------------
 
 async function studentJourney(fixture, browser) {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-  const page = await context.newPage();
+  const context = await observeJourneyAwait("new browser context", () => browser.newContext({ viewport: { width: 1440, height: 1000 } }), 45_000);
+  const page = await observeJourneyAwait("new browser page", () => context.newPage(), 45_000);
   const httpFailures = trackAppHttpFailures(page, [WEB_BASE]);
   const errors = attachErrorTracking(page, "student");
 
@@ -1141,10 +1196,12 @@ async function studentJourney(fixture, browser) {
       "observed",
     );
   } catch (error) {
-    await captureJourneyFailure(page, "student", errors, error);
+    recordJourneyFailure("student journey", error, "primary");
+    await observeJourneyAwait("student failure evidence", () => captureJourneyFailure(page, "student", errors, error), 45_000)
+      .catch((diagnosticError) => log(`student failure evidence unavailable: ${diagnosticError?.name ?? "Error"}`));
     throw error;
   } finally {
-    await context.close();
+    await observeJourneyAwait("browser context close", () => context.close(), 45_000);
   }
   return result;
 }
@@ -1189,8 +1246,8 @@ async function payloadCheck(fixture) {
 // ---------------------------------------------------------------------------
 
 async function instructorJourney(fixture, browser) {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-  const page = await context.newPage();
+  const context = await observeJourneyAwait("new browser context", () => browser.newContext({ viewport: { width: 1440, height: 1000 } }), 45_000);
+  const page = await observeJourneyAwait("new browser page", () => context.newPage(), 45_000);
   const httpFailures = trackAppHttpFailures(page, [WEB_BASE]);
   const errors = attachErrorTracking(page, "instructor");
 
@@ -1456,10 +1513,12 @@ async function instructorJourney(fixture, browser) {
       "observed",
     );
   } catch (error) {
-    await captureJourneyFailure(page, "instructor", errors, error);
+    recordJourneyFailure("instructor journey", error, "primary");
+    await observeJourneyAwait("instructor failure evidence", () => captureJourneyFailure(page, "instructor", errors, error), 45_000)
+      .catch((diagnosticError) => log(`instructor failure evidence unavailable: ${diagnosticError?.name ?? "Error"}`));
     record("instructor journey completed without throwing", false, error?.message ?? String(error));
   } finally {
-    await context.close();
+    await observeJourneyAwait("browser context close", () => context.close(), 45_000);
   }
   return result;
 }
@@ -1593,7 +1652,7 @@ async function main() {
   try {
     // Phase 2 — student UI (hard).
     try {
-      results.push(await studentJourney(fixture, browser));
+      results.push(await observeJourneyAwait("phase 2 student journey", () => studentJourney(fixture, browser)));
     } catch (error) {
       results.push({
         phase: "Phase 2 — Student UI",
@@ -1603,7 +1662,7 @@ async function main() {
 
     // Phase 3 — payload check (EXPECTED RED, known bug).
     try {
-      results.push(await payloadCheck(fixture));
+      results.push(await observeJourneyAwait("phase 3 payload check", () => payloadCheck(fixture)));
     } catch (error) {
       results.push({
         phase: "Phase 3 — Payload check",
@@ -1613,7 +1672,7 @@ async function main() {
 
     // Phase 4 — instructor UI (best-effort).
     try {
-      results.push(await instructorJourney(fixture, browser));
+      results.push(await observeJourneyAwait("phase 4 instructor journey", () => instructorJourney(fixture, browser)));
     } catch (error) {
       results.push({
         phase: "Phase 4 — Instructor UI",
@@ -1623,7 +1682,7 @@ async function main() {
 
     // Phase 5 — grade check.
     try {
-      results.push(await gradeCheck(fixture));
+      results.push(await observeJourneyAwait("phase 5 persisted grade check", () => gradeCheck(fixture)));
     } catch (error) {
       results.push({
         phase: "Phase 5 — Grade check",
@@ -1631,7 +1690,7 @@ async function main() {
       });
     }
   } finally {
-    await browser.close();
+    await observeJourneyAwait("browser close", () => browser.close(), 45_000);
   }
 
   const { text, anyRed } = summarize(results);

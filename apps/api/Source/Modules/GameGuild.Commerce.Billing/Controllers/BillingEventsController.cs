@@ -125,4 +125,24 @@ public sealed class BillingEventsController(ISender sender) : BaseApiController
         var outboxEvent = await sender.Send(new GetBillingOutboxEventQuery(eventId), ct).ConfigureAwait(false);
         return outboxEvent is null ? NotFound() : Ok(outboxEvent);
     }
+
+    /// <summary>
+    ///     Rebuild one subscription's state from the durable billing event log
+    /// </summary>
+    /// <param name="subscriptionId">Subscription aggregate identifier.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The event-sourced projection of the subscription, verified against the live snapshot.</returns>
+    [HttpGet("subscriptions/{subscriptionId:guid}/projection")]
+    [EndpointSummary("Rebuild subscription state from the durable billing event log")]
+    [EndpointDescription(
+        "Deterministically replays the durable billing events of one subscription (invoice paid, renewal, cancellation, subscription-change saga outcomes) into a projected state and verifies it against the live subscription snapshot, reporting any drift. Unknown future event schemas are listed as skipped instead of failing the replay.")]
+    [ProducesResponseType<SubscriptionEventProjectionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetSubscriptionProjection(Guid subscriptionId, CancellationToken ct)
+    {
+        var projection = await sender.Send(
+            new GetSubscriptionEventProjectionQuery(subscriptionId),
+            ct).ConfigureAwait(false);
+        return projection is null ? NotFound() : Ok(projection);
+    }
 }

@@ -42,7 +42,9 @@ public sealed class GetWebhookEventHandler(
                 ProcessedAt = webhookEvent.ProcessedAt,
                 CreatedAt = webhookEvent.CreatedAt,
                 TenantId = webhookEvent.TenantId,
-                SubscriptionId = webhookEvent.SubscriptionId
+                SubscriptionId = webhookEvent.SubscriptionId,
+                SourceIpAddress = webhookEvent.SourceIpAddress,
+                UserAgent = webhookEvent.UserAgent
             };
         }
         catch (Exception ex)

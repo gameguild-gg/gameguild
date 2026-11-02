@@ -52,6 +52,12 @@
         <ProjectReference
             Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Users\GameGuild.Identity.Users.csproj" />
+        <!-- Cross-tenant tests (#1129/#1132): actor-context tenant validation and the
+             claim-based tenant resolver that consume API-key principals. -->
+        <ProjectReference
+            Include="..\..\Source\Modules\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
+        <ProjectReference
+            Include="..\..\Source\Modules\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
     </ItemGroup>
 
 </Project>

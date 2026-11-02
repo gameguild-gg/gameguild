@@ -73,9 +73,48 @@ public sealed class TrustedDeviceSessionCommandTests
             Id = sessionId, UserId = userId, IsActive = true,
             ExpiresAt = DateTime.UtcNow.AddHours(1), DeviceFingerprint = "persisted-device"
         });
-        service.Setup(s => s.TrustDeviceAsync(userId, "persisted-device", "Browser", cancellation.Token)).ReturnsAsync(outcome);
+        service.Setup(s => s.TrustDeviceAsync(userId, "persisted-device", "Browser", null, cancellation.Token)).ReturnsAsync(outcome);
         var result = await new SessionMutationCommandHandler(service.Object)
             .Handle(new TrustDeviceCommand(userId, sessionId, "Browser"), cancellation.Token);
+        Assert.Equal(outcome, result);
+        service.VerifyAll();
+        service.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task TrustCarriesTheTrustedSessionDeviceMetadataIntoTheTrustMutation()
+    {
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        const string deviceInfo = """{"browser":"Firefox","operatingSystem":"Windows"}""";
+        var service = new Mock<ISessionManagementService>(MockBehavior.Strict);
+        service.Setup(s => s.GetSessionAsync(sessionId, CancellationToken.None)).ReturnsAsync(new UserSession
+        {
+            Id = sessionId, UserId = userId, IsActive = true,
+            ExpiresAt = DateTime.UtcNow.AddHours(1), DeviceFingerprint = "persisted-device",
+            DeviceInfo = deviceInfo
+        });
+        service.Setup(s => s.TrustDeviceAsync(userId, "persisted-device", "Browser", deviceInfo, CancellationToken.None))
+            .ReturnsAsync(true);
+        var result = await new SessionMutationCommandHandler(service.Object)
+            .Handle(new TrustDeviceCommand(userId, sessionId, "Browser"), CancellationToken.None);
+        Assert.True(result);
+        service.VerifyAll();
+        service.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task RenameTrustedDeviceDelegatesToTheServiceWithTheActingPrincipal(bool outcome)
+    {
+        var userId = Guid.NewGuid();
+        var deviceId = Guid.NewGuid();
+        var service = new Mock<ISessionManagementService>(MockBehavior.Strict);
+        service.Setup(s => s.RenameTrustedDeviceAsync(userId, deviceId, "Laptop", CancellationToken.None))
+            .ReturnsAsync(outcome);
+        var result = await new SessionMutationCommandHandler(service.Object)
+            .Handle(new RenameTrustedDeviceCommand(userId, deviceId, "Laptop"), CancellationToken.None);
         Assert.Equal(outcome, result);
         service.VerifyAll();
         service.VerifyNoOtherCalls();

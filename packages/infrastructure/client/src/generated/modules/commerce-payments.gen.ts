@@ -292,6 +292,128 @@ export class CommercePaymentsModule {
   }
 
   /**
+   * Provisions one payment-gateway credential into the encrypted-at-rest store (issue
+   * #413): the plaintext value is encrypted with ASP.NET DataProtection (AES-256 under
+   * the application key ring) before it touches the database, and any previously active
+   * credential of the same slot is deactivated atomically. Requires the
+   * `payments:admin` permission. The response carries only a SHA-256 fingerprint —
+   * the plaintext is never persisted, returned or logged.
+   *
+   * Stores a gateway API credential encrypted at rest (ASP.NET DataProtection, AES-256 under the application key ring) and deactivates the previously active credential of the same slot. The response contains identity metadata and a SHA-256 fingerprint of the plaintext for equality checks — the plaintext itself is never persisted, returned or logged. Requires the payments:admin permission.
+   */
+  async putPaymentsGatewaysCredentials(
+    providerId: string,
+    secretName: string,
+    body: Types.CommercePaymentsProvisionGatewayCredentialInput,
+  ): Promise<Result<Types.CommercePaymentsGatewayCredentialProvisionResult, ApiError>> {
+    const url = `/api/v1/payments/gateways/${providerId}/credentials/${secretName}`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommercePaymentsProvisionGatewayCredentialInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsGatewayCredentialProvisionResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Deactivates the active credential of one (provider, secret name) slot (issue #413).
+   * The encrypted row stays for audit; the slot resolves to "no credential" afterwards
+   * so the gateway falls back to its configuration credential or fails closed. Requires
+   * the `payments:admin` permission.
+   *
+   * Deactivates the active encrypted credential of the (provider, secret name) slot. The encrypted row is retained for audit; reads of the slot resolve to no credential, so the gateway falls back to its configuration credential or fails closed. Idempotent: deactivating a slot without an active credential reports Deactivated=false. Requires the payments:admin permission.
+   */
+  async deletePaymentsGatewaysCredentials(
+    providerId: string,
+    secretName: string,
+  ): Promise<Result<Types.CommercePaymentsGatewayCredentialDeactivationResult, ApiError>> {
+    const url = `/api/v1/payments/gateways/${providerId}/credentials/${secretName}`;
+
+    const result = await this.client.request({
+      method: 'DELETE',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsGatewayCredentialDeactivationResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Validates one gateway's API credentials with a cheap provider round trip (issue
+   * #413): Stripe `GET /v1/balance`, the PayPal OAuth2 token request, or the
+   * respective probe of the other registered adapters. The effective credential is
+   * resolved from the encrypted credential store first and the configuration fallback
+   * second. Requires the `payments:admin` permission. Fail-closed semantics: an
+   * unknown provider is a 404, a disabled adapter or missing credentials is an explicit
+   * failed result — never a simulated pass outside simulation mode.
+   *
+   * Performs the cheapest authenticated call of the gateway (for example Stripe GET /v1/balance or the PayPal OAuth2 token request) to validate that the effective credentials — encrypted-store first, configuration fallback second — actually work. Requires the payments:admin permission. An unknown provider fails with 404; a disabled adapter or a missing credential returns an explicit failed result.
+   */
+  async postPaymentsGatewaysTestConnection(providerId: string): Promise<Result<Types.CommercePaymentsGatewayConnectionTestResult, ApiError>> {
+    const url = `/api/v1/payments/gateways/${providerId}/test-connection`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsGatewayConnectionTestResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Expanded per-gateway analytics (issue #413 analytics remainders): error rate by
+   * type (failed payments grouped by gateway error code), cost analysis (succeeded
+   * volume priced through the configured per-gateway fee schedule) and geographic
+   * performance (attempts and success rate per billing country), each over the rolling
+   * 24h/7d/30d windows. Requires the `payments:admin` permission; non-admin actors
+   * are scoped to their own tenant.
+   *
+   * Returns the expanded per-gateway analytics: the error-rate-by-type breakdown (failed payments grouped by gateway error code), the per-gateway cost analysis (succeeded volume priced through the configured fee schedule, 30d window) and the geographic performance breakdown (attempts and success rate per billing country), each over the rolling 24h/7d/30d windows. Requires the payments:admin permission; non-admin actors are scoped to their own tenant.
+   */
+  async getPaymentsGatewaysAnalytics(): Promise<Result<Types.CommercePaymentsGatewayAnalyticsReport, ApiError>> {
+    const url = '/api/v1/payments/gateways/analytics';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsGatewayAnalyticsReportSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Per-gateway health and performance metrics over the rolling 24h/7d/30d windows
    * (issue #413 follow-up): success rates, average processing latency and volume per
    * gateway, plus the live circuit-breaker state of every known gateway. Requires the

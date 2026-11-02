@@ -4,11 +4,13 @@ using GameGuild.Notifications.Services.Email.Renderers;
 using GameGuild.Notifications.Services.Email.Handlers;
 using GameGuild.Notifications.Services.Push;
 using GameGuild.Notifications.Services.Sms;
+using GameGuild.Notifications.Services.WhatsApp;
 using GameGuild.Identity.Tenants;
 using GameGuild.Push;
 using GameGuild.Sms;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Notifications;
 
@@ -58,6 +60,31 @@ public static class NotificationsModule
             .BindConfiguration("Notifications:PushDispatcher");
         services.AddScoped<PushDispatcherService>();
         services.AddHostedService<PushDispatcherBackgroundService>();
+
+        // WhatsApp dispatch pipeline (issues #54/#55): config-gated port with a fail-closed
+        // NoOp default (same pattern as the Plaid instant-verification seam). The real
+        // Cloud API adapter is registered by the API host once environment credentials
+        // (WHATSAPP_APP_ID / WHATSAPP_PHONE_NUMBER_ID / WHATSAPP_ACCESS_TOKEN) exist and
+        // Notifications:WhatsApp:Enabled is true; until then every send is declined
+        // observably and broadcasts fail explicitly.
+        services.AddSingleton<IValidateOptions<WhatsAppSettings>, WhatsAppSettingsValidator>();
+        services.AddOptions<WhatsAppSettings>()
+            .BindConfiguration(WhatsAppSettings.SectionName)
+            .ValidateOnStart();
+        services.TryAddSingleton<IWhatsAppProvider, NoOpWhatsAppProvider>();
+        services.AddOptions<WhatsAppDispatcherOptions>()
+            .BindConfiguration("Notifications:WhatsApp:Dispatcher");
+        services.AddScoped<IWhatsAppRecipientPhoneResolver, WhatsAppRecipientPhoneResolver>();
+        services.AddScoped<WhatsAppDispatcherService>();
+        services.AddHostedService<WhatsAppDispatcherBackgroundService>();
+
+        // Broadcast campaign engine (issue #55): tenant-scoped template campaigns with a
+        // bounded recipient cap, opt-in filtering and per-recipient delivery tracking.
+        services.AddOptions<WhatsAppBroadcastOptions>()
+            .BindConfiguration(WhatsAppBroadcastOptions.SectionName);
+        services.AddScoped<IWhatsAppBroadcastAudienceResolver, WhatsAppBroadcastAudienceResolver>();
+        services.AddScoped<IWhatsAppBroadcastService, WhatsAppBroadcastService>();
+        services.AddHostedService<WhatsAppBroadcastSchedulerBackgroundService>();
 
         // Tenant invite renderer. Registered here (not in the producing Identity.Tenants module) because
         // Identity.Tenants cannot reference GameGuild.Notifications (circular: Tenants -> Notifications -> Users -> Tenants).

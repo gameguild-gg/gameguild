@@ -30,10 +30,48 @@ public class EnrollmentAuditEmissionTests
             "Learning.Enrollments.UserEnrolled",
             "Learning.Enrollments.ProgressUpdated",
             "Learning.Enrollments.StatusChanged",
-            "Learning.Enrollments.StatusChanged");
+            "Learning.Enrollments.StatusChanged",
+            "Learning.Enrollments.EnrollmentCompleted");
         sink.Events.Should().OnlyContain(auditEvent => auditEvent.ResourceType == "Enrollment");
         sink.Events.Should().OnlyContain(auditEvent => auditEvent.ResourceId == enrolled.Id.ToString());
         sink.Events[0].ActorUserId.Should().Be(userId);
+    }
+
+    [Fact]
+    public async Task CompletingAnEnrollmentEmitsTheDedicatedCompletionEvent()
+    {
+        // Issue #180 program-management tracking: completion is a first-class lifecycle event, not
+        // just one StatusChanged value among many.
+        await using var db = CreateSqliteContext();
+        var sink = new RecordingLearningAuditEventSink();
+        var service = new EnrollmentService(new EnrollmentRepository(db), db, sink);
+        var seeded = Enrollment.Create(Guid.NewGuid(), Guid.NewGuid());
+        db.Set<Enrollment>().Add(seeded);
+        await db.SaveChangesAsync();
+
+        var completed = await service.SetStatusAsync(seeded.Id, EnrollmentStatus.Completed);
+
+        completed.Should().NotBeNull();
+        completed!.Status.Should().Be(EnrollmentStatus.Completed);
+        completed.CompletedAt.Should().NotBeNull();
+        sink.Events.Select(auditEvent => auditEvent.ActionType).Should().Equal(
+            "Learning.Enrollments.StatusChanged",
+            "Learning.Enrollments.EnrollmentCompleted");
+    }
+
+    [Fact]
+    public async Task NonCompletionStatusChangesEmitNoCompletionEvent()
+    {
+        await using var db = CreateSqliteContext();
+        var sink = new RecordingLearningAuditEventSink();
+        var service = new EnrollmentService(new EnrollmentRepository(db), db, sink);
+        var seeded = Enrollment.Create(Guid.NewGuid(), Guid.NewGuid());
+        db.Set<Enrollment>().Add(seeded);
+        await db.SaveChangesAsync();
+
+        await service.SetStatusAsync(seeded.Id, EnrollmentStatus.Paused);
+
+        sink.Events.Select(auditEvent => auditEvent.ActionType).Should().Equal("Learning.Enrollments.StatusChanged");
     }
 
     [Fact]

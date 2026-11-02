@@ -36,7 +36,17 @@ public sealed class BlogViewCounterService(IApplicationDbContext context) : IBlo
                     setters => setters.SetProperty(p => p.ViewsCount, p => p.ViewsCount + 1),
                     ct)
                 .ConfigureAwait(false);
-            return affected > 0;
+            if (affected == 0)
+            {
+                return false;
+            }
+
+            // Set-based writes stage their audit rows on the context (issue #166); saving here
+            // persists that evidence with the increment when no ambient use-case save follows.
+            // Deployments that must not audit view counters can exclude the entity through
+            // Audit:EntityChangeCapture:ExcludedEntityTypes.
+            await context.SaveChangesAsync(ct).ConfigureAwait(false);
+            return true;
         }
         catch (NotSupportedException)
         {

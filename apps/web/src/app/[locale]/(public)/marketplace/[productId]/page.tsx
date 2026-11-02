@@ -1,5 +1,6 @@
 import { cn } from "@game-guild/ui/lib/utils";
 import { AddToCartForm } from '@/components/marketplace/add-to-cart-form';
+import { CurrencyPriceDisplay } from '@/components/currency/currency-price-display';
 import { Link } from '@/i18n/navigation';
 import { getMarketplaceProduct } from '@/lib/marketplace/queries';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -51,7 +52,20 @@ export default async function MarketplaceProductPage({ params }: { params: Promi
         <p className="max-w-3xl leading-7 text-muted-foreground">{product.description ?? product.shortDescription}</p>
       </section>
       <Card>
-        <CardHeader><CardTitle>{price ? `${price.currentPrice} ${price.currency}` : t('priceUnavailable')}</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>
+            {price ? (
+              // Price transparency (issue #412 spec E): original listing price plus the
+              // approximate value in the visitor's selected display currency.
+              <span className="flex flex-col gap-1">
+                <span>{`${price.currentPrice} ${price.currency}`}</span>
+                {typeof price.currentPrice === 'number' ? (
+                  <CurrencyPriceDisplay amount={price.currentPrice} currency={price.currency ?? 'USD'} />
+                ) : null}
+              </span>
+            ) : t('priceUnavailable')}
+          </CardTitle>
+        </CardHeader>
         <CardContent className="space-y-4">
           <AddToCartForm product={product} labels={{ add: t('addToCart'), quantity: t('quantity'), unavailable: t('priceUnavailable') }} />
           <Link

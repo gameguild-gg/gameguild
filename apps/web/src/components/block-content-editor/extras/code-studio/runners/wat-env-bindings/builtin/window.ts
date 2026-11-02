@@ -1,10 +1,7 @@
 /**
  * Window bindings (browser environment stub)
  */
-export function createWindowBindings(
-  stdout: (text: string) => void,
-  stderr: (text: string) => void
-) {
+export function createWindowBindings(stdout: (text: string) => void) {
   return {
     alert: (message: string) => stdout(`[Alert] ${message}`),
     confirm: (message: string) => {

@@ -490,7 +490,7 @@ public sealed class PermissionGrantsControllerTests
             ["users:read"]);
 
         mediator
-            .Setup(x => x.Send(It.IsAny<Authorization.GrantTenantPermissionCommand>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.Send(It.IsAny<GrantTenantPermissionCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Guid.NewGuid());
 
         var controller = new PermissionGrantsController(
@@ -508,7 +508,7 @@ public sealed class PermissionGrantsControllerTests
 
         // The acting user comes from the actor context, never the request body.
         mediator.Verify(x => x.Send(
-            It.Is<Authorization.GrantTenantPermissionCommand>(command =>
+            It.Is<GrantTenantPermissionCommand>(command =>
                 command.UserId == request.UserId &&
                 command.Permissions.SequenceEqual(request.Permissions) &&
                 command.GrantedBy == actorId),
@@ -550,7 +550,7 @@ public sealed class PermissionGrantsControllerTests
             ["users:read"]);
 
         mediator
-            .Setup(x => x.Send(It.IsAny<Authorization.RevokeTenantPermissionCommand>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.Send(It.IsAny<RevokeTenantPermissionCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var controller = new PermissionGrantsController(
@@ -562,7 +562,7 @@ public sealed class PermissionGrantsControllerTests
 
         result.Should().BeOfType<NoContentResult>();
         mediator.Verify(x => x.Send(
-            It.Is<Authorization.RevokeTenantPermissionCommand>(command =>
+            It.Is<RevokeTenantPermissionCommand>(command =>
                 command.UserId == request.UserId &&
                 command.Permissions.SequenceEqual(request.Permissions) &&
                 command.RevokedBy == actorId),

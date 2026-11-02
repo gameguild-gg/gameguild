@@ -44,7 +44,7 @@ public class RetryPaymentRecoveryLifecycleTests
     [InlineData(PaymentStatus.Processing, GatewayFailureKind.OutcomeUnknown)]
     [InlineData(PaymentStatus.Failed, GatewayFailureKind.OutcomeUnknown)]
     [InlineData(PaymentStatus.Processing, GatewayFailureKind.NotApplicable)]
-    public async Task RetryWithUnconfirmedCharge_RecordsItsClaimWithoutRetryOrDunning(
+    public async Task RetryWithUnconfirmedCharge_RetainsPendingClaimWithoutRetryOrDunning(
         PaymentStatus providerStatus, GatewayFailureKind failureKind)
     {
         var payment = FailedPayment(maxRetries: 4);
@@ -59,7 +59,7 @@ public class RetryPaymentRecoveryLifecycleTests
         result.Success.Should().BeFalse();
         result.PaymentResult!.Status.Should().Be(PaymentStatus.Pending);
         CommandOutcome.IsFailure(result).Should().BeTrue();
-        CommandOutcome.ShouldRollback(result).Should().BeFalse("the recorded retry must survive the outer command transaction");
+        CommandOutcome.ShouldRollback(result).Should().BeFalse();
         payment.Status.Should().Be(PaymentStatus.Pending);
         payment.NextRetryAt.Should().BeNull();
         payment.CanRetry.Should().BeFalse();
@@ -287,7 +287,91 @@ public class RetryPaymentRecoveryLifecycleTests
             Times.Once);
     }
 
-    private RetryPaymentCommandHandler CreateHandler(Payment payment, int maxRetries)
+    [Fact]
+    public async Task Retry_WithExpiredRecordedMethod_FallsBackToDefaultSavedMethod()
+    {
+        // Issue #414: the recorded method expired, so the retry charges the owner's
+        // default saved method instead of charging a card that cannot succeed.
+        var payment = FailedPayment(maxRetries: 4);
+        payment.ApplyPaymentMethodChange("pm_expired_card");
+
+        var dbOptions = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<PaymentsPersistenceTestDbContext>()
+            .UseInMemoryDatabase($"retry-fallback-{Guid.NewGuid()}")
+            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
+            .Options;
+        using var context = new PaymentsPersistenceTestDbContext(dbOptions);
+        var methodRepository = new PaymentMethodRepository(context, NullLogger<PaymentMethodRepository>.Instance);
+
+        var ownerId = Guid.NewGuid();
+        var expiredMethod = new PaymentMethod(payment.TenantId, ownerId, "stripe", "pm_expired_card", PaymentMethodType.Card, isDefault: false);
+        expiredMethod.UpdateGatewayMetadata(PaymentMethodType.Card, "visa", "1111", 12, 2030, "fp_expired");
+        expiredMethod.MarkExpired();
+        var defaultMethod = new PaymentMethod(payment.TenantId, ownerId, "stripe", "pm_new_default", PaymentMethodType.Card, isDefault: true);
+        defaultMethod.UpdateGatewayMetadata(PaymentMethodType.Card, "visa", "4242", 12, 2031, "fp_new");
+        context.Set<PaymentMethod>().AddRange(expiredMethod, defaultMethod);
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        SetupGatewaySuccess();
+        var handler = CreateHandler(
+            payment,
+            4,
+            paymentMethodRepository: methodRepository,
+            chargeResolver: new PaymentMethodChargeResolver(methodRepository));
+
+        var result = await handler.Handle(new RetryPaymentCommand(payment.Id), CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        payment.PaymentMethodId.Should().Be("pm_new_default", "the retry falls back to the default saved method");
+        _gateway.Verify(
+            gateway => gateway.ProcessPaymentAsync(
+                It.Is<GatewayPaymentRequest>(request => request.PaymentMethodId == "pm_new_default"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Retry_WithUsableRecordedMethod_KeepsChargingTheRecordedMethod()
+    {
+        var payment = FailedPayment(maxRetries: 4);
+        payment.ApplyPaymentMethodChange("pm_recorded_card");
+
+        var dbOptions = new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<PaymentsPersistenceTestDbContext>()
+            .UseInMemoryDatabase($"retry-keep-{Guid.NewGuid()}")
+            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
+            .Options;
+        using var context = new PaymentsPersistenceTestDbContext(dbOptions);
+        var methodRepository = new PaymentMethodRepository(context, NullLogger<PaymentMethodRepository>.Instance);
+
+        var ownerId = Guid.NewGuid();
+        var recordedMethod = new PaymentMethod(payment.TenantId, ownerId, "stripe", "pm_recorded_card", PaymentMethodType.Card, isDefault: false);
+        recordedMethod.UpdateGatewayMetadata(PaymentMethodType.Card, "visa", "1111", 12, 2031, "fp_recorded");
+        var defaultMethod = new PaymentMethod(payment.TenantId, ownerId, "stripe", "pm_other_default", PaymentMethodType.Card, isDefault: true);
+        defaultMethod.UpdateGatewayMetadata(PaymentMethodType.Card, "visa", "4242", 12, 2031, "fp_other");
+        context.Set<PaymentMethod>().AddRange(recordedMethod, defaultMethod);
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        SetupGatewaySuccess();
+        var handler = CreateHandler(
+            payment,
+            4,
+            paymentMethodRepository: methodRepository,
+            chargeResolver: new PaymentMethodChargeResolver(methodRepository));
+
+        await handler.Handle(new RetryPaymentCommand(payment.Id), CancellationToken.None);
+
+        payment.PaymentMethodId.Should().Be("pm_recorded_card", "an explicit, still-usable recorded method is never overridden");
+        _gateway.Verify(
+            gateway => gateway.ProcessPaymentAsync(
+                It.Is<GatewayPaymentRequest>(request => request.PaymentMethodId == "pm_recorded_card"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    private RetryPaymentCommandHandler CreateHandler(
+        Payment payment,
+        int maxRetries,
+        IPaymentMethodRepository? paymentMethodRepository = null,
+        IPaymentMethodChargeResolver? chargeResolver = null)
     {
         var options = new PaymentRetryOptions { MaxRetries = maxRetries, JitterRatio = 0.0 };
         // The repository returns the shared payment instance; the handler mutates it in place.
@@ -310,7 +394,10 @@ public class RetryPaymentRecoveryLifecycleTests
             _dunning.Object,
             _revenueAuditService.Object,
             _actorAccessor.Object,
-            NullLogger<RetryPaymentCommandHandler>.Instance);
+            NullLogger<RetryPaymentCommandHandler>.Instance,
+            notificationService: null,
+            paymentMethodRepository: paymentMethodRepository,
+            chargeResolver: chargeResolver);
     }
 
     private void SetupGatewaySuccess()

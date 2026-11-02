@@ -54,10 +54,14 @@ public static class CachingServiceExtensions
             sp.GetRequiredService<IOptions<AuthorizationCacheOptions>>().Value.EnableMetrics));
         services.AddHostedService<PermissionCacheMetricsMonitor>();
         services.AddSingleton<IPermissionCachePopularityTracker, PermissionCachePopularityTracker>();
-        services.AddSingleton<IPermissionCacheKeyTracker>(sp => new PermissionCacheKeyTracker(
+        services.AddSingleton<PermissionCacheKeyTracker>(sp => new PermissionCacheKeyTracker(
             sp.GetRequiredService<IMemoryCache>(),
             sp.GetRequiredService<ICacheMetricsService>(),
             sp.GetRequiredService<IOptions<AuthorizationCacheOptions>>().Value.MaxL1CacheSize));
+        services.AddSingleton<IPermissionCacheKeyTracker>(sp => sp.GetRequiredService<PermissionCacheKeyTracker>());
+        services.AddSingleton<IPermissionCacheCapacityManager>(sp => sp.GetRequiredService<PermissionCacheKeyTracker>());
+        services.TryAddSingleton<IPermissionCacheMemoryPressureProvider, RuntimePermissionCacheMemoryPressureProvider>();
+        services.AddHostedService<PermissionCacheMemoryPressureMonitor>();
 
         // Hybrid cache (scoped to allow tenant-specific behavior)
         services.AddScoped<IHybridPermissionCache>(sp =>

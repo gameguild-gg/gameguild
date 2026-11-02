@@ -170,7 +170,8 @@ public class RefundRepository(
         int maxExecutionAttempts,
         DateTime failedBeforeUtc,
         int take = 50,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        DateTime? processingStaleBeforeUtc = null)
     {
         if (take < 1) take = 50;
 
@@ -180,7 +181,15 @@ public class RefundRepository(
                 || (refund.Status == RefundStatus.Failed
                     && refund.AttemptCount < maxExecutionAttempts
                     && refund.FailedAt != null
-                    && refund.FailedAt <= failedBeforeUtc))
+                    && refund.FailedAt <= failedBeforeUtc
+                    // Failure classification (issue #419): permanent declines and
+                    // outcome-unknown attempts are never replayed by the worker; the latter
+                    // stay reserved for webhook/recovery reconciliation.
+                    && (refund.LastFailureKind == GatewayFailureKind.RetriableGatewayFailure
+                        || refund.LastFailureKind == GatewayFailureKind.NotApplicable))
+                || (processingStaleBeforeUtc != null
+                    && refund.Status == RefundStatus.Processing
+                    && refund.UpdatedAt <= processingStaleBeforeUtc))
             .OrderBy(refund => refund.CreatedAt)
             .Take(take)
             .ToListAsync(cancellationToken)

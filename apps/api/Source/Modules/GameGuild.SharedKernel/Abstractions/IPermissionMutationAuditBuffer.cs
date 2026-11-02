@@ -10,6 +10,14 @@ public interface IPermissionMutationAuditBuffer
     /// <summary>Bind an actor with either an explicit target or per-entity tenant attribution for maintenance.</summary>
     IPermissionMutationAuditScope BeginPermissionMutationAuditScope(Guid actorId, Guid? tenantId, bool useEntityTenantScope);
 
+    /// <summary>
+    ///     Bind a named internal maintenance operation after the host validates the actual
+    ///     authenticated system context. Hosts without that capability fail closed.
+    /// </summary>
+    IPermissionMutationAuditScope BeginSystemPermissionMutationAuditScope(
+        PermissionSystemMutation operation, Guid? tenantId, bool useEntityTenantScope) =>
+        throw new NotSupportedException("This host does not support system permission mutation scopes.");
+
     /// <summary>Deliver staged evidence after the owner has committed its transaction.</summary>
     Task FlushPendingPermissionAuditChangesAsync() => FlushPendingPermissionAuditChangesAsync(CancellationToken.None);
 

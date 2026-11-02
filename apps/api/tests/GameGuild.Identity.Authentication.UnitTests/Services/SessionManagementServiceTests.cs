@@ -1057,4 +1057,134 @@ public class SessionManagementServiceTests
         result.Should().Contain(e => e.ActivityType == "DeviceTrusted");
         result.Should().BeInDescendingOrder(e => e.Timestamp); // Most recent first
     }
+
+    // ── Trusted-device metadata + rename (issue #278 remainder) ────────────────────
+
+    [Fact]
+    public async Task TrustDeviceAsync_PersistsSessionDeviceInfoOnTheTrustedDeviceRow()
+    {
+        var userId = Guid.NewGuid();
+        const string deviceInfo = """{"browser":"Firefox","operatingSystem":"Windows"}""";
+        _trustedDeviceRepositoryMock
+            .Setup(x => x.GetByUserAndFingerprintAsync(userId, "fp-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TrustedDevice?)null);
+
+        var result = await _service.TrustDeviceAsync(userId, "fp-1", "Workstation", deviceInfo);
+
+        result.Should().BeTrue();
+        _trustedDeviceRepositoryMock.Verify(x => x.CreateAsync(
+            It.Is<TrustedDevice>(d => d.UserId == userId && d.DeviceFingerprint == "fp-1" && d.DeviceInfo == deviceInfo),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TrustDeviceAsync_TruncatesOversizedDeviceInfoToTheColumnLimit()
+    {
+        var userId = Guid.NewGuid();
+        var oversized = new string('x', SessionManagementService.TrustedDeviceInfoMaxLength + 50);
+        _trustedDeviceRepositoryMock
+            .Setup(x => x.GetByUserAndFingerprintAsync(userId, "fp-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TrustedDevice?)null);
+
+        await _service.TrustDeviceAsync(userId, "fp-1", "Workstation", oversized);
+
+        _trustedDeviceRepositoryMock.Verify(x => x.CreateAsync(
+            It.Is<TrustedDevice>(d => d.DeviceInfo.Length == SessionManagementService.TrustedDeviceInfoMaxLength),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TrustDeviceAsync_RefreshingTrustKeepsPreviouslyCapturedDeviceInfo()
+    {
+        var userId = Guid.NewGuid();
+        const string captured = """{"browser":"Chrome"}""";
+        var existing = new TrustedDevice
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            DeviceFingerprint = "fp-1",
+            DeviceInfo = captured,
+            IsActive = true
+        };
+        _trustedDeviceRepositoryMock
+            .Setup(x => x.GetByUserAndFingerprintAsync(userId, "fp-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existing);
+
+        var result = await _service.TrustDeviceAsync(userId, "fp-1", "Laptop", deviceInfo: null);
+
+        result.Should().BeTrue();
+        existing.DeviceInfo.Should().Be(captured);
+        _trustedDeviceRepositoryMock.Verify(x => x.UpdateAsync(existing, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TrustDeviceAsync_ReTrustRefreshesDeviceInfoFromTheTrustedSession()
+    {
+        var userId = Guid.NewGuid();
+        const string refreshed = """{"browser":"Edge"}""";
+        var existing = new TrustedDevice
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            DeviceFingerprint = "fp-1",
+            DeviceInfo = """{"browser":"Chrome"}""",
+            IsActive = true
+        };
+        _trustedDeviceRepositoryMock
+            .Setup(x => x.GetByUserAndFingerprintAsync(userId, "fp-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existing);
+
+        await _service.TrustDeviceAsync(userId, "fp-1", "Laptop", refreshed);
+
+        existing.DeviceInfo.Should().Be(refreshed);
+        _trustedDeviceRepositoryMock.Verify(x => x.UpdateAsync(existing, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RenameTrustedDeviceAsync_RenamesAnOwnedActiveDeviceWithTrimmedName()
+    {
+        var userId = Guid.NewGuid();
+        var device = new TrustedDevice { Id = Guid.NewGuid(), UserId = userId, IsActive = true, DeviceName = "Old" };
+        _trustedDeviceRepositoryMock
+            .Setup(x => x.GetByIdAsync(device.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(device);
+
+        var result = await _service.RenameTrustedDeviceAsync(userId, device.Id, "  Primary laptop  ");
+
+        result.Should().BeTrue();
+        device.DeviceName.Should().Be("Primary laptop");
+        device.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+        _trustedDeviceRepositoryMock.Verify(x => x.UpdateAsync(device, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("over-200-chars")]
+    public async Task RenameTrustedDeviceAsync_RejectsInvalidNamesWithoutReadingStorage(string? boundary)
+    {
+        var name = boundary == "over-200-chars" ? new string('n', SessionManagementService.MaxTrustedDeviceNameLength + 1) : boundary;
+
+        // Deliberately exercise the runtime guard against a null value from an untyped caller.
+        var result = await _service.RenameTrustedDeviceAsync(Guid.NewGuid(), Guid.NewGuid(), name!);
+
+        result.Should().BeFalse();
+        _trustedDeviceRepositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RenameTrustedDeviceAsync_RejectsForeignOrInactiveDevices()
+    {
+        var userId = Guid.NewGuid();
+        var foreign = new TrustedDevice { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), IsActive = true };
+        var inactive = new TrustedDevice { Id = Guid.NewGuid(), UserId = userId, IsActive = false };
+        _trustedDeviceRepositoryMock.Setup(x => x.GetByIdAsync(foreign.Id, It.IsAny<CancellationToken>())).ReturnsAsync(foreign);
+        _trustedDeviceRepositoryMock.Setup(x => x.GetByIdAsync(inactive.Id, It.IsAny<CancellationToken>())).ReturnsAsync(inactive);
+
+        (await _service.RenameTrustedDeviceAsync(userId, foreign.Id, "X")).Should().BeFalse();
+        (await _service.RenameTrustedDeviceAsync(userId, inactive.Id, "X")).Should().BeFalse();
+
+        _trustedDeviceRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<TrustedDevice>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

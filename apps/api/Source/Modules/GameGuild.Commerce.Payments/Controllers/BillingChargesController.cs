@@ -79,7 +79,8 @@ public sealed class BillingChargesController(ISender sender, IActorContextAccess
         var validationError = ValidateTenantAccess(body.TenantId, "create billing charge");
         if (validationError != null) return validationError;
 
-        var result = await sender.Send(new ProcessPaymentCommand(body.TenantId, body.SubscriptionId, body.Amount, body.PaymentMethodId), ct).ConfigureAwait(false);
+        var result = await sender.Send(
+            new ProcessPaymentCommand(body.TenantId, body.SubscriptionId, body.Amount, body.PaymentMethodId, body.Country), ct).ConfigureAwait(false);
         return CreatedAtAction(nameof(GetChargeById), new { chargeId = result.PaymentId }, result);
     }
 
@@ -142,7 +143,7 @@ public sealed class BillingChargesController(ISender sender, IActorContextAccess
             ? null
             : actorContextAccessor.ValidateTenantAccessAsActionResult(tenantId, operation);
 
-    public sealed record CreateBillingChargeRequest(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId);
+    public sealed record CreateBillingChargeRequest(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId, string? Country = null);
 
     public sealed record RefundBillingChargeRequest(decimal? Amount, string? Reason);
 

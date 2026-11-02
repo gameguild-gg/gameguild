@@ -80,6 +80,18 @@ public interface IRefundProcessingService
     Task<RefundExecutionOutcome> ExecuteAsync(Refund refund, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Recovers a refund stuck in <see cref="RefundStatus.Processing"/> after an interrupted
+    ///     execution (crash/restart between the in-flight persist and the gateway outcome, issue
+    ///     #419): reconciles the refund with its provider using the ORIGINAL idempotency key —
+    ///     providers deduplicate the replay, so a refund that already executed is returned, never
+    ///     duplicated — and then completes or fails the local lifecycle. Outcome-unknown results
+    ///     leave the refund in <see cref="RefundStatus.Processing"/> for webhook reconciliation.
+    ///     Concurrent recoveries of the same refund are single-flighted in-process; cross-process
+    ///     safety comes from the provider idempotency key and the terminal-state guards.
+    /// </summary>
+    Task<RefundExecutionOutcome> RecoverInterruptedAsync(Refund refund, CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Completes a refund whose gateway outcome arrived out-of-band through a webhook (issue
     ///     #415 payment.refunded events): the money already moved at the gateway (typically a
     ///     gateway call whose response was lost), so this records the completion — refund row,
@@ -120,6 +132,12 @@ public sealed class RefundProcessingService(
 {
     private readonly RefundApprovalOptions _options = options.Value;
     private readonly RefundWorkflowOptions _workflowOptions = workflowOptions?.Value ?? new RefundWorkflowOptions();
+
+    /// <summary>
+    ///     Per-refund single-flight gates for interrupted-refund recovery (issue #419): only one
+    ///     in-process worker may reconcile a given stuck refund at a time.
+    /// </summary>
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, SemaphoreSlim> RecoveryGates = new();
 
     public async Task<RefundRequestOutcome> RequestRefundAsync(RefundRequestInput input, CancellationToken cancellationToken = default)
     {
@@ -333,21 +351,18 @@ public sealed class RefundProcessingService(
         refund.MarkProcessing();
         await refundRepository.UpdateAsync(refund, cancellationToken).ConfigureAwait(false);
 
-        // Pinned to the gateway that owns the captured payment (issue #413): refunds
-        // never reroute to another gateway.
-        var gatewayRequest = new GatewayRefundRequest(
-            IdempotencyKey: refund.IdempotencyKey,
-            OriginalTransactionId: payment.ExternalTransactionId ?? payment.ExternalPaymentId ?? payment.Id.ToString(),
-            Amount: refund.Amount,
-            Reason: refund.Reason,
-            ProviderId: payment.Provider,
-            Currency: payment.Currency);
-
-        var gatewayResult = await paymentGateway.ProcessRefundAsync(gatewayRequest, cancellationToken).ConfigureAwait(false);
+        var gatewayResult = await paymentGateway
+            .ProcessRefundAsync(BuildRefundGatewayRequest(payment, refund), cancellationToken)
+            .ConfigureAwait(false);
 
         if (!gatewayResult.Success)
         {
-            refund.MarkFailed(gatewayResult.ErrorMessage ?? "The gateway rejected the refund.");
+            // The failure classification is preserved on the row (issue #419): retryable
+            // failures stay worker-eligible while permanent declines and outcome-unknown
+            // attempts are never replayed by the automated workflow.
+            refund.MarkFailed(
+                gatewayResult.ErrorMessage ?? "The gateway rejected the refund.",
+                gatewayResult.FailureKind);
             await refundRepository.UpdateAsync(refund, cancellationToken).ConfigureAwait(false);
             logger.LogWarning(
                 "Refund {RefundId} for payment {PaymentId} failed at the gateway: {ErrorMessage}",
@@ -381,6 +396,156 @@ public sealed class RefundProcessingService(
         await ApplyPostCompletionAsync(payment, refund, executeAtGateway: true, cancellationToken).ConfigureAwait(false);
 
         return new RefundExecutionOutcome { Success = true, Refund = refund };
+    }
+
+    /// <inheritdoc />
+    public async Task<RefundExecutionOutcome> RecoverInterruptedAsync(
+        Refund refund,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(refund);
+
+        if (refund.IsTerminal)
+        {
+            return new RefundExecutionOutcome { Success = true, Refund = refund };
+        }
+
+        if (refund.Status != RefundStatus.Processing)
+        {
+            return new RefundExecutionOutcome
+            {
+                Success = false,
+                Refund = refund,
+                FailureReason = $"Refund in status {refund.Status} is not an interrupted execution"
+            };
+        }
+
+        // Single-flight in process (issue #419 concurrency): the first worker to see the stuck
+        // refund owns the reconciliation; a concurrent worker backs off immediately. The
+        // provider idempotency key plus the terminal-state guards cover cross-process replays.
+        var gate = RecoveryGates.GetOrAdd(refund.Id, static id => new SemaphoreSlim(1, 1));
+        if (!await gate.WaitAsync(0, cancellationToken).ConfigureAwait(false))
+        {
+            return new RefundExecutionOutcome
+            {
+                Success = false,
+                Refund = refund,
+                FailureReason = "Another worker is already reconciling this interrupted refund"
+            };
+        }
+
+        try
+        {
+            var payment = await paymentRepository.GetByIdAsync(refund.PaymentId, cancellationToken).ConfigureAwait(false);
+            if (payment is null)
+            {
+                return new RefundExecutionOutcome
+                {
+                    Success = false,
+                    Refund = refund,
+                    FailureReason = $"Payment {refund.PaymentId} not found"
+                };
+            }
+
+            // Provider reconciliation with the ORIGINAL idempotency key (issue #419 crash
+            // recovery): providers deduplicate the replay, so an attempt that already executed
+            // returns its original outcome instead of producing a second refund.
+            logger.LogInformation(
+                "Reconciling interrupted refund {RefundId} with the gateway using its original idempotency key",
+                refund.Id);
+
+            var gatewayResult = await paymentGateway
+                .ProcessRefundAsync(BuildRefundGatewayRequest(payment, refund), cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!gatewayResult.Success)
+            {
+                if (gatewayResult.FailureKind == GatewayFailureKind.OutcomeUnknown)
+                {
+                    // The provider could not confirm the original attempt either. The refund
+                    // stays in flight: webhook reconciliation remains the authoritative path
+                    // and the automated workflow never replays an outcome-unknown refund.
+                    logger.LogWarning(
+                        "Reconciliation of interrupted refund {RefundId} could not determine the provider outcome; left in flight for webhook reconciliation",
+                        refund.Id);
+                    return new RefundExecutionOutcome
+                    {
+                        Success = false,
+                        Refund = refund,
+                        FailureReason = "The provider outcome could not be determined; the refund stays in flight for webhook reconciliation"
+                    };
+                }
+
+                refund.MarkFailed(
+                    gatewayResult.ErrorMessage ?? "The gateway rejected the refund during recovery.",
+                    gatewayResult.FailureKind);
+                await refundRepository.UpdateAsync(refund, cancellationToken).ConfigureAwait(false);
+                logger.LogWarning(
+                    "Reconciliation of interrupted refund {RefundId} for payment {PaymentId} failed at the gateway: {ErrorMessage}",
+                    refund.Id,
+                    payment.Id,
+                    gatewayResult.ErrorMessage);
+                return new RefundExecutionOutcome
+                {
+                    Success = false,
+                    Refund = refund,
+                    FailureReason = gatewayResult.ErrorMessage
+                };
+            }
+
+            if (refund.IsTerminal)
+            {
+                // A concurrent completion won between the provider call and this update.
+                return new RefundExecutionOutcome { Success = true, Refund = refund };
+            }
+
+            var statusBeforeRefund = payment.Status;
+            var gatewayRefundId = gatewayResult.RefundId ?? refund.GatewayRefundId ?? $"reconciled_{refund.Id:N}";
+            refund.MarkCompleted(gatewayRefundId, paymentGateway.ProviderId);
+            await refundRepository.UpdateAsync(refund, cancellationToken).ConfigureAwait(false);
+
+            payment.ProcessRefund(refund.Amount, gatewayRefundId, refund.Reason);
+            await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+
+            await RecordRefundAccountingAsync(payment, refund, statusBeforeRefund, cancellationToken).ConfigureAwait(false);
+
+            logger.LogInformation(
+                "Interrupted refund {RefundId} of {Amount} {Currency} reconciled and completed for payment {PaymentId} (gateway refund {GatewayRefundId})",
+                refund.Id,
+                refund.Amount,
+                refund.Currency,
+                payment.Id,
+                gatewayRefundId);
+
+            await ApplyPostCompletionAsync(payment, refund, executeAtGateway: false, cancellationToken).ConfigureAwait(false);
+
+            return new RefundExecutionOutcome { Success = true, Refund = refund };
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    /// <summary>
+    ///     Builds the gateway refund request for <paramref name="refund"/>. Pinned to the gateway
+    ///     that owns the captured payment (issue #413): refunds never reroute to another gateway.
+    ///     Carries the composed retry budget (issue #419): the remaining provider attempts of the
+    ///     workflow maximum, so a routing composite clamps its internal retry loop and the total
+    ///     provider calls across every execution never exceeds
+    ///     <c>Payments:Refunds:Workflow:MaxExecutionAttempts</c>.
+    /// </summary>
+    private GatewayRefundRequest BuildRefundGatewayRequest(Payment payment, Refund refund)
+    {
+        var remainingAttempts = Math.Max(1, _workflowOptions.MaxExecutionAttempts - refund.AttemptCount + 1);
+        return new GatewayRefundRequest(
+            IdempotencyKey: refund.IdempotencyKey,
+            OriginalTransactionId: payment.ExternalTransactionId ?? payment.ExternalPaymentId ?? payment.Id.ToString(),
+            Amount: refund.Amount,
+            Reason: refund.Reason,
+            ProviderId: payment.Provider,
+            Currency: refund.Currency,
+            MaxProviderAttempts: remainingAttempts);
     }
 
     /// <inheritdoc />
@@ -578,13 +743,34 @@ public sealed class RefundProcessingService(
         }
     }
 
-    /// <summary>Sends the refund-confirmation email to the requester (issue #419). Best-effort.</summary>
+    /// <summary>
+    ///     Sends the refund-confirmation email to the intended CUSTOMER recipient (issue #419):
+    ///     the payment owner resolved through the payment-method registration. The requester may
+    ///     be a support operator acting on the customer's behalf, so the confirmation targets the
+    ///     customer and falls back to the requester only when the owner cannot be resolved; the
+    ///     refund's audit attribution to the acting requester is unchanged. Best-effort.
+    /// </summary>
     private async Task SendRefundConfirmationAsync(Payment payment, Refund refund, CancellationToken cancellationToken)
     {
+        Guid recipientId;
+        try
+        {
+            recipientId = await ResolvePaymentOwnerAsync(payment, cancellationToken).ConfigureAwait(false)
+                ?? refund.RequestedByUserId;
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogInformation(
+                "Customer recipient for refund {RefundId} could not be resolved ({ErrorType}); the confirmation falls back to the requester",
+                refund.Id,
+                exception.GetType().FullName);
+            recipientId = refund.RequestedByUserId;
+        }
+
         try
         {
             var result = await notificationService.SendAsync(
-                recipientId: refund.RequestedByUserId,
+                recipientId: recipientId,
                 type: NotificationType.RefundCompleted,
                 title: "Your refund has been processed",
                 message:

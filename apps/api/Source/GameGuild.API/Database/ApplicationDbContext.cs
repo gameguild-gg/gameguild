@@ -9,6 +9,7 @@ using GameGuild.API.Eventing;
 using GameGuild.API.Setup;
 using GameGuild.Compliance.Audit;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.API.Database;
 
@@ -21,12 +22,38 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
     private readonly IUseCaseOperationContextAccessor? _useCaseOperationContextAccessor;
     private readonly IAuditService? _auditService;
     private readonly ILogger<ApplicationDbContext>? _logger;
+    private readonly EntityChangeAuditOptions _entityChangeAuditOptions = new();
     private readonly bool _entityChangeAuditCaptureEnabled = true;
+    private readonly bool _fieldAccessWriteCaptureEnabled = true;
     private readonly MutationValueSnapshotFactory? _valueSnapshotFactory;
     private readonly PermissionAuditOptions _permissionAuditOptions = new();
     private readonly IReadOnlyList<IPermissionAuditHook> _permissionAuditHooks = [];
     private readonly List<PermissionAuditChange> _pendingPermissionAuditChanges = [];
     private PermissionMutationAuditScope? _permissionMutationAuditScope;
+    private readonly IActorContextAccessor? _permissionMaintenanceActorAccessor;
+    private int _stagedSetBasedAuditRowCount;
+
+    /// <summary>
+    ///     Stages audit records (and their forensic value snapshots) captured by
+    ///     <see cref="SetBasedChangeAuditInterceptor"/> for a set-based
+    ///     <c>ExecuteUpdate</c>/<c>ExecuteDelete</c> statement. The rows persist with this
+    ///     context's next <c>SaveChanges</c> call — inside the caller's transaction when one is
+    ///     ambient — and pass through the centralized PII redaction pipeline like every other
+    ///     entity-change record. The staged count is subtracted from the <c>SaveChanges</c>
+    ///     result so callers keep observing business rows only.
+    /// </summary>
+    internal void StageSetBasedAuditRecords(
+        IReadOnlyList<EntityChangeAuditRecord> records, IReadOnlyList<MutationValueSnapshot> snapshots)
+    {
+        ArgumentNullException.ThrowIfNull(records);
+        Set<EntityChangeAuditRecord>().AddRange(records);
+        if (snapshots.Count > 0)
+        {
+            Set<MutationValueSnapshot>().AddRange(snapshots);
+        }
+
+        Interlocked.Add(ref _stagedSetBasedAuditRowCount, records.Count + snapshots.Count);
+    }
 
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
@@ -36,9 +63,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
 
     internal ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
-        bool enableEntityChangeAuditCapture) : this(options)
+        bool enableEntityChangeAuditCapture,
+        EntityChangeAuditOptions? entityChangeAuditOptions = null) : this(options)
     {
-        _entityChangeAuditCaptureEnabled = enableEntityChangeAuditCapture;
+        _entityChangeAuditOptions = entityChangeAuditOptions ?? new EntityChangeAuditOptions();
+        _entityChangeAuditCaptureEnabled = enableEntityChangeAuditCapture && _entityChangeAuditOptions.Enabled;
     }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IPublisher? publisher) : this(options)
@@ -54,7 +83,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         ILogger<ApplicationDbContext>? logger = null,
         IOptions<PermissionAuditOptions>? permissionAuditOptions = null,
         IEnumerable<IPermissionAuditHook>? permissionAuditHooks = null,
-        IOptions<ValueSnapshotOptions>? valueSnapshotOptions = null) : this(options, publisher)
+        IOptions<ValueSnapshotOptions>? valueSnapshotOptions = null,
+        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions = null) : this(options, publisher)
     {
         _useCaseOperationContextAccessor = useCaseOperationContextAccessor;
         _auditService = auditService;
@@ -67,6 +97,53 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         _valueSnapshotFactory = valueSnapshotOptions is null || valueSnapshotOptions.Value.StagingEnabled
             ? new MutationValueSnapshotFactory(valueSnapshotOptions?.Value)
             : null;
+        _entityChangeAuditOptions = entityChangeAuditOptions?.Value ?? new EntityChangeAuditOptions();
+        _entityChangeAuditCaptureEnabled = _entityChangeAuditOptions.Enabled;
+    }
+
+    /// <summary>
+    ///     Full-signature constructor used by dependency injection: identical to the overload above
+    ///     plus the field-level audit options (issue #186) that toggle automatic field-access write
+    ///     capture; DI selects this constructor because it resolves every parameter.
+    /// </summary>
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        IPublisher? publisher,
+        IUseCaseOperationContextAccessor useCaseOperationContextAccessor,
+        IAuditService? auditService,
+        ILogger<ApplicationDbContext>? logger,
+        IOptions<PermissionAuditOptions>? permissionAuditOptions,
+        IEnumerable<IPermissionAuditHook>? permissionAuditHooks,
+        IOptions<ValueSnapshotOptions>? valueSnapshotOptions,
+        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions,
+        IOptions<FieldLevelAuditOptions>? fieldLevelAuditOptions)
+        : this(options, publisher, useCaseOperationContextAccessor, auditService, logger,
+            permissionAuditOptions, permissionAuditHooks, valueSnapshotOptions, entityChangeAuditOptions)
+    {
+        // Field-level write tracking (issue #186) defaults to enabled; the options master
+        // switch is the only way to disable it.
+        _fieldAccessWriteCaptureEnabled = fieldLevelAuditOptions?.Value.CaptureEntityWrites ?? true;
+    }
+
+    /// <summary>DI constructor that supplies the real actor context for system audit scopes.</summary>
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        IPublisher? publisher,
+        IUseCaseOperationContextAccessor useCaseOperationContextAccessor,
+        IAuditService? auditService,
+        ILogger<ApplicationDbContext>? logger,
+        IOptions<PermissionAuditOptions>? permissionAuditOptions,
+        IEnumerable<IPermissionAuditHook>? permissionAuditHooks,
+        IOptions<ValueSnapshotOptions>? valueSnapshotOptions,
+        IOptions<EntityChangeAuditOptions>? entityChangeAuditOptions,
+        IOptions<FieldLevelAuditOptions>? fieldLevelAuditOptions,
+        IActorContextAccessor actorContextAccessor)
+        : this(options, publisher, useCaseOperationContextAccessor, auditService, logger,
+            permissionAuditOptions, permissionAuditHooks, valueSnapshotOptions, entityChangeAuditOptions,
+            fieldLevelAuditOptions)
+    {
+        ArgumentNullException.ThrowIfNull(actorContextAccessor);
+        _permissionMaintenanceActorAccessor = actorContextAccessor;
     }
 
     public override int SaveChanges() => SaveChanges(acceptAllChangesOnSuccess: true);
@@ -216,11 +293,25 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         // the dedicated permission audit path above feeds the centralized compliance
         // AuditLog store, while these rows are the per-entity change history — separate
         // stores, no double recording. Audit-store types are excluded inside the capture
-        // to prevent audit-of-audit recursion.
+        // to prevent audit-of-audit recursion. Service-level configuration
+        // (Audit:EntityChangeCapture) is opt-out: capture stays on unless explicitly
+        // disabled, and the configured exclusion list is a performance guard only.
         var capturedAuditRecordCount = _entityChangeAuditCaptureEnabled
             ? EntityChangeAuditCapture.Capture(this, operationContext, _logger,
                 _permissionMutationAuditScope?.ActorId, _permissionMutationAuditScope?.TenantId,
-                _permissionMutationAuditScope?.UseEntityTenantScope ?? false, _valueSnapshotFactory)
+                _permissionMutationAuditScope?.UseEntityTenantScope ?? false,
+                snapshotFactory: _valueSnapshotFactory,
+                configuredExclusions: _entityChangeAuditOptions.ExcludedEntityTypes)
+            : 0;
+
+        // Field-level write tracking (issue #186 criterion 1): one FieldAccessAudit row per changed
+        // field of every persisted entity write, staged in the same SaveChanges call with automatic
+        // classification and privacy-safe masked values. The staged count is subtracted below so
+        // callers keep observing business rows only.
+        var capturedFieldAccessCount = _fieldAccessWriteCaptureEnabled
+            ? FieldAccessWriteCapture.Capture(this, operationContext, _logger,
+                _permissionMutationAuditScope?.ActorId, _permissionMutationAuditScope?.TenantId,
+                _permissionMutationAuditScope?.UseEntityTenantScope ?? false)
             : 0;
 
         foreach (var entry in ChangeTracker.Entries())
@@ -264,7 +355,12 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
             entity.ClearIntegrationEvents();
         }
 
-        return affectedRows - capturedOutboxCount - capturedAuditRecordCount;
+        // Set-based capture stages its rows outside this save pipeline; keep the caller-visible
+        // count stable by deducting them exactly like the tracked-capture rows above. The staged
+        // count is only reset here after a successful save, so a failed save leaves both the rows
+        // and their deduction pending for the retry.
+        var stagedSetBasedAuditRecordCount = Interlocked.Exchange(ref _stagedSetBasedAuditRowCount, 0);
+        return affectedRows - capturedOutboxCount - capturedAuditRecordCount - capturedFieldAccessCount - stagedSetBasedAuditRecordCount;
     }
 
     private async Task RejectCompletedEventIdsAsync(Guid[] eventIds, bool useAsync, CancellationToken cancellationToken)
@@ -316,7 +412,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
             change.ActorId,
             change.TenantId,
             change.CorrelationId,
-            change.CommandType
+            change.CommandType,
+            change.ActorSubjectId,
+            change.ActorOrigin,
+            change.ActorOperation
         });
 
         foreach (var group in groups)
@@ -336,6 +435,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
                 {
                     CommandType = group.Key.CommandType ?? operation?.CommandType,
                     CorrelationId = group.Key.CorrelationId,
+                    SubjectId = group.Key.ActorSubjectId,
+                    Origin = group.Key.ActorOrigin,
+                    OperationName = group.Key.ActorOperation,
                     ChangeCount = entries.Length,
                     Changes = entries.Select(change => new
                     {
@@ -405,7 +507,35 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
         return lease;
     }
 
-    private sealed record PermissionMutationAuditScope(Guid ActorId, Guid? TenantId, bool UseEntityTenantScope);
+    /// <inheritdoc />
+    public IPermissionMutationAuditScope BeginSystemPermissionMutationAuditScope(
+        PermissionSystemMutation maintenance, Guid? tenantId, bool useEntityTenantScope)
+    {
+        ArgumentNullException.ThrowIfNull(maintenance);
+        if (tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("System permission maintenance requires a valid tenant or explicit null global scope.", nameof(tenantId));
+        }
+        var actor = _permissionMaintenanceActorAccessor?.ActorContext;
+        if (actor is null || !actor.IsAuthenticated || actor.ActorKind != ActorKind.System || !actor.IsSystemAdmin
+            || !string.Equals(actor.SubjectId, SystemActor.SystemSubjectId, StringComparison.Ordinal)
+            || !string.Equals(maintenance.Operation, PermissionSystemMutation.ExpirationOperation, StringComparison.Ordinal)
+            || !string.Equals(actor.TypedAttributes.GetCustomAttribute("operation"), maintenance.Operation, StringComparison.Ordinal))
+        {
+            throw new UnauthorizedAccessException("A trusted system context authorized for this maintenance operation is required.");
+        }
+        var lease = new PermissionMutationAuditScopeLease(this, _permissionMutationAuditScope);
+        _permissionMutationAuditScope = new PermissionMutationAuditScope(Guid.Empty, tenantId, useEntityTenantScope)
+        {
+            SystemOperation = maintenance
+        };
+        return lease;
+    }
+
+    private sealed record PermissionMutationAuditScope(Guid ActorId, Guid? TenantId, bool UseEntityTenantScope)
+    {
+        public PermissionSystemMutation? SystemOperation { get; init; }
+    }
 
     private sealed class PermissionMutationAuditScopeLease : IPermissionMutationAuditScope
     {
@@ -484,7 +614,12 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IDataProte
                     operation?.CorrelationId.ToString(),
                     operation?.CommandType,
                     oldState,
-                    newState));
+                    newState)
+                {
+                    ActorSubjectId = _permissionMutationAuditScope?.SystemOperation is not null ? SystemActor.SystemSubjectId : null,
+                    ActorOrigin = _permissionMutationAuditScope?.SystemOperation is not null ? "SystemMaintenance" : null,
+                    ActorOperation = _permissionMutationAuditScope?.SystemOperation?.Operation
+                });
             }
             catch (Exception exception)
             {

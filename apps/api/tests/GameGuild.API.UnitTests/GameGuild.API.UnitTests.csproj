@@ -68,4 +68,10 @@
         <Using Include="Xunit"/>
     </ItemGroup>
 
+    <!-- MaxMind official GeoIP2 test databases (issue #278 positive-path geolocation tests);
+         sourced from maxmind/MaxMind-DB test-data (CC-SA 4.0). -->
+    <ItemGroup>
+        <None Include="Fixtures\Geolocation\*.mmdb" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
 </Project>

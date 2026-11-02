@@ -363,7 +363,7 @@ public sealed class SessionManagementService(
         }
     }
 
-    public async Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, CancellationToken cancellationToken = default)
+    public async Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, string? deviceInfo = null, CancellationToken cancellationToken = default)
     {
         if (!_sessionOptions.EnableDeviceFingerprinting || string.IsNullOrWhiteSpace(deviceFingerprint))
         {
@@ -383,6 +383,12 @@ public sealed class SessionManagementService(
             }
 
             existingDevice.DeviceName = deviceName;
+            // Refresh the persisted metadata from the session being re-trusted; an empty
+            // caller payload never erases previously captured device details.
+            if (!string.IsNullOrWhiteSpace(deviceInfo))
+            {
+                existingDevice.DeviceInfo = TruncateDeviceInfo(deviceInfo);
+            }
             existingDevice.LastUsedAt = now;
             existingDevice.ExpiresAt = now.AddDays(_sessionOptions.TrustedDeviceDurationDays);
             existingDevice.UpdatedAt = now;
@@ -398,7 +404,7 @@ public sealed class SessionManagementService(
             UserId = userId,
             DeviceFingerprint = deviceFingerprint,
             DeviceName = deviceName,
-            DeviceInfo = string.Empty,
+            DeviceInfo = string.IsNullOrWhiteSpace(deviceInfo) ? string.Empty : TruncateDeviceInfo(deviceInfo),
             TrustedAt = now,
             LastUsedAt = now,
             ExpiresAt = now.AddDays(_sessionOptions.TrustedDeviceDurationDays),
@@ -411,6 +417,17 @@ public sealed class SessionManagementService(
 
         return true;
     }
+
+    /// <summary>
+    ///     Clamps persisted device metadata to the <see cref="TrustedDevice"/> column limit so a
+    ///     long user-agent-derived payload can never overflow the store.
+    /// </summary>
+    private static string TruncateDeviceInfo(string deviceInfo) => deviceInfo.Length <= TrustedDeviceInfoMaxLength
+        ? deviceInfo
+        : deviceInfo[..TrustedDeviceInfoMaxLength];
+
+    /// <summary>The maximum persisted length of a trusted device's metadata JSON (column limit).</summary>
+    public const int TrustedDeviceInfoMaxLength = 2000;
 
     public async Task<bool> IsDeviceTrustedAsync(Guid userId, string deviceFingerprint, CancellationToken cancellationToken = default)
     {
@@ -504,6 +521,38 @@ public sealed class SessionManagementService(
 
         return true;
     }
+
+    /// <summary>
+    ///     Names or renames one of the caller's own trusted devices (issue #278 trusted-device
+    ///     management surface). The name must be non-empty after trimming and no longer than
+    ///     <see cref="MaxTrustedDeviceNameLength"/>; renaming another user's device is rejected.
+    /// </summary>
+    public async Task<bool> RenameTrustedDeviceAsync(Guid userId, Guid deviceId, string name, CancellationToken cancellationToken = default)
+    {
+        var trimmed = name?.Trim() ?? string.Empty;
+        if (trimmed.Length is < 1 or > MaxTrustedDeviceNameLength)
+        {
+            return false;
+        }
+
+        var device = await trustedDeviceRepository.GetByIdAsync(deviceId, cancellationToken).ConfigureAwait(false);
+        if (device is not { IsActive: true } || device.UserId != userId)
+        {
+            return false;
+        }
+
+        device.DeviceName = trimmed;
+        device.UpdatedAt = SystemClock.UtcNow;
+
+        await trustedDeviceRepository.UpdateAsync(device, cancellationToken).ConfigureAwait(false);
+
+        logger.LogInformation("Trusted device {DeviceId} renamed for user {UserId}", deviceId, userId);
+
+        return true;
+    }
+
+    /// <summary>The maximum accepted length of a user-defined trusted device name (column limit).</summary>
+    public const int MaxTrustedDeviceNameLength = 200;
 
     private async Task EnforceMaxConcurrentSessionsAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -680,6 +729,34 @@ public sealed class SessionManagementService(
             }
         }
 
+        // Anonymous-network detection (issue #278 VPN/proxy detection): sessions or the
+        // current request resolved through known VPN/proxy/Tor/hosting networks raise the
+        // score even when the geography alone looks unremarkable. Traits are only present
+        // when the geolocation provider carries anonymous-IP data.
+        var networkObservations = sessionLocations
+            .Concat(requestLocation is not null ? new[] { requestLocation } : Array.Empty<LocationInfo>())
+            .ToList();
+        var torCount = networkObservations.Count(l => l.IsTor == true);
+        if (torCount > 0)
+        {
+            riskScore += 30;
+            riskFactors.Add($"Tor exit node usage: {torCount}");
+        }
+
+        var proxyCount = networkObservations.Count(l => l.IsProxy == true);
+        if (proxyCount > 0)
+        {
+            riskScore += 20;
+            riskFactors.Add($"VPN/proxy usage: {proxyCount}");
+        }
+
+        var hostingCount = networkObservations.Count(l => l.IsHosting == true);
+        if (hostingCount > 0)
+        {
+            riskScore += 10;
+            riskFactors.Add($"Hosting/datacenter network: {hostingCount}");
+        }
+
         // Per-session anomaly detection: an active session located outside the account's
         // usual country is flagged individually. The usual-country baseline is the country
         // of the active session matching the request IP (where the user is right now); when
@@ -755,7 +832,10 @@ public sealed class SessionManagementService(
                 ["max_observed_velocity_kmh"] = maxVelocityKmh is null
                     ? string.Empty
                     : maxVelocityKmh.Value.ToString("F0", CultureInfo.InvariantCulture),
-                ["anomalous_session_ids"] = string.Join(",", anomalousSessionIds)
+                ["anomalous_session_ids"] = string.Join(",", anomalousSessionIds),
+                ["anonymous_network_sessions"] = sessionLocations
+                    .Count(l => l.IsTor == true || l.IsProxy == true || l.IsHosting == true)
+                    .ToString(CultureInfo.InvariantCulture)
             }
         };
     }

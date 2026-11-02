@@ -25,15 +25,42 @@ public static class FraudTestHelpers
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(new FraudAssessment(
-                signalContext.TenantId,
-                signalContext.PaymentId,
-                score,
-                FraudAssessment.RiskLevelForScore(score),
-                decision,
-                reason,
-                [new FraudSignal("UnitTest.Static", score, """{"source":"unit-test"}""")],
-                SystemClock.UtcNow));
+            return Task.FromResult(Assessment(signalContext));
         }
+
+        public Task<FraudAssessment> AssessSubscriptionCreationAsync(
+            FraudSignalContext signalContext,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(Assessment(signalContext));
+        }
+
+        public Task<FraudAssessment> AssessSubscriptionChangeAsync(
+            FraudSignalContext signalContext,
+            SubscriptionFraudChangeKind changeKind,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(Assessment(signalContext));
+        }
+
+        public Task<FraudAssessment> AssessPaymentForBackgroundAsync(
+            FraudSignalContext signalContext,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(Assessment(signalContext));
+        }
+
+        private FraudAssessment Assessment(FraudSignalContext signalContext) => new(
+            signalContext.TenantId,
+            signalContext.PaymentId,
+            score,
+            FraudAssessment.RiskLevelForScore(score),
+            decision,
+            reason,
+            [new FraudSignal("UnitTest.Static", score, """{"source":"unit-test"}""")],
+            SystemClock.UtcNow);
     }
 }

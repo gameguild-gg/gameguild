@@ -85,6 +85,12 @@ public static class SessionEnrichmentJson
             return null;
         }
 
+        // Proxy/VPN: true when any anonymous-network signal fires, false only when every
+        // known signal is explicitly clean, null when the provider has no anonymous-IP data.
+        bool? isProxy = result.IsPublicProxy == true || result.IsAnonymousVpn == true
+            ? true
+            : result.IsPublicProxy == false && result.IsAnonymousVpn == false ? false : null;
+
         return new LocationInfo
         {
             IpAddress = ipAddress,
@@ -95,7 +101,10 @@ public static class SessionEnrichmentJson
             PostalCode = result.PostalCode,
             Latitude = result.Latitude,
             Longitude = result.Longitude,
-            Timezone = result.Timezone
+            Timezone = result.Timezone,
+            IsProxy = isProxy,
+            IsTor = result.IsTorExitNode,
+            IsHosting = result.IsHostingProvider
         };
     }
 

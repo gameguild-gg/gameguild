@@ -1,3 +1,5 @@
+using GameGuild.Compliance.Audit;
+
 namespace GameGuild.API.Database;
 
 /// <summary>
@@ -5,9 +7,14 @@ namespace GameGuild.API.Database;
 ///     the same <c>SaveChanges</c> call as the change itself so a rolled-back
 ///     transaction leaves no audit rows. Audit-store entities (including this type) are
 ///     excluded from capture, so writing audit rows never triggers audit-of-audit
-///     recursion. Sensitive properties are stored with their value redacted.
+///     recursion. Sensitive properties are stored with their value redacted, and the
+///     persisted snapshots additionally pass through the centralized PII redaction
+///     pipeline (<see cref="AuditLogPiiRedactionInterceptor"/>) like every other audit
+///     sink. Implements the module-facing contract
+///     <see cref="IEntityChangeAuditRecord"/> so the compliance audit module can serve
+///     and redact these records without referencing the host entity type.
 /// </summary>
-public sealed class EntityChangeAuditRecord
+public sealed class EntityChangeAuditRecord : IEntityChangeAuditRecord
 {
     public Guid Id { get; set; }
 

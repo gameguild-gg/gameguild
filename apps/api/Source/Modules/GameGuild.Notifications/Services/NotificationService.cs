@@ -111,8 +111,20 @@ public class NotificationService(
         bool? socialEnabled = null,
         bool? learningEnabled = null,
         bool? achievementsEnabled = null,
+        bool? whatsAppEnabled = null,
         CancellationToken cancellationToken = default)
-        => preferenceService.UpdatePreferencesAsync(userId, emailEnabled, pushEnabled, inAppEnabled, smsEnabled, marketingEnabled, socialEnabled, learningEnabled, achievementsEnabled, cancellationToken);
+        => preferenceService.UpdatePreferencesAsync(
+            userId,
+            emailEnabled,
+            pushEnabled,
+            inAppEnabled,
+            smsEnabled,
+            marketingEnabled,
+            socialEnabled,
+            learningEnabled,
+            achievementsEnabled,
+            whatsAppEnabled,
+            cancellationToken);
 
     public Task<Result> SetQuietHoursAsync(
         Guid userId,

@@ -6,7 +6,11 @@ public sealed record InitiateMfaSetupCommand(Guid UserId, string UserEmail) : IC
 public sealed record CompleteMfaSetupCommand(Guid UserId, string Code) : ICommand<MfaVerificationResult>;
 public sealed record VerifyMfaCodeCommand(Guid UserId, string Code, MfaMethod Method) : ICommand<MfaVerificationResult>;
 public sealed record RegenerateMfaBackupCodesCommand(Guid UserId) : ICommand<string[]>;
-public sealed record DisableMfaCommand(Guid UserId, string ConfirmationCode) : ICommand<bool>;
+// Issue #864: the payload is the account password re-verified by MfaService.DisableMfaAsync
+// (issue #244 hardening) — the legacy "ConfirmationCode" name invited contract churn that
+// broke the disable flow once already (Password -> Code -> Password); keep the chain named
+// for what it actually carries.
+public sealed record DisableMfaCommand(Guid UserId, string Password) : ICommand<bool>;
 
 public sealed class MfaMutationCommandHandler(IMfaService mfaService) :
     ICommandHandler<InitiateMfaSetupCommand, MfaSetupResult>,
@@ -28,5 +32,5 @@ public sealed class MfaMutationCommandHandler(IMfaService mfaService) :
         mfaService.GenerateBackupCodesAsync(command.UserId, cancellationToken);
 
     public Task<bool> Handle(DisableMfaCommand command, CancellationToken cancellationToken) =>
-        mfaService.DisableMfaAsync(command.UserId, command.ConfirmationCode, cancellationToken);
+        mfaService.DisableMfaAsync(command.UserId, command.Password, cancellationToken);
 }

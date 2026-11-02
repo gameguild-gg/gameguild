@@ -99,7 +99,8 @@ public sealed class ResetPasswordCommandHandler(
     IEmailVerificationService emailVerificationService,
     ILogger<ResetPasswordCommandHandler> logger,
     IUserSessionRepository? userSessionRepository = null,
-    SessionOptions? sessionOptions = null) : ICommandHandler<ResetPasswordCommand, PasswordResetResult>
+    SessionOptions? sessionOptions = null,
+    IPasswordChangeRevocationService? passwordRevocation = null) : ICommandHandler<ResetPasswordCommand, PasswordResetResult>
 {
     public async Task<PasswordResetResult> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
     {
@@ -150,12 +151,22 @@ public sealed class ResetPasswordCommandHandler(
             return new PasswordResetResult { Success = false, Message = "Your password changed during this reset. Request a new password reset link and try again." };
         }
 
-        if (sessionOptions?.TerminateSessionsOnPasswordChange == true && userSessionRepository is not null)
+        if (sessionOptions?.TerminateSessionsOnPasswordChange == true)
         {
-            await userSessionRepository.TerminateAllForUserAsync(
-                userId,
-                SessionTerminationReason.SecurityViolation.ToString(),
-                cancellationToken).ConfigureAwait(false);
+            if (passwordRevocation is not null)
+            {
+                // Full revocation battery (issue #278): refresh tokens, sessions and the
+                // versioned cutoff covering legacy access tokens, all audited.
+                await passwordRevocation.RevokeAllSessionsAndTokensAsync(userId, "Password reset", cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else if (userSessionRepository is not null)
+            {
+                await userSessionRepository.TerminateAllForUserAsync(
+                    userId,
+                    SessionTerminationReason.SecurityViolation.ToString(),
+                    cancellationToken).ConfigureAwait(false);
+            }
         }
 
         logger.LogInformation("Password reset completed for user {UserId}", userId);
@@ -174,7 +185,8 @@ public sealed class ChangePasswordCommandHandler(
     IPasswordHasher passwordHasher,
     ILogger<ChangePasswordCommandHandler> logger,
     IUserSessionRepository? userSessionRepository = null,
-    SessionOptions? sessionOptions = null) : ICommandHandler<ChangePasswordCommand, PasswordChangeResult>
+    SessionOptions? sessionOptions = null,
+    IPasswordChangeRevocationService? passwordRevocation = null) : ICommandHandler<ChangePasswordCommand, PasswordChangeResult>
 {
     public async Task<PasswordChangeResult> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
     {
@@ -226,14 +238,25 @@ public sealed class ChangePasswordCommandHandler(
         }
 
         var revokedSessions = 0;
-        if (userSessionRepository is not null && sessionOptions?.TerminateSessionsOnPasswordChange == true)
+        if (sessionOptions?.TerminateSessionsOnPasswordChange == true)
         {
-            var activeSessions = await userSessionRepository.GetActiveByUserIdAsync(request.UserId, cancellationToken).ConfigureAwait(false);
-            revokedSessions = activeSessions.Count;
-            await userSessionRepository.TerminateAllForUserAsync(
-                request.UserId,
-                SessionTerminationReason.SecurityViolation.ToString(),
-                cancellationToken).ConfigureAwait(false);
+            if (passwordRevocation is not null)
+            {
+                // Full revocation battery (issue #278): refresh tokens, sessions and the
+                // versioned cutoff covering legacy access tokens, all audited.
+                revokedSessions = await passwordRevocation.RevokeAllSessionsAndTokensAsync(
+                        request.UserId, "Password changed", cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else if (userSessionRepository is not null)
+            {
+                var activeSessions = await userSessionRepository.GetActiveByUserIdAsync(request.UserId, cancellationToken).ConfigureAwait(false);
+                revokedSessions = activeSessions.Count;
+                await userSessionRepository.TerminateAllForUserAsync(
+                    request.UserId,
+                    SessionTerminationReason.SecurityViolation.ToString(),
+                    cancellationToken).ConfigureAwait(false);
+            }
         }
         else if (request.RevokeOtherSessions && userSessionRepository is not null && request.CurrentSessionId is { } keepSessionId)
         {

@@ -66,6 +66,23 @@ describe('OpenAPI Spec Normalizer', () => {
     expect(operation?.operationId).toBe('getAllUsers');
   });
 
+  it('preserves meaningful numeric resource names without treating them as collision suffixes', () => {
+    const normalized = normalizeSpec({
+      ...simpleSpec,
+      paths: {
+        '/api/v1/audit/gdpr/article-30': {
+          get: { operationId: 'getGdprArticle30', responses: { '200': { description: 'Register' } } },
+        },
+        '/api/v1/audit/gdpr/article-30/{id}': {
+          delete: { operationId: 'deleteGdprArticle30', responses: { '204': { description: 'Removed' } } },
+        },
+      },
+    });
+
+    expect(normalized.paths?.['/api/v1/audit/gdpr/article-30']?.get?.operationId).toBe('getGdprArticle30');
+    expect(normalized.paths?.['/api/v1/audit/gdpr/article-30/{id}']?.delete?.operationId).toBe('deleteGdprArticle30');
+  });
+
   it('should resolve duplicate operation IDs with deterministic route semantics', () => {
     const paths = {
       '/api/v1/listings/{listingId}:publish': {

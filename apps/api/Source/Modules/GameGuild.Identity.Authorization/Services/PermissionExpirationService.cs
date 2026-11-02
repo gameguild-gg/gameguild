@@ -38,8 +38,10 @@ public sealed class PermissionExpirationService(
     ITenantSecurityVersionStore securityVersionStore,
     IOptions<PermissionExpirationOptions> expirationOptions,
     ILogger<PermissionExpirationService> logger,
+    IPermissionMutationExecutor mutationExecutor,
     IPublisher? publisher = null,
-    IActorContextAccessor? actorContextAccessor = null
+    IActorContextAccessor? actorContextAccessor = null,
+    IPermissionExpirationRuleEvaluator? ruleEvaluator = null
 ) : IPermissionExpirationService
 {
     private const string ReminderStampKey = "expirationReminderAt";
@@ -51,73 +53,155 @@ public sealed class PermissionExpirationService(
 
     public async Task<int> ProcessExpiredAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        var processing = ResolveProcessingActor();
+        using var backgroundScope = processing.Scope;
+        var actor = processing.Actor;
+        var isSystem = IsExpirationSystemActor(actor);
+        if (!actor.IsAuthenticated || !actor.IsSystemAdmin
+            || (!isSystem && (actor.ActorKind == ActorKind.System || actor.SubjectIdAsGuid is null || actor.SubjectIdAsGuid == Guid.Empty)))
+        {
+            throw new UnauthorizedAccessException("Cross-tenant expiration processing requires system administration.");
+        }
+        if (Options.Validate().Count != 0) { throw new InvalidOperationException("Invalid permission expiration configuration."); }
+        var mutationActor = new ExpirationActor(isSystem ? Guid.Empty : actor.SubjectIdAsGuid!.Value,
+            isSystem ? new PermissionSystemMutation(PermissionSystemMutation.ExpirationOperation) : null);
         var expired = await repository.GetExpiredPermissionsAsync(cancellationToken).ConfigureAwait(false);
         var processed = 0;
-        var affectedTenants = new HashSet<Guid>();
-
-        foreach (var grant in expired.Take(Options.BatchSize))
+        var failures = new List<Exception>();
+        var eligible = expired.Where(grant => !HasStamp(grant, ProcessedStampKey)).Take(Options.BatchSize).ToArray();
+        foreach (var group in eligible.GroupBy(grant => grant.TenantId ?? Guid.Empty))
         {
-            if (HasStamp(grant, ProcessedStampKey))
+            cancellationToken.ThrowIfCancellationRequested();
+            var groupFailures = new List<Exception>();
+            var batch = await ProcessGroupAsync(group, mutationActor, failures, groupFailures, cancellationToken).ConfigureAwait(false);
+            failures.AddRange(groupFailures);
+            if (batch.IsFailure) { continue; }
+            processed += batch.Value.Notifications.Count;
+            foreach (var notification in batch.Value.Notifications)
             {
-                // Already deactivated by a previous cycle; skip so processing stays idempotent.
-                continue;
-            }
-
-            var originalExpiresAt = grant.ExpiresAt;
-
-            try
-            {
-                grant.Expire();
-                SetStamp(grant, ProcessedStampKey);
-                await repository.UpdateAsync(grant, cancellationToken).ConfigureAwait(false);
-
-                if (grant.TenantId is { } tenantId)
+                try { await PublishAsync(notification, cancellationToken).ConfigureAwait(false); }
+                catch (Exception exception) when (exception is not OperationCanceledException and not OutOfMemoryException)
                 {
-                    affectedTenants.Add(tenantId);
+                    // Delivery remains best effort; an accepted expiration is not rolled back
+                    // or advertised as retryable merely because alert queueing failed.
+                    logger.LogWarning(exception, "Failed to publish an accepted permission expiration alert.");
                 }
-
-                await auditService.LogPermissionChangeAsync(
-                    PermissionOperationType.Expire,
-                    grant.UserId,
-                    Guid.Empty,
-                    grant.TenantId,
-                    permissionType: "Tenant",
-                    resourceType: "TenantPermission",
-                    resourceId: grant.Id,
-                    oldValue: originalExpiresAt?.ToString("O"),
-                    newValue: "inactive",
-                    reason: "Automatic permission expiration",
-                    cancellationToken: cancellationToken).ConfigureAwait(false);
-
-                await PublishAsync(
-                    new PermissionExpirationNotification(
-                        grant.Id,
-                        grant.UserId,
-                        grant.TenantId,
-                        grant.Permissions.ToArray(),
-                        originalExpiresAt ?? SystemClock.UtcNow,
-                        PermissionExpirationKind.Expired),
-                    cancellationToken).ConfigureAwait(false);
-
-                processed++;
-            }
-            catch (Exception exception)
-            {
-                logger.LogWarning(exception,
-                    "Failed to process expired permission grant {PermissionId}; retrying on the next cycle.",
-                    grant.Id);
             }
         }
-
-        foreach (var tenantId in affectedTenants)
+        if (failures.Count > 0)
         {
-            await IncrementTenantVersionAsync(tenantId, cancellationToken).ConfigureAwait(false);
+            var failure = new AggregateException("Required permission expiration processing failed; retry pending grants.", failures);
+            failure.Data["ProcessedGrantCount"] = processed;
+            throw failure;
         }
-
         logger.LogInformation("Processed {Count} expired permission grants.", processed);
-
         return processed;
     }
+
+    private (ActorContext Actor, IActorContextScope? Scope) ResolveProcessingActor()
+    {
+        var actor = Actor;
+        if (actor.IsAuthenticated) { return (actor, null); }
+        if (actor.ActorKind != ActorKind.Anonymous || actor.SubjectId is not null)
+        {
+            throw new UnauthorizedAccessException("An unauthenticated actor cannot claim system maintenance identity.");
+        }
+        // This internal maintenance entry point is also called directly by the worker.
+        // HTTP command handlers retain their authenticated administrator guards.
+        var system = ActorContextBuilder.ForSystem(PermissionSystemMutation.ExpirationOperation).Build();
+        var scope = actorContextAccessor?.BeginActorContextScope(system)
+            ?? throw new InvalidOperationException("Automatic expiration requires an ambient system actor scope.");
+        return (system, scope);
+    }
+
+    private static bool IsExpirationSystemActor(ActorContext actor) =>
+        actor.IsAuthenticated && actor.ActorKind == ActorKind.System && actor.IsSystemAdmin
+        && string.Equals(actor.SubjectId, SystemActor.SystemSubjectId, StringComparison.Ordinal)
+        && string.Equals(actor.TypedAttributes.GetCustomAttribute("operation"),
+            PermissionSystemMutation.ExpirationOperation, StringComparison.Ordinal);
+
+    private Task<Result<ExpirationBatchOutcome>> ProcessGroupAsync(IGrouping<Guid, TenantPermission> group,
+        ExpirationActor actor, List<Exception> failures, List<Exception> groupFailures, CancellationToken cancellationToken)
+    {
+        var scope = group.Key == Guid.Empty ? (Guid?)null : group.Key;
+        return ExecuteMutationAsync(actor, scope, async token =>
+        {
+            var notifications = new List<PermissionExpirationNotification>();
+            foreach (var grant in group)
+            {
+                token.ThrowIfCancellationRequested();
+                var attempt = await ProcessGrantAsync(grant, actor, groupFailures, token).ConfigureAwait(false);
+                if (attempt.IsSuccess) { notifications.Add(attempt.Value); }
+            }
+            if (notifications.Count > 0)
+            {
+                await IncrementTenantVersionAsync(group.Key, token).ConfigureAwait(false);
+            }
+            return Result.Success(new ExpirationBatchOutcome(notifications));
+        }, cancellationToken, failures, outcome => outcome.Notifications.Count > 0, true);
+    }
+
+    private Task<Result<PermissionExpirationNotification>> ProcessGrantAsync(TenantPermission grant,
+        ExpirationActor actor, List<Exception> failures, CancellationToken cancellationToken)
+    {
+        var originalExpiresAt = grant.ExpiresAt;
+        return ExecuteMutationAsync(actor, grant.TenantId, async token =>
+        {
+            grant.Expire();
+            SetStamp(grant, ProcessedStampKey);
+            await repository.UpdateAsync(grant, token).ConfigureAwait(false);
+            var audit = await auditService.LogPermissionChangeAsync(
+                PermissionOperationType.Expire, grant.UserId, actor.UserId, grant.TenantId,
+                permissionType: "Tenant", resourceType: "TenantPermission", resourceId: grant.Id,
+                oldValue: originalExpiresAt?.ToString("O"), newValue: "inactive",
+                reason: "Automatic permission expiration", cancellationToken: token).ConfigureAwait(false);
+            if (audit is null || audit.Id == Guid.Empty)
+            {
+                throw new InvalidOperationException("Permission expiration audit was not persisted.");
+            }
+            return Result.Success(new PermissionExpirationNotification(grant.Id, grant.UserId,
+                grant.TenantId, grant.Permissions.ToArray(), originalExpiresAt ?? SystemClock.UtcNow,
+                PermissionExpirationKind.Expired));
+        }, cancellationToken, failures, null, false);
+    }
+
+    private async Task<Result<T>> ExecuteMutationAsync<T>(ExpirationActor actor, Guid? tenantId,
+        Func<CancellationToken, Task<Result<T>>> operation, CancellationToken cancellationToken,
+        List<Exception> failures, Func<T, bool>? shouldCommit, bool useEntityTenantScope)
+    {
+        Exception? operationFailure = null;
+        try
+        {
+            Func<CancellationToken, Task<Result<T>>> perform = async token =>
+            {
+                try { return await operation(token).ConfigureAwait(false); }
+                catch (Exception exception) { operationFailure = exception; throw; }
+            };
+            var result = actor.Maintenance is null
+                ? await mutationExecutor.ExecuteAsync(actor.UserId, tenantId, perform,
+                    cancellationToken, shouldCommit, useEntityTenantScope).ConfigureAwait(false)
+                : await mutationExecutor.ExecuteSystemAsync(actor.Maintenance, tenantId, perform,
+                    cancellationToken, shouldCommit, useEntityTenantScope).ConfigureAwait(false);
+            if (result.IsFailure)
+            {
+                failures.Add(new InvalidOperationException(result.Error.Description));
+            }
+            return result;
+        }
+        catch (Exception exception) when (ReferenceEquals(exception, operationFailure)
+            && exception is not AggregateException and not OperationCanceledException and not OutOfMemoryException)
+        {
+            // The shared executor rethrows the original operation failure only after
+            // confirmed rollback. Setup/commit/rollback failures must escape immediately.
+            failures.Add(exception);
+            return Result.Failure<T>(Error.Failure("PermissionExpiration.OperationFailed", "Required expiration processing failed."));
+        }
+    }
+
+    private sealed record ExpirationBatchOutcome(IReadOnlyList<PermissionExpirationNotification> Notifications);
+
+    private readonly record struct ExpirationActor(Guid UserId, PermissionSystemMutation? Maintenance);
 
     public async Task<int> SendUpcomingExpirationRemindersAsync(CancellationToken cancellationToken = default)
     {
@@ -126,13 +210,11 @@ public sealed class PermissionExpirationService(
         var expiring = await repository.GetExpiringBeforeAsync(cutoff, cancellationToken).ConfigureAwait(false);
         var published = 0;
 
-        foreach (var grant in expiring.Take(Options.BatchSize))
+        var eligible = expiring.Where(grant => !TryGetStamp(grant, ReminderStampKey, out var lastReminder)
+            || now - lastReminder >= Options.MinimumReminderInterval);
+        foreach (var grant in eligible.Take(Options.BatchSize))
         {
-            if (TryGetStamp(grant, ReminderStampKey, out var lastReminder) &&
-                now - lastReminder < Options.MinimumReminderInterval)
-            {
-                continue;
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
@@ -151,6 +233,7 @@ public sealed class PermissionExpirationService(
 
                 published++;
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
             catch (Exception exception)
             {
                 logger.LogWarning(exception,
@@ -181,9 +264,19 @@ public sealed class PermissionExpirationService(
             throw new ArgumentException("Expiration must be in the future. Use ProcessExpiredAsync to expire grants now.", nameof(expiresAt));
         }
 
-        return await MutateExpirationAsync(
+        var now = SystemClock.UtcNow;
+        var grants = await repository.GetByIdsInTenantAsync(tenantId, permissionIds, cancellationToken).ConfigureAwait(false);
+
+        // Advanced expiration rules (issue #331): validate every matched grant BEFORE the first
+        // mutation so a violating bulk operation is rejected atomically, with the matched rule
+        // keys cited in the exception.
+        EnsureRulesSatisfied(
+            grants,
+            grant => ruleEvaluator?.ValidateSetExpiration(grant.Permissions, expiresAt, now));
+
+        return await ApplyExpirationMutationsAsync(
             tenantId,
-            permissionIds,
+            grants,
             grant =>
             {
                 grant.ExpiresAt = expiresAt;
@@ -211,10 +304,17 @@ public sealed class PermissionExpirationService(
         }
 
         var now = SystemClock.UtcNow;
+        var grants = await repository.GetByIdsInTenantAsync(tenantId, permissionIds, cancellationToken).ConfigureAwait(false);
 
-        return await MutateExpirationAsync(
+        // Advanced expiration rules (issue #331): cap single extensions and the resulting
+        // expiration distance before any grant is mutated.
+        EnsureRulesSatisfied(
+            grants,
+            grant => ruleEvaluator?.ValidateExtension(grant.Permissions, grant.ExpiresAt, extension, now));
+
+        return await ApplyExpirationMutationsAsync(
             tenantId,
-            permissionIds,
+            grants,
             grant =>
             {
                 var baseline = grant.ExpiresAt is { } current && current > now ? current : now;
@@ -240,15 +340,40 @@ public sealed class PermissionExpirationService(
         return expiring.Where(p => p.TenantId == tenantId).ToList();
     }
 
-    private async Task<List<TenantPermission>> MutateExpirationAsync(
+    /// <summary>
+    ///     Runs the advanced-rule validation for every grant (issue #331) and throws a
+    ///     <see cref="PermissionExpirationRuleViolationException"/> citing all violations when
+    ///     any grant fails. Called before the first mutation so bulk operations are atomic.
+    /// </summary>
+    private void EnsureRulesSatisfied(
+        List<TenantPermission> grants,
+        Func<TenantPermission, IReadOnlyList<PermissionExpirationRuleViolation>?> validate)
+    {
+        if (ruleEvaluator is null)
+        {
+            return;
+        }
+
+        var violations = new List<PermissionExpirationRuleViolation>();
+        foreach (var grant in grants)
+        {
+            violations.AddRange(validate(grant) ?? Array.Empty<PermissionExpirationRuleViolation>());
+        }
+
+        if (violations.Count > 0)
+        {
+            throw new PermissionExpirationRuleViolationException(violations);
+        }
+    }
+
+    private async Task<List<TenantPermission>> ApplyExpirationMutationsAsync(
         Guid tenantId,
-        IReadOnlyCollection<Guid> permissionIds,
+        List<TenantPermission> grants,
         Action<TenantPermission> mutate,
         string operationDescription,
         string? reason,
         CancellationToken cancellationToken)
     {
-        var grants = await repository.GetByIdsInTenantAsync(tenantId, permissionIds, cancellationToken).ConfigureAwait(false);
         var performedBy = Actor.SubjectIdAsGuid ?? Guid.Empty;
         var updated = new List<TenantPermission>(grants.Count);
 
@@ -295,6 +420,7 @@ public sealed class PermissionExpirationService(
             var newVersion = await securityVersionStore
                 .IncrementVersionAsync(tenantId.ToString(), cancellationToken)
                 .ConfigureAwait(false);
+            if (newVersion <= 0) { throw new InvalidOperationException("Permission invalidation did not advance the security version."); }
             logger.LogDebug("Incremented security version for tenant {TenantId} to {Version}.", tenantId, newVersion);
         }
         catch (Exception exception)

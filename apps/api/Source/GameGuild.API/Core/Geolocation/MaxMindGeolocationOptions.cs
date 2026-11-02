@@ -12,4 +12,12 @@ public sealed class MaxMindGeolocationOptions
 
     /// <summary>Path to the GeoLite2-City(.mmdb) database file. Empty or missing file disables enrichment.</summary>
     public string? DatabasePath { get; set; }
+
+    /// <summary>
+    ///     Optional path to a GeoIP2 Anonymous IP (.mmdb) database. When present (and readable),
+    ///     every resolved address is additionally checked for VPN/proxy/Tor/hosting traits
+    ///     (issue #278 VPN/proxy detection). An absent file leaves those traits unknown
+    ///     (<c>null</c>) — it never disables the city enrichment above.
+    /// </summary>
+    public string? AnonymousDatabasePath { get; set; }
 }

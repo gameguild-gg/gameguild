@@ -139,6 +139,19 @@ public class BillingWebhookEvent : EntityBase
     public string? DeadLetterReason { get; set; }
 
     /// <summary>
+    ///     Source IP address the delivery was accepted from (issue #408: IP address logging).
+    ///     Nullable for rows accepted before the column existed or captured outside a request.
+    /// </summary>
+    [MaxLength(64)]
+    public string? SourceIpAddress { get; set; }
+
+    /// <summary>
+    ///     Bounded user agent of the delivery (issue #408: user agent logging).
+    /// </summary>
+    [MaxLength(512)]
+    public string? UserAgent { get; set; }
+
+    /// <summary>
     ///     Related tenant ID if applicable
     /// </summary>
     public new Guid? TenantId { get; set; }
@@ -147,6 +160,27 @@ public class BillingWebhookEvent : EntityBase
     ///     Related subscription ID if applicable
     /// </summary>
     public Guid? SubscriptionId { get; set; }
+
+    /// <summary>
+    ///     Records the delivery source metadata captured by the webhook endpoint filter
+    ///     (issue #408: IP address and user agent logging). Values are bounded to their column
+    ///     lengths and only recorded when not already captured; replayed rows keep their
+    ///     original delivery source.
+    /// </summary>
+    public void RecordDeliverySource(string? sourceIpAddress, string? userAgent)
+    {
+        if (!string.IsNullOrWhiteSpace(sourceIpAddress))
+        {
+            var ip = sourceIpAddress.Trim();
+            SourceIpAddress = ip.Length <= 64 ? ip : ip[..64];
+        }
+
+        if (!string.IsNullOrWhiteSpace(userAgent))
+        {
+            var agent = userAgent.Trim();
+            UserAgent = agent.Length <= 512 ? agent : agent[..512];
+        }
+    }
 
     /// <summary>
     ///     Mark webhook as processed

@@ -71,6 +71,22 @@ public sealed class PermissionExpirationOptions
     public Dictionary<string, TimeSpan> DefaultExpirationByPermission { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
+    ///     Global baseline for advanced expiration rules (issue #331). Applied to every grant,
+    ///     then composed (strictest wins) with every key matched in
+    ///     <see cref="Rules"/>. Null members place no constraint; a wholly empty rule is inert.
+    /// </summary>
+    public PermissionExpirationRule GlobalRule { get; set; } = new();
+
+    /// <summary>
+    ///     Advanced expiration rules per permission type (issue #331). Keys are either exact
+    ///     permission strings (e.g. <c>economy:payouts:approve</c>) or wildcards (e.g.
+    ///     <c>economy:*</c>); <b>every</b> matching key composes with the
+    ///     <see cref="GlobalRule"/> — strictest constraint wins (see
+    ///     <see cref="ResolveEffectiveRule"/>).
+    /// </summary>
+    public Dictionary<string, PermissionExpirationRule> Rules { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
     ///     Resolves the default expiration period for a grant carrying the given permissions.
     ///     Exact permission match wins, then the longest wildcard prefix, then the global default.
     /// </summary>
@@ -122,6 +138,56 @@ public sealed class PermissionExpirationOptions
         }
 
         return DefaultGrantExpiration;
+    }
+
+    /// <summary>
+    ///     Resolves the effective advanced expiration rule for a grant carrying the given
+    ///     permissions: the <see cref="GlobalRule"/> baseline composed (strictest wins) with
+    ///     every <see cref="Rules"/> key matched by any permission — exact keys and every
+    ///     <c>prefix:*</c> wildcard whose prefix matches. Returns the matched keys alongside
+    ///     the composed rule for administrative introspection.
+    /// </summary>
+    public (PermissionExpirationRule Rule, IReadOnlyList<string> MatchedKeys) ResolveEffectiveRule(IEnumerable<string>? permissions)
+    {
+        var effective = new PermissionExpirationRule();
+        var matched = new List<string>();
+
+        if (!GlobalRule.IsEmpty)
+        {
+            effective.MergeWith(GlobalRule);
+            matched.Add("(global)");
+        }
+
+        if (permissions is null)
+        {
+            return (effective, matched);
+        }
+
+        var permissionList = permissions
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var (key, rule) in Rules)
+        {
+            if (string.IsNullOrWhiteSpace(key) || rule is null || rule.IsEmpty)
+            {
+                continue;
+            }
+
+            var isMatch = permissionList.Any(p =>
+                string.Equals(p, key, StringComparison.OrdinalIgnoreCase)
+                || (key.EndsWith(":*", StringComparison.Ordinal)
+                    && p.StartsWith(key[..^1], StringComparison.OrdinalIgnoreCase)));
+
+            if (isMatch)
+            {
+                effective.MergeWith(rule);
+                matched.Add(key);
+            }
+        }
+
+        return (effective, matched);
     }
 
     /// <summary>
@@ -180,6 +246,48 @@ public sealed class PermissionExpirationOptions
             }
         }
 
+        ValidateRule("GlobalRule", GlobalRule, errors);
+
+        foreach (var (key, rule) in Rules)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                errors.Add("Rules keys must be non-empty permission names.");
+                break;
+            }
+
+            ValidateRule($"Rules['{key}']", rule, errors);
+        }
+
         return errors;
+    }
+
+    private static void ValidateRule(string name, PermissionExpirationRule? rule, List<string> errors)
+    {
+        if (rule is null)
+        {
+            errors.Add($"{name} must not be null.");
+            return;
+        }
+
+        if (rule.MinDuration is { } min && min <= TimeSpan.Zero)
+        {
+            errors.Add($"{name}.MinDuration must be positive.");
+        }
+
+        if (rule.MaxDuration is { } max && max <= TimeSpan.Zero)
+        {
+            errors.Add($"{name}.MaxDuration must be positive.");
+        }
+
+        if (rule.MaxExtension is { } maxExtension && maxExtension <= TimeSpan.Zero)
+        {
+            errors.Add($"{name}.MaxExtension must be positive.");
+        }
+
+        if (rule.MinDuration is { } floor && rule.MaxDuration is { } cap && floor > cap)
+        {
+            errors.Add($"{name}.MinDuration must not exceed {name}.MaxDuration.");
+        }
     }
 }

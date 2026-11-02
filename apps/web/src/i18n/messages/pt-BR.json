@@ -17,6 +17,19 @@
     "walletSigning": "Assinando…",
     "walletConnected": "Conectado:",
     "walletDisconnect": "Desconectar",
+    "guest": {
+      "continueAsGuest": "Continuar como visitante",
+      "busy": "Entrando como visitante...",
+      "disabledMessage": "O acesso como visitante está desativado no momento.",
+      "errorMessage": "Não foi possível iniciar uma sessão de visitante. Tente novamente.",
+      "bannerTitle": "Você está navegando como visitante",
+      "bannerDescription": "Você tem acesso limitado ao conteúdo público. Crie uma conta para desbloquear a experiência completa e manter seu progresso.",
+      "upgradeCta": "Criar sua conta",
+      "leaveGuestMode": "Sair do modo visitante",
+      "sessionLabel": "Sessão de visitante",
+      "permissionsLabel": "Permissões",
+      "signUpNotice": "Sua sessão de visitante será vinculada à sua nova conta."
+    },
     "mfa": {
       "title": "Autenticação de dois fatores",
       "description": "Confirme seu acesso com seu app autenticador. Este desafio expira após cinco minutos.",
@@ -823,6 +836,17 @@
     "savePricing": "Salvar versão de preço",
     "publish": "Publicar",
     "unpublish": "Desativar"
+  },
+  "currency": {
+    "label": "Moeda de exibição",
+    "switchLabel": "Moeda",
+    "suggested": "Sugerido: {code}",
+    "apply": "Usar {code}",
+    "dismiss": "Descartar sugestão",
+    "original": "Preço original",
+    "conversionNote": "≈ {converted} no câmbio atual",
+    "conversionUnavailable": "Conversão indisponível em {code}",
+    "privacyNote": "A sugestão de moeda usa apenas o seu país; nada é armazenado."
   },
   "emailDeliverability": {
     "title": "Entregabilidade de e-mail",

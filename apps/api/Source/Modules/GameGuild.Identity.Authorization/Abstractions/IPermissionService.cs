@@ -207,6 +207,15 @@ public interface ITenantPermissionRepository
         Guid userId, 
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Gets non-deleted, still-active grants whose <c>ExpiresAt</c> is in the past,
+    ///     ordered by expiration instant (oldest first, then id) so the expiration
+    ///     worker's <c>BatchSize</c> window drains a backlog deterministically across
+    ///     cycles (issue #331 recovery). Already-deactivated grants are excluded
+    ///     server-side because the sweep deactivates grants as it processes them;
+    ///     a deactivated-and-stamped grant is never re-eligible.
+    ///     Uses the <c>IX_TenantPermissions_ExpiresAt</c> index.
+    /// </summary>
     Task<List<TenantPermission>> GetExpiredPermissionsAsync(
         CancellationToken cancellationToken = default);
 

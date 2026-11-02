@@ -1,7 +1,7 @@
 import { getSession, getToken } from '@/auth';
 import { createServerClient } from '@game-guild/client';
 import { Link } from '@/i18n/navigation';
-import { Bell, FlaskConical, Gamepad2, GraduationCap, Heart, MessageCircle, PanelsTopLeft, Rocket, Users } from 'lucide-react';
+import { Bell, Gamepad2, GraduationCap, Heart, MessageCircle, PanelsTopLeft, Users } from 'lucide-react';
 import { Github, Twitter, Youtube } from '@/components/ui/brand-icons';
 import type { ReactNode } from 'react';
 import {
@@ -11,6 +11,7 @@ import {
   type PublicWebsiteUser,
 } from './public-website-nav';
 import { PublicAccountMenu } from './public-account-menu';
+import { CurrencySwitcher } from '@/components/currency/currency-switcher';
 
 const primaryNav = [
   { label: 'Community', href: '/community' },
@@ -188,6 +189,8 @@ export async function PublicWebsiteHeader({
   const user = await getHeaderUser();
   const publicAccountActions = (
     <div className="flex items-center gap-2">
+      {/* Currency indicator in the public navigation bar (issue #412 spec E). */}
+      <CurrencySwitcher className="hidden sm:flex" />
       <a
         href="https://github.com/gameguild-gg/gameguild"
         aria-label="GameGuild on GitHub"
@@ -374,26 +377,3 @@ export async function PublicWebsiteShell({ children }: { readonly children: Reac
     </div>
   );
 }
-
-export const publicWebsiteHighlights = [
-  {
-    title: 'Interactive Courses',
-    description: 'Structured game development paths with practical projects, assessments, and production-ready outcomes.',
-    icon: GraduationCap,
-  },
-  {
-    title: 'Testing Lab',
-    description: 'A focused review space where creators can validate builds, gather feedback, and improve playable work.',
-    icon: FlaskConical,
-  },
-  {
-    title: 'Launch Pad',
-    description: 'Release planning, store-page critique, and launch-readiness checklists for student projects.',
-    icon: Rocket,
-  },
-  {
-    title: 'Community Studio',
-    description: 'Connect with peers, instructors, and project teams around critique, collaboration, and shipped work.',
-    icon: Users,
-  },
-] as const;

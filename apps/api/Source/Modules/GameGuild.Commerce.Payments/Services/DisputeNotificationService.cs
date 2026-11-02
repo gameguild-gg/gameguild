@@ -95,9 +95,9 @@ public sealed class DisputeNotificationService(
                 && dispute.Status != DisputeStatus.Won
                 && dispute.Status != DisputeStatus.Lost
                 && dispute.Status != DisputeStatus.Cancelled
-                && dispute.EvidenceDueBy != null
-                && dispute.EvidenceDueBy <= deadlineCutoff)
-            .OrderBy(dispute => dispute.EvidenceDueBy)
+                && (dispute.EvidenceDueBy ?? dispute.DueDate) != null
+                && (dispute.EvidenceDueBy ?? dispute.DueDate) <= deadlineCutoff)
+            .OrderBy(dispute => dispute.EvidenceDueBy ?? dispute.DueDate)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }

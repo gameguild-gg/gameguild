@@ -414,6 +414,151 @@ public class SessionEnrichmentTests
         analysis.RiskFactors.Should().Contain(f => f.StartsWith("Impossible travel", StringComparison.Ordinal));
     }
 
+    // ── Anonymous-network (VPN/proxy/Tor/hosting) detection ─────────────
+
+    [Fact]
+    public async Task CreateSessionAsync_PersistsAnonymousNetworkTraits_FromGeolocationProvider()
+    {
+        AllowCreate();
+        _geolocationMock
+            .Setup(provider => provider.ResolveAsync("203.0.113.10", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GeolocationResult
+            {
+                Country = "Brazil", CountryCode = "BR", City = "Sao Paulo",
+                IsAnonymousVpn = true, IsTorExitNode = false, IsHostingProvider = true, IsPublicProxy = false
+            });
+        var sut = CreateSut(geolocation: _geolocationMock.Object);
+
+        var session = await sut.CreateSessionAsync(Guid.NewGuid(), "203.0.113.10", "Mozilla/5.0");
+
+        var location = SessionEnrichmentJson.DeserializeLocation(session.Location);
+        location.Should().NotBeNull();
+        location!.IsProxy.Should().BeTrue();
+        location.IsTor.Should().BeFalse();
+        location.IsHosting.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ToLocationInfo_UnknownAnonymousTraits_LeaveProxyNull()
+    {
+        var mapped = SessionEnrichmentJson.ToLocationInfo(
+            new GeolocationResult { Country = "Brazil", CountryCode = "BR" }, "203.0.113.10");
+
+        mapped.Should().NotBeNull();
+        mapped!.IsProxy.Should().BeNull();
+        mapped.IsTor.Should().BeNull();
+        mapped.IsHosting.Should().BeNull();
+    }
+
+    [Fact]
+    public void ToLocationInfo_KnownCleanTraits_ResolveProxyFalse()
+    {
+        var mapped = SessionEnrichmentJson.ToLocationInfo(
+            new GeolocationResult
+            {
+                Country = "Brazil", CountryCode = "BR",
+                IsAnonymousVpn = false, IsPublicProxy = false, IsTorExitNode = false, IsHostingProvider = false
+            },
+            "203.0.113.10");
+
+        mapped!.IsProxy.Should().BeFalse();
+        mapped.IsTor.Should().BeFalse();
+        mapped.IsHosting.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task AnalyzeSessionSecurityAsync_FlagsVpnProxyAndHostingSessions()
+    {
+        var userId = Guid.NewGuid();
+        var proxySession = ActiveSession(Guid.NewGuid(), "Mozilla/5.0");
+        proxySession.UserId = userId;
+        proxySession.Location = SessionEnrichmentJson.SerializeLocation(new LocationInfo
+        {
+            IpAddress = "203.0.113.10", IsProxy = true, IsHosting = true
+        });
+        _sessionRepositoryMock
+            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([proxySession]);
+
+        var analysis = await CreateSut().AnalyzeSessionSecurityAsync(userId, "203.0.113.10", "Mozilla/5.0");
+
+        analysis.RiskFactors.Should().Contain(f => f.StartsWith("VPN/proxy usage", StringComparison.Ordinal));
+        analysis.RiskFactors.Should().Contain(f => f.StartsWith("Hosting/datacenter network", StringComparison.Ordinal));
+        analysis.RiskScore.Should().Be(30);
+        analysis.RiskLevel.Should().Be(RiskLevel.Medium);
+        analysis.UnusualActivityDetected.Should().BeTrue();
+        analysis.Metadata["anonymous_network_sessions"].Should().Be("1");
+    }
+
+    [Fact]
+    public async Task AnalyzeSessionSecurityAsync_FlagsTorExitNodeSessions()
+    {
+        var userId = Guid.NewGuid();
+        var torSession = ActiveSession(Guid.NewGuid(), "Mozilla/5.0");
+        torSession.UserId = userId;
+        torSession.Location = SessionEnrichmentJson.SerializeLocation(new LocationInfo
+        {
+            IpAddress = "203.0.113.20", IsTor = true
+        });
+        _sessionRepositoryMock
+            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([torSession]);
+
+        var analysis = await CreateSut().AnalyzeSessionSecurityAsync(userId, "203.0.113.20", "Mozilla/5.0");
+
+        analysis.RiskFactors.Should().Contain(f => f.StartsWith("Tor exit node usage", StringComparison.Ordinal));
+        analysis.RiskScore.Should().Be(30);
+        analysis.RiskLevel.Should().Be(RiskLevel.Medium);
+    }
+
+    [Fact]
+    public async Task AnalyzeSessionSecurityAsync_ExplicitlyCleanNetworkTraits_AddNoRisk()
+    {
+        var userId = Guid.NewGuid();
+        var cleanSession = ActiveSession(Guid.NewGuid(), "Mozilla/5.0");
+        cleanSession.UserId = userId;
+        cleanSession.Location = SessionEnrichmentJson.SerializeLocation(new LocationInfo
+        {
+            IpAddress = "203.0.113.30", Country = "Brazil", City = "Sao Paulo",
+            IsProxy = false, IsTor = false, IsHosting = false
+        });
+        _sessionRepositoryMock
+            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([cleanSession]);
+
+        var analysis = await CreateSut().AnalyzeSessionSecurityAsync(userId, "203.0.113.30", "Mozilla/5.0");
+
+        analysis.RiskFactors.Should().BeEmpty();
+        analysis.RiskLevel.Should().Be(RiskLevel.Low);
+        analysis.Metadata["anonymous_network_sessions"].Should().Be("0");
+    }
+
+    [Fact]
+    public async Task AnalyzeSessionSecurityAsync_FlagsAnonymousRequestIp_FromProvider()
+    {
+        var userId = Guid.NewGuid();
+        var home = ActiveSession(Guid.NewGuid(), "Mozilla/5.0");
+        home.UserId = userId;
+        home.Location = SessionEnrichmentJson.SerializeLocation(new LocationInfo
+        {
+            IpAddress = "198.51.100.1", Country = "Brazil", City = "Sao Paulo"
+        });
+        _sessionRepositoryMock
+            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([home]);
+        _geolocationMock
+            .Setup(provider => provider.ResolveAsync("203.0.113.40", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GeolocationResult
+            {
+                Country = "Brazil", CountryCode = "BR", City = "Sao Paulo", IsTorExitNode = true
+            });
+
+        var analysis = await CreateSut(geolocation: _geolocationMock.Object)
+            .AnalyzeSessionSecurityAsync(userId, "203.0.113.40", "Mozilla/5.0");
+
+        analysis.RiskFactors.Should().Contain(f => f.StartsWith("Tor exit node usage", StringComparison.Ordinal));
+    }
+
     private static UserSession ActiveSession(Guid id, string userAgent) => new()
     {
         Id = id,

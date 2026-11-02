@@ -570,6 +570,59 @@ public sealed class SecurityEventPipelineTests : IDisposable
         Assert.Equal(17, options.BulkPermissionChangeAlertThreshold);
     }
 
+    [Fact]
+    public async Task WebhookSignatureFailure_RaisesUnverifiedAlertImmediately()
+    {
+        var logger = CreateLogger(new SecurityEventPipelineOptions
+        {
+            SpoolDirectoryPath = _spoolDirectory,
+            WebhookFailureAlertThreshold = 100
+        });
+
+        await logger.RecordAsync(
+            SecurityRequest(AuditActionTypes.WebhookSignatureFailed, AuditCategory.Security, ipAddress: "203.0.113.9"),
+            CancellationToken.None);
+
+        var alert = await _assertContext.Set<SecurityAlert>().AsNoTracking().SingleAsync();
+        Assert.Equal(SecurityAlertRules.WebhookUnverified, alert.RuleId);
+        Assert.Contains("failed signature", alert.Description);
+        Assert.Equal(AuditRiskLevel.High, alert.Severity);
+    }
+
+    [Fact]
+    public async Task WebhookFailureBurst_AlertsOnlyBeyondTheConfiguredThreshold()
+    {
+        // Issue #408: alert on more than 5 failed webhooks in 1 hour. With the threshold
+        // configured to 5, the sixth failure inside the window raises the burst alert.
+        var logger = CreateLogger(new SecurityEventPipelineOptions
+        {
+            SpoolDirectoryPath = _spoolDirectory,
+            WebhookFailureAlertThreshold = 5,
+            WebhookFailureWindowMinutes = 60
+        });
+
+        for (var failure = 0; failure < 5; failure++)
+        {
+            await logger.RecordAsync(
+                SecurityRequest(AuditActionTypes.WebhookSignatureFailed, AuditCategory.Security, ipAddress: "203.0.113.9"),
+                CancellationToken.None);
+        }
+
+        Assert.DoesNotContain(
+            await _assertContext.Set<SecurityAlert>().ToListAsync(),
+            alert => alert.RuleId == SecurityAlertRules.WebhookFailureBurst);
+
+        await logger.RecordAsync(
+            SecurityRequest(AuditActionTypes.WebhookDeadLettered, AuditCategory.Security, ipAddress: "203.0.113.9"),
+            CancellationToken.None);
+
+        var burst = await _assertContext.Set<SecurityAlert>().AsNoTracking()
+            .SingleAsync(alert => alert.RuleId == SecurityAlertRules.WebhookFailureBurst);
+        Assert.Contains("6 webhook security failures", burst.Description);
+        Assert.Contains("threshold 5", burst.Description);
+        Assert.Equal(AuditRiskLevel.Critical, burst.Severity);
+    }
+
     /// <summary>A context whose saves always fail, simulating a database outage.</summary>
     private sealed class FailingDbContext(DbContextOptions<ApplicationDbContext> options) : TestApplicationDbContext(options)
     {

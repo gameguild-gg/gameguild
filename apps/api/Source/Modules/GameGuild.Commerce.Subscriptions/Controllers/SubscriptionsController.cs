@@ -46,6 +46,13 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         var validationError = ValidateTenantAccess(body.TenantId, "create subscription");
         if (validationError != null) return validationError;
 
+        // Creation-time fraud metadata (issue #409): the client IP, device fingerprint and
+        // claimed timezone of the creation attempt feed the creation-time risk scoring; the
+        // payer email, billing country and card BIN come from the body.
+        var sourceIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var deviceFingerprint = Request.Headers["X-Device-Fingerprint"].ToString();
+        var clientTimezone = Request.Headers["X-Client-Timezone"].ToString();
+
         var id = await sender.Send(new CreateSubscriptionCommand(
             body.TenantId,
             body.PlanId,
@@ -57,7 +64,13 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
             TrialDays: body.TrialDays,
             PromoCodes: body.PromoCodes,
             PromoCodeIdempotencyKey: body.PromoCodeIdempotencyKey,
-            ProductId: body.ProductId), ct).ConfigureAwait(false);
+            ProductId: body.ProductId,
+            FraudCountry: body.Country,
+            FraudSourceIpAddress: string.IsNullOrWhiteSpace(sourceIpAddress) ? null : sourceIpAddress,
+            FraudDeviceFingerprint: string.IsNullOrWhiteSpace(deviceFingerprint) ? null : deviceFingerprint.Trim(),
+            FraudPayerEmail: body.PayerEmail,
+            FraudCardBin: body.CardBin,
+            FraudClientTimezone: string.IsNullOrWhiteSpace(clientTimezone) ? null : clientTimezone.Trim()), ct).ConfigureAwait(false);
 
         return CreatedAtAction(nameof(GetSubscriptionById), new { subscriptionId = id }, new { id });
     }
@@ -283,6 +296,9 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="PromoCodes">Optional promo codes applied at creation (issue #418)</param>
     /// <param name="PromoCodeIdempotencyKey">Optional replay-protection key for the promo application</param>
     /// <param name="ProductId">Optional product context for product-scoped promo codes</param>
+    /// <param name="Country">Optional ISO 3166-1 alpha-2 billing country; feeds the creation-time fraud signals (issue #409)</param>
+    /// <param name="PayerEmail">Optional payer email; feeds the creation-time disposable-email/blacklist fraud signals (issue #409)</param>
+    /// <param name="CardBin">Optional 6-8 digit card BIN prefix; feeds the creation-time BIN-range fraud signal (issue #409)</param>
     public sealed record CreateSubscriptionRequest(
         Guid TenantId,
         Guid PlanId,
@@ -295,7 +311,10 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         int? TrialDays = null,
         IReadOnlyList<string>? PromoCodes = null,
         string? PromoCodeIdempotencyKey = null,
-        Guid? ProductId = null);
+        Guid? ProductId = null,
+        string? Country = null,
+        string? PayerEmail = null,
+        string? CardBin = null);
 
     /// <summary>Request to partially update a subscription</summary>
     public sealed record PatchSubscriptionRequest(

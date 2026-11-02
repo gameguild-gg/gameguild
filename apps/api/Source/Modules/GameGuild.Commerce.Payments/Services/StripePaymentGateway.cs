@@ -36,6 +36,11 @@ public class StripePaymentGateway(
     public bool IsEnabled => _options.IsEnabled;
 
     /// <inheritdoc />
+    public bool SupportsVerifiedSettlement(string? providerId = null) =>
+        IsEnabled && !_options.UseSimulation
+        && (providerId is null || string.Equals(providerId, ProviderId, StringComparison.OrdinalIgnoreCase));
+
+    /// <inheritdoc />
     public Task<GatewayPaymentResult> ProcessPaymentAsync(
         GatewayPaymentRequest request,
         CancellationToken cancellationToken = default) =>

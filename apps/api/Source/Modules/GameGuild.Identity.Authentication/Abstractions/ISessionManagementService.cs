@@ -40,13 +40,24 @@ public interface ISessionManagementService
 
     Task<int> TerminateAllUserSessionsAsync(Guid userId, SessionTerminationReason reason, Guid? exceptSessionId = null, CancellationToken cancellationToken = default);
 
-    Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, CancellationToken cancellationToken = default);
+    /// <summary>
+    ///     Marks a device as trusted for the user. <paramref name="deviceInfo"/> carries the
+    ///     persisted device metadata (JSON) captured by the session being trusted, so the
+    ///     trusted-device list can present browser/OS details; pass null to leave it unset.
+    /// </summary>
+    Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, string? deviceInfo = null, CancellationToken cancellationToken = default);
 
     Task<bool> IsDeviceTrustedAsync(Guid userId, string deviceFingerprint, CancellationToken cancellationToken = default);
 
     Task<List<TrustedDevice>> GetTrustedDevicesAsync(Guid userId, CancellationToken cancellationToken = default);
 
     Task<bool> RevokeTrustedDeviceAsync(Guid userId, Guid deviceId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Names or renames one of the user's own trusted devices. Returns false when the name
+    ///     is empty/oversized or the device belongs to another user.
+    /// </summary>
+    Task<bool> RenameTrustedDeviceAsync(Guid userId, Guid deviceId, string name, CancellationToken cancellationToken = default);
 
     Task CleanupExpiredSessionsAsync(CancellationToken cancellationToken = default);
 
