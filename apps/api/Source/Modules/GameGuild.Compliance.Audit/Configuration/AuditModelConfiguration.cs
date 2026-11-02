@@ -93,6 +93,13 @@ public sealed class AuditModelConfiguration : IModelConfiguration
             entity.HasIndex(log => log.TenantId);
             entity.HasIndex(log => log.CreatedAt);
             entity.HasIndex(log => new { log.TenantId, log.CreatedAt });
+
+            // Replay-capture sweeps filter DeletedAt == null over CreatedAt ranges
+            // (AuditReplayCaptureService.SelectAsync) — issue #1157. Distinct
+            // property list from the unfiltered single-column index above.
+            entity.HasIndex(log => new { log.CreatedAt, log.TenantId })
+                .HasDatabaseName("ix_audit_logs_created_tenant_live")
+                .HasFilter("\"DeletedAt\" IS NULL");
         });
 
         modelBuilder.Entity<TamperEvidentAuditLog>(entity =>
