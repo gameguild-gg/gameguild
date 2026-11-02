@@ -65,16 +65,115 @@ public sealed class SignInMfaServiceTests
     public async Task RequiredUnenrolledAccountGetsOnlyAnEnrollmentBoundChallenge()
     {
         var fixture = new FlowFixture { Enrolled = false };
+        var configurationId = Guid.NewGuid();
+        var fingerprint = FlowFixture.Digest();
+        fixture.SetupEnrollment(configurationId, fingerprint, "sign-in-enrollment-secret", "otpauth://totp/sign-in-enrollment");
         var result = await fixture.BeginAsync();
         AssertLimited(result, fixture.User, fixture.TenantId);
         var stored = Assert.Single(fixture.Stored);
         Assert.Equal(SignInMfaPurpose.EnrollFactor, stored.Purpose);
+        Assert.Equal(configurationId, stored.EnrollmentConfigurationId);
+        Assert.NotEqual(Guid.Empty, stored.EnrollmentConfigurationId!.Value);
+        Assert.Equal(fingerprint, stored.EnrollmentSecretFingerprint);
+        Assert.True(SignInMfaChallengeToken.IsDigest(stored.EnrollmentSecretFingerprint!));
+        Assert.NotNull(stored.EnrollmentInitializedAt);
+        Assert.InRange(stored.EnrollmentInitializedAt!.Value, stored.CreatedAt, stored.ExpiresAt);
+        Assert.True(stored.EnrollmentInitializedAt < stored.ExpiresAt);
         Assert.Contains("enrollment", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(new[] { "subject", "policy", "lock", "enroll", "persist", "audit:Authentication.MfaSignInRequired" }, fixture.Trace);
         fixture.Challenge = stored;
         var completed = await fixture.CompleteAsync(result.MfaToken!);
         AssertDenied(completed);
         fixture.Issuer.VerifyNoOtherCalls();
         fixture.Mfa.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task RequiredUnenrolledAccountResponseOffersEnrollment()
+    {
+        var fixture = new FlowFixture { Enrolled = false };
+        fixture.SetupEnrollment(Guid.NewGuid(), FlowFixture.Digest(), "offered-enrollment-secret", "otpauth://totp/offered-enrollment");
+        var result = await fixture.BeginAsync();
+        AssertLimited(result, fixture.User, fixture.TenantId);
+        Assert.Equal(new[] { "TOTP" }, result.AvailableMethods);
+        var enrollment = result.MfaEnrollment;
+        Assert.NotNull(enrollment);
+        Assert.Equal("offered-enrollment-secret", enrollment!.SecretKey);
+        Assert.Equal("otpauth://totp/offered-enrollment", enrollment.QrCodeUri);
+        var stored = Assert.Single(fixture.Stored);
+        Assert.InRange(enrollment.ExpiresAt, stored.CreatedAt, stored.ExpiresAt);
+    }
+
+    [Fact]
+    public async Task EnrollmentChallengeSurvivesValidateForPersistence()
+    {
+        // The mocked store mirrors the real one: AddAsync validates before persisting.
+        var fixture = new FlowFixture { Enrolled = false };
+        fixture.SetupEnrollment(Guid.NewGuid(), FlowFixture.Digest(), "validated-enrollment-secret", "otpauth://totp/validated-enrollment");
+        await fixture.BeginAsync();
+        var stored = Assert.Single(fixture.Stored);
+        stored.ValidateForPersistence();
+    }
+
+    [Fact]
+    public async Task EnrollmentChallengesCompleteThroughProofMatchingConsumptionAndBackupCodes()
+    {
+        var fixture = new FlowFixture { Enrolled = false };
+        fixture.SetupEnrollmentMatchSequence(preProof: true, postProof: true);
+        // VerifyTotpAsync flips the provisioned configuration to enrolled inside provider verification.
+        fixture.AfterVerification = () => fixture.Enrolled = true;
+        var began = await fixture.BeginAsync();
+        AssertLimited(began, fixture.User, fixture.TenantId);
+        fixture.Challenge = Assert.Single(fixture.Stored);
+        fixture.Trace.Clear();
+        fixture.Mfa.Setup(port => port.GenerateBackupCodesAsync(fixture.User.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { "enrollment-backup-code-one", "enrollment-backup-code-two" });
+
+        var completed = await fixture.CompleteAsync(began.MfaToken!, MfaMethod.Totp);
+
+        Assert.Same(fixture.Issued, completed);
+        Assert.True(completed.Success);
+        Assert.Equal(new[] { "find", "lock", "find", "matches:false", "subject", "policy", "verify", "subject", "policy", "matches:true", "consume", "issue", "audit:Authentication.MfaSignInVerified" }, fixture.Trace);
+        Assert.Equal(SignInMfaPurpose.EnrollFactor, fixture.ConsumedBinding!.Purpose);
+        Assert.Equal(MfaMethod.Totp, fixture.ConsumedMethod);
+        Assert.Equal(new[] { "enrollment-backup-code-one", "enrollment-backup-code-two" }, completed.MfaEnrollmentBackupCodes);
+        fixture.Enrollment.Verify(port => port.MatchesAsync(It.IsAny<SignInMfaChallenge>(), false, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+        fixture.Enrollment.Verify(port => port.MatchesAsync(It.IsAny<SignInMfaChallenge>(), true, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task EnrollmentCompletionIsDeniedWhenTheConfigurationNoLongerMatchesPreProof()
+    {
+        var fixture = new FlowFixture { Enrolled = false };
+        fixture.SetupEnrollmentMatchSequence(preProof: false, postProof: true);
+        var began = await fixture.BeginAsync();
+        fixture.Challenge = Assert.Single(fixture.Stored);
+        fixture.Trace.Clear();
+
+        var completed = await fixture.CompleteAsync(began.MfaToken!, MfaMethod.Totp);
+
+        AssertDenied(completed);
+        Assert.Equal(new[] { "find", "lock", "find", "matches:false" }, fixture.Trace);
+        Assert.Null(fixture.ConsumedBinding);
+        fixture.Mfa.VerifyNoOtherCalls();
+        fixture.Issuer.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task EnrollmentChallengesCannotBeCompletedWithABackupCode()
+    {
+        var fixture = new FlowFixture { Enrolled = false };
+        var began = await fixture.BeginAsync();
+        fixture.Challenge = Assert.Single(fixture.Stored);
+        fixture.Trace.Clear();
+
+        var completed = await fixture.CompleteAsync(began.MfaToken!, MfaMethod.BackupCode);
+
+        AssertDenied(completed);
+        Assert.Equal(new[] { "find" }, fixture.Trace);
+        Assert.Null(fixture.ConsumedBinding);
+        fixture.Mfa.VerifyNoOtherCalls();
+        fixture.Issuer.VerifyNoOtherCalls();
     }
 
     [Theory]
@@ -403,7 +502,9 @@ public sealed class SignInMfaServiceTests
         public Mock<IAuthenticatedSessionIssuer> Issuer { get; } = new(MockBehavior.Strict);
         public Mock<IAuthenticationAuditEventSink> Audit { get; } = new(MockBehavior.Strict);
         public Mock<ISessionMfaEvidenceStore> SessionEvidence { get; } = new(MockBehavior.Strict);
+        public Mock<ISignInMfaEnrollmentPort> Enrollment { get; } = new(MockBehavior.Strict);
         public Mock<IMfaRecoveryRequestStore> RecoveryRequests { get; } = new(MockBehavior.Strict);
+        public SignInMfaEnrollmentSetup? EnrollmentSetup { get; private set; }
         public MfaRecoveryRequest? LiveRecovery { get; set; }
         public string? CancelledRecoveryUserId { get; private set; }
         public List<string> Trace { get; } = [];
@@ -445,6 +546,7 @@ public sealed class SignInMfaServiceTests
             Store.Setup(port => port.AddAsync(It.IsAny<SignInMfaChallenge>(), It.IsAny<CancellationToken>())).Returns((SignInMfaChallenge challenge, CancellationToken cancellationToken) =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                challenge.ValidateForPersistence();
                 Trace.Add("persist");
                 Stored.Add(challenge);
                 return Task.CompletedTask;
@@ -497,6 +599,43 @@ public sealed class SignInMfaServiceTests
                 CancelledRecoveryUserId = LiveRecovery?.UserId;
                 return Task.CompletedTask;
             });
+            SetupEnrollment(Guid.NewGuid(), Digest(), "default-enrollment-secret", "otpauth://totp/default-enrollment");
+        }
+
+        public void SetupEnrollment(Guid configurationId, string fingerprint, string secret, string qr)
+        {
+            EnrollmentSetup = new SignInMfaEnrollmentSetup(configurationId, fingerprint, secret, qr, Challenge!.ExpiresAt);
+            Enrollment.Setup(port => port.AcquireSubjectLockAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .Returns((Guid _, CancellationToken cancellationToken) =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    Trace.Add("lock");
+                    return Task.CompletedTask;
+                });
+            Enrollment.Setup(port => port.StartOrResumeAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(),
+                    It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Guid _, string _, DateTimeOffset _, DateTimeOffset _, CancellationToken cancellationToken) =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    Trace.Add("enroll");
+                    return EnrollmentSetup!;
+                });
+        }
+
+        public void SetupEnrollmentMatchSequence(bool preProof, bool postProof)
+        {
+            Enrollment.Setup(port => port.MatchesAsync(It.IsAny<SignInMfaChallenge>(), false, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((SignInMfaChallenge _, bool _, DateTimeOffset _, CancellationToken _) =>
+                {
+                    Trace.Add("matches:false");
+                    return preProof;
+                });
+            Enrollment.Setup(port => port.MatchesAsync(It.IsAny<SignInMfaChallenge>(), true, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((SignInMfaChallenge _, bool _, DateTimeOffset _, CancellationToken _) =>
+                {
+                    Trace.Add("matches:true");
+                    return postProof;
+                });
         }
 
         public static string Digest() => Convert.ToHexString(SHA256.HashData(RandomNumberGenerator.GetBytes(32))).ToLowerInvariant();
@@ -506,7 +645,7 @@ public sealed class SignInMfaServiceTests
             Service().CompleteCodeAsync(bearer ?? Bearer, code ?? Code, method, Device, cancellationToken);
         public Task<SignInMfaProof?> ReadSessionAsync(DateTimeOffset authenticatedAt) =>
             Service().ReadSessionProofAsync(VerifiedSubjectId, VerifiedVersion, TenantId, Issued.SessionId, authenticatedAt, CancellationToken.None);
-        private SignInMfaService Service() => new(Subjects.Object, Policy.Object, Store.Object, Mfa.Object, Issuer.Object, Audit.Object, SessionEvidence.Object, Mock.Of<ISignInMfaEnrollmentPort>(MockBehavior.Strict), RecoveryRequests.Object);
+        private SignInMfaService Service() => new(Subjects.Object, Policy.Object, Store.Object, Mfa.Object, Issuer.Object, Audit.Object, SessionEvidence.Object, Enrollment.Object, RecoveryRequests.Object);
         public void ApplySubjectFault(string mode)
         {
             switch (mode)

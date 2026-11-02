@@ -34,9 +34,17 @@
 import { useCallback, useState, useRef, useContext, useEffect } from 'react';
 import { assertSafeServiceUrl } from '../../runtime/security/safe-remote-url.js';
 import { SessionContext } from './session-provider.js';
-import { MfaRequiredError } from '../../runtime/auth/errors.js';
+import { MfaRequiredError, parseMfaEnrollmentOffer } from '../../runtime/auth/errors.js';
+import type { IdentityAuthenticationSignInMfaEnrollmentOffer } from '../../generated/types.gen.js';
 
 const MFA_CHALLENGE_STORAGE_KEY = 'gg.auth.mfaChallenge';
+
+/** A pending first-factor challenge plus, for required-MFA subjects with no enrolled factor, the one-time enrollment offer. */
+export interface MfaChallenge {
+  mfaToken: string;
+  availableMethods: string[];
+  mfaEnrollment?: IdentityAuthenticationSignInMfaEnrollmentOffer;
+}
 
 function readStoredMfaChallenge(): UseAuthReturn['mfaChallenge'] {
   /* v8 ignore start */
@@ -44,11 +52,13 @@ function readStoredMfaChallenge(): UseAuthReturn['mfaChallenge'] {
   try {
     const raw = window.sessionStorage.getItem(MFA_CHALLENGE_STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as { mfaToken?: unknown; availableMethods?: unknown };
+    const parsed = JSON.parse(raw) as { mfaToken?: unknown; availableMethods?: unknown; mfaEnrollment?: unknown };
     if (typeof parsed.mfaToken !== 'string' || !Array.isArray(parsed.availableMethods)) return null;
+    const enrollment = parseMfaEnrollmentOffer(parsed.mfaEnrollment);
     return {
       mfaToken: parsed.mfaToken,
       availableMethods: parsed.availableMethods.filter((m): m is string => typeof m === 'string'),
+      ...(enrollment ? { mfaEnrollment: enrollment } : {}),
     };
   } catch {
     return null;
@@ -69,7 +79,7 @@ export interface AuthActionOptions {
  */
 export interface UseAuthReturn {
   /** Expiring first-factor challenge, persisted in sessionStorage so it survives route navigation. */
-  mfaChallenge: { mfaToken: string; availableMethods: string[] } | null;
+  mfaChallenge: MfaChallenge | null;
   clearMfa: () => void;
   /** Sign in with a provider */
   signIn: (
@@ -194,12 +204,13 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
             const availableMethods = Array.isArray(errorData.availableMethods)
               ? errorData.availableMethods.filter((m: unknown): m is string => typeof m === 'string')
               : [];
-            const challenge = { mfaToken: errorData.mfaToken, availableMethods };
+            const enrollment = parseMfaEnrollmentOffer(errorData.mfaEnrollment);
+            const challenge: MfaChallenge = { mfaToken: errorData.mfaToken, availableMethods, ...(enrollment ? { mfaEnrollment: enrollment } : {}) };
             /* v8 ignore start */
             try { window.sessionStorage.setItem(MFA_CHALLENGE_STORAGE_KEY, JSON.stringify(challenge)); } catch { /* storage unavailable */ }
             /* v8 ignore stop */
             setMfaChallenge(challenge);
-            throw new MfaRequiredError(undefined, { mfaToken: errorData.mfaToken, availableMethods });
+            throw new MfaRequiredError(undefined, { mfaToken: errorData.mfaToken, availableMethods, mfaEnrollment: enrollment });
           }
           throw new Error((errorData as Record<string, string>).message || (errorData as Record<string, string>).detail || 'Sign-in failed');
         }

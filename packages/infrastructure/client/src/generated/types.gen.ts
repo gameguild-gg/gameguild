@@ -14144,6 +14144,13 @@ export interface IdentityAuthenticationSessionTerminationOutput {
   terminatedCount: number;
 }
 
+/** One-time TOTP provisioning offered at sign-in when a required-MFA subject has no enrolled factor. */
+export interface IdentityAuthenticationSignInMfaEnrollmentOffer {
+  expiresAt?: string;
+  qrCodeUri?: string | null;
+  secretKey?: string | null;
+}
+
 /** DTO for sign-in response */
 export interface IdentityAuthenticationSignInOutput {
   /** JWT access token */
@@ -14168,6 +14175,7 @@ identity provider for this sign-in. Null for non-federated flows. */
   expiresIn?: number;
   /** Response message */
   message?: string | null;
+  mfaEnrollment?: IdentityAuthenticationSignInMfaEnrollmentOffer;
   /** Recovery codes returned once, only when a limited enrollment finishes with verified TOTP. */
   mfaEnrollmentBackupCodes?: string[] | null;
   /** MFA session ID if MFA is required */
@@ -29059,6 +29067,7 @@ export let IdentityAuthenticationSessionRenameErrorOutputSchema: z.ZodType<Ident
 export let IdentityAuthenticationSessionSecurityAnalysisSchema: z.ZodType<IdentityAuthenticationSessionSecurityAnalysis>;
 export let IdentityAuthenticationSessionSuccessOutputSchema: z.ZodType<IdentityAuthenticationSessionSuccessOutput>;
 export let IdentityAuthenticationSessionTerminationOutputSchema: z.ZodType<IdentityAuthenticationSessionTerminationOutput>;
+export let IdentityAuthenticationSignInMfaEnrollmentOfferSchema: z.ZodType<IdentityAuthenticationSignInMfaEnrollmentOffer>;
 export let IdentityAuthenticationSignInOutputSchema: z.ZodType<IdentityAuthenticationSignInOutput>;
 export let IdentityAuthenticationSignOutInputSchema: z.ZodType<IdentityAuthenticationSignOutInput>;
 export let IdentityAuthenticationSmsMfaChallengeInputSchema: z.ZodType<IdentityAuthenticationSmsMfaChallengeInput>;
@@ -43175,6 +43184,13 @@ IdentityAuthenticationSessionTerminationOutputSchema = z.object({
   terminatedCount: z.number().int(),
 });
 
+/** Zod schema for IdentityAuthenticationSignInMfaEnrollmentOffer. One-time TOTP provisioning offered at sign-in when a required-MFA subject has no enrolled factor. */
+IdentityAuthenticationSignInMfaEnrollmentOfferSchema = z.object({
+  expiresAt: z.string().datetime().optional(),
+  qrCodeUri: z.string().nullable().optional(),
+  secretKey: z.string().nullable().optional(),
+});
+
 /** Zod schema for IdentityAuthenticationSignInOutput. DTO for sign-in response */
 IdentityAuthenticationSignInOutputSchema = z.object({
   accessToken: z.string().nullable().optional(),
@@ -43190,6 +43206,7 @@ IdentityAuthenticationSignInOutputSchema = z.object({
   expiresAt: z.string().datetime().optional(),
   expiresIn: z.number().int().optional(),
   message: z.string().nullable().optional(),
+  mfaEnrollment: z.lazy(() => IdentityAuthenticationSignInMfaEnrollmentOfferSchema).optional(),
   mfaEnrollmentBackupCodes: z.array(z.string()).nullable().optional(),
   mfaSessionId: z.string().nullable().optional(),
   mfaToken: z.string().nullable().optional(),
