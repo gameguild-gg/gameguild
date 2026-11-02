@@ -313,32 +313,65 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
 
     #region Payment Retry Flow (P0/P1)
 
+    // Issue #1205 G-1: the manual invoice-payment retry now enforces the authenticated
+    // tenant/user ownership contract (same as account-credit settlement) before
+    // dispatching the real payment retry.
+
     [Fact]
-    public async Task PaymentRetry_AfterFailure_ShouldBeScheduled()
+    public async Task PaymentRetry_WithoutAuthentication_IsRejected()
     {
-        // Arrange
         var subscriptionId = await SeedActiveSubscriptionAsync();
         var invoiceId = await SeedFailedInvoiceAsync(subscriptionId);
 
-        // Act
+        _client.DefaultRequestHeaders.Authorization = null;
         var response = await _client.PostAsync($"/api/v1/billing/invoices/{invoiceId}/retry", null);
 
-        // Assert
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Accepted);
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        _client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "test");
+    }
+
+    [Fact]
+    public async Task PaymentRetry_FromForeignUser_IsForbidden()
+    {
+        var (subscriptionId, ownerId) = await SeedActiveSubscriptionWithOwnerAsync();
+        var invoiceId = await SeedFailedInvoiceAsync(subscriptionId);
+
+        _client.DefaultRequestHeaders.Remove("X-Test-Subject");
+        _client.DefaultRequestHeaders.Add("X-Test-Subject", Guid.NewGuid().ToString());
+        var response = await _client.PostAsync($"/api/v1/billing/invoices/{invoiceId}/retry", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        _client.DefaultRequestHeaders.Remove("X-Test-Subject");
+    }
+
+    [Fact]
+    public async Task PaymentRetry_FromOwner_WithoutPaymentBinding_IsRejected()
+    {
+        var (subscriptionId, ownerId) = await SeedActiveSubscriptionWithOwnerAsync();
+        var invoiceId = await SeedFailedInvoiceAsync(subscriptionId);
+
+        _client.DefaultRequestHeaders.Remove("X-Test-Subject");
+        _client.DefaultRequestHeaders.Add("X-Test-Subject", ownerId.ToString());
+        var response = await _client.PostAsync($"/api/v1/billing/invoices/{invoiceId}/retry", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        _client.DefaultRequestHeaders.Remove("X-Test-Subject");
     }
 
     [Fact]
     public async Task PaymentRetry_ExceedsMaxAttempts_ShouldMarkAsFailed()
     {
-        // Arrange
-        var subscriptionId = await SeedActiveSubscriptionAsync();
+        var (subscriptionId, ownerId) = await SeedActiveSubscriptionWithOwnerAsync();
         var invoiceId = await SeedInvoiceWithMaxFailuresAsync(subscriptionId);
 
-        // Act
+        _client.DefaultRequestHeaders.Remove("X-Test-Subject");
+        _client.DefaultRequestHeaders.Add("X-Test-Subject", ownerId.ToString());
         var response = await _client.PostAsync($"/api/v1/billing/invoices/{invoiceId}/retry", null);
 
-        // Assert - Should reject retry or mark permanently failed
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.BadRequest, HttpStatusCode.Conflict);
+        // Assert - the exhausted invoice is rejected as a terminal conflict
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        _client.DefaultRequestHeaders.Remove("X-Test-Subject");
     }
 
     #endregion
@@ -372,6 +405,26 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
         await dbContext.SaveChangesAsync();
 
         return subscription.Id;
+    }
+
+    /// <summary>
+    ///     Seeds an active subscription and returns its id together with the owner id, so
+    ///     actor-gated endpoints can be exercised as the owning user via X-Test-Subject
+    ///     (issue #1205 G-1 ownership contract).
+    /// </summary>
+    private async Task<(Guid SubscriptionId, Guid OwnerId)> SeedActiveSubscriptionWithOwnerAsync()
+    {
+        var subscriptionId = await SeedActiveSubscriptionAsync();
+
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var subscription = await dbContext.Set<Subscription>()
+            .FirstOrDefaultAsync(s => s.Id == subscriptionId);
+        if (subscription is null)
+            throw new InvalidOperationException($"Subscription {subscriptionId} not found");
+
+        return (subscriptionId, subscription.CreatedByUserId);
     }
 
     private async Task<Guid> SeedSubscriptionForTenantAsync(Guid tenantId)
