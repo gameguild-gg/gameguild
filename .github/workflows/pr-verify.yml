@@ -688,6 +688,19 @@ jobs:
           if (gates['secret-scan'] !== 'success' && !failed.some(item => item.startsWith('secret-scan='))) {
             failed.push(`secret-scan=${gates['secret-scan']}`);
           }
+          // Selected surfaces may not silently skip: only an explicitly
+          // unselected surface (classify output "false") may report skipped.
+          // Unknown or missing selection is treated as selected (fail closed).
+          const selection = {
+            api: process.env.API_SELECTED,
+            web: process.env.WEB_SELECTED,
+          };
+          for (const [name, selected] of Object.entries(selection)) {
+            if (selected === 'false' && gates[name] === 'skipped') continue;
+            if (gates[name] !== 'success' && !failed.some(item => item.startsWith(`${name}=`))) {
+              failed.push(`${name}=${gates[name]}`);
+            }
+          }
           if (process.env.ECONOMY_SELECTED === 'true') {
             for (const name of ['economy', 'economy-api', 'economy-client', 'economy-coverage', 'economy-regression']) {
               if (gates[name] !== 'success' && !failed.some(item => item.startsWith(`${name}=`))) {
