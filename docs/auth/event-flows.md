@@ -269,3 +269,82 @@ flowchart TD
         IRSK -- "email lost" --> LOST["no retry row no replay<br/>no notification history"]
     end
     INLINE -.->|"should join the durable path"| SEND
+```
+
+## 4. Cross-module edges
+
+### 4.1 Auth publishes → other modules consume
+
+| Event | Consumer module | Registration / subscription file:line | Handler file:line | Side effect in consumer module |
+| --- | --- | --- | --- | --- |
+| `UserCreatedEvent` | Identity.Authentication (self) | `Modules/GameGuild.Identity.Authentication/Extensions/DependencyInjection.cs:62` | `Handlers/SendWelcomeEmailHandler.cs:18` | welcome email notification row (delegates to Notifications) |
+| `UserCreatedEvent` | Identity.Authentication (self) | `Modules/GameGuild.Identity.Authentication/Extensions/DependencyInjection.cs:63` | `Handlers/LogAnalyticsEventHandler.cs:13` | log line (real analytics sink PLANNED) |
+| `UserCreatedEvent` | Resources — quotas | `Modules/GameGuild.Resources/Extensions/DependencyInjectionInfrastructure.cs:143` | `Modules/GameGuild.Resources/Handlers/QuotaLedgerEventHandler.cs:11` | +1 Users quota ledger entry |
+| `UserCreatedEvent` | Resources — cost accounting | `Modules/GameGuild.Resources/Extensions/DependencyInjectionInfrastructure.cs:150` | `Modules/GameGuild.Resources/CostAccounting/CostAccountingEventHandler.cs:23` | internal usage ledger entry |
+| `UseCaseOperationOccurredV1` (every auth command) | Resources — cost accounting | `Modules/GameGuild.Resources/Extensions/DependencyInjectionInfrastructure.cs:149` | `Modules/GameGuild.Resources/CostAccounting/CostAccountingEventHandler.cs:20-21` | per-operation cost entry |
+| `NewLoginDetectedV1` | API host — security bridge (routes into Notifications) | `GameGuild.API/Core/Eventing/EventTransportServiceCollectionExtensions.cs:23` | `GameGuild.API/Core/Security/NewLoginAlertHandler.cs:33` | NotificationType.Security email row via `INotificationService` (`:70,81`) |
+| `SuspiciousLoginDetectedV1` | API host — security bridge (routes into Notifications) | `EventTransportServiceCollectionExtensions.cs:19` | `GameGuild.API/Core/Security/SuspiciousLoginAlertHandler.cs:22` | urgent NotificationType.Security email (`:44,53`) + audit row (`:56`) |
+| `SuspiciousLoginDetectedV1` | API host — containment (writes back into auth token revocation) | `EventTransportServiceCollectionExtensions.cs:20` | `GameGuild.API/Core/Security/RiskEventSessionRevocationHandler.cs:52` | revoke sessions + `RevokeAllUserTokensAsync` (`:103`) + audit (`:117-121`) |
+| `RefreshTokenReplayContainedV1` | API host — security bridge (routes into Notifications) | `EventTransportServiceCollectionExtensions.cs:18` | `GameGuild.API/Core/Security/RefreshTokenReplayAlertHandler.cs:14` | critical NotificationType.Security row (`:32`) + audit (`:36`) |
+| `AuthenticationAuditEvent` (sink stream, 20+ producer files) | Compliance.Audit | interface binding `Modules/GameGuild.Compliance.Audit/Extensions/AuditModule.cs` | `Modules/GameGuild.Compliance.Audit/Services/CentralAuthenticationAuditEventSink.cs:16` | `AuditLog` row via `ISecurityEventLogger`, spool fallback, SIEM forward |
+| `ApiKeyAuditEvent` (sink stream) | Compliance.Audit | `Modules/GameGuild.Compliance.Audit/Extensions/AuditModule.cs:136` | `CentralApiKeyAuditEventSink` (same registration) | API-key lifecycle AuditLog row |
+
+Delivery for the first five rows is the shared outbox worker (no per-module subscription config — the dispatcher resolves every registered `IIntegrationEventHandler<T>` at dispatch time, `OutboxDispatcher.cs:153-160`). The sink rows are in-process interface calls.
+
+**Notifications module** consumes auth events only transitively: the host-side alert handlers above call `INotificationService.SendAsync`, which persists into the Notifications store. **Analytics** module has no handler for any auth event — the only analytics reaction to sign-up is the log-only `LogAnalyticsEventHandler` inside auth itself. **Economy** (`Finance.Economy`) has no handler for any auth event; its `EconomyPostingAcceptedEventV1` flows the other way into Resources cost accounting.
+
+### 4.2 Auth consumes ← other modules
+
+| Event | Producing module | Producer file:line | Auth consumer file:line | Registration | Side effect |
+| --- | --- | --- | --- | --- | --- |
+| `UserCreatedEvent` | Identity.Users | `Modules/GameGuild.Identity.Users/Commands/CreateUser/CreateUserCommandHandler.cs:20` (contract `Modules/GameGuild.Identity.Users/Architecture/UseCaseEventContracts.g.cs:17` — `ExpectedEventTypes UserCreatedEvent`, `QuotaImpact +1 Users`) | `Handlers/SendWelcomeEmailHandler.cs:18`, `Handlers/LogAnalyticsEventHandler.cs:13` | `Extensions/DependencyInjection.cs:62-63` | welcome email + analytics log |
+| `UserCreatedEvent` | Identity.Authentication (self, local sign-up only) | `Services/LocalAuthService.cs:638` | same handlers | same | same — see #1182 for the coverage hole |
+
+That is the complete inbound list: no other `IIntegrationEventHandler<>` implementation exists inside the auth module.
+
+## 5. Gaps
+
+### 5.1 Orphan producers and consumers
+
+| # | Gap | Evidence | Status |
+| --- | --- | --- | --- |
+| 1 | `UserCreatedEvent` produced only by local sign-up — OAuth/JIT-provisioned accounts never emit it, so they get no welcome email, no quota entry, no cost entry, no analytics | auth producer `Services/LocalAuthService.cs:638` only; federated provisioning `Services/OAuthAuthService.cs:763` adds the user with no event; consumers `SendWelcomeEmailHandler.cs:18` + `QuotaLedgerEventHandler.cs:11` therefore never fire for those accounts | **Filed — #1182** |
+| 2 | Per-jti access-token deny-list checked on every request but no auth path populates it | check `Middleware/TokenRevocationMiddleware.cs:56-63`; the only `RevokeTokenAsync(jti …)` caller is logout `Handlers/LogoutHandler.cs:73` (and `RevokeAllUserTokensAsync` at `:41`), so sign-out-token jtis only; `Commands/RevokeTokenCommand`/`RevokeAllUserTokensCommand` revoke refresh-token lineage, not outstanding access-token jtis | **Filed — #1179** |
+| 3 | Nine in-process events with handlers but no producer anywhere (dead handlers) | `UserSignedInEvent`, `AuthenticationFailedEvent`, `MfaEnabledEvent`, `MfaDisabledEvent`, `MfaVerificationFailedEvent`, `MfaVerificationSucceededEvent`, `RefreshTokenGeneratedEvent`, `RefreshTokenUsedEvent`, `RefreshTokenRevokedEvent` — definitions in `Events/*.cs`, handlers in `Handlers/UserSignedInEventHandler.cs:11`, `Handlers/AuthenticationFailedEventHandler.cs:11`, `Handlers/MfaEventHandler.cs:14,26,38,51`, `Handlers/RefreshTokenEventHandler.cs:13,25,39`; no subtype or construction site exists in `apps/api/Source` | **NEW — no issue found** |
+| 4 | Four fully orphaned event definitions (no producer, no consumer) | `Events/UserSignedUpEvent.cs:8`, `Events/MfaVerifiedEvent.cs:8`, `Events/TokenRefreshedEvent.cs:8`, `Events/TokenRevokedEvent.cs:8` | **NEW — no issue found** |
+| 5 | `UserSignedUpNotification` has consumers but no direct producer — its `INotificationHandler` registrations can only ever fire via the durable `UserCreatedEvent` adapter inside `SendWelcomeEmailHandler.cs:27` | `Events/UserSignedUpNotification.cs:8`; consumers `Handlers/SendWelcomeEmailHandler.cs:36`, `Handlers/LogAnalyticsEventHandler.cs:22`; no `publisher.Publish(new UserSignedUpNotification` exists | **NEW — vestigial pair, no issue found** |
+| 6 | `SuspiciousLoginDetectedV1` recorded only from the local password sign-in risk path — orchestrated, polymorphic, federated and MFA sign-in paths never call the publisher, so brute-force/impossible-travel containment revocation does not cover them | sole caller `Services/LocalAuthService.cs:501` (`ISuspiciousLoginAlertPublisher` referenced nowhere else); consumers `RiskEventSessionRevocationHandler.cs:52` + `SuspiciousLoginAlertHandler.cs:22` | **NEW — no issue found** |
+
+### 5.2 Inline side effects that bypass the outbox / durable notification queue (#1155 class)
+
+The durable pattern for auth mail is: publish notification → `Send*` handler → `INotificationService.SendAsync` → `Notification` row persisted in the command transaction → `EmailDispatcherBackgroundService` delivers out-of-band. The following sites bypass it with a direct `IEmailSender.SendAsync` inside the request — an SMTP outage or process death after commit loses the mail with no retry row and no notification history:
+
+| Site | file:line |
+| --- | --- |
+| MFA recovery requested email | `Handlers/MfaRecoveryCommandHandlers.cs:132` |
+| MFA recovery confirmation email | `Handlers/MfaRecoveryCommandHandlers.cs:227` |
+| Trusted-contact invite email | `Handlers/TrustedContactCommandHandlers.cs:103` |
+| Account-recovery approval code email | `Handlers/AccountRecoveryRequestHandlers.cs:152` |
+| Account-recovery requested email | `Handlers/AccountRecoveryRequestHandlers.cs:165` |
+| Account-recovery threshold nudge email | `Services/AccountRecoveryThresholdEvaluator.cs:96` |
+
+Rows 1-2 are the open **#1155** ("MFA recovery emails bypass durable notification queue"); rows 3-6 are additional members of the same class still unfiled (**NEW**).
+
+Inline `IHttpClientFactory` uses exist in `Services/OidcFederationService.cs:21` (federated metadata discovery — appropriate inline, request-scoped dependency) and `Services/SiemIntegrationService.cs:24` (SIEM forward, best-effort fire-and-forget from the security-event pipeline — not inside a command handler, failures do not lose the already-persisted audit row). Neither is a #1155-class durability hole.
+
+### 5.3 Events without a retry/DLQ story
+
+- Every outbox-delivered durable event has the full story (5 attempts, exponential backoff ≤ 900 s, dead-letter + replay — `InboxStore.cs:8,108-126`, `EventReplayService.cs:39`). No durable auth event lacks it.
+- In-process `INotification` dispatch has **no dispatch-level retry** (`MediatorPublisher.cs:41-49`): a handler exception surfaces inside the command and rolls it back together with the business mutation — acceptable because the durable artifact is the `Notification` row written in that same transaction; there is nothing left to retry after commit.
+- The audit-sink stream has bounded retries plus a durable local spool replayed by a background drainer (`SecurityEventLogger.cs:36-57`), except `ApiKeyLifecycleAudit.RecordAsync` which **swallows sink failures after logging** (`Commands/ApiKeyCommands.cs:448-455`) — a failed API-key audit row is not spooled at that boundary (the underlying `SecurityEventLogger` spool only engages if the call reaches it).
+- `NewLoginDetectedV1` and `SuspiciousLoginDetectedV1` are recorded in independent scopes whose commit precedes the sign-in transaction (`NewLoginAlertPublisher.cs:50-65`, `SuspiciousLoginAlertPublisher.cs:66-82`): a crash between the two commits emits an alert for a sign-in that did not complete (false positive, not lost durability) and vice versa a failed sign-in attempt that already recorded can alert without a session (deliberate defense-in-depth; documented here, not filed).
+
+### 5.4 Gap summary
+
+| Class | Count | Filed |
+| --- | --- | --- |
+| Orphan producer (produced, never consumed) | 0 | — |
+| Orphan consumer (consumed, never produced) | 9 events + 1 notification pair | #1182 (partial-coverage producer), NEW: §5.1 rows 3, 5, 6 |
+| Orphaned definitions (neither produced nor consumed) | 4 | NEW: §5.1 row 4 |
+| Inline side effects bypassing durable queue | 6 email sites | #1155 (2 sites), NEW: 4 sites |
+| Deny-list consumer never populated | 1 | #1179 |
