@@ -236,7 +236,11 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
         var now = SystemClock.UtcNow;
 
         // Three attempts spread over one ISO week (Mon..Sun) plus one attempt in a prior week.
-        var monday = now.Date.AddDays(-((int)now.DayOfWeek + 6) % 7);
+        // The seeded week is the PREVIOUS ISO week, not the current one: seeding the current
+        // week would place future timestamps when the test runs on a Monday, and the handler
+        // (correctly) excludes future timestamps from the default 30-day window — making the
+        // test fail on Mondays. The previous week is always fully inside the window.
+        var monday = now.Date.AddDays(-((int)now.DayOfWeek + 6) % 7).AddDays(-7);
         for (var day = 0; day < 3; day++)
         {
             await AddPaymentAsync(
