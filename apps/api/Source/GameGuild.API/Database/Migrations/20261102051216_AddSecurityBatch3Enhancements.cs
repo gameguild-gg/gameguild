@@ -13,14 +13,6 @@ namespace GameGuild.API.Database.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
-                name: "IX_Users_Email",
-                table: "Users");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Users_Username",
-                table: "Users");
-
-            migrationBuilder.DropIndex(
                 name: "IX_testing_events_TenantId_Status_StartsAt",
                 table: "testing_events");
 
@@ -459,20 +451,6 @@ namespace GameGuild.API.Database.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_Email",
-                table: "Users",
-                column: "Email",
-                unique: true,
-                filter: "\"DeletedAt\" IS NULL");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_Username",
-                table: "Users",
-                column: "Username",
-                unique: true,
-                filter: "\"DeletedAt\" IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_testing_events_TenantId_Status_StartsAt",
@@ -1039,14 +1017,6 @@ namespace GameGuild.API.Database.Migrations
                 name: "achievements");
 
             migrationBuilder.DropIndex(
-                name: "IX_Users_Email",
-                table: "Users");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Users_Username",
-                table: "Users");
-
-            migrationBuilder.DropIndex(
                 name: "IX_testing_events_TenantId_Status_StartsAt",
                 table: "testing_events");
 
@@ -1105,18 +1075,6 @@ namespace GameGuild.API.Database.Migrations
             migrationBuilder.DropColumn(
                 name: "PasswordChangedAt",
                 table: "Users");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_Email",
-                table: "Users",
-                column: "Email",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_Username",
-                table: "Users",
-                column: "Username",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_testing_events_TenantId_Status_StartsAt",

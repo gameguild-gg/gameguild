@@ -263,7 +263,9 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
 
     private static GameGuild.Identity.Users.User SyntheticUser(Guid userId)
     {
-        var user = GameGuild.Identity.Users.User.Create($"mfa-{userId:N}@example.test", "Synthetic MFA owner");
+        // The handle is generated from the display name, so the marker keeps every
+        // synthetic owner's username unique under the partial unique index.
+        var user = GameGuild.Identity.Users.User.Create($"mfa-{userId:N}@example.test", $"Synthetic MFA owner {userId:N}");
         user.Id = userId;
         return user;
     }

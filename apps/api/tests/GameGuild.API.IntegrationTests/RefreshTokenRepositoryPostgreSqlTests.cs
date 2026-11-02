@@ -238,7 +238,9 @@ public sealed class RefreshTokenRepositoryPostgreSqlTests(ApiPostgreSqlFixture f
 
     private static User SyntheticUser(Guid userId)
     {
-        var user = User.Create($"rt-{userId:N}@example.test", "Synthetic refresh owner");
+        // The handle is generated from the display name, so the marker keeps every
+        // synthetic owner's username unique under the partial unique index.
+        var user = User.Create($"rt-{userId:N}@example.test", $"Synthetic refresh owner {userId:N}");
         user.Id = userId;
         return user;
     }

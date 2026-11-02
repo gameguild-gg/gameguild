@@ -66,14 +66,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.PasswordHistoryHashes).HasMaxLength(2600);
         builder.Property(x => x.PasswordChangedAt);
 
-        // Issue #1157: sign-in and lookup resolve accounts by email/handle and only ever
-        // consider live accounts, so the unique indexes become partial — soft-deleting a
-        // user releases its email and handle for reuse while live rows stay unique.
-        builder.HasIndex(x => x.Email)
-            .IsUnique()
-            .HasFilter("\"DeletedAt\" IS NULL");
-        builder.HasIndex(x => x.Username)
-            .IsUnique()
-            .HasFilter("\"DeletedAt\" IS NULL");
+        // Issue #1157 note: the Email/Username unique indexes deliberately stay
+        // unfiltered — the platform's reviewed contract is that soft-deleted users
+        // RETAIN their email and handle (see UsernameModelContractTests), so no
+        // partial identifier indexes are added to this table.
     }
 }

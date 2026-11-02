@@ -324,7 +324,7 @@ public sealed class RefreshTokenLineagePostgreSqlTests(ApiPostgreSqlFixture fixt
             .ToListAsync();
         foreach (var ownerId in owners.Where(id => !existing.Contains(id)))
         {
-            var owner = GameGuild.Identity.Users.User.Create($"lineage-{ownerId:N}@example.test", "Synthetic lineage owner");
+            var owner = GameGuild.Identity.Users.User.Create($"lineage-{ownerId:N}@example.test", $"Synthetic lineage owner {ownerId:N}");
             owner.Id = ownerId;
             db.Set<GameGuild.Identity.Users.User>().Add(owner);
         }
