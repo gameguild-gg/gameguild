@@ -51,6 +51,7 @@ internal static class Runner
             Assert.StartsWith("Microsoft.AspNetCore.Server.Kestrel", server.GetType().Namespace!);
             var address = new Uri(Assert.Single(server.Features.Get<IServerAddressesFeature>()!.Addresses));
             Assert.True(address.IsLoopback && address.Scheme == "http" && address.Port > 0);
+            await AssertMustExistEndpointsAsync(address, evidence);
             string accessToken;
             await using (var scope = factory.Services.CreateAsyncScope())
             {
@@ -160,6 +161,42 @@ internal static class Runner
         {
             await fixture.DisposeAsync();
         }
+    }
+
+    /// <summary>
+    ///     Wiring smoke (issues #1154/#1181 class): a rotating sample of "must-exist"
+    ///     endpoints is probed on the real pipeline with an INVALID bearer — the
+    ///     assertion is only "not 404" (routing + auth wiring exist), so nothing is
+    ///     executed and no session state is touched. A removed or renamed endpoint
+    ///     regresses the hosted acceptance run instead of surfacing only in manual QA.
+    /// </summary>
+    private static async Task AssertMustExistEndpointsAsync(Uri address, string evidence)
+    {
+        // (method, path) probes; each run exercises two of them so the sample
+        // rotates across hosted runs while the step stays small.
+        var probes = new (string Method, string Path)[]
+        {
+            ("POST", "/api/v1/auth/sign-out"),
+            ("GET", "/api/v1/auth/sessions"),
+            ("GET", "/api/v1/auth/mfa/methods"),
+            ("GET", "/api/v1/auth/session-state"),
+        };
+        var offset = DateTimeOffset.UtcNow.DayOfYear % probes.Length;
+        var sampled = new[] { probes[offset], probes[(offset + 1) % probes.Length] };
+        using var http = new HttpClient { BaseAddress = address };
+        foreach (var probe in sampled)
+        {
+            using var request = new HttpRequestMessage(new HttpMethod(probe.Method), probe.Path);
+            request.Headers.Authorization = new("Bearer", "invalid-wiring-smoke-token");
+            using var response = await http.SendAsync(request);
+            Assert.True(
+                response.StatusCode != HttpStatusCode.NotFound,
+                $"Must-exist endpoint {probe.Method} {probe.Path} returned 404 — endpoint wiring regressed.");
+        }
+
+        await File.WriteAllTextAsync(
+            Path.Combine(evidence, "must-exist-endpoints.json"),
+            JsonSerializer.Serialize(new { passed = true, probes = probes.Length, sampled }, JsonOptions));
     }
 
     private static async Task<Account> SeedAsync(IServiceProvider services)
