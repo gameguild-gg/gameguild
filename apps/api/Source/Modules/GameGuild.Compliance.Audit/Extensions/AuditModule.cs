@@ -142,6 +142,10 @@ public static class AuditModule
         services.AddScoped<GameGuild.Content.Pages.IContentPagesAuditEventSink, CentralContentPagesAuditEventSink>();
         services.AddScoped<GameGuild.Learning.ILearningAuditEventSink, CentralLearningAuditEventSink>();
         services.AddScoped<GameGuild.Teams.ITeamsAuditEventSink, CentralTeamsAuditEventSink>();
+        // Central bridge for the role-assignment lifecycle (issue #1204): the
+        // RoleAssigned/RoleRevoked taxonomy action types the compliance event-coverage
+        // checks expect finally have producers — recorded transactionally, fail closed.
+        services.AddScoped<GameGuild.Identity.Authentication.IRoleAssignmentAuditEventSink, CentralRoleAssignmentAuditEventSink>();
         // Central bridge for consent / data subject request lifecycle events (issue #186): consent
         // state changes and DSAR transitions are privacy events in the security event pipeline.
         services.AddScoped<GameGuild.Compliance.Consent.IConsentAuditEventSink, CentralConsentAuditEventSink>();
