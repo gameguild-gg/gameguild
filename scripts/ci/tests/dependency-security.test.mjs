@@ -525,7 +525,7 @@ for (const packageRoot of installedConsumers("follow-redirects")) {
   for (const arrayHeaders of [false, true]) {
     for (const crossOrigin of [false, true]) {
       test(`${packageRoot}: ${arrayHeaders ? "array" : "object"} headers ${crossOrigin ? "strip credentials across origins" : "preserve credentials on the same origin"}`, async context => {
-        assert.equal(require(join(packageRoot, "package.json")).version, "1.16.1");
+        assert.equal(require(join(packageRoot, "package.json")).version, "1.16.2");
         const client = require(packageRoot).http;
         const capture = (request, response) => {
           request.resume();
@@ -682,7 +682,12 @@ for (const packageRoot of installedConsumers("@modelcontextprotocol/sdk")) {
       },
     }), /issuer/i);
     assert.equal(requests, 0, "Issuer mismatch must fail before any credential-bearing request");
-    assert.equal(require(join(packageRoot, "package.json")).version, "1.32.1");
+    const sdkVersion = require(join(packageRoot, "package.json")).version;
+    const [sdkMajor, sdkMinor, sdkPatch] = sdkVersion.split("-")[0].split(".").map(Number);
+    assert.ok(
+      sdkMajor > 1 || (sdkMajor === 1 && (sdkMinor > 32 || (sdkMinor === 32 && sdkPatch >= 1))),
+      `MCP SDK ${sdkVersion} predates the reviewed OAuth issuer-binding fix in 1.32.1`,
+    );
   });
 }
 
