@@ -26,26 +26,6 @@ import { TurnstileWidget } from "@/components/antibot/turnstile-widget";
 
 const subscribeToHydration = () => () => undefined;
 
-/**
- * After this many failed submissions the CAPTCHA challenge is revealed locally
- * (issue #1082). The API keeps its own source-IP counter and may reveal it
- * earlier; both paths converge on the same widget.
- */
-const TURNSTILE_FAILURE_THRESHOLD = 3;
-
-/** The stable marker the API embeds when a Turnstile token is required. */
-const CAPTCHA_REQUIRED_MARKER = "captcha_required";
-
-function isCaptchaRequiredError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof (error as { message?: unknown }).message === "string" &&
-    (error as { message: string }).message.includes(CAPTCHA_REQUIRED_MARKER)
-  );
-}
-
 export function SignInForm({
   className,
   redirectTo = "/",
@@ -66,21 +46,11 @@ export function SignInForm({
   const { signIn, isLoading, error, clearError } = useAuth();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const [failedAttempts, setFailedAttempts] = useState(0);
   const isHydrated = useSyncExternalStore(
     subscribeToHydration,
     () => true,
     () => false,
   );
-
-  // The CAPTCHA engages after repeated failures (issue #1082): preemptively after
-  // the local counter trips, or immediately when the API's own source-IP counter
-  // flagged the attempt with the captcha_required marker. Without a configured site
-  // key the widget cannot render, so the client-side gate stays open (the API also
-  // fails open while its Turnstile secret is unset).
-  const turnstileConfigured = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
-  const captchaRequired =
-    failedAttempts >= TURNSTILE_FAILURE_THRESHOLD || isCaptchaRequiredError(error);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -104,13 +74,6 @@ export function SignInForm({
       }));
       return;
     }
-    if (captchaRequired && turnstileConfigured && !turnstileToken) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        password: "Please complete the bot verification challenge.",
-      }));
-      return;
-    }
 
     try {
       await signIn("credentials", {
@@ -127,18 +90,13 @@ export function SignInForm({
       // app-wide useAuth state (mfaChallenge) survives the navigation.
       // redirectTo rides along so the challenge returns to the caller's
       // original target (issue #864 callbackUrl flow).
-      const mfaRequired =
-        err instanceof Error && "type" in err && err.type === "MfaRequired";
-      if (mfaRequired) {
+      if (
+        err instanceof Error &&
+        "type" in err &&
+        err.type === "MfaRequired"
+      ) {
         form.reset();
         router.replace({ pathname: "/sign-in/2fa", query: { redirectTo } });
-      } else {
-        // A failed submission (issue #1082): count it toward the local CAPTCHA
-        // threshold here, in the failure handler of the submit event — not in
-        // an effect reacting to the shared error state, which would cascade
-        // renders (react-hooks/set-state-in-effect). An MFA redirect is a
-        // challenge, not a credential failure, so it does not count.
-        setFailedAttempts((count) => count + 1);
       }
       // error state is set by useAuth
     }
@@ -243,20 +201,8 @@ export function SignInForm({
                 !("type" in error && error.type === "MfaRequired") && (
                   <FieldError>{error.message}</FieldError>
                 )}
-              {captchaRequired && (
-                <Field>
-                  <FieldLabel>Bot verification</FieldLabel>
-                  <TurnstileWidget
-                    onToken={setTurnstileToken}
-                    action="sign-in"
-                    id="sign-in-turnstile"
-                  />
-                  <FieldDescription className="text-slate-400">
-                    Required after repeated failed sign-in attempts.
-                  </FieldDescription>
-                </Field>
-              )}
               <Field>
+                <TurnstileWidget onToken={setTurnstileToken} action="sign-in" id="sign-in-turnstile" />
                 <Button
                   type="submit"
                   size="lg"
