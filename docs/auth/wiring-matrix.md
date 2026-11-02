@@ -254,3 +254,243 @@ File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/Ext
 | POST /v{n}/auth/external-logins/{provider}/scopes:revoke | `RevokeExternalLoginScopesCommand` | — | `RevokeExternalLoginScopesCommandHandler (ExternalLoginHandlers.cs:158)` | scan | authz | Authentication | ExternalLoginsControllerTests.cs, SessionStateRateLimitPolicyTests.cs +1 | — | V, NI |
 | DELETE /v{n}/auth/external-logins/{provider} | `UnlinkExternalLoginCommand` | — | `UnlinkExternalLoginCommandHandler (ExternalLoginHandlers.cs:124)` | scan | authz | Authentication | ExternalLoginsControllerTests.cs, SessionStateRateLimitPolicyTests.cs +1 | — | V, NI |
 
+### GuestSessionController (2 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/GuestSessionController.cs` (class decl line 24).
+ — no class auth attribute — endpoints rely on method attributes or the authenticated-by-default policy.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/auth/guest-session | `IssueGuestSessionCommand` | — | `IssueGuestSessionHandler (IssueGuestSessionHandler.cs:16)` | scan+expl | anon ✓registry | GuestIssuance | GuestSessionServiceTests.cs | — | V, NI |
+| GET /v{n}/auth/guest-session | — none | n/a | — (none) | n/a | authz | — global | — | — | NC, NU, NI |
+
+### KeyRotationController (3 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/KeyRotationController.cs` (class decl line 20).
+ — class `[Authorize(Policy = Policies.SystemConfigurationManage)]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /v{n}/auth/signing-keys | — none | n/a | — (none) | n/a | authz | — global | MaxCoverageTests.cs | — | NC, B, NI |
+| POST /v{n}/auth/signing-keys:rotate | `RotateSigningKeyCommand` | — | `KeyRotationCommandHandler (KeyRotationCommands.cs:9)` | scan | authz | — global | MaxCoverageTests.cs | — | V, NI |
+| POST /v{n}/auth/signing-keys:cleanup | `CleanupExpiredSigningKeysCommand` | — | `KeyRotationCommandHandler (KeyRotationCommands.cs:10)` | scan | authz | — global | MaxCoverageTests.cs | — | V, NI |
+
+### MfaController (17 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/MfaController.cs` (class decl line 19).
+ — class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /v{n}/auth/mfa | — none | n/a | — (none) | n/a | authz | — global | MaxCoverageTests2.cs | — | NC, B, NI |
+| POST /v{n}/auth/mfa/totp:setup | `InitiateMfaSetupCommand` | — | `MfaMutationCommandHandler (MfaMutationCommands.cs:16)` | scan | authz | — global | MfaMutationCommandHandlerTests.cs, MaxCoverageTests2.cs | — | V, NI |
+| POST /v{n}/auth/mfa/totp:complete | `CompleteMfaSetupCommand` | — | `MfaMutationCommandHandler (MfaMutationCommands.cs:17)` | scan | authz | — global | MfaMutationCommandHandlerTests.cs, MaxCoverageTests2.cs | — | V, NI |
+| POST /v{n}/auth/mfa/verify | `VerifyMfaCodeCommand` | — | `MfaMutationCommandHandler (MfaMutationCommands.cs:18)` | scan | anon ✓registry | — global | MfaMutationCommandHandlerTests.cs, MaxCoverageTests2.cs | MfaRecoveryPostgreSqlTests.cs | V |
+| GET /v{n}/auth/mfa/backup-codes | — none | n/a | — (none) | n/a | authz | — global | MaxCoverageTests2.cs | MfaRecoveryPostgreSqlTests.cs | NC, B |
+| POST /v{n}/auth/mfa/backup-codes:regenerate | `RegenerateMfaBackupCodesCommand` | — | `MfaMutationCommandHandler (MfaMutationCommands.cs:19)` | scan | authz | — global | MfaMutationCommandHandlerTests.cs, MaxCoverageTests2.cs | MfaRecoveryPostgreSqlTests.cs | V |
+| POST /v{n}/auth/mfa/sms:setup | `StartSmsMfaEnrollmentCommand` | — | `SmsPushMfaCommandHandler (SmsPushMfaCommands.cs:31)` | scan | authz | — global | MaxCoverageTests2.cs | — | V, NI |
+| POST /v{n}/auth/mfa/sms:complete | `CompleteSmsMfaEnrollmentCommand` | — | `SmsPushMfaCommandHandler (SmsPushMfaCommands.cs:32)` | scan | authz | — global | MaxCoverageTests2.cs | — | V, NI |
+| POST /v{n}/auth/mfa/sms:challenge | `SendSmsMfaChallengeCommand` | — | `SmsPushMfaCommandHandler (SmsPushMfaCommands.cs:33)` | scan | anon ✓registry | — global | — | — | V, NU, NI |
+| POST /v{n}/auth/mfa/email:setup | `StartEmailMfaEnrollmentCommand` | `EmailMfaCommandValidators.cs:8` | `EmailMfaCommandHandler (EmailMfaCommands.cs:18)` | scan | authz | — global | — | — | NU, NI |
+| POST /v{n}/auth/mfa/email:complete | `CompleteEmailMfaEnrollmentCommand` | `EmailMfaCommandValidators.cs:17` | `EmailMfaCommandHandler (EmailMfaCommands.cs:19)` | scan | authz | — global | — | — | NU, NI |
+| POST /v{n}/auth/mfa/email:challenge | `SendEmailMfaChallengeCommand` | `EmailMfaCommandValidators.cs:33` | `EmailMfaCommandHandler (EmailMfaCommands.cs:20)` | scan | anon ✓registry | — global | — | — | NU, NI |
+| POST /v{n}/auth/mfa/push:register-device | `RegisterPushMfaDeviceCommand` | — | `SmsPushMfaCommandHandler (SmsPushMfaCommands.cs:34)` | scan | authz | — global | — | — | V, NU, NI |
+| POST /v{n}/auth/mfa/push:challenge | `IssuePushMfaChallengeCommand` | — | `SmsPushMfaCommandHandler (SmsPushMfaCommands.cs:35)` | scan | anon ✓registry | — global | — | — | V, NU, NI |
+| POST /v{n}/auth/mfa/push:respond | `RespondPushMfaChallengeCommand` | — | `SmsPushMfaCommandHandler (SmsPushMfaCommands.cs:36)` | scan | anon ✓registry | — global | — | — | V, NU, NI |
+| GET /v{n}/auth/mfa/methods | — none | n/a | — (none) | n/a | authz | — global | MaxCoverageTests2.cs | — | NC, B, NI |
+| POST /v{n}/auth/mfa:disable | `DisableMfaCommand` | — | `MfaMutationCommandHandler (MfaMutationCommands.cs:20)` | scan | authz | — global | MfaMutationCommandHandlerTests.cs, MaxCoverageTests2.cs | — | V, NI |
+
+### MfaRecoveryController (3 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/MfaRecoveryController.cs` (class decl line 18).
+ — class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/auth/mfa/recovery:request | `RequestMfaRecoveryCommand` | `MfaRecoveryCommandValidators.cs:5` | `RequestMfaRecoveryCommandHandler (MfaRecoveryCommandHandlers.cs:47)` | scan+expl | anon ✓registry | — global | MfaRecoveryCommandHandlersTests.cs | MfaRecoveryPostgreSqlTests.cs | ok |
+| POST /v{n}/auth/mfa/recovery:continue | `ContinueMfaRecoveryCommand` | `MfaRecoveryCommandValidators.cs:16` | `ContinueMfaRecoveryCommandHandler (MfaRecoveryCommandHandlers.cs:151)` | scan+expl | anon ✓registry | — global | MfaRecoveryCommandHandlersTests.cs | MfaRecoveryPostgreSqlTests.cs | ok |
+| POST /v{n}/auth/mfa/recovery:confirm | `ConfirmMfaRecoveryCommand` | `MfaRecoveryCommandValidators.cs:26` | `ConfirmMfaRecoveryCommandHandler (MfaRecoveryCommandHandlers.cs:245)` | scan+expl | anon ✓registry | — global | MfaRecoveryCommandHandlersTests.cs | MfaRecoveryPostgreSqlTests.cs | ok |
+
+### OrchestratedAuthController (5 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/OrchestratedAuthController.cs` (class decl line 24).
+ — class `[Authorize]`; class `[EnableRateLimiting(RateLimitPolicies.Authentication)]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/auth/orchestrated:initiate | `InitiateOrchestratedAuthenticationCommand` | `OrchestratedAuthenticationCommandValidators.cs:8` | `InitiateOrchestratedAuthenticationHandler (OrchestratedAuthenticationHandlers.cs:20)` | scan | anon ✓registry | Authentication | OrchestratedAuthenticationWiringTests.cs | — | NI |
+| POST /v{n}/auth/orchestrated/{flowId}:process-step | `ProcessOrchestratedAuthenticationStepCommand` | `OrchestratedAuthenticationCommandValidators.cs:27` | `ProcessOrchestratedAuthenticationStepHandler (OrchestratedAuthenticationHandlers.cs:64)` | scan | anon ✓registry | Authentication | OrchestratedAuthenticationWiringTests.cs | — | NI |
+| POST /v{n}/auth/orchestrated/{flowId}:complete | `CompleteOrchestratedAuthenticationCommand` | `OrchestratedAuthenticationCommandValidators.cs:50` | `CompleteOrchestratedAuthenticationHandler (OrchestratedAuthenticationHandlers.cs:99)` | scan | anon ✓registry | Authentication | OrchestratedAuthenticationWiringTests.cs | — | NI |
+| GET /v{n}/auth/orchestrated/{flowId} | `GetOrchestratedAuthenticationFlowStateQuery` | — | `GetOrchestratedAuthenticationFlowStateHandler (OrchestratedAuthenticationHandlers.cs:151)` | scan | anon ✓registry | Authentication | OrchestratedAuthenticationWiringTests.cs | — | VQ, NI |
+| POST /v{n}/auth/orchestrated/{flowId}:abandon | `AbandonOrchestratedAuthenticationCommand` | `OrchestratedAuthenticationCommandValidators.cs:63` | `AbandonOrchestratedAuthenticationHandler (OrchestratedAuthenticationHandlers.cs:127)` | scan | anon ✓registry | Authentication | OrchestratedAuthenticationWiringTests.cs | — | NI |
+
+### PermissionAdminController (9 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/PermissionAdminController.cs` (class decl line 39).
+ — class route prefix `v{version:apiVersion}/permissions`; class `[Authorize]`; class `[EnableRateLimiting(RateLimitPolicies.Authorization)]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /v{n}/tenants/{tenantId:guid}/permissions/analytics | `GetPermissionAnalyticsQuery` | — | **MISSING** | — | authz | Authorization | AdminAnalyticsControllerTests.cs | — | VQ, H, NI |
+| GET /v{n}/permissions/audit-trail | `GetPermissionAuditTrailQuery` | — | **MISSING** | — | authz | Authorization | AdminAnalyticsControllerTests.cs | — | VQ, H, NI |
+| GET /v{n}/permissions/cache/stats | `GetPermissionCacheStatsQuery` | — | `GetPermissionCacheStatsQueryHandler (GetPermissionCacheStatsQueryHandler.cs:10)` | scan+expl | authz | Authorization | AdminAnalyticsControllerTests.cs, PermissionCacheStatsQueryHandlerTests.cs | — | VQ, NI |
+| POST /v{n}/permissions/cache:clear | `ClearPermissionCacheCommand` | — | `ClearPermissionCacheCommandHandler (ClearPermissionCacheCommandHandler.cs:33)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs, PermissionCommandSecurityTests.cs | AccessControlIntegrationTests.cs | V |
+| POST /v{n}/permissions/cache:warm | `WarmPermissionCacheCommand` | — | `WarmPermissionCacheCommandHandler (WarmPermissionCacheCommand.cs:34)` | scan+expl | authz | Authorization | WarmPermissionCacheCommandHandlerTests.cs | — | V, NI |
+| GET /v{n}/permissions/cache/keys | `GetPermissionCacheKeysQuery` | — | `GetPermissionCacheKeysQueryHandler (GetPermissionCacheKeysQueryHandler.cs:9)` | scan+expl | authz | Authorization | PermissionCacheKeysControllerTests.cs, PermissionCacheKeysQueryHandlerTests.cs | — | VQ, NI |
+| GET /v{n}/permissions/cache/keys:inspect | `GetPermissionCacheKeyQuery` | — | `GetPermissionCacheKeyQueryHandler (GetPermissionCacheKeysQueryHandler.cs:63)` | scan+expl | authz | Authorization | PermissionCacheKeysControllerTests.cs, PermissionCacheKeysQueryHandlerTests.cs | — | VQ, NI |
+| GET /v{n}/permissions/templates | `GetPermissionTemplatesQuery` | — | `GetPermissionTemplatesQueryHandler (GetPermissionTemplatesQueryHandler.cs:14)` | scan+expl | authz | Authorization | AuthenticationCoverageCompletionTests.cs, AdminAnalyticsControllerTests.cs | — | VQ, NI |
+| POST /v{n}/permissions/templates/{templateId:guid}:apply | `ApplyPermissionTemplateCommand` | — | `ApplyPermissionTemplateCommandHandler (ApplyPermissionTemplateCommandHandler.cs:32)` | scan+expl | authz | Authorization | AuthenticationCoverageCompletionTests.cs, AdminAnalyticsControllerTests.cs +1 | — | V, NI |
+
+### PermissionEvaluationController (9 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/PermissionEvaluationController.cs` (class decl line 28).
+ — class route prefix `v{version:apiVersion}/permissions`; class `[Authorize]`; class `[EnableRateLimiting(RateLimitPolicies.Authorization)]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/permissions/tenant:check | `HasTenantPermissionQuery` | — | `HasTenantPermissionQueryHandler (PermissionEvaluationQueryHandlers.cs:32)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs, HasTenantPermissionQueryHandlerTests.cs +1 | AccessControlIntegrationTests.cs | VQ |
+| GET /v{n}/permissions/tenant | `GetTenantPermissionsQuery` | — | `GetTenantPermissionsQueryHandler (TenantPermissionQueries.cs:118)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs, AuthorizationCoverageCompletionTests.cs +5 | — | VQ, NI |
+| POST /v{n}/permissions/content-type:check | `HasContentTypePermissionQuery` | — | `HasContentTypePermissionQueryHandler (PermissionEvaluationQueryHandlers.cs:128)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs | — | VQ, NI |
+| GET /v{n}/permissions/content-type | `GetContentTypePermissionsQuery` | — | `GetContentTypePermissionsQueryHandler (PermissionEvaluationQueryHandlers.cs:65)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs | — | VQ, NI |
+| POST /v{n}/permissions/resource:check | `HasResourcePermissionQuery` | — | `HasResourcePermissionQueryHandler (PermissionEvaluationQueryHandlers.cs:211)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs | — | VQ, NI |
+| GET /v{n}/permissions/resource | `GetResourcePermissionsQuery` | — | `GetResourcePermissionsQueryHandler (PermissionEvaluationQueryHandlers.cs:181)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs | — | VQ, NI |
+| GET /v{n}/users/{userId:guid}/permissions | `GetUserPermissionsQuery` | — | `GetUserPermissionsQueryHandler (PermissionEvaluationQueryHandlers.cs:244)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs | — | VQ, NI |
+| GET /v{n}/users/{userId:guid}/permissions/effective | `GetEffectivePermissionsQuery` | — | `GetEffectivePermissionsQueryHandler (PermissionEvaluationQueryHandlers.cs:332)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs, AuthorizationCoverageCompletionTests.cs +1 | — | VQ, NI |
+| POST /v{n}/permissions/:resolve-hierarchy | `ResolvePermissionHierarchyQuery` | — | `ResolvePermissionHierarchyQueryHandler (PermissionEvaluationQueryHandlers.cs:388)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs | — | VQ, NI |
+
+### PermissionGrantsController (12 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/PermissionGrantsController.cs` (class decl line 34).
+ — class route prefix `v{version:apiVersion}/permissions`; class `[Authorize]`; class `[EnableRateLimiting(RateLimitPolicies.Authorization)]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/permissions/tenant-grants | `GrantTenantPermissionCommand` | — | `GrantTenantPermissionCommandHandler (TenantPermissionCommands.cs:52)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs, AuthorizationCoverageCompletionTests.cs +5 | — | V, NI |
+| DELETE /v{n}/permissions/tenant-grants/{grantId:guid} | `RevokeTenantPermissionByIdCommand` | — | `RevokeTenantPermissionByIdHandler (RevokeTenantPermissionByIdHandler.cs:16)` | scan | authz | Authorization | AuthenticationCoverageCompletionTests.cs, AdminAnalyticsControllerTests.cs +1 | — | V, NI |
+| POST /v{n}/permissions/tenant-grants:revoke | `RevokeTenantPermissionCommand` | — | `RevokeTenantPermissionCommandHandler (TenantPermissionCommands.cs:150)` | scan | authz | Authorization | AuthenticationCoverageCompletionTests.cs, AdminAnalyticsControllerTests.cs +5 | AccessControlIntegrationTests.cs | V |
+| POST /v{n}/permissions/tenant-grants:batch-create | `BulkGrantTenantPermissionsCommand` | — | `BulkGrantTenantPermissionsCommandHandler (BulkTenantPermissionCommandHandlers.cs:35)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs, BulkTenantPermissionCommandHandlerTests.cs +1 | — | V, NI |
+| POST /v{n}/permissions/tenant-grants:batch-delete | `BulkRevokeTenantPermissionsCommand` | — | `BulkRevokeTenantPermissionsCommandHandler (BulkTenantPermissionCommandHandlers.cs:126)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs, BulkTenantPermissionCommandHandlerTests.cs +1 | AccessControlIntegrationTests.cs | V |
+| POST /v{n}/permissions/content-type-grants | `GrantContentTypePermissionCommand` | — | **UNAVAILABLE** | fallback | authz | Authorization | AdminAnalyticsControllerTests.cs | — | V, HU, NI |
+| DELETE /v{n}/permissions/content-type-grants/{grantId:guid} | `RevokeContentTypePermissionByIdCommand` | — | `RevokeContentTypePermissionByIdHandler (RevokeContentTypePermissionByIdHandler.cs:10)` | scan | authz | Authorization | AuthenticationCoverageCompletionTests.cs, AdminAnalyticsControllerTests.cs | — | V, NI |
+| POST /v{n}/permissions/content-type-grants:revoke | `RevokeContentTypePermissionCommand` | — | **UNAVAILABLE** | fallback | authz | Authorization | AuthenticationCoverageCompletionTests.cs, AdminAnalyticsControllerTests.cs | — | V, HU, NI |
+| POST /v{n}/permissions/resource-grants | `GrantResourcePermissionCommand` | — | `GrantResourcePermissionCommandHandler (ResourcePermissionCommandHandlers.cs:27)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs | — | V, NI |
+| DELETE /v{n}/permissions/resource-grants/{grantId:guid} | `RevokeResourcePermissionByIdCommand` | — | `RevokeResourcePermissionByIdHandler (RevokeResourcePermissionByIdHandler.cs:10)` | scan | authz | Authorization | AuthenticationCoverageCompletionTests.cs, AdminAnalyticsControllerTests.cs | — | V, NI |
+| POST /v{n}/permissions/resource-grants:revoke | `RevokeResourcePermissionCommand` | — | `RevokeResourcePermissionCommandHandler (ResourcePermissionCommandHandlers.cs:152)` | scan | authz | Authorization | AuthenticationCoverageCompletionTests.cs, AdminAnalyticsControllerTests.cs | — | V, NI |
+| POST /v{n}/permissions/resource-grants:batch-create | `BulkGrantResourcePermissionsCommand` | — | `BulkGrantResourcePermissionsCommandHandler (BulkGrantResourcePermissionsCommandHandler.cs:24)` | scan | authz | Authorization | AdminAnalyticsControllerTests.cs, PermissionCommandSecurityTests.cs | — | V, NI |
+
+### RolesController (7 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/RolesController.cs` (class decl line 29).
+ — class route prefix `v{version:apiVersion}/roles`; no class auth attribute — endpoints rely on method attributes or the authenticated-by-default policy.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /v{n}/roles/{roleId:guid} | `GetRoleByIdQuery` | — | `GetRoleByIdQueryHandler (RoleQueryHandlers.cs:32)` | scan | authz | — global | AuthorizationRoleContractTests.cs, ApiKeyAndRolesControllerTests.cs +1 | — | VQ, NI |
+| PUT /v{n}/roles/{roleId:guid} | `UpdateRoleCommand` | — | `UpdateRoleCommandHandler (RoleCommandHandlers.cs:52)` | scan | authz | — global | AuthorizationRoleContractTests.cs, ApiKeyAndRolesControllerTests.cs +1 | — | V, NI |
+| DELETE /v{n}/roles/{roleId:guid} | `DeleteRoleCommand` | — | `DeleteRoleCommandHandler (RoleCommandHandlers.cs:126)` | scan | authz | — global | AuthorizationRoleContractTests.cs, ApiKeyAndRolesControllerTests.cs +1 | — | V, NI |
+| GET /v{n}/roles/user/{userId:guid} | `GetUserRolesQuery` | — | `GetUserRolesQueryHandler (RoleQueryHandlers.cs:60)` | scan | authz | — global | AuthorizationRoleContractTests.cs, ApiKeyAndRolesControllerTests.cs +1 | — | VQ, NI |
+| POST /v{n}/roles/:assign | `AssignRoleToUserCommand` | — | `AssignRoleToUserCommandHandler (RoleCommandHandlers.cs:162)` | scan | authz | — global | AuthorizationRoleContractTests.cs, ApiKeyAndRolesControllerTests.cs +1 | — | V, NI |
+| POST /v{n}/roles/:bulk-assign | `BulkAssignRolesCommand` | — | `BulkAssignRolesCommandHandler (RoleCommandHandlers.cs:241)` | scan | authz | — global | AuthorizationRoleContractTests.cs, ApiKeyAndRolesControllerTests.cs +1 | — | V, NI |
+| POST /v{n}/roles/:remove | `RemoveRoleFromUserCommand` | — | `RemoveRoleFromUserCommandHandler (RoleCommandHandlers.cs:335)` | scan | authz | — global | AuthorizationRoleContractTests.cs, ApiKeyAndRolesControllerTests.cs +1 | — | V, NI |
+
+### ServiceAccountCrudController (3 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/ServiceAccountCrudController.cs` (class decl line 19).
+ — class route prefix `v{version:apiVersion}/auth/service-accounts`; no class auth attribute — endpoints rely on method attributes or the authenticated-by-default policy.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /v{n}/auth/service-accounts/{serviceAccountId:guid} | — none | n/a | — (none) | n/a | authz · RequireAdminRole | — global | MaxCoverageTests2.cs | — | NC, B, NI |
+| PATCH /v{n}/auth/service-accounts/{serviceAccountId:guid} | `PatchServiceAccountCommand` | — | `ServiceAccountMutationCommandHandler (ServiceAccountMutationCommands.cs:48)` | scan | authz · RequireAdminRole | — global | MaxCoverageTests2.cs | — | V, NI |
+| DELETE /v{n}/auth/service-accounts/{serviceAccountId:guid} | `DeactivateServiceAccountCommand` | — | `ServiceAccountMutationCommandHandler (ServiceAccountMutationCommands.cs:52)` | scan | authz · RequireAdminRole | — global | MaxCoverageTests2.cs | — | V, B, NI |
+
+### ServiceAccountOperationsController (8 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/ServiceAccountOperationsController.cs` (class decl line 18).
+ — class route prefix `v{version:apiVersion}/auth/service-accounts`; no class auth attribute — endpoints rely on method attributes or the authenticated-by-default policy.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/auth/service-accounts/{serviceAccountId:guid}:rotate-secret | `RotateServiceAccountSecretCommand` | — | `ServiceAccountMutationCommandHandler (ServiceAccountMutationCommands.cs:49)` | scan | authz · RequireAdminRole | — global | ServiceAccountOperationsControllerTests.cs | — | V, NI |
+| POST /v{n}/auth/service-accounts/{serviceAccountId:guid}:unlock | `UnlockServiceAccountCommand` | — | `ServiceAccountMutationCommandHandler (ServiceAccountMutationCommands.cs:50)` | scan | authz · RequireAdminRole | — global | ServiceAccountOperationsControllerTests.cs | — | V, NI |
+| POST /v{n}/auth/service-accounts/{serviceAccountId:guid}:lock | `LockServiceAccountCommand` | — | `ServiceAccountMutationCommandHandler (ServiceAccountMutationCommands.cs:51)` | scan | authz · RequireAdminRole | — global | ServiceAccountOperationsControllerTests.cs | — | V, B, NI |
+| GET /v{n}/auth/service-accounts/{serviceAccountId:guid}/audit-log | — none | n/a | — (none) | n/a | authz · RequireAdminRole | — global | ServiceAccountOperationsControllerTests.cs | — | NC, B, NI |
+| POST /v{n}/auth/service-accounts/{serviceAccountId:guid}:deactivate | `DeactivateServiceAccountCommand` | — | `ServiceAccountMutationCommandHandler (ServiceAccountMutationCommands.cs:52)` | scan | authz · RequireAdminRole | — global | ServiceAccountOperationsControllerTests.cs | — | V, NI |
+| POST /v{n}/auth/service-accounts/{serviceAccountId:guid}:reactivate | `ReactivateServiceAccountCommand` | — | `ServiceAccountMutationCommandHandler (ServiceAccountMutationCommands.cs:53)` | scan | authz · RequireAdminRole | — global | ServiceAccountOperationsControllerTests.cs | — | V, NI |
+| PATCH /v{n}/auth/service-accounts/{serviceAccountId:guid}/scopes | `UpdateServiceAccountScopesCommand` | — | `ServiceAccountMutationCommandHandler (ServiceAccountMutationCommands.cs:54)` | scan | authz · RequireAdminRole | — global | ServiceAccountOperationsControllerTests.cs | — | V, NI |
+| PATCH /v{n}/auth/service-accounts/{serviceAccountId:guid}/client-certificate | `BindServiceAccountCertificateCommand` | `ServiceAccountCommandValidators.cs:10` | `ServiceAccountMutationCommandHandler (ServiceAccountMutationCommands.cs:55)` | scan | authz · RequireAdminRole | — global | ServiceAccountOperationsControllerTests.cs | — | NI |
+
+### ServiceAccountTokenController (1 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/ServiceAccountTokenController.cs` (class decl line 19).
+ — class route prefix `v{version:apiVersion}/auth/service-accounts`; no class auth attribute — endpoints rely on method attributes or the authenticated-by-default policy.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/oauth/token | `IssueServiceAccountTokenCommand` | — | `ServiceAccountMutationCommandHandler (ServiceAccountMutationCommands.cs:56)` | scan | anon ✓registry | Authentication | ServiceAccountTokenControllerTests.cs | — | V, NI |
+
+### SessionController (7 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/SessionController.cs` (class decl line 18).
+ — class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /v{n}/auth/sessions | — none | n/a | — (none) | n/a | authz | — global | MaxCoverageTests2.cs, SessionControllerRenameTests.cs | ProviderSessionPostgreSqlHttpTests.cs, RefreshTokenReplayScopePostgreSqlHttpTests.cs +5 | NC, B |
+| GET /v{n}/auth/sessions:analyze-security | — none | n/a | — (none) | n/a | authz | — global | MaxCoverageTests2.cs | — | NC, B, NI |
+| DELETE /v{n}/auth/sessions/{sessionId:guid} | `TerminateSessionCommand` | — | `SessionMutationCommandHandler (SessionMutationCommands.cs:25)` | scan | authz | — global | MaxCoverageTests2.cs, TrustedDeviceSessionCommandTests.cs | — | V, B, NI |
+| PATCH /v{n}/auth/sessions/{sessionId:guid}/name | `RenameSessionCommand` | — | `SessionMutationCommandHandler (SessionMutationCommands.cs:31)` | scan | authz | — global | SessionControllerRenameTests.cs, TrustedDeviceSessionCommandTests.cs | — | V, NI |
+| POST /v{n}/auth/sessions:terminate-others | `TerminateUserSessionsCommand` | — | `SessionMutationCommandHandler (SessionMutationCommands.cs:26)` | scan | authz | — global | MaxCoverageTests2.cs, TrustedDeviceSessionCommandTests.cs | RevokeAllUserTokensPostgreSqlHttpTests.cs | V |
+| POST /v{n}/auth/sessions:terminate-all | `RevokeAllUserTokensCommand` | — | `RevokeAllUserTokensHandler (RevokeAllUserTokensCommand.cs:16)` | scan | authz | — global | AuthFacadeApiRegistrationTests.cs, RevokeAllUserTokensTests.cs +1 | RefreshTokenLifecycleAuditPostgreSqlHttpTests.cs, RevokeAllUserTokensPostgreSqlHttpTests.cs +1 | V |
+| POST /v{n}/auth/sessions:refresh | `RefreshUserSessionCommand` | — | `SessionMutationCommandHandler (SessionMutationCommands.cs:27)` | scan | authz | — global | MaxCoverageTests2.cs, TrustedDeviceSessionCommandTests.cs | — | V, NI |
+
+### StepUpController (3 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/StepUpController.cs` (class decl line 21).
+ — class route prefix `v{version:apiVersion}/auth/step-up`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/auth/step-up/challenges | `CreateStepUpChallengeCommand` | — | `StepUpCommandHandler (StepUpCommands.cs:10)` | scan | authz | — global | CommandHandlerSender.cs | — | V, NI |
+| POST /v{n}/auth/step-up/challenges/{challengeId:guid}:webauthn-options | `BeginStepUpWebAuthnCommand` | — | `StepUpCommandHandler (StepUpCommands.cs:11)` | scan | authz | — global | CommandHandlerSender.cs | — | V, NI |
+| POST /v{n}/auth/step-up/challenges/{challengeId:guid}:verify | `VerifyStepUpChallengeCommand` | — | `StepUpCommandHandler (StepUpCommands.cs:12)` | scan | authz | — global | CommandHandlerSender.cs | — | V, NI |
+
+### TrustedContactsController (2 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/TrustedContactsController.cs` (class decl line 19).
+ — class route prefix `v{version:apiVersion}/auth/trusted-contacts`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/auth/trusted-contacts/confirm | `ConfirmTrustedContactCommand` | `TrustedContactCommandValidators.cs:34` | `ConfirmTrustedContactCommandHandler (TrustedContactCommandHandlers.cs:183)` | scan+expl | anon ✓registry | — global | TrustedContactCommandHandlersTests.cs | — | NI |
+| DELETE /v{n}/auth/trusted-contacts/{contactId:guid} | `RemoveTrustedContactCommand` | `TrustedContactCommandValidators.cs:22` | `RemoveTrustedContactCommandHandler (TrustedContactCommandHandlers.cs:140)` | scan+expl | authz | — global | TrustedContactCommandHandlersTests.cs | — | NI |
+
+### TrustedDevicesController (2 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/TrustedDevicesController.cs` (class decl line 18).
+ — class route prefix `v{version:apiVersion}/auth/trusted-devices`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| DELETE /v{n}/auth/trusted-devices/{deviceId:guid} | `RevokeTrustedDeviceCommand` | — | `SessionMutationCommandHandler (SessionMutationCommands.cs:29)` | scan | authz | — global | MaxCoverageTests2.cs, TrustedDeviceSessionCommandTests.cs | — | V, NI |
+| PATCH /v{n}/auth/trusted-devices/{deviceId:guid}/name | `RenameTrustedDeviceCommand` | — | `SessionMutationCommandHandler (SessionMutationCommands.cs:30)` | scan | authz | — global | TrustedDeviceSessionCommandTests.cs | — | V, NI |
+
+### WebAuthnController (11 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/WebAuthnController.cs` (class decl line 23).
+ — class route prefix `v{version:apiVersion}/auth/webauthn`; no class auth attribute — endpoints rely on method attributes or the authenticated-by-default policy; class `[EnableRateLimiting(RateLimitPolicies.Authentication)]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/auth/webauthn/registration:begin | `BeginWebAuthnRegistrationCommand` | — | `WebAuthnMutationCommandHandler (WebAuthnMutationCommands.cs:38)` | scan | authz | Authentication | AuthenticationCoverageCompletionTests.cs, ProviderRefreshIssuanceSafetyTests.cs +2 | — | V, NI |
+| POST /v{n}/auth/webauthn/registration:complete | `CompleteWebAuthnRegistrationCommand` | — | `WebAuthnMutationCommandHandler (WebAuthnMutationCommands.cs:39)` | scan | authz | Authentication | AuthenticationCoverageCompletionTests.cs, WebAuthnControllerMalformedPayloadTests.cs +3 | — | V, NI |
+| POST /v{n}/auth/webauthn/authentication:begin | `BeginWebAuthnAuthenticationCommand` | — | `WebAuthnMutationCommandHandler (WebAuthnMutationCommands.cs:40)` | scan | anon ✓registry | Authentication | AuthenticationCoverageCompletionTests.cs, ProviderRefreshIssuanceSafetyTests.cs +2 | — | V, NI |
+| POST /v{n}/auth/webauthn/authentication:complete | `CompleteWebAuthnAuthenticationCommand` | — | `WebAuthnMutationCommandHandler (WebAuthnMutationCommands.cs:41)` | scan | anon ✓registry | Authentication | AuthenticationCoverageCompletionTests.cs, WebAuthnControllerMalformedPayloadTests.cs +3 | ProviderSessionPostgreSqlHttpTests.cs | V |
+| GET /v{n}/auth/webauthn/credentials | — none | n/a | — (none) | n/a | authz | Authentication | MaxCoverageTests.cs | — | NC, B, NI |
+| GET /v{n}/auth/webauthn/credentials/{credentialId:guid} | — none | n/a | — (none) | n/a | authz | Authentication | MaxCoverageTests.cs, WebAuthnCredentialLifecycleTests.cs | — | NC, B, NI |
+| POST /v{n}/auth/webauthn/credentials/{credentialId:guid}:verify | `VerifyWebAuthnCredentialCommand` | — | `WebAuthnMutationCommandHandler (WebAuthnMutationCommands.cs:42)` | scan | authz | Authentication | AuthenticationCoverageCompletionTests.cs, ProviderRefreshIssuanceSafetyTests.cs +2 | — | V, NI |
+| POST /v{n}/auth/webauthn/credentials/{credentialId:guid}:deactivate | `DeactivateWebAuthnCredentialCommand` | — | `WebAuthnMutationCommandHandler (WebAuthnMutationCommands.cs:44)` | scan | authz | Authentication | AuthenticationCoverageCompletionTests.cs, ProviderRefreshIssuanceSafetyTests.cs +1 | — | V, NI |
+| POST /v{n}/auth/webauthn/credentials/{credentialId:guid}:activate | `ActivateWebAuthnCredentialCommand` | — | `WebAuthnMutationCommandHandler (WebAuthnMutationCommands.cs:45)` | scan | authz | Authentication | AuthenticationCoverageCompletionTests.cs, ProviderRefreshIssuanceSafetyTests.cs +1 | — | V, NI |
+| DELETE /v{n}/auth/webauthn/credentials/{credentialId:guid} | `DeleteWebAuthnCredentialCommand` | — | `WebAuthnMutationCommandHandler (WebAuthnMutationCommands.cs:43)` | scan | authz | Authentication | AuthenticationCoverageCompletionTests.cs, ProviderRefreshIssuanceSafetyTests.cs +2 | — | V, NI |
+| PATCH /v{n}/auth/webauthn/credentials/{credentialId:guid} | `UpdateWebAuthnCredentialNameCommand` | — | `WebAuthnMutationCommandHandler (WebAuthnMutationCommands.cs:46)` | scan | authz | Authentication | AuthenticationCoverageCompletionTests.cs, ProviderRefreshIssuanceSafetyTests.cs +2 | — | V, NI |
+
