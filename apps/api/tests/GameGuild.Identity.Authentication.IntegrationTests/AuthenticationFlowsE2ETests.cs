@@ -1,11 +1,13 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using FluentAssertions;
 using Xunit;
 using GameGuild.API.Database;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
+using Nethereum.Signer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -547,173 +549,351 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
     #endregion
 
     #region Web3 Authentication E2E Tests
-    // TODO: Create concrete Web3ChallengeRequest implementation before uncommenting
-    /*
-    [Fact(Skip = "Web3ChallengeRequest is abstract - needs concrete implementation")]
+
+    // Revived (previously skipped with "Web3ChallengeRequest is abstract"): the request is
+    // now a concrete DTO (DTOs/Web3ChallengeRequest.cs) and the whole flow exists as
+    // IAuthService.GenerateWeb3ChallengeAsync / VerifyWeb3SignatureAsync behind
+    // POST /v1/auth/web3/challenge and /v1/auth/web3:verify. The SIWE configuration comes
+    // from appsettings.json (Origin=https://gameguild.gg, AllowedChainIds=["1"]), which the
+    // InMemory Testing host picks up unchanged. The signatures below are genuine EIP-191
+    // secp256k1 signatures produced with Nethereum — no cryptographic seam is stubbed.
+    // Time-based challenge expiry needs a controllable clock and is covered against the
+    // real provider by Web3AuthenticationPostgreSqlHttpTests
+    // (ChallengeLifetimeIsFiveMinutesAndExactExpirationRejectsRealSignatureWithoutIssuance).
+
+    [Fact]
     public async Task Web3Auth_CompleteFlow_ChallengeAndVerify_ShouldAuthenticateWallet()
     {
-        // Arrange
-        var walletAddress = $"0x{Guid.NewGuid():N}";
+        // Arrange - a real keypair; the wallet address is its public address
+        var walletKey = new EthECKey(Convert.ToHexString(RandomNumberGenerator.GetBytes(32)));
+        var walletAddress = walletKey.GetPublicAddress();
 
-        // Act 1: Generate Challenge
-        var challengeRequest = new GameGuild.Identity.Authentication.DTOs.Web3ChallengeRequest
+        // Edge - malformed (not 0x + 40 hex) and invalid-checksum addresses are rejected
+        // by challenge generation instead of yielding a signable message.
+        var malformedAddress = $"0x{Guid.NewGuid():N}";
+        await FluentActions.Invoking(() => _authService.GenerateWeb3ChallengeAsync(
+                new Web3ChallengeRequest { WalletAddress = malformedAddress, ChainId = "1" }))
+            .Should().ThrowAsync<ArgumentException>();
+
+        var badChecksumAddress = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAeD";
+        await FluentActions.Invoking(() => _authService.GenerateWeb3ChallengeAsync(
+                new Web3ChallengeRequest { WalletAddress = badChecksumAddress, ChainId = "1" }))
+            .Should().ThrowAsync<ArgumentException>();
+
+        // Act 1: generate the SIWE challenge through the composite auth service
+        var challengeResult = await _authService.GenerateWeb3ChallengeAsync(new Web3ChallengeRequest
         {
             WalletAddress = walletAddress,
             ChainId = "1"
-        };
+        });
 
-        var challengeResult = await _authService.GenerateWeb3ChallengeAsync(challengeRequest);
-
-        // Assert Challenge Generation
+        // Assert Challenge Generation - EIP-4361 message bound to the wallet, single-use nonce
         challengeResult.Should().NotBeNull();
-        challengeResult.Challenge.Should().NotBeNullOrEmpty();
+        challengeResult.Challenge.Should().Contain("wants you to sign in with your Ethereum account:");
+        challengeResult.Challenge.ToLowerInvariant().Should().Contain(walletAddress.ToLowerInvariant(),
+            "the challenge must be bound to the requesting wallet");
+        challengeResult.Nonce.Should().NotBeNullOrWhiteSpace();
         challengeResult.ExpiresAt.Should().BeAfter(DateTime.UtcNow);
 
-        // Act 2: Verify Signature (with mock signature)
-        var mockSignature = "0x" + string.Concat(Enumerable.Repeat("a1b2c3d4", 16));
-
-        var verifyRequest = new GameGuild.Identity.Authentication.Models.Requests.Web3VerificationRequest
+        // Act 2: sign the exact issued message with the wallet key and verify
+        var signature = new EthereumMessageSigner().EncodeUTF8AndSign(challengeResult.Challenge, walletKey);
+        var signInResult = await _authService.VerifyWeb3SignatureAsync(new Web3VerificationRequest
         {
             WalletAddress = walletAddress,
             Challenge = challengeResult.Challenge,
-            Signature = mockSignature,
+            Signature = signature,
+            Nonce = challengeResult.Nonce,
             ChainId = "1"
-        };
+        });
 
-        // Note: Actual signature verification would require Web3 library mocking
-        // This demonstrates the test flow structure
+        // Assert - complete wallet credentials issued
+        signInResult.Success.Should().BeTrue();
+        signInResult.Message.Should().Be("Web3 authentication successful");
+        signInResult.AccessToken.Should().NotBeNullOrWhiteSpace();
+        signInResult.AccessToken.Split('.').Should().HaveCount(3, "the access token must be a three-segment JWT");
+        signInResult.RefreshToken.Should().NotBeNullOrWhiteSpace();
+        signInResult.SessionId.Should().NotBeEmpty();
+        signInResult.UserId.Should().NotBeEmpty();
+        signInResult.TenantId.Should().HaveValue();
+
+        // Assert - the wallet identity was provisioned exactly once and linked to the account
+        var walletIdentifier = walletAddress.ToLowerInvariant() + "@web3.local";
+        var user = await _dbContext.Set<User>().SingleAsync(u => u.Email == walletIdentifier);
+        user.Id.Should().Be(signInResult.UserId);
+        var externalLogin = await _dbContext.Set<ExternalLogin>().SingleAsync(
+            login => login.Provider == "web3" && login.ProviderKey == walletAddress.ToLowerInvariant());
+        externalLogin.UserId.Should().Be(user.Id);
+
+        // Assert - the session persists with only the hashed refresh token
+        var hasher = _scope.ServiceProvider.GetRequiredService<IRefreshTokenHasher>();
+        var session = await _dbContext.Set<UserSession>().SingleAsync(s => s.Id == signInResult.SessionId);
+        session.UserId.Should().Be(user.Id);
+        session.IsActive.Should().BeTrue();
+        session.RefreshToken.Should().Be(hasher.HashToken(signInResult.RefreshToken));
     }
-    */
 
-    // TODO: Create GenerateWeb3ChallengeRequest and VerifyWeb3SignatureRequest types before uncommenting
-    /*
-    [Fact(Skip = "Web3ChallengeRequest is abstract - needs concrete implementation")]
-    public async Task Web3Auth_ExpiredChallenge_ShouldFailVerification()
+    [Fact]
+    public async Task Web3Auth_UnknownOrConsumedChallenge_ShouldFailVerificationWithoutIssuingCredentials()
     {
-        // Arrange
-        var walletAddress = $"0x{Guid.NewGuid():N}";
-
-        var challengeRequest = new GenerateWeb3ChallengeRequest
-        {
-            WalletAddress = walletAddress
-        };
-
-        var challengeResult = await _authService.GenerateWeb3ChallengeAsync(challengeRequest);
-
-        // Simulate challenge expiration by waiting or manipulating timestamp
-        // In real test, we'd mock the time provider
-
-        var verifyRequest = new VerifyWeb3SignatureRequest
+        // Arrange - a live challenge for a fresh wallet
+        var walletKey = new EthECKey(Convert.ToHexString(RandomNumberGenerator.GetBytes(32)));
+        var walletAddress = walletKey.GetPublicAddress();
+        var challengeResult = await _authService.GenerateWeb3ChallengeAsync(new Web3ChallengeRequest
         {
             WalletAddress = walletAddress,
-            Challenge = "expired_challenge",
-            Signature = "0x" + string.Concat(Enumerable.Repeat("a1b2c3d4", 16))
-        };
+            ChainId = "1"
+        });
+        var walletIdentifier = walletAddress.ToLowerInvariant() + "@web3.local";
+        var sessionsBefore = await _dbContext.Set<UserSession>().CountAsync();
 
-        // Act & Assert - Should fail due to expired/invalid challenge
-        // await FluentActions.Invoking(async () => await _authService.VerifyWeb3SignatureAsync(verifyRequest))
-        //     .Should().ThrowAsync<Exception>();
+        // Act 1 - verify against a challenge that was never issued (the shape an expired,
+        // evicted or fabricated challenge takes from the verifier's point of view). The
+        // signature itself is genuine, so the mismatch must be caught on the challenge.
+        var fabricatedChallenge = challengeResult.Challenge + "\nExpired-Block";
+        await FluentActions.Invoking(() => _authService.VerifyWeb3SignatureAsync(new Web3VerificationRequest
+            {
+                WalletAddress = walletAddress,
+                Challenge = fabricatedChallenge,
+                Signature = new EthereumMessageSigner().EncodeUTF8AndSign(fabricatedChallenge, walletKey),
+                Nonce = challengeResult.Nonce,
+                ChainId = "1"
+            }))
+            .Should().ThrowAsync<AuthenticationRequiredException>()
+            .WithMessage("Invalid Web3 signature");
+
+        // Assert - fail closed: no account, no wallet link, no session, audited attempt
+        (await _dbContext.Set<User>().AnyAsync(u => u.Email == walletIdentifier)).Should().BeFalse();
+        (await _dbContext.Set<ExternalLogin>()
+            .AnyAsync(login => login.Provider == "web3" && login.ProviderKey == walletAddress.ToLowerInvariant()))
+            .Should().BeFalse();
+        (await _dbContext.Set<UserSession>().CountAsync()).Should().Be(sessionsBefore);
+        (await _dbContext.Set<AuthenticationAttempt>()
+            .AnyAsync(attempt => !attempt.IsSuccessful
+                && attempt.Email == "web3@audit.invalid"
+                && attempt.FailureReason == "InvalidSignature"))
+            .Should().BeTrue("a rejected Web3 verification must be audited as a failed attempt");
+
+        // Act 2 - the genuine challenge verifies exactly once; replaying the consumed
+        // nonce fails even though signature, message and nonce are all valid.
+        var validSignature = new EthereumMessageSigner().EncodeUTF8AndSign(challengeResult.Challenge, walletKey);
+        var signIn = await _authService.VerifyWeb3SignatureAsync(new Web3VerificationRequest
+        {
+            WalletAddress = walletAddress,
+            Challenge = challengeResult.Challenge,
+            Signature = validSignature,
+            Nonce = challengeResult.Nonce,
+            ChainId = "1"
+        });
+        signIn.Success.Should().BeTrue();
+
+        await FluentActions.Invoking(() => _authService.VerifyWeb3SignatureAsync(new Web3VerificationRequest
+            {
+                WalletAddress = walletAddress,
+                Challenge = challengeResult.Challenge,
+                Signature = validSignature,
+                Nonce = challengeResult.Nonce,
+                ChainId = "1"
+            }))
+            .Should().ThrowAsync<AuthenticationRequiredException>()
+            .WithMessage("Invalid Web3 signature");
+
+        // Assert - exactly one session was ever issued for this wallet
+        var user = await _dbContext.Set<User>().SingleAsync(u => u.Email == walletIdentifier);
+        (await _dbContext.Set<UserSession>().CountAsync(s => s.UserId == user.Id)).Should().Be(1);
     }
-    */
+
     #endregion
 
     #region Polymorphic Authentication E2E Tests
-    // TODO: Create PolymorphicSignInRequest type and implement PolymorphicSignInAsync before uncommenting
-    /*
-    [Fact(Skip = "PolymorphicSignInAsync API not yet implemented")]
+
+    // Revived (previously skipped with "PolymorphicSignInAsync API not yet implemented"):
+    // the implemented API is NOT a dictionary-of-credentials service method — it is the
+    // POST /v1/auth/polymorphic endpoint (AuthController.PolymorphicSignIn) backed by
+    // PolymorphicSignInCommand/PolymorphicSignInHandler, which resolves ONE account by an
+    // email, username or international-phone identifier plus a password, then applies the
+    // existing password, risk, tenant and session flow. The tests below exercise that real
+    // contract over HTTP against the shared InMemory host (the class fixture's _client).
+
+    [Fact]
     public async Task PolymorphicAuth_LocalStrategy_ShouldAuthenticateCorrectly()
     {
-        // Arrange
-        var email = $"poly.local.{Guid.NewGuid()}@test.com";
+        // Arrange - a local account reachable by both email and username
+        var email = $"poly.local.{Guid.NewGuid():N}@test.com";
+        var username = $"poly_user_{Guid.NewGuid():N}";
         var password = "PolyPassword123!";
 
-        // First create a local user
-        var signUpRequest = new LocalSignUpRequest
+        var signUpResult = await _authService.LocalSignUpAsync(new LocalSignUpRequest
         {
             Email = email,
-            Username = $"poly_user_{Guid.NewGuid():N}",
+            Username = username,
             Password = password
-        };
+        });
 
-        await _authService.LocalSignUpAsync(signUpRequest);
-
-        // Act - Use polymorphic sign-in with local credentials
-        var polyRequest = new PolymorphicSignInRequest
+        // Act - sign in through the polymorphic endpoint using the email strategy
+        using var response = await _client.PostAsJsonAsync("/v1/auth/polymorphic", new
         {
-            Strategy = "Local",
-            Credentials = new Dictionary<string, string>
-            {
-                { "email", email },
-                { "password", password }
-            }
-        };
+            credential = email,
+            credentialType = "Email",
+            password
+        });
 
-        // TODO: Implement method - var result = await _authService.PolymorphicSignInAsync(polyRequest);
+        var body = await response.Content.ReadAsStringAsync();
+        response.StatusCode.Should().Be(HttpStatusCode.OK, body);
+        var dto = await response.Content.ReadFromJsonAsync<SignInResponse>();
 
-        // Assert
-        result.Should().NotBeNull();
-        result.AccessToken.Should().NotBeNullOrEmpty();
-        result.RefreshToken.Should().NotBeNullOrEmpty();
+        // Assert - the same credentials, tenant context and tokens as local sign-in
+        dto.Should().NotBeNull();
+        dto!.Success.Should().BeTrue();
+        dto.UserId.Should().Be(signUpResult.UserId);
+        dto.AccessToken.Should().NotBeNullOrWhiteSpace();
+        dto.AccessToken.Split('.').Should().HaveCount(3, "the access token must be a three-segment JWT");
+        dto.RefreshToken.Should().NotBeNullOrWhiteSpace();
+        dto.SessionId.Should().NotBeEmpty();
+        dto.TenantId.Should().HaveValue();
+
+        var session = await _dbContext.Set<UserSession>().SingleAsync(s => s.Id == dto.SessionId);
+        session.UserId.Should().Be(signUpResult.UserId);
+        session.IsActive.Should().BeTrue();
+
+        // Act 2 - the username strategy resolves the very same account
+        using var usernameResponse = await _client.PostAsJsonAsync("/v1/auth/polymorphic", new
+        {
+            credential = username,
+            credentialType = "Username",
+            password
+        });
+
+        var usernameBody = await usernameResponse.Content.ReadAsStringAsync();
+        usernameResponse.StatusCode.Should().Be(HttpStatusCode.OK, usernameBody);
+        var usernameDto = await usernameResponse.Content.ReadFromJsonAsync<SignInResponse>();
+        usernameDto!.Success.Should().BeTrue();
+        usernameDto.UserId.Should().Be(signUpResult.UserId,
+            "email and username strategies must resolve the same account");
+        usernameDto.SessionId.Should().NotBe(dto.SessionId, "each sign-in issues its own session");
     }
 
-    [Fact(Skip = "PolymorphicSignInAsync API not yet implemented")]
-    public async Task PolymorphicAuth_Web3Strategy_ShouldProcessChallengeResponse()
+    [Fact]
+    public async Task PolymorphicAuth_WalletAddressStrategy_AndUnknownIdentifier_ShouldFailWithGenericAuthenticationFailure()
     {
-        // Arrange
-        var walletAddress = $"0x{Guid.NewGuid():N}";
+        // Arrange - a syntactically valid wallet address. The polymorphic endpoint only
+        // resolves email, username and phone identifiers (PolymorphicSignInHandler), so a
+        // WalletAddress strategy can never resolve an account. Per the controller docs,
+        // missing, ambiguous or invalid identifiers receive the generic authentication
+        // failure — indistinguishable from an unknown email, so no enumeration leak.
+        var walletAddress = new EthECKey(Convert.ToHexString(RandomNumberGenerator.GetBytes(32))).GetPublicAddress();
+        var unknownEmail = $"unknown.{Guid.NewGuid():N}@test.com";
+        var password = "WalletPassword123!";
+        var sessionsBefore = await _dbContext.Set<UserSession>().CountAsync();
 
-        // Act - Generate challenge via polymorphic interface
-        var polyRequest = new PolymorphicSignInRequest
+        // Act - WalletAddress strategy
+        using var walletResponse = await _client.PostAsJsonAsync("/v1/auth/polymorphic", new
         {
-            Strategy = "Web3",
-            Credentials = new Dictionary<string, string>
-            {
-                { "walletAddress", walletAddress }
-            }
-        };
+            credential = walletAddress,
+            credentialType = "WalletAddress",
+            password
+        });
 
-        // Note: Full flow would require signature verification mocking
-        // This demonstrates the structure
+        var walletBody = await walletResponse.Content.ReadAsStringAsync();
+        walletResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized, walletBody);
+        var walletProblem = await walletResponse.Content.ReadFromJsonAsync<ProblemDetails>();
+        walletProblem.Should().NotBeNull();
+        walletProblem!.Status.Should().Be((int)HttpStatusCode.Unauthorized);
+        walletProblem.Title.Should().Be("Unauthorized");
+        walletProblem.Detail.Should().Be("Invalid credentials. Please check your email and password.",
+            "unsupported identifiers get the generic login failure");
+
+        // Act 2 - an unknown email identifier
+        using var unknownResponse = await _client.PostAsJsonAsync("/v1/auth/polymorphic", new
+        {
+            credential = unknownEmail,
+            credentialType = "Email",
+            password
+        });
+
+        var unknownBody = await unknownResponse.Content.ReadAsStringAsync();
+        unknownResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized, unknownBody);
+        var unknownProblem = await unknownResponse.Content.ReadFromJsonAsync<ProblemDetails>();
+        unknownProblem!.Status.Should().Be((int)HttpStatusCode.Unauthorized);
+        unknownProblem.Detail.Should().Be(walletProblem.Detail,
+            "unknown and unsupported identifiers must be indistinguishable");
+        unknownProblem.Title.Should().Be(walletProblem.Title);
+
+        // Assert - no credentials issued and both failures audited as password attempts
+        (await _dbContext.Set<UserSession>().CountAsync()).Should().Be(sessionsBefore);
+        (await _dbContext.Set<AuthenticationAttempt>()
+            .AnyAsync(attempt => !attempt.IsSuccessful
+                && attempt.FailureReason == "InvalidCredentials"
+                && (attempt.Email == walletAddress || attempt.Email == unknownEmail)))
+            .Should().BeTrue("rejected polymorphic identifiers must be audited as failed attempts");
     }
 
-    [Fact(Skip = "PolymorphicSignInAsync API not yet implemented")]
-    public async Task PolymorphicAuth_CrossStrategy_UserWithMultipleAuth_ShouldLinkAccounts()
+    [Fact]
+    public async Task PolymorphicAuth_CrossStrategy_UserWithMultipleIdentifiers_ShouldResolveSameAccountAcrossStrategies()
     {
-        // Arrange - Create user with local auth
-        var email = $"cross.strategy.{Guid.NewGuid()}@test.com";
+        // Arrange - one local account with both an email and a username identifier
+        var email = $"cross.strategy.{Guid.NewGuid():N}@test.com";
+        var username = $"cross_user_{Guid.NewGuid():N}";
         var password = "CrossStrategy123!";
 
-        var localSignUpRequest = new LocalSignUpRequest
+        var localResult = await _authService.LocalSignUpAsync(new LocalSignUpRequest
         {
             Email = email,
-            Username = $"cross_user_{Guid.NewGuid():N}",
+            Username = username,
             Password = password
-        };
-
-        var localResult = await _authService.LocalSignUpAsync(localSignUpRequest);
+        });
         var userId = localResult.UserId;
+        var defaultTenantId = _dbContext.Set<Tenant>().Single(t => t.IsDefault).Id;
 
-        // Act - Link Web3 wallet to same user (in real scenario)
-        // This would involve:
-        // 1. User signs in with local auth
-        // 2. User connects Web3 wallet
-        // 3. System links wallet to existing user account
-
-        // Assert - User should be able to sign in with either method
-        var localSignIn = new LocalSignInRequest
+        // Act - three strategies: explicit email, explicit username, and auto-detection
+        using var emailResponse = await _client.PostAsJsonAsync("/v1/auth/polymorphic", new
         {
-            Email = email,
-            Password = password
-        };
+            credential = email,
+            credentialType = "Email",
+            password
+        });
+        using var usernameResponse = await _client.PostAsJsonAsync("/v1/auth/polymorphic", new
+        {
+            credential = username,
+            credentialType = "Username",
+            password
+        });
+        using var autoDetectedResponse = await _client.PostAsJsonAsync("/v1/auth/polymorphic", new
+        {
+            credential = email,
+            password
+        });
 
-        var localSignInResult = await _authService.LocalSignInAsync(localSignIn);
-        localSignInResult.UserId.Should().Be(userId);
+        var emailBody = await emailResponse.Content.ReadAsStringAsync();
+        emailResponse.StatusCode.Should().Be(HttpStatusCode.OK, emailBody);
+        var usernameBody = await usernameResponse.Content.ReadAsStringAsync();
+        usernameResponse.StatusCode.Should().Be(HttpStatusCode.OK, usernameBody);
+        var autoDetectedBody = await autoDetectedResponse.Content.ReadAsStringAsync();
+        autoDetectedResponse.StatusCode.Should().Be(HttpStatusCode.OK, autoDetectedBody);
+
+        var byEmail = await emailResponse.Content.ReadFromJsonAsync<SignInResponse>();
+        var byUsername = await usernameResponse.Content.ReadFromJsonAsync<SignInResponse>();
+        var byAutoDetection = await autoDetectedResponse.Content.ReadFromJsonAsync<SignInResponse>();
+
+        // Assert - every strategy resolves the same account in the default tenant, each
+        // with its own session; the account can be reached by any of its identifiers.
+        var results = new[] { byEmail!, byUsername!, byAutoDetection! };
+        results.Should().OnlyContain(result => result.Success);
+        results.Should().OnlyContain(result => result.UserId == userId);
+        results.Should().OnlyContain(result => result.TenantId == defaultTenantId);
+        results.Should().OnlyContain(result =>
+            result.AvailableTenants != null
+            && result.AvailableTenants.Single().Id == defaultTenantId);
+        results.Select(result => result.SessionId).Should().OnlyHaveUniqueItems();
+
+        (await _dbContext.Set<UserSession>().CountAsync(s => s.UserId == userId))
+            .Should().Be(3, "each polymorphic strategy sign-in issues its own session");
     }
 
     #endregion
 
     #region Token Lifecycle Edge Cases
 
+    /*
     [Fact]
     public async Task TokenLifecycle_MultipleRefreshes_ShouldInvalidateOldTokens()
     {
@@ -744,6 +924,14 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
             .Should().ThrowAsync<Exception>();
     }
     */
+
+    // TokenLifecycle_MultipleRefreshes_ShouldInvalidateOldTokens stays commented for the
+    // same provider reason as the retired LocalAuth_TokenRefresh_AfterRevocation_ShouldFail
+    // above: refresh rotation/revocation runs through ExecuteUpdate statements that the EF
+    // InMemory provider cannot translate. Its scenario (old refresh tokens invalid after
+    // rotation) is covered against the real provider by the Postgres suites, e.g.
+    // RefreshTokenRotationPostgreSqlTests in this project and
+    // GameGuild.API.IntegrationTests.BearerRevocationPostgreSqlHttpTests.
     [Fact]
     public async Task TokenLifecycle_SignOut_ShouldRevokeAllUserTokens()
     {
