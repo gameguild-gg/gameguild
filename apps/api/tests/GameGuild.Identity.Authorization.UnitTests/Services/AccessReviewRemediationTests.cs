@@ -289,7 +289,8 @@ public sealed class AccessReviewRemediationTests
         var parsed = AccessReviewService.ParsePermissionDetails(details);
 
         parsed.Should().HaveCount(expectedCount);
-        parsed.Should().OnlyContain(p => !p.Contains('(') && !p.Contains(' ') && p == p.Trim());
+        parsed.Should().NotContain(p => p.Contains('(') || p.Contains(' ') || p != p.Trim(),
+            "tokens are clean permission identifiers (prose parses to nothing)");
     }
 
     [Fact]

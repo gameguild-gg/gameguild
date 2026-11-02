@@ -45,11 +45,13 @@ public class AccessReviewCampaignTests
     }
 
     [Fact]
-    public void Start_ShouldSetStatusToInProgress()
+    public void Start_ShouldSetStatusToActive()
     {
+        // Issue #1204: Start opens the campaign (Draft -> Active); the first recorded
+        // decision then moves it to InProgress.
         var campaign = CreateCampaign();
         campaign.Start();
-        campaign.Status.Should().Be(AccessReviewStatus.InProgress);
+        campaign.Status.Should().Be(AccessReviewStatus.Active);
     }
 
     [Fact]
