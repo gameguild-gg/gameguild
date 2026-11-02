@@ -695,6 +695,22 @@ jobs:
               }
             }
           }
+          // Selected surfaces must actually run and pass: only an explicit
+          // `<surface>_SELECTED === 'false'` legitimately explains a skipped gate,
+          // and a missing selection (or any other value) is treated as selected so
+          // a classifier hiccup can never silently wave a PR through. An unselected
+          // surface still has to report an explicit outcome — a skipped job is fine,
+          // a missing one never is.
+          const isSelected = (value) => value !== 'false';
+          for (const [name, selected] of [
+            ['web', isSelected(process.env.WEB_SELECTED)],
+            ['api', isSelected(process.env.API_SELECTED)],
+          ]) {
+            const allowed = gates[name] === 'success' || (gates[name] === 'skipped' && !selected);
+            if (!allowed && !failed.some(item => item.startsWith(`${name}=`))) {
+              failed.push(`${name}=${gates[name]}`);
+            }
+          }
           if (failed.length) {
             console.error(`Required PR gates failed: ${failed.join(', ')}`);
             process.exit(1);
