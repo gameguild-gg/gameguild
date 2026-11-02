@@ -926,6 +926,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("ParentResourceType", "ParentResourceId")
                         .HasDatabaseName("IX_AssetReferences_Parent");
 
+                    b.HasIndex("ParentResourceType", "ParentResourceId", "CreatedAt")
+                        .HasDatabaseName("ix_asset_references_parent_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("asset_references", "assets");
                 });
 
@@ -4681,6 +4685,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("WalletId");
 
+                    b.HasIndex("WalletId", "CreatedAt")
+                        .HasDatabaseName("ix_wallet_transactions_wallet_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("wallet_transactions");
                 });
 
@@ -7221,6 +7229,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("CreatedAt", "TenantId")
+                        .HasDatabaseName("ix_audit_logs_created_tenant_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex("TenantId", "CreatedAt");
 
@@ -23833,6 +23845,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserId");
 
+                    b.HasIndex("UserId", "CreatedAt")
+                        .HasDatabaseName("ix_user_notifications_user_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.HasIndex("UserId", "IsArchived");
 
                     b.HasIndex("UserId", "IsRead");
@@ -27558,6 +27574,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId");
 
+                    b.HasIndex("Status", "Visibility")
+                        .HasDatabaseName("ix_programs_status_visibility_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("programs", t =>
                         {
                             t.HasCheckConstraint("CK_programs_PassingScore_Canonical", "\"PassingScore\" >= 0 AND \"PassingScore\" <= 10000");
@@ -27651,6 +27671,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("Type");
+
+                    b.HasIndex("ProgramId", "SortOrder")
+                        .HasDatabaseName("ix_program_contents_program_sort_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("program_contents", t =>
                         {
@@ -33580,6 +33604,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("PrimaryAuthorId", "Status", "PublishedAt");
 
+                    b.HasIndex("Status", "PublishedAt", "Id")
+                        .HasDatabaseName("ix_social_blog_posts_status_published_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("social_blog_posts", (string)null);
                 });
 
@@ -33770,6 +33798,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("UserId", "PostId")
                         .IsUnique();
 
+                    b.HasIndex("UserId", "CreatedAt", "Id")
+                        .HasDatabaseName("ix_social_saved_posts_user_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("social_saved_posts", (string)null);
                 });
 
@@ -33813,6 +33845,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("AssetReferenceId");
 
                     b.HasIndex("AuthorId", "ExpiresAt");
+
+                    b.HasIndex("AuthorId", "ExpiresAt", "CreatedAt")
+                        .HasDatabaseName("ix_social_stories_author_expires_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("social_stories", (string)null);
                 });
@@ -34552,9 +34588,17 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("Visibility");
 
+                    b.HasIndex("AuthorId", "CreatedAt")
+                        .HasDatabaseName("ix_posts_author_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.HasIndex("AuthorId", "RepostOfPostId")
                         .IsUnique()
                         .HasFilter("\"RepostOfPostId\" IS NOT NULL AND \"DeletedAt\" IS NULL");
+
+                    b.HasIndex("TenantId", "CreatedAt")
+                        .HasDatabaseName("ix_posts_tenant_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("posts", (string)null);
                 });
@@ -34611,6 +34655,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("ParentCommentId");
 
                     b.HasIndex("PostId");
+
+                    b.HasIndex("PostId", "CreatedAt")
+                        .HasDatabaseName("ix_post_comments_post_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("post_comments", (string)null);
                 });
@@ -35624,6 +35672,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TeamId", "UserId")
                         .IsUnique();
 
+                    b.HasIndex("UserId", "TenantId")
+                        .HasDatabaseName("ix_team_members_user_tenant_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("project_collaboration_team_members", (string)null);
                 });
 
@@ -36117,6 +36169,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("RecurrenceSeriesId", "RecurrenceOccurrence")
                         .HasDatabaseName("IX_testing_events_recurrence_series_occurrence");
+
+                    b.HasIndex("TenantId", "StartsAt")
+                        .HasDatabaseName("ix_testing_events_tenant_starts_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex("TenantId", "Status", "StartsAt");
 
@@ -36806,6 +36862,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserId");
 
+                    b.HasIndex("TestingRequestId", "TenantId")
+                        .HasDatabaseName("ix_testing_participants_request_tenant_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("testing_participants", (string)null);
                 });
 
@@ -37064,6 +37124,10 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId");
 
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("ix_testing_requests_status_created_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
                     b.ToTable("testing_requests", (string)null);
                 });
 
@@ -37158,6 +37222,10 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("TestingRequestId");
+
+                    b.HasIndex("TenantId", "SessionDate")
+                        .HasDatabaseName("ix_testing_sessions_tenant_session_live")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("testing_sessions", (string)null);
                 });

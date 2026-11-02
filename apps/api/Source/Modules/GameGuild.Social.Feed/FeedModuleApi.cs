@@ -291,6 +291,14 @@ public sealed class SavedPostConfiguration : IEntityTypeConfiguration<SavedPost>
         builder.HasKey(saved => saved.Id);
         builder.HasIndex(saved => new { saved.UserId, saved.PostId }).IsUnique();
         builder.HasIndex(saved => new { saved.UserId, saved.CreatedAt });
+
+        // Saved-post listings filter DeletedAt == null and page by (CreatedAt, Id)
+        // keyset (SavedPostService, FeedProjection) — issue #1157. Property list is
+        // intentionally longer than the unfiltered (UserId, CreatedAt) index above
+        // so EF keeps both indexes.
+        builder.HasIndex(saved => new { saved.UserId, saved.CreatedAt, saved.Id })
+            .HasDatabaseName("ix_social_saved_posts_user_created_live")
+            .HasFilter("\"DeletedAt\" IS NULL");
     }
 }
 
@@ -303,6 +311,12 @@ public sealed class StoryConfiguration : IEntityTypeConfiguration<Story>
         builder.Property(story => story.Caption).HasMaxLength(280);
         builder.HasIndex(story => new { story.AuthorId, story.ExpiresAt });
         builder.HasIndex(story => story.AssetReferenceId);
+
+        // Story-tray queries filter DeletedAt == null per author with expiry
+        // windowing and CreatedAt ordering (StoryService) — issue #1157.
+        builder.HasIndex(story => new { story.AuthorId, story.ExpiresAt, story.CreatedAt })
+            .HasDatabaseName("ix_social_stories_author_expires_live")
+            .HasFilter("\"DeletedAt\" IS NULL");
     }
 }
 
