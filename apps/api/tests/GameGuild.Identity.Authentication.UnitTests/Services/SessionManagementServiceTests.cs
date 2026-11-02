@@ -1165,14 +1165,23 @@ public class SessionManagementServiceTests
     [Fact]
     public void MergeAssociatedIpAddress_CapsTheHistoryAtTheColumnLimit()
     {
-        // Two-character addresses keep the fixture short; the point is the cap, not the format.
+        // IPv6-length entries push the serialized array past the column limit, so the merge
+        // must evict the oldest entries to fit.
+        var entries = Enumerable.Range(1, 40)
+            .Select(i => $"2001:0db8:85a3:0000:0000:8a2e:0370:{i:0000}")
+            .ToList();
+        var history = "[" + string.Join(",", entries.Select(e => $"\"{e}\"")) + "]";
+        history.Length.Should().BeGreaterThan(SessionManagementService.TrustedDeviceIpHistoryMaxLength);
+
         var merged = SessionManagementService.MergeAssociatedIpAddress(
-            """["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"]""",
-            "41");
+            history,
+            "2001:0db8:85a3:0000:0000:8a2e:0370:9999");
 
         merged.Should().NotBeNull();
         merged!.Length.Should().BeLessOrEqualTo(SessionManagementService.TrustedDeviceIpHistoryMaxLength);
-        merged.Should().NotContain("\"01\"").And.Contain("\"41\"");
+        // Oldest entries were evicted to fit; the newest is present.
+        merged.Should().NotContain(entries[0]).And.NotContain(entries[1]);
+        merged.Should().Contain("2001:0db8:85a3:0000:0000:8a2e:0370:9999");
     }
 
     [Fact]

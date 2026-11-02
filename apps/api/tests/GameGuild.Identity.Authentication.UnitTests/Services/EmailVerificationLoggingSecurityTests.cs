@@ -84,7 +84,8 @@ public sealed class EmailVerificationLoggingSecurityTests
         var failingCache = new Mock<IDistributedCache>();
         failingCache.Setup(value => value.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(),
             It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>())).Throws(original);
-        failingCache.Setup(value => value.GetStringAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        // GetStringAsync is an extension over GetAsync; the interface method is what Moq can stub.
+        failingCache.Setup(value => value.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Throws(original);
         var publisher = Publisher();
         publisher.Setup(value => value.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))

@@ -719,7 +719,8 @@ public sealed class EmailVerificationCatchBlockTests
     public async Task VerifyToken_CacheThrows_ReturnsFalse()
     {
         var mockCache = new Mock<IDistributedCache>();
-        mockCache.Setup(c => c.GetStringAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        // GetStringAsync is an extension over GetAsync; the interface method is what Moq can stub.
+        mockCache.Setup(c => c.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Throws(new InvalidOperationException("Cache error"));
 
         var publisher = new Mock<IPublisher>();
@@ -763,7 +764,8 @@ public sealed class EmailVerificationCatchBlockTests
     public async Task ResendVerification_CacheThrows_ReturnsFalse()
     {
         var mockCache = new Mock<IDistributedCache>();
-        mockCache.Setup(c => c.GetStringAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        // GetStringAsync is an extension over GetAsync; the interface method is what Moq can stub.
+        mockCache.Setup(c => c.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Throws(new InvalidOperationException("Cache error"));
 
         var publisher = new Mock<IPublisher>();
@@ -784,7 +786,8 @@ public sealed class EmailVerificationCatchBlockTests
     public async Task IsTokenValid_CacheThrows_ReturnsFalse()
     {
         var mockCache = new Mock<IDistributedCache>();
-        mockCache.Setup(c => c.GetStringAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        // GetStringAsync is an extension over GetAsync; the interface method is what Moq can stub.
+        mockCache.Setup(c => c.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Throws(new InvalidOperationException("Cache error"));
 
         var publisher = new Mock<IPublisher>();
