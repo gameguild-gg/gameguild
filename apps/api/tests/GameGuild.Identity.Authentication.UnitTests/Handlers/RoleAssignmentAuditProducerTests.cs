@@ -24,6 +24,7 @@ public sealed class RoleAssignmentAuditProducerTests
 
     private static Role CreateRole(Guid tenantId) => new("Support", "Support role", tenantId)
     {
+        Id = Guid.NewGuid(),
         Permissions = "[\"courses:read\"]"
     };
 
