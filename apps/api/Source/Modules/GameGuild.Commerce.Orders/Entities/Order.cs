@@ -43,7 +43,10 @@ public class Order : StatefulEntity<OrderStatus>
         new Dictionary<OrderStatus, IReadOnlySet<OrderStatus>>
         {
             { OrderStatus.Pending, new HashSet<OrderStatus> { OrderStatus.Processing, OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled, OrderStatus.OnHold } },
-            { OrderStatus.Processing, new HashSet<OrderStatus> { OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled, OrderStatus.OnHold } },
+            // Issue #1205 G-5: Processing → Pending is the payment-reservation release edge
+            // (capture claim released after a declined charge) — declared in the FSM so the
+            // transition is validated and audited instead of written directly.
+            { OrderStatus.Processing, new HashSet<OrderStatus> { OrderStatus.Pending, OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled, OrderStatus.OnHold } },
             { OrderStatus.OnHold, new HashSet<OrderStatus> { OrderStatus.Pending, OrderStatus.Processing, OrderStatus.Cancelled } }, // Can be released back to processing or cancelled
             { OrderStatus.Paid, new HashSet<OrderStatus> { OrderStatus.Fulfilled, OrderStatus.Failed } }, // Paid but not yet fulfilled
             { OrderStatus.Fulfilled, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.PartiallyRefunded, OrderStatus.Disputed } }, // Terminal success state
