@@ -31,7 +31,7 @@ flowchart TD
     end
 
     subgraph EVAL["Evaluation attempt - the 3 working endpoints"]
-        E1["Caller POST v1 abac-policies :evaluate<br/>AbacPolicyController.cs L101"] --> E2["EvaluateAbacPoliciesCommandHandler<br/>PolicyEvaluationCommandHandlers.cs L74"]
+        E1["Caller POST v1 abac-policies evaluate action<br/>AbacPolicyController.cs L101"] --> E2["EvaluateAbacPoliciesCommandHandler<br/>PolicyEvaluationCommandHandlers.cs L74"]
         E2 --> E3["Map context to AbacRequestContext<br/>AbacEvaluationContextMapper.cs L728"]
         E3 --> E4["AbacPolicyEvaluator EvaluateAsync<br/>Services AbacPolicyEvaluator.cs L74"]
         E4 --> E5["Load active policies for tenant<br/>GetActivePoliciesAsync filters IsEnabled<br/>AbacPolicyEvaluator.cs L85"]
@@ -40,7 +40,7 @@ flowchart TD
         E6 -- "policies" --> E8["Iterate sorted by Priority descending - L88"]
         E8 --> E9{"Policy IsEffective<br/>enabled and inside window<br/>Entities AdvancedPermissions.cs L171"}
         E9 -- "not effective" --> E10["Skip - continue loop"]
-        E9 -- "effective" --> E11{"EvaluatePolicy matches<br/>attribute and condition JSON<br/>AbacPolicyEvaluator.cs L96"]
+        E9 -- "effective" --> E11{"EvaluatePolicy matches<br/>attribute and condition JSON<br/>AbacPolicyEvaluator.cs L96"}
         E11 -- "no match" --> E12["Detail NotApplicable - L100"]
         E11 -- "match and Effect Deny" --> E13["LogWarning ABAC policy denied<br/>short-circuit Deny with deciding policy<br/>AbacPolicyEvaluator.cs L105-116"]
         E11 -- "match and Effect Allow" --> E14["Detail Permit - request gate only<br/>never mints a permission - L99"]
@@ -53,8 +53,8 @@ flowchart TD
         E13 --> ER["200 AbacEvaluationResult"]
         E16 --> ER
         E17 --> ER
-        E1B["POST :evaluate-bulk L112"] --> E2B["BulkEvaluateAbacPoliciesCommandHandler<br/>PolicyEvaluationCommandHandlers.cs L123<br/>per-context loop with failure list"]
-        E1C["POST :test-expression L123"] --> E2C["TestAbacExpressionCommandHandler<br/>PolicyEvaluationCommandHandlers.cs L200<br/>AbacExpressionEvaluator dry run"]
+        E1B["POST evaluate-bulk action L112"] --> E2B["BulkEvaluateAbacPoliciesCommandHandler<br/>PolicyEvaluationCommandHandlers.cs L123<br/>per-context loop with failure list"]
+        E1C["POST test-expression action L123"] --> E2C["TestAbacExpressionCommandHandler<br/>PolicyEvaluationCommandHandlers.cs L200<br/>AbacExpressionEvaluator dry run"]
     end
 
     subgraph REQUESTGATE["Request-time gate - the stub reality #1180"]

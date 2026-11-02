@@ -27,7 +27,7 @@ flowchart TD
     end
 
     subgraph E["Evaluation - the working half"]
-        E1["POST v1 conditional-policies :evaluate<br/>ConditionalPolicyEvaluationController.cs L31"] --> E2["EvaluateConditionalPoliciesCommandHandler<br/>PolicyEvaluationCommandHandlers.cs L280"]
+        E1["POST v1 conditional-policies evaluate action<br/>ConditionalPolicyEvaluationController.cs L31"] --> E2["EvaluateConditionalPoliciesCommandHandler<br/>PolicyEvaluationCommandHandlers.cs L280"]
         E2 --> E3["ConditionalPolicyEvaluator EvaluateAsync<br/>Services ConditionalPolicyEvaluator.cs L78"]
         E3 --> E4["Filter IsEnabled and sort Priority desc - L85"]
         E4 --> E5{"Applicable - action and resource type filters<br/>ConditionalPolicyEvaluator.cs L159"}
@@ -39,7 +39,7 @@ flowchart TD
         E6 --> E4
         E8 --> ER["200 ConditionalPolicyResult"]
         E9 --> ER
-        E1B["POST :evaluate-bulk L42 - :test-rule L53 - :validate L108<br/>:simulate L131 - :validate-condition L158<br/>handlers PolicyEvaluationCommandHandlers.cs L323 L403 L544 L465 L590"]
+        E1B["POST evaluate-bulk L42 - test-rule L53 - validate L108<br/>simulate L131 - validate-condition L158<br/>handlers PolicyEvaluationCommandHandlers.cs L323 L403 L544 L465 L590"]
     end
 
     subgraph B["Path B - signed bundles - works"]
@@ -61,7 +61,7 @@ flowchart TD
         B12 -- "invalid or tampered" --> B422["PolicyBundleSignatureException"]
         B12 -- "valid" --> B13["Status Approved - L248"]
         B13 --> B14["POST bundleId deploy L146"]
-        B14 --> B15{"Signed store refuses unsigned or unverified<br/>GetVerifiedBundleAsync allowUnsignedDraft false<br/>PolicyBundleCommands.cs L317"]
+        B14 --> B15{"Signed store refuses unsigned or unverified<br/>GetVerifiedBundleAsync allowUnsignedDraft false<br/>PolicyBundleCommands.cs L317"}
         B15 -- "refused" --> B422
         B15 -- "verified but Status not Approved" --> B409
         B15 -- "approved" --> B16["MaterializeAsync policy definitions<br/>any parse failure throws first - L339"]

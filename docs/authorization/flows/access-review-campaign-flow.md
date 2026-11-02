@@ -34,7 +34,7 @@ flowchart TD
         ST3 -- "missing" --> ST404["404 false"]
         ST3 -- "found" --> ST4{"Actor can manage tenant<br/>CanManageTenant L108 L349"}
         ST4 -- "no" --> ST403["403 tenant administrator required"]
-        ST4 -- "yes" --> ST5{"Entity guard - only Draft can start<br/>Entities AccessReview.cs L89"]
+        ST4 -- "yes" --> ST5{"Entity guard - only Draft can start<br/>Entities AccessReview.cs L89"}
         ST5 -- "not draft" --> ST409["409 only draft campaigns can be started"]
         ST5 -- "draft" --> ST6["Status InProgress - L94"]
     end

@@ -23,7 +23,7 @@ flowchart TD
     subgraph D1["Door 1 - ASP.NET policy"]
         P1["Endpoint with Authorize Policy name"] --> P2["DbAuthorizationPolicyProvider GetPolicyAsync<br/>Providers DbAuthorizationPolicyProvider.cs L45"]
         P2 --> P3{"Policy in DB store<br/>tenant scoped first then global base - L80-96"}
-        P3 -- "found" --> P4["Build AuthorizationPolicy from definition<br/>permissions roles schemes ACL flag - L96"}
+        P3 -- "found" --> P4["Build AuthorizationPolicy from definition<br/>permissions roles schemes ACL flag - L96"]
         P3 -- "not found" --> P5{"Static fallback provider - L45"}
         P5 -- "static policy" --> P6["Static policy applies"]
         P5 -- "unknown" --> P404["PolicyNotFound - endpoint 403 or 500 by host config"]
