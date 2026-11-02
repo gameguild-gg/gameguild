@@ -188,7 +188,7 @@ flowchart TD
 flowchart TD
     A["Create cohort<br>POST api-cohorts L41<br>Cohorts-Controllers-CohortsController"] --> B["Cohort.Create Scheduled IsOpen false<br>Cohorts-Entities-Cohort L24-47"]
     B --> C["Open<br>POST id-open L126<br>Open sets IsOpen true and Status Active L51-56"]
-    C --> D{"Learner enrolls with cohort<br>EnrollUserCommand CohortId<br>Enrollments-EnrollmentModuleApi L29"]
+    C --> D{"Learner enrolls with cohort<br>EnrollUserCommand CohortId<br>Enrollments-EnrollmentModuleApi L29"}
     D --> E["CanEnroll gate<br>IsOpen and capacity and Status Active<br>Cohorts-Entities-Cohort L49"]
     D2["Scheduled content<br>GET cohorts-cohortId-schedule L26<br>Cohorts-Controllers-CohortSchedulesController"] --> F["Schedule preview<br>POST schedule-preview L41<br>CohortScheduleGenerator"]
     F --> G["Conflicts detected<br>ScheduleConflictDetector severity<br>Cohorts-Entities-SchedulingEnums L49-55"]
