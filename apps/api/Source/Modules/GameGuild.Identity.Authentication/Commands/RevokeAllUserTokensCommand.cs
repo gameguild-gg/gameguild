@@ -13,7 +13,8 @@ public sealed class RevokeAllUserTokensHandler(
     IRefreshTokenRepository refreshTokenRepository,
     ISessionManagementService sessionService,
     IVersionedUserTokenRevocationService tokenRevocationService,
-    IRefreshTokenLifecycleRecorder lifecycleRecorder) : ICommandHandler<RevokeAllUserTokensCommand, int>
+    IRefreshTokenLifecycleRecorder lifecycleRecorder,
+    IPublisher? eventPublisher = null) : ICommandHandler<RevokeAllUserTokensCommand, int>
 {
     private readonly IRefreshTokenLifecycleRecorder _lifecycleRecorder = lifecycleRecorder ?? throw new ArgumentNullException(nameof(lifecycleRecorder));
     public async Task<int> Handle(RevokeAllUserTokensCommand command, CancellationToken cancellationToken)
@@ -43,6 +44,14 @@ public sealed class RevokeAllUserTokensHandler(
         await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         await _lifecycleRecorder.RecordMutationAsync(new RefreshTokenLifecycleEvent(RefreshTokenLifecycleOperation.AllRevoked,
             userId, TenantId: actor.TenantId), cancellationToken).ConfigureAwait(false);
+
+        // In-process refresh-token lifecycle telemetry (issue #1199): the account's whole
+        // refresh-token set is revoked, so the token id is the "all" sentinel.
+        await AuthenticationEventDispatch.PublishAsync(
+            eventPublisher,
+            new RefreshTokenRevokedEvent("all", userId, "User initiated logout everywhere", SystemClock.UtcNow),
+            null,
+            cancellationToken).ConfigureAwait(false);
 
         // Cover legacy access tokens without version/session claims as well. A store failure must not return success.
         await tokenRevocationService.RevokeAllUserTokensAsync(
