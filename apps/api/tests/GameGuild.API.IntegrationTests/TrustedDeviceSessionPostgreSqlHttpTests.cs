@@ -215,8 +215,10 @@ public sealed class TrustedDeviceSessionPostgreSqlHttpTests(ApiPostgreSqlFixture
     public async Task BoundSessionWithoutFingerprintCannotInventTrustFromTransport()
     {
         var account = await SeedAsync(withoutFingerprint: true);
+        const string deviceName = "No device identity";
+        var receipt = await SeedStepUpReceiptAsync(account, account.CurrentSessionId, deviceName);
         using var client = await SignedClientAsync(account, account.CurrentSessionId);
-        using var response = await client.PostAsJsonAsync(TrustRoute, new { deviceName = "No device identity" });
+        using var response = await client.PostAsJsonAsync(TrustRoute, new { deviceName, stepUpReceipt = receipt });
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         await AssertNoTrustAsync(account);
         await AssertSessionsUnchangedAsync(account);
@@ -227,11 +229,15 @@ public sealed class TrustedDeviceSessionPostgreSqlHttpTests(ApiPostgreSqlFixture
     {
         var account = await SeedAsync(legacyTrusted: true);
         var trustedId = await SeedTrustAsync(account);
+        const string deviceName = "Disabled device";
+        // Verified step-up receipt so the request passes the fresh-verification gate (issue
+        // #1144) and still reaches the fingerprinting-disabled denial inside the command.
+        var receipt = await SeedStepUpReceiptAsync(account, account.CurrentSessionId, deviceName);
         using var factory = fixture.RealAuthenticationFactory.WithWebHostBuilder(
             builder => builder.UseSetting("Session:EnableDeviceFingerprinting", "false"));
         Assert.False(factory.Services.GetRequiredService<SessionOptions>().EnableDeviceFingerprinting);
         using var client = await SignedClientAsync(account, account.CurrentSessionId, factory: factory);
-        using var response = await client.PostAsJsonAsync(TrustRoute, new { deviceName = "Disabled device" });
+        using var response = await client.PostAsJsonAsync(TrustRoute, new { deviceName, stepUpReceipt = receipt });
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.False(Assert.Single(await ReadSessionsAsync(client),
             row => row.Id == account.CurrentSessionId).IsTrustedDevice);
@@ -376,7 +382,9 @@ public sealed class TrustedDeviceSessionPostgreSqlHttpTests(ApiPostgreSqlFixture
     /// </summary>
     private async Task<string> SeedStepUpReceiptAsync(Account account, Guid sessionId, string deviceName)
     {
-        const string receipt = "integration-step-up-receipt";
+        // Unique per seed: receipt_hash carries a unique constraint, and several tests in this
+        // class seed receipts against one database.
+        var receipt = $"integration-step-up-receipt-{Guid.NewGuid():N}";
         var binding = SessionMutationCommandHandler.TrustDeviceStepUpBinding(deviceName);
         await using var scope = fixture.RealAuthenticationFactory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
