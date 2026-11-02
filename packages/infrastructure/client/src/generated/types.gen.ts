@@ -12390,6 +12390,232 @@ export interface FinanceEconomyTreasuryAdminWithdrawalRun {
 /** OpenAPI schema for Finance Economy Treasury Admin Withdrawal Run State. */
 export type FinanceEconomyTreasuryAdminWithdrawalRunState = 'PendingApproval' | 'Approved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
 
+/** Data model for Finance Ledgers Controllers Create Child Ledger Request. */
+export interface FinanceLedgersControllersCreateChildLedgerInput {
+  budgetLimit?: number | null;
+  code?: string | null;
+  createdByUserId?: string;
+  currencyCode?: string | null;
+  description?: string | null;
+  isShared?: boolean;
+  name?: string | null;
+  projectEndDate?: string | null;
+  projectStartDate?: string | null;
+  tags?: string[] | null;
+  type?: FinanceLedgersEnumsLedgerType;
+}
+
+/** Data model for Finance Ledgers Controllers Create Root Ledger Request. */
+export interface FinanceLedgersControllersCreateRootLedgerInput {
+  code?: string | null;
+  createdByUserId?: string;
+  currencyCode?: string | null;
+  description?: string | null;
+  name?: string | null;
+  tags?: string[] | null;
+  tenantId?: string;
+}
+
+/** Data model for Finance Ledgers Controllers Post Entry Request. */
+export interface FinanceLedgersControllersPostEntryInput {
+  amount?: number;
+  budgetCategoryCode?: string | null;
+  budgetId?: string | null;
+  category?: FinanceLedgersEnumsEntryCategory;
+  counterpartyName?: string | null;
+  createdByUserId?: string;
+  description?: string | null;
+  externalReferenceId?: string | null;
+  tags?: string[] | null;
+  transactionDate?: string;
+  type?: FinanceLedgersEnumsEntryType;
+}
+
+/** Data model for Finance Ledgers Controllers Post Transfer Request. */
+export interface FinanceLedgersControllersPostTransferInput {
+  amount?: number;
+  createdByUserId?: string;
+  description?: string | null;
+  destinationLedgerId?: string;
+  sourceLedgerId?: string;
+  transactionDate?: string;
+}
+
+/** Data model for Finance Ledgers Controllers Reverse Entry Request. */
+export interface FinanceLedgersControllersReverseEntryInput {
+  reason?: string | null;
+  reversedByUserId?: string;
+}
+
+/** Data model for Finance Ledgers Controllers Update Entry Request. */
+export interface FinanceLedgersControllersUpdateEntryInput {
+  description?: string | null;
+  notes?: string | null;
+  updatedByUserId?: string;
+}
+
+/** Category for ledger entries. */
+export type FinanceLedgersEnumsEntryCategory = 'Revenue' | 'Expense' | 'Asset' | 'Liability' | 'Equity' | 'Transfer' | 'Adjustment';
+
+/** Status of a ledger entry. */
+export type FinanceLedgersEnumsEntryStatus = 'Pending' | 'Posted' | 'Voided' | 'Reconciled';
+
+/** Type of ledger entry (transaction direction). */
+export type FinanceLedgersEnumsEntryType = 'Debit' | 'Credit';
+
+/** Lifecycle status for ledgers. */
+export type FinanceLedgersEnumsLedgerStatus = 'Draft' | 'Active' | 'Inactive' | 'Archived' | 'Closed';
+
+/** Discriminator for ledger types in the hierarchy.
+Each type has specific behaviors and constraints. */
+export type FinanceLedgersEnumsLedgerType =
+  | 'Root'
+  | 'Department'
+  | 'Project'
+  | 'CostCenter'
+  | 'RevenueCenter'
+  | 'Personal'
+  | 'Business'
+  | 'Family'
+  | 'Product'
+  | 'IncomeSource'
+  | 'BudgetCategory'
+  | 'Virtual';
+
+/** Category-based rollup. */
+export interface FinanceLedgersModelsCategoryRollup {
+  category?: FinanceLedgersEnumsEntryCategory;
+  entryCount?: number;
+  netAmount?: number;
+  percentageOfTotal?: number;
+  totalCredit?: number;
+  totalDebit?: number;
+}
+
+/** Ledger balance summary. */
+export interface FinanceLedgersModelsLedgerBalance {
+  calculatedAt?: string;
+  currencyCode?: string | null;
+  entryCount?: number;
+  includesDescendants?: boolean;
+  ledgerCode?: string | null;
+  ledgerId?: string;
+  ledgerName?: string | null;
+  netBalance?: number;
+  totalCredit?: number;
+  totalDebit?: number;
+}
+
+/** Ledger DTO for API responses. */
+export interface FinanceLedgersModelsLedgerDto {
+  id?: string;
+  allowDirectEntries?: boolean;
+  budgetLimit?: number | null;
+  cachedEntryCount?: number;
+  cachedNetBalance?: number;
+  childCount?: number;
+  code?: string | null;
+  createdAt?: string;
+  createdByUserId?: string;
+  currencyCode?: string | null;
+  description?: string | null;
+  fiscalYearStartMonth?: number;
+  hierarchyDepth?: number;
+  hierarchyPath?: string | null;
+  isShared?: boolean;
+  name?: string | null;
+  parentLedgerCode?: string | null;
+  parentLedgerId?: string | null;
+  projectEndDate?: string | null;
+  projectStartDate?: string | null;
+  slug?: string | null;
+  statsCalculatedAt?: string | null;
+  status?: FinanceLedgersEnumsLedgerStatus;
+  tags?: string[] | null;
+  tenantId?: string;
+  type?: FinanceLedgersEnumsLedgerType;
+  updatedAt?: string | null;
+}
+
+/** Entry DTO for API responses. */
+export interface FinanceLedgersModelsLedgerEntryDto {
+  id?: string;
+  amount?: number;
+  budgetCategoryCode?: string | null;
+  budgetId?: string | null;
+  category?: FinanceLedgersEnumsEntryCategory;
+  counterpartyName?: string | null;
+  createdAt?: string;
+  createdByUserId?: string;
+  currencyCode?: string | null;
+  description?: string | null;
+  externalReferenceId?: string | null;
+  ledgerCode?: string | null;
+  ledgerId?: string;
+  ledgerPath?: string | null;
+  notes?: string | null;
+  originalAmount?: number | null;
+  originalCurrencyCode?: string | null;
+  postingDate?: string;
+  referenceNumber?: string | null;
+  reversedByEntryId?: string | null;
+  reversesEntryId?: string | null;
+  status?: FinanceLedgersEnumsEntryStatus;
+  tags?: string[] | null;
+  transactionDate?: string;
+  transferPairEntryId?: string | null;
+  type?: FinanceLedgersEnumsEntryType;
+  updatedAt?: string | null;
+}
+
+/** Rollup node with own balance + children aggregation. */
+export interface FinanceLedgersModelsLedgerRollupNode {
+  id: string;
+  /** Children rollup nodes. */
+  children?: FinanceLedgersModelsLedgerRollupNode[] | null;
+  code: string | null;
+  consolidatedBalance: FinanceLedgersModelsLedgerBalance;
+  depth: number;
+  name: string | null;
+  ownBalance: FinanceLedgersModelsLedgerBalance;
+  type: FinanceLedgersEnumsLedgerType;
+}
+
+/** Tree node for hierarchy display. */
+export interface FinanceLedgersModelsLedgerTreeNode {
+  id: string;
+  children?: FinanceLedgersModelsLedgerTreeNode[] | null;
+  code: string | null;
+  currencyCode: string | null;
+  depth: number;
+  entryCount?: number;
+  name: string | null;
+  netBalance?: number;
+  status: FinanceLedgersEnumsLedgerStatus;
+  type: FinanceLedgersEnumsLedgerType;
+}
+
+/** Granularity for period-based reports. */
+export type FinanceLedgersModelsPeriodGranularity = 'Day' | 'Week' | 'Month' | 'Quarter' | 'Year';
+
+/** Time-period rollup for trends. */
+export interface FinanceLedgersModelsPeriodRollup {
+  entryCount?: number;
+  netChange?: number;
+  periodEnd?: string;
+  periodLabel?: string | null;
+  periodStart?: string;
+  runningBalance?: number;
+  totalCredit?: number;
+  totalDebit?: number;
+}
+
+/** Result of a transfer operation between two ledgers. */
+export interface FinanceLedgersModelsTransferResult {
+  creditEntry?: FinanceLedgersModelsLedgerEntryDto;
+  debitEntry?: FinanceLedgersModelsLedgerEntryDto;
+}
+
 /** Data model for Game Jams Add Jam Criteria Request. */
 export interface GameJamsAddJamCriteriaInput {
   description?: string | null;
@@ -12550,6 +12776,84 @@ export interface GameJamsSubmitJamEntryInput {
   notes?: string | null;
   projectVersionId?: string;
   userId?: string;
+}
+
+/** Data model for Gamification Achievements Achievement Dto. */
+export interface GamificationAchievementsAchievementDto {
+  id?: string;
+  category?: string | null;
+  color?: string | null;
+  description?: string | null;
+  displayOrder?: number;
+  iconUrl?: string | null;
+  isActive?: boolean;
+  isRepeatable?: boolean;
+  isSecret?: boolean;
+  levels?: GamificationAchievementsAchievementLevelDto[] | null;
+  name?: string | null;
+  points?: number;
+  type?: string | null;
+}
+
+/** Data model for Gamification Achievements Achievement Level Dto. */
+export interface GamificationAchievementsAchievementLevelDto {
+  id?: string;
+  iconUrl?: string | null;
+  level?: number;
+  name?: string | null;
+  pointsAwarded?: number;
+  requiredProgress?: number;
+}
+
+/** Data model for Gamification Achievements Award Achievement Request. */
+export interface GamificationAchievementsAwardAchievementInput {
+  context?: string | null;
+  userId?: string;
+}
+
+/** Data model for Gamification Achievements Create Achievement Request. */
+export interface GamificationAchievementsCreateAchievementInput {
+  category?: string | null;
+  color?: string | null;
+  description?: string | null;
+  displayOrder?: number;
+  iconUrl?: string | null;
+  isRepeatable?: boolean;
+  isSecret?: boolean;
+  name?: string | null;
+  points?: number;
+  type?: string | null;
+}
+
+/** Data model for Gamification Achievements Update Achievement Request. */
+export interface GamificationAchievementsUpdateAchievementInput {
+  category?: string | null;
+  color?: string | null;
+  description?: string | null;
+  displayOrder?: number | null;
+  iconUrl?: string | null;
+  isActive?: boolean | null;
+  isRepeatable?: boolean | null;
+  isSecret?: boolean | null;
+  name?: string | null;
+  points?: number | null;
+}
+
+/** Data model for Gamification Achievements User Achievement Dto. */
+export interface GamificationAchievementsUserAchievementDto {
+  id?: string;
+  achievementDescription?: string | null;
+  achievementId?: string;
+  achievementName?: string | null;
+  category?: string | null;
+  earnedAt?: string;
+  iconUrl?: string | null;
+  isCompleted?: boolean;
+  level?: number;
+  maxProgress?: number;
+  pointsEarned?: number;
+  progress?: number;
+  progressPercentage?: number;
 }
 
 /** Data model for Identity Authentication Account Recovery Approval Response. */
@@ -25319,6 +25623,68 @@ export interface SocialProfilesUpdateSocialProfileBody {
   websiteUrl?: string | null;
 }
 
+/** Data model for Social Ratings Batch Summary Request. */
+export interface SocialRatingsBatchSummaryInput {
+  entityIds?: string[] | null;
+  entityType?: string | null;
+}
+
+/** Data model for Social Ratings Create Rating Request. */
+export interface SocialRatingsCreateRatingInput {
+  entityId?: string;
+  entityType?: string | null;
+  reviewText?: string | null;
+  reviewTitle?: string | null;
+  value?: number;
+}
+
+/** Data model for Social Ratings Rating Dto. */
+export interface SocialRatingsRatingDto {
+  id?: string;
+  createdAt?: string;
+  editedAt?: string | null;
+  entityId?: string;
+  entityType?: string | null;
+  helpfulCount?: number;
+  isVerified?: boolean;
+  moderationStatus?: SocialRatingsRatingModerationStatus;
+  reviewText?: string | null;
+  reviewTitle?: string | null;
+  userId?: string;
+  value?: number;
+}
+
+/** Moderation status for ratings/reviews */
+export type SocialRatingsRatingModerationStatus = 'Pending' | 'Approved' | 'Rejected' | 'Flagged';
+
+/** Sort order options for rating queries */
+export type SocialRatingsRatingSortOrder = 'MostRecent' | 'Oldest' | 'HighestRating' | 'LowestRating' | 'MostHelpful';
+
+/** Data model for Social Ratings Rating Summary Dto. */
+export interface SocialRatingsRatingSummaryDto {
+  averageRating?: number;
+  distribution?: Record<string, number> | null;
+  entityId?: string;
+  entityType?: string | null;
+  fiveStar?: number;
+  fourStar?: number;
+  oneStar?: number;
+  threeStar?: number;
+  totalRatings?: number;
+  totalReviews?: number;
+  twoStar?: number;
+}
+
+/** Data model for Social Ratings Report Request. */
+export interface SocialRatingsReportInput {
+  reason?: string | null;
+}
+
+/** Data model for Social Ratings Vote Helpful Request. */
+export interface SocialRatingsVoteHelpfulInput {
+  isHelpful?: boolean;
+}
+
 /** Data model for Social Reactions Reaction Dto. */
 export interface SocialReactionsReactionDto {
   id?: string;
@@ -28511,6 +28877,26 @@ export let FinanceEconomyTreasuryAdminWithdrawalAuditEventSchema: z.ZodType<Fina
 export let FinanceEconomyTreasuryAdminWithdrawalAuditViewSchema: z.ZodType<FinanceEconomyTreasuryAdminWithdrawalAuditView>;
 export let FinanceEconomyTreasuryAdminWithdrawalRunSchema: z.ZodType<FinanceEconomyTreasuryAdminWithdrawalRun>;
 export let FinanceEconomyTreasuryAdminWithdrawalRunStateSchema: z.ZodType<FinanceEconomyTreasuryAdminWithdrawalRunState>;
+export let FinanceLedgersControllersCreateChildLedgerInputSchema: z.ZodType<FinanceLedgersControllersCreateChildLedgerInput>;
+export let FinanceLedgersControllersCreateRootLedgerInputSchema: z.ZodType<FinanceLedgersControllersCreateRootLedgerInput>;
+export let FinanceLedgersControllersPostEntryInputSchema: z.ZodType<FinanceLedgersControllersPostEntryInput>;
+export let FinanceLedgersControllersPostTransferInputSchema: z.ZodType<FinanceLedgersControllersPostTransferInput>;
+export let FinanceLedgersControllersReverseEntryInputSchema: z.ZodType<FinanceLedgersControllersReverseEntryInput>;
+export let FinanceLedgersControllersUpdateEntryInputSchema: z.ZodType<FinanceLedgersControllersUpdateEntryInput>;
+export let FinanceLedgersEnumsEntryCategorySchema: z.ZodType<FinanceLedgersEnumsEntryCategory>;
+export let FinanceLedgersEnumsEntryStatusSchema: z.ZodType<FinanceLedgersEnumsEntryStatus>;
+export let FinanceLedgersEnumsEntryTypeSchema: z.ZodType<FinanceLedgersEnumsEntryType>;
+export let FinanceLedgersEnumsLedgerStatusSchema: z.ZodType<FinanceLedgersEnumsLedgerStatus>;
+export let FinanceLedgersEnumsLedgerTypeSchema: z.ZodType<FinanceLedgersEnumsLedgerType>;
+export let FinanceLedgersModelsCategoryRollupSchema: z.ZodType<FinanceLedgersModelsCategoryRollup>;
+export let FinanceLedgersModelsLedgerBalanceSchema: z.ZodType<FinanceLedgersModelsLedgerBalance>;
+export let FinanceLedgersModelsLedgerDtoSchema: z.ZodType<FinanceLedgersModelsLedgerDto>;
+export let FinanceLedgersModelsLedgerEntryDtoSchema: z.ZodType<FinanceLedgersModelsLedgerEntryDto>;
+export let FinanceLedgersModelsLedgerRollupNodeSchema: z.ZodType<FinanceLedgersModelsLedgerRollupNode>;
+export let FinanceLedgersModelsLedgerTreeNodeSchema: z.ZodType<FinanceLedgersModelsLedgerTreeNode>;
+export let FinanceLedgersModelsPeriodGranularitySchema: z.ZodType<FinanceLedgersModelsPeriodGranularity>;
+export let FinanceLedgersModelsPeriodRollupSchema: z.ZodType<FinanceLedgersModelsPeriodRollup>;
+export let FinanceLedgersModelsTransferResultSchema: z.ZodType<FinanceLedgersModelsTransferResult>;
 export let GameJamsAddJamCriteriaInputSchema: z.ZodType<GameJamsAddJamCriteriaInput>;
 export let GameJamsCreateJamInputSchema: z.ZodType<GameJamsCreateJamInput>;
 export let GameJamsJamSchema: z.ZodType<GameJamsJam>;
@@ -28522,6 +28908,12 @@ export let GameJamsJamStatusSchema: z.ZodType<GameJamsJamStatus>;
 export let GameJamsJamSubmissionDtoSchema: z.ZodType<GameJamsJamSubmissionDto>;
 export let GameJamsScoreJamSubmissionInputSchema: z.ZodType<GameJamsScoreJamSubmissionInput>;
 export let GameJamsSubmitJamEntryInputSchema: z.ZodType<GameJamsSubmitJamEntryInput>;
+export let GamificationAchievementsAchievementDtoSchema: z.ZodType<GamificationAchievementsAchievementDto>;
+export let GamificationAchievementsAchievementLevelDtoSchema: z.ZodType<GamificationAchievementsAchievementLevelDto>;
+export let GamificationAchievementsAwardAchievementInputSchema: z.ZodType<GamificationAchievementsAwardAchievementInput>;
+export let GamificationAchievementsCreateAchievementInputSchema: z.ZodType<GamificationAchievementsCreateAchievementInput>;
+export let GamificationAchievementsUpdateAchievementInputSchema: z.ZodType<GamificationAchievementsUpdateAchievementInput>;
+export let GamificationAchievementsUserAchievementDtoSchema: z.ZodType<GamificationAchievementsUserAchievementDto>;
 export let IdentityAuthenticationAccountRecoveryApprovalOutputSchema: z.ZodType<IdentityAuthenticationAccountRecoveryApprovalOutput>;
 export let IdentityAuthenticationAccountRecoveryApprovalResultSchema: z.ZodType<IdentityAuthenticationAccountRecoveryApprovalResult>;
 export let IdentityAuthenticationAccountRecoveryCancelResultSchema: z.ZodType<IdentityAuthenticationAccountRecoveryCancelResult>;
@@ -29622,6 +30014,14 @@ export let SocialProfilesSocialProfileDtoSchema: z.ZodType<SocialProfilesSocialP
 export let SocialProfilesUpdateProfilePortfolioItemBodySchema: z.ZodType<SocialProfilesUpdateProfilePortfolioItemBody>;
 export let SocialProfilesUpdateProfilePrivacyBodySchema: z.ZodType<SocialProfilesUpdateProfilePrivacyBody>;
 export let SocialProfilesUpdateSocialProfileBodySchema: z.ZodType<SocialProfilesUpdateSocialProfileBody>;
+export let SocialRatingsBatchSummaryInputSchema: z.ZodType<SocialRatingsBatchSummaryInput>;
+export let SocialRatingsCreateRatingInputSchema: z.ZodType<SocialRatingsCreateRatingInput>;
+export let SocialRatingsRatingDtoSchema: z.ZodType<SocialRatingsRatingDto>;
+export let SocialRatingsRatingModerationStatusSchema: z.ZodType<SocialRatingsRatingModerationStatus>;
+export let SocialRatingsRatingSortOrderSchema: z.ZodType<SocialRatingsRatingSortOrder>;
+export let SocialRatingsRatingSummaryDtoSchema: z.ZodType<SocialRatingsRatingSummaryDto>;
+export let SocialRatingsReportInputSchema: z.ZodType<SocialRatingsReportInput>;
+export let SocialRatingsVoteHelpfulInputSchema: z.ZodType<SocialRatingsVoteHelpfulInput>;
 export let SocialReactionsReactionDtoSchema: z.ZodType<SocialReactionsReactionDto>;
 export let SocialReactionsReactionTargetTypeSchema: z.ZodType<SocialReactionsReactionTargetType>;
 export let SocialReactionsReactionTypeSchema: z.ZodType<SocialReactionsReactionType>;
@@ -41238,6 +41638,238 @@ FinanceEconomyTreasuryAdminWithdrawalRunSchema = z.object({
 /** Zod schema for FinanceEconomyTreasuryAdminWithdrawalRunState. OpenAPI schema for Finance Economy Treasury Admin Withdrawal Run State. */
 FinanceEconomyTreasuryAdminWithdrawalRunStateSchema = z.enum(['PendingApproval', 'Approved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
 
+/** Zod schema for FinanceLedgersControllersCreateChildLedgerInput. Data model for Finance Ledgers Controllers Create Child Ledger Request. */
+FinanceLedgersControllersCreateChildLedgerInputSchema = z.object({
+  budgetLimit: z.number().nullable().optional(),
+  code: z.string().nullable().optional(),
+  createdByUserId: z.string().uuid().optional(),
+  currencyCode: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  isShared: z.boolean().optional(),
+  name: z.string().nullable().optional(),
+  projectEndDate: z.string().date().nullable().optional(),
+  projectStartDate: z.string().date().nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  type: z.lazy(() => FinanceLedgersEnumsLedgerTypeSchema).optional(),
+});
+
+/** Zod schema for FinanceLedgersControllersCreateRootLedgerInput. Data model for Finance Ledgers Controllers Create Root Ledger Request. */
+FinanceLedgersControllersCreateRootLedgerInputSchema = z.object({
+  code: z.string().nullable().optional(),
+  createdByUserId: z.string().uuid().optional(),
+  currencyCode: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceLedgersControllersPostEntryInput. Data model for Finance Ledgers Controllers Post Entry Request. */
+FinanceLedgersControllersPostEntryInputSchema = z.object({
+  amount: z.number().optional(),
+  budgetCategoryCode: z.string().nullable().optional(),
+  budgetId: z.string().uuid().nullable().optional(),
+  category: z.lazy(() => FinanceLedgersEnumsEntryCategorySchema).optional(),
+  counterpartyName: z.string().nullable().optional(),
+  createdByUserId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  externalReferenceId: z.string().nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  transactionDate: z.string().date().optional(),
+  type: z.lazy(() => FinanceLedgersEnumsEntryTypeSchema).optional(),
+});
+
+/** Zod schema for FinanceLedgersControllersPostTransferInput. Data model for Finance Ledgers Controllers Post Transfer Request. */
+FinanceLedgersControllersPostTransferInputSchema = z.object({
+  amount: z.number().optional(),
+  createdByUserId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  destinationLedgerId: z.string().uuid().optional(),
+  sourceLedgerId: z.string().uuid().optional(),
+  transactionDate: z.string().date().optional(),
+});
+
+/** Zod schema for FinanceLedgersControllersReverseEntryInput. Data model for Finance Ledgers Controllers Reverse Entry Request. */
+FinanceLedgersControllersReverseEntryInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+  reversedByUserId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceLedgersControllersUpdateEntryInput. Data model for Finance Ledgers Controllers Update Entry Request. */
+FinanceLedgersControllersUpdateEntryInputSchema = z.object({
+  description: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  updatedByUserId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceLedgersEnumsEntryCategory. Category for ledger entries. */
+FinanceLedgersEnumsEntryCategorySchema = z.enum(['Revenue', 'Expense', 'Asset', 'Liability', 'Equity', 'Transfer', 'Adjustment']);
+
+/** Zod schema for FinanceLedgersEnumsEntryStatus. Status of a ledger entry. */
+FinanceLedgersEnumsEntryStatusSchema = z.enum(['Pending', 'Posted', 'Voided', 'Reconciled']);
+
+/** Zod schema for FinanceLedgersEnumsEntryType. Type of ledger entry (transaction direction). */
+FinanceLedgersEnumsEntryTypeSchema = z.enum(['Debit', 'Credit']);
+
+/** Zod schema for FinanceLedgersEnumsLedgerStatus. Lifecycle status for ledgers. */
+FinanceLedgersEnumsLedgerStatusSchema = z.enum(['Draft', 'Active', 'Inactive', 'Archived', 'Closed']);
+
+/** Zod schema for FinanceLedgersEnumsLedgerType. Discriminator for ledger types in the hierarchy.
+Each type has specific behaviors and constraints. */
+FinanceLedgersEnumsLedgerTypeSchema = z.enum([
+  'Root',
+  'Department',
+  'Project',
+  'CostCenter',
+  'RevenueCenter',
+  'Personal',
+  'Business',
+  'Family',
+  'Product',
+  'IncomeSource',
+  'BudgetCategory',
+  'Virtual',
+]);
+
+/** Zod schema for FinanceLedgersModelsCategoryRollup. Category-based rollup. */
+FinanceLedgersModelsCategoryRollupSchema = z.object({
+  category: z.lazy(() => FinanceLedgersEnumsEntryCategorySchema).optional(),
+  entryCount: z.number().int().optional(),
+  netAmount: z.number().optional(),
+  percentageOfTotal: z.number().optional(),
+  totalCredit: z.number().optional(),
+  totalDebit: z.number().optional(),
+});
+
+/** Zod schema for FinanceLedgersModelsLedgerBalance. Ledger balance summary. */
+FinanceLedgersModelsLedgerBalanceSchema = z.object({
+  calculatedAt: z.string().datetime().optional(),
+  currencyCode: z.string().nullable().optional(),
+  entryCount: z.number().int().optional(),
+  includesDescendants: z.boolean().optional(),
+  ledgerCode: z.string().nullable().optional(),
+  ledgerId: z.string().uuid().optional(),
+  ledgerName: z.string().nullable().optional(),
+  netBalance: z.number().optional(),
+  totalCredit: z.number().optional(),
+  totalDebit: z.number().optional(),
+});
+
+/** Zod schema for FinanceLedgersModelsLedgerDto. Ledger DTO for API responses. */
+FinanceLedgersModelsLedgerDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  allowDirectEntries: z.boolean().optional(),
+  budgetLimit: z.number().nullable().optional(),
+  cachedEntryCount: z.number().int().optional(),
+  cachedNetBalance: z.number().optional(),
+  childCount: z.number().int().optional(),
+  code: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  createdByUserId: z.string().uuid().optional(),
+  currencyCode: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  fiscalYearStartMonth: z.number().int().optional(),
+  hierarchyDepth: z.number().int().optional(),
+  hierarchyPath: z.string().nullable().optional(),
+  isShared: z.boolean().optional(),
+  name: z.string().nullable().optional(),
+  parentLedgerCode: z.string().nullable().optional(),
+  parentLedgerId: z.string().uuid().nullable().optional(),
+  projectEndDate: z.string().date().nullable().optional(),
+  projectStartDate: z.string().date().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  statsCalculatedAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => FinanceLedgersEnumsLedgerStatusSchema).optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  type: z.lazy(() => FinanceLedgersEnumsLedgerTypeSchema).optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for FinanceLedgersModelsLedgerEntryDto. Entry DTO for API responses. */
+FinanceLedgersModelsLedgerEntryDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  amount: z.number().optional(),
+  budgetCategoryCode: z.string().nullable().optional(),
+  budgetId: z.string().uuid().nullable().optional(),
+  category: z.lazy(() => FinanceLedgersEnumsEntryCategorySchema).optional(),
+  counterpartyName: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  createdByUserId: z.string().uuid().optional(),
+  currencyCode: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  externalReferenceId: z.string().nullable().optional(),
+  ledgerCode: z.string().nullable().optional(),
+  ledgerId: z.string().uuid().optional(),
+  ledgerPath: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  originalAmount: z.number().nullable().optional(),
+  originalCurrencyCode: z.string().nullable().optional(),
+  postingDate: z.string().date().optional(),
+  referenceNumber: z.string().nullable().optional(),
+  reversedByEntryId: z.string().uuid().nullable().optional(),
+  reversesEntryId: z.string().uuid().nullable().optional(),
+  status: z.lazy(() => FinanceLedgersEnumsEntryStatusSchema).optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  transactionDate: z.string().date().optional(),
+  transferPairEntryId: z.string().uuid().nullable().optional(),
+  type: z.lazy(() => FinanceLedgersEnumsEntryTypeSchema).optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for FinanceLedgersModelsLedgerRollupNode. Rollup node with own balance + children aggregation. */
+FinanceLedgersModelsLedgerRollupNodeSchema = z.object({
+  id: z.string().uuid(),
+  children: z
+    .array(z.lazy(() => FinanceLedgersModelsLedgerRollupNodeSchema))
+    .nullable()
+    .optional(),
+  code: z.string().nullable(),
+  consolidatedBalance: z.lazy(() => FinanceLedgersModelsLedgerBalanceSchema),
+  depth: z.number().int(),
+  name: z.string().nullable(),
+  ownBalance: z.lazy(() => FinanceLedgersModelsLedgerBalanceSchema),
+  type: z.lazy(() => FinanceLedgersEnumsLedgerTypeSchema),
+});
+
+/** Zod schema for FinanceLedgersModelsLedgerTreeNode. Tree node for hierarchy display. */
+FinanceLedgersModelsLedgerTreeNodeSchema = z.object({
+  id: z.string().uuid(),
+  children: z
+    .array(z.lazy(() => FinanceLedgersModelsLedgerTreeNodeSchema))
+    .nullable()
+    .optional(),
+  code: z.string().nullable(),
+  currencyCode: z.string().nullable(),
+  depth: z.number().int(),
+  entryCount: z.number().int().optional(),
+  name: z.string().nullable(),
+  netBalance: z.number().optional(),
+  status: z.lazy(() => FinanceLedgersEnumsLedgerStatusSchema),
+  type: z.lazy(() => FinanceLedgersEnumsLedgerTypeSchema),
+});
+
+/** Zod schema for FinanceLedgersModelsPeriodGranularity. Granularity for period-based reports. */
+FinanceLedgersModelsPeriodGranularitySchema = z.enum(['Day', 'Week', 'Month', 'Quarter', 'Year']);
+
+/** Zod schema for FinanceLedgersModelsPeriodRollup. Time-period rollup for trends. */
+FinanceLedgersModelsPeriodRollupSchema = z.object({
+  entryCount: z.number().int().optional(),
+  netChange: z.number().optional(),
+  periodEnd: z.string().date().optional(),
+  periodLabel: z.string().nullable().optional(),
+  periodStart: z.string().date().optional(),
+  runningBalance: z.number().optional(),
+  totalCredit: z.number().optional(),
+  totalDebit: z.number().optional(),
+});
+
+/** Zod schema for FinanceLedgersModelsTransferResult. Result of a transfer operation between two ledgers. */
+FinanceLedgersModelsTransferResultSchema = z.object({
+  creditEntry: z.lazy(() => FinanceLedgersModelsLedgerEntryDtoSchema).optional(),
+  debitEntry: z.lazy(() => FinanceLedgersModelsLedgerEntryDtoSchema).optional(),
+});
+
 /** Zod schema for GameJamsAddJamCriteriaInput. Data model for Game Jams Add Jam Criteria Request. */
 GameJamsAddJamCriteriaInputSchema = z.object({
   description: z.string().nullable().optional(),
@@ -41382,6 +42014,87 @@ GameJamsSubmitJamEntryInputSchema = z.object({
   notes: z.string().nullable().optional(),
   projectVersionId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for GamificationAchievementsAchievementDto. Data model for Gamification Achievements Achievement Dto. */
+GamificationAchievementsAchievementDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  category: z.string().nullable().optional(),
+  color: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  displayOrder: z.number().int().optional(),
+  iconUrl: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  isRepeatable: z.boolean().optional(),
+  isSecret: z.boolean().optional(),
+  levels: z
+    .array(z.lazy(() => GamificationAchievementsAchievementLevelDtoSchema))
+    .nullable()
+    .optional(),
+  name: z.string().nullable().optional(),
+  points: z.number().int().optional(),
+  type: z.string().nullable().optional(),
+});
+
+/** Zod schema for GamificationAchievementsAchievementLevelDto. Data model for Gamification Achievements Achievement Level Dto. */
+GamificationAchievementsAchievementLevelDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  iconUrl: z.string().nullable().optional(),
+  level: z.number().int().optional(),
+  name: z.string().nullable().optional(),
+  pointsAwarded: z.number().int().optional(),
+  requiredProgress: z.number().int().optional(),
+});
+
+/** Zod schema for GamificationAchievementsAwardAchievementInput. Data model for Gamification Achievements Award Achievement Request. */
+GamificationAchievementsAwardAchievementInputSchema = z.object({
+  context: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for GamificationAchievementsCreateAchievementInput. Data model for Gamification Achievements Create Achievement Request. */
+GamificationAchievementsCreateAchievementInputSchema = z.object({
+  category: z.string().nullable().optional(),
+  color: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  displayOrder: z.number().int().optional(),
+  iconUrl: z.string().nullable().optional(),
+  isRepeatable: z.boolean().optional(),
+  isSecret: z.boolean().optional(),
+  name: z.string().nullable().optional(),
+  points: z.number().int().optional(),
+  type: z.string().nullable().optional(),
+});
+
+/** Zod schema for GamificationAchievementsUpdateAchievementInput. Data model for Gamification Achievements Update Achievement Request. */
+GamificationAchievementsUpdateAchievementInputSchema = z.object({
+  category: z.string().nullable().optional(),
+  color: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  displayOrder: z.number().int().nullable().optional(),
+  iconUrl: z.string().nullable().optional(),
+  isActive: z.boolean().nullable().optional(),
+  isRepeatable: z.boolean().nullable().optional(),
+  isSecret: z.boolean().nullable().optional(),
+  name: z.string().nullable().optional(),
+  points: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for GamificationAchievementsUserAchievementDto. Data model for Gamification Achievements User Achievement Dto. */
+GamificationAchievementsUserAchievementDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  achievementDescription: z.string().nullable().optional(),
+  achievementId: z.string().uuid().optional(),
+  achievementName: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  earnedAt: z.string().datetime().optional(),
+  iconUrl: z.string().nullable().optional(),
+  isCompleted: z.boolean().optional(),
+  level: z.number().int().optional(),
+  maxProgress: z.number().int().optional(),
+  pointsEarned: z.number().int().optional(),
+  progress: z.number().int().optional(),
+  progressPercentage: z.number().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationAccountRecoveryApprovalOutput. Data model for Identity Authentication Account Recovery Approval Response. */
@@ -52993,6 +53706,68 @@ SocialProfilesUpdateSocialProfileBodySchema = z.object({
   websiteUrl: z.string().nullable().optional(),
 });
 
+/** Zod schema for SocialRatingsBatchSummaryInput. Data model for Social Ratings Batch Summary Request. */
+SocialRatingsBatchSummaryInputSchema = z.object({
+  entityIds: z.array(z.string().uuid()).nullable().optional(),
+  entityType: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialRatingsCreateRatingInput. Data model for Social Ratings Create Rating Request. */
+SocialRatingsCreateRatingInputSchema = z.object({
+  entityId: z.string().uuid().optional(),
+  entityType: z.string().nullable().optional(),
+  reviewText: z.string().nullable().optional(),
+  reviewTitle: z.string().nullable().optional(),
+  value: z.number().int().optional(),
+});
+
+/** Zod schema for SocialRatingsRatingDto. Data model for Social Ratings Rating Dto. */
+SocialRatingsRatingDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  editedAt: z.string().datetime().nullable().optional(),
+  entityId: z.string().uuid().optional(),
+  entityType: z.string().nullable().optional(),
+  helpfulCount: z.number().int().optional(),
+  isVerified: z.boolean().optional(),
+  moderationStatus: z.lazy(() => SocialRatingsRatingModerationStatusSchema).optional(),
+  reviewText: z.string().nullable().optional(),
+  reviewTitle: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+  value: z.number().int().optional(),
+});
+
+/** Zod schema for SocialRatingsRatingModerationStatus. Moderation status for ratings/reviews */
+SocialRatingsRatingModerationStatusSchema = z.enum(['Pending', 'Approved', 'Rejected', 'Flagged']);
+
+/** Zod schema for SocialRatingsRatingSortOrder. Sort order options for rating queries */
+SocialRatingsRatingSortOrderSchema = z.enum(['MostRecent', 'Oldest', 'HighestRating', 'LowestRating', 'MostHelpful']);
+
+/** Zod schema for SocialRatingsRatingSummaryDto. Data model for Social Ratings Rating Summary Dto. */
+SocialRatingsRatingSummaryDtoSchema = z.object({
+  averageRating: z.number().optional(),
+  distribution: z.record(z.string(), z.number()).nullable().optional(),
+  entityId: z.string().uuid().optional(),
+  entityType: z.string().nullable().optional(),
+  fiveStar: z.number().int().optional(),
+  fourStar: z.number().int().optional(),
+  oneStar: z.number().int().optional(),
+  threeStar: z.number().int().optional(),
+  totalRatings: z.number().int().optional(),
+  totalReviews: z.number().int().optional(),
+  twoStar: z.number().int().optional(),
+});
+
+/** Zod schema for SocialRatingsReportInput. Data model for Social Ratings Report Request. */
+SocialRatingsReportInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialRatingsVoteHelpfulInput. Data model for Social Ratings Vote Helpful Request. */
+SocialRatingsVoteHelpfulInputSchema = z.object({
+  isHelpful: z.boolean().optional(),
+});
+
 /** Zod schema for SocialReactionsReactionDto. Data model for Social Reactions Reaction Dto. */
 SocialReactionsReactionDtoSchema = z.object({
   id: z.string().uuid().optional(),
@@ -55168,10 +55943,20 @@ export type FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAudit = Financ
 export { FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDtoSchema as FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditSchema };
 export type FinanceEconomyPayoutsQueriesEconomyPayoutRequestReview = FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto;
 export { FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDtoSchema as FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewSchema };
+export type FinanceLedgersModelsLedger = FinanceLedgersModelsLedgerDto;
+export { FinanceLedgersModelsLedgerDtoSchema as FinanceLedgersModelsLedgerSchema };
+export type FinanceLedgersModelsLedgerEntry = FinanceLedgersModelsLedgerEntryDto;
+export { FinanceLedgersModelsLedgerEntryDtoSchema as FinanceLedgersModelsLedgerEntrySchema };
 export type GameJamsJamCriteria = GameJamsJamCriteriaDto;
 export { GameJamsJamCriteriaDtoSchema as GameJamsJamCriteriaSchema };
 export type GameJamsJamSubmission = GameJamsJamSubmissionDto;
 export { GameJamsJamSubmissionDtoSchema as GameJamsJamSubmissionSchema };
+export type GamificationAchievementsAchievement = GamificationAchievementsAchievementDto;
+export { GamificationAchievementsAchievementDtoSchema as GamificationAchievementsAchievementSchema };
+export type GamificationAchievementsAchievementLevel = GamificationAchievementsAchievementLevelDto;
+export { GamificationAchievementsAchievementLevelDtoSchema as GamificationAchievementsAchievementLevelSchema };
+export type GamificationAchievementsUserAchievement = GamificationAchievementsUserAchievementDto;
+export { GamificationAchievementsUserAchievementDtoSchema as GamificationAchievementsUserAchievementSchema };
 export type IdentityAuthenticationApiKey = IdentityAuthenticationApiKeyDto;
 export { IdentityAuthenticationApiKeyDtoSchema as IdentityAuthenticationApiKeySchema };
 export type IdentityAuthenticationAuthSessionState = IdentityAuthenticationAuthSessionStateDto;
@@ -55688,6 +56473,10 @@ export type SocialProfilesProfileSkill = SocialProfilesProfileSkillDto;
 export { SocialProfilesProfileSkillDtoSchema as SocialProfilesProfileSkillSchema };
 export type SocialProfilesSocialProfile = SocialProfilesSocialProfileDto;
 export { SocialProfilesSocialProfileDtoSchema as SocialProfilesSocialProfileSchema };
+export type SocialRatingsRating = SocialRatingsRatingDto;
+export { SocialRatingsRatingDtoSchema as SocialRatingsRatingSchema };
+export type SocialRatingsRatingSummary = SocialRatingsRatingSummaryDto;
+export { SocialRatingsRatingSummaryDtoSchema as SocialRatingsRatingSummarySchema };
 export type SocialReactionsReaction = SocialReactionsReactionDto;
 export { SocialReactionsReactionDtoSchema as SocialReactionsReactionSchema };
 export type SocialReactionsTargetReactionSummary = SocialReactionsTargetReactionSummaryDto;
