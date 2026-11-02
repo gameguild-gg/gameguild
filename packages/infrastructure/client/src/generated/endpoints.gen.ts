@@ -21,6 +21,172 @@ export const getWellKnownJwksJsonEndpoint = {
   requiresAuth: false,
 } as const;
 
+/**
+ * Get all available achievements.
+ */
+export interface GetApiAchievementsForGetApiAchievementsInput {
+  query?: {
+    category?: string;
+    isActive?: boolean;
+  };
+}
+export type GetApiAchievementsForGetApiAchievementsOutput = Types.GamificationAchievementsAchievementDto[];
+export const getApiAchievementsForGetApiAchievementsEndpoint = {
+  operationId: 'getApiAchievementsForGetApiAchievements' as const,
+  method: 'GET' as const,
+  path: '/api/achievements' as const,
+  tags: ['GamificationAchievements'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Create a new achievement (admin only).
+ */
+export interface PostApiAchievementsInput {
+  body?: Types.GamificationAchievementsCreateAchievementInput;
+}
+export type PostApiAchievementsOutput = Types.GamificationAchievementsAchievementDto;
+export const postApiAchievementsEndpoint = {
+  operationId: 'postApiAchievements' as const,
+  method: 'POST' as const,
+  path: '/api/achievements' as const,
+  tags: ['GamificationAchievements'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get a specific achievement by ID.
+ */
+export interface GetApiAchievementsForGetApiAchievementsByAchievementIdInput {
+  achievementId: string;
+}
+export type GetApiAchievementsForGetApiAchievementsByAchievementIdOutput = Types.GamificationAchievementsAchievementDto;
+export const getApiAchievementsForGetApiAchievementsByAchievementIdEndpoint = {
+  operationId: 'getApiAchievementsForGetApiAchievementsByAchievementId' as const,
+  method: 'GET' as const,
+  path: '/api/achievements/{achievementId}' as const,
+  tags: ['GamificationAchievements'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Update an existing achievement (admin only).
+ */
+export interface PutApiAchievementsInput {
+  achievementId: string;
+  body?: Types.GamificationAchievementsUpdateAchievementInput;
+}
+export type PutApiAchievementsOutput = Types.GamificationAchievementsAchievementDto;
+export const putApiAchievementsEndpoint = {
+  operationId: 'putApiAchievements' as const,
+  method: 'PUT' as const,
+  path: '/api/achievements/{achievementId}' as const,
+  tags: ['GamificationAchievements'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Delete an achievement (admin only).
+ */
+export interface DeleteApiAchievementsInput {
+  achievementId: string;
+}
+export type DeleteApiAchievementsOutput = void;
+export const deleteApiAchievementsEndpoint = {
+  operationId: 'deleteApiAchievements' as const,
+  method: 'DELETE' as const,
+  path: '/api/achievements/{achievementId}' as const,
+  tags: ['GamificationAchievements'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Award an achievement to a user (admin only, for manual awards).
+ */
+export interface PostApiAchievementsAwardInput {
+  achievementId: string;
+  body?: Types.GamificationAchievementsAwardAchievementInput;
+}
+export type PostApiAchievementsAwardOutput = Types.GamificationAchievementsUserAchievementDto;
+export const postApiAchievementsAwardEndpoint = {
+  operationId: 'postApiAchievementsAward' as const,
+  method: 'POST' as const,
+  path: '/api/achievements/{achievementId}/award' as const,
+  tags: ['GamificationAchievements'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get eligible achievements the current user can earn.
+ */
+export type GetApiAchievementsEligibleInput = void;
+export type GetApiAchievementsEligibleOutput = Types.GamificationAchievementsAchievementDto[];
+export const getApiAchievementsEligibleEndpoint = {
+  operationId: 'getApiAchievementsEligible' as const,
+  method: 'GET' as const,
+  path: '/api/achievements/eligible' as const,
+  tags: ['GamificationAchievements'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get all achievements for the current user.
+ */
+export interface GetApiAchievementsMyInput {
+  query?: {
+    category?: string;
+  };
+}
+export type GetApiAchievementsMyOutput = Types.GamificationAchievementsUserAchievementDto[];
+export const getApiAchievementsMyEndpoint = {
+  operationId: 'getApiAchievementsMy' as const,
+  method: 'GET' as const,
+  path: '/api/achievements/my' as const,
+  tags: ['GamificationAchievements'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Mark an achievement notification as read.
+ */
+export interface PostApiAchievementsMyMarkNotifiedInput {
+  userAchievementId: string;
+}
+export type PostApiAchievementsMyMarkNotifiedOutput = void;
+export const postApiAchievementsMyMarkNotifiedEndpoint = {
+  operationId: 'postApiAchievementsMyMarkNotified' as const,
+  method: 'POST' as const,
+  path: '/api/achievements/my/{userAchievementId}/mark-notified' as const,
+  tags: ['GamificationAchievements'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get total achievement points for the current user.
+ */
+export type GetApiAchievementsMyPointsInput = void;
+export type GetApiAchievementsMyPointsOutput = number;
+export const getApiAchievementsMyPointsEndpoint = {
+  operationId: 'getApiAchievementsMyPoints' as const,
+  method: 'GET' as const,
+  path: '/api/achievements/my/points' as const,
+  tags: ['GamificationAchievements'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get unnotified achievements for the current user.
+ */
+export type GetApiAchievementsMyUnnotifiedInput = void;
+export type GetApiAchievementsMyUnnotifiedOutput = Types.GamificationAchievementsUserAchievementDto[];
+export const getApiAchievementsMyUnnotifiedEndpoint = {
+  operationId: 'getApiAchievementsMyUnnotified' as const,
+  method: 'GET' as const,
+  path: '/api/achievements/my/unnotified' as const,
+  tags: ['GamificationAchievements'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiAnalyticsDashboardsInput {
   query?: {
     tenantId?: string;
@@ -3814,6 +3980,353 @@ export const getApiPrerequisitesDependentsEndpoint = {
   path: '/api/prerequisites/dependents/{courseId}' as const,
   tags: ['LearningCoursesPrerequisites'] as const,
   requiresAuth: true,
+} as const;
+
+/**
+ * Rate an entity (create or update)
+ */
+export interface PostApiRatingsInput {
+  body?: Types.SocialRatingsCreateRatingInput;
+}
+export type PostApiRatingsOutput = Types.SocialRatingsRatingDto;
+export const postApiRatingsEndpoint = {
+  operationId: 'postApiRatings' as const,
+  method: 'POST' as const,
+  path: '/api/ratings' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get a specific rating by ID
+ */
+export interface GetApiRatingsInput {
+  ratingId: string;
+}
+export type GetApiRatingsOutput = Types.SocialRatingsRatingDto;
+export const getApiRatingsEndpoint = {
+  operationId: 'getApiRatings' as const,
+  method: 'GET' as const,
+  path: '/api/ratings/{ratingId}' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Delete the current user's rating
+ */
+export interface DeleteApiRatingsInput {
+  ratingId: string;
+}
+export type DeleteApiRatingsOutput = void;
+export const deleteApiRatingsEndpoint = {
+  operationId: 'deleteApiRatings' as const,
+  method: 'DELETE' as const,
+  path: '/api/ratings/{ratingId}' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Mark a review as helpful or not helpful
+ */
+export interface PostApiRatingsHelpfulInput {
+  ratingId: string;
+  body?: Types.SocialRatingsVoteHelpfulInput;
+}
+export type PostApiRatingsHelpfulOutput = void;
+export const postApiRatingsHelpfulEndpoint = {
+  operationId: 'postApiRatingsHelpful' as const,
+  method: 'POST' as const,
+  path: '/api/ratings/{ratingId}/helpful' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Remove helpful vote
+ */
+export interface DeleteApiRatingsHelpfulInput {
+  ratingId: string;
+}
+export type DeleteApiRatingsHelpfulOutput = void;
+export const deleteApiRatingsHelpfulEndpoint = {
+  operationId: 'deleteApiRatingsHelpful' as const,
+  method: 'DELETE' as const,
+  path: '/api/ratings/{ratingId}/helpful' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Report a review
+ */
+export interface PostApiRatingsReportInput {
+  ratingId: string;
+  body?: Types.SocialRatingsReportInput;
+}
+export type PostApiRatingsReportOutput = void;
+export const postApiRatingsReportEndpoint = {
+  operationId: 'postApiRatingsReport' as const,
+  method: 'POST' as const,
+  path: '/api/ratings/{ratingId}/report' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Admin delete a rating
+ */
+export interface DeleteApiRatingsAdminInput {
+  ratingId: string;
+}
+export type DeleteApiRatingsAdminOutput = void;
+export const deleteApiRatingsAdminEndpoint = {
+  operationId: 'deleteApiRatingsAdmin' as const,
+  method: 'DELETE' as const,
+  path: '/api/ratings/admin/{ratingId}' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Approve a rating (Admin)
+ */
+export interface PostApiRatingsAdminApproveInput {
+  ratingId: string;
+}
+export type PostApiRatingsAdminApproveOutput = void;
+export const postApiRatingsAdminApproveEndpoint = {
+  operationId: 'postApiRatingsAdminApprove' as const,
+  method: 'POST' as const,
+  path: '/api/ratings/admin/{ratingId}/approve' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Reject a rating (Admin)
+ */
+export interface PostApiRatingsAdminRejectInput {
+  ratingId: string;
+}
+export type PostApiRatingsAdminRejectOutput = void;
+export const postApiRatingsAdminRejectEndpoint = {
+  operationId: 'postApiRatingsAdminReject' as const,
+  method: 'POST' as const,
+  path: '/api/ratings/admin/{ratingId}/reject' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get ratings pending moderation (Admin)
+ */
+export interface GetApiRatingsAdminModerationInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiRatingsAdminModerationOutput = Types.SocialRatingsRatingDto[];
+export const getApiRatingsAdminModerationEndpoint = {
+  operationId: 'getApiRatingsAdminModeration' as const,
+  method: 'GET' as const,
+  path: '/api/ratings/admin/moderation' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Force recalculate rating summary (Admin)
+ */
+export interface PostApiRatingsAdminRecalculateInput {
+  entityType: string;
+  entityId: string;
+}
+export type PostApiRatingsAdminRecalculateOutput = void;
+export const postApiRatingsAdminRecalculateEndpoint = {
+  operationId: 'postApiRatingsAdminRecalculate' as const,
+  method: 'POST' as const,
+  path: '/api/ratings/admin/recalculate/{entityType}/{entityId}' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get ratings count for an entity
+ */
+export interface GetApiRatingsCountInput {
+  entityType: string;
+  entityId: string;
+}
+export type GetApiRatingsCountOutput = number;
+export const getApiRatingsCountEndpoint = {
+  operationId: 'getApiRatingsCount' as const,
+  method: 'GET' as const,
+  path: '/api/ratings/count/{entityType}/{entityId}' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Get ratings for an entity
+ */
+export interface GetApiRatingsEntityInput {
+  entityType: string;
+  entityId: string;
+  query?: {
+    minValue?: number;
+    maxValue?: number;
+    withReviewOnly?: boolean;
+    verifiedOnly?: boolean;
+    sortOrder?: Types.SocialRatingsRatingSortOrder;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiRatingsEntityOutput = Types.SocialRatingsRatingDto[];
+export const getApiRatingsEntityEndpoint = {
+  operationId: 'getApiRatingsEntity' as const,
+  method: 'GET' as const,
+  path: '/api/ratings/entity/{entityType}/{entityId}' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Check if current user has rated an entity
+ */
+export interface GetApiRatingsHasRatedInput {
+  entityType: string;
+  entityId: string;
+}
+export type GetApiRatingsHasRatedOutput = boolean;
+export const getApiRatingsHasRatedEndpoint = {
+  operationId: 'getApiRatingsHasRated' as const,
+  method: 'GET' as const,
+  path: '/api/ratings/has-rated/{entityType}/{entityId}' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get the current user's rating for an entity
+ */
+export interface GetApiRatingsMyInput {
+  entityType: string;
+  entityId: string;
+}
+export type GetApiRatingsMyOutput = Types.SocialRatingsRatingDto;
+export const getApiRatingsMyEndpoint = {
+  operationId: 'getApiRatingsMy' as const,
+  method: 'GET' as const,
+  path: '/api/ratings/my/{entityType}/{entityId}' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get current user's ratings for multiple entities (batch)
+ */
+export interface PostApiRatingsMyBatchInput {
+  body?: Types.SocialRatingsBatchSummaryInput;
+}
+export type PostApiRatingsMyBatchOutput = Record<string, SocialRatingsRatingDto>;
+export const postApiRatingsMyBatchEndpoint = {
+  operationId: 'postApiRatingsMyBatch' as const,
+  method: 'POST' as const,
+  path: '/api/ratings/my/batch' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get recent reviews
+ */
+export interface GetApiRatingsRecentReviewsInput {
+  query?: {
+    entityType?: string;
+    take?: number;
+  };
+}
+export type GetApiRatingsRecentReviewsOutput = Types.SocialRatingsRatingDto[];
+export const getApiRatingsRecentReviewsEndpoint = {
+  operationId: 'getApiRatingsRecentReviews' as const,
+  method: 'GET' as const,
+  path: '/api/ratings/recent-reviews' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Get summaries for multiple entities (batch)
+ */
+export interface PostApiRatingsSummariesBatchInput {
+  body?: Types.SocialRatingsBatchSummaryInput;
+}
+export type PostApiRatingsSummariesBatchOutput = Record<string, SocialRatingsRatingSummaryDto>;
+export const postApiRatingsSummariesBatchEndpoint = {
+  operationId: 'postApiRatingsSummariesBatch' as const,
+  method: 'POST' as const,
+  path: '/api/ratings/summaries/batch' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Get rating summary for an entity
+ */
+export interface GetApiRatingsSummaryInput {
+  entityType: string;
+  entityId: string;
+}
+export type GetApiRatingsSummaryOutput = Types.SocialRatingsRatingSummaryDto;
+export const getApiRatingsSummaryEndpoint = {
+  operationId: 'getApiRatingsSummary' as const,
+  method: 'GET' as const,
+  path: '/api/ratings/summary/{entityType}/{entityId}' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Get top-rated entities of a type
+ */
+export interface GetApiRatingsTopInput {
+  entityType: string;
+  query?: {
+    minRatings?: number;
+    take?: number;
+  };
+}
+export type GetApiRatingsTopOutput = Types.SocialRatingsRatingSummaryDto[];
+export const getApiRatingsTopEndpoint = {
+  operationId: 'getApiRatingsTop' as const,
+  method: 'GET' as const,
+  path: '/api/ratings/top/{entityType}' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Get all ratings by a specific user
+ */
+export interface GetApiRatingsUserInput {
+  userId: string;
+  query?: {
+    entityType?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiRatingsUserOutput = Types.SocialRatingsRatingDto[];
+export const getApiRatingsUserEndpoint = {
+  operationId: 'getApiRatingsUser' as const,
+  method: 'GET' as const,
+  path: '/api/ratings/user/{userId}' as const,
+  tags: ['SocialRatings'] as const,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11018,6 +11531,410 @@ export const postIntegrationsEconomySumsubWebhookEndpoint = {
   path: '/api/v1/integrations/economy/sumsub/webhook' as const,
   tags: ['EconomyIntegrations'] as const,
   requiresAuth: false,
+} as const;
+
+/**
+ * Gets a ledger by ID.
+ */
+export interface GetLedgersInput {
+  ledgerId: string;
+}
+export type GetLedgersOutput = Types.FinanceLedgersModelsLedgerDto;
+export const getLedgersEndpoint = {
+  operationId: 'getLedgers' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/{ledgerId}' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets the ancestor path from root to ledger.
+ */
+export interface GetLedgersAncestorsInput {
+  ledgerId: string;
+}
+export type GetLedgersAncestorsOutput = Types.FinanceLedgersModelsLedgerDto[];
+export const getLedgersAncestorsEndpoint = {
+  operationId: 'getLedgersAncestors' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/{ledgerId}/ancestors' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets balance for a ledger (direct entries only).
+ */
+export interface GetLedgersBalanceInput {
+  ledgerId: string;
+  query?: {
+    asOfDate?: string;
+  };
+}
+export type GetLedgersBalanceOutput = Types.FinanceLedgersModelsLedgerBalance;
+export const getLedgersBalanceEndpoint = {
+  operationId: 'getLedgersBalance' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/{ledgerId}/balance' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets consolidated balance including all descendants.
+ */
+export interface GetLedgersBalanceConsolidatedInput {
+  ledgerId: string;
+  query?: {
+    asOfDate?: string;
+  };
+}
+export type GetLedgersBalanceConsolidatedOutput = Types.FinanceLedgersModelsLedgerBalance;
+export const getLedgersBalanceConsolidatedEndpoint = {
+  operationId: 'getLedgersBalanceConsolidated' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/{ledgerId}/balance/consolidated' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets direct children of a ledger.
+ */
+export interface GetLedgersChildrenInput {
+  ledgerId: string;
+}
+export type GetLedgersChildrenOutput = Types.FinanceLedgersModelsLedgerDto[];
+export const getLedgersChildrenEndpoint = {
+  operationId: 'getLedgersChildren' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/{ledgerId}/children' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets descendants of a ledger.
+ */
+export interface GetLedgersDescendantsInput {
+  ledgerId: string;
+  query?: {
+    maxDepth?: number;
+  };
+}
+export type GetLedgersDescendantsOutput = Types.FinanceLedgersModelsLedgerDto[];
+export const getLedgersDescendantsEndpoint = {
+  operationId: 'getLedgersDescendants' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/{ledgerId}/descendants' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets entries for a ledger (direct only).
+ */
+export interface GetLedgersEntriesForGetLedgersByLedgerIdEntriesInput {
+  ledgerId: string;
+  query?: {
+    fromDate?: string;
+    toDate?: string;
+  };
+}
+export type GetLedgersEntriesForGetLedgersByLedgerIdEntriesOutput = Types.FinanceLedgersModelsLedgerEntryDto[];
+export const getLedgersEntriesForGetLedgersByLedgerIdEntriesEndpoint = {
+  operationId: 'getLedgersEntriesForGetLedgersByLedgerIdEntries' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/{ledgerId}/entries' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Posts a new entry to a ledger.
+ */
+export interface PostLedgersEntriesInput {
+  ledgerId: string;
+  body?: Types.FinanceLedgersControllersPostEntryInput;
+}
+export type PostLedgersEntriesOutput = Types.FinanceLedgersModelsLedgerEntryDto;
+export const postLedgersEntriesEndpoint = {
+  operationId: 'postLedgersEntries' as const,
+  method: 'POST' as const,
+  path: '/api/v1/ledgers/{ledgerId}/entries' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets entries for a ledger including all descendants (rollup).
+ */
+export interface GetLedgersEntriesRollupInput {
+  ledgerId: string;
+  query?: {
+    fromDate?: string;
+    toDate?: string;
+  };
+}
+export type GetLedgersEntriesRollupOutput = Types.FinanceLedgersModelsLedgerEntryDto[];
+export const getLedgersEntriesRollupEndpoint = {
+  operationId: 'getLedgersEntriesRollup' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/{ledgerId}/entries/rollup' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets the hierarchy tree starting from a ledger.
+ */
+export interface GetLedgersHierarchyInput {
+  ledgerId: string;
+  query?: {
+    maxDepth?: number;
+  };
+}
+export type GetLedgersHierarchyOutput = Types.FinanceLedgersModelsLedgerTreeNode;
+export const getLedgersHierarchyEndpoint = {
+  operationId: 'getLedgersHierarchy' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/{ledgerId}/hierarchy' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets hierarchical rollup for a subtree.
+ */
+export interface GetLedgersRollupInput {
+  ledgerId: string;
+  query?: {
+    fromDate?: string;
+    toDate?: string;
+  };
+}
+export type GetLedgersRollupOutput = Types.FinanceLedgersModelsLedgerRollupNode;
+export const getLedgersRollupEndpoint = {
+  operationId: 'getLedgersRollup' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/{ledgerId}/rollup' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets category-based rollup for a ledger.
+ */
+export interface GetLedgersRollupCategoriesInput {
+  ledgerId: string;
+  query?: {
+    includeDescendants?: boolean;
+    fromDate?: string;
+    toDate?: string;
+  };
+}
+export type GetLedgersRollupCategoriesOutput = Types.FinanceLedgersModelsCategoryRollup[];
+export const getLedgersRollupCategoriesEndpoint = {
+  operationId: 'getLedgersRollupCategories' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/{ledgerId}/rollup/categories' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets period-based rollup for a ledger.
+ */
+export interface GetLedgersRollupPeriodsInput {
+  ledgerId: string;
+  query?: {
+    fromDate?: string;
+    toDate?: string;
+    granularity?: Types.FinanceLedgersModelsPeriodGranularity;
+    includeDescendants?: boolean;
+  };
+}
+export type GetLedgersRollupPeriodsOutput = Types.FinanceLedgersModelsPeriodRollup[];
+export const getLedgersRollupPeriodsEndpoint = {
+  operationId: 'getLedgersRollupPeriods' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/{ledgerId}/rollup/periods' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Creates a new child ledger under a parent.
+ */
+export interface PostLedgersChildrenInput {
+  parentLedgerId: string;
+  body?: Types.FinanceLedgersControllersCreateChildLedgerInput;
+}
+export type PostLedgersChildrenOutput = Types.FinanceLedgersModelsLedgerDto;
+export const postLedgersChildrenEndpoint = {
+  operationId: 'postLedgersChildren' as const,
+  method: 'POST' as const,
+  path: '/api/v1/ledgers/{parentLedgerId}/children' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets a ledger by code within tenant.
+ */
+export interface GetLedgersByCodeInput {
+  tenantId: string;
+  code: string;
+}
+export type GetLedgersByCodeOutput = Types.FinanceLedgersModelsLedgerDto;
+export const getLedgersByCodeEndpoint = {
+  operationId: 'getLedgersByCode' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/by-code/{tenantId}/{code}' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets an entry by ID.
+ */
+export interface GetLedgersEntriesForGetLedgersEntriesByEntryIdInput {
+  entryId: string;
+}
+export type GetLedgersEntriesForGetLedgersEntriesByEntryIdOutput = Types.FinanceLedgersModelsLedgerEntryDto;
+export const getLedgersEntriesForGetLedgersEntriesByEntryIdEndpoint = {
+  operationId: 'getLedgersEntriesForGetLedgersEntriesByEntryId' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/entries/{entryId}' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Deletes an entry that has not been reconciled, voided, transferred, or linked to a reversal.
+ */
+export interface DeleteLedgersEntriesInput {
+  entryId: string;
+}
+export type DeleteLedgersEntriesOutput = void;
+export const deleteLedgersEntriesEndpoint = {
+  operationId: 'deleteLedgersEntries' as const,
+  method: 'DELETE' as const,
+  path: '/api/v1/ledgers/entries/{entryId}' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Updates a mutable entry.
+ */
+export interface PatchLedgersEntriesInput {
+  entryId: string;
+  body?: Types.FinanceLedgersControllersUpdateEntryInput;
+}
+export type PatchLedgersEntriesOutput = Types.FinanceLedgersModelsLedgerEntryDto;
+export const patchLedgersEntriesEndpoint = {
+  operationId: 'patchLedgersEntries' as const,
+  method: 'PATCH' as const,
+  path: '/api/v1/ledgers/entries/{entryId}' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Reverses/voids an entry.
+ */
+export interface PostLedgersEntriesReverseInput {
+  entryId: string;
+  body?: Types.FinanceLedgersControllersReverseEntryInput;
+}
+export type PostLedgersEntriesReverseOutput = Types.FinanceLedgersModelsLedgerEntryDto;
+export const postLedgersEntriesReverseEndpoint = {
+  operationId: 'postLedgersEntriesReverse' as const,
+  method: 'POST' as const,
+  path: '/api/v1/ledgers/entries/{entryId}/reverse' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Creates a new root ledger.
+ */
+export interface PostLedgersRootInput {
+  body?: Types.FinanceLedgersControllersCreateRootLedgerInput;
+}
+export type PostLedgersRootOutput = Types.FinanceLedgersModelsLedgerDto;
+export const postLedgersRootEndpoint = {
+  operationId: 'postLedgersRoot' as const,
+  method: 'POST' as const,
+  path: '/api/v1/ledgers/root' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets all ledgers for a tenant.
+ */
+export interface GetLedgersTenantInput {
+  tenantId: string;
+  query?: {
+    status?: Types.FinanceLedgersEnumsLedgerStatus;
+    type?: Types.FinanceLedgersEnumsLedgerType;
+  };
+}
+export type GetLedgersTenantOutput = Types.FinanceLedgersModelsLedgerDto[];
+export const getLedgersTenantEndpoint = {
+  operationId: 'getLedgersTenant' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/tenant/{tenantId}' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets root ledgers for a tenant.
+ */
+export interface GetLedgersTenantRootsInput {
+  tenantId: string;
+}
+export type GetLedgersTenantRootsOutput = Types.FinanceLedgersModelsLedgerDto[];
+export const getLedgersTenantRootsEndpoint = {
+  operationId: 'getLedgersTenantRoots' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/tenant/{tenantId}/roots' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Gets virtual ledgers for a tenant.
+ */
+export interface GetLedgersTenantVirtualInput {
+  tenantId: string;
+}
+export type GetLedgersTenantVirtualOutput = Types.FinanceLedgersModelsLedgerDto[];
+export const getLedgersTenantVirtualEndpoint = {
+  operationId: 'getLedgersTenantVirtual' as const,
+  method: 'GET' as const,
+  path: '/api/v1/ledgers/tenant/{tenantId}/virtual' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Posts a transfer between two ledgers.
+ */
+export interface PostLedgersTransfersInput {
+  body?: Types.FinanceLedgersControllersPostTransferInput;
+}
+export type PostLedgersTransfersOutput = Types.FinanceLedgersModelsTransferResult;
+export const postLedgersTransfersEndpoint = {
+  operationId: 'postLedgersTransfers' as const,
+  method: 'POST' as const,
+  path: '/api/v1/ledgers/transfers' as const,
+  tags: ['FinanceLedgersFinanceLedgers'] as const,
+  requiresAuth: true,
 } as const;
 
 /**
@@ -19437,6 +20354,57 @@ export const postAuthGuestSessionEndpoint = {
   path: '/v1/auth/guest-session' as const,
   tags: ['AuthGuest'] as const,
   requiresAuth: false,
+} as const;
+
+/**
+ * Lists every active blocklist entry, expired entries filtered out.
+ *
+ * Lists the active known-attacker IP blocklist entries stored in the distributed cache.
+ */
+export type GetAuthIpBlocklistInput = void;
+export type GetAuthIpBlocklistOutput = Types.IdentityAuthenticationIpBlocklistEntry[];
+export const getAuthIpBlocklistEndpoint = {
+  operationId: 'getAuthIpBlocklist' as const,
+  method: 'GET' as const,
+  path: '/v1/auth/ip-blocklist' as const,
+  tags: ['AuthIpBlocklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Adds or replaces a blocklist entry.
+ *
+ * Stores a known-attacker IP address in the shared blocklist. Omit expiresAt to apply the configured default entry lifetime.
+ */
+export interface PutAuthIpBlocklistInput {
+  body?: Types.IdentityAuthenticationIpBlocklistEntryInput;
+}
+export type PutAuthIpBlocklistOutput = void;
+export const putAuthIpBlocklistEndpoint = {
+  operationId: 'putAuthIpBlocklist' as const,
+  method: 'PUT' as const,
+  path: '/v1/auth/ip-blocklist' as const,
+  tags: ['AuthIpBlocklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Removes a blocklist entry.
+ *
+ * Removes the blocklist entry for the given IP address. Returns 404 when no entry exists.
+ */
+export interface DeleteAuthIpBlocklistInput {
+  query?: {
+    ipAddress?: string;
+  };
+}
+export type DeleteAuthIpBlocklistOutput = void;
+export const deleteAuthIpBlocklistEndpoint = {
+  operationId: 'deleteAuthIpBlocklist' as const,
+  method: 'DELETE' as const,
+  path: '/v1/auth/ip-blocklist' as const,
+  tags: ['AuthIpBlocklist'] as const,
+  requiresAuth: true,
 } as const;
 
 /**
@@ -33780,6 +34748,17 @@ export const getUsersProfilesEndpoint = {
 /** Registry of all endpoints */
 export const endpoints = {
   getWellKnownJwksJson: getWellKnownJwksJsonEndpoint,
+  getApiAchievementsForGetApiAchievements: getApiAchievementsForGetApiAchievementsEndpoint,
+  postApiAchievements: postApiAchievementsEndpoint,
+  getApiAchievementsForGetApiAchievementsByAchievementId: getApiAchievementsForGetApiAchievementsByAchievementIdEndpoint,
+  putApiAchievements: putApiAchievementsEndpoint,
+  deleteApiAchievements: deleteApiAchievementsEndpoint,
+  postApiAchievementsAward: postApiAchievementsAwardEndpoint,
+  getApiAchievementsEligible: getApiAchievementsEligibleEndpoint,
+  getApiAchievementsMy: getApiAchievementsMyEndpoint,
+  postApiAchievementsMyMarkNotified: postApiAchievementsMyMarkNotifiedEndpoint,
+  getApiAchievementsMyPoints: getApiAchievementsMyPointsEndpoint,
+  getApiAchievementsMyUnnotified: getApiAchievementsMyUnnotifiedEndpoint,
   getApiAnalyticsDashboards: getApiAnalyticsDashboardsEndpoint,
   postApiAnalyticsDashboards: postApiAnalyticsDashboardsEndpoint,
   getAnalyticsDashboardById: getAnalyticsDashboardByIdEndpoint,
@@ -34035,6 +35014,27 @@ export const endpoints = {
   postApiPrerequisitesCourseReorder: postApiPrerequisitesCourseReorderEndpoint,
   getApiPrerequisitesCourseWouldCreateCycle: getApiPrerequisitesCourseWouldCreateCycleEndpoint,
   getApiPrerequisitesDependents: getApiPrerequisitesDependentsEndpoint,
+  postApiRatings: postApiRatingsEndpoint,
+  getApiRatings: getApiRatingsEndpoint,
+  deleteApiRatings: deleteApiRatingsEndpoint,
+  postApiRatingsHelpful: postApiRatingsHelpfulEndpoint,
+  deleteApiRatingsHelpful: deleteApiRatingsHelpfulEndpoint,
+  postApiRatingsReport: postApiRatingsReportEndpoint,
+  deleteApiRatingsAdmin: deleteApiRatingsAdminEndpoint,
+  postApiRatingsAdminApprove: postApiRatingsAdminApproveEndpoint,
+  postApiRatingsAdminReject: postApiRatingsAdminRejectEndpoint,
+  getApiRatingsAdminModeration: getApiRatingsAdminModerationEndpoint,
+  postApiRatingsAdminRecalculate: postApiRatingsAdminRecalculateEndpoint,
+  getApiRatingsCount: getApiRatingsCountEndpoint,
+  getApiRatingsEntity: getApiRatingsEntityEndpoint,
+  getApiRatingsHasRated: getApiRatingsHasRatedEndpoint,
+  getApiRatingsMy: getApiRatingsMyEndpoint,
+  postApiRatingsMyBatch: postApiRatingsMyBatchEndpoint,
+  getApiRatingsRecentReviews: getApiRatingsRecentReviewsEndpoint,
+  postApiRatingsSummariesBatch: postApiRatingsSummariesBatchEndpoint,
+  getApiRatingsSummary: getApiRatingsSummaryEndpoint,
+  getApiRatingsTop: getApiRatingsTopEndpoint,
+  getApiRatingsUser: getApiRatingsUserEndpoint,
   getApiReady: getApiReadyEndpoint,
   getApiSocialBlogAdminComments: getApiSocialBlogAdminCommentsEndpoint,
   deleteApiSocialBlogAdminComments: deleteApiSocialBlogAdminCommentsEndpoint,
@@ -34503,6 +35503,30 @@ export const endpoints = {
   getGiftsSent: getGiftsSentEndpoint,
   postIntegrationsEconomyStripeConnectWebhook: postIntegrationsEconomyStripeConnectWebhookEndpoint,
   postIntegrationsEconomySumsubWebhook: postIntegrationsEconomySumsubWebhookEndpoint,
+  getLedgers: getLedgersEndpoint,
+  getLedgersAncestors: getLedgersAncestorsEndpoint,
+  getLedgersBalance: getLedgersBalanceEndpoint,
+  getLedgersBalanceConsolidated: getLedgersBalanceConsolidatedEndpoint,
+  getLedgersChildren: getLedgersChildrenEndpoint,
+  getLedgersDescendants: getLedgersDescendantsEndpoint,
+  getLedgersEntriesForGetLedgersByLedgerIdEntries: getLedgersEntriesForGetLedgersByLedgerIdEntriesEndpoint,
+  postLedgersEntries: postLedgersEntriesEndpoint,
+  getLedgersEntriesRollup: getLedgersEntriesRollupEndpoint,
+  getLedgersHierarchy: getLedgersHierarchyEndpoint,
+  getLedgersRollup: getLedgersRollupEndpoint,
+  getLedgersRollupCategories: getLedgersRollupCategoriesEndpoint,
+  getLedgersRollupPeriods: getLedgersRollupPeriodsEndpoint,
+  postLedgersChildren: postLedgersChildrenEndpoint,
+  getLedgersByCode: getLedgersByCodeEndpoint,
+  getLedgersEntriesForGetLedgersEntriesByEntryId: getLedgersEntriesForGetLedgersEntriesByEntryIdEndpoint,
+  deleteLedgersEntries: deleteLedgersEntriesEndpoint,
+  patchLedgersEntries: patchLedgersEntriesEndpoint,
+  postLedgersEntriesReverse: postLedgersEntriesReverseEndpoint,
+  postLedgersRoot: postLedgersRootEndpoint,
+  getLedgersTenant: getLedgersTenantEndpoint,
+  getLedgersTenantRoots: getLedgersTenantRootsEndpoint,
+  getLedgersTenantVirtual: getLedgersTenantVirtualEndpoint,
+  postLedgersTransfers: postLedgersTransfersEndpoint,
   postNotificationsEmailEvents: postNotificationsEmailEventsEndpoint,
   getNotificationsSubscriptions: getNotificationsSubscriptionsEndpoint,
   postNotificationsSubscriptionsResend: postNotificationsSubscriptionsResendEndpoint,
@@ -35010,6 +36034,9 @@ export const endpoints = {
   postAuthGoogleSignIn: postAuthGoogleSignInEndpoint,
   getAuthGuestSession: getAuthGuestSessionEndpoint,
   postAuthGuestSession: postAuthGuestSessionEndpoint,
+  getAuthIpBlocklist: getAuthIpBlocklistEndpoint,
+  putAuthIpBlocklist: putAuthIpBlocklistEndpoint,
+  deleteAuthIpBlocklist: deleteAuthIpBlocklistEndpoint,
   postAuthMagicLinkConsume: postAuthMagicLinkConsumeEndpoint,
   postAuthMagicLinkRequest: postAuthMagicLinkRequestEndpoint,
   getAuthMfa: getAuthMfaEndpoint,
