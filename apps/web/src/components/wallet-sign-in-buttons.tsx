@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "@game-guild/client/react";
+import { TurnstileWidget } from "@/components/antibot/turnstile-widget";
 import {
   Web3Provider,
   createWalletAdapters,
@@ -44,6 +45,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   user_rejected: "You rejected the request in your wallet. Nothing was signed.",
   wallet_not_found: "This wallet was not detected in your browser.",
   challenge_failed: "Could not start wallet sign-in. Please try again.",
+  "bot-check-failed": "Bot check failed. Please refresh and try again.",
   verification_failed: "Wallet sign-in failed. The challenge may have expired — please try again.",
   unauthorized: "Connect your wallet first.",
   disconnected: "Your wallet disconnected.",
@@ -108,6 +110,8 @@ function WalletButtonGroup({
   labels: WalletSignInLabels;
 }) {
   const { signIn } = useAuth();
+  // Keep the anti-bot token with the wallet context and clear it on challenge failure.
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   // Accessed through the context object (not destructured): the linter's
   // unbound-method rule fires on functions separated from their owning
   // object. `useWeb3` (not the `useWallet` snapshot) exposes `authenticate`
@@ -124,16 +128,25 @@ function WalletButtonGroup({
         const response = await fetch(CHALLENGE_ENDPOINT, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ walletAddress: request.walletAddress, chainId: request.chainId }),
+          body: JSON.stringify({
+            walletAddress: request.walletAddress,
+            chainId: request.chainId,
+            turnstileToken,
+          }),
+        }).catch((error) => {
+          setTurnstileToken(null);
+          throw error;
         });
         const data = (await response.json().catch(() => null)) as {
           challenge?: string;
           nonce?: string;
           expiresAt?: string;
           message?: string;
+          error?: string;
         } | null;
         if (!response.ok || !data?.challenge || !data.nonce) {
-          throw new Error(data?.message ?? "challenge_failed");
+          setTurnstileToken(null);
+          throw new Error(data?.message ?? data?.error ?? "challenge_failed");
         }
         return { challenge: data.challenge, nonce: data.nonce, expiresAt: data.expiresAt };
       },
@@ -152,7 +165,7 @@ function WalletButtonGroup({
         });
       },
     }),
-    [signIn, redirectTo],
+    [signIn, redirectTo, turnstileToken],
   );
 
   async function handleConnect(walletId: string) {
@@ -191,6 +204,7 @@ function WalletButtonGroup({
 
   return (
     <div className="contents" data-testid="wallet-sign-in-buttons">
+      <TurnstileWidget onToken={setTurnstileToken} id="wallet-sign-in-turnstile" />
       {availableWallets.map((wallet) => (
         <button
           key={wallet.id}

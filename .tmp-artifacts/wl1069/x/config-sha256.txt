@@ -1,2 +1,0 @@
-6927fa01e9eed55dd333e5962a7ea5dc09276d966d1093be0b341e30835d5596  apps/web/eslint.config.mjs
-147da20830bd4a73ec0ae32abc0a0f9c6a1305797daaf7644dbda99fba9dbaec  apps/web/eslint-suppressions.json

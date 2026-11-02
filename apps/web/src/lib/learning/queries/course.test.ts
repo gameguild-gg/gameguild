@@ -256,6 +256,50 @@ describe("course analytics query", () => {
       "28691da8-245e-4d9e-b729-83c9023ba063",
     ]);
     expect(content.total).toBe(2);
+    expect(content.error).toBeUndefined();
+  });
+
+  it("surfaces failed content loads as an error state instead of silent emptiness", async () => {
+    const courseId = "58691da8-245e-4d9e-b729-83c9023ba066";
+    mocks.getCoursesContent.mockResolvedValue({
+      ok: false,
+      error: { status: 429 },
+    });
+
+    const content = await getCourseContent(courseId);
+
+    expect(content).toEqual({ items: [], total: 0, error: 429 });
+  });
+
+  it("marks transport failures on course content as errors", async () => {
+    const courseId = "68691da8-245e-4d9e-b729-83c9023ba067";
+    mocks.getCoursesContent.mockRejectedValue(new Error("network down"));
+
+    const content = await getCourseContent(courseId);
+
+    expect(content).toEqual({ items: [], total: 0, error: "error" });
+  });
+
+  it("omits the author handle when the creator lookup fails", async () => {
+    mocks.getCoursesSlug.mockResolvedValue({
+      ok: true,
+      data: {
+        id: "78691da8-245e-4d9e-b729-83c9023ba068",
+        title: "Racing Course",
+        slug: "ai4games",
+        creatorId: "019f594e-8e00-0000-0000-000000000000",
+        status: "Published",
+        visibility: "Public",
+      },
+    });
+    mocks.getUsersForGetUsersByUserId.mockResolvedValue({
+      ok: false,
+      error: { status: 401 },
+    });
+
+    const course = await getCourse("ai4games");
+
+    expect(course?.creatorHandle).toBeNull();
   });
 
   it("maps aggregate API analytics without inventing detail rows", async () => {

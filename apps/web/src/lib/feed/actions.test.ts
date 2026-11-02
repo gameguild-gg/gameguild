@@ -5,10 +5,12 @@ const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
   getSession: vi.fn(),
   getToken: vi.fn(),
+  verifyTurnstileToken: vi.fn(),
 }));
 
 vi.mock("@/auth", () => ({ getSession: mocks.getSession, getToken: mocks.getToken }));
 vi.mock("@game-guild/client", () => ({ createServerClient: mocks.createServerClient }));
+vi.mock("@/lib/antibot/turnstile", () => ({ verifyTurnstileToken: mocks.verifyTurnstileToken }));
 
 import {
   createPostComment,
@@ -40,6 +42,7 @@ describe("social feed actions", () => {
     });
     mocks.getToken.mockResolvedValue("access-token");
     mocks.createServerClient.mockReturnValue({ request: mocks.request });
+    mocks.verifyTurnstileToken.mockResolvedValue({ success: true });
   });
 
   it("creates posts without accepting a caller-supplied actor or tenant", async () => {
@@ -277,5 +280,51 @@ describe("social feed actions", () => {
         code: "OFFLINE",
       }));
     }
+  });
+});
+
+describe("createPostComment turnstile gate", () => {
+  beforeEach(() => {
+    mocks.getSession.mockResolvedValue({
+      user: { id: "user-1", email: "builder@example.com", name: "Ari Builder" },
+    });
+    mocks.getToken.mockResolvedValue("access-token");
+    mocks.createServerClient.mockReturnValue({ request: mocks.request });
+    mocks.verifyTurnstileToken.mockResolvedValue({ success: true });
+  });
+
+  it("throws a typed bot-check failure without calling the API when verification fails", async () => {
+    mocks.verifyTurnstileToken.mockResolvedValue({ success: false, reason: "verify-failed" });
+
+    await expect(createPostComment("post-1", { content: "Nice", turnstileToken: "stale" })).rejects.toEqual(
+      expect.objectContaining({
+        name: "FeedMutationError",
+        status: 403,
+        code: "FORBIDDEN",
+        message: "Bot check failed. Please refresh and try again.",
+      }),
+    );
+    expect(mocks.verifyTurnstileToken).toHaveBeenCalledWith("stale");
+    expect(mocks.request).not.toHaveBeenCalled();
+  });
+
+  it("verifies a missing token and fails closed before calling the API", async () => {
+    mocks.verifyTurnstileToken.mockResolvedValue({ success: false, reason: "missing-token" });
+
+    await expect(createPostComment("post-1", { content: "Nice" })).rejects.toMatchObject({ status: 403 });
+    expect(mocks.request).not.toHaveBeenCalled();
+  });
+
+  it("forwards the comment once with the token stripped from the body", async () => {
+    mocks.request.mockResolvedValue({ ok: true, data: { id: "c-1", content: "Nice" } });
+
+    await expect(createPostComment("post-1", { content: " Nice ", turnstileToken: "fresh" })).resolves.toMatchObject({
+      id: "c-1",
+    });
+
+    expect(mocks.request).toHaveBeenCalledTimes(1);
+    const [input] = mocks.request.mock.calls[0];
+    expect(input.body).toEqual({ content: "Nice", parentCommentId: null });
+    expect(input.body).not.toHaveProperty("turnstileToken");
   });
 });

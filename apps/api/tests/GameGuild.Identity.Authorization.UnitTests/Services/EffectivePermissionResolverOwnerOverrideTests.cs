@@ -226,7 +226,7 @@ public class EffectivePermissionResolverOwnerOverrideTests
     }
 
     [Fact]
-    public async Task ResolveAsync_StaticDenyWarning_PreservesWildcardGrantAndOrdinaryDiagnostic()
+    public async Task ResolveAsync_StaticDenyWarning_PreservesWildcardGrantAndProtectsDiagnosticIdentity()
     {
         SetupNoData();
         _repository
@@ -245,8 +245,10 @@ public class EffectivePermissionResolverOwnerOverrideTests
 
         result.Permissions.Should().BeEquivalentTo(new[] { "*" });
         result.Sources["*"].Should().Be(PermissionSource.Static);
-        _logger.Entries.Should().ContainSingle(entry => entry.Level == LogLevel.Warning
-            && entry.Message == $"Attempted to deny static permission * for user {SystemAccountId} - denies cannot override static grants");
+        var warning = _logger.Entries.Should().ContainSingle(entry => entry.Level == LogLevel.Warning).Which;
+        warning.Message.Should().MatchRegex(
+            @"^Attempted to deny static permission \* for user id:[a-f0-9]{64} - denies cannot override static grants$");
+        warning.Message.Should().NotContain(SystemAccountId.ToString());
     }
 
     [Fact]

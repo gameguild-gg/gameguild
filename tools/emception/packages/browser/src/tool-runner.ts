@@ -18,6 +18,26 @@ import { SUBPROCESS_SHIM } from './emscripten/subprocess-shim.js';
 import { loadModuleFactory } from './loader/wasm-module.js';
 import { mountVFSFS, type VFSFSRuntime } from './vfs/emscripten-vfsfs.js';
 import type { VFSManager } from './vfs/index.js';
+import { runNodeTool, type NodeToolVfs } from './node-tool.js';
+
+interface NodeToolFileCache {
+  get(path: string): Uint8Array | null;
+  has(path: string): boolean;
+  readAsync(path: string, fallback: (path: string) => Promise<Uint8Array | null>): Promise<Uint8Array | null>;
+}
+
+/**
+ * Emscripten Node.js build tools executed with the real sources via the
+ * node-emulation loader (see node-tool.ts). Everything else dispatched to
+ * `node` is an Emscripten-compiled JS program and uses the legacy evaluator.
+ */
+const NODE_TOOL_PATHS: ReadonlySet<string> = new Set([
+  '/usr/lib/emscripten/tools/compiler.mjs',
+  '/usr/lib/emscripten/tools/preprocessor.mjs',
+  '/usr/lib/emscripten/tools/acorn-optimizer.mjs',
+  '/usr/lib/emscripten/tools/unsafe_optimizations.mjs',
+  '/usr/lib/emscripten/tools/lz4-compress.mjs',
+]);
 
 const LOG_PREFIX = '[Emception:Kernel]';
 function elapsed(t0: number): string {
@@ -510,6 +530,21 @@ export class ToolRunner {
         argv = [tool, scriptPath];
       }
       console.log(`${LOG_PREFIX}   Injected Python script: ${scriptPath}`);
+      // html-minifier-terser is not shipped in the browser sysroot, so emcc's
+      // auto-enabled MINIFY_HTML (on at -O2+) would fail with a scary error.
+      // Disable it unless the caller explicitly requested MINIFY_HTML.
+      if (!argv.some((a) => /MINIFY_HTML/.test(a))) {
+        let minifierAvailable = false;
+        try {
+          minifierAvailable = !!(await this.vfs.fetchFile('/usr/lib/emscripten/node_modules/html-minifier-terser/package.json'));
+        } catch {
+          minifierAvailable = false;
+        }
+        if (!minifierAvailable) {
+          argv.push('-sMINIFY_HTML=0');
+          console.log(`${LOG_PREFIX}   Injected -sMINIFY_HTML=0 (html-minifier-terser unavailable in browser sysroot)`);
+        }
+      }
     }
 
     // Normalize linker library paths to canonical cache-lib locations.
@@ -1151,6 +1186,14 @@ export class ToolRunner {
 
     // Is this a Python-based tool (emcc/em++)?
     const isPythonTool = descriptor.modulePath.includes('python');
+    // Per-run capture file paths: python's file-backed stderr/stdout and the
+    // sys.exit wrapper's exit-code file are keyed per invocation so back-to-back
+    // runs can never leak output into each other's results (the shared
+    // write-through VFS makes fixed paths race-prone).
+    const pyCaptureId = isPythonTool ? Math.random().toString(36).slice(2, 10) : null;
+    const pyStderrLog = pyCaptureId ? `/tmp/.py_stderr_${pyCaptureId}.log` : '/tmp/stderr.log';
+    const pyStdoutLog = pyCaptureId ? `/tmp/.py_stdout_${pyCaptureId}.log` : '/tmp/stdout.log';
+    const pyExitCode = pyCaptureId ? `/tmp/.py_exit_${pyCaptureId}.txt` : null;
 
     // Is stdin provided? (interactive script mode vs build-tool mode)
     const isInteractive = !!options.stdin;
@@ -1169,6 +1212,13 @@ export class ToolRunner {
       // before flushing C stdio buffers).
       PYTHONUNBUFFERED: '1',
       ...(isPythonTool ? { EMCC_SKIP_SANITY_CHECK: '1' } : {}),
+      ...(isPythonTool
+        ? {
+            _EMCEPTION_STDERR_LOG: pyStderrLog,
+            _EMCEPTION_STDOUT_LOG: pyStdoutLog,
+            ...(pyExitCode ? { _EMCEPTION_EXIT_CODE: pyExitCode } : {}),
+          }
+        : {}),
       // Tell sitecustomize.py not to replace sys.stdout/sys.stderr
       // when running interactively — we need Emscripten's TTY I/O.
       ...(isInteractive ? { _EMCEPTION_INTERACTIVE: '1' } : {}),
@@ -1660,7 +1710,7 @@ if not _interactive:
         """File-backed stderr replacement since WASM fd 2 yields EBADF."""
         def write(self, s):
             try:
-                with open('/tmp/stderr.log', 'a') as f:
+                with open(os.environ.get('_EMCEPTION_STDERR_LOG') or '/tmp/stderr.log', 'a') as f:
                     f.write(str(s))
             except: pass
             return len(str(s))
@@ -1675,7 +1725,7 @@ if not _interactive:
         """File-backed stdout replacement since WASM fd 1 may be None/invalid."""
         def write(self, s):
             try:
-                with open('/tmp/stdout.log', 'a') as f:
+                with open(os.environ.get('_EMCEPTION_STDOUT_LOG') or '/tmp/stdout.log', 'a') as f:
                     f.write(str(s))
             except: pass
             return len(str(s))
@@ -1692,6 +1742,21 @@ if not _interactive:
 
     sys.stderr = _SafeStderr()
     sys.__stderr__ = sys.stderr
+    # Record the real exit status: the Asyncify-wrapped callMain loses it and
+    # EXITSTATUS is never set in WASM, so sys.exit writes it to a file the
+    # tool-runner reads post-run. emcc.py always routes through sys.exit.
+    _exit_log = os.environ.get('_EMCEPTION_EXIT_CODE')
+    if _exit_log:
+        _orig_exit = sys.exit
+
+        def _exit(code=0):
+            try:
+                _code_text = '0' if code is None else (str(int(code)) if isinstance(code, int) else '1')
+                with open(_exit_log, 'w') as f:
+                    f.write(_code_text)
+            except: pass
+            _orig_exit(code)
+        sys.exit = _exit
 else:
     # Interactive mode: Emscripten's TTY is wired to forward output to
     # the browser terminal, but CPython may set sys.stdout/sys.stderr to
@@ -2435,7 +2500,7 @@ sys.excepthook = _hook
 
         // Read Python stderr log (redirected from broken fd 2)
         try {
-          const stderrLog = new TextDecoder().decode(instance.FS.readFile('/tmp/stderr.log'));
+          const stderrLog = new TextDecoder().decode(instance.FS.readFile(pyStderrLog));
           if (stderrLog.length > 0) {
             console.log(`${LOG_PREFIX}   stderr.log:\n${stderrLog}`);
             for (const line of stderrLog.split('\n')) {
@@ -2451,7 +2516,7 @@ sys.excepthook = _hook
 
         // Read Python stdout log (when _SafeStdout was active, non-interactive mode)
         try {
-          const stdoutLog = new TextDecoder().decode(instance.FS.readFile('/tmp/stdout.log'));
+          const stdoutLog = new TextDecoder().decode(instance.FS.readFile(pyStdoutLog));
           if (stdoutLog.length > 0) {
             for (const line of stdoutLog.split('\n')) {
               if (line.length > 0) {
@@ -2474,6 +2539,24 @@ sys.excepthook = _hook
     // Process is done — let GC reclaim the WASM linear memory
     console.log(`${LOG_PREFIX}   Process complete, releasing WASM instance (total spawn: ${elapsed(tSpawn)})`);
 
+    // Read the exit code recorded by the sitecustomize sys.exit wrapper.
+    // The Asyncify-wrapped callMain loses the real status (EXITSTATUS is
+    // never set in WASM), so the file is authoritative when present.
+    // emcc.py routes its result through sys.exit(main()).
+    if (pyExitCode) {
+      try {
+        const exitCodeText = new TextDecoder().decode(instance.FS.readFile(pyExitCode)).trim();
+        if (exitCodeText.length > 0) {
+          const parsed = Number.parseInt(exitCodeText, 10);
+          if (Number.isFinite(parsed)) {
+            console.log(`${LOG_PREFIX}   Exit code from python capture: ${parsed} (callMain reported ${exitCode})`);
+            exitCode = parsed;
+          }
+        }
+      } catch {
+        /* not written — no wrapper or normal completion */
+      }
+    }
     return {
       exitCode,
       stdout: stdoutChunks.join('\n'),
@@ -3165,6 +3248,71 @@ sys.excepthook = _hook
   /* ---------------------------------------------------------------- */
 
   /**
+   * In-memory cache of /usr/lib/emscripten tool sources. The node tool
+   * loader's synchronous fs.readFileSync needs the sources available
+   * without await, but LazyFS only serves CDN files asynchronously —
+   * so preload them once. Lean by design: only the JS toolchain files
+   * (tools/*.mjs, src/*.mjs, src/*.js, node_modules/acorn), NOT the
+   * multi-thousand-file system/ headers that also live in the
+   * emscripten-core bundle.
+   */
+  private nodeToolFileCache: Map<string, Uint8Array> | null = null;
+
+  private isNodeToolFile(path: string): boolean {
+    return (
+      (path.startsWith('/usr/lib/emscripten/tools/') && path.endsWith('.mjs')) ||
+      (path.startsWith('/usr/lib/emscripten/src/') &&
+        (path.endsWith('.mjs') || path.endsWith('.js'))) ||
+      path.startsWith('/usr/lib/emscripten/node_modules/acorn/') ||
+      path.startsWith('/usr/lib/emscripten/html/')
+    );
+  }
+
+  private async preloadNodeToolFiles(): Promise<NodeToolFileCache> {
+    if (!this.nodeToolFileCache) {
+      const cache = new Map<string, Uint8Array>();
+      const files = this.vfs.getBundleFilePaths('emscripten-core').filter((p) => this.isNodeToolFile(p));
+      const results = await Promise.allSettled(files.map(async (p) => [p, await this.vfs.fetchFile(p)] as const));
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value[1]) cache.set(result.value[0], result.value[1]);
+      }
+      // Bare-specifier resolution (e.g. `import * as acorn from 'acorn'`) is
+      // synchronous: it reads <pkg>/package.json and probes entry files via
+      // the cache. On CDN manifests that don't list acorn yet, eagerly fetch
+      // the known files so resolution succeeds.
+      const acornProbePaths = [
+        '/usr/lib/emscripten/node_modules/acorn/package.json',
+        '/usr/lib/emscripten/node_modules/acorn/dist/acorn.mjs',
+        '/usr/lib/emscripten/node_modules/acorn/dist/acorn.js',
+        '/usr/lib/emscripten/html/shell.html',
+        '/usr/lib/emscripten/html/shell_minimal.html',
+        '/usr/lib/emscripten/html/shell_file.html',
+        '/usr/lib/emscripten/html/shell_runtime.html',
+      ];
+      await Promise.allSettled(
+        acornProbePaths.map(async (p) => {
+          if (cache.has(p)) return;
+          const data = await this.vfs.fetchFile(p).catch(() => null);
+          if (data) cache.set(p, data);
+        }),
+      );
+      this.nodeToolFileCache = cache;
+      console.log(`${LOG_PREFIX}   Preloaded ${cache.size}/${files.length} emscripten node-tool files`);
+    }
+    return {
+      get: (p: string) => this.nodeToolFileCache?.get(p) ?? null,
+      has: (p: string) => this.nodeToolFileCache?.has(p) ?? false,
+      readAsync: async (p: string, fallback: (p: string) => Promise<Uint8Array | null>) => {
+        const cached = this.nodeToolFileCache?.get(p);
+        if (cached) return cached;
+        const data = await fallback(p);
+        if (data) this.nodeToolFileCache?.set(p, data);
+        return data;
+      },
+    };
+  }
+
+  /**
    * Run an Emscripten-compiled JavaScript file in the browser.
    *
    * After emcc produces main.js + main.wasm, this evaluator:
@@ -3178,24 +3326,43 @@ sys.excepthook = _hook
     const scriptPath = argv.length > 1 ? argv[1] : argv[0];
     console.log(`${LOG_PREFIX} ===== NODE (JS eval): ${scriptPath} =====`);
 
-    // Special case: compiler.mjs is a heavy Node.js script that's used for
-    // post-processing after clang compilation. The actual compilation is done
-    // by clang, so we can safely skip the node execution and return minimal output.
-    if (scriptPath.includes('compiler.mjs')) {
-      console.log(`${LOG_PREFIX}   [SKIPPED] compiler.mjs (post-processing, already done by clang)`);
-      // Return minimal valid JSON matching the format that compiler.mjs --symbols-only
-      // produces (see src/jsifier.mjs runJSify symbolsOnly branch).
-      // Python's get_js_sym_info() -> json.loads(output) expects:
-      //   deps: dict[str, list[str]]  — JS symbol → native dependencies
-      //   asyncFuncs: list[str]       — async JS library functions
-      //   extraLibraryFuncs: list[str] — extra library function names
-      const output = JSON.stringify({
-        deps: {},
-        asyncFuncs: [],
-        extraLibraryFuncs: [],
+    // Emscripten's own Node.js build tools run with their real sources via
+    // the node-emulation loader (see node-tool.ts).
+    if (NODE_TOOL_PATHS.has(scriptPath)) {
+      console.log(`${LOG_PREFIX}   Dispatching to real node tool execution: ${scriptPath}`);
+      // Python's subprocess shim stores piped stdin in /tmp/.subprocess_stdin.
+      let stdin: string | undefined;
+      try {
+        const stdinBytes = await this.vfs.fetchFile('/tmp/.subprocess_stdin');
+        if (stdinBytes) stdin = new TextDecoder().decode(stdinBytes);
+      } catch {
+        /* stdin file absent — tool reads no stdin */
+      }
+      const cache = await this.preloadNodeToolFiles();
+      const toolVfs: NodeToolVfs = {
+        fetchFile: (p: string) => cache.readAsync(p, () => this.vfs.fetchFile(p)),
+        readFileSync: (p: string) => cache.get(p) ?? this.vfs.readFileSync(p),
+        writeFileSync: (p: string, d: Uint8Array) => this.vfs.writeFileSync(p, d),
+        existsSync: (p: string) => cache.has(p) || this.vfs.existsSync(p),
+        readdirSync: (p: string) => this.vfs.readdirSync(p),
+        statSync: (p: string) => {
+          const s = this.vfs.statSync(p);
+          if (!s || s.type === 'symlink') return s ? { type: 'dir' as const, size: s.size } : null;
+          return { type: s.type, size: s.size };
+        },
+        deleteFileSync: (p: string) => this.vfs.deleteFileSync(p),
+        mkdirSync: (p: string) => this.vfs.mkdirSync(p),
+      };
+      const result = await runNodeTool(toolVfs, {
+        cwd: options.cwd || '/home/user',
+        argv,
+        env: options.env,
+        stdin,
+        onStdout: options.onStdout,
+        onStderr: options.onStderr,
       });
-      options.onStdout?.(output);
-      return { exitCode: 0, stdout: output, stderr: '' };
+      console.log(`${LOG_PREFIX} ===== NODE COMPLETE: exitCode=${result.exitCode}, total=${elapsed(tTotal)} =====`);
+      return result;
     }
 
     // Read the JS file from the kernel VFS
