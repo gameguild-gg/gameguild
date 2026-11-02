@@ -5,13 +5,17 @@ const mocks = vi.hoisted(() => ({
   request: vi.fn(),
   client: vi.fn(),
   token: vi.fn(),
+  revalidate: vi.fn(),
 }));
 vi.mock('@/auth', () => ({ getToken: mocks.token }));
 vi.mock('@game-guild/client', () => ({ createServerClient: mocks.client }));
+vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidate }));
 import {
   startIndividualRuntimeSubmission,
   submitRuntimeSubmission,
   submitAssessmentTestRun,
+  resolveRuntimeInstructorReview,
+  regradeRuntimeSubmission,
 } from './grading-runtime-actions';
 
 const wireExecution = {
@@ -81,6 +85,21 @@ const wireTestRun = {
   readyForPublication: false,
   diagnostics: [],
 };
+
+const reviewMutations = [
+  { name: 'instructor review', mutate: () => resolveRuntimeInstructorReview('official', {
+    schemaVersion: 1, items: [], feedback: null, overrideReason: null,
+  }, 'review-key') },
+  { name: 'regrade', mutate: () => regradeRuntimeSubmission('official', 'New evidence', 'regrade-key') },
+];
+
+function expectCanonicalQueueRevalidated() {
+  expect(mocks.revalidate.mock.calls).toEqual([
+    ['/speedgrader/assessments/assessment'],
+    ['/en-US/speedgrader/assessments/assessment'],
+    ['/pt-BR/speedgrader/assessments/assessment'],
+  ]);
+}
 
 describe('official grading runtime actions', () => {
   beforeEach(() => {
@@ -175,5 +194,35 @@ describe('official grading runtime actions', () => {
       error:
         'Unsupported runtime submission status returned by the grading API: UnexpectedStatus.',
     });
+  });
+
+  it.each(reviewMutations)('revalidates the canonical assessment in every locale after $name succeeds', async ({ mutate }) => {
+    const result = await mutate();
+    expect(result).toMatchObject({ success: true, data: { assessmentId: 'assessment', submissionId: 'official' } });
+    expect(mocks.request).toHaveBeenCalledTimes(1);
+    expectCanonicalQueueRevalidated();
+  });
+
+  it.each(reviewMutations)('waits for $name confirmation before invalidating the queue', async ({ mutate }) => {
+    let confirm!: (value: { ok: true; data: typeof wireSubmission }) => void;
+    mocks.request.mockReturnValue(new Promise((resolve) => { confirm = resolve; }));
+    const pending = mutate();
+    await vi.waitFor(() => expect(mocks.request).toHaveBeenCalledTimes(1));
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+    confirm({ ok: true, data: wireSubmission });
+    expect(await pending).toMatchObject({ success: true });
+    expectCanonicalQueueRevalidated();
+  });
+
+  it.each(reviewMutations)('does not invalidate the queue when $name fails', async ({ mutate }) => {
+    mocks.request.mockResolvedValue({ ok: false, error: { status: 409, message: 'The round has advanced.' } });
+    expect(await mutate()).toMatchObject({ success: false });
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+
+  it.each(reviewMutations)('does not invalidate the queue when $name returns malformed runtime data', async ({ mutate }) => {
+    mocks.request.mockResolvedValue({ ok: true, data: { ...wireSubmission, status: 'UnexpectedStatus' } });
+    expect(await mutate()).toMatchObject({ success: false });
+    expect(mocks.revalidate).not.toHaveBeenCalled();
   });
 });

@@ -38,17 +38,30 @@ function read(value: unknown, instructor = false) {
 }
 
 describe('readCodeRuntimeDefinition', () => {
-  it.each(['1', '2'])('reads only the frozen definition for supported adapter %s', (version) => {
+  it.each(['1', '2', '3'])('reads only the frozen definition for supported adapter %s', (version) => {
     const fixture = submission(version);
     expect(read(fixture.value)).toBe(fixture.learner);
     expect(read(fixture.value, true)).toBe(fixture.instructor);
     expect(read(fixture.value).Tests.Private).toEqual([]);
   });
 
-  it.each(['', '0', '3', 'latest'])('rejects unsupported adapter %s', (version) => {
+  it.each(['', '0', '4', 'latest'])('rejects unsupported adapter %s', (version) => {
     const { value } = submission(version);
     expect(() => read(value)).toThrow('unavailable adapter version');
     expect(() => read(value, true)).toThrow('unavailable adapter version');
+  });
+
+  it.each(['1', '2', '3'])('rejects an unsupported content version for adapter %s', (version) => {
+    const { value, learner, instructor } = submission(version);
+    const invalidLearner = { execution: { ...value.execution, delivery: {
+      ...value.execution.delivery,
+      items: { code: { ...value.execution.delivery.items.code,
+        learnerPayload: { definition: { ...learner, Version: 2 } } } },
+    } } };
+    const invalidInstructor = { execution: { ...value.execution,
+      instructorVisibleContent: { ...instructor, Version: 2 } } };
+    expect(() => read(invalidLearner)).toThrow('frozen Code definition is unavailable');
+    expect(() => read(invalidInstructor, true)).toThrow('frozen Code definition is unavailable');
   });
 
   it('rejects a different adapter even when its version is supported', () => {

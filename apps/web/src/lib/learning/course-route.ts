@@ -17,6 +17,11 @@ export function slugifyRoutePart(value: string): string {
     .slice(0, 80);
 }
 
+/**
+ * '' when no usable author identity is known: never fall back to the raw
+ * creator ID (leaks owner UUID prefix); a suffix-less slug resolves
+ * identically via getCourseLookupSlug.
+ */
 export function getCourseAuthorHandle(course: CourseRouteSource): string {
   const fromExplicitHandle = course.creatorHandle ? slugifyRoutePart(course.creatorHandle) : '';
   if (fromExplicitHandle) return fromExplicitHandle;
@@ -28,15 +33,17 @@ export function getCourseAuthorHandle(course: CourseRouteSource): string {
   const fromEmail = emailLocalPart ? slugifyRoutePart(emailLocalPart) : '';
   if (fromEmail) return fromEmail;
 
-  const creatorId = course.creatorId?.trim();
-  if (creatorId) return slugifyRoutePart(creatorId).slice(0, 12) || 'gameguild';
-
-  return 'gameguild';
+  return '';
 }
 
 export function getCourseRouteParam(course: CourseRouteSource): string {
   const slug = course.slug?.trim();
-  if (slug) return `${slug}${COURSE_AUTHOR_SEPARATOR}${getCourseAuthorHandle(course)}`;
+  if (slug) {
+    const authorHandle = getCourseAuthorHandle(course);
+    return authorHandle
+      ? `${slug}${COURSE_AUTHOR_SEPARATOR}${authorHandle}`
+      : slug;
+  }
 
   return String(course.id ?? '').trim();
 }

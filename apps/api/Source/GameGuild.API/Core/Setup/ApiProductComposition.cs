@@ -44,6 +44,7 @@ using GameGuild.Social.Blog;
 using GameGuild.Social.Follows;
 using GameGuild.Social.Feed;
 using GameGuild.Social.Groups;
+using GameGuild.Social.Mentorship;
 using GameGuild.Social.Profiles;
 using GameGuild.Social.Ratings;
 using GameGuild.Social.Reactions;
@@ -99,6 +100,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
         "Social.Feed",
         "Social.Follows",
         "Social.Groups",
+        "Social.Mentorship",
         "Social.Posts",
         "Social.Profiles",
         "Social.Ratings",
@@ -164,6 +166,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
         builder.Services.AddPostsModule();
         builder.Services.AddSocialBlogModule();        builder.Services.AddSocialFeedModule();
         builder.Services.AddSocialGroupsModule();
+        builder.Services.AddMentorshipModule();
         builder.Services.AddSocialReactionsModule();
         builder.Services.AddRatingsModule();
 

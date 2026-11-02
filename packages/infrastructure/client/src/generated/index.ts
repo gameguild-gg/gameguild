@@ -188,6 +188,7 @@ export * from './modules/learning-experience-learning-paths-learning-path.gen.js
 export * from './modules/learning-workspaces-learner-workspace.gen.js';
 export * from './modules/content-marketing-leads.gen.js';
 export * from './modules/learning-assessments-tasks.gen.js';
+export * from './modules/social-mentorship.gen.js';
 export * from './modules/auth-service-accounts-tokens.gen.js';
 export * from './modules/content-pages-open-graph.gen.js';
 export * from './modules/commerce-orders.gen.js';

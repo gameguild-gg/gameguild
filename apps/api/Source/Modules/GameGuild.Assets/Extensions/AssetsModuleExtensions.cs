@@ -64,7 +64,10 @@ public static class AssetsModuleExtensions
             client.Timeout = TimeSpan.FromSeconds(openinaryOptions.TimeoutSeconds);
         })
         .AddHttpMessageHandler<Openinary.OpeninaryRetryHandler>()
-        .Services.AddSingleton<Openinary.OpeninaryRetryHandler>();
+        // DelegatingHandler instances must NOT be singletons: IHttpClientFactory
+        // requires a fresh instance per handler pipeline ("must not be reused or
+        // cached" InvalidOperationException otherwise).
+        .Services.AddTransient<Openinary.OpeninaryRetryHandler>();
 
         // S3 Client
         services.AddSingleton<IAmazonS3>(sp =>

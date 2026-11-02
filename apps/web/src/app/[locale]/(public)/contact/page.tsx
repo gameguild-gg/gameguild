@@ -8,6 +8,7 @@ import { Textarea } from '@game-guild/ui/components/textarea';
 import { usePathname } from 'next/navigation';
 import React, { type FormEvent, useState, useTransition } from 'react';
 import { submitContactLeadAction } from '@/lib/contact/actions';
+import { TurnstileWidget } from '@/components/antibot/turnstile-widget';
 
 type ContactFormState = {
   name: string;
@@ -30,6 +31,7 @@ export default function Page(): React.JSX.Element {
   const [form, setForm] = useState<ContactFormState>(initialFormState);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   function updateField<K extends keyof ContactFormState>(field: K, value: ContactFormState[K]) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -43,9 +45,12 @@ export default function Page(): React.JSX.Element {
       const result = await submitContactLeadAction({
         ...form,
         pagePath: pathname,
+        turnstileToken,
       });
 
       if (!result.success) {
+        // Single-use token: reset on failure so the widget re-issues a fresh one.
+        setTurnstileToken(null);
         setFeedback({ type: 'error', message: result.error });
         return;
       }
@@ -178,6 +183,7 @@ export default function Page(): React.JSX.Element {
               </div>
             ) : null}
 
+            <TurnstileWidget onToken={setTurnstileToken} action="contact" id="contact-turnstile" />
             <Button type="submit" disabled={isPending}>
               {isPending ? 'Sending...' : 'Send message'}
             </Button>

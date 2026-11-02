@@ -1,9 +1,9 @@
-import type { editor, IDisposable } from "monaco-editor"
+import type { editor } from "monaco-editor"
 
 export class CppTypeChecker {
   private monaco: typeof import("monaco-editor") | null
   private editor: editor.IStandaloneCodeEditor | null
-  private disposables: IDisposable[] = []
+  private pendingCheck: ReturnType<typeof setTimeout> | null = null
 
   constructor(monaco: typeof import("monaco-editor") | null, editor: editor.IStandaloneCodeEditor | null) {
     this.monaco = monaco
@@ -11,8 +11,10 @@ export class CppTypeChecker {
   }
 
   register(code: string) {
+    this.cancelPendingCheck()
     // Simple C++ type checking and error detection
-    setTimeout(() => {
+    this.pendingCheck = setTimeout(() => {
+      this.pendingCheck = null
       const { monaco, editor: editorInstance } = this
       if (!monaco || !editorInstance) return
       const model = editorInstance.getModel()
@@ -114,8 +116,7 @@ export class CppTypeChecker {
   }
 
   dispose() {
-    // Clean up any disposables
-    this.disposables.forEach((disposable) => disposable.dispose())
+    this.cancelPendingCheck()
 
     // Clear markers when disposing
     const { monaco, editor: editorInstance } = this
@@ -124,6 +125,13 @@ export class CppTypeChecker {
       if (model) {
         monaco.editor.setModelMarkers(model, "cpp", [])
       }
+    }
+  }
+
+  private cancelPendingCheck() {
+    if (this.pendingCheck !== null) {
+      clearTimeout(this.pendingCheck)
+      this.pendingCheck = null
     }
   }
 }
