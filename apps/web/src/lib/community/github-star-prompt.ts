@@ -3,6 +3,31 @@
 import { getToken } from '@/auth';
 import { createServerClient } from '@game-guild/client';
 
+/** Public repository metadata endpoint used for the star check (issue #90). */
+const REPO_API_URL = 'https://api.github.com/repos/gameguild-gg/gameguild';
+
+/**
+ * Repository star count for the star prompt (issue #106 phase 1): fetched on
+ * the server with a one-hour revalidation window so the browser no longer
+ * calls api.github.com from a mount effect. Any failure renders the prompt
+ * without the count.
+ */
+export async function fetchRepositoryStarCount(): Promise<number | null> {
+  try {
+    const response = await fetch(REPO_API_URL, {
+      headers: { Accept: 'application/vnd.github+json' },
+      next: { revalidate: 3600 },
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const repo = (await response.json()) as Partial<{ stargazers_count?: unknown }>;
+    return typeof repo.stargazers_count === 'number' ? repo.stargazers_count : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Server-side data source for the GitHub star prompt (issue #90).
  *

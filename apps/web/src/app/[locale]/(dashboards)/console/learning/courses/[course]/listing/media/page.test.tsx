@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CourseDetails } from '@/lib/learning/types';
 import ListingMediaPage from './page';
 
-const fetchCourseMock = vi.fn();
+const getCourseMock = vi.fn();
 const updateCourseMock = vi.fn();
 const refreshMock = vi.fn();
 
@@ -15,8 +15,11 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+vi.mock('@/lib/learning', () => ({
+  getCourse: (...args: unknown[]) => getCourseMock(...args),
+}));
+
 vi.mock('@/lib/learning/actions', () => ({
-  fetchCourse: (...args: unknown[]) => fetchCourseMock(...args),
   updateCourse: (...args: unknown[]) => updateCourseMock(...args),
 }));
 
@@ -62,18 +65,21 @@ const courseFixture: CourseDetails = {
 
 describe('ListingMediaPage', () => {
   beforeEach(() => {
-    fetchCourseMock.mockReset();
+    getCourseMock.mockReset();
     updateCourseMock.mockReset();
     refreshMock.mockReset();
-    fetchCourseMock.mockResolvedValue(courseFixture);
+    getCourseMock.mockResolvedValue(courseFixture);
     updateCourseMock.mockResolvedValue({ success: true, data: null });
   });
 
-  it('loads the course and saves media URLs through updateCourse', async () => {
-    render(<ListingMediaPage params={Promise.resolve({ locale: 'en-US', course: 'ai-for-boss-encounters-by-instructor-one' })} />);
+  it('fetches the course server-side and saves media URLs through updateCourse', async () => {
+    render(await ListingMediaPage({ params: Promise.resolve({ locale: 'en-US', course: 'ai-for-boss-encounters-by-instructor-one' }) } as never));
 
-    const thumbnailInput = await screen.findByLabelText(/thumbnail url/i);
-    fireEvent.change(thumbnailInput, {
+    // The server render already carries the fetched values — no loading state.
+    expect(getCourseMock).toHaveBeenCalledWith('ai-for-boss-encounters-by-instructor-one');
+    expect(screen.getByLabelText(/thumbnail url/i)).toHaveValue('https://cdn.gameguild.gg/courses/boss-ai.jpg');
+
+    fireEvent.change(screen.getByLabelText(/thumbnail url/i), {
       target: { value: 'https://cdn.gameguild.gg/courses/advanced-encounter-ai.jpg' },
     });
     fireEvent.change(screen.getByLabelText(/video url/i), {
@@ -94,5 +100,13 @@ describe('ListingMediaPage', () => {
       expect(screen.getByRole('button', { name: /save media/i })).toBeEnabled();
     });
     expect(refreshMock).not.toHaveBeenCalled();
+  });
+
+  it('renders the not-found branch when the server lookup returns null', async () => {
+    getCourseMock.mockResolvedValue(null);
+
+    render(await ListingMediaPage({ params: Promise.resolve({ locale: 'en-US', course: 'missing-course' }) } as never));
+
+    expect(screen.getByText('Course not found.')).toBeInTheDocument();
   });
 });
