@@ -711,6 +711,22 @@ jobs:
               }
             }
           }
+          // Selected-lane integrity (pr-required-gate.test.mjs contract): the Web and API
+          // lanes must actually run. A missing result blocks unconditionally; a skipped run
+          // blocks unless the classifier explicitly reported the lane unselected ('false').
+          // Anything else (empty/unknown selection) fails closed.
+          for (const [name, selection] of [['api', process.env.API_SELECTED], ['web', process.env.WEB_SELECTED]]) {
+            const result = gates[name];
+            if (result === '') {
+              if (!failed.some(item => item.startsWith(`${name}=`))) {
+                failed.push(`${name}=missing`);
+              }
+            } else if (result === 'skipped' && selection !== 'false') {
+              if (!failed.some(item => item.startsWith(`${name}=`))) {
+                failed.push(`${name}=skipped`);
+              }
+            }
+          }
           if (failed.length) {
             console.error(`Required PR gates failed: ${failed.join(', ')}`);
             process.exit(1);
