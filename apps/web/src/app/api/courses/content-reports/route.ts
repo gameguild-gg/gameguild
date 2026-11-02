@@ -1,4 +1,6 @@
 import { getToken } from '@/auth';
+import { verifyTurnstileToken } from '@/lib/antibot/turnstile';
+import { forwardedIpHeaders } from '@/lib/server/forwarded-headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 const DEFAULT_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -39,17 +41,37 @@ function badRequest(message: string): NextResponse {
   return NextResponse.json({ error: message }, { status: 400 });
 }
 
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+async function readRequestBody(request: NextRequest): Promise<Record<string, unknown> | null> {
+  try {
+    const body: unknown = await request.json();
+    return isJsonObject(body) ? body : null;
+  } catch {
+    return null;
+  }
+}
+
 async function getBackendError(response: Response): Promise<string> {
   try {
-    const body = await response.json();
-    if (typeof body?.title === 'string') return body.title;
-    if (typeof body?.error === 'string') return body.error;
-    if (typeof body?.message === 'string') return body.message;
+    const body: unknown = await response.json();
+    if (isJsonObject(body)) {
+      if (typeof body.title === 'string') return body.title;
+      if (typeof body.error === 'string') return body.error;
+      if (typeof body.message === 'string') return body.message;
+    }
   } catch {
     // Use the HTTP status text below.
   }
 
   return response.statusText || 'Backend request failed.';
+}
+
+function readString(body: Record<string, unknown>, key: string): string | undefined {
+  const value = body[key];
+  return typeof value === 'string' ? value : undefined;
 }
 
 async function getAuthHeader(): Promise<Record<string, string> | NextResponse> {
@@ -65,8 +87,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const authHeader = await getAuthHeader();
   if (authHeader instanceof NextResponse) return authHeader;
 
-  const body = await request.json();
-  const contentId = typeof body?.contentId === 'string' ? body.contentId.trim() : '';
+  const body = await readRequestBody(request);
+  if (!body) return badRequest('A valid JSON object is required.');
+
+  // Public write surface: verify the Turnstile token before proxying. The
+  // token is consumed here and never included in the forwarded body below.
+  const verification = await verifyTurnstileToken(readString(body, 'turnstileToken'));
+  if (!verification.success) {
+    return NextResponse.json({ error: 'bot-check-failed' }, { status: 403 });
+  }
+
+  const contentId = readString(body, 'contentId')?.trim() ?? '';
   if (!GUID_PATTERN.test(contentId)) {
     return badRequest('This learning content is not backed by a reportable asset reference yet.');
   }
@@ -76,10 +107,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     headers: {
       ...authHeader,
       'Content-Type': 'application/json',
+      ...(await forwardedIpHeaders()),
     },
     body: JSON.stringify({
-      reason: mapReason(body?.reason ?? body?.reportType),
-      description: typeof body?.description === 'string' ? body.description : null,
+      reason: mapReason(readString(body, 'reason') ?? readString(body, 'reportType')),
+      description: readString(body, 'description') ?? null,
     }),
     cache: 'no-store',
   });
@@ -118,8 +150,9 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
   const authHeader = await getAuthHeader();
   if (authHeader instanceof NextResponse) return authHeader;
 
-  const body = await request.json();
-  const reportId = typeof body?.reportId === 'string' ? body.reportId.trim() : '';
+  const body = await readRequestBody(request);
+  if (!body) return badRequest('A valid JSON object is required.');
+  const reportId = readString(body, 'reportId')?.trim() ?? '';
   if (!GUID_PATTERN.test(reportId)) {
     return badRequest('A valid report id is required.');
   }
@@ -131,8 +164,8 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      decision: mapReviewDecision(body?.status),
-      notes: typeof body?.notes === 'string' ? body.notes : null,
+      decision: mapReviewDecision(readString(body, 'status')),
+      notes: readString(body, 'notes') ?? null,
     }),
     cache: 'no-store',
   });
