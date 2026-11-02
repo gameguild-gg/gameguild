@@ -666,33 +666,54 @@ jobs:
           ECONOMY_REGRESSION: ${{ needs.economy-regression.result }}
           ECONOMY_SELECTED: ${{ needs.classify.outputs.economyCritical }}
         run: |
-          fail=0; missing=""
-          check() { case "$2" in success) ;; *) missing="$missing $1=$2"; fail=1 ;; esac; }
-          check classify "$CLASSIFY"
-          check secret-scan "$SECRET_SCAN"
-          check repository-policy "$REPOSITORY_POLICY"
-          case "$WEB_SELECTED:$WEB" in
-            false:skipped) ;;
-            *) check web "$WEB" ;;
-          esac
-          case "$API_SELECTED:$API" in
-            false:skipped) ;;
-            *) check api "$API" ;;
-          esac
-          if [ "$ECONOMY_SELECTED" = "true" ]; then
-            for g in economy economy-api economy-client economy-coverage economy-regression; do
-              case "$g" in
-                economy) r="$ECONOMY" ;;
-                economy-api) r="$ECONOMY_API" ;;
-                economy-client) r="$ECONOMY_CLIENT" ;;
-                economy-coverage) r="$ECONOMY_COVERAGE" ;;
-                economy-regression) r="$ECONOMY_REGRESSION" ;;
-              esac
-              case "$r" in success) ;; *) missing="$missing $g=$r"; fail=1 ;; esac
-            done
-          fi
-          if [ "$fail" -ne 0 ]; then
-            echo "Required PR gates failed:$missing" >&2
-            exit 1
-          fi
-          echo 'Every selected PR gate passed or was intentionally skipped.'
+          node - <<'NODE'
+          const gates = {
+            classify: process.env.CLASSIFY,
+            'secret-scan': process.env.SECRET_SCAN,
+            'repository-policy': process.env.REPOSITORY_POLICY,
+            web: process.env.WEB,
+            api: process.env.API,
+            'testing-lab': process.env.TESTING_LAB,
+            openapi: process.env.OPENAPI,
+            migration: process.env.MIGRATION,
+            economy: process.env.ECONOMY,
+            'economy-api': process.env.ECONOMY_API,
+            'economy-client': process.env.ECONOMY_CLIENT,
+            'economy-coverage': process.env.ECONOMY_COVERAGE,
+            'economy-regression': process.env.ECONOMY_REGRESSION,
+          };
+          const failed = Object.entries(gates)
+            .filter(([, result]) => result === 'failure' || result === 'cancelled')
+            .map(([name, result]) => `${name}=${result}`);
+          // A gate that never reported a conclusion (empty result) is structural
+          // breakage, not a pass: block with the gate's own prefix.
+          for (const [name, result] of Object.entries(gates)) {
+            if (result === '' && !failed.some(item => item.startsWith(`${name}=`))) {
+              failed.push(`${name}=`);
+            }
+          }
+          // Selected surfaces must actually run: "skipped" is legitimate only when
+          // the classifier explicitly deselected the surface. Unknown or missing
+          // selection is treated as selected (fail closed).
+          if (gates.web === 'skipped' && process.env.WEB_SELECTED !== 'false') {
+            failed.push('web=skipped');
+          }
+          if (gates.api === 'skipped' && process.env.API_SELECTED !== 'false') {
+            failed.push('api=skipped');
+          }
+          if (gates['secret-scan'] !== 'success' && !failed.some(item => item.startsWith('secret-scan='))) {
+            failed.push(`secret-scan=${gates['secret-scan']}`);
+          }
+          if (process.env.ECONOMY_SELECTED === 'true') {
+            for (const name of ['economy', 'economy-api', 'economy-client', 'economy-coverage', 'economy-regression']) {
+              if (gates[name] !== 'success' && !failed.some(item => item.startsWith(`${name}=`))) {
+                failed.push(`${name}=${gates[name]}`);
+              }
+            }
+          }
+          if (failed.length) {
+            console.error(`Required PR gates failed: ${failed.join(', ')}`);
+            process.exit(1);
+          }
+          console.log('Every selected PR gate passed or was intentionally skipped.');
+          NODE

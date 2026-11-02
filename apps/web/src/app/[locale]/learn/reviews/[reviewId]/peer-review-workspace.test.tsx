@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LearningAssessmentsAnonymousReviewSubmission } from '@game-guild/client';
 import { createQuizAnswerEnvelope, createQuizExecutionDelivery } from '@game-guild/grading-adapter-quiz';
 import { createSingleChoiceEntry, QuizEntryType, toQuizLearnerEntry } from '@game-guild/quiz';
-import { ReviewWorkspace } from './review-workspace';
+import { ReviewWorkspaceForm } from './review-workspace';
+import ReviewWorkspacePage from './page';
 import { fetchPeerReviewWorkspace, submitPeerReview } from '@/lib/learning/actions-peer-review';
 
 const actionsMock = vi.hoisted(() => ({
@@ -87,8 +88,7 @@ const canonicalQuizReview = {
 } satisfies LearningAssessmentsAnonymousReviewSubmission;
 
 function renderWorkspace(review: LearningAssessmentsAnonymousReviewSubmission) {
-  actionsMock.fetchWorkspace.mockResolvedValue({ ok: true, review });
-  return render(<ReviewWorkspace reviewId={review.reviewId ?? 'review-1'} />);
+  return render(<ReviewWorkspaceForm review={review} />);
 }
 
 async function setCriterionPoints(user: ReturnType<typeof userEvent.setup>, criterionId: string, value: string) {
@@ -220,11 +220,30 @@ describe('ReviewWorkspace', () => {
     expect(screen.queryByTestId('submit-review')).not.toBeInTheDocument();
   });
 
-  it('renders an error state when the workspace cannot be loaded', async () => {
+  it('renders an error state (server page) when the workspace cannot be loaded', async () => {
     actionsMock.fetchWorkspace.mockResolvedValue({ ok: false, error: 'Failed to load the review.' });
-    render(<ReviewWorkspace reviewId="review-x" />);
 
+    render(
+      await ReviewWorkspacePage({
+        params: Promise.resolve({ locale: 'en-US', reviewId: 'review-x' }),
+      } as never),
+    );
+
+    expect(actionsMock.fetchWorkspace).toHaveBeenCalledWith('review-x');
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Failed to load the review.');
+  });
+
+  it('server page fetches the workspace and renders the form with the payload', async () => {
+    actionsMock.fetchWorkspace.mockResolvedValue({ ok: true, review: rubricReview });
+
+    render(
+      await ReviewWorkspacePage({
+        params: Promise.resolve({ locale: 'en-US', reviewId: 'review-1' }),
+      } as never),
+    );
+
+    expect(actionsMock.fetchWorkspace).toHaveBeenCalledWith('review-1');
+    expect(await screen.findByText('Anonymous submission · attempt 2 · Final Project')).toBeInTheDocument();
   });
 });

@@ -1,25 +1,27 @@
 import '@testing-library/jest-dom/vitest';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { StrictMode } from 'react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CourseDetails } from '@/lib/learning/types';
 import ListingInfoPage from './page';
 
-const fetchCourseMock = vi.fn();
+const getCourseMock = vi.fn();
 const updateCourseMock = vi.fn();
 const refreshMock = vi.fn();
 const replaceMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/workspace/learning',
+  usePathname: () => '/console/learning',
   useRouter: () => ({
     refresh: refreshMock,
     replace: replaceMock,
   }),
 }));
 
+vi.mock('@/lib/learning', () => ({
+  getCourse: (...args: unknown[]) => getCourseMock(...args),
+}));
+
 vi.mock('@/lib/learning/actions', () => ({
-  fetchCourse: (...args: unknown[]) => fetchCourseMock(...args),
   updateCourse: (...args: unknown[]) => updateCourseMock(...args),
 }));
 
@@ -64,21 +66,26 @@ const courseFixture: CourseDetails = {
   updatedAt: '2026-01-02T00:00:00.000Z',
 };
 
-describe('ListingInfoPage', () => {
+const params = Promise.resolve({ locale: 'en-US', course: 'ai-for-boss-encounters-by-instructor-one' });
+
+describe('ListingInfoPage (server component)', () => {
   beforeEach(() => {
-    fetchCourseMock.mockReset();
+    getCourseMock.mockReset();
     updateCourseMock.mockReset();
     refreshMock.mockReset();
     replaceMock.mockReset();
-    fetchCourseMock.mockResolvedValue(courseFixture);
+    getCourseMock.mockResolvedValue(courseFixture);
     updateCourseMock.mockResolvedValue({ success: true, data: null });
   });
 
-  it('loads the course and saves storefront identity fields through updateCourse', async () => {
-    render(<ListingInfoPage params={Promise.resolve({ locale: 'en-US', course: 'ai-for-boss-encounters-by-instructor-one' })} />);
+  it('fetches the course server-side and saves storefront identity fields through updateCourse', async () => {
+    render(await ListingInfoPage({ params } as never));
 
-    const titleInput = await screen.findByLabelText(/course title/i);
-    fireEvent.change(titleInput, { target: { value: 'Advanced Encounter AI' } });
+    // The server render already carries the fetched values — no loading state.
+    expect(getCourseMock).toHaveBeenCalledWith('ai-for-boss-encounters-by-instructor-one');
+    expect(screen.getByLabelText(/course title/i)).toHaveValue('AI for Boss Encounters');
+
+    fireEvent.change(screen.getByLabelText(/course title/i), { target: { value: 'Advanced Encounter AI' } });
     fireEvent.change(screen.getByLabelText(/url slug/i), { target: { value: 'advanced-encounter-ai' } });
     fireEvent.change(screen.getByLabelText(/^description$/i), {
       target: { value: 'Design readable enemy behavior loops for shipped game prototypes.' },
@@ -115,29 +122,11 @@ describe('ListingInfoPage', () => {
     expect(screen.getByText('Course info updated successfully.')).toBeInTheDocument();
   });
 
-  it('does not overwrite professor edits when an obsolete StrictMode load resolves late', async () => {
-    let resolveFirst!: (course: CourseDetails) => void;
-    let resolveSecond!: (course: CourseDetails) => void;
-    fetchCourseMock
-      .mockReturnValueOnce(new Promise<CourseDetails>((resolve) => { resolveFirst = resolve; }))
-      .mockReturnValueOnce(new Promise<CourseDetails>((resolve) => { resolveSecond = resolve; }));
+  it('renders the not-found branch when the server lookup returns null', async () => {
+    getCourseMock.mockResolvedValue(null);
 
-    render(
-      <StrictMode>
-        <ListingInfoPage params={Promise.resolve({ locale: 'en-US', course: 'ai-for-boss-encounters-by-instructor-one' })} />
-      </StrictMode>,
-    );
+    render(await ListingInfoPage({ params } as never));
 
-    await waitFor(() => expect(fetchCourseMock).toHaveBeenCalledTimes(2));
-    resolveSecond(courseFixture);
-    const titleInput = await screen.findByLabelText(/course title/i);
-    fireEvent.change(titleInput, { target: { value: 'Professor work in progress' } });
-
-    await act(async () => {
-      resolveFirst({ ...courseFixture, title: 'Obsolete server title' });
-      await Promise.resolve();
-    });
-
-    expect(titleInput).toHaveValue('Professor work in progress');
+    expect(screen.getByText('Course not found.')).toBeInTheDocument();
   });
 });
