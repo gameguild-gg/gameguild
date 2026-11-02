@@ -486,9 +486,11 @@ public class AccessReviewService(
     ///     Parses the item's free-form permission list (comma/semicolon separated,
     ///     optionally annotated with a trailing parenthetical, e.g.
     ///     <c>"courses:read, courses:write (tenant 3fa…)"</c>) into distinct
-    ///     case-insensitive permission tokens.
+    ///     case-insensitive permission tokens. Tokens containing whitespace or
+    ///     separator annotations are prose, not permissions, and parse to nothing
+    ///     (triggering the full-scope revoke fallback).
     /// </summary>
-    internal static string[] ParsePermissionDetails(string? permissionDetails)
+    public static string[] ParsePermissionDetails(string? permissionDetails)
     {
         if (string.IsNullOrWhiteSpace(permissionDetails))
         {

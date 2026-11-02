@@ -119,7 +119,8 @@ public sealed class AccessReviewStateMachineTests
     [InlineData(AccessReviewStatus.Expired)]
     public void Complete_RejectsNonOpenStates(AccessReviewStatus status)
     {
-        var campaign = NewCampaign { Status = status };
+        var campaign = NewCampaign();
+        campaign.Status = status;
 
         var act = () => campaign.Complete(Guid.NewGuid());
 
