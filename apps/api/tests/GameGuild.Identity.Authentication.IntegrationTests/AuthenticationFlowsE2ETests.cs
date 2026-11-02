@@ -844,6 +844,10 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
         var userId = localResult.UserId;
         var defaultTenantId = _dbContext.Set<Tenant>().Single(t => t.IsDefault).Id;
 
+        // Sign-up itself issues one session-bound refresh token (see TokenLifecycle tests),
+        // so the strategy sign-ins are measured relative to the post-sign-up session count.
+        var sessionsAfterSignUp = await _dbContext.Set<UserSession>().CountAsync(s => s.UserId == userId);
+
         // Act - three strategies: explicit email, explicit username, and auto-detection
         using var emailResponse = await _client.PostAsJsonAsync("/v1/auth/polymorphic", new
         {
@@ -886,7 +890,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
         results.Select(result => result.SessionId).Should().OnlyHaveUniqueItems();
 
         (await _dbContext.Set<UserSession>().CountAsync(s => s.UserId == userId))
-            .Should().Be(3, "each polymorphic strategy sign-in issues its own session");
+            .Should().Be(sessionsAfterSignUp + 3, "each polymorphic strategy sign-in issues its own session");
     }
 
     #endregion
