@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Moq;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Infrastructure;
@@ -7,7 +8,11 @@ internal static class PersistedAuthenticationSessions
 {
     public static void Configure(Mock<ISessionManagementService> sessions)
     {
-        var stored = new Dictionary<Guid, UserSession>();
+        // Concurrent sign-ins call CreateSessionAsync simultaneously (see
+        // ConcurrentSignInRaceConditionTests); a plain Dictionary can lose one of the
+        // concurrent writes, which turned the persisted-session assertion into a coin flip
+        // under load. The store must be as thread-safe as the real one.
+        var stored = new ConcurrentDictionary<Guid, UserSession>();
         sessions.Setup(value => value.CreateSessionAsync(
                 It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
