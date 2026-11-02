@@ -111,12 +111,14 @@ public sealed class LoginAttemptAnalysisServiceThreatIntelTests
     }
 
     [Theory]
-    [InlineData("Observation", 35, 0)]
-    [InlineData("Observation", 75, 0)]
-    [InlineData("Enforce", 35, 35)]
-    [InlineData("Enforce", 75, 75)]
+    [InlineData("Observation", 35, 0, 0)]
+    [InlineData("Observation", 75, 0, 0)]
+    [InlineData("Enforce", 35, 35, 35)]
+    [InlineData("Enforce", 75, 75, 75)]
+    [InlineData("Observation", 135, 0, 0)]
+    [InlineData("Enforce", 135, 135, 100)]
     public async Task AnalyzeLoginAttemptAsync_BreachedPasswordMatch_LogsOnlySignalAndScore(
-        string mode, int configuredScore, int expectedScore)
+        string mode, int configuredScore, int expectedScore, int expectedDiagnosticScore)
     {
         var logger = new Mock<ILogger<LoginAttemptAnalysisService>>();
         AuthenticationAuditEvent? recordedAudit = null;
@@ -165,7 +167,7 @@ public sealed class LoginAttemptAnalysisServiceThreatIntelTests
         var ipFingerprint = matchProperties["IpAddress"].Should().BeOfType<string>().Which;
         ipFingerprint.Should().MatchRegex("^ip-network:[a-f0-9]{64}$");
         matchProperties["UserId"].Should().Be("none");
-        matchProperties["RiskScoreBump"].Should().BeOfType<int>().Which.Should().Be(expectedScore);
+        matchProperties["RiskScoreBump"].Should().BeOfType<int>().Which.Should().Be(expectedDiagnosticScore);
         matchProperties["{OriginalFormat}"].Should().Be(
             "Threat intelligence match ({Mode}) - Signal: {Signal}, IP: {IpAddress}, UserId: {UserId}, RiskScoreBump: {RiskScoreBump}");
 
@@ -173,7 +175,7 @@ public sealed class LoginAttemptAnalysisServiceThreatIntelTests
         {
             var anomalyProperties = ((IEnumerable<KeyValuePair<string, object?>>)logs[1].Arguments[2]).ToDictionary();
             anomalyProperties.Keys.Should().BeEquivalentTo(["UserId", "IpAddress", "RiskScore", "Anomalies", "{OriginalFormat}"]);
-            anomalyProperties["RiskScore"].Should().BeOfType<int>().Which.Should().Be(expectedScore);
+            anomalyProperties["RiskScore"].Should().BeOfType<int>().Which.Should().Be(expectedDiagnosticScore);
             anomalyProperties["Anomalies"].Should().Be("ThreatIntel:BreachedPassword");
             anomalyProperties["UserId"].Should().Be("none");
             anomalyProperties["IpAddress"].Should().Be(ipFingerprint);

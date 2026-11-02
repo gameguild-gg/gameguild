@@ -80,6 +80,10 @@ services:
       - Redis__Enabled=true
       - Redis__ConnectionString=${REDIS_CONNECTION_STRING:?set REDIS_CONNECTION_STRING}
       - Redis__InstanceName=${REDIS_INSTANCE_NAME:-game-guild:}
+      # Real-client-IP: trusted proxy CIDRs live in appsettings.json (CF ranges + 172.16.0.0/12).
+      # Do NOT set RateLimiting__TrustedProxyNetworks__* here — last-provider-wins per index would
+      # overwrite the first appsettings entry. Allowlist only, safe to override per deployment:
+      - RateLimiting__AccessControl__AllowlistedIpNetworks__0=172.16.0.0/12
       - Assets__Storage__ServiceUrl=${S3_SERVICE_URL:?set S3_SERVICE_URL}
       - Assets__Storage__AccessKey=${S3_ACCESS_KEY:?set S3_ACCESS_KEY}
       - Assets__Storage__SecretKey=${S3_SECRET_KEY:?set S3_SECRET_KEY}
@@ -159,6 +163,7 @@ services:
         API_PUBLIC_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
         AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
     image: game-guild-web
     ports:
       - '3000'
@@ -174,6 +179,8 @@ services:
       - NEXTAUTH_URL=${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
       - AUTH_SECRET=${AUTH_SECRET:?set AUTH_SECRET}
       - AUTH_TRUST_HOST=true
+      - NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
+      - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY:-1x0000000000000000000000000000000AA}
     security_opt:
       - no-new-privileges:true
     healthcheck:

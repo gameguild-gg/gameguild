@@ -1,7 +1,9 @@
 'use server';
 
 import { getRequestAuthContext } from '@/auth';
+import { verifyTurnstileToken } from '@/lib/antibot/turnstile';
 import { assertSafeServiceUrl } from '@/lib/security/safe-remote-url';
+import { forwardedIpHeaders } from '@/lib/server/forwarded-headers';
 
 import type {
   AddBlogCommentInput,
@@ -228,10 +230,27 @@ export async function deletePost(postId: string) {
   return blogRequest<void>(path(postId), { method: 'DELETE' });
 }
 
-export async function addComment(postId: string, input: AddBlogCommentInput) {
+/**
+ * Public comment write surface. `turnstileToken` is consumed here — verified
+ * server-side before any API call and never forwarded to the backend body.
+ */
+export async function addComment(
+  postId: string,
+  input: AddBlogCommentInput & { turnstileToken?: string | null },
+) {
+  const { turnstileToken, ...comment } = input;
+  const verification = await verifyTurnstileToken(turnstileToken);
+  if (!verification.success) {
+    return {
+      success: false,
+      error: 'Bot check failed. Please refresh and try again.',
+      status: 403,
+    } satisfies BlogActionResult<BlogComment>;
+  }
   return blogRequest<BlogComment>(path(postId, '/comments'), {
     method: 'POST',
-    body: JSON.stringify(input),
+    body: JSON.stringify(comment),
+    headers: { ...(await forwardedIpHeaders()) },
   });
 }
 

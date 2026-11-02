@@ -26,9 +26,52 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  runner-pool:
+    name: Select runner pool
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      pool: ${{ steps.select.outputs.pool }}
+    steps:
+      - name: Choose self-hosted pool or GitHub-hosted overflow
+        id: select
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
+        run: |
+          set -eu
+          if [[ "$FORK_PR" == 'true' ]]; then
+            echo 'Fork PR: untrusted code must never run on self-hosted hardware.' >&2
+            echo 'pool=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          pool='["self-hosted","gameguild"]'
+          response=$(curl -s -w '\n%{http_code}' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$REPOSITORY/actions/runners" || echo $'\n000')
+          status=$(tail -n1 <<<"$response")
+          body=$(sed '$d' <<<"$response")
+          if [[ "$status" == '200' ]]; then
+            total=$(jq '[.runners[] | select(any(.labels[]; .name == "gameguild"))] | length' <<<"$body")
+            busy=$(jq '[.runners[] | select(any(.labels[]; .name == "gameguild")) | select(.busy == true)] | length' <<<"$body")
+            echo "Self-hosted ARC runners: total=$total busy=$busy (max 9)."
+            if [[ "$busy" -ge 9 ]]; then
+              echo 'All 9 ARC runners busy; overflowing to GitHub-hosted.' >&2
+              pool='["ubuntu-latest"]'
+            fi
+          else
+            echo "Runner list unavailable (HTTP $status); defaulting to self-hosted." >&2
+          fi
+          echo "pool=$pool" >> "$GITHUB_OUTPUT"
+
   prepare:
     name: Resolve tested release candidate
-    runs-on: ubuntu-latest
+    needs: runner-pool
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     outputs:
       runtimeChanged: ${{ steps.classify.outputs.runtimeChanged }}
       services: ${{ steps.classify.outputs.runtimeServiceMatrix }}
@@ -178,9 +221,9 @@ jobs:
 
   promote:
     name: Promote exact candidate digests
-    needs: prepare
+    needs: [runner-pool, prepare]
     if: needs.prepare.outputs.runtimeChanged == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     environment: production
     timeout-minutes: 5
     steps:
@@ -251,9 +294,9 @@ jobs:
 
   deploy:
     name: Roll out through Devtron
-    needs: [prepare, promote]
+    needs: [runner-pool, prepare, promote]
     if: needs.prepare.outputs.runtimeChanged == 'true' && needs.promote.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     environment: production
     timeout-minutes: 10
     steps:
@@ -358,8 +401,8 @@ jobs:
 
   no-runtime-release:
     name: No runtime deployment required
-    needs: prepare
+    needs: [runner-pool, prepare]
     if: needs.prepare.outputs.runtimeChanged != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.pool) }}
     steps:
       - run: echo 'The main change does not affect a runtime service.'

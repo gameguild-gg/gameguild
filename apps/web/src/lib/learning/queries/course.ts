@@ -149,20 +149,19 @@ async function resolveCreatorHandle(
 ): Promise<string | null> {
   if (!creatorId) return null;
 
-  const fallback = slugifyRoutePart(creatorId).slice(0, 12) || null;
   const { users } = createCourseModules();
 
   try {
     const result = await users.getUsersForGetUsersByUserId(creatorId);
-    if (!result.ok) return fallback;
+    if (!result.ok) return null;
 
     return (
       slugifyRoutePart(result.data.name ?? "") ||
       slugifyRoutePart(result.data.email?.split("@")[0] ?? "") ||
-      fallback
+      null
     );
   } catch {
-    return fallback;
+    return null;
   }
 }
 
@@ -448,7 +447,11 @@ export const getCourseContent = cache(
       const { content } = createCourseModules();
       const result = await content.getCoursesContent(resolvedCourseId);
 
-      if (!result.ok) return { items: [], total: 0 };
+      if (!result.ok) {
+        const status =
+          (result.error as { status?: number } | undefined)?.status ?? "error";
+        return { items: [], total: 0, error: status };
+      }
 
       const items: CourseContentItemViewModel[] = [];
       const seenIds = new Set<string>();
@@ -467,7 +470,7 @@ export const getCourseContent = cache(
 
       return { items, total: items.length };
     } catch {
-      return { items: [], total: 0 };
+      return { items: [], total: 0, error: "error" };
     }
   },
 );

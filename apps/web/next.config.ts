@@ -217,6 +217,15 @@ const nextConfig: NextConfig = {
           { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
         ],
       },
+      // Same requirement for the Pyodide runtime worker (#111), spawned by the
+      // cross-origin-isolated code-studio routes.
+      {
+        source: "/_next/static/chunks/:file(pyodide-runtime.*)",
+        headers: [
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
+        ],
+      },
       {
         source: "/wasm/:path*.wasm",
         headers: [

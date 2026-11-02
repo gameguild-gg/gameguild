@@ -173,6 +173,11 @@ try {
   // scenarios revoke the token. The owner has expired trust; another owner has
   // active trust for exactly the same fingerprint.
   await page.goto(webUrl + '/workspace/settings/security', { waitUntil: 'domcontentloaded', timeout });
+  // Dev-server compile of this route can race the first RSC stream and abort it
+  // (ECONNRESET / "destination stream errored"); a deterministic reload once the
+  // route is compiled gives a clean stream before the trust assertions begin.
+  await page.waitForLoadState('networkidle', { timeout }).catch(() => {});
+  await page.reload({ waitUntil: 'domcontentloaded', timeout });
   // A streamed reload can briefly retain hidden copies outside the active main.
   // Keep strict row uniqueness and owner isolation within the rendered page.
   const securityPage = page.getByRole('main');

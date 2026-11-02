@@ -165,10 +165,16 @@ public static class AnonymousEndpointRegistry
             ["RepliesController.GetDiscussionReplies"] = "Public replies under a public discussion.",
             ["LikesController.GetCourseLikeCount"] = "Aggregate public like count for a course.",
 
+            // ── Public mentorship directory (published profiles only, issue #102) ──
+            ["MentorsController.List"] = "Public mentor/advisor directory; anonymous callers see published profiles only.",
+            ["MentorsController.Get"] = "Public mentor profile detail; anonymous callers see published profiles only.",
+            ["MentorsController.Availability"] = "Public open-availability listing for a published mentor profile.",
+
             // ── Public blog reading surface (published content only) ──
             ["BlogPublicController.GetAuthorPosts"] = "Public blog reading surface — published content only.",
             ["BlogPublicController.GetPostDetail"] = "Public blog reading surface — published content only.",
             ["BlogPublicController.ResolveRoute"] = "Public blog reading surface — published content only.",
+            ["BlogPublicController.ResolveLegacySlug"] = "Public blog reading surface — legacy Ghost slug resolution for permanent redirects; published content only, ambiguous slugs 404.",
             ["BlogPublicController.GetIndex"] = "Public blog reading surface — published content only.",
             ["BlogPublicController.RecordView"] = "Public blog reading surface — published content only; atomic view counter with PerIp rate limiting.",
             ["BlogPublicController.GetComments"] = "Public blog reading surface — published content only.",

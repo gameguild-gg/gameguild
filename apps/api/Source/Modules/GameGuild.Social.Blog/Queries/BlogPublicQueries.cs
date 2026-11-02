@@ -98,6 +98,13 @@ public sealed record BlogRouteResolutionDto(string Handle, string Slug);
 public sealed record ResolveBlogRouteForRedirectQuery(string Handle, string Slug) : IQuery<BlogRouteResolutionDto?>;
 
 /// <summary>
+/// Resolves a legacy Ghost slug (no author segment, issue #91/#96) to the canonical internal
+/// route, or null when no live published post matches. Ambiguous slugs (two authors using the
+/// same slug) resolve to null rather than guessing.
+/// </summary>
+public sealed record ResolveLegacyBlogSlugQuery(string Slug) : IQuery<BlogRouteResolutionDto?>;
+
+/// <summary>
 /// True when a live published post exists with the given id. Drafts, deleted posts, and unknown
 /// ids are indistinguishable (false) — the controller maps that to 404 like the detail query.
 /// </summary>
@@ -490,7 +497,7 @@ public sealed class ResolveBlogRouteForRedirectQueryHandler(IApplicationDbContex
             : await ToResolutionAsync(context, target.PrimaryAuthorId, target.Slug, cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<BlogRouteResolutionDto?> ToResolutionAsync(
+    internal static async Task<BlogRouteResolutionDto?> ToResolutionAsync(
         IApplicationDbContext context, Guid primaryAuthorId, string slug, CancellationToken ct)
     {
         var handle = await context.Set<SocialProfile>()
@@ -511,4 +518,28 @@ public sealed class IsBlogPostPublishedQueryHandler(IApplicationDbContext contex
     public Task<bool> Handle(IsBlogPostPublishedQuery request, CancellationToken cancellationToken)
         => BlogPublicQueries.PublishedPosts(context)
             .AnyAsync(p => p.Id == request.PostId, cancellationToken);
+}
+
+/// <summary>
+/// Handles <see cref="ResolveLegacyBlogSlugQuery"/>: a legacy Ghost slug resolves to the single
+/// live published post carrying it (slug uniqueness is per author, so collisions are possible;
+/// an ambiguous slug resolves to null instead of an arbitrary post).
+/// </summary>
+public sealed class ResolveLegacyBlogSlugQueryHandler(IApplicationDbContext context)
+    : IQueryHandler<ResolveLegacyBlogSlugQuery, BlogRouteResolutionDto?>
+{
+    /// <inheritdoc />
+    public async Task<BlogRouteResolutionDto?> Handle(ResolveLegacyBlogSlugQuery request, CancellationToken cancellationToken)
+    {
+        var matches = await BlogPublicQueries.PublishedPosts(context)
+            .Where(p => p.Slug == request.Slug)
+            .Select(p => new { p.PrimaryAuthorId, p.Slug })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return matches.Count == 1
+            ? await ResolveBlogRouteForRedirectQueryHandler.ToResolutionAsync(
+                context, matches[0].PrimaryAuthorId, matches[0].Slug, cancellationToken).ConfigureAwait(false)
+            : null;
+    }
 }

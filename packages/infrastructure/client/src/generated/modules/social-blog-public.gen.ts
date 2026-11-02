@@ -130,6 +130,28 @@ export class SocialBlogPublicModule {
   }
 
   /**
+   * Resolves a legacy Ghost slug (no author segment, issues #91/#96) to the canonical internal
+   * route for permanent redirects; missing or ambiguous slugs → indistinguishable 404.
+   */
+  async getApiSocialBlogPublicResolveLegacy(slug: string): Promise<Result<Types.SocialBlogQueriesBlogRouteResolutionDto, ApiError>> {
+    const url = `/api/social/blog/public/resolve-legacy/${slug}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.SocialBlogQueriesBlogRouteResolutionDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Resolves a possibly-stale (handle, slug) route to the canonical route, or 404.
    */
   async getApiSocialBlogPublicResolve(handle: string, slug: string): Promise<Result<Types.SocialBlogQueriesBlogRouteResolutionDto, ApiError>> {
