@@ -53,6 +53,7 @@ public class ResourcePermissionService : IResourcePermissionService
 
             _logger.LogInformation(
                 "Created resource invitation for {Email} to access {ResourceType}/{ResourceId}",
+                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
                 LogRedaction.MaskEmail(request.Email), LogRedaction.Sanitize(resourceType), LogRedaction.Sanitize(resourceId));
 
             return ShareResult.SuccessWithInvitation(

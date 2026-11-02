@@ -36,6 +36,15 @@ public class PostEntityConfiguration : IEntityTypeConfiguration<Post>
         builder.HasIndex(p => new { p.AuthorId, p.RepostOfPostId })
             .IsUnique()
             .HasFilter("\"RepostOfPostId\" IS NOT NULL AND \"DeletedAt\" IS NULL");
+
+        // Soft-delete partial indexes (issue #1157): feed queries always filter
+        // DeletedAt == null and order by CreatedAt (SocialFeedQueryService).
+        builder.HasIndex(p => new { p.AuthorId, p.CreatedAt })
+            .HasDatabaseName("ix_posts_author_created_live")
+            .HasFilter("\"DeletedAt\" IS NULL");
+        builder.HasIndex(p => new { p.TenantId, p.CreatedAt })
+            .HasDatabaseName("ix_posts_tenant_created_live")
+            .HasFilter("\"DeletedAt\" IS NULL");
     }
 }
 
@@ -54,6 +63,12 @@ public class PostCommentEntityConfiguration : IEntityTypeConfiguration<PostComme
         builder.HasIndex(c => c.PostId);
         builder.HasIndex(c => c.AuthorId);
         builder.HasIndex(c => c.ParentCommentId);
+
+        // Thread reads filter DeletedAt == null and order by CreatedAt
+        // (PostCommentService.GetCommentsForPostAsync).
+        builder.HasIndex(c => new { c.PostId, c.CreatedAt })
+            .HasDatabaseName("ix_post_comments_post_created_live")
+            .HasFilter("\"DeletedAt\" IS NULL");
     }
 }
 

@@ -18,9 +18,11 @@ public class ProgramConfiguration : IEntityTypeConfiguration<Program> {
       .IsRequired()
       .HasDefaultValue(PercentValue.FromUnits(6000));
 
-    // Issue #1157: the public catalog lists programs by status on every browse; the
-    // partial index keeps soft-deleted programs out of that hot path entirely.
-    builder.HasIndex(p => p.Status)
+    // Catalog queries filter DeletedAt == null with Status/Visibility equality
+    // (GetPublishedProgramBySlugQueryHandler) — issue #1157. Distinct property
+    // list from the annotation-declared single-column Status index.
+    builder.HasIndex(p => new { p.Status, p.Visibility })
+      .HasDatabaseName("ix_programs_status_visibility_live")
       .HasFilter("\"DeletedAt\" IS NULL");
   }
 }

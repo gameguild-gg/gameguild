@@ -24,6 +24,12 @@ public class UserNotificationConfiguration : IEntityTypeConfiguration<UserNotifi
         builder.HasIndex(un => new { un.UserId, un.IsArchived });
         builder.HasIndex(un => new { un.UserId, un.Type, un.IsRead });
 
+        // Notification inboxes filter DeletedAt == null and page newest-first on
+        // CreatedAt (UserNotificationRepository.GetPagedByUserIdAsync) — issue #1157.
+        builder.HasIndex(un => new { un.UserId, un.CreatedAt })
+            .HasDatabaseName("ix_user_notifications_user_created_live")
+            .HasFilter("\"DeletedAt\" IS NULL");
+
         // Configure enums
         builder.Property(un => un.Priority).HasConversion<int>();
 
