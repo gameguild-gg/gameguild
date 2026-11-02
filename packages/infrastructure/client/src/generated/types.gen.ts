@@ -22248,6 +22248,7 @@ export interface NotificationsControllersNotificationPreferenceDto {
   smsEnabled?: boolean;
   socialEnabled?: boolean;
   timezone?: string | null;
+  whatsAppEnabled?: boolean;
 }
 
 /** Data model for Notifications Controllers Notification Timeline Dto. */
@@ -22329,6 +22330,7 @@ export interface NotificationsControllersUpdatePreferencesInput {
   pushEnabled?: boolean | null;
   smsEnabled?: boolean | null;
   socialEnabled?: boolean | null;
+  whatsAppEnabled?: boolean | null;
 }
 
 /** Data model for Notifications Controllers Whats App Broadcast Dto. */
@@ -50674,6 +50676,7 @@ NotificationsControllersNotificationPreferenceDtoSchema = z.object({
   smsEnabled: z.boolean().optional(),
   socialEnabled: z.boolean().optional(),
   timezone: z.string().nullable().optional(),
+  whatsAppEnabled: z.boolean().optional(),
 });
 
 /** Zod schema for NotificationsControllersNotificationTimelineDto. Data model for Notifications Controllers Notification Timeline Dto. */
@@ -50758,6 +50761,7 @@ NotificationsControllersUpdatePreferencesInputSchema = z.object({
   pushEnabled: z.boolean().nullable().optional(),
   smsEnabled: z.boolean().nullable().optional(),
   socialEnabled: z.boolean().nullable().optional(),
+  whatsAppEnabled: z.boolean().nullable().optional(),
 });
 
 /** Zod schema for NotificationsControllersWhatsAppBroadcastDto. Data model for Notifications Controllers Whats App Broadcast Dto. */

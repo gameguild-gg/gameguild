@@ -141,6 +141,12 @@ public class Certificate : EntityBase
             throw new ArgumentOutOfRangeException(nameof(newExpiresAt), "The renewed expiry must be in the future.");
         }
 
+        if (Status == CertificateStatus.Active && newExpiresAt <= ExpiresAt)
+        {
+            // Renewal must extend an active certificate — never shorten a live expiry.
+            throw new ArgumentOutOfRangeException(nameof(newExpiresAt), "The renewed expiry must extend the current expiry.");
+        }
+
         ExpiresAt = newExpiresAt;
         Status = CertificateStatus.Active;
         UpdatedAt = SystemClock.UtcNow;
