@@ -31,7 +31,10 @@ public class OAuthAuthService(
     ILogger<OAuthAuthService> logger,
     IOptions<JwtOptions>? jwtOptions = null,
     IAuthenticationAuditEventSink? auditEventSink = null,
-    ISamlFederationService? samlFederationService = null
+    ISamlFederationService? samlFederationService = null,
+    IAuthenticationAnomalyDetectionService? anomalyDetectionService = null,
+    ISuspiciousLoginAlertPublisher? suspiciousLoginAlerts = null,
+    IPublisher? eventPublisher = null
 ) : IOAuthAuthService
 {
     public async Task<SignInResponse> GitHubSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
@@ -630,7 +633,66 @@ public class OAuthAuthService(
             TenantId: tenantAccessContext.TenantId,
             Metadata: new { Provider = authenticationMethod, SessionId = sessionId, DurationMs = stopwatch.ElapsedMilliseconds })).ConfigureAwait(false);
 
+        // Sign-in risk coverage (issue #1199): every federated family funnels through this
+        // completion, so the confirmed containment signals (impossible travel, brute force)
+        // are evaluated here too — not only on the local password path. Best-effort: analysis
+        // failures never fail the sign-in, and the publisher swallows its own failures.
+        await AlertFederatedSignInRisksAsync(user, tenantAccessContext.TenantId, authenticationMethod, ipAddress, userAgent, cancellationToken)
+            .ConfigureAwait(false);
+
+        // In-process sign-in telemetry (issue #1199) with the precise provider method.
+        await AuthenticationEventDispatch.PublishAsync(
+            eventPublisher,
+            new UserSignedInEvent(user.Id, user.Email, authenticationMethod, ipAddress, userAgent, SystemClock.UtcNow),
+            logger,
+            cancellationToken).ConfigureAwait(false);
+
         return response;
+    }
+
+    /// <summary>
+    ///     Evaluates the shared anomaly analysis for a completing federated sign-in and forwards
+    ///     the confirmed containment signals (impossible travel, brute force) to the durable
+    ///     suspicious-login alert publisher (issue #1199: the containment revocation must cover
+    ///     federated sessions, not only local password sign-ins). Analysis is best-effort.
+    /// </summary>
+    private async Task AlertFederatedSignInRisksAsync(
+        User user,
+        Guid? tenantId,
+        string authenticationMethod,
+        string? ipAddress,
+        string? userAgent,
+        CancellationToken cancellationToken)
+    {
+        if (anomalyDetectionService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var analysis = await anomalyDetectionService.AnalyzeLoginAttemptAsync(new AuthenticationAttemptContext
+            {
+                UserId = user.Id,
+                Identifier = user.Email.ToLowerInvariant(),
+                AuthenticationMethod = authenticationMethod,
+                IpAddress = ipAddress ?? "unknown",
+                UserAgent = userAgent ?? "Unknown",
+                TenantId = tenantId,
+                AttemptedAt = SystemClock.UtcNow
+            }).ConfigureAwait(false);
+
+            await AuthenticationEventDispatch.AlertConfirmedSignInRisksAsync(
+                suspiciousLoginAlerts, user.Id, tenantId, analysis, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not analyze the federated sign-in risk for user {UserId} ({Method})", user.Id, authenticationMethod);
+        }
     }
 
     /// <summary>Audit action types for identity-provider integration events (issue #180). Kept as
@@ -708,6 +770,21 @@ public class OAuthAuthService(
             UserAgent: httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString(),
             ErrorMessage: exception.GetType().Name,
             Metadata: new { Provider = authenticationMethod, DurationMs = stopwatch.ElapsedMilliseconds })).ConfigureAwait(false);
+
+        // In-process failure telemetry (issue #1199). The identifier is the same synthetic
+        // audit identity recorded above (no real account may exist); the client response stays
+        // the provider error mapped by the caller.
+        var failedHttpContext = httpContextAccessor.HttpContext;
+        await AuthenticationEventDispatch.PublishAsync(
+            eventPublisher,
+            new AuthenticationFailedEvent(
+                $"oauth-{authenticationMethod.ToLowerInvariant()}@audit.invalid",
+                exception.GetType().Name,
+                authAttemptService.GetClientIpAddress(failedHttpContext),
+                failedHttpContext?.Request.Headers.UserAgent.ToString(),
+                SystemClock.UtcNow),
+            logger,
+            CancellationToken.None).ConfigureAwait(false);
     }
 
     /// <summary>
