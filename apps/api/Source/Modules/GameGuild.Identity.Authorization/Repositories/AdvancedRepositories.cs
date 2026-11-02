@@ -423,7 +423,7 @@ public class AccessReviewCampaignRepository(DbContext context) : IAccessReviewCa
     {
         var now = SystemClock.UtcNow;
         var query = DbSet.Where(c =>
-            c.Status == AccessReviewStatus.InProgress &&
+            (c.Status == AccessReviewStatus.Active || c.Status == AccessReviewStatus.InProgress) &&
             c.StartDate <= now &&
             c.EndDate >= now
         );
@@ -442,7 +442,8 @@ public class AccessReviewCampaignRepository(DbContext context) : IAccessReviewCa
     {
         var now = SystemClock.UtcNow;
         return await DbSet
-            .Where(c => c.Status == AccessReviewStatus.InProgress && c.EndDate < now)
+            .Where(c => (c.Status == AccessReviewStatus.Active || c.Status == AccessReviewStatus.InProgress)
+                && c.EndDate < now)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
