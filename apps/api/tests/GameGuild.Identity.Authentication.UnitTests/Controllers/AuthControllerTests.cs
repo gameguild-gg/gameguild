@@ -137,7 +137,6 @@ public class AuthControllerTests
         capturedCommand.ChainId.Should().Be("5");
     }
 
-<<<<<<< HEAD
     // ── Issue #1116: provider outage answers 503 and advertises the magic-link fallback ──
 
     [Fact]
