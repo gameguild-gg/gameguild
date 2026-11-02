@@ -25026,6 +25026,175 @@ export const getMeTasksEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetMentorshipMentorsInput {
+  query?: {
+    skill?: string;
+    role?: Types.SocialMentorshipMentorshipProgramRole;
+    search?: string;
+    offersIntroductoryCall?: boolean;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetMentorshipMentorsOutput = Types.SocialMentorshipMentorProfileDto[];
+export const getMentorshipMentorsEndpoint = {
+  operationId: 'getMentorshipMentors' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/mentors' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: false,
+} as const;
+
+export interface GetMentorProfileByIdInput {
+  profileId: string;
+}
+export type GetMentorProfileByIdOutput = Types.SocialMentorshipMentorProfileDto;
+export const getMentorProfileByIdEndpoint = {
+  operationId: 'getMentorProfileById' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/mentors/{profileId}' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: false,
+} as const;
+
+export interface GetMentorshipMentorsAvailabilityInput {
+  profileId: string;
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+  };
+}
+export type GetMentorshipMentorsAvailabilityOutput = Types.SocialMentorshipMentorAvailabilitySlotDto[];
+export const getMentorshipMentorsAvailabilityEndpoint = {
+  operationId: 'getMentorshipMentorsAvailability' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/mentors/{profileId}/availability' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: false,
+} as const;
+
+export type GetMentorshipProfileInput = void;
+export type GetMentorshipProfileOutput = Types.SocialMentorshipMentorProfileDto;
+export const getMentorshipProfileEndpoint = {
+  operationId: 'getMentorshipProfile' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/profile' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutMentorshipProfileInput {
+  body?: Types.SocialMentorshipUpsertMentorProfileInput;
+}
+export type PutMentorshipProfileOutput = Types.SocialMentorshipMentorProfileDto;
+export const putMentorshipProfileEndpoint = {
+  operationId: 'putMentorshipProfile' as const,
+  method: 'PUT' as const,
+  path: '/v1/mentorship/profile' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipProfileAvailabilityInput {
+  body?: Types.SocialMentorshipPublishMentorAvailabilityInput;
+}
+export type PostMentorshipProfileAvailabilityOutput = Types.SocialMentorshipMentorAvailabilitySlotDto[];
+export const postMentorshipProfileAvailabilityEndpoint = {
+  operationId: 'postMentorshipProfileAvailability' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/profile/availability' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteMentorshipProfileAvailabilityInput {
+  slotId: string;
+}
+export type DeleteMentorshipProfileAvailabilityOutput = void;
+export const deleteMentorshipProfileAvailabilityEndpoint = {
+  operationId: 'deleteMentorshipProfileAvailability' as const,
+  method: 'DELETE' as const,
+  path: '/v1/mentorship/profile/availability/{slotId}' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetMentorshipProfileDashboardInput = void;
+export type GetMentorshipProfileDashboardOutput = Types.SocialMentorshipMentorDashboardDto;
+export const getMentorshipProfileDashboardEndpoint = {
+  operationId: 'getMentorshipProfileDashboard' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/profile/dashboard' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipProfileStatusInput {
+  body?: Types.SocialMentorshipSetMentorProfileStatusInput;
+}
+export type PostMentorshipProfileStatusOutput = Types.SocialMentorshipMentorProfileDto;
+export const postMentorshipProfileStatusEndpoint = {
+  operationId: 'postMentorshipProfileStatus' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/profile/status' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetMentorshipSessionsInput {
+  query?: {
+    fromUtc?: string;
+    toUtc?: string;
+    status?: Types.SocialMentorshipMentorshipSessionStatus;
+    asMentorOnly?: boolean;
+  };
+}
+export type GetMentorshipSessionsOutput = Types.SocialMentorshipMentorshipSessionDto[];
+export const getMentorshipSessionsEndpoint = {
+  operationId: 'getMentorshipSessions' as const,
+  method: 'GET' as const,
+  path: '/v1/mentorship/sessions' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipSessionsInput {
+  body?: Types.SocialMentorshipBookMentorshipSessionInput;
+}
+export type PostMentorshipSessionsOutput = Types.SocialMentorshipMentorshipSessionDto;
+export const postMentorshipSessionsEndpoint = {
+  operationId: 'postMentorshipSessions' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/sessions' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipSessionsCancelInput {
+  sessionId: string;
+  body?: Types.SocialMentorshipCancelMentorshipSessionInput;
+}
+export type PostMentorshipSessionsCancelOutput = Types.SocialMentorshipMentorshipSessionDto;
+export const postMentorshipSessionsCancelEndpoint = {
+  operationId: 'postMentorshipSessionsCancel' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/sessions/{sessionId}/cancel' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostMentorshipSessionsCompleteInput {
+  sessionId: string;
+}
+export type PostMentorshipSessionsCompleteOutput = Types.SocialMentorshipMentorshipSessionDto;
+export const postMentorshipSessionsCompleteEndpoint = {
+  operationId: 'postMentorshipSessionsComplete' as const,
+  method: 'POST' as const,
+  path: '/v1/mentorship/sessions/{sessionId}/complete' as const,
+  tags: ['SocialMentorship'] as const,
+  requiresAuth: true,
+} as const;
+
 /**
  * OAuth2 client_credentials grant - authenticates a service account and returns a JWT token.
  *
@@ -35198,6 +35367,19 @@ export const endpoints = {
   postMarketingLeads: postMarketingLeadsEndpoint,
   getMarketingLeadById: getMarketingLeadByIdEndpoint,
   getMeTasks: getMeTasksEndpoint,
+  getMentorshipMentors: getMentorshipMentorsEndpoint,
+  getMentorProfileById: getMentorProfileByIdEndpoint,
+  getMentorshipMentorsAvailability: getMentorshipMentorsAvailabilityEndpoint,
+  getMentorshipProfile: getMentorshipProfileEndpoint,
+  putMentorshipProfile: putMentorshipProfileEndpoint,
+  postMentorshipProfileAvailability: postMentorshipProfileAvailabilityEndpoint,
+  deleteMentorshipProfileAvailability: deleteMentorshipProfileAvailabilityEndpoint,
+  getMentorshipProfileDashboard: getMentorshipProfileDashboardEndpoint,
+  postMentorshipProfileStatus: postMentorshipProfileStatusEndpoint,
+  getMentorshipSessions: getMentorshipSessionsEndpoint,
+  postMentorshipSessions: postMentorshipSessionsEndpoint,
+  postMentorshipSessionsCancel: postMentorshipSessionsCancelEndpoint,
+  postMentorshipSessionsComplete: postMentorshipSessionsCompleteEndpoint,
   postOauthToken: postOauthTokenEndpoint,
   getOg: getOgEndpoint,
   getOrdersForGetOrders: getOrdersForGetOrdersEndpoint,
