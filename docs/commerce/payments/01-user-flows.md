@@ -338,7 +338,7 @@ flowchart TD
 | 1 | All three edge headers absent | header chain (`CurrenciesController.cs:51-53`) | country null → `country-unknown` default USD |
 | 2 | Bogus 3-letter or 1-letter code | `MapCountryToCurrency` guard (`GetCurrencySuggestion.cs:111-113`) | null → default path |
 | 3 | Region maps to a currency outside the ISO catalog | catalog check (`:120`) | treated as unknown (defensive) |
-| 4 | Anonymous caller | intended allow (`CurrenciesController.cs:43`, registry `:112`) | **BUG** — CQRS auth behavior throws first (Gap N1) |
+| 4 | Anonymous caller | intended allow (`CurrenciesController.cs:43`, registry `:112`) | **BUG** — CQRS auth behavior throws first (Gap N9) |
 | 5 | Tenant with zero enabled currencies | fallback chain (`:89-94`) | `first-enabled` absent → default USD, `IsEnabledForTenant=false` |
 | 6 | Disabled currency for the tenant | enablement filter (`:82`) | never suggested; tenant-base offered instead |
 | 7 | Direct unit tests | handler invoked directly (`FxSecurityTests.cs:284-313`) | pass — the pipeline behavior is bypassed, masking gap N9 |
