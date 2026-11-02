@@ -131,6 +131,32 @@ public class CertificateAuditEmissionTests
     }
 
     [Fact]
+    public void RenewingAnActiveCertificateWithAShorterExpiryThrows()
+    {
+        var certificate = Certificate.Issue(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Alice", "Math",
+            DateTime.UtcNow.AddYears(1));
+
+        var act = () => certificate.Renew(DateTime.UtcNow.AddDays(1));
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void RenewingAnActiveCertificateWithALaterExpirySucceeds()
+    {
+        var originalExpiry = DateTime.UtcNow.AddYears(1);
+        var certificate = Certificate.Issue(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Alice", "Math",
+            originalExpiry);
+
+        certificate.Renew(DateTime.UtcNow.AddYears(2));
+
+        certificate.ExpiresAt.Should().BeAfter(originalExpiry);
+        certificate.Status.Should().Be(CertificateStatus.Active);
+    }
+
+    [Fact]
     public async Task AuditEmissionFailureBlocksCertificateRenewal()
     {
         await using var context = CreateSqliteContext();
