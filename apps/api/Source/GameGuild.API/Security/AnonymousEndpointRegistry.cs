@@ -165,6 +165,18 @@ public static class AnonymousEndpointRegistry
             ["RepliesController.GetDiscussionReplies"] = "Public replies under a public discussion.",
             ["LikesController.GetCourseLikeCount"] = "Aggregate public like count for a course.",
 
+            // ── Public ratings and achievements reads (approved/published content only) ──
+            ["RatingsController.GetById"] = "Public rating detail; approved ratings only (issue #1158 module activation).",
+            ["RatingsController.GetRatings"] = "Public rating listing for an entity; approved ratings only.",
+            ["RatingsController.GetSummary"] = "Aggregate public rating summary for an entity.",
+            ["RatingsController.GetSummariesBatch"] = "Batched aggregate public rating summaries.",
+            ["RatingsController.GetUserRatings"] = "Public approved-rating listing for a user.",
+            ["RatingsController.GetCount"] = "Aggregate public rating count for an entity.",
+            ["RatingsController.GetTopRated"] = "Public top-rated entity listing.",
+            ["RatingsController.GetRecentReviews"] = "Public recent approved-review listing.",
+            ["AchievementsController.GetAchievements"] = "Public achievement catalog listing; only active achievements are returned.",
+            ["AchievementsController.GetAchievement"] = "Public achievement detail; only active achievements are returned.",
+
             // ── Public mentorship directory (published profiles only, issue #102) ──
             ["MentorsController.List"] = "Public mentor/advisor directory; anonymous callers see published profiles only.",
             ["MentorsController.Get"] = "Public mentor profile detail; anonymous callers see published profiles only.",
