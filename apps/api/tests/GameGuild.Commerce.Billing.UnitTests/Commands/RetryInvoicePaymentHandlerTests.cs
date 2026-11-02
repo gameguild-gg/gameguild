@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Commerce.Payments;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Commerce.Subscriptions;
@@ -7,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
 using Xunit;
+using PaymentRetryResult = GameGuild.Commerce.Payments.PaymentRetryResult;
+using RetryPaymentCommand = GameGuild.Commerce.Payments.RetryPaymentCommand;
 
 namespace GameGuild.Commerce.Billing.UnitTests.Commands;
 

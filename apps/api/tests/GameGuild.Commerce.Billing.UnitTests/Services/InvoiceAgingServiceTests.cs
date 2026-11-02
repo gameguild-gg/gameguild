@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -59,7 +60,7 @@ public sealed class InvoiceAgingServiceTests
 
         var service = new InvoiceAgingService(context, NullLogger<InvoiceAgingService>.Instance);
 
-        var aged = await service.MarkOverdueOpenInvoicesPastDueAsync(tenantId, CancellationToken.None);
+        var aged = await service.MarkOverdueOpenInvoicesPastDueAsync(cancellationToken: CancellationToken.None);
 
         aged.Should().BeEquivalentTo([overdue.Id]);
         overdue.Status.Should().Be(InvoiceStatus.PastDue);
