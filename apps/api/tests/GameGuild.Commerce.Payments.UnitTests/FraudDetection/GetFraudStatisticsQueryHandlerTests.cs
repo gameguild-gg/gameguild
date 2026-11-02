@@ -236,7 +236,15 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
         var now = SystemClock.UtcNow;
 
         // Three attempts spread over one ISO week (Mon..Sun) plus one attempt in a prior week.
+        // Fall back to the previous ISO week when the current one has fewer than three elapsed
+        // days: the statistics window only counts attempts up to "now", so running on a Monday
+        // or Tuesday must not seed future-dated attempts the handler filters back out.
         var monday = now.Date.AddDays(-((int)now.DayOfWeek + 6) % 7);
+        if (monday.AddDays(2) > now.Date)
+        {
+            monday = monday.AddDays(-7);
+        }
+
         for (var day = 0; day < 3; day++)
         {
             await AddPaymentAsync(
