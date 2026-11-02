@@ -17,9 +17,7 @@ using GameGuild.Finance.Economy.Bounties;
 using GameGuild.Finance.Economy.Marketplace;
 using GameGuild.Finance.Economy.Payouts;
 using GameGuild.Finance.Economy.Treasury;
-using GameGuild.Finance.Ledgers;
 using GameGuild.GameJams;
-using GameGuild.Gamification.Achievements;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
@@ -46,7 +44,6 @@ using GameGuild.Social.Feed;
 using GameGuild.Social.Groups;
 using GameGuild.Social.Mentorship;
 using GameGuild.Social.Profiles;
-using GameGuild.Social.Ratings;
 using GameGuild.Social.Reactions;
 using GameGuild.Teams;
 using GameGuild.TestingLab;
@@ -101,29 +98,20 @@ internal sealed class ApiProductComposition : IApiProductComposition
         "Social.Mentorship",
         "Social.Posts",
         "Social.Profiles",
-        "Social.Ratings",
         "Social.Reactions",
         "Teams",
-        "TestingLab",
-        "Finance.Ledgers",
-        "Gamification.Achievements"
+        "TestingLab"
     ];
 
     public IReadOnlyList<string> DisabledModules { get; } =
     [
         "Compliance.FinancialCrime",
+        "Finance.Ledgers",
         "TrustSafety"
     ];
 
     public void ConfigureServices(WebApplicationBuilder builder)
     {
-        // Issue #1158: the Finance.Ledgers, Social.Ratings and Gamification.Achievements
-        // assemblies carry complete entities and model configurations but were never
-        // referenced by the API host, so their tables never materialized. Enable their
-        // modules so handler scanning, DI and the EF model all pick them up.
-        builder.Services.AddLedgerModule();
-        builder.Services.AddRatingsModule();
-        builder.Services.AddAchievementsModule();
         builder.Services.AddFerpaModule();
         builder.Services.AddKycComposition(builder.Configuration);
         builder.Services.AddSingleton<IDatabaseMigrationPrerequisite, EconomyMigrationPrerequisite>();

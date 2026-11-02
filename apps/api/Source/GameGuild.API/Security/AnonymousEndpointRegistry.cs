@@ -165,20 +165,6 @@ public static class AnonymousEndpointRegistry
             ["DiscussionsController.GetContentDiscussions"] = "Public discussions under published content.",
             ["RepliesController.GetDiscussionReplies"] = "Public replies under a public discussion.",
             ["LikesController.GetCourseLikeCount"] = "Aggregate public like count for a course.",
-            // Public ratings surface (module materialized by issue #1158): read-only
-            // aggregate/published ratings browsing; writes and personal endpoints stay authorized.
-            ["RatingsController.GetById"] = "Public rating detail for a published entity.",
-            ["RatingsController.GetRatings"] = "Public rating list under a published entity.",
-            ["RatingsController.GetSummary"] = "Aggregate public rating summary for an entity.",
-            ["RatingsController.GetSummariesBatch"] = "Batched aggregate public rating summaries.",
-            ["RatingsController.GetUserRatings"] = "Public ratings a user has published.",
-            ["RatingsController.GetCount"] = "Aggregate public rating count for an entity.",
-            ["RatingsController.GetTopRated"] = "Public top-rated entity listing.",
-            ["RatingsController.GetRecentReviews"] = "Public recent-review feed of published ratings.",
-            // Public achievements catalog (module materialized by issue #1158): read-only
-            // definitions browsing; user-scoped progress endpoints stay authorized.
-            ["AchievementsController.GetAchievements"] = "Public achievement-definitions catalog.",
-            ["AchievementsController.GetAchievement"] = "Public achievement-definition detail.",
 
             // ── Public mentorship directory (published profiles only, issue #102) ──
             ["MentorsController.List"] = "Public mentor/advisor directory; anonymous callers see published profiles only.",
