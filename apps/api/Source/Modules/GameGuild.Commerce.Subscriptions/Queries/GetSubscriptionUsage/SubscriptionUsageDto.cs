@@ -5,7 +5,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Simplified DTO for subscription usage information
 /// </summary>
-public abstract class SubscriptionUsageDto
+public class SubscriptionUsageDto
 {
     public Guid SubscriptionId { get; set; }
 

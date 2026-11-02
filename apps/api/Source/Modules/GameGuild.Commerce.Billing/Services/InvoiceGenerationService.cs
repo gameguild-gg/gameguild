@@ -37,6 +37,7 @@ public sealed class InvoiceGenerationService(
     IUserRepository userRepository,
     INotificationService notificationService,
     GameGuild.Commerce.Payments.IReferralService referralService,
+    IInvoiceAgingService invoiceAgingService,
     ILogger<InvoiceGenerationService> logger,
     GameGuild.Commerce.ISubscriptionPromoCoordinator? promoCoordinator = null) : IInvoiceGenerationService
 {
@@ -93,6 +94,13 @@ public sealed class InvoiceGenerationService(
             throw new InvalidOperationException(
                 $"Cannot materialize invoice for subscription {request.SubscriptionId}: tenant is missing");
         }
+
+        // Issue #1205 G-2 (on-next-touch aging): materializing the next cycle means the
+        // previous cycle settled — any still-open invoice past its due date for this
+        // subscription ages to PastDue instead of lingering Open forever.
+        await invoiceAgingService
+            .MarkOverdueOpenInvoicesPastDueAsync(request.SubscriptionId, cancellationToken)
+            .ConfigureAwait(false);
 
         var idempotencyKey = BuildIdempotencyKey(request.SubscriptionId, request.BillingCycleNumber);
 
