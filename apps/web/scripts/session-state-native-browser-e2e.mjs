@@ -224,13 +224,20 @@ try {
   const isSecurityAction = response => response.request().method() === 'POST' &&
     new URL(response.url()).pathname.endsWith('/workspace/settings/security') &&
     Boolean(response.request().headers()['next-action']);
+  // Issue #1144: trusting the current device now requires a fresh step-up receipt
+  // (challenge bound to operation/target/payload hash, verified with an MFA factor).
+  // This acceptance account has no MFA factor, so the real Trust server action's API
+  // call is rejected with 403 and creates nothing: the action itself completes (RSC
+  // protocol 200, surfacing the failure as an error toast), the Trusted badge and
+  // trusted-device row never appear, and the Trust affordance stays available.
   const trustAction = page.waitForResponse(isSecurityAction, { timeout });
   await trustButton.click();
   assert.equal((await trustAction).status(), 200);
-  await trustedBadge.waitFor({ state: 'visible', timeout });
-  await trustedRow.waitFor({ state: 'visible', timeout });
-  await trustButton.waitFor({ state: 'hidden', timeout });
-  assert.equal(await securityPage.locator('[data-testid^="trusted-device-row-"]').count(), 1);
+  await page.waitForLoadState('networkidle', { timeout }).catch(() => {});
+  await trustButton.waitFor({ state: 'visible', timeout });
+  assert.equal(await trustedBadge.count(), 0);
+  assert.equal(await trustedRow.count(), 0);
+  assert.equal(await securityPage.locator('[data-testid^="trusted-device-row-"]').count(), 0);
   assert.equal(await otherRow.getByText('Trusted', { exact: true }).count(), 0);
   const trustedResponse = await fetch(apiUrl + '/v1/auth/trusted-devices', {
     headers: { authorization: 'Bearer ' + accessToken, 'X-Tenant-Id': account.tenantId },
@@ -238,24 +245,17 @@ try {
   });
   assert.equal(trustedResponse.status, 200);
   const trustedDevices = await trustedResponse.json();
-  assert.equal(trustedDevices.length, 1);
-  assert.equal(trustedDevices[0].id, account.trustedDeviceId);
-  assert.equal(trustedDevices[0].deviceName, '');
-  assert.ok(new Date(trustedDevices[0].expiresAt).getTime() > Date.now());
+  assert.equal(trustedDevices.length, 0);
   await currentRow.screenshot({ path: path.join(evidence, 'session-trust-active.png') });
-  trustPassed('The real Trust server action renews the same device and updates the current session badge');
+  trustPassed('The real Trust server action without a step-up receipt is rejected and creates nothing');
 
-  const revokeAction = page.waitForResponse(isSecurityAction, { timeout });
-  await trustedRow.getByRole('button', { name: 'Revoke', exact: true }).click();
-  assert.equal((await revokeAction).status(), 200);
-  await trustedRow.waitFor({ state: 'hidden', timeout });
-  await trustedBadge.waitFor({ state: 'hidden', timeout });
-  await trustButton.waitFor({ state: 'visible', timeout });
+  // With the renewal rejected there is no trusted row to revoke; the rejected attempt
+  // must leave the current session authenticated and its persisted state untouched.
   const stillValid = await authenticated.request.get(webUrl + '/api/auth/session-state');
   assert.equal(stillValid.status(), 200);
   assertState(await stillValid.json());
   await currentRow.screenshot({ path: path.join(evidence, 'session-trust-revoked.png') });
-  trustPassed('The real Revoke action removes trust without terminating or changing the current session');
+  trustPassed('The rejected trust attempt leaves the current session valid and unchanged');
 
   await page.reload({ waitUntil: 'domcontentloaded', timeout });
   await currentRow.waitFor({ state: 'visible', timeout });
@@ -265,7 +265,7 @@ try {
   assert.equal(await securityPage.locator('[data-testid^="session-row-"]').count(), 2);
   assert.equal(await securityPage.getByTestId('session-row-' + account.foreignSessionId).count(), 0);
   assert.equal(await securityPage.getByTestId('trusted-device-row-' + account.foreignTrustedDeviceId).count(), 0);
-  trustPassed('A fresh security page preserves revoked trust and owner isolation');
+  trustPassed('A fresh security page preserves the rejected trust state and owner isolation');
   assert.equal(trustCases.length, 4);
   await writeFile(path.join(evidence, 'trust-browser.json'), JSON.stringify({
     passed: true, userId: account.userId, sessionId: account.sessionId,

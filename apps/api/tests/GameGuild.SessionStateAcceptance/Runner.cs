@@ -117,12 +117,15 @@ internal static class Runner
                 var trusted = await db.Set<TrustedDevice>().AsNoTracking()
                     .Where(row => row.UserId == account.UserId || row.UserId == account.ForeignUserId).ToListAsync();
                 Assert.Equal(2, trusted.Count);
+                // Issue #1144: the browser's Trust action is rejected without a step-up receipt,
+                // so the seeded own trust row must survive untouched — same identity, still
+                // inactive and still expired (no renewal, no revocation happened).
                 var ownTrust = Assert.Single(trusted, row => row.UserId == account.UserId);
                 Assert.Equal(account.TrustedDeviceId, ownTrust.Id);
                 Assert.Equal(account.Fingerprint, ownTrust.DeviceFingerprint);
                 Assert.Equal(string.Empty, ownTrust.DeviceName);
                 Assert.False(ownTrust.IsActive);
-                Assert.True(ownTrust.ExpiresAt > DateTime.UtcNow);
+                Assert.True(ownTrust.ExpiresAt < DateTime.UtcNow);
                 var foreignTrust = Assert.Single(trusted, row => row.UserId == account.ForeignUserId);
                 Assert.Equal(account.ForeignTrustedDeviceId, foreignTrust.Id);
                 Assert.Equal(account.Fingerprint, foreignTrust.DeviceFingerprint);
@@ -134,7 +137,7 @@ internal static class Runner
                 await File.WriteAllTextAsync(Path.Combine(evidence, "trust-persistence.json"),
                     JsonSerializer.Serialize(new { passed = true, account.SessionId, account.TrustedDeviceId,
                         account.ForeignTrustedDeviceId, currentSessionFingerprint = account.Fingerprint,
-                        renewedSameIdentity = true, ownTrustRevoked = true, foreignTrustUnchanged = true,
+                        trustRenewalRejected = true, ownTrustUnchanged = true, foreignTrustUnchanged = true,
                         database = "Fresh PostgreSQL context after actual browser server actions" }, JsonOptions));
                 var revoked = Assert.Single(rows, row => row.Id == account.SessionId);
                 Assert.False(revoked.IsActive);

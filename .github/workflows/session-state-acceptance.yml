@@ -111,8 +111,8 @@ jobs:
           assert.equal(storedTrust.sessionId, trust.sessionId);
           assert.equal(storedTrust.trustedDeviceId, trust.trustedDeviceId);
           assert.equal(storedTrust.foreignTrustedDeviceId, trust.foreignTrustedDeviceId);
-          assert.equal(storedTrust.renewedSameIdentity, true);
-          assert.equal(storedTrust.ownTrustRevoked, true);
+          assert.equal(storedTrust.trustRenewalRejected, true);
+          assert.equal(storedTrust.ownTrustUnchanged, true);
           assert.equal(storedTrust.foreignTrustUnchanged, true);
           NODE
       - name: Retain source-bound acceptance evidence
