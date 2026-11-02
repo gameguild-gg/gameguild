@@ -13,14 +13,16 @@ public sealed class GetSubscriptionPlanUsageStatisticsHandler(
     IApplicationDbContext context)
     : IQueryHandler<GetSubscriptionPlanUsageStatisticsQuery, object>
 {
-    public async Task<object?> Handle(
+    public async Task<object> Handle(
         GetSubscriptionPlanUsageStatisticsQuery request,
         CancellationToken cancellationToken)
     {
         var plan = await planRepository.GetByIdAsync(request.PlanId, cancellationToken).ConfigureAwait(false);
         if (plan is null)
         {
-            return null;
+            // The query declares IQuery<object> (non-nullable surface); a missing plan
+            // surfaces as a null payload.
+            return null!;
         }
 
         var now = SystemClock.UtcNow;

@@ -9,9 +9,9 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     <see langword="null" /> when the subscription does not exist.
 /// </summary>
 public sealed class GetSubscriptionUsageHandler(ISubscriptionQueryService queryService)
-    : IQueryHandler<GetSubscriptionUsageQuery, SubscriptionUsageDto?>
+    : IQueryHandler<GetSubscriptionUsageQuery, SubscriptionUsageDto>
 {
-    public async Task<SubscriptionUsageDto?> Handle(
+    public async Task<SubscriptionUsageDto> Handle(
         GetSubscriptionUsageQuery request,
         CancellationToken cancellationToken)
     {
@@ -24,7 +24,9 @@ public sealed class GetSubscriptionUsageHandler(ISubscriptionQueryService queryS
         }
         catch (SubscriptionNotFoundException)
         {
-            return null;
+            // The query declares IQuery<SubscriptionUsageDto> (non-nullable surface);
+            // a missing subscription surfaces as a null payload.
+            return null!;
         }
 
         var dto = new SubscriptionUsageDto
