@@ -149,3 +149,4 @@ BenchmarkDotNet.Artifacts/
 
 # Local AI tooling state and generated logs
 .mimosa/
+.tmp-artifacts/

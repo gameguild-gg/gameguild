@@ -59,6 +59,20 @@ public sealed class BlogPublicController(
             ? Ok(resolution)
             : NotFound();
 
+    /// <summary>
+    /// Resolves a legacy Ghost slug (no author segment, issues #91/#96) to the canonical internal
+    /// route for permanent redirects; missing or ambiguous slugs → indistinguishable 404.
+    /// </summary>
+    [HttpGet("resolve-legacy/{slug}")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(BlogRouteResolutionDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ResolveLegacySlug(string slug, CancellationToken cancellationToken)
+        => await sender.Send(new ResolveLegacyBlogSlugQuery(slug), cancellationToken).ConfigureAwait(false)
+            is { } resolution
+            ? Ok(resolution)
+            : NotFound();
+
     /// <summary>Global public blog index (published only), keyset-paged newest-first.</summary>
     [HttpGet("posts")]
     [AllowAnonymous]
