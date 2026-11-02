@@ -89,7 +89,16 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
 
     public async Task DeleteExpiredAsync(DateTime now, CancellationToken cancellationToken = default)
     {
-        var expiredDevices = await TrustedDevices.Where(d => d.ExpiresAt.HasValue && d.ExpiresAt.Value < now || !d.IsActive && d.UpdatedAt < now.AddDays(-90)).ToListAsync(cancellationToken);
+        // Retention grace (issue #1144): a merely-expired row is still renewed in place
+        // by SessionManagementService.TrustDeviceAsync when the same device is re-trusted
+        // (same row id and trust history). Hard-deleting a row as soon as it lapses would
+        // race that renewal and turn every re-trust into a fresh row, so rows are pruned
+        // only once they have been expired — or revoked/deactivated — for over 90 days.
+        var retentionCutoff = now.AddDays(-90);
+
+        var expiredDevices = await TrustedDevices.Where(d =>
+            (d.ExpiresAt.HasValue && d.ExpiresAt.Value < retentionCutoff)
+            || (!d.IsActive && d.UpdatedAt < retentionCutoff)).ToListAsync(cancellationToken);
 
         if (expiredDevices.Count == 0)
         {
@@ -97,7 +106,7 @@ public class TrustedDeviceRepository(IApplicationDbContext context) : ITrustedDe
         }
 
         TrustedDevices.RemoveRange(expiredDevices);
-        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     // Helper methods for backward compatibility and service layer

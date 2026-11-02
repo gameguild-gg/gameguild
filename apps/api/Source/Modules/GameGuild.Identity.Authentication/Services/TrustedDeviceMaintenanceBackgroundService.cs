@@ -5,10 +5,13 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-///     Background maintenance for the trusted-device registry (issue #1144): expired trust
+///     Background maintenance for the trusted-device registry (issue #1144): abandoned trust
 ///     rows are pruned on a schedule so the table does not grow unbounded. Reuses the
-///     repository's existing <c>DeleteExpiredAsync</c> cleanup, which removes expired rows
-///     and rows revoked more than 90 days ago.
+///     repository's existing <c>DeleteExpiredAsync</c> cleanup, which removes rows that have
+///     been expired — or revoked/deactivated — for more than 90 days. The retention grace
+///     matters: a merely-expired row is still renewed in place when its device is re-trusted
+///     (<see cref="SessionManagementService.TrustDeviceAsync"/> keeps the row id and trust
+///     history), so a sweep must never race that renewal.
 /// </summary>
 public sealed class TrustedDeviceMaintenanceBackgroundService(
     IServiceProvider serviceProvider,

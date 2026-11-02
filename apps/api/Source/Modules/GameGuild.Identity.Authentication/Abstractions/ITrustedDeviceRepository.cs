@@ -47,7 +47,9 @@ public interface ITrustedDeviceRepository
     Task RevokeAllForUserAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Deletes expired trusted devices (cleanup task).
+    ///     Deletes abandoned trusted devices (cleanup task): rows that have been expired —
+    ///     or revoked/deactivated — for more than 90 days. A merely-expired row is kept,
+    ///     because re-trusting the same device renews it in place (same row id).
     /// </summary>
     Task DeleteExpiredAsync(DateTime now, CancellationToken cancellationToken = default);
 
