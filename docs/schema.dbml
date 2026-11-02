@@ -14360,6 +14360,7 @@ Table "gameguild.authentication"."user_mfa_configuration" {
   "setup_expires_at" timestamp
   "sms_phone_number" "character varying(32)"
   "push_device_token" "character varying(512)"
+  "email_mfa_address" "character varying(256)"
   "created_at" timestamp [not null]
   "updated_at" timestamp [not null]
 

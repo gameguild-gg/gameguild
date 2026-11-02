@@ -70,6 +70,10 @@ public sealed class MfaAttemptTrackingService(
             {
                 enabledMethods.Add(MfaMethod.Sms.ToString());
             }
+            if (!string.IsNullOrEmpty(mfaConfig.EmailMfaAddress))
+            {
+                enabledMethods.Add(MfaMethod.Email.ToString());
+            }
             if (backupCodesRemaining > 0)
             {
                 enabledMethods.Add(MfaMethod.BackupCode.ToString());

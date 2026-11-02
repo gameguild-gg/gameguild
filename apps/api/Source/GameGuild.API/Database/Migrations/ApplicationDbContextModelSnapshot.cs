@@ -21122,6 +21122,12 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("EmailMfaAddress")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("email_mfa_address");
+
                     b.Property<DateTime?>("EnabledAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("enabled_at");

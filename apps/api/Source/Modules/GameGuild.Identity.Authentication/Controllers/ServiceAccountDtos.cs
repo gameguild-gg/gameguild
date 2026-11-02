@@ -128,6 +128,23 @@ public class LockServiceAccountRequest
 }
 
 /// <summary>
+///     Request to bind an X.509 client certificate to a service account (issue #1146).
+/// </summary>
+public class BindServiceAccountCertificateRequest
+{
+    /// <summary>
+    ///     Certificate thumbprint: 40 (SHA-1) or 64 (SHA-256) hex characters, optionally separated by colons or spaces.
+    /// </summary>
+    public string Thumbprint { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     Optional SHA-256 hex pin of the certificate's Subject Public Key Info; the pin survives
+    ///     certificate re-issuance with the same key.
+    /// </summary>
+    public string? SpkiSha256 { get; set; }
+}
+
+/// <summary>
 ///     Response for service account audit log.
 /// </summary>
 public class ServiceAccountAuditLogResponse

@@ -8,8 +8,8 @@ internal static class PersistedAuthenticationSessions
 {
     public static void Configure(Mock<ISessionManagementService> sessions)
     {
-        // Concurrent sign-ins persist in parallel; a plain Dictionary can lose one of the
-        // simultaneous writes and fail the race tests spuriously.
+        // Concurrent writes arrive here under the concurrent sign-in tests; a plain
+        // Dictionary can silently drop one of two simultaneous CreateSessionAsync stores.
         var stored = new ConcurrentDictionary<Guid, UserSession>();
         sessions.Setup(value => value.CreateSessionAsync(
                 It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
