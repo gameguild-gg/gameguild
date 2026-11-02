@@ -55,6 +55,7 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
   const [phone, setPhone] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [disableOpen, setDisableOpen] = React.useState(false);
+  const [regenerateOpen, setRegenerateOpen] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [freshCodes, setFreshCodes] = React.useState<string[] | null>(null);
 
@@ -142,12 +143,16 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
   async function handleRegenerate() {
     setBusy(true);
     try {
-      const result = await regenerateBackupCodesAction();
+      // Issue #1153: regeneration re-verifies the account password server-side; the
+      // dialog collects it before the codes are rotated.
+      const result = await regenerateBackupCodesAction(password);
       if (result.success) {
+        setRegenerateOpen(false);
+        setPassword('');
         setFreshCodes(result.codes ?? []);
         toast.success(t('recovery.regenerated'));
       } else {
-        reportFailure(result.message);
+        reportFailure(result.message ?? t('recovery.wrongPassword'));
       }
     } finally {
       setBusy(false);
@@ -338,7 +343,7 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
               </Button>
             </div>
           ) : (
-            <Button variant="outline" onClick={() => void handleRegenerate()} disabled={busy} data-testid="mfa-recovery-regenerate">
+            <Button variant="outline" onClick={() => setRegenerateOpen(true)} disabled={busy} data-testid="mfa-recovery-regenerate">
               {backupCode?.isEnabled ? t('recovery.regenerate') : t('recovery.generate')}
             </Button>
           )}
@@ -385,6 +390,50 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
                 data-testid="mfa-disable-confirm"
               >
                 {t('disable.confirm')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </form>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={regenerateOpen} onOpenChange={setRegenerateOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('recovery.confirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('recovery.confirmDescription')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!busy && password.length > 0) {
+                void handleRegenerate();
+              }
+            }}
+          >
+            <div className="grid gap-2">
+              <Label htmlFor="mfa-regenerate-password">{t('recovery.passwordLabel')}</Label>
+              <Input
+                id="mfa-regenerate-password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setPassword('')}>{t('recovery.cancel')}</AlertDialogCancel>
+              {/* Same #864 pattern as disable: preventDefault keeps the dialog open while
+                  the password is verified so a wrong password doesn't force retyping. */}
+              <AlertDialogAction
+                type="submit"
+                onClick={(event) => {
+                  event.preventDefault();
+                  void handleRegenerate();
+                }}
+                disabled={busy || password.length === 0}
+                data-testid="mfa-recovery-confirm"
+              >
+                {t('recovery.regenerate')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </form>
