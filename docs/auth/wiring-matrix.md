@@ -494,3 +494,258 @@ File: `apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/Web
 | DELETE /v{n}/auth/webauthn/credentials/{credentialId:guid} | `DeleteWebAuthnCredentialCommand` | — | `WebAuthnMutationCommandHandler (WebAuthnMutationCommands.cs:43)` | scan | authz | Authentication | AuthenticationCoverageCompletionTests.cs, ProviderRefreshIssuanceSafetyTests.cs +2 | — | V, NI |
 | PATCH /v{n}/auth/webauthn/credentials/{credentialId:guid} | `UpdateWebAuthnCredentialNameCommand` | — | `WebAuthnMutationCommandHandler (WebAuthnMutationCommands.cs:46)` | scan | authz | Authentication | AuthenticationCoverageCompletionTests.cs, ProviderRefreshIssuanceSafetyTests.cs +2 | — | V, NI |
 
+## Part B — Authorization module controllers
+
+### AccessReviewsController (11 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/AccessReviewsController.cs` (class decl line 19).
+ — class route prefix `v{version:apiVersion}/access-reviews`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/access-reviews/campaigns | — none | n/a | — (none) | n/a | authz | — global | AccessReviewsControllerStatusTranslationTests.cs | AccessReviewWorkflowPostgreSqlHttpTests.cs | NC |
+| GET /v{n}/access-reviews/campaigns/{id:guid} | `GetAccessReviewCampaignByIdQuery` | — | `GetAccessReviewCampaignByIdHandler (AccessReviewQueries.cs:15)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/access-reviews/campaigns/active | `GetActiveAccessReviewCampaignsQuery` | — | `GetActiveAccessReviewCampaignsHandler (AccessReviewQueries.cs:32)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| POST /v{n}/access-reviews/campaigns/{id:guid}:start | `StartAccessReviewCampaignCommand` | `AccessReviewCommands.cs:65` | `StartAccessReviewCampaignHandler (AccessReviewCommands.cs:74)` | scan | authz | — global | AccessReviewCampaignControllerTests.cs, AccessReviewsControllerStatusTranslationTests.cs +1 | — | HU, NI |
+| POST /v{n}/access-reviews/campaigns/{id:guid}:complete | `CompleteAccessReviewCampaignCommand` | `AccessReviewCommands.cs:93` | `CompleteAccessReviewCampaignHandler (AccessReviewCommands.cs:103)` | scan | authz | — global | AccessReviewCampaignControllerTests.cs, CoverageBoostTests5.cs | — | HU, NI |
+| POST /v{n}/access-reviews/campaigns/{id:guid}:cancel | `CancelAccessReviewCampaignCommand` | `AccessReviewCommands.cs:123` | `CancelAccessReviewCampaignHandler (AccessReviewCommands.cs:132)` | scan | authz | — global | CoverageBoostTests5.cs | — | NI |
+| POST /v{n}/access-reviews/campaigns/{id:guid}:send-reminders | `SendAccessReviewRemindersCommand` | — | `SendAccessReviewRemindersHandler (AccessReviewCommands.cs:221)` | scan | authz | — global | CoverageBoostTests5.cs | — | V, NI |
+| GET /v{n}/access-reviews/items/pending | `GetPendingReviewItemsQuery` | — | `GetPendingReviewItemsHandler (AccessReviewQueries.cs:49)` | scan | authz | — global | AccessReviewsControllerStatusTranslationTests.cs, CoverageBoostTests5.cs | — | VQ, NI |
+| POST /v{n}/access-reviews/items/{id:guid}:approve | `ApproveAccessReviewItemCommand` | `AccessReviewCommands.cs:152` | `ApproveAccessReviewItemHandler (AccessReviewCommands.cs:163)` | scan | authz | — global | AccessReviewsControllerStatusTranslationTests.cs, CoverageBoostTests5.cs | AccessReviewWorkflowPostgreSqlHttpTests.cs | ok |
+| POST /v{n}/access-reviews/items/{id:guid}:revoke | `RevokeAccessReviewItemCommand` | `AccessReviewCommands.cs:188` | `RevokeAccessReviewItemHandler (AccessReviewCommands.cs:199)` | scan | authz | — global | AccessReviewsControllerStatusTranslationTests.cs, CoverageBoostTests5.cs | AccessReviewWorkflowPostgreSqlHttpTests.cs | ok |
+| POST /v{n}/access-reviews/campaigns:process-expired | `ProcessExpiredCampaignsCommand` | — | `ProcessExpiredCampaignsHandler (AccessReviewCommands.cs:238)` | scan | authz | — global | CoverageBoostTests5.cs | — | V, NI |
+
+### ContentTypePermissionsController (6 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/ContentTypePermissionsController.cs` (class decl line 26).
+ — class route prefix `api/v{version:apiVersion}/authorization/content-types`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /api/v{n}/authorization/content-types/grants | `GrantContentTypePermissionGrantCommand` | — | `GrantContentTypePermissionGrantCommandHandler (ContentTypePermissionCommands.cs:47)` | scan | authz | — global | ContentTypePermissionGrantServiceTests.cs | — | V, NI |
+| POST /api/v{n}/authorization/content-types/denies | `DenyContentTypePermissionGrantCommand` | — | `DenyContentTypePermissionGrantCommandHandler (ContentTypePermissionCommands.cs:193)` | scan | authz | — global | — | — | V, NU, NI |
+| POST /api/v{n}/authorization/content-types/grants:revoke | `RevokeContentTypePermissionGrantCommand` | — | `RevokeContentTypePermissionGrantCommandHandler (ContentTypePermissionCommands.cs:101)` | scan | authz | — global | — | — | V, NU, NI |
+| DELETE /api/v{n}/authorization/content-types/{tenantId:guid}/grants/{grantId:guid} | `RevokeContentTypePermissionGrantByIdCommand` | — | `RevokeContentTypePermissionGrantByIdCommandHandler (ContentTypePermissionCommands.cs:137)` | scan | authz | — global | ContentTypePermissionGrantServiceTests.cs | — | V, NI |
+| GET /api/v{n}/authorization/content-types/{tenantId:guid}/grants | `GetContentTypePermissionGrantsQuery` | — | `GetContentTypePermissionGrantsQueryHandler (ContentTypePermissionCommands.cs:274)` | scan | authz | — global | ContentTypePermissionGrantServiceTests.cs | — | VQ, NI |
+| GET /api/v{n}/authorization/content-types/{tenantId:guid}/has-permission | `DacPermissionQuery` | — | **MISSING** | — | authz | — global | ResourcePermissionAuthorizationFilterDacAttributeTests.cs, QueryOperationsPermissionTests.cs +3 | — | VQ, H, B, NI |
+
+### DelegatedAdminController (7 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/DelegatedAdminController.cs` (class decl line 19).
+ — class route prefix `v{version:apiVersion}/delegated-admin`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| DELETE /v{n}/delegated-admin/{id:guid} | `RevokeDelegatedAdminCommand` | `DelegatedAdminCommands.cs:120` | `RevokeDelegatedAdminHandler (DelegatedAdminCommands.cs:133)` | scan | authz | — global | CoverageBoostTests5.cs, DelegatedAdminScopeGuardTests.cs | — | NI |
+| GET /v{n}/delegated-admin/{id:guid} | `GetDelegatedAdminScopeByIdQuery` | — | `GetDelegatedAdminScopeByIdHandler (DelegatedAdminQueries.cs:15)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/delegated-admin/user/{adminUserId:guid}/scopes | `GetAdminScopesQuery` | — | `GetAdminScopesHandler (DelegatedAdminQueries.cs:32)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/delegated-admin/user/{adminUserId:guid}/managed-users | `GetManagedUsersQuery` | — | `GetManagedUsersHandler (DelegatedAdminQueries.cs:49)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/delegated-admin/user/{adminUserId:guid}/managed-resources | `GetManagedResourceTypesQuery` | — | `GetManagedResourceTypesHandler (DelegatedAdminQueries.cs:66)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/delegated-admin/user/{adminUserId:guid}/can-manage-user/{targetUserId:guid} | `CanManageUserQuery` | — | `CanManageUserHandler (DelegatedAdminQueries.cs:83)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/delegated-admin/user/{adminUserId:guid}/can-manage-resource | `CanManageResourceQuery` | — | `CanManageResourceHandler (DelegatedAdminQueries.cs:105)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs | — | VQ, NI |
+
+### JitElevationsController (9 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/JitElevationsController.cs` (class decl line 19).
+ — class route prefix `v{version:apiVersion}/jit-elevations`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/jit-elevations/{id:guid}:approve | `ApproveJitElevationCommand` | `JitElevationCommands.cs:94` | `ApproveJitElevationHandler (JitElevationCommands.cs:109)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs +1 | — | NI |
+| POST /v{n}/jit-elevations/{id:guid}:deny | `DenyJitElevationCommand` | `JitElevationCommands.cs:168` | `DenyJitElevationHandler (JitElevationCommands.cs:182)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs +1 | — | NI |
+| POST /v{n}/jit-elevations/{id:guid}:revoke | `RevokeJitElevationCommand` | `JitElevationCommands.cs:223` | `RevokeJitElevationHandler (JitElevationCommands.cs:237)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs +1 | — | NI |
+| GET /v{n}/jit-elevations/{id:guid} | `GetJitElevationByIdQuery` | — | `GetJitElevationByIdHandler (JitElevationQueries.cs:15)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/jit-elevations/pending | `GetPendingJitElevationsQuery` | — | `GetPendingJitElevationsHandler (JitElevationQueries.cs:32)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/jit-elevations/user/{userId:guid} | `GetUserJitElevationsQuery` | — | `GetUserJitElevationsHandler (JitElevationQueries.cs:49)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/jit-elevations/user/{userId:guid}/active | `GetActiveJitElevationsQuery` | — | `GetActiveJitElevationsHandler (JitElevationQueries.cs:66)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/jit-elevations/user/{userId:guid}/check | `HasActiveJitElevationQuery` | — | `HasActiveJitElevationHandler (JitElevationQueries.cs:88)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| POST /v{n}/jit-elevations/:cleanup | `CleanupExpiredElevationsCommand` | — | `CleanupExpiredElevationsHandler (JitElevationCommands.cs:275)` | scan | authz | — global | CoverageBoostTests5.cs | — | V, NI |
+
+### PermissionAnalyticsController (6 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/PermissionAnalyticsController.cs` (class decl line 18).
+ — class route prefix `v{version:apiVersion}/permission-analytics`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /v{n}/permission-analytics/usage | `GetPermissionUsageQuery` | — | `GetPermissionUsageHandler (PermissionAnalyticsQueries.cs:19)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/permission-analytics/user-activity | `GetUserActivityQuery` | — | `GetUserActivityHandler (PermissionAnalyticsQueries.cs:46)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/permission-analytics/resource-patterns | `GetResourceAccessPatternsQuery` | — | `GetResourceAccessPatternsHandler (PermissionAnalyticsQueries.cs:74)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/permission-analytics/trends | `GetPermissionTrendsQuery` | — | `GetPermissionTrendsHandler (PermissionAnalyticsQueries.cs:101)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/permission-analytics/anomalies | `DetectPermissionAnomaliesQuery` | — | `DetectPermissionAnomaliesHandler (PermissionAnalyticsQueries.cs:126)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/permission-analytics/report | `GeneratePermissionReportQuery` | — | `GeneratePermissionReportHandler (PermissionAnalyticsQueries.cs:151)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+
+### PermissionApprovalsController (2 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/PermissionApprovalsController.cs` (class decl line 20).
+ — class route prefix `api/v{version:apiVersion}/authorization/permission-approvals`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /api/v{n}/authorization/permission-approvals/{id:guid} | `GetPermissionApprovalQuery` | — | `GetPermissionApprovalQueryHandler (PermissionApprovalCommands.cs:129)` | scan | authz | — global | — | — | VQ, NU, NI |
+| POST /api/v{n}/authorization/permission-approvals/{id:guid}/decisions | `DecidePermissionApprovalCommand` | — | `DecidePermissionApprovalCommandHandler (PermissionApprovalCommands.cs:99)` | scan | authz | — global | — | — | V, NU, NI |
+
+### PermissionDelegationsController (6 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/PermissionDelegationsController.cs` (class decl line 19).
+ — class route prefix `v{version:apiVersion}/permission-delegations`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| DELETE /v{n}/permission-delegations/{id:guid} | `RevokeDelegationCommand` | `PermissionDelegationCommands.cs:71` | `RevokeDelegationHandler (PermissionDelegationCommands.cs:80)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs | — | NI |
+| GET /v{n}/permission-delegations/{id:guid} | `GetDelegationByIdQuery` | — | `GetDelegationByIdHandler (PermissionDelegationQueries.cs:15)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/permission-delegations/delegate/{delegateUserId:guid} | `GetActiveDelegationsQuery` | — | `GetActiveDelegationsHandler (PermissionDelegationQueries.cs:32)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/permission-delegations/delegator/{delegatorUserId:guid} | `GetDelegationsByDelegatorQuery` | — | `GetDelegationsByDelegatorHandler (PermissionDelegationQueries.cs:49)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/permission-delegations/check | `CheckDelegatedPermissionQuery` | — | `CheckDelegatedPermissionHandler (PermissionDelegationQueries.cs:71)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| POST /v{n}/permission-delegations/:cleanup | `CleanupExpiredDelegationsCommand` | — | `CleanupExpiredDelegationsHandler (PermissionDelegationCommands.cs:114)` | scan | authz | — global | CoverageBoostTests5.cs | — | V, NI |
+
+### PermissionSyncController (2 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/PermissionEngineControllers.cs` (class decl line 21).
+ — class route prefix `api/v{version:apiVersion}/authorization/sync`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /api/v{n}/authorization/sync/export | `ExportPermissionSyncCommand` | — | `ExportPermissionSyncCommandHandler (PermissionEngineCommands.cs:144)` | scan | authz | — global | PermissionEngineOperationsTests.cs | — | V, NI |
+| POST /api/v{n}/authorization/sync/import | `ImportPermissionSyncCommand` | — | `ImportPermissionSyncCommandHandler (PermissionEngineCommands.cs:171)` | scan | authz | — global | PermissionEngineOperationsTests.cs | — | V, NI |
+
+### PermissionRestorationController (2 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/PermissionEngineControllers.cs` (class decl line 99).
+ — class route prefix `api/v{version:apiVersion}/authorization/restorations`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /api/v{n}/authorization/restorations/deleted/{permissionId:guid} | `RestoreDeletedPermissionCommand` | — | `RestoreDeletedPermissionCommandHandler (PermissionEngineCommands.cs:203)` | scan | authz | — global | PermissionEngineOperationsTests.cs | — | V, NI |
+| POST /api/v{n}/authorization/restorations/undo/{auditLogId:guid} | `UndoPermissionChangeCommand` | — | `UndoPermissionChangeCommandHandler (PermissionEngineCommands.cs:224)` | scan | authz | — global | PermissionEngineOperationsTests.cs | — | V, NI |
+
+### PermissionComplianceController (1 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/PermissionEngineControllers.cs` (class decl line 153).
+ — class route prefix `api/v{version:apiVersion}/authorization/compliance`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /api/v{n}/authorization/compliance/report | `GetPermissionComplianceReportQuery` | — | `GetPermissionComplianceReportHandler (PermissionEngineCommands.cs:246)` | scan | authz | — global | PermissionEngineOperationsTests.cs | — | VQ, NI |
+
+### PermissionGraphController (2 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/PermissionGraphController.cs` (class decl line 22).
+ — class route prefix `api/v{version:apiVersion}/authorization/permission-graph`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /api/v{n}/authorization/permission-graph/roles/{roleId:guid}/deletion-impact | `AnalyzeRoleDeletionQuery` | — | `AnalyzeRoleDeletionHandler (PermissionGraphQueries.cs:33)` | scan | authz | — global | PermissionGraphQueryHandlerTests.cs, PermissionGraphControllerTests.cs | — | VQ, NI |
+| GET /api/v{n}/authorization/permission-graph/roles/{roleId:guid}/permission-removal-impact/{permissionKey} | `AnalyzePermissionRemovalQuery` | — | `AnalyzePermissionRemovalHandler (PermissionGraphQueries.cs:50)` | scan | authz | — global | PermissionGraphQueryHandlerTests.cs, PermissionGraphControllerTests.cs | — | VQ, NI |
+
+### PermissionHistoryController (3 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/PermissionHistoryController.cs` (class decl line 21).
+ — class route prefix `api/v{version:apiVersion}/authorization/permissions`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /api/v{n}/authorization/permissions/history/at | `GetPermissionHistoryAtQuery` | — | `GetPermissionHistoryAtQueryHandler (PermissionHistoryQueries.cs:36)` | scan | authz | — global | — | — | VQ, NU, NI |
+| GET /api/v{n}/authorization/permissions/history/inheritance | `GetInheritanceHistoryQuery` | — | `GetInheritanceHistoryQueryHandler (PermissionHistoryQueries.cs:112)` | scan | authz | — global | — | — | VQ, NU, NI |
+| GET /api/v{n}/authorization/permission-policies/{policyId:guid}/versions | `GetPolicyVersionHistoryQuery` | — | `GetPolicyVersionHistoryQueryHandler (PermissionHistoryQueries.cs:161)` | scan | authz | — global | — | — | VQ, NU, NI |
+
+### PermissionSimulationController (1 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/PermissionSimulationController.cs` (class decl line 21).
+ — class route prefix `api/v{version:apiVersion}/authorization`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /api/v{n}/authorization/permissions:simulate | `SimulatePermissionChangeCommand` | — | `SimulatePermissionChangeCommandHandler (PermissionSimulationCommands.cs:88)` | scan | authz | — global | PermissionTemplateLifecycleTests.cs | — | V, NI |
+
+### PermissionTemplatesController (8 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/PermissionTemplatesController.cs` (class decl line 20).
+ — class route prefix `api/v{version:apiVersion}/authorization/permission-templates`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| PUT /api/v{n}/authorization/permission-templates/{templateId:guid} | `UpdatePermissionTemplateCommand` | — | `UpdatePermissionTemplateCommandHandler (PermissionTemplateCommands.cs:211)` | scan | authz | — global | PermissionTemplateLifecycleTests.cs | — | V, NI |
+| DELETE /api/v{n}/authorization/permission-templates/{templateId:guid} | `DeletePermissionTemplateCommand` | — | `DeletePermissionTemplateCommandHandler (PermissionTemplateCommands.cs:380)` | scan | authz | — global | PermissionTemplateLifecycleTests.cs | — | V, NI |
+| GET /api/v{n}/authorization/permission-templates/{templateId:guid}/versions | `GetPermissionTemplateVersionsQuery` | — | `GetPermissionTemplateVersionsQueryHandler (PermissionTemplateQueries.cs:99)` | scan | authz | — global | — | — | VQ, NU, NI |
+| POST /api/v{n}/authorization/permission-templates/{templateId:guid}:instantiate-preview | `PreviewPermissionTemplateInstantiationQuery` | — | `PreviewPermissionTemplateInstantiationQueryHandler (PermissionTemplateQueries.cs:161)` | scan | authz | — global | — | — | VQ, NU, NI |
+| POST /api/v{n}/authorization/permission-templates/{templateId:guid}:instantiate | `InstantiatePermissionTemplateCommand` | — | `InstantiatePermissionTemplateCommandHandler (PermissionTemplateCommands.cs:501)` | scan | authz | — global | PermissionTemplateLifecycleTests.cs | — | V, NI |
+| POST /api/v{n}/authorization/permission-templates/{templateId:guid}/migrations | `MigratePermissionTemplateCommand` | — | `MigratePermissionTemplateCommandHandler (PermissionTemplateCommands.cs:810)` | scan | authz | — global | PermissionTemplateLifecycleTests.cs | — | V, NI |
+| GET /api/v{n}/authorization/permission-templates/{templateId:guid}/migrations/{migrationId:guid} | `GetPermissionTemplateMigrationQuery` | — | `GetPermissionTemplateMigrationQueryHandler (PermissionTemplateQueries.cs:194)` | scan | authz | — global | — | — | VQ, NU, NI |
+| POST /api/v{n}/authorization/permission-templates/{templateId:guid}/migrations/{migrationId:guid}:rollback | `RollbackPermissionTemplateMigrationCommand` | — | `RollbackPermissionTemplateMigrationCommandHandler (PermissionTemplateCommands.cs:1219)` | scan | authz | — global | PermissionTemplateLifecycleTests.cs | — | V, NI |
+
+### PolicyBundlesController (4 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/PolicyBundlesController.cs` (class decl line 34).
+ — class route prefix `api/v{version:apiVersion}/authorization/policy-bundles`; class `[Authorize]`; class `[EnableRateLimiting(RateLimitPolicies.Authorization)]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /api/v{n}/authorization/policy-bundles/{bundleId:guid}:sign | `SignPolicyBundleCommand` | — | `SignPolicyBundleCommandHandler (PolicyBundleCommands.cs:148)` | scan | authz | Authorization | SignPolicyBundleCommandHandlerTests.cs | — | V, NI |
+| POST /api/v{n}/authorization/policy-bundles/{bundleId:guid}:approve | `ApprovePolicyBundleCommand` | — | `ApprovePolicyBundleCommandHandler (PolicyBundleCommands.cs:220)` | scan | authz | Authorization | SignPolicyBundleCommandHandlerTests.cs | — | V, NI |
+| POST /api/v{n}/authorization/policy-bundles/{bundleId:guid}:deploy | `DeployPolicyBundleCommand` | — | `DeployPolicyBundleCommandHandler (PolicyBundleCommands.cs:297)` | scan | authz | Authorization | SignPolicyBundleCommandHandlerTests.cs | — | V, NI |
+| POST /api/v{n}/authorization/policy-bundles/deployments/{deploymentId:guid}:rollback | `RollbackPolicyBundleDeploymentCommand` | — | `RollbackPolicyBundleDeploymentCommandHandler (PolicyBundleCommands.cs:405)` | scan | authz | Authorization | — | — | V, NU, NI |
+
+### ResourcePermissionsController (11 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/ResourcePermissionsController.cs` (class decl line 21).
+ — class route prefix `api/v{version:apiVersion}/authorization/resources`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| GET /api/v{n}/authorization/resources/invitations/{invitationId:guid} | `GetResourceInvitationQuery` | — | `GetResourceInvitationQueryHandler (ResourceInvitationQueries.cs:45)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, ResourcePermissionsControllerInvitationTests.cs | — | VQ, NI |
+| GET /api/v{n}/authorization/resources/invitations/pending | `GetPendingResourceInvitationsQuery` | — | `GetPendingResourceInvitationsQueryHandler (ResourceInvitationQueries.cs:85)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, ResourcePermissionsControllerInvitationTests.cs | — | VQ, NI |
+| POST /api/v{n}/authorization/resources/invitations/{invitationId:guid}/accept | `AcceptResourceInvitationCommand` | — | `AcceptResourceInvitationCommandHandler (ResourcePermissionCommands.cs:259)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, ResourcePermissionsControllerInvitationTests.cs | — | V, NI |
+| POST /api/v{n}/authorization/resources/invitations/{invitationId:guid}/decline | `DeclineResourceInvitationCommand` | — | `DeclineResourceInvitationCommandHandler (ResourcePermissionCommands.cs:322)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, ResourcePermissionsControllerInvitationTests.cs | — | V, NI |
+| DELETE /api/v{n}/authorization/resources/invitations/{invitationId:guid} | `RevokeResourceInvitationCommand` | — | `RevokeResourceInvitationCommandHandler (ResourcePermissionCommands.cs:384)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, ResourcePermissionsControllerInvitationTests.cs | — | V, NI |
+| POST /api/v{n}/authorization/resources/share | `ShareResourceCommand` | — | `ShareResourceCommandHandler (ResourcePermissionCommands.cs:181)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs | — | V, NI |
+| PUT /api/v{n}/authorization/resources/users/permissions | `UpdateUserPermissionsCommand` | — | `UpdateUserPermissionsCommandHandler (ResourcePermissionCommands.cs:59)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs | — | V, NI |
+| DELETE /api/v{n}/authorization/resources/users/access | `RemoveUserAccessCommand` | — | `RemoveUserAccessCommandHandler (ResourcePermissionCommands.cs:469)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs | — | V, NI |
+| GET /api/v{n}/authorization/resources/{resourceType}/{resourceId}/permissions | `GetEffectivePermissionsQuery` | — | `GetEffectivePermissionsQueryHandler (PermissionEvaluationQueryHandlers.cs:332)` | scan | authz | — global | AdminAnalyticsControllerTests.cs, AuthorizationCoverageCompletionTests.cs +1 | — | VQ, NI |
+| GET /api/v{n}/authorization/resources/{resourceType}/{resourceId}/has-permission | `HasPermissionQuery` | — | `HasPermissionQueryHandler (TenantPermissionQueries.cs:593)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs | — | VQ, NI |
+| GET /api/v{n}/authorization/resources/{resourceType}/{resourceId}/users | `GetResourceUsersQuery` | — | `GetResourceUsersQueryHandler (TenantPermissionQueries.cs:708)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs | — | VQ, NI |
+
+### SoDController (11 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/SoDController.cs` (class decl line 19).
+ — class route prefix `v{version:apiVersion}/sod`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /v{n}/sod/rules | `CreateSoDRuleCommand` | `SoDCommands.cs:22` | `CreateSoDRuleHandler (SoDCommands.cs:35)` | scan | authz | — global | CoverageBoostTests5.cs | — | NI |
+| PUT /v{n}/sod/rules/{id:guid} | `UpdateSoDRuleCommand` | `SoDCommands.cs:68` | `UpdateSoDRuleHandler (SoDCommands.cs:82)` | scan | authz | — global | CoverageBoostTests5.cs | — | NI |
+| DELETE /v{n}/sod/rules/{id:guid} | `DeleteSoDRuleCommand` | `SoDCommands.cs:110` | `DeleteSoDRuleHandler (SoDCommands.cs:119)` | scan | authz | — global | CoverageBoostTests5.cs | — | NI |
+| GET /v{n}/sod/rules/{id:guid} | `GetSoDRuleByIdQuery` | — | `GetSoDRuleByIdHandler (SoDQueries.cs:15)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/sod/rules | `GetActiveSoDRulesQuery`<br/>`GetSoDRulesQuery` | — / — | `GetActiveSoDRulesHandler (SoDQueries.cs:49)` / `GetSoDRulesHandler (SoDQueries.cs:32)` | scan/scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/sod/violations/detect/{userId:guid} | `DetectSoDViolationsQuery` | — | `DetectSoDViolationsHandler (SoDQueries.cs:66)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/sod/violations/user/{userId:guid} | `GetUserSoDViolationsQuery` | — | `GetUserSoDViolationsHandler (SoDQueries.cs:83)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| GET /v{n}/sod/violations/active | `GetActiveSoDViolationsQuery` | — | `GetActiveSoDViolationsHandler (SoDQueries.cs:100)` | scan | authz | — global | CoverageBoostTests5.cs | — | VQ, NI |
+| POST /v{n}/sod/violations/{id:guid}:resolve | `ResolveSoDViolationCommand` | `SoDCommands.cs:140` | `ResolveSoDViolationHandler (SoDCommands.cs:152)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs | — | NI |
+| POST /v{n}/sod/violations/{id:guid}:exception | `GrantSoDExceptionCommand` | `SoDCommands.cs:178` | `GrantSoDExceptionHandler (SoDCommands.cs:189)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs | — | NI |
+| POST /v{n}/sod/violations:scan | `ScanSoDViolationsCommand` | — | `ScanSoDViolationsHandler (SoDCommands.cs:211)` | scan | authz | — global | CoverageBoostTests5.cs | — | V, NI |
+
+### TenantPermissionsController (18 endpoints)
+
+File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/TenantPermissionsController.cs` (class decl line 23).
+ — class route prefix `api/v{version:apiVersion}/authorization/tenants`; class `[Authorize]`.
+
+| Route | Command/Query | Validator | Handler | DI | Auth | Rate-limit | Unit test | Integration/PG test | HOLE |
+|---|---|---|---|---|---|---|---|---|---|
+| POST /api/v{n}/authorization/tenants/grant | `GrantTenantPermissionCommand` | — | `GrantTenantPermissionCommandHandler (TenantPermissionCommands.cs:52)` | scan | authz | — global | AdminAnalyticsControllerTests.cs, AuthorizationCoverageCompletionTests.cs +5 | — | V, NI |
+| POST /api/v{n}/authorization/tenants/revoke | `RevokeTenantPermissionCommand` | — | `RevokeTenantPermissionCommandHandler (TenantPermissionCommands.cs:150)` | scan | authz | — global | AdminAnalyticsControllerTests.cs, AuthorizationCoverageCompletionTests.cs +4 | AccessControlIntegrationTests.cs | V |
+| GET /api/v{n}/authorization/tenants/{tenantId}/permissions | `GetTenantPermissionsQuery` | — | `GetTenantPermissionsQueryHandler (TenantPermissionQueries.cs:118)` | scan | authz | — global | AdminAnalyticsControllerTests.cs, AuthorizationCoverageCompletionTests.cs +5 | — | VQ, NI |
+| GET /api/v{n}/authorization/permissions/global:check | `HasGlobalPermissionQuery` | — | `HasGlobalPermissionQueryHandler (TenantPermissionQueries.cs:295)` | scan | authz | — global | TenantPermissionQueryPagingAndGlobalTests.cs | — | VQ, NI |
+| GET /api/v{n}/authorization/tenants/{tenantId}/has-permission | `GetTenantPermissionsQuery` | — | `GetTenantPermissionsQueryHandler (TenantPermissionQueries.cs:118)` | scan | authz | — global | AdminAnalyticsControllerTests.cs, AuthorizationCoverageCompletionTests.cs +5 | — | VQ, NI |
+| POST /api/v{n}/authorization/tenants/global/defaults | `SetGlobalDefaultPermissionsCommand` | — | `SetGlobalDefaultPermissionsCommandHandler (TenantPermissionCommands.cs:248)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs +1 | — | V, NI |
+| POST /api/v{n}/authorization/tenants/defaults | `SetTenantDefaultPermissionsCommand` | — | `SetTenantDefaultPermissionsCommandHandler (TenantPermissionCommands.cs:316)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs +2 | — | V, NI |
+| POST /api/v{n}/authorization/tenants/deny | `DenyTenantPermissionCommand` | — | `DenyTenantPermissionCommandHandler (TenantPermissionCommands.cs:398)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs +2 | — | V, NI |
+| POST /api/v{n}/authorization/tenants/deny/remove | `RemoveDenyPermissionsCommand` | — | `RemoveDenyPermissionsCommandHandler (TenantPermissionCommands.cs:495)` | scan | authz | — global | AuthorizationCoverageCompletionTests.cs, CoverageBoostTests5.cs +2 | — | V, NI |
+| POST /api/v{n}/authorization/tenants/permissions:set-expiration | `SetTenantPermissionExpirationCommand` | — | `SetTenantPermissionExpirationCommandHandler (TenantPermissionCommands.cs:594)` | scan | authz | — global | TenantPermissionExpirationBoundaryTests.cs, TenantPermissionExpirationInputLoggingTests.cs +2 | — | V, NI |
+| POST /api/v{n}/authorization/tenants/permissions:extend-expiration | `ExtendTenantPermissionExpirationCommand` | — | `ExtendTenantPermissionExpirationCommandHandler (TenantPermissionCommands.cs:658)` | scan | authz | — global | TenantPermissionExpirationBoundaryTests.cs, TenantPermissionExpirationInputLoggingTests.cs +2 | — | V, NI |
+| GET /api/v{n}/authorization/tenants/permissions:expiring | `GetExpiringTenantPermissionsQuery` | — | `GetExpiringTenantPermissionsQueryHandler (TenantPermissionQueries.cs:849)` | scan | authz | — global | — | PermissionExpirationAdministrationPostgreSqlHttpTests.cs | VQ, NU |
+| POST /api/v{n}/authorization/tenants/permissions:process-expired | `ProcessExpiredPermissionsCommand` | — | `ProcessExpiredPermissionsCommandHandler (TenantPermissionCommands.cs:700)` | scan | authz | — global | PermissionExpirationCommandHandlerTests.cs | — | V, NI |
+| POST /api/v{n}/authorization/tenants/permissions:send-expiration-reminders | `SendExpirationRemindersCommand` | — | `SendExpirationRemindersCommandHandler (TenantPermissionCommands.cs:737)` | scan | authz | — global | PermissionExpirationCommandHandlerTests.cs | — | V, NI |
+| GET /api/v{n}/authorization/tenants/permissions:expiration-rules | `GetEffectiveExpirationRuleQuery` | — | `GetEffectiveExpirationRuleQueryHandler (TenantPermissionQueries.cs:959)` | scan | authz | — global | PermissionExpirationAnalyticsQueryHandlerTests.cs | — | VQ, NI |
+| GET /api/v{n}/authorization/tenants/permissions:expiration-summary | `GetExpirationSummaryQuery` | — | `GetExpirationSummaryQueryHandler (PermissionExpirationAnalyticsQueries.cs:33)` | scan | authz | — global | PermissionExpirationAnalyticsQueryHandlerTests.cs | — | VQ, NI |
+| GET /api/v{n}/authorization/tenants/permissions:expiration-trends | `GetExpirationTrendsQuery` | — | `GetExpirationTrendsQueryHandler (PermissionExpirationAnalyticsQueries.cs:78)` | scan | authz | — global | PermissionExpirationAnalyticsQueryHandlerTests.cs | — | VQ, NI |
+| GET /api/v{n}/authorization/tenants/permissions:expiration-report | `GetExpirationReportQuery` | — | `GetExpirationReportQueryHandler (PermissionExpirationAnalyticsQueries.cs:127)` | scan | authz | — global | PermissionExpirationAnalyticsQueryHandlerTests.cs | — | VQ, NI |
