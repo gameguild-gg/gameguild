@@ -1,5 +1,6 @@
 import { auth, authConfig, readSessionUnCached } from '@/auth';
 import { GitHubStarPrompt } from '@/components/community/github-star-prompt';
+import { fetchRepositoryStarCount } from '@/lib/community/github-star-prompt';
 import { WorkspaceShell } from '@/components/console/workspace-shell';
 import { AccessibilitySyncInitializer } from '@/components/settings/accessibility-sync-initializer';
 import { EditorPreferencesSyncInitializer } from '@/components/settings/editor-preferences-sync-initializer';
@@ -74,10 +75,13 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
     }
   }
 
-  const [notifications, dashboardContexts, twoFactorEnabled] = await Promise.all([
+  const [notifications, dashboardContexts, twoFactorEnabled, repositoryStars] = await Promise.all([
     getDashboardNotificationSummary(session.user.id),
     getDashboardContexts(),
     fetchTwoFactorEnabled(),
+    // Issue #106 phase 1: star count comes from the server (cached 1h), not
+    // from a browser call to api.github.com.
+    fetchRepositoryStarCount(),
   ]);
   const dashboardUser = {
     id: session.user.id,
@@ -97,7 +101,7 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
       <AccessibilitySyncInitializer />
       <EditorPreferencesSyncInitializer />
       {twoFactorEnabled === false && <TwoFactorNudgeBanner twoFactorEnabled={false} />}
-      <GitHubStarPrompt />
+      <GitHubStarPrompt starCount={repositoryStars} />
       {children}
     </WorkspaceShell>
   );

@@ -211,4 +211,35 @@ public class ServiceAccountOperationsController(
             return NotFound();
         }
     }
+
+    /// <summary>
+    ///     Binds an X.509 client certificate to a service account so the certificate can
+    ///     authenticate in lieu of the client secret (issue #1146).
+    /// </summary>
+    /// <param name="serviceAccountId">Service account ID</param>
+    /// <param name="request">Certificate thumbprint and optional SPKI key pin</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPatch("{serviceAccountId:guid}/client-certificate")]
+    [Authorize(Policy = "RequireAdminRole")]
+    [EndpointSummary("Bind client certificate")]
+    [EndpointDescription("Binds an X.509 client certificate (thumbprint plus optional SPKI key pin) to a service account, allowing certificate authentication in lieu of the client secret. Pins are normalized to the authentication-time form; a later certificate presentation matches on either the thumbprint or the SPKI pin.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> BindClientCertificate(Guid serviceAccountId, [FromBody] BindServiceAccountCertificateRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        try
+        {
+            await sender.Send(
+                new BindServiceAccountCertificateCommand(serviceAccountId, request.Thumbprint, request.SpkiSha256),
+                cancellationToken).ConfigureAwait(false);
+            return NoContent();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+    }
 }

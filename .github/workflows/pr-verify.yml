@@ -685,6 +685,22 @@ jobs:
           const failed = Object.entries(gates)
             .filter(([, result]) => result === 'failure' || result === 'cancelled')
             .map(([name, result]) => `${name}=${result}`);
+          // A gate that never reported a conclusion (empty result) is structural
+          // breakage, not a pass: block with the gate's own prefix.
+          for (const [name, result] of Object.entries(gates)) {
+            if (result === '' && !failed.some(item => item.startsWith(`${name}=`))) {
+              failed.push(`${name}=`);
+            }
+          }
+          // Selected surfaces must actually run: "skipped" is legitimate only when
+          // the classifier explicitly deselected the surface. Unknown or missing
+          // selection is treated as selected (fail closed).
+          if (gates.web === 'skipped' && process.env.WEB_SELECTED !== 'false') {
+            failed.push('web=skipped');
+          }
+          if (gates.api === 'skipped' && process.env.API_SELECTED !== 'false') {
+            failed.push('api=skipped');
+          }
           if (gates['secret-scan'] !== 'success' && !failed.some(item => item.startsWith('secret-scan='))) {
             failed.push(`secret-scan=${gates['secret-scan']}`);
           }
