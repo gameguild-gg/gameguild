@@ -22,6 +22,7 @@ public sealed class SendEmailVerificationRequestedHandler(
             var user = await userRepository.GetByEmailAsync(notification.Email, cancellationToken).ConfigureAwait(false);
             if (user is null)
             {
+                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
                 logger.LogWarning("Verification email requested for unknown email {Email}", LogRedaction.MaskEmail(notification.Email));
                 return;
             }
@@ -47,11 +48,13 @@ public sealed class SendEmailVerificationRequestedHandler(
                 throw new InvalidOperationException("Authentication notification was not durably queued.");
             }
 
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
             logger.LogInformation("Verification email queued for {Email}", LogRedaction.MaskEmail(notification.Email));
         }
         catch (Exception ex)
         {
             logger.LogError("Error queueing verification email to {Email}: {ErrorType}",
+                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
                 LogRedaction.MaskEmail(notification.Email), ex.GetType().Name);
             throw; // Queue persistence failed; do not acknowledge a lost notification.
         }

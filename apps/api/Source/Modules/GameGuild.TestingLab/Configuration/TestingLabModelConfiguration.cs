@@ -120,6 +120,12 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
                 .WithMany()
                 .HasForeignKey(request => request.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Request queues filter Status + DeletedAt == null and page newest-first
+            // on CreatedAt (TestingRequestRepository) — issue #1157.
+            builder.HasIndex(request => new { request.Status, request.CreatedAt })
+                .HasDatabaseName("ix_testing_requests_status_created_live")
+                .HasFilter("\"DeletedAt\" IS NULL");
         });
     }
 
@@ -151,6 +157,13 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
                 .WithMany()
                 .HasForeignKey(session => session.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Session listings per tenant filter DeletedAt == null
+            // (TestingSessionOperationsService) — issue #1157. Distinct property
+            // list from the annotation-declared TenantId index.
+            builder.HasIndex(session => new { session.TenantId, session.SessionDate })
+                .HasDatabaseName("ix_testing_sessions_tenant_session_live")
+                .HasFilter("\"DeletedAt\" IS NULL");
         });
     }
 
@@ -190,6 +203,12 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
                 .WithMany()
                 .HasForeignKey(participant => participant.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Roster lookups filter TestingRequestId + TenantId + DeletedAt == null
+            // (TestingParticipantOperationsService) — issue #1157.
+            builder.HasIndex(participant => new { participant.TestingRequestId, participant.TenantId })
+                .HasDatabaseName("ix_testing_participants_request_tenant_live")
+                .HasFilter("\"DeletedAt\" IS NULL");
         });
     }
 
@@ -407,6 +426,12 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
             builder.HasIndex(testingEvent => new { testingEvent.TenantId, testingEvent.Status, testingEvent.StartsAt });
             builder.HasIndex(testingEvent => new { testingEvent.RecurrenceSeriesId, testingEvent.RecurrenceOccurrence })
                 .HasDatabaseName("IX_testing_events_recurrence_series_occurrence");
+
+            // Event calendars per tenant filter DeletedAt == null (TestingEventHandlers)
+            // — issue #1157. Distinct property list from the indexes above.
+            builder.HasIndex(testingEvent => new { testingEvent.TenantId, testingEvent.StartsAt })
+                .HasDatabaseName("ix_testing_events_tenant_starts_live")
+                .HasFilter("\"DeletedAt\" IS NULL");
         });
     }
 

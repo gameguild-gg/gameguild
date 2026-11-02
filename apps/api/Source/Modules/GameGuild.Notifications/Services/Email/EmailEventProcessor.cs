@@ -45,6 +45,7 @@ public sealed class EmailEventProcessor(
 
         logger.LogInformation(
             "Processed {EventType} delivery event. Recipient: {RecipientEmail}, SuppressionReason: {Reason}, DeadLettered: {DeadLettered}",
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
             deliveryEvent.EventType, LogRedaction.MaskEmail(normalized), reason, deadLettered);
     }
 
