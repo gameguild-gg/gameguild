@@ -129,6 +129,7 @@ public sealed class AuthController(ISender sender) : BaseApiController
             TenantId = body.TenantId,
             DeviceFingerprint = body.DeviceFingerprint,
             RememberMe = body.RememberMe,
+            TurnstileToken = body.TurnstileToken,
             GuestAccessToken = body.GuestAccessToken
         }, ct);
     }
@@ -736,6 +737,46 @@ public sealed class AuthController(ISender sender) : BaseApiController
         await sender.Send(command, ct).ConfigureAwait(false);
 
         return NoContent();
+    }
+
+    /// <summary>
+    ///     Sign out the caller, revoking the current access token (and optionally every session)
+    /// </summary>
+    /// <param name="body">Optional sign-out options (logout everywhere)</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Sign-out result describing how many sessions were invalidated</returns>
+    [Authorize]
+    [HttpPost("v{version:apiVersion}/auth/sign-out")]
+    [EndpointSummary("Sign out")]
+    [EndpointDescription("Signs out the authenticated caller by revoking the current access token; with logoutEverywhere it also revokes every refresh token and terminates every session for the account (issue #1154).")]
+    [ProducesResponseType<LogoutResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SignOut([FromBody] SignOutRequest? body, CancellationToken ct)
+    {
+        // Get user ID from claims (same extraction order as ChangePassword)
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value
+            ?? User.FindFirst("user_id")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid user context");
+        }
+
+        var command = new LogoutCommand
+        {
+            UserId = userId,
+            CurrentTokenJti = User.FindFirst("jti")?.Value,
+            CurrentTokenExpiresAt = long.TryParse(User.FindFirst("exp")?.Value, out var expiresAtUnix)
+                ? DateTimeOffset.FromUnixTimeSeconds(expiresAtUnix).UtcDateTime
+                : null,
+            LogoutEverywhere = body?.LogoutEverywhere == true,
+            Reason = body?.LogoutEverywhere == true ? "User initiated sign-out (everywhere)" : "User initiated sign-out",
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+        };
+
+        LogoutResponse result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        return Ok(result);
     }
 
     /// <summary>

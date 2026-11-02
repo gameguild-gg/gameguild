@@ -61,11 +61,13 @@ public sealed class SendWelcomeEmailHandler(
             }
 
             logger.LogInformation("Welcome email queued for {Email} (ID: {UserId})",
+                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
                 LogRedaction.MaskEmail(notification.Email), LogRedaction.RedactId(notification.UserId, "uid"));
         }
         catch (Exception ex)
         {
             logger.LogWarning("Welcome email queueing failed for user {Email} (ID: {UserId}): {ErrorType}",
+                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
                 LogRedaction.MaskEmail(notification.Email), LogRedaction.RedactId(notification.UserId, "uid"), ex.GetType().Name);
             throw; // The asynchronous outbox retries; never acknowledge a lost queue write.
         }

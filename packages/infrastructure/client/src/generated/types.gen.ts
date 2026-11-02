@@ -12706,6 +12706,15 @@ export interface IdentityAuthenticationBeginWebAuthnRegistrationInput {
   preferredAuthenticatorType?: IdentityAuthenticationWebAuthnAuthenticatorType;
 }
 
+/** Request to bind an X.509 client certificate to a service account (issue #1146). */
+export interface IdentityAuthenticationBindServiceAccountCertificateInput {
+  /** Optional SHA-256 hex pin of the certificate's Subject Public Key Info; the pin survives
+certificate re-issuance with the same key. */
+  spkiSha256?: string | null;
+  /** Certificate thumbprint: 40 (SHA-1) or 64 (SHA-256) hex characters, optionally separated by colons or spaces. */
+  thumbprint?: string | null;
+}
+
 /** Assigns one role to multiple users in a single bounded operation. */
 export interface IdentityAuthenticationBulkAssignRolesCommand {
   /** Optional expiration shared by every assignment. */
@@ -12986,6 +12995,22 @@ export interface IdentityAuthenticationEmailCodeRequestResult {
   success?: boolean;
 }
 
+/** Request for an email MFA sign-in challenge (issue #1152) */
+export interface IdentityAuthenticationEmailMfaChallengeInput {
+  /** User identifier whose enrolled email address receives the code */
+  userId: string;
+}
+
+/** Response for email MFA setup initiation (issue #1152) */
+export interface IdentityAuthenticationEmailMfaSetupOutput {
+  /** Masked email address for confirmation */
+  emailMasked: string | null;
+  /** Time in seconds until code expires */
+  expiresInSeconds: number;
+  /** Status message */
+  message: string | null;
+}
+
 /** Response for email verification request */
 export interface IdentityAuthenticationEmailVerificationOutput {
   /** Success message */
@@ -13181,6 +13206,9 @@ instead of the standard one. Null or false keeps the standard lifetime. */
   rememberMe?: boolean | null;
   /** Optional tenant ID to use for the sign-in. If not provided, will use the first available tenant for the user */
   tenantId?: string | null;
+  /** Cloudflare Turnstile token (issue #1082). Required once the source IP crossed
+the configured failed-sign-in threshold; ignored otherwise. */
+  turnstileToken?: string | null;
   username?: string | null;
 }
 
@@ -13237,6 +13265,16 @@ export interface IdentityAuthenticationLocationInfo {
 /** Request to lock a service account. */
 export interface IdentityAuthenticationLockServiceAccountInput {
   reason?: string | null;
+}
+
+/** Response from logout command */
+export interface IdentityAuthenticationLogoutOutput {
+  /** Message describing the result */
+  message?: string | null;
+  /** Number of sessions invalidated */
+  sessionsInvalidated?: number;
+  /** Whether the logout was successful */
+  success?: boolean;
 }
 
 /** Data model for Identity Authentication Magic Link Request Result. */
@@ -13494,6 +13532,9 @@ a valid guest session is upgraded into the issued authenticated session. */
   /** When true, issues a persistent ("remember me") refresh token using the persistent lifetime. */
   rememberMe?: boolean | null;
   tenantId?: string | null;
+  /** Cloudflare Turnstile token (issue #1082). Required once the source IP crossed
+the configured failed-sign-in threshold; ignored otherwise. */
+  turnstileToken?: string | null;
 }
 
 /** Request body to satisfy one challenge step of an orchestrated authentication flow.
@@ -13862,6 +13903,14 @@ the guest session itself ends at that point. */
   user?: IdentityAuthenticationUserDto;
   /** User ID */
   userId?: string;
+}
+
+/** Request to sign out the authenticated caller (issue #1154). The body is optional:
+without it only the current access token is revoked. */
+export interface IdentityAuthenticationSignOutInput {
+  /** When true, revokes every refresh token and terminates every session for the
+account (sign out everywhere) instead of only the current token. */
+  logoutEverywhere?: boolean;
 }
 
 /** Request for an SMS sign-in challenge */
@@ -28491,6 +28540,7 @@ export let IdentityAuthenticationBackupCodesStatusOutputSchema: z.ZodType<Identi
 export let IdentityAuthenticationBeginPasskeyApprovalInputSchema: z.ZodType<IdentityAuthenticationBeginPasskeyApprovalInput>;
 export let IdentityAuthenticationBeginWebAuthnAuthenticationInputSchema: z.ZodType<IdentityAuthenticationBeginWebAuthnAuthenticationInput>;
 export let IdentityAuthenticationBeginWebAuthnRegistrationInputSchema: z.ZodType<IdentityAuthenticationBeginWebAuthnRegistrationInput>;
+export let IdentityAuthenticationBindServiceAccountCertificateInputSchema: z.ZodType<IdentityAuthenticationBindServiceAccountCertificateInput>;
 export let IdentityAuthenticationBulkAssignRolesCommandSchema: z.ZodType<IdentityAuthenticationBulkAssignRolesCommand>;
 export let IdentityAuthenticationBulkRoleAssignmentItemResultSchema: z.ZodType<IdentityAuthenticationBulkRoleAssignmentItemResult>;
 export let IdentityAuthenticationBulkRoleAssignmentResultSchema: z.ZodType<IdentityAuthenticationBulkRoleAssignmentResult>;
@@ -28523,6 +28573,8 @@ export let IdentityAuthenticationDiscordLinkAuthorizeOutputSchema: z.ZodType<Ide
 export let IdentityAuthenticationDiscordLinkCallbackInputSchema: z.ZodType<IdentityAuthenticationDiscordLinkCallbackInput>;
 export let IdentityAuthenticationDiscordSignInOutputSchema: z.ZodType<IdentityAuthenticationDiscordSignInOutput>;
 export let IdentityAuthenticationEmailCodeRequestResultSchema: z.ZodType<IdentityAuthenticationEmailCodeRequestResult>;
+export let IdentityAuthenticationEmailMfaChallengeInputSchema: z.ZodType<IdentityAuthenticationEmailMfaChallengeInput>;
+export let IdentityAuthenticationEmailMfaSetupOutputSchema: z.ZodType<IdentityAuthenticationEmailMfaSetupOutput>;
 export let IdentityAuthenticationEmailVerificationOutputSchema: z.ZodType<IdentityAuthenticationEmailVerificationOutput>;
 export let IdentityAuthenticationEmailVerificationResultSchema: z.ZodType<IdentityAuthenticationEmailVerificationResult>;
 export let IdentityAuthenticationEvmCertificateBlockReferenceSchema: z.ZodType<IdentityAuthenticationEvmCertificateBlockReference>;
@@ -28548,6 +28600,7 @@ export let IdentityAuthenticationLocalSignInInputSchema: z.ZodType<IdentityAuthe
 export let IdentityAuthenticationLocalSignUpInputSchema: z.ZodType<IdentityAuthenticationLocalSignUpInput>;
 export let IdentityAuthenticationLocationInfoSchema: z.ZodType<IdentityAuthenticationLocationInfo>;
 export let IdentityAuthenticationLockServiceAccountInputSchema: z.ZodType<IdentityAuthenticationLockServiceAccountInput>;
+export let IdentityAuthenticationLogoutOutputSchema: z.ZodType<IdentityAuthenticationLogoutOutput>;
 export let IdentityAuthenticationMagicLinkRequestResultSchema: z.ZodType<IdentityAuthenticationMagicLinkRequestResult>;
 export let IdentityAuthenticationMfaConfigurationOutputSchema: z.ZodType<IdentityAuthenticationMfaConfigurationOutput>;
 export let IdentityAuthenticationMfaErrorOutputSchema: z.ZodType<IdentityAuthenticationMfaErrorOutput>;
@@ -28613,6 +28666,7 @@ export let IdentityAuthenticationSessionSecurityAnalysisSchema: z.ZodType<Identi
 export let IdentityAuthenticationSessionSuccessOutputSchema: z.ZodType<IdentityAuthenticationSessionSuccessOutput>;
 export let IdentityAuthenticationSessionTerminationOutputSchema: z.ZodType<IdentityAuthenticationSessionTerminationOutput>;
 export let IdentityAuthenticationSignInOutputSchema: z.ZodType<IdentityAuthenticationSignInOutput>;
+export let IdentityAuthenticationSignOutInputSchema: z.ZodType<IdentityAuthenticationSignOutInput>;
 export let IdentityAuthenticationSmsMfaChallengeInputSchema: z.ZodType<IdentityAuthenticationSmsMfaChallengeInput>;
 export let IdentityAuthenticationSmsMfaSetupInputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupInput>;
 export let IdentityAuthenticationSmsMfaSetupOutputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupOutput>;
@@ -41463,6 +41517,12 @@ IdentityAuthenticationBeginWebAuthnRegistrationInputSchema = z.object({
   preferredAuthenticatorType: z.lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema).optional(),
 });
 
+/** Zod schema for IdentityAuthenticationBindServiceAccountCertificateInput. Request to bind an X.509 client certificate to a service account (issue #1146). */
+IdentityAuthenticationBindServiceAccountCertificateInputSchema = z.object({
+  spkiSha256: z.string().nullable().optional(),
+  thumbprint: z.string().nullable().optional(),
+});
+
 /** Zod schema for IdentityAuthenticationBulkAssignRolesCommand. Assigns one role to multiple users in a single bounded operation. */
 IdentityAuthenticationBulkAssignRolesCommandSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
@@ -41699,6 +41759,18 @@ IdentityAuthenticationEmailCodeRequestResultSchema = z.object({
   success: z.boolean().optional(),
 });
 
+/** Zod schema for IdentityAuthenticationEmailMfaChallengeInput. Request for an email MFA sign-in challenge (issue #1152) */
+IdentityAuthenticationEmailMfaChallengeInputSchema = z.object({
+  userId: z.string().uuid(),
+});
+
+/** Zod schema for IdentityAuthenticationEmailMfaSetupOutput. Response for email MFA setup initiation (issue #1152) */
+IdentityAuthenticationEmailMfaSetupOutputSchema = z.object({
+  emailMasked: z.string().nullable(),
+  expiresInSeconds: z.number().int(),
+  message: z.string().nullable(),
+});
+
 /** Zod schema for IdentityAuthenticationEmailVerificationOutput. Response for email verification request */
 IdentityAuthenticationEmailVerificationOutputSchema = z.object({
   message: z.string().nullable(),
@@ -41872,6 +41944,7 @@ IdentityAuthenticationLocalSignInInputSchema = z.object({
   password: z.string().min(1),
   rememberMe: z.boolean().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
+  turnstileToken: z.string().nullable().optional(),
   username: z.string().nullable().optional(),
 });
 
@@ -41909,6 +41982,13 @@ IdentityAuthenticationLocationInfoSchema = z.object({
 /** Zod schema for IdentityAuthenticationLockServiceAccountInput. Request to lock a service account. */
 IdentityAuthenticationLockServiceAccountInputSchema = z.object({
   reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationLogoutOutput. Response from logout command */
+IdentityAuthenticationLogoutOutputSchema = z.object({
+  message: z.string().nullable().optional(),
+  sessionsInvalidated: z.number().int().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationMagicLinkRequestResult. Data model for Identity Authentication Magic Link Request Result. */
@@ -42118,6 +42198,7 @@ IdentityAuthenticationPolymorphicSignInInputSchema = z.object({
   password: z.string().nullable().optional(),
   rememberMe: z.boolean().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
+  turnstileToken: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationProcessOrchestratedAuthenticationStepRequestDto. Request body to satisfy one challenge step of an orchestrated authentication flow.
@@ -42413,6 +42494,12 @@ IdentityAuthenticationSignInOutputSchema = z.object({
   upgradedFromGuestSessionId: z.string().uuid().nullable().optional(),
   user: z.lazy(() => IdentityAuthenticationUserDtoSchema).optional(),
   userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationSignOutInput. Request to sign out the authenticated caller (issue #1154). The body is optional:
+without it only the current access token is revoked. */
+IdentityAuthenticationSignOutInputSchema = z.object({
+  logoutEverywhere: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationSmsMfaChallengeInput. Request for an SMS sign-in challenge */

@@ -104,7 +104,8 @@ public class LocalizedErrorService : ILocalizedErrorService
             }
             catch (FormatException ex)
             {
-                _logger.LogWarning(ex, "Failed to format error message {ErrorKey} with {ArgCount} arguments", 
+                _logger.LogWarning(ex, "Failed to format error message {ErrorKey} with {ArgCount} arguments",
+                    // codeql[cs/exposure-of-sensitive-information] errorKey is a translation dictionary key (e.g. "validation.email"), not an address, and is already sanitized
                     LogRedaction.Sanitize(errorKey), args.Length);
                 return message;
             }
@@ -158,6 +159,7 @@ public class LocalizedErrorService : ILocalizedErrorService
                 return message;
             }
 
+            // codeql[cs/exposure-of-sensitive-information] key is a translation dictionary key (e.g. "validation.email"), not an address, and is already sanitized
             _logger.LogWarning("Missing translation for key {Key} in culture {Culture}", LogRedaction.Sanitize(key), culture.Name);
             return key; // Return the key itself as fallback
         })!;
@@ -187,7 +189,8 @@ public class LocalizedErrorService : ILocalizedErrorService
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Database lookup failed for error key {Key} in culture {Culture}, using fallback", 
+            _logger.LogDebug(ex, "Database lookup failed for error key {Key} in culture {Culture}, using fallback",
+                // codeql[cs/exposure-of-sensitive-information] key is a translation dictionary key (e.g. "validation.email"), not an address, and is already sanitized
                 LogRedaction.Sanitize(key), culture.Name);
             return null;
         }

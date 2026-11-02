@@ -121,6 +121,7 @@ public static class DatabaseSeeder
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(adminUser, "Admin").ConfigureAwait(false);
+                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
                 logger?.LogInformation("  Created admin user: {Email}", LogRedaction.MaskEmail(adminEmail));
             }
             else

@@ -95,6 +95,7 @@ public class EmailDeliveryAdminService(
 
         suppression.Release();
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
         logger.LogInformation("Suppression released by admin. EmailAddress: {EmailAddress}", LogRedaction.MaskEmail(normalized));
         return Result.Success(true);
     }

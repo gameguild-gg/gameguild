@@ -80,6 +80,8 @@ public class NotificationDeliveryService(
             decision = await preferenceService.DecideDeliveryAsync(userId, type, channel, priority, cancellationToken).ConfigureAwait(false);
             if (decision.Action == NotificationDeliveryAction.Drop)
             {
+                // codeql[cs/cleartext-storage-of-sensitive-information] type is the fixed NotificationType enum discriminator, not a credential
+                // codeql[cs/exposure-of-sensitive-information] type is the fixed NotificationType enum discriminator, not personal data
                 logger.LogDebug("Notification dropped due to user preferences. UserId: {UserId}, Type: {Type}, Reason: {Reason}", LogRedaction.Sanitize(userId.ToString()), type, decision.Reason);
                 return Result.Failure<Notification>(Error.Failure("Notification.Skipped", $"Notification skipped due to user preferences ({decision.Reason})"));
             }
@@ -123,7 +125,10 @@ public class NotificationDeliveryService(
         }
 
         logger.LogInformation("Notification sent. Id: {NotificationId}, Recipient: {RecipientId}, Type: {Type}",
-            notification.Id, LogRedaction.Sanitize(recipientId.ToString()), notification.Type);
+            notification.Id, LogRedaction.Sanitize(recipientId.ToString()),
+            // codeql[cs/cleartext-storage-of-sensitive-information] notification.Type is the fixed NotificationType enum discriminator, not a credential
+            // codeql[cs/exposure-of-sensitive-information] notification.Type is the fixed NotificationType enum discriminator, not personal data
+            notification.Type);
 
         return Result.Success(notification);
     }
