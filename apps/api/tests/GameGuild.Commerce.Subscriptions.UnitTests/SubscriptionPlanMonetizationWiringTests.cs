@@ -92,4 +92,42 @@ public sealed class SubscriptionPlanMonetizationWiringTests
             .GetCustomAttribute<AuthorizeRequestAttribute>()
             .Should().BeNull();
     }
+
+    [Theory]
+    [InlineData(typeof(SubscriptionsController), nameof(SubscriptionsController.PatchSubscription))]
+    [InlineData(typeof(SubscriptionsController), nameof(SubscriptionsController.PutSubscription))]
+    [InlineData(typeof(SubscriptionsController), nameof(SubscriptionsController.DeleteSubscription))]
+    public void DestructiveSubscriptionEndpoints_RequireConfigurePermission(Type controller, string actionName)
+    {
+        // Issue #1205 G-9: the destructive subscription endpoints were guarded by a bare
+        // [Authorize]; they now carry the module's most-protected mutation permission.
+        var method = controller.GetMethod(actionName, BindingFlags.Public | BindingFlags.Instance);
+        method.Should().NotBeNull();
+
+        var attribute = method!.GetCustomAttribute<RequirePermissionAttribute>();
+        attribute.Should().NotBeNull(
+            "{0}.{1} destructively mutates a subscription and must be permission-gated",
+            controller.Name, actionName);
+        attribute!.PermissionName.Should().Be(MonetizationPermission.Keys.Configure);
+    }
+
+    [Fact]
+    public void DestructiveSubscriptionCommands_CarryAuthorizeRequest()
+    {
+        // Issue #1205 G-9: the gate must hold on every dispatch path, not only the
+        // controller — mirror the plan-configuration command pattern.
+        var destructiveCommands = new[]
+        {
+            typeof(DeleteSubscriptionCommand),
+            typeof(PatchSubscriptionCommand),
+            typeof(UpdateSubscriptionCommand)
+        };
+
+        foreach (var command in destructiveCommands)
+        {
+            var attribute = command.GetCustomAttribute<AuthorizeRequestAttribute>();
+            attribute.Should().NotBeNull("{0} must carry [AuthorizeRequest]", command.Name);
+            attribute!.Permission.Should().Be(MonetizationPermission.Keys.Configure, $"for {command.Name}");
+        }
+    }
 }
