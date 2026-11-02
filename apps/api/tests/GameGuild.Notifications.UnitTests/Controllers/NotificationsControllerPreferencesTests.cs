@@ -112,7 +112,7 @@ public class NotificationsControllerPreferencesTests
         catalog.Should().OnlyContain(e => knownCategories.Contains(e.Category));
 
         var transactional = catalog.Where(e => !e.Suppressible).Select(e => e.Type).ToList();
-        transactional.Should().BeEquivalentTo(["EmailVerification", "PasswordReset", "MagicLink", "EmailCode", "TenantInvite", "SmsMfaCode", "PushMfaChallenge"]);
+        transactional.Should().BeEquivalentTo(["EmailVerification", "PasswordReset", "MagicLink", "EmailCode", "TenantInvite", "SmsMfaCode", "PushMfaChallenge", "TrustedContactInvite"]);
 
         // Issue #244: one-time SMS MFA codes are Transactional (never suppressible — an account
         // security factor must never be muted by channel preferences).

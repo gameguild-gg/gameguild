@@ -135,6 +135,8 @@ public class NotificationPreferenceService(
 
     /// <summary>
     /// Notification types that are always delivered regardless of any preference (account-critical emails).
+    /// Keep in sync with <see cref="NotificationCategories.Transactional"/> — the digest-routing test
+    /// asserts every category member bypasses routing through this set.
     /// </summary>
     private static readonly HashSet<NotificationType> TransactionalTypes =
     [
@@ -144,7 +146,8 @@ public class NotificationPreferenceService(
         NotificationType.EmailCode,
         NotificationType.TenantInvite,
         NotificationType.SmsMfaCode,
-        NotificationType.PushMfaChallenge
+        NotificationType.PushMfaChallenge,
+        NotificationType.TrustedContactInvite
     ];
 
     public async Task<NotificationDeliveryDecision> DecideDeliveryAsync(
