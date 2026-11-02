@@ -749,3 +749,183 @@ File: `apps/api/Source/Modules/GameGuild.Identity.Authorization/Controllers/Tena
 | GET /api/v{n}/authorization/tenants/permissions:expiration-summary | `GetExpirationSummaryQuery` | — | `GetExpirationSummaryQueryHandler (PermissionExpirationAnalyticsQueries.cs:33)` | scan | authz | — global | PermissionExpirationAnalyticsQueryHandlerTests.cs | — | VQ, NI |
 | GET /api/v{n}/authorization/tenants/permissions:expiration-trends | `GetExpirationTrendsQuery` | — | `GetExpirationTrendsQueryHandler (PermissionExpirationAnalyticsQueries.cs:78)` | scan | authz | — global | PermissionExpirationAnalyticsQueryHandlerTests.cs | — | VQ, NI |
 | GET /api/v{n}/authorization/tenants/permissions:expiration-report | `GetExpirationReportQuery` | — | `GetExpirationReportQueryHandler (PermissionExpirationAnalyticsQueries.cs:127)` | scan | authz | — global | PermissionExpirationAnalyticsQueryHandlerTests.cs | — | VQ, NI |
+## Part C — ISender bypass register
+
+Endpoints whose controller action does **not** go through `ISender`/`IMediator`. These violate the module's
+CQRS convention unless justified; justification is assessed per row. `NC+B` = no request type at all;
+`B` only = request type exists for the write part but reads/verification go through a service.
+
+| Controller.Action | Route | What the action calls | Verdict |
+|---|---|---|---|
+| `GuestSessionController.GetCurrent` (GuestSessionController.cs:L66) | GET /v{n}/auth/guest-session | `claims only` | justified — trivial principal projection, no data access |
+| `KeyRotationController.GetSigningKeys` (KeyRotationController.cs:L45) | GET /v{n}/auth/signing-keys | `IKeyRotationService.GetActiveSigningKeyAsync, IKeyRotationService.GetValidationKeysAsync` | unjustified read bypass — and the keys it returns are ignored by issuance/validation (issue #1141) |
+| `MfaController.GetMfaConfiguration` (MfaController.cs:L37) | GET /v{n}/auth/mfa | `IMfaService.GetMfaConfigurationAsync` | unjustified — read bypasses pipeline; same projection is one query away |
+| `MfaController.GetBackupCodes` (MfaController.cs:L149) | GET /v{n}/auth/mfa/backup-codes | `IMfaService.GetMfaConfigurationAsync` | unjustified — read bypass; also returns backup codes inline, see #1153 re-verification context |
+| `MfaController.ListMfaMethods` (MfaController.cs:L465) | GET /v{n}/auth/mfa/methods | `IMfaService.GetMfaConfigurationAsync` | unjustified — read bypass |
+| `ServiceAccountCrudController.GetServiceAccount` (ServiceAccountCrudController.cs:L85) | GET /v{n}/auth/service-accounts/{serviceAccountId:guid} | `IServiceAccountService.GetByIdAsync` | unjustified — read bypass |
+| `ServiceAccountCrudController.DeleteServiceAccount` (ServiceAccountCrudController.cs:L171) | DELETE /v{n}/auth/service-accounts/{serviceAccountId:guid} | `IServiceAccountService.GetByIdAsync` | partial — existence pre-check via service, mutation via command |
+| `ServiceAccountOperationsController.Lock` (ServiceAccountOperationsController.cs:L84) | POST /v{n}/auth/service-accounts/{serviceAccountId:guid}:lock | `IServiceAccountService.GetByIdAsync` | partial — existence pre-check via service, mutation via command |
+| `ServiceAccountOperationsController.GetAuditLog` (ServiceAccountOperationsController.cs:L110) | GET /v{n}/auth/service-accounts/{serviceAccountId:guid}/audit-log | `IServiceAccountService.GetByIdAsync, IServiceAccountService.GetAuditLogAsync` | unjustified — read bypass |
+| `SessionController.GetSessions` (SessionController.cs:L32) | GET /v{n}/auth/sessions | `ISessionManagementService.GetUserSessionsAsync, ISessionManagementService.GetTrustedDevicesAsync` | unjustified — read bypass composing two service calls |
+| `SessionController.AnalyzeSessionSecurity` (SessionController.cs:L73) | GET /v{n}/auth/sessions:analyze-security | `ISessionManagementService.AnalyzeSessionSecurityAsync` | unjustified — read bypass |
+| `SessionController.TerminateSession` (SessionController.cs:L100) | DELETE /v{n}/auth/sessions/{sessionId:guid} | `ISessionManagementService.GetSessionAsync` | partial — ownership pre-check via service, mutation via command |
+| `WebAuthnController.GetCredentials` (WebAuthnController.cs:L170) | GET /v{n}/auth/webauthn/credentials | `IWebAuthnService.GetUserCredentialsAsync` | unjustified — read bypass |
+| `WebAuthnController.GetCredential` (WebAuthnController.cs:L193) | GET /v{n}/auth/webauthn/credentials/{credentialId:guid} | `IWebAuthnService.GetCredentialByIdAsync` | unjustified — read bypass |
+| `ContentTypePermissionsController.HasPermission` (ContentTypePermissionsController.cs:L200) | GET /api/v{n}/authorization/content-types/{tenantId:guid}/has-permission | `RequestServices service-locator` | unjustified — service-locator + direct resolver call; `DacPermissionQuery` never flows through `ISender` and has no handler |
+
+## Part D — endpoints with no working handler
+
+### D1. Declared-unavailable commands (`HU`)
+
+`Send` throws `UnavailableUseCaseException` — "The planned authorization management API is not available."
+(use-case contracts: `Modules/GameGuild.Identity.Authentication/Architecture/UseCaseEventContracts.g.cs`).
+
+| Route | Command |
+|---|---|
+| PUT /v{n}/abac-policies/{policyId} | `UpdateAbacPolicyCommand` |
+| DELETE /v{n}/abac-policies/{policyId} | `DeleteAbacPolicyCommand` |
+| POST /v{n}/abac-policies/{policyId}:activate | `ActivateAbacPolicyCommand` |
+| POST /v{n}/abac-policies/{policyId}:deactivate | `DeactivateAbacPolicyCommand` |
+| POST /v{n}/abac-policies/{policyId}:clone | `CloneAbacPolicyCommand` |
+| POST /v{n}/abac-policies/:validate | `ValidateAbacPolicyCommand` |
+| POST /v{n}/abac-policies/templates/{templateId}:instantiate | `CreateAbacPolicyFromTemplateCommand` |
+| POST /v{n}/access-reviews/:revoke-access | `RevokeAccessCommand` |
+| POST /v{n}/access-reviews/:bulk-revoke-access | `BulkRevokeAccessCommand` |
+| POST /v{n}/access-reviews/:generate-report | `GenerateAccessReviewReportCommand` |
+| POST /v{n}/access-reviews/campaigns | `CreateAccessReviewCampaignCommand` |
+| DELETE /v{n}/access-reviews/campaigns/{campaignId} | `DeleteAccessReviewCampaignCommand` |
+| POST /v{n}/access-reviews/campaigns/{campaignId}:start | `StartAccessReviewCampaignCommand` |
+| POST /v{n}/access-reviews/campaigns/{campaignId}:complete | `CompleteAccessReviewCampaignCommand` |
+| POST /v{n}/access-reviews/campaigns/{campaignId}:send-reminders | `SendReviewRemindersCommand` |
+| POST /v{n}/access-reviews/reminder-settings | `ConfigureReminderSettingsCommand` |
+| POST /v{n}/access-reviews/items:bulk-review | `BulkReviewAccessItemsCommand` |
+| POST /v{n}/access-reviews/periodic | `CreatePeriodicAccessReviewCommand` |
+| POST /v{n}/access-reviews/periodic/{scheduleId}:trigger | `TriggerPeriodicAccessReviewCommand` |
+| PUT /v{n}/conditional-policies/{policyId} | `UpdateConditionalPolicyCommand` |
+| DELETE /v{n}/conditional-policies/{policyId} | `DeleteConditionalPolicyCommand` |
+| POST /v{n}/conditional-policies/{policyId}:activate | `ActivateConditionalPolicyCommand` |
+| POST /v{n}/conditional-policies/{policyId}:deactivate | `DeactivateConditionalPolicyCommand` |
+| POST /v{n}/conditional-policies/{policyId}:clone | `CloneConditionalPolicyCommand` |
+| PUT /v{n}/conditional-policies/{policyId}/priority | `UpdateConditionalPolicyPriorityCommand` |
+| POST /v{n}/conditional-policies/templates/{templateId}:instantiate | `CreateConditionalPolicyFromTemplateCommand` |
+| POST /v{n}/permissions/content-type-grants | `GrantContentTypePermissionCommand` |
+| POST /v{n}/permissions/content-type-grants:revoke | `RevokeContentTypePermissionCommand` |
+| POST /v{n}/access-reviews/campaigns/{id:guid}:start | `StartAccessReviewCampaignCommand` |
+| POST /v{n}/access-reviews/campaigns/{id:guid}:complete | `CompleteAccessReviewCampaignCommand` |
+
+### D2. Queries with NO handler anywhere (`H`) — live runtime failures
+
+No handler type exists in any scanned assembly and queries are **not** covered by the unavailable-use-case
+fallback (commands only — `ServiceCollectionExtensions.cs:93-110` resolves `ICommand*` interfaces exclusively).
+`Send` throws `InvalidOperationException("No handler found for request type …")` (`SharedKernel/CQRS/Implementation/MediatorSender.cs:136`).
+Exception: `ContentTypePermissionsController.HasPermission` never calls `Send` — it passes `DacPermissionQuery`
+straight to `IDacPermissionResolver` (see Part C); the query type is equally unhandled and untested.
+
+| Route | Query | Controller |
+|---|---|---|
+| GET /v{n}/abac-policies/{policyId} | `GetAbacPolicyQuery` | `AbacPolicyController.GetAbacPolicy` |
+| GET /v{n}/abac-policies/statistics | `GetAbacPolicyStatisticsQuery` | `AbacPolicyController.GetAbacPolicyStatistics` |
+| GET /v{n}/abac-policies/{policyId}/usage | `GetAbacPolicyUsageQuery` | `AbacPolicyController.GetAbacPolicyUsage` |
+| GET /v{n}/abac-policies/{policyId}/audit-trail | `GetAbacPolicyAuditTrailQuery` | `AbacPolicyController.GetAbacPolicyAuditTrail` |
+| GET /v{n}/abac-policies/conflicts | `GetAbacPolicyConflictsQuery` | `AbacPolicyController.GetAbacPolicyConflicts` |
+| GET /v{n}/abac-policies/templates | `GetAbacPolicyTemplatesQuery` | `AbacPolicyController.GetAbacPolicyTemplates` |
+| GET /v{n}/access-reviews/revocation-history | `GetAccessRevocationHistoryQuery` | `AccessReviewAnalyticsController.GetAccessRevocationHistory` |
+| GET /v{n}/access-reviews/analytics | `GetAccessReviewAnalyticsQuery` | `AccessReviewAnalyticsController.GetAccessReviewAnalytics` |
+| GET /v{n}/access-reviews/compliance-status | `GetComplianceStatusQuery` | `AccessReviewAnalyticsController.GetComplianceStatus` |
+| GET /v{n}/access-reviews/campaigns/{campaignId} | `GetAccessReviewCampaignQuery` | `AccessReviewCampaignController.GetAccessReviewCampaign` |
+| GET /v{n}/access-reviews/campaigns | `GetAccessReviewCampaignsQuery` | `AccessReviewCampaignController.GetAccessReviewCampaigns` |
+| GET /v{n}/access-reviews/templates | `GetAccessReviewTemplatesQuery` | `AccessReviewCampaignController.GetAccessReviewTemplates` |
+| GET /v{n}/access-reviews/campaigns/{campaignId}/items | `GetAccessReviewItemsQuery` | `AccessReviewItemController.GetAccessReviewItems` |
+| GET /v{n}/access-reviews/items/{itemId} | `GetAccessReviewItemDetailsQuery` | `AccessReviewItemController.GetAccessReviewItemDetails` |
+| GET /v{n}/access-reviews/periodic/{scheduleId} | `GetPeriodicAccessReviewQuery` | `AccessReviewItemController.GetPeriodicAccessReview` |
+| GET /v{n}/access-reviews/periodic | `GetPeriodicAccessReviewsQuery` | `AccessReviewItemController.GetPeriodicAccessReviews` |
+| GET /v{n}/conditional-policies/{policyId} | `GetConditionalPolicyQuery` | `ConditionalPolicyCrudController.GetConditionalPolicy` |
+| GET /v{n}/conditional-policies/templates | `GetConditionalPolicyTemplatesQuery` | `ConditionalPolicyCrudController.GetConditionalPolicyTemplates` |
+| GET /v{n}/conditional-policies/statistics | `GetConditionalPolicyStatisticsQuery` | `ConditionalPolicyEvaluationController.GetConditionalPolicyStatistics` |
+| GET /v{n}/conditional-policies/{policyId}/usage | `GetConditionalPolicyUsageQuery` | `ConditionalPolicyEvaluationController.GetConditionalPolicyUsage` |
+| GET /v{n}/conditional-policies/{policyId}/evaluation-history | `GetConditionalPolicyEvaluationHistoryQuery` | `ConditionalPolicyEvaluationController.GetConditionalPolicyEvaluationHistory` |
+| GET /v{n}/conditional-policies/conflicts | `GetConditionalPolicyConflictsQuery` | `ConditionalPolicyEvaluationController.GetConditionalPolicyConflicts` |
+| GET /v{n}/conditional-policies/condition-types | `GetPolicyConditionTypesQuery` | `ConditionalPolicyEvaluationController.GetPolicyConditionTypes` |
+| GET /v{n}/tenants/{tenantId:guid}/permissions/analytics | `GetPermissionAnalyticsQuery` | `PermissionAdminController.GetPermissionAnalytics` |
+| GET /v{n}/permissions/audit-trail | `GetPermissionAuditTrailQuery` | `PermissionAdminController.GetPermissionAuditTrail` |
+| GET /api/v{n}/authorization/content-types/{tenantId:guid}/has-permission | `DacPermissionQuery` | `ContentTypePermissionsController.HasPermission` |
+
+## Part E — observations
+
+1. **Dual handler registration** — 36 request types are both auto-scanned and explicitly registered (`AddScoped<ICommandHandler<…>>` in `Modules/GameGuild.Identity.Authentication/Data/Extensions/DependencyInjection.cs:465-492` and `Extensions/DependencyInjection.cs:22-44`). Harmless (both resolve to the same implementation) but redundant; the scan is authoritative.
+2. **Validator distribution** — FluentValidation coverage is concentrated on the credential-auth command set (`Modules/GameGuild.Identity.Authentication/Validators/`, 20 files, 49 command instances covered). The **Authorization module contains zero `AbstractValidator` classes**; all tenant/resource/content-type permission mutations reach their handlers unvalidated.
+3. **Route prefix inconsistency** — Authorization-module controllers split between `/v{n}/…` (`AccessReviewsController`, `SoDController`, `JitElevationsController`, `DelegatedAdminController`, `PermissionAnalyticsController`, `PermissionDelegationsController`, `PermissionTemplatesController`) and `/api/v{n}/authorization/…` (`TenantPermissionsController`, `ResourcePermissionsController`, `ContentTypePermissionsController`, `PermissionHistoryController`, `PermissionGraphController`, `PermissionApprovalsController`, `PermissionSyncController`, `PermissionRestorationController`, `PermissionComplianceController`, `PermissionSimulationController`, `PolicyBundlesController`).
+4. **`AbacPolicyController`/`AccessReview*`/`ConditionalPolicy*`/`PermissionAdmin` write APIs are shipped-but-unavailable on purpose** (Part D1); their read APIs are simply broken (Part D2). Related: #1180 notes the ABAC middleware gate itself is a stub.
+5. **Test-helper exclusion** — `IdentityCommandTestSender.cs`, `CommandHandlerSender.cs`, stubs and `TestHelpers/` were excluded from test-attribution to avoid false coverage.
+
+## Part F — totals and coverage
+
+- **Endpoints in scope: 324** across 46 controllers (28 in `GameGuild.Identity.Authentication`, 18 in `GameGuild.Identity.Authorization`).
+- **Endpoints with at least one hole: 311/324 (96.0%)**.
+- **Fully wired endpoints (no hole): 13** — `AdminMfaController.ResetUserMfa`, `ApiKeyController.CreateApiKey`, `AuthController.LocalSignUp`, `AuthController.LocalSignIn`, `AuthController.GoogleIdTokenSignIn`, `AuthController.SamlCallback`, `AuthController.RefreshToken`, `AuthController.RevokeToken`, `MfaRecoveryController.RequestMfaRecovery`, `MfaRecoveryController.ContinueMfaRecovery`, `MfaRecoveryController.ConfirmMfaRecovery`, `AccessReviewsController.ApproveItem`, `AccessReviewsController.RevokeItem`.
+
+| Hole class | Rows | Share of endpoints |
+|---|---|---|
+| H — no handler at all (live `InvalidOperationException`) | 26 | 8.0% |
+| HU — handler declared unavailable | 30 | 9.3% |
+| V — no validator (command) | 158 | 48.8% |
+| VQ — no validator (query) | 102 | 31.5% |
+| B — ISender bypass | 14 | 4.3% |
+| NC — no command/query | 15 | 4.6% |
+| NU — no unit test | 22 | 6.8% |
+| NI — no integration/PG test | 277 | 85.5% |
+
+- Validator coverage: **49/207 command instances (24%)**, **0/103 query instances**.
+- Unit-test coverage: **302/324 (93.2%)**.
+- Integration/PG-test coverage: **47/324 (14.5%)** — the credential flows (sign-up/in, tokens, MFA completion, OIDC/SAML, recovery) are covered; the permission-admin surfaces (Authentication module) and most Authorization-module surfaces are not exercised by any integration test.
+
+## Part G — known-issue cross-reference and NEW holes
+
+### G1. Holes already tracked in the issue tracker
+
+| Issue | Hole as filed | Matrix rows affected | Status on develop |
+|---|---|---|---|
+| #1141 | JWT key rotation unwired — `JwtTokenService` ignores `GetValidationKeysAsync` | `KeyRotationController.GetSigningKeys` (B), `RotateKey`, `CleanupExpiredKeys` | open — confirmed by matrix; the JWKS read endpoint itself is a service bypass |
+| #1142 | Service account PATCH silently loses name/description/expiry | `ServiceAccountCrudController.PatchServiceAccount` | open — wiring itself intact (`ServiceAccountMutationCommandHandler.cs:48`); persistence bug is handler-internal |
+| #1143 | WebAuthn attestation conveyance `None`, `UserVerified` hard-coded true | `WebAuthnController.BeginRegistration`, `CompleteRegistration` | open — wiring intact; defect is inside `WebAuthnRegistrationService` |
+| #1144 | Trusted devices lack fresh-verification prerequisite and pruning | `TrustedDevicesController.RegisterDevice`, `List`, `Remove`, `Rename` | open |
+| #1145 | Trusted-contact email failures abort commands without outbox | `TrustedContactsController.AddTrustedContact` | open |
+| #1146 | mTLS `BindCertificate` has no API or command surface | (missing endpoint — `ServiceAccountOperationsController` has no bind-certificate action) | open |
+| #1150 | No API-level CAPTCHA on sign-up — Turnstile enforced only in Next.js | `AuthController.LocalSignUp` | open — validator exists (`LocalSignUpCommandValidator.cs:9`) but no CAPTCHA rule |
+| #1151 | Email verification tokens in process-local `IMemoryCache` | `AuthController.SendEmailVerification`, `VerifyEmail` | open |
+| #1152 | No email-MFA enrollment endpoint despite being advertised | `MfaController.InitiateEmailSetup`, `CompleteEmailSetup`, `SendEmailChallenge` | **stale** — `/v1/auth/mfa/email:setup`, `email:complete`, `email:challenge` exist on develop (`MfaController.cs:287,317,344`) with real handlers (`EmailMfaCommandHandler`) |
+| #1153 | Backup-code regenerate and push-device register lack password re-verification | `MfaController.RegenerateBackupCodes`, `RegisterPushDevice` | open |
+| #1154 | `LogoutCommand` dead code — no dedicated sign-out endpoint | `AuthController.SignOut` | **stale** — `POST /v1/auth/sign-out` exists (`AuthController.cs:736-767`) and sends `LogoutCommand` → `LogoutHandler.cs:9`; the endpoint docstring itself cites issue #1154 |
+| #1155 | MFA recovery emails bypass durable notification queue | `MfaRecoveryController.RequestMfaRecovery` | open |
+| #1178 | Orchestrated completion issues token with `sid` claim but no `UserSession` row | `OrchestratedAuthController.Complete` | open — wiring intact; defect is handler/session-store mismatch |
+| #1179 | Per-jti access-token deny-list never populated by any auth path | `AuthController.SignOut`, `RevokeToken` | open |
+| #1180 | `AbacPolicyMiddleware` copies are header-writing stubs — no request-time ABAC gate | `AbacPolicyController` evaluate endpoints (wired) vs Part D1/D2 (unavailable/missing) | open |
+| #1181 | External login link gaps — no GitHub/Microsoft link endpoints, Discord state not validated, unlink case-mismatch | `ExternalLoginsController` (6 endpoints; no GitHub/Microsoft link actions exist) | open |
+| #1182 | OAuth-provisioned accounts never receive welcome email; password-change notifications missing | `AuthController.GoogleIdTokenSignIn`/`GitHubCallback`/`DiscordCallback`/`OidcCallback`/`SamlCallback`, `ChangePassword` | open |
+
+### G2. NEW holes (not tracked anywhere)
+
+Ranked by severity. File:line anchors are on develop @ `74e9bba4c`.
+
+- **N1 (critical)** — 25 query endpoints call `Send` on query types that have **no handler in any module** — every one of these requests dies with `InvalidOperationException` at runtime. Full list in Part D2; anchors: `AbacPolicyController.cs:L179`, `AbacPolicyController.cs:L191`, `AbacPolicyController.cs:L203`, `AbacPolicyController.cs:L230`, `AbacPolicyController.cs:L246`, `AbacPolicyController.cs:L44`, `AccessReviewAnalyticsController.cs:L110`, `AccessReviewAnalyticsController.cs:L59`, `AccessReviewAnalyticsController.cs:L90`, `AccessReviewCampaignController.cs:L165`, `AccessReviewCampaignController.cs:L48`, `AccessReviewCampaignController.cs:L85`, `AccessReviewItemController.cs:L113`, `AccessReviewItemController.cs:L125`, `AccessReviewItemController.cs:L36`, `AccessReviewItemController.cs:L85`, `ConditionalPolicyCrudController.cs:L153`, `ConditionalPolicyCrudController.cs:L43`, `ConditionalPolicyEvaluationController.cs:L120`, `ConditionalPolicyEvaluationController.cs:L147`, `ConditionalPolicyEvaluationController.cs:L69`, `ConditionalPolicyEvaluationController.cs:L81`, `ConditionalPolicyEvaluationController.cs:L93`, `PermissionAdminController.cs:L53`, `PermissionAdminController.cs:L70`. (The matching write-side commands are declared unavailable — these read-side queries were simply never given handlers or contracts.)
+- **N2 (high)** — `ContentTypePermissionsController.HasPermission` resolves `IDacPermissionResolver` via `HttpContext.RequestServices` and passes `DacPermissionQuery` straight to the resolver — a request type that never enters the CQRS pipeline, has no handler, no validator and no tests (`ContentTypePermissionsController.cs:L200`).
+- **N3 (high)** — 8 MFA endpoints have **no unit test anywhere** (SMS/email/push challenge cycles, push device registration, plus `AuthController.CompleteMfaSignIn`): `MfaController.cs:L260`, `MfaController.cs:L293`, `MfaController.cs:L323`, `MfaController.cs:L349`, `MfaController.cs:L383`, `MfaController.cs:L409`, `MfaController.cs:L438` — `SendSmsMfaChallengeCommand`, `StartEmailMfaEnrollmentCommand`, `CompleteEmailMfaEnrollmentCommand`, `SendEmailMfaChallengeCommand`, `RegisterPushMfaDeviceCommand`, `IssuePushMfaChallengeCommand`, `RespondPushMfaChallengeCommand` are referenced by zero test files (CompleteMfaSignIn has PG integration tests but no unit tests).
+- **N4 (high)** — `GuestSessionController.Issue` (`POST /v1/auth/guest-session`) has **no integration test hitting the route and no validator** for `IssueGuestSessionCommand` — an anonymous, credential-issuing endpoint (`GuestSessionController.cs:L38`); only service-level unit tests exist (`Guest/GuestSessionServiceTests.cs`).
+- **N5 (medium)** — Systematic validator gap: **158 command instances (76%) reach handlers with no FluentValidation stage**; the entire Authorization module ships zero validators (TenantPermissions/ResourcePermissions/SoD/JitElevations/PolicyBundles mutations are unvalidated at the pipeline level).
+- **N6 (medium)** — Read-path ISender bypasses: `MfaController` configuration/methods reads, `SessionController` session list/security analysis, `WebAuthnController` credential reads, `ServiceAccount` reads/audit-log, `KeyRotationController.GetSigningKeys` — 11 unjustified read bypasses (Part C).
+- **N7 (low)** — `AccountRecoveryController.BeginPasskeyApproval` — no unit test (`AccountRecoveryController.cs:L115`) despite anonymous exposure; integration tests cover the route.
+- **N8 (low)** — Authorization-module long-tail endpoints without unit tests: `PermissionApprovalsController.Decide`, `PermissionHistoryController` (2 queries), `PermissionTemplatesController` (3), `PolicyBundlesController.Rollback`, `TenantPermissionsController.GetExpiringPermissions`, `ContentTypePermissionsController.DenyPermission`/`RevokePermission`.
+- **N9 (info)** — OpenAPI-visible but permanently erroring surface: 30 endpoint rows (Part D1) advertise operations that always throw `UnavailableUseCaseException`; consider removing from the exported OpenAPI document or gating behind a feature flag.
+
+### G3. Verification method
+
+Extraction was performed by static analysis of every controller action (route attribute, action body, constructor
+dependencies), cross-referenced against: `AbstractValidator<T>` declarations across all module sources; handler
+interface declarations across all module sources; `UseCaseEventContracts.g.cs`; module DI files; the anonymous-endpoint
+registry; and the seven unit/integration/security test projects (`GameGuild.Identity.Authentication.UnitTests`,
+`GameGuild.Identity.Authorization.UnitTests`, `GameGuild.Permissions.UnitTests`, `GameGuild.API.UnitTests`,
+`GameGuild.API.SecurityTests`, `GameGuild.Identity.Authentication.IntegrationTests`, `GameGuild.Identity.Authorization.IntegrationTests`,
+`GameGuild.API.IntegrationTests`, `GameGuild.SessionStateAcceptance`). Integration attribution requires the literal
+route string (or the request type) in the test file; unit attribution requires the request/handler type or a joint
+controller+action reference. Sampled rows were hand-verified against the source before publication.
+
