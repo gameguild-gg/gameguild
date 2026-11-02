@@ -104,6 +104,66 @@ public class CreateSubscriptionCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_ShouldDeriveAmountFromPlan_IgnoringClientSuppliedAmount()
+    {
+        // Issue #1205 G-13: the plan (19.99/month) is authoritative — a client trying to
+        // lock in 0.01 must still get the plan price.
+        Subscription? capturedSubscription = null;
+        _mockRepository
+            .Setup(r => r.AddAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()))
+            .Callback<Subscription, CancellationToken>((s, _) => capturedSubscription = s)
+            .ReturnsAsync((Subscription s, CancellationToken _) => s);
+
+        var command = new CreateSubscriptionCommand(
+            TenantId: Guid.NewGuid(),
+            PlanId: Guid.NewGuid(),
+            CreatedByUserId: Guid.NewGuid(),
+            BillingCycle: BillingCycle.Monthly,
+            Amount: 0.01m);
+
+        await _handler.Handle(command, CancellationToken.None);
+
+        capturedSubscription.Should().NotBeNull();
+        capturedSubscription!.Amount.Amount.Should().Be(19.99m);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldUseConfiguredIntervalPrice_FromThePricingService()
+    {
+        // Issue #1205 G-13: an explicit interval price point (15.00 quarterly) resolved by
+        // the interval pricing service wins over both the client amount and the derived
+        // monthly-x-months fallback.
+        Subscription? capturedSubscription = null;
+        _mockRepository
+            .Setup(r => r.AddAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()))
+            .Callback<Subscription, CancellationToken>((s, _) => capturedSubscription = s)
+            .ReturnsAsync((Subscription s, CancellationToken _) => s);
+
+        var intervalPricing = new Mock<ISubscriptionIntervalPricingService>();
+        intervalPricing
+            .Setup(service => service.ResolvePriceForCycleAsync(It.IsAny<SubscriptionPlan>(), BillingCycle.Quarterly, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Money(15m, "USD"));
+
+        var handler = new CreateSubscriptionCommandHandler(
+            _mockRepository.Object,
+            _mockPlanRepository.Object,
+            Mock.Of<ILogger<CreateSubscriptionCommandHandler>>(),
+            intervalPricingService: intervalPricing.Object);
+
+        var command = new CreateSubscriptionCommand(
+            TenantId: Guid.NewGuid(),
+            PlanId: Guid.NewGuid(),
+            CreatedByUserId: Guid.NewGuid(),
+            BillingCycle: BillingCycle.Quarterly,
+            Amount: 999m);
+
+        await handler.Handle(command, CancellationToken.None);
+
+        capturedSubscription.Should().NotBeNull();
+        capturedSubscription!.Amount.Amount.Should().Be(15m);
+    }
+
+    [Fact]
     public async Task Handle_ShouldCreateSubscriptionWithTrial_WhenTrialDaysProvided()
     {
         // Arrange
