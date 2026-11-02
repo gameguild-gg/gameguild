@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Moq;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Infrastructure;
@@ -7,7 +8,11 @@ internal static class PersistedAuthenticationSessions
 {
     public static void Configure(Mock<ISessionManagementService> sessions)
     {
-        var stored = new Dictionary<Guid, UserSession>();
+        // ConcurrentDictionary: the concurrent sign-in race tests drive several
+        // CreateSessionAsync calls in parallel through this store; a plain
+        // Dictionary corrupts under concurrent writes, and the escaping exception
+        // surfaces as the generic "Authentication failed" SystemError path.
+        var stored = new ConcurrentDictionary<Guid, UserSession>();
         sessions.Setup(value => value.CreateSessionAsync(
                 It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
