@@ -171,16 +171,17 @@ flowchart TD
         REF["token rotation detects replay<br/>Services LocalAuthService.cs L771 L881 L898"] --> RLR["RefreshTokenLifecycleRecorder RecordMutationAsync<br/>must share ambient transaction<br/>Core Security RefreshTokenLifecycleRecorder.cs L32-44"]
         RLR --> OB3[("outbox_messages<br/>RefreshTokenReplayContainedV1<br/>Core Security RefreshTokenLifecycleRecorder.cs L44")]
     end
-    OB1 --> W["OutboxBackgroundService every 2 s<br/>Core Eventing OutboxBackgroundService.cs L20"]
-    OB2 --> W
-    OB3 --> W
+    OB1 --> SUBTITLE
+    OB2 --> SUBTITLE
+    OB3 --> SUBTITLE
+    SUBTITLE{{"DURABILITY BOUNDARY<br/>outbox row commits with or near the<br/>sign-in transaction - worker survives crashes"}}
+    SUBTITLE --> W["OutboxBackgroundService every 2 s<br/>Core Eventing OutboxBackgroundService.cs L20"]
     W --> D["OutboxDispatcher with inbox receipts<br/>Core Eventing OutboxDispatcher.cs L242-343"]
     D --> NLH["NewLoginAlertHandler<br/>Core Security NewLoginAlertHandler.cs L33<br/>opt-in gated default off - issue 278"]
     D --> SLH["SuspiciousLoginAlertHandler<br/>urgent owner alert email<br/>Core Security SuspiciousLoginAlertHandler.cs L22-53"]
     D --> RVK["RiskEventSessionRevocationHandler<br/>Core Security RiskEventSessionRevocationHandler.cs L52"]
     D --> RTH["RefreshTokenReplayAlertHandler<br/>critical owner notification row<br/>Core Security RefreshTokenReplayAlertHandler.cs L14-36"]
     RVK --> RVT["RevokeAllUserTokensAsync plus session revoke<br/>plus audit row<br/>Core Security RiskEventSessionRevocationHandler.cs L103 L117"]
-    SUBTITLE{{"DURABILITY BOUNDARY<br/>outbox row commit precedes all consumer nodes"}}
     TOKREV["token revocation consumption path<br/>TokenRevocationMiddleware checks jti deny-list<br/>Middleware TokenRevocationMiddleware.cs L56-63"]
     LOGOUT["LogoutHandler only producer of a jti entry<br/>Handlers LogoutHandler.cs L73<br/>RevokeAllUserTokens path at L41"]
     LOGOUT --> TOKREV
@@ -256,7 +257,7 @@ Durable path (what every `Send*` handler and host-side alert handler uses): the 
 flowchart TD
     subgraph DURABLE["Durable notification queue path"]
         P1["email code magic link password reset<br/>email verification welcome email<br/>Handlers EmailCodeCommandHandlers.cs L26<br/>Handlers MagicLinkCommandHandlers.cs L29<br/>Handlers PasswordCommandHandlers.cs L68<br/>Services EmailVerificationService.cs L84<br/>Handlers SendWelcomeEmailHandler.cs L44"] --> SEND["INotificationService SendAsync<br/>Notifications Services NotificationService.cs L27"]
-        SEND --> ROW{{"DURABILITY BOUNDARY<br/>Notification row persisted in the<br/>same command transaction<br/>handler throws if not queued"}} 
+        SEND --> ROW{{"DURABILITY BOUNDARY<br/>Notification row persisted in the<br/>same command transaction<br/>handler throws if not queued"}}
         ROW --> ND["Notifications table row<br/>type EmailCode MagicLink PasswordReset<br/>EmailVerification Onboarding Security<br/>SmsMfaCode PushMfaChallenge"]
         ND --> EMD["EmailDispatcherBackgroundService drains<br/>Notifications Services Email EmailDispatcherBackgroundService.cs"]
         EMD --> REN["IEmailRenderer registry renders<br/>auth renderers registered at<br/>Extensions DependencyInjection.cs L53-57"]
