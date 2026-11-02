@@ -32,8 +32,12 @@ public sealed class BlogPostConfiguration : IEntityTypeConfiguration<BlogPost>
 
         // Slug uniqueness is per primary author — no global slug index.
         builder.HasIndex(post => new { post.PrimaryAuthorId, post.Slug }).IsUnique();
-        builder.HasIndex(post => new { post.PrimaryAuthorId, post.Status, post.PublishedAt });
-        builder.HasIndex(post => new { post.Status, post.PublishedAt });
+        // Issue #1157: author feeds and the public listing only see non-deleted posts;
+        // the partial indexes keep soft-deleted posts out of those hot paths entirely.
+        builder.HasIndex(post => new { post.PrimaryAuthorId, post.Status, post.PublishedAt })
+            .HasFilter("\"DeletedAt\" IS NULL");
+        builder.HasIndex(post => new { post.Status, post.PublishedAt })
+            .HasFilter("\"DeletedAt\" IS NULL");
     }
 }
 

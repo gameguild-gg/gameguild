@@ -17,5 +17,10 @@ public class ProgramConfiguration : IEntityTypeConfiguration<Program> {
     builder.Property(p => p.PassingScore)
       .IsRequired()
       .HasDefaultValue(PercentValue.FromUnits(6000));
+
+    // Issue #1157: the public catalog lists programs by status on every browse; the
+    // partial index keeps soft-deleted programs out of that hot path entirely.
+    builder.HasIndex(p => p.Status)
+      .HasFilter("\"DeletedAt\" IS NULL");
   }
 }

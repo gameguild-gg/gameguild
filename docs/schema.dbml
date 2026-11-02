@@ -185,6 +185,36 @@ Table "account_credit_invoice_settlements" {
   }
 }
 
+Table "achievements" {
+  "Id" uuid [not null]
+  "Name" "character varying(200)" [not null]
+  "Description" "character varying(2000)"
+  "Category" "character varying(100)" [not null]
+  "Type" "character varying(100)" [not null]
+  "IconUrl" "character varying(500)"
+  "Color" "character varying(50)"
+  "Points" integer [not null]
+  "IsActive" boolean [not null]
+  "IsSecret" boolean [not null]
+  "IsRepeatable" boolean [not null]
+  "Conditions" jsonb
+  "DisplayOrder" integer [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_achievements"]
+    Category [name: "IX_achievements_Category"]
+    (Category, IsActive) [name: "IX_achievements_Category_IsActive"]
+    IsActive [name: "IX_achievements_IsActive"]
+    TenantId [name: "IX_achievements_TenantId"]
+    Type [name: "IX_achievements_Type"]
+  }
+}
+
 Table "ai_authoring_conversations" {
   "Id" uuid [not null]
   "ProgramId" uuid [not null]
@@ -5202,6 +5232,81 @@ Table "promo_stacking_rules" {
   }
 }
 
+Table "rating_helpful_votes" {
+  "Id" uuid [not null]
+  "RatingId" uuid [not null]
+  "UserId" uuid [not null]
+  "IsHelpful" boolean [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_rating_helpful_votes"]
+    RatingId [name: "IX_rating_helpful_votes_RatingId"]
+    (RatingId, UserId) [unique, name: "IX_rating_helpful_votes_RatingId_UserId"]
+    UserId [name: "IX_rating_helpful_votes_UserId"]
+  }
+}
+
+Table "rating_summaries" {
+  "Id" uuid [not null]
+  "EntityId" uuid [not null]
+  "EntityType" "character varying(100)" [not null]
+  "AverageRating" numeric(3,2) [not null]
+  "TotalRatings" integer [not null]
+  "OneStar" integer [not null]
+  "TwoStar" integer [not null]
+  "ThreeStar" integer [not null]
+  "FourStar" integer [not null]
+  "FiveStar" integer [not null]
+  "TotalReviews" integer [not null]
+  "LastCalculatedAt" timestamp [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_rating_summaries"]
+    AverageRating [name: "IX_rating_summaries_AverageRating"]
+    (EntityId, EntityType) [unique, name: "IX_rating_summaries_EntityId_EntityType"]
+    TotalRatings [name: "IX_rating_summaries_TotalRatings"]
+  }
+}
+
+Table "ratings" {
+  "Id" uuid [not null]
+  "UserId" uuid [not null]
+  "EntityId" uuid [not null]
+  "EntityType" "character varying(100)" [not null]
+  "Value" integer [not null]
+  "ReviewText" "character varying(2000)"
+  "ReviewTitle" "character varying(200)"
+  "IsVerified" boolean [not null]
+  "HelpfulCount" integer [not null]
+  "ReportCount" integer [not null]
+  "ModerationStatus" "character varying(20)" [not null]
+  "EditedAt" timestamp
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_ratings"]
+    CreatedAt [name: "IX_ratings_CreatedAt"]
+    (EntityId, EntityType) [name: "IX_ratings_EntityId_EntityType"]
+    (EntityId, EntityType, UserId) [unique, name: "IX_ratings_EntityId_EntityType_UserId"]
+    UserId [name: "IX_ratings_UserId"]
+    Value [name: "IX_ratings_Value"]
+  }
+}
+
 Table "referrals" {
   "Id" uuid [not null]
   "TenantId" uuid [not null]
@@ -6647,6 +6752,7 @@ Table "Users" {
   "Name" "character varying(100)" [not null]
   "PasswordHash" "character varying(512)"
   "PasswordHistoryHashes" "character varying(2600)"
+  "PasswordChangedAt" timestamp
   "IsEmailVerified" boolean [not null]
   "LastLoginAt" timestamp
   "IsActive" boolean [not null]
@@ -6869,6 +6975,104 @@ Table "account_credit_transactions" {
     IdempotencyKey [name: "IX_account_credit_transactions_IdempotencyKey"]
     ReferenceId [name: "IX_account_credit_transactions_ReferenceId"]
     (TenantId, UserId, CreatedAt) [name: "IX_account_credit_transactions_TenantId_UserId_CreatedAt"]
+  }
+}
+
+Table "achievement_levels" {
+  "Id" uuid [not null]
+  "AchievementId" uuid [not null]
+  "Level" integer [not null]
+  "Name" "character varying(100)" [not null]
+  "Description" "character varying(300)"
+  "RequiredProgress" integer [not null]
+  "Points" integer [not null]
+  "IconUrl" "character varying(500)"
+  "Color" "character varying(7)"
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_achievement_levels"]
+    AchievementId [name: "IX_achievement_levels_AchievementId"]
+    (AchievementId, Level) [unique, name: "IX_achievement_levels_AchievementId_Level"]
+    Level [name: "IX_achievement_levels_Level"]
+  }
+}
+
+Table "achievement_prerequisites" {
+  "Id" uuid [not null]
+  "AchievementId" uuid [not null]
+  "PrerequisiteAchievementId" uuid [not null]
+  "RequiresCompletion" boolean [not null]
+  "MinimumLevel" integer
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_achievement_prerequisites"]
+    AchievementId [name: "IX_achievement_prerequisites_AchievementId"]
+    (AchievementId, PrerequisiteAchievementId) [unique, name: "IX_achievement_prerequisites_AchievementId_PrerequisiteAchieve~"]
+    PrerequisiteAchievementId [name: "IX_achievement_prerequisites_PrerequisiteAchievementId"]
+  }
+}
+
+Table "achievement_progress" {
+  "Id" uuid [not null]
+  "UserId" uuid [not null]
+  "AchievementId" uuid [not null]
+  "CurrentProgress" integer [not null]
+  "TargetProgress" integer [not null]
+  "LastUpdated" timestamp [not null]
+  "IsCompleted" boolean [not null]
+  "Context" jsonb
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_achievement_progress"]
+    AchievementId [name: "IX_achievement_progress_AchievementId"]
+    TenantId [name: "IX_achievement_progress_TenantId"]
+    UserId [name: "IX_achievement_progress_UserId"]
+    (UserId, AchievementId) [unique, name: "IX_achievement_progress_UserId_AchievementId"]
+  }
+}
+
+Table "user_achievements" {
+  "Id" uuid [not null]
+  "UserId" uuid [not null]
+  "AchievementId" uuid [not null]
+  "EarnedAt" timestamp [not null]
+  "Level" integer
+  "Progress" integer [not null]
+  "MaxProgress" integer [not null]
+  "IsCompleted" boolean [not null]
+  "IsNotified" boolean [not null]
+  "Context" jsonb
+  "PointsEarned" integer [not null]
+  "EarnCount" integer [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_user_achievements"]
+    AchievementId [name: "IX_user_achievements_AchievementId"]
+    EarnedAt [name: "IX_user_achievements_EarnedAt"]
+    TenantId [name: "IX_user_achievements_TenantId"]
+    UserId [name: "IX_user_achievements_UserId"]
+    (UserId, AchievementId) [name: "IX_user_achievements_UserId_AchievementId"]
+    (UserId, IsNotified) [name: "IX_user_achievements_UserId_IsNotified"]
   }
 }
 
@@ -9593,6 +9797,7 @@ Table "TenantMembers" {
 
   Indexes {
     Id [pk, name: "PK_TenantMembers"]
+    UserId [name: "ix_tenant_members_user_id_active"]
     JoinedAt [name: "IX_TenantMembers_JoinedAt"]
     ParentMemberId [name: "IX_TenantMembers_ParentMemberId"]
     (TenantId, IsActive) [name: "IX_TenantMembers_TenantId_IsActive"]
@@ -12694,6 +12899,8 @@ Table "PeerReviewClaims" {
 
 Ref "FK_DynamicRole_DynamicRole_ParentRoleId":"DynamicRole"."Id" ?<? "DynamicRole"."ParentRoleId" [delete: restrict]
 
+Ref "FK_Ledgers_ParentLedger":"finance"."Ledgers"."Id" ?<? "finance"."Ledgers"."ParentLedgerId" [delete: restrict]
+
 Ref "FK_pages_pages_ParentPageId":"pages"."Id" ?<? "pages"."ParentPageId" [delete: restrict]
 
 Ref "FK_product_categories_product_categories_ParentCategoryId":"product_categories"."Id" ?<? "product_categories"."ParentCategoryId" [delete: restrict]
@@ -12705,6 +12912,16 @@ Ref "FK_AcademicOutboxDeliveries_AcademicOutboxMessages_OutboxMessa~":"AcademicO
 Ref "FK_AccessReviewItem_AccessReviewCampaign_CampaignId":"AccessReviewCampaign"."Id" <? "AccessReviewItem"."CampaignId" [delete: cascade]
 
 Ref "FK_account_credit_transactions_account_credit_grants_GrantId":"account_credit_grants"."Id" <? "account_credit_transactions"."GrantId" [delete: restrict]
+
+Ref "FK_achievement_levels_achievements_AchievementId":"achievements"."Id" <? "achievement_levels"."AchievementId" [delete: cascade]
+
+Ref "FK_achievement_prerequisites_achievements_AchievementId":"achievements"."Id" <? "achievement_prerequisites"."AchievementId" [delete: cascade]
+
+Ref "FK_achievement_prerequisites_achievements_PrerequisiteAchievem~":"achievements"."Id" <? "achievement_prerequisites"."PrerequisiteAchievementId" [delete: cascade]
+
+Ref "FK_achievement_progress_achievements_AchievementId":"achievements"."Id" <? "achievement_progress"."AchievementId" [delete: cascade]
+
+Ref "FK_user_achievements_achievements_AchievementId":"achievements"."Id" <? "user_achievements"."AchievementId" [delete: cascade]
 
 Ref "FK_analytics_dashboard_widgets_analytics_dashboards_DashboardId":"analytics_dashboards"."Id" <? "analytics_dashboard_widgets"."DashboardId" [delete: cascade]
 
@@ -12858,6 +13075,18 @@ Ref "FK_learning_cohort_schedules_learning_cohorts_CohortId":"learning_cohorts".
 
 Ref "FK_learning_path_courses_learning_paths_LearningPathId":"learning_paths"."Id" <? "learning_path_courses"."LearningPathId" [delete: cascade]
 
+Ref "FK_LedgerClosures_AncestorLedger":"finance"."Ledgers"."Id" <? "finance"."LedgerClosures"."AncestorId" [delete: cascade]
+
+Ref "FK_LedgerClosures_DescendantLedger":"finance"."Ledgers"."Id" <? "finance"."LedgerClosures"."DescendantId"
+
+Ref "FK_LedgerEntries_Ledger":"finance"."Ledgers"."Id" <? "finance"."LedgerEntries"."LedgerId" [delete: cascade]
+
+Ref "FK_LedgerEntries_ReversedByEntry":"finance"."LedgerEntries"."Id" ?<? "finance"."LedgerEntries"."ReversedByEntryId" [delete: set null]
+
+Ref "FK_LedgerEntries_ReversesEntry":"finance"."LedgerEntries"."Id" ?<? "finance"."LedgerEntries"."ReversesEntryId" [delete: set null]
+
+Ref "FK_LedgerEntries_TransferPair":"finance"."LedgerEntries"."Id" ?<? "finance"."LedgerEntries"."TransferPairEntryId" [delete: set null]
+
 Ref "FK_marketplace_cart_items_marketplace_carts_CartId":"marketplace_carts"."Id" <? "marketplace_cart_items"."CartId" [delete: cascade]
 
 Ref "FK_Notifications_NotificationTemplates_TemplateId":"NotificationTemplates"."Id" ?<? "Notifications"."TemplateId" [delete: set null]
@@ -12891,8 +13120,6 @@ Ref "FK_team_invitations_project_collaboration_teams_TeamId":"project_collaborat
 Ref "FK_sla_impact_analyses_resource_quotas_ResourceQuotaId":"resources"."resource_quotas"."Id" <? "gameguild.resources"."sla_impact_analyses"."ResourceQuotaId" [delete: restrict]
 
 Ref "FK_revenue_reconciliation_discrepancies_revenue_reconciliation~":"revenue_reconciliation_runs"."Id" <? "revenue_reconciliation_discrepancies"."RunId" [delete: cascade]
-
-Ref "FK_user_role_role_role_id":"gameguild.authentication"."role"."id" <? "gameguild.authentication"."user_role"."role_id" [delete: cascade]
 
 Ref "FK_AuditExportHistories_ScheduledAuditExports_ScheduledExportId":"ScheduledAuditExports"."Id" <? "AuditExportHistories"."ScheduledExportId" [delete: cascade]
 
@@ -12942,9 +13169,17 @@ Ref "FK_testing_lab_settings_Tenants_TenantId":"Tenants"."Id" ?<? "testing_lab_s
 
 Ref "FK_UsageTracking_Tenants_TenantId":"Tenants"."Id" <? "UsageTracking"."TenantId" [delete: cascade]
 
-Ref "FK_totp_replay_state_user_mfa_configuration_configuration_id":"gameguild.authentication"."user_mfa_configuration"."id" <? "gameguild.authentication"."totp_replay_state"."configuration_id" [delete: cascade]
-
 Ref "FK_wallet_transactions_user_wallets_WalletId":"user_wallets"."Id" <? "wallet_transactions"."WalletId" [delete: cascade]
+
+Ref "FK_api_keys_Users_user_id":"Users"."Id" <? "gameguild.authentication"."api_keys"."user_id" [delete: restrict]
+
+Ref "FK_blockchaincertificateanchor_Users_UserId":"Users"."Id" <? "gameguild.authentication"."blockchaincertificateanchor"."UserId" [delete: restrict]
+
+Ref "FK_externallogin_Users_UserId":"Users"."Id" <? "gameguild.authentication"."externallogin"."UserId" [delete: restrict]
+
+Ref "FK_identityverification_Users_UserId":"Users"."Id" <? "gameguild.authentication"."identityverification"."UserId" [delete: restrict]
+
+Ref "FK_mfaattempt_Users_UserId":"Users"."Id" <? "gameguild.authentication"."mfaattempt"."UserId" [delete: restrict]
 
 Ref "FK_orders_Users_UserId":"Users"."Id" <? "orders"."UserId" [delete: cascade]
 
@@ -12990,6 +13225,14 @@ Ref "FK_testing_event_template_revisions_testing_event_templates_Te~":"testing_e
 
 Ref "FK_testing_events_Users_ManagerUserId":"Users"."Id" <? "testing_events"."ManagerUserId" [delete: restrict]
 
+Ref "FK_trusteddevice_Users_UserId":"Users"."Id" <? "gameguild.authentication"."trusteddevice"."UserId" [delete: restrict]
+
+Ref "FK_user_mfa_configuration_Users_user_id":"Users"."Id" <? "gameguild.authentication"."user_mfa_configuration"."user_id" [delete: restrict]
+
+Ref "FK_user_role_Users_user_id":"Users"."Id" <? "gameguild.authentication"."user_role"."user_id" [delete: restrict]
+
+Ref "FK_user_role_role_role_id":"gameguild.authentication"."role"."id" <? "gameguild.authentication"."user_role"."role_id" [delete: cascade]
+
 Ref "FK_UserMetadata_Users_UserId":"Users"."Id" <? "UserMetadata"."UserId" [delete: cascade]
 
 Ref "FK_UserNotifications_Users_UserId":"Users"."Id" <? "UserNotifications"."UserId" [delete: cascade]
@@ -12998,11 +13241,9 @@ Ref "FK_UserPreferences_Users_UserId":"Users"."Id" <? "UserPreferences"."UserId"
 
 Ref "FK_UserProfiles_Users_UserId":"Users"."Id" <? "UserProfiles"."UserId" [delete: cascade]
 
-Ref "FK_refreshtoken_refreshtoken_ParentTokenId":"gameguild.authentication"."refreshtoken"."id" ?<? "gameguild.authentication"."refreshtoken"."ParentTokenId" [delete: restrict]
+Ref "FK_usersession_Users_UserId":"Users"."Id" <? "gameguild.authentication"."usersession"."UserId" [delete: restrict]
 
-Ref "FK_refreshtoken_usersession_SessionId":"gameguild.authentication"."usersession"."id" ?<? "gameguild.authentication"."refreshtoken"."SessionId" [delete: restrict]
-
-Ref "FK_session_mfa_evidence_usersession_session_id":"gameguild.authentication"."usersession"."id" <? "gameguild.authentication"."session_mfa_evidence"."session_id" [delete: cascade]
+Ref "FK_UserWebAuthnCredentials_Users_UserId":"Users"."Id" <? "auth"."UserWebAuthnCredentials"."UserId" [delete: restrict]
 
 Ref "FK_WhatsAppBroadcastRecipients_WhatsAppBroadcasts_BroadcastId":"WhatsAppBroadcasts"."Id" <? "WhatsAppBroadcastRecipients"."BroadcastId" [delete: cascade]
 
@@ -13231,6 +13472,16 @@ Ref "FK_testing_committee_members_testing_events_EventId":"testing_events"."Id" 
 Ref "FK_testing_event_slots_testing_events_EventId":"testing_events"."Id" <? "testing_event_slots"."EventId" [delete: cascade]
 
 Ref "FK_testing_event_slots_testing_locations_LocationId":"testing_locations"."Id" ?<? "testing_event_slots"."LocationId" [delete: restrict]
+
+Ref "FK_totp_replay_state_user_mfa_configuration_configuration_id":"gameguild.authentication"."user_mfa_configuration"."id" <? "gameguild.authentication"."totp_replay_state"."configuration_id" [delete: cascade]
+
+Ref "FK_refreshtoken_Users_UserId":"Users"."Id" <? "gameguild.authentication"."refreshtoken"."UserId" [delete: restrict]
+
+Ref "FK_refreshtoken_refreshtoken_ParentTokenId":"gameguild.authentication"."refreshtoken"."id" ?<? "gameguild.authentication"."refreshtoken"."ParentTokenId" [delete: restrict]
+
+Ref "FK_refreshtoken_usersession_SessionId":"gameguild.authentication"."usersession"."id" ?<? "gameguild.authentication"."refreshtoken"."SessionId" [delete: restrict]
+
+Ref "FK_session_mfa_evidence_usersession_session_id":"gameguild.authentication"."usersession"."id" <? "gameguild.authentication"."session_mfa_evidence"."session_id" [delete: cascade]
 
 Ref "FK_economy_journal_lines_economy_accounts_AccountId":"economy_accounts"."Id" <? "economy_journal_lines"."AccountId" [delete: restrict]
 
@@ -13531,39 +13782,6 @@ Table "gameguild.authentication"."adaptivebehaviorbaseline" {
   }
 }
 
-Table "gameguild.authentication"."api_keys" {
-  "id" uuid [not null]
-  "user_id" uuid [not null]
-  "name" "character varying(100)" [not null]
-  "key_hash" "character varying(64)" [not null]
-  "key_prefix" "character varying(20)" [not null]
-  "scopes" "character varying(1000)" [not null]
-  "is_active" boolean [not null, default: true]
-  "expires_at" timestamp
-  "last_used_at" timestamp
-  "usage_count" bigint [not null, default: 0]
-  "ip_whitelist" "character varying(100)"
-  "revoked_at" timestamp
-  "revocation_reason" "character varying(200)"
-  "replaces_key_id" uuid
-  "rotation_grace_ends_at" timestamp
-  "version" integer [not null]
-  "created_at" timestamp [not null]
-  "updated_at" timestamp [not null]
-  "deleted_at" timestamp
-  "tenant_id" uuid
-
-  Indexes {
-    id [pk, name: "PK_api_keys"]
-    expires_at [name: "ix_api_keys_expires_at"]
-    is_active [name: "ix_api_keys_is_active"]
-    key_hash [unique, name: "ix_api_keys_key_hash"]
-    replaces_key_id [name: "ix_api_keys_replaces_key_id"]
-    tenant_id [name: "ix_api_keys_tenant_id"]
-    user_id [name: "ix_api_keys_user_id"]
-  }
-}
-
 Table "gameguild.authentication"."authentication_flow_states" {
   "flow_id" uuid [not null]
   "user_id" uuid
@@ -13622,31 +13840,6 @@ Table "gameguild.authentication"."authenticationattempt" {
   }
 }
 
-Table "gameguild.authentication"."blockchaincertificateanchor" {
-  "id" uuid [not null]
-  "UserId" uuid [not null]
-  "CertificateType" "character varying(128)" [not null]
-  "CertificateHash" "character varying(128)" [not null]
-  "CertificateData" "character varying(4000)" [not null]
-  "TransactionHash" "character varying(128)" [not null]
-  "BlockchainNetwork" "character varying(64)" [not null]
-  "BlockNumber" bigint
-  "AnchoredAt" timestamp [not null]
-  "IsRevoked" boolean [not null]
-  "RevokedAt" timestamp
-  "RevocationReason" "character varying(1000)"
-  "RevocationTransactionHash" "character varying(128)"
-  "ExpiresAt" timestamp
-  "Metadata" "character varying(2000)"
-
-  Indexes {
-    id [pk, name: "PK_blockchaincertificateanchor"]
-    CertificateHash [unique, name: "ix_blockchaincertificateanchor_certificate_hash"]
-    TransactionHash [name: "ix_blockchaincertificateanchor_transaction_hash"]
-    UserId [name: "ix_blockchaincertificateanchor_user_id"]
-  }
-}
-
 Table "gameguild.authentication"."contenttypepermission" {
   "id" uuid [not null]
   "ContentTypeName" "character varying(256)" [not null]
@@ -13677,24 +13870,6 @@ Table "gameguild.authentication"."contenttypepermission" {
   }
 }
 
-Table "gameguild.authentication"."externallogin" {
-  "id" uuid [not null]
-  "UserId" uuid [not null]
-  "Provider" "character varying(64)" [not null]
-  "ProviderKey" "character varying(256)" [not null]
-  "CreatedAt" timestamp [not null]
-  "UpdatedAt" timestamp [not null]
-  "GrantedScopes" "character varying(1024)"
-  "ConsentedAt" timestamp
-  "ConsentVersion" integer [not null, default: 0]
-
-  Indexes {
-    id [pk, name: "PK_externallogin"]
-    (Provider, ProviderKey) [unique, name: "ix_externallogin_provider_provider_key"]
-    UserId [name: "ix_externallogin_user_id"]
-  }
-}
-
 Table "gameguild.authentication"."genericresourcepermission" {
   "id" uuid [not null]
   "Version" integer [not null]
@@ -13719,32 +13894,6 @@ Table "gameguild.authentication"."genericresourcepermission" {
     TenantId [name: "ix_genericresourcepermission_tenant_id"]
     (TenantId, ResourceType, ResourceId) [name: "ix_genericresourcepermission_tenant_resource"]
     UserId [name: "ix_genericresourcepermission_user_id"]
-  }
-}
-
-Table "gameguild.authentication"."identityverification" {
-  "id" uuid [not null]
-  "UserId" uuid [not null]
-  "VerificationType" "character varying(128)" [not null]
-  "Status" "character varying(64)" [not null]
-  "VerifiedValue" "character varying(256)" [not null]
-  "InitiatedAt" timestamp [not null]
-  "CompletedAt" timestamp
-  "ExpiresAt" timestamp
-  "VerificationProvider" "character varying(256)"
-  "ExternalVerificationId" "character varying(256)"
-  "ConfidenceScore" doubleprecision
-  "Notes" "character varying(1000)"
-  "ReviewedBy" uuid
-  "ReviewedAt" timestamp
-  "DocumentIds" "character varying(2000)"
-  "Metadata" "character varying(2000)"
-
-  Indexes {
-    id [pk, name: "PK_identityverification"]
-    Status [name: "ix_identityverification_status"]
-    UserId [name: "ix_identityverification_user_id"]
-    (UserId, VerificationType) [name: "ix_identityverification_user_type"]
   }
 }
 
@@ -13784,31 +13933,6 @@ OR (request_token_hash ~ '^[a-f0-9]{64}$')` [name: 'ck_mfa_recovery_tokens']
     id [pk, name: "PK_mfa_recovery_requests"]
     (tenant_id, status) [name: "ix_mfa_recovery_requests_tenant_status"]
     user_id [unique, name: "ux_mfa_recovery_requests_active_user"]
-  }
-}
-
-Table "gameguild.authentication"."mfaattempt" {
-  "id" uuid [not null]
-  "UserId" uuid [not null]
-  "Method" "character varying(50)" [not null]
-  "IsSuccessful" boolean [not null]
-  "FailureReason" "character varying(500)"
-  "IpAddress" "character varying(45)" [not null]
-  "UserAgent" "character varying(500)" [not null]
-  "AttemptedAt" timestamp [not null]
-  "ProcessingTimeMs" integer [not null]
-  "DeviceFingerprint" "character varying(256)"
-  "SessionId" uuid
-  "TenantId" uuid
-  "Metadata" "character varying(2000)"
-  "CreatedAt" timestamp [not null]
-  "UpdatedAt" timestamp [not null]
-
-  Indexes {
-    id [pk, name: "PK_mfaattempt"]
-    AttemptedAt [name: "ix_mfaattempt_attempted_at"]
-    TenantId [name: "ix_mfaattempt_tenant_id"]
-    UserId [name: "ix_mfaattempt_user_id"]
   }
 }
 
@@ -14072,6 +14196,133 @@ Table "gameguild.authentication"."trusted_contacts" {
   }
 }
 
+Table "gameguild.authentication"."api_keys" {
+  "id" uuid [not null]
+  "user_id" uuid [not null]
+  "name" "character varying(100)" [not null]
+  "key_hash" "character varying(64)" [not null]
+  "key_prefix" "character varying(20)" [not null]
+  "scopes" "character varying(1000)" [not null]
+  "is_active" boolean [not null, default: true]
+  "expires_at" timestamp
+  "last_used_at" timestamp
+  "usage_count" bigint [not null, default: 0]
+  "ip_whitelist" "character varying(100)"
+  "revoked_at" timestamp
+  "revocation_reason" "character varying(200)"
+  "replaces_key_id" uuid
+  "rotation_grace_ends_at" timestamp
+  "version" integer [not null]
+  "created_at" timestamp [not null]
+  "updated_at" timestamp [not null]
+  "deleted_at" timestamp
+  "tenant_id" uuid
+
+  Indexes {
+    id [pk, name: "PK_api_keys"]
+    expires_at [name: "ix_api_keys_expires_at"]
+    is_active [name: "ix_api_keys_is_active"]
+    key_hash [unique, name: "ix_api_keys_key_hash"]
+    replaces_key_id [name: "ix_api_keys_replaces_key_id"]
+    tenant_id [name: "ix_api_keys_tenant_id"]
+    user_id [name: "ix_api_keys_user_id"]
+  }
+}
+
+Table "gameguild.authentication"."blockchaincertificateanchor" {
+  "id" uuid [not null]
+  "UserId" uuid [not null]
+  "CertificateType" "character varying(128)" [not null]
+  "CertificateHash" "character varying(128)" [not null]
+  "CertificateData" "character varying(4000)" [not null]
+  "TransactionHash" "character varying(128)" [not null]
+  "BlockchainNetwork" "character varying(64)" [not null]
+  "BlockNumber" bigint
+  "AnchoredAt" timestamp [not null]
+  "IsRevoked" boolean [not null]
+  "RevokedAt" timestamp
+  "RevocationReason" "character varying(1000)"
+  "RevocationTransactionHash" "character varying(128)"
+  "ExpiresAt" timestamp
+  "Metadata" "character varying(2000)"
+
+  Indexes {
+    id [pk, name: "PK_blockchaincertificateanchor"]
+    CertificateHash [unique, name: "ix_blockchaincertificateanchor_certificate_hash"]
+    TransactionHash [name: "ix_blockchaincertificateanchor_transaction_hash"]
+    UserId [name: "ix_blockchaincertificateanchor_user_id"]
+  }
+}
+
+Table "gameguild.authentication"."externallogin" {
+  "id" uuid [not null]
+  "UserId" uuid [not null]
+  "Provider" "character varying(64)" [not null]
+  "ProviderKey" "character varying(256)" [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "GrantedScopes" "character varying(1024)"
+  "ConsentedAt" timestamp
+  "ConsentVersion" integer [not null, default: 0]
+
+  Indexes {
+    id [pk, name: "PK_externallogin"]
+    (Provider, ProviderKey) [unique, name: "ix_externallogin_provider_provider_key"]
+    UserId [name: "ix_externallogin_user_id"]
+  }
+}
+
+Table "gameguild.authentication"."identityverification" {
+  "id" uuid [not null]
+  "UserId" uuid [not null]
+  "VerificationType" "character varying(128)" [not null]
+  "Status" "character varying(64)" [not null]
+  "VerifiedValue" "character varying(256)" [not null]
+  "InitiatedAt" timestamp [not null]
+  "CompletedAt" timestamp
+  "ExpiresAt" timestamp
+  "VerificationProvider" "character varying(256)"
+  "ExternalVerificationId" "character varying(256)"
+  "ConfidenceScore" doubleprecision
+  "Notes" "character varying(1000)"
+  "ReviewedBy" uuid
+  "ReviewedAt" timestamp
+  "DocumentIds" "character varying(2000)"
+  "Metadata" "character varying(2000)"
+
+  Indexes {
+    id [pk, name: "PK_identityverification"]
+    Status [name: "ix_identityverification_status"]
+    UserId [name: "ix_identityverification_user_id"]
+    (UserId, VerificationType) [name: "ix_identityverification_user_type"]
+  }
+}
+
+Table "gameguild.authentication"."mfaattempt" {
+  "id" uuid [not null]
+  "UserId" uuid [not null]
+  "Method" "character varying(50)" [not null]
+  "IsSuccessful" boolean [not null]
+  "FailureReason" "character varying(500)"
+  "IpAddress" "character varying(45)" [not null]
+  "UserAgent" "character varying(500)" [not null]
+  "AttemptedAt" timestamp [not null]
+  "ProcessingTimeMs" integer [not null]
+  "DeviceFingerprint" "character varying(256)"
+  "SessionId" uuid
+  "TenantId" uuid
+  "Metadata" "character varying(2000)"
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+
+  Indexes {
+    id [pk, name: "PK_mfaattempt"]
+    AttemptedAt [name: "ix_mfaattempt_attempted_at"]
+    TenantId [name: "ix_mfaattempt_tenant_id"]
+    UserId [name: "ix_mfaattempt_user_id"]
+  }
+}
+
 Table "gameguild.authentication"."trusteddevice" {
   "id" uuid [not null]
   "UserId" uuid [not null]
@@ -14118,6 +14369,29 @@ Table "gameguild.authentication"."user_mfa_configuration" {
   }
 }
 
+Table "gameguild.authentication"."user_role" {
+  "id" uuid [not null]
+  "user_id" uuid [not null]
+  "role_id" uuid [not null]
+  "assigned_by" uuid
+  "assigned_at" timestamp [not null]
+  "expires_at" timestamp
+  "Version" integer [not null]
+  "created_at" timestamp [not null]
+  "updated_at" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    id [pk, name: "PK_user_role"]
+    assigned_by [name: "idx_user_role_assigned_by"]
+    expires_at [name: "idx_user_role_expires_at"]
+    role_id [name: "idx_user_role_role_id"]
+    user_id [name: "idx_user_role_user_id"]
+    (user_id, role_id) [unique, name: "idx_user_role_user_id_role_id"]
+  }
+}
+
 Table "gameguild.authentication"."usersession" {
   "id" uuid [not null]
   "UserId" uuid [not null]
@@ -14143,29 +14417,6 @@ Table "gameguild.authentication"."usersession" {
     ExpiresAt [name: "ix_usersession_expires_at"]
     RefreshToken [unique, name: "ix_usersession_refresh_token"]
     UserId [name: "ix_usersession_user_id"]
-  }
-}
-
-Table "gameguild.authentication"."user_role" {
-  "id" uuid [not null]
-  "user_id" uuid [not null]
-  "role_id" uuid [not null]
-  "assigned_by" uuid
-  "assigned_at" timestamp [not null]
-  "expires_at" timestamp
-  "Version" integer [not null]
-  "created_at" timestamp [not null]
-  "updated_at" timestamp [not null]
-  "DeletedAt" timestamp
-  "TenantId" uuid
-
-  Indexes {
-    id [pk, name: "PK_user_role"]
-    assigned_by [name: "idx_user_role_assigned_by"]
-    expires_at [name: "idx_user_role_expires_at"]
-    role_id [name: "idx_user_role_role_id"]
-    user_id [name: "idx_user_role_user_id"]
-    (user_id, role_id) [unique, name: "idx_user_role_user_id_role_id"]
   }
 }
 
@@ -14817,6 +15068,118 @@ Table "gameguild.audit"."entity_change_audit_records" {
     (EntityName, KeyId, OccurredAtUtc) [name: "ix_entity_change_audit_entity"]
     (TenantId, OccurredAtUtc) [name: "ix_entity_change_audit_tenant_time"]
     OccurredAtUtc [name: "ix_entity_change_audit_time"]
+  }
+}
+
+Table "finance"."Ledgers" {
+  "Id" uuid [not null]
+  "TenantId" uuid [not null]
+  "Code" "character varying(50)" [not null]
+  "Name" "character varying(200)" [not null]
+  "Description" "character varying(1000)"
+  "Slug" "character varying(200)" [not null]
+  "Type" "character varying(50)" [not null]
+  "Status" "character varying(50)" [not null]
+  "CurrencyCode" "character varying(3)" [not null]
+  "FiscalYearStartMonth" integer [not null, default: 1]
+  "Tags" "character varying(2000)" [not null]
+  "ParentLedgerId" uuid
+  "HierarchyPath" "character varying(4000)" [not null]
+  "HierarchyDepth" integer [not null]
+  "VirtualFilterSpec" jsonb
+  "VirtualSourceLedgerIds" "uuid[]"
+  "IsShared" boolean [not null]
+  "AllowDirectEntries" boolean [not null]
+  "BudgetLimit" numeric(19,4)
+  "ProjectStartDate" date
+  "ProjectEndDate" date
+  "CachedTotalDebit" numeric [not null]
+  "CachedTotalCredit" numeric [not null]
+  "CachedNetBalance" numeric(19,4) [not null]
+  "CachedEntryCount" integer [not null]
+  "StatsCalculatedAt" timestamp
+  "CreatedByUserId" uuid [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "UpdatedByUserId" uuid
+  "DeletedAt" timestamp
+  "RowVersion" bigint [not null]
+
+  Indexes {
+    Id [pk, name: "PK_Ledgers"]
+    ParentLedgerId [name: "IX_Ledgers_ParentLedgerId"]
+    TenantId [name: "IX_Ledgers_TenantId"]
+    (TenantId, Code) [unique, name: "IX_Ledgers_TenantId_Code"]
+    (TenantId, Slug) [unique, name: "IX_Ledgers_TenantId_Slug"]
+    (TenantId, Status) [name: "IX_Ledgers_TenantId_Status"]
+    (TenantId, Type) [name: "IX_Ledgers_TenantId_Type"]
+  }
+}
+
+Table "finance"."LedgerClosures" {
+  "Id" uuid [not null]
+  "AncestorId" uuid [not null]
+  "DescendantId" uuid [not null]
+  "Depth" integer [not null]
+  "TenantId" uuid [not null]
+
+  Indexes {
+    Id [pk, name: "PK_LedgerClosures"]
+    (AncestorId, Depth) [name: "IX_LedgerClosures_Ancestor_Depth"]
+    (AncestorId, DescendantId) [unique, name: "IX_LedgerClosures_Ancestor_Descendant"]
+    (DescendantId, Depth) [name: "IX_LedgerClosures_Descendant_Depth"]
+    TenantId [name: "IX_LedgerClosures_TenantId"]
+    (TenantId, AncestorId) [name: "IX_LedgerClosures_TenantId_Ancestor"]
+  }
+}
+
+Table "finance"."LedgerEntries" {
+  "Id" uuid [not null]
+  "TenantId" uuid [not null]
+  "ReferenceNumber" "character varying(100)" [not null]
+  "ExternalReferenceId" "character varying(200)"
+  "LedgerId" uuid [not null]
+  "ParentLedgerIds" jsonb [not null]
+  "LedgerPath" "character varying(500)" [not null]
+  "Type" "character varying(20)" [not null]
+  "Status" "character varying(20)" [not null]
+  "Category" "character varying(50)" [not null]
+  "Amount" numeric(19,4) [not null]
+  "CurrencyCode" "character varying(3)" [not null]
+  "OriginalAmount" numeric(19,4)
+  "OriginalCurrencyCode" "character varying(3)"
+  "ExchangeRate" numeric(19,10)
+  "TransactionDate" date [not null]
+  "PostingDate" date [not null]
+  "Description" "character varying(500)" [not null]
+  "Notes" "character varying(2000)"
+  "Tags" jsonb [not null]
+  "CounterpartyName" "character varying(200)"
+  "CounterpartyReference" "character varying(100)"
+  "TransferPairEntryId" uuid
+  "TransferDestinationLedgerId" uuid
+  "BudgetId" uuid
+  "BudgetCategoryCode" "character varying(50)"
+  "BudgetPeriodId" "character varying(50)"
+  "ReversesEntryId" uuid
+  "ReversedByEntryId" uuid
+  "Metadata" jsonb
+  "AttachmentIds" jsonb [not null]
+  "CreatedByUserId" uuid [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp
+  "UpdatedByUserId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_LedgerEntries"]
+    ExternalReferenceId [name: "IX_LedgerEntries_ExternalReferenceId"]
+    (LedgerId, Category) [name: "IX_LedgerEntries_LedgerId_Category"]
+    (LedgerId, Status) [name: "IX_LedgerEntries_LedgerId_Status"]
+    (LedgerId, TransactionDate) [name: "IX_LedgerEntries_LedgerId_TransactionDate"]
+    ReferenceNumber [name: "IX_LedgerEntries_ReferenceNumber"]
+    ReversedByEntryId [unique, name: "IX_LedgerEntries_ReversedByEntryId"]
+    ReversesEntryId [unique, name: "IX_LedgerEntries_ReversesEntryId"]
+    TransferPairEntryId [unique, name: "IX_LedgerEntries_TransferPairEntryId"]
   }
 }
 

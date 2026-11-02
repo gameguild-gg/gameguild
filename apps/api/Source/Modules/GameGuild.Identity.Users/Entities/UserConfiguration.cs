@@ -64,5 +64,16 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         // The original password hash guards history checks against concurrent updates.
         builder.Property(x => x.PasswordHash).IsConcurrencyToken();
         builder.Property(x => x.PasswordHistoryHashes).HasMaxLength(2600);
+        builder.Property(x => x.PasswordChangedAt);
+
+        // Issue #1157: sign-in and lookup resolve accounts by email/handle and only ever
+        // consider live accounts, so the unique indexes become partial — soft-deleting a
+        // user releases its email and handle for reuse while live rows stay unique.
+        builder.HasIndex(x => x.Email)
+            .IsUnique()
+            .HasFilter("\"DeletedAt\" IS NULL");
+        builder.HasIndex(x => x.Username)
+            .IsUnique()
+            .HasFilter("\"DeletedAt\" IS NULL");
     }
 }

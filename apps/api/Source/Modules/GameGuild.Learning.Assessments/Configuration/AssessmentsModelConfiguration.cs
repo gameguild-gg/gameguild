@@ -100,7 +100,10 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
                     "(NOT \"AllowLateSubmissions\" OR (\"DueAt\" IS NOT NULL AND \"LateSubmissionDeadline\" IS NOT NULL AND \"LateSubmissionDeadline\" > \"DueAt\" AND (\"AvailableUntil\" IS NULL OR \"LateSubmissionDeadline\" <= \"AvailableUntil\"))) AND " +
                     "(\"AllowLateSubmissions\" OR \"LateSubmissionDeadline\" IS NULL)");
             });
-            entity.HasIndex(e => e.CourseId);
+            // Issue #1157: hot course-assessment listing filters soft-deleted rows; the
+            // partial index keeps dead rows out of the index entirely.
+            entity.HasIndex(e => e.CourseId)
+                .HasFilter("\"DeletedAt\" IS NULL");
             entity.HasIndex(e => e.AssessmentGroupId);
             entity.HasIndex(e => e.Slug);
             entity.HasIndex(e => e.ContentId)

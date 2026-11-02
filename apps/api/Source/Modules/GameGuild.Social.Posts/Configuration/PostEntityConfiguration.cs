@@ -24,7 +24,12 @@ public class PostEntityConfiguration : IEntityTypeConfiguration<Post>
         builder.HasIndex(p => p.MediaAssetReferenceId);
 
         builder.HasIndex(p => p.AuthorId);
-        builder.HasIndex(p => p.TenantId);
+        // Issue #1157: author feeds list non-deleted posts; the partial indexes keep
+        // soft-deleted posts out of the hot feed paths entirely.
+        builder.HasIndex(p => p.AuthorId)
+            .HasFilter("\"DeletedAt\" IS NULL");
+        builder.HasIndex(p => p.TenantId)
+            .HasFilter("\"DeletedAt\" IS NULL");
         builder.HasIndex(p => p.Visibility);
         builder.HasIndex(p => p.IsPinned);
         builder.HasIndex(p => p.CreatedAt);
