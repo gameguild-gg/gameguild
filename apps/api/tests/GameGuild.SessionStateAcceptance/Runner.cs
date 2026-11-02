@@ -176,10 +176,10 @@ internal static class Runner
         // rotates across hosted runs while the step stays small.
         var probes = new (string Method, string Path)[]
         {
-            ("POST", "/api/v1/auth/sign-out"),
-            ("GET", "/api/v1/auth/sessions"),
-            ("GET", "/api/v1/auth/mfa/methods"),
-            ("GET", "/api/v1/auth/session-state"),
+            ("POST", "/v1/auth/sign-out"),
+            ("GET", "/v1/auth/sessions"),
+            ("GET", "/v1/auth/mfa/methods"),
+            ("GET", "/v1/auth/session-state"),
         };
         var offset = DateTimeOffset.UtcNow.DayOfYear % probes.Length;
         var sampled = new[] { probes[offset], probes[(offset + 1) % probes.Length] };
