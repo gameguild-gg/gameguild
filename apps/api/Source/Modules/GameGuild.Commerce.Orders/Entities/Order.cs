@@ -362,7 +362,10 @@ public class Order : StatefulEntity<OrderStatus>
             throw new InvalidOperationException($"Cannot release payment reservation for order in {Status} status");
         }
 
-        Status = OrderStatus.Pending;
+        // Issue #1205 G-5: go through the state machine so the transition is validated
+        // and the OrderStateChangedEvent (order_audit_logs) records the reservation
+        // release, instead of writing Status directly and bypassing the audit trail.
+        TransitionToWithReason(OrderStatus.Pending, reason: "Payment reservation released");
         Touch();
     }
 
