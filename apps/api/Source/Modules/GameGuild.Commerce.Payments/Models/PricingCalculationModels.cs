@@ -70,11 +70,18 @@ public class AppliedDiscount
 /// <param name="Quantity">Quantity consumed in the period</param>
 /// <param name="PerUnitPrice">Flat per-unit price used when no tiers are supplied</param>
 /// <param name="Tiers">Optional progressive tier bands</param>
+/// <param name="Currency">
+///     Optional ISO 4217 code the per-unit prices (flat and tiered) are denominated in.
+///     Null (default) means they are already in the calculation currency. When set and
+///     different from the calculation currency, every per-unit price is converted through the
+///     FX core before the charge is computed (issue #412 spec F).
+/// </param>
 public sealed record PricingUsageChargeInput(
     string Metric,
     decimal Quantity,
     decimal PerUnitPrice = 0,
-    IReadOnlyList<PricingUsageTier>? Tiers = null);
+    IReadOnlyList<PricingUsageTier>? Tiers = null,
+    string? Currency = null);
 
 /// <summary>
 ///     One progressive usage-pricing band (issue #417). Bands are half-open quantity

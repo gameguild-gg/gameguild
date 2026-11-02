@@ -33,6 +33,30 @@ public sealed class CurrenciesController(ISender sender) : BaseApiController
     }
 
     /// <summary>
+    ///     Suggests a display currency for the caller from the country code delivered by the
+    ///     network edge (issue #412 spec E). GDPR data-minimized: a country code is consumed,
+    ///     never an IP; nothing is stored and no geolocation database is consulted. Anonymous
+    ///     callers get the catalog mapping (enablement is checked client-side or after sign-in).
+    /// </summary>
+    /// <param name="ct">Cancellation token.</param>
+    [HttpGet("suggestion")]
+    [AllowAnonymous]
+    [EndpointSummary("Suggest a display currency from the caller's country")]
+    [EndpointDescription("Maps the edge-proxy country code to an ISO 4217 currency and respects tenant enablement; no IP or location is stored (see the privacy notice in the response).")]
+    [ProducesResponseType(typeof(CurrencySuggestionDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSuggestion(CancellationToken ct)
+    {
+        // Edge proxies inject the country of the client connection; the API consumes only
+        // the country code, never the IP (GDPR data minimization — docs/CURRENCY_FX_COMPLIANCE.md).
+        var country = Request.Headers["CF-IPCountry"].FirstOrDefault()
+            ?? Request.Headers["X-Country-Code"].FirstOrDefault()
+            ?? Request.Headers["X-Vercel-IP-Country"].FirstOrDefault();
+
+        var result = await sender.Send(new GetCurrencySuggestionQuery(country), ct).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
     ///     Enables a currency for the tenant (creates the configuration row on first use).
     /// </summary>
     /// <param name="currencyCode">ISO 4217 code.</param>

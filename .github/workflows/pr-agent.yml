@@ -17,12 +17,25 @@ jobs:
       (github.event_name == 'pull_request' ||
        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
+    timeout-minutes: 120
+    # Serialize pr-agent runs GLOBALLY (no cancel): the shared 6-slot vLLM
+    # behind omniroute is queue-sensitive. When two pr-agent runs race, one
+    # starves — its 50k-token prefills sit queued past Cloudflare's 120s
+    # origin-read window, every litellm retry 524s until exhausted, and the
+    # run fails ("Failed to generate code suggestions", run 41108906294,
+    # 1h17m of 524 loops) while the other finishes clean in ~4m. Queueing
+    # beats racing; unqueued TTFT is well under 120s.
+    # 120m bound: a pathological run (524 death-loop) must not stall the
+    # global queue for the 6h Actions default. Healthy runs: 4-20m; a 100
+    # chunk-call big-PR review stays well under this.
+    # cancel-in-progress: false on purpose — cancelling would let a new run
+    # starve the in-flight one again. The old per-PR cancel only protected
+    # against push-during-file-collection (IncompletePullRequestFilesError);
+    # that abort is rare and cheaper than a 524 death loop, and the
+    # synchronize trigger still starts a fresh run on the new head.
     concurrency:
-      # A push to the PR while pr-agent is collecting files makes it abort
-      # (IncompletePullRequestFilesError). Cancel the stale run instead of letting
-      # it race; the synchronize trigger starts a fresh run on the new head.
-      group: pr-agent-${{ github.event.pull_request.number || github.event.issue.number }}
-      cancel-in-progress: true
+      group: pr-agent
+      cancel-in-progress: false
     steps:
       # pr-agent v0.48.0, verified against the publisher's release attestation.
       - uses: docker://pragent/pr-agent@sha256:80edef71baa3df28c129d858d4b53784abfc14704c235efb32b6c461d5399a6d
@@ -54,9 +67,18 @@ jobs:
           PR_CODE_SUGGESTIONS__MAX_NUMBER_OF_CALLS: "100"
           # CF free plan kills non-streaming LLM calls at ~120s (524, zone
           # omniroute.gameguild.gg). pr-agent's litellm workaround: force
-          # streaming for this OpenAI-compatible endpoint — SSE bytes keep
-          # the CF connection alive; pr-agent aggregates the stream itself.
-          # Both keys are required together (provider AND api_base substring).
+          # streaming for this OpenAI-compatible endpoint — vLLM sends SSE
+          # headers before prefill, so bytes flow and the 524 window never
+          # trips; pr-agent aggregates the stream itself. THREE keys are
+          # required together: the match in pr-agent's
+          # _force_streaming_for_request() is on the explicit
+          # custom_llm_provider kwarg — which ONLY comes from
+          # LITELLM.CUSTOM_LLM_PROVIDER, never from the openai/ model
+          # prefix — AND the api_base substring. Without
+          # LITELLM__CUSTOM_LLM_PROVIDER the other two keys are inert
+          # (verified: zero "Using streaming mode" lines in runs
+          # 41108906294/41139010582 → every call non-streaming → 524s).
+          LITELLM__CUSTOM_LLM_PROVIDER: openai
           LITELLM__FORCE_STREAMING_CUSTOM_LLM_PROVIDER: openai
           LITELLM__FORCE_STREAMING_API_BASE_SUBSTRINGS: '["omniroute.gameguild.gg"]'
           GITHUB_ACTION_CONFIG__AUTO_REVIEW: "true"

@@ -134,14 +134,40 @@ try {
   await cookiesFor(authenticated, encrypted);
   const page = await authenticated.newPage();
   page.setDefaultTimeout(timeout);
-  const first = page.waitForResponse(isState, { timeout });
+  // Issue #106 phase 1: the account page fetches the session-state projection on
+  // the server (with the session's bearer) and renders the card filled on first
+  // paint, so no browser request to /api/auth/session-state is expected during the
+  // load. The browser→Next-BFF path stays covered by the anonymous and tampered
+  // denials above and by the explicit Refresh, foreign-identity and post-revocation
+  // scenarios below.
   await page.goto(webUrl + '/workspace/settings/account', { waitUntil: 'domcontentloaded', timeout });
-  const initial = await first;
-  assert.equal(initial.status(), 200);
-  assert.equal(initial.headers()['cache-control'], 'no-store');
-  assertState(await initial.json());
   const card = page.getByTestId('session-state-card');
   const fields = card.getByTestId('session-state-fields');
+  // Issue #106 phase 1 made the account page server-rendered: the fields are
+  // present in the server HTML before React attaches its event handlers in the
+  // development server, and a Refresh click landing in that gap dispatches on
+  // an inert button without producing any browser request. Click-and-wait is
+  // therefore retried within the original ~120s budget until the page is
+  // interactive; the refresh request itself is an idempotent GET.
+  async function refreshAndAwaitSessionState() {
+    let lastError;
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      const pending = page.waitForResponse(isState, { timeout: 10_000 });
+      try {
+        await card.getByRole('button', { name: 'Refresh', exact: true }).click({ timeout: 10_000 });
+      } catch (error) {
+        lastError = error;
+        await pending.catch(() => {});
+        continue;
+      }
+      try {
+        return await pending;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError;
+  }
   await fields.waitFor({ state: 'visible', timeout });
   assert.equal(await fields.getByText('Valid', { exact: true }).count(), 1);
   for (const [label, value] of [
@@ -152,12 +178,10 @@ try {
     assert.equal((await field.innerText()).trim(), value);
   }
   await card.screenshot({ path: path.join(evidence, 'session-state-valid.png') });
-  passed('Real account page renders the persisted owner session through Next BFF and API');
+  passed('Real account page renders the persisted owner session from the server-fetched projection');
   await verifyMetadataRoutes({ webUrl, page, evidence });
 
-  const refresh = page.waitForResponse(isState, { timeout });
-  await card.getByRole('button', { name: 'Refresh', exact: true }).click();
-  const refreshed = await refresh;
+  const refreshed = await refreshAndAwaitSessionState();
   assert.equal(refreshed.status(), 200);
   assert.equal(refreshed.headers()['cache-control'], 'no-store');
   assertState(await refreshed.json());
@@ -251,9 +275,8 @@ try {
     productionBuildAcceptance: false,
   }, null, 2));
   // Resume the original seven session-state scenarios on their actual account page.
-  const returned = page.waitForResponse(isState, { timeout });
+  // The card is server-rendered filled again (issue #106 phase 1); no mount fetch.
   await page.goto(webUrl + '/workspace/settings/account', { waitUntil: 'domcontentloaded', timeout });
-  assert.equal((await returned).status(), 200);
   await fields.waitFor({ state: 'visible', timeout });
 
   const revoke = await fetch(apiUrl + '/v1/auth/sessions/' + account.sessionId, {
@@ -264,9 +287,8 @@ try {
   });
   assert.equal(revoke.status, 200);
   passed('Actual API revokes the authenticated session');
-  const rejected = page.waitForResponse(isState, { timeout });
-  await card.getByRole('button', { name: 'Refresh', exact: true }).click();
-  assert.equal((await rejected).status(), 401);
+  const rejected = await refreshAndAwaitSessionState();
+  assert.equal(rejected.status(), 401);
   const error = card.getByTestId('session-state-error');
   await error.waitFor({ state: 'visible', timeout });
   assert.ok((await error.innerText()).trim().length > 0);

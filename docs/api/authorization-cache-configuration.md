@@ -17,6 +17,13 @@ services.AddAuthorizationCaching(options =>
     options.AccessControlListTtlSeconds = 60;
     options.DistributedCacheTtlSeconds = 600;
     options.MaxL1CacheSize = 5000;
+    options.EnableL1MemoryPressureAdaptation = true;
+    options.L1MemoryPressureCheckIntervalSeconds = 30;
+    options.L1MemoryPressureHighThresholdPercent = 85;
+    options.L1MemoryPressureRecoveryThresholdPercent = 70;
+    options.L1MemoryPressureMinimumCapacityPercent = 25;
+    options.L1MemoryPressureReductionPercent = 50;
+    options.L1MemoryPressureRecoveryStepPercent = 25;
     options.UsePubSubInvalidation = true;
     options.InvalidationChannelName = "gg:auth:invalidate";
     options.L2CompressionEnabled = true;
@@ -46,6 +53,29 @@ key tracker. When the cap is exceeded, the tracker removes the
 least-recently-used L1 entry and records a `capacity` eviction. This cap is
 scoped to tracked authorization entries; it does not set `SizeLimit` on the
 shared application `IMemoryCache`.
+
+When `EnableL1MemoryPressureAdaptation` is enabled, a hosted monitor samples the
+runtime's latest `GC.GetGCMemoryInfo()` load indicator every 30 seconds. The high
+and recovery percentages are relative to the GC high-memory threshold. At or
+above the default 85% threshold, each sample halves the effective tracked-entry
+budget, down to 25% of `MaxL1CacheSize` (at least one entry). Excess tracked entries
+are evicted in LRU order and recorded with reason `memory_pressure`; unrelated
+entries in the shared application cache are untouched. A high-pressure sample
+never increases an already smaller budget.
+
+At or below 70%, recovery restores 25% of the configured maximum per sample,
+capped at that maximum. Values between the thresholds keep the existing budget.
+Recovery permits subsequent cache writes; it does not preload permissions.
+Unknown snapshots retain the current budget. Disabling adaptation skips sampling.
+The startup options validate the interval, percentage ranges and hysteresis order.
+
+Budget transitions emit structured logs with memory-load/threshold bytes, previous
+and effective entry budgets, and eviction counts. The signal describes the most
+recent GC observation and can lag current system load; sampling never forces a GC.
+The effective budget limits tracked entry count rather than providing a byte-level
+memory guarantee. It does not modify grants, tenant/user security versions, Redis
+entries or expiration boundaries. A sampling failure is logged and retried at
+the next interval while normal authorization continues.
 
 Permission changes advance the shared tenant security version before publishing
 user, resource, or policy invalidation events. Cache keys include this version,
@@ -79,8 +109,13 @@ advances no security version, so the cached copy polices itself: writes clamp th
 L1 and L2 TTL to the seconds remaining before the earliest effective grant
 expiration (never above the configured TTL), and every read re-checks the
 boundary before serving, which also covers entries promoted from L2 to L1.
-A decision whose grants already lapsed is returned once from the authoritative
-evaluation but never cached.
+If an evaluated grant has lapsed before the ACL wrapper can return its decision,
+the wrapper retries the evaluation. It also rechecks tenant/global/user security
+versions after distributed cache reads and writes, so an invalidation during
+those waits cannot return the old-version decision. A stable, effective decision
+can be served; after three attempts without a stable version and lifetime, the
+wrapper throws `InvalidOperationException` and fails closed. It never returns or
+caches the expired decision.
 
 Bulk permission-check decisions (the `IPermissionService` bulk and streaming
 paths, cached under the `permission` cache type with `bulk:v2` keys) carry the
@@ -165,19 +200,31 @@ the normal versioned ACL evaluation path and returns only requested, warmed, and
 duplicate counts; it does not return access decisions. This is explicit
 operator-selected prewarming.
 
-Automatic popularity-based warming is enabled by default for subject-based ACL
-evaluations. Each API process keeps a bounded, process-local frequency window
-(`PopularityTrackingCapacity`, default 5,000 distinct pairs). Every
-`AutomaticWarmupIntervalSeconds` (default 60), it selects up to
-`AutomaticWarmupMaxEntriesPerCycle` (default 50) pairs seen at least
-`AutomaticWarmupMinimumAccessCount` times in that window (default 5). Warmup
-evaluates the selected pairs through the normal versioned ACL path, and those
-warmup evaluations are excluded from popularity counts. If the tracking window
-is full, new distinct pairs are ignored until the next cycle; existing pairs
-continue accumulating. Configure `AutomaticWarmupEnabled` to `false` to disable
-both observation and scheduled work. Each replica ranks its own observations;
+Automatic popularity-based warming is disabled by default (opt-in, per the
+issue #353 spec) and applies to subject-based ACL evaluations. Each API process
+keeps a bounded, process-local frequency window (`PopularityTrackingCapacity`,
+default 5,000 distinct pairs). Every `AutomaticWarmupIntervalSeconds`
+(default 60), it selects up to `AutomaticWarmupMaxEntriesPerCycle` (default 50)
+pairs seen at least `AutomaticWarmupMinimumAccessCount` times in that window
+(default 5). Warmup evaluates the selected pairs through the normal versioned
+ACL path, and those warmup evaluations are excluded from popularity counts. If
+the tracking window is full, new distinct pairs are ignored until the next
+cycle; existing pairs continue accumulating. Set
+`Authorization:Cache:AutomaticWarmupEnabled` to `true` to enable both
+observation and scheduled work. Each replica ranks its own observations;
 when Redis L2 is enabled, the usual distributed cache remains shared. A failed
 cycle is logged and a later cycle continues.
+
+Configuration-key reconciliation for issue #353: the popularity-based warm
+scheduler requested in the issue is configured through the existing
+`Authorization:Cache` options section rather than a separate
+`Permissions:CacheWarming` section — `AutomaticWarmupMaxEntriesPerCycle` is the
+"top-N hottest keys per cycle" limit (`PopularKeys`), `AutomaticWarmupIntervalSeconds`
+is the interval, and `AutomaticWarmupEnabled` (default `false`) is the feature
+gate. Frequency is measured per subject/resource pair by the process-local
+popularity tracker; the aggregate `ICacheMetricsService` counters (hits, misses,
+evictions, lookup durations per cache type) do not carry per-key data and are
+used for monitoring, not scheduling.
 
 If an L2 read fails or contains invalid data, the hybrid cache records a warning
 and returns a miss so the calling service can load the authoritative value from
@@ -310,17 +357,38 @@ Alertmanager receiver configured for the deployment. Sentinel and Cluster
 topologies additionally alert on `redis_master_up` / managed-failover events
 from the provider.
 
-The authorization and authentication unit suites cover the L1/L2 cache behavior,
-DI registration, version increments, serialized event payloads, subscriber
-dispatch and retry, Redis publish failure handling, and cache availability when
-L2 reads, writes, or removals fail. The Redis integration project contains
-focused cases for stale-ACL protection, Pub/Sub dispatch, role/group dependency
-invalidation, and subscriber recovery after a Redis restart. The four focused
-Redis integration tests passed locally with Docker enabled. API Verify now
-selects the integration-test project when its files change.
+## Verification records and deployment qualification
 
-Full network fault injection during Redis reconnects, inherited hierarchy
-invalidation through actual group-definition and membership mutation paths,
-and production-representative database-backed performance/load measurements
-remain open work. Cross-instance metric export and example alert thresholds
-are implemented but still need CI and deployment-level validation.
+The authorization and authentication unit suites cover L1/L2 behavior, DI
+registration, version increments, event payloads, subscriber dispatch and retry,
+Redis publish failures, cache availability during L2 failures, grant expiration,
+and collision-safe keys. The additional 14 concurrency cases delivered by
+[#1016](https://github.com/gameguild-gg/gameguild/pull/1016) passed in its final
+hosted CI: tenant/global/user invalidation during L2 reads and writes on both
+ACL entry points, plus stable L2 hits. These cases control cache/version
+collaborators to make the timing boundaries deterministic.
+
+The digest-verified hosted artifacts for
+[#980](https://github.com/gameguild-gg/gameguild/pull/980) contain seven passing
+Redis cache cases and one passing PostgreSQL bulk-permission cache case. The
+Redis cases use an actual Redis server and two service providers, with controlled
+ACL/version stores. They cover shared-L2 stale-ACL protection, concurrent version
+changes, Pub/Sub dispatch, inherited role/group dependency eviction across scopes,
+group-grant invalidation, and resubscription after a server restart. The separate
+PostgreSQL case verifies bulk checks and invalidation across calls. Together these
+records describe the exercised boundaries; they are not a combined PostgreSQL/Redis
+production deployment or exhaustive network-fault trial.
+
+The EF/PostgreSQL cached-versus-database measurements recorded by
+[#666](https://github.com/gameguild-gg/gameguild/pull/666) remain in the
+[benchmark README](../../apps/api/tests/GameGuild.Identity.Authorization.PerformanceTests/README.md).
+They are dated, isolated-fixture measurements, not fresh throughput or capacity
+numbers for a later release. That verification also exercised metric export through
+the sample Collector/Prometheus stack, all three cache alert rules, and a firing
+smoke alert received by Alertmanager. The
+[deployment guide](./authorization-cache-deployment.md) describes configuring an
+external notification receiver for each deployment.
+
+For release capacity planning, measure representative data, network topology,
+load, and fault conditions in the intended deployment. The examples and historical
+fixtures do not establish its service-level objectives.

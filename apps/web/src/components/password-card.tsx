@@ -18,6 +18,7 @@ import {
   changePasswordAction,
   type PasswordChangeActionResult,
 } from '@/lib/auth/password-change-action';
+import { recoverFromStaleServerAction } from '@/lib/auth/server-action-errors';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@game-guild/ui/components/field';
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -57,7 +58,14 @@ export function PasswordCard() {
         confirmPassword,
         revokeOtherSessions,
       });
-    } catch {
+    } catch (error) {
+      // Issue #1035: a stale action bundle (409 "Server Action unavailable") can only be
+      // fixed by reloading; do that once instead of toasting a generic error the user
+      // would retry into the same 409.
+      if (recoverFromStaleServerAction(error)) {
+        setPending(false);
+        return;
+      }
       result = { success: false, status: 'error' };
     } finally {
       setPending(false);

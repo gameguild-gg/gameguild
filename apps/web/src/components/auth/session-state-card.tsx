@@ -3,7 +3,7 @@
 import { Loader2, RefreshCw, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { useAuthState } from '@/hooks/use-auth-state';
+import { useAuthState, type AuthSessionState } from '@/hooks/use-auth-state';
 
 function formatUtc(value: string | null): string {
   if (!value) return '—';
@@ -13,9 +13,10 @@ function formatUtc(value: string | null): string {
 
 /** Account-settings surface for the session-state endpoint (issue #221): makes the
  * authentication infrastructure user-visible — session validity, expiry, token version,
- * active sessions and MFA enrollment. */
-export function SessionStateCard() {
-  const { state, error, loading, refresh } = useAuthState();
+ * active sessions and MFA enrollment. Issue #106 phase 1: the server page supplies
+ * the initial projection; the client only re-reads on explicit refresh. */
+export function SessionStateCard({ initialState }: { initialState?: AuthSessionState | null }) {
+  const { state, error, loading, refresh } = useAuthState(initialState);
 
   return (
     <Card data-testid="session-state-card">

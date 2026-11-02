@@ -4,10 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import AccessSettingsPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/access/page';
 import DangerPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/settings/danger/page';
-import { archiveCourse, deleteCourse, fetchCourse, transferCourseOwnership, updateCourse } from '@/lib/learning/actions';
+import { archiveCourse, deleteCourse, transferCourseOwnership, updateCourse } from '@/lib/learning/actions';
 
 const refreshMock = vi.fn();
 const pushMock = vi.fn();
+const getCourseMock = vi.fn();
 
 Object.defineProperties(HTMLElement.prototype, {
   hasPointerCapture: { value: vi.fn(() => false) },
@@ -42,9 +43,12 @@ vi.mock('@/i18n/navigation', () => ({
 vi.mock('@/lib/learning/actions', () => ({
   archiveCourse: vi.fn(),
   deleteCourse: vi.fn(),
-  fetchCourse: vi.fn(),
   transferCourseOwnership: vi.fn(),
   updateCourse: vi.fn(),
+}));
+
+vi.mock('@/lib/learning', () => ({
+  getCourse: (...args: unknown[]) => getCourseMock(...args),
 }));
 
 const course = {
@@ -65,7 +69,7 @@ const params = Promise.resolve({ locale: 'en-US', course: 'boss-ai-by-instructor
 describe('course settings client pages', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fetchCourse).mockResolvedValue(course as never);
+    getCourseMock.mockResolvedValue(course);
     vi.mocked(updateCourse).mockResolvedValue({ success: true, data: null });
     vi.mocked(archiveCourse).mockResolvedValue({ success: true, data: null });
     vi.mocked(deleteCourse).mockResolvedValue({ success: true, data: null });
@@ -75,9 +79,9 @@ describe('course settings client pages', () => {
   it('saves access settings with unlimited enrollment cap semantics', async () => {
     const user = userEvent.setup();
 
-    render(<AccessSettingsPage params={params} />);
+    render(await AccessSettingsPage({ params } as never));
 
-    expect(await screen.findByText('Listing visibility')).toBeInTheDocument();
+    expect(screen.getByText('Listing visibility')).toBeInTheDocument();
     await user.clear(screen.getByLabelText(/maximum enrollments/i));
     await user.type(screen.getByLabelText(/maximum enrollments/i), '0');
     await user.clear(screen.getByLabelText(/enrollment deadline/i));
@@ -101,22 +105,22 @@ describe('course settings client pages', () => {
     const user = userEvent.setup();
     vi.mocked(updateCourse).mockResolvedValueOnce({ success: false, error: 'Enrollment is closed.' });
 
-    render(<AccessSettingsPage params={params} />);
-    expect(await screen.findByText('Listing visibility')).toBeInTheDocument();
+    render(await AccessSettingsPage({ params } as never));
+    expect(screen.getByText('Listing visibility')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /save listing access/i }));
     expect(await screen.findByText('Enrollment is closed.')).toBeInTheDocument();
 
-    vi.mocked(fetchCourse).mockResolvedValueOnce(null);
-    render(<AccessSettingsPage params={Promise.resolve({ locale: 'en-US', course: 'missing' })} />);
-    expect(await screen.findByText('Course not found.')).toBeInTheDocument();
+    getCourseMock.mockResolvedValueOnce(null);
+    render(await AccessSettingsPage({ params: Promise.resolve({ locale: 'en-US', course: 'missing' }) } as never));
+    expect(screen.getByText('Course not found.')).toBeInTheDocument();
   });
 
   it('archives a course from the danger zone', async () => {
     const user = userEvent.setup();
 
-    render(<DangerPage params={params} />);
+    render(await DangerPage({ params } as never));
 
-    expect(await screen.findByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /archive course/i }));
 
     await waitFor(() => {
@@ -130,9 +134,9 @@ describe('course settings client pages', () => {
   it('requires exact title confirmation before deleting a course', async () => {
     const user = userEvent.setup();
 
-    render(<DangerPage params={params} />);
+    render(await DangerPage({ params } as never));
 
-    expect(await screen.findByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^delete course$/i }));
 
     const deleteButton = screen.getByRole('button', { name: /permanently delete/i });
@@ -152,9 +156,9 @@ describe('course settings client pages', () => {
     const user = userEvent.setup();
     vi.mocked(archiveCourse).mockResolvedValueOnce({ success: false, error: 'Course has active sessions.' });
 
-    render(<DangerPage params={params} />);
+    render(await DangerPage({ params } as never));
 
-    expect(await screen.findByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /archive course/i }));
 
     expect(await screen.findByText('Course has active sessions.')).toBeInTheDocument();
@@ -164,9 +168,9 @@ describe('course settings client pages', () => {
   it('transfers ownership after confirming the course title', async () => {
     const user = userEvent.setup();
 
-    render(<DangerPage params={params} />);
+    render(await DangerPage({ params } as never));
 
-    expect(await screen.findByText('Transfer course ownership')).toBeInTheDocument();
+    expect(screen.getByText('Transfer course ownership')).toBeInTheDocument();
     const transferButton = screen.getByRole('button', { name: /transfer ownership/i });
     expect(transferButton).toBeDisabled();
 

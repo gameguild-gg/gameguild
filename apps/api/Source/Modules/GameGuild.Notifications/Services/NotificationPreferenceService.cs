@@ -33,6 +33,7 @@ public class NotificationPreferenceService(
         bool? socialEnabled = null,
         bool? learningEnabled = null,
         bool? achievementsEnabled = null,
+        bool? whatsAppEnabled = null,
         CancellationToken cancellationToken = default)
     {
         var preferencesResult = await GetPreferencesAsync(userId, cancellationToken).ConfigureAwait(false);
@@ -48,6 +49,11 @@ public class NotificationPreferenceService(
             pushEnabled ?? preferences.PushEnabled,
             inAppEnabled ?? preferences.InAppEnabled,
             smsEnabled ?? preferences.SmsEnabled);
+
+        if (whatsAppEnabled.HasValue)
+        {
+            preferences.SetWhatsAppEnabled(whatsAppEnabled.Value);
+        }
 
         preferences.UpdateCategoryPreferences(
             marketingEnabled ?? preferences.MarketingEnabled,
@@ -151,6 +157,16 @@ public class NotificationPreferenceService(
         var preferences = await context.Set<NotificationPreference>()
             .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken).ConfigureAwait(false);
 
+        // 0. WhatsApp explicit opt-in gate (fail closed): WhatsApp is a paid, externally
+        //    metered channel — it is NEVER delivered without an explicit opt-in row
+        //    (WhatsAppEnabled == true), not even for transactional or urgent types, and
+        //    not when no preference row exists yet.
+        if (channel == NotificationChannel.WhatsApp
+            && (preferences == null || !preferences.WhatsAppEnabled))
+        {
+            return NotificationDeliveryDecision.Drop("whatsapp-not-opted-in");
+        }
+
         if (preferences == null)
         {
             return NotificationDeliveryDecision.Send();
@@ -176,6 +192,7 @@ public class NotificationPreferenceService(
             NotificationChannel.Push => preferences.PushEnabled,
             NotificationChannel.InApp => preferences.InAppEnabled,
             NotificationChannel.Sms => preferences.SmsEnabled,
+            NotificationChannel.WhatsApp => preferences.WhatsAppEnabled,
             _ => true
         };
 

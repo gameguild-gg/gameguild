@@ -13,6 +13,21 @@ public class SubscriptionRepository(IApplicationDbContext context)
         return await Query.Include(s => s.Plan).FirstOrDefaultAsync(s => s.Id == id, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Subscription>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        return await Query
+            .Include(s => s.Plan)
+            .Where(s => ids.Contains(s.Id))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public async Task<Subscription?> GetByExternalIdAsync(string externalId, CancellationToken cancellationToken = default)
     {
         return await Query.Include(s => s.Plan).FirstOrDefaultAsync(s => s.ExternalId == externalId, cancellationToken).ConfigureAwait(false);

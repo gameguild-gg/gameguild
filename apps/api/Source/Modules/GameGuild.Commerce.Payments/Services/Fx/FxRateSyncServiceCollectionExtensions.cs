@@ -48,7 +48,8 @@ public static class FxRateSyncServiceCollectionExtensions
             {
                 var settings = provider.GetRequiredService<IOptions<FxSyncOptions>>().Value.OpenExchangeRates;
                 client.Timeout = TimeSpan.FromSeconds(Math.Max(5, settings.TimeoutSeconds));
-            });
+            })
+                .AddHttpMessageHandler<FxProviderRateLimiterHandler>(); // spec H: bounded outbound call rate
             services.AddScoped<IFxRateProvider>(provider => provider.GetRequiredService<OpenExchangeRatesFxRateProvider>());
         }
 
@@ -58,7 +59,8 @@ public static class FxRateSyncServiceCollectionExtensions
             {
                 var settings = provider.GetRequiredService<IOptions<FxSyncOptions>>().Value.Ecb;
                 client.Timeout = TimeSpan.FromSeconds(Math.Max(5, settings.TimeoutSeconds));
-            });
+            })
+                .AddHttpMessageHandler<FxProviderRateLimiterHandler>(); // spec H: bounded outbound call rate
             services.AddScoped<IFxRateProvider>(provider => provider.GetRequiredService<EcbFxRateProvider>());
         }
 
@@ -70,6 +72,10 @@ public static class FxRateSyncServiceCollectionExtensions
             provider.GetRequiredService<IOptions<FxSyncOptions>>(),
             provider.GetRequiredService<ILogger<FxRateCache>>()));
         services.Replace(ServiceDescriptor.Singleton<IExchangeRateProvider, PersistedFxRateProvider>());
+
+        // Outbound politeness guard (issue #412 spec H): resolved into each provider's
+        // HttpClient pipeline; one independent window per provider client.
+        services.AddTransient<FxProviderRateLimiterHandler>();
 
         // Sync orchestration + alerting + the opt-in scheduled worker.
         services.AddScoped<IFxRateSyncService, FxRateSyncService>();

@@ -38,12 +38,14 @@ public sealed class RefundWorkflowWorker(
         }
 
         var retryEligibleAfter = SystemClock.UtcNow.AddMinutes(-settings.FailedRetryDelayMinutes);
+        var processingStaleBefore = SystemClock.UtcNow.AddMinutes(-settings.ProcessingStaleAfterMinutes);
         var due = await refundRepository
             .ListDueForWorkflowAsync(
                 settings.MaxExecutionAttempts,
                 retryEligibleAfter,
                 settings.MaxBatchSize,
-                cancellationToken)
+                cancellationToken,
+                processingStaleBeforeUtc: processingStaleBefore)
             .ConfigureAwait(false);
 
         var executed = 0;
@@ -53,8 +55,14 @@ public sealed class RefundWorkflowWorker(
 
             try
             {
+                // Interrupted executions (issue #419 crash recovery) are reconciled with the
+                // provider through the recovery path — the original idempotency key dedupes
+                // the replay — instead of being re-executed; everything else runs the normal
+                // execution core.
                 await RunAsWorkflowSystemActorAsync(
-                        () => refundProcessingService.ExecuteAsync(refund, cancellationToken),
+                        () => refund.Status == RefundStatus.Processing
+                            ? refundProcessingService.RecoverInterruptedAsync(refund, cancellationToken)
+                            : refundProcessingService.ExecuteAsync(refund, cancellationToken),
                         cancellationToken)
                     .ConfigureAwait(false);
                 executed++;

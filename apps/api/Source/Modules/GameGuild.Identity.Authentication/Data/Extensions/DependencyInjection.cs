@@ -120,6 +120,8 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthenticationFlowStateRepository, AuthenticationFlowStateRepository>();
         services.AddScoped<IAuthenticationOrchestrationService, AuthenticationOrchestrationService>();
         services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
+        // Issue #1085: per-user seen-device registry backing first-seen device detection.
+        services.AddScoped<IUserDeviceFingerprintRepository, UserDeviceFingerprintRepository>();
         services.AddScoped<IMfaAttemptRepository, MfaAttemptRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<GameGuild.Identity.Authorization.IAuthorizationRolePermissionProvider, RolePermissionProvider>();
@@ -131,6 +133,22 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthAttemptService, AuthAttemptService>();
         services.AddScoped<ISuspiciousLoginAlertPublisher, SuspiciousLoginAlertPublisher>();
         services.AddScoped<INewLoginAlertPublisher, NewLoginAlertPublisher>();
+        // Issue #1083: the account lockout policy alerts the owner through the host-side
+        // notification bridge when a fresh lockout engages.
+        services.AddScoped<IAccountLockoutAlertPublisher, AccountLockoutAlertPublisher>();
+        // Issue #1086: concurrent-session-limit evictions notify the evicted session's
+        // owner through the host-side notification bridge.
+        services.AddScoped<ISessionEvictionAlertPublisher, SessionEvictionAlertPublisher>();
+        // Issue #1085: first-seen device sign-ins notify the owner through the host-side
+        // notification bridge.
+        services.AddScoped<INewDeviceSignInAlertPublisher, NewDeviceSignInAlertPublisher>();
+        // Issue #1082: server-side Cloudflare Turnstile verification for password sign-in
+        // admission after repeated source-IP failures. An unset secret disables the gate.
+        services.AddHttpClient(TurnstileVerificationService.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(10));
+        services.AddScoped<ITurnstileVerificationService>(static provider => new TurnstileVerificationService(
+            provider.GetRequiredService<IHttpClientFactory>(),
+            provider.GetService<AuthenticationSecurityOptions>() ?? new AuthenticationSecurityOptions(),
+            provider.GetRequiredService<ILogger<TurnstileVerificationService>>()));
         // Server-side device metadata: dependency-free user-agent parsing for every session;
         // geolocation stays a pure abstraction (SharedKernel) with a no-op default so a host
         // can plug in an offline GeoIP provider without touching this module.
@@ -171,9 +189,10 @@ public static class DataDependencyInjection
         services.AddScoped<IOidcFederationService, OidcFederationService>();
         // SAML 2.0 federation (enterprise IdPs, issue #268) — config-supplied IdP certificates,
         // SP metadata + Assertion Consumer Service validation with single-use InResponseTo
-        // correlation and assertion-ID replay protection in IDistributedCache; config-gated per
-        // Authentication:ExternalProviders:Saml:<slug> (fail closed).
-        services.AddScoped<ISamlProtocolStateStore, DistributedCacheSamlProtocolStateStore>();
+        // correlation (bound to the issued RelayState) and assertion-ID replay protection,
+        // persisted atomically in the shared PostgreSQL schema across instances; config-gated
+        // per Authentication:ExternalProviders:Saml:<slug> (fail closed).
+        services.AddScoped<ISamlProtocolStateStore, PostgreSqlSamlProtocolStateStore>();
         services.AddScoped<ISamlFederationService, SamlFederationService>();
         services.AddScoped<IWeb3Service, Web3Service>();
         services.AddScoped<IServiceAccountService, ServiceAccountService>();
@@ -201,6 +220,9 @@ public static class DataDependencyInjection
         // SMS OTP factor (issue #244): code lifecycle + delivery through the Notifications SMS
         // channel; the provider port (ISmsSender) is host-configured, fail-closed NoOp default.
         services.AddScoped<ISmsMfaService, SmsMfaService>();
+        // Email OTP factor (issue #1152): same code lifecycle posture as SMS, delivered to the
+        // account's verified address through the Notifications email channel.
+        services.AddScoped<IEmailMfaService, EmailMfaService>();
         // Push approval factor, v1 contract (issue #259): challenge state in IDistributedCache
         // (Redis path in production, mirroring the token revocation store).
         services.AddScoped<IPushMfaService, PushMfaService>();
@@ -222,6 +244,10 @@ public static class DataDependencyInjection
 
         // Session management
         services.AddScoped<ISessionManagementService, SessionManagementService>();
+        // Password change/reset revocation battery (issue #278): mirrors the
+        // terminate-everywhere command — refresh tokens revoked, sessions terminated with an
+        // audited PasswordChanged reason, and a versioned cutoff covering legacy access tokens.
+        services.AddScoped<IPasswordChangeRevocationService, PasswordChangeRevocationService>();
 
         // Guest access (issue #213): anonymous guest sessions in their own identity namespace —
         // short-lived tokens in a dedicated audience, an IDistributedCache-backed session

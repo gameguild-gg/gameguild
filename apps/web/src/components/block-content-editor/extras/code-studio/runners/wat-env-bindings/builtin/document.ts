@@ -1,10 +1,7 @@
 /**
  * Document bindings (DOM stub)
  */
-export function createDocumentBindings(
-  stdout: (text: string) => void,
-  stderr: (text: string) => void
-): Record<string, any> {
+export function createDocumentBindings(stdout: (text: string) => void) {
   return {
     createElement: (tagName: string) => {
       stdout(`[DOM] createElement: ${tagName}`)

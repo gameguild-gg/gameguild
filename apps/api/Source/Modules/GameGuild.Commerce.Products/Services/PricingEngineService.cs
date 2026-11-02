@@ -13,7 +13,8 @@ public class PricingEngineService(
     IPromoStackingRuleRepository stackingRuleRepository,
     IPricingRuleRepository pricingRuleRepository,
     IPricingExperimentService pricingExperimentService,
-    IMemoryCache cache) : IPricingEngineService
+    IMemoryCache cache,
+    IPromoCustomerStateResolver? customerStateResolver = null) : IPricingEngineService
 {
     private const string RulesCacheKeyPrefix = "PricingEngine:Rules:";
 
@@ -282,14 +283,53 @@ public class PricingEngineService(
                 Outcome: PromoCodeValidationOutcome.Inactive);
         }
 
-        // Check validity period
-        if (!promoCode.IsCurrentlyValid())
+        // Check validity period (issue #418 timezone awareness): expired and
+        // not-yet-valid are distinct rejections per window edge.
+        var windowOutcome = promoCode.EvaluateWindow();
+        if (windowOutcome == PromoWindowOutcome.NotYetValid)
         {
             return new PromoCodeValidationResult(
                 false,
-                ErrorMessage: "Promo code has expired or is not yet valid",
+                ErrorMessage: "Promo code is not yet valid",
+                PromoCodeId: promoCode.Id,
+                Outcome: PromoCodeValidationOutcome.NotYetValid);
+        }
+
+        if (windowOutcome == PromoWindowOutcome.Expired)
+        {
+            return new PromoCodeValidationResult(
+                false,
+                ErrorMessage: "Promo code has expired",
                 PromoCodeId: promoCode.Id,
                 Outcome: PromoCodeValidationOutcome.Expired);
+        }
+
+        // Check customer-type eligibility (issue #418): a code restricted to New,
+        // Existing, or Churned customers only validates for customers currently in
+        // that state. Unrestricted (Any) codes are unaffected.
+        if (promoCode.EligibleCustomerType != PromoCustomerType.Any)
+        {
+            if (customerStateResolver is null)
+            {
+                return new PromoCodeValidationResult(
+                    false,
+                    ErrorMessage: "Promo code eligibility cannot be verified for this customer",
+                    PromoCodeId: promoCode.Id,
+                    Outcome: PromoCodeValidationOutcome.CustomerNotEligible);
+            }
+
+            var customerState = await customerStateResolver
+                .ResolveAsync(userId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!PromoCustomerEligibility.IsEligible(promoCode.EligibleCustomerType, customerState))
+            {
+                return new PromoCodeValidationResult(
+                    false,
+                    ErrorMessage: $"Promo code is only valid for {promoCode.EligibleCustomerType} customers",
+                    PromoCodeId: promoCode.Id,
+                    Outcome: PromoCodeValidationOutcome.CustomerNotEligible);
+            }
         }
 
         // Check product restriction

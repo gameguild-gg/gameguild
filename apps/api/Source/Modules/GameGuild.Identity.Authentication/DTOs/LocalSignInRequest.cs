@@ -34,6 +34,12 @@ public class LocalSignInRequest
     public bool? RememberMe { get; set; }
 
     /// <summary>
+    ///     Cloudflare Turnstile token (issue #1082). Required once the source IP crossed
+    ///     the configured failed-sign-in threshold; ignored otherwise.
+    /// </summary>
+    public string? TurnstileToken { get; set; }
+
+    /// <summary>
     ///     Optional guest bearer token presented by an anonymous visitor signing in
     ///     (issue #213). Possession upgrades that guest session into this authenticated
     ///     session (session continuity); an invalid or replayed guest token never blocks

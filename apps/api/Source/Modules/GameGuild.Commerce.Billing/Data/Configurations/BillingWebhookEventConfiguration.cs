@@ -72,6 +72,12 @@ public class BillingWebhookEventConfiguration : IEntityTypeConfiguration<Billing
         builder.Property(x => x.DeadLetterReason)
             .HasMaxLength(1000);
 
+        builder.Property(x => x.SourceIpAddress)
+            .HasMaxLength(64);
+
+        builder.Property(x => x.UserAgent)
+            .HasMaxLength(512);
+
         builder.Property(x => x.ProcessingAttempts)
             .IsConcurrencyToken();
 

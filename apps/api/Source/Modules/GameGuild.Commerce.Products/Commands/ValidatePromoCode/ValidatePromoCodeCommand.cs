@@ -10,10 +10,16 @@ namespace GameGuild.Commerce.Products;
 /// <param name="ProductId">Optional product ID</param>
 /// <param name="UserId">Optional user ID</param>
 /// <param name="PlanId">Optional subscription plan ID for plan-scoped codes (issue #418)</param>
+/// <param name="CaptchaToken">
+/// CAPTCHA token for untrusted (anonymous) validation contexts (issue #418 anti-farming).
+/// When the redemption CAPTCHA gate is enabled, an untrusted caller without a verifiable
+/// token is rejected before any code lookup happens — fail closed.
+/// </param>
 public sealed record ValidatePromoCodeCommand(
     string Code,
     decimal OrderAmount,
     Guid? ProductId = null,
     Guid? UserId = null,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? CaptchaToken = null
 ) : ICommand<PromoCodeValidationResult>;

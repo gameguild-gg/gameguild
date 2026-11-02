@@ -35,6 +35,11 @@ public class BillingConfiguration : IValidatableObject
     public GooglePaySettings GooglePay { get; set; } = new GooglePaySettings();
 
     /// <summary>
+    ///     Braintree webhook verification settings (issue #408: offline public-key verification)
+    /// </summary>
+    public BraintreeSettings Braintree { get; set; } = new BraintreeSettings();
+
+    /// <summary>
     ///     Webhook configuration settings
     /// </summary>
     public WebhookSettings Webhook { get; set; } = new WebhookSettings();
@@ -54,6 +59,11 @@ public class BillingConfiguration : IValidatableObject
             yield return PaymentProviders.PayPal;
         }
 
+        if (!string.IsNullOrEmpty(Braintree.PublicKey))
+        {
+            yield return PaymentProviders.Braintree;
+        }
+
         if (!string.IsNullOrEmpty(ApplePay.BundleId))
         {
             yield return PaymentProviders.AppleAppStore;
@@ -69,6 +79,7 @@ public class BillingConfiguration : IValidatableObject
         {
             PaymentProviders.Stripe => !string.IsNullOrEmpty(Stripe.SecretKey),
             PaymentProviders.PayPal => !string.IsNullOrEmpty(PayPal.ClientId),
+            PaymentProviders.Braintree => !string.IsNullOrEmpty(Braintree.PublicKey),
             PaymentProviders.AppleAppStore => !string.IsNullOrEmpty(ApplePay.BundleId),
             _ => false
         };
@@ -83,6 +94,8 @@ public class BillingConfiguration : IValidatableObject
         {
             PaymentProviders.Stripe => Stripe.WebhookSecret,
             PaymentProviders.PayPal => PayPal.WebhookId, // PayPal uses webhook ID for verification
+            // Braintree verifies offline against the public key; there is no shared secret.
+            PaymentProviders.Braintree => Braintree.PublicKey,
             _ => null
         };
     }
@@ -133,6 +146,24 @@ public class BillingConfiguration : IValidatableObject
                 new[] { $"{nameof(PayPal)}.{nameof(PayPal.ClientSecret)}" });
         }
 
+        // Braintree validation (issue #408): a configured webhook key must be plausibly
+        // shaped, and the environment must be a known value.
+        if (!string.IsNullOrEmpty(Braintree.PublicKey)
+            && (Braintree.PublicKey.Length is < 8 or > 64 || Braintree.PublicKey.Contains(' ')))
+        {
+            yield return new ValidationResult(
+                "Braintree.PublicKey must be 8-64 characters without whitespace",
+                new[] { $"{nameof(Braintree)}.{nameof(Braintree.PublicKey)}" });
+        }
+
+        if (!string.Equals(Braintree.Environment, "sandbox", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(Braintree.Environment, "production", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return new ValidationResult(
+                "Braintree.Environment must be 'sandbox' or 'production'",
+                new[] { $"{nameof(Braintree)}.{nameof(Braintree.Environment)}" });
+        }
+
         // ApplePay validation: SharedSecret required when BundleId is set
         if (!string.IsNullOrEmpty(ApplePay.BundleId) && string.IsNullOrEmpty(ApplePay.SharedSecret))
         {
@@ -163,6 +194,15 @@ public class BillingConfiguration : IValidatableObject
                 new[] { $"{nameof(Webhook)}.{nameof(Webhook.ProcessingTimeoutSeconds)}" });
         }
 
+        // Response bound (issue #408): the explicit sub-5-second response contract. The value
+        // must stay strictly under the 5-second provider tolerance, hence the 1-4 window.
+        if (Webhook.ResponseBoundSeconds is < 1 or > 4)
+        {
+            yield return new ValidationResult(
+                "ResponseBoundSeconds must be between 1 and 4 seconds (strictly under the 5-second provider tolerance)",
+                new[] { $"{nameof(Webhook)}.{nameof(Webhook.ResponseBoundSeconds)}" });
+        }
+
         if (Webhook.RetryPolicy.InitialDelaySeconds < 1)
         {
             yield return new ValidationResult(
@@ -186,6 +226,17 @@ public class BillingConfiguration : IValidatableObject
                     $"SourceIpAllowlist entry '{entry}' is not a valid IPv4/IPv6 CIDR network",
                     new[] { $"{nameof(Webhook)}.{nameof(Webhook.Security)}.{nameof(Webhook.Security.SourceIpAllowlist)}" });
             }
+        }
+
+        // Raw-delivery retention (issue #408: capture raw payload and all headers): the
+        // retention window is bounded whether or not retention is enabled, so a stray value
+        // can never silently extend an opt-in window past the 1-365 day range.
+        if (Webhook.Retention.RetentionDays is < WebhookRetentionPolicy.MinRetentionDays
+            or > WebhookRetentionPolicy.MaxRetentionDays)
+        {
+            yield return new ValidationResult(
+                $"Retention.RetentionDays must be between {WebhookRetentionPolicy.MinRetentionDays} and {WebhookRetentionPolicy.MaxRetentionDays} days",
+                new[] { $"{nameof(Webhook)}.{nameof(Webhook.Retention)}.{nameof(Webhook.Retention.RetentionDays)}" });
         }
 
         // Webhook source security: suspicious-activity thresholds must be positive when enabled.
@@ -253,6 +304,14 @@ public class BillingConfiguration : IValidatableObject
             if (!string.IsNullOrEmpty(PayPal.ClientId) && string.IsNullOrEmpty(PayPal.ClientSecret))
             {
                 errors.Add("PayPal: ClientSecret is required when ClientId is set");
+            }
+        }
+
+        if (provider == null || provider == PaymentProviders.Braintree)
+        {
+            if (!string.IsNullOrEmpty(Braintree.PublicKey) && (Braintree.PublicKey.Length is < 8 or > 64 || Braintree.PublicKey.Contains(' ')))
+            {
+                errors.Add("Braintree: PublicKey must be 8-64 characters without whitespace");
             }
         }
 

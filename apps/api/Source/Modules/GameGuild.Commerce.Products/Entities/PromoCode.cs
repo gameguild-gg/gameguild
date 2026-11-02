@@ -79,11 +79,25 @@ public class PromoCode : EntityBase
     /// <summary>Whether the discount also applies to renewals</summary>
     public bool ApplyToRenewal { get; set; } = false;
 
-    /// <summary>When this promo code becomes valid</summary>
+    /// <summary>When this promo code becomes valid (stored as a UTC instant; the window may be expressed in <see cref="TimeZoneId"/>)</summary>
     public DateTime? ValidFrom { get; set; }
 
-    /// <summary>When this promo code expires</summary>
+    /// <summary>When this promo code expires (stored as a UTC instant; the window may be expressed in <see cref="TimeZoneId"/>)</summary>
     public DateTime? ValidUntil { get; set; }
+
+    /// <summary>
+    /// IANA timezone the validity window is expressed in (issue #418 timezone awareness).
+    /// Wall-clock edges supplied at create/update are converted to UTC instants in this
+    /// zone before persistence; null (or an unresolvable id) means UTC.
+    /// </summary>
+    [MaxLength(50)]
+    public string? TimeZoneId { get; set; }
+
+    /// <summary>
+    /// Customer relationship state this code is eligible for (issue #418): New
+    /// (first-time), Existing, or Churned win-back. Default Any = no restriction.
+    /// </summary>
+    public PromoCustomerType EligibleCustomerType { get; set; } = PromoCustomerType.Any;
 
     /// <summary>Whether this promo code is currently active</summary>
     public bool IsActive { get; set; } = true;
@@ -123,20 +137,21 @@ public class PromoCode : EntityBase
     /// <summary>Navigation property to promo code usage records</summary>
     public virtual ICollection<PromoCodeUse> PromoCodeUses { get; set; } = new List<PromoCodeUse>();
 
-    /// <summary>Check if the promo code is currently valid</summary>
+    /// <summary>Check if the promo code is currently valid (UTC-instant window evaluation)</summary>
     public bool IsCurrentlyValid()
     {
         if (!IsActive) return false;
 
-        var now = SystemClock.UtcNow;
-        if (ValidFrom.HasValue && ValidFrom.Value > now)
-            return false;
-
-        if (ValidUntil.HasValue && ValidUntil.Value <= now)
-            return false;
-
-        return true;
+        return EvaluateWindow() == PromoWindowOutcome.WithinWindow;
     }
+
+    /// <summary>
+    /// Evaluates the stored UTC validity window against the current instant
+    /// (issue #418): expired and not-yet-valid are distinct outcomes so validation
+    /// can reject each edge separately.
+    /// </summary>
+    public PromoWindowOutcome EvaluateWindow(DateTime? utcNow = null)
+        => PromoValidityWindow.Evaluate(ValidFrom, ValidUntil, utcNow ?? SystemClock.UtcNow);
 
     /// <summary>
     /// Calculate the discount amount for a given order amount. Supports all five

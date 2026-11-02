@@ -108,6 +108,16 @@ public static class AuditActionTypes
     // Billing webhook delivery dead-lettering after exhausted retries (issue #408)
     public const string WebhookDeadLettered = "WebhookDeadLettered";
 
+    // Billing webhook lifecycle entries (issue #408: an audit-module entry for every
+    // webhook event). Informational operational trail complementing the security events
+    // above: every accepted delivery is recorded, and every terminal outcome (processed
+    // or failed attempt) is journaled through the same audit pipeline entry point.
+    public const string WebhookEventReceived = "WebhookEventReceived";
+
+    public const string WebhookEventProcessed = "WebhookEventProcessed";
+
+    public const string WebhookEventFailed = "WebhookEventFailed";
+
     // External Billing Provider Management (issue #397 provider-management API)
     public const string BillingProviderEnabled = "BillingProviderEnabled";
 
@@ -117,6 +127,9 @@ public static class AuditActionTypes
 
     // Billing webhook signing-secret rotation (issue #408)
     public const string BillingWebhookSecretRotated = "BillingWebhookSecretRotated";
+
+    // Promo engine unusual-usage anomaly (issue #418 anti-farming alerting)
+    public const string PromoUsageAnomalyDetected = "PromoUsageAnomalyDetected";
 
     // Tenant Operations
     public const string TenantCreated = "TenantCreated";
@@ -146,4 +159,47 @@ public static class AuditActionTypes
     public const string UsernameNormalized = "UsernameNormalized";
 
     public const string UsernameCollisionResolved = "UsernameCollisionResolved";
+
+    // Federated identity / IdP integration auditing (issue #180)
+    public const string ExternalLoginSucceeded = "Authentication.ExternalLoginSucceeded";
+
+    public const string ExternalLoginFailed = "Authentication.ExternalLoginFailed";
+
+    public const string ExternalAccountLinked = "Authentication.ExternalAccountLinked";
+
+    public const string ExternalAccountProvisioned = "Authentication.ExternalAccountProvisioned";
+
+    public const string FederatedSignInMfaDenied = "Authentication.FederatedSignInMfaDenied";
+
+    // Learning lifecycle auditing (issue #180)
+    public const string CertificateVerified = "Learning.Certificates.CertificateVerified";
+
+    public const string CertificateRenewed = "Learning.Certificates.CertificateRenewed";
+
+    public const string EnrollmentCompleted = "Learning.Enrollments.EnrollmentCompleted";
+
+    // Field-level data access auditing (issue #186)
+    public const string FieldAccessRecorded = "DataProtection.FieldAccessRecorded";
+
+    public const string ConsentGranted = "Consent.Granted";
+
+    public const string ConsentRevoked = "Consent.Revoked";
+
+    public const string SensitiveFieldClassified = "DataProtection.SensitiveFieldClassified";
+
+    public const string FieldAccessAnomalyDetected = "DataProtection.FieldAccessAnomalyDetected";
+
+    public const string BulkExportThresholdExceeded = "DataProtection.BulkExportThresholdExceeded";
+
+    public const string GdprProcessingActivityChanged = "DataProtection.GdprProcessingActivityChanged";
+
+    public const string DataSubjectRequestRecorded = "DataProtection.DataSubjectRequestRecorded";
+
+    public const string DataSubjectRequestCompleted = "DataProtection.DataSubjectRequestCompleted";
+
+    public const string DataSubjectRequestRejected = "DataProtection.DataSubjectRequestRejected";
+
+    public const string CrossBorderTransferRecorded = "DataProtection.CrossBorderTransferRecorded";
+
+    public const string SensitiveDataRetentionEnforced = "DataProtection.SensitiveDataRetentionEnforced";
 }

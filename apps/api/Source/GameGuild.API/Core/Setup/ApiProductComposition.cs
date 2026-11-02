@@ -17,7 +17,9 @@ using GameGuild.Finance.Economy.Bounties;
 using GameGuild.Finance.Economy.Marketplace;
 using GameGuild.Finance.Economy.Payouts;
 using GameGuild.Finance.Economy.Treasury;
+using GameGuild.Finance.Ledgers;
 using GameGuild.GameJams;
+using GameGuild.Gamification.Achievements;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
@@ -42,7 +44,9 @@ using GameGuild.Social.Blog;
 using GameGuild.Social.Follows;
 using GameGuild.Social.Feed;
 using GameGuild.Social.Groups;
+using GameGuild.Social.Mentorship;
 using GameGuild.Social.Profiles;
+using GameGuild.Social.Ratings;
 using GameGuild.Social.Reactions;
 using GameGuild.Teams;
 using GameGuild.TestingLab;
@@ -72,6 +76,8 @@ internal sealed class ApiProductComposition : IApiProductComposition
         "Finance.Economy.Marketplace",
         "Finance.Economy.Payouts",
         "Finance.Economy.Treasury",
+        "Finance.Ledgers",
+        "Gamification.Achievements",
         "GameJams",
         "LaunchPad",
         "Learning.Assessments",
@@ -94,8 +100,10 @@ internal sealed class ApiProductComposition : IApiProductComposition
         "Social.Feed",
         "Social.Follows",
         "Social.Groups",
+        "Social.Mentorship",
         "Social.Posts",
         "Social.Profiles",
+        "Social.Ratings",
         "Social.Reactions",
         "Teams",
         "TestingLab"
@@ -104,7 +112,6 @@ internal sealed class ApiProductComposition : IApiProductComposition
     public IReadOnlyList<string> DisabledModules { get; } =
     [
         "Compliance.FinancialCrime",
-        "Finance.Ledgers",
         "TrustSafety"
     ];
 
@@ -159,7 +166,15 @@ internal sealed class ApiProductComposition : IApiProductComposition
         builder.Services.AddPostsModule();
         builder.Services.AddSocialBlogModule();        builder.Services.AddSocialFeedModule();
         builder.Services.AddSocialGroupsModule();
+        builder.Services.AddMentorshipModule();
         builder.Services.AddSocialReactionsModule();
+        builder.Services.AddRatingsModule();
+
+        // Finance.Ledgers / Gamification.Achievements (issue #1158): entity configurations were
+        // complete but the assemblies were never referenced by the API host, so their tables never
+        // materialized. The references plus these registrations put their models and services online.
+        builder.Services.AddLedgerModule();
+        builder.Services.AddAchievementsModule();
 
         builder.Services.AddGameJamsModule();
         builder.Services.AddTeamsModule();

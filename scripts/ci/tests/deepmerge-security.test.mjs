@@ -27,7 +27,7 @@ test('the deepmerge mitigation requires the exact patched bytes on every install
   const config = readPnpmSecurityConfig(repositoryRoot);
   assert.equal(config.patchedDependencies?.['deepmerge@4.3.1'], 'patches/deepmerge@4.3.1.patch');
   assert.equal(config.auditConfig, undefined);
-  assert.deepEqual(config.onlyBuiltDependencies, ['braces', 'deepmerge', 'sprintf-js']);
+  assert.deepEqual(config.onlyBuiltDependencies, ['braces', 'deepmerge', 'eslint-plugin-import', 'glob', 'minimatch', 'sprintf-js']);
   assert.equal(createHash('sha256').update(readFileSync(join(repositoryRoot, 'patches/deepmerge@4.3.1.patch'))).digest('hex'), 'ce7bc8c614caad7eae9afd0ccb7c63767c693fed9df668af1a4dbb8516664919');
   const expected = {
     'index.js': 'dbef7cab6abdd1338228a08297f0047b3f56c9d7533b38358629b6024c78dbc7',

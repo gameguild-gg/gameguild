@@ -1,22 +1,16 @@
 import { Providers } from '@/components/providers';
 import { routing } from '@/i18n';
-import type { Metadata } from 'next';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import React from 'react';
 
+// No per-locale metadata here (issue #103 dedup): the root layout already
+// declares the shared `title` template and `metadataBase`, and every page
+// below defines its own `generateMetadata` when it needs overrides.
+
 export async function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
-}
-
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: {
-      template: '%s | GameGuild',
-      default: 'GameGuild',
-    },
-  };
 }
 
 export default async function Layout({ children, params }: LayoutProps<'/[locale]'>): Promise<React.JSX.Element> {

@@ -1,6 +1,8 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
 using GameGuild.CQRS.Models;
+using GameGuild.Identity.Authorization.Queries;
+using GameGuild.Identity.Context.Actors;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -384,7 +386,7 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
     ///     Gets permission grants expiring within a window (administrative visibility
     ///     for upcoming expirations).
     /// </summary>
-    /// <param name="tenantId">The tenant ID.</param>
+    /// <param name="actorContextAccessor">The authenticated actor and validated request tenant.</param>
     /// <param name="expiresBefore">Optional cutoff; defaults to the configured notification window.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Grants expiring before the cutoff.</returns>
@@ -396,19 +398,31 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetExpiringPermissions(
-        [FromRoute] Guid tenantId,
+        [FromServices] IActorContextAccessor actorContextAccessor,
         [FromQuery] DateTime? expiresBefore,
         CancellationToken cancellationToken)
     {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.TenantId is not Guid tenantId || tenantId == Guid.Empty)
+        {
+            return Forbid();
+        }
+
         var query = new GetExpiringTenantPermissionsQuery
         {
             TenantId = new TenantId(tenantId),
             ExpiresBefore = expiresBefore
         };
 
-        var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
-
-        return Ok(result);
+        try
+        {
+            var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
     }
 
     /// <summary>
@@ -449,5 +463,190 @@ public sealed class TenantPermissionsController(ISender sender, ILogger<TenantPe
         var published = await sender.Send(new SendExpirationRemindersCommand(), cancellationToken).ConfigureAwait(false);
 
         return Ok(new { Published = published });
+    }
+
+    // ========================================================================
+    // ADVANCED EXPIRATION RULES + ANALYTICS ENDPOINTS (issue #331)
+    // ========================================================================
+
+    /// <summary>
+    ///     Describes the effective advanced expiration rule for a set of permissions
+    ///     (issue #331): the composed constraint (global baseline + every matching
+    ///     per-permission key, strictest wins) and the matched configuration keys.
+    /// </summary>
+    /// <param name="actorContextAccessor">The authenticated actor and validated request tenant.</param>
+    /// <param name="permissions">Comma-separated permission strings to resolve the rule for.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The effective rule and the matched configuration keys.</returns>
+    /// <response code="200">Effective rule resolved.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="403">User doesn't have tenant admin rights for the request tenant.</response>
+    [HttpGet("permissions:expiration-rules")]
+    [ProducesResponseType(typeof(GetEffectiveExpirationRuleResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetEffectiveExpirationRules(
+        [FromServices] IActorContextAccessor actorContextAccessor,
+        [FromQuery] string permissions,
+        CancellationToken cancellationToken)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.TenantId is not Guid tenantId || tenantId == Guid.Empty)
+        {
+            return Forbid();
+        }
+
+        var query = new GetEffectiveExpirationRuleQuery
+        {
+            TenantId = new TenantId(tenantId),
+            Permissions = (permissions ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        };
+
+        try
+        {
+            var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
+
+    /// <summary>
+    ///     Gets the expiration dashboard for the request tenant (issue #331 "expiration
+    ///     analytics and reporting"): the grant population bucketed by time-to-expiry plus
+    ///     the per-permission breakdown of grants expiring within the analytics window.
+    /// </summary>
+    /// <param name="actorContextAccessor">The authenticated actor and validated request tenant.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The expiration summary with buckets and per-permission breakdown.</returns>
+    /// <response code="200">Summary computed successfully.</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="403">User doesn't have tenant admin rights for the request tenant.</response>
+    [HttpGet("permissions:expiration-summary")]
+    [ProducesResponseType(typeof(PermissionExpirationSummary), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetExpirationSummary(
+        [FromServices] IActorContextAccessor actorContextAccessor,
+        CancellationToken cancellationToken)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.TenantId is not Guid tenantId || tenantId == Guid.Empty)
+        {
+            return Forbid();
+        }
+
+        var query = new GetExpirationSummaryQuery { TenantId = new TenantId(tenantId) };
+
+        try
+        {
+            var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
+
+    /// <summary>
+    ///     Gets the daily expiration funnel for the request tenant across an inclusive period
+    ///     (issue #331): automatic expirations processed and manual expiration mutations
+    ///     applied per day, reconstructed from the permission audit log.
+    /// </summary>
+    /// <param name="actorContextAccessor">The authenticated actor and validated request tenant.</param>
+    /// <param name="fromDate">Inclusive period start (UTC).</param>
+    /// <param name="toDate">Inclusive period end (UTC).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>One trend point per day in the period.</returns>
+    /// <response code="200">Trends computed successfully.</response>
+    /// <response code="400">Invalid period (end before start).</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="403">User doesn't have tenant admin rights for the request tenant.</response>
+    [HttpGet("permissions:expiration-trends")]
+    [ProducesResponseType(typeof(List<PermissionExpirationTrendPoint>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetExpirationTrends(
+        [FromServices] IActorContextAccessor actorContextAccessor,
+        [FromQuery] DateTime fromDate,
+        [FromQuery] DateTime toDate,
+        CancellationToken cancellationToken)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.TenantId is not Guid tenantId || tenantId == Guid.Empty)
+        {
+            return Forbid();
+        }
+
+        var query = new GetExpirationTrendsQuery
+        {
+            TenantId = new TenantId(tenantId),
+            FromDate = fromDate,
+            ToDate = toDate
+        };
+
+        try
+        {
+            var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
+
+    /// <summary>
+    ///     Generates the combined expiration report for the request tenant (issue #331
+    ///     "expiration analytics and reporting"): dashboard, daily funnel trends, and
+    ///     operational attention flags across an inclusive period.
+    /// </summary>
+    /// <param name="actorContextAccessor">The authenticated actor and validated request tenant.</param>
+    /// <param name="periodStart">Inclusive period start (UTC).</param>
+    /// <param name="periodEnd">Inclusive period end (UTC).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The combined expiration report.</returns>
+    /// <response code="200">Report generated successfully.</response>
+    /// <response code="400">Invalid period (end before start).</response>
+    /// <response code="401">User is not authenticated.</response>
+    /// <response code="403">User doesn't have tenant admin rights for the request tenant.</response>
+    [HttpGet("permissions:expiration-report")]
+    [ProducesResponseType(typeof(PermissionExpirationReport), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetExpirationReport(
+        [FromServices] IActorContextAccessor actorContextAccessor,
+        [FromQuery] DateTime periodStart,
+        [FromQuery] DateTime periodEnd,
+        CancellationToken cancellationToken)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.TenantId is not Guid tenantId || tenantId == Guid.Empty)
+        {
+            return Forbid();
+        }
+
+        var query = new GetExpirationReportQuery
+        {
+            TenantId = new TenantId(tenantId),
+            PeriodStart = periodStart,
+            PeriodEnd = periodEnd
+        };
+
+        try
+        {
+            var result = await sender.Send(query, cancellationToken).ConfigureAwait(false);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
     }
 }

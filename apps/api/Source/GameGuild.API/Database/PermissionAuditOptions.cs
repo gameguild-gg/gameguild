@@ -29,7 +29,17 @@ public sealed record PermissionAuditChange(
     string? CorrelationId,
     string? CommandType,
     string? BeforeState,
-    string? AfterState);
+    string? AfterState)
+{
+    /// <summary>The host-validated non-user subject, when an internal system acted.</summary>
+    public string? ActorSubjectId { get; init; }
+
+    /// <summary>The trusted origin of the non-user maintenance scope.</summary>
+    public string? ActorOrigin { get; init; }
+
+    /// <summary>The authorized system maintenance operation captured with the mutation.</summary>
+    public string? ActorOperation { get; init; }
+}
 
 /// <summary>
 /// Context offered to optional domain-specific audit hooks after the primary audit attempt.

@@ -10,11 +10,15 @@ namespace GameGuild.Commerce.Billing;
 ///     Endpoint filter enforcing the webhook source security controls on the anonymous provider
 ///     callback endpoints: temporary suspicious-activity blocks first, then the configured CIDR
 ///     allowlist (fail closed with 403). Both checks run before the request payload is read.
+///     The filter also captures the delivery source (provider, remote IP, user agent) into the
+///     scoped <see cref="IWebhookDeliveryContext"/> so the webhook repository can stamp it on
+///     the durable inbox row (issue #408: IP address and user agent logging).
 /// </summary>
 public sealed class WebhookSourceSecurityFilter(
     WebhookSourceIpAllowlist allowlist,
     IWebhookSuspiciousActivityMonitor suspiciousActivityMonitor,
     IWebhookSecurityEventPublisher securityEventPublisher,
+    IWebhookDeliveryContext deliveryContext,
     ILogger<WebhookSourceSecurityFilter> logger) : IAsyncAuthorizationFilter
 {
 
@@ -24,6 +28,11 @@ public sealed class WebhookSourceSecurityFilter(
 
         var remoteIp = context.HttpContext.Connection.RemoteIpAddress?.ToString();
         var provider = ResolveProvider(context);
+
+        // Capture the delivery source before any rejection path: accepted and rejected
+        // deliveries alike get their source recorded (rejections additionally publish a
+        // security event with the same IP).
+        deliveryContext.Capture(provider, remoteIp, context.HttpContext.Request.Headers.UserAgent.ToString());
 
         // Blocked sources are rejected first, before the allowlist, with a security event.
         if (!string.IsNullOrEmpty(remoteIp) &&

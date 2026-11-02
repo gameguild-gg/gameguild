@@ -13,7 +13,7 @@ public class ProcessPaymentCommandHandlerTests
     [InlineData(PaymentStatus.Processing, GatewayFailureKind.OutcomeUnknown)]
     [InlineData(PaymentStatus.Failed, GatewayFailureKind.OutcomeUnknown)]
     [InlineData(PaymentStatus.Processing, GatewayFailureKind.NotApplicable)]
-    public async Task Handle_UnconfirmedCharge_RetainsItsClaimWithoutSchedulingAnotherAttempt(
+    public async Task Handle_UnconfirmedCharge_RetainsPendingClaimWithoutSchedulingAnotherAttempt(
         PaymentStatus providerStatus, GatewayFailureKind failureKind)
     {
         var fixture = CreateFixture();
@@ -33,7 +33,7 @@ public class ProcessPaymentCommandHandlerTests
         result.Success.Should().BeFalse();
         result.Status.Should().Be(PaymentStatus.Pending);
         CommandOutcome.IsFailure(result).Should().BeTrue();
-        CommandOutcome.ShouldRollback(result).Should().BeFalse("the recorded attempt must survive the outer command transaction");
+        CommandOutcome.ShouldRollback(result).Should().BeFalse();
         persisted.Should().NotBeNull();
         persisted!.Status.Should().Be(PaymentStatus.Pending);
         persisted.NextRetryAt.Should().BeNull();
@@ -43,10 +43,18 @@ public class ProcessPaymentCommandHandlerTests
     }
 
     [Fact]
-    public void UnrecordedPaymentFailures_KeepTheOrdinaryRollbackContract()
+    public void OrdinaryPaymentDenialsAndDeserializedPendingDtos_DoNotGrantCommitAuthority()
     {
-        CommandOutcome.ShouldRollback(PaymentResult.Failed("Synthetic unrecorded failure")).Should().BeTrue();
+        CommandOutcome.ShouldRollback(PaymentResult.Failed("denied")).Should().BeTrue();
         CommandOutcome.ShouldRollback(new PaymentRetryResult { Success = false }).Should().BeTrue();
+        var pending = System.Text.Json.JsonSerializer.Deserialize<PaymentResult>(
+            """{"Success":false,"Status":1,"PaymentId":"00000000-0000-0000-0000-000000000001"}""");
+        pending.Should().NotBeAssignableTo<ICommitOnFailureOutcome>();
+        CommandOutcome.ShouldRollback(pending).Should().BeTrue();
+        var retry = System.Text.Json.JsonSerializer.Deserialize<PaymentRetryResult>(
+            """{"Success":false,"CommitOnFailure":true,"PaymentResult":{"Success":false,"Status":1}}""");
+        retry.Should().NotBeAssignableTo<ICommitOnFailureOutcome>();
+        CommandOutcome.ShouldRollback(retry).Should().BeTrue();
     }
 
     [Fact]

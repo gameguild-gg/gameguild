@@ -8,7 +8,6 @@
  * @see https://github.com/WebAssembly/WASI/tree/main/preview2
  */
 
-import type { InputStream, OutputStream, Pollable } from './types'
 import {
   createCliEnvironment,
   createCliExit,
@@ -47,7 +46,7 @@ export { createDOMBindings } from './builtin/dom'
 export function createComponentModelBindings(
   stdout: (text: string) => void,
   stderr: (text: string) => void
-): Record<string, any> {
+) {
   // Stream management
   let nextStreamId = 0
   const streams = new Map<number, { type: 'input' | 'output'; onWrite?: (data: Uint8Array) => void }>()
@@ -111,7 +110,7 @@ export function createWatEnvironment(
   stderr: (text: string) => void,
   memory?: WebAssembly.Memory,
   options?: { useComponentModel?: boolean }
-): Record<string, any> {
+) {
   // Use Component Model (WASI Preview 2) if requested
   if (options?.useComponentModel) {
     return createComponentModelBindings(stdout, stderr)
@@ -137,11 +136,11 @@ export function createWatEnvironment(
     GOImports: createGoBindings(stdout, stderr),
 
     // JavaScript environment
-    js: createJSBindings(stdout, stderr),
+    js: createJSBindings(),
 
     // Web APIs stub
-    window: createWindowBindings(stdout, stderr),
-    document: createDocumentBindings(stdout, stderr),
+    window: createWindowBindings(stdout),
+    document: createDocumentBindings(stdout),
   }
 }
 

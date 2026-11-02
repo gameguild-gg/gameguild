@@ -89,13 +89,18 @@ public interface ISamlFederationService
     Task<SamlSignInChallenge> BuildSignInRedirectAsync(string slug, string? relayState, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Base64-decodes and validates the posted <c>SAMLResponse</c> for <paramref name="slug" />:
-    ///     XML-DSig signature against the configured certificates (unsigned or wrongly-signed
-    ///     responses are refused), issuer, status, destination, audience, clock-skew-bounded
-    ///     lifetimes, <c>InResponseTo</c> correlation with an outstanding AuthnRequest, and
-    ///     single-use assertion IDs. Returns the mapped identity on success.
+    ///     Base64-decodes and validates the posted <c>SAMLResponse</c> for
+    ///     <paramref name="slug" />: XML-DSig signature against the configured certificates
+    ///     (unsigned or wrongly-signed responses are refused), issuer, status, destination,
+    ///     audience, clock-skew-bounded lifetimes, signed subject-confirmation
+    ///     <c>InResponseTo</c> correlation with an outstanding AuthnRequest, the
+    ///     <paramref name="relayState" /> posted alongside the response (it must be the one
+    ///     issued with that request — the browser/provider callback-state binding), and
+    ///     single-use assertion IDs. Pending-request consumption and assertion reservation
+    ///     are atomic, database-backed operations shared by every application instance.
+    ///     Returns the mapped identity on success.
     /// </summary>
-    Task<SamlFederatedIdentity> ConsumeAssertionAsync(string slug, string samlResponse, CancellationToken cancellationToken = default);
+    Task<SamlFederatedIdentity> ConsumeAssertionAsync(string slug, string samlResponse, string relayState, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Builds this service provider's SAML 2.0 metadata document (entity descriptor with

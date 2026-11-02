@@ -17,5 +17,12 @@ public class ProgramConfiguration : IEntityTypeConfiguration<Program> {
     builder.Property(p => p.PassingScore)
       .IsRequired()
       .HasDefaultValue(PercentValue.FromUnits(6000));
+
+    // Catalog queries filter DeletedAt == null with Status/Visibility equality
+    // (GetPublishedProgramBySlugQueryHandler) — issue #1157. Distinct property
+    // list from the annotation-declared single-column Status index.
+    builder.HasIndex(p => new { p.Status, p.Visibility })
+      .HasDatabaseName("ix_programs_status_visibility_live")
+      .HasFilter("\"DeletedAt\" IS NULL");
   }
 }

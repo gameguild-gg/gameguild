@@ -70,6 +70,24 @@ public sealed class SubscriptionPromoCoordinator(
     }
 
     /// <inheritdoc />
+    public Task<SubscriptionPromoQuoteResult> QuoteForPlanChangeAsync(
+        SubscriptionPlanChangePromoQuoteRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        // Plan-change quotes share the creation semantics: plan-scoped validation against
+        // the charge amount, stacking resolution, read-only (usage recorded after the change).
+        return QuoteForSubscriptionCreationAsync(
+            new SubscriptionPromoQuoteRequest(
+                request.PlanId,
+                request.ChargeAmount,
+                request.PromoCodes,
+                request.UserId),
+            cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<Guid>> RecordSubscriptionUsageAsync(
         SubscriptionPromoUsageRecordRequest request,
         CancellationToken cancellationToken = default)

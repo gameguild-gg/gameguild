@@ -68,7 +68,7 @@ public class NotificationServiceTests
         var subject = new NotificationService(delivery.Object, preference.Object, template.Object);
 
         preference.Setup(x => x.GetPreferencesAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(preferenceValue));
-        preference.Setup(x => x.UpdatePreferencesAsync(userId, false, true, false, true, false, true, false, true, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(preferenceValue));
+        preference.Setup(x => x.UpdatePreferencesAsync(userId, false, true, false, true, false, true, false, true, It.IsAny<bool?>(), It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(preferenceValue));
         preference.Setup(x => x.SetQuietHoursAsync(userId, new TimeOnly(22, 0), new TimeOnly(7, 0), "UTC", It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success());
 
         (await subject.GetPreferencesAsync(userId)).Value.Should().BeSameAs(preferenceValue);

@@ -252,7 +252,7 @@ public class SubscriptionQueryAndExternalIdService(
 
         var tenantId = subscription.TenantId
                        ?? throw new InvalidOperationException(
-                           "TenantId is required for subscription entities but was null. This indicates a data integrity issue.");
+                               "TenantId is required for subscription entities but was null. This indicates a data integrity issue.");
 
         var billingCycleNumber = subscription.LastProcessedBillingCycle + 1;
         var billingPeriodStart = billingCycleNumber == 1
@@ -271,7 +271,36 @@ public class SubscriptionQueryAndExternalIdService(
             billingCycleNumber,
             billingPeriodStart,
             billingPeriodEnd,
-            subscription.CreatedByUserId);
+            subscription.CreatedByUserId,
+            PlanId: subscription.PlanId);
+    }
+
+    /// <summary>
+    ///     Bulk payment-context resolution (issue #409: fraud statistics by plan). One query
+    ///     loads the subscriptions with their plans; cycle bookkeeping is not needed here, so
+    ///     the contexts carry identity, plan attribution and pricing only.
+    /// </summary>
+    public async Task<IReadOnlyList<SubscriptionPaymentContext>> GetPaymentContextsAsync(
+        IReadOnlyCollection<Guid> subscriptionIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (subscriptionIds.Count == 0)
+        {
+            return [];
+        }
+
+        var subscriptions = await _repository.GetByIdsAsync(subscriptionIds, cancellationToken).ConfigureAwait(false);
+
+        return subscriptions
+            .Select(subscription => new SubscriptionPaymentContext(
+                subscription.Id,
+                subscription.TenantId ?? Guid.Empty,
+                subscription.Amount.Amount,
+                subscription.Amount.Currency,
+                subscription.ExternalCustomerId,
+                PlanId: subscription.PlanId,
+                PlanName: subscription.Plan?.Name))
+            .ToList();
     }
 
     public async Task SetExternalCustomerIdAsync(Guid subscriptionId, string externalCustomerId, CancellationToken cancellationToken = default)

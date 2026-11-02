@@ -80,6 +80,8 @@
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Orders\GameGuild.Commerce.Orders.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Finance.Economy\GameGuild.Finance.Economy.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Finance.Economy.AiCredits\GameGuild.Finance.Economy.AiCredits.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Finance.Ledgers\GameGuild.Finance.Ledgers.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Gamification.Achievements\GameGuild.Gamification.Achievements.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Finance.Economy.AdRewards\GameGuild.Finance.Economy.AdRewards.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Finance.Economy.Bounties\GameGuild.Finance.Economy.Bounties.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Finance.Economy.Marketplace\GameGuild.Finance.Economy.Marketplace.csproj" />
@@ -105,6 +107,7 @@
         <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.LearningPaths\GameGuild.Learning.Experience.LearningPaths.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Social\GameGuild.Learning.Experience.Social.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Profiles\GameGuild.Social.Profiles.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Ratings\GameGuild.Social.Ratings.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Assets\GameGuild.Social.Assets.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Blog\GameGuild.Social.Blog.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Groups\GameGuild.Social.Groups.csproj" />
@@ -112,6 +115,7 @@
         <ProjectReference Include="..\Modules\GameGuild.Social.Reactions\GameGuild.Social.Reactions.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Feed\GameGuild.Social.Feed.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Follows\GameGuild.Social.Follows.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Mentorship\GameGuild.Social.Mentorship.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.GameJams\GameGuild.GameJams.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Projects\GameGuild.Projects.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.ProjectWork\GameGuild.ProjectWork.csproj" />

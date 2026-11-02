@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for logout command that immediately revokes tokens.
 /// </summary>
-public sealed class LogoutHandler : IRequestHandler<LogoutCommand, LogoutResponse>
+public sealed class LogoutHandler : ICommandHandler<LogoutCommand, LogoutResponse>
 {
     private readonly ITokenRevocationService _tokenRevocationService;
     private readonly IRefreshTokenRepository _refreshTokenRepository;

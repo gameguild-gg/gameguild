@@ -3,6 +3,7 @@ using System.Text.Json;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -93,10 +94,12 @@ public sealed class SessionBoundTokenRevocationTests
     [Fact]
     public async Task ActiveOwnedUnexpiredSessionPreservesAuthenticatedIdentity()
     {
+        using var requestServices = new ServiceCollection().BuildServiceProvider();
         var user = Guid.NewGuid();
         var session = Guid.NewGuid();
         var context = new DefaultHttpContext
         {
+            RequestServices = requestServices,
             User = new ClaimsPrincipal(new ClaimsIdentity([
                 new Claim("sub", user.ToString()), new Claim(JwtClaimTypes.SessionId, session.ToString())], "Bearer"))
         };

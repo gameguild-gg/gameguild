@@ -118,11 +118,80 @@ public class PaymentMethodMigrationTests
         return builder.Operations;
     }
 
+    // ── Encrypted-at-rest gateway references (issue #414) ───────────────
+
+    [Fact]
+    public void EncryptPaymentMethodGatewayIds_ShouldAddHashColumnAndWidenTheReferenceColumn()
+    {
+        var operations = EncryptUpOperations();
+
+        operations
+            .OfType<AddColumnOperation>()
+            .Should().ContainSingle(c => c.Table == "payment_methods" && c.Name == "GatewayPaymentMethodIdHash")
+            .Which.IsNullable.Should().BeTrue("legacy rows have no hash until re-registered");
+
+        var widened = operations
+            .OfType<AlterColumnOperation>()
+            .Should().ContainSingle(c => c.Table == "payment_methods" && c.Name == "GatewayPaymentMethodId")
+            .Which;
+        widened.MaxLength.Should().Be(512);
+    }
+
+    [Fact]
+    public void EncryptPaymentMethodGatewayIds_ShouldGuardDuplicateHashesPerTenant()
+    {
+        var operations = EncryptUpOperations();
+
+        var hashGuard = operations
+            .OfType<CreateIndexOperation>()
+            .Should().ContainSingle(i => i.Name == "ix_payment_methods_tenant_gateway_hash_unique")
+            .Which;
+
+        hashGuard.IsUnique.Should().BeTrue();
+        hashGuard.Columns.Should().BeEquivalentTo(["TenantId", "GatewayProvider", "GatewayPaymentMethodIdHash"]);
+        hashGuard.Filter.Should().Be("\"DeletedAt\" IS NULL");
+
+        operations
+            .OfType<CreateIndexOperation>()
+            .Should().ContainSingle(i => i.Name == "IX_payment_methods_GatewayPaymentMethodIdHash");
+    }
+
+    [Fact]
+    public void EncryptPaymentMethodGatewayIds_Down_ShouldRevertTheColumnAndIndexes()
+    {
+        var builder = new MigrationBuilder("Npgsql");
+        new ExposedEncryptPaymentMethodGatewayIds().BuildDown(builder);
+
+        builder.Operations
+            .OfType<DropColumnOperation>()
+            .Should().Contain(c => c.Table == "payment_methods" && c.Name == "GatewayPaymentMethodIdHash");
+        builder.Operations
+            .OfType<DropIndexOperation>()
+            .Should().Contain(i => i.Name == "ix_payment_methods_tenant_gateway_hash_unique");
+        builder.Operations
+            .OfType<AlterColumnOperation>()
+            .Should().Contain(c => c.Table == "payment_methods" && c.Name == "GatewayPaymentMethodId");
+    }
+
+    private static IReadOnlyList<MigrationOperation> EncryptUpOperations()
+    {
+        var builder = new MigrationBuilder("Npgsql");
+        new ExposedEncryptPaymentMethodGatewayIds().BuildUp(builder);
+        return builder.Operations;
+    }
+
     /// <summary>
     ///     Migration <c>Up</c>/<c>Down</c> are protected; expose them for operation-level
     ///     assertions (same pattern as <c>EconomyConfirmedFundingWriterMigrationTests</c>).
     /// </summary>
     private sealed class ExposedAddPaymentMethods : AddPaymentMethods
+    {
+        public void BuildUp(MigrationBuilder builder) => Up(builder);
+
+        public void BuildDown(MigrationBuilder builder) => Down(builder);
+    }
+
+    private sealed class ExposedEncryptPaymentMethodGatewayIds : EncryptPaymentMethodGatewayIds
     {
         public void BuildUp(MigrationBuilder builder) => Up(builder);
 

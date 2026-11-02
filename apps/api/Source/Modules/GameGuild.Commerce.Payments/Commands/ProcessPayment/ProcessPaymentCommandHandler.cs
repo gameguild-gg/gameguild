@@ -22,7 +22,10 @@ public sealed class ProcessPaymentCommandHandler(
     ILogger<ProcessPaymentCommandHandler> logger,
     IAccountCreditService? creditService = null,
     IOptions<CreditAutoApplyOptions>? creditAutoApplyOptions = null,
-    INotificationService? notificationService = null) : ICommandHandler<ProcessPaymentCommand, PaymentResult>
+    INotificationService? notificationService = null,
+    Microsoft.Extensions.Options.IOptionsMonitor<FraudAssessmentOptions>? fraudAssessmentOptions = null,
+    GameGuild.Commerce.IFraudReviewTicketCoordinator? fraudReviewTicketCoordinator = null,
+    IFraudBackgroundScoringQueue? backgroundScoringQueue = null) : ICommandHandler<ProcessPaymentCommand, PaymentResult>
 {
     private const string SubscriptionInvoiceKind = "subscription";
 
@@ -32,6 +35,9 @@ public sealed class ProcessPaymentCommandHandler(
 
     public async Task<PaymentResult> Handle(ProcessPaymentCommand request, CancellationToken cancellationToken)
     {
+        var tokenProvider = GatewayPaymentMethodTokens.ResolveProvider(request.PaymentMethodId, request.GatewayProvider)
+            ?? throw new ArgumentException(GatewayPaymentMethodTokens.ValidationMessage, nameof(request));
+
         var subscription = await subscriptionPaymentContextService.GetPaymentContextAsync(request.SubscriptionId, cancellationToken)
             .ConfigureAwait(false)
             ?? throw new InvalidOperationException($"Payment subscription {request.SubscriptionId} was not found.");
@@ -97,10 +103,20 @@ public sealed class ProcessPaymentCommandHandler(
             paymentMethodId: request.PaymentMethodId,
             maxRetries: retryOptions.Value.MaxRetries);
 
+        // Persist the client context the fraud gate assessed (issue #409): the source IP
+        // and device fingerprint feed the cross-account device analysis and the
+        // review-detail surface. Recorded before the insert so the attempt lands with
+        // its context in one write.
+        payment.RecordFraudAttemptContext(request.SourceIpAddress, request.DeviceFingerprint);
+
         await paymentRepository.AddAsync(payment, cancellationToken).ConfigureAwait(false);
 
         // 3. Pre-gateway fraud assessment (issue #409): Review/Block hold the payment as
-        //    failed without gateway execution and without an automatic retry.
+        //    failed without gateway execution and without an automatic retry. The attempt's
+        //    billing country, source IP, device fingerprint and payer email feed the
+        //    geography, IP/device/email-blacklist and disposable-email signals; the card BIN,
+        //    the server-known AVS/CVV outcomes and the claimed client timezone feed the
+        //    BIN-range, verification-outcome and GeoIP anonymizer/timezone signals.
         var fraudContext = new FraudSignalContext(
             payment.TenantId,
             payment.Id,
@@ -109,7 +125,15 @@ public sealed class ProcessPaymentCommandHandler(
             request.PaymentMethodId,
             subscription.Amount,
             subscription.Currency,
-            subscription.BillingCycleNumber);
+            subscription.BillingCycleNumber,
+            Country: request.Country,
+            SourceIpAddress: request.SourceIpAddress,
+            DeviceFingerprint: request.DeviceFingerprint,
+            PayerEmail: request.PayerEmail,
+            CardBin: request.CardBin,
+            AvsOutcome: request.AvsOutcome,
+            CvvOutcome: request.CvvOutcome,
+            ClientTimezone: request.ClientTimezone);
 
         var assessment = await fraudDetectionService.AssessPaymentAsync(fraudContext, cancellationToken)
             .ConfigureAwait(false);
@@ -128,7 +152,15 @@ public sealed class ProcessPaymentCommandHandler(
                 "Payment {PaymentId} held by fraud gate: decision {Decision}, score {Score}, reason {Reason}",
                 payment.Id, assessment.Decision, assessment.Score, assessment.Reason);
 
-            await NotifyFraudHoldAsync(payment, assessment, cancellationToken).ConfigureAwait(false);
+            await NotifyFraudHoldAsync(payment, assessment, subscription.OwnerUserId, request.PayerEmail, cancellationToken).ConfigureAwait(false);
+
+            // Issue #409: a held-for-review payment opens an in-app support ticket on the
+            // shared ticket system, so the case surfaces in the support queue staff work.
+            // Best-effort: ticket problems never change the fraud decision.
+            if (assessment.Decision == FraudDecision.Review)
+            {
+                await OpenReviewTicketAsync(payment, assessment, cancellationToken).ConfigureAwait(false);
+            }
 
             return new PaymentResult
             {
@@ -141,6 +173,18 @@ public sealed class ProcessPaymentCommandHandler(
                 FailureReason = payment.FailureReason,
                 PaymentMethodId = request.PaymentMethodId
             };
+        }
+
+        // Issue #409: asynchronous completion. Providers the synchronous budget deferred
+        // are re-evaluated by the background worker, which can only tighten this Allow.
+        if (assessment.EffectiveDeferredProviders.Count > 0
+            && backgroundScoringQueue is not null
+            && fraudAssessmentOptions?.CurrentValue.ResolveFor(payment.TenantId).BackgroundRescoringEnabled != false)
+        {
+            backgroundScoringQueue.TryEnqueue(new FraudBackgroundScoringJob(
+                payment.Id,
+                fraudContext,
+                assessment.EffectiveDeferredProviders));
         }
 
         // Account-credit auto-apply (issue #410): plan the credit tender BEFORE charging the
@@ -181,6 +225,7 @@ public sealed class ProcessPaymentCommandHandler(
         // 4. Persist a local claim before invoking the provider. Unmapped Stripe
         // remains Pending until a verified mapping permits Processing.
         GatewayPaymentResultBinder.PrepareProcessingClaim(payment);
+        payment.RecordBillingCountry(request.Country);
         await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
 
         // 5. Process through payment gateway — or settle entirely with credits when they
@@ -196,6 +241,19 @@ public sealed class ProcessPaymentCommandHandler(
                 .ConfigureAwait(false);
         }
 
+        var gatewayMetadata = new Dictionary<string, string>
+        {
+            ["tenant_id"] = subscription.TenantId.ToString(),
+            ["subscription_id"] = request.SubscriptionId.ToString(),
+            ["billing_cycle"] = subscription.BillingCycleNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        };
+
+        // The billing country feeds the geography-aware routing filters/strategy (issue #413).
+        if (!string.IsNullOrWhiteSpace(request.Country))
+        {
+            gatewayMetadata[GatewayRouteContext.CountryMetadataKey] = request.Country.ToUpperInvariant();
+        }
+
         var gatewayRequest = new GatewayPaymentRequest(
             IdempotencyKey: idempotencyKey,
             Amount: chargeAmount,
@@ -203,12 +261,8 @@ public sealed class ProcessPaymentCommandHandler(
             CustomerId: externalCustomerId,
             PaymentMethodId: request.PaymentMethodId,
             Description: $"Payment for subscription {request.SubscriptionId}",
-            Metadata: new Dictionary<string, string>
-            {
-                ["tenant_id"] = subscription.TenantId.ToString(),
-                ["subscription_id"] = request.SubscriptionId.ToString(),
-                ["billing_cycle"] = subscription.BillingCycleNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)
-            });
+            Metadata: gatewayMetadata,
+            GatewayProvider: tokenProvider);
 
         var gatewayResult = await paymentGateway.ProcessPaymentAsync(gatewayRequest, cancellationToken)
             .ConfigureAwait(false);
@@ -464,6 +518,146 @@ public sealed class ProcessPaymentCommandHandler(
     ///     payment outcome: the hold is already persisted.
     /// </summary>
     private async Task NotifyFraudHoldAsync(
+        Payment payment,
+        FraudAssessment assessment,
+        Guid? ownerUserId,
+        string? payerEmail,
+        CancellationToken cancellationToken)
+    {
+        if (notificationService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await NotifyAdminFraudHoldAsync(payment, assessment, cancellationToken).ConfigureAwait(false);
+
+            // Customer notice on suspicious activity (issue #409): a held-for-review payment
+            // tells the subscription owner their transaction is being verified. The delivered
+            // default is the in-app notice only — never email — so a fraudster holding the
+            // account never learns the gate fired. Deployments that accept that trade-off can
+            // opt into an additional email leg through
+            // Payments:FraudAssessment:CustomerNoticeEmailEnabled (default off).
+            if (assessment.Decision == FraudDecision.Review && ownerUserId is { } customerId)
+            {
+                var emailEnabled = fraudAssessmentOptions?.CurrentValue
+                    .ResolveFor(payment.TenantId).CustomerNoticeEmailEnabled == true;
+                var message =
+                    $"Payment {payment.Id} ({payment.Amount:0.##} {payment.Currency}) is going through additional security verification. " +
+                    "No action is needed from you right now; we will notify you once the review completes.";
+
+                await notificationService
+                    .SendAsync(
+                        recipientId: customerId,
+                        type: NotificationType.Billing,
+                        title: "Your payment is being reviewed",
+                        message: message,
+                        channel: NotificationChannel.InApp,
+                        tenantId: payment.TenantId,
+                        priority: NotificationPriority.Normal,
+                        referenceEntityId: payment.Id,
+                        referenceEntityType: nameof(Payment),
+                        metadata: JsonSerializer.Serialize(new
+                        {
+                            paymentId = payment.Id,
+                            tenantId = payment.TenantId,
+                            decision = assessment.Decision.ToString()
+                        }),
+                        recipientEmail: null,
+                        cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (emailEnabled && !string.IsNullOrWhiteSpace(payerEmail))
+                {
+                    var emailResult = await notificationService
+                        .SendAsync(
+                            recipientId: customerId,
+                            type: NotificationType.Billing,
+                            title: "Your payment is being reviewed",
+                            message: message,
+                            channel: NotificationChannel.Email,
+                            tenantId: payment.TenantId,
+                            priority: NotificationPriority.Normal,
+                            referenceEntityId: payment.Id,
+                            referenceEntityType: nameof(Payment),
+                            recipientEmail: payerEmail.Trim(),
+                            cancellationToken: cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (!emailResult.IsSuccess)
+                    {
+                        logger.LogInformation(
+                            "Fraud-hold customer email for payment {PaymentId} was not delivered: {Reason}",
+                            payment.Id,
+                            emailResult.Error?.Description ?? "preference decision");
+                    }
+                }
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Notifications are best-effort: delivery problems must never change the fraud decision.
+            logger.LogWarning(
+                exception,
+                "Failed to send the fraud-hold notices for payment {PaymentId}",
+                payment.Id);
+        }
+    }
+
+    /// <summary>
+    ///     Opens the manual-review support ticket for a held payment (issue #409: create a
+    ///     support ticket for manual review cases). Routed through the commerce coordinator
+    ///     contract so the Payments project stays free of the Products ticket system.
+    ///     Best-effort: without a registered coordinator (unit hosts, compositions without
+    ///     the Products module) the review queue itself remains the durable surface.
+    /// </summary>
+    private async Task OpenReviewTicketAsync(
+        Payment payment,
+        FraudAssessment assessment,
+        CancellationToken cancellationToken)
+    {
+        if (fraudReviewTicketCoordinator is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var ticketId = await fraudReviewTicketCoordinator
+                .OpenReviewTicketAsync(
+                    new GameGuild.Commerce.FraudReviewTicketRequest(
+                        payment.TenantId,
+                        payment.Id,
+                        nameof(Payment),
+                        "payment-gate",
+                        assessment.Score,
+                        assessment.Reason,
+                        payment.Amount,
+                        payment.Currency,
+                        payment.FraudEvidence),
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            if (ticketId is { } id)
+            {
+                logger.LogInformation(
+                    "Fraud review ticket {TicketId} opened for payment {PaymentId}",
+                    id,
+                    payment.Id);
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Best-effort: the held payment and its review-queue entry are already durable.
+            logger.LogWarning(
+                exception,
+                "Failed to open the fraud review ticket for payment {PaymentId}",
+                payment.Id);
+        }
+    }
+
+    private async Task NotifyAdminFraudHoldAsync(
         Payment payment,
         FraudAssessment assessment,
         CancellationToken cancellationToken)

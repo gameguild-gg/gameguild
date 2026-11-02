@@ -63,6 +63,14 @@ public class AssetReferenceConfiguration : IEntityTypeConfiguration<AssetReferen
         builder.HasIndex(e => new { e.ParentResourceType, e.ParentResourceId })
             .HasDatabaseName("IX_AssetReferences_Parent");
 
+        // Library listings under a parent resource are query-filtered
+        // (DeletedAt == null) and ordered by CreatedAt descending
+        // (SearchAssetsQuery) — issue #1157. Distinct property list from
+        // IX_AssetReferences_Parent so EF keeps both indexes.
+        builder.HasIndex(e => new { e.ParentResourceType, e.ParentResourceId, e.CreatedAt })
+            .HasDatabaseName("ix_asset_references_parent_created_live")
+            .HasFilter("\"DeletedAt\" IS NULL");
+
         builder.HasIndex(e => e.AccessPolicy)
             .HasDatabaseName("IX_AssetReferences_AccessPolicy");
 

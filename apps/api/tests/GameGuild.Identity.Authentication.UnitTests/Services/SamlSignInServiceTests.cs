@@ -96,7 +96,7 @@ public class SamlSignInServiceTests
             .ReturnsAsync("refresh-token");
 
         _samlFederationServiceMock
-            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SamlFederatedIdentity
             {
                 Slug = Slug,
@@ -226,7 +226,7 @@ public class SamlSignInServiceTests
         _userRepoMock.Setup(x => x.GetByEmailAsync("jane@corp.example.test", It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
         _samlFederationServiceMock
-            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SamlFederatedIdentity
             {
                 Slug = Slug,
@@ -280,7 +280,7 @@ public class SamlSignInServiceTests
         _userRepoMock.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
         _samlFederationServiceMock
-            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SamlFederatedIdentity
             {
                 Slug = Slug,
@@ -336,7 +336,7 @@ public class SamlSignInServiceTests
             .Setup(x => x.IsMfaRequiredAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         _samlFederationServiceMock
-            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SamlFederatedIdentity
             {
                 Slug = Slug,
@@ -362,7 +362,7 @@ public class SamlSignInServiceTests
             .Setup(x => x.GetByProviderKeyAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ExternalLogin?)null);
         _samlFederationServiceMock
-            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SamlFederatedIdentity
             {
                 Slug = Slug,
@@ -387,7 +387,7 @@ public class SamlSignInServiceTests
             .ReturnsAsync((User?)null);
         SetUpMemberships((OtherTenant, true));
         _samlFederationServiceMock
-            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SamlFederatedIdentity
             {
                 Slug = Slug,
@@ -412,7 +412,7 @@ public class SamlSignInServiceTests
             .ReturnsAsync((User?)null);
         SetUpMemberships((AllowedTenant, true));
         _samlFederationServiceMock
-            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.ConsumeAssertionAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SamlFederatedIdentity
             {
                 Slug = Slug,

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
@@ -681,5 +682,227 @@ public sealed class PasswordCommandHandlersTests
         result.Success.Should().BeFalse();
         result.Message.Should().Be("Password must be at least 8 characters long; Password must contain an uppercase letter");
         userRepository.Verify(r => r.UpdatePasswordHashAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // ── Session revocation on password change (issue #278) ──────────────────────
+
+    private static void SetupSuccessfulChange(
+        Mock<IUserRepository> userRepository,
+        Mock<IPasswordHasher> hasher,
+        Guid userId)
+    {
+        userRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = userId, PasswordHash = "old-hash" });
+        hasher.Setup(h => h.VerifyPassword("old-hash", "CurrentPass1!")).Returns(true);
+        hasher.Setup(h => h.ValidatePasswordStrength("StrongPass1!"))
+            .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
+        hasher.Setup(h => h.HashPassword("StrongPass1!"))
+            .Returns("new-hash");
+        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+    }
+
+    [Fact]
+    public async Task ChangePasswordCommandHandler_TerminateOnPasswordChange_UsesRevocationService()
+    {
+        var userId = Guid.NewGuid();
+        var userRepository = new Mock<IUserRepository>();
+        var sessionRepository = new Mock<IUserSessionRepository>();
+        var hasher = new Mock<IPasswordHasher>();
+        SetupSuccessfulChange(userRepository, hasher, userId);
+        var revocation = new Mock<IPasswordChangeRevocationService>();
+        revocation
+            .Setup(r => r.RevokeAllSessionsAndTokensAsync(userId, "Password changed", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(4);
+        var options = new SessionOptions { TerminateSessionsOnPasswordChange = true };
+
+        var handler = new ChangePasswordCommandHandler(
+            userRepository.Object,
+            hasher.Object,
+            NullLogger<ChangePasswordCommandHandler>.Instance,
+            sessionRepository.Object,
+            options,
+            revocation.Object);
+
+        var result = await handler.Handle(
+            new ChangePasswordCommand
+            {
+                UserId = userId,
+                CurrentPassword = "CurrentPass1!",
+                NewPassword = "StrongPass1!",
+                ConfirmPassword = "StrongPass1!"
+            },
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        result.SessionsRevoked.Should().Be(4);
+        // Full battery via the service: the legacy repository-only path must not also run.
+        revocation.Verify(r => r.RevokeAllSessionsAndTokensAsync(userId, "Password changed", It.IsAny<CancellationToken>()), Times.Once);
+        sessionRepository.Verify(r => r.TerminateAllForUserAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        sessionRepository.Verify(r => r.GetActiveByUserIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ChangePasswordCommandHandler_TerminateOnPasswordChange_WithoutService_FallsBackToRepository()
+    {
+        var userId = Guid.NewGuid();
+        var userRepository = new Mock<IUserRepository>();
+        var sessionRepository = new Mock<IUserSessionRepository>();
+        var hasher = new Mock<IPasswordHasher>();
+        SetupSuccessfulChange(userRepository, hasher, userId);
+        sessionRepository.Setup(r => r.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new UserSession { Id = Guid.NewGuid(), UserId = userId, IsActive = true, ExpiresAt = DateTime.UtcNow.AddHours(1) },
+                new UserSession { Id = Guid.NewGuid(), UserId = userId, IsActive = true, ExpiresAt = DateTime.UtcNow.AddHours(1) }
+            ]);
+        sessionRepository.Setup(r => r.TerminateAllForUserAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        var options = new SessionOptions { TerminateSessionsOnPasswordChange = true };
+
+        var handler = new ChangePasswordCommandHandler(
+            userRepository.Object,
+            hasher.Object,
+            NullLogger<ChangePasswordCommandHandler>.Instance,
+            sessionRepository.Object,
+            options);
+
+        var result = await handler.Handle(
+            new ChangePasswordCommand
+            {
+                UserId = userId,
+                CurrentPassword = "CurrentPass1!",
+                NewPassword = "StrongPass1!",
+                ConfirmPassword = "StrongPass1!"
+            },
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        result.SessionsRevoked.Should().Be(2);
+        sessionRepository.Verify(r => r.TerminateAllForUserAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ChangePasswordCommandHandler_TerminateOnPasswordChangeDisabled_SkipsRevocation()
+    {
+        var userId = Guid.NewGuid();
+        var userRepository = new Mock<IUserRepository>();
+        var sessionRepository = new Mock<IUserSessionRepository>();
+        var hasher = new Mock<IPasswordHasher>();
+        SetupSuccessfulChange(userRepository, hasher, userId);
+        var revocation = new Mock<IPasswordChangeRevocationService>();
+        var options = new SessionOptions { TerminateSessionsOnPasswordChange = false };
+
+        var handler = new ChangePasswordCommandHandler(
+            userRepository.Object,
+            hasher.Object,
+            NullLogger<ChangePasswordCommandHandler>.Instance,
+            sessionRepository.Object,
+            options,
+            revocation.Object);
+
+        var result = await handler.Handle(
+            new ChangePasswordCommand
+            {
+                UserId = userId,
+                CurrentPassword = "CurrentPass1!",
+                NewPassword = "StrongPass1!",
+                ConfirmPassword = "StrongPass1!",
+                RevokeOtherSessions = false
+            },
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        result.SessionsRevoked.Should().Be(0);
+        revocation.Verify(r => r.RevokeAllSessionsAndTokensAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        sessionRepository.Verify(r => r.TerminateAllForUserAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ResetPasswordCommandHandler_TerminateOnPasswordChange_UsesRevocationService()
+    {
+        var userId = Guid.NewGuid();
+        var userRepository = new Mock<IUserRepository>();
+        var hasher = new Mock<IPasswordHasher>();
+        var emailService = new Mock<IEmailVerificationService>();
+        emailService.Setup(s => s.VerifyPasswordResetTokenAsync("token"))
+            .ReturnsAsync(new TokenValidationResult(true, userId, "reset@test.com"));
+        userRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = userId, Email = "reset@test.com" });
+        hasher.Setup(h => h.ValidatePasswordStrength("StrongPass1!"))
+            .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
+        hasher.Setup(h => h.HashPassword("StrongPass1!"))
+            .Returns("new-hash");
+        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var revocation = new Mock<IPasswordChangeRevocationService>();
+        revocation
+            .Setup(r => r.RevokeAllSessionsAndTokensAsync(userId, "Password reset", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
+        var options = new SessionOptions { TerminateSessionsOnPasswordChange = true };
+
+        var handler = new ResetPasswordCommandHandler(
+            userRepository.Object,
+            hasher.Object,
+            emailService.Object,
+            NullLogger<ResetPasswordCommandHandler>.Instance,
+            null,
+            options,
+            revocation.Object);
+
+        var result = await handler.Handle(
+            new ResetPasswordCommand
+            {
+                Token = "token",
+                NewPassword = "StrongPass1!",
+                ConfirmPassword = "StrongPass1!"
+            },
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        revocation.Verify(r => r.RevokeAllSessionsAndTokensAsync(userId, "Password reset", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ResetPasswordCommandHandler_TerminateOnPasswordChange_WithoutService_FallsBackToRepository()
+    {
+        var userId = Guid.NewGuid();
+        var userRepository = new Mock<IUserRepository>();
+        var hasher = new Mock<IPasswordHasher>();
+        var emailService = new Mock<IEmailVerificationService>();
+        var sessionRepository = new Mock<IUserSessionRepository>();
+        emailService.Setup(s => s.VerifyPasswordResetTokenAsync("token"))
+            .ReturnsAsync(new TokenValidationResult(true, userId, "reset@test.com"));
+        userRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = userId, Email = "reset@test.com" });
+        hasher.Setup(h => h.ValidatePasswordStrength("StrongPass1!"))
+            .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
+        hasher.Setup(h => h.HashPassword("StrongPass1!"))
+            .Returns("new-hash");
+        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        sessionRepository.Setup(r => r.TerminateAllForUserAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        var options = new SessionOptions { TerminateSessionsOnPasswordChange = true };
+
+        var handler = new ResetPasswordCommandHandler(
+            userRepository.Object,
+            hasher.Object,
+            emailService.Object,
+            NullLogger<ResetPasswordCommandHandler>.Instance,
+            sessionRepository.Object,
+            options);
+
+        var result = await handler.Handle(
+            new ResetPasswordCommand
+            {
+                Token = "token",
+                NewPassword = "StrongPass1!",
+                ConfirmPassword = "StrongPass1!"
+            },
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        sessionRepository.Verify(r => r.TerminateAllForUserAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

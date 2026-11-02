@@ -14,7 +14,7 @@ Students compare and contrast a variety of data structures. Students compare alg
     
 ## Student-centered Learning Outcomes
 
-[![Bloom's Taxonomy](https://cdn.vanderbilt.edu/vu-wp0/wp-content/uploads/sites/59/2019/03/27124326/Blooms-Taxonomy-650x366.jpg)](https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/)
+[![Bloom's Taxonomy](/assets/images/courses/blooms-taxonomy.jpg)](https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/)
 <a href="https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/">Bloom's Taxonomy on Learning Outcomes</a>
 
 Upon completion of the Data Structures and Algorithms course in C++, students should be able to:

@@ -119,6 +119,40 @@ public interface IPromoCodeRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Validation attempts recorded for a subject (user id when authenticated, otherwise
+    /// the normalized code string) within the window ending now (issue #418 anomaly detection).
+    /// The current attempt is expected to be persisted already or counted by the caller.
+    /// </summary>
+    Task<int> CountRecentValidationAttemptsAsync(
+        Guid? userId,
+        string? normalizedCode,
+        DateTime windowStartUtc,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Recorded promo usages for a user within the window ending now
+    /// (issue #418 anomaly detection).
+    /// </summary>
+    Task<int> CountRecentUsagesAsync(
+        Guid userId,
+        DateTime windowStartUtc,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Whether the user has ever recorded a promo usage (issue #418 customer-state
+    /// resolution and first-purchase attribution).
+    /// </summary>
+    Task<bool> HasUserRecordedUsageAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Persists a first-purchase campaign attribution row (issue #418 CAC). Best-effort
+    /// analytics write: the unique index on <c>PromoCampaignAttribution.UserId</c> makes the
+    /// first attribution win and a lost race surfaces as a db-update exception the caller
+    /// catches. Saves immediately.
+    /// </summary>
+    Task RecordFirstPurchaseAttributionAsync(PromoCampaignAttribution attribution, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Load promo codes by identifiers (issue #418 subscription application).
     /// </summary>
     Task<List<PromoCode>> GetByIdsAsync(IReadOnlyList<Guid> ids, CancellationToken cancellationToken = default);

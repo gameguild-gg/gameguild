@@ -4,7 +4,8 @@ public class ConsentService(
     IConsentPolicyRepository policyRepository,
     IPolicyVersionRepository versionRepository,
     IUserConsentRepository consentRepository,
-    IDataSubjectRequestRepository dsrRepository) : IConsentService
+    IDataSubjectRequestRepository dsrRepository,
+    IConsentAuditEventSink? auditSink = null) : IConsentService
 {
     public async Task<ConsentPolicyDto> CreatePolicyAsync(string name, PolicyType type, bool isMandatory, string? description, CancellationToken ct = default)
     {
@@ -64,6 +65,13 @@ public class ConsentService(
             ConsentMethod = method
         };
         consent = await consentRepository.AddAsync(consent, ct).ConfigureAwait(false);
+        await RecordAuditAsync(new ConsentAuditEvent(
+            ConsentAuditActionTypes.Granted,
+            userId,
+            null,
+            Success: true,
+            $"Consent granted for policy version {policyVersionId}",
+            Metadata: new { PolicyVersionId = policyVersionId, Method = method, IpAddress = ipAddress }), ct).ConfigureAwait(false);
         return ToDto(consent);
     }
 
@@ -73,6 +81,13 @@ public class ConsentService(
         if (consent == null || !consent.IsGranted) return;
         consent.Revoke();
         await consentRepository.UpdateAsync(consent, ct).ConfigureAwait(false);
+        await RecordAuditAsync(new ConsentAuditEvent(
+            ConsentAuditActionTypes.Revoked,
+            userId,
+            null,
+            Success: true,
+            $"Consent revoked for policy version {policyVersionId}",
+            Metadata: new { PolicyVersionId = policyVersionId }), ct).ConfigureAwait(false);
     }
 
     public async Task<List<UserConsentDto>> GetUserConsentsAsync(Guid userId, CancellationToken ct = default)
@@ -91,6 +106,13 @@ public class ConsentService(
             Deadline = DateTime.UtcNow.AddDays(30)
         };
         request = await dsrRepository.AddAsync(request, ct).ConfigureAwait(false);
+        await RecordAuditAsync(new ConsentAuditEvent(
+            ConsentAuditActionTypes.RequestSubmitted,
+            userId,
+            null,
+            Success: true,
+            $"Data subject {type} request submitted (30-day statutory deadline {request.Deadline:yyyy-MM-dd})",
+            Metadata: new { RequestId = request.Id, RequestType = type.ToString(), Deadline = request.Deadline }), ct).ConfigureAwait(false);
         return ToDto(request);
     }
 
@@ -100,6 +122,13 @@ public class ConsentService(
             ?? throw new KeyNotFoundException($"Data subject request {requestId} not found.");
         request.Complete(processedBy, notes);
         await dsrRepository.UpdateAsync(request, ct).ConfigureAwait(false);
+        await RecordAuditAsync(new ConsentAuditEvent(
+            ConsentAuditActionTypes.RequestCompleted,
+            request.UserId,
+            null,
+            Success: true,
+            $"Data subject {request.RequestType} request fulfilled",
+            Metadata: new { RequestId = request.Id, ProcessedBy = processedBy, OnTime = DateTime.UtcNow <= request.Deadline }), ct).ConfigureAwait(false);
         return ToDto(request);
     }
 
@@ -107,6 +136,29 @@ public class ConsentService(
     {
         var requests = await dsrRepository.GetPendingAsync(ct).ConfigureAwait(false);
         return requests.Select(ToDto).ToList();
+    }
+
+    private async Task RecordAuditAsync(ConsentAuditEvent auditEvent, CancellationToken ct)
+    {
+        if (auditSink is null)
+        {
+            return;
+        }
+
+        // The audit bridge is durable with spool fallback; a capture hiccup must never block the
+        // consent operation itself.
+        try
+        {
+            await auditSink.RecordAsync(auditEvent, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            // Swallow: consent state changes are independently durable through their repositories.
+        }
     }
 
     private static ConsentPolicyDto ToDto(ConsentPolicy p) =>

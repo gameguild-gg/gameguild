@@ -13,11 +13,11 @@ public enum AuditRetentionGrowthModel { Constant, HistoricalTrend, CompoundAnnua
 public sealed record AuditStorageTierPrice
 {
     public AuditStorageTier Tier { get; init; }
-    [Range(typeof(decimal), "0", "100000")]
+    [ThreadSafeDecimalRange("0", "100000")]
     public decimal MonthlyCostPerGiB { get; init; }
-    [Range(typeof(decimal), "0", "100000")]
+    [ThreadSafeDecimalRange("0", "100000")]
     public decimal RetrievalCostPerGiB { get; init; }
-    [Range(typeof(decimal), "0", "604800000")]
+    [ThreadSafeDecimalRange("0", "604800000")]
     public decimal ExpectedReadLatencyMilliseconds { get; init; }
 }
 
@@ -43,9 +43,9 @@ public sealed record ConfigureAuditRetentionRequest
 {
     [Range(0, int.MaxValue)] public int ExpectedRevision { get; init; }
     [Required, RegularExpression("^[A-Z]{3}$")] public string Currency { get; init; } = "USD";
-    [Range(typeof(decimal), "1", "10")] public decimal StorageOverheadMultiplier { get; init; } = 1;
-    [Range(typeof(decimal), "0", "1000000000000000")] public decimal? MonthlyBudget { get; init; }
-    [Range(typeof(decimal), "0", "604800000")] public decimal MaximumReadLatencyMilliseconds { get; init; } = 1000;
+    [ThreadSafeDecimalRange("1", "10")] public decimal StorageOverheadMultiplier { get; init; } = 1;
+    [ThreadSafeDecimalRange("0", "1000000000000000")] public decimal? MonthlyBudget { get; init; }
+    [ThreadSafeDecimalRange("0", "604800000")] public decimal MaximumReadLatencyMilliseconds { get; init; } = 1000;
     [Required] public AuditRetentionScenario Baseline { get; init; } = new();
     [Required, MinLength(4), MaxLength(4)] public List<AuditStorageTierPrice> TierPrices { get; init; } = [];
     [Required, MaxLength(50)] public List<AuditRetentionObligation> Obligations { get; init; } = [];
@@ -58,7 +58,7 @@ public sealed record RunAuditRetentionSimulationRequest
     [Range(14, 365)] public int HistoricalDays { get; init; } = 90;
     [Range(1, 120)] public int ForecastMonths { get; init; } = 36;
     public AuditRetentionGrowthModel GrowthModel { get; init; } = AuditRetentionGrowthModel.HistoricalTrend;
-    [Range(typeof(decimal), "-95", "300")] public decimal? AnnualGrowthPercent { get; init; }
+    [ThreadSafeDecimalRange("-95", "300")] public decimal? AnnualGrowthPercent { get; init; }
     [Required, MinLength(1), MaxLength(10)] public List<AuditRetentionScenario> Scenarios { get; init; } = [];
 }
 

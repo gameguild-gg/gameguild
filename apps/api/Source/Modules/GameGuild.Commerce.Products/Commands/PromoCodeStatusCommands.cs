@@ -81,6 +81,8 @@ public sealed class DeactivatePromoCodeHandler(IPromoCodeRepository repository) 
 /// <param name="CampaignId">Optional campaign identifier</param>
 /// <param name="ProductId">Optional product ID</param>
 /// <param name="PlanId">Optional subscription plan ID (issue #418)</param>
+/// <param name="TimeZoneId">Optional time zone used to evaluate the promotion window.</param>
+/// <param name="EligibleCustomerType">Optional customer eligibility restriction.</param>
 public sealed record PatchPromoCodeCommand(
     Guid PromoCodeId,
     string? Name = null,
@@ -103,13 +105,18 @@ public sealed record PatchPromoCodeCommand(
     int? StackingPriority = null,
     string? CampaignId = null,
     Guid? ProductId = null,
-    Guid? PlanId = null
+    Guid? PlanId = null,
+    string? TimeZoneId = null,
+    PromoCustomerType? EligibleCustomerType = null
 ) : ICommand<PromoCodeDto>;
 
 /// <summary>
 /// Handler for PatchPromoCodeCommand
 /// </summary>
-public sealed class PatchPromoCodeHandler(IPromoCodeRepository repository) : ICommandHandler<PatchPromoCodeCommand, PromoCodeDto>
+public sealed class PatchPromoCodeHandler(
+    IPromoCodeRepository repository,
+    Microsoft.Extensions.Options.IOptions<PromoEngineOptions>? engineOptions = null)
+    : ICommandHandler<PatchPromoCodeCommand, PromoCodeDto>
 {
     public async Task<PromoCodeDto> Handle(PatchPromoCodeCommand request, CancellationToken cancellationToken)
     {
@@ -172,13 +179,27 @@ public sealed class PatchPromoCodeHandler(IPromoCodeRepository repository) : ICo
         {
             promoCode.ApplyToRenewal = request.ApplyToRenewal.Value;
         }
-        if (request.ValidFrom.HasValue)
+        if (request.ValidFrom.HasValue || request.ValidUntil.HasValue || !string.IsNullOrWhiteSpace(request.TimeZoneId))
         {
-            promoCode.ValidFrom = request.ValidFrom;
+            // Issue #418: normalize supplied window edges to UTC instants in the effective
+            // timezone (explicit patch wins, else the stored zone, else the tenant default).
+            var effectiveTimeZoneId = !string.IsNullOrWhiteSpace(request.TimeZoneId)
+                ? request.TimeZoneId
+                : !string.IsNullOrWhiteSpace(promoCode.TimeZoneId) ? promoCode.TimeZoneId : engineOptions?.Value.DefaultTimeZoneId;
+            var (timeZone, _) = PromoValidityWindow.ResolveTimeZone(effectiveTimeZoneId);
+            if (request.ValidFrom.HasValue)
+            {
+                promoCode.ValidFrom = PromoValidityWindow.NormalizeToUtc(request.ValidFrom, timeZone);
+            }
+            if (request.ValidUntil.HasValue)
+            {
+                promoCode.ValidUntil = PromoValidityWindow.NormalizeToUtc(request.ValidUntil, timeZone);
+            }
+            promoCode.TimeZoneId = timeZone.Id;
         }
-        if (request.ValidUntil.HasValue)
+        if (request.EligibleCustomerType.HasValue)
         {
-            promoCode.ValidUntil = request.ValidUntil;
+            promoCode.EligibleCustomerType = request.EligibleCustomerType.Value;
         }
         if (request.IsActive.HasValue)
         {

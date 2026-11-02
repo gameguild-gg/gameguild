@@ -201,6 +201,19 @@ public sealed record PasswordChangeRequest
 }
 
 /// <summary>
+///     Request to sign out the authenticated caller (issue #1154). The body is optional:
+///     without it only the current access token is revoked.
+/// </summary>
+public sealed record SignOutRequest
+{
+    /// <summary>
+    ///     When true, revokes every refresh token and terminates every session for the
+    ///     account (sign out everywhere) instead of only the current token.
+    /// </summary>
+    public bool LogoutEverywhere { get; init; }
+}
+
+/// <summary>
 ///     Request to verify Web3 wallet signature
 /// </summary>
 public sealed record Web3VerifyRequest

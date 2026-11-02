@@ -16,6 +16,7 @@ namespace GameGuild.Commerce.Products;
 [Route("v{version:apiVersion}/support/tickets/mine")]
 [Microsoft.AspNetCore.Http.Tags("support/tickets/self-service")]
 [Authorize]
+[DataMaskingResourceType("SupportTicket")]
 public sealed class MySupportTicketsController(
     ISender sender,
     IActorContextAccessor actorContextAccessor,

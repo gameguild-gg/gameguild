@@ -23,6 +23,7 @@ import {
   type NotificationReadActionResult,
 } from '@/lib/notifications/mark-read-action';
 import { WorkspaceUserMenu, type WorkspaceUser } from '@/components/console/workspace-user-menu';
+import { CurrencySwitcher } from '@/components/currency/currency-switcher';
 
 interface NotificationItemProps {
   item: DashboardNotificationItem;
@@ -213,6 +214,8 @@ export function AppShellHeaderMenu({ notifications, user }: AppShellHeaderMenuPr
       className="flex shrink-0 items-center justify-end gap-1 sm:gap-2"
     >
       <ContextToggle isWorkspace={isWorkspace} />
+      {/* Currency indicator in the navigation bar (issue #412 spec E). */}
+      <CurrencySwitcher />
       <NotificationsMenu notifications={notifications} />
       <div className="ml-1 sm:ml-2">
         <WorkspaceUserMenu user={user} />

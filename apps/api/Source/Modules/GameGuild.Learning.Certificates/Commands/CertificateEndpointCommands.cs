@@ -13,6 +13,10 @@ public sealed record RevokeCertificateEndpointCommand(
     Guid CertificateId,
     string Reason) : ICommand<Result>;
 
+public sealed record RenewCertificateEndpointCommand(
+    Guid CertificateId,
+    DateTime NewExpiresAt) : ICommand<Result<Certificate>>;
+
 public sealed record CreateCertificateTemplateEndpointCommand(
     Guid CourseId,
     string Name,
@@ -36,6 +40,7 @@ public sealed class CertificateEndpointCommandHandler(
     ICertificateTemplateService templateService) :
     ICommandHandler<IssueCertificateEndpointCommand, Result<Certificate>>,
     ICommandHandler<RevokeCertificateEndpointCommand, Result>,
+    ICommandHandler<RenewCertificateEndpointCommand, Result<Certificate>>,
     ICommandHandler<CreateCertificateTemplateEndpointCommand, Result<CertificateTemplate>>,
     ICommandHandler<UpdateCertificateTemplateEndpointCommand, Result<CertificateTemplate>>,
     ICommandHandler<DeleteCertificateTemplateEndpointCommand, Result>
@@ -54,6 +59,11 @@ public sealed class CertificateEndpointCommandHandler(
         RevokeCertificateEndpointCommand request,
         CancellationToken cancellationToken) =>
         certificateService.RevokeCertificateAsync(request.CertificateId, request.Reason);
+
+    public Task<Result<Certificate>> Handle(
+        RenewCertificateEndpointCommand request,
+        CancellationToken cancellationToken) =>
+        certificateService.RenewCertificateAsync(request.CertificateId, request.NewExpiresAt);
 
     public Task<Result<CertificateTemplate>> Handle(
         CreateCertificateTemplateEndpointCommand request,

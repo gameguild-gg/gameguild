@@ -183,14 +183,110 @@ export class AccessControlTenantPermissionsModule {
   }
 
   /**
+   * Generates the combined expiration report for the request tenant (issue #331
+   * "expiration analytics and reporting"): dashboard, daily funnel trends, and
+   * operational attention flags across an inclusive period.
+   */
+  async getAuthorizationTenantsPermissionsExpirationReport(query?: {
+    periodStart?: string;
+    periodEnd?: string;
+  }): Promise<Result<Types.IdentityAuthorizationPermissionExpirationReport, ApiError>> {
+    const url = '/api/v1/authorization/tenants/permissions:expiration-report';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthorizationPermissionExpirationReportSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Describes the effective advanced expiration rule for a set of permissions
+   * (issue #331): the composed constraint (global baseline + every matching
+   * per-permission key, strictest wins) and the matched configuration keys.
+   */
+  async getAuthorizationTenantsPermissionsExpirationRules(query?: {
+    permissions?: string;
+  }): Promise<Result<Types.IdentityAuthorizationGetEffectiveExpirationRuleOutput, ApiError>> {
+    const url = '/api/v1/authorization/tenants/permissions:expiration-rules';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthorizationGetEffectiveExpirationRuleOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Gets the expiration dashboard for the request tenant (issue #331 "expiration
+   * analytics and reporting"): the grant population bucketed by time-to-expiry plus
+   * the per-permission breakdown of grants expiring within the analytics window.
+   */
+  async getAuthorizationTenantsPermissionsExpirationSummary(): Promise<Result<Types.IdentityAuthorizationPermissionExpirationSummary, ApiError>> {
+    const url = '/api/v1/authorization/tenants/permissions:expiration-summary';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthorizationPermissionExpirationSummarySchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Gets the daily expiration funnel for the request tenant across an inclusive period
+   * (issue #331): automatic expirations processed and manual expiration mutations
+   * applied per day, reconstructed from the permission audit log.
+   */
+  async getAuthorizationTenantsPermissionsExpirationTrends(query?: {
+    fromDate?: string;
+    toDate?: string;
+  }): Promise<Result<Types.IdentityAuthorizationPermissionExpirationTrendPoint[], ApiError>> {
+    const url = '/api/v1/authorization/tenants/permissions:expiration-trends';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Types.IdentityAuthorizationPermissionExpirationTrendPoint[], ApiError>;
+  }
+
+  /**
    * Gets permission grants expiring within a window (administrative visibility
    * for upcoming expirations).
    */
-  async getAuthorizationTenantsPermissionsExpiring(
-    tenantId: string,
-    query?: { expiresBefore?: string },
-  ): Promise<Result<Types.IdentityAuthorizationGetExpiringTenantPermissionsOutput, ApiError>> {
-    const url = `/api/v1/authorization/tenants/permissions:expiring`;
+  async getAuthorizationTenantsPermissionsExpiring(query?: {
+    expiresBefore?: string;
+  }): Promise<Result<Types.IdentityAuthorizationGetExpiringTenantPermissionsOutput, ApiError>> {
+    const url = '/api/v1/authorization/tenants/permissions:expiring';
 
     const result = await this.client.request({
       method: 'GET',

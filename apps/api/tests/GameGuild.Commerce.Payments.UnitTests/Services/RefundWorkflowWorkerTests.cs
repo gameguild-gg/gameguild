@@ -24,7 +24,7 @@ public class RefundWorkflowWorkerTests
         var worker = CreateWorker(enabled: false);
         _refundRepository
             .Setup(repository => repository.ListDueForWorkflowAsync(
-                It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<CancellationToken>(), It.IsAny<DateTime?>()))
             .Throws(new InvalidOperationException("must not be called"));
 
         var executed = await worker.ProcessDueAsync();
@@ -69,7 +69,9 @@ public class RefundWorkflowWorkerTests
                 It.Is<DateTime>(cutoff => cutoff <= SystemClock.UtcNow.AddMinutes(-60).AddSeconds(5)
                     && cutoff >= SystemClock.UtcNow.AddMinutes(-61)),
                 25,
-                It.IsAny<CancellationToken>()),
+                It.IsAny<CancellationToken>(),
+                It.Is<DateTime?>(stale => stale <= SystemClock.UtcNow.AddMinutes(-15).AddSeconds(5)
+                    && stale >= SystemClock.UtcNow.AddMinutes(-16))),
             Times.Once);
     }
 
@@ -90,6 +92,55 @@ public class RefundWorkflowWorkerTests
         _processingService.Verify(
             service => service.ExecuteAsync(It.IsAny<Refund>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task ProcessDueAsync_RoutesStuckProcessingRefundsToTheRecoveryPath_Issue419()
+    {
+        // An interrupted execution (crash between the in-flight persist and the gateway
+        // outcome) is reconciled through the recovery core, never re-executed blindly.
+        var interrupted = ProcessingRefund();
+        var approved = ApprovedRefund();
+        var worker = CreateWorker(enabled: true);
+        SetupDueRefunds([interrupted, approved]);
+
+        var executed = await worker.ProcessDueAsync();
+
+        executed.Should().Be(2);
+        _processingService.Verify(
+            service => service.RecoverInterruptedAsync(
+                It.Is<Refund>(candidate => candidate.Id == interrupted.Id),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        _processingService.Verify(
+            service => service.ExecuteAsync(
+                It.Is<Refund>(candidate => candidate.Id == approved.Id),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        _processingService.Verify(
+            service => service.ExecuteAsync(
+                It.Is<Refund>(candidate => candidate.Id == interrupted.Id),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ProcessDueAsync_PassesTheProcessingStalenessCutoffToTheQuery()
+    {
+        var worker = CreateWorker(enabled: true, processingStaleAfterMinutes: 30);
+        SetupDueRefunds([]);
+
+        await worker.ProcessDueAsync();
+
+        _refundRepository.Verify(
+            repository => repository.ListDueForWorkflowAsync(
+                It.IsAny<int>(),
+                It.IsAny<DateTime>(),
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>(),
+                It.Is<DateTime?>(stale => stale <= SystemClock.UtcNow.AddMinutes(-30).AddSeconds(5)
+                    && stale >= SystemClock.UtcNow.AddMinutes(-31))),
+            Times.Once);
     }
 
     [Fact]
@@ -131,7 +182,8 @@ public class RefundWorkflowWorkerTests
         bool enabled,
         int maxExecutionAttempts = 3,
         int failedRetryDelayMinutes = 60,
-        int maxBatchSize = 50) =>
+        int maxBatchSize = 50,
+        int processingStaleAfterMinutes = 15) =>
         new(
             _refundRepository.Object,
             _processingService.Object,
@@ -142,7 +194,8 @@ public class RefundWorkflowWorkerTests
                 PollIntervalMinutes = 5,
                 MaxExecutionAttempts = maxExecutionAttempts,
                 FailedRetryDelayMinutes = failedRetryDelayMinutes,
-                MaxBatchSize = maxBatchSize
+                MaxBatchSize = maxBatchSize,
+                ProcessingStaleAfterMinutes = processingStaleAfterMinutes
             }),
             NullLogger<RefundWorkflowWorker>.Instance);
 
@@ -150,7 +203,7 @@ public class RefundWorkflowWorkerTests
     {
         _refundRepository
             .Setup(repository => repository.ListDueForWorkflowAsync(
-                It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<CancellationToken>(), It.IsAny<DateTime?>()))
             .ReturnsAsync(refunds.ToList());
     }
 
@@ -167,6 +220,22 @@ public class RefundWorkflowWorkerTests
             requiresApproval: true,
             $"idem-{Guid.NewGuid():N}");
         refund.MarkApproved(Guid.NewGuid());
+        return refund;
+    }
+
+    private static Refund ProcessingRefund()
+    {
+        var refund = Refund.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            10m,
+            "USD",
+            "goodwill",
+            null,
+            Guid.NewGuid(),
+            requiresApproval: false,
+            $"idem-{Guid.NewGuid():N}");
+        refund.MarkProcessing();
         return refund;
     }
 

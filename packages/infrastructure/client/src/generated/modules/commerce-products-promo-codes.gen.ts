@@ -117,7 +117,9 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
-   * Validate a promo code
+   * Validate a promo code. Untrusted (anonymous) contexts are CAPTCHA-gated when the
+   * promo redemption CAPTCHA gate is enabled (issue #418 anti-farming): a missing or
+   * unverifiable token is rejected before any code lookup, fail closed.
    */
   async postPromoCodesValidate(body: Types.CommerceProductsValidatePromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeValidationResult, ApiError>> {
     const url = '/v1/promo-codes/:validate';

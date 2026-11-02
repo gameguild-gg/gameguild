@@ -82,6 +82,13 @@ public class UserMfaConfiguration
     [MaxLength(512)]
     public string? PushDeviceToken { get; set; }
 
+    /// <summary>
+    ///     Email address verified for email-MFA code delivery (issue #1152). The address is only
+    ///     set after a one-time code sent to it has been verified; null when email MFA is not enrolled.
+    /// </summary>
+    [MaxLength(256)]
+    public string? EmailMfaAddress { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }

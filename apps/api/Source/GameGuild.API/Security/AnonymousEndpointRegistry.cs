@@ -87,6 +87,7 @@ public static class AnonymousEndpointRegistry
             ["AccountRecoveryController.CompletePasskeyApproval"] = "Records one recovery approval after cryptographic assertion verification; replays and unknown requests fail closed (issue #209).",
             ["AccountRecoveryController.CompleteReset"] = "Consumes the single-use forced-reset token minted at the approval threshold; unknown, expired or consumed tokens fail closed (issue #209).",
             ["MfaController.SendSmsChallenge"] = "Sends a throttled one-time code to the already-enrolled phone; the code itself is the credential and unknown users get a generic failure.",
+            ["MfaController.SendEmailChallenge"] = "Sends a throttled one-time code to the already-enrolled email address; the code itself is the credential and unknown users get a generic failure (issue #1152).",
             ["MfaController.IssuePushChallenge"] = "Issues a short-lived approval challenge to the already-enrolled device; the challenge bearer is the credential.",
             ["MfaController.RespondPushChallenge"] = "Records the device's decision for a pending, unexpired challenge; unknown or expired challenges fail closed.",
             ["WebAuthnController.BeginAuthentication"] = "First half of the passkey ceremony; returns only a challenge.",
@@ -108,6 +109,7 @@ public static class AnonymousEndpointRegistry
             ["ProductCategoriesController.GetCategory"] = "Public catalog category detail.",
             ["ProductRecommendationsController.GetRecommendations"] = "Public rule-based frequently-bought-together and bundle-savings hints from published catalog data.",
             ["SubscriptionPlansCrudController.GetSubscriptionPlans"] = "Public pricing plans for the marketing site.",
+            ["CurrenciesController.GetSuggestion"] = "Non-personalized currency suggestion from the edge-proxy country code (a country, never an IP); nothing is stored — GDPR data-minimized display preference for public pricing pages.",
             ["ProgramCrudController.GetPublicPrograms"] = "Public course catalog; only published programs are returned.",
             ["ProgramCrudController.GetProgramBySlug"] = "Public course detail; only published programs are returned.",
             ["ProgramCrudController.GetLinkedProducts"] = "Public storefront products linked to a published course.",
@@ -164,10 +166,28 @@ public static class AnonymousEndpointRegistry
             ["RepliesController.GetDiscussionReplies"] = "Public replies under a public discussion.",
             ["LikesController.GetCourseLikeCount"] = "Aggregate public like count for a course.",
 
+            // ── Public ratings and achievements reads (approved/published content only) ──
+            ["RatingsController.GetById"] = "Public rating detail; approved ratings only (issue #1158 module activation).",
+            ["RatingsController.GetRatings"] = "Public rating listing for an entity; approved ratings only.",
+            ["RatingsController.GetSummary"] = "Aggregate public rating summary for an entity.",
+            ["RatingsController.GetSummariesBatch"] = "Batched aggregate public rating summaries.",
+            ["RatingsController.GetUserRatings"] = "Public approved-rating listing for a user.",
+            ["RatingsController.GetCount"] = "Aggregate public rating count for an entity.",
+            ["RatingsController.GetTopRated"] = "Public top-rated entity listing.",
+            ["RatingsController.GetRecentReviews"] = "Public recent approved-review listing.",
+            ["AchievementsController.GetAchievements"] = "Public achievement catalog listing; only active achievements are returned.",
+            ["AchievementsController.GetAchievement"] = "Public achievement detail; only active achievements are returned.",
+
+            // ── Public mentorship directory (published profiles only, issue #102) ──
+            ["MentorsController.List"] = "Public mentor/advisor directory; anonymous callers see published profiles only.",
+            ["MentorsController.Get"] = "Public mentor profile detail; anonymous callers see published profiles only.",
+            ["MentorsController.Availability"] = "Public open-availability listing for a published mentor profile.",
+
             // ── Public blog reading surface (published content only) ──
             ["BlogPublicController.GetAuthorPosts"] = "Public blog reading surface — published content only.",
             ["BlogPublicController.GetPostDetail"] = "Public blog reading surface — published content only.",
             ["BlogPublicController.ResolveRoute"] = "Public blog reading surface — published content only.",
+            ["BlogPublicController.ResolveLegacySlug"] = "Public blog reading surface — legacy Ghost slug resolution for permanent redirects; published content only, ambiguous slugs 404.",
             ["BlogPublicController.GetIndex"] = "Public blog reading surface — published content only.",
             ["BlogPublicController.RecordView"] = "Public blog reading surface — published content only; atomic view counter with PerIp rate limiting.",
             ["BlogPublicController.GetComments"] = "Public blog reading surface — published content only.",
@@ -191,6 +211,7 @@ public static class AnonymousEndpointRegistry
             ["BillingWebhooksController.HandleApplePayWebhook"] = "Provider billing webhook; receipt/signature verified inside the handler.",
             ["BillingWebhooksController.HandleStripeWebhook"] = "Provider billing webhook; Stripe signature verified with the webhook secret inside the handler.",
             ["BillingWebhooksController.HandlePayPalWebhook"] = "Provider billing webhook; PayPal transmission signature verified inside the handler.",
+            ["BillingWebhooksController.HandleBraintreeWebhook"] = "Provider billing webhook; Braintree bt_signature verified offline against the configured gateway public key inside the handler.",
             ["EmailEventsController.*"] = "Email delivery-events webhook; SNS signature verified with a pinned signing-cert host.",
             ["EconomySumSubWebhookController.Ingest"] = "KYC provider webhook; request signature is validated against the provider secret.",
             ["EconomyStripeConnectWebhookController.Ingest"] = "Payout provider webhook; Stripe signature is validated against the configured secret.",

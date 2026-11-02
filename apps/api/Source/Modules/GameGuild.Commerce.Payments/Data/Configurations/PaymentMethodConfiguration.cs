@@ -29,11 +29,22 @@ public class PaymentMethodConfiguration : IEntityTypeConfiguration<PaymentMethod
         builder.Property(paymentMethod => paymentMethod.CardFingerprint).HasMaxLength(255);
         builder.Property(paymentMethod => paymentMethod.Nickname).HasMaxLength(100);
         builder.Property(paymentMethod => paymentMethod.BillingAddress).HasMaxLength(1000);
+        // Protected (encrypted) gateway reference plus its deterministic lookup hash
+        // (issue #414): equality lookups go through the hash, never the ciphertext.
+        builder.Property(paymentMethod => paymentMethod.GatewayPaymentMethodId).HasMaxLength(512);
+        builder.Property(paymentMethod => paymentMethod.GatewayPaymentMethodIdHash).HasMaxLength(64);
 
         // Duplicate-token guard: one live local row per gateway payment method per tenant.
         builder.HasIndex(paymentMethod => new { paymentMethod.TenantId, paymentMethod.GatewayProvider, paymentMethod.GatewayPaymentMethodId })
             .IsUnique()
             .HasDatabaseName("ix_payment_methods_tenant_gateway_unique")
+            .HasFilter("\"DeletedAt\" IS NULL");
+
+        // Hash form of the duplicate-token guard for rows stored with encryption (the
+        // ciphertext form above is unique per write but not queryable by equality).
+        builder.HasIndex(paymentMethod => new { paymentMethod.TenantId, paymentMethod.GatewayProvider, paymentMethod.GatewayPaymentMethodIdHash })
+            .IsUnique()
+            .HasDatabaseName("ix_payment_methods_tenant_gateway_hash_unique")
             .HasFilter("\"DeletedAt\" IS NULL");
 
         // Single-default invariant per tenant + user among non-deleted rows (atomic DB backstop).

@@ -17,7 +17,8 @@ public sealed record UpdateNotificationPreferencesCommand(
     bool? MarketingEnabled,
     bool? SocialEnabled,
     bool? LearningEnabled,
-    bool? AchievementsEnabled) : ICommand<Result<NotificationPreference>>;
+    bool? AchievementsEnabled,
+    bool? WhatsAppEnabled = null) : ICommand<Result<NotificationPreference>>;
 public sealed record SetNotificationQuietHoursCommand(
     Guid UserId,
     TimeOnly? Start,
@@ -62,6 +63,7 @@ public sealed class NotificationMutationCommandHandler(
             command.SocialEnabled,
             command.LearningEnabled,
             command.AchievementsEnabled,
+            command.WhatsAppEnabled,
             cancellationToken);
 
     public Task<Result> Handle(SetNotificationQuietHoursCommand command, CancellationToken cancellationToken) =>

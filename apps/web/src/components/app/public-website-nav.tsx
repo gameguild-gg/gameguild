@@ -16,6 +16,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@game-guild/ui/components/sheet';
+import { CurrencySwitcher } from '@/components/currency/currency-switcher';
 import { cn } from '@game-guild/ui/lib/utils';
 import { ChevronDown, Menu } from 'lucide-react';
 import { Github } from '@/components/ui/brand-icons';
@@ -234,6 +235,12 @@ export function PublicMobileNav({
             );
           })}
         </nav>
+
+        {/* Mobile currency selector (issue #412 spec E): full-width switcher inside
+            the mobile navigation sheet, same state as the header indicator. */}
+        <div className="mt-6 sm:hidden">
+          <CurrencySwitcher className="w-full" />
+        </div>
 
         <div className="mt-8 grid gap-3">
           {user ? (

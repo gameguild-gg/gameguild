@@ -103,6 +103,31 @@ export class CommercePaymentsFraudReviewsModule {
   }
 
   /**
+   * Get the full review detail for one held payment (issue #409: manual review
+   * interface enrichment).
+   *
+   * Returns the full manual-review detail for one assessed payment: the review case with its signal evidence, the customer's prior transaction history (count, succeeded count, volume, account-age proxy), the payment details (method, provider, source IP, billing country) and the device fingerprint with the session facts (claimed/resolved timezone, anonymizer detection) recovered from the assessed evidence. Requires the payments:admin permission.
+   */
+  async getFraudReviewsDetail(paymentId: string, query?: { tenantId?: string }): Promise<Result<Types.CommercePaymentsFraudReviewDetail, ApiError>> {
+    const url = `/api/v1/fraud/reviews/${paymentId}/detail`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsFraudReviewDetailSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Bulk-approve pending fraud reviews, releasing the fraud holds.
    *
    * Approves the pending fraud reviews for a batch of held payments (2-100), releasing each fraud hold so the payment can be retried. Items that are not pending reviews are skipped with a reason. Requires the payments:admin permission.

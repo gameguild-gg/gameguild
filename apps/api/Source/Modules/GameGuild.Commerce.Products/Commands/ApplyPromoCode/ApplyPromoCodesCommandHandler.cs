@@ -1,5 +1,6 @@
 using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Commerce.Products;
 
@@ -12,6 +13,9 @@ namespace GameGuild.Commerce.Products;
 /// (issue #400) whenever the command carries a stable correlation key (an explicit
 /// idempotency key or order linkage), with the full per-code breakdown and the stacking
 /// rule that governed resolution.
+/// Redemption from untrusted (anonymous) contexts is CAPTCHA-gated (issue #418): when the
+/// gate is enabled, a missing or unverifiable token rejects every code — fail closed.
+/// Recorded redemptions feed the unusual-usage velocity alerting (issue #418).
 /// </summary>
 public sealed class ApplyPromoCodesCommandHandler(
     IPricingEngineService pricingEngine,
@@ -19,7 +23,10 @@ public sealed class ApplyPromoCodesCommandHandler(
     IPromoCodeUsageRecorder usageRecorder,
     IPromoCodeAuditLogger auditLogger,
     GameGuild.Commerce.IPricingDecisionLedgerWriter pricingLedgerWriter,
-    ILogger<ApplyPromoCodesCommandHandler> logger)
+    ILogger<ApplyPromoCodesCommandHandler> logger,
+    IPromoRedemptionCaptchaGate? captchaGate = null,
+    IPromoUsageAnomalyEvaluator? anomalyEvaluator = null,
+    IOptions<PromoAbuseDetectionOptions>? abuseOptions = null)
     : ICommandHandler<ApplyPromoCodesCommand, PromoCodeApplicationResult>
 {
     public async Task<PromoCodeApplicationResult> Handle(
@@ -27,6 +34,26 @@ public sealed class ApplyPromoCodesCommandHandler(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        // Issue #418 anti-farming: untrusted (anonymous) redemption contexts must pass the
+        // CAPTCHA gate when it is enabled. Fail closed — a denied gate rejects every code
+        // before any pricing or usage work happens.
+        if (captchaGate is not null)
+        {
+            var gateDecision = captchaGate.Check(isTrustedContext: request.UserId.HasValue, request.CaptchaToken);
+            if (!gateDecision.Allowed)
+            {
+                var rejected = request.PromoCodes
+                    .Select(code => new RejectedPromoCode(code, gateDecision.Reason ?? "CAPTCHA verification failed"))
+                    .ToList();
+                return new PromoCodeApplicationResult(
+                    request.OrderAmount,
+                    request.OrderAmount,
+                    0,
+                    [],
+                    rejected);
+            }
+        }
 
         var result = await pricingEngine.ApplyPromoCodesAsync(
             request.OrderAmount,
@@ -77,6 +104,7 @@ public sealed class ApplyPromoCodesCommandHandler(
                         usageRecorded = true;
                         await auditLogger.LogRedemptionAsync(
                             request.UserId.Value, promoCode.Code, entry.DiscountAmount, promoCode.Currency, usage?.Id, cancellationToken).ConfigureAwait(false);
+                        await EvaluateRedemptionVelocityAsync(request.UserId.Value, promoCode.Code, cancellationToken).ConfigureAwait(false);
                         break;
 
                     case PromoUsageRecordingStatus.Replay:
@@ -113,6 +141,37 @@ public sealed class ApplyPromoCodesCommandHandler(
         await RecordPricingDecisionAsync(request, result, cancellationToken).ConfigureAwait(false);
 
         return result with { UsageRecorded = usageRecorded };
+    }
+
+    /// <summary>
+    /// Unusual-usage velocity check (issue #418): counts the user's recorded redemptions
+    /// inside the configured window (the current one included) and hands the count to the
+    /// anomaly evaluator, which publishes a security event when the threshold is breached.
+    /// </summary>
+    private async Task EvaluateRedemptionVelocityAsync(Guid userId, string code, CancellationToken cancellationToken)
+    {
+        if (anomalyEvaluator is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var windowMinutes = Math.Clamp(abuseOptions?.Value.RedemptionWindowMinutes ?? 10, 1, 1440);
+            var windowStart = SystemClock.UtcNow.AddMinutes(-windowMinutes);
+            var recentCount = await promoCodeRepository
+                .CountRecentUsagesAsync(userId, windowStart, cancellationToken)
+                .ConfigureAwait(false) + 1; // include the redemption that triggered the check
+
+            await anomalyEvaluator
+                .EvaluateRedemptionVelocityAsync(userId, code, recentCount, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Best effort: anomaly alerting must never change the redemption outcome.
+            logger.LogWarning(exception, "Promo redemption velocity evaluation failed for user {UserId}", userId);
+        }
     }
 
     /// <summary>

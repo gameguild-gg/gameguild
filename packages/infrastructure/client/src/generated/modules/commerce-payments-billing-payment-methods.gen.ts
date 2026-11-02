@@ -36,7 +36,7 @@ export class CommercePaymentsBillingPaymentMethodsModule {
   /**
    * Register a payment method from a tokenized gateway result.
    *
-   * Registers a payment method from a Stripe payment method token (pm_...) produced by Stripe.js/Elements or a confirmed SetupIntent. Raw card data is never accepted; only display metadata returned by the gateway is stored.
+   * Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider, and an optional MethodType hint (card, bank_account, paypal, apple_pay, google_pay, wallet) states the family the token vaults. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.
    */
   async postBillingPaymentMethods(
     body: Types.CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody,
@@ -116,16 +116,23 @@ export class CommercePaymentsBillingPaymentMethodsModule {
   }
 
   /**
-   * Remove a payment method (soft delete).
+   * Remove a payment method (soft delete, explicit confirmation required).
    *
-   * Soft-deletes a payment method. Fails closed with 409 Conflict while any active subscription still bills with it; set a new default first to re-point subscriptions.
+   * Soft-deletes a payment method after explicit confirmation (body confirm=true). Without confirmation the request fails with 400. Fails closed with 409 Conflict while any active subscription still bills with it; set a new default first to re-point subscriptions.
    */
-  async deleteBillingPaymentMethods(paymentMethodId: string): Promise<Result<void, ApiError>> {
+  async deleteBillingPaymentMethods(
+    paymentMethodId: string,
+    body: Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/billing/payment-methods/${paymentMethodId}`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'DELETE',
       path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 
@@ -149,6 +156,85 @@ export class CommercePaymentsBillingPaymentMethodsModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.CommercePaymentsPaymentMethodDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Current micro-deposit verification state of a bank-account payment method.
+   *
+   * Returns the micro-deposit verification state of a saved bank-account payment method (none, pending, verified, expired or locked) with the challenge deadline and remaining attempts. Owner or system administrator only.
+   */
+  async getBillingPaymentMethodsBankVerification(paymentMethodId: string): Promise<Result<Types.CommercePaymentsBankAccountVerificationStatusDto, ApiError>> {
+    const url = `/api/v1/billing/payment-methods/${paymentMethodId}/bank-verification`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsBankAccountVerificationStatusDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Initiate micro-deposit verification: two random deposits ($0.01-$0.99) are
+   * generated; only salted hashes are stored.
+   *
+   * Generates two random micro-deposits ($0.01-$0.99) for a saved bank-account payment method and returns them once (only salted hashes are stored). The owner has 3 business days and at most 3 failed echo attempts. Idempotent while a challenge is open. Subject to the configurable MFA step-up policy.
+   */
+  async postBillingPaymentMethodsBankVerificationInitiate(
+    paymentMethodId: string,
+  ): Promise<Result<Types.CommercePaymentsBankAccountVerificationInitiationDto, ApiError>> {
+    const url = `/api/v1/billing/payment-methods/${paymentMethodId}/bank-verification/initiate`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsBankAccountVerificationInitiationDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Echo the two observed micro-deposit amounts to verify the bank account.
+   *
+   * Echoes the two micro-deposit amounts observed on the bank statement. Both must match within the 3-business-day deadline and the 3-attempt cap; success marks the bank account verified and therefore chargeable. Subject to the configurable MFA step-up policy.
+   */
+  async postBillingPaymentMethodsBankVerificationVerify(
+    paymentMethodId: string,
+    body: Types.CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody,
+  ): Promise<Result<Types.CommercePaymentsBankAccountVerificationStatusDto, ApiError>> {
+    const url = `/api/v1/billing/payment-methods/${paymentMethodId}/bank-verification/verify`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBodySchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommercePaymentsBankAccountVerificationStatusDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

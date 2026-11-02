@@ -1,11 +1,14 @@
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Compliance.Audit;
+using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
 using GameGuild.Projects;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.Options;
+using Moq;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -170,6 +173,83 @@ public sealed class EntityChangeAuditCaptureTests
         await transaction.RollbackAsync();
 
         (await AuditRecords(context).CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ConfiguredExclusionList_SkipsOnlyListedEntityTypes()
+    {
+        var options = NewInMemoryOptions();
+        var captureOptions = Options.Create(new EntityChangeAuditOptions
+        {
+            ExcludedEntityTypes = { "Project" }
+        });
+        await using var context = new ApplicationDbContext(
+            options, null, new UseCaseOperationContextAccessor(), entityChangeAuditOptions: captureOptions);
+        context.Add(new Project { Title = "Excluded project", Slug = "excluded-project" });
+        context.Add(new User { Email = "captured@example.com", Name = "Captured user" });
+        await context.SaveChangesAsync();
+
+        var records = await AuditRecords(context).ToListAsync();
+        records.Should().ContainSingle(record => record.EntityName == "User");
+        records.Should().NotContain(record => record.EntityName == "Project");
+    }
+
+    [Fact]
+    public async Task Capture_IsEnabledByDefault_AndCanBeExplicitlyOptedOut()
+    {
+        // Default (no configuration bound): capture stays on — a missing config section can
+        // never silently drop universal coverage.
+        var defaultOptions = NewInMemoryOptions();
+        await using (var defaultContext = new ApplicationDbContext(defaultOptions, null, new UseCaseOperationContextAccessor()))
+        {
+            defaultContext.Add(new Project { Title = "Default captured", Slug = "default-captured" });
+            await defaultContext.SaveChangesAsync();
+            (await AuditRecords(defaultContext).CountAsync()).Should().Be(1);
+        }
+
+        var optedOutOptions = NewInMemoryOptions();
+        var disabledOptions = Options.Create(new EntityChangeAuditOptions { Enabled = false });
+        await using (var optedOutContext = new ApplicationDbContext(
+            optedOutOptions, null, new UseCaseOperationContextAccessor(), entityChangeAuditOptions: disabledOptions))
+        {
+            optedOutContext.Add(new Project { Title = "Not captured", Slug = "not-captured" });
+            await optedOutContext.SaveChangesAsync();
+            (await AuditRecords(optedOutContext).CountAsync()).Should().Be(0);
+        }
+    }
+
+    [Fact]
+    public async Task PermissionFamilyEntity_CapturedOnceWithoutDuplicatingThePermissionAuditPath()
+    {
+        var options = NewInMemoryOptions();
+        var operationAccessor = new UseCaseOperationContextAccessor();
+        var auditService = new Mock<IAuditService>();
+        auditService
+            .Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()))
+            .Returns(Task.CompletedTask);
+        await using var context = new ApplicationDbContext(options, null, operationAccessor, auditService.Object);
+
+        var role = new Role("UniversalCaptureRole", "Role for universal capture test", null) { Id = Guid.NewGuid() };
+        var assignment = new UserRole(Guid.NewGuid(), role.Id, Guid.NewGuid()) { Id = Guid.NewGuid(), Role = role };
+        context.Add(role);
+        context.Add(assignment);
+        await context.SaveChangesAsync();
+
+        // The universal store records the entity change exactly once per entity: one Role row
+        // (added) and one UserRole row (added), with no duplicates from the permission path.
+        var entityRecords = await AuditRecords(context).ToListAsync();
+        entityRecords.Where(record => record.EntityName == "UserRole").Should().ContainSingle();
+        entityRecords.Where(record => record.EntityName == "Role").Should().ContainSingle();
+        entityRecords.Should().NotContain(record => record.EntityName.Contains("AuditLog", StringComparison.OrdinalIgnoreCase));
+
+        // The dedicated permission path emitted its grouped central AuditLog record(s) for the
+        // permission-family mutation (a separate store — no double recording): every central
+        // record is a Permission-family entry, and none of them duplicates the per-entity
+        // change history the universal store owns.
+        auditService.Invocations.Should().NotBeEmpty();
+        auditService.Invocations
+            .Select(invocation => (CreateAuditLogRequest)invocation.Arguments[0])
+            .Should().OnlyContain(request => request.ResourceType == "Permission");
     }
 
     private static DbContextOptions<ApplicationDbContext> NewInMemoryOptions() =>

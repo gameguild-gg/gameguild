@@ -35,6 +35,16 @@ public sealed class RefundWorkflowOptions
     [Range(1, 10080)]
     public int FailedRetryDelayMinutes { get; set; } = 60;
 
+    /// <summary>
+    ///     Age after which a refund stuck in <see cref="RefundStatus.Processing"/> is treated as
+    ///     an interrupted execution (crash/restart between the in-flight persist and the gateway
+    ///     outcome, issue #419) and handed to the recovery path, which reconciles it with the
+    ///     provider using the original idempotency key. Must comfortably exceed the longest
+    ///     expected provider call so live executions are never mistaken for interrupted ones.
+    /// </summary>
+    [Range(1, 10080)]
+    public int ProcessingStaleAfterMinutes { get; set; } = 15;
+
     /// <summary>Maximum refunds processed per worker cycle.</summary>
     [Range(1, 500)]
     public int MaxBatchSize { get; set; } = 50;
@@ -69,6 +79,11 @@ public sealed class RefundWorkflowOptionsValidator : IValidateOptions<RefundWork
         if (options.FailedRetryDelayMinutes is < 1 or > 10080)
         {
             failures.Add("FailedRetryDelayMinutes must be between 1 and 10080.");
+        }
+
+        if (options.ProcessingStaleAfterMinutes is < 1 or > 10080)
+        {
+            failures.Add("ProcessingStaleAfterMinutes must be between 1 and 10080.");
         }
 
         if (options.MaxBatchSize is < 1 or > 500)

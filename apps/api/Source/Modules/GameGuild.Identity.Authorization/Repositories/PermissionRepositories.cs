@@ -102,9 +102,21 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
         CancellationToken cancellationToken = default
     )
     {
+        var now = SystemClock.UtcNow;
+
+        // SECURITY (issue #331 recovery): only ACTIVE expired grants are eligible.
+        // The expiration sweep deactivates grants as it processes them
+        // (PermissionBase.Expire sets IsActive = false), so excluding inactive rows
+        // server-side keeps already-processed grants out of the result set. Combined
+        // with the deterministic ordering this guarantees a backlog larger than the
+        // worker's BatchSize drains across cycles instead of the earliest batch
+        // permanently occupying the window. Ordering oldest-expiry-first is fair and
+        // uses the IX_TenantPermissions_ExpiresAt index.
         return await TenantPermissions
             .AsNoTracking()
-            .Where(p => p.DeletedAt == null && p.ExpiresAt.HasValue && p.ExpiresAt < SystemClock.UtcNow)
+            .Where(p => p.DeletedAt == null && p.IsActive && p.ExpiresAt.HasValue && p.ExpiresAt < now)
+            .OrderBy(p => p.ExpiresAt)
+            .ThenBy(p => p.Id)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 

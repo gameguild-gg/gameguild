@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Commerce.Billing;
 
@@ -18,12 +19,21 @@ namespace GameGuild.Commerce.Billing;
 ///     anonymous endpoint registry and authenticated by provider signatures/secrets
 ///     plus the webhook source security filter); event inspection, manual retry, and
 ///     the security monitoring surface require the SystemAdmin policy.
+///     Every provider callback enforces the explicit sub-5-second response bound
+///     (issue #408): processing that exceeds <see cref="WebhookSettings.ResponseBoundSeconds"/>
+///     is acknowledged as received-and-deferred and completed by the durable inbox
+///     retry pipeline instead of holding the provider's connection open.
 /// </summary>
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/billing/webhooks")]
 [Microsoft.AspNetCore.Http.Tags("billing/webhooks")]
-public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWebhooksController> logger) : BaseApiController
+public sealed class BillingWebhooksController(
+    ISender sender,
+    IOptions<BillingConfiguration> billingConfiguration,
+    IWebhookDeliveryContext deliveryContext,
+    ILogger<BillingWebhooksController> logger) : BaseApiController
 {
+    private readonly WebhookSettings _webhookSettings = billingConfiguration.Value.Webhook;
     /// <summary>
     ///     Handle Google Pay webhook events for transaction notifications
     /// </summary>
@@ -65,6 +75,7 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
         {
             using var reader = new StreamReader(Request.Body);
             var payload = await reader.ReadToEndAsync(ct);
+            CaptureRawDeliveryForRetention(payload);
 
             // Get authorization header for JWT verification
             var authHeader = Request.Headers["Authorization"].ToString();
@@ -86,9 +97,12 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
 
             logger.LogInformation("Processing Google Pay webhook for project: {ProjectId}", LogRedaction.Sanitize(projectId));
 
-            var result = await sender.Send(new ProcessGooglePayWebhookCommand(payload, authHeader, projectId), ct).ConfigureAwait(false);
+            var result = await SendWithResponseBoundAsync(
+                new ProcessGooglePayWebhookCommand(payload, authHeader, projectId), ct);
 
-            return Ok(new { received = true, processed = result.Processed });
+            return result is null
+                ? DeferredAcknowledgement()
+                : Ok(new { received = true, processed = result.Processed });
         }
         catch (InvalidWebhookSignatureException ex)
         {
@@ -123,6 +137,7 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
     {
         using var reader = new StreamReader(Request.Body);
         var payload = await reader.ReadToEndAsync(ct);
+        CaptureRawDeliveryForRetention(payload);
 
         var merchantId = Request.Headers["Apple-Pay-Merchant-Id"].ToString();
         var signature = Request.Headers["Apple-Pay-Signature"].ToString();
@@ -141,8 +156,13 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
 
         logger.LogInformation("Processing Apple Pay webhook for merchant: {MerchantId}", LogRedaction.Sanitize(merchantId));
 
-        var result = await sender.Send(
+        var result = await SendWithResponseBoundAsync(
             new ProcessApplePayWebhookCommand(payload, merchantId, signature), ct).ConfigureAwait(false);
+
+        if (result is null)
+        {
+            return DeferredAcknowledgement();
+        }
 
         if (result.Processed || result.WasAlreadyProcessed)
         {
@@ -179,6 +199,7 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
         {
             using var reader = new StreamReader(Request.Body);
             var payload = await reader.ReadToEndAsync(ct);
+            CaptureRawDeliveryForRetention(payload);
 
             var signature = Request.Headers["Stripe-Signature"].ToString();
 
@@ -189,7 +210,13 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
                 return BadRequest(new { error = "Missing signature" });
             }
 
-            var result = await sender.Send(new ProcessStripeWebhookCommand(payload, signature), ct).ConfigureAwait(false);
+            var result = await SendWithResponseBoundAsync(new ProcessStripeWebhookCommand(payload, signature), ct)
+                .ConfigureAwait(false);
+
+            if (result is null)
+            {
+                return DeferredAcknowledgement();
+            }
 
             return result.Processed || result.WasAlreadyProcessed
                 ? Ok(new { received = true, processed = result.Processed, eventId = result.EventId })
@@ -238,6 +265,7 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
     {
         using var reader = new StreamReader(Request.Body);
         var payload = await reader.ReadToEndAsync(ct);
+        CaptureRawDeliveryForRetention(payload);
 
         // PayPal webhook requires specific headers for signature verification
         var transmissionId = Request.Headers["PayPal-Transmission-Id"].ToString();
@@ -254,13 +282,19 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
             return BadRequest(new { error = "Missing required PayPal headers" });
         }
 
-        var result = await sender.Send(new ProcessPayPalWebhookCommand(
-            payload,
-            transmissionId,
-            transmissionSig,
-            transmissionTime,
-            string.IsNullOrEmpty(certUrl) ? null : certUrl,
-            string.IsNullOrEmpty(authAlgo) ? null : authAlgo), ct);
+        var result = await SendWithResponseBoundAsync(new ProcessPayPalWebhookCommand(
+                payload,
+                transmissionId,
+                transmissionSig,
+                transmissionTime,
+                string.IsNullOrEmpty(certUrl) ? null : certUrl,
+                string.IsNullOrEmpty(authAlgo) ? null : authAlgo), ct)
+            .ConfigureAwait(false);
+
+        if (result is null)
+        {
+            return DeferredAcknowledgement();
+        }
 
         if (result.Processed || result.WasAlreadyProcessed)
         {
@@ -268,6 +302,144 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
         }
 
         return StatusCode(500, new { error = result.ErrorMessage, requiresRetry = result.RequiresRetry });
+    }
+
+    /// <summary>
+    ///     Handle Braintree webhook events with offline signature verification
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Webhook processing confirmation</returns>
+    /// <remarks>
+    ///     Braintree delivers <c>application/x-www-form-urlencoded</c> bodies carrying the
+    ///     <c>bt_signature</c>/<c>bt_payload</c> pair. The signature is verified offline against
+    ///     the gateway's configured public key (issue #408) before any inbox work; failed
+    ///     verification is rejected fail-closed with a security event. The stored payload is the
+    ///     privacy-minimized routing projection of the notification.
+    /// </remarks>
+    [HttpPost("braintree")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Webhook)]
+    [ServiceFilter(typeof(WebhookSourceSecurityFilter))]
+    [EndpointSummary("Handle Braintree webhook events with offline signature verification")]
+    [EndpointDescription(
+        "Processes Braintree webhook notifications for subscription charges, failures and lifecycle events. The bt_signature form field is verified offline against the configured gateway public key before any inbox work; failed verification is rejected fail-closed."
+    )]
+    [ProducesResponseType<object>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> HandleBraintreeWebhook(CancellationToken ct)
+    {
+        // Opt-in raw-delivery retention (issue #408: capture raw payload and all headers):
+        // snapshot the urlencoded body verbatim before the form parser consumes it. No-op
+        // (no buffering, no extra read) when the retention policy is disabled.
+        if (_webhookSettings.Retention.Enabled)
+        {
+            Request.EnableBuffering();
+            string rawBody;
+            using (var rawReader = new StreamReader(Request.Body, leaveOpen: true))
+            {
+                rawBody = await rawReader.ReadToEndAsync(ct);
+            }
+
+            Request.Body.Seek(0, SeekOrigin.Begin);
+            CaptureRawDeliveryForRetention(rawBody);
+        }
+
+        IFormCollection form;
+        try
+        {
+            form = await Request.ReadFormAsync(ct);
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or FileLoadException)
+        {
+            // A delivery without a parseable form body (wrong content type, rejected
+            // multipart limits) is malformed, not unauthorized: reject it as a bad request.
+            logger.LogWarning("Braintree webhook body could not be read as a form: {Message}", LogRedaction.Sanitize(exception.Message));
+            return BadRequest(new { error = "Missing required Braintree form fields" });
+        }
+
+        var btSignature = form["bt_signature"].ToString();
+        var btPayload = form["bt_payload"].ToString();
+
+        if (string.IsNullOrEmpty(btSignature) || string.IsNullOrEmpty(btPayload))
+        {
+            logger.LogWarning("Missing Braintree bt_signature/bt_payload form fields");
+            return BadRequest(new { error = "Missing required Braintree form fields" });
+        }
+
+        var result = await SendWithResponseBoundAsync(new ProcessBraintreeWebhookCommand(btSignature, btPayload), ct)
+            .ConfigureAwait(false);
+
+        if (result is null)
+        {
+            return DeferredAcknowledgement();
+        }
+
+        if (result.Processed || result.WasAlreadyProcessed)
+        {
+            return Ok(new { received = true, processed = result.Processed, eventId = result.EventId });
+        }
+
+        return StatusCode(500, new { error = result.ErrorMessage, requiresRetry = result.RequiresRetry });
+    }
+
+    /// <summary>
+    ///     Executes a provider webhook command under the explicit response bound
+    ///     (issue #408): a linked cancellation source cancels after
+    ///     <see cref="WebhookSettings.ResponseBoundSeconds"/> (strictly under the 5-second
+    ///     provider tolerance). When the bound fires the endpoint returns <c>null</c> and the
+    ///     caller acknowledges the delivery as received-and-deferred — the durable inbox row
+    ///     and the hosted retry worker complete the work. A client-side disconnect still
+    ///     propagates as cancellation.
+    /// </summary>
+    private async Task<TResponse?> SendWithResponseBoundAsync<TResponse>(
+        ICommand<TResponse> command,
+        CancellationToken ct)
+    {
+        using var boundedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        boundedCts.CancelAfter(TimeSpan.FromSeconds(Math.Max(1, _webhookSettings.ResponseBoundSeconds)));
+
+        try
+        {
+            return await sender.Send(command, boundedCts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (boundedCts.IsCancellationRequested && !ct.IsCancellationRequested)
+        {
+            logger.LogWarning(
+                "Webhook processing exceeded the {BoundSeconds}s response bound; acknowledging as deferred (command {CommandType})",
+                _webhookSettings.ResponseBoundSeconds,
+                command.GetType().Name);
+            return default;
+        }
+    }
+
+    /// <summary>The acknowledgement returned when the response bound deferred processing (issue #408).</summary>
+    private IActionResult DeferredAcknowledgement() =>
+        Ok(new { received = true, processed = false, deferred = true });
+
+    /// <summary>
+    ///     Captures the raw delivery (raw body + full header set) of the current provider
+    ///     callback into the scoped delivery context for the opt-in raw-delivery retention
+    ///     (issue #408: capture raw payload and all headers). A strict no-op when the
+    ///     retention policy is disabled — the default — so production behavior is unchanged
+    ///     until the policy is explicitly enabled. The redaction pass and the
+    ///     after-verification persistence gate live downstream (see
+    ///     <see cref="BillingWebhookRepository"/> and <see cref="WebhookRawDeliveryRedactor"/>).
+    /// </summary>
+    /// <param name="rawPayload">The raw HTTP body exactly as received from the provider.</param>
+    private void CaptureRawDeliveryForRetention(string rawPayload)
+    {
+        if (!_webhookSettings.Retention.Enabled)
+        {
+            return;
+        }
+
+        var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (key, values) in Request.Headers)
+        {
+            headers[key] = values.ToString();
+        }
+
+        deliveryContext.CaptureRawDelivery(rawPayload, headers);
     }
 
     /// <summary>
@@ -357,6 +529,37 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
         var summary = await sender.Send(new GetBillingWebhookSecuritySummaryQuery(), ct).ConfigureAwait(false);
 
         return Ok(summary);
+    }
+
+    /// <summary>
+    ///     Get the billing webhook processing statistics (issue #408)
+    /// </summary>
+    /// <param name="fromUtc">Optional inclusive window start (ISO-8601); defaults to 24 hours ago.</param>
+    /// <param name="toUtc">Optional inclusive window end (ISO-8601); defaults to now.</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Webhook activity statistics for the window</returns>
+    /// <remarks>
+    ///     Admin-facing webhook activity dashboard (issue #408): events received, processed and
+    ///     failed in the window, the processing success rate, the average received-to-processed
+    ///     latency, the dead-lettered and unverified counts, and a per-provider breakdown.
+    /// </remarks>
+    [HttpGet("stats")]
+    [Authorize(Policy = Policies.SystemAdmin)]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
+    [EndpointSummary("Get billing webhook processing statistics")]
+    [EndpointDescription(
+        "Admin-facing webhook activity dashboard: events received, processed and currently failed, the processing success rate, the average received-to-processed latency in seconds, dead-lettered and unverified counts over the window, and a per-provider breakdown. Defaults to the last 24 hours. Requires the SystemAdmin policy."
+    )]
+    [ProducesResponseType<BillingWebhookStatsDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetWebhookStats(
+        [FromQuery] DateTime? fromUtc = null,
+        [FromQuery] DateTime? toUtc = null,
+        CancellationToken ct = default)
+    {
+        var stats = await sender.Send(new GetBillingWebhookStatsQuery(fromUtc, toUtc), ct).ConfigureAwait(false);
+
+        return Ok(stats);
     }
 
     /// <summary>

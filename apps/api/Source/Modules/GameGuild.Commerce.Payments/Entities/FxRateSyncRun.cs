@@ -61,6 +61,18 @@ public class FxRateSyncRun : EntityBase
     /// <summary>Number of quotations whose value actually changed (rate-change audit reference).</summary>
     public int RatesChanged { get; set; }
 
+    /// <summary>
+    ///     Rate-reasonableness guard (issue #412 spec H): quotations quarantined because they
+    ///     moved more than the configured daily-change threshold against the previously
+    ///     persisted value. Quarantined quotations are NOT persisted; details live in
+    ///     <see cref="AnomalyDetails"/>.
+    /// </summary>
+    public int AnomalousRatesSkipped { get; set; }
+
+    /// <summary>JSON detail of the quarantined quotations (pair, old, new, change %, threshold).</summary>
+    [MaxLength(8000)]
+    public string? AnomalyDetails { get; set; }
+
     /// <summary>Effective date of the rate set that was persisted.</summary>
     public DateTime? EffectiveDateUtc { get; set; }
 

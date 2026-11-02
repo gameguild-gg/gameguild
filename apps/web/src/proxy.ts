@@ -1,4 +1,9 @@
 import { auth } from "@/auth";
+import {
+  LOCALE_COOKIE_MAX_AGE_SECONDS,
+  LOCALE_COOKIE_NAME,
+  resolveLocaleForRequest,
+} from "@/i18n/locale-detection";
 import { routing } from "@/i18n/routing";
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
@@ -12,6 +17,12 @@ const DEFAULT_LOCALE_PREFIX = `/${routing.defaultLocale}`;
 const NON_DEFAULT_LOCALE_PREFIXES = routing.locales
   .filter((locale) => locale !== routing.defaultLocale)
   .map((locale) => `/${locale}`);
+// Canonical web origin (issue #103): the legacy `web.` host alias must never
+// serve duplicate content — it is permanently redirected to the canonical
+// domain so crawlers consolidate on a single host.
+const CANONICAL_ORIGIN = (process.env.NEXT_PUBLIC_APP_URL || "https://gameguild.gg").replace(/\/+$/, "");
+const CANONICAL_HOST = new URL(CANONICAL_ORIGIN).host;
+const LEGACY_HOST_ALIASES = new Set(["web.gameguild.gg"]);
 
 function matchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
@@ -49,11 +60,60 @@ function redirectToPath(request: NextRequest, pathname: string): NextResponse {
 }
 
 /**
+ * Canonicalizes an explicit default-locale URL and persists the choice when
+ * it conflicts with what automatic detection would otherwise serve: an
+ * `/en-US/...` visit from a pt-BR browser (or with a pt-BR preference
+ * stored) is a deliberate English request, so the preference cookie must be
+ * written before the redirect is followed. Otherwise detection (issue #92)
+ * would bounce that visitor right back to `/pt-BR` on the next request and
+ * the switch could never stick (issue #99). Without a conflict the response
+ * stays cookie-free, preserving the session-cookie contract of plain
+ * canonicalization redirects.
+ */
+function redirectToUnprefixedPath(request: NextRequest, unprefixedPath: string): NextResponse {
+  const response = redirectToPath(request, unprefixedPath);
+  const wouldAutoDetectNonDefault =
+    resolveLocaleForRequest(
+      request.headers.get("cookie"),
+      request.headers.get("accept-language"),
+    ) !== routing.defaultLocale;
+  if (wouldAutoDetectNonDefault) {
+    response.cookies.set(LOCALE_COOKIE_NAME, routing.defaultLocale, {
+      path: "/",
+      maxAge: LOCALE_COOKIE_MAX_AGE_SECONDS,
+      sameSite: "lax",
+    });
+  }
+  return response;
+}
+
+/**
+ * Permanent host canonicalization (issue #103): `web.gameguild.gg` historically
+ * served the same pages as `gameguild.gg`, duplicating content and splitting
+ * SEO signals across hosts. Requests arriving on a legacy alias are redirected
+ * to the canonical host with path and query preserved. Only the actual request
+ * host is trusted — client-provided forwarding headers must not influence
+ * routing (same posture as the origin-trust behavior below).
+ */
+function redirectToCanonicalHost(request: NextRequest): NextResponse | null {
+  const host = (request.headers.get("host") ?? request.nextUrl.host).split(",")[0]?.trim().toLowerCase();
+  if (!host || !LEGACY_HOST_ALIASES.has(host)) return null;
+
+  const url = new URL(request.url);
+  url.protocol = CANONICAL_ORIGIN.startsWith("http://") ? "http:" : "https:";
+  url.host = CANONICAL_HOST;
+  return NextResponse.redirect(url, 308);
+}
+
+/**
  * Keeps the default locale internal while preserving explicit non-default
  * locales. The marker header prevents Next 16 from canonicalizing the
  * internal `/en-US` rewrite back into a redirect loop.
  */
 export function routeRequest(request: NextRequest): NextResponse {
+  const canonicalRedirect = redirectToCanonicalHost(request);
+  if (canonicalRedirect) return canonicalRedirect;
+
   const pathname = request.nextUrl.pathname;
 
   // Server Action redirects inherit the rewritten request's headers. Only
@@ -69,14 +129,14 @@ export function routeRequest(request: NextRequest): NextResponse {
   if (matchesPrefix(pathname, DEFAULT_LOCALE_PREFIX)) {
     const unprefixedPath = pathname.slice(DEFAULT_LOCALE_PREFIX.length) || "/";
     if (unprefixedPath === "/social") {
-      return redirectToPath(request, "/feed");
+      return redirectToUnprefixedPath(request, "/feed");
     }
     // RSC navigation targets the internal locale tree. A canonical browser
     // redirect makes Next request that internal tree again and creates a loop.
     if (request.headers.get("rsc") === "1") {
       return rewriteWithLocale(request, pathname, routing.defaultLocale);
     }
-    return redirectToPath(request, unprefixedPath);
+    return redirectToUnprefixedPath(request, unprefixedPath);
   }
 
   const nonDefaultPrefix = NON_DEFAULT_LOCALE_PREFIXES.find((prefix) => matchesPrefix(pathname, prefix));
@@ -94,6 +154,23 @@ export function routeRequest(request: NextRequest): NextResponse {
 
   if (pathname === "/social") {
     return redirectToPath(request, "/feed");
+  }
+
+  // Automatic locale detection (issue #92): a request without an explicit
+  // locale prefix resolves the visitor's preferred locale — a stored choice
+  // first (issue #99 override), then the browser's Accept-Language, then the
+  // default. A detected non-default locale is served through its canonical
+  // prefixed URL so the browser, history entries and next-intl link
+  // generation all agree on the locale; fetch-based RSC navigations follow
+  // the redirect transparently. The default locale keeps the internal
+  // rewrite so default-locale URLs stay unprefixed.
+  const detectedLocale = resolveLocaleForRequest(
+    request.headers.get("cookie"),
+    request.headers.get("accept-language"),
+  );
+  if (detectedLocale !== routing.defaultLocale) {
+    const suffix = pathname === "/" ? "" : pathname;
+    return redirectToPath(request, `/${detectedLocale}${suffix}`);
   }
 
   const localizedPath = pathname === "/" ? DEFAULT_LOCALE_PREFIX : `${DEFAULT_LOCALE_PREFIX}${pathname}`;

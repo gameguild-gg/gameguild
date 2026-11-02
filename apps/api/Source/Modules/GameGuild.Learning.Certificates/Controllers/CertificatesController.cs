@@ -154,6 +154,23 @@ public class CertificatesController : BaseApiController
     }
 
     /// <summary>
+    /// Renew a certificate by extending its validity (certificate lifecycle renewal, issue #180)
+    /// </summary>
+    [HttpPost("{id:guid}/renew")]
+    [RequireResourcePermission<PermissionType, Certificate>(PermissionType.Edit)]
+    public async Task<ActionResult<CertificateDto>> RenewCertificate(Guid id, [FromBody] RenewCertificateRequest request)
+    {
+        var result = await _sender.Send(new RenewCertificateEndpointCommand(id, request.NewExpiresAt)).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound ? NotFound(result.Error) : BadRequest(result.Error);
+        }
+
+        return Ok(CertificateDto.FromEntity(result.Value));
+    }
+
+    /// <summary>
     /// Get certificates for a specific course
     /// </summary>
     [HttpGet("course/{courseId:guid}")]
@@ -418,3 +435,8 @@ public sealed record IssueCertificateRequest(
 /// Request to revoke a certificate
 /// </summary>
 public sealed record RevokeCertificateRequest(string Reason);
+
+/// <summary>
+/// Request to renew a certificate by extending its validity
+/// </summary>
+public sealed record RenewCertificateRequest(DateTime NewExpiresAt);

@@ -13,6 +13,9 @@ public class GatewayMetricsServiceTests
 {
     private readonly Mock<IPaymentRepository> _repository = new();
 
+    private GatewayMetricsService CreateService(GatewayRoutingOptions? routing = null) =>
+        new(_repository.Object, Microsoft.Extensions.Options.Options.Create(routing ?? new GatewayRoutingOptions()));
+
     private static Payment NewPayment(
         string provider,
         PaymentStatus status,
@@ -76,7 +79,7 @@ public class GatewayMetricsServiceTests
                     weekOldPayPalSucceeded
                 }.Where(payment => payment.CreatedAt >= start && payment.CreatedAt <= end).ToList());
 
-        var service = new GatewayMetricsService(_repository.Object);
+        var service = CreateService();
         var metrics = await service.GetWindowMetricsAsync();
 
         var stripe24h = metrics.Should().ContainSingle(metric =>
@@ -111,7 +114,7 @@ public class GatewayMetricsServiceTests
                 It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { fast, slow });
 
-        var service = new GatewayMetricsService(_repository.Object);
+        var service = CreateService();
         var metrics = await service.GetWindowMetricsAsync();
 
         var stripe24h = metrics.Single(metric => metric.ProviderId == "stripe" && metric.Window == "24h");
@@ -126,7 +129,7 @@ public class GatewayMetricsServiceTests
                 It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
-        var service = new GatewayMetricsService(_repository.Object);
+        var service = CreateService();
         var metrics = await service.GetWindowMetricsAsync();
 
         metrics.Should().BeEmpty();
@@ -142,7 +145,7 @@ public class GatewayMetricsServiceTests
                 It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { pending });
 
-        var service = new GatewayMetricsService(_repository.Object);
+        var service = CreateService();
         var metrics = await service.GetWindowMetricsAsync();
 
         var stripe24h = metrics.Single(metric => metric.ProviderId == "stripe" && metric.Window == "24h");

@@ -1236,7 +1236,7 @@ public class AuditControllerCoverageCompletionTests
             auditService ?? Mock.Of<IAuditService>(),
             actorAccessor.Object,
             NullLogger<AuditController>.Instance,
-            new CommandHandlerSender(auditService ?? Mock.Of<IAuditService>(), Mock.Of<ISecurityAuditAggregator>(), actorAccessor.Object),
+            new CommandHandlerSender(auditService ?? Mock.Of<IAuditService>(), Mock.Of<ISecurityAuditAggregator>(), actorAccessor.Object, new NoOpBulkExportMonitor()),
             exportProgressTracker ?? CreateProgressTracker(),
             exportWebhookNotifier ?? CreateWebhookNotifier(),
             Mock.Of<IScheduledAuditExportService>())
@@ -1402,7 +1402,7 @@ public class SecurityAuditControllerCoverageCompletionTests
             auditService ?? Mock.Of<IAuditService>(),
             actorAccessor.Object,
             NullLogger<SecurityAuditController>.Instance,
-            new CommandHandlerSender(aggregator ?? Mock.Of<ISecurityAuditAggregator>(), auditService ?? Mock.Of<IAuditService>(), actorAccessor.Object));
+            new CommandHandlerSender(aggregator ?? Mock.Of<ISecurityAuditAggregator>(), auditService ?? Mock.Of<IAuditService>(), actorAccessor.Object, new NoOpBulkExportMonitor()));
     }
 
     private static ActorContext CreateActor(Guid userId)

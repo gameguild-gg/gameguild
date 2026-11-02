@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Authentication;
 ///     Command to logout a user and immediately revoke all their tokens.
 ///     This enables immediate logout without waiting for token expiry.
 /// </summary>
-public sealed class LogoutCommand : IRequest<LogoutResponse>
+public sealed class LogoutCommand : ICommand<LogoutResponse>
 {
     /// <summary>
     ///     The user ID to logout
