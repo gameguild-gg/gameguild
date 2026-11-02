@@ -203,7 +203,7 @@ stateDiagram-v2
     Revoked --> [*]
 ```
 
-Expiry enforcement is read-time, not write-time: `IsDeviceTrustedAsync` returns false when `ExpiresAt <= now` (`Services/SessionManagementService.cs:446-449`), `GetTrustedDevicesAsync` filters expired rows out of listings (`:463-464`), and the orchestrated flow's device-recognition check consults the repository (`Services/AuthenticationOrchestrationService.cs:112-118`). No background job transitions an expired row — the row stays `IsActive = true` with a past `ExpiresAt` until the owner re-trusts or revokes it. This is exactly the enforcement seam the open PR #1172 (trusted-device expiry hardening) targets: today "expired" is a derived predicate that every reader must remember to evaluate.
+Expiry enforcement is read-time, not write-time: `IsDeviceTrustedAsync` returns false when `ExpiresAt <= now` (`Services/SessionManagementService.cs:446-449`), `GetTrustedDevicesAsync` filters expired rows out of listings (`:463-464`), and the orchestrated flow's device-recognition check consults the repository (`Services/AuthenticationOrchestrationService.cs:112-118`). No background job transitions an expired row — the row stays `IsActive = true` with a past `ExpiresAt` until the owner re-trusts or revokes it. This is exactly the enforcement seam the open PR #1172 (reliability and security hardening batch for issues #1143/#1144/#1145/#1151/#1155) targets: today "expired" is a derived predicate that every reader must remember to evaluate, and there is no pruning job (issue #1144). The full user-flow view of this entity is in `docs/auth/flows/trusted-devices-flow.md`.
 
 ### Transitions audit — TrustedDevice
 
@@ -219,7 +219,7 @@ Unreachable states: none.
 
 Missing guards / edge cases:
 
-- **D1 — trust grant needs no MFA proof.** `TrustDeviceAsync` is invoked post-authentication; nothing in it requires a fresh step-up. A session-hijacking attacker with the fingerprint can pin their device for 30 days.
+- **D1 — trust grant needs no fresh verification (issue #1144, fix in flight via open PR #1172).** `TrustDeviceAsync` is invoked post-authentication; nothing in it requires a fresh step-up. A session-hijacking attacker with the fingerprint can pin their device for 30 days.
 - **D2 — expiry vs revoke asymmetry.** Revocation is persisted (`IsActive = false`); expiry is not (row remains active-but-derived-expired). Anything reading `IsActive` directly (e.g. analytics or a future admin surface) over-trusts expired devices; the two correct readers are `:432-452` and `:454-465`.
 - **D3 — eviction race.** `EnforceMaxTrustedDevicesAsync` (`:581-597`) fetch-then-updates; two concurrent trusts can both pass the cap check and both persist, exceeding `MaxTrustedDevices`.
 
@@ -239,7 +239,7 @@ stateDiagram-v2
     Revoked --> [*] : a revoked contact can never approve recovery - Entities TrustedContact.cs 35
 ```
 
-Approval codes: only `Confirmed` contacts receive recovery codes; recovery approval handlers re-check `Status == Confirmed` at approval time (`Handlers/ApproveAccountRecoveryCommandHandler.cs:67`), and the recovery-request query counts only confirmed contacts (`Handlers/AccountRecoveryRequestHandlers.cs:66`). Redemption re-checks the digest with a fixed-time comparison (`Handlers/TrustedContactCommandHandlers.cs:196-201`) after sweeping expired invites (`:194`, `Repositories/PostgreSqlTrustedContactStore.cs:53-56`).
+Approval codes: only `Confirmed` contacts receive recovery codes; recovery approval handlers re-check `Status == Confirmed` at approval time (`Handlers/ApproveAccountRecoveryCommandHandler.cs:67`), and the recovery-request query counts only confirmed contacts (`Handlers/AccountRecoveryRequestHandlers.cs:66`). Redemption re-checks the digest with a fixed-time comparison (`Handlers/TrustedContactCommandHandlers.cs:196-201`) after sweeping expired invites (`:194`, `Repositories/PostgreSqlTrustedContactStore.cs:53-56`). User-flow view: `docs/auth/flows/trusted-contacts-flow.md`.
 
 ### Transitions audit — TrustedContact
 
@@ -322,7 +322,7 @@ stateDiagram-v2
     Revoked --> [*]
 ```
 
-Rotation keeps the old key valid through a bounded overlap window (`RotateApiKeyHandler`, `Commands/ApiKeyCommands.cs:349-421`; single atomic repository save at `:387` → `Repositories/ApiKeyRepository.cs:69-86`). The final revocation of the rotated key is *lazy*: `ApiKeyAuthenticationHandler` finalizes it on the next authentication attempt (`Services/ApiKeyAuthenticationHandler.cs:98` → `Entities/ApiKey.cs:236-245`), so an unused rotated key sits in `GraceExpired` (still `IsActive`, grace past) indefinitely — `IsValid()` fails closed regardless (`:171-174`).
+Rotation keeps the old key valid through a bounded overlap window (`RotateApiKeyHandler`, `Commands/ApiKeyCommands.cs:349-421`; single atomic repository save at `:387` → `Repositories/ApiKeyRepository.cs:69-86`). The final revocation of the rotated key is *lazy*: `ApiKeyAuthenticationHandler` finalizes it on the next authentication attempt (`Services/ApiKeyAuthenticationHandler.cs:98` → `Entities/ApiKey.cs:236-245`), so an unused rotated key sits in `GraceExpired` (still `IsActive`, grace past) indefinitely — `IsValid()` fails closed regardless (`:171-174`). User-flow views: `docs/auth/flows/api-key-flow.md` and `docs/auth/flows/key-rotation-flow.md`.
 
 | Transition | Code allows? | Trigger (file:line) | Guard assessment |
 |---|---|---|---|
@@ -335,7 +335,7 @@ Unreachable states: none. Missing guards: **K1** — `GraceExpired → Revoked` 
 
 ### 8b. ServiceAccount
 
-Entity: `Entities/ServiceAccount.cs`. Flags: `IsActive` (`:60`), `ExpiresAt` (`:65`), `IsLocked`/`LockedAt` (`:117-122`), composite `CanAuthenticate` (`:147-155`: inactive, locked, and expired all fail closed). Certificate binding is a column pair, not a status enum: `CertificateThumbprint` (`:135`) and `CertificateSpkiSha256` (`:142`), null = secret-only.
+Entity: `Entities/ServiceAccount.cs`. Flags: `IsActive` (`:60`), `ExpiresAt` (`:65`), `IsLocked`/`LockedAt` (`:117-122`), composite `CanAuthenticate` (`:147-155`: inactive, locked, and expired all fail closed). Certificate binding is a column pair, not a status enum: `CertificateThumbprint` (`:135`) and `CertificateSpkiSha256` (`:142`), null = secret-only. User-flow view: `docs/auth/flows/service-account-flow.md`.
 
 ```mermaid
 stateDiagram-v2
