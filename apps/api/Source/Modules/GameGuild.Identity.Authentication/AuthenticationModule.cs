@@ -36,10 +36,12 @@ public static class AuthenticationModule
         app.UseAuthentication();
         app.UseAuthorization();
 
-        // Configure authorization middleware (from Authorization module)
-        app.UseMiddleware<Authorization.PermissionCachingMiddleware>();
+        // NOTE (issue #1203): PermissionCachingMiddleware and AccessReviewMiddleware were
+        // unregistered — both were header-writing stubs with no behavior (see
+        // docs/authorization/gaps.md §C). Permission caching lives in the permission
+        // services; access-review compliance tracking lives in the access-review services.
+        // AbacPolicyMiddleware (issue #1180) remains pending that issue's resolution.
         app.UseMiddleware<Authorization.AbacPolicyMiddleware>();
-        app.UseMiddleware<Authorization.AccessReviewMiddleware>();
 
         return app;
     }

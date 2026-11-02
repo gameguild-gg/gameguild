@@ -9,17 +9,19 @@ internal sealed class PasswordSignInAdmissionStub : IPasswordSignInAdmissionServ
     public AuthenticationTimingOrigin? Origin { get; private set; }
     public HttpContext? Context { get; private set; }
     public CancellationToken Cancellation { get; private set; }
+    public List<string?> TurnstileTokens { get; } = [];
     public UnauthorizedAccessException? Denial { get; set; }
     public bool LeaseDisposed { get; private set; }
 
     public Task<IAsyncDisposable> AdmitAsync(string identifier, HttpContext? context,
-        AuthenticationTimingOrigin timingOrigin, CancellationToken cancellationToken)
+        AuthenticationTimingOrigin timingOrigin, CancellationToken cancellationToken, string? turnstileToken = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
         Identifiers.Add(identifier);
         Origin = timingOrigin;
         Context = context;
         Cancellation = cancellationToken;
+        TurnstileTokens.Add(turnstileToken);
         if (Denial is not null)
         {
             throw Denial;

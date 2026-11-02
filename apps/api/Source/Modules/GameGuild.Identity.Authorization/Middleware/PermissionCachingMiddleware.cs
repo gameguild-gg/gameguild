@@ -8,13 +8,15 @@ namespace GameGuild.Identity.Authorization;
 /// </summary>
 /// <remarks>
 ///     <para>
-///         This middleware was moved from GameGuild.Identity.Authentication module
-///         as it performs authorization-related logic (permission caching).
-///     </para>
-///     <para>
-///         Placement: Should run after ActorContextMiddleware, before request handling.
+///         DEPRECATED (issue #1203): this class was a header-writing stub — it appended
+///         <c>X-Permission-Cache: enabled</c> and did nothing else. Permission caching is
+///         performed by the permission resolution services (memory-cache backed, with
+///         explicit invalidation via ClearPermissionCacheCommand), so no per-request
+///         middleware responsibility remains to implement. It has been unregistered from
+///         the pipeline; see docs/authorization/gaps.md §C2.
 ///     </para>
 /// </remarks>
+[Obsolete("Header-writing stub with no behavior; unregistered from the pipeline (issue #1203, docs/authorization/gaps.md §C2). Permission caching is owned by the permission resolution services.")]
 public sealed class PermissionCachingMiddleware(
     RequestDelegate next,
     ILogger<PermissionCachingMiddleware> logger

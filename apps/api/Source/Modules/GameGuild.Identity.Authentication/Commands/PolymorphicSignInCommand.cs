@@ -37,6 +37,12 @@ public class PolymorphicSignInCommand : ICommand<SignInResponse>
     /// </summary>
     public bool? RememberMe { get; init; }
 
+    /// <summary>
+    ///     Cloudflare Turnstile token (issue #1082). Required once the source IP crossed
+    ///     the configured failed-sign-in threshold; ignored otherwise.
+    /// </summary>
+    public string? TurnstileToken { get; init; }
+
     /// <summary>Optional guest token to upgrade into the issued session (issue #213).</summary>
     public string? GuestAccessToken { get; init; }
 }

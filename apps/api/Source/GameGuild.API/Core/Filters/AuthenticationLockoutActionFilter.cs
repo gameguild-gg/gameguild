@@ -11,7 +11,7 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        if (!TryGetLocalSignInEmail(context, out var email))
+        if (!TryGetLocalSignIn(context, out var email, out var turnstileToken))
         {
             await next().ConfigureAwait(false);
             return;
@@ -25,7 +25,19 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
         try
         {
             lease = await services.GetRequiredService<IPasswordSignInAdmissionService>()
-                .AdmitAsync(email, context.HttpContext, origin, cancellationToken).ConfigureAwait(false);
+                .AdmitAsync(email, context.HttpContext, origin, cancellationToken, turnstileToken).ConfigureAwait(false);
+        }
+        catch (PasswordSignInCaptchaRequiredException exception)
+        {
+            // Issue #1082: the stable marker in the detail lets the client reveal the
+            // CAPTCHA challenge; the status stays the generic 401 used for denied sign-ins.
+            context.Result = new UnauthorizedObjectResult(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Unauthorized",
+                Detail = exception.Message
+            });
+            return;
         }
         catch (UnauthorizedAccessException exception)
         {
@@ -42,9 +54,10 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
         await next().ConfigureAwait(false);
     }
 
-    private static bool TryGetLocalSignInEmail(ActionExecutingContext context, out string email)
+    private static bool TryGetLocalSignIn(ActionExecutingContext context, out string email, out string? turnstileToken)
     {
         email = string.Empty;
+        turnstileToken = null;
 
         if (context.ActionDescriptor is not ControllerActionDescriptor descriptor ||
             descriptor.ControllerTypeInfo.AsType() != typeof(AuthController) ||
@@ -60,6 +73,7 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
         }
 
         email = request.Email;
+        turnstileToken = request.TurnstileToken;
         return true;
     }
 }

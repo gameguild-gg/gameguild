@@ -711,20 +711,20 @@ jobs:
               }
             }
           }
-          // Selected surfaces must actually run and pass: only an explicit
-          // `<surface>_SELECTED === 'false'` legitimately explains a skipped gate,
-          // and a missing selection (or any other value) is treated as selected so
-          // a classifier hiccup can never silently wave a PR through. An unselected
-          // surface still has to report an explicit outcome — a skipped job is fine,
-          // a missing one never is.
-          const isSelected = (value) => value !== 'false';
-          for (const [name, selected] of [
-            ['web', isSelected(process.env.WEB_SELECTED)],
-            ['api', isSelected(process.env.API_SELECTED)],
-          ]) {
-            const allowed = gates[name] === 'success' || (gates[name] === 'skipped' && !selected);
-            if (!allowed && !failed.some(item => item.startsWith(`${name}=`))) {
-              failed.push(`${name}=${gates[name]}`);
+          // Selected-lane integrity (pr-required-gate.test.mjs contract): the Web and API
+          // lanes must actually run. A missing result blocks unconditionally; a skipped run
+          // blocks unless the classifier explicitly reported the lane unselected ('false').
+          // Anything else (empty/unknown selection) fails closed.
+          for (const [name, selection] of [['api', process.env.API_SELECTED], ['web', process.env.WEB_SELECTED]]) {
+            const result = gates[name];
+            if (result === '') {
+              if (!failed.some(item => item.startsWith(`${name}=`))) {
+                failed.push(`${name}=missing`);
+              }
+            } else if (result === 'skipped' && selection !== 'false') {
+              if (!failed.some(item => item.startsWith(`${name}=`))) {
+                failed.push(`${name}=skipped`);
+              }
             }
           }
           if (failed.length) {

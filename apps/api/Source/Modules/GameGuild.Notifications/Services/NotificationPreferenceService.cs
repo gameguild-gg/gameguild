@@ -157,6 +157,16 @@ public class NotificationPreferenceService(
         var preferences = await context.Set<NotificationPreference>()
             .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken).ConfigureAwait(false);
 
+        // 0. WhatsApp explicit opt-in gate (fail closed): WhatsApp is a paid, externally
+        //    metered channel — it is NEVER delivered without an explicit opt-in row
+        //    (WhatsAppEnabled == true), not even for transactional or urgent types, and
+        //    not when no preference row exists yet.
+        if (channel == NotificationChannel.WhatsApp
+            && (preferences == null || !preferences.WhatsAppEnabled))
+        {
+            return NotificationDeliveryDecision.Drop("whatsapp-not-opted-in");
+        }
+
         if (preferences == null)
         {
             return NotificationDeliveryDecision.Send();

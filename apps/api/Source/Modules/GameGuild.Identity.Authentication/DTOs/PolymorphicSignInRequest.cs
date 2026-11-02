@@ -13,6 +13,12 @@ public sealed class PolymorphicSignInRequest
     public bool? RememberMe { get; init; }
 
     /// <summary>
+    ///     Cloudflare Turnstile token (issue #1082). Required once the source IP crossed
+    ///     the configured failed-sign-in threshold; ignored otherwise.
+    /// </summary>
+    public string? TurnstileToken { get; init; }
+
+    /// <summary>
     ///     Optional guest bearer token presented by an anonymous visitor signing in (issue #213):
     ///     a valid guest session is upgraded into the issued authenticated session.
     /// </summary>

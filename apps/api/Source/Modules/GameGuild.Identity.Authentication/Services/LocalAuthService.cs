@@ -46,7 +46,10 @@ public class LocalAuthService(
     IOptions<GeoFencingOptions>? geoFencingOptions = null,
     IOptions<PasswordAgePolicyOptions>? passwordAgeOptions = null,
     IIpBlocklistService? ipBlocklistService = null,
-    IOptions<IpBlocklistOptions>? ipBlocklistOptions = null
+    IOptions<IpBlocklistOptions>? ipBlocklistOptions = null,
+    IAuthenticationAttemptRepository? attemptRepository = null,
+    AuthenticationSecurityOptions? authenticationSecurityOptions = null,
+    IPublisher? eventPublisher = null
 ) : ILocalAuthService
 {
     private const string ComplianceDeniedAuditAction = "Authentication.ComplianceDenied";
@@ -55,6 +58,12 @@ public class LocalAuthService(
     private const string GeoFenceStepUpAuditAction = "Authentication.GeoFenceStepUpRequired";
     private const string IpBlocklistDeniedAuditAction = "Authentication.IpBlocklistDenied";
     private const string IpBlocklistStepUpAuditAction = "Authentication.IpBlocklistStepUpRequired";
+
+    /// <summary>
+    ///     Window over which failed attempts count toward the progressive sign-in delay
+    ///     (issue #1084); matches the account-lockout failure window.
+    /// </summary>
+    private static readonly TimeSpan ProgressiveDelayWindow = TimeSpan.FromHours(1);
 
     public async Task<SignInResponse> LocalSignInAsync(LocalSignInRequest request, CancellationToken cancellationToken = default)
     {
@@ -126,6 +135,13 @@ public class LocalAuthService(
                 throw new AccessDeniedException("Sign-in denied by the IP blocklist.");
             }
 
+            // Progressive delay (issue #1084): throttle attempts against an account with
+            // recent failures BEFORE any credential work. Applied per account identifier
+            // (not per source IP) so distributed attacks against one account are slowed
+            // by the account itself. Runs after the admission lockout filter, which still
+            // handles the hard lockout; counting failures fail open (no delay).
+            await ApplyProgressiveDelayAsync(request.Email, cancellationToken).ConfigureAwait(false);
+
             // Lookup user from database
             var normalizedEmail = request.Email.ToLowerInvariant();
             var user = request.CredentialResolutionFailed ? null
@@ -177,6 +193,15 @@ public class LocalAuthService(
                     // Risk analysis and central audit must still run when the local attempt service is unavailable.
                     logger.LogError("Could not record failed authentication attempt for user {UserId}: {ErrorType}", userId, exception.GetType().FullName);
                 }
+
+                // In-process failure telemetry (issue #1199): the event carries the failure
+                // reason and request context; the caller still receives only the generic
+                // enumeration-protected message thrown below.
+                await AuthenticationEventDispatch.PublishAsync(
+                    eventPublisher,
+                    new AuthenticationFailedEvent(request.Email, failureReason ?? "InvalidCredentials", ipAddress, userAgent, SystemClock.UtcNow),
+                    logger,
+                    cancellationToken).ConfigureAwait(false);
 
                 var failedAttemptContext = CreateAttemptContext(
                     request.Email, userId, ipAddress, userAgent, request.TenantId, deviceFingerprint, candidatePasswordSha256Hex);
@@ -474,6 +499,14 @@ public class LocalAuthService(
             // Record successful login attempt
             await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, authenticatedUserId, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
 
+            // In-process sign-in telemetry (issue #1199): fired at the single point where the
+            // local password sign-in is finalized — ordinary credentials issued, session persisted.
+            await AuthenticationEventDispatch.PublishAsync(
+                eventPublisher,
+                new UserSignedInEvent(authenticatedUserId, authenticatedUser?.Email ?? request.Email, "Password", ipAddress, userAgent, SystemClock.UtcNow),
+                logger,
+                cancellationToken).ConfigureAwait(false);
+
             var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
                                                ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
@@ -522,10 +555,82 @@ public class LocalAuthService(
             {
                 logger.LogError("Could not record failed authentication attempt after a system error: {ErrorType}", exception.GetType().FullName);
             }
+            await AuthenticationEventDispatch.PublishAsync(
+                eventPublisher,
+                new AuthenticationFailedEvent(request.Email, "SystemError", ipAddress, userAgent, SystemClock.UtcNow),
+                logger,
+                cancellationToken).ConfigureAwait(false);
             await CompleteTimingOnceAsync().ConfigureAwait(false);
 
             throw new UnauthorizedAccessException(enumerationProtection.GetGenericErrorMessage("login"));
         }
+    }
+
+    /// <summary>
+    ///     Progressive delay on failed password sign-in attempts (issue #1084). Waits
+    ///     <c>base * 2^(failures - 1)</c> seconds (capped at the configured maximum;
+    ///     default schedule 1s, 2s, 4s, 8s) before credential verification when the
+    ///     account identifier has recent failed attempts. Fail-open: repository or
+    ///     configuration problems skip the delay rather than blocking sign-in.
+    /// </summary>
+    private async Task ApplyProgressiveDelayAsync(string email, CancellationToken cancellationToken)
+    {
+        if (attemptRepository is null ||
+            authenticationSecurityOptions is not { EnableProgressiveDelay: true } securityOptions ||
+            securityOptions.ProgressiveDelayBaseSeconds <= 0)
+        {
+            return;
+        }
+
+        int recentFailures;
+        try
+        {
+            recentFailures = await attemptRepository.CountRecentFailedAttemptsAsync(
+                email.ToLowerInvariant(),
+                SystemClock.UtcNow.Subtract(ProgressiveDelayWindow),
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            // The backoff is a defense-in-depth throttle: never let its counter fail a sign-in.
+            logger.LogError("Could not count recent sign-in failures for the progressive delay: {ErrorType}",
+                exception.GetType().FullName);
+            return;
+        }
+
+        var delay = ComputeProgressiveDelay(recentFailures, securityOptions);
+        if (delay <= TimeSpan.Zero)
+        {
+            return;
+        }
+
+        logger.LogInformation(
+            "Applying progressive sign-in delay of {DelaySeconds:F0}s before credential verification ({RecentFailures} recent failed attempts)",
+            delay.TotalSeconds, recentFailures);
+        await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Exponential backoff schedule for the progressive sign-in delay (issue #1084):
+    ///     1 failure waits the base, each further failure doubles it, saturating at the
+    ///     configured maximum (defaults produce 1s, 2s, 4s, 8s, 8s, ...).
+    /// </summary>
+    internal static TimeSpan ComputeProgressiveDelay(int recentFailures, AuthenticationSecurityOptions options)
+    {
+        if (recentFailures <= 0 || options.ProgressiveDelayBaseSeconds <= 0)
+        {
+            return TimeSpan.Zero;
+        }
+
+        // 2^30 seconds would overflow int math; any count beyond that saturates anyway.
+        var exponent = Math.Min(recentFailures - 1, 30);
+        var seconds = options.ProgressiveDelayBaseSeconds * Math.Pow(2, exponent);
+        var cappedSeconds = Math.Min(seconds, options.ProgressiveDelayMaxSeconds);
+        return TimeSpan.FromSeconds(cappedSeconds);
     }
 
     private async Task CompleteAuthenticationTimingAsync(AuthenticationTimingOrigin origin, bool credentialWorkCompleted,
@@ -1028,6 +1133,15 @@ public class LocalAuthService(
 
         logger.LogInformation("Refresh token rotated for user {UserId}", userId);
 
+        // In-process rotation telemetry (issue #1199): the presented token was consumed and
+        // replaced, i.e. it was used. Replay and rotation-loss denials return above without
+        // reaching this point, so the event only fires for a claimed rotation.
+        await AuthenticationEventDispatch.PublishAsync(
+            eventPublisher,
+            new RefreshTokenUsedEvent(storedToken.Id.ToString(), userId, now),
+            logger,
+            cancellationToken).ConfigureAwait(false);
+
         var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
                                           ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
@@ -1064,6 +1178,11 @@ public class LocalAuthService(
             {
                 await sessionManagementService.TerminateSessionAsync(familySessionId.Value, SessionTerminationReason.SecurityViolation, cancellationToken)
                     .ConfigureAwait(false);
+                await AuthenticationEventDispatch.PublishAsync(
+                    eventPublisher,
+                    new RefreshTokenRevokedEvent(token.Id.ToString(), userId, "ReplayContained", SystemClock.UtcNow),
+                    logger,
+                    cancellationToken).ConfigureAwait(false);
                 return;
             }
         }
@@ -1077,6 +1196,14 @@ public class LocalAuthService(
             userId,
             SessionTerminationReason.SecurityViolation,
             cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        // In-process revocation telemetry (issue #1199): replay containment revokes the
+        // compromised token's lineage (family or account scope, per configuration).
+        await AuthenticationEventDispatch.PublishAsync(
+            eventPublisher,
+            new RefreshTokenRevokedEvent(token.Id.ToString(), userId, "ReplayContained", SystemClock.UtcNow),
+            logger,
+            cancellationToken).ConfigureAwait(false);
 
         var compromisedUser = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         if (compromisedUser is null)
@@ -1217,6 +1344,13 @@ public class LocalAuthService(
         }
         await RecordRefreshMutationAsync(new RefreshTokenLifecycleEvent(RefreshTokenLifecycleOperation.Revoked,
             refreshToken.UserId, refreshToken.Id, session?.Id ?? refreshToken.SessionId), cancellationToken).ConfigureAwait(false);
+
+        // In-process revocation telemetry (issue #1199): explicit single-token revocation.
+        await AuthenticationEventDispatch.PublishAsync(
+            eventPublisher,
+            new RefreshTokenRevokedEvent(refreshToken.Id.ToString(), refreshToken.UserId, "Revoked", SystemClock.UtcNow),
+            logger,
+            cancellationToken).ConfigureAwait(false);
     }
 
     private Task RecordRefreshMutationAsync(RefreshTokenLifecycleEvent lifecycleEvent, CancellationToken cancellationToken) =>

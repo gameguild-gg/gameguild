@@ -34,6 +34,8 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     private readonly Mock<IUserMfaConfigurationRepository> _userMfaConfiguration = new();
     private readonly Mock<IRoleRepository> _roleRepository = new();
     private readonly Mock<IJwtTokenService> _jwtTokenService = new();
+    private readonly Mock<ISuspiciousLoginAlertPublisher> _suspiciousAlerts = new();
+    private readonly Mock<GameGuild.CQRS.IPublisher> _eventsPublisher = new();
 
     private readonly InMemoryFlowStateStore _flowStates = new();
     private readonly User _user = new() { Id = Guid.NewGuid(), Email = "user@example.com", IsActive = true, PasswordHash = "hash" };
@@ -122,7 +124,9 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
             _roleRepository.Object,
             _jwtTokenService.Object,
             Options.Create(new JwtOptions()),
-            NullLogger<AuthenticationOrchestrationService>.Instance);
+            NullLogger<AuthenticationOrchestrationService>.Instance,
+            suspiciousLoginAlerts: _suspiciousAlerts.Object,
+            eventPublisher: _eventsPublisher.Object);
 
         SystemClock.SetProvider(_clock);
     }
@@ -609,6 +613,56 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     };
 
     private sealed class TestInitiateAuthenticationRequest : InitiateAuthenticationRequest;
+
+    // ═══════════════════════════════════════════════════════════════════
+    // In-process event + suspicious-login coverage (issue #1199)
+    // ═══════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task Initiate_HighRiskFlow_FiresStepUpSuspiciousLoginAlert()
+    {
+        _anomalyDetection
+            .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
+            .ReturnsAsync(new AuthenticationAnomalyResult
+            {
+                IsAnomalous = true,
+                RiskLevel = RiskLevel.High,
+                RiskScore = 85,
+                DetectedAnomalies = new List<string>()
+            });
+
+        var state = await _sut.InitiateAuthenticationAsync(CreateRequest(deviceFingerprint: TrustedFingerprint));
+
+        // A flow at or above the high-risk threshold forces the strongest challenge set,
+        // which is the step-up containment signal previously missing from this family.
+        _suspiciousAlerts.Verify(alerts => alerts.RecordAsync(
+            _user.Id,
+            It.IsAny<Guid?>(),
+            SecurityAlertKinds.LoginStepUpRequired,
+            RiskLevel.High,
+            85,
+            It.IsAny<CancellationToken>()), Times.Once);
+        state.RequiredSteps.Should().Contain(AuthenticationStep.RiskChallenge);
+    }
+
+    [Fact]
+    public async Task Initiate_InvalidPrimaryCredential_PublishesAuthenticationFailedEvent()
+    {
+        _passwordHasher
+            .Setup(hasher => hasher.VerifyPasswordWithWorkClassification(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(new PasswordVerificationResult(IsValid: false, WorkPerformed: true));
+
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => _sut.InitiateAuthenticationAsync(CreateRequest(deviceFingerprint: TrustedFingerprint)));
+
+        exception.Message.Should().Be("Authentication failed");
+        _eventsPublisher.Verify(publisher => publisher.Publish(
+            It.Is<AuthenticationFailedEvent>(e =>
+                e.Identifier == "user@example.com" &&
+                e.Reason == "InvalidCredentials" &&
+                e.IpAddress == "203.0.113.5"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 
     /// <summary>
     ///     Deterministic clock: the service reads <see cref="SystemClock"/>, which the tests

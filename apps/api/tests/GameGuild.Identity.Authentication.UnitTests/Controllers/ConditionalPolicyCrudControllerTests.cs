@@ -31,26 +31,10 @@ public sealed class ConditionalPolicyCrudControllerTests
         created.Value.Should().BeSameAs(policy);
     }
 
-    [Fact]
-    public async Task GetConditionalPolicy_ShouldReturnOkAndMapPolicyId()
-    {
-        var mediator = new Mock<IMediator>();
-        GetConditionalPolicyQuery? captured = null;
-        var policy = CreatePolicy();
-
-        mediator
-            .Setup(x => x.Send(It.IsAny<GetConditionalPolicyQuery>(), It.IsAny<CancellationToken>()))
-            .Callback<object, CancellationToken>((request, _) => captured = (GetConditionalPolicyQuery)request)
-            .ReturnsAsync(policy);
-
-        var controller = CreateController(mediator);
-
-        var result = await controller.GetConditionalPolicy(policy.Id);
-
-        captured.Should().NotBeNull();
-        captured!.PolicyId.Should().Be(policy.Id);
-        result.Result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeSameAs(policy);
-    }
+    // NOTE (issue #1203): GetConditionalPolicy/GetConditionalPolicies/GetConditionalPolicyTemplates
+    // tests previously mocked IMediator and stayed green while the endpoints had no
+    // handlers and answered 500. They are replaced by pipeline-level coverage in
+    // GameGuild.API.IntegrationTests (PolicyManagementQueriesPostgreSqlHttpTests).
 
     [Fact]
     public async Task UpdateConditionalPolicy_ShouldAssignPolicyIdAndReturnOk()
@@ -90,31 +74,6 @@ public sealed class ConditionalPolicyCrudControllerTests
         captured.Should().NotBeNull();
         captured!.PolicyId.Should().Be(policyId);
         result.Should().BeOfType<NoContentResult>();
-    }
-
-    [Fact]
-    public async Task GetConditionalPolicies_ShouldMapFiltersAndReturnOk()
-    {
-        var mediator = new Mock<IMediator>();
-        GetConditionalPoliciesQuery? captured = null;
-        var tenantId = Guid.NewGuid();
-
-        mediator
-            .Setup(x => x.Send(It.IsAny<GetConditionalPoliciesQuery>(), It.IsAny<CancellationToken>()))
-            .Callback<object, CancellationToken>((request, _) => captured = (GetConditionalPoliciesQuery)request)
-            .ReturnsAsync((PagedResult<ConditionalPolicy>)null!);
-
-        var controller = CreateController(mediator);
-
-        var result = await controller.GetConditionalPolicies(tenantId, isActive: true, conditionType: "TimeBased", page: 3, pageSize: 25);
-
-        captured.Should().NotBeNull();
-        captured!.TenantId.Should().Be(tenantId);
-        captured.IsActive.Should().BeTrue();
-        captured.ConditionType.Should().Be("TimeBased");
-        captured.Page.Should().Be(3);
-        captured.PageSize.Should().Be(25);
-        result.Result.Should().BeOfType<OkObjectResult>();
     }
 
     [Fact]
@@ -205,23 +164,6 @@ public sealed class ConditionalPolicyCrudControllerTests
 
         var ok = result.Should().BeOfType<OkObjectResult>().Subject;
         GetAnonymousProperty<string>(ok.Value!, "message").Should().Be("Policy priority updated successfully");
-    }
-
-    [Fact]
-    public async Task GetConditionalPolicyTemplates_ShouldReturnOk()
-    {
-        var mediator = new Mock<IMediator>();
-        var templates = Array.Empty<ConditionalPolicyTemplateDto>();
-
-        mediator
-            .Setup(x => x.Send(It.IsAny<GetConditionalPolicyTemplatesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(templates.AsEnumerable());
-
-        var controller = CreateController(mediator);
-
-        var result = await controller.GetConditionalPolicyTemplates();
-
-        result.Result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeEquivalentTo(templates);
     }
 
     [Fact]
