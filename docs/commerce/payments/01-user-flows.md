@@ -310,7 +310,7 @@ flowchart TD
 
 ## 5. Currency suggestion endpoint
 
-`GET api/v1/currencies/suggestion` — anonymous (`CurrenciesController.cs:42-57`), registered in the anonymous endpoint registry (`GameGuild.API/Security/AnonymousEndpointRegistry.cs:112`). This is the endpoint observed failing in Session-state logs — see the Gaps document (`06-gaps.md` gap N1): the query carries `[AuthorizeRequest("")]` (`Queries/Currencies/GetCurrencySuggestion.cs:32`) and the CQRS `AuthorizationBehavior` rejects unauthenticated actors before the empty-permission skip (`Identity.Authorization/Behaviors/AuthorizationBehavior.cs:66-69` vs `:105-108`).
+`GET api/v1/currencies/suggestion` — anonymous (`CurrenciesController.cs:42-57`), registered in the anonymous endpoint registry (`GameGuild.API/Security/AnonymousEndpointRegistry.cs:112`). This is the endpoint observed failing in Session-state logs — see the Gaps document (`06-gaps.md` gap N9): the query carries `[AuthorizeRequest("")]` (`Queries/Currencies/GetCurrencySuggestion.cs:32`) and the CQRS `AuthorizationBehavior` rejects unauthenticated actors before the empty-permission skip (`Identity.Authorization/Behaviors/AuthorizationBehavior.cs:66-69` vs `:105-108`).
 
 ```mermaid
 flowchart TD
@@ -318,7 +318,7 @@ flowchart TD
         U1["Anonymous or authenticated caller"] --> U2["Read edge country headers<br/>CF-IPCountry then X-Country-Code<br/>then X-Vercel-IP-Country L51"]
         U2 --> U3["GetCurrencySuggestionQuery country<br/>L55"]
         U3 --> U4{"CQRS AuthorizationBehavior<br/>AuthorizeRequest empty permission<br/>GetCurrencySuggestion.cs L32"}
-        U4 -- "actor not authenticated" --> U500["UnauthorizedAccessException<br/>AuthorizationBehavior.cs L66<br/>no controller catch - 500 to client - GAP N1"]
+        U4 -- "actor not authenticated" --> U500["UnauthorizedAccessException<br/>AuthorizationBehavior.cs L66<br/>no controller catch - 500 to client - GAP N9"]
         U4 -- "authenticated reaches handler" --> U5["MapCountryToCurrency via RegionInfo<br/>BCL region data L109<br/>catalog-verified ISO 4217 L120"]
         U5 -- "unknown or malformed country" --> U6["Suggest USD source default<br/>fallback country-unknown L62"]
         U5 -- "mapped" --> U7{"Tenant context L54"}
@@ -341,7 +341,7 @@ flowchart TD
 | 4 | Anonymous caller | intended allow (`CurrenciesController.cs:43`, registry `:112`) | **BUG** — CQRS auth behavior throws first (Gap N1) |
 | 5 | Tenant with zero enabled currencies | fallback chain (`:89-94`) | `first-enabled` absent → default USD, `IsEnabledForTenant=false` |
 | 6 | Disabled currency for the tenant | enablement filter (`:82`) | never suggested; tenant-base offered instead |
-| 7 | Direct unit tests | handler invoked directly (`FxSecurityTests.cs:284-313`) | pass — the pipeline behavior is bypassed, masking gap N1 |
+| 7 | Direct unit tests | handler invoked directly (`FxSecurityTests.cs:284-313`) | pass — the pipeline behavior is bypassed, masking gap N9 |
 
 ## 6. Payment method lifecycle
 
