@@ -122,6 +122,8 @@ public static class DataDependencyInjection
         services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
         // Expired/revoked trusted-device pruning (issue #1144); fails soft and retries per interval.
         services.AddHostedService<TrustedDeviceCleanupBackgroundService>();
+        // Issue #1085: per-user seen-device registry backing first-seen device detection.
+        services.AddScoped<IUserDeviceFingerprintRepository, UserDeviceFingerprintRepository>();
         services.AddScoped<IMfaAttemptRepository, MfaAttemptRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<GameGuild.Identity.Authorization.IAuthorizationRolePermissionProvider, RolePermissionProvider>();
@@ -133,6 +135,22 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthAttemptService, AuthAttemptService>();
         services.AddScoped<ISuspiciousLoginAlertPublisher, SuspiciousLoginAlertPublisher>();
         services.AddScoped<INewLoginAlertPublisher, NewLoginAlertPublisher>();
+        // Issue #1083: the account lockout policy alerts the owner through the host-side
+        // notification bridge when a fresh lockout engages.
+        services.AddScoped<IAccountLockoutAlertPublisher, AccountLockoutAlertPublisher>();
+        // Issue #1086: concurrent-session-limit evictions notify the evicted session's
+        // owner through the host-side notification bridge.
+        services.AddScoped<ISessionEvictionAlertPublisher, SessionEvictionAlertPublisher>();
+        // Issue #1085: first-seen device sign-ins notify the owner through the host-side
+        // notification bridge.
+        services.AddScoped<INewDeviceSignInAlertPublisher, NewDeviceSignInAlertPublisher>();
+        // Issue #1082: server-side Cloudflare Turnstile verification for password sign-in
+        // admission after repeated source-IP failures. An unset secret disables the gate.
+        services.AddHttpClient(TurnstileVerificationService.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(10));
+        services.AddScoped<ITurnstileVerificationService>(static provider => new TurnstileVerificationService(
+            provider.GetRequiredService<IHttpClientFactory>(),
+            provider.GetService<AuthenticationSecurityOptions>() ?? new AuthenticationSecurityOptions(),
+            provider.GetRequiredService<ILogger<TurnstileVerificationService>>()));
         // Server-side device metadata: dependency-free user-agent parsing for every session;
         // geolocation stays a pure abstraction (SharedKernel) with a no-op default so a host
         // can plug in an offline GeoIP provider without touching this module.

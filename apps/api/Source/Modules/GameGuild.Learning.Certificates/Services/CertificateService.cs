@@ -353,6 +353,11 @@ public class CertificateService : ICertificateService, ICertificateIssuanceServi
                 return Result.Failure<Certificate>(Error.Conflict("Certificate", "A revoked certificate cannot be renewed"));
             }
 
+            if (certificate.Status == CertificateStatus.Active && newExpiresAt <= certificate.ExpiresAt)
+            {
+                return Result.Failure<Certificate>(Error.Conflict("Certificate", "The renewed expiry must extend the current expiry"));
+            }
+
             certificate.Renew(newExpiresAt);
             _context.Set<Certificate>().Update(certificate);
             var transaction = await _context.BeginAuditedMutationTransactionAsync().ConfigureAwait(false);

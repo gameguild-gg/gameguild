@@ -23,5 +23,12 @@ public class ProgramContentConfiguration : IEntityTypeConfiguration<ProgramConte
 
     // Configure relationship with Parent (self-referencing, can't be done with annotations)
     builder.HasOne(pc => pc.Parent).WithMany(pc => pc.Children).HasForeignKey(pc => pc.ParentId).OnDelete(DeleteBehavior.Restrict);
+
+    // Program detail pages load live content trees (ProgramId + DeletedAt == null,
+    // ordered by SortOrder) — issue #1157. Distinct property list from the
+    // annotation-declared single-column ProgramId index.
+    builder.HasIndex(pc => new { pc.ProgramId, pc.SortOrder })
+      .HasDatabaseName("ix_program_contents_program_sort_live")
+      .HasFilter("\"DeletedAt\" IS NULL");
   }
 }
