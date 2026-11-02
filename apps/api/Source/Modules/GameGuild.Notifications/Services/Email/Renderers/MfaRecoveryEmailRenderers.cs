@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using GameGuild.Email;
 using GameGuild.Notifications.Services.Email;
 using Microsoft.Extensions.Configuration;
 

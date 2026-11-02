@@ -6,6 +6,7 @@ using GameGuild.Notifications.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using NotificationPriority = GameGuild.Notifications.NotificationPriority;
 using Xunit;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Handlers;
