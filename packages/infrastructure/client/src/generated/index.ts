@@ -19,7 +19,6 @@ export * from './endpoints.gen.js';
 
 // Re-export module-grouped endpoints
 export * from './modules/learning-lti.gen.js';
-export * from './modules/gamification-achievements.gen.js';
 export * from './modules/analytics-dashboards.gen.js';
 export * from './modules/analytics.gen.js';
 export * from './modules/assets-secure-delivery.gen.js';
@@ -47,7 +46,6 @@ export * from './modules/learning-enrollments.gen.js';
 export * from './modules/analytics-metrics-product.gen.js';
 export * from './modules/notifications.gen.js';
 export * from './modules/learning-courses-prerequisites.gen.js';
-export * from './modules/social-ratings.gen.js';
 export * from './modules/social-blog-admin.gen.js';
 export * from './modules/social-blog-comments.gen.js';
 export * from './modules/social-blog-authoring.gen.js';
@@ -112,7 +110,6 @@ export * from './modules/commerce-payments-fraud-statistics.gen.js';
 export * from './modules/commerce-payments-fx-rates.gen.js';
 export * from './modules/commerce-payments-gifts.gen.js';
 export * from './modules/economy-integrations.gen.js';
-export * from './modules/finance-ledgers-finance-ledgers.gen.js';
 export * from './modules/notifications-subscriptions.gen.js';
 export * from './modules/commerce-payments.gen.js';
 export * from './modules/commerce-payments-taxes.gen.js';
