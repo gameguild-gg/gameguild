@@ -114,6 +114,7 @@ describe('SignInForm', () => {
       password: 'password123',
       rememberMe: false,
       redirectTo: '/',
+      turnstileToken: null,
     });
   });
 

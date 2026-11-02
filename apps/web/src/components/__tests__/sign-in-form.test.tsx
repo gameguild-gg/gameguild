@@ -149,6 +149,7 @@ describe('SignInForm', () => {
       password: 'password123',
       rememberMe: false,
       redirectTo: '/',
+      turnstileToken: null,
     });
   });
 
@@ -165,6 +166,7 @@ describe('SignInForm', () => {
       password: 'password123',
       rememberMe: true,
       redirectTo: '/',
+      turnstileToken: null,
     });
   });
 
