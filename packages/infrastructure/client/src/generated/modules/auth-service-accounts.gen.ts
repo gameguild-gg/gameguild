@@ -256,6 +256,31 @@ export class AuthServiceAccountsModule {
   }
 
   /**
+   * Binds an X.509 client certificate to a service account so the certificate can
+   * authenticate in lieu of the client secret (issue #1146).
+   *
+   * Binds an X.509 client certificate (thumbprint plus optional SPKI key pin) to a service account, allowing certificate authentication in lieu of the client secret. Pins are normalized to the authentication-time form; a later certificate presentation matches on either the thumbprint or the SPKI pin.
+   */
+  async patchAuthServiceAccountsClientCertificate(
+    serviceAccountId: string,
+    body: Types.IdentityAuthenticationBindServiceAccountCertificateInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/service-accounts/${serviceAccountId}/client-certificate`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationBindServiceAccountCertificateInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PATCH',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * Updates the scopes for a service account.
    */
   async patchAuthServiceAccountsScopes(serviceAccountId: string, body: Types.IdentityAuthenticationUpdateScopesInput): Promise<Result<void, ApiError>> {
