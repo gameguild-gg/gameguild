@@ -6,6 +6,7 @@ import { getProductsContainingCourse } from '@/lib/courses/actions/enrollment.ac
 import { getCourseViewerAccess } from '@/lib/courses/services/course-viewer-access';
 import { getCachedPublicCourseBySlug } from '@/lib/courses/cached-public-course';
 import { buildPageMetadata } from '@/lib/seo';
+import { buildCourseJsonLd, JsonLd } from '@/lib/seo/jsonld';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
@@ -114,7 +115,25 @@ async function CourseContent({ slug }: { slug: string }): Promise<React.JSX.Elem
     getProductsContainingCourse(slug),
   ]);
 
-  return <CourseLandingPage course={course} viewerAccess={viewerAccess} products={products} />;
+  // Real data only: offer comes from an actual storefront product price; omitted otherwise.
+  const pricedProduct = products.find((product) => typeof product.price === 'number' && product.price >= 0);
+
+  return (
+    <>
+      <JsonLd
+        data={buildCourseJsonLd({
+          name: course.title ?? 'Course',
+          description: course.description,
+          url: `/courses/${slug}`,
+          imageUrl: typeof course.thumbnail === 'string' ? course.thumbnail : undefined,
+          offer: pricedProduct
+            ? { price: pricedProduct.price, priceCurrency: pricedProduct.currency ?? 'USD' }
+            : null,
+        })}
+      />
+      <CourseLandingPage course={course} viewerAccess={viewerAccess} products={products} />
+    </>
+  );
 }
 
 export default async function CourseDetailPage({ params }: CourseDetailPageProps) {

@@ -5,6 +5,10 @@ import React from 'react';
 
 import { buildPageMetadata } from '@/lib/seo';
 
+// No JobPosting JSON-LD: listings are static community-role copy without
+// structured data (datePosted, validThrough, hiringOrganization); emitting it
+// would fabricate required fields (issue #1208 guidance).
+
 export const metadata = buildPageMetadata({
   path: '/jobs',
   title: 'Community Opportunities — GameGuild',
