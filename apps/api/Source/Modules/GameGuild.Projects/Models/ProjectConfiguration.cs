@@ -57,7 +57,6 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project> {
     builder.HasIndex(p => p.CreatedAt);
     builder.HasIndex(p => p.UpdatedAt);
     builder.HasIndex(p => new { p.Status, p.Visibility });
-    builder.HasIndex(p => new { p.CategoryId, p.Status });
     // Issue #1157: gallery and dashboard listings filter soft-deleted projects; the
     // partial indexes keep deleted projects out of the hot listing paths entirely.
     builder.HasIndex(p => new { p.CategoryId, p.Status })
