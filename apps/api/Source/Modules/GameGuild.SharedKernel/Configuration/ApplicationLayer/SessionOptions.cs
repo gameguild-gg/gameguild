@@ -84,11 +84,27 @@ public sealed class SessionOptions : BaseOptions
     public bool RequireTrustedDeviceForSensitiveOps { get; set; } = false;
 
     /// <summary>
-    ///     How strictly the request's client IP must match the session's recorded IP
-    ///     (issue #278). <see cref="SessionIpAddressBinding.Strict"/> requires location
-    ///     tracking so sessions carry a real address instead of "unknown".
+    ///   How strictly the request's client IP must match the session's recorded IP
+    ///   (issue #278). <see cref="SessionIpAddressBinding.Strict"/> requires location
+    ///   tracking so sessions carry a real address instead of "unknown".
     /// </summary>
     public SessionIpAddressBinding IpAddressBinding { get; set; } = SessionIpAddressBinding.Off;
+
+    /// <summary>
+    ///   Whether trusting or revoking a trusted device requires a recent authentication
+    ///   (auth_time within <see cref="DeviceTrustFreshAuthenticationWindowMinutes"/>, plus an
+    ///   MFA-verified token when the user has MFA enabled) — issue #1144 step-up prerequisite.
+    /// </summary>
+    public bool RequireFreshAuthenticationForDeviceTrust { get; set; } = true;
+
+    /// <summary>
+    ///   How recent the acting user's authentication (auth_time claim) must be for
+    ///   trusted-device mutations. Default 15 minutes, matching the sensitive-action
+    ///   assurance window used by teams/projects ownership transfers.
+    /// </summary>
+    [Range(1, 1440)]
+    public int DeviceTrustFreshAuthenticationWindowMinutes { get; set; } = 15;
+
 
     public bool IsValid
     {
@@ -132,6 +148,11 @@ public sealed class SessionOptions : BaseOptions
         if (IpAddressBinding == SessionIpAddressBinding.Strict && !EnableLocationTracking)
         {
             errors.Add("IpAddressBinding Strict requires EnableLocationTracking so sessions record a real client address");
+        }
+
+        if (DeviceTrustFreshAuthenticationWindowMinutes is < 1 or > 1440)
+        {
+            errors.Add("DeviceTrustFreshAuthenticationWindowMinutes must be between 1 and 1440 (24 hours)");
         }
 
         return (errors.Count == 0, errors.ToArray());

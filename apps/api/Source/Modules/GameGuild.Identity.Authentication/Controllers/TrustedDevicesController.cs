@@ -15,7 +15,10 @@ namespace GameGuild.Identity.Authentication;
 [Route("v{version:apiVersion}/auth/trusted-devices")]
 [Microsoft.AspNetCore.Http.Tags("auth/trusted-devices")]
 [Authorize]
-public sealed class TrustedDevicesController(ISessionManagementService sessionService, ISender sender) : AuthControllerBase
+public sealed class TrustedDevicesController(
+    ISessionManagementService sessionService,
+    ISender sender,
+    IFreshVerificationGate? freshVerificationGate = null) : AuthControllerBase
 {
     /// <summary>
     ///     Get trusted devices for the current user
@@ -67,6 +70,13 @@ public sealed class TrustedDevicesController(ISessionManagementService sessionSe
             return BadRequest(new SessionErrorResponse { Error = "Current session device is unavailable" });
         }
 
+        // Fresh-verification prerequisite (issue #1144): trusting a device is a sensitive
+        // mutation and requires a recent (optionally MFA-verified) authentication.
+        if (!await PassesFreshVerificationAsync(ct).ConfigureAwait(false))
+        {
+            return Forbid();
+        }
+
         var success = await sender.Send(
             new TrustDeviceCommand(userId, sessionId, body.DeviceName), ct).ConfigureAwait(false);
 
@@ -93,6 +103,14 @@ public sealed class TrustedDevicesController(ISessionManagementService sessionSe
     public async Task<IActionResult> RevokeTrustedDevice(Guid deviceId, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
+
+        // Fresh-verification prerequisite (issue #1144): revoking trust weakens the account's
+        // device-based recognition, so it requires a recent authentication like trusting does.
+        if (!await PassesFreshVerificationAsync(ct).ConfigureAwait(false))
+        {
+            return Forbid();
+        }
+
         var success = await sender.Send(new RevokeTrustedDeviceCommand(userId, deviceId), ct).ConfigureAwait(false);
 
         if (!success)
@@ -142,6 +160,22 @@ public sealed class TrustedDevicesController(ISessionManagementService sessionSe
     }
 
     #region Private Helpers
+
+    /// <summary>
+    ///     Fresh-verification prerequisite for trusted-device mutations (issue #1144).
+    ///     The gate is injected by the module in the composed host; direct construction
+    ///     without a gate (unit-test seam) keeps the historical behavior.
+    /// </summary>
+    private async Task<bool> PassesFreshVerificationAsync(CancellationToken ct)
+    {
+        if (freshVerificationGate is null)
+        {
+            return true;
+        }
+
+        var verification = await freshVerificationGate.VerifyRecentAuthenticationAsync(ct).ConfigureAwait(false);
+        return verification.IsVerified;
+    }
 
     private static DeviceInfo? ParseDeviceInfo(string? deviceInfoJson)
     {

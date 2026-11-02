@@ -1,8 +1,10 @@
 using Asp.Versioning;
+using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -10,11 +12,14 @@ namespace GameGuild.Identity.Authentication;
 ///     Trusted-contact management for delegated account recovery (issue #209). Listing,
 ///     adding and removing require the owner's session; the invite confirmation is
 ///     anonymous and rests on the single-use emailed token (email-verification style).
+///     Rate limited with the authentication bucket (issue #1145) so the anonymous token
+///     redemption endpoint gets its own throttled budget like other credential flows.
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/auth/trusted-contacts")]
 [Tags("auth/trusted-contacts")]
+[EnableRateLimiting(RateLimitPolicies.Authentication)]
 [Authorize]
 public sealed class TrustedContactsController(
     ITrustedContactStore contactStore,

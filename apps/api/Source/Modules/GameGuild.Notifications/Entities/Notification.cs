@@ -476,6 +476,9 @@ public enum NotificationType
     /// <summary>Legal hold requires a custodian's or stakeholder's attention (issue #177)</summary>
     LegalHoldNotice = 36,
 
+    /// <summary>Trusted recovery contact invitation for delegated account recovery (issue #1145)</summary>
+    TrustedContactInvite = 37,
+
     /// <summary>Custom/other notification type</summary>
     Custom = 99
 }

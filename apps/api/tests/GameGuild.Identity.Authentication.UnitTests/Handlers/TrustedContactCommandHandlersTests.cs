@@ -1,7 +1,8 @@
 using FluentAssertions;
-using GameGuild.Email;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -18,13 +19,45 @@ public sealed class TrustedContactCommandHandlersTests
     private static IConfiguration CreateConfig() =>
         new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>()).Build();
 
+    /// <summary>
+    ///     Notification-outbox stub (issue #1145): the invite email is a durably queued
+    ///     Pending notification row rendered and retried by the email dispatcher worker.
+    /// </summary>
+    private static Mock<INotificationService> CreateQueuingNotificationService()
+    {
+        var notifications = new Mock<INotificationService>();
+        notifications
+            .Setup(s => s.SendAsync(
+                It.IsAny<Guid?>(),
+                It.IsAny<NotificationType>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<NotificationChannel>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<GameGuild.Notifications.NotificationPriority>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(Notification.Create(
+                recipientId: null,
+                type: NotificationType.TrustedContactInvite,
+                channel: NotificationChannel.Email,
+                title: "Trusted recovery contact invitation",
+                message: string.Empty,
+                recipientEmail: "queued@test.com")));
+        return notifications;
+    }
+
     [Fact]
-    public async Task AddTrustedContact_CreatesInvitedContactWithDigestAndSendsEmail()
+    public async Task AddTrustedContact_CreatesInvitedContactWithDigestAndQueuesInviteEmail()
     {
         var owner = CreateOwner();
         var contacts = new Mock<ITrustedContactStore>();
         var users = new Mock<IUserRepository>();
-        var email = new Mock<IEmailSender>();
+        var notifications = CreateQueuingNotificationService();
         users.Setup(r => r.GetByIdAsync(owner.Id, It.IsAny<CancellationToken>())).ReturnsAsync(owner);
         contacts.Setup(s => s.CountActiveByOwnerAsync(owner.Id, It.IsAny<CancellationToken>())).ReturnsAsync(0);
         contacts.Setup(s => s.FindActiveByOwnerAndEmailAsync(owner.Id, "friend@test.com", It.IsAny<CancellationToken>()))
@@ -36,7 +69,7 @@ public sealed class TrustedContactCommandHandlersTests
             .Returns(Task.CompletedTask);
 
         var handler = new AddTrustedContactCommandHandler(
-            contacts.Object, users.Object, email.Object,
+            contacts.Object, users.Object, notifications.Object,
             Options.Create(new AccountRecoveryOptions()), CreateConfig(),
             Mock.Of<IAuthenticationAuditEventSink>(), NullLogger<AddTrustedContactCommandHandler>.Instance);
 
@@ -54,9 +87,62 @@ public sealed class TrustedContactCommandHandlersTests
         persisted.OwnerUserId.Should().Be(owner.Id);
         persisted.InviteTokenHash.Should().MatchRegex("^[a-f0-9]{64}$");
         persisted.InviteTokenExpiresAt.Should().BeAfter(persisted.InvitedAt);
-        email.Verify(s => s.SendAsync(
-            It.Is<EmailMessage>(m => m.ToEmail == "friend@test.com" && m.PlainTextContent.Contains("token=")),
+        notifications.Verify(s => s.SendAsync(
+            It.Is<Guid?>(recipient => !recipient.HasValue),
+            NotificationType.TrustedContactInvite,
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            NotificationChannel.Email,
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.IsAny<GameGuild.Notifications.NotificationPriority>(),
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.Is<string?>(metadata => metadata != null && metadata.Contains("inviteToken")),
+            "friend@test.com",
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddTrustedContact_QueueFailureFailsTheCommand()
+    {
+        var owner = CreateOwner();
+        var contacts = new Mock<ITrustedContactStore>();
+        var users = new Mock<IUserRepository>();
+        var notifications = new Mock<INotificationService>();
+        users.Setup(r => r.GetByIdAsync(owner.Id, It.IsAny<CancellationToken>())).ReturnsAsync(owner);
+        contacts.Setup(s => s.CountActiveByOwnerAsync(owner.Id, It.IsAny<CancellationToken>())).ReturnsAsync(0);
+        contacts.Setup(s => s.FindActiveByOwnerAndEmailAsync(owner.Id, "friend@test.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TrustedContact?)null);
+        contacts.Setup(s => s.AddAsync(It.IsAny<TrustedContact>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        notifications
+            .Setup(s => s.SendAsync(
+                It.IsAny<Guid?>(),
+                It.IsAny<NotificationType>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<NotificationChannel>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<GameGuild.Notifications.NotificationPriority>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure<Notification>(Error.Failure("Notification.Queue", "outbox write failed")));
+
+        var handler = new AddTrustedContactCommandHandler(
+            contacts.Object, users.Object, notifications.Object,
+            Options.Create(new AccountRecoveryOptions()), CreateConfig(),
+            Mock.Of<IAuthenticationAuditEventSink>(), NullLogger<AddTrustedContactCommandHandler>.Instance);
+
+        var act = () => handler.Handle(new AddTrustedContactCommand { OwnerUserId = owner.Id, Email = "Friend@Test.com" }, CancellationToken.None);
+
+        // The outbox row is the durability boundary: failing to persist it must fail the
+        // command rather than acknowledge an invite whose email can never be sent.
+        await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
     [Fact]
@@ -68,7 +154,7 @@ public sealed class TrustedContactCommandHandlersTests
         users.Setup(r => r.GetByIdAsync(owner.Id, It.IsAny<CancellationToken>())).ReturnsAsync(owner);
 
         var handler = new AddTrustedContactCommandHandler(
-            contacts.Object, users.Object, Mock.Of<IEmailSender>(),
+            contacts.Object, users.Object, CreateQueuingNotificationService().Object,
             Options.Create(new AccountRecoveryOptions()), CreateConfig(),
             Mock.Of<IAuthenticationAuditEventSink>(), NullLogger<AddTrustedContactCommandHandler>.Instance);
 
@@ -90,7 +176,7 @@ public sealed class TrustedContactCommandHandlersTests
             .ReturnsAsync(new TrustedContact { Id = Guid.NewGuid(), OwnerUserId = owner.Id, Email = "friend@test.com", Status = TrustedContactStatus.Invited });
 
         var handler = new AddTrustedContactCommandHandler(
-            contacts.Object, users.Object, Mock.Of<IEmailSender>(),
+            contacts.Object, users.Object, CreateQueuingNotificationService().Object,
             Options.Create(new AccountRecoveryOptions { MaxTrustedContacts = 5 }), CreateConfig(),
             Mock.Of<IAuthenticationAuditEventSink>(), NullLogger<AddTrustedContactCommandHandler>.Instance);
 
@@ -110,7 +196,7 @@ public sealed class TrustedContactCommandHandlersTests
         contacts.Setup(s => s.CountActiveByOwnerAsync(owner.Id, It.IsAny<CancellationToken>())).ReturnsAsync(2);
 
         var handler = new AddTrustedContactCommandHandler(
-            contacts.Object, users.Object, Mock.Of<IEmailSender>(),
+            contacts.Object, users.Object, CreateQueuingNotificationService().Object,
             Options.Create(new AccountRecoveryOptions { MaxTrustedContacts = 2 }), CreateConfig(),
             Mock.Of<IAuthenticationAuditEventSink>(), NullLogger<AddTrustedContactCommandHandler>.Instance);
 

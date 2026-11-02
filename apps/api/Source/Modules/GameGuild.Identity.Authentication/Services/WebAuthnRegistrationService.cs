@@ -2,6 +2,7 @@ using System.Text.Json;
 using Fido2NetLib;
 using Fido2NetLib.Objects;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -12,8 +13,11 @@ public class WebAuthnRegistrationService(
     IFido2 fido2,
     IWebAuthnCredentialRepository credentialRepository,
     IWebAuthnSessionStore sessionStore,
-    ILogger<WebAuthnRegistrationService> logger) : IWebAuthnRegistrationService
+    ILogger<WebAuthnRegistrationService> logger,
+    IOptions<WebAuthnCeremonyOptions>? ceremonyOptions = null) : IWebAuthnRegistrationService
 {
+    private readonly WebAuthnCeremonyOptions _ceremonyOptions = ceremonyOptions?.Value ?? new WebAuthnCeremonyOptions();
+
     public async Task<WebAuthnRegistrationOptionsResult> BeginRegistrationAsync(
         Guid userId,
         string userEmail,
@@ -38,11 +42,12 @@ public class WebAuthnRegistrationService(
                 DisplayName = displayName
             };
 
-            // Set authenticator selection criteria
+            // Set authenticator selection criteria (ceremony knobs are configurable, issue #1143;
+            // defaults reproduce the previous hard-coded values)
             var authenticatorSelection = new AuthenticatorSelection
             {
                 ResidentKey = ResidentKeyRequirement.Preferred,
-                UserVerification = UserVerificationRequirement.Preferred
+                UserVerification = _ceremonyOptions.ResolvedUserVerification
             };
 
             if (preferredType.HasValue)
@@ -61,7 +66,7 @@ public class WebAuthnRegistrationService(
                 User = user,
                 ExcludeCredentials = excludeCredentials,
                 AuthenticatorSelection = authenticatorSelection,
-                AttestationPreference = AttestationConveyancePreference.None
+                AttestationPreference = _ceremonyOptions.ResolvedAttestationConveyance
             });
 
             // Store session for later verification (distributed challenge store, issue #234)

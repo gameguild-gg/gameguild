@@ -32,7 +32,7 @@ public sealed class EmailDispatcherService(
 
     /// <summary>Transactional types: expire via TransactionalStalenessTtl and never render once stale.</summary>
     private static readonly HashSet<NotificationType> TransactionalTypes =
-        [NotificationType.EmailVerification, NotificationType.PasswordReset, NotificationType.MagicLink, NotificationType.EmailCode, NotificationType.TenantInvite];
+        [NotificationType.EmailVerification, NotificationType.PasswordReset, NotificationType.MagicLink, NotificationType.EmailCode, NotificationType.TenantInvite, NotificationType.TrustedContactInvite];
 
     /// <summary>
     /// Runs one sweep pass and returns the number of rows processed (sent, held, skipped, or deadlettered by design).

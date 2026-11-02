@@ -445,6 +445,15 @@ public sealed class SessionManagementService(
 
         if (trustedDevice.ExpiresAt.HasValue && trustedDevice.ExpiresAt.Value <= SystemClock.UtcNow)
         {
+            // Enforce the trust expiry at the point of use (issue #1144): an expired row is
+            // deactivated so it stops counting toward the trusted-device cap and listings,
+            // instead of lingering as an "active" row that every use has to re-filter.
+            trustedDevice.IsActive = false;
+            trustedDevice.UpdatedAt = SystemClock.UtcNow;
+            await trustedDeviceRepository.UpdateAsync(trustedDevice, cancellationToken).ConfigureAwait(false);
+            logger.LogInformation(
+                "Trusted device {DeviceId} expired; trust deactivated on use for user {UserId}",
+                trustedDevice.Id, userId);
             return false;
         }
 

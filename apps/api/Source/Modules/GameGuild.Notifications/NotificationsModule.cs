@@ -91,6 +91,11 @@ public static class NotificationsModule
         services.AddScoped<IEmailRenderer, TenantInviteRenderer>();
         services.AddScoped<IIntegrationEventHandler<TenantMemberInviteRequestedV1>, TenantInviteRequestedHandler>();
 
+        // Trusted-recovery-contact invite renderer (issue #1145): the producing Identity.Authentication
+        // module queues a TrustedContactInvite notification row through the durable outbox; this
+        // renderer turns that row into the emailed confirmation link when the dispatcher sweeps it.
+        services.AddScoped<IEmailRenderer, TrustedContactInviteRenderer>();
+
         // One-click unsubscribe tokens (IDataProtectionProvider is registered by the API host)
         services.AddScoped<IUnsubscribeTokenService, UnsubscribeTokenService>();
 

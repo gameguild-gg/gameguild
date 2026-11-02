@@ -19,7 +19,8 @@ public static class NotificationCategories
         NotificationType.EmailCode,
         NotificationType.TenantInvite,
         NotificationType.SmsMfaCode,
-        NotificationType.PushMfaChallenge
+        NotificationType.PushMfaChallenge,
+        NotificationType.TrustedContactInvite
     ];
 
     /// <summary>
@@ -64,7 +65,8 @@ public static class NotificationCategories
             or NotificationType.EmailCode
             or NotificationType.TenantInvite
             or NotificationType.SmsMfaCode
-            or NotificationType.PushMfaChallenge => "Transactional",
+            or NotificationType.PushMfaChallenge
+            or NotificationType.TrustedContactInvite => "Transactional",
 
         _ => "System"
     };

@@ -4,6 +4,7 @@ using Fido2NetLib.Objects;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -17,15 +18,18 @@ public class WebAuthnAuthenticationSubService(
     IWebAuthnSessionStore sessionStore,
     ILogger<WebAuthnAuthenticationSubService> logger,
     IAuthenticationAuditEventSink? auditEventSink,
-    IHttpContextAccessor? httpContextAccessor) : IWebAuthnAuthenticationService
+    IHttpContextAccessor? httpContextAccessor,
+    IOptions<WebAuthnCeremonyOptions>? ceremonyOptions = null) : IWebAuthnAuthenticationService
 {
+    private readonly WebAuthnCeremonyOptions _ceremonyOptions = ceremonyOptions?.Value ?? new WebAuthnCeremonyOptions();
+
     public WebAuthnAuthenticationSubService(
         IFido2 fido2,
         IWebAuthnCredentialRepository credentialRepository,
         IUserRepository userRepository,
         IWebAuthnSessionStore sessionStore,
         ILogger<WebAuthnAuthenticationSubService> logger)
-        : this(fido2, credentialRepository, userRepository, sessionStore, logger, null, null)
+        : this(fido2, credentialRepository, userRepository, sessionStore, logger, null, null, null)
     {
     }
 
@@ -78,11 +82,12 @@ public class WebAuthnAuthenticationSubService(
                 }
             }
 
-            // Generate assertion options
+            // Generate assertion options (user-verification requirement is configurable, issue #1143;
+            // the default reproduces the previous hard-coded value)
             var options = fido2.GetAssertionOptions(new GetAssertionOptionsParams
             {
                 AllowedCredentials = allowedCredentials ?? [],
-                UserVerification = UserVerificationRequirement.Preferred
+                UserVerification = _ceremonyOptions.ResolvedUserVerification
             });
 
             // Store session (distributed challenge store, issue #234): keyed by user when known,

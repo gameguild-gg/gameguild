@@ -223,6 +223,12 @@ public static class DataDependencyInjection
 
         // Session management
         services.AddScoped<ISessionManagementService, SessionManagementService>();
+        // Fresh-verification gate (issue #1144): trusted-device mutations require a recent
+        // (optionally MFA-verified) authentication; window/knob live in SessionOptions.
+        services.AddScoped<IFreshVerificationGate, FreshVerificationGate>();
+        // Expired trusted-device rows are pruned on a schedule so the registry cannot grow
+        // unbounded (issue #1144).
+        services.AddHostedService<TrustedDeviceMaintenanceBackgroundService>();
         // Password change/reset revocation battery (issue #278): mirrors the
         // terminate-everywhere command — refresh tokens revoked, sessions terminated with an
         // audited PasswordChanged reason, and a versioned cutoff covering legacy access tokens.
@@ -267,6 +273,12 @@ public static class DataDependencyInjection
         // Register Fido2 as singleton
         services.AddSingleton(fido2Config);
         services.AddSingleton<IFido2>(sp => new Fido2(sp.GetRequiredService<Fido2Configuration>()));
+
+        // Ceremony knobs (issue #1143): attestation conveyance + user-verification requirement.
+        // Bound to the same "WebAuthn" section as ServerDomain/Origins; the defaults reproduce
+        // the previous hard-coded ceremony values, so behavior is unchanged unless configured.
+        services.AddOptions<WebAuthnCeremonyOptions>()
+            .BindConfiguration(WebAuthnCeremonyOptions.SectionName);
 
         // Register WebAuthn repository and sub-services
         services.AddScoped<IWebAuthnCredentialRepository, WebAuthnCredentialRepository>();
