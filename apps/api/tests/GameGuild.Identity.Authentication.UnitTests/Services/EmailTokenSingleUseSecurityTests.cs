@@ -171,9 +171,9 @@ public sealed class EmailTokenSingleUseSecurityTests
     /// </summary>
     private sealed class RecordingKeyCache : IDistributedCache
     {
-        private readonly Microsoft.Extensions.Caching.Memory.DistributedMemoryCache _inner =
+        private readonly Microsoft.Extensions.Caching.Distributed.MemoryDistributedCache _inner =
             new(Microsoft.Extensions.Options.Options.Create(
-                new Microsoft.Extensions.Caching.Memory.DistributedCacheOptions()));
+                new Microsoft.Extensions.Caching.Memory.MemoryDistributedCacheOptions()));
         private readonly ConcurrentDictionary<string, byte> _keys = new();
 
         public IReadOnlyCollection<string> Keys => _keys.Keys.ToArray();
@@ -229,9 +229,9 @@ public sealed class EmailTokenSingleUseSecurityTests
 
     private sealed class SynchronizedReadCache : IDistributedCache, IDisposable
     {
-        private readonly Microsoft.Extensions.Caching.Memory.DistributedMemoryCache _inner =
+        private readonly Microsoft.Extensions.Caching.Distributed.MemoryDistributedCache _inner =
             new(Microsoft.Extensions.Options.Options.Create(
-                new Microsoft.Extensions.Caching.Memory.DistributedCacheOptions()));
+                new Microsoft.Extensions.Caching.Memory.MemoryDistributedCacheOptions()));
         private readonly Barrier _barrier = new(4);
         private int _readCount;
         private int _synchronizationFailed;
@@ -279,9 +279,9 @@ public sealed class EmailTokenSingleUseSecurityTests
 
     private sealed class SuspendedRemovalCache : IDistributedCache, IDisposable
     {
-        private readonly Microsoft.Extensions.Caching.Memory.DistributedMemoryCache _inner =
+        private readonly Microsoft.Extensions.Caching.Distributed.MemoryDistributedCache _inner =
             new(Microsoft.Extensions.Options.Options.Create(
-                new Microsoft.Extensions.Caching.Memory.DistributedCacheOptions()));
+                new Microsoft.Extensions.Caching.Memory.MemoryDistributedCacheOptions()));
         public ManualResetEventSlim RemovalStarted { get; } = new();
         public ManualResetEventSlim AllowRemoval { get; } = new();
         public bool SuspendRemoval { get; set; }

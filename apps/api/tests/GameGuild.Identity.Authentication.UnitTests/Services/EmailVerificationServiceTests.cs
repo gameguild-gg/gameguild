@@ -31,8 +31,8 @@ public class EmailVerificationServiceTests
             magicLinkTokenStore: _magicLinkTokenStore);
     }
 
-    internal static DistributedMemoryCache CreateCache() =>
-        new(Options.Create(new DistributedCacheOptions()));
+    internal static MemoryDistributedCache CreateCache() =>
+        new(Options.Create(new MemoryDistributedCacheOptions()));
 
     [Fact]
     public async Task GenerateVerificationTokenAsync_GeneratesValidToken()
@@ -141,12 +141,12 @@ public class EmailVerificationServiceTests
     }
 
     /// <summary>
-    ///     A real <see cref="DistributedMemoryCache"/> that also records every key it has seen,
+    ///     A real <see cref="MemoryDistributedCache"/> that also records every key it has seen,
     ///     standing in for cache introspection the distributed abstraction does not expose.
     /// </summary>
     internal sealed class RecordingDistributedCache : IDistributedCache
     {
-        private readonly DistributedMemoryCache _inner = new(Options.Create(new DistributedCacheOptions()));
+        private readonly MemoryDistributedCache _inner = new(Options.Create(new MemoryDistributedCacheOptions()));
         private readonly ConcurrentDictionary<string, byte> _keys = new();
 
         public IReadOnlyCollection<string> Keys => _keys.Keys.ToArray();

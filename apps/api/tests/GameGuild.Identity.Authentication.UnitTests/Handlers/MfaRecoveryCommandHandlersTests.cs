@@ -3,11 +3,11 @@ using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
 using GameGuild.Notifications;
 using GameGuild.Notifications.Services;
-using GameGuild.SharedKernel.Models;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
+using NotificationPriority = GameGuild.Notifications.NotificationPriority;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Handlers;
 
@@ -151,7 +151,7 @@ public sealed class MfaRecoveryCommandHandlersTests
                 It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<Notification>(
-                GameGuild.SharedKernel.Models.Error.Failure("Notification.OutboxUnavailable", "The notification outbox is unavailable.")));
+                Error.Failure("Notification.OutboxUnavailable", "The notification outbox is unavailable.")));
 
         var handler = CreateRequestHandler(users, tracking, store, notifications, cache);
         var act = () => handler.Handle(new RequestMfaRecoveryCommand { Email = user.Email }, CancellationToken.None);

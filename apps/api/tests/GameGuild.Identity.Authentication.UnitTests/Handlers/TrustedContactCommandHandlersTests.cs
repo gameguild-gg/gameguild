@@ -3,11 +3,11 @@ using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
 using GameGuild.Notifications;
 using GameGuild.Notifications.Services;
-using GameGuild.SharedKernel.Models;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
+using NotificationPriority = GameGuild.Notifications.NotificationPriority;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Handlers;
 
@@ -120,7 +120,7 @@ public sealed class TrustedContactCommandHandlersTests
                 It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<Notification>(
-                GameGuild.SharedKernel.Models.Error.Failure("Notification.OutboxUnavailable", "The notification outbox is unavailable.")));
+                Error.Failure("Notification.OutboxUnavailable", "The notification outbox is unavailable.")));
 
         var handler = new AddTrustedContactCommandHandler(
             contacts.Object, users.Object, notifications.Object,

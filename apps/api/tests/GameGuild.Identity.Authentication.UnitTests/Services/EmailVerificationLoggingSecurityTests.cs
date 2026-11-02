@@ -82,7 +82,7 @@ public sealed class EmailVerificationLoggingSecurityTests
         var logger = new TestLogger<EmailVerificationService>();
         var cache = EmailVerificationServiceTests.CreateCache();
         var failingCache = new Mock<IDistributedCache>();
-        failingCache.Setup(value => value.SetAsync(It.IsAny<byte[]>(), It.IsAny<byte[]>(),
+        failingCache.Setup(value => value.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(),
             It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>())).Throws(original);
         failingCache.Setup(value => value.GetStringAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Throws(original);

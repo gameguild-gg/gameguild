@@ -697,7 +697,7 @@ public sealed class EmailVerificationCatchBlockTests
     public async Task GenerateToken_CacheThrows_PropagatesException()
     {
         var mockCache = new Mock<IDistributedCache>();
-        mockCache.Setup(c => c.SetAsync(It.IsAny<byte[]>(), It.IsAny<byte[]>(),
+        mockCache.Setup(c => c.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(),
                 It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>()))
             .Throws(new InvalidOperationException("Cache error"));
 

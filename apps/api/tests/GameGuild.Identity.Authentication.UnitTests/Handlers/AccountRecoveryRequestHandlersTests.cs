@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
+using NotificationPriority = GameGuild.Notifications.NotificationPriority;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Handlers;
 
@@ -44,7 +45,7 @@ public sealed class AccountRecoveryRequestHandlersTests
                 It.IsAny<string?>(),
                 It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(GameGuild.SharedKernel.Models.Result.Success<Notification>(null!));
+            .ReturnsAsync(Result.Success<Notification>(null!));
         return notifications;
     }
 

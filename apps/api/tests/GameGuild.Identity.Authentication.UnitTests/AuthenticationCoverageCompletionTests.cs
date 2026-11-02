@@ -30,7 +30,7 @@ public sealed class AuthenticationCoverageCompletionTests
     [Fact]
     public async Task EmailVerificationService_CoversTypedTokensAndValidationBranches()
     {
-        var cache = new DistributedMemoryCache(Options.Create(new DistributedCacheOptions()));
+        var cache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
         var publisher = new Mock<IPublisher>();
         publisher.Setup(x => x.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);

@@ -222,8 +222,8 @@ public sealed class TrustedDeviceSessionCommandTests
         var (service, receipts) = CreateStrictMocks();
         service.Setup(s => s.RenameTrustedDeviceAsync(userId, deviceId, "Laptop", CancellationToken.None))
             .ReturnsAsync(outcome);
-        var result = await Handle(new SessionMutationCommandHandler(service.Object, receipts.Object),
-            new RenameTrustedDeviceCommand(userId, deviceId, "Laptop"));
+        var result = await new SessionMutationCommandHandler(service.Object, receipts.Object)
+            .Handle(new RenameTrustedDeviceCommand(userId, deviceId, "Laptop"), CancellationToken.None);
         Assert.Equal(outcome, result);
         service.VerifyAll();
         service.VerifyNoOtherCalls();
