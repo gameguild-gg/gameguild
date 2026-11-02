@@ -3,6 +3,7 @@ import { getPrivacyPreference } from '@/lib/user-settings/queries';
 import { ConsentBanner } from './consent-banner';
 import { GoogleAnalytics } from './google-analytics';
 import { GoogleTagManager } from './google-tag-manager';
+import { WebVitalsReporter } from './web-vitals-reporter';
 
 /**
  * Server-side mount for the opt-in analytics embeds: Google Tag Manager
@@ -44,6 +45,8 @@ export async function AnalyticsConsent() {
       {gtmContainerId ? <GoogleTagManager containerId={gtmContainerId} /> : null}
       {gaMeasurementId ? <GoogleAnalytics measurementId={gaMeasurementId} /> : null}
       <ConsentBanner serverAnalyticsConsent={serverAnalyticsConsent} />
+      {/* #1210: Web Vitals + page-load timing → GA4/Firebase, consent-gated. */}
+      <WebVitalsReporter />
     </>
   );
 }
