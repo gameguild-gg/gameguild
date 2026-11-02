@@ -14135,6 +14135,22 @@ Table "gameguild.authentication"."user_mfa_configuration" {
   }
 }
 
+Table "gameguild.authentication"."userdevicefingerprint" {
+  "id" uuid [not null]
+  "UserId" uuid [not null]
+  "DeviceFingerprint" "character varying(64)" [not null]
+  "FirstSeenAt" timestamp [not null]
+  "LastSeenAt" timestamp [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+
+  Indexes {
+    id [pk, name: "PK_userdevicefingerprint"]
+    UserId [name: "ix_userdevicefingerprint_user_id"]
+    (UserId, DeviceFingerprint) [unique, name: "ix_userdevicefingerprint_user_id_device_fingerprint"]
+  }
+}
+
 Table "gameguild.authentication"."usersession" {
   "id" uuid [not null]
   "UserId" uuid [not null]

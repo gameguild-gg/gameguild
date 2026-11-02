@@ -76,6 +76,10 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
         // "Remember me" opt-in from the sign-in form: drives the backend's persistent
         // refresh-token lifetime and this client's cookie storage policy.
         const rememberMe = credentials.rememberMe === true;
+        // Cloudflare Turnstile token (issue #1082): presented only after the API flagged
+        // repeated failed sign-ins from this network. Forwarded verbatim; the API
+        // verifies it server-side and ignores it when no challenge is required.
+        const turnstileToken = credentials.turnstileToken as string | undefined;
 
         const completingMfa = Object.hasOwn(credentials, 'mfaToken');
         if (!completingMfa && (!email || !password)) {
@@ -101,6 +105,7 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
           body = { email, password };
           if (tenantId) body.tenantId = tenantId;
           if (rememberMe) body.rememberMe = true;
+          if (turnstileToken) body.turnstileToken = turnstileToken;
         }
 
         let response: Response;

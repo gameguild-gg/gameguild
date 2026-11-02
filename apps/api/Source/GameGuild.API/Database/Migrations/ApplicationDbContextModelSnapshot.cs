@@ -20443,6 +20443,45 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("trusteddevice", "gameguild.authentication");
                 });
 
+            modelBuilder.Entity("GameGuild.Identity.Authentication.UserDeviceFingerprint", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeviceFingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("FirstSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_userdevicefingerprint_user_id");
+
+                    b.HasIndex("UserId", "DeviceFingerprint")
+                        .IsUnique()
+                        .HasDatabaseName("ix_userdevicefingerprint_user_id_device_fingerprint");
+
+                    b.ToTable("userdevicefingerprint", "gameguild.authentication");
+                });
+
             modelBuilder.Entity("GameGuild.Identity.Authentication.UserMfaConfiguration", b =>
                 {
                     b.Property<Guid>("Id")

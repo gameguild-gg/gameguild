@@ -46,6 +46,8 @@ public sealed class AuthAttemptGeolocationTests
 
         public Task<List<AuthenticationAttempt>> GetFailedAttemptsAsync(string identifier, DateTime since, CancellationToken cancellationToken = default) => Task.FromResult(new List<AuthenticationAttempt>());
 
+        public Task<int> CountRecentFailedAttemptsAsync(string email, DateTime since, CancellationToken cancellationToken = default) => Task.FromResult(0);
+
         public Task<List<AuthenticationAttempt>> GetSuspiciousAttemptsAsync(DateTime since, CancellationToken cancellationToken = default) => Task.FromResult(new List<AuthenticationAttempt>());
 
         public Task<AuthenticationAttempt?> GetLastSuccessfulAttemptAsync(Guid userId, CancellationToken cancellationToken = default) => Task.FromResult<AuthenticationAttempt?>(null);
