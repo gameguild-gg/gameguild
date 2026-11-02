@@ -20,29 +20,10 @@
 #     scope and tracked solely by #1180)
 
 # ── G1: commands whose handler is never registered in host DI ─────────────────
-# The Achievements module's commands have handler types but the host never
-# registers them — the same module gap tracked by #1158.
-G1|GameGuild.Gamification.Achievements.AwardAchievementCommand # issue #1158: Achievements module not wired into the host — handler type exists but is never registered.
-G1|GameGuild.Gamification.Achievements.CreateAchievementCommand # issue #1158: Achievements module not wired into the host — handler type exists but is never registered.
-G1|GameGuild.Gamification.Achievements.DeleteAchievementCommand # issue #1158: Achievements module not wired into the host — handler type exists but is never registered.
-G1|GameGuild.Gamification.Achievements.MarkAchievementNotifiedCommand # issue #1158: Achievements module not wired into the host — handler type exists but is never registered.
-G1|GameGuild.Gamification.Achievements.UpdateAchievementCommand # issue #1158: Achievements module not wired into the host — handler type exists but is never registered.
+# (empty — the #1158 Achievements module gap was fixed and its entries removed)
 
-# ── G2: entity configurations without tables (#1158) ──────────────────────────
-G2|GameGuild.Finance.Ledgers|LedgerConfiguration|Entities.Ledger # issue #1158: Finance.Ledgers has full EF configurations but no tables (module never applied by the host).
-G2|GameGuild.Finance.Ledgers|LedgerClosureConfiguration|LedgerClosure # issue #1158: Finance.Ledgers has full EF configurations but no tables (module never applied by the host).
-G2|GameGuild.Finance.Ledgers|LedgerEntryConfiguration|LedgerEntry # issue #1158: Finance.Ledgers has full EF configurations but no tables (module never applied by the host).
-G2|GameGuild.Social.Ratings|RatingEntityConfiguration|Rating # issue #1158: Social.Ratings has full EF configurations but no tables (module never applied by the host).
-G2|GameGuild.Social.Ratings|RatingHelpfulVoteEntityConfiguration|RatingHelpfulVote # issue #1158: Social.Ratings has full EF configurations but no tables (module never applied by the host).
-G2|GameGuild.Social.Ratings|RatingSummaryEntityConfiguration|RatingSummary # issue #1158: Social.Ratings has full EF configurations but no tables (module never applied by the host).
-G2|GameGuild.Gamification.Achievements|AchievementConfiguration|Achievement # issue #1158: Gamification.Achievements has full EF configurations but no tables (module never applied by the host).
-G2|GameGuild.Gamification.Achievements|UserAchievementConfiguration|UserAchievement # issue #1158: Gamification.Achievements has full EF configurations but no tables (module never applied by the host).
-G2|GameGuild.Gamification.Achievements|AchievementLevelConfiguration|AchievementLevel # issue #1158: Gamification.Achievements has full EF configurations but no tables (module never applied by the host).
-G2|GameGuild.Gamification.Achievements|AchievementPrerequisiteConfiguration|AchievementPrerequisite # issue #1158: Gamification.Achievements has full EF configurations but no tables (module never applied by the host).
-G2|GameGuild.Gamification.Achievements|AchievementProgressConfiguration|AchievementProgress # issue #1158: Gamification.Achievements has full EF configurations but no tables (module never applied by the host).
-G2|unreferenced-module|GameGuild.Finance.Ledgers # issue #1158: module assembly is not referenced by the host project at all — the literal #1158 root cause.
-G2|unreferenced-module|GameGuild.Social.Ratings # issue #1158: module assembly is not referenced by the host project at all — the literal #1158 root cause.
-# Additional dead configurations discovered by the guard itself (same shape as #1158):
+# ── G2: entity configurations without tables ──────────────────────────────────
+# Dead configurations discovered by the guard itself (same shape as the fixed #1158):
 G2|GameGuild.Commerce.Payments|FinancialLedgerEntryConfiguration|FinancialLedgerEntry # issue #1184: Commerce.Payments financial-ledger configuration never materializes (dead configuration).
 G2|GameGuild.Compliance.KYC|UserKycVerificationConfiguration|UserKycVerification # issue #1184: Compliance.KYC verification configuration never materializes (dead configuration).
 
