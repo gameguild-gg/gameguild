@@ -136,4 +136,132 @@ public class AuthControllerTests
         capturedCommand.Nonce.Should().Be("nonce-12345678");
         capturedCommand.ChainId.Should().Be("5");
     }
+
+    [Fact]
+    public async Task SignOut_ShouldMapClaimsAndBodyToLogoutCommand()
+    {
+        var userId = Guid.NewGuid();
+        const string jti = "current-jti";
+        const long expUnix = 1900000000;
+        var expectedExpiresAt = DateTimeOffset.FromUnixTimeSeconds(expUnix).UtcDateTime;
+        LogoutCommand? capturedCommand = null;
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(service => service.Send(It.IsAny<LogoutCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<LogoutResponse>, CancellationToken>((command, _) => capturedCommand = (LogoutCommand)command)
+            .ReturnsAsync(new LogoutResponse { Success = true, Message = "Successfully logged out", SessionsInvalidated = 1 });
+
+        var controller = new AuthController(sender.Object)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                        [
+                            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                            new Claim("jti", jti),
+                            new Claim("exp", expUnix.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                        ],
+                        "Bearer"))
+                }
+            }
+        };
+
+        var result = await controller.SignOut(new SignOutRequest { LogoutEverywhere = true }, CancellationToken.None);
+
+        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+        var payload = ok.Value.Should().BeOfType<LogoutResponse>().Subject;
+        payload.Success.Should().BeTrue();
+        capturedCommand.Should().NotBeNull();
+        capturedCommand!.UserId.Should().Be(userId);
+        capturedCommand.CurrentTokenJti.Should().Be(jti);
+        capturedCommand.CurrentTokenExpiresAt.Should().Be(expectedExpiresAt);
+        capturedCommand.LogoutEverywhere.Should().BeTrue();
+        sender.VerifyAll();
+    }
+
+    [Fact]
+    public async Task SignOut_ShouldDefaultToCurrentTokenOnly_WhenBodyOmitted()
+    {
+        var userId = Guid.NewGuid();
+        LogoutCommand? capturedCommand = null;
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(service => service.Send(It.IsAny<LogoutCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<LogoutResponse>, CancellationToken>((command, _) => capturedCommand = (LogoutCommand)command)
+            .ReturnsAsync(new LogoutResponse { Success = true, Message = "Successfully logged out", SessionsInvalidated = 1 });
+
+        var controller = new AuthController(sender.Object)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                        [new Claim("sub", userId.ToString())],
+                        "Bearer"))
+                }
+            }
+        };
+
+        var result = await controller.SignOut(null, CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>();
+        capturedCommand.Should().NotBeNull();
+        capturedCommand!.LogoutEverywhere.Should().BeFalse();
+        capturedCommand.CurrentTokenJti.Should().BeNull();
+        capturedCommand.CurrentTokenExpiresAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SignOut_ShouldReturnUnauthorized_WhenUserContextIsMissing()
+    {
+        var sender = new Mock<ISender>();
+        var controller = new AuthController(sender.Object)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity("Bearer"))
+                }
+            }
+        };
+
+        var result = await controller.SignOut(null, CancellationToken.None);
+
+        result.Should().BeOfType<UnauthorizedObjectResult>();
+        sender.Verify(service => service.Send(It.IsAny<LogoutCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SignOut_ShouldReturnServerFailurePayload_WhenLogoutHandlerFails()
+    {
+        var userId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(service => service.Send(It.IsAny<LogoutCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LogoutResponse { Success = false, Message = "An error occurred during logout", SessionsInvalidated = 0 });
+
+        var controller = new AuthController(sender.Object)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                        [new Claim(ClaimTypes.NameIdentifier, userId.ToString())],
+                        "Bearer"))
+                }
+            }
+        };
+
+        var result = await controller.SignOut(null, CancellationToken.None);
+
+        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+        var payload = ok.Value.Should().BeOfType<LogoutResponse>().Subject;
+        payload.Success.Should().BeFalse();
+        payload.SessionsInvalidated.Should().Be(0);
+    }
 }
