@@ -1,6 +1,9 @@
 name: Session state functional acceptance
 
 on:
+  # synchronize events for this workflow have been dropping like PR Verify's did
+  # (repair773); dispatch is the deterministic unblock for verification.
+  workflow_dispatch: {}
   pull_request:
     paths:
       - ".github/workflows/session-state-acceptance.yml"
