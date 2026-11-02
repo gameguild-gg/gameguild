@@ -85,3 +85,187 @@ Not outbox rows — direct interface calls whose durability is the sink's own (b
 - **5 durable event types** flow out of auth commands in total (the 3 named V1 events + `UserCreatedEvent` + the generic `UseCaseOperationOccurredV1` emitted for all ~65 contracted auth commands).
 - **3 sink streams** (`AuthenticationAuditEvent`, `ApiKeyAuditEvent`, `RefreshTokenLifecycleEvent`) with 40+ producer call sites.
 - **1 integration event consumed from another module**: `UserCreatedEvent` (SharedKernel type; also produced by the Users module).
+
+## 3. Flowcharts per event family
+
+All diagrams are `flowchart TD`. The **durability boundary** is the point where the in-request transaction commits: everything before it is atomic with the command; everything after it survives process death in `gameguild.integration.outbox_messages`.
+
+### 3.1 Sign-up lifecycle events
+
+```mermaid
+flowchart TD
+    REQ["POST local sign-up<br/>LocalSignUpCommand"] --> H["LocalSignUpHandler<br/>Extensions DependencyInjection.cs L18"]
+    H --> S["LocalAuthService sign-up<br/>Services LocalAuthService.cs L619"]
+    S --> U["User CreateWithPassword<br/>Services LocalAuthService.cs L633"]
+    U --> EV["AddIntegrationEvent UserCreatedEvent<br/>Services LocalAuthService.cs L638"]
+    EV --> OP["UseCaseOperationBehavior also stages<br/>platform use-case-operation occurred v1<br/>Core Eventing UseCaseOperationBehavior.cs L134"]
+    EV --> SAVE["ApplicationDbContext SaveChangesAsync collects<br/>entity integration events into OutboxMessage rows<br/>Database ApplicationDbContext.cs L197-230"]
+    OP --> SAVE
+    SAVE --> BOUNDARY{{"DURABILITY BOUNDARY<br/>command transaction commit<br/>UseCaseOperationBehavior.cs L89"}}
+    BOUNDARY --> OUTBOX[("gameguild.integration<br/>outbox_messages<br/>EventTransportModelConfiguration.cs L18")]
+    OUTBOX --> WORKER["OutboxBackgroundService poll every 2 s<br/>Core Eventing OutboxBackgroundService.cs L20"]
+    WORKER --> DISP["OutboxDispatcher claims batch of 50<br/>FOR UPDATE SKIP LOCKED per-aggregate FIFO<br/>Core Eventing OutboxDispatcher.cs L44-91"]
+    DISP --> C1["SendWelcomeEmailHandler HandleAsync<br/>Handlers SendWelcomeEmailHandler.cs L18"]
+    DISP --> C2["LogAnalyticsEventHandler HandleAsync<br/>Handlers LogAnalyticsEventHandler.cs L13"]
+    DISP --> C3["QuotaLedgerEventHandler HandleAsync<br/>Resources Handlers QuotaLedgerEventHandler.cs L11"]
+    DISP --> C4["CostAccountingEventHandler HandleAsync<br/>Resources CostAccounting CostAccountingEventHandler.cs L23"]
+    C1 --> E1["Notification row Onboarding welcome email<br/>Handlers SendWelcomeEmailHandler.cs L44-50"]
+    C2 --> E2["Analytics log line - real sink PLANNED<br/>Handlers LogAnalyticsEventHandler.cs L14-18"]
+    C3 --> E3["+1 Users quota ledger entry<br/>Resources Handlers QuotaLedgerEventHandler.cs L29"]
+    C4 --> E4["Internal usage ledger cost entry<br/>Resources CostAccounting CostAccountingEventHandler.cs L24"]
+    DISP --> RETRY{"consumer failed<br/>InboxStore.cs L78-118"}
+    RETRY -- "attempt below 5" --> BACK["backoff 2 to the n seconds<br/>capped at 900 s<br/>InboxStore.cs L122-126"]
+    BACK --> DISP
+    RETRY -- "attempt 5 reached" --> DLQ["DeadLetteredAtUtc set<br/>replayable via EventReplayService<br/>EventReplayService.cs L39"]
+    OAUTH["CONTRAST - federated first sign-in<br/>userRepository AddAsync with no UserCreatedEvent<br/>Services OAuthAuthService.cs L763"]
+    OAUTH -.->|"missing edge - issue 1182"| DISP
+    OAUTH -.->|"welcome email quota and cost entries never fire"| E1
+```
+
+Notes: `UserSignedUpNotification` is synthesized only inside `SendWelcomeEmailHandler.cs:27` when adapting the durable `UserCreatedEvent`; no command publishes it directly. The four orphaned log-only sign-in events (`UserSignedUpEvent` etc., §2.3-2.4) have no edge to draw.
+
+### 3.2 MFA events
+
+```mermaid
+flowchart TD
+    subgraph SMSFAM["SMS MFA - issue 244"]
+        SC["StartSmsMfaEnrollment or<br/>SendSmsMfaChallenge commands"] --> SSP["SmsMfaService publish<br/>Services SmsMfaService.cs L150"]
+        SSP --> SH["SendSmsMfaCodeRequestedHandler<br/>Handlers SendSmsMfaCodeRequestedHandler.cs L20"]
+        SH --> SN["Notification row type SmsMfaCode channel Sms<br/>priority High - phone in protected metadata<br/>Handlers SendSmsMfaCodeRequestedHandler.cs L36-46"]
+    end
+    subgraph EMAILFAM["Email MFA - issue 1152"]
+        EC["StartEmailMfaEnrollment or<br/>SendEmailMfaChallenge commands"] --> ESP["EmailMfaService publish<br/>Services EmailMfaService.cs L157"]
+        ESP --> EH["SendEmailMfaCodeRequestedHandler<br/>Handlers SendEmailMfaCodeRequestedHandler.cs L18"]
+        EH --> EN["Notification row type EmailCode<br/>address in protected metadata<br/>Handlers SendEmailMfaCodeRequestedHandler.cs L31"]
+    end
+    subgraph PUSHFAM["Push MFA - issue 259"]
+        PC["IssuePushMfaChallengeCommand"] --> PSP["PushMfaService publish<br/>Services PushMfaService.cs L101"]
+        PSP --> PH["SendPushMfaChallengeHandler<br/>Handlers SendPushMfaChallengeHandler.cs L21"]
+        PH --> PN["Notification row type PushMfaChallenge<br/>channel Push priority Urgent<br/>Handlers SendPushMfaChallengeHandler.cs L44-49"]
+    end
+    MFAAUD["MFA lifecycle audit events<br/>SignInMfaService Records Authentication.MfaSignIn actions<br/>SignInMfa SignInMfaService.cs L198<br/>MfaAttemptTrackingService.cs L286"]
+    MFAAUD --> SINK["IAuthenticationAuditEventSink"]
+    SINK --> CAS["CentralAuthenticationAuditEventSink<br/>Compliance Audit Services CentralAuthenticationAuditEventSink.cs L16"]
+    CAS --> MFAREQ{"MFA proof action types<br/>CentralAuthenticationAuditEventSink.cs L18-19"}
+    MFAREQ -- "MfaSignInRequired Denied<br/>EnrollmentStarted Verified" --> TRANS["must persist inside owning<br/>command transaction else throw<br/>CentralAuthenticationAuditEventSink.cs L46-53"]
+    MFAREQ -- "all other MFA actions" --> SPOOL["security event logger with<br/>bounded retries and local spool fallback<br/>Compliance Audit SecurityEventLogger.cs L36-57"]
+    ORPH["MfaEnabledEvent MfaDisabledEvent<br/>MfaVerificationFailedEvent MfaVerificationSucceededEvent<br/>consumed by MfaEventHandler.cs L14 L26 L38 L51"]
+    ORPH -.->|"no producer anywhere - dead wiring"| X["orphan - see section 5"]
+```
+
+The notification publishes are in-process (`GameGuild.CQRS` mediator, `MediatorPublisher.cs:41-49`); there is no outbox hop because the durable artifact is the `Notification` row the `Send*` handler persists in the same command scope — each handler throws if the row was not durably queued.
+
+### 3.3 Session and token events
+
+```mermaid
+flowchart TD
+    subgraph NEWLOGIN["New login detected - informational"]
+        ISS["AuthenticatedSessionIssuer issues session<br/>Services AuthenticatedSessionIssuer.cs L12"] --> NLP["NewLoginAlertPublisher RecordAsync<br/>independent scope best effort<br/>Services NewLoginAlertPublisher.cs L43"]
+        NLP --> OB1[("outbox_messages<br/>NewLoginDetectedV1<br/>config gated Authentication NewLoginNotifications Enabled<br/>NewLoginAlertPublisher.cs L32")]
+    end
+    subgraph SUSPICIOUS["Suspicious login detected - containment"]
+        RISK["LocalAuthService risk analysis path<br/>Services LocalAuthService.cs L501"] --> SLP["SuspiciousLoginAlertPublisher RecordAsync<br/>independent scope best effort<br/>Services SuspiciousLoginAlertPublisher.cs L57"]
+        SLP --> OB2[("outbox_messages<br/>SuspiciousLoginDetectedV1<br/>alert kinds SecurityAlertKinds<br/>Events SuspiciousLoginDetectedV1.cs L8-22")]
+    end
+    subgraph REPLAY["Refresh token replay contained"]
+        REF["token rotation detects replay<br/>Services LocalAuthService.cs L771 L881 L898"] --> RLR["RefreshTokenLifecycleRecorder RecordMutationAsync<br/>must share ambient transaction<br/>Core Security RefreshTokenLifecycleRecorder.cs L32-44"]
+        RLR --> OB3[("outbox_messages<br/>RefreshTokenReplayContainedV1<br/>Core Security RefreshTokenLifecycleRecorder.cs L44")]
+    end
+    OB1 --> W["OutboxBackgroundService every 2 s<br/>Core Eventing OutboxBackgroundService.cs L20"]
+    OB2 --> W
+    OB3 --> W
+    W --> D["OutboxDispatcher with inbox receipts<br/>Core Eventing OutboxDispatcher.cs L242-343"]
+    D --> NLH["NewLoginAlertHandler<br/>Core Security NewLoginAlertHandler.cs L33<br/>opt-in gated default off - issue 278"]
+    D --> SLH["SuspiciousLoginAlertHandler<br/>urgent owner alert email<br/>Core Security SuspiciousLoginAlertHandler.cs L22-53"]
+    D --> RVK["RiskEventSessionRevocationHandler<br/>Core Security RiskEventSessionRevocationHandler.cs L52"]
+    D --> RTH["RefreshTokenReplayAlertHandler<br/>critical owner notification row<br/>Core Security RefreshTokenReplayAlertHandler.cs L14-36"]
+    RVK --> RVT["RevokeAllUserTokensAsync plus session revoke<br/>plus audit row<br/>Core Security RiskEventSessionRevocationHandler.cs L103 L117"]
+    SUBTITLE{{"DURABILITY BOUNDARY<br/>outbox row commit precedes all consumer nodes"}}
+    TOKREV["token revocation consumption path<br/>TokenRevocationMiddleware checks jti deny-list<br/>Middleware TokenRevocationMiddleware.cs L56-63"]
+    LOGOUT["LogoutHandler only producer of a jti entry<br/>Handlers LogoutHandler.cs L73<br/>RevokeAllUserTokens path at L41"]
+    LOGOUT --> TOKREV
+    TOKREV -.->|"deny-list otherwise empty - issue 1179"| GAPX["gap - see section 5"]
+    ORPHT["TokenRefreshedEvent TokenRevokedEvent plus the four<br/>RefreshToken abstract events - handlers log only<br/>Handlers RefreshTokenEventHandler.cs L13 L25 L39"]
+    ORPHT -.->|"no producer anywhere"| X2["orphans - see section 5"]
+```
+
+### 3.4 OAuth link events
+
+Federated sign-in and account linking currently publish **no durable or in-process events** — only audit-sink records and the generic operation event. The named-linking edge that is missing is `UserCreatedEvent` (#1182).
+
+```mermaid
+flowchart TD
+    CB["federated callback commands<br/>Discord GitHub Steam Epic Facebook<br/>Microsoft Oidc Saml GoogleIdToken<br/>Architecture AuthenticationUseCaseEventContracts.cs L8 L12-17 L22-25"] --> OAS["OAuthAuthService external sign-in<br/>auto-link then JIT provisioning policy<br/>Services OAuthAuthService.cs L715"]
+    OAS --> MATCH{"account exists<br/>Services OAuthAuthService.cs L760"}
+    MATCH -- "existing external login or verified email" --> LINKAUD["Authentication.ExternalAccountLinked<br/>audit sink record<br/>Services OAuthAuthService.cs L821"]
+    MATCH -- "new account JIT provisioned" --> NEWU["userRepository AddAsync<br/>Services OAuthAuthService.cs L763"]
+    NEWU --> PROVAUD["Authentication.ExternalAccountProvisioned<br/>audit sink record only<br/>Services OAuthAuthService.cs L840"]
+    NEWU -.->|"UserCreatedEvent NOT emitted - issue 1182"| MISSING["no welcome email no quota entry<br/>no cost entry no analytics for<br/>OAuth provisioned accounts"]
+    LINKAUD --> CAS["CentralAuthenticationAuditEventSink<br/>Compliance Audit Services CentralAuthenticationAuditEventSink.cs L16"]
+    PROVAUD --> CAS
+    OAS --> OKAUD["Authentication.ExternalLoginSucceeded<br/>Services OAuthAuthService.cs L622-634"]
+    OAS --> FAILAUD["Authentication.ExternalLoginFailed<br/>Services OAuthAuthService.cs L703"]
+    OKAUD --> CAS
+    FAILAUD --> CAS
+    CAS --> AL["AuditLog row AuditCategory.Authentication<br/>classified and SIEM forwarded"]
+    OAS --> OP[("generic operation event<br/>identity authentication oidc-callback etc<br/>UseCaseOperationBehavior.cs L134")]
+    UNLINK["external login link and unlink commands<br/>docs auth flows external-login-link-unlink-flow.md"] --> UNKAUD["session and permission audit trail<br/>no named event declared"]
+    EXT["ExternalLoginHandlers<br/>Handlers ExternalLoginHandlers.cs"] -.->|"no Publish and no RecordAsync calls"| NONE["no events on link unlink surface"]
+```
+
+### 3.5 Trusted-device, trusted-contact and account-recovery events
+
+Trusted contacts and account recovery rely on audit-sink records plus the generic operation event; **all owner/contact emails on this surface are inline sends** (see §5.2).
+
+```mermaid
+flowchart TD
+    TC["trusted contact commands<br/>Add Remove Confirm<br/>Architecture AuthenticationUseCaseEventContracts.cs L52-54"] --> TCH["TrustedContactCommandHandlers<br/>Handlers TrustedContactCommandHandlers.cs"]
+    TCH --> TCE["INLINE emailSender SendAsync invite mail<br/>Handlers TrustedContactCommandHandlers.cs L103"]
+    TCH --> TCAUD["AuthenticationAuditEvent records<br/>Handlers TrustedContactCommandHandlers.cs L123 L161 L219"]
+    REC["account recovery commands<br/>Request Cancel Approve ApprovePasskey<br/>BeginPasskeyApproval CompleteReset<br/>Architecture AuthenticationUseCaseEventContracts.cs L55-60"] --> RECH["AccountRecoveryRequestHandlers<br/>Handlers AccountRecoveryRequestHandlers.cs"]
+    RECH --> RCE1["INLINE emailSender SendAsync approval code<br/>Handlers AccountRecoveryRequestHandlers.cs L152"]
+    RECH --> RCE2["INLINE emailSender SendAsync recovery requested<br/>Handlers AccountRecoveryRequestHandlers.cs L165"]
+    RECH --> RCAUD["AuthenticationAuditEvent records<br/>Handlers AccountRecoveryRequestHandlers.cs L175 L215"]
+    THR["AccountRecoveryThresholdEvaluator<br/>Services AccountRecoveryThresholdEvaluator.cs L59"] --> THRE["INLINE emailSender SendAsync<br/>complete-your-recovery mail<br/>Services AccountRecoveryThresholdEvaluator.cs L96"]
+    RESET["CompleteAccountRecoveryResetCommandHandler<br/>Handlers CompleteAccountRecoveryResetCommandHandler.cs"] --> REVT["RevokeAllUserTokensAsync forced reset<br/>Handlers CompleteAccountRecoveryResetCommandHandler.cs L93"]
+    RESET --> REVAUD["AuthenticationAuditEvent records<br/>Handlers CompleteAccountRecoveryResetCommandHandler.cs L119 L151"]
+    MFAR["MFA recovery commands<br/>Request Continue Confirm<br/>Architecture AuthenticationUseCaseEventContracts.cs L37-39"] --> MFRH["MfaRecoveryCommandHandlers<br/>Handlers MfaRecoveryCommandHandlers.cs"]
+    MFRH --> MRE1["INLINE emailSender SendAsync recovery requested<br/>Handlers MfaRecoveryCommandHandlers.cs L132"]
+    MFRH --> MRE2["INLINE emailSender SendAsync confirm mail<br/>Handlers MfaRecoveryCommandHandlers.cs L227"]
+    TCAUD --> CAS["CentralAuthenticationAuditEventSink"]
+    RCAUD --> CAS
+    REVAUD --> CAS
+    CAS --> AL["AuditLog rows via security event pipeline"]
+    TC --> OP1[("generic operation event<br/>identity authentication add-trusted-contact etc")]
+    REC --> OP2[("generic operation event<br/>identity authentication request-account-recovery etc")]
+    MFAR --> OP3[("generic operation event<br/>identity authentication request-mfa-recovery etc")]
+    DEV["trusted devices - WebAuthn credential<br/>Activate Deactivate Begin Complete registration<br/>Architecture StepUpEventContracts.cs L5<br/>AuthenticationUseCaseEventContracts.cs L34-35"] --> DEVOP[("generic operation event only<br/>no named cross-module event declared")]
+    TCE -.->|"bypasses durable notification queue"| GX["inline gap class 1155 - see section 5"]
+    RCE1 -.-> GX
+    RCE2 -.-> GX
+    THRE -.-> GX
+    MRE1 -.-> GX
+    MRE2 -.-> GX
+```
+
+### 3.6 Notification emails — durable path and inline bypasses
+
+Durable path (what every `Send*` handler and host-side alert handler uses): the `Notification` row **is** the queue; the email dispatcher drains it out-of-band.
+
+```mermaid
+flowchart TD
+    subgraph DURABLE["Durable notification queue path"]
+        P1["email code magic link password reset<br/>email verification welcome email<br/>Handlers EmailCodeCommandHandlers.cs L26<br/>Handlers MagicLinkCommandHandlers.cs L29<br/>Handlers PasswordCommandHandlers.cs L68<br/>Services EmailVerificationService.cs L84<br/>Handlers SendWelcomeEmailHandler.cs L44"] --> SEND["INotificationService SendAsync<br/>Notifications Services NotificationService.cs L27"]
+        SEND --> ROW{{"DURABILITY BOUNDARY<br/>Notification row persisted in the<br/>same command transaction<br/>handler throws if not queued"}} 
+        ROW --> ND["Notifications table row<br/>type EmailCode MagicLink PasswordReset<br/>EmailVerification Onboarding Security<br/>SmsMfaCode PushMfaChallenge"]
+        ND --> EMD["EmailDispatcherBackgroundService drains<br/>Notifications Services Email EmailDispatcherBackgroundService.cs"]
+        EMD --> REN["IEmailRenderer registry renders<br/>auth renderers registered at<br/>Extensions DependencyInjection.cs L53-57"]
+        REN --> SMTP["email sent - dispatcher owns retry"]
+        ND --> PUD["PushDispatcherBackgroundService for push channel<br/>Notifications Services Push PushDispatcherBackgroundService.cs"]
+    end
+    subgraph INLINE["Inline bypass - not durable issue 1155 class"]
+        I1["MfaRecoveryCommandHandlers L132 L227<br/>AccountRecoveryRequestHandlers L152 L165<br/>TrustedContactCommandHandlers L103<br/>AccountRecoveryThresholdEvaluator L96"] --> ISEND["IEmailSender SendAsync directly<br/>inside the request"]
+        ISEND --> IRSK{"process crash or SMTP outage<br/>after command commit"}
+        IRSK -- "email lost" --> LOST["no retry row no replay<br/>no notification history"]
+    end
+    INLINE -.->|"should join the durable path"| SEND
