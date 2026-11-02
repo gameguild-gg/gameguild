@@ -1,98 +1,121 @@
-using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.Configuration;
+using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-///     Cloudflare Turnstile verifier (issue #1150). Enforcement is opt-in per
-///     deployment: verification is required exactly when a secret is configured
-///     (Turnstile:SecretKey, or the TURNSTILE_SECRET_KEY environment variable used by
-///     the web app), so dev/CI environments without a secret are unaffected.
+///     Cloudflare Turnstile token verification via the siteverify HTTP endpoint
+///     (issue #1082). Behavior:
+///     <list type="bullet">
+///         <item>Secret unset → disabled: success with <c>disabled</c> (dev/CI fail-open), warned once per process.</item>
+///         <item>Missing/oversized token → fail-closed with <c>missing-token</c>.</item>
+///         <item>Cloudflare responds success:false → fail-closed with <c>verify-failed</c>.</item>
+///         <item>Network/parse error → fail-open with <c>verify-unavailable</c> (an outage must not lock everyone out; an explicit Cloudflare rejection does).</item>
+///     </list>
 /// </summary>
 public sealed class TurnstileVerificationService(
-    IConfiguration configuration,
+    IHttpClientFactory httpClientFactory,
+    AuthenticationSecurityOptions options,
     ILogger<TurnstileVerificationService> logger) : ITurnstileVerificationService
 {
-    private const string SiteVerifyUrl = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+    /// <summary>The named HTTP client used for siteverify calls (registered with a timeout).</summary>
+    public const string HttpClientName = "GameGuild.Turnstile";
+
     private const int MaxTokenLength = 2048;
 
-    // One shared client for the process; verification calls are rare (sign-up only) and
-    // the static-siteverify endpoint needs no per-request disposal.
-    private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromSeconds(10) };
+    private static readonly JsonSerializerOptions ResponseJsonOptions = new(JsonSerializerDefaults.Web);
 
-    private static readonly JsonSerializerOptions ResponseJsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private bool disabledWarningLogged;
 
-    private readonly string? _secretKey = ResolveSecret(configuration);
-
-    private bool _disabledWarningLogged;
-
-    public bool IsEnabled => !string.IsNullOrWhiteSpace(_secretKey);
-
-    public async Task<bool> VerifyAsync(string? turnstileToken, string? remoteIpAddress = null, CancellationToken cancellationToken = default)
+    public async Task<TurnstileVerificationResult> VerifyAsync(
+        string? token,
+        string? remoteIpAddress = null,
+        CancellationToken cancellationToken = default)
     {
-        if (!IsEnabled)
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var secret = options.TurnstileSecretKey;
+        if (string.IsNullOrWhiteSpace(secret))
         {
-            if (!_disabledWarningLogged)
+            if (!disabledWarningLogged)
             {
-                _disabledWarningLogged = true;
-                logger.LogWarning("Turnstile secret not configured; server-side anti-bot verification is disabled");
+                disabledWarningLogged = true;
+                logger.LogWarning("Turnstile secret not set; sign-in CAPTCHA verification disabled");
             }
 
-            return true;
+            return TurnstileVerificationResult.Disabled;
         }
 
-        if (string.IsNullOrWhiteSpace(turnstileToken) || turnstileToken.Length > MaxTokenLength)
+        if (string.IsNullOrWhiteSpace(token) || token.Length > MaxTokenLength)
         {
-            logger.LogWarning("Sign-up blocked: Turnstile token missing or malformed");
-            return false;
+            return TurnstileVerificationResult.MissingToken;
         }
 
+        var verifyUrl = string.IsNullOrWhiteSpace(options.TurnstileSiteVerifyUrl)
+            ? "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+            : options.TurnstileSiteVerifyUrl;
+
+        TurnstileSiteVerifyResponse? result;
         try
         {
-            var payload = new { secret = _secretKey, response = turnstileToken, remoteip = remoteIpAddress };
-            using var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-            using var response = await HttpClient.PostAsync(SiteVerifyUrl, content, cancellationToken).ConfigureAwait(false);
-
-            var siteVerify = await JsonSerializer
-                .DeserializeAsync<SiteVerifyResponse>(response.Content.ReadAsStream(cancellationToken), ResponseJsonOptions, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (siteVerify?.Success == true)
+            var client = httpClientFactory.CreateClient(HttpClientName);
+            using var content = new FormUrlEncodedContent(BuildSiteVerifyPayload(secret, token, remoteIpAddress));
+            using var response = await client.PostAsync(verifyUrl, content, cancellationToken).ConfigureAwait(false);
+            // A non-success HTTP status is still a parsed Cloudflare response whenever the
+            // body is readable; only transport/parsing failures fail open.
+            var payload = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            result = TryDeserialize(payload);
+            if (result is null)
             {
-                return true;
+                logger.LogError("Turnstile siteverify returned an unreadable response (HTTP {Status})", (int)response.StatusCode);
+                return TurnstileVerificationResult.VerifyUnavailable;
             }
-
-            logger.LogWarning("Sign-up blocked: Cloudflare rejected the Turnstile token");
-            return false;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            // Fail-open on verifier unavailability: a Cloudflare/network outage must not
-            // lock every sign-up out — an explicit Cloudflare rejection (above) does.
-            logger.LogError(ex, "Turnstile siteverify request failed; allowing the request");
-            return true;
+            logger.LogError(exception, "Turnstile siteverify request failed; allowing request");
+            return TurnstileVerificationResult.VerifyUnavailable;
+        }
+
+        return result.Success is true
+            ? new TurnstileVerificationResult(true)
+            : TurnstileVerificationResult.VerifyFailed;
+    }
+
+    private static Dictionary<string, string> BuildSiteVerifyPayload(string secret, string token, string? remoteIpAddress)
+    {
+        var payload = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["secret"] = secret,
+            ["response"] = token
+        };
+        if (!string.IsNullOrWhiteSpace(remoteIpAddress))
+        {
+            payload["remoteip"] = remoteIpAddress;
+        }
+
+        return payload;
+    }
+
+    private static TurnstileSiteVerifyResponse? TryDeserialize(string payload)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<TurnstileSiteVerifyResponse>(payload, ResponseJsonOptions);
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 
-    private static string? ResolveSecret(IConfiguration configuration)
+    private sealed class TurnstileSiteVerifyResponse
     {
-        var secret = configuration["Turnstile:SecretKey"];
-        if (string.IsNullOrWhiteSpace(secret))
-        {
-            secret = Environment.GetEnvironmentVariable("TURNSTILE_SECRET_KEY");
-        }
-
-        return string.IsNullOrWhiteSpace(secret) ? null : secret.Trim();
-    }
-
-    private sealed record SiteVerifyResponse
-    {
-        public bool? Success { get; init; }
+        public bool? Success { get; set; }
     }
 }

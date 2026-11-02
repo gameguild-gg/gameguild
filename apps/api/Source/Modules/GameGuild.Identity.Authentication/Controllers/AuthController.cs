@@ -130,6 +130,7 @@ public sealed class AuthController(ISender sender) : BaseApiController
             TenantId = body.TenantId,
             DeviceFingerprint = body.DeviceFingerprint,
             RememberMe = body.RememberMe,
+            TurnstileToken = body.TurnstileToken,
             GuestAccessToken = body.GuestAccessToken
         }, ct);
     }

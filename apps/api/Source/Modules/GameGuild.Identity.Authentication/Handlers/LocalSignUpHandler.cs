@@ -23,9 +23,10 @@ public sealed class LocalSignUpHandler(
     {
         // Issue #1150: enforce Turnstile at the API, not only in the Next.js layer —
         // direct API callers (curl/scripts/attackers) bypassed the web check entirely.
-        // Enforced exactly when a Turnstile secret is configured (see the verifier).
+        // Enforced exactly when a Turnstile secret is configured (see the verifier:
+        // Disabled/VerifyUnavailable fail open, MissingToken/VerifyFailed fail closed).
         if (turnstileVerification is not null
-            && !await turnstileVerification.VerifyAsync(command.TurnstileToken, null, cancellationToken).ConfigureAwait(false))
+            && !(await turnstileVerification.VerifyAsync(command.TurnstileToken, null, cancellationToken).ConfigureAwait(false)).Success)
         {
             logger.LogWarning("Sign-up rejected: Turnstile verification failed");
             return new SignInResponse { Success = false, Message = TurnstileFailedMessage };

@@ -76,6 +76,50 @@ public sealed class AuthenticationSecurityOptions : BaseOptions
     [Range(1, 10)]
     public int SuspiciousThreshold { get; set; } = 3;
 
+    /// <summary>
+    ///     Whether to enable the progressive (exponential backoff) delay on failed
+    ///     password sign-in attempts (issue #1084). The delay is applied per account
+    ///     identifier before password verification:
+    ///     <c>base * 2^(failures - 1)</c> seconds, capped at
+    ///     <see cref="ProgressiveDelayMaxSeconds"/>. Default schedule: 1s, 2s, 4s, 8s.
+    /// </summary>
+    public bool EnableProgressiveDelay { get; set; } = true;
+
+    /// <summary>
+    ///     Base delay in seconds for the progressive sign-in backoff (issue #1084).
+    ///     Applied after the first failure and doubled on each additional failure.
+    /// </summary>
+    [Range(0, 10)]
+    public int ProgressiveDelayBaseSeconds { get; set; } = 1;
+
+    /// <summary>
+    ///     Maximum delay in seconds for the progressive sign-in backoff (issue #1084).
+    ///     The exponential schedule saturates at this value.
+    /// </summary>
+    [Range(1, 60)]
+    public int ProgressiveDelayMaxSeconds { get; set; } = 8;
+
+    /// <summary>
+    ///     Number of failed sign-in attempts from one source IP (within the failure
+    ///     window) after which password sign-in requires a Cloudflare Turnstile token
+    ///     (issue #1082). 0 disables the challenge entirely.
+    /// </summary>
+    [Range(0, 100)]
+    public int TurnstileRequiredAfterFailedAttempts { get; set; } = 3;
+
+    /// <summary>
+    ///     Cloudflare Turnstile secret key used to verify tokens server-side
+    ///     (issue #1082). Empty/unset disables verification: the challenge is not
+    ///     required and tokens are not checked (development default; production must
+    ///     configure a secret).
+    /// </summary>
+    public string TurnstileSecretKey { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     Cloudflare Turnstile siteverify endpoint. Overridable for tests.
+    /// </summary>
+    public string TurnstileSiteVerifyUrl { get; set; } = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+
     public bool IsValid
     {
         get => Validate().IsValid;
@@ -118,6 +162,21 @@ public sealed class AuthenticationSecurityOptions : BaseOptions
         if (SuspiciousThreshold < 1 || SuspiciousThreshold > 10)
         {
             errors.Add("SuspiciousThreshold must be between 1 and 10");
+        }
+
+        if (ProgressiveDelayBaseSeconds < 0 || ProgressiveDelayBaseSeconds > 10)
+        {
+            errors.Add("ProgressiveDelayBaseSeconds must be between 0 and 10");
+        }
+
+        if (ProgressiveDelayMaxSeconds < 1 || ProgressiveDelayMaxSeconds > 60)
+        {
+            errors.Add("ProgressiveDelayMaxSeconds must be between 1 and 60");
+        }
+
+        if (ProgressiveDelayBaseSeconds > ProgressiveDelayMaxSeconds)
+        {
+            errors.Add("ProgressiveDelayBaseSeconds cannot exceed ProgressiveDelayMaxSeconds");
         }
 
         if (MaxFailedAttemptsPerHour > MaxFailedAttemptsPerDay)
