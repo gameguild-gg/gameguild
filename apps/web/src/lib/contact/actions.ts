@@ -1,5 +1,9 @@
 'use server';
 
+import { verifyTurnstileToken } from '@/lib/antibot/turnstile';
+import { forwardedIpHeaders } from '@/lib/server/forwarded-headers';
+import { assertSafeServiceUrl } from '@/lib/security/safe-remote-url';
+
 type ContactLeadInput = {
     name: string;
     email: string;
@@ -8,6 +12,7 @@ type ContactLeadInput = {
     message: string;
     pagePath?: string;
     locale?: string;
+    turnstileToken?: string | null;
 };
 
 type ActionResult = { success: true; message: string } | { success: false; error: string };
@@ -52,6 +57,11 @@ function getFirstProblemDetailError(payload: unknown): string | null {
 }
 
 export async function submitContactLeadAction(input: ContactLeadInput): Promise<ActionResult> {
+    const verification = await verifyTurnstileToken(input.turnstileToken);
+    if (!verification.success) {
+        return { success: false, error: 'Bot check failed. Please refresh and try again.' };
+    }
+
     if (!input.name?.trim()) {
         return { success: false, error: 'Name is required.' };
     }
@@ -69,10 +79,11 @@ export async function submitContactLeadAction(input: ContactLeadInput): Promise<
     }
 
     try {
-        const response = await fetch(`${getApiUrl()}/v1/marketing/leads`, {
+        const response = await fetch(assertSafeServiceUrl(`${getApiUrl()}/v1/marketing/leads`, getApiUrl()), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                ...(await forwardedIpHeaders()),
             },
             body: JSON.stringify({
                 source: 'contact',

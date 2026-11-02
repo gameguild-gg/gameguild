@@ -43,6 +43,7 @@ This directory contains the cleaned and consolidated project documentation migra
 ## Security
 
 - `security/DUAL_CURRENCY_ECONOMY_THREAT_MODEL.md` – Financial-integrity, provider, ad-fraud, privacy, and operational controls
+- `operations/cloudflare-bot-defense.md` – Trusted-proxy client IPs, per-IP rate-limit buckets, and Turnstile operations runbook
 
 ## Permissions System
 

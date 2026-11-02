@@ -57,6 +57,8 @@ test-results/
 playwright-report/
 playwright-report-react/
 artifacts/
+# Downloaded CI release staging
+/_artifacts/
 cov.json
 cov[0-9]*.json
 coverage.*.xml

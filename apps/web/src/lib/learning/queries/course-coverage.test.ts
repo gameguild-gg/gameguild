@@ -165,9 +165,9 @@ describe('course query coverage', () => {
       isEnrollmentOpen: false, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-02T00:00:00.000Z',
     });
     await expect(getCourse('email')).resolves.toMatchObject({ creatorHandle: 'grace-hopper' });
-    await expect(getCourse('fallback')).resolves.toMatchObject({ creatorHandle: 'creator-fall' });
-    await expect(getCourse('api-failure')).resolves.toMatchObject({ creatorHandle: 'creator-api-' });
-    await expect(getCourse('throw')).resolves.toMatchObject({ creatorHandle: 'creator-thro' });
+    await expect(getCourse('fallback')).resolves.toMatchObject({ creatorHandle: null });
+    await expect(getCourse('api-failure')).resolves.toMatchObject({ creatorHandle: null });
+    await expect(getCourse('throw')).resolves.toMatchObject({ creatorHandle: null });
     await expect(getCourse('empty-fallback')).resolves.toMatchObject({ creatorHandle: null });
     await expect(getCourse('no-creator')).resolves.toMatchObject({ creatorHandle: null });
   });
@@ -303,10 +303,10 @@ describe('course query coverage', () => {
     expect(mocks.readGrading).toHaveBeenCalledWith('{}');
   });
 
-  it('returns empty content when the API fails or throws', async () => {
-    mocks.getContent.mockResolvedValueOnce({ ok: false, error: {} }).mockRejectedValueOnce(new Error('content failed'));
-    await expect(getCourseContent(courseId)).resolves.toEqual({ items: [], total: 0 });
-    await expect(getCourseContent(courseId)).resolves.toEqual({ items: [], total: 0 });
+  it('returns empty content with an error marker when the API fails or throws', async () => {
+    mocks.getContent.mockResolvedValueOnce({ ok: false, error: { status: 500 } }).mockRejectedValueOnce(new Error('content failed'));
+    await expect(getCourseContent(courseId)).resolves.toEqual({ items: [], total: 0, error: 500 });
+    await expect(getCourseContent(courseId)).resolves.toEqual({ items: [], total: 0, error: 'error' });
   });
 
   it.each(['Markdown', 'Lexical', 'RevealJs', 'Video', 'Html', 'ExternalLink', null, undefined, 'Legacy']) (

@@ -7,12 +7,13 @@ import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@game-guild/ui/components/field';
 import { Input } from '@game-guild/ui/components/input';
+import { TurnstileWidget } from '@/components/antibot/turnstile-widget';
 
 type ActionResult = { success: true; data: void } | { success: false; error: string };
 
 interface ResetPasswordFormProps {
   token: string;
-  onReset: (token: string, newPassword: string, confirmPassword: string) => Promise<ActionResult>;
+  onReset: (token: string, newPassword: string, confirmPassword: string, turnstileToken?: string | null) => Promise<ActionResult>;
 }
 
 export function ResetPasswordForm({ token, onReset }: ResetPasswordFormProps) {
@@ -21,6 +22,7 @@ export function ResetPasswordForm({ token, onReset }: ResetPasswordFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,8 +30,10 @@ export function ResetPasswordForm({ token, onReset }: ResetPasswordFormProps) {
     setIsLoading(true);
 
     try {
-      const result = await onReset(token, newPassword, confirmPassword);
+      const result = await onReset(token, newPassword, confirmPassword, turnstileToken);
       if (!result.success) {
+        // Single-use token: reset on failure so the widget re-issues a fresh one.
+        setTurnstileToken(null);
         setError(result.error);
         return;
       }
@@ -77,6 +81,7 @@ export function ResetPasswordForm({ token, onReset }: ResetPasswordFormProps) {
               {error ? <FieldError>{error}</FieldError> : null}
             </Field>
             <Field>
+              <TurnstileWidget onToken={setTurnstileToken} action="reset-password" id="reset-password-turnstile" />
               <Button type="submit" disabled={isLoading || !token}>
                 {isLoading ? 'Updating...' : 'Update password'}
               </Button>

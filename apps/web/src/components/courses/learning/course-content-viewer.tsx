@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
 import { CourseCompletionCertificateService } from '@/lib/courses/services/certificate.service';
 import { ContentReportService } from '@/lib/courses/services/content-report.service';
+import { TurnstileWidget } from '@/components/antibot/turnstile-widget';
 import { CertificateNotification, ContentNavigationSidebar, LessonViewer, ReportContentDialog } from '@game-guild/courses/components/learning';
 import { BookOpen, CheckCircle, ChevronLeft, ChevronRight, Clock, FileText, Flag, MessageSquare, MoreVertical, Play, Trophy, Upload } from 'lucide-react';
 import { ActivityComponent } from './activity-component';
@@ -68,6 +69,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportMessage, setReportMessage] = useState<ContentReportMessage | null>(null);
+  const [reportTurnstileToken, setReportTurnstileToken] = useState<string | null>(null);
   const [certificateEligibility, setCertificateEligibility] = useState<any>(null);
   const [showCertificateNotification, setShowCertificateNotification] = useState(false);
 
@@ -261,9 +263,11 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
         reportType: reason,
         reason,
         description,
+        turnstileToken: reportTurnstileToken,
       });
 
       if (!report.success) {
+        setReportTurnstileToken(null);
         setReportMessage({
           type: 'error',
           text: report.error || 'The report could not be submitted. Review the details and try again.',
@@ -277,6 +281,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
       });
     } catch (error) {
       console.error('Failed to report content:', error);
+      setReportTurnstileToken(null);
       setReportMessage({
         type: 'error',
         text: 'The report could not be submitted. Review the details and try again.',
@@ -467,6 +472,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                 </Card>
 
                 {/* Report Content Dialog */}
+                {showReportDialog ? <TurnstileWidget onToken={setReportTurnstileToken} id="content-report-turnstile" /> : null}
                 <ReportContentDialog open={showReportDialog} onOpenChange={setShowReportDialog} contentId={currentItem.id} contentTitle={currentItem.title} onSubmit={handleReportContent} />
               </>
             )}

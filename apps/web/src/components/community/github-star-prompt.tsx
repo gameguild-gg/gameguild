@@ -9,13 +9,7 @@ import { useEffect, useState } from 'react';
 const DISMISSED_STORAGE_KEY = 'gg-github-star-prompt-dismissed';
 const SESSION_CHECK_KEY = 'gg-github-star-prompt-checked';
 
-/** Public repository metadata endpoint used for the star check (issue #90). */
-const REPO_API_URL = 'https://api.github.com/repos/gameguild-gg/gameguild';
 const REPO_URL = 'https://github.com/gameguild-gg/gameguild';
-
-interface GitHubRepoSnapshot {
-  stargazersCount: number;
-}
 
 /**
  * Dismissible "Star us" prompt for GitHub-linked members (issue #90).
@@ -23,18 +17,25 @@ interface GitHubRepoSnapshot {
  * Behavior:
  * - Only considers accounts linked to GitHub (server action over
  *   HEAD /v1/auth/external-logins); non-GitHub users never see it.
- * - Checks `GET /repos/gameguild-gg/gameguild` for the repository's starred
- *   state. v1 caveat, documented here deliberately: the public repo endpoint
- *   exposes `stargazers_count` (rendered on the card) but not a per-viewer
- *   starred flag — the user's GitHub OAuth token is not persisted server-side,
- *   so `/user/starred/:owner/:repo` cannot be called on their behalf yet.
- *   Until that lands, GitHub-linked members see the prompt unless dismissed.
+ * - The repository star count arrives from the server (issue #106 phase 1:
+ *   fetched with a one-hour revalidation in the dashboard layout, no browser
+ *   call to api.github.com). v1 caveat, documented here deliberately: the
+ *   public repo endpoint exposes `stargazers_count` (rendered on the card)
+ *   but not a per-viewer starred flag — the user's GitHub OAuth token is not
+ *   persisted server-side, so `/user/starred/:owner/:repo` cannot be called
+ *   on their behalf yet. Until that lands, GitHub-linked members see the
+ *   prompt unless dismissed.
  * - Rate limited: at most one check per browser session (sessionStorage).
  * - Dismissible: dismissal persists across sessions (localStorage).
  */
-export function GitHubStarPrompt({ className }: { className?: string }) {
+export function GitHubStarPrompt({
+  starCount,
+  className,
+}: {
+  starCount: number | null;
+  className?: string;
+}) {
   const [visible, setVisible] = useState(false);
-  const [starCount, setStarCount] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,16 +49,6 @@ export function GitHubStarPrompt({ className }: { className?: string }) {
 
         const linked = await isGitHubLinkedAction();
         if (!linked || cancelled) return;
-
-        const response = await fetch(REPO_API_URL, {
-          headers: { Accept: 'application/vnd.github+json' },
-        });
-        if (!response.ok || cancelled) return;
-
-        const repo = (await response.json()) as Partial<GitHubRepoSnapshot>;
-        if (typeof repo.stargazersCount === 'number') {
-          setStarCount(repo.stargazersCount);
-        }
         setVisible(true);
       } catch {
         // Any failure (offline, API down) silently skips the prompt.

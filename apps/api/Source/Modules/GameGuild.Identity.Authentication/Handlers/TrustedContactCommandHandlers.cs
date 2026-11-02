@@ -87,7 +87,7 @@ public sealed class AddTrustedContactCommandHandler(
         await contactStore.AddAsync(contact, cancellationToken).ConfigureAwait(false);
         await QueueInviteNotificationAsync(contact, owner.Email, inviteToken, cancellationToken).ConfigureAwait(false);
         await AuditAsync("AccountRecovery.ContactInvited", owner.Id, owner.TenantId, success: true, request, cancellationToken).ConfigureAwait(false);
-        logger.LogInformation("Trusted contact invite issued for owner {OwnerUserId} to {ContactEmail}", owner.Id, normalizedEmail);
+        logger.LogInformation("Trusted contact invite issued for owner {OwnerUserId}", owner.Id);
 
         return new TrustedContactActionResult
         {

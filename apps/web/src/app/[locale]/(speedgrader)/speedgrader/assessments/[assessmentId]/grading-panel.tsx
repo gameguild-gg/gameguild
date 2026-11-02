@@ -39,6 +39,7 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 export interface GradingPanelProps {
   item: LearningAssessmentsGradingQueueItem;
   assessment: LearningAssessmentsGradingQueueAssessment;
+  onReviewStateChanged?: (submission: AssessmentSubmissionRuntimeViewV1) => void;
 }
 
 interface ItemResolutionState {
@@ -53,6 +54,7 @@ export function GradingPanel(props: GradingPanelProps): React.JSX.Element {
 function GradingPanelSession({
   item,
   assessment,
+  onReviewStateChanged,
 }: GradingPanelProps): React.JSX.Element {
   const router = useRouter();
   const [submission, setSubmission] =
@@ -226,7 +228,7 @@ function GradingPanelSession({
       return;
     }
     acceptRuntimeSubmission(result.data);
-    router.refresh();
+    onReviewStateChanged?.(result.data);
   }
 
   async function releaseResult() {
@@ -326,7 +328,7 @@ function GradingPanelSession({
     }
     acceptRuntimeSubmission(result.data);
     setRegradeReason('');
-    router.refresh();
+    onReviewStateChanged?.(result.data);
   }
 
   return (
