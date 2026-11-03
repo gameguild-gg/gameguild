@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Options;
+using GameGuild.Configuration.ApplicationLayer;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -8,7 +11,9 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public class KeyRotationService(
     IApplicationDbContext dbContext,
-    ILogger<KeyRotationService> logger) : IKeyRotationService
+    ILogger<KeyRotationService> logger,
+    IJwtSigningKeyCache? signingKeyCache = null,
+    IOptions<JwtOptions>? jwtOptions = null) : IKeyRotationService
 {
     private readonly IApplicationDbContext _dbContext = dbContext;
 
@@ -24,6 +29,7 @@ public class KeyRotationService(
     {
         var now = SystemClock.UtcNow;
         return await _dbContext.Set<JwtSigningKey>()
+            .AsNoTracking()
             .Where(k => k.ValidFrom <= now && k.ExpiresAt > now)
             .OrderByDescending(k => k.KeyVersion)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -58,6 +64,11 @@ public class KeyRotationService(
         // Rotate out old key (but keep it valid for token verification during overlap period)
         if (currentKey != null)
         {
+            // A token issued just before a late/manual rotation still has its full TTL.
+            var options = jwtOptions?.Value ?? new JwtOptions();
+            var overlapEnd = validFrom.AddMinutes(options.AccessTokenExpirationMinutes)
+                .AddSeconds(options.ClockSkewSeconds);
+            if (currentKey.ExpiresAt < overlapEnd) { currentKey.ExpiresAt = overlapEnd; }
             currentKey.Rotate(reason);
             logger.LogInformation(
                 "Rotated key {OldKeyId} (version {OldVersion}) to {NewKeyId} (version {NewVersion})",
@@ -70,6 +81,11 @@ public class KeyRotationService(
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        // Issue #1141: validators must learn the new key set as soon as it changes, so
+        // tokens signed by the fresh active key validate immediately while tokens from
+        // the rotated-out key keep validating for the rest of their lifetime.
+        await RefreshValidationKeyCacheAsync(cancellationToken).ConfigureAwait(false);
 
         return newKey;
     }
@@ -94,6 +110,8 @@ public class KeyRotationService(
         logger.LogInformation("Cleaned up {Count} expired JWT signing keys older than {CutoffDate}",
             expiredKeys.Count, cutoffDate);
 
+        await RefreshValidationKeyCacheAsync(cancellationToken).ConfigureAwait(false);
+
         return expiredKeys.Count;
     }
 
@@ -110,5 +128,22 @@ public class KeyRotationService(
             logger.LogInformation("JWT signing key initialized. Active key: {KeyId}, expires: {ExpiresAt}",
                 activeKey.KeyId, activeKey.ExpiresAt);
         }
+
+        await RefreshValidationKeyCacheAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Publishes the currently valid key set to the process-wide validation-key cache
+    ///     (issue #1141). A missing cache (unit tests, static-key-only hosts) is not an
+    ///     error — validation then keeps using the statically configured secret.
+    /// </summary>
+    private async Task RefreshValidationKeyCacheAsync(CancellationToken cancellationToken)
+    {
+        if (signingKeyCache is null)
+        {
+            return;
+        }
+
+        await signingKeyCache.RefreshAsync(this, cancellationToken).ConfigureAwait(false);
     }
 }

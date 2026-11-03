@@ -97,6 +97,7 @@ export interface UseAuthReturn {
     firstName?: string;
     lastName?: string;
     tenantId?: string;
+    turnstileToken?: string;
     /**
      * Guest bearer token presented when registering from a guest session
      * (issue #213). A valid guest session is upgraded into the issued
@@ -261,6 +262,7 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
       firstName?: string;
       lastName?: string;
       tenantId?: string;
+      turnstileToken?: string;
       guestAccessToken?: string;
       redirectTo?: string;
       redirect?: boolean;

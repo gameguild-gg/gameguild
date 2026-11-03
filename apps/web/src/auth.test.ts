@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { CredentialsProviderConfig } from "@game-guild/client";
 
 const state = vi.hoisted(() => ({
   cookie: "encrypted-session" as string | undefined,
@@ -10,6 +11,9 @@ const state = vi.hoisted(() => ({
   encodeSession: vi.fn(),
   sharedAuth: vi.fn(),
   proxy: vi.fn(),
+  signUp: vi.fn(),
+  verifyTurnstile: vi.fn(async () => ({ success: true })),
+  passwordAuthorize: vi.fn(async () => null),
 }));
 
 vi.mock("react", async (importOriginal) => ({
@@ -40,10 +44,13 @@ vi.mock("@game-guild/client", () => ({
     auth: state.sharedAuth,
     signIn: vi.fn(),
     signOut: vi.fn(),
-    signUp: vi.fn(),
+    signUp: state.signUp,
     update: vi.fn(),
   }),
-  CredentialsProvider: () => ({ authorize: vi.fn() }),
+  CredentialsProvider: (options?: Pick<CredentialsProviderConfig, "authorize">) => ({
+    id: "credentials", name: "Credentials", type: "credentials",
+    authorize: options?.authorize ?? state.passwordAuthorize,
+  }),
   GoogleProvider: vi.fn(),
   DiscordProvider: vi.fn(),
   processSession: state.processSession,
@@ -62,7 +69,35 @@ vi.mock("@game-guild/client", () => ({
   },
 }));
 
+vi.mock("@/lib/antibot/turnstile", () => ({ verifyTurnstileToken: state.verifyTurnstile }));
+
 describe("request-bound authentication readers", () => {
+  it("leaves the sign-in CAPTCHA unconsumed for the API admission threshold", async () => {
+    vi.stubEnv("TURNSTILE_SECRET_KEY", crypto.randomUUID());
+    try {
+      const { authConfig } = await import("./auth");
+      const provider = authConfig.providers.find((candidate) => candidate.type === "credentials");
+      if (!provider || provider.type !== "credentials") throw new Error("Missing credentials provider");
+      const credentials = {
+        email: "reader@example.invalid", password: crypto.randomUUID(), turnstileToken: crypto.randomUUID(),
+      };
+      const request = new Request("http://web.example/api/auth/signin");
+      await provider.authorize(credentials, request);
+      expect(state.passwordAuthorize).toHaveBeenCalledWith(credentials, request);
+      expect(state.verifyTurnstile).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+  it("forwards the fresh sign-up CAPTCHA without consuming its one-time proof in the web layer", async () => {
+    const authModule = await import("./auth");
+    const credentials = {
+      username: "reader", email: "reader@example.invalid", password: crypto.randomUUID(), turnstileToken: crypto.randomUUID(),
+    };
+    await authModule.signUp(credentials, { redirect: false });
+    expect(state.signUp).toHaveBeenCalledWith(credentials, { redirect: false });
+    expect(state.verifyTurnstile).not.toHaveBeenCalled();
+  });
   const session = { user: { id: "member-id" }, tenantId: "owned-tenant" };
   const token = { accessToken: "opaque-access-token" };
 

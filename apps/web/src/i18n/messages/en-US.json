@@ -330,7 +330,12 @@
           "regenerate": "Regenerate codes",
           "regenerated": "New recovery codes generated. Previous codes are now invalid.",
           "freshWarning": "These codes are shown only once. Store them somewhere safe now.",
-          "hide": "I saved my codes"
+          "hide": "I saved my codes",
+          "confirmTitle": "Regenerate recovery codes",
+          "confirmDescription": "Enter your account password to re-verify before new recovery codes are issued. Previously issued codes become invalid.",
+          "passwordLabel": "Account password",
+          "cancel": "Cancel",
+          "wrongPassword": "Password verification failed. Recovery codes were not changed."
         },
         "disable": {
           "title": "Disable MFA",

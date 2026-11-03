@@ -13529,6 +13529,12 @@ session (session continuity); an invalid token never blocks registration. */
   phoneNumber?: string | null;
   /** Optional tenant ID to use for the sign-up. If not provided, a default tenant may be assigned */
   tenantId?: string | null;
+  /** Cloudflare Turnstile anti-bot token (issue #1150). Optional at the contract
+level, but REQUIRED whenever the API has a Turnstile secret configured
+(Turnstile:SecretKey / TURNSTILE_SECRET_KEY): without a secret the check is
+disabled; with one, sign-up fails closed until Cloudflare verifies the token.
+The Next.js layer's client-side check alone was bypassable by direct API calls. */
+  turnstileToken?: string | null;
   username: string;
 }
 
@@ -13871,6 +13877,9 @@ export interface IdentityAuthenticationPushMfaChallengeOutput {
 export interface IdentityAuthenticationPushMfaDeviceInput {
   /** Device registration token from the mobile platform (FCM/APNs) */
   deviceToken: string | null;
+  /** The account password, re-verified before the device token is replaced
+(issue #1153 — a stolen bearer token must not hijack push delivery). */
+  password: string;
 }
 
 /** Device's answer to a push MFA challenge */
@@ -13885,6 +13894,13 @@ export interface IdentityAuthenticationPushMfaRespondInput {
 export interface IdentityAuthenticationRefreshTokenInput {
   refreshToken: string;
   tenantId?: string | null;
+}
+
+/** Request to regenerate backup codes */
+export interface IdentityAuthenticationRegenerateBackupCodesInput {
+  /** The account password, re-verified before new backup codes are issued
+(issue #1153 — a bearer token alone must not rotate recovery codes). */
+  password: string;
 }
 
 /** Request DTO for removing a role from a user */
@@ -29038,6 +29054,7 @@ export let IdentityAuthenticationPushMfaChallengeOutputSchema: z.ZodType<Identit
 export let IdentityAuthenticationPushMfaDeviceInputSchema: z.ZodType<IdentityAuthenticationPushMfaDeviceInput>;
 export let IdentityAuthenticationPushMfaRespondInputSchema: z.ZodType<IdentityAuthenticationPushMfaRespondInput>;
 export let IdentityAuthenticationRefreshTokenInputSchema: z.ZodType<IdentityAuthenticationRefreshTokenInput>;
+export let IdentityAuthenticationRegenerateBackupCodesInputSchema: z.ZodType<IdentityAuthenticationRegenerateBackupCodesInput>;
 export let IdentityAuthenticationRemoveRoleFromUserInputSchema: z.ZodType<IdentityAuthenticationRemoveRoleFromUserInput>;
 export let IdentityAuthenticationRenameSessionInputSchema: z.ZodType<IdentityAuthenticationRenameSessionInput>;
 export let IdentityAuthenticationRenameTrustedDeviceInputSchema: z.ZodType<IdentityAuthenticationRenameTrustedDeviceInput>;
@@ -42681,6 +42698,7 @@ IdentityAuthenticationLocalSignUpInputSchema = z.object({
   password: z.string().min(8),
   phoneNumber: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
+  turnstileToken: z.string().nullable().optional(),
   username: z.string().min(1),
 });
 
@@ -42948,6 +42966,7 @@ IdentityAuthenticationPushMfaChallengeOutputSchema = z.object({
 /** Zod schema for IdentityAuthenticationPushMfaDeviceInput. Request to register a push MFA device */
 IdentityAuthenticationPushMfaDeviceInputSchema = z.object({
   deviceToken: z.string().nullable(),
+  password: z.string().min(1),
 });
 
 /** Zod schema for IdentityAuthenticationPushMfaRespondInput. Device's answer to a push MFA challenge */
@@ -42960,6 +42979,11 @@ IdentityAuthenticationPushMfaRespondInputSchema = z.object({
 IdentityAuthenticationRefreshTokenInputSchema = z.object({
   refreshToken: z.string().min(1),
   tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationRegenerateBackupCodesInput. Request to regenerate backup codes */
+IdentityAuthenticationRegenerateBackupCodesInputSchema = z.object({
+  password: z.string().min(1),
 });
 
 /** Zod schema for IdentityAuthenticationRemoveRoleFromUserInput. Request DTO for removing a role from a user */

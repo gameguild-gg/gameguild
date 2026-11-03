@@ -168,7 +168,7 @@ describe('MfaMethodsManager (settings/security, issue #244)', () => {
     expect(screen.getByText('settings.security.mfa.sms.unavailable')).toBeInTheDocument();
   });
 
-  it('regenerates recovery codes and shows them exactly once', async () => {
+  it('regenerates recovery codes only with the account password and shows them once', async () => {
     const user = userEvent.setup();
     mocks.regenerateBackupCodes.mockResolvedValue({
       success: true,
@@ -177,7 +177,18 @@ describe('MfaMethodsManager (settings/security, issue #244)', () => {
     });
     render(<MfaMethodsManager data={makeData()} />);
 
+    // Issue #1153: regeneration requires password re-verification before rotating codes.
     await user.click(screen.getByTestId('mfa-recovery-regenerate'));
+    const confirm = screen.getByTestId('mfa-recovery-confirm');
+    expect(confirm).toBeDisabled();
+
+    const password = crypto.randomUUID();
+    await user.type(screen.getByLabelText('settings.security.mfa.recovery.passwordLabel'), password);
+    await user.click(confirm);
+
+    await waitFor(() => {
+      expect(mocks.regenerateBackupCodes).toHaveBeenCalledWith(password);
+    });
 
     const codes = await screen.findByTestId('mfa-recovery-codes');
     expect(codes).toHaveTextContent('AAAA-BBBB');
@@ -196,11 +207,12 @@ describe('MfaMethodsManager (settings/security, issue #244)', () => {
     const confirm = screen.getByTestId('mfa-disable-confirm');
     expect(confirm).toBeDisabled();
 
-    await user.type(screen.getByLabelText('settings.security.mfa.disable.passwordLabel'), 'Tr0ub4dor&3');
+    const password = crypto.randomUUID();
+    await user.type(screen.getByLabelText('settings.security.mfa.disable.passwordLabel'), password);
     await user.click(confirm);
 
     await waitFor(() => {
-      expect(mocks.disableMfa).toHaveBeenCalledWith('Tr0ub4dor&3');
+      expect(mocks.disableMfa).toHaveBeenCalledWith(password);
     });
 
     mocks.disableMfa.mockResolvedValue({ success: false, status: 'error', message: 'Password verification failed' });

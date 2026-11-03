@@ -167,10 +167,14 @@ export async function completeSmsEnrollmentAction(code: string): Promise<MfaActi
   return resultFrom(true);
 }
 
-/** Regenerates the recovery (backup) codes; the fresh set is shown exactly once. */
-export async function regenerateBackupCodesAction(): Promise<MfaBackupCodesResult> {
+/**
+ * Regenerates the recovery (backup) codes after re-verifying the account password
+ * (issue #1153 — the server refuses to rotate recovery codes on a bearer token alone);
+ * the fresh set is shown exactly once.
+ */
+export async function regenerateBackupCodesAction(password: string): Promise<MfaBackupCodesResult> {
   const mfaModule = new GeneratedApi.AuthMultiFactorModule(getApiClient());
-  const result = await mfaModule.postAuthMfaBackupCodesRegenerate();
+  const result = await mfaModule.postAuthMfaBackupCodesRegenerate({ password });
   revalidatePath(SETTINGS_SECURITY_PATH);
 
   if (!result.ok) {

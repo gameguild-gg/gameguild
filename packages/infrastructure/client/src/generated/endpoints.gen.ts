@@ -20440,9 +20440,11 @@ export const getAuthMfaBackupCodesEndpoint = {
 /**
  * Generate new backup codes (invalidates existing ones)
  *
- * Generates a new set of backup codes, invalidating any previously generated codes.
+ * Generates a new set of backup codes after password re-verification (issue #1153), invalidating any previously generated codes.
  */
-export type PostAuthMfaBackupCodesRegenerateInput = void;
+export interface PostAuthMfaBackupCodesRegenerateInput {
+  body?: Types.IdentityAuthenticationRegenerateBackupCodesInput;
+}
 export type PostAuthMfaBackupCodesRegenerateOutput = Types.IdentityAuthenticationBackupCodesOutput;
 export const postAuthMfaBackupCodesRegenerateEndpoint = {
   operationId: 'postAuthMfaBackupCodesRegenerate' as const,
@@ -20536,7 +20538,7 @@ export const postAuthMfaPushChallengeEndpoint = {
 /**
  * Register the mobile device for push MFA
  *
- * Registers (or replaces) the mobile device registration token used to deliver push MFA approval challenges.
+ * Registers (or replaces) the mobile device registration token used to deliver push MFA approval challenges, after password re-verification (issue #1153).
  */
 export interface PostAuthMfaPushRegisterDeviceInput {
   body?: Types.IdentityAuthenticationPushMfaDeviceInput;
@@ -21496,7 +21498,7 @@ export const postAuthSignOutEndpoint = {
 /**
  * Register a new user with email and password
  *
- * Creates a new user account with email and password credentials, returning authentication tokens on success.
+ * Creates a new user account with email and password credentials, returning authentication tokens on success. When Turnstile is configured (TURNSTILE_SECRET_KEY), turnstileToken is required and verified server-side (issue #1150).
  */
 export interface PostAuthSignUpInput {
   body?: Types.IdentityAuthenticationLocalSignUpInput;

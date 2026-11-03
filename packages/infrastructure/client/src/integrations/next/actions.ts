@@ -281,6 +281,7 @@ export function createSignUpAction(config: ResolvedAuthConfig) {
       firstName?: string;
       lastName?: string;
       tenantId?: string;
+      turnstileToken?: string;
     },
     options?: { redirectTo?: string; redirect?: boolean },
   ): Promise<void> {
@@ -294,6 +295,7 @@ export function createSignUpAction(config: ResolvedAuthConfig) {
     if (credentials.firstName) body.firstName = credentials.firstName;
     if (credentials.lastName) body.lastName = credentials.lastName;
     if (credentials.tenantId) body.tenantId = credentials.tenantId;
+    if (credentials.turnstileToken) body.turnstileToken = credentials.turnstileToken;
 
     const response = await fetch(`${config.apiUrl}/v1/auth/sign-up`, {
       method: 'POST',

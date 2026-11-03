@@ -32,7 +32,7 @@ public sealed class AuthController(ISender sender) : BaseApiController
     [AllowAnonymous]
     [HttpPost("v{version:apiVersion}/auth/sign-up")]
     [EndpointSummary("Register a new user")]
-    [EndpointDescription("Creates a new user account with email and password credentials, returning authentication tokens on success.")]
+    [EndpointDescription("Creates a new user account with email and password credentials, returning authentication tokens on success. When Turnstile is configured (TURNSTILE_SECRET_KEY), turnstileToken is required and verified server-side (issue #1150).")]
     [ProducesResponseType<SignInResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -45,7 +45,8 @@ public sealed class AuthController(ISender sender) : BaseApiController
             Password = body.Password,
             Username = body.Username,
             TenantId = body.TenantId,
-            GuestAccessToken = body.GuestAccessToken
+            GuestAccessToken = body.GuestAccessToken,
+            TurnstileToken = body.TurnstileToken
         };
 
         SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);

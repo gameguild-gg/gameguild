@@ -28,17 +28,23 @@ public class KeyRotationBackgroundService : BackgroundService
     {
         _logger.LogInformation("JWT Key Rotation Background Service started");
 
-        // Initialize keys on startup
+        // Initialize keys on startup. Issue #1141: this must never abort host startup —
+        // token issuance keeps working on the statically configured key when the store
+        // cannot be initialized (transient DB unavailability, focused test hosts), and
+        // the loop below retries initialization on its next pass.
         try
         {
             using var scope = _serviceProvider.CreateScope();
             var keyRotationService = scope.ServiceProvider.GetRequiredService<IKeyRotationService>();
             await keyRotationService.InitializeAsync(stoppingToken).ConfigureAwait(false);
         }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            return;
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to initialize JWT signing keys");
-            throw;
+            _logger.LogError(ex, "Failed to initialize JWT signing keys; will retry on the next scheduled pass");
         }
 
         while (!stoppingToken.IsCancellationRequested)
@@ -77,9 +83,9 @@ public class KeyRotationBackgroundService : BackgroundService
             }
             catch (Exception ex)
             {
+                // Keep the worker alive through transient store failures; the next
+                // scheduled pass retries rotation.
                 _logger.LogError(ex, "Error during JWT key rotation check");
-                // Continue running despite errors
-                throw;
             }
         }
 

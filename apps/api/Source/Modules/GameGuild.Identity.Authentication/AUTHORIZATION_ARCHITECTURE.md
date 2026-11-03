@@ -2100,6 +2100,37 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### JWT rotation and sensitive MFA mutations (#1141, #1123, #1153)
+
+The scoped `IKeyRotationService` and hosted rotation worker are explicitly registered.
+User and service-account JWTs use the active HS256 store key with its `kid`; the
+configured static key remains a compatibility fallback. Both bearer authentication
+and `JwtTokenService` validation refresh the shared-store snapshot before checking
+signatures, so another process's rotation is visible without restarting. Validation
+reads are untracked to avoid retaining old row values across requests. Refreshes,
+including rotation-triggered refreshes, carry a per-process sequence assigned before
+the store read. Publication ignores superseded results, so a delayed older read cannot
+erase a newly learned key and concurrent requests need not queue their store reads.
+Caller cancellation propagates without publishing late results. Cached keys
+carry their validity bounds and are filtered on every read, including during store
+outages. Refresh failures retain only unexpired cached keys and log exception types
+without connection details or key material. Caller cancellation propagates.
+
+Normal rotation retains the predecessor for at least the configured access-token
+lifetime plus clock skew, covering tokens issued just before a late rotation. The
+cached snapshot is per process; authenticated bearer requests read the shared store
+for cross-process freshness rather than claiming distributed cache invalidation.
+
+Backup-code regeneration and push-device registration require password re-verification
+inside their command handlers. Missing verifiers, passwordless accounts and incorrect
+passwords deny the mutation. The web recovery-code dialog collects the password and
+forwards it through the generated API module. Password sign-in and sign-up forward
+their single-use Turnstile proofs through the SDK to the API; the web layer does not
+consume the same proof first. Sign-in admission applies the existing source-IP failure
+threshold, accepts a fresh proof once and refuses replay. The verifier's configured
+disabled/outage policy remains in force.
+
+
 ### External identity provider availability (#1116, #1125)
 
 Provider transport errors, HTTP 5xx responses and HttpClient timeouts are distinct

@@ -499,7 +499,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
   }
 
   async function handleSignUp(body: Record<string, unknown>, responseCookies: ResponseCookies): Promise<Response> {
-    const { username, email, password, firstName, lastName, tenantId, guestAccessToken } = body as {
+    const { username, email, password, firstName, lastName, tenantId, guestAccessToken, turnstileToken } = body as {
       username?: string;
       email?: string;
       password?: string;
@@ -507,6 +507,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
       lastName?: string;
       tenantId?: string;
       guestAccessToken?: string;
+      turnstileToken?: string;
     };
 
     if (!username || !email || !password) {
@@ -529,6 +530,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     // link the fresh authenticated session to the guest session; an invalid
     // token never blocks registration.
     if (guestAccessToken) signUpBody.guestAccessToken = guestAccessToken;
+    if (turnstileToken) signUpBody.turnstileToken = turnstileToken;
 
     const response = await fetch(`${config.apiUrl}/v1/auth/sign-up`, {
       method: 'POST',

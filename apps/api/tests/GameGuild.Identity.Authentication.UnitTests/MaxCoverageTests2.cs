@@ -344,14 +344,50 @@ public class MfaControllerCovTests
     }
 
     [Fact]
-    public async Task RegenerateBackupCodes_ReturnsNewCodes()
+    public async Task RegenerateBackupCodes_WithVerifiedPassword_ReturnsNewCodes()
     {
+        // Issue #1153: regeneration now requires password re-verification before the
+        // handler rotates the recovery codes.
         _mfaService.Setup(s => s.GenerateBackupCodesAsync(
             _userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { "CODE1", "CODE2" });
 
-        var result = await _controller.RegenerateBackupCodes(CancellationToken.None);
+        var controller = new MfaController(
+            _mfaService.Object,
+            new CommandHandlerSender(_mfaService.Object, CreateReverification(verified: true)));
+        SetControllerUser(controller, _userId);
+
+        var result = await controller.RegenerateBackupCodes(
+            new RegenerateBackupCodesRequest { Password = "correct-password" }, CancellationToken.None);
         result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task RegenerateBackupCodes_WithWrongPassword_ReturnsBadRequest()
+    {
+        // Issue #1153: a bearer token alone must not rotate the recovery codes.
+        var controller = new MfaController(
+            _mfaService.Object,
+            new CommandHandlerSender(_mfaService.Object, CreateReverification(verified: false)));
+        SetControllerUser(controller, _userId);
+
+        var result = await controller.RegenerateBackupCodes(
+            new RegenerateBackupCodesRequest { Password = "wrong-password" }, CancellationToken.None);
+        result.Should().BeOfType<BadRequestObjectResult>();
+        _mfaService.Verify(s => s.GenerateBackupCodesAsync(
+            It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private MfaReverificationService CreateReverification(bool verified)
+    {
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetByIdAsync(_userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = _userId, PasswordHash = "stored-hash" });
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(verified);
+        return new MfaReverificationService(
+            userRepo.Object, hasher.Object, NullLogger<MfaReverificationService>.Instance);
     }
 
     [Fact]

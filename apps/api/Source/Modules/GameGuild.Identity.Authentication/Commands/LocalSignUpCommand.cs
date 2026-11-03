@@ -23,4 +23,10 @@ public class LocalSignUpCommand : ICommand<SignInResponse>
 
     /// <summary>Optional guest token to upgrade into the issued session (issue #213).</summary>
     public string? GuestAccessToken { get; set; }
+
+    /// <summary>
+    ///     Turnstile anti-bot token verified server-side before the account is created
+    ///     (issue #1150); required when the API has a Turnstile secret configured.
+    /// </summary>
+    public string? TurnstileToken { get; set; }
 }
