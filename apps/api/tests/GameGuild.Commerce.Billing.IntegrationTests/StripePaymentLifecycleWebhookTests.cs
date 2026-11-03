@@ -84,7 +84,7 @@ public class StripePaymentLifecycleWebhookTests
             .ReturnsAsync(payment);
 
         var handled = await consumer.TryConsumeAsync(
-            VerifiedEvent("payment_intent.succeeded", "pi_pending", status: "succeeded", chargeId: "ch_pending"),
+            VerifiedEvent("payment_intent.succeeded", "pi_pending", status: "succeeded", chargeId: "ch_pending", paymentIntent: "pi_pending"),
             CancellationToken.None);
 
         handled.Should().BeTrue();
