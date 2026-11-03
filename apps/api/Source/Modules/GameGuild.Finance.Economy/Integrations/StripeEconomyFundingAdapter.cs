@@ -27,6 +27,15 @@ public interface IStripeEconomyFundingAdapter
 
     IdempotencyKey ConfirmationIdempotencyKey(EconomyTopUpPaymentFact payment);
 
+    /// <summary>
+    ///     Deterministic idempotency key of the provider-funding reversal for a cumulative
+    ///     HardCoin unit total (issue #1202 gaps N4) — identical to the key
+    ///     <see cref="CreateReversal"/> stamps on its <see cref="ReverseTopUpCommand"/>, so the
+    ///     protected-operation intent and the persisted posting deduplicate the same
+    ///     cumulative reversal level on webhook redeliveries.
+    /// </summary>
+    IdempotencyKey ReversalIdempotencyKey(EconomyTopUpPaymentFact payment, long cumulativeProviderHardUnits);
+
     ConfirmObservedTopUpCommand CreateConfirmation(
         Payment payment,
         HardCoinFundingClaim claim,
@@ -51,6 +60,21 @@ public interface IStripeEconomyFundingAdapter
 
     ReverseTopUpCommand CreateReversal(
         Payment payment,
+        decimal cumulativeRefundedAmount,
+        decimal cumulativeDisputedAmount,
+        ProviderReversalDisposition disposition,
+        string evidence,
+        ReserveVersion reserveVersion,
+        PolicyVersion policyVersion,
+        DateTimeOffset occurredAt);
+
+    /// <summary>
+    ///     Fact-based variant of <see cref="CreateReversal(Payment,decimal,decimal,ProviderReversalDisposition,string,ReserveVersion,PolicyVersion,DateTimeOffset)"/>
+    ///     for webhook-driven reversals that only hold the persisted payment fact (issue #1202
+    ///     gaps N4). Same idempotency key space and the same cumulative bounds.
+    /// </summary>
+    ReverseTopUpCommand CreateReversal(
+        EconomyTopUpPaymentFact payment,
         decimal cumulativeRefundedAmount,
         decimal cumulativeDisputedAmount,
         ProviderReversalDisposition disposition,
@@ -100,6 +124,16 @@ public sealed class StripeEconomyFundingAdapter : IStripeEconomyFundingAdapter
     {
         ArgumentNullException.ThrowIfNull(payment);
         return Key("confirm", ProviderLeg(payment).Key);
+    }
+
+    /// <inheritdoc />
+    public IdempotencyKey ReversalIdempotencyKey(EconomyTopUpPaymentFact payment, long cumulativeProviderHardUnits)
+    {
+        ArgumentNullException.ThrowIfNull(payment);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cumulativeProviderHardUnits);
+        var leg = ProviderLeg(payment);
+        var cumulative = cumulativeProviderHardUnits.ToString(CultureInfo.InvariantCulture);
+        return Key("reverse", $"{leg.Key}:{cumulative}");
     }
 
     public ConfirmObservedTopUpCommand CreateConfirmation(
@@ -195,12 +229,46 @@ public sealed class StripeEconomyFundingAdapter : IStripeEconomyFundingAdapter
         DateTimeOffset occurredAt)
     {
         ArgumentNullException.ThrowIfNull(payment);
-        ArgumentException.ThrowIfNullOrWhiteSpace(evidence);
         payment.ValidateProviderMonetaryBounds(
             payment.Amount,
             cumulativeRefundedAmount,
             cumulativeDisputedAmount);
-        var leg = ProviderLeg(ToPaymentFact(payment));
+        return CreateReversal(
+            ToPaymentFact(payment),
+            cumulativeRefundedAmount,
+            cumulativeDisputedAmount,
+            disposition,
+            evidence,
+            reserveVersion,
+            policyVersion,
+            occurredAt);
+    }
+
+    /// <inheritdoc />
+    public ReverseTopUpCommand CreateReversal(
+        EconomyTopUpPaymentFact payment,
+        decimal cumulativeRefundedAmount,
+        decimal cumulativeDisputedAmount,
+        ProviderReversalDisposition disposition,
+        string evidence,
+        ReserveVersion reserveVersion,
+        PolicyVersion policyVersion,
+        DateTimeOffset occurredAt)
+    {
+        ArgumentNullException.ThrowIfNull(payment);
+        ArgumentException.ThrowIfNullOrWhiteSpace(evidence);
+        if (cumulativeRefundedAmount < 0 || cumulativeDisputedAmount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(cumulativeRefundedAmount));
+        }
+
+        if (cumulativeRefundedAmount + cumulativeDisputedAmount > payment.Amount)
+        {
+            throw new InvalidOperationException(
+                "Cumulative provider refunded and disputed amounts cannot exceed the payment amount.");
+        }
+
+        var leg = ProviderLeg(payment);
         var cumulative = ToUsdMinorUnits(
             checked(cumulativeRefundedAmount + cumulativeDisputedAmount),
             nameof(cumulativeRefundedAmount));
