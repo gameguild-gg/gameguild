@@ -30,7 +30,7 @@ public interface IStripeEconomyFundingAdapter
     /// <summary>
     ///     Deterministic idempotency key of the provider-funding reversal for a cumulative
     ///     HardCoin unit total (issue #1202 gaps N4) — identical to the key
-    ///     <see cref="CreateReversal"/> stamps on its <see cref="ReverseTopUpCommand"/>, so the
+    ///     <see cref="CreateReversal(EconomyTopUpPaymentFact, decimal, decimal, ProviderReversalDisposition, string, ReserveVersion, PolicyVersion, DateTimeOffset)"/> stamps on its <see cref="ReverseTopUpCommand"/>, so the
     ///     protected-operation intent and the persisted posting deduplicate the same
     ///     cumulative reversal level on webhook redeliveries.
     /// </summary>
