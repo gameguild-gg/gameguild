@@ -102,8 +102,8 @@ export function createFirebaseDestination(loader: FirebaseAnalyticsLoader): Fire
 
 export interface Destination {
   sendGa4(w: ConsentWindow, eventName: string, payload: Record<string, string | number>): void;
-  sendFirebase(eventName: string, payload: Record<string, string | number>): void;
-  setFirebaseCollection(enabled: boolean): Promise<void>;
+  sendFirebase(eventName: string, payload: Record<string, string | number>): Promise<void>;
+  setFirebaseCollection(enabled: boolean): void;
 }
 
 /**
@@ -135,9 +135,11 @@ export function createDispatcher(
         // Fail closed: destination error → silent no-op.
       }
     },
-    async setFirebaseCollection(enabled) {
-      const analytics = await firebaseDestination();
-      analytics?.setCollectionEnabled?.(enabled);
+    setFirebaseCollection(enabled) {
+      void (async () => {
+        const analytics = await firebaseDestination();
+        analytics?.setCollectionEnabled?.(enabled);
+      })();
     },
   };
 }
