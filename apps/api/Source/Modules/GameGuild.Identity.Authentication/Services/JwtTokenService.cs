@@ -146,7 +146,7 @@ public sealed class JwtTokenService(
     {
         if (roles == null) throw new ArgumentNullException(nameof(roles));
 
-        logger.LogInformation("Generating access token for user: {UserId}", userId);
+        logger.LogInformation("Generating access token for user: {UserId}", LogRedaction.ProtectIdentifier(userId));
 
         try
         {
@@ -206,13 +206,13 @@ public sealed class JwtTokenService(
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            logger.LogInformation("Access token generated for user: {UserId}, Expires: {Expires}", userId, token.ValidTo);
+            logger.LogInformation("Access token generated for user: {UserId}, Expires: {Expires}", LogRedaction.ProtectIdentifier(userId), token.ValidTo);
 
             return tokenString;
         }
         catch (Exception ex)
         {
-            logger.LogError("Error generating access token for user: {UserId}: {ErrorType}", userId, ex.GetType().FullName);
+            logger.LogError("Error generating access token for user: {UserId}: {ErrorType}", LogRedaction.ProtectIdentifier(userId), ex.GetType().FullName);
 
             throw;
         }
@@ -250,7 +250,7 @@ public sealed class JwtTokenService(
         cancellationToken.ThrowIfCancellationRequested();
         RefreshTokenLifecycleMetrics.RecordAttempt(RefreshTokenLifecycleOperation.Issued);
 
-        logger.LogInformation("Generating refresh token for user: {UserId}", LogRedaction.RedactId(userId, "uid"));
+        logger.LogInformation("Generating refresh token for user: {UserId}", LogRedaction.ProtectIdentifier(userId));
 
         try
         {
@@ -308,7 +308,7 @@ public sealed class JwtTokenService(
                         logger,
                         cancellationToken).ConfigureAwait(false);
 
-                    logger.LogInformation("Refresh token generated and stored: {TokenId}, Expires: {ExpiresAt}", refreshToken.Id, refreshToken.ExpiresAt);
+                    logger.LogInformation("Refresh token generated and stored: {TokenId}, Expires: {ExpiresAt}", LogRedaction.ProtectIdentifier(refreshToken.Id), refreshToken.ExpiresAt);
 
                     return tokenString; // Success, return token
                 }
@@ -325,7 +325,7 @@ public sealed class JwtTokenService(
         }
         catch (Exception ex)
         {
-            logger.LogError("Error generating refresh token for user: {UserId}: {ErrorType}", userId, ex.GetType().FullName);
+            logger.LogError("Error generating refresh token for user: {UserId}: {ErrorType}", LogRedaction.ProtectIdentifier(userId), ex.GetType().FullName);
 
             throw;
         }
@@ -444,7 +444,7 @@ public sealed class JwtTokenService(
 
             if (refreshToken.IsRevoked)
             {
-                logger.LogInformation("Refresh token already revoked: {TokenId}", refreshToken.Id);
+                logger.LogInformation("Refresh token already revoked: {TokenId}", LogRedaction.ProtectIdentifier(refreshToken.Id));
 
                 return true;
             }
@@ -466,7 +466,7 @@ public sealed class JwtTokenService(
                 logger,
                 cancellationToken).ConfigureAwait(false);
 
-            logger.LogInformation("Refresh token revoked: {TokenId}", refreshToken.Id);
+            logger.LogInformation("Refresh token revoked: {TokenId}", LogRedaction.ProtectIdentifier(refreshToken.Id));
 
             return true;
         }
@@ -491,7 +491,7 @@ public sealed class JwtTokenService(
     {
         logger.LogInformation(
             "Generating service account token for: {ServiceAccountId}, ClientId: {ClientId}",
-            LogRedaction.RedactId(serviceAccountId, "said"), LogRedaction.RedactId(clientId, "cid"));
+            LogRedaction.ProtectIdentifier(serviceAccountId), LogRedaction.ProtectIdentifier(clientId));
 
         try
         {
@@ -543,7 +543,7 @@ public sealed class JwtTokenService(
 
             logger.LogInformation(
                 "Service account token generated for: {ServiceAccountId}, Expires: {ExpiresAt}",
-                LogRedaction.RedactId(serviceAccountId, "said"), expiresAt);
+                LogRedaction.ProtectIdentifier(serviceAccountId), expiresAt);
 
             return (tokenString, expiresAt);
         }
@@ -551,7 +551,7 @@ public sealed class JwtTokenService(
         {
             logger.LogError(
                 "Error generating service account token for: {ServiceAccountId}: {ErrorType}",
-                LogRedaction.RedactId(serviceAccountId, "said"), ex.GetType().FullName);
+                LogRedaction.ProtectIdentifier(serviceAccountId), ex.GetType().FullName);
 
             throw;
         }
