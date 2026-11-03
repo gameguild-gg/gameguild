@@ -199,6 +199,8 @@ public static class AuditActionTypes
 
     public const string DataSubjectRequestRejected = "DataProtection.DataSubjectRequestRejected";
 
+    public const string DataSubjectRequestExpired = "DataProtection.DataSubjectRequestExpired";
+
     public const string CrossBorderTransferRecorded = "DataProtection.CrossBorderTransferRecorded";
 
     public const string SensitiveDataRetentionEnforced = "DataProtection.SensitiveDataRetentionEnforced";

@@ -36,6 +36,7 @@ public interface IFerpaInspectionRequestRepository
     Task<FerpaInspectionRequest> AddAsync(FerpaInspectionRequest request, CancellationToken ct = default);
     Task<FerpaInspectionRequest?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<List<FerpaInspectionRequest>> GetPendingAsync(CancellationToken ct = default);
+    Task<List<FerpaInspectionRequest>> GetOverdueAsync(DateTime utcNow, CancellationToken ct = default);
     Task UpdateAsync(FerpaInspectionRequest request, CancellationToken ct = default);
 }
 
@@ -158,6 +159,15 @@ public sealed class FerpaInspectionRequestRepository(IApplicationDbContext conte
     public async Task<List<FerpaInspectionRequest>> GetPendingAsync(CancellationToken ct = default)
         => await context.Set<FerpaInspectionRequest>()
             .Where(request => request.Status == FerpaRequestStatus.Pending && request.DeletedAt == null)
+            .OrderBy(request => request.Deadline)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+    public async Task<List<FerpaInspectionRequest>> GetOverdueAsync(DateTime utcNow, CancellationToken ct = default)
+        => await context.Set<FerpaInspectionRequest>()
+            .Where(request => (request.Status == FerpaRequestStatus.Pending || request.Status == FerpaRequestStatus.InReview)
+                && request.Deadline < utcNow
+                && request.DeletedAt == null)
             .OrderBy(request => request.Deadline)
             .ToListAsync(ct)
             .ConfigureAwait(false);

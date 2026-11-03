@@ -124,6 +124,24 @@ public class UserConsent : EntityBase
         ConsentRevokedAt = DateTime.UtcNow;
         Touch();
     }
+
+    /// <summary>
+    ///     Re-activates a previously revoked consent in place (issue #1219 N2).
+    ///     The (UserId, PolicyVersionId) pair is unique in <c>user_consents</c>, so a
+    ///     re-grant must update the existing row rather than insert a new one. The
+    ///     withdrawal history stays auditable through the consent audit events
+    ///     (Consent.Revoked / Consent.Granted) emitted by the service layer.
+    /// </summary>
+    public void Regrant(string? ipAddress, string? userAgent, string? method)
+    {
+        IsGranted = true;
+        ConsentGivenAt = DateTime.UtcNow;
+        ConsentRevokedAt = null;
+        IpAddress = ipAddress;
+        UserAgent = userAgent;
+        ConsentMethod = method;
+        Touch();
+    }
 }
 
 /// <summary>
@@ -174,6 +192,24 @@ public class DataSubjectRequest : EntityBase
         ProcessedByUserId = processedBy;
         ProcessedAt = DateTime.UtcNow;
         ProcessingNotes = reason;
+        Touch();
+    }
+
+    /// <summary>
+    ///     Marks the request as expired by the statutory deadline sweeper
+    ///     (issue #1219 N3). Only live requests can expire; terminal states
+    ///     (Completed/Rejected/Expired) are left untouched so the transition
+    ///     stays idempotent for the periodic worker.
+    /// </summary>
+    public void Expire()
+    {
+        if (Status is not (DataSubjectRequestStatus.Pending or DataSubjectRequestStatus.InProgress))
+        {
+            return;
+        }
+
+        Status = DataSubjectRequestStatus.Expired;
+        ProcessedAt = DateTime.UtcNow;
         Touch();
     }
 }

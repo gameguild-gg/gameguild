@@ -6,6 +6,7 @@ using GameGuild.API.HealthChecks;
 using GameGuild.API.HostedServices;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
+using GameGuild.Compliance.Consent;
 using GameGuild.Compliance.FERPA;
 using GameGuild.Compliance.KYC;
 using GameGuild.Configuration;
@@ -117,7 +118,22 @@ internal sealed class ApiProductComposition : IApiProductComposition
 
     public void ConfigureServices(WebApplicationBuilder builder)
     {
+        // Compliance.Consent (issue #1219 N1): the module was enabled for CQRS handler
+        // discovery (ModuleConfiguration.CommonEnabledModules) but its service layer was
+        // never registered in the host, so every api/compliance/consent endpoint failed
+        // to resolve IConsentService and returned 500. Registered here alongside the
+        // sibling FERPA module registration.
+        builder.Services.AddConsentModule();
         builder.Services.AddFerpaModule();
+        // Statutory deadline sweeper (issue #1219 N3): fires the GDPR 30-day DSR and
+        // FERPA 45-day inspection-request Expired transitions on a bounded periodic
+        // schedule, following the RefreshTokenCleanupWorker shape.
+        builder.Services.AddOptions<global::GameGuild.API.Core.Compliance.ComplianceDeadlineExpiryOptions>()
+            .Bind(builder.Configuration.GetSection(global::GameGuild.API.Core.Compliance.ComplianceDeadlineExpiryOptions.SectionName))
+            .Validate(policy => policy.Validate().Count == 0, "Invalid compliance deadline expiry configuration.")
+            .ValidateOnStart();
+        builder.Services.AddScoped<global::GameGuild.API.Core.Compliance.IComplianceDeadlineExpiryOperation, global::GameGuild.API.Core.Compliance.ComplianceDeadlineExpiryOperation>();
+        builder.Services.AddHostedService<global::GameGuild.API.Core.Compliance.ComplianceDeadlineExpiryWorker>();
         builder.Services.AddKycComposition(builder.Configuration);
         builder.Services.AddSingleton<IDatabaseMigrationPrerequisite, EconomyMigrationPrerequisite>();
         builder.Services.AddEconomyCapabilityComposition(builder.Configuration);
