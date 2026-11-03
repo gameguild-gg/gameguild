@@ -8951,7 +8951,7 @@ export const postBillingInvoicesAccountCreditsEndpoint = {
 /**
  * Retry invoice payment
  *
- * Dispatches a real payment retry for one of the caller's open or past-due invoices through the same payment retry path the automated retry queue uses. An overdue open invoice ages to past-due on the retry touch.
+ * Accepts a local retry scheduling request for open or past-due invoices. External gateway capture requires configured payment-provider credentials.
  */
 export interface PostBillingInvoicesRetryInput {
   invoiceId: string;
