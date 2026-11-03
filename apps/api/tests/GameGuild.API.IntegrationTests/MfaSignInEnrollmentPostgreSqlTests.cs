@@ -35,7 +35,7 @@ public sealed class MfaSignInEnrollmentPostgreSqlTests(ApiPostgreSqlFixture fixt
     {
         using var factory = CreateFactory(requireMfaByDefault: true);
         var marker = Guid.NewGuid().ToString("N");
-        var password = "aA7!" + Convert.ToHexString(RandomNumberGenerator.GetBytes(20));
+        var password = SyntheticPassword();
         var (userId, tenantId, email) = await SeedAsync(factory, marker, password);
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         var pending = await SignInPendingAsync(client, email, password, tenantId);
@@ -91,7 +91,7 @@ public sealed class MfaSignInEnrollmentPostgreSqlTests(ApiPostgreSqlFixture fixt
     {
         using var factory = CreateFactory(requireMfaByDefault: true);
         var marker = Guid.NewGuid().ToString("N");
-        var password = "aA7!" + Convert.ToHexString(RandomNumberGenerator.GetBytes(20));
+        var password = SyntheticPassword();
         var seededConfigurationId = Guid.NewGuid();
         const string seededSecret = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
         var (userId, tenantId, email) = await SeedAsync(factory, marker, password, encryption => new UserMfaConfiguration
@@ -165,7 +165,7 @@ public sealed class MfaSignInEnrollmentPostgreSqlTests(ApiPostgreSqlFixture fixt
     {
         using var factory = CreateFactory(requireMfaByDefault: true);
         var marker = Guid.NewGuid().ToString("N");
-        var password = "aA7!" + Convert.ToHexString(RandomNumberGenerator.GetBytes(20));
+        var password = SyntheticPassword();
         var (userId, tenantId, email) = await SeedAsync(factory, marker, password);
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         var pending = await SignInPendingAsync(client, email, password, tenantId);
@@ -203,7 +203,7 @@ public sealed class MfaSignInEnrollmentPostgreSqlTests(ApiPostgreSqlFixture fixt
     {
         using var factory = CreateFactory(requireMfaByDefault: false);
         var marker = Guid.NewGuid().ToString("N");
-        var password = "aA7!" + Convert.ToHexString(RandomNumberGenerator.GetBytes(20));
+        var password = SyntheticPassword();
         var (userId, tenantId, email) = await SeedAsync(factory, marker, password);
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         using var response = await client.PostAsJsonAsync("/v1/auth/sign-in", new { email, password, tenantId });
@@ -346,6 +346,8 @@ public sealed class MfaSignInEnrollmentPostgreSqlTests(ApiPostgreSqlFixture fixt
 
     private static string Fingerprint(string seed) =>
         Convert.ToHexString(SHA256.HashData(Encoding.ASCII.GetBytes(seed))).ToLowerInvariant();
+
+    private static string SyntheticPassword() => $"Synthetic1!{Guid.NewGuid():N}";
 
     private sealed record SignInPendingResult(bool Success, bool RequiresMfa, string Bearer, string SecretKey,
         string QrCodeUri);
