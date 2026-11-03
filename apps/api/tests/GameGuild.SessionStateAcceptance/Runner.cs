@@ -118,13 +118,13 @@ internal static class Runner
                     .Where(row => row.UserId == account.UserId || row.UserId == account.ForeignUserId).ToListAsync();
                 Assert.Equal(2, trusted.Count);
                 // Issue #1144: the browser's Trust action is rejected without a step-up receipt,
-                // so the seeded own trust row must survive untouched — same identity, still
-                // inactive and still expired (no renewal, no revocation happened).
+                // so the seeded own trust row must survive untouched — same identity, same
+                // seeded name, still active-but-expired (no renewal, no revocation happened).
                 var ownTrust = Assert.Single(trusted, row => row.UserId == account.UserId);
                 Assert.Equal(account.TrustedDeviceId, ownTrust.Id);
                 Assert.Equal(account.Fingerprint, ownTrust.DeviceFingerprint);
-                Assert.Equal(string.Empty, ownTrust.DeviceName);
-                Assert.False(ownTrust.IsActive);
+                Assert.Equal("Expired browser", ownTrust.DeviceName);
+                Assert.True(ownTrust.IsActive);
                 Assert.True(ownTrust.ExpiresAt < DateTime.UtcNow);
                 var foreignTrust = Assert.Single(trusted, row => row.UserId == account.ForeignUserId);
                 Assert.Equal(account.ForeignTrustedDeviceId, foreignTrust.Id);
