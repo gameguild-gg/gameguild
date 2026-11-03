@@ -49,7 +49,7 @@ the `OutboxBackgroundService` hosted service.
 | Retry budget | **5 attempts** per consumer | `Core/Eventing/InboxStore.cs:8` (`MaxAttempts`) |
 | Backoff | exponential `2^attemptCount` seconds, **capped at 900 s** | `InboxStore.cs:122-126` (`EventRetryPolicy.GetDelay`) |
 | Dead letter | `InboxReceipt.DeadLetteredAtUtc` and, when every consumer is terminal with at least one DLQ, `OutboxMessage.DeadLetteredAtUtc` | `InboxStore.cs:108-111`, `OutboxDispatcher.cs:229-232` |
-| Replay | `EventReplayService.ReplayAsync` (`Core/Eventing/EventReplayService.cs:52-103`) behind `ReplayOutboxEventCommand` (`Core/Eventing/ReplayOutboxEventCommand.cs:3-14`) — re-arms consumer receipts for one event/consumer | admin surface, CQRS command |
+| Replay | `EventReplayService.ReplayAsync` (`Core/Eventing/EventReplayService.cs:39-101`) behind `ReplayOutboxEventCommand` (`Core/Eventing/ReplayOutboxEventCommand.cs:3-14`) — re-arms consumer receipts for one event/consumer | admin surface, CQRS command |
 | Consumer isolation | each consumer runs in its own DI scope + transaction with an inbox `TryLockAsync` (`ON CONFLICT DO NOTHING` upsert then `FOR UPDATE SKIP LOCKED` select) | `OutboxDispatcher.cs:242-343`, `InboxStore.cs:10-64` |
 | Finalization | serialized by `FOR UPDATE` on the parent row to survive expired-claim double-dispatch | `OutboxDispatcher.cs:190-211` |
 | Cleanup | completed messages retired in batches of **1000** (`OutboxCleanupService.cs:9`), ≤8 batches / ≤500 ms per cycle (`OutboxBackgroundService.cs:28`), via the Postgres function `retire_completed_outbox_messages` which atomically writes delivery tombstones, deletes child receipts, then payloads | `OutboxCleanupService.cs:24-31` |
@@ -107,7 +107,7 @@ flowchart TD
     DISP -- "throws" --> FAIL["RecordFailureAsync<br/>InboxStore.cs L78-119"]
     FAIL -- "attempt below 5" --> BACK["NextAttemptAtUtc equals now plus<br/>2 to the n seconds capped 900 s<br/>InboxStore.cs L122-126"]
     BACK --> POLL
-    FAIL -- "attempt 5 reached" --> DLQ["DeadLetteredAtUtc set<br/>listed by EventReplayService<br/>EventReplayService.cs L39-50"]
+    FAIL -- "attempt 5 reached" --> DLQ["DeadLetteredAtUtc set<br/>listed by EventReplayService<br/>EventReplayService.cs L23-38"]
     DLQ --> REPLAY["ReplayOutboxEventCommand<br/>re-arms receipts and retries<br/>ReplayOutboxEventCommand.cs L3"]
     REPLAY --> POLL
     OK --> FINAL["Finalize serialized FOR UPDATE<br/>CompletedAtUtc or DeadLetteredAtUtc<br/>OutboxDispatcher.cs L187-240"]
