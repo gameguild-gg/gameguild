@@ -2895,6 +2895,11 @@
       "count": 10
     }
   },
+  "src/lib/community/queries/members.ts": {
+    "@typescript-eslint/no-unnecessary-type-assertion": {
+      "count": 1
+    }
+  },
   "src/lib/courses/actions/enrollment.actions.ts": {
     "@typescript-eslint/require-await": {
       "count": 1
