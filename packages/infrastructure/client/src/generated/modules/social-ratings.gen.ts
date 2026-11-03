@@ -287,7 +287,7 @@ export class SocialRatingsModule {
   /**
    * Get current user's ratings for multiple entities (batch)
    */
-  async postApiRatingsMyBatch(body: Types.SocialRatingsBatchSummaryInput): Promise<Result<Record<string, SocialRatingsRatingDto>, ApiError>> {
+  async postApiRatingsMyBatch(body: Types.SocialRatingsBatchSummaryInput): Promise<Result<Record<string, Types.SocialRatingsRatingDto>, ApiError>> {
     const url = '/api/ratings/my/batch';
 
     // Validate request body
@@ -300,7 +300,7 @@ export class SocialRatingsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Record<string, SocialRatingsRatingDto>, ApiError>;
+    return result as Result<Record<string, Types.SocialRatingsRatingDto>, ApiError>;
   }
 
   /**
@@ -322,7 +322,9 @@ export class SocialRatingsModule {
   /**
    * Get summaries for multiple entities (batch)
    */
-  async postApiRatingsSummariesBatch(body: Types.SocialRatingsBatchSummaryInput): Promise<Result<Record<string, SocialRatingsRatingSummaryDto>, ApiError>> {
+  async postApiRatingsSummariesBatch(
+    body: Types.SocialRatingsBatchSummaryInput,
+  ): Promise<Result<Record<string, Types.SocialRatingsRatingSummaryDto>, ApiError>> {
     const url = '/api/ratings/summaries/batch';
 
     // Validate request body
@@ -335,7 +337,7 @@ export class SocialRatingsModule {
       requiresAuth: false,
     });
 
-    return result as Result<Record<string, SocialRatingsRatingSummaryDto>, ApiError>;
+    return result as Result<Record<string, Types.SocialRatingsRatingSummaryDto>, ApiError>;
   }
 
   /**
