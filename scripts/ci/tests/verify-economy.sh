@@ -90,7 +90,7 @@ test_release_flow_opens_version_pr_to_main() {
   grep -Eq 'uses: changesets/action@[a-f0-9]{40} # v2([[:space:]]|$)' "$emception_workflow" || return 1
   grep -Fq 'version-script: pnpm run version:emception' "$emception_workflow" || return 1
   grep -Fq 'run: pnpm run publish:emception' "$emception_workflow" || return 1
-  grep -Fq 'TAG="emception-v${VERSION}"' "$emception_workflow" || return 1
+  grep -Fq 'TAG="v${VERSION}"' "$emception_workflow" || return 1
   ! grep -Fq 'auto-changeset.mjs --apply' "$emception_workflow"
 }
 
