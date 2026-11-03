@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using GameGuild.Email;
@@ -318,5 +319,151 @@ public sealed class EmailCodeRenderer(
     private sealed record EmailCodeMetadata(string? Code, string? Email, string? UserName)
     {
         public static EmailCodeMetadata Empty { get; } = new(null, null, null);
+    }
+}
+
+/// <summary>
+/// Renders the lost-MFA-device recovery-started email. TRANSACTIONAL: never unsubscribable, no footer.
+/// Metadata JSON: <c>{ "token": string, "email": string, "userName": string, "cooldownEndsAt": string }</c>.
+/// </summary>
+public sealed class MfaRecoveryRenderer(
+    IEmailFooterService footerService,
+    IConfiguration configuration,
+    NotificationMetadataProtector metadataProtector) : EmailRendererBase, IEmailRenderer
+{
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    public NotificationType Type => NotificationType.MfaRecovery;
+
+    public Task<EmailMessage?> RenderAsync(Notification notification, CancellationToken cancellationToken = default)
+    {
+        var meta = Deserialize(metadataProtector.GetForRendering(notification, Type));
+        if (string.IsNullOrWhiteSpace(meta.Token) || string.IsNullOrWhiteSpace(meta.Email))
+        {
+            throw new InvalidOperationException("Notification credential metadata is invalid or unavailable.");
+        }
+        var appBaseUrl = ResolveBaseUrl();
+        var link = $"{appBaseUrl}/auth/mfa-recovery?token={Uri.EscapeDataString(meta.Token)}";
+        var cooldownEndsAt = DateTimeOffset.TryParse(meta.CooldownEndsAt, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed)
+            ? parsed
+            : (DateTimeOffset?)null;
+        var cooldownText = cooldownEndsAt is { } endsAt ? $"{endsAt:u} (UTC)" : "the announced cooling-off period";
+        var recipientName = string.IsNullOrWhiteSpace(meta.UserName) ? meta.Email : meta.UserName;
+        var encodedName = WebUtility.HtmlEncode(recipientName);
+        var encodedLink = WebUtility.HtmlEncode(link);
+
+        var plain =
+            $"Hi {recipientName},\n\nA request to reset the multi-factor authentication on your account was received.\n\n" +
+            $"For your security, this request becomes actionable after {cooldownText}.\n\n" +
+            $"After that time, open this link to continue: {link}\n\n" +
+            "If you did not request this, you can ignore this email; nothing will change on your account.";
+        var html =
+            $"<p>Hi {encodedName},</p>" +
+            $"<p>A request to reset the multi-factor authentication on your account was received.</p>" +
+            $"<p>For your security, this request becomes actionable after {WebUtility.HtmlEncode(cooldownText)}.</p>" +
+            $"<p>After that time, open this link to continue: <a href=\"{encodedLink}\">continue MFA recovery</a></p>" +
+            "<p>If you did not request this, you can ignore this email; nothing will change on your account.</p>";
+
+        var (finalPlain, finalHtml) = MergeFooter(plain, html, footerService.Build(notification));
+        var message = new EmailMessage(string.Empty, "Multi-factor authentication recovery requested", finalPlain, finalHtml, recipientName);
+        return Task.FromResult<EmailMessage?>(message);
+    }
+
+    private string ResolveBaseUrl()
+    {
+        var appBaseUrl = configuration["App:BaseUrl"];
+        return string.IsNullOrWhiteSpace(appBaseUrl) ? "http://localhost:3000" : appBaseUrl.TrimEnd('/');
+    }
+
+    private static MfaRecoveryMetadata Deserialize(string? metadata)
+    {
+        if (string.IsNullOrWhiteSpace(metadata))
+        {
+            return MfaRecoveryMetadata.Empty;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<MfaRecoveryMetadata>(metadata, JsonOptions) ?? MfaRecoveryMetadata.Empty;
+        }
+        catch (JsonException)
+        {
+            return MfaRecoveryMetadata.Empty;
+        }
+    }
+
+    private sealed record MfaRecoveryMetadata(string? Token, string? Email, string? UserName, string? CooldownEndsAt)
+    {
+        public static MfaRecoveryMetadata Empty { get; } = new(null, null, null, null);
+    }
+}
+
+/// <summary>
+/// Renders the MFA recovery confirmation email. TRANSACTIONAL: never unsubscribable, no footer.
+/// Metadata JSON: <c>{ "token": string, "email": string, "userName": string }</c>.
+/// </summary>
+public sealed class MfaRecoveryConfirmationRenderer(
+    IEmailFooterService footerService,
+    IConfiguration configuration,
+    NotificationMetadataProtector metadataProtector) : EmailRendererBase, IEmailRenderer
+{
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    public NotificationType Type => NotificationType.MfaRecoveryConfirmation;
+
+    public Task<EmailMessage?> RenderAsync(Notification notification, CancellationToken cancellationToken = default)
+    {
+        var meta = Deserialize(metadataProtector.GetForRendering(notification, Type));
+        if (string.IsNullOrWhiteSpace(meta.Token) || string.IsNullOrWhiteSpace(meta.Email))
+        {
+            throw new InvalidOperationException("Notification credential metadata is invalid or unavailable.");
+        }
+        var appBaseUrl = ResolveBaseUrl();
+        var link = $"{appBaseUrl}/auth/mfa-recovery?confirm={Uri.EscapeDataString(meta.Token)}";
+        var recipientName = string.IsNullOrWhiteSpace(meta.UserName) ? meta.Email : meta.UserName;
+        var encodedName = WebUtility.HtmlEncode(recipientName);
+        var encodedLink = WebUtility.HtmlEncode(link);
+
+        var plain =
+            $"Hi {recipientName},\n\nYour multi-factor authentication recovery request is ready to complete.\n\n" +
+            $"Open this link to confirm and disable multi-factor authentication: {link}\n\n" +
+            "The link expires in one hour. If you did not request this, ignore this email.";
+        var html =
+            $"<p>Hi {encodedName},</p>" +
+            "<p>Your multi-factor authentication recovery request is ready to complete.</p>" +
+            $"<p><a href=\"{encodedLink}\">Confirm MFA recovery</a></p>" +
+            "<p>The link expires in one hour. If you did not request this, ignore this email.</p>";
+
+        var (finalPlain, finalHtml) = MergeFooter(plain, html, footerService.Build(notification));
+        var message = new EmailMessage(string.Empty, "Confirm multi-factor authentication recovery", finalPlain, finalHtml, recipientName);
+        return Task.FromResult<EmailMessage?>(message);
+    }
+
+    private string ResolveBaseUrl()
+    {
+        var appBaseUrl = configuration["App:BaseUrl"];
+        return string.IsNullOrWhiteSpace(appBaseUrl) ? "http://localhost:3000" : appBaseUrl.TrimEnd('/');
+    }
+
+    private static MfaRecoveryConfirmationMetadata Deserialize(string? metadata)
+    {
+        if (string.IsNullOrWhiteSpace(metadata))
+        {
+            return MfaRecoveryConfirmationMetadata.Empty;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<MfaRecoveryConfirmationMetadata>(metadata, JsonOptions) ?? MfaRecoveryConfirmationMetadata.Empty;
+        }
+        catch (JsonException)
+        {
+            return MfaRecoveryConfirmationMetadata.Empty;
+        }
+    }
+
+    private sealed record MfaRecoveryConfirmationMetadata(string? Token, string? Email, string? UserName)
+    {
+        public static MfaRecoveryConfirmationMetadata Empty { get; } = new(null, null, null);
     }
 }

@@ -53,10 +53,14 @@ const acquire = step(web, 'Acquire verified Toolchain release for Web');
 
 const clientGateName = 'Test client credentials, MFA, auth factory, transport and generator contracts';
 const clientSuites = [
+  'tests/auth/errors.test.ts',
   'tests/auth/providers/credentials.test.ts',
+  'tests/next/mfa-enrollment-action.test.ts',
+  'tests/next/signup-captcha-forwarding.test.ts',
   'tests/next/auth.test.ts',
   'tests/next/actions-extended.test.ts',
   'tests/gaps/final-gaps.test.ts',
+  'tests/react/use-auth-mfa.test.tsx',
   'tests/react/query-hooks-extended.test.ts',
   'tests/generator',
   'tests/transport',

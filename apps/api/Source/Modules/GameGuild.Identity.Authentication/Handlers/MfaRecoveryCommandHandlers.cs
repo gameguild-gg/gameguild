@@ -1,10 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using GameGuild.CQRS;
-using GameGuild.Email;
 using GameGuild.Identity.Users;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -41,9 +42,8 @@ public sealed class RequestMfaRecoveryCommandHandler(
     IUserRepository userRepository,
     IMfaAttemptTrackingService mfaTrackingService,
     IMfaRecoveryRequestStore recoveryStore,
-    IEmailSender emailSender,
+    INotificationService notificationService,
     IMemoryCache memoryCache,
-    IConfiguration configuration,
     ILogger<RequestMfaRecoveryCommandHandler> logger) : ICommandHandler<RequestMfaRecoveryCommand, MfaRecoveryRequestResult>
 {
     private const string RateLimitKeyPrefix = "mfarecovery:ratelimit:";
@@ -105,7 +105,7 @@ public sealed class RequestMfaRecoveryCommandHandler(
                 logger.LogWarning("MFA recovery request race detected for user {UserId}. Treating as success.", user.Id);
             }
 
-            await SendRecoveryStartedEmailAsync(user.Email, requestToken, recovery.CooldownEndsAt, cancellationToken).ConfigureAwait(false);
+            await QueueRecoveryStartedEmailAsync(user, requestToken, recovery.CooldownEndsAt, cancellationToken).ConfigureAwait(false);
             logger.LogInformation("MFA recovery request opened for user {UserId}", user.Id);
         }
         else
@@ -117,25 +117,36 @@ public sealed class RequestMfaRecoveryCommandHandler(
         return ApplyRateLimit(new MfaRecoveryRequestResult());
     }
 
-    private Task SendRecoveryStartedEmailAsync(string email, string requestToken, DateTimeOffset cooldownEndsAt, CancellationToken cancellationToken)
+    /// <summary>
+    ///     Queues the recovery-started email through the durable notification pipeline (outbox row,
+    ///     retried by the email dispatcher) instead of a direct IEmailSender call whose transient
+    ///     SMTP failure would silently lose the email (issue #1155).
+    /// </summary>
+    private async Task QueueRecoveryStartedEmailAsync(User user, string requestToken, DateTimeOffset cooldownEndsAt, CancellationToken cancellationToken)
     {
-        var link = $"{ResolveWebBaseUrl()}/auth/mfa-recovery?token={requestToken}";
-        var plain = $"A request to reset the multi-factor authentication on your account was received.\n\n" +
-            $"For your security, this request becomes actionable after {cooldownEndsAt:u} (UTC).\n\n" +
-            $"After that time, open this link to continue: {link}\n\n" +
-            "If you did not request this, you can ignore this email; nothing will change on your account.";
-        var html = $"<p>A request to reset the multi-factor authentication on your account was received.</p>" +
-            $"<p>For your security, this request becomes actionable after {cooldownEndsAt:u} (UTC).</p>" +
-            $"<p>After that time, open this link to continue: <a href=\"{link}\">continue MFA recovery</a></p>" +
-            "<p>If you did not request this, you can ignore this email; nothing will change on your account.</p>";
+        var metadata = JsonSerializer.Serialize(new
+        {
+            token = requestToken,
+            email = user.Email,
+            userName = user.Username,
+            cooldownEndsAt
+        });
 
-        return emailSender.SendAsync(new EmailMessage(email, "Multi-factor authentication recovery requested", plain, html), cancellationToken);
-    }
+        var result = await notificationService.SendAsync(
+            user.Id,
+            NotificationType.MfaRecovery,
+            "Multi-factor authentication recovery requested",
+            "A request to reset the multi-factor authentication on your account was received.",
+            NotificationChannel.Email,
+            user.TenantId,
+            metadata: metadata,
+            recipientEmail: user.Email,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
 
-    private string ResolveWebBaseUrl()
-    {
-        var baseUrl = configuration["App:BaseUrl"];
-        return string.IsNullOrWhiteSpace(baseUrl) ? "http://localhost:3000" : baseUrl.TrimEnd('/');
+        if (result is null || result.IsFailure)
+        {
+            throw new InvalidOperationException("MFA recovery notification was not durably queued.");
+        }
     }
 }
 
@@ -146,8 +157,7 @@ public sealed class RequestMfaRecoveryCommandHandler(
 public sealed class ContinueMfaRecoveryCommandHandler(
     IMfaRecoveryRequestStore recoveryStore,
     IUserRepository userRepository,
-    IEmailSender emailSender,
-    IConfiguration configuration,
+    INotificationService notificationService,
     ILogger<ContinueMfaRecoveryCommandHandler> logger) : ICommandHandler<ContinueMfaRecoveryCommand, MfaRecoveryContinueResult>
 {
     private static readonly MfaRecoveryContinueResult Denial = new()
@@ -204,7 +214,7 @@ public sealed class ContinueMfaRecoveryCommandHandler(
             };
         }
 
-        await SendConfirmationEmailAsync(user.Email, confirmationToken, cancellationToken).ConfigureAwait(false);
+        await QueueConfirmationEmailAsync(user, confirmationToken, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("MFA recovery confirmation issued for request {RequestId}", recovery.Id);
 
         return new MfaRecoveryContinueResult
@@ -214,23 +224,34 @@ public sealed class ContinueMfaRecoveryCommandHandler(
         };
     }
 
-    private Task SendConfirmationEmailAsync(string email, string confirmationToken, CancellationToken cancellationToken)
+    /// <summary>
+    ///     Queues the confirmation email through the durable notification pipeline (outbox row,
+    ///     retried by the email dispatcher) instead of a direct IEmailSender call (issue #1155).
+    /// </summary>
+    private async Task QueueConfirmationEmailAsync(User user, string confirmationToken, CancellationToken cancellationToken)
     {
-        var link = $"{ResolveWebBaseUrl()}/auth/mfa-recovery?confirm={confirmationToken}";
-        var plain = $"Your multi-factor authentication recovery request is ready to complete.\n\n" +
-            $"Open this link to confirm and disable multi-factor authentication: {link}\n\n" +
-            "The link expires in one hour. If you did not request this, ignore this email.";
-        var html = $"<p>Your multi-factor authentication recovery request is ready to complete.</p>" +
-            $"<p><a href=\"{link}\">Confirm MFA recovery</a></p>" +
-            "<p>The link expires in one hour. If you did not request this, ignore this email.</p>";
+        var metadata = JsonSerializer.Serialize(new
+        {
+            token = confirmationToken,
+            email = user.Email,
+            userName = user.Username
+        });
 
-        return emailSender.SendAsync(new EmailMessage(email, "Confirm multi-factor authentication recovery", plain, html), cancellationToken);
-    }
+        var result = await notificationService.SendAsync(
+            user.Id,
+            NotificationType.MfaRecoveryConfirmation,
+            "Confirm multi-factor authentication recovery",
+            "Confirm and disable multi-factor authentication for your account.",
+            NotificationChannel.Email,
+            user.TenantId,
+            metadata: metadata,
+            recipientEmail: user.Email,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
 
-    private string ResolveWebBaseUrl()
-    {
-        var baseUrl = configuration["App:BaseUrl"];
-        return string.IsNullOrWhiteSpace(baseUrl) ? "http://localhost:3000" : baseUrl.TrimEnd('/');
+        if (result is null || result.IsFailure)
+        {
+            throw new InvalidOperationException("MFA recovery notification was not durably queued.");
+        }
     }
 }
 

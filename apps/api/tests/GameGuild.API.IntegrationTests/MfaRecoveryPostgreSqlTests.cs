@@ -18,6 +18,8 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services.Email;
 
 namespace GameGuild.API.IntegrationTests;
 
@@ -288,7 +290,9 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
 
         using var requested = await client.PostAsJsonAsync("/v1/auth/mfa/recovery:request", new { email });
         Assert.True(requested.StatusCode == HttpStatusCode.OK, await requested.Content.ReadAsStringAsync());
-        var requestToken = ExtractToken(Assert.Single(spy.Sent), "token=");
+        // Emails now go through the durable notification outbox (issue #1155); tokens are read
+        // from the queued notification rows instead of an intercepted direct-sender call.
+        var requestToken = await ExtractQueuedTokenAsync(factory, userId, NotificationType.MfaRecovery);
 
         using (var scope = factory.Services.CreateScope())
         {
@@ -303,7 +307,7 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         Assert.True(continued.StatusCode == HttpStatusCode.OK, await continued.Content.ReadAsStringAsync());
         using var continuedBody = JsonDocument.Parse(await continued.Content.ReadAsStringAsync());
         Assert.True(continuedBody.RootElement.GetProperty("success").GetBoolean());
-        var confirmationToken = ExtractToken(spy.Sent[1], "confirm=");
+        var confirmationToken = await ExtractQueuedTokenAsync(factory, userId, NotificationType.MfaRecoveryConfirmation);
 
         using var confirmed = await client.PostAsJsonAsync("/v1/auth/mfa/recovery:confirm", new { confirmationToken });
         Assert.True(confirmed.StatusCode == HttpStatusCode.OK, await confirmed.Content.ReadAsStringAsync());
@@ -409,13 +413,21 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         return (user.Id, tenant.Id);
     }
 
-    private static string ExtractToken(EmailMessage message, string marker)
+    private static async Task<string> ExtractQueuedTokenAsync(
+        Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> factory,
+        Guid userId,
+        NotificationType type)
     {
-        var start = message.PlainTextContent.IndexOf(marker, StringComparison.Ordinal);
-        Assert.True(start >= 0, $"No '{marker}' link in: {message.PlainTextContent}");
-        var token = message.PlainTextContent[(start + marker.Length)..];
-        var end = token.IndexOfAny([' ', '\n', '\r']);
-        return end < 0 ? token : token[..end];
+        using var scope = factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var protector = scope.ServiceProvider.GetRequiredService<NotificationMetadataProtector>();
+        var row = await context.Set<Notification>().AsNoTracking().SingleAsync(value => value.RecipientId == userId && value.Type == type);
+        var metadata = protector.GetForRendering(row, type);
+        Assert.False(string.IsNullOrWhiteSpace(metadata), "Queued notification metadata carried no token payload.");
+        using var parsed = JsonDocument.Parse(metadata!);
+        var token = parsed.RootElement.GetProperty("token").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(token), "Queued notification metadata carried no token.");
+        return token!;
     }
 
     private sealed class SpyEmailSender : IEmailSender
