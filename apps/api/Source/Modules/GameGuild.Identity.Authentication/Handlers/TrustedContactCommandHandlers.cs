@@ -1,7 +1,8 @@
+using System.Text.Json;
 using GameGuild.CQRS;
-using GameGuild.Email;
 using GameGuild.Identity.Users;
-using Microsoft.Extensions.Configuration;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -9,15 +10,15 @@ namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Designates a trusted contact for the acting owner: mints a single-use invite
-///     token (stored as a digest) and emails the invite. Fails closed on the contact
-///     cap, duplicate emails, and self-delegation.
+///     token (stored as a digest) and queues the invite email through the durable
+///     notification outbox (issue #1145), so a transient SMTP failure no longer loses
+///     the invite. Fails closed on the contact cap, duplicate emails, and self-delegation.
 /// </summary>
 public sealed class AddTrustedContactCommandHandler(
     ITrustedContactStore contactStore,
     IUserRepository userRepository,
-    IEmailSender emailSender,
+    INotificationService notificationService,
     IOptions<AccountRecoveryOptions> options,
-    IConfiguration configuration,
     IAuthenticationAuditEventSink auditSink,
     ILogger<AddTrustedContactCommandHandler> logger) : ICommandHandler<AddTrustedContactCommand, TrustedContactActionResult>
 {
@@ -78,7 +79,7 @@ public sealed class AddTrustedContactCommandHandler(
         };
 
         await contactStore.AddAsync(contact, cancellationToken).ConfigureAwait(false);
-        await SendInviteEmailAsync(contact.Email, owner.Email, inviteToken, contact.InviteTokenExpiresAt!.Value, cancellationToken).ConfigureAwait(false);
+        await QueueInviteEmailAsync(contact, owner, inviteToken, cancellationToken).ConfigureAwait(false);
         await AuditAsync("AccountRecovery.ContactInvited", owner.Id, owner.TenantId, success: true, request, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Trusted contact invite issued for owner {OwnerUserId}", owner.Id);
 
@@ -90,17 +91,36 @@ public sealed class AddTrustedContactCommandHandler(
         };
     }
 
-    private Task SendInviteEmailAsync(string contactEmail, string ownerEmail, string inviteToken, DateTimeOffset expiresAt, CancellationToken cancellationToken)
+    /// <summary>
+    ///     Queues the invite email through the durable notification pipeline (outbox row, retried
+    ///     by the email dispatcher) instead of a direct IEmailSender call whose transient SMTP
+    ///     failure would silently lose the invite (issue #1145).
+    /// </summary>
+    private async Task QueueInviteEmailAsync(TrustedContact contact, User owner, string inviteToken, CancellationToken cancellationToken)
     {
-        var link = $"{ResolveWebBaseUrl()}/auth/trusted-contacts/confirm?token={inviteToken}";
-        var plain = $"You were designated as a trusted recovery contact for a GameGuild account ({ownerEmail}).\n\n" +
-            $"If you accept, open this link before {expiresAt:u} (UTC) to confirm: {link}\n\n" +
-            "If you were not expecting this, ignore this email; confirming is voluntary and you can ask the account owner to remove you at any time.";
-        var html = $"<p>You were designated as a trusted recovery contact for a GameGuild account ({ownerEmail}).</p>" +
-            $"<p>If you accept, open this link before {expiresAt:u} (UTC) to confirm: <a href=\"{link}\">confirm trusted contact</a></p>" +
-            "<p>If you were not expecting this, ignore this email; confirming is voluntary and you can ask the account owner to remove you at any time.</p>";
+        var metadata = JsonSerializer.Serialize(new
+        {
+            token = inviteToken,
+            contactEmail = contact.Email,
+            ownerEmail = owner.Email,
+            expiresAt = contact.InviteTokenExpiresAt
+        });
 
-        return emailSender.SendAsync(new EmailMessage(contactEmail, "Trusted recovery contact invitation", plain, html), cancellationToken);
+        var result = await notificationService.SendAsync(
+            null,
+            NotificationType.TrustedContactInvite,
+            "Trusted recovery contact invitation",
+            "You were designated as a trusted recovery contact for a GameGuild account.",
+            NotificationChannel.Email,
+            owner.TenantId,
+            metadata: metadata,
+            recipientEmail: contact.Email,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        if (result is null || result.IsFailure)
+        {
+            throw new InvalidOperationException("Trusted-contact invitation was not durably queued.");
+        }
     }
 
     private static TrustedContactDto ToDto(TrustedContact contact) => new()
@@ -112,12 +132,6 @@ public sealed class AddTrustedContactCommandHandler(
         InvitedAt = contact.InvitedAt,
         ConfirmedAt = contact.ConfirmedAt
     };
-
-    private string ResolveWebBaseUrl()
-    {
-        var baseUrl = configuration["App:BaseUrl"];
-        return string.IsNullOrWhiteSpace(baseUrl) ? "http://localhost:3000" : baseUrl.TrimEnd('/');
-    }
 
     private Task AuditAsync(string actionType, Guid userId, Guid? tenantId, bool success, AddTrustedContactCommand request, CancellationToken cancellationToken) =>
         auditSink.RecordAsync(new AuthenticationAuditEvent(

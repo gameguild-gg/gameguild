@@ -46,28 +46,46 @@ Columns: **outbox** = persisted to `gameguild.integration.outbox_messages` befor
 
 ### 2.3 In-process events with handlers but no producer (consumed never produced)
 
+> **Status update (issue #1199):** all nine events below are now wired — published through the module's
+> in-process `IPublisher` dispatch (`Services/AuthenticationEventDispatch.cs`, best-effort so a telemetry
+> failure never fails authentication). Producers: `UserSignedInEvent` at the local success point
+> (`LocalAuthService`), every federated completion (`OAuthAuthService.CompleteSignInAsync`) and the shared
+> issuer completion (`AuthenticatedSessionIssuer`, covering MFA-complete/passkey/magic-link); the records
+> were un-abstracted for direct construction. `AuthenticationFailedEvent` on the local failure +
+> system-error paths, federated provider failures and orchestrated credential failures (identifier masked
+> in the handler log). The four MFA events in `MfaService` enable/disable/verify paths. The refresh-token
+> trio in `JwtTokenService` (issue + single revoke), `LocalAuthService` (rotation use, replay containment,
+> explicit revoke) and the logout-everywhere handlers (`LogoutHandler`, `RevokeAllUserTokensHandler` —
+> token id `"all"` sentinel for whole-set revocations). The table below documents the state the issue was
+> filed against.
+
 All are declared `abstract` (or sealed with no construction site) and **no subtype or `new` expression exists anywhere in `apps/api/Source`**. Their handlers are dead wiring.
 
 | Type | Definition file:line | Handler(s) file:line | Handler side effect | HOLE |
 | --- | --- | --- | --- | --- |
-| `UserSignedInEvent` | `Events/UserSignedInEvent.cs:8` | `Handlers/UserSignedInEventHandler.cs:11` | logs sign-in | **YES** — orphan consumer |
-| `AuthenticationFailedEvent` | `Events/AuthenticationFailedEvent.cs:8` | `Handlers/AuthenticationFailedEventHandler.cs:11` | logs failure (comment `:25` points to the real durable path `SuspiciousLoginDetectedV1`) | **YES** — orphan consumer |
-| `MfaEnabledEvent` | `Events/MfaEnabledEvent.cs:8` | `Handlers/MfaEventHandler.cs:26` | logs | **YES** — orphan consumer |
-| `MfaDisabledEvent` | `Events/MfaDisabledEvent.cs:8` | `Handlers/MfaEventHandler.cs:14` | logs | **YES** — orphan consumer |
-| `MfaVerificationFailedEvent` | `Events/MfaVerificationFailedEvent.cs:8` | `Handlers/MfaEventHandler.cs:38` | logs | **YES** — orphan consumer |
-| `MfaVerificationSucceededEvent` | `Events/MfaVerificationSucceededEvent.cs:8` | `Handlers/MfaEventHandler.cs:51` | logs | **YES** — orphan consumer |
-| `RefreshTokenGeneratedEvent` | `Events/RefreshTokenGeneratedEvent.cs:8` | `Handlers/RefreshTokenEventHandler.cs:13` | logs | **YES** — orphan consumer |
-| `RefreshTokenUsedEvent` | `Events/RefreshTokenUsedEvent.cs:8` | `Handlers/RefreshTokenEventHandler.cs:39` | logs (comment `:30-33` points to the replay-contained durable path) | **YES** — orphan consumer |
-| `RefreshTokenRevokedEvent` | `Events/RefreshTokenRevokedEvent.cs:8` | `Handlers/RefreshTokenEventHandler.cs:25` | logs | **YES** — orphan consumer |
+| `UserSignedInEvent` | `Events/UserSignedInEvent.cs:8` | `Handlers/UserSignedInEventHandler.cs:11` | logs sign-in | **YES** — orphan consumer — **wired in #1199** |
+| `AuthenticationFailedEvent` | `Events/AuthenticationFailedEvent.cs:8` | `Handlers/AuthenticationFailedEventHandler.cs:11` | logs failure (comment `:25` points to the real durable path `SuspiciousLoginDetectedV1`) | **YES** — orphan consumer — **wired in #1199** |
+| `MfaEnabledEvent` | `Events/MfaEnabledEvent.cs:8` | `Handlers/MfaEventHandler.cs:26` | logs | **YES** — orphan consumer — **wired in #1199** |
+| `MfaDisabledEvent` | `Events/MfaDisabledEvent.cs:8` | `Handlers/MfaEventHandler.cs:14` | logs | **YES** — orphan consumer — **wired in #1199** |
+| `MfaVerificationFailedEvent` | `Events/MfaVerificationFailedEvent.cs:8` | `Handlers/MfaEventHandler.cs:38` | logs | **YES** — orphan consumer — **wired in #1199** |
+| `MfaVerificationSucceededEvent` | `Events/MfaVerificationSucceededEvent.cs:8` | `Handlers/MfaEventHandler.cs:51` | logs | **YES** — orphan consumer — **wired in #1199** |
+| `RefreshTokenGeneratedEvent` | `Events/RefreshTokenGeneratedEvent.cs:8` | `Handlers/RefreshTokenEventHandler.cs:13` | logs | **YES** — orphan consumer — **wired in #1199** |
+| `RefreshTokenUsedEvent` | `Events/RefreshTokenUsedEvent.cs:8` | `Handlers/RefreshTokenEventHandler.cs:39` | logs (comment `:30-33` points to the replay-contained durable path) | **YES** — orphan consumer — **wired in #1199** |
+| `RefreshTokenRevokedEvent` | `Events/RefreshTokenRevokedEvent.cs:8` | `Handlers/RefreshTokenEventHandler.cs:25` | logs | **YES** — orphan consumer — **wired in #1199** |
 
 ### 2.4 Orphaned definitions (no producer and no consumer)
 
+> **Status update (issue #1199):** all four definitions were **removed** — each is a shape duplicate of
+> a live event (`MfaVerifiedEvent` ≈ `MfaVerificationSucceededEvent`, `TokenRefreshedEvent` ≈
+> `RefreshTokenUsedEvent`, `TokenRevokedEvent` ≈ `RefreshTokenRevokedEvent`, `UserSignedUpEvent` ≈ the
+> durable `UserCreatedEvent`), and keeping two types for the same fact would recreate the orphan pattern.
+
 | Type | Definition file:line | HOLE |
 | --- | --- | --- |
-| `UserSignedUpEvent` | `Events/UserSignedUpEvent.cs:8` | **YES** — fully orphaned definition |
-| `MfaVerifiedEvent` | `Events/MfaVerifiedEvent.cs:8` | **YES** — fully orphaned definition |
-| `TokenRefreshedEvent` | `Events/TokenRefreshedEvent.cs:8` | **YES** — fully orphaned definition |
-| `TokenRevokedEvent` | `Events/TokenRevokedEvent.cs:8` | **YES** — fully orphaned definition |
+| `UserSignedUpEvent` | `Events/UserSignedUpEvent.cs:8` | **YES** — fully orphaned definition — **removed in #1199** |
+| `MfaVerifiedEvent` | `Events/MfaVerifiedEvent.cs:8` | **YES** — fully orphaned definition — **removed in #1199** |
+| `TokenRefreshedEvent` | `Events/TokenRefreshedEvent.cs:8` | **YES** — fully orphaned definition — **removed in #1199** |
+| `TokenRevokedEvent` | `Events/TokenRevokedEvent.cs:8` | **YES** — fully orphaned definition — **removed in #1199** |
 
 ### 2.5 Audit-event sink stream (auth publishes, Compliance.Audit / host consume)
 
@@ -311,10 +329,10 @@ That is the complete inbound list: no other `IIntegrationEventHandler<>` impleme
 | --- | --- | --- | --- |
 | 1 | `UserCreatedEvent` produced only by local sign-up — OAuth/JIT-provisioned accounts never emit it, so they get no welcome email, no quota entry, no cost entry, no analytics | auth producer `Services/LocalAuthService.cs:638` only; federated provisioning `Services/OAuthAuthService.cs:763` adds the user with no event; consumers `SendWelcomeEmailHandler.cs:18` + `QuotaLedgerEventHandler.cs:11` therefore never fire for those accounts | **Filed — #1182** |
 | 2 | Per-jti access-token deny-list checked on every request but no auth path populates it | check `Middleware/TokenRevocationMiddleware.cs:56-63`; the only `RevokeTokenAsync(jti …)` caller is logout `Handlers/LogoutHandler.cs:73` (and `RevokeAllUserTokensAsync` at `:41`), so sign-out-token jtis only; `Commands/RevokeTokenCommand`/`RevokeAllUserTokensCommand` revoke refresh-token lineage, not outstanding access-token jtis | **Filed — #1179** |
-| 3 | Nine in-process events with handlers but no producer anywhere (dead handlers) | `UserSignedInEvent`, `AuthenticationFailedEvent`, `MfaEnabledEvent`, `MfaDisabledEvent`, `MfaVerificationFailedEvent`, `MfaVerificationSucceededEvent`, `RefreshTokenGeneratedEvent`, `RefreshTokenUsedEvent`, `RefreshTokenRevokedEvent` — definitions in `Events/*.cs`, handlers in `Handlers/UserSignedInEventHandler.cs:11`, `Handlers/AuthenticationFailedEventHandler.cs:11`, `Handlers/MfaEventHandler.cs:14,26,38,51`, `Handlers/RefreshTokenEventHandler.cs:13,25,39`; no subtype or construction site exists in `apps/api/Source` | **NEW — no issue found** |
-| 4 | Four fully orphaned event definitions (no producer, no consumer) | `Events/UserSignedUpEvent.cs:8`, `Events/MfaVerifiedEvent.cs:8`, `Events/TokenRefreshedEvent.cs:8`, `Events/TokenRevokedEvent.cs:8` | **NEW — no issue found** |
-| 5 | `UserSignedUpNotification` has consumers but no direct producer — its `INotificationHandler` registrations can only ever fire via the durable `UserCreatedEvent` adapter inside `SendWelcomeEmailHandler.cs:27` | `Events/UserSignedUpNotification.cs:8`; consumers `Handlers/SendWelcomeEmailHandler.cs:36`, `Handlers/LogAnalyticsEventHandler.cs:22`; no `publisher.Publish(new UserSignedUpNotification` exists | **NEW — vestigial pair, no issue found** |
-| 6 | `SuspiciousLoginDetectedV1` recorded only from the local password sign-in risk path — orchestrated, polymorphic, federated and MFA sign-in paths never call the publisher, so brute-force/impossible-travel containment revocation does not cover them | sole caller `Services/LocalAuthService.cs:501` (`ISuspiciousLoginAlertPublisher` referenced nowhere else); consumers `RiskEventSessionRevocationHandler.cs:52` + `SuspiciousLoginAlertHandler.cs:22` | **NEW — no issue found** |
+| 3 | Nine in-process events with handlers but no producer anywhere (dead handlers) | `UserSignedInEvent`, `AuthenticationFailedEvent`, `MfaEnabledEvent`, `MfaDisabledEvent`, `MfaVerificationFailedEvent`, `MfaVerificationSucceededEvent`, `RefreshTokenGeneratedEvent`, `RefreshTokenUsedEvent`, `RefreshTokenRevokedEvent` — definitions in `Events/*.cs`, handlers in `Handlers/UserSignedInEventHandler.cs:11`, `Handlers/AuthenticationFailedEventHandler.cs:11`, `Handlers/MfaEventHandler.cs:14,26,38,51`, `Handlers/RefreshTokenEventHandler.cs:13,25,39`; no subtype or construction site exists in `apps/api/Source` | **Filed — #1199, wired** |
+| 4 | Four fully orphaned event definitions (no producer, no consumer) | `Events/UserSignedUpEvent.cs:8`, `Events/MfaVerifiedEvent.cs:8`, `Events/TokenRefreshedEvent.cs:8`, `Events/TokenRevokedEvent.cs:8` | **Filed — #1199, removed** |
+| 5 | `UserSignedUpNotification` has consumers but no direct producer — its `INotificationHandler` registrations can only ever fire via the durable `UserCreatedEvent` adapter inside `SendWelcomeEmailHandler.cs:27` | `Events/UserSignedUpNotification.cs:8`; consumers `Handlers/SendWelcomeEmailHandler.cs:36`, `Handlers/LogAnalyticsEventHandler.cs:22`; no `publisher.Publish(new UserSignedUpNotification` exists | **NEW — vestigial pair, no issue found** — the adapter pattern is intentional (kept as-is per #1199) |
+| 6 | `SuspiciousLoginDetectedV1` recorded only from the local password sign-in risk path — orchestrated, polymorphic, federated and MFA sign-in paths never call the publisher, so brute-force/impossible-travel containment revocation does not cover them | sole caller `Services/LocalAuthService.cs:501` (`ISuspiciousLoginAlertPublisher` referenced nowhere else); consumers `RiskEventSessionRevocationHandler.cs:52` + `SuspiciousLoginAlertHandler.cs:22` | **Filed — #1199, wired** — orchestrated initiation/failure paths, every federated completion (`OAuthAuthService.CompleteSignInAsync`) and the shared issuer (MFA-complete/passkey/magic-link) now evaluate the confirmed signals and forward them to the publisher. Polymorphic sign-in delegates to the local path, which was already covered |
 
 ### 5.2 Inline side effects that bypass the outbox / durable notification queue (#1155 class)
 

@@ -166,6 +166,77 @@ public sealed class AuthenticatedSessionIssuerTests
         fixture.VerifyNoAccessIssued();
     }
 
+    // ── In-process event + suspicious-login coverage (issue #1199) ─────────
+
+    [Fact]
+    public async Task IssueMfaAsync_CompletionPublishesUserSignedInEvent()
+    {
+        var fixture = new IssuanceFixture();
+        var proof = fixture.Proof();
+        fixture.MfaEvidence.Setup(store => store.AddAsync(It.IsAny<Guid>(), It.IsAny<SignInMfaProof>(), It.IsAny<CancellationToken>()))
+            .Callback(() => fixture.EvidencePersisted = true).Returns(Task.CompletedTask);
+
+        var result = await fixture.IssueMfaAsync(proof);
+
+        Assert.True(result.Success);
+        fixture.Events.Verify(publisher => publisher.Publish(
+            It.Is<UserSignedInEvent>(e =>
+                e.UserId == fixture.User.Id &&
+                e.Email == fixture.User.Email &&
+                e.AuthMethod.StartsWith("Mfa:", StringComparison.Ordinal)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task IssueMfaAsync_ImpossibleTravelFiresSuspiciousLoginAlert()
+    {
+        var fixture = new IssuanceFixture();
+        fixture.Anomaly
+            .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
+            .ReturnsAsync(new AuthenticationAnomalyResult
+            {
+                IsAnomalous = true,
+                RiskLevel = RiskLevel.High,
+                RiskScore = 92,
+                DetectedAnomalies = [SecurityAlertKinds.ImpossibleTravel]
+            });
+        var proof = fixture.Proof();
+        fixture.MfaEvidence.Setup(store => store.AddAsync(It.IsAny<Guid>(), It.IsAny<SignInMfaProof>(), It.IsAny<CancellationToken>()))
+            .Callback(() => fixture.EvidencePersisted = true).Returns(Task.CompletedTask);
+
+        var result = await fixture.IssueMfaAsync(proof);
+
+        Assert.True(result.Success);
+        // The MFA-complete family must reach the same durable containment as the local path:
+        // RiskEventSessionRevocationHandler consumes this event to revoke sessions and tokens.
+        fixture.Alerts.Verify(alerts => alerts.RecordAsync(
+            fixture.User.Id,
+            fixture.TenantId,
+            SecurityAlertKinds.ImpossibleTravel,
+            RiskLevel.High,
+            92,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task IssueAsync_WithoutAnomalySignals_DoesNotAlert()
+    {
+        var fixture = new IssuanceFixture();
+        fixture.Anomaly
+            .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
+            .ReturnsAsync(new AuthenticationAnomalyResult { RiskLevel = RiskLevel.Low, RiskScore = 3, DetectedAnomalies = [] });
+
+        var result = await fixture.IssueAsync();
+
+        Assert.True(result.Success);
+        fixture.Alerts.Verify(alerts => alerts.RecordAsync(
+            It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<RiskLevel>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        fixture.Events.Verify(publisher => publisher.Publish(
+            It.Is<UserSignedInEvent>(e => e.UserId == fixture.User.Id && e.AuthMethod == "Session"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task FailedMfaEvidencePersistenceCannotIssueAccessCredentials()
     {
@@ -188,6 +259,9 @@ public sealed class AuthenticatedSessionIssuerTests
         public Mock<IRefreshTokenRepository> Repository { get; } = new();
         public Mock<ISessionManagementService> Sessions { get; } = new();
         public Mock<ISessionMfaEvidenceStore> MfaEvidence { get; } = new(MockBehavior.Strict);
+        public Mock<IAuthenticationAnomalyDetectionService> Anomaly { get; } = new();
+        public Mock<ISuspiciousLoginAlertPublisher> Alerts { get; } = new();
+        public Mock<IPublisher> Events { get; } = new();
         public bool EvidencePersisted { get; set; }
         public RefreshToken Token { get; }
         public UserMembershipDto Membership { get; }
@@ -238,14 +312,16 @@ public sealed class AuthenticatedSessionIssuerTests
             .ReturnsAsync(new GetUserMembershipsResponse { Memberships = values, TotalCount = values.Count });
 
         public Task<SignInResponse> IssueAsync(Guid? requestedTenantId = null, CancellationToken cancellationToken = default) =>
-            new AuthenticatedSessionIssuer(Sender.Object, Jwt.Object, Hasher, Repository.Object, Sessions.Object, MfaEvidence.Object)
+            new AuthenticatedSessionIssuer(Sender.Object, Jwt.Object, Hasher, Repository.Object, Sessions.Object, MfaEvidence.Object,
+                    anomalyDetection: Anomaly.Object, suspiciousLoginAlerts: Alerts.Object, eventPublisher: Events.Object)
                 .IssueAsync(User, requestedTenantId, new DeviceInfo { Fingerprint = "synthetic-device", IpAddress = "127.0.0.1", UserAgent = "test-agent" }, cancellationToken);
 
         public SignInMfaProof Proof() => new(Guid.NewGuid(), User.Id, TenantId, User.TokenVersion, new string('a', 64),
             SignInFirstFactor.Password, new DateTimeOffset(Token.CreatedAt), DateTimeOffset.UtcNow, MfaMethod.BackupCode);
 
         public Task<SignInResponse> IssueMfaAsync(SignInMfaProof proof) =>
-            new AuthenticatedSessionIssuer(Sender.Object, Jwt.Object, Hasher, Repository.Object, Sessions.Object, MfaEvidence.Object)
+            new AuthenticatedSessionIssuer(Sender.Object, Jwt.Object, Hasher, Repository.Object, Sessions.Object, MfaEvidence.Object,
+                    anomalyDetection: Anomaly.Object, suspiciousLoginAlerts: Alerts.Object, eventPublisher: Events.Object)
                 .IssueMfaAsync(User, TenantId, new DeviceInfo { Fingerprint = "synthetic-device" }, proof, CancellationToken.None);
 
         public void VerifyNoAccessIssued() => Jwt.Verify(service => service.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(),

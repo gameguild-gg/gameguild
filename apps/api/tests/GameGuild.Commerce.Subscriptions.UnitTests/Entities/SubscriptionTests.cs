@@ -1268,7 +1268,7 @@ public class SubscriptionTests
     }
 
     [Fact]
-    public void Suspend_WithoutReason_ShouldNotSetMetadata()
+    public void Suspend_WithoutReason_ShouldNotStoreReason_ButRecordsAutoRenewPreference()
     {
         // Arrange
         var subscription = CreateValidSubscription();
@@ -1279,7 +1279,67 @@ public class SubscriptionTests
 
         // Assert
         subscription.Status.Should().Be(SubscriptionStatus.Suspended);
-        subscription.Metadata.Should().BeNull();
+        // Issue #1205 G-10: no suspension reason is stored, but the pre-suspension
+        // auto-renew preference is always recorded so Reactivate can restore it.
+        subscription.Metadata.Should().NotBeNull();
+        subscription.Metadata.Should().NotContain("suspensionReason");
+        subscription.Metadata.Should().Contain("autoRenewBeforeSuspension");
+    }
+
+    [Fact]
+    public void Suspend_ShouldPreserveExistingMetadata_InsteadOfReplacingIt()
+    {
+        // Issue #1205 G-10: pausing (or any suspension) must not clobber the
+        // creation-time fraud-review evidence stored in the same metadata field.
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.UpdateMetadata("""{"decision":"Review","score":55,"signals":["bin"]}""");
+
+        subscription.Suspend("manual review hold");
+
+        subscription.Metadata.Should().NotBeNull();
+        subscription.Metadata.Should().Contain("suspensionReason");
+        subscription.Metadata.Should().Contain("manual review hold");
+        subscription.Metadata.Should().Contain("decision", "the fraud evidence survives the suspension");
+        subscription.Metadata.Should().Contain("score");
+    }
+
+    [Fact]
+    public void Reactivate_ShouldRestorePreSuspensionAutoRenew_InsteadOfForceEnabling()
+    {
+        // Issue #1205 G-10: a user who had auto-renew off must not silently re-enable
+        // billing by resuming; a user who had it on gets it back.
+        var autoRenewOff = CreateValidSubscription();
+        autoRenewOff.Activate();
+        autoRenewOff.SetAutoRenew(false);
+        autoRenewOff.Suspend("vacation");
+        autoRenewOff.Reactivate();
+        autoRenewOff.Status.Should().Be(SubscriptionStatus.Active);
+        autoRenewOff.AutoRenew.Should().BeFalse("the pre-suspension preference is restored, not forced on");
+
+        var autoRenewOn = CreateValidSubscription();
+        autoRenewOn.Activate();
+        autoRenewOn.SetAutoRenew(true);
+        autoRenewOn.Suspend("vacation");
+        autoRenewOn.Reactivate();
+        autoRenewOn.AutoRenew.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Reactivate_ShouldPreserveOtherMetadata_AfterSuspension()
+    {
+        // Issue #1205 G-10: only the suspension bookkeeping keys are removed on resume.
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.UpdateMetadata("""{"decision":"Review","score":55}""");
+        subscription.Suspend("hold");
+        subscription.Metadata.Should().Contain("decision");
+
+        subscription.Reactivate();
+
+        subscription.Metadata.Should().NotContain("suspensionReason");
+        subscription.Metadata.Should().NotContain("autoRenewBeforeSuspension");
+        subscription.Metadata.Should().Contain("decision", "fraud evidence survives the resume");
     }
 
     [Fact]

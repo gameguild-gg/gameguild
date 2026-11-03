@@ -1,5 +1,6 @@
 using System.Text.Json;
 using GameGuild.Configuration.ApplicationLayer;
+using GameGuild.CQRS;
 using GameGuild.Identity.Users;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -29,7 +30,9 @@ public sealed class AuthenticationOrchestrationService(
     IRoleRepository roleRepository,
     IJwtTokenService jwtTokenService,
     IOptions<JwtOptions> jwtOptions,
-    ILogger<AuthenticationOrchestrationService> logger) : IAuthenticationOrchestrationService
+    ILogger<AuthenticationOrchestrationService> logger,
+    ISuspiciousLoginAlertPublisher? suspiciousLoginAlerts = null,
+    IPublisher? eventPublisher = null) : IAuthenticationOrchestrationService
 {
     /// <summary>Flow lifetime: flows expire 15 minutes after initiation.</summary>
     public static readonly TimeSpan FlowLifetime = TimeSpan.FromMinutes(15);
@@ -62,6 +65,13 @@ public sealed class AuthenticationOrchestrationService(
 
         var attemptContext = BuildAttemptContext(request, user.Id);
         var riskScore = await AssessRiskScoreAsync(user.Id, attemptContext).ConfigureAwait(false);
+
+        // Sign-in risk coverage (issue #1199): the orchestrated family previously never reached
+        // the suspicious-login containment. Confirmed signals on the initiating attempt are
+        // forwarded, and a high-risk flow (which forces the strongest challenge set) is reported
+        // as a step-up signal — mirroring the local password path. Best-effort: the publisher
+        // gates on the configured severity and swallows its own failures.
+        await AlertInitiationRisksAsync(user.Id, request.TenantId, attemptContext, riskScore).ConfigureAwait(false);
 
         var requiredSteps = new List<AuthenticationStep> { AuthenticationStep.PrimaryCredential };
         requiredSteps.AddRange(await DetermineRequiredChallengesAsync(user.Id, riskScore, attemptContext).ConfigureAwait(false));
@@ -305,6 +315,18 @@ public sealed class AuthenticationOrchestrationService(
                 "InvalidCredentials",
                 TimeSpan.Zero,
                 request.AuthMethod).ConfigureAwait(false);
+
+            // In-process failure telemetry (issue #1199): the event carries the failure reason
+            // and request context; the thrown response stays the generic enumeration-protected
+            // message below. Known-account brute force on the failed attempt also reaches the
+            // suspicious-login containment, mirroring the local password path.
+            await AuthenticationEventDispatch.PublishAsync(
+                eventPublisher,
+                new AuthenticationFailedEvent(identifier, "InvalidCredentials", request.IpAddress, request.UserAgent, SystemClock.UtcNow),
+                logger,
+                CancellationToken.None).ConfigureAwait(false);
+            await AlertFailedAttemptRisksAsync(user?.Id, request).ConfigureAwait(false);
+
             logger.LogWarning("Primary credential validation failed for identifier {Identifier} from {IpAddress}", identifier, request.IpAddress);
             throw new UnauthorizedAccessException(enumerationProtectionService.GetGenericErrorMessage("login"));
         }
@@ -318,6 +340,61 @@ public sealed class AuthenticationOrchestrationService(
             request.AuthMethod).ConfigureAwait(false);
 
         return user;
+    }
+
+    /// <summary>
+    ///     Forwards the confirmed risk signals of an initiating orchestrated flow to the durable
+    ///     suspicious-login alert publisher (issue #1199). A flow at or above the high-risk
+    ///     threshold is forced into the strongest challenge set, which is the step-up signal.
+    /// </summary>
+    private async Task AlertInitiationRisksAsync(Guid userId, Guid? tenantId, AuthenticationAttemptContext context, double riskScore)
+    {
+        if (suspiciousLoginAlerts is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var analysis = await anomalyDetectionService.AnalyzeLoginAttemptAsync(context).ConfigureAwait(false);
+            await AuthenticationEventDispatch.AlertConfirmedSignInRisksAsync(
+                suspiciousLoginAlerts, userId, tenantId, analysis, CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            // Defense-in-depth: alert evaluation must never fail flow initiation.
+            logger.LogError(exception, "Could not evaluate sign-in risk alerts for user {UserId}", userId);
+        }
+
+        if (riskScore >= HighRiskChallengeThreshold)
+        {
+            await suspiciousLoginAlerts.RecordAsync(
+                userId, tenantId, SecurityAlertKinds.LoginStepUpRequired,
+                RiskLevel.High, (int)Math.Round(riskScore * 100), CancellationToken.None).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    ///     Evaluates a failed orchestrated credential attempt for the brute-force signal and
+    ///     forwards it to the suspicious-login containment (issue #1199). Best-effort.
+    /// </summary>
+    private async Task AlertFailedAttemptRisksAsync(Guid? userId, InitiateAuthenticationRequest request)
+    {
+        if (suspiciousLoginAlerts is null || userId is not { } alertUserId)
+        {
+            return;
+        }
+
+        try
+        {
+            var analysis = await anomalyDetectionService.AnalyzeLoginAttemptAsync(BuildAttemptContext(request, alertUserId)).ConfigureAwait(false);
+            await AuthenticationEventDispatch.AlertConfirmedSignInRisksAsync(
+                suspiciousLoginAlerts, alertUserId, request.TenantId, analysis, CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not evaluate failed-attempt risk alerts for user {UserId}", userId);
+        }
     }
 
     private async Task<double> AssessRiskScoreAsync(Guid userId, AuthenticationAttemptContext context)

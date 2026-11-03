@@ -90,18 +90,26 @@ public sealed class ProductCatalogIntegrationTests
     [Fact]
     public async Task RefundOrder_RestoresInventory_OnFullRefund()
     {
-        var (order, lineItem) = CreateFulfilledOrderWithLine();
+        var (order, lineItem, actor) = CreateFulfilledOrderWithLine();
 
         var repository = new Mock<IOrderRepository>();
         repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
+        repository.Setup(mock => mock.UpdateAsync(order, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        repository.Setup(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         var entitlements = new Mock<IEntitlementService>();
         entitlements
             .Setup(service => service.RevokeEntitlementAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         var inventory = new Mock<IProductInventoryService>();
 
-        var handler = new RefundOrderCommandHandler(repository.Object, entitlements.Object, inventory.Object);
+        var refunder = new Mock<IOrderPaymentRefunder>();
+        refunder.Setup(mock => mock.RefundAsync(It.IsAny<AuthoritativeOrderRefund>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(OrderRefundResult.Succeeded(Guid.NewGuid()));
+
+        var handler = new RefundOrderCommandHandler(repository.Object, refunder.Object, entitlements.Object, actor, inventory.Object);
         var result = await handler.Handle(new RefundOrderCommand(order.Id), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -260,15 +268,16 @@ public sealed class ProductCatalogIntegrationTests
         return (order, lineItem);
     }
 
-    private static (Order Order, OrderLineItem LineItem) CreateFulfilledOrderWithLine()
+    private static (Order Order, OrderLineItem LineItem, IActorContextAccessor Actor) CreateFulfilledOrderWithLine()
     {
         var order = Order.Create(Guid.NewGuid(), $"refund-{Guid.NewGuid():N}", Guid.NewGuid());
         var productId = Guid.NewGuid();
         var lineItem = AddSimpleLine(order, productId, "Any product");
-        // Refunds are accepted for Completed orders (the legacy paid status); the fulfilled
-        // status is a post-entitlement state the refund path intentionally rejects.
-        order.MarkAsPaid();
-        return (order, lineItem);
+        // Issue #1205 G-4: refunds accept the modern Fulfilled happy path (captured through
+        // Payments, so the order carries the internal payment binding the gateway refund needs).
+        order.MarkAsPaidPendingFulfillment(Guid.NewGuid(), $"ext-{Guid.NewGuid():N}");
+        order.MarkAsFulfilled();
+        return (order, lineItem, CreateActor(order.UserId, order.TenantId!.Value));
     }
 
     private static OrderLineItem AddSimpleLine(Order order, Guid productId, string productName)

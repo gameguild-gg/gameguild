@@ -3,8 +3,13 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Service for handling email verification operations.
 ///     Manages verification token generation, validation, and email sending coordination.
-///     Cache keys contain token digests; concurrent consumers share an atomic one-time claim.
-///     These guarantees apply to the configured in-process cache, not a distributed token store.
+///     Cache keys contain token digests; consumption writes a consumed sentinel before removal,
+///     so a token claims one-time use by read-then-remove. Verification and password-reset tokens
+///     live in <see cref="Microsoft.Extensions.Caching.Distributed.IDistributedCache"/> (Redis in
+///     production, the host's distributed-memory cache in single-node/dev) so restarts and
+///     multi-node deployments share one durable token space. That abstraction has no atomic
+///     compare-and-delete, so simultaneous cross-instance presentations of one token are bounded
+///     by the remove protocol rather than an in-process interlock.
 /// </summary>
 public interface IEmailVerificationService
 {

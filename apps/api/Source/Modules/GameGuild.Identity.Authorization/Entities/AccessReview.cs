@@ -55,18 +55,22 @@ public class AccessReviewCampaign
     public ICollection<AccessReviewItem> Items { get; set; } = new List<AccessReviewItem>();
 
     /// <summary>
-    ///     Check if campaign is active and in progress
+    ///     Check if campaign is open (started, still within its review window).
+    ///     Both <see cref="AccessReviewStatus.Active"/> (opened, no decisions yet)
+    ///     and <see cref="AccessReviewStatus.InProgress"/> (decisions recorded)
+    ///     are open states (issue #1204).
     /// </summary>
     public bool IsActive() =>
-        Status == AccessReviewStatus.InProgress &&
+        Status is AccessReviewStatus.Active or AccessReviewStatus.InProgress &&
         SystemClock.UtcNow >= StartDate &&
         SystemClock.UtcNow <= EndDate;
 
     /// <summary>
-    ///     Check if campaign has expired
+    ///     Check if campaign has expired (open past its end date without completion)
     /// </summary>
     public bool IsExpired() =>
-        Status == AccessReviewStatus.InProgress && SystemClock.UtcNow > EndDate;
+        Status is AccessReviewStatus.Active or AccessReviewStatus.InProgress &&
+        SystemClock.UtcNow > EndDate;
 
     /// <summary>
     ///     Calculate completion percentage
@@ -82,7 +86,10 @@ public class AccessReviewCampaign
     }
 
     /// <summary>
-    ///     Start the campaign (change status from Draft to InProgress)
+    ///     Start the campaign (Draft → Active). <see cref="AccessReviewStatus.Active"/>
+    ///     is the "opened for attestations" state; the campaign moves to
+    ///     <see cref="AccessReviewStatus.InProgress"/> when the first item decision is
+    ///     recorded (see <see cref="RecordDecision"/>) (issue #1204).
     /// </summary>
     public void Start()
     {
@@ -91,18 +98,18 @@ public class AccessReviewCampaign
             throw new InvalidOperationException("Only draft campaigns can be started");
         }
 
-        Status = AccessReviewStatus.InProgress;
+        Status = AccessReviewStatus.Active;
         UpdatedAt = SystemClock.UtcNow;
     }
 
     /// <summary>
-    ///     Complete the campaign
+    ///     Complete the campaign (from any open state: Active or InProgress)
     /// </summary>
     public void Complete(Guid completedByUserId)
     {
-        if (Status != AccessReviewStatus.InProgress)
+        if (Status is not (AccessReviewStatus.Active or AccessReviewStatus.InProgress))
         {
-            throw new InvalidOperationException("Only in-progress campaigns can be completed");
+            throw new InvalidOperationException("Only open campaigns can be completed");
         }
 
         Status = AccessReviewStatus.Completed;
@@ -132,6 +139,31 @@ public class AccessReviewCampaign
     {
         Status = AccessReviewStatus.Expired;
         UpdatedAt = SystemClock.UtcNow;
+    }
+
+    /// <summary>
+    ///     Record one item decision: increments the reviewed and outcome counters and
+    ///     moves an <see cref="AccessReviewStatus.Active"/> campaign to
+    ///     <see cref="AccessReviewStatus.InProgress"/> (first response received).
+    ///     Called exactly once per item by the decision paths (items can only be
+    ///     decided from <see cref="AccessReviewItemStatus.Pending"/>, issue #1204).
+    /// </summary>
+    public void RecordDecision(bool approved)
+    {
+        if (Status == AccessReviewStatus.Active)
+        {
+            Status = AccessReviewStatus.InProgress;
+        }
+
+        IncrementReviewed();
+        if (approved)
+        {
+            IncrementApproved();
+        }
+        else
+        {
+            IncrementRevoked();
+        }
     }
 
     /// <summary>
@@ -225,10 +257,12 @@ public class AccessReviewItem
     }
 
     /// <summary>
-    ///     Approve the access
+    ///     Approve the access. Only pending items can be decided — decisions never
+    ///     overwrite each other (issue #1204).
     /// </summary>
     public void Approve(string? reason = null, string? notes = null)
     {
+        EnsurePendingForDecision();
         Status = AccessReviewItemStatus.Approved;
         Decision = AccessReviewDecision.Approve;
         DecisionReason = reason;
@@ -238,16 +272,27 @@ public class AccessReviewItem
     }
 
     /// <summary>
-    ///     Revoke the access
+    ///     Revoke the access. Only pending items can be decided — decisions never
+    ///     overwrite each other (issue #1204).
     /// </summary>
     public void Revoke(string reason, string? notes = null)
     {
+        EnsurePendingForDecision();
         Status = AccessReviewItemStatus.Revoked;
         Decision = AccessReviewDecision.Revoke;
         DecisionReason = reason;
         ReviewerNotes = notes;
         ReviewedAt = SystemClock.UtcNow;
         UpdatedAt = SystemClock.UtcNow;
+    }
+
+    private void EnsurePendingForDecision()
+    {
+        if (Status != AccessReviewItemStatus.Pending)
+        {
+            throw new InvalidOperationException(
+                $"Review item {Id} has already been decided ({Status}); decisions cannot be overwritten.");
+        }
     }
 
     /// <summary>

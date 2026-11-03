@@ -7,6 +7,7 @@ using System.Text;
 using GameGuild;
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Configuration.PresentationLayer.Authorization;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -27,7 +28,8 @@ public sealed class JwtTokenService(
     IOptions<JwtOptions> jwtOptions,
     IAuthorizationGroupMembershipProvider? groupMembershipProvider = null,
     IOptions<AuthorizationTokenOptions>? authorizationTokenOptions = null,
-    IRefreshTokenLifecycleRecorder? lifecycleRecorder = null) : IJwtTokenService
+    IRefreshTokenLifecycleRecorder? lifecycleRecorder = null,
+    IPublisher? eventPublisher = null) : IJwtTokenService
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
     private readonly AuthorizationTokenOptions _authorizationTokenOptions = authorizationTokenOptions?.Value ?? new AuthorizationTokenOptions();
@@ -291,6 +293,14 @@ public sealed class JwtTokenService(
                             userId, refreshToken.Id), cancellationToken).ConfigureAwait(false);
                     }
 
+                    // In-process refresh-token lifecycle telemetry (issue #1199): this is the
+                    // module's single issue point, so every family's token generation is covered.
+                    await AuthenticationEventDispatch.PublishAsync(
+                        eventPublisher,
+                        new RefreshTokenGeneratedEvent(refreshToken.Id.ToString(), userId, refreshToken.ExpiresAt),
+                        logger,
+                        cancellationToken).ConfigureAwait(false);
+
                     logger.LogInformation("Refresh token generated and stored: {TokenId}, Expires: {ExpiresAt}", refreshToken.Id, refreshToken.ExpiresAt);
 
                     return tokenString; // Success, return token
@@ -440,6 +450,13 @@ public sealed class JwtTokenService(
                 await lifecycleRecorder.RecordMutationAsync(new RefreshTokenLifecycleEvent(RefreshTokenLifecycleOperation.Revoked,
                     refreshToken.UserId, refreshToken.Id, refreshToken.SessionId), cancellationToken).ConfigureAwait(false);
             }
+
+            // In-process refresh-token lifecycle telemetry (issue #1199).
+            await AuthenticationEventDispatch.PublishAsync(
+                eventPublisher,
+                new RefreshTokenRevokedEvent(refreshToken.Id.ToString(), refreshToken.UserId, "Revoked", SystemClock.UtcNow),
+                logger,
+                cancellationToken).ConfigureAwait(false);
 
             logger.LogInformation("Refresh token revoked: {TokenId}", refreshToken.Id);
 

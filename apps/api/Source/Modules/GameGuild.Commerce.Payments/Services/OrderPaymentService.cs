@@ -10,8 +10,9 @@ namespace GameGuild.Commerce.Payments;
 public sealed class OrderPaymentService(
     IPaymentRepository paymentRepository,
     IPaymentGateway paymentGateway,
+    IRefundProcessingService refundProcessingService,
     IOptions<PaymentRetryOptions> retryOptions,
-    ILogger<OrderPaymentService> logger) : IOrderPaymentProcessor, IOrderPaymentAuthority
+    ILogger<OrderPaymentService> logger) : IOrderPaymentProcessor, IOrderPaymentAuthority, IOrderPaymentRefunder
 {
     internal static readonly TimeSpan SafeProviderReplayWindow = TimeSpan.FromHours(23);
 
@@ -325,6 +326,73 @@ public sealed class OrderPaymentService(
                payment.TenantId == binding.TenantId &&
                payment.Amount == binding.Amount &&
                string.Equals(payment.Currency, binding.Currency, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Refunds a captured order payment through the approval-aware refund core
+    ///     (issue #1205 G-4), mirroring the immediate <see cref="ProcessRefundCommandHandler"/>
+    ///     path: one <see cref="Refund"/> row, the gateway refund and the refund accounting
+    ///     are all handled by Payments before Orders mutates its local state.
+    /// </summary>
+    public async Task<OrderRefundResult> RefundAsync(
+        AuthoritativeOrderRefund refund,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(refund);
+        if (refund.OrderId == Guid.Empty || refund.TenantId == Guid.Empty || refund.PaymentId == Guid.Empty)
+            throw new ArgumentException("Order, tenant and payment identifiers are required.", nameof(refund));
+        if (refund.Amount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(refund), "Refund amount must be positive.");
+        if (string.IsNullOrWhiteSpace(refund.Reason))
+            throw new ArgumentException("A refund reason is required.", nameof(refund));
+
+        var payment = await paymentRepository.GetByIdAsync(refund.PaymentId, cancellationToken).ConfigureAwait(false);
+        if (payment is null)
+            return OrderRefundResult.Failed($"Payment {refund.PaymentId} not found.");
+
+        if (payment.OrderId != refund.OrderId ||
+            payment.TenantId != refund.TenantId ||
+            !string.Equals(payment.Currency, refund.Currency, StringComparison.Ordinal))
+        {
+            return OrderRefundResult.Failed("The payment does not match the authoritative order snapshot.");
+        }
+
+        var outcome = await refundProcessingService
+            .RequestRefundAsync(
+                new RefundRequestInput(
+                    PaymentId: refund.PaymentId,
+                    Amount: refund.Amount,
+                    Reason: refund.Reason,
+                    ReasonDetails: $"Order {refund.OrderId} refund requested through the orders API",
+                    RequestedByUserId: refund.RequestedByUserId),
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!outcome.Success || outcome.Refund is null)
+        {
+            logger.LogWarning(
+                "Order refund for order {OrderId} (payment {PaymentId}) did not complete: {FailureReason}",
+                refund.OrderId,
+                refund.PaymentId,
+                outcome.FailureReason);
+            return OrderRefundResult.Failed(outcome.FailureReason ?? "The refund could not be processed.");
+        }
+
+        if (outcome.Refund.Status != RefundStatus.Completed)
+        {
+            return outcome.RequiresApproval
+                ? OrderRefundResult.RequiresApproval(outcome.Refund.Id)
+                : OrderRefundResult.Failed(outcome.Refund.FailureReason ?? outcome.FailureReason ?? "The refund did not complete.");
+        }
+
+        logger.LogInformation(
+            "Order refund {RefundId} of {Amount} {Currency} completed for order {OrderId} (payment {PaymentId})",
+            outcome.Refund.Id,
+            outcome.Refund.Amount,
+            outcome.Refund.Currency,
+            refund.OrderId,
+            refund.PaymentId);
+        return OrderRefundResult.Succeeded(outcome.Refund.Id);
     }
 
     internal static string CreateIdempotencyKey(Guid tenantId, Guid orderId) =>

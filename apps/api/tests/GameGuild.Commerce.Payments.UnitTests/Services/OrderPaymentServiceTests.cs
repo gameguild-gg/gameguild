@@ -36,6 +36,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
         var charge = new AuthoritativeOrderCharge(
@@ -85,6 +86,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             Mock.Of<IPaymentGateway>(),
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -121,6 +123,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -160,6 +163,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -208,6 +212,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -260,6 +265,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -299,6 +305,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -345,6 +352,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -391,6 +399,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -439,6 +448,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -488,6 +498,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -535,6 +546,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -583,6 +595,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -623,6 +636,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -668,6 +682,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -723,6 +738,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -787,6 +803,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -806,6 +823,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             Mock.Of<IPaymentRepository>(),
             Mock.Of<IPaymentGateway>(),
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -834,6 +852,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -872,6 +891,7 @@ public sealed class OrderPaymentServiceTests
         var service = new OrderPaymentService(
             repository.Object,
             gateway.Object,
+            Mock.Of<IRefundProcessingService>(),
             Options.Create(new PaymentRetryOptions()),
             Mock.Of<ILogger<OrderPaymentService>>());
 
@@ -883,6 +903,140 @@ public sealed class OrderPaymentServiceTests
         persisted.Should().NotBeNull();
         persisted!.Status.Should().Be(PaymentStatus.Failed);
         persisted.ErrorCode.Should().Be("card_declined");
+    }
+
+    // ── IOrderPaymentRefunder boundary (issue #1205 G-4) ───────────────────
+
+    private static (Payment Payment, Mock<IPaymentRepository> Repository) ArrangeSucceededOrderPayment()
+    {
+        var orderId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var payment = Payment.Create(
+            tenantId,
+            75m,
+            "USD",
+            $"order:{tenantId:N}:{orderId:N}:charge",
+            orderId: orderId);
+        payment.MarkAsProcessing("txn_order_1");
+        payment.MarkAsSucceeded("ch_order_1", "txn_order_1");
+
+        var repository = new Mock<IPaymentRepository>();
+        repository.Setup(repo => repo.GetByIdAsync(payment.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(payment);
+
+        return (payment, repository);
+    }
+
+    private static Refund CreateCompletedRefund(Guid paymentId, decimal amount)
+    {
+        var refund = Refund.Create(
+            Guid.NewGuid(),
+            paymentId,
+            amount,
+            "USD",
+            "order_refund",
+            null,
+            Guid.NewGuid(),
+            requiresApproval: false,
+            $"refund_{paymentId}_test");
+        refund.MarkProcessing();
+        refund.MarkCompleted("re_test_1", "stripe");
+        return refund;
+    }
+
+    private OrderPaymentService CreateRefunderService(
+        Mock<IPaymentRepository> repository,
+        Mock<IRefundProcessingService>? refundProcessing = null)
+    {
+        refundProcessing ??= new Mock<IRefundProcessingService>();
+        return new OrderPaymentService(
+            repository.Object,
+            Mock.Of<IPaymentGateway>(),
+            refundProcessing.Object,
+            Options.Create(new PaymentRetryOptions()),
+            Mock.Of<ILogger<OrderPaymentService>>());
+    }
+
+    [Fact]
+    public async Task RefundAsync_CompletedRefund_ReturnsSucceeded()
+    {
+        var (payment, repository) = ArrangeSucceededOrderPayment();
+        var refund = CreateCompletedRefund(payment.Id, 75m);
+        var refundProcessing = new Mock<IRefundProcessingService>();
+        refundProcessing
+            .Setup(service => service.RequestRefundAsync(It.IsAny<RefundRequestInput>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RefundRequestOutcome { Success = true, RequiresApproval = false, Refund = refund });
+
+        var service = CreateRefunderService(repository, refundProcessing);
+        var result = await service.RefundAsync(new AuthoritativeOrderRefund(
+            payment.OrderId!.Value, payment.TenantId, payment.Id, 75m, "USD", "order_refund", Guid.NewGuid()));
+
+        result.Success.Should().BeTrue();
+        result.State.Should().Be(OrderRefundState.Succeeded);
+        result.RefundId.Should().Be(refund.Id);
+    }
+
+    [Fact]
+    public async Task RefundAsync_PendingApproval_ReturnsRequiresApproval()
+    {
+        var (payment, repository) = ArrangeSucceededOrderPayment();
+        var pending = Refund.Create(
+            Guid.NewGuid(),
+            payment.Id,
+            75m,
+            "USD",
+            "order_refund",
+            null,
+            Guid.NewGuid(),
+            requiresApproval: true,
+            $"refund_{payment.Id}_pending");
+        var refundProcessing = new Mock<IRefundProcessingService>();
+        refundProcessing
+            .Setup(service => service.RequestRefundAsync(It.IsAny<RefundRequestInput>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RefundRequestOutcome { Success = true, RequiresApproval = true, Refund = pending });
+
+        var service = CreateRefunderService(repository, refundProcessing);
+        var result = await service.RefundAsync(new AuthoritativeOrderRefund(
+            payment.OrderId!.Value, payment.TenantId, payment.Id, 75m, "USD", "order_refund", Guid.NewGuid()));
+
+        result.Success.Should().BeFalse();
+        result.State.Should().Be(OrderRefundState.RequiresApproval);
+        result.RefundId.Should().Be(pending.Id);
+    }
+
+    [Fact]
+    public async Task RefundAsync_PaymentMismatchedWithOrder_ReturnsFailed()
+    {
+        var (payment, repository) = ArrangeSucceededOrderPayment();
+
+        var service = CreateRefunderService(repository);
+        var result = await service.RefundAsync(new AuthoritativeOrderRefund(
+            Guid.NewGuid(), // a different order
+            payment.TenantId,
+            payment.Id,
+            75m,
+            "USD",
+            "order_refund",
+            Guid.NewGuid()));
+
+        result.Success.Should().BeFalse();
+        result.State.Should().Be(OrderRefundState.Failed);
+        result.FailureReason.Should().Contain("does not match");
+    }
+
+    [Fact]
+    public async Task RefundAsync_UnknownPayment_ReturnsFailed()
+    {
+        var repository = new Mock<IPaymentRepository>();
+        repository.Setup(repo => repo.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Payment?)null);
+
+        var service = CreateRefunderService(repository);
+        var result = await service.RefundAsync(new AuthoritativeOrderRefund(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 75m, "USD", "order_refund", Guid.NewGuid()));
+
+        result.Success.Should().BeFalse();
+        result.FailureReason.Should().Contain("not found");
     }
 
 }
