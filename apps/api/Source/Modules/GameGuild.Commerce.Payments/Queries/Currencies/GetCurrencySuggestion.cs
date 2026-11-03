@@ -1,6 +1,5 @@
 using System.Globalization;
 using GameGuild.CQRS;
-using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,7 +28,10 @@ public sealed record CurrencySuggestionDto(
 ///     base currency (or first enabled currency) is offered instead.
 /// </summary>
 /// <param name="CountryCode">ISO 3166-1 alpha-2 country from the edge headers; null/unknown falls back.</param>
-[AuthorizeRequest("")]
+// Issue #1202 (gaps N9): this query is served to anonymous visitors (the endpoint is
+// [AllowAnonymous] and registered in AnonymousEndpointRegistry). It must NOT carry
+// [AuthorizeRequest("")]: AuthorizationBehavior rejects unauthenticated actors before its
+// empty-permission skip runs, so the attribute turned every anonymous suggestion into a 500.
 public sealed record GetCurrencySuggestionQuery(string? CountryCode) : IQuery<CurrencySuggestionDto>;
 
 /// <summary>Handler for <see cref="GetCurrencySuggestionQuery"/>.</summary>

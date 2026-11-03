@@ -471,14 +471,11 @@ public class Payment : EntityBase
         ExternalPaymentId = externalPaymentId;
         ExternalTransactionId = externalTransactionId ?? ExternalTransactionId;
         ProcessedAt = SystemClock.UtcNow;
-
-        Raise(new PaymentSucceededEvent(
-            Id,
-            TenantId,
-            SubscriptionId,
-            Amount,
-            Currency,
-            ProcessedAt.Value));
+        // Issue #1202 (gaps N13): the former PaymentSucceededEvent raise was collected and
+        // discarded by the persistence pipeline with no publisher or consumer anywhere in
+        // the tree, so it is removed rather than kept as dead code. Downstream reactions to
+        // a succeeded payment run as direct service calls (ProcessPaymentCommandHandler);
+        // the durable integration-event outbox is the path for any future consumer.
     }
 
     /// <summary>
