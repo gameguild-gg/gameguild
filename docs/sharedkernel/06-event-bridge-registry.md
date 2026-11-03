@@ -47,7 +47,7 @@ Notifications owns a parallel registry for **rendering**: one `IEmailRenderer` p
 
 ## 3. UseCaseOperationOccurredV1 — the generic operation contract
 
-- Event record: `Modules/GameGuild.SharedKernel/Events/UseCaseOperationContext.cs:194-204` —
+- Event record: `Modules/GameGuild.SharedKernel/Events/UseCaseOperationContext.cs:198-204` —
   `platform.use-case-operation.occurred.v1`, `SourceModule = "Platform"`, payload is just
   `[NonPersonalEventData] string OperationCode` + `CommandType` (PII-free by construction).
 - Emission: for **every mutating command**, `Core/Eventing/UseCaseOperationBehavior.cs:134`
@@ -74,13 +74,17 @@ Notifications owns a parallel registry for **rendering**: one `IEmailRenderer` p
 - `IUseCaseEventVerifier` (`Core/Eventing/`, registered `:16`) cross-checks the declared
   contract against what the command actually emitted inside the transaction
   (`UseCaseOperationBehavior.cs:84-87`).
-- **Scale**: **258 contracts** declared across the platform (hand-written
-  `*UseCaseEventContracts.cs` files plus generated `UseCaseEventContracts.g.cs` per module,
-  e.g. the host's own `GameGuild.API/Architecture/UseCaseEventContracts.g.cs:2` for
-  `ReplayOutboxEventCommand` → `api.replay-outbox-event`). The auth slice audited in
-  `docs/auth/event-flows.md` — "emitted for all ~65 contracted auth commands" — is 58 in
+- **Scale**: **1,161 contracts** declared platform-wide on this tree — 258 hand-written
+  `[UseCaseEventContract(typeof…)]` attributes plus 903 generated
+  `[assembly: global::GameGuild.UseCaseEventContractAttribute(typeof…)]` lines across 45
+  generated `UseCaseEventContracts.g.cs` files (e.g. the host's own
+  `GameGuild.API/Architecture/UseCaseEventContracts.g.cs:2` for `ReplayOutboxEventCommand` →
+  `api.replay-outbox-event`). The auth slice is 164: 58 in
   `Modules/GameGuild.Identity.Authentication/Architecture/AuthenticationUseCaseEventContracts.cs`
-  + 3 in `StepUpEventContracts.cs`.
+  + 3 in `StepUpEventContracts.cs` + 103 in that module's generated
+  `UseCaseEventContracts.g.cs`. (`docs/auth/event-flows.md` quotes "~65 contracted auth
+  commands" — that audit counted the hand-written set at its base commit; the generated set
+  has since grown.)
 - Unavailable-module commands additionally resolve to fail-closed handler stubs through the
   same attribute (`UnavailableReason`, wired at
   `Modules/GameGuild.SharedKernel/CQRS/Extensions/ServiceCollectionExtensions.cs:77-111`).
@@ -90,7 +94,7 @@ Notifications owns a parallel registry for **rendering**: one `IEmailRenderer` p
 ```mermaid
 flowchart TD
     CMD["mutating command"] --> OPS["UseCaseOperationBehavior<br/>requires contract<br/>UseCaseEventContractRegistry GetRequired L27"]
-    OPS --> GEN["UseCaseOperationOccurredV1<br/>one row per business mutation<br/>UseCaseOperationContext.cs L194"]
+    OPS --> GEN["UseCaseOperationOccurredV1<br/>one row per business mutation<br/>UseCaseOperationContext.cs L198"]
     MOD["module publishes named durable event<br/>for example SuspiciousLoginDetectedV1"] --> OUTBOX[("shared outbox<br/>gameguild.integration")]
     GEN --> OUTBOX
     OUTBOX --> DISP["OutboxDispatcher discovers all<br/>IIntegrationEventHandler of T<br/>OutboxDispatcher.cs L150-185"]

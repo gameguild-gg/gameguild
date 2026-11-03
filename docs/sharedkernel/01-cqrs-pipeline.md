@@ -73,25 +73,25 @@ flowchart TD
     CTRL --> SEND["ISender Send<br/>typed overload MediatorSender.cs L42"]
     SEND --> BUILD["BuildPipeline wraps handler<br/>behaviors in registration order<br/>MediatorSender.cs L145-168"]
     BUILD --> AUTHZ{"1 AuthorizationBehavior<br/>AuthorizeRequestAttribute present<br/>AuthorizationBehavior.cs L49"}
-    AUTHZ -- "no attribute" --> VAL
-    AUTHZ -- "attribute present" --> AUTHZC{"authenticated and permitted<br/>tenant permission or ACL or admin bypass"}
-    AUTHZC -- "no" --> AUTHZ403["UnauthorizedAccessException<br/>fail closed<br/>AuthorizationBehavior.cs L68 or L150"]
-    AUTHZC -- "yes" --> VAL{"2 ValidationBehavior<br/>validators run sequentially<br/>ValidationBehavior.cs L32"}
-    VAL -- "failures" --> VAL400["RequestValidationException<br/>no quota consumed no operation event<br/>ValidationBehavior.cs L52"]
-    VAL -- "valid" --> QUO{"3 ResourceQuotaBehavior<br/>RequiresQuotaAttribute present<br/>ResourceQuotaBehavior.cs L39"}
-    QUO -- "no attribute" --> OPS
-    QUO -- "attribute" --> QUOR{"atomic reserve succeeds<br/>TryAtomicConsumeAsync"}
-    QUOR -- "exceeded or no tenant" --> QUO429["QuotaExceededException or<br/>InvalidOperationException fail closed<br/>ResourceQuotaBehavior.cs L106 L55"]
-    QUOR -- "reserved" --> OPS["4 UseCaseOperationBehavior commands only<br/>open transaction<br/>UseCaseOperationBehavior.cs L67-70"]
+    AUTHZ -->|"no attribute"| VAL
+    AUTHZ -->|"attribute present"| AUTHZC{"authenticated and permitted<br/>tenant permission or ACL or admin bypass"}
+    AUTHZC -->|"no"| AUTHZ403["UnauthorizedAccessException<br/>fail closed<br/>AuthorizationBehavior.cs L68 or L150"]
+    AUTHZC -->|"yes"| VAL{"2 ValidationBehavior<br/>validators run sequentially<br/>ValidationBehavior.cs L32"}
+    VAL -->|"failures"| VAL400["RequestValidationException<br/>no quota consumed no operation event<br/>ValidationBehavior.cs L52"]
+    VAL -->|"valid"| QUO{"3 ResourceQuotaBehavior<br/>RequiresQuotaAttribute present<br/>ResourceQuotaBehavior.cs L39"}
+    QUO -->|"no attribute"| OPS
+    QUO -->|"attribute"| QUOR{"atomic reserve succeeds<br/>TryAtomicConsumeAsync"}
+    QUOR -->|"exceeded or no tenant"| QUO429["QuotaExceededException or<br/>InvalidOperationException fail closed<br/>ResourceQuotaBehavior.cs L106 L55"]
+    QUOR -->|"reserved"| OPS["4 UseCaseOperationBehavior commands only<br/>open transaction<br/>UseCaseOperationBehavior.cs L67-70"]
     OPS --> HND["Command or QueryHandler Handle<br/>business mutation plus<br/>entity AddDomainEvent AddIntegrationEvent"]
-    HND -- "throws" --> OPSRB["rollback with CancellationToken None<br/>ChangeTracker Clear ResetForRetry rethrow<br/>UseCaseOperationBehavior.cs L93-113"]
+    HND -->|"throws"| OPSRB["rollback with CancellationToken None<br/>ChangeTracker Clear ResetForRetry rethrow<br/>UseCaseOperationBehavior.cs L93-113"]
     OPSRB --> EXM
-    HND -- "returns Result failure" --> OPSRR["rollback no event emitted<br/>quota reservation released<br/>UseCaseOperationBehavior.cs L74-81"]
+    HND -->|"returns Result failure"| OPSRR["rollback no event emitted<br/>quota reservation released<br/>UseCaseOperationBehavior.cs L74-81"]
     OPSRR --> CTRL
-    HND -- "returns success" --> OPEV["EnsureOperationEventStoredAsync writes<br/>OutboxMessage row in same transaction<br/>UseCaseOperationBehavior.cs L117-154"]
-    OPEV --> VFY{"UseCaseEventVerifier<br/>declared contract satisfied<br/>UseCaseOperationBehavior.cs L84-87"]
-    VFY -- "violation" --> OPSRB
-    VFY -- "ok" --> COMMIT["transaction commit<br/>UseCaseOperationBehavior.cs L89"]
+    HND -->|"returns success"| OPEV["EnsureOperationEventStoredAsync writes<br/>OutboxMessage row in same transaction<br/>UseCaseOperationBehavior.cs L117-154"]
+    OPEV --> VFY{"UseCaseEventVerifier<br/>declared contract satisfied<br/>UseCaseOperationBehavior.cs L84-87"}
+    VFY -->|"violation"| OPSRB
+    VFY -->|"ok"| COMMIT["transaction commit<br/>UseCaseOperationBehavior.cs L89"]
     COMMIT --> FLUSH["FlushPendingPermissionAuditChanges<br/>UseCaseOperationBehavior.cs L90"]
     FLUSH --> CTRL
     VAL400 --> EXM["ExceptionHandlingMiddleware<br/>outermost middleware catches<br/>ExceptionHandlingMiddleware.cs L20-86"]
