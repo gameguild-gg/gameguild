@@ -12,10 +12,14 @@ public class AccessReviewService(
     IAccessReviewItemRepository itemRepository,
     ILogger<AccessReviewService> logger,
     IPublisher? publisher = null,
-    IActorContextAccessor? actorContextAccessor = null
+    IActorContextAccessor? actorContextAccessor = null,
+    IPermissionGrantService? permissionGrantService = null,
+    ITenantPermissionRepository? tenantPermissionRepository = null
 ) : IAccessReviewService
 {
     private const string TenantAdministratorRequiredMessage = "Tenant administrator access to this access review is required.";
+
+    private const string AutoRevokeReason = "Access review campaign ended without a response (auto-revoke on no response)";
 
     private readonly IAccessReviewCampaignRepository _campaignRepository =
         campaignRepository ?? throw new ArgumentNullException(nameof(campaignRepository));
@@ -30,6 +34,10 @@ public class AccessReviewService(
 
     private readonly IActorContextAccessor _actorContextAccessor =
         actorContextAccessor ?? throw new ArgumentNullException(nameof(actorContextAccessor));
+
+    private readonly IPermissionGrantService? _permissionGrantService = permissionGrantService;
+
+    private readonly ITenantPermissionRepository? _tenantPermissionRepository = tenantPermissionRepository;
 
     private ActorContext Actor => _actorContextAccessor.ActorContext;
 
@@ -235,6 +243,7 @@ public class AccessReviewService(
 
         EnsureCanReviewItem(item);
         item.Approve(reason, notes);
+        await RecordCampaignDecisionAsync(item, approved: true, cancellationToken).ConfigureAwait(false);
         await _itemRepository.UpdateAsync(item, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Approved review item {ItemId}", itemId);
@@ -259,9 +268,19 @@ public class AccessReviewService(
 
         EnsureCanReviewItem(item);
         item.Revoke(reason, notes);
+
+        // The revoke decision is remediation, not a status flip: the subject's in-scope
+        // permissions are removed through the same grant lifecycle the admin paths use
+        // (status change + enforcement + audit + webhook fan-out), issue #1204.
+        await RevokeSubjectAccessAsync(item, reason, cancellationToken).ConfigureAwait(false);
+
+        await RecordCampaignDecisionAsync(item, approved: false, cancellationToken).ConfigureAwait(false);
         await _itemRepository.UpdateAsync(item, cancellationToken).ConfigureAwait(false);
 
-        _logger.LogInformation("Revoked review item {ItemId}", itemId);
+        _logger.LogInformation(
+            "Revoked review item {ItemId} for subject {SubjectUserId}; remediation executed through the grant lifecycle",
+            itemId,
+            item.SubjectUserId);
 
         return item;
     }
@@ -312,6 +331,34 @@ public class AccessReviewService(
 
         foreach (var campaign in pendingCampaigns.Where(c => c.IsExpired()))
         {
+            if (campaign.AutoRevokeOnNoResponse)
+            {
+                // AutoRevokeOnNoResponse is enforced by the expiry sweep: every still-pending
+                // item is decided as revoked and its subject loses the in-scope permissions
+                // through the same grant lifecycle the manual revoke decision uses (issue #1204).
+                var items = await _itemRepository
+                    .GetByCampaignAsync(campaign.Id, cancellationToken)
+                    .ConfigureAwait(false);
+                var autoRevoked = 0;
+
+                foreach (var item in items.Where(i => i.IsPending()))
+                {
+                    item.Revoke(AutoRevokeReason, notes: "Auto-revoked by the campaign expiry sweep (AutoRevokeOnNoResponse).");
+                    await RevokeSubjectAccessAsync(item, AutoRevokeReason, cancellationToken).ConfigureAwait(false);
+                    campaign.RecordDecision(approved: false);
+                    await _itemRepository.UpdateAsync(item, cancellationToken).ConfigureAwait(false);
+                    autoRevoked++;
+                }
+
+                if (autoRevoked > 0)
+                {
+                    _logger.LogInformation(
+                        "Auto-revoked {Count} unanswered item(s) of expired campaign {CampaignId} (AutoRevokeOnNoResponse enabled)",
+                        autoRevoked,
+                        campaign.Id);
+                }
+            }
+
             campaign.MarkExpired();
             await _campaignRepository.UpdateAsync(campaign, cancellationToken).ConfigureAwait(false);
             expiredCount++;
@@ -320,6 +367,144 @@ public class AccessReviewService(
         _logger.LogInformation("Marked {Count} campaigns as expired", expiredCount);
 
         return expiredCount;
+    }
+
+    /// <summary>
+    ///     Records one item decision on the owning campaign: increments the campaign
+    ///     counters and moves an <see cref="AccessReviewStatus.Active"/> campaign to
+    ///     <see cref="AccessReviewStatus.InProgress"/> on the first decision (issue #1204).
+    /// </summary>
+    private async Task RecordCampaignDecisionAsync(
+        AccessReviewItem item,
+        bool approved,
+        CancellationToken cancellationToken
+    )
+    {
+        var campaign = item.Campaign;
+        if (campaign == null)
+        {
+            _logger.LogWarning(
+                "Review item {ItemId} has no loaded campaign; campaign counters were not incremented",
+                item.Id);
+            return;
+        }
+
+        campaign.RecordDecision(approved);
+        await _campaignRepository.UpdateAsync(campaign, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Executes the access-review revoke decision against the grant lifecycle
+    ///     (<see cref="IPermissionGrantService.RevokeTenantPermissionAsync"/>): removes
+    ///     the subject's in-scope permissions, invalidates the tenant permission cache
+    ///     (enforcement), journals the durable permission audit row and fans out the
+    ///     <c>permission.revoked</c> webhook. Without this step the decision is a status
+    ///     flip only and the subject keeps every permission (issue #1204).
+    /// </summary>
+    private async Task RevokeSubjectAccessAsync(
+        AccessReviewItem item,
+        string reason,
+        CancellationToken cancellationToken
+    )
+    {
+        if (_permissionGrantService is null)
+        {
+            // Legacy/test construction without the grant service: refuse silently-empty
+            // remediation — make the gap visible instead of flipping status alone.
+            _logger.LogWarning(
+                "Access review revoke for item {ItemId} has no permission grant service wired; no permission remediation was performed",
+                item.Id);
+            return;
+        }
+
+        var campaign = item.Campaign;
+        if (campaign?.TenantId is not { } tenantId)
+        {
+            _logger.LogWarning(
+                "Access review item {ItemId} has no tenant scope; permission remediation was skipped",
+                item.Id);
+            return;
+        }
+
+        var permissions = await ResolveInScopePermissionsAsync(item, tenantId, cancellationToken).ConfigureAwait(false);
+        if (permissions.Length == 0)
+        {
+            _logger.LogInformation(
+                "Access review item {ItemId} subject {SubjectUserId} holds no revokable tenant permissions",
+                item.Id,
+                item.SubjectUserId);
+            return;
+        }
+
+        var revoked = await _permissionGrantService
+            .RevokeTenantPermissionAsync(item.SubjectUserId, tenantId, permissions, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (revoked)
+        {
+            _logger.LogInformation(
+                "Access review revoke for item {ItemId} removed {PermissionCount} permission(s) from subject {SubjectUserId} in tenant {TenantId}: {Reason}",
+                item.Id,
+                permissions.Length,
+                item.SubjectUserId,
+                tenantId,
+                reason);
+        }
+    }
+
+    /// <summary>
+    ///     Resolves the permissions in scope for the item: the parsed
+    ///     <see cref="AccessReviewItem.PermissionDetails"/> list, or — when the item
+    ///     carries no parseable details — every permission the subject currently holds
+    ///     in the campaign's tenant (full-scope recertification revoke).
+    /// </summary>
+    private async Task<string[]> ResolveInScopePermissionsAsync(
+        AccessReviewItem item,
+        Guid tenantId,
+        CancellationToken cancellationToken
+    )
+    {
+        var parsed = ParsePermissionDetails(item.PermissionDetails);
+        if (parsed.Length > 0)
+        {
+            return parsed;
+        }
+
+        if (_tenantPermissionRepository is not null)
+        {
+            var existing = await _tenantPermissionRepository
+                .GetByUserAndTenantAsync(item.SubjectUserId, tenantId, cancellationToken)
+                .ConfigureAwait(false);
+
+            return existing?.Permissions ?? Array.Empty<string>();
+        }
+
+        return Array.Empty<string>();
+    }
+
+    /// <summary>
+    ///     Parses the item's free-form permission list (comma/semicolon separated,
+    ///     optionally annotated with a trailing parenthetical, e.g.
+    ///     <c>"courses:read, courses:write (tenant 3fa…)"</c>) into distinct
+    ///     case-insensitive permission tokens. Tokens containing whitespace or
+    ///     separator annotations are prose, not permissions, and parse to nothing
+    ///     (triggering the full-scope revoke fallback).
+    /// </summary>
+    public static string[] ParsePermissionDetails(string? permissionDetails)
+    {
+        if (string.IsNullOrWhiteSpace(permissionDetails))
+        {
+            return Array.Empty<string>();
+        }
+
+        return permissionDetails
+            .Split([',', ';'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(token => token.Trim())
+            .Select(token => token.Contains('(') ? token[..token.IndexOf('(')].Trim() : token)
+            .Where(token => !string.IsNullOrWhiteSpace(token))
+            .Where(token => token.All(c => char.IsLetterOrDigit(c) || c is ':' or '_' or '-' or '.' or '*'))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 
     private void EnsureAuthenticated()
