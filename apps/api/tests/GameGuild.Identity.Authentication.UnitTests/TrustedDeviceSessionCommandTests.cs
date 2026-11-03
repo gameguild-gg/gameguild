@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using GameGuild.Identity.Authentication;
 using Moq;
 using Xunit;
@@ -6,6 +8,15 @@ namespace GameGuild.Identity.Authentication.UnitTests;
 
 public sealed class TrustedDeviceSessionCommandTests
 {
+    private static (Mock<ISessionManagementService> Service, Mock<IStepUpReceiptService> Receipts) CreateStrictMocks()
+        => (new Mock<ISessionManagementService>(MockBehavior.Strict), new Mock<IStepUpReceiptService>(MockBehavior.Strict));
+
+    private static Task<bool> Handle(
+        SessionMutationCommandHandler handler,
+        TrustDeviceCommand command,
+        CancellationToken cancellationToken = default) =>
+        handler.Handle(command, cancellationToken);
+
     [Theory]
     [InlineData("missing")]
     [InlineData("foreign-owner")]
@@ -36,13 +47,14 @@ public sealed class TrustedDeviceSessionCommandTests
             case "whitespace-fingerprint": session.DeviceFingerprint = " "; break;
             default: throw new ArgumentOutOfRangeException(nameof(boundary), boundary, "Unknown session trust boundary.");
         }
-        var service = new Mock<ISessionManagementService>(MockBehavior.Strict);
+        var (service, receipts) = CreateStrictMocks();
         service.Setup(s => s.GetSessionAsync(sessionId, CancellationToken.None)).ReturnsAsync(session);
-        var handler = new SessionMutationCommandHandler(service.Object);
-        var result = await handler.Handle(new TrustDeviceCommand(userId, sessionId, "Browser"), CancellationToken.None);
+        var handler = new SessionMutationCommandHandler(service.Object, receipts.Object);
+        var result = await Handle(handler, new TrustDeviceCommand(userId, sessionId, "Browser", "step-up-receipt"));
         Assert.False(result);
         service.Verify(s => s.GetSessionAsync(sessionId, CancellationToken.None), Times.Once);
         service.VerifyNoOtherCalls();
+        receipts.VerifyNoOtherCalls();
     }
 
     [Theory]
@@ -50,13 +62,90 @@ public sealed class TrustedDeviceSessionCommandTests
     [InlineData(false)]
     public async Task EmptyPrincipalIdentifiersAreRejectedBeforeAnySessionRead(bool emptyUser)
     {
-        var service = new Mock<ISessionManagementService>(MockBehavior.Strict);
-        var handler = new SessionMutationCommandHandler(service.Object);
-        var result = await handler.Handle(new TrustDeviceCommand(
+        var (service, receipts) = CreateStrictMocks();
+        var handler = new SessionMutationCommandHandler(service.Object, receipts.Object);
+        var result = await Handle(handler, new TrustDeviceCommand(
             emptyUser ? Guid.Empty : Guid.NewGuid(),
-            emptyUser ? Guid.NewGuid() : Guid.Empty, "Browser"), CancellationToken.None);
+            emptyUser ? Guid.NewGuid() : Guid.Empty, "Browser", "step-up-receipt"));
         Assert.False(result);
         service.VerifyNoOtherCalls();
+        receipts.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task TrustWithoutAStepUpReceiptIsRejectedBeforeAnyMutation()
+    {
+        // Fresh verification gate (issue #1144): an otherwise valid session must not be able to
+        // grant device trust without a just-verified MFA receipt.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var (service, receipts) = CreateStrictMocks();
+        service.Setup(s => s.GetSessionAsync(sessionId, CancellationToken.None)).ReturnsAsync(new UserSession
+        {
+            Id = sessionId, UserId = userId, IsActive = true,
+            ExpiresAt = DateTime.UtcNow.AddHours(1), DeviceFingerprint = "persisted-device"
+        });
+
+        var result = await Handle(new SessionMutationCommandHandler(service.Object, receipts.Object),
+            new TrustDeviceCommand(userId, sessionId, "Browser", null));
+
+        Assert.False(result);
+        service.Verify(s => s.GetSessionAsync(sessionId, CancellationToken.None), Times.Once);
+        service.VerifyNoOtherCalls();
+        receipts.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task TrustWithAnInvalidStepUpReceiptIsRejectedBeforeAnyMutation()
+    {
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var (service, receipts) = CreateStrictMocks();
+        service.Setup(s => s.GetSessionAsync(sessionId, CancellationToken.None)).ReturnsAsync(new UserSession
+        {
+            Id = sessionId, UserId = userId, IsActive = true,
+            ExpiresAt = DateTime.UtcNow.AddHours(1), DeviceFingerprint = "persisted-device"
+        });
+        receipts.Setup(r => r.ConsumeAsync(
+                It.Is<StepUpOperationBinding>(binding => binding.OperationType == "trust-device"),
+                "forged-receipt",
+                CancellationToken.None))
+            .ThrowsAsync(new StepUpReceiptInvalidException("receipt is invalid"));
+
+        var result = await Handle(new SessionMutationCommandHandler(service.Object, receipts.Object),
+            new TrustDeviceCommand(userId, sessionId, "Browser", "forged-receipt"));
+
+        Assert.False(result);
+        service.Verify(s => s.GetSessionAsync(sessionId, CancellationToken.None), Times.Once);
+        service.Verify(s => s.TrustDeviceAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TrustConsumesTheReceiptBoundToTheDeviceName()
+    {
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var (service, receipts) = CreateStrictMocks();
+        service.Setup(s => s.GetSessionAsync(sessionId, CancellationToken.None)).ReturnsAsync(new UserSession
+        {
+            Id = sessionId, UserId = userId, IsActive = true,
+            ExpiresAt = DateTime.UtcNow.AddHours(1), DeviceFingerprint = "persisted-device"
+        });
+        receipts.Setup(r => r.ConsumeAsync(
+                SessionMutationCommandHandler.TrustDeviceStepUpBinding("Browser"),
+                "step-up-receipt",
+                CancellationToken.None))
+            .Returns(Task.CompletedTask);
+        service.Setup(s => s.TrustDeviceAsync(userId, "persisted-device", "Browser", null, null, CancellationToken.None))
+            .ReturnsAsync(true);
+
+        var result = await Handle(new SessionMutationCommandHandler(service.Object, receipts.Object),
+            new TrustDeviceCommand(userId, sessionId, "Browser", "step-up-receipt"));
+
+        Assert.True(result);
+        service.VerifyAll();
+        receipts.VerifyAll();
     }
 
     [Theory]
@@ -67,40 +156,60 @@ public sealed class TrustedDeviceSessionCommandTests
         var userId = Guid.NewGuid();
         var sessionId = Guid.NewGuid();
         using var cancellation = new CancellationTokenSource();
-        var service = new Mock<ISessionManagementService>(MockBehavior.Strict);
+        var (service, receipts) = CreateStrictMocks();
         service.Setup(s => s.GetSessionAsync(sessionId, cancellation.Token)).ReturnsAsync(new UserSession
         {
             Id = sessionId, UserId = userId, IsActive = true,
             ExpiresAt = DateTime.UtcNow.AddHours(1), DeviceFingerprint = "persisted-device"
         });
-        service.Setup(s => s.TrustDeviceAsync(userId, "persisted-device", "Browser", null, cancellation.Token)).ReturnsAsync(outcome);
-        var result = await new SessionMutationCommandHandler(service.Object)
-            .Handle(new TrustDeviceCommand(userId, sessionId, "Browser"), cancellation.Token);
+        receipts.Setup(r => r.ConsumeAsync(
+                It.IsAny<StepUpOperationBinding>(), "step-up-receipt", cancellation.Token))
+            .Returns(Task.CompletedTask);
+        service.Setup(s => s.TrustDeviceAsync(userId, "persisted-device", "Browser", null, null, cancellation.Token)).ReturnsAsync(outcome);
+        var result = await Handle(new SessionMutationCommandHandler(service.Object, receipts.Object),
+            new TrustDeviceCommand(userId, sessionId, "Browser", "step-up-receipt"), cancellation.Token);
         Assert.Equal(outcome, result);
         service.VerifyAll();
         service.VerifyNoOtherCalls();
+        receipts.VerifyAll();
     }
 
     [Fact]
-    public async Task TrustCarriesTheTrustedSessionDeviceMetadataIntoTheTrustMutation()
+    public async Task TrustCarriesTheTrustedSessionDeviceMetadataAndIpIntoTheTrustMutation()
     {
         var userId = Guid.NewGuid();
         var sessionId = Guid.NewGuid();
         const string deviceInfo = """{"browser":"Firefox","operatingSystem":"Windows"}""";
-        var service = new Mock<ISessionManagementService>(MockBehavior.Strict);
+        var (service, receipts) = CreateStrictMocks();
         service.Setup(s => s.GetSessionAsync(sessionId, CancellationToken.None)).ReturnsAsync(new UserSession
         {
             Id = sessionId, UserId = userId, IsActive = true,
             ExpiresAt = DateTime.UtcNow.AddHours(1), DeviceFingerprint = "persisted-device",
-            DeviceInfo = deviceInfo
+            DeviceInfo = deviceInfo,
+            IpAddress = "203.0.113.7"
         });
-        service.Setup(s => s.TrustDeviceAsync(userId, "persisted-device", "Browser", deviceInfo, CancellationToken.None))
+        receipts.Setup(r => r.ConsumeAsync(It.IsAny<StepUpOperationBinding>(), "step-up-receipt", CancellationToken.None))
+            .Returns(Task.CompletedTask);
+        service.Setup(s => s.TrustDeviceAsync(userId, "persisted-device", "Browser", deviceInfo, "203.0.113.7", CancellationToken.None))
             .ReturnsAsync(true);
-        var result = await new SessionMutationCommandHandler(service.Object)
-            .Handle(new TrustDeviceCommand(userId, sessionId, "Browser"), CancellationToken.None);
+        var result = await Handle(new SessionMutationCommandHandler(service.Object, receipts.Object),
+            new TrustDeviceCommand(userId, sessionId, "Browser", "step-up-receipt"));
         Assert.True(result);
         service.VerifyAll();
         service.VerifyNoOtherCalls();
+        receipts.VerifyAll();
+    }
+
+    [Fact]
+    public void TrustDeviceStepUpBinding_HashesTheTrimmedDeviceName()
+    {
+        var binding = SessionMutationCommandHandler.TrustDeviceStepUpBinding("  Browser  ");
+
+        Assert.Equal("trust-device", binding.OperationType);
+        Assert.Equal("current-session", binding.TargetReference);
+        Assert.Equal(
+            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("Browser"))).ToLowerInvariant(),
+            binding.PayloadHash);
     }
 
     [Theory]
@@ -110,10 +219,10 @@ public sealed class TrustedDeviceSessionCommandTests
     {
         var userId = Guid.NewGuid();
         var deviceId = Guid.NewGuid();
-        var service = new Mock<ISessionManagementService>(MockBehavior.Strict);
+        var (service, receipts) = CreateStrictMocks();
         service.Setup(s => s.RenameTrustedDeviceAsync(userId, deviceId, "Laptop", CancellationToken.None))
             .ReturnsAsync(outcome);
-        var result = await new SessionMutationCommandHandler(service.Object)
+        var result = await new SessionMutationCommandHandler(service.Object, receipts.Object)
             .Handle(new RenameTrustedDeviceCommand(userId, deviceId, "Laptop"), CancellationToken.None);
         Assert.Equal(outcome, result);
         service.VerifyAll();
