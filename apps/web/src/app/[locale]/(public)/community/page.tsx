@@ -15,6 +15,7 @@ export const metadata = buildPageMetadata({
   path: '/community',
   title: 'Community — GameGuild',
   description: 'Meet builders, follow project progress, join critique rooms, and move from course exercises to public project outcomes with the GameGuild community.',
+  twitterLargeCard: true,
 });
 
 export default async function CommunityPage(): Promise<React.JSX.Element> {

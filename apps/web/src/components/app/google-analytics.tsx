@@ -1,7 +1,7 @@
 'use client';
 
 import { ensureConsentDefaults, pushConsentUpdate, type ConsentWindow } from '@/lib/consent/consent-mode';
-import { subscribeConsent } from '@/lib/consent/store';
+import { DENIED_CONSENT, subscribeConsent } from '@/lib/consent/store';
 import Script from 'next/script';
 import { useEffect, useState } from 'react';
 
@@ -37,13 +37,23 @@ export function GoogleAnalytics({ measurementId: rawMeasurementId }: GoogleAnaly
 
     let configured = false;
     return subscribeConsent((state) => {
-      if (!state) return;
-      pushConsentUpdate(w, state);
-      if (state.analytics && !configured) {
+      // null (missing/invalid/cleared record) is a denial — push it, never
+      // leave a previously granted consent state active.
+      const effective = state ?? DENIED_CONSENT;
+      pushConsentUpdate(w, effective);
+      if (effective.analytics && !configured) {
         configured = true;
         w.gtag!('js', new Date());
         w.gtag!('config', measurementId);
         setTransportReady(true);
+      }
+      if (!effective.analytics) {
+        // Consent Mode denial alone does not stop an already-loaded tag from
+        // sending cookieless pings; the disable cookie hard-stops collection.
+        document.cookie = `ga-disable-${measurementId}=true; path=/; max-age=31536000`;
+        setTransportReady(false);
+      } else {
+        document.cookie = `ga-disable-${measurementId}=; path=/; max-age=0`;
       }
     });
   }, [measurementId]);

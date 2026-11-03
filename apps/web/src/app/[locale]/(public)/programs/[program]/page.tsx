@@ -37,6 +37,7 @@ export async function generateMetadata({ params }: ProgramDetailPageProps) {
     path: `/programs/${slug}`,
     title: `${program.title} — GameGuild`,
     description: program.summary,
+  twitterLargeCard: true,
   });
 }
 

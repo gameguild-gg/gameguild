@@ -41,6 +41,7 @@ export async function generateMetadata({ params }: { params: Promise<{ course: s
     title: `${course.title ?? 'Course'} — GameGuild`,
     description: course.description ?? 'GameGuild course.',
     ogImage: typeof course.thumbnail === 'string' ? course.thumbnail : undefined,
+  twitterLargeCard: true,
   });
 }
 
@@ -126,6 +127,7 @@ async function CourseContent({ slug }: { slug: string }): Promise<React.JSX.Elem
           description: course.description,
           url: `/courses/${slug}`,
           imageUrl: typeof course.thumbnail === 'string' ? course.thumbnail : undefined,
+          estimatedHours: course.estimatedHours ?? null,
           offer: pricedProduct
             ? { price: pricedProduct.price, priceCurrency: pricedProduct.currency ?? 'USD' }
             : null,

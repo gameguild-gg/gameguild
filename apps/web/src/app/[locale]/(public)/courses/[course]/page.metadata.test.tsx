@@ -38,7 +38,7 @@ describe('course page metadata', () => {
     const metadata = await generateMetadata({ params: Promise.resolve({ course: 'preview-course' }) });
 
     expect(getCachedPublicCourseBySlugMock).toHaveBeenCalledWith('preview-course');
-    expect(metadata.title).toBe('Preview Course — GameGuild');
+    expect((metadata.title as { absolute: string }).absolute).toBe('Preview Course — GameGuild');
     expect(metadata.description).toBe('The course description.');
     expect((metadata.openGraph as { images?: string[] }).images).toEqual(['https://example.test/preview.png']);
     expect(metadata.alternates?.canonical).toBe(`${SITE_BASE_URL}/courses/preview-course`);

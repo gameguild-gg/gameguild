@@ -10,6 +10,7 @@ export const metadata: Metadata = buildPageMetadata({
   path: BLOG_INDEX_PATH,
   title: 'Blog — GameGuild',
   description: 'Posts from the GameGuild community — tutorials, devlogs, and deep dives from working game developers.',
+  twitterLargeCard: true,
 });
 
 interface BlogIndexPageProps {

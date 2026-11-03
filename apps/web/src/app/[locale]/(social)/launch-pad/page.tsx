@@ -9,6 +9,7 @@ export const metadata = buildPageMetadata({
   path: '/launch-pad',
   title: 'Launch Pad — GameGuild',
   description: 'Release and marketing support for shipping games: launch events, wishlisting campaigns, and community momentum from the GameGuild Launch Pad.',
+  twitterLargeCard: true,
 });
 
 const eventStatusNames = ['Draft', 'ApplicationsOpen', 'ApplicationsClosed', 'Scheduled', 'Active', 'Completed', 'Cancelled', 'Archived'];

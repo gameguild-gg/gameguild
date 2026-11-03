@@ -10,6 +10,7 @@ export const metadata = buildPageMetadata({
   path: '/projects',
   title: 'Projects — GameGuild',
   description: 'Explore community game projects on GameGuild — playable builds, devlogs, and works in progress from member studios and solo creators.',
+  twitterLargeCard: true,
 });
 
 interface ProjectsPageProps {

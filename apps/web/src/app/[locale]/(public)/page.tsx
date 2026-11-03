@@ -34,6 +34,7 @@ export const metadata = buildPageMetadata({
   path: '/',
   title: 'GameGuild — Learn, build, and ship games together',
   description: 'GameGuild is the open platform where game creators learn, build, and ship together: courses, an in-browser code editor, project management, playtesting, and community in one workspace.',
+  twitterLargeCard: true,
 });
 
 /** `/` is contextual: the community feed when signed in, the marketing landing otherwise. */

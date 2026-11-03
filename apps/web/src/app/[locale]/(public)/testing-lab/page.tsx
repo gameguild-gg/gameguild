@@ -9,6 +9,7 @@ export const metadata = buildPageMetadata({
   title: "Testing Lab — GameGuild",
   description:
     "Join playtesting events and QA workflows on GameGuild — find live sessions, give structured feedback, and help creators ship better games.",
+  twitterLargeCard: true,
 });
 
 function safeTimeZone(timeZone?: string | null) {

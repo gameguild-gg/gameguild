@@ -102,8 +102,28 @@ export function clearTrackingIdentifiers(): void {
   }
 }
 
-function dispatchConsentChanged(state: ConsentState): void {
+export function dispatchConsentChanged(state: ConsentState): void {
   window.dispatchEvent(new CustomEvent<ConsentState>(CONSENT_CHANGED_EVENT, { detail: state }));
+}
+
+/**
+ * Reopens the granular consent UI. Withdrawal must stay as accessible as
+ * the grant: any surface (footer, settings) can fire this and the banner
+ * listens for it. The persisted record is cleared so the banner treats the
+ * user as undecided again — tracking stays denied until a new choice.
+ */
+export const CONSENT_REOPEN_EVENT = 'gg:consent-reopen';
+
+export function reopenConsentBanner(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(CONSENT_STORAGE_KEY);
+  } catch {
+    // Storage blocked: the event still reopens the banner for this page.
+  }
+  clearTrackingIdentifiers();
+  window.dispatchEvent(new CustomEvent(CONSENT_REOPEN_EVENT));
+  notifyListeners(DENIED_CONSENT);
 }
 
 export interface SaveConsentInput {

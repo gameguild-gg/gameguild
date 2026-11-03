@@ -13,6 +13,7 @@ export const metadata = buildPageMetadata({
   path: '/courses',
   title: 'Courses — GameGuild',
   description: 'GameGuild courses are organized into focused production packages: programming foundations, AI systems, launch operations, portfolio presentation, and data-informed game decisions.',
+  twitterLargeCard: true,
 });
 
 export default async function CoursesPage() {

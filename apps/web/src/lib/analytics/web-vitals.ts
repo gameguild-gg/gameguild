@@ -77,6 +77,7 @@ export function sendToGa4(w: ConsentWindow, eventName: string, payload: Record<s
 
 export type FirebaseAnalyticsLike = {
   logEvent(eventName: string, payload: Record<string, unknown>): void;
+  setCollectionEnabled?(enabled: boolean): void;
 };
 
 export type FirebaseAnalyticsLoader = () => Promise<FirebaseAnalyticsLike | null>;
@@ -101,7 +102,8 @@ export function createFirebaseDestination(loader: FirebaseAnalyticsLoader): Fire
 
 export interface Destination {
   sendGa4(w: ConsentWindow, eventName: string, payload: Record<string, string | number>): void;
-  sendFirebase(eventName: string, payload: Record<string, string | number>): Promise<void>;
+  sendFirebase(eventName: string, payload: Record<string, string | number>): void;
+  setFirebaseCollection(enabled: boolean): Promise<void>;
 }
 
 /**
@@ -132,6 +134,10 @@ export function createDispatcher(
       } catch {
         // Fail closed: destination error → silent no-op.
       }
+    },
+    async setFirebaseCollection(enabled) {
+      const analytics = await firebaseDestination();
+      analytics?.setCollectionEnabled?.(enabled);
     },
   };
 }

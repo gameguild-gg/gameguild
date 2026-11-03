@@ -1,6 +1,6 @@
 'use client';
 
-import { isDoNotTrackEnabled, readConsent, saveConsent } from '@/lib/consent/store';
+import { CONSENT_REOPEN_EVENT, isDoNotTrackEnabled, readConsent, saveConsent } from '@/lib/consent/store';
 import type { ConsentState } from '@/lib/consent/state';
 import { useEffect, useState } from 'react';
 
@@ -14,13 +14,15 @@ type ConsentChoice = { analytics: boolean; marketing: boolean };
 /**
  * Consent coordinator (issue #1206).
  *
- * - Signed-in users: the server privacy preference
+ * - Signed-in users: an explicitly recorded server privacy preference
  *   (`privacyPreferences.AnalyticsCookies`) stays authoritative — it is
  *   synced into the client store on load (server sync is read-only; the
  *   settings page remains the mutation surface, via
  *   `updatePrivacyPreferenceAction`).
  * - Anonymous visitors with no persisted choice get the granular banner.
  *   Do Not Track suppresses the banner (tracking stays denied).
+ * - `reopenConsentBanner()` (e.g. from a footer "Cookie settings" control)
+ *   re-shows the granular choices so withdrawal is always accessible.
  */
 export function ConsentBanner({ serverAnalyticsConsent }: ConsentBannerProps) {
   const [mounted, setMounted] = useState(false);
@@ -46,6 +48,16 @@ export function ConsentBanner({ serverAnalyticsConsent }: ConsentBannerProps) {
     }
     queueMicrotask(() => setMounted(!existing && !isDoNotTrackEnabled()));
   }, [serverAnalyticsConsent, serverPreference]);
+
+  useEffect(() => {
+    // Any surface may reopen the granular choices (withdrawal accessibility).
+    const onReopen = () => {
+      setDismissed(false);
+      setMounted(true);
+    };
+    window.addEventListener(CONSENT_REOPEN_EVENT, onReopen);
+    return () => window.removeEventListener(CONSENT_REOPEN_EVENT, onReopen);
+  }, []);
 
   const visible = mounted && !dismissed;
   if (!visible) return null;

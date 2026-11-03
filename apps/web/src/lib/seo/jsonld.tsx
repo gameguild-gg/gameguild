@@ -53,6 +53,8 @@ export interface CourseJsonLdInput {
   /** Optional default offer (price + ISO 4217 currency) when course pricing is exposed. */
   offer?: { price: number; priceCurrency: string } | null;
   imageUrl?: string | null;
+  /** Total estimated workload in hours; omitted (not invented) when unknown. */
+  estimatedHours?: number | null;
 }
 
 /** `Course` for `/courses/[course]` and `/programs/[program]`. */
@@ -63,6 +65,7 @@ export function buildCourseJsonLd({
   providerName = SITE_NAME,
   offer,
   imageUrl,
+  estimatedHours,
 }: CourseJsonLdInput): Record<string, unknown> {
   return {
     '@context': 'https://schema.org',
@@ -75,7 +78,10 @@ export function buildCourseJsonLd({
     hasCourseInstance: {
       '@type': 'CourseInstance',
       courseMode: 'online',
-      courseWorkload: 'P0D',
+      // Unknown workload is omitted — never published as an invented P0D.
+      ...(estimatedHours && estimatedHours > 0
+        ? { courseWorkload: `PT${Math.round(estimatedHours)}H` }
+        : {}),
     },
     ...(offer
       ? {

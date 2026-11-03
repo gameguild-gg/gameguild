@@ -17,6 +17,7 @@ import {
   SheetTrigger,
 } from '@game-guild/ui/components/sheet';
 import { CurrencySwitcher } from '@/components/currency/currency-switcher';
+import { reopenConsentBanner } from '@/lib/consent/store';
 import { cn } from '@game-guild/ui/lib/utils';
 import { ChevronDown, Menu } from 'lucide-react';
 import { Github } from '@/components/ui/brand-icons';
@@ -282,6 +283,17 @@ export function PublicMobileNav({
             </>
           )}
           {user?.canManage ? <Link href="/dashboard" onClick={() => setOpen(false)} className="inline-flex items-center justify-center rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-accent">Dashboard</Link> : null}
+          {/* GDPR withdrawal access: reopens the granular cookie choices. */}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              reopenConsentBanner();
+            }}
+            className="inline-flex items-center justify-center rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-accent"
+          >
+            Cookie settings
+          </button>
           <a
             href="https://github.com/gameguild-gg/gameguild"
             onClick={() => setOpen(false)}

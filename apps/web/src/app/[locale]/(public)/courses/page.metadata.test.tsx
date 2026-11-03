@@ -6,8 +6,8 @@ import { metadata } from './page';
 
 describe('courses listing metadata', () => {
   it('has a unique title and description', () => {
-    expect(metadata.title).toContain('Courses');
-    expect(metadata.title).not.toBe('GameGuild');
+    expect((metadata.title as { absolute: string }).absolute).toContain('Courses');
+    expect(String(metadata.title)).not.toBe('GameGuild');
     expect(metadata.description).toBeTruthy();
     expect(metadata.description).not.toBe(metadata.title);
   });

@@ -10,6 +10,7 @@ export const metadata = buildPageMetadata({
   path: '/marketplace',
   title: 'Marketplace — GameGuild',
   description: 'Browse GameGuild marketplace products — digital tools, assets, and course packs for game creators.',
+  twitterLargeCard: true,
 });
 
 export default async function MarketplacePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {

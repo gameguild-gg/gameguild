@@ -13,6 +13,7 @@ export const metadata = buildPageMetadata({
   path: '/jobs',
   title: 'Community Opportunities — GameGuild',
   description: 'Mentor builders, review projects, and support community sessions — practical GameGuild roles that help members improve projects while building professional credibility.',
+  twitterLargeCard: true,
 });
 
 const contributionTracks = [

@@ -12,7 +12,7 @@ describe('program detail metadata', () => {
     const slug = typeof program.slug === 'string' ? program.slug : String(program.slug);
     const metadata = await generateMetadata({ params: Promise.resolve({ program: slug }) });
 
-    expect(String(metadata.title)).toContain('— GameGuild');
+    expect((metadata.title as { absolute: string }).absolute).toContain('— GameGuild');
     expect(String(metadata.title)).not.toBe('GameGuild');
     expect(metadata.alternates?.canonical).toBe(`${SITE_BASE_URL}/programs/${slug}`);
     const languages = metadata.alternates?.languages as Record<string, string>;

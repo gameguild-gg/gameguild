@@ -68,7 +68,11 @@ describe('GoogleAnalytics (consent mode v2)', () => {
     expect(w.dataLayer).toEqual([
       { 'gg:consent-default': true },
       ['consent', 'default', expect.anything()],
+      // Absent consent is pushed as an explicit denial (fail closed)…
+      ['consent', 'update', expect.anything()],
     ]);
+    // …which also sets the ga-disable cookie so an already-loaded tag stops collecting.
+    expect(document.cookie).toContain('ga-disable-G-TESTID=true');
     // …but no transport script, no js/config calls.
     expect(scriptRenders).toHaveLength(0);
   });

@@ -31,7 +31,7 @@ const firebaseConfigured = Boolean(
 
 const loadFirebaseAnalytics: FirebaseAnalyticsLoader = async () => {
   if (!firebaseConfigured || typeof window === 'undefined') return null;
-  const [{ initializeApp, getApps }, { getAnalytics, isSupported, logEvent }] = await Promise.all([
+  const [{ initializeApp, getApps }, { getAnalytics, isSupported, logEvent, setAnalyticsCollectionEnabled }] = await Promise.all([
     import('@firebase/app'),
     import('@firebase/analytics'),
   ]);
@@ -51,7 +51,14 @@ const loadFirebaseAnalytics: FirebaseAnalyticsLoader = async () => {
   const dispatch = (eventName: string, payload: Record<string, unknown>) => {
     logEvent(analytics, eventName as 'page_view', payload);
   };
-  return { logEvent: dispatch };
+  return {
+    logEvent: dispatch,
+    setCollectionEnabled: (enabled: boolean) => {
+      // SDK-managed automatic collection runs independently of the custom
+      // event dispatcher; withdrawal must disable it too.
+      setAnalyticsCollectionEnabled(analytics, enabled);
+    },
+  };
 };
 
 export function WebVitalsReporter() {
@@ -75,6 +82,9 @@ export function WebVitalsReporter() {
       },
     );
 
+    // The document's Navigation Timing entry describes the initial load only;
+    // reporting it again on every SPA route change would misattribute the
+    // same numbers to every page. Fire once per document.
     const reportPageLoad = () => {
       try {
         const [entry] = performance.getEntriesByType('navigation');
@@ -93,8 +103,12 @@ export function WebVitalsReporter() {
       window.addEventListener('load', reportPageLoad, { once: true });
     }
 
-    // Re-subscribe so consent changes are picked up on the next event.
-    const unsubscribe = subscribeConsent(() => {});
+    // Consent changes: toggle SDK-managed Firebase collection so withdrawal
+    // stops automatic collection immediately, not just custom events.
+    const unsubscribe = subscribeConsent((state) => {
+      const analyticsGranted = state?.analytics === true;
+      void dispatcher.setFirebaseCollection(analyticsGranted);
+    });
 
     return () => {
       stopVitals();

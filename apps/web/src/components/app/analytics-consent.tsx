@@ -1,5 +1,5 @@
 import { getAuthenticatedUserId } from '@/lib/user-settings/api-client';
-import { getPrivacyPreference } from '@/lib/user-settings/queries';
+import { getRecordedPrivacyConsent } from '@/lib/user-settings/queries';
 import { ConsentBanner } from './consent-banner';
 import { GoogleAnalytics } from './google-analytics';
 import { GoogleTagManager } from './google-tag-manager';
@@ -18,10 +18,11 @@ import { WebVitalsReporter } from './web-vitals-reporter';
  *    denied-by-default `gtag('consent', 'default', …)` before anything
  *    loads and only start transports after the client consent store grants
  *    a purpose.
- * 3. Signed-in users: the server privacy preference
- *    (`privacyPreferences.AnalyticsCookies`) is authoritative and syncs into
- *    the client store. Preference read failure fails closed (denied) and no
- *    banner is shown for the signed-in session.
+ * 3. Signed-in users: an explicitly RECORDED server privacy preference
+ *    (`AnalyticsCookies` present on the row) is authoritative and syncs
+ *    into the client store. A missing row/field is a default, NOT an
+ *    opt-in — those users get no implicit grant. Preference read failure
+ *    fails closed (denied) and no banner is shown for the signed-in session.
  * 4. Anonymous visitors: the granular consent banner collects the choice
  *    (suppressed when Do Not Track is enabled — tracking stays denied).
  */
@@ -34,7 +35,10 @@ export async function AnalyticsConsent() {
   let serverAnalyticsConsent: boolean | undefined;
   if (userId) {
     try {
-      serverAnalyticsConsent = (await getPrivacyPreference()).analyticsCookies;
+      const recorded = await getRecordedPrivacyConsent();
+      serverAnalyticsConsent = recorded.analyticsCookiesRecorded
+        ? recorded.preference.analyticsCookies
+        : undefined;
     } catch {
       serverAnalyticsConsent = false;
     }

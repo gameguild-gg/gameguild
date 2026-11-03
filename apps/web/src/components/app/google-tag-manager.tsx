@@ -1,7 +1,7 @@
 'use client';
 
 import { ensureConsentDefaults, pushConsentUpdate, type ConsentWindow } from '@/lib/consent/consent-mode';
-import { subscribeConsent } from '@/lib/consent/store';
+import { DENIED_CONSENT, subscribeConsent } from '@/lib/consent/store';
 import Script from 'next/script';
 import { useEffect, useState } from 'react';
 
@@ -44,9 +44,11 @@ export function GoogleTagManager({ containerId: rawContainerId }: GoogleTagManag
 
     let started = false;
     return subscribeConsent((state) => {
-      if (!state) return;
-      pushConsentUpdate(w, state);
-      if ((state.analytics || state.marketing) && !started) {
+      // null (missing/invalid/cleared record) is a denial — fail closed so a
+      // started container never keeps its previous grant.
+      const effective = state ?? DENIED_CONSENT;
+      pushConsentUpdate(w, effective);
+      if ((effective.analytics || effective.marketing) && !started) {
         started = true;
         w.dataLayer!.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
         setTransportReady(true);

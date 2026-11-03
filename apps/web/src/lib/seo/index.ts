@@ -14,10 +14,15 @@ const SECONDARY_LOCALE = 'pt-BR';
 export interface PageMetadataInput {
   /** Unprefixed site path, e.g. `/courses` or `/courses/unity-fundamentals`. */
   path: string;
+  /** Absolute title INCLUDING the brand — the root `%s | GameGuild` template is bypassed. */
   title: string;
   description: string;
   ogImage?: string;
   noIndex?: boolean;
+  /** Active locale for localized canonical/OG URLs (defaults to the unprefixed default locale). */
+  locale?: string;
+  /** Force the large Twitter card even without an inline ogImage (routes using the opengraph-image.tsx file convention). */
+  twitterLargeCard?: boolean;
 }
 
 /** Normalizes an unprefixed path to exactly one leading slash and no trailing slash (except root). */
@@ -32,10 +37,16 @@ function joinUrl(base: string, path: string): string {
   return `${base.replace(/\/$/, '')}${normalized === '/' ? '' : normalized}`;
 }
 
+function localizedPath(path: string, locale?: string): string {
+  if (!locale || locale === 'en-US') return normalizePath(path);
+  return `/${locale}${normalizePath(path)}`;
+}
+
 /**
- * Standard page metadata: unique title/description, absolute unprefixed
- * canonical, hreflang alternates (`en-US` = canonical, `pt-BR` = prefixed,
- * `x-default` = canonical), OpenGraph website card, and Twitter summary.
+ * Standard page metadata: unique title/description, absolute canonical for
+ * the ACTIVE locale (default-locale URLs unprefixed, others prefixed),
+ * hreflang alternates (`x-default` always points at the default-locale
+ * URL), OpenGraph website card, and Twitter summary.
  */
 export function buildPageMetadata({
   path,
@@ -43,21 +54,27 @@ export function buildPageMetadata({
   description,
   ogImage,
   noIndex,
+  locale,
+  twitterLargeCard,
 }: PageMetadataInput): Metadata {
-  const canonical = joinUrl(SITE_BASE_URL, path);
+  const canonical = joinUrl(SITE_BASE_URL, localizedPath(path, locale));
+  const enUs = joinUrl(SITE_BASE_URL, normalizePath(path));
   const ptBr = joinUrl(SITE_BASE_URL, `/${SECONDARY_LOCALE}${normalizePath(path)}`);
   const images = ogImage ? { images: [ogImage] } : {};
+  const largeCard = Boolean(ogImage) || twitterLargeCard === true;
 
   return {
-    title,
+    // Absolute title: the root layout template (`%s | GameGuild`) would
+    // otherwise append a second brand suffix to already-branded titles.
+    title: { absolute: title },
     description,
     ...(noIndex ? { robots: { index: false, follow: false } } : { robots: { index: true, follow: true } }),
     alternates: {
       canonical,
       languages: {
-        'en-US': canonical,
+        'en-US': enUs,
         'pt-BR': ptBr,
-        'x-default': canonical,
+        'x-default': enUs,
       },
     },
     openGraph: {
@@ -69,7 +86,7 @@ export function buildPageMetadata({
       ...images,
     },
     twitter: {
-      card: ogImage ? 'summary_large_image' : 'summary',
+      card: largeCard ? 'summary_large_image' : 'summary',
       title,
       description,
       ...images,

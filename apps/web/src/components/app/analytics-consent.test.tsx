@@ -5,7 +5,7 @@ import type { PrivacyPreferenceData } from '@/lib/user-settings/preferences-mapp
 
 const mocks = vi.hoisted(() => ({
   getAuthenticatedUserId: vi.fn(),
-  getPrivacyPreference: vi.fn(),
+  getRecordedPrivacyConsent: vi.fn(),
   gtmMounted: [] as Array<Record<string, unknown>>,
   gaMounted: [] as Array<Record<string, unknown>>,
   banners: [] as Array<Record<string, unknown>>,
@@ -15,7 +15,7 @@ vi.mock('@/lib/user-settings/api-client', () => ({
   getAuthenticatedUserId: mocks.getAuthenticatedUserId,
 }));
 vi.mock('@/lib/user-settings/queries', () => ({
-  getPrivacyPreference: mocks.getPrivacyPreference,
+  getRecordedPrivacyConsent: mocks.getRecordedPrivacyConsent,
 }));
 
 vi.mock('./google-tag-manager', () => ({
@@ -59,7 +59,7 @@ describe('AnalyticsConsent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getAuthenticatedUserId.mockResolvedValue(null);
-    mocks.getPrivacyPreference.mockResolvedValue(privacy());
+    mocks.getRecordedPrivacyConsent.mockResolvedValue({ preference: privacy(), analyticsCookiesRecorded: true });
     mocks.gtmMounted.length = 0;
     mocks.gaMounted.length = 0;
     mocks.banners.length = 0;
@@ -76,7 +76,7 @@ describe('AnalyticsConsent', () => {
     const { container } = render(await AnalyticsConsent());
 
     expect(container).toBeEmptyDOMElement();
-    expect(mocks.getPrivacyPreference).not.toHaveBeenCalled();
+    expect(mocks.getRecordedPrivacyConsent).not.toHaveBeenCalled();
     expect(mocks.gtmMounted).toHaveLength(0);
     expect(mocks.gaMounted).toHaveLength(0);
     expect(mocks.banners).toHaveLength(0);
@@ -89,7 +89,7 @@ describe('AnalyticsConsent', () => {
     const { container } = render(await AnalyticsConsent());
 
     expect(container).toBeEmptyDOMElement();
-    expect(mocks.getPrivacyPreference).not.toHaveBeenCalled();
+    expect(mocks.getRecordedPrivacyConsent).not.toHaveBeenCalled();
   });
 
   it('mounts loaders plus the anonymous consent banner for anonymous visitors', async () => {
@@ -98,7 +98,7 @@ describe('AnalyticsConsent', () => {
 
     render(await AnalyticsConsent());
 
-    expect(mocks.getPrivacyPreference).not.toHaveBeenCalled();
+    expect(mocks.getRecordedPrivacyConsent).not.toHaveBeenCalled();
     expect(mocks.gtmMounted).toEqual([{ containerId: 'GTM-TESTID' }]);
     expect(mocks.gaMounted).toEqual([{ measurementId: 'G-TESTID' }]);
     expect(mocks.banners).toEqual([{}]);
@@ -107,11 +107,14 @@ describe('AnalyticsConsent', () => {
   it('syncs the server privacy preference for signed-in users (no banner choice surface)', async () => {
     process.env[GTM_ENV_KEY] = 'GTM-TESTID';
     mocks.getAuthenticatedUserId.mockResolvedValue('user-1');
-    mocks.getPrivacyPreference.mockResolvedValue(privacy({ analyticsCookies: false }));
+    mocks.getRecordedPrivacyConsent.mockResolvedValue({
+      preference: privacy({ analyticsCookies: false }),
+      analyticsCookiesRecorded: true,
+    });
 
     render(await AnalyticsConsent());
 
-    expect(mocks.getPrivacyPreference).toHaveBeenCalledTimes(1);
+    expect(mocks.getRecordedPrivacyConsent).toHaveBeenCalledTimes(1);
     expect(mocks.banners).toEqual([{ serverAnalyticsConsent: false }]);
   });
 
@@ -127,10 +130,23 @@ describe('AnalyticsConsent', () => {
   it('fails closed when the preference read fails for a signed-in user', async () => {
     process.env[GA_ENV_KEY] = 'G-TESTID';
     mocks.getAuthenticatedUserId.mockResolvedValue('user-1');
-    mocks.getPrivacyPreference.mockRejectedValue(new Error('preferences API unavailable'));
+    mocks.getRecordedPrivacyConsent.mockRejectedValue(new Error('preferences API unavailable'));
 
     render(await AnalyticsConsent());
 
     expect(mocks.banners).toEqual([{ serverAnalyticsConsent: false }]);
+  });
+
+  it('treats a missing/unrecorded preference as undecided — no implicit analytics grant', async () => {
+    process.env[GA_ENV_KEY] = 'G-TESTID';
+    mocks.getAuthenticatedUserId.mockResolvedValue('user-1');
+    mocks.getRecordedPrivacyConsent.mockResolvedValue({
+      preference: privacy({ analyticsCookies: true }),
+      analyticsCookiesRecorded: false,
+    });
+
+    render(await AnalyticsConsent());
+
+    expect(mocks.banners).toEqual([{}]);
   });
 });
