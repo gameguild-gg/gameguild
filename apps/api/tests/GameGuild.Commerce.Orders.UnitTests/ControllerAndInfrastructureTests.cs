@@ -470,7 +470,7 @@ public class OrdersInfrastructureTests
             new CompleteOrderCommandHandler(orderRepo, entitlementService, dbContext, OrderTestFactory.CreatePaymentAuthority(), actor),
             new DeleteOrderCommandHandler(orderRepo),
             new HoldOrderCommandHandler(orderRepo),
-            new RefundOrderCommandHandler(orderRepo, entitlementService),
+            new RefundOrderCommandHandler(orderRepo, Mock.Of<IOrderPaymentRefunder>(), entitlementService, actor),
             new ReleaseOrderCommandHandler(orderRepo),
             new UpdateOrderCommandHandler(orderRepo, actor)
         };

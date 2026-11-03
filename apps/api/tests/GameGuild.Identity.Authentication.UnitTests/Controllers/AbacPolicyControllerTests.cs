@@ -10,6 +10,14 @@ namespace GameGuild.Identity.Authentication.UnitTests.Controllers;
 
 public sealed class AbacPolicyControllerTests
 {
+    // NOTE (issue #1203): the read-side tests (GetAbacPolicy, GetAbacPolicies, statistics,
+    // usage, audit-trail, conflicts, templates) previously mocked IMediator and stayed
+    // green while the endpoints had no handlers and answered 500. They are replaced by
+    // pipeline-level coverage in GameGuild.API.IntegrationTests
+    // (PolicyManagementQueriesPostgreSqlHttpTests), which exercises the real mediator
+    // and handlers. The remaining tests below cover the still-unavailable command
+    // surface (422 mapping), which is real controller behavior.
+
     [Fact]
     public async Task CreateAbacPolicy_ShouldReturnCreatedAtAction()
     {
@@ -29,27 +37,6 @@ public sealed class AbacPolicyControllerTests
         created.ActionName.Should().Be(nameof(AbacPolicyController.GetAbacPolicy));
         created.RouteValues!["id"].Should().Be(policy.Id);
         created.Value.Should().BeSameAs(policy);
-    }
-
-    [Fact]
-    public async Task GetAbacPolicy_ShouldMapPolicyIdAndReturnOk()
-    {
-        var mediator = new Mock<IMediator>();
-        GetAbacPolicyQuery? captured = null;
-        var policy = CreatePolicy();
-
-        mediator
-            .Setup(x => x.Send(It.IsAny<GetAbacPolicyQuery>(), It.IsAny<CancellationToken>()))
-            .Callback<object, CancellationToken>((request, _) => captured = (GetAbacPolicyQuery)request)
-            .ReturnsAsync(policy);
-
-        var controller = CreateController(mediator);
-
-        var result = await controller.GetAbacPolicy(policy.Id);
-
-        captured.Should().NotBeNull();
-        captured!.PolicyId.Should().Be(policy.Id);
-        result.Result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeSameAs(policy);
     }
 
     [Fact]
@@ -93,31 +80,6 @@ public sealed class AbacPolicyControllerTests
         captured.Should().NotBeNull();
         captured!.PolicyId.Should().Be(policyId);
         result.Should().BeOfType<NoContentResult>();
-    }
-
-    [Fact]
-    public async Task GetAbacPolicies_ShouldMapFiltersAndReturnOk()
-    {
-        var mediator = new Mock<IMediator>();
-        GetAbacPoliciesQuery? captured = null;
-        var tenantId = Guid.NewGuid();
-
-        mediator
-            .Setup(x => x.Send(It.IsAny<GetAbacPoliciesQuery>(), It.IsAny<CancellationToken>()))
-            .Callback<object, CancellationToken>((request, _) => captured = (GetAbacPoliciesQuery)request)
-            .ReturnsAsync((PagedResult<AbacPolicy>)null!);
-
-        var controller = CreateController(mediator);
-
-        var result = await controller.GetAbacPolicies(tenantId, isActive: true, category: "Security", page: 2, pageSize: 15);
-
-        captured.Should().NotBeNull();
-        captured!.TenantId.Should().Be(tenantId);
-        captured.IsActive.Should().BeTrue();
-        captured.Category.Should().Be("Security");
-        captured.Page.Should().Be(2);
-        captured.PageSize.Should().Be(15);
-        result.Result.Should().BeOfType<OkObjectResult>();
     }
 
     [Fact]
@@ -242,83 +204,6 @@ public sealed class AbacPolicyControllerTests
     }
 
     [Fact]
-    public async Task GetAbacPolicyStatistics_ShouldMapDefaultDates()
-    {
-        var mediator = new Mock<IMediator>();
-        GetAbacPolicyStatisticsQuery? captured = null;
-        var tenantId = Guid.NewGuid();
-
-        mediator
-            .Setup(x => x.Send(It.IsAny<GetAbacPolicyStatisticsQuery>(), It.IsAny<CancellationToken>()))
-            .Callback<object, CancellationToken>((request, _) => captured = (GetAbacPolicyStatisticsQuery)request)
-            .ReturnsAsync((AbacPolicyStatisticsDto)null!);
-
-        var controller = CreateController(mediator);
-        var before = DateTime.UtcNow;
-
-        var result = await controller.GetAbacPolicyStatistics(tenantId);
-
-        var after = DateTime.UtcNow;
-        captured.Should().NotBeNull();
-        captured!.TenantId.Should().Be(tenantId);
-        captured.FromDate.Should().BeOnOrAfter(before.AddDays(-30).AddSeconds(-1));
-        captured.FromDate.Should().BeOnOrBefore(after.AddDays(-30).AddSeconds(1));
-        captured.ToDate.Should().BeOnOrAfter(before.AddSeconds(-1));
-        captured.ToDate.Should().BeOnOrBefore(after.AddSeconds(1));
-        result.Result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task GetAbacPolicyUsage_ShouldMapPolicyIdAndDefaultDates()
-    {
-        var mediator = new Mock<IMediator>();
-        GetAbacPolicyUsageQuery? captured = null;
-        var policyId = Guid.NewGuid();
-
-        mediator
-            .Setup(x => x.Send(It.IsAny<GetAbacPolicyUsageQuery>(), It.IsAny<CancellationToken>()))
-            .Callback<object, CancellationToken>((request, _) => captured = (GetAbacPolicyUsageQuery)request)
-            .ReturnsAsync((AbacPolicyUsageDto)null!);
-
-        var controller = CreateController(mediator);
-        var before = DateTime.UtcNow;
-
-        var result = await controller.GetAbacPolicyUsage(policyId);
-
-        var after = DateTime.UtcNow;
-        captured.Should().NotBeNull();
-        captured!.PolicyId.Should().Be(policyId);
-        captured.FromDate.Should().BeOnOrAfter(before.AddDays(-7).AddSeconds(-1));
-        captured.FromDate.Should().BeOnOrBefore(after.AddDays(-7).AddSeconds(1));
-        captured.ToDate.Should().BeOnOrAfter(before.AddSeconds(-1));
-        captured.ToDate.Should().BeOnOrBefore(after.AddSeconds(1));
-        result.Result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task GetAbacPolicyAuditTrail_ShouldMapPolicyIdAndPaging()
-    {
-        var mediator = new Mock<IMediator>();
-        GetAbacPolicyAuditTrailQuery? captured = null;
-        var policyId = Guid.NewGuid();
-
-        mediator
-            .Setup(x => x.Send(It.IsAny<GetAbacPolicyAuditTrailQuery>(), It.IsAny<CancellationToken>()))
-            .Callback<object, CancellationToken>((request, _) => captured = (GetAbacPolicyAuditTrailQuery)request)
-            .ReturnsAsync((AbacPolicyAuditTrailDto)null!);
-
-        var controller = CreateController(mediator);
-
-        var result = await controller.GetAbacPolicyAuditTrail(policyId, page: 4, pageSize: 12);
-
-        captured.Should().NotBeNull();
-        captured!.PolicyId.Should().Be(policyId);
-        captured.Page.Should().Be(4);
-        captured.PageSize.Should().Be(12);
-        result.Result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeNull();
-    }
-
-    [Fact]
     public async Task ValidateAbacPolicy_ShouldReturnOk()
     {
         var mediator = new Mock<IMediator>();
@@ -333,44 +218,6 @@ public sealed class AbacPolicyControllerTests
         var result = await controller.ValidateAbacPolicy(command);
 
         result.Result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task GetAbacPolicyConflicts_ShouldMapTenantId()
-    {
-        var mediator = new Mock<IMediator>();
-        GetAbacPolicyConflictsQuery? captured = null;
-        var tenantId = Guid.NewGuid();
-
-        mediator
-            .Setup(x => x.Send(It.IsAny<GetAbacPolicyConflictsQuery>(), It.IsAny<CancellationToken>()))
-            .Callback<object, CancellationToken>((request, _) => captured = (GetAbacPolicyConflictsQuery)request)
-            .ReturnsAsync((AbacPolicyConflictsDto)null!);
-
-        var controller = CreateController(mediator);
-
-        var result = await controller.GetAbacPolicyConflicts(tenantId);
-
-        captured.Should().NotBeNull();
-        captured!.TenantId.Should().Be(tenantId);
-        result.Result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task GetAbacPolicyTemplates_ShouldReturnOk()
-    {
-        var mediator = new Mock<IMediator>();
-        var templates = Array.Empty<AbacPolicyTemplateDto>();
-
-        mediator
-            .Setup(x => x.Send(It.IsAny<GetAbacPolicyTemplatesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(templates.AsEnumerable());
-
-        var controller = CreateController(mediator);
-
-        var result = await controller.GetAbacPolicyTemplates();
-
-        result.Result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeEquivalentTo(templates);
     }
 
     [Fact]

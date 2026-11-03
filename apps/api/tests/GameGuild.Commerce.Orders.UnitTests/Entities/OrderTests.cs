@@ -317,6 +317,34 @@ public class OrderTests
         events.Should().Contain(e => e.GetType() == typeof(OrderStateChangedEvent));
     }
 
+    [Fact]
+    public void ReleasePaymentReservation_ShouldGoThroughTheStateMachine_AndRaiseTheAuditEvent()
+    {
+        // Issue #1205 G-5: the reservation release used to write Status directly — no FSM
+        // validation, no OrderStateChangedEvent, nothing in order_audit_logs.
+        var order = CreatePendingOrder();
+        order.StartPaymentProcessing();
+
+        order.ReleasePaymentReservation();
+
+        order.Status.Should().Be(OrderStatus.Pending);
+        // (TransitionToWithReason plus the OnStatusChanged hook each raise the event —
+        // the pre-existing double-raise on every audited transition.)
+        order.DomainEvents.OfType<OrderStateChangedEvent>()
+            .Should().Contain(e => e.PreviousStatus == OrderStatus.Processing && e.NewStatus == OrderStatus.Pending);
+    }
+
+    [Fact]
+    public void ReleasePaymentReservation_ShouldRejectNonProcessingOrders()
+    {
+        var order = CreatePendingOrder();
+
+        var act = () => order.ReleasePaymentReservation();
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Cannot release payment reservation*");
+    }
+
     #endregion
 
     #region Idempotency Key Tests

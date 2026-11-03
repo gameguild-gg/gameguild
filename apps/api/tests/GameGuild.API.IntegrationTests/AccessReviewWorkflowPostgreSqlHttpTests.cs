@@ -66,12 +66,13 @@ public sealed class AccessReviewWorkflowPostgreSqlHttpTests(ApiPostgreSqlFixture
             persisted.CreatedBy.Should().Be(adminId);
             persisted.Name.Should().Be($"Q4 recertification {tenantId:N}");
 
-            // Start the campaign.
+            // Start the campaign: Draft → Active (opened for attestations, issue #1204);
+            // the first recorded decision then moves it to InProgress.
             var startResponse = await adminClient.PostAsync($"{CampaignsRoute}/{campaignId}:start", null);
             startResponse.StatusCode.Should().Be(
                 HttpStatusCode.NoContent,
                 await startResponse.Content.ReadAsStringAsync());
-            (await QueryCampaignAsync(campaignId))!.Status.Should().Be(AccessReviewStatus.InProgress);
+            (await QueryCampaignAsync(campaignId))!.Status.Should().Be(AccessReviewStatus.Active);
 
             // Assign a review item to the reviewer (attestation work list).
             itemId = await SeedReviewItemAsync(campaignId, reviewerId, tenantId);

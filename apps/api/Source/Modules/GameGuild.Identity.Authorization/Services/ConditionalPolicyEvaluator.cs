@@ -17,6 +17,22 @@ public interface IConditionalPolicyEvaluator
         CancellationToken ct = default);
 
     /// <summary>
+    ///     Set-based evaluation for effective-permission resolution (issue #1204):
+    ///     evaluates the tenant's active conditional policies once against the
+    ///     resolution context and returns the subset of <paramref name="actions"/>
+    ///     a matching deny policy subtracts. Conditions are action-independent, so
+    ///     each policy's conditions are evaluated at most once. Allow-effect policies
+    ///     never mint permissions (consistent with the ABAC overlay semantics).
+    /// </summary>
+    Task<ConditionalPolicySetEvaluationResult> EvaluateActionsAsync(
+        Guid userId,
+        Guid? tenantId,
+        string? resourceType,
+        Guid? resourceId,
+        IReadOnlyCollection<string> actions,
+        CancellationToken ct = default);
+
+    /// <summary>
     ///     Evaluates one in-memory <see cref="ConditionalPolicy"/> against a context
     ///     without consulting any repository (issue #374: what-if rule testing and
     ///     simulation). The policy is never persisted — this overload exists exactly for
@@ -68,6 +84,31 @@ public record PolicyEvaluationDetail(
     bool ConditionsMet);
 
 /// <summary>
+///     Set-based conditional policy evaluation result for effective-permission
+///     resolution (issue #1204): which of the requested actions matching deny
+///     policies subtract, plus the tenant's evaluated active-policy count.
+/// </summary>
+/// <param name="PolicyCount">
+///     Active conditional policies evaluated for the tenant (0 = no policy configured:
+///     the acceptable allow-by-no-policy case).
+/// </param>
+/// <param name="DeniedActions">
+///     Actions subtracted by matching deny policies. A deny policy without a
+///     permission-type constraint is context-wide and denies every requested action.
+/// </param>
+/// <param name="ContextWideDenial">
+///     True when at least one matched deny policy was untargeted (permission-type
+///     unconstrained) — the denial covers every action, not only
+///     <paramref name="DeniedActions" /> returned for the requested set.
+/// </param>
+/// <param name="Details">Per-policy evaluation details (deny matches included).</param>
+public sealed record ConditionalPolicySetEvaluationResult(
+    int PolicyCount,
+    IReadOnlyList<string> DeniedActions,
+    bool ContextWideDenial,
+    IReadOnlyList<PolicyEvaluationDetail> Details);
+
+/// <summary>
 ///     Implementation of conditional policy evaluator using existing ConditionalPolicy entity.
 /// </summary>
 public class ConditionalPolicyEvaluator(
@@ -81,7 +122,7 @@ public class ConditionalPolicyEvaluator(
     {
         var policies = await repository.GetActivePoliciesAsync(context.TenantId, ct).ConfigureAwait(false);
         var details = new List<PolicyEvaluationDetail>();
-        
+
         // Filter and sort policies by priority (descending)
         var applicablePolicies = policies
             .Where(p => p.IsActive())
@@ -124,6 +165,86 @@ public class ConditionalPolicyEvaluator(
 
         // No deny policy matched
         return new ConditionalPolicyResult(IsAllowed: true, Details: details);
+    }
+
+    public async Task<ConditionalPolicySetEvaluationResult> EvaluateActionsAsync(
+        Guid userId,
+        Guid? tenantId,
+        string? resourceType,
+        Guid? resourceId,
+        IReadOnlyCollection<string> actions,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(actions);
+
+        var policies = await repository.GetActivePoliciesAsync(tenantId, ct).ConfigureAwait(false);
+        if (policies.Count == 0)
+        {
+            // No policy configured: the documented acceptable default (allow-by-no-policy).
+            return new ConditionalPolicySetEvaluationResult(0, Array.Empty<string>(), false, Array.Empty<PolicyEvaluationDetail>());
+        }
+
+        // Resolution-time context: subject identity, resource frame and time are known;
+        // per-request signals (IP, device, geo, MFA) are not. Policies conditioned on
+        // those attributes do not match here and stay enforced by the request-time
+        // gates — same narrowing the ABAC overlay documents.
+        var context = new ConditionalPolicyContext(
+            UserId: userId,
+            TenantId: tenantId,
+            ResourceType: resourceType ?? string.Empty,
+            ResourceId: resourceId,
+            Action: "*",
+            UserRoles: Array.Empty<string>());
+
+        var denied = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var details = new List<PolicyEvaluationDetail>();
+        var contextWideDenial = false;
+
+        var applicablePolicies = policies
+            .Where(p => p.IsActive())
+            .Where(p => p.AppliesToResourceType(context.ResourceType))
+            .OrderByDescending(p => p.Priority);
+
+        foreach (var policy in applicablePolicies)
+        {
+            // Conditions are action-independent: evaluate once per policy, then apply
+            // the deny to the actions the policy targets.
+            var conditionsMet = EvaluateConditions(policy, context);
+
+            details.Add(new PolicyEvaluationDetail(policy.Id, policy.Name, policy.Action, conditionsMet));
+
+            if (!conditionsMet || policy.Action != PolicyAction.Deny)
+            {
+                continue;
+            }
+
+            if (policy.PermissionType is null)
+            {
+                // Unconstrained deny: context-wide, subtracts everything.
+                contextWideDenial = true;
+                denied.UnionWith(actions);
+            }
+            else if (actions.Contains(policy.PermissionType, StringComparer.OrdinalIgnoreCase))
+            {
+                denied.Add(policy.PermissionType);
+            }
+        }
+
+        if (denied.Count > 0)
+        {
+            logger.LogWarning(
+                "Conditional policy evaluation (resolution time) denied {DeniedCount} of {ActionCount} permission(s) for user {UserId} in tenant {TenantId}",
+                denied.Count,
+                actions.Count,
+                userId,
+                tenantId);
+        }
+
+        return new ConditionalPolicySetEvaluationResult(
+            policies.Count,
+            denied.ToArray(),
+            contextWideDenial,
+            details);
     }
 
     /// <summary>

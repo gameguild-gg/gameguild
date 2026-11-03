@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -17,6 +18,7 @@ public class MfaServiceTests
     private readonly Mock<IMfaAttemptTrackingService> _attemptTrackingServiceMock;
     private readonly Mock<GameGuild.Identity.Users.IUserRepository> _userRepositoryMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
+    private readonly Mock<IPublisher> _publisherMock;
     private readonly MfaService _service;
 
     public MfaServiceTests()
@@ -27,6 +29,7 @@ public class MfaServiceTests
         _attemptTrackingServiceMock = new Mock<IMfaAttemptTrackingService>();
         _userRepositoryMock = new Mock<GameGuild.Identity.Users.IUserRepository>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
+        _publisherMock = new Mock<IPublisher>();
 
         _service = new MfaService(
             _loggerMock.Object,
@@ -34,7 +37,8 @@ public class MfaServiceTests
             _backupCodeMfaServiceMock.Object,
             _attemptTrackingServiceMock.Object,
             _userRepositoryMock.Object,
-            _passwordHasherMock.Object);
+            _passwordHasherMock.Object,
+            eventPublisher: _publisherMock.Object);
     }
 
     #region GetMfaConfigurationAsync Tests
@@ -661,6 +665,96 @@ public class MfaServiceTests
 
         // Assert
         result.Should().BeFalse();
+    }
+
+    #endregion
+
+    #region In-process MFA event emission (issue #1199: the dead event layer)
+
+    [Fact]
+    public async Task CompleteMfaSetupAsync_WhenTotpValid_PublishesMfaEnabledEvent()
+    {
+        var userId = Guid.NewGuid();
+        _totpMfaServiceMock
+            .Setup(x => x.VerifyTotpAsync(userId, "123456", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _service.CompleteMfaSetupAsync(userId, "123456");
+
+        result.Success.Should().BeTrue();
+        _publisherMock.Verify(
+            x => x.Publish(It.Is<MfaEnabledEvent>(e => e.UserId == userId && e.Method == "Totp"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task CompleteMfaSetupAsync_WhenTotpInvalid_PublishesMfaVerificationFailedEvent()
+    {
+        var userId = Guid.NewGuid();
+        _totpMfaServiceMock
+            .Setup(x => x.VerifyTotpAsync(userId, "000000", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await _service.CompleteMfaSetupAsync(userId, "000000");
+
+        result.Success.Should().BeFalse();
+        _publisherMock.Verify(
+            x => x.Publish(It.Is<MfaVerificationFailedEvent>(e => e.UserId == userId && e.Method == "Totp"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task VerifyMfaAsync_WhenValid_PublishesMfaVerificationSucceededEvent()
+    {
+        var userId = Guid.NewGuid();
+        _backupCodeMfaServiceMock
+            .Setup(x => x.VerifyBackupCodeAsync(userId, "backup-code-1", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _service.VerifyMfaAsync(userId, "backup-code-1", MfaMethod.BackupCode);
+
+        result.Success.Should().BeTrue();
+        _publisherMock.Verify(
+            x => x.Publish(It.Is<MfaVerificationSucceededEvent>(e => e.UserId == userId && e.Method == "BackupCode"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task VerifyMfaAsync_WhenInvalid_PublishesMfaVerificationFailedEvent()
+    {
+        var userId = Guid.NewGuid();
+        _totpMfaServiceMock
+            .Setup(x => x.VerifyTotpAsync(userId, "111111", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await _service.VerifyMfaAsync(userId, "111111", MfaMethod.Totp);
+
+        result.Success.Should().BeFalse();
+        _publisherMock.Verify(
+            x => x.Publish(It.Is<MfaVerificationFailedEvent>(e => e.UserId == userId && e.Method == "Totp"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task DisableMfaAsync_WhenDisabled_PublishesMfaDisabledEvent()
+    {
+        var userId = Guid.NewGuid();
+        _userRepositoryMock
+            .Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateUserWithPasswordHash("hash:$2a$11$storedhash"));
+        _passwordHasherMock
+            .Setup(x => x.VerifyPassword("hash:$2a$11$storedhash", "Correct-Horse-1!"))
+            .Returns(true);
+        _attemptTrackingServiceMock
+            .Setup(x => x.DisableMfaAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _service.DisableMfaAsync(userId, "Correct-Horse-1!");
+
+        result.Should().BeTrue();
+        _publisherMock.Verify(
+            x => x.Publish(It.Is<MfaDisabledEvent>(e => e.UserId == userId && e.Method == "Totp"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     #endregion
