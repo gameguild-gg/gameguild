@@ -2041,6 +2041,24 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### External identity provider availability (#1116, #1125)
+
+Provider transport errors, HTTP 5xx responses and HttpClient timeouts are distinct
+from credential rejection. Sign-in and account-linking failures caused by provider
+unavailability return an `oauth_provider_unavailable` 503 response; sign-in also
+advertises the existing magic-link fallback. No tokens, session or external-account
+link may be created from a failed exchange. Invalid signatures, audiences, issuers
+and expired tokens remain credential failures; outages never bypass validation.
+Google signing-key fetch failures retain the typed outage outcome. OIDC discovery,
+token exchange and signing-key fetch failures retain their HTTP status for internal
+diagnosis without exposing upstream exception details in the response.
+
+An HttpClient timeout can contain an internally cancelled token and an inner
+`TimeoutException`. Classification checks the request's own cancellation token
+first, so caller cancellation is propagated rather than reported as an outage.
+The Google library has no cancellation overload: the request stops awaiting its
+validation when cancelled, without permitting the pending validation to sign in.
+
 ### Permission grant deletion and restoration (#352)
 
 `PermissionBase.IsEffective` and `Grants` reject soft-deleted grants even when a

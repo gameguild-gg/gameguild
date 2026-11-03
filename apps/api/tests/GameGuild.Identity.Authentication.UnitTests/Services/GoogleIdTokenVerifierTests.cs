@@ -8,6 +8,67 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 
 public class GoogleIdTokenVerifierTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SigningKeyFetchFailure_IsProviderOutage(bool timeout)
+    {
+        using var internalTimeout = new CancellationTokenSource();
+        internalTimeout.Cancel();
+        Exception failure = timeout
+            ? new TaskCanceledException("HTTP timeout", new TimeoutException(), internalTimeout.Token)
+            : new HttpRequestException("JWKS unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable);
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["OAuth:Google:ClientId"] = "test-client-id"
+        }).Build();
+        var verifier = new GoogleIdTokenVerifier(configuration, new Mock<ILogger<GoogleIdTokenVerifier>>().Object,
+            (_, _) => Task.FromException<Google.Apis.Auth.GoogleJsonWebSignature.Payload>(failure));
+
+        var act = () => verifier.VerifyAsync("token", CancellationToken.None);
+
+        var thrown = await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+        thrown.Which.Provider.Should().Be("Google");
+        thrown.Which.InnerException.Should().BeSameAs(failure);
+    }
+
+    [Fact]
+    public async Task LibraryRejectsCredentials_RemainsUnauthorized()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["OAuth:Google:ClientId"] = "test-client-id"
+        }).Build();
+        var verifier = new GoogleIdTokenVerifier(configuration, new Mock<ILogger<GoogleIdTokenVerifier>>().Object,
+            (_, _) => Task.FromException<Google.Apis.Auth.GoogleJsonWebSignature.Payload>(new FormatException("Invalid JWT")));
+
+        var act = () => verifier.VerifyAsync("token", CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task CallerCancelsDuringLibraryValidation_PropagatesCancellation()
+    {
+        using var caller = new CancellationTokenSource();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var pending = new TaskCompletionSource<Google.Apis.Auth.GoogleJsonWebSignature.Payload>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["OAuth:Google:ClientId"] = "test-client-id"
+        }).Build();
+        var verifier = new GoogleIdTokenVerifier(configuration, new Mock<ILogger<GoogleIdTokenVerifier>>().Object,
+            (_, _) => { started.SetResult(); return pending.Task; });
+
+        var verification = verifier.VerifyAsync("token", caller.Token);
+        await started.Task;
+        caller.Cancel();
+
+        var act = () => verification;
+        await act.Should().ThrowAsync<OperationCanceledException>();
+        pending.SetResult(new Google.Apis.Auth.GoogleJsonWebSignature.Payload());
+    }
+
     // ───────────────────────────────────────────────────────────────────────────
     // Seam test: proves a fake IGoogleIdTokenVerifier returns the canned
     // VerifiedGoogleUser. This is the contract Todo 3 will depend on — it must

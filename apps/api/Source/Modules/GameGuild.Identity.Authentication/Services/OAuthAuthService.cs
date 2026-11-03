@@ -45,6 +45,7 @@ public class OAuthAuthService(
         var githubUser = await RunProviderAuthenticationAsync(
             "GitHub",
             stopwatch,
+            cancellationToken,
             () => oauthService.GetUserProfileAsync("github", request.AccessToken)).ConfigureAwait(false);
 
         var email = githubUser.Email ?? throw new UnauthorizedAccessException("Email not available from GitHub profile");
@@ -72,6 +73,7 @@ public class OAuthAuthService(
         var googleUser = await RunProviderAuthenticationAsync(
             "Google",
             stopwatch,
+            cancellationToken,
             () => oauthService.GetUserProfileAsync("google", request.AccessToken)).ConfigureAwait(false);
 
         var email = googleUser.Email ?? throw new UnauthorizedAccessException("Email not available from Google profile");
@@ -99,6 +101,7 @@ public class OAuthAuthService(
         var microsoftUser = await RunProviderAuthenticationAsync(
             "Microsoft",
             stopwatch,
+            cancellationToken,
             () => oauthService.GetUserProfileAsync("microsoft", request.AccessToken)).ConfigureAwait(false);
         var email = microsoftUser.Email ?? throw new UnauthorizedAccessException("Email not available from Microsoft profile");
         var grantedScopes = oauthService.ResolveAuthorizationScopes("microsoft");
@@ -138,10 +141,11 @@ public class OAuthAuthService(
         }
 
         // Cryptographically verify the Google ID token (signature, iss, aud, exp).
-        // Verifier throws UnauthorizedAccessException on any failure → caller surfaces 401.
+        // Invalid credentials surface as 401; provider availability failures surface as 503.
         var googleUser = await RunProviderAuthenticationAsync(
             "GoogleIdToken",
             stopwatch,
+            cancellationToken,
             () => googleIdTokenVerifier.VerifyAsync(request.IdToken, cancellationToken)).ConfigureAwait(false);
 
         var email = googleUser.Email;
@@ -175,6 +179,7 @@ public class OAuthAuthService(
         var discordUser = await RunProviderAuthenticationAsync(
             "Discord",
             stopwatch,
+            cancellationToken,
             () => oauthService.HandleCallbackAsync("discord", request.Code, request.State, request.RedirectUri))
             .ConfigureAwait(false);
 
@@ -215,6 +220,7 @@ public class OAuthAuthService(
         var githubUser = await RunProviderAuthenticationAsync(
             "GitHub",
             stopwatch,
+            cancellationToken,
             () => oauthService.HandleCallbackAsync("github", request.Code, request.State, request.RedirectUri))
             .ConfigureAwait(false);
 
@@ -298,6 +304,7 @@ public class OAuthAuthService(
         var profile = await RunProviderAuthenticationAsync(
             displayName,
             stopwatch,
+            cancellationToken,
             () => oauthService.HandleCallbackAsync(providerKey, code, state, redirectUri))
             .ConfigureAwait(false);
 
@@ -340,6 +347,7 @@ public class OAuthAuthService(
         var (user, identity) = await RunProviderAuthenticationAsync(
             authenticationMethod,
             stopwatch,
+            cancellationToken,
             async () =>
             {
                 var federatedIdentity = await oidcFederationService
@@ -413,6 +421,7 @@ public class OAuthAuthService(
         var (user, identity) = await RunProviderAuthenticationAsync(
             authenticationMethod,
             stopwatch,
+            cancellationToken,
             async () =>
             {
                 var federatedIdentity = await federationService
@@ -726,11 +735,23 @@ public class OAuthAuthService(
     private async Task<T> RunProviderAuthenticationAsync<T>(
         string authenticationMethod,
         Stopwatch stopwatch,
+        CancellationToken cancellationToken,
         Func<Task<T>> authenticate)
     {
         try
         {
             return await authenticate().ConfigureAwait(false);
+        }
+        catch (Exception exception) when (OAuthProviderUnavailableException.IsProviderUnavailability(exception, cancellationToken))
+        {
+            // Record the provider outage and preserve its typed outcome for the API's
+            // fallback response. Request cancellation remains cancellation.
+            await RecordFailedOAuthAttemptAsync(authenticationMethod, stopwatch, exception).ConfigureAwait(false);
+            if (exception is OAuthProviderUnavailableException)
+            {
+                throw;
+            }
+            throw new OAuthProviderUnavailableException(authenticationMethod, exception);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -798,6 +819,12 @@ public class OAuthAuthService(
     /// </summary>
     private async Task<User> ResolveExternalUserAsync(string provider, string email, string providerKey, string? name, bool emailVerified, string[] grantedScopes, CancellationToken cancellationToken)
     {
+        // Email case normalization (issue #1118): providers may return mixed-case addresses
+        // (User@Gmail.com) while accounts are stored lowercase. Normalize before any
+        // matching so a casing change never mints a duplicate account or breaks linking;
+        // every other surface (sign-up, magic link, password reset) already normalizes.
+        email = email.Trim().ToLowerInvariant();
+
         var existingLink = await externalLoginRepository
             .GetByProviderKeyAsync(provider, providerKey, cancellationToken)
             .ConfigureAwait(false);
