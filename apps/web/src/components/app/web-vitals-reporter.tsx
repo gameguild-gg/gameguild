@@ -32,8 +32,8 @@ const firebaseConfigured = Boolean(
 const loadFirebaseAnalytics: FirebaseAnalyticsLoader = async () => {
   if (!firebaseConfigured || typeof window === 'undefined') return null;
   const [{ initializeApp, getApps }, { getAnalytics, isSupported }] = await Promise.all([
-    import('firebase/app'),
-    import('firebase/analytics'),
+    import('@firebase/app'),
+    import('@firebase/analytics'),
   ]);
   if (!(await isSupported())) return null;
   const app = getApps()[0] ?? initializeApp({
