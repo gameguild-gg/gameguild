@@ -118,7 +118,7 @@ Legacy FeedItem inbox: `FeedController` at `api/social/feed` · class `[Authoriz
 
 ### `GameGuild.Social.Profiles/Controllers/SocialProfilesController.cs` (11 endpoints)
 
-`api/social/profiles` · class `[Authorize]` (L11); `[AllowAnonymous]` on by-handle and search L34,39 · 0 validators · tests `Social.Profiles.UnitTests`. **HOLE?** `PUT users/{userId}/privacy` and skills/portfolio mutations take the path `userId` without an actor-equality guard at the controller; the service assumes self-service (gap N8 family).
+`api/social/profiles` · class `[Authorize]` (L11); `[AllowAnonymous]` on by-handle and search L34,39 · 0 validators · tests `Social.Profiles.UnitTests`. **HOLE?** none — every mutation enforces actor equality via `IsActor(userId)` / `OwnsProfileAsync` (`SocialProfilesController.cs:47,59,73,87`).
 
 | Verb | Route | Action | Dispatch | L |
 |---|---|---|---|---|
@@ -603,7 +603,7 @@ versioned tenant routes · class `[Authorize]` (L19); tenant match enforced inli
 
 ### `GameGuild.TestingLab/Controllers/TestingEventsController.cs` (44 endpoints)
 
-`v{version}/testing/events` · class `[Authorize]` (L10); `[AllowAnonymous]` public reads L31,41 · 4 validators (`Validators/*` — create event/session/feedback, submit request) · tests `TestingLab.UnitTests`. The 44 endpoints cover the full event workflow incl. applications lifecycle, committee, slots, votes. **HOLE?** none wiring; `POST {eventId}/applications/{applicationId}/votes` trusts body voter identity unless committee-checked (gap N15).
+`v{version}/testing/events` · class `[Authorize]` (L10); `[AllowAnonymous]` public reads L31,41 · 4 validators (`Validators/*` — create event/session/feedback, submit request) · tests `TestingLab.UnitTests`. The 44 endpoints cover the full event workflow incl. applications lifecycle, committee, slots, votes. **HOLE?** none — committee voting verifies active committee membership from the actor context, UnderReview state and duplicate votes (`EventsWorkflow/TestingApplicationHandlers.cs:559-600`).
 
 | Verb | Route | Action | Dispatch | L |
 |---|---|---|---|---|
