@@ -161,6 +161,15 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
     {
         var now = SystemClock.UtcNow;
 
+        // Anchor the daily buckets on whole UTC days instead of offsets from "now":
+        // inside the first two hours after UTC midnight, "today minus one/two hours"
+        // lands on yesterday, all three attempts collapse into a single day bucket
+        // and the two-bucket assertion fails (seen in CI at 00:20 UTC). Noon
+        // yesterday and today's midnight boundary are always in the past at any
+        // execution time, so the trend always holds exactly two day buckets.
+        var yesterdayNoon = now.Date.AddDays(-1).AddHours(12);
+        var todayMidnight = now.Date;
+
         // Blocked attempt from a high-risk country through stripe, yesterday.
         await AddPaymentAsync(
             _tenantId,
@@ -170,7 +179,7 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
                 payment.MarkAsProcessing();
                 payment.RecordFraudAssessment(FraudDecision.Block, 95, "blocked", null);
             },
-            createdAt: now.AddDays(-1));
+            createdAt: yesterdayNoon);
 
         // Held attempt from Portugal through paypal, today.
         await AddPaymentAsync(
@@ -181,11 +190,11 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
                 payment.MarkAsProcessing();
                 payment.RecordFraudAssessment(FraudDecision.Review, 55, "held", null);
             },
-            createdAt: now.AddHours(-1),
+            createdAt: todayMidnight,
             provider: "paypal");
 
         // Attempt without a recorded country through stripe, today.
-        await AddPaymentAsync(_tenantId, payment => payment.MarkAsProcessing(), createdAt: now.AddHours(-2));
+        await AddPaymentAsync(_tenantId, payment => payment.MarkAsProcessing(), createdAt: todayMidnight);
 
         var handler = new GetFraudStatisticsQueryHandler(_context);
         var report = await handler.Handle(new GetFraudStatisticsQuery(), CancellationToken.None);
