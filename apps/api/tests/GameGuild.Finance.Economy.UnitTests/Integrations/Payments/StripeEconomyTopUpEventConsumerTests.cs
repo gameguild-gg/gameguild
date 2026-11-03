@@ -119,7 +119,7 @@ public sealed class StripeEconomyTopUpEventConsumerTests
         fixture.ReversalGateway.Verify(gateway => gateway.Reverse(
             It.Is<PersistedProviderReversal>(reversal =>
                 reversal.Command.CumulativeProviderHardUnits == 250 &&
-                reversal.Command.IrrecoverableDisposition == ProviderReversalDisposition.ResponsibleDebt))),
+                reversal.Command.IrrecoverableDisposition == ProviderReversalDisposition.ResponsibleDebt)),
             Times.Once);
         // No provider-event state transition: the reversal lives in the ledger; the top-up row
         // keeps its Posted posting binding.
