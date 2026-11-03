@@ -61,6 +61,7 @@ public sealed class InvoiceGenerationServiceTests
             _userRepository.Object,
             _notificationService.Object,
             _referralService.Object,
+            Mock.Of<IInvoiceAgingService>(),
             NullLogger<InvoiceGenerationService>.Instance);
     }
 

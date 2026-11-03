@@ -19,6 +19,7 @@ public static class OrdersModule
         services.TryAddScoped<IOrderPaymentAuthority, DenyOrderPaymentAuthority>();
         services.TryAddScoped<IOrderPaymentProcessor, DenyOrderPaymentProcessor>();
         services.TryAddScoped<IOrderPaymentIntentPreparer, DenyOrderPaymentIntentPreparer>();
+        services.TryAddScoped<IOrderPaymentRefunder, DenyOrderPaymentRefunder>();
         services.TryAddScoped<IOrderMarketplaceSettlementAuthority, DenyOrderMarketplaceSettlementAuthority>();
 
         // IOrderService removed — all operations now use CQRS commands/queries dispatched via ISender.

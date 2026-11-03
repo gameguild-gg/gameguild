@@ -473,6 +473,17 @@ public static class AuthorizationModuleExtensions
         // grants. Host-registered plugins continue to be picked up alongside this one.
         services.AddScoped<IPermissionEvaluationExtension, AbacPolicyEvaluationExtension>();
 
+        // Layer 2: conditional-policy overlay on effective resolution (issue #1204).
+        // The tenant's active conditional policies are consulted whenever permissions
+        // resolve — matching denies subtract their targeted actions (unconstrained
+        // denies subtract everything), allow policies never mint grants. Tenants
+        // without policies keep the documented allow-by-no-policy default; when
+        // policies exist but their evaluation fails, the overlay fails closed
+        // (PermissionEngine:ConditionalPolicy:FailClosedOnEvaluationError, default on)
+        // instead of silently allowing. Runs before the ABAC overlay (Order 400 < 500)
+        // so ABAC remains the final veto.
+        services.AddScoped<IPermissionEvaluationExtension, ConditionalPolicyEvaluationExtension>();
+
         // External authorization-decision provider (issue #146): consulted by the
         // effective-permission resolver after every local layer. The built-in HTTP
         // implementation is disabled by default (Authorization:ExternalDecision:Enabled

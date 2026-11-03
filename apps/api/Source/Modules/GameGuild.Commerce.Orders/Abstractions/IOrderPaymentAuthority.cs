@@ -21,11 +21,19 @@ internal sealed class DenyOrderPaymentIntentPreparer : IOrderPaymentIntentPrepar
 {
     public Task<OrderPaymentIntentPreparation> PrepareAsync(
         AuthoritativeOrderPaymentIntent intent,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(new OrderPaymentIntentPreparation(
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(new OrderPaymentIntentPreparation(
             false,
             null,
             null,
             "Payments is not configured for Payment Element setup.",
             OrderChargeState.Failed));
+}
+
+internal sealed class DenyOrderPaymentRefunder : IOrderPaymentRefunder
+{
+    public Task<OrderRefundResult> RefundAsync(
+        AuthoritativeOrderRefund refund,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult(OrderRefundResult.Failed("Payments is not configured for order refunds."));
 }

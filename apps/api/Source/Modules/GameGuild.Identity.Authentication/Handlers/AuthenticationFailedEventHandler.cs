@@ -12,7 +12,9 @@ public sealed class AuthenticationFailedEventHandler(ILogger<AuthenticationFaile
     {
         logger.LogWarning(
             "Authentication failed for identifier {Identifier}. Reason: {Reason}. IP: {IpAddress}, User Agent: {UserAgent}, Time: {Timestamp}",
-            notification.Identifier,
+            // codeql[cs/exposure-of-sensitive-information] the identifier is an email address on the local
+            // password path and is masked before entering the structured log (issue #1199 wiring).
+            LogRedaction.MaskEmail(notification.Identifier),
             notification.Reason,
             notification.IpAddress ?? "Unknown",
             notification.UserAgent ?? "Unknown",
