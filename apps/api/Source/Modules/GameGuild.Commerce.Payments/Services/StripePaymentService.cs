@@ -739,6 +739,16 @@ public class StripePaymentService(
         GatewayRefundRequest request,
         CancellationToken cancellationToken)
     {
+        // Issue #1202 (gaps N1): resolve — and fail closed on — the minor-unit currency
+        // BEFORE the gateway try/catch below. The generic handler folds any exception into
+        // a refund-failure result, which would silently turn the mis-scale guard into a
+        // gateway decline instead of the programming-error signal callers must see.
+        string? refundCurrency = null;
+        if (request.Amount.HasValue)
+        {
+            refundCurrency = ResolveRefundCurrency(request);
+        }
+
         try
         {
             var createOptions = new RefundCreateOptions
@@ -749,13 +759,13 @@ public class StripePaymentService(
 
             if (request.Amount.HasValue)
             {
-                // Issue #1202 (gaps N1): the minor-unit conversion must use the PAYMENT's
-                // actual currency — the same source the charge leg uses — never a hardcoded
-                // one. A hardcoded two-decimal currency over-refunds zero-decimal currencies
-                // (JPY: 100x) and under-refunds three-decimal ones (KWD/BHD).
+                // The minor-unit conversion must use the PAYMENT's actual currency — the
+                // same source the charge leg uses — never a hardcoded one. A hardcoded
+                // two-decimal currency over-refunds zero-decimal currencies (JPY: 100x)
+                // and under-refunds three-decimal ones (KWD/BHD).
                 createOptions.Amount = StripeAmountConverter.ToStripeAmount(
                     request.Amount.Value,
-                    ResolveRefundCurrency(request));
+                    refundCurrency!);
             }
 
             var requestOptions = new RequestOptions

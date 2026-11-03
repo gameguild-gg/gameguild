@@ -535,6 +535,30 @@ public class Payment : EntityBase
         }
     }
 
+    /// <summary>
+    ///     Compensates a failure exit whose persistence was rejected (issue #1202 gap N6):
+    ///     sweep-style callers transition the aggregate to Failed before saving, so a failed
+    ///     save would otherwise leave the in-memory entity claiming a terminal state the
+    ///     store never accepted. The payment returns to Pending — the same legal transition
+    ///     <see cref="PrepareForRetry" /> uses — with the caller-captured pre-exit field
+    ///     values, so the entity keeps matching the untouched row the next sweep cycle
+    ///     reconsiders. Fails when the payment is not currently Failed.
+    /// </summary>
+    public void RevertUnpersistedFailure(
+        string? failureReason,
+        string? errorCode,
+        DateTime? processedAt,
+        bool isRetriable,
+        DateTime? nextRetryAt)
+    {
+        TransitionTo(PaymentStatus.Pending);
+        FailureReason = failureReason;
+        ErrorCode = errorCode;
+        ProcessedAt = processedAt;
+        IsRetriable = isRetriable;
+        NextRetryAt = nextRetryAt;
+    }
+
     /// <summary>Marks the payment as requiring additional action (e.g., 3DS)</summary>
     public void MarkAsRequiresAction(string? externalTransactionId = null)
     {

@@ -52,6 +52,17 @@ public sealed class PendingPaymentAgingWorker(
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            // Snapshot the pre-exit field values (issue #1202 gap N6): the aggregate mutates
+            // before the save, so a rejected save must be compensated to keep the in-memory
+            // entity matching the store row the sweep failed to update.
+            var preExit = (
+                failureReason: payment.FailureReason,
+                errorCode: payment.ErrorCode,
+                processedAt: payment.ProcessedAt,
+                isRetriable: payment.IsRetriable,
+                nextRetryAt: payment.NextRetryAt);
+
+            var persisted = false;
             try
             {
                 // Pending → Failed is a legal transition. The exit is deliberately NOT
@@ -64,6 +75,7 @@ public sealed class PendingPaymentAgingWorker(
                     nextRetryAt: null,
                     isRetriable: false);
                 await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+                persisted = true;
                 exited++;
 
                 logger.LogWarning(
@@ -78,8 +90,19 @@ public sealed class PendingPaymentAgingWorker(
             }
             catch (Exception exception)
             {
-                // One payment must never abort the sweep: it stays Pending and is
-                // reconsidered on the next cycle.
+                // One payment must never abort the sweep. When the exit never reached the
+                // store it is compensated back to Pending — the entity keeps matching the
+                // untouched row — and the payment is reconsidered on the next cycle.
+                if (!persisted && payment.Status == PaymentStatus.Failed)
+                {
+                    payment.RevertUnpersistedFailure(
+                        preExit.failureReason,
+                        preExit.errorCode,
+                        preExit.processedAt,
+                        preExit.isRetriable,
+                        preExit.nextRetryAt);
+                }
+
                 logger.LogError(exception,
                     "Pending-payment aging exit failed for payment {PaymentId}.",
                     payment.Id);
