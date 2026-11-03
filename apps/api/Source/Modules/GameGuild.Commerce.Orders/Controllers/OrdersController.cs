@@ -1,20 +1,25 @@
 using Asp.Versioning;
+using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace GameGuild.Commerce.Orders;
 
 /// <summary>
 /// Controller for managing orders and purchases.
 /// Dispatches all operations through CQRS commands/queries via <see cref="ISender"/>.
+/// Rate limiting (issue #1205 G-7): order creation/capture are charge-attempting
+/// endpoints and carry the Api policy like the sibling commerce surfaces.
 /// </summary>
 [Microsoft.AspNetCore.Http.Tags("commerce/orders")]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/orders")]
 [Authorize]
+[EnableRateLimiting(RateLimitPolicies.Api)]
 public class OrdersController(ISender sender, IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     // ── Result → ActionResult mapping (DRY) ─────────────────────────────

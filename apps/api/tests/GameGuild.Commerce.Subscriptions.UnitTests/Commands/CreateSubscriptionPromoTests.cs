@@ -72,7 +72,9 @@ public class CreateSubscriptionPromoTests
         _mockPromoCoordinator
             .Setup(c => c.QuoteForSubscriptionCreationAsync(
                 It.Is<GameGuild.Commerce.SubscriptionPromoQuoteRequest>(r =>
-                    r.PlanId == command.PlanId && r.Amount == 100m && r.UserId == command.CreatedByUserId),
+                    // Issue #1205 G-13: codes are quoted against the plan's price (29.99),
+                    // not the client-supplied amount (100).
+                    r.PlanId == command.PlanId && r.Amount == 29.99m && r.UserId == command.CreatedByUserId),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Quote(100m, 80m, new[]
             {

@@ -36,7 +36,10 @@ public sealed class BillingCoverageCompletionTests
         result.InvoiceNumber.Should().Be("INV-1");
         result.Accepted.Should().BeTrue();
 
-        new RetryInvoicePaymentHandler(Mock.Of<GameGuild.IApplicationDbContext>()).Should().NotBeNull();
+        new RetryInvoicePaymentHandler(
+            Mock.Of<GameGuild.IApplicationDbContext>(),
+            Mock.Of<GameGuild.CQRS.ISender>(),
+            Mock.Of<GameGuild.Identity.Context.Actors.IActorContextAccessor>()).Should().NotBeNull();
         new BillingInvoicesController(Mock.Of<GameGuild.CQRS.ISender>()).Should().NotBeNull();
     }
 

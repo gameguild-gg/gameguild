@@ -44,7 +44,7 @@ internal sealed class IdentityCommandTestSender : ISender
             jwtTokenService ?? Mock.Of<IJwtTokenService>()));
 
     public static IdentityCommandTestSender ForSessions(ISessionManagementService service) =>
-        new(sessionHandler: new SessionMutationCommandHandler(service));
+        new(sessionHandler: new SessionMutationCommandHandler(service, Mock.Of<IStepUpReceiptService>()));
 
     public static IdentityCommandTestSender ForStepUp(IStepUpReceiptService service) =>
         new(stepUpHandler: new StepUpCommandHandler(service));
@@ -79,12 +79,14 @@ internal sealed class IdentityCommandTestSender : ISender
             DeactivateServiceAccountCommand command when _serviceAccountHandler is not null => await _serviceAccountHandler.Handle(command, cancellationToken),
             ReactivateServiceAccountCommand command when _serviceAccountHandler is not null => await _serviceAccountHandler.Handle(command, cancellationToken),
             UpdateServiceAccountScopesCommand command when _serviceAccountHandler is not null => await _serviceAccountHandler.Handle(command, cancellationToken),
+            BindServiceAccountCertificateCommand command when _serviceAccountHandler is not null => await _serviceAccountHandler.Handle(command, cancellationToken),
             IssueServiceAccountTokenCommand command when _serviceAccountHandler is not null => await _serviceAccountHandler.Handle(command, cancellationToken),
             TerminateSessionCommand command when _sessionHandler is not null => await _sessionHandler.Handle(command, cancellationToken),
             TerminateUserSessionsCommand command when _sessionHandler is not null => await _sessionHandler.Handle(command, cancellationToken),
             RefreshUserSessionCommand command when _sessionHandler is not null => await _sessionHandler.Handle(command, cancellationToken),
             TrustDeviceCommand command when _sessionHandler is not null => await _sessionHandler.Handle(command, cancellationToken),
             RevokeTrustedDeviceCommand command when _sessionHandler is not null => await _sessionHandler.Handle(command, cancellationToken),
+            RenameTrustedDeviceCommand command when _sessionHandler is not null => await _sessionHandler.Handle(command, cancellationToken),
             RenameSessionCommand command when _sessionHandler is not null => await _sessionHandler.Handle(command, cancellationToken),
             CreateStepUpChallengeCommand command when _stepUpHandler is not null => await _stepUpHandler.Handle(command, cancellationToken),
             BeginStepUpWebAuthnCommand command when _stepUpHandler is not null => await _stepUpHandler.Handle(command, cancellationToken),
@@ -119,6 +121,7 @@ internal sealed class IdentityCommandTestSender : ISender
             DeactivateServiceAccountCommand command => await Send<Unit>(command, cancellationToken),
             ReactivateServiceAccountCommand command => await Send<Unit>(command, cancellationToken),
             UpdateServiceAccountScopesCommand command => await Send<Unit>(command, cancellationToken),
+            BindServiceAccountCertificateCommand command => await Send<Unit>(command, cancellationToken),
             _ => await Send((dynamic)request, cancellationToken)
         };
     }

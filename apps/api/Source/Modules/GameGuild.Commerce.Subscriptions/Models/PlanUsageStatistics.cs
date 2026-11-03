@@ -3,7 +3,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     Usage statistics for a subscription plan
 /// </summary>
-public abstract class PlanUsageStatistics
+public class PlanUsageStatistics
 {
     /// <summary>
     ///     Plan ID

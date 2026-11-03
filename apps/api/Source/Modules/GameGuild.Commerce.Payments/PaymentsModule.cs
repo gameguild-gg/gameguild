@@ -254,6 +254,7 @@ public static class PaymentsModule
         services.AddScoped<IWalletService, WalletService>();
         services.Replace(ServiceDescriptor.Scoped<IOrderPaymentProcessor, OrderPaymentService>());
         services.Replace(ServiceDescriptor.Scoped<IOrderPaymentAuthority, OrderPaymentService>());
+        services.Replace(ServiceDescriptor.Scoped<IOrderPaymentRefunder, OrderPaymentService>());
         services.Replace(ServiceDescriptor.Scoped<IOrderPaymentIntentPreparer, OrderPaymentIntentService>());
 
         // Payment-method registry (issue #414): self-service management plus the daily

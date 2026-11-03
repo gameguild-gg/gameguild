@@ -163,15 +163,25 @@ public sealed class AssignRoleToUserCommandHandler : ICommandHandler<AssignRoleT
 {
     private readonly IRoleRepository _roleRepository;
     private readonly ICacheInvalidationService? _cacheInvalidationService;
+    private readonly IRoleAssignmentAuditEventSink? _auditEventSink;
 
     public AssignRoleToUserCommandHandler(IRoleRepository roleRepository) : this(roleRepository, null)
     {
     }
 
     public AssignRoleToUserCommandHandler(IRoleRepository roleRepository, ICacheInvalidationService? cacheInvalidationService)
+        : this(roleRepository, cacheInvalidationService, null)
+    {
+    }
+
+    public AssignRoleToUserCommandHandler(
+        IRoleRepository roleRepository,
+        ICacheInvalidationService? cacheInvalidationService,
+        IRoleAssignmentAuditEventSink? auditEventSink)
     {
         _roleRepository = roleRepository;
         _cacheInvalidationService = cacheInvalidationService;
+        _auditEventSink = auditEventSink;
     }
 
     public async Task<UserRoleDto> Handle(AssignRoleToUserCommand request, CancellationToken cancellationToken)
@@ -203,6 +213,24 @@ public sealed class AssignRoleToUserCommandHandler : ICommandHandler<AssignRoleT
             role,
             request.UserId,
             cancellationToken).ConfigureAwait(false);
+
+        // Role mutations are auditable governance events (issue #1204): emit the
+        // RoleAssigned action the compliance coverage checks expect. The sink journals
+        // transactionally in the owning command; without a sink (legacy hosts) the
+        // assignment itself is unaffected.
+        if (_auditEventSink is not null)
+        {
+            await _auditEventSink.RecordAsync(
+                new RoleAssignmentAuditEvent(
+                    RoleAssignmentAuditActionTypes.RoleAssigned,
+                    request.UserId,
+                    role.Id,
+                    role.Name,
+                    role.TenantId,
+                    request.AssignedBy,
+                    request.ExpiresAt),
+                cancellationToken).ConfigureAwait(false);
+        }
 
         // Return DTO
         return new UserRoleDto
@@ -237,7 +265,8 @@ public sealed class BulkAssignRolesCommandHandler(
     IActorContextAccessor actorContextAccessor,
     IUserRepository userRepository,
     IUserAuthorizationTokenVersionService tokenVersionService,
-    ICacheInvalidationService cacheInvalidationService
+    ICacheInvalidationService cacheInvalidationService,
+    IRoleAssignmentAuditEventSink? auditEventSink = null
 ) : ICommandHandler<BulkAssignRolesCommand, BulkRoleAssignmentResult>
 {
     private const int MaximumUsersPerRequest = 500;
@@ -314,6 +343,28 @@ public sealed class BulkAssignRolesCommandHandler(
                 role,
                 changedUserIds,
                 cancellationToken).ConfigureAwait(false);
+
+            // Per-subject RoleAssigned audit events for every changed assignment
+            // (bounded by the 500-user cap): the compliance coverage checks expect
+            // assignment history per subject (issue #1204).
+            if (auditEventSink is not null)
+            {
+                foreach (var outcome in outcomes.Where(result =>
+                            result.Status is BulkRoleAssignmentStatus.Assigned or BulkRoleAssignmentStatus.Reactivated))
+                {
+                    await auditEventSink.RecordAsync(
+                        new RoleAssignmentAuditEvent(
+                            RoleAssignmentAuditActionTypes.RoleAssigned,
+                            outcome.UserId,
+                            role.Id,
+                            role.Name,
+                            role.TenantId,
+                            Actor.SubjectIdAsGuid,
+                            request.ExpiresAt,
+                            Metadata: new { BulkAssignment = true, outcome.Status }),
+                        cancellationToken).ConfigureAwait(false);
+                }
+            }
         }
 
         return new BulkRoleAssignmentResult
@@ -336,15 +387,25 @@ public sealed class RemoveRoleFromUserCommandHandler : ICommandHandler<RemoveRol
 {
     private readonly IRoleRepository _roleRepository;
     private readonly ICacheInvalidationService? _cacheInvalidationService;
+    private readonly IRoleAssignmentAuditEventSink? _auditEventSink;
 
     public RemoveRoleFromUserCommandHandler(IRoleRepository roleRepository) : this(roleRepository, null)
     {
     }
 
     public RemoveRoleFromUserCommandHandler(IRoleRepository roleRepository, ICacheInvalidationService? cacheInvalidationService)
+        : this(roleRepository, cacheInvalidationService, null)
+    {
+    }
+
+    public RemoveRoleFromUserCommandHandler(
+        IRoleRepository roleRepository,
+        ICacheInvalidationService? cacheInvalidationService,
+        IRoleAssignmentAuditEventSink? auditEventSink)
     {
         _roleRepository = roleRepository;
         _cacheInvalidationService = cacheInvalidationService;
+        _auditEventSink = auditEventSink;
     }
 
     public async Task<bool> Handle(RemoveRoleFromUserCommand request, CancellationToken cancellationToken)
@@ -365,6 +426,20 @@ public sealed class RemoveRoleFromUserCommandHandler : ICommandHandler<RemoveRol
                 _cacheInvalidationService,
                 role,
                 request.UserId,
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        // Role revocations are auditable governance events (issue #1204): emit the
+        // RoleRevoked action the compliance coverage checks expect.
+        if (_auditEventSink is not null && role is not null)
+        {
+            await _auditEventSink.RecordAsync(
+                new RoleAssignmentAuditEvent(
+                    RoleAssignmentAuditActionTypes.RoleRevoked,
+                    request.UserId,
+                    role.Id,
+                    role.Name,
+                    role.TenantId),
                 cancellationToken).ConfigureAwait(false);
         }
 
