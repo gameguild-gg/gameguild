@@ -39,6 +39,15 @@
       "@game-guild/ui/*": [
         "../../packages/ui/src/*"
       ],
+      "@game-guild/client": [
+        "../../packages/infrastructure/client/src/index.ts"
+      ],
+      "@game-guild/client/react": [
+        "../../packages/infrastructure/client/src/integrations/react/index.ts"
+      ],
+      "@game-guild/client/next": [
+        "../../packages/infrastructure/client/src/integrations/next/index.ts"
+      ],
       "next": [
         "./node_modules/next"
       ],

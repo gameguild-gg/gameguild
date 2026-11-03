@@ -48,9 +48,16 @@ export function qualifyType(type: string, namespace = 'Types'): string {
     return type.split(' & ').map(t => qualifyType(t.trim(), namespace)).join(' & ');
   }
 
-  // Handle Record<K,V>
-  if (type.startsWith('Record<')) {
-    return type;
+  // Handle Record<K,V> — qualify the value type argument
+  const recordMatch = type.match(/^Record<([^,]+),\s*(.+)>$/);
+  if (recordMatch) {
+    return `Record<${qualifyType(recordMatch[1].trim(), namespace)}, ${qualifyType(recordMatch[2].trim(), namespace)}>`;
+  }
+
+  // Handle other single-argument generics (e.g. Partial<T>)
+  const genericMatch = type.match(/^(\w+)<(.+)>$/);
+  if (genericMatch && !PRIMITIVE_TYPES.has(genericMatch[1])) {
+    return `${genericMatch[1]}<${qualifyType(genericMatch[2].trim(), namespace)}>`;
   }
 
   const baseType = type;
