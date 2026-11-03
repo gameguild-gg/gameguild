@@ -139,7 +139,7 @@ public sealed class PasswordHashReconciliationTests
         var prefix = "aA7!" + Convert.ToHexString(RandomNumberGenerator.GetBytes(34));
         var password = prefix + Guid.NewGuid().ToString("N");
         var candidate = prefix + Guid.NewGuid().ToString("N");
-        var user = new User { Id = Guid.NewGuid(), Email = $"history-{Guid.NewGuid():N}@example.test", PasswordHash = BCrypt.Net.BCrypt.HashPassword(password, 10) };
+        var user = new User { Id = Guid.NewGuid(), Email = $"history-{Guid.NewGuid():N}@example.test", PasswordHash = BCrypt.Net.BCrypt.HashPassword(password, 10), IsEmailVerified = true };
         var repository = new Mock<IUserRepository>(MockBehavior.Strict);
         repository.Setup(service => service.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
         var token = Guid.NewGuid().ToString("N");
