@@ -426,6 +426,8 @@ public sealed class FerpaServiceTests
         var completed = new FerpaInspectionRequest { StudentUserId = Guid.NewGuid(), Status = FerpaRequestStatus.Completed, Deadline = now.AddDays(-10) };
         _requests.Setup(repository => repository.GetOverdueAsync(It.Is<DateTime>(instant => instant >= now.AddSeconds(-5)), default))
             .ReturnsAsync([overdue, inReview]);
+        _requests.Setup(repository => repository.UpdateAsync(It.IsAny<FerpaInspectionRequest>(), default))
+            .Returns(Task.CompletedTask);
 
         var expired = await CreateSubject().ExpireOverdueInspectionRequestsAsync(now);
 
