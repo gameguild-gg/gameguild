@@ -31,7 +31,7 @@ const firebaseConfigured = Boolean(
 
 const loadFirebaseAnalytics: FirebaseAnalyticsLoader = async () => {
   if (!firebaseConfigured || typeof window === 'undefined') return null;
-  const [{ initializeApp, getApps }, { getAnalytics, isSupported }] = await Promise.all([
+  const [{ initializeApp, getApps }, { getAnalytics, isSupported, logEvent }] = await Promise.all([
     import('@firebase/app'),
     import('@firebase/analytics'),
   ]);
@@ -47,9 +47,11 @@ const loadFirebaseAnalytics: FirebaseAnalyticsLoader = async () => {
       ? { measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }
       : {}),
   });
-  return getAnalytics(app) as unknown as {
-    logEvent: (eventName: string, payload: Record<string, unknown>) => void;
+  const analytics = getAnalytics(app);
+  const dispatch = (eventName: string, payload: Record<string, unknown>) => {
+    logEvent(analytics, eventName as 'page_view', payload);
   };
+  return { logEvent: dispatch };
 };
 
 export function WebVitalsReporter() {

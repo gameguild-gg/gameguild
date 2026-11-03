@@ -132,26 +132,62 @@ export function saveConsent(input: SaveConsentInput): ConsentState {
     // Storage blocked: still dispatch so transports react within this page.
   }
 
-  if (!next.analytics && !next.marketing && (previous?.analytics || previous?.marketing)) {
-    clearTrackingIdentifiers();
-  } else if (!next.analytics && previous?.analytics) {
+  // Any previously granted purpose that is now revoked requires identifier
+  // cleanup — including marketing-only revocation (advertising identifiers).
+  const revokedGrantedPurpose =
+    (previous?.analytics && !next.analytics) || (previous?.marketing && !next.marketing);
+  if (revokedGrantedPurpose) {
     clearTrackingIdentifiers();
   }
 
   dispatchConsentChanged(next);
+  notifyListeners(next);
   return next;
 }
 
 type ConsentListener = (state: ConsentState | null) => void;
 
 const listeners = new Set<ConsentListener>();
+let storageHandlerBound = false;
+
+function notifyListeners(state: ConsentState | null): void {
+  for (const listener of listeners) listener(state);
+}
 
 function handleStorage(event: StorageEvent): void {
+  if (event.key === null) {
+    // A wholesale storage clear: cookies and tracker identifiers must not
+    // survive it. storageArea narrows it to our own localStorage.
+    if (!event.storageArea || event.storageArea === window.localStorage) {
+      clearTrackingIdentifiers();
+      notifyListeners(DENIED_CONSENT);
+    }
+    return;
+  }
   if (event.key !== CONSENT_STORAGE_KEY) return;
   const state = parseConsentState(event.newValue);
-  // Cross-tab: notify local listeners; identifier clearing happens lazily
-  // through the consent-mode update each loader performs.
-  for (const listener of listeners) listener(state);
+  if (!state || isDoNotTrackEnabled()) {
+    // Missing/malformed record or Do Not Track: report DENIED, never let
+    // loaded tags keep operating on their previous grant.
+    if (event.newValue === null) {
+      clearTrackingIdentifiers();
+    }
+    notifyListeners(DENIED_CONSENT);
+    return;
+  }
+  notifyListeners(state);
+}
+
+function bindStorageHandler(): void {
+  if (storageHandlerBound || typeof window === 'undefined') return;
+  window.addEventListener('storage', handleStorage);
+  storageHandlerBound = true;
+}
+
+function maybeUnbindStorageHandler(): void {
+  if (listeners.size > 0 || !storageHandlerBound) return;
+  window.removeEventListener('storage', handleStorage);
+  storageHandlerBound = false;
 }
 
 /**
@@ -161,19 +197,15 @@ function handleStorage(event: StorageEvent): void {
  */
 export function subscribeConsent(listener: ConsentListener): () => void {
   listeners.add(listener);
-
-  const storageBound = typeof window !== 'undefined';
-  if (storageBound) {
-    window.addEventListener('storage', handleStorage);
-  }
+  bindStorageHandler();
 
   listener(readConsent());
 
   return () => {
     listeners.delete(listener);
-    if (storageBound) {
-      window.removeEventListener('storage', handleStorage);
-    }
+    // The DOM handler is shared by all subscribers — drop it only when the
+    // last one leaves, or cross-tab updates die for everyone else.
+    maybeUnbindStorageHandler();
   };
 }
 

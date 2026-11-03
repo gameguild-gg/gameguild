@@ -125,4 +125,62 @@ describe('consent store', () => {
     expect(listener).toHaveBeenCalledTimes(1); // only the immediate call
     unsubscribe();
   });
+
+  it('notifies subscribers when saveConsent records a same-page choice', () => {
+    const listener = vi.fn();
+    const unsubscribe = subscribeConsent(listener);
+
+    saveConsent({ analytics: true, marketing: false });
+
+    expect(listener).toHaveBeenCalledWith(expect.objectContaining({ analytics: true }));
+    unsubscribe();
+  });
+
+  it('clears advertising identifiers when only marketing is revoked', () => {
+    document.cookie = '_gcl_au=1.1.xyz; path=/';
+    saveConsent({ analytics: true, marketing: true });
+
+    saveConsent({ analytics: true, marketing: false });
+
+    expect(document.cookie).not.toContain('_gcl_au=');
+  });
+
+  it('keeps cross-tab updates alive for remaining subscribers after one unsubscribes', () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const unsubscribeFirst = subscribeConsent(first);
+    subscribeConsent(second);
+    first.mockClear();
+    second.mockClear();
+
+    unsubscribeFirst();
+    const remote = serializeConsentState(grantedState({ analytics: true, marketing: true }));
+    window.dispatchEvent(new StorageEvent('storage', { key: CONSENT_STORAGE_KEY, newValue: remote }));
+
+    expect(second).toHaveBeenCalledWith(expect.objectContaining({ analytics: true }));
+  });
+
+  it('treats a malformed remote record as denial, not silence', () => {
+    const listener = vi.fn();
+    const unsubscribe = subscribeConsent(listener);
+    listener.mockClear();
+
+    window.dispatchEvent(new StorageEvent('storage', { key: CONSENT_STORAGE_KEY, newValue: 'garbage' }));
+
+    expect(listener).toHaveBeenCalledWith(expect.objectContaining({ analytics: false, marketing: false }));
+    unsubscribe();
+  });
+
+  it('treats a remote storage clear as revocation and clears identifiers', () => {
+    document.cookie = '_ga=GA1.1.1.1; path=/';
+    const listener = vi.fn();
+    const unsubscribe = subscribeConsent(listener);
+    listener.mockClear();
+
+    window.dispatchEvent(new StorageEvent('storage', { key: null, newValue: null, storageArea: window.localStorage }));
+
+    expect(listener).toHaveBeenCalledWith(expect.objectContaining({ analytics: false, marketing: false }));
+    expect(document.cookie).not.toContain('_ga=');
+    unsubscribe();
+  });
 });
