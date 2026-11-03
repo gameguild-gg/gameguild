@@ -339,7 +339,7 @@ async function getUserMemberships(
     return { memberships: [], error: result.error.message };
   }
 
-  return { memberships: (result.data?.memberships ?? []), error: null };
+  return { memberships: result.data?.memberships ?? [], error: null };
 }
 
 export async function getPendingMemberInvitations(userId: string): Promise<{
