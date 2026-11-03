@@ -27,12 +27,9 @@ export function ensureConsentDefaults(w: ConsentWindow): void {
     w.dataLayer!.push(args);
   };
 
-  const alreadySet = (w.dataLayer as Array<{ 'gg:consent-default'?: boolean } | unknown[]>).some(
-    (entry) =>
-      typeof entry === 'object' &&
-      entry !== null &&
-      !Array.isArray(entry) &&
-      (entry as { 'gg:consent-default'?: boolean })['gg:consent-default'] === true,
+  const alreadySet = w.dataLayer.some(
+    (entry): entry is Record<string, unknown> =>
+      typeof entry === 'object' && entry !== null && !Array.isArray(entry) && entry['gg:consent-default'] === true,
   );
   if (alreadySet) return;
 

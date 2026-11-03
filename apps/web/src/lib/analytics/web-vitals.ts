@@ -101,7 +101,7 @@ export function createFirebaseDestination(loader: FirebaseAnalyticsLoader): Fire
 
 export interface Destination {
   sendGa4(w: ConsentWindow, eventName: string, payload: Record<string, string | number>): void;
-  sendFirebase(eventName: string, payload: Record<string, string | number>): void;
+  sendFirebase(eventName: string, payload: Record<string, string | number>): Promise<void>;
 }
 
 /**
@@ -121,9 +121,11 @@ export function createDispatcher(
       sendToGa4(w, eventName, payload);
     },
     async sendFirebase(eventName, payload) {
-      const state = getCurrentConsent();
-      if (!state?.analytics) return;
+      if (!getCurrentConsent()?.analytics) return;
       const analytics = await firebaseDestination();
+      // Consent may have been revoked while the loader was in flight —
+      // re-check before dispatching.
+      if (!getCurrentConsent()?.analytics) return;
       if (!analytics) return;
       try {
         analytics.logEvent(eventName, payload);

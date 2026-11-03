@@ -23,37 +23,36 @@ type ConsentChoice = { analytics: boolean; marketing: boolean };
  *   Do Not Track suppresses the banner (tracking stays denied).
  */
 export function ConsentBanner({ serverAnalyticsConsent }: ConsentBannerProps) {
-  const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const [choice, setChoice] = useState<ConsentChoice>({ analytics: false, marketing: false });
+
+  const serverPreference = typeof serverAnalyticsConsent === 'boolean';
 
   useEffect(() => {
     const existing = readConsent();
-    if (existing) {
-      setVisible(false);
+    if (serverPreference) {
+      // The server preference is authoritative for signed-in users. Apply it
+      // whenever the local record is absent OR disagrees — an anonymous grant
+      // must not survive into an account with analytics disabled.
+      const serverState = { analytics: serverAnalyticsConsent, marketing: false };
+      const matchesServer = existing !== null
+        && existing.analytics === serverState.analytics
+        && existing.marketing === serverState.marketing;
+      if (!matchesServer) {
+        saveConsent(serverState);
+      }
       return;
     }
+    queueMicrotask(() => setMounted(!existing && !isDoNotTrackEnabled()));
+  }, [serverAnalyticsConsent, serverPreference]);
 
-    if (typeof serverAnalyticsConsent === 'boolean') {
-      // Signed-in: server preference wins; record it locally so loaders and
-      // other tabs pick it up without re-showing the banner.
-      saveConsent({ analytics: serverAnalyticsConsent, marketing: false });
-      setVisible(false);
-      return;
-    }
-
-    if (isDoNotTrackEnabled()) {
-      setVisible(false);
-      return;
-    }
-
-    setVisible(true);
-  }, [serverAnalyticsConsent]);
-
+  const visible = mounted && !dismissed;
   if (!visible) return null;
 
   function confirm(next: ConsentChoice) {
     saveConsent(next);
-    setVisible(false);
+    setDismissed(true);
   }
 
   return (
