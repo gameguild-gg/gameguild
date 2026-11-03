@@ -184,4 +184,22 @@ describe('MfaChallengeForm', () => {
     await user.click(screen.getByTestId('mfa-backup-codes-continue'));
     expect(mockLocationHref).toHaveBeenCalledWith('/workspace');
   });
+
+  it('does not claim the recovery codes were copied when the clipboard write fails', async () => {
+    mockAuth.mfaChallenge = enrollmentChallenge;
+    mockCompleteMfaEnrollment.mockResolvedValue({ success: true, backupCodes: ['first-once-code', 'second-once-code'] });
+    const writeText = vi.fn().mockRejectedValue(new DOMException('Permission denied', 'NotAllowedError'));
+    const { user } = renderWithUser(<MfaChallengeForm redirectTo="/workspace" />);
+    // user-event installs its own clipboard stub on setup; override it after render.
+    Object.defineProperty(globalThis.navigator, 'clipboard', { configurable: true, writable: true, value: { writeText } });
+
+    await user.type(screen.getByLabelText('signIn.mfa.codeLabel'), '123456');
+    await user.click(screen.getByRole('button', { name: 'signIn.mfa.enrollSubmit' }));
+    const codes = await screen.findByTestId('mfa-enrollment-backup-codes');
+    expect(codes).toBeInTheDocument();
+
+    await user.click(screen.getByTestId('mfa-backup-codes-copy'));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith('first-once-code\nsecond-once-code'));
+    expect(screen.queryByText('signIn.mfa.copied')).not.toBeInTheDocument();
+  });
 });

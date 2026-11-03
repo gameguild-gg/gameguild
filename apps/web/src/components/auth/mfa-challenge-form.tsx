@@ -58,10 +58,10 @@ export function MfaChallengeForm({
   const enrollment = mfaChallenge?.mfaEnrollment;
   const isEnrollment = enrollment != null;
 
-  async function copyText(text: string) {
+  async function copyText(text: string, kind: "secret" | "codes") {
     if (!navigator.clipboard?.writeText) return;
     await navigator.clipboard.writeText(text);
-    setCopied("secret");
+    setCopied(kind);
     window.setTimeout(() => setCopied(null), 1500);
   }
 
@@ -155,9 +155,7 @@ export function MfaChallengeForm({
                   variant="outline"
                   className="border-white/10 text-slate-200 hover:bg-white/10 hover:text-white"
                   onClick={() => {
-                    void navigator.clipboard.writeText(backupCodes.join("\n"));
-                    setCopied("codes");
-                    window.setTimeout(() => setCopied(null), 1500);
+                    void copyText(backupCodes.join("\n"), "codes");
                   }}
                   data-testid="mfa-backup-codes-copy"
                 >
@@ -256,7 +254,7 @@ export function MfaChallengeForm({
                       disabled={enrolling}
                       onClick={() => {
                         if (enrollment?.secretKey) {
-                          void copyText(enrollment.secretKey);
+                          void copyText(enrollment.secretKey, "secret");
                         }
                       }}
                     >

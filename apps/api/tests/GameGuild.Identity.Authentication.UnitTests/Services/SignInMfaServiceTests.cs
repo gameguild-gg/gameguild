@@ -80,12 +80,32 @@ public sealed class SignInMfaServiceTests
         Assert.InRange(stored.EnrollmentInitializedAt!.Value, stored.CreatedAt, stored.ExpiresAt);
         Assert.True(stored.EnrollmentInitializedAt < stored.ExpiresAt);
         Assert.Contains("enrollment", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(new[] { "subject", "policy", "lock", "enroll", "persist", "audit:Authentication.MfaSignInRequired" }, fixture.Trace);
+        Assert.Equal(new[] { "subject", "policy", "lock", "subject", "enroll", "persist", "audit:Authentication.MfaSignInRequired" }, fixture.Trace);
         fixture.Challenge = stored;
         var completed = await fixture.CompleteAsync(result.MfaToken!);
         AssertDenied(completed);
         fixture.Issuer.VerifyNoOtherCalls();
         fixture.Mfa.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task ConcurrentEnrollmentCompletionUnderLockFallsBackToVerificationChallenge()
+    {
+        var fixture = new FlowFixture { Enrolled = false };
+        fixture.SetupEnrollment(Guid.NewGuid(), FlowFixture.Digest(), "raced-secret", "otpauth://totp/raced");
+        // The subject re-read under the enrollment lock observes the concurrent completion.
+        fixture.AfterLock = () => fixture.Enrolled = true;
+        var result = await fixture.BeginAsync();
+        AssertLimited(result, fixture.User, fixture.TenantId);
+        var stored = Assert.Single(fixture.Stored);
+        Assert.Equal(SignInMfaPurpose.VerifyFactor, stored.Purpose);
+        Assert.Null(stored.EnrollmentConfigurationId);
+        Assert.Null(stored.EnrollmentSecretFingerprint);
+        Assert.Null(stored.EnrollmentInitializedAt);
+        Assert.DoesNotContain("enroll", fixture.Trace);
+        Assert.Equal(new[] { "subject", "policy", "lock", "subject", "persist", "audit:Authentication.MfaSignInRequired" }, fixture.Trace);
+        Assert.Null(result.MfaEnrollment);
+        fixture.Enrollment.Verify(port => port.StartOrResumeAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -518,6 +538,7 @@ public sealed class SignInMfaServiceTests
         public bool AdditionalProof { get; init; }
         public bool ConsumeResult { get; init; } = true;
         public Action? AfterVerification { get; set; }
+        public Action? AfterLock { get; set; }
         public SignInMfaChallengeBinding? ConsumedBinding { get; private set; }
         public MfaMethod? ConsumedMethod { get; private set; }
 
@@ -610,6 +631,7 @@ public sealed class SignInMfaServiceTests
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     Trace.Add("lock");
+                    AfterLock?.Invoke();
                     return Task.CompletedTask;
                 });
             Enrollment.Setup(port => port.StartOrResumeAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(),

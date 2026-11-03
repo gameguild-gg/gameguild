@@ -68,11 +68,32 @@ public sealed class SignInMfaService(
         {
             // Serialize against settings enrollment and concurrent sign-ins before provisioning.
             await enrollment.AcquireSubjectLockAsync(verifiedSubjectId, cancellationToken).ConfigureAwait(false);
-            setup = await enrollment.StartOrResumeAsync(verifiedSubjectId, current.User.Email, now, challenge.ExpiresAt,
-                cancellationToken).ConfigureAwait(false);
-            challenge.EnrollmentConfigurationId = setup.ConfigurationId;
-            challenge.EnrollmentSecretFingerprint = setup.SecretFingerprint;
-            challenge.EnrollmentInitializedAt = now;
+            // Enrollment state was read before the lock; a concurrent completion (settings
+            // setup or another sign-in) may have enabled the factor while this request waited.
+            // Re-read the subject under the lock and fall back to a verification challenge.
+            var locked = await subjects.ReadCurrentAsync(verifiedSubjectId, cancellationToken).ConfigureAwait(false);
+            RequireAccount(locked, verifiedSubjectId, verifiedTokenVersion);
+            if (IsLocked(locked!)) { return SignInMfaPreparation.WithOutcome(Denied()); }
+            if (locked!.HasEnrolledMfa)
+            {
+                current = locked;
+                completingEnrollment = false;
+                challenge = new SignInMfaChallenge
+                {
+                    Id = Guid.NewGuid(), SubjectId = verifiedSubjectId, SubjectTokenVersion = verifiedTokenVersion,
+                    TenantId = decision.TenantId, PolicyFingerprint = decision.PolicyFingerprint, TokenHash = hash,
+                    FirstFactor = firstFactor, Purpose = SignInMfaPurpose.VerifyFactor,
+                    CreatedAt = now, ExpiresAt = now.AddMinutes(5)
+                };
+            }
+            else
+            {
+                setup = await enrollment.StartOrResumeAsync(verifiedSubjectId, current.User.Email, now, challenge.ExpiresAt,
+                    cancellationToken).ConfigureAwait(false);
+                challenge.EnrollmentConfigurationId = setup.ConfigurationId;
+                challenge.EnrollmentSecretFingerprint = setup.SecretFingerprint;
+                challenge.EnrollmentInitializedAt = now;
+            }
         }
         await challenges.AddAsync(challenge, cancellationToken).ConfigureAwait(false);
         await RecordAsync("Authentication.MfaSignInRequired", challenge, false, firstFactor.ToString(), deviceInfo,
