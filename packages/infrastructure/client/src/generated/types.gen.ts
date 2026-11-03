@@ -10032,7 +10032,6 @@ export interface ComplianceConsentPolicyVersionDto {
 /** Data model for Compliance Consent Process Request Body. */
 export interface ComplianceConsentProcessRequestBody {
   notes?: string | null;
-  processedByUserId?: string;
 }
 
 /** Data model for Compliance Consent Publish Version Request. */
@@ -10070,7 +10069,6 @@ export interface ComplianceConsentUserConsentDto {
 export interface ComplianceFERPACompleteFerpaInspectionRequestBody {
   approved?: boolean;
   notes?: string | null;
-  processedByUserId?: string;
 }
 
 /** OpenAPI schema for Compliance FERPA Education Record Kind. */
@@ -14254,6 +14252,10 @@ export interface IdentityAuthenticationStepUpReceiptOutput {
 /** Request to trust a device */
 export interface IdentityAuthenticationTrustDeviceInput {
   deviceName?: string | null;
+  /** Fresh step-up receipt proving the caller just re-verified with an MFA factor for the
+`trust-device` operation (issue #1144). Obtain it from the step-up challenge
+flow bound to this device name. */
+  stepUpReceipt?: string | null;
 }
 
 /** Outcome of a trusted-contact mutation by the owner. */
@@ -39122,7 +39124,6 @@ ComplianceConsentPolicyVersionDtoSchema = z.object({
 /** Zod schema for ComplianceConsentProcessRequestBody. Data model for Compliance Consent Process Request Body. */
 ComplianceConsentProcessRequestBodySchema = z.object({
   notes: z.string().nullable().optional(),
-  processedByUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceConsentPublishVersionInput. Data model for Compliance Consent Publish Version Request. */
@@ -39160,7 +39161,6 @@ ComplianceConsentUserConsentDtoSchema = z.object({
 ComplianceFERPACompleteFerpaInspectionRequestBodySchema = z.object({
   approved: z.boolean().optional(),
   notes: z.string().nullable().optional(),
-  processedByUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceFERPAEducationRecordKind. OpenAPI schema for Compliance FERPA Education Record Kind. */
@@ -43249,6 +43249,7 @@ IdentityAuthenticationStepUpReceiptOutputSchema = z.object({
 /** Zod schema for IdentityAuthenticationTrustDeviceInput. Request to trust a device */
 IdentityAuthenticationTrustDeviceInputSchema = z.object({
   deviceName: z.string().nullable().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationTrustedContactActionResult. Outcome of a trusted-contact mutation by the owner. */
