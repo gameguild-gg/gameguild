@@ -56,6 +56,7 @@ public sealed class EmailSender : IConfirmedEmailSender
         var currentOptions = options.Value;
         if (!currentOptions.Enabled)
         {
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
             logger.LogInformation("Email delivery is disabled. Skipping email to {RecipientEmail}.", LogRedaction.MaskEmail(message.ToEmail));
             return new EmailDeliveryReceipt(false, null);
         }
@@ -140,6 +141,7 @@ public sealed class EmailSender : IConfirmedEmailSender
 
         logger.LogInformation(
             "Delivered email to {RecipientEmail} with {AttachmentCount} attachments.",
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
             LogRedaction.MaskEmail(message.ToEmail),
             message.Attachments?.Count ?? 0);
         return response.Headers.TryGetValues("X-Message-Id", out var messageIds)
@@ -213,6 +215,7 @@ public sealed class EmailSender : IConfirmedEmailSender
 
         logger.LogInformation(
             "Delivered email to {RecipientEmail} through SMTP host {SmtpHost}:{SmtpPort} with {AttachmentCount} attachments.",
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
             LogRedaction.MaskEmail(message.ToEmail),
             currentOptions.SmtpHost,
             currentOptions.SmtpPort,

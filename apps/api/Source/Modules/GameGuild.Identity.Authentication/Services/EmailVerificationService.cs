@@ -62,12 +62,16 @@ public class EmailVerificationService(
                 AbsoluteExpiration = tokenInfo.ExpiresAt
             }.SetSize(1));
 
+            // codeql[cs/cleartext-storage-of-sensitive-information] tokenType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
+            // codeql[cs/exposure-of-sensitive-information] tokenType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
             logger.LogInformation("Generated {TokenType} token for user {UserId}", tokenType, LogRedaction.RedactId(userId, "uid"));
             return Task.FromResult(token);
         }
         catch (Exception ex)
         {
             logger.LogError("Error generating {TokenType} token for user {UserId}: {ErrorType}",
+                // codeql[cs/cleartext-storage-of-sensitive-information] tokenType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
+                // codeql[cs/exposure-of-sensitive-information] tokenType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                 tokenType, LogRedaction.RedactId(userId, "uid"), ex.GetType().FullName);
             throw;
         }
@@ -85,11 +89,13 @@ public class EmailVerificationService(
                     UserName = userName
                 }).ConfigureAwait(false);
 
+            // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
             logger.LogInformation("Verification email queued for {Email}", LogRedaction.MaskEmail(email));
         }
         catch (Exception ex)
         {
             logger.LogError("Error sending verification email to {Email}: {ErrorType}",
+                // codeql[cs/exposure-of-sensitive-information] address is redacted by LogRedaction.MaskEmail before entering the structured log
                 LogRedaction.MaskEmail(email), ex.GetType().FullName);
             throw;
         }
@@ -164,6 +170,8 @@ public class EmailVerificationService(
         {
             if (string.IsNullOrWhiteSpace(token))
             {
+                // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
+                // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                 logger.LogWarning("Empty {TokenType} token used", expectedType);
                 return Task.FromResult(TokenValidationResult.Failed("Token is required"));
             }
@@ -171,6 +179,8 @@ public class EmailVerificationService(
             var tokenKey = GetTokenCacheKey(token);
             if (!memoryCache.TryGetValue(tokenKey, out TokenInfo? tokenInfo) || tokenInfo == null)
             {
+                // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
+                // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                 logger.LogWarning("Invalid {TokenType} token used", expectedType);
                 return Task.FromResult(TokenValidationResult.Failed("Invalid token"));
             }
@@ -188,6 +198,8 @@ public class EmailVerificationService(
             if (tokenInfo.ExpiresAt < SystemClock.UtcNow)
             {
                 memoryCache.Remove(tokenKey);
+                // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
+                // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                 logger.LogWarning("Expired {TokenType} token used for user {UserId}", expectedType, LogRedaction.RedactId(tokenInfo.UserId, "uid"));
                 return Task.FromResult(TokenValidationResult.Failed("Expired token"));
             }
@@ -197,6 +209,8 @@ public class EmailVerificationService(
                 logger.LogWarning(
                     "Invalid token type {ActualTokenType}; expected {ExpectedTokenType}",
                     tokenInfo.Type,
+                    // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
+                    // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                     expectedType);
 
                 return Task.FromResult(TokenValidationResult.Failed("Invalid token type"));
@@ -204,6 +218,8 @@ public class EmailVerificationService(
 
             if (!tokenInfo.TryConsume())
             {
+                // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
+                // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                 logger.LogWarning("Already consumed {TokenType} token used", expectedType);
                 return Task.FromResult(TokenValidationResult.Failed("Invalid token"));
             }
@@ -215,11 +231,15 @@ public class EmailVerificationService(
 
             memoryCache.Remove(tokenKey);
 
+            // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
+            // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
             logger.LogInformation("{TokenType} token consumed successfully for user {UserId}", expectedType, LogRedaction.RedactId(tokenInfo.UserId, "uid"));
             return Task.FromResult(new TokenValidationResult(true, tokenInfo.UserId, tokenInfo.Email));
         }
         catch (Exception ex)
         {
+            // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
+            // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
             logger.LogError("Error verifying {TokenType} token: {ErrorType}", expectedType, ex.GetType().FullName);
             return Task.FromResult(TokenValidationResult.Failed("Token verification failed"));
         }

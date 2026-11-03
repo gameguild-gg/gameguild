@@ -245,7 +245,32 @@ public sealed class WhatsAppChannelPreferenceTests : IDisposable
         var decision = await service.DecideDeliveryAsync(userId, NotificationType.Marketing, NotificationChannel.WhatsApp, NotificationPriority.Normal);
 
         decision.Action.Should().Be(NotificationDeliveryAction.Drop);
-        decision.Reason.Should().Be("channel-disabled");
+        decision.Reason.Should().Be("whatsapp-not-opted-in");
+    }
+
+    [Fact]
+    public async Task DecideDelivery_DropsWhatsAppWhenNoPreferenceRowExists()
+    {
+        var userId = Guid.NewGuid();
+        var service = new NotificationPreferenceService(context);
+
+        var decision = await service.DecideDeliveryAsync(userId, NotificationType.Marketing, NotificationChannel.WhatsApp, NotificationPriority.Normal);
+
+        decision.Action.Should().Be(NotificationDeliveryAction.Drop);
+        decision.Reason.Should().Be("whatsapp-not-opted-in");
+    }
+
+    [Fact]
+    public async Task DecideDelivery_DropsUrgentWhatsAppWithoutOptIn()
+    {
+        var userId = Guid.NewGuid();
+        await AddPreferenceAsync(userId, whatsAppEnabled: false);
+        var service = new NotificationPreferenceService(context);
+
+        var decision = await service.DecideDeliveryAsync(userId, NotificationType.Security, NotificationChannel.WhatsApp, NotificationPriority.Urgent);
+
+        decision.Action.Should().Be(NotificationDeliveryAction.Drop);
+        decision.Reason.Should().Be("whatsapp-not-opted-in");
     }
 
     [Fact]

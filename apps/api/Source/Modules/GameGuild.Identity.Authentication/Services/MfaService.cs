@@ -5,8 +5,8 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-///     MFA orchestrator that coordinates TOTP, backup-code, SMS-OTP, push-challenge and
-///     attempt-tracking sub-services. Kept for backward compatibility with code that depends
+///     MFA orchestrator that coordinates TOTP, backup-code, SMS-OTP, email-OTP, push-challenge
+///     and attempt-tracking sub-services. Kept for backward compatibility with code that depends
 ///     on IMfaService.
 /// </summary>
 public sealed class MfaService(
@@ -17,6 +17,7 @@ public sealed class MfaService(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     ISmsMfaService? smsMfaService = null,
+    IEmailMfaService? emailMfaService = null,
     IPushMfaService? pushMfaService = null,
     MfaOptions? mfaOptions = null) : IMfaService
 {
@@ -76,6 +77,11 @@ public sealed class MfaService(
             {
                 if (smsMfaService is null) { isValid = false; }
                 else { isValid = await smsMfaService.VerifyCodeAsync(userId, code, cancellationToken).ConfigureAwait(false); }
+            }
+            else if (method == MfaMethod.Email)
+            {
+                if (emailMfaService is null) { isValid = false; }
+                else { isValid = await emailMfaService.VerifyCodeAsync(userId, code, cancellationToken).ConfigureAwait(false); }
             }
             else if (method == MfaMethod.Push)
             {

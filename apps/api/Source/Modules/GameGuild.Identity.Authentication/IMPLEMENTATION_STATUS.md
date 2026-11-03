@@ -496,7 +496,7 @@ None - All planned features are implemented!
 
 2. **Integration Tests** - Some test scenarios commented out pending handler implementation:
    - Bulk ABAC policy evaluation (25+ commented tests)
-   - Web3/Polymorphic auth types need concrete implementations
+   - Web3/Polymorphic auth E2E tests revived against the real API (November 2026)
    - Conditional policy evaluation needs handler completion
 
 ### 📊 Implementation Statistics
@@ -672,12 +672,14 @@ Controllers/
      - ✅ Fixed `MfaConfigurationResponse.IsMfaEnabled` → `IsEnabled`
      - ✅ Fixed `IMfaService.DisableMfaAsync` → Added password confirmation parameter
      - ✅ Fixed OAuth requests → `GoogleSignInRequest.AccessToken` and `GitHubSignInRequest.AccessToken`
-     - ✅ Skipped Web3 tests → Abstract `Web3ChallengeRequest` base class needs concrete implementation
-     - ✅ Skipped polymorphic tests → `PolymorphicSignInAsync` API not yet implemented
-   - **Test Execution**: 14 executable tests (5 skipped with documentation), 0 compilation errors
-   
-   **Priority**: Low - Tests compile and are ready to run once concrete Web3 implementation is added
-   **Complexity**: Low - Only 5 tests skipped pending Web3 concrete types and polymorphic API implementation
+     - ✅ Skipped Web3 tests → revived (November 2026) against the concrete `Web3ChallengeRequest` DTO,
+       `IAuthService.GenerateWeb3ChallengeAsync`/`VerifyWeb3SignatureAsync` and real EIP-191 signatures
+     - ✅ Skipped polymorphic tests → revived (November 2026) against the implemented
+       `POST /v1/auth/polymorphic` endpoint (`PolymorphicSignInCommand`/`PolymorphicSignInHandler`)
+   - **Test Execution**: 19 executable tests (previously 5 stale-skipped), 0 compilation errors
+
+   **Priority**: Done - Web3 and polymorphic E2E tests are live and aligned to the shipped API
+   **Complexity**: Resolved - the awaited concrete Web3 types and polymorphic API both exist
 
 3. **Access Control** (FRAMEWORK IMPLEMENTED - API INVESTIGATION COMPLETE):
    - 🚧 **Framework Created**: `AccessControlIntegrationTests.cs` (533 lines, 18 test methods)
@@ -808,7 +810,7 @@ Controllers/
 | Role Management Integration | `RoleManagementIntegrationTests.cs` | 740 | 19 | ✅ **PASSING** |
 | Access Control Integration | `AccessControlIntegrationTests.cs` | 533 | 18 | ⚠️ **Partial** (3 active, others commented) |
 | Session Management Integration | `SessionManagementIntegrationTests.cs` | 500 | 20 | ⚠️ **Partial** (concurrent tests active) |
-| Authentication Flows E2E | `AuthenticationFlowsE2ETests.cs` | 514 | 19 | ⚠️ **Partial** (most active, Web3/Polymorphic commented) |
+| Authentication Flows E2E | `AuthenticationFlowsE2ETests.cs` | 514 | 19 | ✅ **All active** (Web3/Polymorphic revived November 2026) |
 
 **Test Coverage Areas**:
 - ✅ Complete authentication workflows (local, social, Web3, polymorphic)
@@ -969,7 +971,7 @@ The Authentication module is **fully complete and production-ready**, with enter
 | `RoleManagementIntegrationTests.cs` | ✅ Passing | All | Role assignment, temporary roles, multi-tenancy |
 | `AccessControlIntegrationTests.cs` | ⚠️ Partial | 3 active | ABAC tests working, others commented for future impl |
 | `SessionManagementIntegrationTests.cs` | ⚠️ Partial | Concurrent only | Security tests commented pending handler impl |
-| `AuthenticationFlowsE2ETests.cs` | ⚠️ Partial | Most active | Web3/Polymorphic tests commented pending types |
+| `AuthenticationFlowsE2ETests.cs` | ✅ All active | 19 | Web3/Polymorphic tests revived against the shipped API (Nov 2026) |
 
 ### Test Coverage Details
 
@@ -1001,10 +1003,11 @@ The Authentication module is **fully complete and production-ready**, with enter
 - Throttling handlers - Rate limiting (2 tests)
 - Session timeline - Activity tracking (1 test)
 
-**Web3 & Polymorphic Auth** (commented pending request types):
-- `GenerateWeb3ChallengeRequest` - Concrete type needed (tests reference abstract)
-- `VerifyWeb3SignatureRequest` - Type doesn't exist (1 test)
-- `PolymorphicSignInRequest` - Type doesn't exist (2 tests)
+**Web3 & Polymorphic Auth** (revived November 2026 - no longer pending):
+- `Web3ChallengeRequest` - concrete DTO shipped; challenge/verify exercised through
+  `IAuthService.GenerateWeb3ChallengeAsync`/`VerifyWeb3SignatureAsync` with real EIP-191 signatures
+- `PolymorphicSignInRequest`/`PolymorphicSignInCommand` - implemented; exercised over HTTP at
+  `POST /v1/auth/polymorphic` (email/username strategies, generic failure for unsupported identifiers)
 
 ### Test Infrastructure Created
 

@@ -30,6 +30,13 @@ public sealed class TeamsModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
             builder.HasIndex(member => new { member.TeamId, member.UserId }).IsUnique();
             builder.HasIndex(member => member.UserId);
+
+            // Team authorization resolves membership by UserId + TenantId with
+            // DeletedAt == null on every permission check
+            // (TeamAuthorizationService.GetMembershipAsync) — issue #1157.
+            builder.HasIndex(member => new { member.UserId, member.TenantId })
+                .HasDatabaseName("ix_team_members_user_tenant_live")
+                .HasFilter("\"DeletedAt\" IS NULL");
         });
 
         modelBuilder.Entity<TeamInvitation>(builder =>

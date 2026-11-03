@@ -60,15 +60,14 @@ function loadTurnstileScript(onAvailable?: (available: boolean) => void): void {
 }
 
 /**
- * Cloudflare Turnstile challenge widget for sign-in/sign-up forms.
+ * Cloudflare Turnstile challenge widget for sign-in forms (issue #1082).
  *
- * First-party explicit-mode implementation (replaces @marsidev/react-turnstile,
- * whose onload-callback race caused a doubled empty box in production).
+ * First-party explicit-mode implementation.
  *
  * Behavior:
  * - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` unset/empty → renders nothing and reports
  *   `onToken(null)` exactly once, so forms keep working without the challenge
- *   (dev/e2e path; the server-side gate fails open through verifyTurnstileToken).
+ *   (dev/e2e path; the API-side gate fails open while its secret is unset).
  * - Key set → renders the challenge; every terminal outcome (success, error,
  *   expire) is reported through `onToken`.
  */
