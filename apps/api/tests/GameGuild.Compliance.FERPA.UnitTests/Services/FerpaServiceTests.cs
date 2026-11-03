@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Identity.Context.Actors;
 using Moq;
 using Xunit;
 
@@ -6,6 +7,7 @@ namespace GameGuild.Compliance.FERPA.UnitTests.Services;
 
 public sealed class FerpaServiceTests
 {
+    private readonly Guid _actorUserId = Guid.NewGuid();
     private readonly Mock<IFerpaEducationRecordRepository> _records = new(MockBehavior.Strict);
     private readonly Mock<IFerpaDirectoryInformationPolicyRepository> _policies = new(MockBehavior.Strict);
     private readonly Mock<IFerpaDisclosureConsentRepository> _consents = new(MockBehavior.Strict);
@@ -57,6 +59,8 @@ public sealed class FerpaServiceTests
         var second = new FerpaEducationRecord { StudentUserId = studentId, ExternalRecordId = "old", Title = "Old" };
         _records.Setup(repository => repository.GetByStudentAsync(studentId, default)).ReturnsAsync([first, second]);
         _records.Setup(repository => repository.GetDirectoryInformationAsync(studentId, default)).ReturnsAsync([second]);
+        _policies.Setup(repository => repository.GetByTenantAsync(null, default))
+            .ReturnsAsync(new FerpaDirectoryInformationPolicy { OptOutEnabled = true });
 
         var all = await CreateSubject().GetStudentRecordsAsync(studentId);
         var directory = await CreateSubject().GetDirectoryInformationAsync(studentId);
@@ -189,7 +193,7 @@ public sealed class FerpaServiceTests
 
         result.Should().Match<FerpaDisclosureLogDto>(log =>
             log.StudentUserId == command.StudentUserId &&
-            log.DisclosedByUserId == command.DisclosedByUserId &&
+            log.DisclosedByUserId == _actorUserId &&
             log.Recipient == command.Recipient &&
             log.Basis == command.Basis &&
             log.Purpose == command.Purpose &&
@@ -278,7 +282,7 @@ public sealed class FerpaServiceTests
 
         result.Should().Match<FerpaInspectionRequestDto>(request =>
             request.StudentUserId == command.StudentUserId &&
-            request.RequestedByUserId == command.RequestedByUserId &&
+            request.RequestedByUserId == _actorUserId &&
             request.Status == FerpaRequestStatus.Pending &&
             request.Deadline == command.Deadline &&
             request.ProcessingNotes == null);
@@ -338,12 +342,116 @@ public sealed class FerpaServiceTests
         result.Select(request => request.Id).Should().Equal(early.Id, late.Id);
     }
 
-    private FerpaService CreateSubject() => new(
+    [Fact]
+    public async Task StudentRead_ByUnrelatedMemberIsRejected()
+    {
+        var studentId = Guid.NewGuid();
+        var subject = CreateSubject(actor =>
+            new ActorContext
+            {
+                ActorKind = ActorKind.User,
+                SubjectId = actor.ToString(),
+                Roles = new HashSet<string>(),
+                Permissions = new HashSet<string>(),
+                IsAuthenticated = true
+            });
+
+        var action = () => subject.GetStudentRecordsAsync(studentId);
+
+        await action.Should().ThrowAsync<FerpaAuthorizationException>()
+            .WithMessage("*read-student-records*");
+        _records.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task TenantAdmin_ReadsAreClampedToOwnTenantRecords()
+    {
+        var studentId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var ownTenant = new FerpaEducationRecord { StudentUserId = studentId, TenantId = tenantId, ExternalRecordId = "own", Title = "Own" };
+        var otherTenant = new FerpaEducationRecord { StudentUserId = studentId, TenantId = Guid.NewGuid(), ExternalRecordId = "other", Title = "Other" };
+        _records.Setup(repository => repository.GetByStudentAsync(studentId, default)).ReturnsAsync([ownTenant, otherTenant]);
+
+        var subject = CreateSubject(actor => new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = actor.ToString(),
+            TenantId = tenantId,
+            Roles = new HashSet<string> { "TenantAdmin" },
+            Permissions = new HashSet<string>(),
+            IsAuthenticated = true
+        });
+
+        var visible = await subject.GetStudentRecordsAsync(studentId);
+
+        visible.Select(record => record.Id).Should().Equal(ownTenant.Id);
+    }
+
+    [Fact]
+    public async Task RecordDisclosure_DirectoryInformationBasisRequiresAnOptOutPolicy()
+    {
+        var command = CreateDisclosureCommand(FerpaDisclosureBasis.DirectoryInformation);
+        _policies.Setup(repository => repository.GetByTenantAsync(null, default))
+            .ReturnsAsync(new FerpaDirectoryInformationPolicy { OptOutEnabled = false });
+
+        var action = () => CreateSubject().RecordDisclosureAsync(command);
+
+        await action.Should().ThrowAsync<FerpaAuthorizationException>()
+            .WithMessage("*opt-out*");
+        _logs.Verify(repository => repository.AddAsync(It.IsAny<FerpaDisclosureLog>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RecordDisclosure_DirectoryInformationBasisAllowedUnderOptOutRegime()
+    {
+        var command = CreateDisclosureCommand(FerpaDisclosureBasis.DirectoryInformation);
+        _policies.Setup(repository => repository.GetByTenantAsync(null, default))
+            .ReturnsAsync(new FerpaDirectoryInformationPolicy { OptOutEnabled = true });
+        _logs.Setup(repository => repository.AddAsync(It.IsAny<FerpaDisclosureLog>(), default))
+            .ReturnsAsync((FerpaDisclosureLog log, CancellationToken _) => log);
+
+        var result = await CreateSubject().RecordDisclosureAsync(command);
+
+        result.Basis.Should().Be(FerpaDisclosureBasis.DirectoryInformation);
+        result.DisclosedByUserId.Should().Be(_actorUserId);
+    }
+
+    [Fact]
+    public async Task ExpireOverdueInspectionRequests_TransitionsLiveOverdueRowsOnly()
+    {
+        var now = DateTime.UtcNow;
+        var overdue = new FerpaInspectionRequest { StudentUserId = Guid.NewGuid(), Deadline = now.AddDays(-1) };
+        var inReview = new FerpaInspectionRequest { StudentUserId = Guid.NewGuid(), Status = FerpaRequestStatus.InReview, Deadline = now.AddDays(-2) };
+        var future = new FerpaInspectionRequest { StudentUserId = Guid.NewGuid(), Deadline = now.AddDays(10) };
+        var completed = new FerpaInspectionRequest { StudentUserId = Guid.NewGuid(), Status = FerpaRequestStatus.Completed, Deadline = now.AddDays(-10) };
+        _requests.Setup(repository => repository.GetOverdueAsync(It.Is<DateTime>(instant => instant >= now.AddSeconds(-5)), default))
+            .ReturnsAsync([overdue, inReview]);
+
+        var expired = await CreateSubject().ExpireOverdueInspectionRequestsAsync(now);
+
+        expired.Should().Be(2);
+        overdue.Status.Should().Be(FerpaRequestStatus.Expired);
+        inReview.Status.Should().Be(FerpaRequestStatus.Expired);
+        future.Status.Should().Be(FerpaRequestStatus.Pending);
+        completed.Status.Should().Be(FerpaRequestStatus.Completed);
+    }
+
+    private FerpaService CreateSubject(Func<Guid, ActorContext>? actorContext = null) => new(
         _records.Object,
         _policies.Object,
         _consents.Object,
         _logs.Object,
-        _requests.Object);
+        _requests.Object,
+        new FixedActorContextAccessor((actorContext ?? SystemAdminActor)(_actorUserId)));
+
+    private static ActorContext SystemAdminActor(Guid subjectId) => new()
+    {
+        ActorKind = ActorKind.User,
+        SubjectId = subjectId.ToString(),
+        Roles = new HashSet<string> { "SystemAdmin" },
+        Permissions = new HashSet<string>(),
+        IsAuthenticated = true
+    };
 
     private static RecordFerpaDisclosureCommand CreateDisclosureCommand(FerpaDisclosureBasis basis) => new(
         Guid.NewGuid(),
@@ -354,4 +462,17 @@ public sealed class FerpaServiceTests
         "grades",
         "[\"grade-1\"]",
         new DateTime(2026, 7, 17, 10, 0, 0, DateTimeKind.Utc));
+
+    private sealed class FixedActorContextAccessor(ActorContext context) : IActorContextAccessor
+    {
+        public ActorContext ActorContext => context;
+        public void SetActorContext(ActorContext value) { }
+        public void ClearActorContext() { }
+        public IActorContextScope BeginActorContextScope(ActorContext context) => new NoopScope();
+
+        private sealed class NoopScope : IActorContextScope
+        {
+            public void Dispose() { }
+        }
+    }
 }
