@@ -166,7 +166,7 @@
   },
   "devDependencies": {
     "@eslint/compat": "^2.1.1",
-    "@excalidraw/mermaid-to-excalidraw": "2.2.2",
+    "@excalidraw/mermaid-to-excalidraw": "3.1.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.3",
