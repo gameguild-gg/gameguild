@@ -47,7 +47,7 @@ All 22 assemblies are enabled in the host: the Social nine plus `GameJams`, `Lau
 | [`02-cqrs-wiring-matrix.md`](02-cqrs-wiring-matrix.md) | Route → command/query/service → validator → handler → auth → rate limit → unit test → HOLE? for all 45 controller files; cross-references the CI wiring-gap guard instead of re-deriving the handler-less surface |
 | [`03-state-machines.md`](03-state-machines.md) | `stateDiagram-v2` for jam, project (+ project version), asset moderation, group membership, TestingLab event/session, blog post; transition-audit tables with defect index |
 | [`04-event-inventory.md`](04-event-inventory.md) | Every event/notification/stream with producer/consumer `file:line` — the 12 orphan `Post*` events, the announcement bridge, blog-AI credit ledger, AI quota/billing trail, asset moderation + outbox events; cross-module `sequenceDiagram`s (Social↔Notifications, Platform↔Economy.AiCredits, Assets↔Openinary) |
-| [`05-gaps.md`](05-gaps.md) | 4 KNOWN (cross-referenced to the merged packages' issues #1199–#1226) + NEW gaps with `file:line` |
+| [`05-gaps.md`](05-gaps.md) | 5 KNOWN (cross-referenced to the merged packages' issues #1199–#1226) + 14 NEW gaps with `file:line` (2 candidates withdrawn on verification) |
 
 ## Headline findings
 

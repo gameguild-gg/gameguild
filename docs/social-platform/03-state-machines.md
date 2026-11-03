@@ -124,7 +124,7 @@ Testing **session** (`TestingLab:/Entities/SessionStatus.cs:3`): `Scheduled → 
 
 | Defect | Description | Evidence | Gap |
 |---|---|---|---|
-| D9 | event transition endpoints validate from-states in service layer only for some transitions; voting trusts caller identity | `TestingEventsController.cs:439` | N15 |
+| D9 | withdrawn — committee voting verifies membership, UnderReview state and duplicates from the actor context | `TestingApplicationHandlers.cs:559-600` | — |
 
 ## SM6 — Blog post (`BlogPostStatus`)
 
