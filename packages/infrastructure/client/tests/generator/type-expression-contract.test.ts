@@ -37,10 +37,12 @@ describe('generated type expression contracts', () => {
     const generated = ts.createSourceFile('generated.ts', generateTypes(spec), ts.ScriptTarget.Latest, true);
     // Compile the actual generated declarations, excluding runtime Zod schemas.
     const declarations = generated.statements
-      .filter(statement => ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement))
-      .map(statement => ts.createPrinter().printNode(ts.EmitHint.Unspecified, statement, generated))
+      .filter((statement) => ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement))
+      .map((statement) => ts.createPrinter().printNode(ts.EmitHint.Unspecified, statement, generated))
       .join('\n');
-    const source = declarations + `
+    const source =
+      declarations +
+      `
       type Assert<T extends true> = T;
       type Same<A, B> = [A, B] extends [B, A] ? true : false;
       type CountContract = Assert<Same<Count, number>>;
@@ -51,14 +53,19 @@ describe('generated type expression contracts', () => {
     `;
     const file = path.resolve('alias-consumer-contract.ts');
     const options: ts.CompilerOptions = {
-      strict: true, noEmit: true, skipLibCheck: true, types: [], target: ts.ScriptTarget.ES2022,
+      strict: true,
+      noEmit: true,
+      skipLibCheck: true,
+      types: [],
+      target: ts.ScriptTarget.ES2022,
     };
     const host = ts.createCompilerHost(options);
     const getSourceFile = host.getSourceFile.bind(host);
     host.getSourceFile = (name, languageVersion, onError, shouldCreateNewSourceFile) =>
-      path.resolve(name) === file ? ts.createSourceFile(file, source, languageVersion, true)
+      path.resolve(name) === file
+        ? ts.createSourceFile(file, source, languageVersion, true)
         : getSourceFile(name, languageVersion, onError, shouldCreateNewSourceFile);
     const diagnostics = ts.getPreEmitDiagnostics(ts.createProgram([file], options, host));
-    expect(diagnostics.map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'))).toEqual([]);
+    expect(diagnostics.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'))).toEqual([]);
   });
 });

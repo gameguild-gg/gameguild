@@ -91,11 +91,6 @@
       "count": 1
     }
   },
-  "scripts/utils/type-qualify.ts": {
-    "prettier/prettier": {
-      "count": 5
-    }
-  },
   "src/integrations/next/actions.ts": {
     "@typescript-eslint/no-unnecessary-type-assertion": {
       "count": 1
