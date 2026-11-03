@@ -5,7 +5,7 @@
  * Inspired by next-auth's error system but tailored for our use case.
  */
 
-import type { IdentityAuthenticationSignInMfaEnrollmentOffer } from '../../generated/types.gen.js';
+import type { IdentityAuthenticationSignInMfaEnrollmentOffer } from '../../generated/types.gen';
 
 /**
  * Validate and normalize the one-time TOTP enrollment offer that may ride a

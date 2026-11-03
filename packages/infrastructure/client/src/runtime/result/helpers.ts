@@ -4,7 +4,7 @@
  * Utility functions for working with Result types.
  */
 
-import type { Result, Ok, Err } from './types.js';
+import type { Result, Ok, Err } from './types';
 
 /**
  * Create a success result

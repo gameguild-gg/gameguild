@@ -7,13 +7,13 @@
  * They read/write cookies directly via next/headers and can trigger redirects.
  */
 
-import type { ResolvedAuthConfig, Session, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types.js';
-import { decodeJWT } from '../../runtime/auth/jwt.js';
-import { SessionStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies.js';
-import { createJWTPayload, processSession, encodeSession, refreshAccessToken, toSession } from '../../runtime/auth/session.js';
-import { CredentialsSignInError, ProviderNotFoundError, SignUpError } from '../../runtime/auth/errors.js';
-import { applyResponseCookies, parseBackendAuthResponse } from './handlers.js';
-import { type OAuthProviderWithMethods, getOAuthExchangeToken } from './oauth-helpers.js';
+import type { ResolvedAuthConfig, Session, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types';
+import { decodeJWT } from '../../runtime/auth/jwt';
+import { SessionStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies';
+import { createJWTPayload, processSession, encodeSession, refreshAccessToken, toSession } from '../../runtime/auth/session';
+import { CredentialsSignInError, ProviderNotFoundError, SignUpError } from '../../runtime/auth/errors';
+import { applyResponseCookies, parseBackendAuthResponse } from './handlers';
+import { type OAuthProviderWithMethods, getOAuthExchangeToken } from './oauth-helpers';
 
 /**
  * Cookie adapter — abstracts next/headers cookies() API.
@@ -103,7 +103,7 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
     // Return a proxy wrapper
     return async (request: Request): Promise<Response> => {
       // Read session from request cookies
-      const { parseCookieHeader } = await import('./handlers.js');
+      const { parseCookieHeader } = await import('./handlers');
       const cookieHeader = request.headers.get('cookie') || '';
       const cookieMap = parseCookieHeader(cookieHeader);
 

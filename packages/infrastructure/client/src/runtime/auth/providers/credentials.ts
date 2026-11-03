@@ -19,9 +19,9 @@
  * ```
  */
 
-import type { CredentialsProviderConfig, ProviderResult, SessionUser } from '../types.js';
-import { AccountLockedError, AuthServiceUnavailableError, CredentialsSignInError, MfaRequiredError, parseMfaEnrollmentOffer } from '../errors.js';
-import { resolveAuthPermissions, resolveAuthRoles } from '../claims.js';
+import type { CredentialsProviderConfig, ProviderResult, SessionUser } from '../types';
+import { AccountLockedError, AuthServiceUnavailableError, CredentialsSignInError, MfaRequiredError, parseMfaEnrollmentOffer } from '../errors';
+import { resolveAuthPermissions, resolveAuthRoles } from '../claims';
 
 /**
  * Options for the credentials provider

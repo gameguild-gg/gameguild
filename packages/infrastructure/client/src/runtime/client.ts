@@ -4,9 +4,9 @@
  * Main client interface for making API requests.
  */
 
-import type { Result } from './result/types.js';
-import type { ApiError } from './errors/types.js';
-import type { RequestConfig, ApiResponse } from './transport/types.js';
+import type { Result } from './result/types';
+import type { ApiError } from './errors/types';
+import type { RequestConfig, ApiResponse } from './transport/types';
 
 /**
  * API Client interface

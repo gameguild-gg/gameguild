@@ -6,7 +6,7 @@
  * Generated from: GameGuild API
  * API Version: 4.4.0
  */
-import type * as Types from './types.gen.js';
+import type * as Types from './types.gen';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Endpoint Definitions

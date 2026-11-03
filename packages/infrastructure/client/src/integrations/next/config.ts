@@ -5,8 +5,8 @@
  * config with all defaults applied.
  */
 
-import type { GameGuildAuthConfig, ResolvedAuthConfig, AuthCallbacks } from '../../runtime/auth/types.js';
-import { MissingSecretError, ConfigError } from '../../runtime/auth/errors.js';
+import type { GameGuildAuthConfig, ResolvedAuthConfig, AuthCallbacks } from '../../runtime/auth/types';
+import { MissingSecretError, ConfigError } from '../../runtime/auth/errors';
 
 /** Default max age: 30 days */
 const DEFAULT_MAX_AGE = 30 * 24 * 60 * 60;

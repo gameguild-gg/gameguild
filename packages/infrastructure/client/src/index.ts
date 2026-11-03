@@ -19,15 +19,15 @@
  */
 
 // Client factories
-export { createClient, type ClientConfig } from './client.js';
-export { createServerClient, type ServerClientConfig } from './server.js';
+export { createClient, type ClientConfig } from './client';
+export { createServerClient, type ServerClientConfig } from './server';
 
 // Result types
-export type { Result, Ok, Err, ResultData, ResultError } from './runtime/result/types.js';
-export { ok, err, isOk, isErr, unwrap, unwrapOr, match } from './runtime/result/helpers.js';
+export type { Result, Ok, Err, ResultData, ResultError } from './runtime/result/types';
+export { ok, err, isOk, isErr, unwrap, unwrapOr, match } from './runtime/result/helpers';
 
 // Error types and guards
-export type { ApiError, ApiErrorCode, AuthenticationError, AuthorizationError, NotFoundError, ValidationError } from './runtime/errors/types.js';
+export type { ApiError, ApiErrorCode, AuthenticationError, AuthorizationError, NotFoundError, ValidationError } from './runtime/errors/types';
 
 export {
   isApiError,
@@ -41,22 +41,22 @@ export {
   isRetryableError,
   getRequiredPermissions,
   getRequiredFeature,
-} from './runtime/errors/guards.js';
+} from './runtime/errors/guards';
 
 // Validation utilities
-export { transformZodError, isZodError, safeParse } from './runtime/errors/validation.js';
+export { transformZodError, isZodError, safeParse } from './runtime/errors/validation';
 
 // DevTools
-export { DevTools, type DevToolsConfig } from './runtime/devtools/index.js';
+export { DevTools, type DevToolsConfig } from './runtime/devtools/index';
 
 // Deduplication
-export { RequestDeduplicator, type DeduplicationConfig } from './runtime/deduplication/index.js';
+export { RequestDeduplicator, type DeduplicationConfig } from './runtime/deduplication/index';
 
 // Product API exports
-export * from './product-exports.js';
+export * from './product-exports';
 
 // Additional error guard
-export { getRetryAfter } from './runtime/errors/guards.js';
+export { getRetryAfter } from './runtime/errors/guards';
 
 // Auth types
 export type {
@@ -81,13 +81,13 @@ export type {
   SessionStatus,
   UseSessionReturn,
   SessionProviderProps,
-} from './runtime/auth/types.js';
+} from './runtime/auth/types';
 
 // Auth utilities
-export { encodeJWT, decodeJWT } from './runtime/auth/jwt.js';
-export { SessionStore, CsrfStore, CallbackStore, resolveCookieOptions } from './runtime/auth/cookies.js';
-export { createCSRFToken, validateCSRFToken } from './runtime/auth/csrf.js';
-export { createJWTPayload, toSession, shouldRefreshToken, refreshAccessToken, processSession, encodeSession } from './runtime/auth/session.js';
+export { encodeJWT, decodeJWT } from './runtime/auth/jwt';
+export { SessionStore, CsrfStore, CallbackStore, resolveCookieOptions } from './runtime/auth/cookies';
+export { createCSRFToken, validateCSRFToken } from './runtime/auth/csrf';
+export { createJWTPayload, toSession, shouldRefreshToken, refreshAccessToken, processSession, encodeSession } from './runtime/auth/session';
 
 // Auth errors
 export {
@@ -116,10 +116,10 @@ export {
   isAuthError,
   isReauthRequired,
   isCredentialsError,
-} from './runtime/auth/errors.js';
+} from './runtime/auth/errors';
 
 // Authorization utilities
-export { hasRole, hasAllRoles, hasAnyRole, hasPermission, hasAllPermissions, hasAnyPermission, can } from './runtime/auth/authorization.js';
+export { hasRole, hasAllRoles, hasAnyRole, hasPermission, hasAllPermissions, hasAnyPermission, can } from './runtime/auth/authorization';
 
 // Extended auth operations (MFA, password reset, email verification, session management)
 export {
@@ -136,7 +136,7 @@ export {
   terminateSession,
   terminateOtherSessions,
   terminateAllSessions,
-} from './runtime/auth/extended-operations.js';
+} from './runtime/auth/extended-operations';
 export type {
   MfaVerifyInput,
   MfaSetupResult,
@@ -145,25 +145,25 @@ export type {
   PasswordChangeInput,
   EmailVerificationInput,
   SessionInfo,
-} from './runtime/auth/extended-operations.js';
+} from './runtime/auth/extended-operations';
 
 // Auth providers
-export { CredentialsProvider } from './runtime/auth/providers/credentials.js';
-export { DiscordProvider } from './runtime/auth/providers/discord.js';
-export { GitHubProvider } from './runtime/auth/providers/github.js';
-export { GoogleProvider } from './runtime/auth/providers/google.js';
+export { CredentialsProvider } from './runtime/auth/providers/credentials';
+export { DiscordProvider } from './runtime/auth/providers/discord';
+export { GitHubProvider } from './runtime/auth/providers/github';
+export { GoogleProvider } from './runtime/auth/providers/google';
 
 // Tenant types
-export type { TenantProvider, TenantConfig } from './runtime/tenant/types.js';
+export type { TenantProvider, TenantConfig } from './runtime/tenant/types';
 
 // Transport types
-export type { RequestConfig, ApiResponse, Interceptor } from './runtime/transport/types.js';
+export type { RequestConfig, ApiResponse, Interceptor } from './runtime/transport/types';
 
 // ─── Next.js Integration ─────────────────────────────────────────
-export { GameGuildAuth } from './integrations/next/auth.js';
-export { parseCookieHeader, parseBackendAuthResponse } from './integrations/next/handlers.js';
-export { createMfaEnrollmentCompleteAction, type MfaEnrollmentCompleteResult } from './integrations/next/actions.js';
-export type { OAuthProviderWithMethods } from './integrations/next/oauth-helpers.js';
+export { GameGuildAuth } from './integrations/next/auth';
+export { parseCookieHeader, parseBackendAuthResponse } from './integrations/next/handlers';
+export { createMfaEnrollmentCompleteAction, type MfaEnrollmentCompleteResult } from './integrations/next/actions';
+export type { OAuthProviderWithMethods } from './integrations/next/oauth-helpers';
 export {
   createNextClient,
   createNextAuthTokenProvider,
@@ -171,11 +171,11 @@ export {
   createClientFromCookies,
   createRouteClient,
   type NextClientConfig,
-} from './integrations/next/index.js';
+} from './integrations/next/index';
 
 // ─── Plugins ─────────────────────────────────────────────────────
-export { createRetryPlugin, createRetryInterceptor, type RetryConfig } from './plugins/retry.js';
-export { createAuthRetryPlugin, type AuthRetryConfig } from './plugins/auth-retry.js';
-export { createLoggingInterceptor, type LoggingConfig, type LogLevel, type LoggerFn } from './plugins/logging.js';
-export { createCacheInterceptor, MemoryCache, type CacheConfig, type CacheInterceptor } from './plugins/cache.js';
-export { createMetricsInterceptor, type MetricsConfig, type RequestMetrics, type AggregatedMetrics, type MetricsInterceptor } from './plugins/metrics.js';
+export { createRetryPlugin, createRetryInterceptor, type RetryConfig } from './plugins/retry';
+export { createAuthRetryPlugin, type AuthRetryConfig } from './plugins/auth-retry';
+export { createLoggingInterceptor, type LoggingConfig, type LogLevel, type LoggerFn } from './plugins/logging';
+export { createCacheInterceptor, MemoryCache, type CacheConfig, type CacheInterceptor } from './plugins/cache';
+export { createMetricsInterceptor, type MetricsConfig, type RequestMetrics, type AggregatedMetrics, type MetricsInterceptor } from './plugins/metrics';

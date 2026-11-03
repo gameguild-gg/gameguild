@@ -4,8 +4,8 @@
  * Prevents duplicate in-flight requests by caching pending promises
  */
 
-import type { Result } from '../result/types.js';
-import type { ApiError } from '../errors/types.js';
+import type { Result } from '../result/types';
+import type { ApiError } from '../errors/types';
 
 export interface DeduplicationConfig {
   /**

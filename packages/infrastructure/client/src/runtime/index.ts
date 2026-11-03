@@ -5,8 +5,8 @@
  */
 
 // Result types
-export type { Result, Ok, Err, ResultData, ResultError } from './result/types.js';
-export { ok, err, isOk, isErr, unwrap, unwrapOr, unwrapOrElse, map, mapErr, flatMap, match, fromPromise, toPromise } from './result/helpers.js';
+export type { Result, Ok, Err, ResultData, ResultError } from './result/types';
+export { ok, err, isOk, isErr, unwrap, unwrapOr, unwrapOrElse, map, mapErr, flatMap, match, fromPromise, toPromise } from './result/helpers';
 
 // Error types
 export type {
@@ -22,7 +22,7 @@ export type {
   ServerError,
   SpecificApiError,
   ValidationError,
-} from './errors/types.js';
+} from './errors/types';
 
 export {
   isApiError,
@@ -45,7 +45,7 @@ export {
   getRetryAfter,
   createApiError,
   createNetworkError,
-} from './errors/index.js';
+} from './errors/index';
 
 // Transport types
 export type {
@@ -57,16 +57,16 @@ export type {
   ResponseInterceptor,
   Transport,
   TransportConfig,
-} from './transport/types.js';
+} from './transport/types';
 
-export { createFetchTransport, createHeaderInterceptor } from './transport/fetch.js';
+export { createFetchTransport, createHeaderInterceptor } from './transport/fetch';
 
 // Auth types
-export type { AuthConfig, AuthMode, TokenPair, TokenProvider } from './auth/types.js';
-export { TokenRefreshManager, type TokenRefreshConfig } from './auth/refresh.js';
+export type { AuthConfig, AuthMode, TokenPair, TokenProvider } from './auth/types';
+export { TokenRefreshManager, type TokenRefreshConfig } from './auth/refresh';
 
 // Tenant types
-export type { TenantConfig, TenantProvider } from './tenant/types.js';
+export type { TenantConfig, TenantProvider } from './tenant/types';
 
 // Client types
-export type { ApiClient, RequestExecutor } from './client.js';
+export type { ApiClient, RequestExecutor } from './client';
