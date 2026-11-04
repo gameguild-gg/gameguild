@@ -22,9 +22,10 @@ public class EnrollmentAuditEmissionTests
         var userId = Guid.NewGuid();
 
         var enrolled = await service.EnrollAsync(new EnrollUserCommand(courseId, userId, null));
-        await service.UpdateProgressAsync(enrolled.Id, 42);
-        await service.SetStatusAsync(enrolled.Id, EnrollmentStatus.Paused);
-        await service.SetStatusAsync(enrolled.Id, EnrollmentStatus.Completed);
+        enrolled.IsSuccess.Should().BeTrue();
+        await service.UpdateProgressAsync(enrolled.Value.Id, 42);
+        await service.SetStatusAsync(enrolled.Value.Id, EnrollmentStatus.Paused);
+        await service.SetStatusAsync(enrolled.Value.Id, EnrollmentStatus.Completed);
 
         sink.Events.Select(auditEvent => auditEvent.ActionType).Should().Equal(
             "Learning.Enrollments.UserEnrolled",
@@ -33,7 +34,7 @@ public class EnrollmentAuditEmissionTests
             "Learning.Enrollments.StatusChanged",
             "Learning.Enrollments.EnrollmentCompleted");
         sink.Events.Should().OnlyContain(auditEvent => auditEvent.ResourceType == "Enrollment");
-        sink.Events.Should().OnlyContain(auditEvent => auditEvent.ResourceId == enrolled.Id.ToString());
+        sink.Events.Should().OnlyContain(auditEvent => auditEvent.ResourceId == enrolled.Value.Id.ToString());
         sink.Events[0].ActorUserId.Should().Be(userId);
     }
 

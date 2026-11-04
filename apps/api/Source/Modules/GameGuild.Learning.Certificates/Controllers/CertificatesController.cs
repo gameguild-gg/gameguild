@@ -1,3 +1,4 @@
+using GameGuild.Learning.Courses;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.CQRS;
@@ -17,6 +18,7 @@ public class CertificatesController : BaseApiController
     private readonly ICertificateService _certificateService;
     private readonly ICertificateTemplateService _templateService;
     private readonly IActorContextAccessor _actorContextAccessor;
+    private readonly ICourseAccessEvaluator _courseAccessEvaluator;
     private readonly ILogger<CertificatesController> _logger;
     private readonly ISender _sender;
 
@@ -24,14 +26,27 @@ public class CertificatesController : BaseApiController
         ICertificateService certificateService,
         ICertificateTemplateService templateService,
         IActorContextAccessor actorContextAccessor,
+        ICourseAccessEvaluator courseAccessEvaluator,
         ILogger<CertificatesController> logger,
         ISender sender)
     {
         _certificateService = certificateService;
         _templateService = templateService;
         _actorContextAccessor = actorContextAccessor;
+        _courseAccessEvaluator = courseAccessEvaluator;
         _logger = logger;
         _sender = sender;
+    }
+
+    /// <summary>
+    ///     Actor gate for recipient-scoped certificates (issue #1226 N6): a learner may
+    ///     only read their own certificates; system admins keep cross-recipient access
+    ///     for support.
+    /// </summary>
+    private bool CanAccessUserData(Guid userId)
+    {
+        var actor = _actorContextAccessor.ActorContext;
+        return actor.IsSystemAdmin || actor.SubjectIdAsGuid == userId;
     }
 
     /// <summary>
@@ -62,6 +77,14 @@ public class CertificatesController : BaseApiController
         if (certificate == null)
         {
             return NotFound();
+        }
+
+        // Ownership gate (issue #1226 N6): a certificate is recipient-scoped personal
+        // data; only the recipient (or a system admin) may read it by id. Public
+        // verification stays on the number-based verify endpoints.
+        if (!CanAccessUserData(certificate.UserId))
+        {
+            return Forbid();
         }
 
         return Ok(CertificateDto.FromEntity(certificate));
@@ -177,6 +200,14 @@ public class CertificatesController : BaseApiController
     public async Task<ActionResult<IEnumerable<CertificateDto>>> GetCourseCertificates(Guid courseId)
     {
         var actor = _actorContextAccessor.ActorContext;
+
+        // Staff gate (issue #1226 N6/N7): the course-wide recipient list is staff data —
+        // reading every learner's certificates requires the course Edit capability (the
+        // evaluator grants system admins everything).
+        if (!await _courseAccessEvaluator.HasCapabilityAsync(courseId, CourseCapability.Edit).ConfigureAwait(false))
+        {
+            return Forbid();
+        }
 
         var certificates = await _certificateService.GetCourseCertificatesAsync(courseId, actor.TenantId).ConfigureAwait(false);
         var dtos = certificates.Select(c => CertificateDto.FromEntity(c));
