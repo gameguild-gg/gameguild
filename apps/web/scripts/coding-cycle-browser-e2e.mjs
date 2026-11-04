@@ -410,6 +410,10 @@ async function bootStack() {
   // --- Next.js web ---
   const webEnv = [
     `NODE_ENV=development`,
+    // Cold webpack compilation of both personas exceeded Next's default heap
+    // restart threshold in CI (run 41797799470), dropping the instructor CSRF
+    // request. Match the bounded heap used by the sign-in/session browser gates.
+    `NODE_OPTIONS=--max-old-space-size=6144`,
     `CODING_CYCLE_E2E=1`,
     `API_URL=${API_BASE}`,
     `NEXT_PUBLIC_API_URL=${API_BASE}`,
