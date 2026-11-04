@@ -6,7 +6,6 @@ using Moq;
 using Xunit;
 
 namespace GameGuild.Commerce.Orders.UnitTests;
-
 public sealed class OrderMutationAuthorizationTests
 {
     public static TheoryData<string, string> DeniedActors
@@ -14,9 +13,33 @@ public sealed class OrderMutationAuthorizationTests
         get
         {
             var cases = new TheoryData<string, string>();
-            foreach (var operation in new[] { "cancel", "delete", "hold", "release" })
-            foreach (var actor in new[] { "other-user", "other-tenant", "anonymous", "missing", "no-tenant", "invalid-subject", "service" })
-                cases.Add(operation, actor);
+            foreach (var operation in new[]
+            {
+                "cancel",
+                "delete",
+                "hold",
+                "release"
+            }
+
+            )
+            {
+                foreach (var actor in new[]
+                {
+                    "other-user",
+                    "other-tenant",
+                    "anonymous",
+                    "missing",
+                    "no-tenant",
+                    "invalid-subject",
+                    "service"
+                }
+
+                )
+                {
+                    cases.Add(operation, actor);
+                }
+            }
+
             return cases;
         }
     }
@@ -33,9 +56,7 @@ public sealed class OrderMutationAuthorizationTests
         var updatedAt = order.UpdatedAt;
         var version = order.Version;
         var events = order.DomainEvents.ToArray();
-
         var result = await Execute(operation, order.Id, repository.Object, actor, inventory.Object);
-
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be(actorKind switch
         {
@@ -64,9 +85,7 @@ public sealed class OrderMutationAuthorizationTests
         typeof(Order).GetProperty(nameof(Order.Status))!.SetValue(order, OrderStatus.Fulfilled);
         var repository = RepositoryWith(order);
         var inventory = new Mock<IProductInventoryService>();
-
         var result = await Execute(operation, order.Id, repository.Object, ActorFor(order, "other-user"), inventory.Object);
-
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Orders.Forbidden");
         repository.Verify(mock => mock.UpdateAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -84,19 +103,17 @@ public sealed class OrderMutationAuthorizationTests
         var order = CreateOrder(operation);
         var repository = RepositoryWith(order);
         var inventory = new Mock<IProductInventoryService>();
-
         var result = await Execute(operation, order.Id, repository.Object, ActorFor(order, "owner"), inventory.Object);
-
         result.IsSuccess.Should().BeTrue();
         order.Status.Should().Be(expectedStatus);
         order.IsDeleted.Should().Be(operation == "delete");
         repository.Verify(mock => mock.UpdateAsync(order, It.IsAny<CancellationToken>()), Times.Once);
         repository.Verify(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         if (operation == "cancel")
-            inventory.Verify(mock => mock.ReleaseAsync(
-                It.Is<IReadOnlyCollection<(Guid ProductId, int Quantity)>>(lines =>
-                    lines.Count == 1 && lines.First().ProductId == order.LineItems.First().ProductId),
-                It.IsAny<CancellationToken>()), Times.Once);
+        {
+            inventory.Verify(mock => mock.ReleaseAsync(It.Is<IReadOnlyCollection<(Guid ProductId, int Quantity)>>(lines => lines.Count == 1 && lines.First().ProductId == order.LineItems.First().ProductId), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
         inventory.VerifyNoOtherCalls();
     }
 
@@ -109,10 +126,7 @@ public sealed class OrderMutationAuthorizationTests
     {
         var repository = new Mock<IOrderRepository>();
         var inventory = new Mock<IProductInventoryService>();
-
-        var result = await Execute(operation, Guid.NewGuid(), repository.Object,
-            Mock.Of<IActorContextAccessor>(), inventory.Object);
-
+        var result = await Execute(operation, Guid.NewGuid(), repository.Object, Mock.Of<IActorContextAccessor>(), inventory.Object);
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Orders.NotFound");
         repository.Verify(mock => mock.UpdateAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -124,7 +138,11 @@ public sealed class OrderMutationAuthorizationTests
     {
         var order = OrderTestFactory.CreatePendingOrder();
         OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Reserved item", 10m);
-        if (operation == "release") order.PlaceOnHold("Review");
+        if (operation == "release")
+        {
+            order.PlaceOnHold("Review");
+        }
+
         return order;
     }
 
@@ -138,12 +156,15 @@ public sealed class OrderMutationAuthorizationTests
 
     private static IActorContextAccessor ActorFor(Order order, string kind)
     {
-        if (kind == "missing") return Mock.Of<IActorContextAccessor>();
+        if (kind == "missing")
+        {
+            return Mock.Of<IActorContextAccessor>();
+        }
+
         var actor = new ActorContext
         {
             ActorKind = kind == "service" ? ActorKind.Service : ActorKind.User,
-            SubjectId = kind == "invalid-subject" ? "invalid" :
-                (kind == "other-user" ? Guid.NewGuid() : order.UserId).ToString(),
+            SubjectId = kind == "invalid-subject" ? "invalid" : (kind == "other-user" ? Guid.NewGuid() : order.UserId).ToString(),
             TenantId = kind == "no-tenant" ? null : kind == "other-tenant" ? Guid.NewGuid() : order.TenantId,
             IsAuthenticated = kind != "anonymous",
             Roles = new HashSet<string>(),
@@ -154,22 +175,15 @@ public sealed class OrderMutationAuthorizationTests
         return accessor.Object;
     }
 
-    private static async Task<Result> Execute(string operation, Guid orderId, IOrderRepository repository,
-        IActorContextAccessor actor, IProductInventoryService inventory)
+    private static async Task<Result> Execute(string operation, Guid orderId, IOrderRepository repository, IActorContextAccessor actor, IProductInventoryService inventory)
     {
-        using var services = new ServiceCollection()
-            .AddSingleton(repository).AddSingleton(actor).AddSingleton(inventory).BuildServiceProvider();
+        using var services = new ServiceCollection().AddSingleton(repository).AddSingleton(actor).AddSingleton(inventory).BuildServiceProvider();
         return operation switch
         {
-            "cancel" => await ActivatorUtilities.CreateInstance<CancelOrderCommandHandler>(services)
-                .Handle(new CancelOrderCommand(orderId, "Requested"), CancellationToken.None),
-            "delete" => await ActivatorUtilities.CreateInstance<DeleteOrderCommandHandler>(services)
-                .Handle(new DeleteOrderCommand(orderId), CancellationToken.None),
-            "hold" => await ActivatorUtilities.CreateInstance<HoldOrderCommandHandler>(services)
-                .Handle(new HoldOrderCommand(orderId, "Review"), CancellationToken.None),
-            "release" => await ActivatorUtilities.CreateInstance<ReleaseOrderCommandHandler>(services)
-                .Handle(new ReleaseOrderCommand(orderId), CancellationToken.None),
-            _ => throw new ArgumentOutOfRangeException(nameof(operation))
-        };
+            "cancel" => await ActivatorUtilities.CreateInstance<CancelOrderCommandHandler>(services).Handle(new CancelOrderCommand(orderId, "Requested"), CancellationToken.None),
+            "delete" => await ActivatorUtilities.CreateInstance<DeleteOrderCommandHandler>(services).Handle(new DeleteOrderCommand(orderId), CancellationToken.None),
+            "hold" => await ActivatorUtilities.CreateInstance<HoldOrderCommandHandler>(services).Handle(new HoldOrderCommand(orderId, "Review"), CancellationToken.None),
+            "release" => await ActivatorUtilities.CreateInstance<ReleaseOrderCommandHandler>(services).Handle(new ReleaseOrderCommand(orderId), CancellationToken.None),
+            _ => throw new ArgumentOutOfRangeException(nameof(operation))};
     }
 }

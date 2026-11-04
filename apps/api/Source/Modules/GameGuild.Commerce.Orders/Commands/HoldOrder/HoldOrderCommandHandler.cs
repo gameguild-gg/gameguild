@@ -2,18 +2,12 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Commerce.Orders;
-
 /// <summary>
 /// Handler for placing an order on hold
 /// </summary>
-public sealed class HoldOrderCommandHandler(
-    IOrderRepository orderRepository,
-    IActorContextAccessor actorContextAccessor)
-    : ICommandHandler<HoldOrderCommand, Result<OrderOperationResult>>
+public sealed class HoldOrderCommandHandler(IOrderRepository orderRepository, IActorContextAccessor actorContextAccessor) : ICommandHandler<HoldOrderCommand, Result<OrderOperationResult>>
 {
-    public async Task<Result<OrderOperationResult>> Handle(
-        HoldOrderCommand request,
-        CancellationToken cancellationToken)
+    public async Task<Result<OrderOperationResult>> Handle(HoldOrderCommand request, CancellationToken cancellationToken)
     {
         var order = await orderRepository.GetByIdAsync(request.OrderId, cancellationToken).ConfigureAwait(false);
         if (order is null)
@@ -23,7 +17,9 @@ public sealed class HoldOrderCommandHandler(
 
         var authorizationError = OrderActorContext.Authorize(order, actorContextAccessor);
         if (authorizationError is not null)
+        {
             return Result.Failure<OrderOperationResult>(authorizationError);
+        }
 
         if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Processing)
         {
@@ -33,7 +29,6 @@ public sealed class HoldOrderCommandHandler(
         order.PlaceOnHold(request.Reason);
         await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
         await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
         return Result.Success(OrderOperationResult.FromOrder(order));
     }
 }

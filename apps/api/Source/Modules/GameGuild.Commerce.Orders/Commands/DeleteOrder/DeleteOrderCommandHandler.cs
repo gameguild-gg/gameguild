@@ -2,18 +2,12 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Commerce.Orders;
-
 /// <summary>
 /// Handler for soft-deleting an order
 /// </summary>
-public sealed class DeleteOrderCommandHandler(
-    IOrderRepository orderRepository,
-    IActorContextAccessor actorContextAccessor)
-    : ICommandHandler<DeleteOrderCommand, Result>
+public sealed class DeleteOrderCommandHandler(IOrderRepository orderRepository, IActorContextAccessor actorContextAccessor) : ICommandHandler<DeleteOrderCommand, Result>
 {
-    public async Task<Result> Handle(
-        DeleteOrderCommand request,
-        CancellationToken cancellationToken)
+    public async Task<Result> Handle(DeleteOrderCommand request, CancellationToken cancellationToken)
     {
         var order = await orderRepository.GetByIdAsync(request.OrderId, cancellationToken).ConfigureAwait(false);
         if (order is null)
@@ -23,7 +17,9 @@ public sealed class DeleteOrderCommandHandler(
 
         var authorizationError = OrderActorContext.Authorize(order, actorContextAccessor);
         if (authorizationError is not null)
+        {
             return Result.Failure(authorizationError);
+        }
 
         if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Cancelled)
         {
@@ -33,7 +29,6 @@ public sealed class DeleteOrderCommandHandler(
         order.SoftDelete();
         await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
         await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
         return Result.Success();
     }
 }
