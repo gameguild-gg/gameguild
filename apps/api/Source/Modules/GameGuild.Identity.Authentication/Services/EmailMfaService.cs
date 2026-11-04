@@ -113,7 +113,11 @@ public sealed class EmailMfaService(
     }
 
     /// <inheritdoc />
-    public async Task<bool> VerifyCodeAsync(Guid userId, string code, CancellationToken cancellationToken = default)
+    public Task<bool> VerifyCodeAsync(Guid userId, string code) =>
+        VerifyCodeAsync(userId, code, CancellationToken.None);
+
+    /// <inheritdoc />
+    public async Task<bool> VerifyCodeAsync(Guid userId, string code, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var configuration = await mfaConfigRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
