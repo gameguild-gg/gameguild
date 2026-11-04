@@ -492,10 +492,12 @@ describe('createSignOutAction — extended', () => {
       expect.stringContaining('tokens:revoke'),
       expect.objectContaining({
         body: JSON.stringify({ token: 'refresh-token' }),
-        headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       }),
     );
+    const headers = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
+    expect(headers.get('Content-Type')).toBe('application/json');
+    expect(headers.get('Authorization')).toBe('Bearer access-token');
   });
 
   it('should redirect after signout by default', async () => {

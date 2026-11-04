@@ -13,6 +13,7 @@ import { SessionStore, resolveCookieOptions, type CookieSerializeOptions } from 
 import { createJWTPayload, processSession, encodeSession, refreshAccessToken, toSession } from '../../runtime/auth/session.js';
 import { CredentialsSignInError, ProviderNotFoundError } from '../../runtime/auth/errors.js';
 import { registerAccount } from '../../runtime/auth/sign-up.js';
+import { revokeSessionRefreshToken } from '../../runtime/auth/sign-out.js';
 import type { IdentityAuthenticationLocalSignUpInput } from '../../generated/types.gen.js';
 import { applyResponseCookies, parseBackendAuthResponse } from './handlers.js';
 import { type OAuthProviderWithMethods, getOAuthExchangeToken } from './oauth-helpers.js';
@@ -341,12 +342,8 @@ export function createSignOutAction(config: ResolvedAuthConfig) {
             token: encryptedToken,
             secret: config.secret,
           });
-          if (token?.refreshToken) {
-            await fetch(`${config.apiUrl}/v1/auth/tokens:revoke`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ token: token.refreshToken }),
-            }).catch(() => {});
+          if (token) {
+            await revokeSessionRefreshToken(config.apiUrl, token);
           }
         } catch {
           // Ignore

@@ -8,7 +8,7 @@ the counts below are the historical audit snapshot. The F1/F2 correction notes
 describe the current implementation, and F5 corrects a controller-count false
 positive. The adjacent F3/F4 transport findings remain unresolved; these scoped
 corrections are not a newly certified surface audit. F3 records the subsequent
-Next registration migration, and F4 records the password/MFA credential-provider
+Next registration/token-revocation migrations, and F4 records the password/MFA credential-provider
 migration; the other provider transports remain.
 
 Sources of truth:
@@ -125,9 +125,9 @@ exercised, but not through its generated method (finding F3).
 | GET | `/v1/auth/session-state` | `getAuthSessionState` | `app/[locale]/(dashboards)/workspace/settings/account/page.tsx` |
 | POST | `/v1/auth/sign-in` | `postAuthSignIn` | — (raw transport, F3/F4) |
 | POST | `/v1/auth/sign-out` | `postAuthSignOut` | — (raw transport, F3/F4) |
-| POST | `/v1/auth/sign-up` | `postAuthSignUp` | raw fetch only (F3) |
+| POST | `/v1/auth/sign-up` | `postAuthSignUp` | SDK Next registration migrated (F3); counts remain historical |
 | POST | `/v1/auth/tokens:refresh` | `postAuthTokensRefresh` | — (raw transport, F3/F4) |
-| POST | `/v1/auth/tokens:revoke` | `postAuthTokensRevoke` | raw fetch only (F3) |
+| POST | `/v1/auth/tokens:revoke` | `postAuthTokensRevoke` | SDK Next logout migrated (F3); counts remain historical |
 | POST | `/v1/auth/web3/challenge` | `postAuthWeb3Challenge` | — (raw transport, F3/F4) |
 | POST | `/v1/auth/web3:verify` | `postAuthWeb3Verify` | — (raw transport, F3/F4) |
 
@@ -293,14 +293,14 @@ exercised, but not through its generated method (finding F3).
 
 ### Auth module findings
 
-- **A1 — the primary credential flows bypass the generated client entirely.**
-  Password sign-in, sign-out, token refresh, sign-up, password reset, email-code,
+- **A1 — primary credential transport gap (historical audit).**
+  At audit time, password sign-in, sign-out, token refresh, sign-up, password reset, email-code,
   magic-link, web3 and MFA-verify all reach the API through hand-rolled `fetch`
   calls in `apps/web/src/lib/auth/*` and
   `packages/infrastructure/client/src/runtime/auth/*` (see F3/F4), so their
-  generated methods show as "never called" while the endpoints are among the
-  hottest in production. The generated auth surface is exercised mainly for
-  session/device/MFA settings management.
+  generated methods showed as "never called" while the endpoints were among the
+  hottest in production. The F3/F4 correction notes record subsequent generated
+  migrations; these historical audit counts have not been recertified.
 - **A2 — complete dead clusters (0 callers, any transport)**: account recovery (6),
   API keys (4), SCIM tokens (4), service accounts (15), roles (9), WebAuthn (13),
   trusted contacts (4), signing keys (3), admin MFA reset, MFA email/push/recovery
@@ -391,7 +391,7 @@ actual successful empty collection renders the empty state. A later successful
 server render replaces the alert with fresh campaign data. These corrections do
 not resolve F3/F4/F5 or turn the no-caller inventory into a deletion list.
 
-### F3 — Next registration migrated; parallel transports remain
+### F3 — Next registration/token revocation migrated; parallel transports remain
 
 The original audit identified 17+ generated endpoints shadowed by hand-written
 transports in the client runtime and web app. The Next route and server-action
@@ -402,13 +402,19 @@ callbacks and redirects are retained; malformed, denied, incomplete and pending
 MFA/step-up responses never create an ordinary session. Network/server/response
 failures produce a service-unavailable error, distinct from invalid registration.
 
+The two Next logout paths now call generated `AuthModule.postAuthTokensRevoke`
+through `runtime/auth/sign-out.ts`. Revocation carries the access bearer from the
+decrypted session: the endpoint requires `[Authorize]` and its handler enforces
+refresh-token ownership. The old calls supplied no bearer, so could clear local
+cookies while leaving remote refresh credentials valid. Missing/malformed tokens
+are not sent, and request-body actor/token fields cannot replace the session's
+credentials. Logout never refreshes or rotates tokens. Revocation has a five-second
+request budget; failure still permits local cookie cleanup. Server authorization
+and ownership checks are unchanged. The old enrollment route is covered by F1.
+
 Remaining transports from the historical inventory (line numbers below belong to
 the original audit, not the current source):
 
-- `packages/infrastructure/client/src/integrations/next/actions.ts` and
-  `…/integrations/next/handlers.ts`: `/v1/auth/tokens:revoke` remains hand-written;
-  their `/v1/auth/sign-up` calls are now generated. The old enrollment route is
-  covered separately by the F1 correction;
 - `…/runtime/auth/extended-operations.ts:162` (`/v1/auth/mfa/verify`), `:201` (`/v1/auth/mfa/methods`),
   `:220` (`/v1/auth/password:reset-request`), `:299` (`/v1/auth/sessions`),
   `:314` (`/v1/auth/sessions/{id}`);

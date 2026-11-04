@@ -23,6 +23,7 @@ import { decodeJWT } from '../../runtime/auth/jwt.js';
 import { resolveAuthPermissions, resolveAuthRoles } from '../../runtime/auth/claims.js';
 import { AuthError, CredentialsSignInError, ProviderNotFoundError, CSRFError, SignUpError } from '../../runtime/auth/errors.js';
 import { registerAccount } from '../../runtime/auth/sign-up.js';
+import { revokeSessionRefreshToken } from '../../runtime/auth/sign-out.js';
 import type { IdentityAuthenticationLocalSignUpInput } from '../../generated/types.gen.js';
 import { type OAuthProviderWithMethods, getOAuthExchangeToken, getOAuthAuthorizeUrl, getOAuthHandleCallback } from './oauth-helpers.js';
 import {
@@ -520,14 +521,8 @@ export function createHandlers(config: ResolvedAuthConfig) {
     if (encryptedToken) {
       try {
         const token = await decodeJWT({ token: encryptedToken, secret: config.secret });
-        if (token?.refreshToken) {
-          await fetch(`${config.apiUrl}/v1/auth/tokens:revoke`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token.refreshToken }),
-            /* v8 ignore start */
-          }).catch(() => {});
-          /* v8 ignore stop */
+        if (token) {
+          await revokeSessionRefreshToken(config.apiUrl, token);
         }
       } catch {
         // Ignore decode errors
