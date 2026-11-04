@@ -3465,7 +3465,7 @@ export const getApiHealthDependenciesEndpoint = {
 export interface PostApiLearningEnrollmentsInput {
   body?: Types.LearningEnrollmentsEnrollUserInput;
 }
-export type PostApiLearningEnrollmentsOutput = Types.LearningEnrollmentsEnrollmentDto;
+export type PostApiLearningEnrollmentsOutput = void;
 export const postApiLearningEnrollmentsEndpoint = {
   operationId: 'postApiLearningEnrollments' as const,
   method: 'POST' as const,
@@ -3518,7 +3518,7 @@ export interface GetApiLearningEnrollmentsCoursesInput {
     status?: Types.LearningEnrollmentsEnrollmentStatus;
   };
 }
-export type GetApiLearningEnrollmentsCoursesOutput = Types.LearningEnrollmentsEnrollmentDto[];
+export type GetApiLearningEnrollmentsCoursesOutput = void;
 export const getApiLearningEnrollmentsCoursesEndpoint = {
   operationId: 'getApiLearningEnrollmentsCourses' as const,
   method: 'GET' as const,
@@ -3533,7 +3533,7 @@ export interface GetApiLearningEnrollmentsUsersInput {
     status?: Types.LearningEnrollmentsEnrollmentStatus;
   };
 }
-export type GetApiLearningEnrollmentsUsersOutput = Types.LearningEnrollmentsEnrollmentDto[];
+export type GetApiLearningEnrollmentsUsersOutput = void;
 export const getApiLearningEnrollmentsUsersEndpoint = {
   operationId: 'getApiLearningEnrollmentsUsers' as const,
   method: 'GET' as const,

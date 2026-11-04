@@ -21135,20 +21135,6 @@ export interface LearningCoursesWorkspaceData {
   files?: Record<string, LearningCoursesBundleFileMeta> | null;
 }
 
-/** Data model for Learning Enrollments Enrollment Dto. */
-export interface LearningEnrollmentsEnrollmentDto {
-  id?: string;
-  cohortId?: string | null;
-  completedAt?: string | null;
-  courseId?: string;
-  droppedAt?: string | null;
-  enrolledAt?: string;
-  lastActivityAt?: string | null;
-  progress?: number;
-  status?: LearningEnrollmentsEnrollmentStatus;
-  userId?: string;
-}
-
 /** OpenAPI schema for Learning Enrollments Enrollment Status. */
 export type LearningEnrollmentsEnrollmentStatus = 'Active' | 'Paused' | 'Completed' | 'Dropped' | 'Expired';
 
@@ -29685,7 +29671,6 @@ export let LearningCoursesUpdateTimeSpentInputSchema: z.ZodType<LearningCoursesU
 export let LearningCoursesUserProgressDtoSchema: z.ZodType<LearningCoursesUserProgressDto>;
 export let LearningCoursesVisibilitySchema: z.ZodType<LearningCoursesVisibility>;
 export let LearningCoursesWorkspaceDataSchema: z.ZodType<LearningCoursesWorkspaceData>;
-export let LearningEnrollmentsEnrollmentDtoSchema: z.ZodType<LearningEnrollmentsEnrollmentDto>;
 export let LearningEnrollmentsEnrollmentStatusSchema: z.ZodType<LearningEnrollmentsEnrollmentStatus>;
 export let LearningEnrollmentsEnrollUserInputSchema: z.ZodType<LearningEnrollmentsEnrollUserInput>;
 export let LearningEnrollmentsUpdateEnrollmentProgressInputSchema: z.ZodType<LearningEnrollmentsUpdateEnrollmentProgressInput>;
@@ -49546,20 +49531,6 @@ LearningCoursesWorkspaceDataSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningEnrollmentsEnrollmentDto. Data model for Learning Enrollments Enrollment Dto. */
-LearningEnrollmentsEnrollmentDtoSchema = z.object({
-  id: z.string().uuid().optional(),
-  cohortId: z.string().uuid().nullable().optional(),
-  completedAt: z.string().datetime().nullable().optional(),
-  courseId: z.string().uuid().optional(),
-  droppedAt: z.string().datetime().nullable().optional(),
-  enrolledAt: z.string().datetime().optional(),
-  lastActivityAt: z.string().datetime().nullable().optional(),
-  progress: z.number().int().optional(),
-  status: z.lazy(() => LearningEnrollmentsEnrollmentStatusSchema).optional(),
-  userId: z.string().uuid().optional(),
-});
-
 /** Zod schema for LearningEnrollmentsEnrollmentStatus. OpenAPI schema for Learning Enrollments Enrollment Status. */
 LearningEnrollmentsEnrollmentStatusSchema = z.enum(['Active', 'Paused', 'Completed', 'Dropped', 'Expired']);
 
@@ -56275,8 +56246,6 @@ export type LearningCoursesUpdateProgress = LearningCoursesUpdateProgressDto;
 export { LearningCoursesUpdateProgressDtoSchema as LearningCoursesUpdateProgressSchema };
 export type LearningCoursesUserProgress = LearningCoursesUserProgressDto;
 export { LearningCoursesUserProgressDtoSchema as LearningCoursesUserProgressSchema };
-export type LearningEnrollmentsEnrollment = LearningEnrollmentsEnrollmentDto;
-export { LearningEnrollmentsEnrollmentDtoSchema as LearningEnrollmentsEnrollmentSchema };
 export type LearningExperienceDiscoveryCourseCollection = LearningExperienceDiscoveryCourseCollectionDto;
 export { LearningExperienceDiscoveryCourseCollectionDtoSchema as LearningExperienceDiscoveryCourseCollectionSchema };
 export type LearningExperienceDiscoveryCreateCourseCollection = LearningExperienceDiscoveryCreateCourseCollectionDto;
