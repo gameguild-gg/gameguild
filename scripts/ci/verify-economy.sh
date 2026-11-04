@@ -421,10 +421,13 @@ build_client() {
 }
 
 verify_web_tests() {
+  # Web workers type-process the generated client from package source
+  # (tsconfig paths); that needs more than the default V8 heap.
+  export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=12288}"
   gate_stage='frontend-tests'
   local web_evidence="$artifact_root/vitest/web.json"
   local economy_web_evidence="$artifact_root/vitest/economy-coverage.json"
-  run env -u API_URL NODE_OPTIONS=--max-old-space-size=12288 "${pnpm_command[@]}" --filter @game-guild/web exec vitest run --maxWorkers=4 --reporter=json "--outputFile=$web_evidence"
+  run env -u API_URL "${pnpm_command[@]}" --filter @game-guild/web exec vitest run --maxWorkers=4 --reporter=json "--outputFile=$web_evidence"
   ECONOMY_WEB_COVERAGE_DIR="$artifact_root/coverage/web" run env -u API_URL \
     "${pnpm_command[@]}" --filter @game-guild/web run test:economy:coverage \
     --reporter=json "--outputFile=$economy_web_evidence"
