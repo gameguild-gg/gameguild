@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from '../../runtime/client';
+import type { Result } from '../../runtime/result/types';
+import type { ApiError } from '../../runtime/errors/types';
+import * as Types from '../types.gen';
+import { safeParse } from '../../runtime/errors/validation';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

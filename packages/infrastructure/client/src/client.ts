@@ -4,19 +4,19 @@
  * Creates API client instances for browser/client-side usage.
  */
 
-import { createFetchTransport, createHeaderInterceptor } from './runtime/transport/fetch.js';
-import { TokenRefreshManager } from './runtime/auth/refresh.js';
-import { RequestDeduplicator } from './runtime/deduplication/index.js';
-import { DevTools } from './runtime/devtools/index.js';
-import { ok, err } from './runtime/result/helpers.js';
-import type { Result } from './runtime/result/types.js';
-import type { ApiError } from './runtime/errors/types.js';
-import type { TokenProvider } from './runtime/auth/types.js';
-import type { TenantProvider } from './runtime/tenant/types.js';
-import type { ApiResponse, Interceptor, RequestConfig, Transport } from './runtime/transport/types.js';
-import type { ApiClient } from './runtime/client.js';
-import type { DeduplicationConfig } from './runtime/deduplication/index.js';
-import type { DevToolsConfig } from './runtime/devtools/index.js';
+import { createFetchTransport, createHeaderInterceptor } from './runtime/transport/fetch';
+import { TokenRefreshManager } from './runtime/auth/refresh';
+import { RequestDeduplicator } from './runtime/deduplication/index';
+import { DevTools } from './runtime/devtools/index';
+import { ok, err } from './runtime/result/helpers';
+import type { Result } from './runtime/result/types';
+import type { ApiError } from './runtime/errors/types';
+import type { TokenProvider } from './runtime/auth/types';
+import type { TenantProvider } from './runtime/tenant/types';
+import type { ApiResponse, Interceptor, RequestConfig, Transport } from './runtime/transport/types';
+import type { ApiClient } from './runtime/client';
+import type { DeduplicationConfig } from './runtime/deduplication/index';
+import type { DevToolsConfig } from './runtime/devtools/index';
 
 /**
  * Client configuration options

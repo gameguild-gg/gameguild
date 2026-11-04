@@ -351,6 +351,23 @@ const nextConfig: NextConfig = {
 
     config.resolve.alias = {
       ...config.resolve.alias,
+      // tsconfig "paths" points @game-guild/client at package source so
+      // tsc/typed-lint avoid the rollup-plugin-dts mangling in the bundled
+      // d.ts; bundling must still use the built dist — webpack dev cannot
+      // compile the client source because its NodeNext './x.js' specifiers
+      // do not rewrite outside the library's own build pipeline.
+      "@game-guild/client": path.resolve(
+        __dirname,
+        "../../packages/infrastructure/client/dist/index.js",
+      ),
+      "@game-guild/client/react": path.resolve(
+        __dirname,
+        "../../packages/infrastructure/client/dist/react.js",
+      ),
+      "@game-guild/client/next": path.resolve(
+        __dirname,
+        "../../packages/infrastructure/client/dist/next.js",
+      ),
       ...(!walletConnectEnabled
         ? {
             "@walletconnect/ethereum-provider$": path.resolve(

@@ -14,7 +14,7 @@ import type {
   RateLimitError,
   ServerError,
   ValidationError,
-} from './types.js';
+} from './types';
 
 /**
  * Check if error is an ApiError

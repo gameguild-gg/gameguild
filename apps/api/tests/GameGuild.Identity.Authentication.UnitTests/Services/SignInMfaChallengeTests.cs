@@ -88,8 +88,100 @@ public sealed class SignInMfaChallengeTests
         var challenge = CreateChallenge();
         challenge.ValidateForPersistence();
         challenge.Purpose = SignInMfaPurpose.EnrollFactor;
+        // A bare enrollment challenge is unpersistable: it can never be completed (born bound).
+        Assert.Throws<ArgumentException>(challenge.ValidateForPersistence);
+        challenge.EnrollmentConfigurationId = Guid.NewGuid();
+        challenge.EnrollmentSecretFingerprint = new string('a', 64);
+        challenge.EnrollmentInitializedAt = challenge.CreatedAt;
         challenge.ValidateForPersistence();
         Assert.NotEqual(SignInMfaPurpose.VerifyFactor, challenge.Purpose);
+    }
+
+    [Theory]
+    [InlineData("bare")]
+    [InlineData("configuration-only")]
+    [InlineData("fingerprint-only")]
+    [InlineData("initialization-only")]
+    [InlineData("configuration-and-fingerprint")]
+    [InlineData("configuration-and-initialization")]
+    [InlineData("fingerprint-and-initialization")]
+    public void PartiallyBoundEnrollFactorChallengesCannotBePersisted(string mode)
+    {
+        var challenge = CreateChallenge();
+        challenge.Purpose = SignInMfaPurpose.EnrollFactor;
+        if (mode.Contains("configuration")) { challenge.EnrollmentConfigurationId = Guid.NewGuid(); }
+        if (mode.Contains("fingerprint")) { challenge.EnrollmentSecretFingerprint = new string('a', 64); }
+        if (mode.Contains("initialization")) { challenge.EnrollmentInitializedAt = challenge.CreatedAt; }
+        Assert.Throws<ArgumentException>(challenge.ValidateForPersistence);
+    }
+
+    [Theory]
+    [InlineData("configuration")]
+    [InlineData("fingerprint")]
+    [InlineData("initialization")]
+    [InlineData("all")]
+    public void VerifyFactorChallengesCannotCarryEnrollmentEvidence(string mode)
+    {
+        var challenge = CreateChallenge();
+        challenge.Purpose = SignInMfaPurpose.VerifyFactor;
+        if (mode is "configuration" or "all") { challenge.EnrollmentConfigurationId = Guid.NewGuid(); }
+        if (mode is "fingerprint" or "all") { challenge.EnrollmentSecretFingerprint = new string('a', 64); }
+        if (mode is "initialization" or "all") { challenge.EnrollmentInitializedAt = challenge.CreatedAt; }
+        Assert.Throws<ArgumentException>(challenge.ValidateForPersistence);
+    }
+
+    [Theory]
+    [InlineData("short")]
+    [InlineData("long")]
+    [InlineData("non-hex")]
+    [InlineData("uppercase")]
+    public void EnrollmentFingerprintsMustBeFullLowercaseHexDigests(string mode)
+    {
+        var challenge = CreateChallenge();
+        challenge.Purpose = SignInMfaPurpose.EnrollFactor;
+        challenge.EnrollmentConfigurationId = Guid.NewGuid();
+        challenge.EnrollmentSecretFingerprint = mode switch
+        {
+            "short" => new string('a', 63),
+            "long" => new string('a', 65),
+            "uppercase" => new string('A', 64),
+            _ => new string('g', 64)
+        };
+        challenge.EnrollmentInitializedAt = challenge.CreatedAt;
+        Assert.Throws<ArgumentException>(challenge.ValidateForPersistence);
+    }
+
+    [Theory]
+    [InlineData("before-created")]
+    [InlineData("at-expires")]
+    [InlineData("after-expires")]
+    public void EnrollmentInitializationMustFallInsideTheChallengeWindow(string mode)
+    {
+        var challenge = CreateChallenge();
+        challenge.Purpose = SignInMfaPurpose.EnrollFactor;
+        challenge.EnrollmentConfigurationId = Guid.NewGuid();
+        challenge.EnrollmentSecretFingerprint = new string('a', 64);
+        challenge.EnrollmentInitializedAt = mode switch
+        {
+            "before-created" => challenge.CreatedAt.AddSeconds(-1),
+            "at-expires" => challenge.ExpiresAt,
+            _ => challenge.ExpiresAt.AddSeconds(1)
+        };
+        Assert.Throws<ArgumentException>(challenge.ValidateForPersistence);
+    }
+
+    [Fact]
+    public void FullyBoundEnrollFactorChallengeValidatesAcrossItsWholeWindow()
+    {
+        var challenge = CreateChallenge();
+        challenge.Purpose = SignInMfaPurpose.EnrollFactor;
+        challenge.EnrollmentConfigurationId = Guid.NewGuid();
+        challenge.EnrollmentSecretFingerprint = new string('a', 64);
+        challenge.EnrollmentInitializedAt = challenge.CreatedAt.AddMinutes(4);
+        challenge.ValidateForPersistence();
+        Assert.NotEqual(Guid.Empty, challenge.EnrollmentConfigurationId!.Value);
+        Assert.True(SignInMfaChallengeToken.IsDigest(challenge.EnrollmentSecretFingerprint!));
+        Assert.InRange(challenge.EnrollmentInitializedAt!.Value, challenge.CreatedAt, challenge.ExpiresAt);
     }
 
     public static SignInMfaChallenge CreateChallenge()
