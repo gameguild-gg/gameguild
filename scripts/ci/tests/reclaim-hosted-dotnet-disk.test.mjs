@@ -109,3 +109,17 @@ test('coverage prepares hosted disk before dependency installation and retains i
   assert.match(coverage, /ECONOMY_GATE_PROFILE: coverage\s+run: bash scripts\/ci\/verify-economy\.sh/);
   assert.match(workflow, /node --test scripts\/ci\/tests\/dotnet-cache-policy\.test\.mjs scripts\/ci\/tests\/reclaim-hosted-dotnet-disk\.test\.mjs/);
 });
+
+test('regression shards prepare hosted disk before dependencies and retain all required tests', async () => {
+  const workflow = await readFile(new URL('../../../.github/workflows/pr-verify.yml', import.meta.url), 'utf8');
+  const regression = workflow.split('\n  economy-regression:')[1].split('\n  required-gate:')[0];
+  assert.match(regression, /if: runner\.environment == 'github-hosted' && runner\.os == 'Linux'/);
+  const prepare = regression.indexOf('run: bash scripts/ci/reclaim-hosted-dotnet-disk.sh');
+  assert.ok(prepare >= 0 && prepare < regression.indexOf('uses: ./.github/actions/setup-node-workspace'));
+  assert.ok(prepare < regression.indexOf('uses: ./.github/actions/setup-dotnet'));
+  assert.match(regression, /fail-fast: false/);
+  assert.match(regression, /shard: \[api-integration-1, api-integration-2, api-integration-3, api-integration-4, api-unit, remaining-1, remaining-2\]/);
+  assert.match(regression, /ECONOMY_GATE_PROFILE: regression/);
+  assert.match(regression, /run: bash scripts\/ci\/verify-economy\.sh/);
+  assert.doesNotMatch(regression, /continue-on-error: true|SKIP_DOCKER_TESTS/);
+});
