@@ -4,7 +4,9 @@ Last audited: 2026-11-02 against `develop` (`ac959fd8f`). The endpoint scan ran
 against `74e9bba4c` and was re-verified after develop advanced (PRs #1185–#1201):
 the only client regeneration in that window (`d3e340865`) added Cloudflare
 Turnstile request fields for issue #1082 — `endpoints.gen.ts` is unchanged, so
-every count below stands.
+the counts below are the historical audit snapshot. The F1/F2 correction notes
+describe the current implementation; the adjacent transport and generated-client
+findings remain separate unresolved work, not a newly certified surface audit.
 
 Sources of truth:
 
@@ -357,6 +359,13 @@ Next auth handler's MFA-enrollment action gets a 404. Either implement the
 endpoint, point the handler at `/v1/auth/mfa/sign-in/complete`, or remove the
 action.
 
+**Correction (issue #1217, F1):** the SDK no longer dispatches that standalone
+enrollment action or fetches the unserved API path. Required-MFA sign-in already
+returns the sign-in-bound `mfaEnrollment` offer; the Next handler passes that offer
+to the UI without issuing a session. Completion continues through the real
+`/v1/auth/mfa/sign-in/complete` route with the limited bearer and proof. Tests cover
+the offer, local rejection of the obsolete action, CSRF and session isolation.
+
 ### F2 — CLIENT-CALL-NO-ENDPOINT: promo-campaigns dashboard calls wrong path prefix
 
 `apps/web/src/app/api/billing/promo-campaigns/route.ts:50` and
@@ -370,6 +379,14 @@ serves `/v1/promo-campaigns`, not `/api/v1/promo-campaigns`. The generated clien
 has the correct path (`/v1/promo-campaigns`, `endpoints.gen.ts:27570`). The page
 silently swallows the failure (`if (!response.ok) return [];`), so the dashboard
 renders empty instead of erroring.
+
+**Correction (issue #1217, F2):** the page and all campaign proxy calls now use
+`/v1/promo-campaigns`, including performance and lifecycle routes. A proxy test
+derives the expected prefix from `PromoCampaignsController` itself. Initial HTTP,
+network and malformed-response failures render a safe server-side alert; only an
+actual successful empty collection renders the empty state. A later successful
+server render replaces the alert with fresh campaign data. These corrections do
+not resolve F3/F4/F5 or turn the no-caller inventory into a deletion list.
 
 ### F3 — parallel hand-rolled transport shadows 17+ generated endpoints
 

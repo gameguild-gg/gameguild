@@ -6,7 +6,7 @@ import type { ResolvedAuthConfig } from '../../src/runtime/auth/types.js';
 
 vi.mock('../../src/runtime/auth/csrf.js', () => ({
   createCSRFToken: vi.fn(),
-  validateCSRFToken: vi.fn(async (cookie, token) => cookie === 'csrf-cookie' && token === 'csrf-token'),
+  validateCSRFToken: vi.fn((cookie, token) => Promise.resolve(cookie === 'csrf-cookie' && token === 'csrf-token')),
 }));
 
 const mfaToken = 'x'.repeat(43);
@@ -14,11 +14,11 @@ const config: ResolvedAuthConfig = {
   providers: [CredentialsProvider()],
   apiUrl: 'http://api.example',
   callbacks: {
-    jwt: async ({ token }) => token,
-    session: async ({ session }) => session,
-    signIn: async () => true,
-    authorized: async ({ auth }) => !!auth,
-    redirect: async ({ url, baseUrl }) => new URL(url, baseUrl).href,
+    jwt: ({ token }) => Promise.resolve(token),
+    session: ({ session }) => Promise.resolve(session),
+    signIn: () => Promise.resolve(true),
+    authorized: ({ auth }) => Promise.resolve(!!auth),
+    redirect: ({ url, baseUrl }) => Promise.resolve(new URL(url, baseUrl).href),
   },
   secret: 'a-synthetic-local-test-secret-with-32-characters',
   pages: {},
@@ -58,23 +58,38 @@ describe('native limited MFA through Next handlers', () => {
     expect(response.headers.get('set-cookie')).toBeNull();
   });
 
-  it('returns only provisioning data, uses only the limited bearer, and sets no session', async () => {
-    const backend = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ...setup, accessToken: 'must-not-forward', userId: 'must-not-forward' })));
+  it('uses the enrollment offer from first-factor sign-in without a second provisioning request or a session', async () => {
+    const backend = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          requiresMfa: true,
+          mfaToken,
+          availableMethods: ['Totp'],
+          mfaEnrollment: setup,
+        }),
+      ),
+    );
     globalThis.fetch = backend;
-    const response = await createHandlers(config).POST(request('mfa/enrollment', { mfaToken, tenantId: 'untrusted', password: 'must-not-forward' }));
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual(setup);
-    expect(backend.mock.calls[0][0]).toBe('http://api.example/v1/auth/mfa/sign-in/enrollment');
-    expect(JSON.parse(backend.mock.calls[0][1].body)).toEqual({ mfaToken });
+    const response = await createHandlers(config).POST(request('signin/credentials', { email: 'a@example.com', password: 'pw', redirect: false }));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({
+      error: 'MfaRequired',
+      mfaToken,
+      availableMethods: ['Totp'],
+      mfaEnrollment: { secretKey: setup.secretKey, qrCodeUri: setup.qrCodeUri, expiresAt: setup.expiresAt },
+    });
+    expect(backend).toHaveBeenCalledOnce();
+    expect(backend.mock.calls[0][0]).toBe('http://api.example/v1/auth/sign-in');
     expect(response.headers.get('set-cookie')).toBeNull();
     expect(response.headers.get('cache-control')).toContain('no-store');
   });
 
-  it('rejects a malformed enrollment bearer locally', async () => {
-    globalThis.fetch = vi.fn();
-    const response = await createHandlers(config).POST(request('mfa/enrollment', { mfaToken: 'bad' }));
-    expect(response.status).toBe(400);
+  it.each([mfaToken, 'bad'])('rejects the obsolete standalone enrollment action locally (%s)', async (bearer) => {
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 404 }));
+    const response = await createHandlers(config).POST(request('mfa/enrollment', { mfaToken: bearer }));
+    expect(response.status).toBe(404);
     expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(response.headers.get('set-cookie')).toBeNull();
   });
 
   it('returns the first-factor challenge without a session cookie or logging the bearer', async () => {
@@ -102,7 +117,7 @@ describe('native limited MFA through Next handlers', () => {
     );
     const response = await createHandlers(config).POST(request('signin/credentials', { mfaToken, method: 'Totp', code: '123456', redirect: false }));
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body: unknown = await response.json();
     expect(body).not.toHaveProperty('mfaEnrollmentBackupCodes');
     expect(body).not.toHaveProperty('mfaToken');
     const cookie = response.headers.get('set-cookie')!;
