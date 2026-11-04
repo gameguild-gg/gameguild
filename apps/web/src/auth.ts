@@ -129,6 +129,37 @@ export function auth(handler?: AuthProxyHandler) {
 // unrelated concurrent requests never suppress each other's cookie writes.
 const requestRotations = new WeakMap<object, Promise<void>>();
 
+// Probe result per request-bound cookie store: the probe writes the current
+// cookie value, so it must run at most once per store.
+const persistableStores = new WeakMap<object, boolean>();
+
+// A read-only RSC cookie store cannot persist a rotated refresh token, and the
+// backend revokes the presented one on every refresh. Rotating there would
+// strand the browser on a revoked token (replay containment kills the session
+// family), so persistence is probed by rewriting the current cookie value —
+// a no-op on writable stores, a throw on sealed RSC stores.
+function canPersistCookies(
+  cookieStore: Awaited<ReturnType<typeof cookies>>,
+  sessionStore: SessionStore,
+  encrypted: string,
+): boolean {
+  const cached = persistableStores.get(cookieStore);
+  if (cached !== undefined) return cached;
+  // A sibling reader already rotated on this store — the probe would clobber
+  // the freshly rotated cookie with the now-revoked value.
+  if (requestRotations.has(cookieStore)) return true;
+  try {
+    sessionStore.write(encrypted, (name, value, options) =>
+      cookieStore.set(name, value, options),
+    );
+    persistableStores.set(cookieStore, true);
+    return true;
+  } catch {
+    persistableStores.set(cookieStore, false);
+    return false;
+  }
+}
+
 async function readCurrentSession() {
   const cookieStore = await cookies();
   const cookieOptions = resolveCookieOptions(
@@ -145,6 +176,10 @@ async function readCurrentSession() {
   const { session, token, updated } = await processSession(
     encrypted,
     authConfig,
+    {
+      allowRefresh: () =>
+        canPersistCookies(cookieStore, sessionStore, encrypted),
+    },
   );
 
   if (updated && token) {
