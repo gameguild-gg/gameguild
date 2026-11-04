@@ -138,11 +138,13 @@ public static class PaymentsModule
         // presented on multiple customer accounts, backed by the payments device-lookup
         // partial index.
         services.AddScoped<IFraudSignalProvider, DeviceFingerprintFraudSignalProvider>();
-        // Asynchronous fraud scoring (issue #409 remainder): a bounded queue plus a worker
-        // completing the providers the synchronous <200ms budget deferred. Enqueue happens
-        // after the synchronous decision is persisted, so queue behavior never blocks or
-        // rejects the payment path.
-        services.AddSingleton<IFraudBackgroundScoringQueue, FraudBackgroundScoringQueue>();
+        // Asynchronous fraud scoring (issue #409 remainder, made durable in #1218 G3): a
+        // persisted job table plus a due-sweep worker completing the providers the synchronous
+        // <200ms budget deferred. Enqueue happens after the synchronous decision is persisted
+        // and can never block or reject the payment path — a failed persist is logged, counted
+        // (enqueue_abandoned) and treated as a best-effort miss. Jobs survive restarts and
+        // dead-letter after the attempt ceiling instead of being silently dropped.
+        services.AddScoped<IFraudBackgroundScoringJobStore, FraudBackgroundScoringJobStore>();
         services.AddScoped<IFraudBackgroundScoringWorker, FraudBackgroundScoringWorker>();
         services.AddHostedService<FraudBackgroundScoringHostedService>();
         // NoOp fallback keeps the GeoIP signal provider resolvable (and silent) in hosts

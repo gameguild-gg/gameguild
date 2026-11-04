@@ -2682,6 +2682,68 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("dispute_evidence");
                 });
 
+            modelBuilder.Entity("GameGuild.Commerce.Payments.FraudBackgroundScoringJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ClaimedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ClaimedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ContextJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeferredProvidersJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentId")
+                        .HasDatabaseName("ix_fraud_rescoring_jobs_payment");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_fraud_rescoring_jobs_tenant");
+
+                    b.HasIndex("Status", "NextAttemptAt")
+                        .HasDatabaseName("ix_fraud_rescoring_jobs_due");
+
+                    b.ToTable("FraudBackgroundScoringJob");
+                });
+
             modelBuilder.Entity("GameGuild.Commerce.Payments.FraudBlacklistEntry", b =>
                 {
                     b.Property<Guid>("Id")

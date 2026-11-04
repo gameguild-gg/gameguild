@@ -209,12 +209,13 @@ public sealed class FraudAssessmentOptions
     public bool BackgroundRescoringEnabled { get; set; } = true;
 
     /// <summary>
-    ///     Capacity of the in-memory background re-scoring queue (issue #409). When full,
-    ///     new deferred work is dropped with a warning — the synchronous decision stands
-    ///     and the queue never blocks or rejects the payment path.
+    ///     Poll interval, in seconds, of the durable background re-scoring due sweep (issue
+    ///     #1218 G3: the volatile in-memory channel was replaced by a persisted job table swept
+    ///     like the payment retry queue, so deferred jobs survive restarts and are never
+    ///     silently dropped).
     /// </summary>
-    [Range(16, 100000)]
-    public int BackgroundRescoringQueueCapacity { get; set; } = 1000;
+    [Range(1, 3600)]
+    public int BackgroundRescoringPollIntervalSeconds { get; set; } = 5;
 
     /// <summary>
     ///     Distinct customer accounts a device fingerprint must have been seen on before
@@ -304,7 +305,7 @@ public sealed class FraudAssessmentOptions
             BlockThreshold = overrideValues.BlockThreshold ?? BlockThreshold,
             SyncEvaluationBudgetMilliseconds = overrideValues.SyncEvaluationBudgetMilliseconds ?? SyncEvaluationBudgetMilliseconds,
             BackgroundRescoringEnabled = overrideValues.BackgroundRescoringEnabled ?? BackgroundRescoringEnabled,
-            BackgroundRescoringQueueCapacity = overrideValues.BackgroundRescoringQueueCapacity ?? BackgroundRescoringQueueCapacity,
+            BackgroundRescoringPollIntervalSeconds = overrideValues.BackgroundRescoringPollIntervalSeconds ?? BackgroundRescoringPollIntervalSeconds,
             CrossAccountDeviceMinAccounts = overrideValues.CrossAccountDeviceMinAccounts ?? CrossAccountDeviceMinAccounts,
             CrossAccountDeviceLookbackDays = overrideValues.CrossAccountDeviceLookbackDays ?? CrossAccountDeviceLookbackDays,
             CrossAccountDeviceWeight = overrideValues.CrossAccountDeviceWeight ?? CrossAccountDeviceWeight,
@@ -455,9 +456,9 @@ public sealed class FraudAssessmentOverride
     /// <summary>See <see cref="FraudAssessmentOptions.BackgroundRescoringEnabled"/>.</summary>
     public bool? BackgroundRescoringEnabled { get; set; }
 
-    /// <summary>See <see cref="FraudAssessmentOptions.BackgroundRescoringQueueCapacity"/>.</summary>
-    [Range(16, 100000)]
-    public int? BackgroundRescoringQueueCapacity { get; set; }
+    /// <summary>See <see cref="FraudAssessmentOptions.BackgroundRescoringPollIntervalSeconds"/>.</summary>
+    [Range(1, 3600)]
+    public int? BackgroundRescoringPollIntervalSeconds { get; set; }
 
     /// <summary>See <see cref="FraudAssessmentOptions.CrossAccountDeviceMinAccounts"/>.</summary>
     [Range(2, 100)]
