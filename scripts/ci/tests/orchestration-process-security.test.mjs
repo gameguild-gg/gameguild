@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -191,5 +192,36 @@ for (const platform of ["win32", "linux"]) {
     assert.equal(calls[0].options.detached, platform !== "win32");
     assert.deepEqual([...calls[0].options.stdio], ["ignore", "pipe", "pipe"]);
     assert.equal(calls[0].options.shell, false);
+  });
+}
+
+
+for (const platform of ["win32", "linux"]) {
+  test(`coding cycle gives the ${platform} web worker a bounded heap independent of its parent`, async () => {
+    const source = await readFile(path.join(root, "apps/web/scripts/coding-cycle-browser-e2e.mjs"), "utf8");
+    const { calls, sandbox } = context(platform);
+    sandbox.process.env = { ...environment, NODE_OPTIONS: "--max-old-space-size=128" };
+    sandbox.API_BASE = "http://127.0.0.1:48123";
+    sandbox.WEB_BASE = "http://localhost:48124";
+    sandbox.WEB_PORT = 48124;
+    sandbox.WEB_DIR = "/owned memory validation";
+    sandbox.log = () => {};
+    sandbox.envArrayToObject = vm.runInNewContext(`(${sourceFunction(source, "envArrayToObject")})`, sandbox);
+    const start = source.indexOf("  const webEnv = [");
+    const end = source.indexOf("\n  children.push({ proc: web", start);
+    assert.notEqual(start, -1);
+    assert.notEqual(end, -1);
+    await vm.runInNewContext(`(async () => { ${source.slice(start, end)} })()`, sandbox);
+    assert.equal(calls.length, 1);
+    const heap = spawnSync(process.execPath, ["-e", "console.log(require('node:v8').getHeapStatistics().heap_size_limit)"], {
+      encoding: "utf8",
+      env: { ...process.env, ...calls[0].options.env },
+      timeout: 10_000,
+      windowsHide: true,
+    });
+    assert.equal(heap.status, 0, heap.stderr);
+    const heapBytes = Number(heap.stdout.trim());
+    assert.ok(heapBytes >= 6144 * 1024 * 1024, `worker heap was only ${heapBytes} bytes`);
+    assert.ok(heapBytes <= 6400 * 1024 * 1024, `worker heap was not bounded: ${heapBytes} bytes`);
   });
 }
