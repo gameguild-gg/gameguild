@@ -90,8 +90,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0(@babel/core@8.0.7)(@types/node@26.6.6)(asn1.js@5.4.1)
       '@dbml/core':
-        specifier: ^10.2.0
-        version: 10.3.1
+        specifier: ^11.0.0
+        version: 11.0.0
       '@game-guild/eslint-config':
         specifier: workspace:*
         version: link:packages/tooling/eslint
@@ -3743,17 +3743,9 @@ packages:
     resolution: {integrity: sha512-XnWuq6vZ7l3Zj4Lvi4u5kLQfbB+45kdsa7yGfKrKXQDuPVgTWGrwMzh5ogec4LZOqybqOka03SzQ/VMI6Rnpww==}
     engines: {node: '>=18'}
 
-  '@dbml/core@10.3.1':
-    resolution: {integrity: sha512-swCpThxQchab6d6wP5gp/UFcArmptyIRFaAEUW8Z8oNrTYluVlh0Ru6AsB44JiA4+lVgNk0yeF1ewuOuFT3ZPA==}
-    engines: {node: '>=16'}
-
   '@dbml/core@11.0.0':
     resolution: {integrity: sha512-4KkWdakmvZgPyDJmDomzm1z4GaN4sCUZR2ezDjs435C8FbQxUQeHDUpMVZqJlnfSFVPz4l50PonDrb9hh1+YQA==}
     engines: {node: '>=16'}
-
-  '@dbml/parse@10.3.1':
-    resolution: {integrity: sha512-l2T+RYUpkCxqSlqMnc3YOwJyLDnDDckddG26KO4vwtYGJKIPYautzBi+ypKxEMdLvuNpHN/HkRCteApeZei8TA==}
-    engines: {node: '>=18'}
 
   '@dbml/parse@11.0.0':
     resolution: {integrity: sha512-vmPZqzAJPAOf+zRy0lgnTtUzllmrG6peOHBdgY3k2vUe3B84lw3G/kEZHE6r+xq6rIZPviGYKc0AdlgDXj7szg==}
@@ -17813,16 +17805,6 @@ snapshots:
       - pg-native
       - supports-color
 
-  '@dbml/core@10.3.1':
-    dependencies:
-      '@dbml/parse': 10.3.1
-      antlr4: 4.13.2
-      lodash: 4.18.1
-      lodash-es: 4.18.0
-      luxon: 3.7.2
-      parsimmon: 1.18.1
-      pluralize: 8.0.0
-
   '@dbml/core@11.0.0':
     dependencies:
       '@dbml/parse': 11.0.0
@@ -17832,12 +17814,6 @@ snapshots:
       luxon: 3.7.2
       parsimmon: 1.18.1
       pluralize: 8.0.0
-
-  '@dbml/parse@10.3.1':
-    dependencies:
-      lodash-es: 4.18.0
-      luxon: 3.7.2
-      pathe: 2.0.3
 
   '@dbml/parse@11.0.0':
     dependencies:
