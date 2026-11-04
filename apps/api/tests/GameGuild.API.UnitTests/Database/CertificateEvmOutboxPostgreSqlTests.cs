@@ -12,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Course = GameGuild.Learning.Courses.Program;
+using LearningCompletionStatus = GameGuild.Learning.Courses.CompletionStatus;
+using LearningProgramEnrollment = GameGuild.Learning.Courses.ProgramEnrollment;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -273,8 +275,16 @@ public sealed class CertificateEvmOutboxPostgreSqlTests(CertificateEvmOutboxPost
         var course = new Course { Id = Guid.NewGuid(), Title = "Certificate fixture", Slug = "certificate-" + marker, CreatorId = user.Id };
         var tenant = Guid.NewGuid();
         var template = CertificateTemplate.Create(course.Id, "Certificate template", "<div>Certificate fixture</div>", tenant);
-        context.AddRange(user, course, template); await context.SaveChangesAsync(Ct);
-        return (template.Id, Guid.NewGuid(), user.Id, course.Id, tenant);
+        // The issuance eligibility gate (#1226 N1, merged with #1275) rejects enrollments
+        // that do not exist, so the fixture seeds a completed enrollment owned by the
+        // certificate recipient instead of minting certificates against a random id.
+        var enrollment = new LearningProgramEnrollment
+        {
+            Id = Guid.NewGuid(), UserId = user.Id, ProgramId = course.Id,
+            CompletionStatus = LearningCompletionStatus.Completed,
+        };
+        context.AddRange(user, course, template, enrollment); await context.SaveChangesAsync(Ct);
+        return (template.Id, enrollment.Id, user.Id, course.Id, tenant);
     }
 
     private sealed class FixtureAuditSink(bool fail) : ILearningAuditEventSink
