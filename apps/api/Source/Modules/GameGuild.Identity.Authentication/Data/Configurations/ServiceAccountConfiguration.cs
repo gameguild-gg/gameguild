@@ -79,7 +79,7 @@ public class ServiceAccountConfiguration : IEntityTypeConfiguration<ServiceAccou
         // X.509 client-certificate binding (thumbprint + optional SPKI key pin)
         builder.Property(x => x.CertificateThumbprint)
             .HasColumnName("certificate_thumbprint")
-            .HasMaxLength(40);
+            .HasMaxLength(64);
 
         builder.Property(x => x.CertificateSpkiSha256)
             .HasColumnName("certificate_spki_sha256")
@@ -101,6 +101,9 @@ public class ServiceAccountConfiguration : IEntityTypeConfiguration<ServiceAccou
 
         builder.Property(x => x.LockedAt)
             .HasColumnName("locked_at");
+
+        builder.Property(x => x.AutomaticLockoutEndsAt)
+            .HasColumnName("automatic_lockout_ends_at");
 
         builder.Property(x => x.FailedAuthenticationAttempts)
             .HasColumnName("failed_authentication_attempts")

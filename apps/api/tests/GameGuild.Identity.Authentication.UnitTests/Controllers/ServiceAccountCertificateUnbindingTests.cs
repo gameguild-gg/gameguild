@@ -13,6 +13,7 @@ public sealed class ServiceAccountCertificateUnbindingTests
     [Theory]
     [InlineData("Admin", false, false, false, 204)]
     [InlineData("Owner", false, false, false, 204)]
+    [InlineData("TenantAdmin", false, false, false, 204)]
     [InlineData("Member", false, false, false, 403)]
     [InlineData("Admin", true, false, false, 403)]
     [InlineData("Admin", false, true, false, 403)]

@@ -1,6 +1,7 @@
 using System.Data.Common;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -13,17 +14,22 @@ public sealed class ServiceAccountService : IServiceAccountService
     private readonly IServiceAccountRepository _repository;
     private readonly IRefreshTokenHasher _hasher;
     private readonly ILogger<ServiceAccountService> _logger;
+    private readonly TimeSpan _lockoutDuration;
     private const int ClientSecretLength = 64;
     private const int LockThreshold = 10;
 
     public ServiceAccountService(
         IServiceAccountRepository repository,
         IRefreshTokenHasher hasher,
-        ILogger<ServiceAccountService> logger)
+        ILogger<ServiceAccountService> logger,
+        AuthenticationSecurityOptions? securityOptions = null)
     {
         _repository = repository;
         _hasher = hasher;
         _logger = logger;
+        var durationMinutes = (securityOptions ?? new AuthenticationSecurityOptions()).AccountLockoutDurationMinutes;
+        if (durationMinutes is < 1 or > 1440) throw new ArgumentOutOfRangeException(nameof(securityOptions));
+        _lockoutDuration = TimeSpan.FromMinutes(durationMinutes);
     }
 
     /// <inheritdoc />
@@ -104,8 +110,7 @@ public sealed class ServiceAccountService : IServiceAccountService
                 _logger.LogWarning(
                     "Authentication failed: IP {IpAddress} not in allowed list for service account {ServiceAccountId}",
                     ipAddress, serviceAccount.Id);
-                serviceAccount.RecordFailedAuthentication(LockThreshold);
-                await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
+                // Source-policy denial must not let an outside caller lock this account.
                 return null;
             }
         }
@@ -116,7 +121,7 @@ public sealed class ServiceAccountService : IServiceAccountService
             _logger.LogWarning(
                 "Authentication failed: invalid client secret for service account {ServiceAccountId}",
                 serviceAccount.Id);
-            serviceAccount.RecordFailedAuthentication(LockThreshold);
+            serviceAccount.RecordFailedAuthentication(LockThreshold, _lockoutDuration);
             await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
             return null;
         }
@@ -166,8 +171,7 @@ public sealed class ServiceAccountService : IServiceAccountService
                 _logger.LogWarning(
                     "Authentication failed: IP {IpAddress} not in allowed list for service account {ServiceAccountId}",
                     ipAddress, serviceAccount.Id);
-                serviceAccount.RecordFailedAuthentication(LockThreshold);
-                await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
+                // Source-policy denial must not let an outside caller lock this account.
                 return null;
             }
         }
@@ -175,10 +179,12 @@ public sealed class ServiceAccountService : IServiceAccountService
         // SECURITY: fail closed when no certificate is bound, or when the presented
         // certificate matches neither the bound thumbprint nor the bound SPKI key pin.
         var thumbprint = ClientCertificateAuthenticationUtilities.GetNormalizedThumbprint(clientCertificate);
+        var sha256Thumbprint = clientCertificate.GetCertHashString(HashAlgorithmName.SHA256);
         var spkiSha256 = ClientCertificateAuthenticationUtilities.ComputeSpkiSha256Hex(clientCertificate);
 
         var thumbprintMatches = !string.IsNullOrWhiteSpace(serviceAccount.CertificateThumbprint)
-                                && string.Equals(serviceAccount.CertificateThumbprint, thumbprint, StringComparison.OrdinalIgnoreCase);
+                                && (string.Equals(serviceAccount.CertificateThumbprint, thumbprint, StringComparison.OrdinalIgnoreCase)
+                                    || string.Equals(serviceAccount.CertificateThumbprint, sha256Thumbprint, StringComparison.OrdinalIgnoreCase));
         var spkiMatches = !string.IsNullOrWhiteSpace(serviceAccount.CertificateSpkiSha256)
                           && string.Equals(serviceAccount.CertificateSpkiSha256, spkiSha256, StringComparison.OrdinalIgnoreCase);
 
@@ -187,7 +193,7 @@ public sealed class ServiceAccountService : IServiceAccountService
             _logger.LogWarning(
                 "Authentication failed: client certificate {Thumbprint} does not match the certificate bound to service account {ServiceAccountId}",
                 thumbprint, serviceAccount.Id);
-            serviceAccount.RecordFailedAuthentication(LockThreshold);
+            serviceAccount.RecordFailedAuthentication(LockThreshold, _lockoutDuration);
             await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
             return null;
         }
@@ -287,7 +293,8 @@ public sealed class ServiceAccountService : IServiceAccountService
 
     private static string? StripHexPin(string value)
     {
-        Span<char> compact = stackalloc char[value.Length];
+        // Pins contain at most 64 hex characters; request length must not control stack allocation.
+        Span<char> compact = stackalloc char[64];
         var length = 0;
         foreach (var character in value)
         {
@@ -296,7 +303,7 @@ public sealed class ServiceAccountService : IServiceAccountService
                 continue;
             }
 
-            if (!Uri.IsHexDigit(character))
+            if (!Uri.IsHexDigit(character) || length == compact.Length)
             {
                 return null;
             }

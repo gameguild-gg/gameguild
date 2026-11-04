@@ -256,7 +256,7 @@ public class ServiceAccountOperationsController(
 
     /// <summary>Removes both certificate pins; client-secret authentication remains available.</summary>
     [HttpDelete("{serviceAccountId:guid}/client-certificate")]
-    [Authorize(Policy = "RequireAdminRole")]
+    [Authorize]
     [EndpointSummary("Unbind client certificate")]
     [EndpointDescription("Removes the certificate thumbprint and SPKI pin. Requires an administrator in the account's tenant, or a system administrator for a global or cross-tenant account.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

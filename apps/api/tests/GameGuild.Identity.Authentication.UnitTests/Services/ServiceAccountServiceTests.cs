@@ -268,7 +268,7 @@ public class ServiceAccountServiceTests
     }
 
     [Fact]
-    public async Task AuthenticateAsync_WithDisallowedIp_ShouldRecordFailure()
+    public async Task AuthenticateAsync_WithDisallowedIp_ShouldNotConsumeCredentialLockoutBudget()
     {
         // Arrange
         var clientId = "svc_test123";
@@ -296,8 +296,9 @@ public class ServiceAccountServiceTests
 
         // Assert
         result.Should().BeNull();
-        _repositoryMock.Verify(x => x.UpdateAsync(It.Is<ServiceAccount>(sa => 
-            sa.FailedAuthenticationAttempts == 1), It.IsAny<CancellationToken>()), Times.Once);
+        serviceAccount.FailedAuthenticationAttempts.Should().Be(0);
+        serviceAccount.IsLocked.Should().BeFalse();
+        _repositoryMock.Verify(x => x.UpdateAsync(It.IsAny<ServiceAccount>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

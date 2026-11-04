@@ -87,6 +87,7 @@ public sealed class ClientCertificateAuthenticationHandler : AuthenticationHandl
         }
 
         var thumbprint = ClientCertificateAuthenticationUtilities.GetNormalizedThumbprint(clientCertificate);
+        var sha256Thumbprint = clientCertificate.GetCertHashString(HashAlgorithmName.SHA256);
         var spkiSha256 = ClientCertificateAuthenticationUtilities.ComputeSpkiSha256Hex(clientCertificate);
 
         List<ServiceAccount> matches;
@@ -94,6 +95,7 @@ public sealed class ClientCertificateAuthenticationHandler : AuthenticationHandl
         {
             matches = await _dbContext.Set<ServiceAccount>()
                 .Where(account => account.CertificateThumbprint == thumbprint
+                                  || account.CertificateThumbprint == sha256Thumbprint
                                   || account.CertificateSpkiSha256 == spkiSha256)
                 .ToListAsync(Context.RequestAborted).ConfigureAwait(false);
         }
@@ -141,8 +143,7 @@ public sealed class ClientCertificateAuthenticationHandler : AuthenticationHandl
             Logger.LogWarning(
                 "Authentication failed: IP {IpAddress} not in allowed list for service account {ServiceAccountId}",
                 clientIp, serviceAccount.Id);
-            serviceAccount.RecordFailedAuthentication();
-            await SaveAccountAsync(serviceAccount).ConfigureAwait(false);
+            // A disallowed source cannot consume the account's credential-failure budget.
             return await FailAsync(
                 "Client certificate not authorized from this IP address.",
                 "ServiceAccountIpNotAllowed", serviceAccount).ConfigureAwait(false);

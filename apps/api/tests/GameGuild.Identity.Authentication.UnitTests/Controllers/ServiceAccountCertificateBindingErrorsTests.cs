@@ -91,6 +91,19 @@ public sealed class ServiceAccountCertificateBindingErrorsTests
         fixture.Repository.Verify(repo => repo.UpdateAsync(fixture.Account, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task Bind_OversizedHexInputReturns400WithoutLoadingAccount()
+    {
+        var fixture = CreateFixture();
+
+        var result = await fixture.Controller.BindClientCertificate(fixture.Account.Id,
+            new BindServiceAccountCertificateRequest { Thumbprint = new string('A', 1_000_000) }, CancellationToken.None);
+
+        result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(400);
+        fixture.Repository.Verify(repo => repo.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        fixture.Repository.Verify(repo => repo.UpdateAsync(It.IsAny<ServiceAccount>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private static Fixture CreateFixture()
     {
         var account = new ServiceAccount { Id = Guid.NewGuid(), Name = "Certificate binding test", ClientId = "binding-test", IsActive = true };

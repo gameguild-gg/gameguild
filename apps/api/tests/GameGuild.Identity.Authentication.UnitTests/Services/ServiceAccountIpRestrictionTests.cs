@@ -42,8 +42,9 @@ public sealed class ServiceAccountIpRestrictionTests : IDisposable
         fixture.Account.AuthenticationCount.Should().Be(0);
         fixture.Account.LastAuthenticatedAt.Should().BeNull();
         fixture.Account.LastAuthenticatedFromIp.Should().BeNull();
-        fixture.Account.FailedAuthenticationAttempts.Should().Be(1);
-        fixture.Repository.Verify(repo => repo.UpdateAsync(fixture.Account, It.IsAny<CancellationToken>()), Times.Once);
+        fixture.Account.FailedAuthenticationAttempts.Should().Be(0);
+        fixture.Account.IsLocked.Should().BeFalse();
+        fixture.Repository.Verify(repo => repo.UpdateAsync(fixture.Account, It.IsAny<CancellationToken>()), Times.Never);
         fixture.Hasher.Verify(hasher => hasher.VerifyToken(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
