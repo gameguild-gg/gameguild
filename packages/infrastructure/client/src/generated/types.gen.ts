@@ -14168,6 +14168,13 @@ export interface IdentityAuthenticationSessionTerminationOutput {
   terminatedCount: number;
 }
 
+/** One-time TOTP provisioning offered at sign-in when a required-MFA subject has no enrolled factor. */
+export interface IdentityAuthenticationSignInMfaEnrollmentOffer {
+  expiresAt?: string;
+  qrCodeUri?: string | null;
+  secretKey?: string | null;
+}
+
 /** DTO for sign-in response */
 export interface IdentityAuthenticationSignInOutput {
   /** JWT access token */
@@ -14192,6 +14199,7 @@ identity provider for this sign-in. Null for non-federated flows. */
   expiresIn?: number;
   /** Response message */
   message?: string | null;
+  mfaEnrollment?: IdentityAuthenticationSignInMfaEnrollmentOffer;
   /** Recovery codes returned once, only when a limited enrollment finishes with verified TOTP. */
   mfaEnrollmentBackupCodes?: string[] | null;
   /** MFA session ID if MFA is required */
@@ -21133,20 +21141,6 @@ export type LearningCoursesVisibility = 'Public' | 'Internal' | 'Private' | 'Res
 /** Workspace file map for a coding assignment: path → metadata. */
 export interface LearningCoursesWorkspaceData {
   files?: Record<string, LearningCoursesBundleFileMeta> | null;
-}
-
-/** Data model for Learning Enrollments Enrollment Dto. */
-export interface LearningEnrollmentsEnrollmentDto {
-  id?: string;
-  cohortId?: string | null;
-  completedAt?: string | null;
-  courseId?: string;
-  droppedAt?: string | null;
-  enrolledAt?: string;
-  lastActivityAt?: string | null;
-  progress?: number;
-  status?: LearningEnrollmentsEnrollmentStatus;
-  userId?: string;
 }
 
 /** OpenAPI schema for Learning Enrollments Enrollment Status. */
@@ -29093,6 +29087,7 @@ export let IdentityAuthenticationSessionRenameErrorOutputSchema: z.ZodType<Ident
 export let IdentityAuthenticationSessionSecurityAnalysisSchema: z.ZodType<IdentityAuthenticationSessionSecurityAnalysis>;
 export let IdentityAuthenticationSessionSuccessOutputSchema: z.ZodType<IdentityAuthenticationSessionSuccessOutput>;
 export let IdentityAuthenticationSessionTerminationOutputSchema: z.ZodType<IdentityAuthenticationSessionTerminationOutput>;
+export let IdentityAuthenticationSignInMfaEnrollmentOfferSchema: z.ZodType<IdentityAuthenticationSignInMfaEnrollmentOffer>;
 export let IdentityAuthenticationSignInOutputSchema: z.ZodType<IdentityAuthenticationSignInOutput>;
 export let IdentityAuthenticationSignOutInputSchema: z.ZodType<IdentityAuthenticationSignOutInput>;
 export let IdentityAuthenticationSmsMfaChallengeInputSchema: z.ZodType<IdentityAuthenticationSmsMfaChallengeInput>;
@@ -29685,7 +29680,6 @@ export let LearningCoursesUpdateTimeSpentInputSchema: z.ZodType<LearningCoursesU
 export let LearningCoursesUserProgressDtoSchema: z.ZodType<LearningCoursesUserProgressDto>;
 export let LearningCoursesVisibilitySchema: z.ZodType<LearningCoursesVisibility>;
 export let LearningCoursesWorkspaceDataSchema: z.ZodType<LearningCoursesWorkspaceData>;
-export let LearningEnrollmentsEnrollmentDtoSchema: z.ZodType<LearningEnrollmentsEnrollmentDto>;
 export let LearningEnrollmentsEnrollmentStatusSchema: z.ZodType<LearningEnrollmentsEnrollmentStatus>;
 export let LearningEnrollmentsEnrollUserInputSchema: z.ZodType<LearningEnrollmentsEnrollUserInput>;
 export let LearningEnrollmentsUpdateEnrollmentProgressInputSchema: z.ZodType<LearningEnrollmentsUpdateEnrollmentProgressInput>;
@@ -43225,6 +43219,13 @@ IdentityAuthenticationSessionTerminationOutputSchema = z.object({
   terminatedCount: z.number().int(),
 });
 
+/** Zod schema for IdentityAuthenticationSignInMfaEnrollmentOffer. One-time TOTP provisioning offered at sign-in when a required-MFA subject has no enrolled factor. */
+IdentityAuthenticationSignInMfaEnrollmentOfferSchema = z.object({
+  expiresAt: z.string().datetime().optional(),
+  qrCodeUri: z.string().nullable().optional(),
+  secretKey: z.string().nullable().optional(),
+});
+
 /** Zod schema for IdentityAuthenticationSignInOutput. DTO for sign-in response */
 IdentityAuthenticationSignInOutputSchema = z.object({
   accessToken: z.string().nullable().optional(),
@@ -43240,6 +43241,7 @@ IdentityAuthenticationSignInOutputSchema = z.object({
   expiresAt: z.string().datetime().optional(),
   expiresIn: z.number().int().optional(),
   message: z.string().nullable().optional(),
+  mfaEnrollment: z.lazy(() => IdentityAuthenticationSignInMfaEnrollmentOfferSchema).optional(),
   mfaEnrollmentBackupCodes: z.array(z.string()).nullable().optional(),
   mfaSessionId: z.string().nullable().optional(),
   mfaToken: z.string().nullable().optional(),
@@ -49544,20 +49546,6 @@ LearningCoursesWorkspaceDataSchema = z.object({
     )
     .nullable()
     .optional(),
-});
-
-/** Zod schema for LearningEnrollmentsEnrollmentDto. Data model for Learning Enrollments Enrollment Dto. */
-LearningEnrollmentsEnrollmentDtoSchema = z.object({
-  id: z.string().uuid().optional(),
-  cohortId: z.string().uuid().nullable().optional(),
-  completedAt: z.string().datetime().nullable().optional(),
-  courseId: z.string().uuid().optional(),
-  droppedAt: z.string().datetime().nullable().optional(),
-  enrolledAt: z.string().datetime().optional(),
-  lastActivityAt: z.string().datetime().nullable().optional(),
-  progress: z.number().int().optional(),
-  status: z.lazy(() => LearningEnrollmentsEnrollmentStatusSchema).optional(),
-  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningEnrollmentsEnrollmentStatus. OpenAPI schema for Learning Enrollments Enrollment Status. */

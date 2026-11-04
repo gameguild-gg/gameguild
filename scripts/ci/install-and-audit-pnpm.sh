@@ -50,4 +50,6 @@ lock_hash_after_audit="$(sha256sum "$root_lock" | awk '{print $1}')"
 
 printf '> node scripts/ci/validate-pnpm-audit.mjs\n'
 node "$script_dir/validate-pnpm-audit.mjs" "$audit_report" "$audit_exit_code"
-node --test "$script_dir/tests/dependency-security.test.mjs" "$script_dir/tests/next-dev-origin-security.test.mjs" "$script_dir/tests/glob-minimatch-security.test.mjs"
+# glob-minimatch-security parses the full pnpm lockfile; default V8 heap
+# OOMs on runner hardware.
+NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=8192}" node --test "$script_dir/tests/dependency-security.test.mjs" "$script_dir/tests/next-dev-origin-security.test.mjs" "$script_dir/tests/glob-minimatch-security.test.mjs"

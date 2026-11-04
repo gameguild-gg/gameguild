@@ -29,8 +29,8 @@
  */
 
 import { createContext, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { Session, SessionStatus, SessionProviderProps } from '../../runtime/auth/types.js';
-import { createAuthBroadcast, type AuthBroadcastMessage } from './broadcast.js';
+import type { Session, SessionStatus, SessionProviderProps } from '../../runtime/auth/types';
+import { createAuthBroadcast, type AuthBroadcastMessage } from './broadcast';
 
 // ─── Context Types ───────────────────────────────────────────────
 

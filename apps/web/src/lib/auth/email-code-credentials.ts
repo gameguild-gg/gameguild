@@ -2,6 +2,7 @@ import {
   AuthServiceUnavailableError,
   CredentialsSignInError,
   MfaRequiredError,
+  parseMfaEnrollmentOffer,
   parseBackendAuthResponse,
   type CredentialsProviderConfig,
 } from "@game-guild/client";
@@ -98,6 +99,7 @@ export function createEmailCodeCredentialsAuthorize(
         availableMethods: Array.isArray(payload.availableMethods)
           ? payload.availableMethods.filter((method): method is string => typeof method === "string")
           : undefined,
+        mfaEnrollment: parseMfaEnrollmentOffer(payload.mfaEnrollment),
       });
     }
     const result = parseBackendAuthResponse(payload);
