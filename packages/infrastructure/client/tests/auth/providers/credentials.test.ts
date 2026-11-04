@@ -64,20 +64,20 @@ describe('CredentialsProvider', () => {
     await expect(provider.authorize({ email: 'a@b.com', password: '' }, undefined)).rejects.toThrow(CredentialsSignInError);
   });
 
-  it('should call sign-in endpoint on successful auth', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        accessToken: 'access-token',
-        refreshToken: 'refresh-token',
-        expiresIn: 3600,
-        userId: 'user-1',
-        email: 'test@example.com',
-        roles: ['Admin', 'User'],
-        permissions: ['users:read', 'users:create'],
-        user: { displayName: 'Test', profilePictureUrl: 'https://img.com/pic.png' },
-      }),
-    });
+  it('should call the generated sign-in method on successful auth', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          accessToken: 'access-token',
+          refreshToken: 'refresh-token',
+          expiresIn: 3600,
+          userId: 'user-1',
+          email: 'test@example.com',
+          user: { username: 'testuser' },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
@@ -87,19 +87,36 @@ describe('CredentialsProvider', () => {
       'http://localhost:8080/v1/auth/sign-in',
       expect.objectContaining({
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
       }),
     );
+    expect(mockFetch.mock.calls[0][1].headers.get('content-type')).toBe('application/json');
 
     expect(result).not.toBeNull();
     expect(result!.tokens.accessToken).toBe('access-token');
     expect(result!.tokens.refreshToken).toBe('refresh-token');
     expect(result!.user.id).toBe('user-1');
     expect(result!.user.email).toBe('test@example.com');
-    expect(result!.user.name).toBe('Test');
-    expect(result!.user.image).toBe('https://img.com/pic.png');
-    expect(result!.user.roles).toEqual(['Admin', 'User']);
-    expect(result!.user.permissions).toEqual(['users:read', 'users:create']);
+    expect(result!.user.name).toBe('testuser');
+    expect(result!.user.image).toBeNull();
+  });
+
+  it('forwards the Turnstile token through the generated contract field (issue #1082 / #1217 F4)', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ accessToken: 'token', userId: 'user-1' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+    globalThis.fetch = mockFetch;
+
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
+    await provider.authorize(
+      { email: 'a@b.com', password: 'pass', turnstileToken: 'XXXX.DUMMY.TOKEN' },
+      undefined,
+    );
+
+    expect(mockFetch.mock.calls[0][0]).toBe('http://localhost:8080/v1/auth/sign-in');
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body).turnstileToken).toBe('XXXX.DUMMY.TOKEN');
   });
 
   it('should derive roles and permissions from access token claims when response omits arrays', async () => {
@@ -107,17 +124,19 @@ describe('CredentialsProvider', () => {
       'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': ['Admin', 'User'],
       scope: 'users:read users:create',
     });
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        accessToken,
-        refreshToken: 'refresh-token',
-        expiresIn: 3600,
-        userId: 'user-1',
-        email: 'test@example.com',
-        user: { username: 'admin' },
-      }),
-    });
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          accessToken,
+          refreshToken: 'refresh-token',
+          expiresIn: 3600,
+          userId: 'user-1',
+          email: 'test@example.com',
+          user: { username: 'admin' },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
@@ -127,14 +146,13 @@ describe('CredentialsProvider', () => {
     expect(result!.user.permissions).toEqual(['users:read', 'users:create']);
   });
 
-  it('should use custom signInPath', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        accessToken: 'token',
-        userId: 'user-1',
+  it('ignores the deprecated signInPath option and always calls the served route', async () => {
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ accessToken: 'token', userId: 'user-1' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
       }),
-    });
+    );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({
@@ -143,14 +161,16 @@ describe('CredentialsProvider', () => {
     });
     await provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined);
 
-    expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/custom/sign-in', expect.anything());
+    expect(mockFetch.mock.calls[0][0]).toBe('http://localhost:8080/v1/auth/sign-in');
   });
 
   it('should include tenantId in request body when provided', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ accessToken: 'token', userId: 'user-1' }),
-    });
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ accessToken: 'token', userId: 'user-1' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
@@ -161,10 +181,12 @@ describe('CredentialsProvider', () => {
   });
 
   it('should include rememberMe=true in request body when requested', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ accessToken: 'token', userId: 'user-1' }),
-    });
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ accessToken: 'token', userId: 'user-1' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
@@ -176,10 +198,12 @@ describe('CredentialsProvider', () => {
   });
 
   it('should omit rememberMe from the request body when not requested', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ accessToken: 'token', userId: 'user-1' }),
-    });
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ accessToken: 'token', userId: 'user-1' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
@@ -215,13 +239,15 @@ describe('CredentialsProvider', () => {
   });
 
   it('should throw MfaRequiredError when response has requiresMfa', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        requiresMfa: true,
-        mfaSessionId: 'mfa-session-123',
-      }),
-    });
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          requiresMfa: true,
+          mfaSessionId: 'mfa-session-123',
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    );
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
@@ -251,6 +277,7 @@ describe('CredentialsProvider', () => {
           mfaToken,
           availableMethods: ['TOTP', 'BackupCode'],
         }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
       ),
     );
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
@@ -271,6 +298,7 @@ describe('CredentialsProvider', () => {
           email: 'server@example.com',
           mfaEnrollmentBackupCodes: ['one-time-code'],
         }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
       ),
     );
     globalThis.fetch = mockFetch;
@@ -305,7 +333,9 @@ describe('CredentialsProvider', () => {
   });
 
   it('rejects a successful HTTP response that supplies no ordinary access token', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ userId: 'user' })));
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ userId: 'user' }), { status: 200, headers: { 'content-type': 'application/json' } }),
+    );
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
     await expect(provider.authorize({ mfaToken: 'x'.repeat(43), method: 'BackupCode', code: 'backup-code' })).rejects.toThrow(CredentialsSignInError);
   });
@@ -342,10 +372,12 @@ describe('CredentialsProvider', () => {
   });
 
   it('should use __apiUrl from credentials as fallback', async () => {
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ accessToken: 'token', userId: 'user-1' }),
-    });
+    const mockFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ accessToken: 'token', userId: 'user-1' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider(); // no apiUrl in options

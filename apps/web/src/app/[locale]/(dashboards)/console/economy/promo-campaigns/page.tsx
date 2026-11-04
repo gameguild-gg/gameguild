@@ -1,23 +1,67 @@
 import { PromoCampaignsConsole, type PromoCampaignRow } from '@/components/billing/promo-campaigns-console';
 import { redirect } from '@/i18n/navigation';
 import { getRequestAuthContext, auth } from '@/auth';
+import { createServerClient, GeneratedApi, type CommerceProductsPromoCampaignDto } from '@game-guild/client';
+import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
+import { AlertTriangle } from 'lucide-react';
 
 const CONSOLE_PATH = '/console/economy/promo-campaigns';
 
-function apiBaseUrl(): string {
-  return (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+/** Server-side campaign list loader: the caller's session token authorizes the
+ * read through the generated client (`/v1/promo-campaigns` — the API serves no
+ * `/api/v1` prefix, issue #1217); the promo-campaigns controller keeps enforcing
+ * its permission policy. A failed load reports an error instead of silently
+ * rendering an empty dashboard. */
+async function loadCampaigns(token: string): Promise<{ campaigns: PromoCampaignRow[]; loadError: string | null }> {
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  const modules = new GeneratedApi.CommerceProductsPromoCampaignsModule(
+    createServerClient({
+      baseUrl: apiUrl,
+      auth: { getAccessToken: async () => token },
+    }),
+  );
+
+  try {
+    const result = await modules.getPromoCampaignsForGetPromoCampaigns({ skip: 0, take: 50 });
+    if (!result.ok) {
+      return { campaigns: [], loadError: `The promo-campaign API rejected the list query (HTTP ${result.error.status ?? 500}).` };
+    }
+    return { campaigns: (result.data?.items ?? []).filter(isRenderableCampaign).map(toCampaignRow), loadError: null };
+  } catch {
+    // The generated client's safeParse throws on contract drift between the
+    // deployed API and the client; surface the failure instead of an empty page.
+    return { campaigns: [], loadError: 'The campaign list could not be loaded because the promo-campaign API violated its contract.' };
+  }
 }
 
-/** Server-side campaign list loader: the caller's session token authorizes the
- * read; the promo-campaigns controller keeps enforcing its permission policy. */
-async function loadCampaigns(token: string): Promise<readonly PromoCampaignRow[]> {
-  const response = await fetch(`${apiBaseUrl()}/api/v1/promo-campaigns?skip=0&take=50`, {
-    headers: { authorization: `Bearer ${token}`, accept: 'application/json', 'content-type': 'application/json' },
-    cache: 'no-store',
-  });
-  if (!response.ok) return [];
-  const payload = (await response.json().catch(() => null)) as { items?: PromoCampaignRow[] } | null;
-  return payload?.items ?? [];
+/** A row is renderable only when the fields the console treats as required are present. */
+function isRenderableCampaign(campaign: CommerceProductsPromoCampaignDto | null | undefined): campaign is CommerceProductsPromoCampaignDto {
+  return (
+    !!campaign &&
+    typeof campaign.id === 'string' &&
+    typeof campaign.name === 'string' &&
+    typeof campaign.key === 'string' &&
+    typeof campaign.status === 'string'
+  );
+}
+
+function toCampaignRow(campaign: CommerceProductsPromoCampaignDto): PromoCampaignRow {
+  return {
+    id: campaign.id,
+    name: campaign.name,
+    key: campaign.key,
+    description: campaign.description,
+    status: campaign.status,
+    startsAtLocal: campaign.startsAtLocal,
+    endsAtLocal: campaign.endsAtLocal,
+    timeZoneId: campaign.timeZoneId ?? 'UTC',
+    budget: campaign.budget,
+    acquisitionSpend: campaign.acquisitionSpend,
+    currency: campaign.currency ?? 'USD',
+    codeCount: campaign.codeCount ?? 0,
+    attributedCustomers: campaign.attributedCustomers ?? 0,
+    customerAcquisitionCost: campaign.customerAcquisitionCost,
+  };
 }
 
 /**
@@ -41,7 +85,7 @@ export default async function PromoCampaignsPage({
     throw new Error('Unauthenticated console access');
   }
 
-  const campaigns = await loadCampaigns(token);
+  const { campaigns, loadError } = await loadCampaigns(token);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
@@ -52,7 +96,15 @@ export default async function PromoCampaignsPage({
           redemption, conversion and customer-acquisition-cost attribution pulled from the promo engine.
         </p>
       </header>
-      <PromoCampaignsConsole initialCampaigns={campaigns} />
+      {loadError ? (
+        <Alert variant="destructive">
+          <AlertTriangle className="size-4" aria-hidden />
+          <AlertTitle>Campaigns could not be loaded</AlertTitle>
+          <AlertDescription>{loadError}</AlertDescription>
+        </Alert>
+      ) : (
+        <PromoCampaignsConsole initialCampaigns={campaigns} />
+      )}
     </div>
   );
 }

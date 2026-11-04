@@ -448,21 +448,21 @@ describe('credentials provider — fallback chains (L120)', () => {
   });
 
   it('uses backendUser fallbacks when direct fields are missing', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        // No userId, no email at top level — falls to backendUser
-        accessToken: 'at',
-        refreshToken: 'rt',
-        user: {
-          id: 'bu-id',
-          email: 'bu@email.com',
-          displayName: 'Backend User',
-          profilePictureUrl: 'https://img.com/pic.png',
-        },
-      }),
-    });
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          // No userId, no email at top level — falls to backendUser
+          accessToken: 'at',
+          refreshToken: 'rt',
+          user: {
+            id: 'bu-id',
+            email: 'bu@email.com',
+            username: 'backenduser',
+          },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    );
 
     const provider = CredentialsProvider({
       apiUrl: 'http://localhost:8080',
@@ -473,8 +473,8 @@ describe('credentials provider — fallback chains (L120)', () => {
     const user = result!.user;
     expect(user.id).toBe('bu-id');
     expect(user.email).toBe('bu@email.com');
-    expect(user.name).toBe('Backend User');
-    expect(user.image).toBe('https://img.com/pic.png');
+    expect(user.name).toBe('backenduser');
+    expect(user.image).toBeNull();
   });
 });
 

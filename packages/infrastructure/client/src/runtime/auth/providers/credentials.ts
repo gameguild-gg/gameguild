@@ -1,8 +1,11 @@
 /**
  * Credentials Provider
  *
- * Authenticates via email/password against the .NET backend's /v1/auth/sign-in endpoint.
- * This is the primary provider for local authentication.
+ * Authenticates via email/password against the .NET backend's sign-in contract
+ * through the generated API client (`AuthModule.postAuthSignIn` /
+ * `AuthModule.postAuthMfaSignInComplete`), so request and response shapes stay
+ * inside the typed OpenAPI contract (issue #1217, findings F3/F4 — the Turnstile
+ * hardening of #1082 shipped through a hand-rolled fetch and widened that gap).
  *
  * @example
  * ```typescript
@@ -22,6 +25,8 @@
 import type { CredentialsProviderConfig, ProviderResult, SessionUser } from '../types.js';
 import { AccountLockedError, AuthServiceUnavailableError, CredentialsSignInError, MfaRequiredError } from '../errors.js';
 import { resolveAuthPermissions, resolveAuthRoles } from '../claims.js';
+import { GeneratedApi } from '../../../generated/index.js';
+import { createServerClient } from '../../../server.js';
 
 /**
  * Options for the credentials provider
@@ -36,6 +41,9 @@ export interface CredentialsProviderOptions {
   /**
    * Sign-in endpoint path
    * @default '/v1/auth/sign-in'
+   * @deprecated The provider always calls the generated client method for
+   * `POST /v1/auth/sign-in`; the path is kept only for backward-compatible
+   * configuration typing.
    */
   signInPath?: string;
 
@@ -47,13 +55,13 @@ export interface CredentialsProviderOptions {
 }
 
 /**
- * Create a credentials provider for email/password authentication.
+ * Create a credentials provider for email/password.
  *
  * @param options - Provider configuration
  * @returns A credentials provider config
  */
 export function CredentialsProvider(options: CredentialsProviderOptions = {}): CredentialsProviderConfig {
-  const { signInPath = '/v1/auth/sign-in', authorize: customAuthorize } = options;
+  const { authorize: customAuthorize } = options;
 
   return {
     id: 'credentials',
@@ -77,8 +85,9 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
         // refresh-token lifetime and this client's cookie storage policy.
         const rememberMe = credentials.rememberMe === true;
         // Cloudflare Turnstile token (issue #1082): presented only after the API flagged
-        // repeated failed sign-ins from this network. Forwarded verbatim; the API
-        // verifies it server-side and ignores it when no challenge is required.
+        // repeated failed sign-ins from this network. Forwarded verbatim through the
+        // generated contract field; the API verifies it server-side and ignores it
+        // when no challenge is required.
         const turnstileToken = credentials.turnstileToken as string | undefined;
 
         const completingMfa = Object.hasOwn(credentials, 'mfaToken');
@@ -86,97 +95,109 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
           throw new CredentialsSignInError('Email and password are required');
         }
 
-        let path = signInPath;
-        let body: Record<string, unknown>;
-        if (completingMfa) {
-          const { mfaToken, method, code } = credentials;
-          if (
-            typeof mfaToken !== 'string' ||
+        const { mfaToken, method, code } = credentials;
+        if (
+          completingMfa &&
+          (typeof mfaToken !== 'string' ||
             !/^[A-Za-z0-9_-]{43}$/.test(mfaToken) ||
             (method !== 'Totp' && method !== 'BackupCode') ||
             typeof code !== 'string' ||
-            !code.trim()
-          ) {
-            throw new CredentialsSignInError('A valid MFA challenge, method and code are required');
-          }
-          path = '/v1/auth/mfa/sign-in/complete';
-          body = { mfaToken, method, code };
-        } else {
-          body = { email, password };
-          if (tenantId) body.tenantId = tenantId;
-          if (rememberMe) body.rememberMe = true;
-          if (turnstileToken) body.turnstileToken = turnstileToken;
+            !code.trim())
+        ) {
+          throw new CredentialsSignInError('A valid MFA challenge, method and code are required');
         }
 
-        let response: Response;
+        const auth = new GeneratedApi.AuthModule(
+          createServerClient({
+            baseUrl: apiUrl,
+            auth: { getAccessToken: async () => null },
+          }),
+        );
+
+        let result: Awaited<ReturnType<GeneratedApi.AuthModule['postAuthSignIn']>>;
         try {
-          response = await fetch(`${apiUrl}${path}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-          });
+          result = completingMfa
+            ? await auth.postAuthMfaSignInComplete({
+                mfaToken: mfaToken as string,
+                method: method as 'Totp' | 'BackupCode',
+                code: code as string,
+              })
+            : await auth.postAuthSignIn({
+                email,
+                password,
+                ...(tenantId ? { tenantId } : {}),
+                ...(rememberMe ? { rememberMe: true } : {}),
+                ...(turnstileToken ? { turnstileToken } : {}),
+              });
         } catch (error) {
+          // Unreachable API or generated-client contract drift (safeParse throws,
+          // issue #864): either way the authentication service cannot be trusted
+          // to have completed sign-in.
           throw new AuthServiceUnavailableError(
             'Authentication service is unreachable. Please check the API deployment.',
             error instanceof Error ? error : undefined,
           );
         }
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          const message =
-            ((errorData as Record<string, unknown>).message as string) || ((errorData as Record<string, unknown>).detail as string) || 'Invalid credentials';
+        if (!result.ok) {
+          const status = result.error.status ?? 0;
+          const message = result.error.detail || result.error.message || 'Invalid credentials';
 
-          if (response.status >= 500) {
+          if (status === 0 || status >= 500) {
             throw new AuthServiceUnavailableError();
           }
 
-          if (response.status === 423) {
+          if (status === 423) {
             throw new AccountLockedError(message);
           }
 
           throw new CredentialsSignInError(message);
         }
 
-        const data = (await response.json()) as Record<string, unknown>;
+        const data = result.data;
 
         // Check for MFA requirement
-        if (data.requiresMfa) {
+        if (data?.requiresMfa) {
           throw new MfaRequiredError('Multi-factor authentication required', {
-            mfaSessionId: data.mfaSessionId as string | undefined,
+            mfaSessionId: data.mfaSessionId ?? undefined,
             mfaToken: typeof data.mfaToken === 'string' ? data.mfaToken : undefined,
-            availableMethods: Array.isArray(data.availableMethods) ? data.availableMethods.filter((m): m is string => typeof m === 'string') : undefined,
+            availableMethods: Array.isArray(data.availableMethods)
+              ? data.availableMethods.filter((m): m is string => typeof m === 'string')
+              : undefined,
           });
         }
 
-        if (typeof data.accessToken !== 'string' || !data.accessToken.trim()) {
+        if (typeof data?.accessToken !== 'string' || !data.accessToken.trim()) {
           throw new CredentialsSignInError('Authentication did not complete');
         }
 
-        // Extract user info from the response
-        const backendUser = data.user as Record<string, unknown> | undefined;
+        // Extract user info from the response. The claims helpers read the raw
+        // response record and the decoded access-token payload for roles and
+        // permissions, so they keep receiving the untyped view of the payload.
+        const rawData = data as unknown as Record<string, unknown>;
+        const backendUser = rawData.user as Record<string, unknown> | undefined;
         const user: SessionUser = {
           /* v8 ignore next */
-          id: (data.userId as string) || (backendUser?.id as string) || '',
-          email: (data.email as string) || (backendUser?.email as string) || (completingMfa ? '' : email),
+          id: data.userId || (backendUser?.id as string) || '',
+          email: data.email || (backendUser?.email as string) || (completingMfa ? '' : email),
           name: (backendUser?.displayName as string) || (backendUser?.username as string) || null,
           image: (backendUser?.profilePictureUrl as string) || null,
-          roles: resolveAuthRoles(data, backendUser),
-          permissions: resolveAuthPermissions(data, backendUser),
+          roles: resolveAuthRoles(rawData, backendUser),
+          permissions: resolveAuthPermissions(rawData, backendUser),
         };
 
-        const result: ProviderResult = {
+        const resultPayload: ProviderResult = {
           tokens: {
-            accessToken: data.accessToken as string,
-            refreshToken: data.refreshToken as string,
-            expiresIn: data.expiresIn as number | undefined,
-            accessTokenExpiresAt: data.accessTokenExpiresAt as string | undefined,
-            refreshTokenExpiresAt: data.refreshTokenExpiresAt as string | undefined,
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken ?? undefined,
+            expiresIn: data.expiresIn,
+            accessTokenExpiresAt: data.accessTokenExpiresAt,
+            refreshTokenExpiresAt: data.refreshTokenExpiresAt,
             tokenType: 'Bearer',
           },
           user,
-          sessionId: data.sessionId as string | undefined,
-          tenantId: data.tenantId as string | undefined,
+          sessionId: data.sessionId,
+          tenantId: data.tenantId ?? undefined,
           availableTenants: data.availableTenants as Array<{ id: string; name: string }> | undefined,
           rememberMe,
           ...(completingMfa && Array.isArray(data.mfaEnrollmentBackupCodes)
@@ -184,7 +205,7 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
             : {}),
         };
 
-        return result;
+        return resultPayload;
       }),
   };
 }
