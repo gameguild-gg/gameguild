@@ -8,7 +8,7 @@ the counts below are the historical audit snapshot. The F1/F2 correction notes
 describe the current implementation, and F5 corrects a controller-count false
 positive. The adjacent F3/F4 transport findings remain unresolved; these scoped
 corrections are not a newly certified surface audit. F3 records the subsequent
-Next registration/token-revocation and MFA-settings migrations, and F4 records the password/MFA credential-provider
+Next registration/token-revocation and MFA-operation migrations, and F4 records the password/MFA credential-provider
 migration; the other provider transports remain.
 
 Sources of truth:
@@ -391,7 +391,7 @@ actual successful empty collection renders the empty state. A later successful
 server render replaces the alert with fresh campaign data. These corrections do
 not resolve F3/F4/F5 or turn the no-caller inventory into a deletion list.
 
-### F3 — Next registration/token revocation and MFA settings migrated; parallel transports remain
+### F3 — Next registration/token revocation and MFA operations migrated; parallel transports remain
 
 The original audit identified 17+ generated endpoints shadowed by hand-written
 transports in the client runtime and web app. The Next route and server-action
@@ -429,11 +429,28 @@ failures throw a typed error instead of returning unchecked data. These settings
 operations do not complete the limited-challenge sign-in flow, which remains
 separate.
 
+`verifyMfa` now completes that sign-in flow through generated
+`AuthModule.postAuthMfaSignInComplete` at `/v1/auth/mfa/sign-in/complete`, instead
+of posting a session ID to the authenticated settings-verification route. It takes
+the opaque first-factor `mfaToken`, TOTP or backup-code proof and an optional device
+binding. Actor/tenant/IP assertions and the deprecated ordinary-bearer argument
+are never forwarded. The deprecated `mfaSessionId` input accepts an opaque challenge
+only when no explicit `mfaToken` was supplied; a session GUID cannot authenticate.
+Unsupported SMS, invalid challenges and oversized proofs fail before network access.
+
+Generated validation precedes the result mapping. Denied, pending MFA/step-up,
+malformed and incomplete replies cannot yield ordinary credentials; completion
+requires access/refresh credentials and a validated identity. Legacy profile/claim
+extensions remain supported, and one-time enrollment backup codes are returned
+separately from tokens. This operation has no automatic refresh or diagnostic
+payload logging and has a five-second request budget. Failures preserve the public
+`MfaVerificationError` type. The backend completion endpoint returns generic
+verification failure; this adapter does not invent an attempts-remaining count.
+
 Remaining transports from the historical inventory (line numbers below belong to
 the original audit, not the current source):
 
-- `…/runtime/auth/extended-operations.ts:162` (`/v1/auth/mfa/verify`),
-  `:220` (`/v1/auth/password:reset-request`), `:299` (`/v1/auth/sessions`),
+- `…/runtime/auth/extended-operations.ts:220` (`/v1/auth/password:reset-request`), `:299` (`/v1/auth/sessions`),
   `:314` (`/v1/auth/sessions/{id}`);
 - `apps/web/src/lib/auth/password-actions.ts:29,78`; `apps/web/src/lib/auth/email-code-request.ts:14`;
   `apps/web/src/lib/auth/magic-link-request.ts:16`;

@@ -4,7 +4,7 @@
  * Client-side wrappers for backend auth endpoints that go beyond
  * basic sign-in/sign-up/sign-out. Includes:
  *
- * - MFA verification (TOTP, SMS, backup codes)
+ * - MFA sign-in completion (TOTP, backup codes) and authenticated settings
  * - Password reset (request + confirm)
  * - Password change (authenticated)
  * - Email verification (send + confirm)
@@ -21,7 +21,7 @@
  * import { verifyMfa, requestPasswordReset, listSessions } from '@game-guild/client';
  *
  * // MFA verification after sign-in returns MfaRequiredError
- * const result = await verifyMfa(apiUrl, { mfaSessionId, code: '123456', method: 'totp' });
+ * const result = await verifyMfa(apiUrl, { mfaToken, code: '123456', method: 'totp' });
  *
  * // Password reset flow
  * await requestPasswordReset(apiUrl, { email: 'user@example.com' });
@@ -31,6 +31,7 @@
 
 import type { ProviderResult } from './types.js';
 import { createClient } from '../../client.js';
+import { AuthModule } from '../../generated/modules/auth.gen.js';
 import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen.js';
 import type { IdentityAuthenticationMfaMethod } from '../../generated/types.gen.js';
 import { parseBackendAuthResponse } from '../../integrations/next/handlers.js';
@@ -43,12 +44,16 @@ export { MfaVerificationError, PasswordResetError, EmailVerificationError, Sessi
 // ─── Types ───────────────────────────────────────────────────────
 
 export interface MfaVerifyInput {
-  /** MFA session ID returned by the sign-in attempt */
-  mfaSessionId: string;
-  /** The TOTP/SMS code or backup code */
+  /** Expiring, opaque first-factor challenge returned by the sign-in attempt. */
+  mfaToken?: string;
+  /** @deprecated Use mfaToken. Only an opaque challenge works here; a session GUID cannot complete MFA. */
+  mfaSessionId?: string;
+  /** The TOTP code or backup code. */
   code: string;
-  /** Which MFA method to use */
+  /** SMS is retained for source compatibility, but is unsupported by native sign-in completion. */
   method: 'totp' | 'sms' | 'backup_code';
+  /** Optional binding of this proof to the device used for the first factor. */
+  deviceFingerprint?: string;
 }
 
 export interface MfaSetupResult {
@@ -174,36 +179,86 @@ const MFA_METHOD_NAMES: Record<IdentityAuthenticationMfaMethod, string> = {
  * Complete MFA verification after a sign-in attempt returned MfaRequiredError.
  *
  * @param apiUrl - Backend API base URL
- * @param input - MFA session ID + code + method
- * @param accessToken - Optional access token (if partial auth was returned)
+ * @param input - Limited first-factor challenge + code + supported method
+ * @param accessToken - Deprecated compatibility argument; ordinary credentials are never sent.
  * @returns ProviderResult with full tokens on success
  */
-export async function verifyMfa(apiUrl: string, input: MfaVerifyInput, accessToken?: string): Promise<ProviderResult> {
-  const headers: Record<string, string> = { ...JSON_HEADERS };
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
+export function verifyMfa(apiUrl: string, input: MfaVerifyInput, accessToken?: string): Promise<ProviderResult>;
+export async function verifyMfa(apiUrl: string, input: MfaVerifyInput): Promise<ProviderResult> {
+  if (!input || typeof input !== 'object') throw new MfaVerificationError('An MFA challenge and proof are required');
+  const mfaToken = Object.hasOwn(input, 'mfaToken') ? input.mfaToken : input.mfaSessionId;
+  if (
+    typeof mfaToken !== 'string' ||
+    !/^[A-Za-z0-9_-]{43}$/.test(mfaToken) ||
+    (input.method !== 'totp' && input.method !== 'backup_code') ||
+    typeof input.code !== 'string' ||
+    !input.code.trim()
+  ) {
+    throw new MfaVerificationError('A valid MFA challenge, TOTP or backup code is required');
   }
 
-  const response = await fetch(assertSafeServiceUrl(`${apiUrl}/v1/auth/mfa/verify`, apiUrl), {
-    redirect: 'error',
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      mfaSessionId: input.mfaSessionId,
-      code: input.code,
-      method: input.method,
+  // Preserve older profile/claim extensions, while generated fields always win.
+  const legacy: Record<string, unknown> = {};
+  const auth = new AuthModule(
+    createClient({
+      baseUrl: apiUrl,
+      autoRefresh: false,
+      timeout: 5_000,
+      devtools: { enabled: false },
+      interceptors: [
+        {
+          onResponse(response) {
+            const data = response.data;
+            if (data !== null && typeof data === 'object') {
+              if ('roles' in data) legacy.roles = data.roles;
+              if ('permissions' in data) legacy.permissions = data.permissions;
+              if ('user' in data) legacy.user = data.user;
+            }
+            return Promise.resolve(response);
+          },
+        },
+      ],
     }),
-  });
+  );
 
-  if (!response.ok) {
-    const errorData = await parseErrorBody(response);
-    throw new MfaVerificationError(extractErrorMessage(errorData, 'MFA verification failed'), {
-      attemptsRemaining: errorData.attemptsRemaining as number | undefined,
+  try {
+    const response = await auth.postAuthMfaSignInComplete({
+      mfaToken,
+      method: input.method === 'totp' ? 'Totp' : 'BackupCode',
+      code: input.code,
+      ...(input.deviceFingerprint !== undefined ? { deviceFingerprint: input.deviceFingerprint } : {}),
     });
-  }
+    if (!response.ok) {
+      throw new MfaVerificationError(
+        response.error.status === 0 || response.error.status >= 500
+          ? 'MFA verification is temporarily unavailable'
+          : response.error.detail || response.error.message || 'MFA verification failed',
+      );
+    }
 
-  const data = (await response.json()) as Record<string, unknown>;
-  return parseBackendAuthResponse(data);
+    const verified = response.data;
+    if (
+      verified.success === false ||
+      verified.requiresMfa ||
+      verified.requiresStepUp ||
+      !verified.accessToken?.trim() ||
+      !verified.refreshToken?.trim() ||
+      !(verified.userId || verified.user?.id)
+    ) {
+      throw new MfaVerificationError('MFA verification did not complete');
+    }
+    const data: Record<string, unknown> = { ...legacy, ...verified };
+    if (verified.user && legacy.user !== null && typeof legacy.user === 'object') {
+      data.user = { ...legacy.user, ...verified.user };
+    }
+    return {
+      ...parseBackendAuthResponse(data),
+      ...(verified.mfaEnrollmentBackupCodes ? { mfaEnrollmentBackupCodes: verified.mfaEnrollmentBackupCodes } : {}),
+    };
+  } catch (error) {
+    if (error instanceof MfaVerificationError) throw error;
+    throw new MfaVerificationError('MFA verification failed');
+  }
 }
 
 /**
