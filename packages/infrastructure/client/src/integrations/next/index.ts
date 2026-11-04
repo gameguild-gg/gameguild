@@ -21,7 +21,6 @@
 
 // ─── GameGuildAuth Factory ───────────────────────────────────────
 export { GameGuildAuth } from './auth.js';
-export { createMfaEnrollmentCompleteAction, type MfaEnrollmentCompleteResult } from './actions.js';
 
 // ─── Provider Factories (re-exported for convenience) ────────────
 export { CredentialsProvider, GoogleProvider, GitHubProvider, DiscordProvider } from '../../runtime/auth/providers/index.js';

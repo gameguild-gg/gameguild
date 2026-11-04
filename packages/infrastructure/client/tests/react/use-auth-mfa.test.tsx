@@ -63,49 +63,6 @@ describe('browser MFA state', () => {
     unmount();
   });
 
-  it('persists the enrollment offer with the challenge and hydrates it in a fresh hook', async () => {
-    const offer = {
-      secretKey: 'SYNTHETIC-SETUP',
-      qrCodeUri: 'otpauth://totp/Example?secret=SYNTHETIC',
-      expiresAt: new Date(Date.now() + 300_000).toISOString(),
-    };
-    const backend = vi
-      .fn()
-      .mockResolvedValueOnce(json({ csrfToken: 'first-csrf' }))
-      .mockResolvedValueOnce(json({ error: 'MfaRequired', mfaToken: token, availableMethods: ['TOTP'], mfaEnrollment: offer }, 403));
-    vi.stubGlobal('fetch', backend);
-    const { result, unmount } = renderHook(() => useAuth());
-    let thrown: unknown;
-    await act(async () => {
-      thrown = await result.current.signIn('credentials', { email: 'a@example.com', password: 'pw', redirect: false }).catch((e) => e);
-    });
-    expect(thrown).toBeInstanceOf(MfaRequiredError);
-    expect((thrown as MfaRequiredError).mfaEnrollment).toEqual(offer);
-    expect(result.current.mfaChallenge).toEqual({ mfaToken: token, availableMethods: ['TOTP'], mfaEnrollment: offer });
-    expect(sessionStorage.getItem('gg.auth.mfaChallenge')).toBe(JSON.stringify({ mfaToken: token, availableMethods: ['TOTP'], mfaEnrollment: offer }));
-    unmount();
-    const next = renderHook(() => useAuth());
-    expect(next.result.current.mfaChallenge).toEqual({ mfaToken: token, availableMethods: ['TOTP'], mfaEnrollment: offer });
-    next.unmount();
-  });
-
-  it('drops a malformed enrollment offer instead of persisting it', async () => {
-    const backend = vi
-      .fn()
-      .mockResolvedValueOnce(json({ csrfToken: 'first-csrf' }))
-      .mockResolvedValueOnce(
-        json({ error: 'MfaRequired', mfaToken: token, availableMethods: ['TOTP'], mfaEnrollment: { secretKey: '' } }, 403),
-      );
-    vi.stubGlobal('fetch', backend);
-    const { result, unmount } = renderHook(() => useAuth());
-    await act(async () => {
-      await result.current.signIn('credentials', { email: 'a@example.com', password: 'pw', redirect: false }).catch(() => {});
-    });
-    expect(result.current.mfaChallenge).toEqual({ mfaToken: token, availableMethods: ['TOTP'] });
-    expect(sessionStorage.getItem('gg.auth.mfaChallenge')).toBe(JSON.stringify({ mfaToken: token, availableMethods: ['TOTP'] }));
-    unmount();
-  });
-
   it('redirects immediately after a verified challenge', async () => {
     vi.stubGlobal(
       'fetch',

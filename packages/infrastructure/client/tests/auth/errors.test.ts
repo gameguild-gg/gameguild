@@ -8,7 +8,6 @@ import {
   CredentialsSignInError,
   AccountLockedError,
   MfaRequiredError,
-  parseMfaEnrollmentOffer,
   SignUpError,
   SessionExpiredError,
   InvalidSessionError,
@@ -109,33 +108,6 @@ describe('Auth Error Types', () => {
       });
       expect(error.mfaSessionId).toBe('session-123');
       expect(error.availableMethods).toEqual(['totp', 'sms']);
-    });
-
-    it('should carry a validated enrollment offer and serialize it', () => {
-      const offer = { secretKey: 'SECRET', qrCodeUri: 'otpauth://totp/x?secret=SECRET', expiresAt: new Date(Date.now() + 60_000).toISOString() };
-      const error = new MfaRequiredError('MFA needed', { mfaEnrollment: offer });
-      expect(error.mfaEnrollment).toEqual(offer);
-      expect(error.toJSON()).toMatchObject({ mfaEnrollment: offer });
-    });
-  });
-
-  describe('parseMfaEnrollmentOffer', () => {
-    const valid = { secretKey: 'SECRET', qrCodeUri: 'otpauth://totp/x?secret=SECRET', expiresAt: new Date(Date.now() + 60_000).toISOString() };
-
-    it('accepts a complete offer', () => {
-      expect(parseMfaEnrollmentOffer(valid)).toEqual(valid);
-    });
-
-    it.each([
-      ['absent', undefined],
-      ['null', null],
-      ['non-object', 'offer'],
-      ['empty object', {}],
-      ['empty secret', { ...valid, secretKey: '' }],
-      ['non-otpauth uri', { ...valid, qrCodeUri: 'https://not-otpauth' }],
-      ['unparseable expiry', { ...valid, expiresAt: 'not-a-date' }],
-    ])('rejects the %s payload', (_label, value) => {
-      expect(parseMfaEnrollmentOffer(value)).toBeUndefined();
     });
   });
 

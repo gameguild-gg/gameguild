@@ -261,28 +261,6 @@ describe('CredentialsProvider', () => {
     expect(error.toJSON()).not.toHaveProperty('user');
   });
 
-  it('carries the enrollment offer from a required-MFA unenrolled first factor', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          requiresMfa: true,
-          mfaToken: 'x'.repeat(43),
-          availableMethods: ['TOTP'],
-          mfaEnrollment: {
-            secretKey: 'SYNTHETIC-SETUP',
-            qrCodeUri: 'otpauth://totp/Example?secret=SYNTHETIC',
-            expiresAt: new Date(Date.now() + 300_000).toISOString(),
-          },
-        }),
-      ),
-    );
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
-    const error = await provider.authorize({ email: 'a@b.com', password: 'pass' }).catch((e) => e);
-    expect(error).toBeInstanceOf(MfaRequiredError);
-    expect(error.mfaEnrollment).toMatchObject({ secretKey: 'SYNTHETIC-SETUP', qrCodeUri: 'otpauth://totp/Example?secret=SYNTHETIC' });
-    expect(error.toJSON().mfaEnrollment).toMatchObject({ secretKey: 'SYNTHETIC-SETUP' });
-  });
-
   it('completes MFA with only the limited bearer, method and code', async () => {
     const mockFetch = vi.fn().mockResolvedValue(
       new Response(

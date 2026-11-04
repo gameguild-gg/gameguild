@@ -40,18 +40,7 @@
       "submit": "Verify and sign in",
       "startAgain": "Start sign-in again",
       "noChallenge": "No active two-factor challenge. Start signing in to receive a new code.",
-      "backToSignIn": "Back to sign in",
-      "enrollDescription": "Your account requires two-factor authentication. Scan the QR code with your authenticator app or paste the setup key, then enter the 6-digit code to finish signing in.",
-      "enrollQrLabel": "Authenticator app QR code",
-      "secretLabel": "Setup key",
-      "copySecret": "Copy setup key",
-      "copied": "Copied",
-      "enrollSubmit": "Verify and finish setup",
-      "enrollFailed": "Setup could not be completed. Check the code and try again.",
-      "backupCodesTitle": "Save your recovery codes",
-      "backupCodesDescription": "These recovery codes are shown only once. Store them somewhere safe before continuing — each one can sign you in without your authenticator app.",
-      "copyBackupCodes": "Copy all codes",
-      "backupCodesContinue": "I've stored my codes — continue"
+      "backToSignIn": "Back to sign in"
     }
   },
   "magicLink": {

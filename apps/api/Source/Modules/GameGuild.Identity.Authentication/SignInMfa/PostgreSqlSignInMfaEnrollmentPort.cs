@@ -8,8 +8,7 @@ namespace GameGuild.Identity.Authentication;
 
 /// <summary>Limited enrollment uses the shared command transaction and existing TOTP provider.</summary>
 public sealed class PostgreSqlSignInMfaEnrollmentPort(IApplicationDbContext context,
-    IUserMfaConfigurationRepository configurations, IEncryptionService encryption, MfaOptions options) :
-    ISignInMfaEnrollmentPort
+    IEncryptionService encryption, MfaOptions options) : ISignInMfaEnrollmentPort
 {
     private DbContext DatabaseContext => context is DbContext database &&
         database.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL" &&
@@ -27,36 +26,6 @@ public sealed class PostgreSqlSignInMfaEnrollmentPort(IApplicationDbContext cont
             SELECT 1 FROM "gameguild.authentication"."user_mfa_configuration"
             WHERE user_id = {subjectId} FOR UPDATE
             """, cancellationToken).ConfigureAwait(false);
-    }
-
-    public async Task<SignInMfaEnrollmentSetup> StartOrResumeAsync(Guid subjectId, string email, DateTimeOffset now,
-        DateTimeOffset challengeExpiresAt, CancellationToken cancellationToken)
-    {
-        _ = DatabaseContext;
-        if (subjectId == Guid.Empty) { throw new ArgumentException("A subject is required.", nameof(subjectId)); }
-        if (string.IsNullOrWhiteSpace(email)) { throw new ArgumentException("An email is required.", nameof(email)); }
-        if (!options.Enabled) { throw new InvalidOperationException("Limited MFA enrollment requires enabled MFA options."); }
-        if (challengeExpiresAt <= now) { throw new ArgumentOutOfRangeException(nameof(challengeExpiresAt)); }
-        var secret = TotpMfaService.GenerateBase32Secret();
-        var configuration = await configurations.GetByUserIdAsync(subjectId, cancellationToken).ConfigureAwait(false);
-        // The subject was verified unenrolled under the same lock; an enabled row can only be a lost race.
-        if (configuration is { IsEnabled: true }) { throw new InvalidOperationException("The subject already has an active MFA configuration."); }
-        var created = configuration is null;
-        configuration ??= new UserMfaConfiguration { Id = Guid.NewGuid(), UserId = subjectId };
-        configuration.PreferredMethod = MfaMethod.Totp;
-        configuration.TotpSecretKey = encryption.Encrypt(secret);
-        configuration.IsEnabled = false;
-        configuration.IsSetupComplete = false;
-        // The setup window never outlives the challenge it is bound to.
-        configuration.SetupExpiresAt = challengeExpiresAt.UtcDateTime;
-        // Recovery codes are created only after the bound TOTP proof succeeds.
-        configuration.BackupCodes = null;
-        configuration.QrCodeSetupData = null;
-        configuration = created
-            ? await configurations.CreateAsync(configuration, cancellationToken).ConfigureAwait(false)
-            : await configurations.UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
-        return new(configuration.Id, Fingerprint(secret), secret,
-            TotpMfaService.GenerateTotpUri(email, secret, options.TotpIssuer, options.TotpTimeStepSeconds), challengeExpiresAt);
     }
 
     public async Task<bool> MatchesAsync(SignInMfaChallenge challenge, bool enrolled, DateTimeOffset now,
