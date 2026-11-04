@@ -414,6 +414,9 @@ async function bootStack() {
     // restart threshold in CI (run 41797799470), dropping the instructor CSRF
     // request. Match the bounded heap used by the sign-in/session browser gates.
     `NODE_OPTIONS=--max-old-space-size=6144`,
+    // Avoid retaining webpack's cache during both cold persona compilations.
+    // The bounded heap alone still hit Next's restart threshold in run 41806918808.
+    `GAMEGUILD_DISABLE_WEBPACK_CACHE=1`,
     `CODING_CYCLE_E2E=1`,
     `API_URL=${API_BASE}`,
     `NEXT_PUBLIC_API_URL=${API_BASE}`,
