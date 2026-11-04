@@ -19,12 +19,12 @@
 | 9 | Commerce.Orders | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (billing-orders/07 §6-7 pós-#1229) | ✅ (billing-orders/08 F6-F7) | ✅ commerce/09 | **8/8** |
 | 10 | Commerce.Subscriptions | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (billing-orders/07 §1-5 pós-#1229) | ✅ (billing-orders/08 F1-F5) | ✅ commerce/09 | **8/8** |
 | 11 | Commerce.Products | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
-| 12 | Compliance.Audit | ✅ | ✅ 38 tabelas | ✅ 3 sinks | ✅ | ❌ | 🟡 lite | ❌ | 🟡 | 4.5/8 |
-| 13 | Compliance.Consent | ✅ | ✅ | ✅ | ✅ | ❌ | 🟡 lite | ❌ | 🟡 | 4.5/8 |
-| 14 | Compliance.FERPA | ✅ | ✅ | ✅ | ✅ | ❌ | 🟡 lite | ❌ | 🟡 | 4.5/8 |
-| 15 | Compliance.KYC | ✅ | ✅ | ✅ | ✅ | ❌ | 🟡 lite | ❌ | 🟡 | 4.5/8 |
+| 12 | Compliance.Audit | ✅ | ✅ 38 tabelas | ✅ 3 sinks | ✅ | ✅ 7 famílias (K2 payments ausente) | ✅ 8 famílias F1-F8 | ✅ L0+8 L1 | ✅ | **8/8** |
+| 13 | Compliance.Consent | ✅ | ✅ | ✅ | ✅ | ✅ (compliance/10 §4) | ✅ F5 + #1268 aberto | ✅ | ✅ | **8/8** (N1/N2 residuais — #1268 pendente) |
+| 14 | Compliance.FERPA | ✅ | ✅ | ✅ | ✅ | ✅ (compliance/10 §5) | ✅ F6 | ✅ + examinador FERPA | ✅ | **8/8** (N3/N4/N5/N6 residuais) |
+| 15 | Compliance.KYC | ✅ | ✅ | ✅ | ✅ | ✅ (compliance/10 §6) | ✅ F7+F8 | ✅ + examinador AML | ✅ | **8/8** (N7/N9/N10/N11 residuais) |
 | 16 | Compliance.FinancialCrime | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
-| 17 | Finance.Economy (7 subs) | ✅ | ✅ 108 tabelas | ✅ 5 outboxes | ✅ | ✅ | ❌ | ❌ | ❌ | 5/8 |
+| 17 | Finance.Economy (7 subs) | ✅ | ✅ 108 tabelas | ✅ 5 outboxes | ✅ | ✅ (economy/05) | ✅ 9 famílias E1-E9 | ✅ L0+9 L1 | ✅ | **8/8** (N1-N10 residuais no 07-gaps) |
 | 18 | Finance.Ledgers | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
 | 19 | Learning (12 subs) | ✅ 6 | ✅ 31 ctrl | ✅ | ✅ 5 | ✅ | ❌ | ❌ | ❌ | 5/8 |
 | 20 | Social.Posts | 🟡 críticos | ✅ 127 endpoints (família) | ✅ | ✅ 6 (família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
@@ -73,19 +73,20 @@
 
 | Métrica | Valor |
 |---|---|
-| Módulos com package completo (8/8) | **9** (Authentication + Authorization + Users + Tenants + Provisioning + Payments + Billing + Orders + Subscriptions) |
+| Módulos com package completo (8/8) | **14** (Authentication + Authorization + Users + Tenants + Provisioning + Payments + Billing + Orders + Subscriptions + Compliance.Audit/Consent/FERPA/KYC + Finance.Economy) |
 | Módulos ≥4/8 (kit funcional, faltam STRIDE/DFD/arq) | **29** |
-| Módulos 0/8 (sem nada) | **10** (+2 contracts-only n/a) |
-| Endpoints com matriz de wiring | **~1.770** de ~2.115 gerados (+125 users/tenants/provisioning +177 authz re-matrizado) |
-| Fluxos de usuário documentados | **~67** (+7 authz já contados; +2+2+2 famílias users/tenants/provisioning) |
-| Máquinas de estado | **~36** (+3 users, +3 tenants, +2 provisioning, +1 context n/a) |
-| STRIDE | auth + commerce + **identity (4 novos: authz 7 famílias + users + tenants + provisioning)** — 6 docs, 23 famílias |
-| DFDs | 17 (auth) + 16 (commerce) + **10 identity (authz L0+7×L1; users/tenants/provisioning L0+3×L1 cada)** |
+| Módulos 0/8 (sem nada) | **12** (+2 contracts-only n/a) |
+| Endpoints com matriz de wiring | **~1.770** de ~2.115 gerados (base ~1.470 + 177 authz + ~125 users/tenants/provisioning) |
+| Fluxos de usuário documentados | **~66** (+2 famílias cada de users/tenants/provisioning) |
+| Máquinas de estado | **~38** (+3 users, +3 tenants, +2 provisioning) |
+| STRIDE | auth (12 fluxos) + commerce (17 famílias) + compliance (F1-F8) + economy (E1-E9) + **identity (4 docs: authz 7 famílias + users + tenants + provisioning)** |
+| DFDs | 17 (auth) + 16 (commerce) + compliance (L0 + 8 famílias) + economy (L0 + 9 famílias) + **10 identity (authz L0+7×L1; users/tenants/provisioning L0+3×L1 cada)** |
+| Sequências cross-module | auth + economy + compliance (audit-sink fan-in, KYC gates, FERPA-Learning) + **authz cross-module-sequences** (+ sets lite de users/tenants/provisioning) |
 
 ## Próximas ondas (ordem de risco)
 
 1. ~~**Payments + Billing/Orders/Subscriptions**: STRIDE + DFDs + arquitetura~~ — **entregue** (docs/commerce/payments/07-08, docs/commerce/billing-orders/07-08, docs/commerce/09-security-architecture; verificação pós-#1266/#1229 incluída nos docs 07)
 2. ~~**Authorization completion + Identity.Users/Tenants/Provisioning + auth spot-audit**~~ — **entregue** (docs/authorization/ cross-module-sequences + 07/08/09; docs/identity/{users,tenants,provisioning}/ completos + docs/identity/context.md; spot-audit 29 citações em docs/auth/spot-audit-2026-11.md — 0 afirmações falsas). Achados críticos abertos: takeover de tenants (4 controllers sem política, docs/identity/tenants/gaps.md T1), permissão self nunca semeada (users 403, docs/identity/users/gaps.md U5), eventos AddDomainEvent descartados (tenants T8, repo-wide)
-3. **Compliance (4) + Economy**: STRIDE regulatório + DFDs + arquitetura + sequências do compliance
+3. ~~**Compliance (4) + Economy**: STRIDE regulatório + DFDs + arquitetura + sequências do compliance~~ **ENTREGUE** — compliance/08-11 + economy/08-10; K4 economy (mint reversal) confirmado FIXED pós-#1266; N1 compliance re-verificado VIVO (PR #1268 aberto)
 4. **Learning + Social/Platform**: STRIDE + DFDs + arquitetura + sequências (3 famílias)
 5. **Módulos 0/8 — hot-path primeiro**: Notifications + TrustSafety → FinancialCrime (AML) → Products + Content + Ledgers/Achievements + Mentorship/Ratings
