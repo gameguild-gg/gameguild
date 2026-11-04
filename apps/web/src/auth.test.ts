@@ -218,4 +218,27 @@ describe("request-bound authentication readers", () => {
     expect(state.cookieSet).toHaveBeenCalledTimes(1);
     expect(state.processSession).toHaveBeenCalledTimes(1);
   });
+
+  it("a read-only RSC store never rotates the refresh token", async () => {
+    state.cookieSet.mockImplementation(() => { throw new Error("RSC cookies are read-only"); });
+    const authModule = await import("./auth");
+    expect(await authModule.auth()).toBe(session);
+    expect(state.processSession).toHaveBeenCalledExactlyOnceWith(
+      "encrypted-session",
+      expect.anything(),
+      expect.objectContaining({ allowRefresh: expect.any(Function) }),
+    );
+    const options = state.processSession.mock.calls[0][2] as { allowRefresh: () => boolean };
+    expect(options.allowRefresh()).toBe(false);
+  });
+
+  it("a writable request allows refresh rotation", async () => {
+    const authModule = await import("./auth");
+    expect(await authModule.auth()).toBe(session);
+    const options = state.processSession.mock.calls[0][2] as { allowRefresh: () => boolean };
+    expect(options.allowRefresh()).toBe(true);
+    expect(state.cookieSet).toHaveBeenCalledWith(
+      "gameguild.session-token", "encrypted-session", { httpOnly: true, path: "/" },
+    );
+  });
 });
