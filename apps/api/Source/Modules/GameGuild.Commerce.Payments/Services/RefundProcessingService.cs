@@ -2,6 +2,7 @@ using System.Text.Json;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Notifications;
 using GameGuild.Notifications.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -97,16 +98,26 @@ public interface IRefundProcessingService
     ///     gateway call whose response was lost), so this records the completion — refund row,
     ///     payment aggregate, accounting and post-completion steps — without a new gateway call.
     ///     Idempotent: refunds already completed or rejected are returned as no-ops.
+    ///     When <paramref name="gatewayReportedAmount"/> is supplied it must match the local
+    ///     refund row's amount (issue #1202 gaps N3): a gateway refund executed for less than
+    ///     requested is never finalized at the recorded full value — the completion fails
+    ///     closed and the refund stays awaiting reconciliation.
     /// </summary>
     /// <param name="refund">Local refund row awaiting its gateway outcome.</param>
     /// <param name="gatewayRefundId">Gateway refund identifier reported by the webhook.</param>
     /// <param name="gatewayName">Gateway that executed the refund (e.g. stripe).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="gatewayReportedAmount">
+    ///     Major-unit amount the gateway reports for this individual refund, when the verified
+    ///     event carries it (refund.created/refund.updated do; the coalescing charge.refunded
+    ///     path does not).
+    /// </param>
     Task<RefundExecutionOutcome> CompleteFromGatewayAsync(
         Refund refund,
         string gatewayRefundId,
         string gatewayName,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        decimal? gatewayReportedAmount = null);
 }
 
 /// <summary>
@@ -381,8 +392,7 @@ public sealed class RefundProcessingService(
         refund.MarkCompleted(gatewayRefundId, paymentGateway.ProviderId);
         await refundRepository.UpdateAsync(refund, cancellationToken).ConfigureAwait(false);
 
-        payment.ProcessRefund(refund.Amount, gatewayRefundId, refund.Reason);
-        await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+        await ApplyRefundToPaymentAsync(payment, refund, gatewayRefundId, cancellationToken).ConfigureAwait(false);
 
         await RecordRefundAccountingAsync(payment, refund, statusBeforeRefund, cancellationToken).ConfigureAwait(false);
 
@@ -504,8 +514,7 @@ public sealed class RefundProcessingService(
             refund.MarkCompleted(gatewayRefundId, paymentGateway.ProviderId);
             await refundRepository.UpdateAsync(refund, cancellationToken).ConfigureAwait(false);
 
-            payment.ProcessRefund(refund.Amount, gatewayRefundId, refund.Reason);
-            await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+            await ApplyRefundToPaymentAsync(payment, refund, gatewayRefundId, cancellationToken).ConfigureAwait(false);
 
             await RecordRefundAccountingAsync(payment, refund, statusBeforeRefund, cancellationToken).ConfigureAwait(false);
 
@@ -524,6 +533,47 @@ public sealed class RefundProcessingService(
         finally
         {
             gate.Release();
+        }
+    }
+
+    /// <summary>
+    ///     Applies a completed refund leg to the payment aggregate under the entity's
+    ///     optimistic-concurrency token (issue #1202 gaps N2). The Version token serializes
+    ///     concurrent refund legs (gateway execution vs webhook completion vs recovery): when
+    ///     a leg saves against a stale aggregate it reloads the freshly persisted state —
+    ///     carrying the concurrent leg's cumulative <see cref="Payment.RefundedAmount"/> and
+    ///     the current Version — and re-applies its own amount against it, so both legs are
+    ///     recorded instead of corrupting the counter or losing the already-completed
+    ///     gateway refund to an unhandled conflict. The domain guard
+    ///     (<c>RefundedAmount + amount &gt; Amount</c>) still fails closed on the reloaded
+    ///     state, and retries are bounded.
+    /// </summary>
+    private async Task ApplyRefundToPaymentAsync(
+        Payment payment,
+        Refund refund,
+        string gatewayRefundId,
+        CancellationToken cancellationToken)
+    {
+        const int maxAttempts = 3;
+
+        for (var attempt = 1; ; attempt++)
+        {
+            payment.ProcessRefund(refund.Amount, gatewayRefundId, refund.Reason);
+            try
+            {
+                await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+            catch (DbUpdateConcurrencyException) when (attempt < maxAttempts)
+            {
+                logger.LogWarning(
+                    "Concurrent refund leg detected on payment {PaymentId} while applying refund {RefundId}; reloading the aggregate and retrying (attempt {Attempt} of {MaxAttempts})",
+                    payment.Id,
+                    refund.Id,
+                    attempt,
+                    maxAttempts);
+                await paymentRepository.ReloadAsync(payment, cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 
@@ -553,7 +603,8 @@ public sealed class RefundProcessingService(
         Refund refund,
         string gatewayRefundId,
         string gatewayName,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        decimal? gatewayReportedAmount = null)
     {
         ArgumentNullException.ThrowIfNull(refund);
         ArgumentException.ThrowIfNullOrWhiteSpace(gatewayRefundId);
@@ -575,6 +626,30 @@ public sealed class RefundProcessingService(
                 Success = false,
                 Refund = refund,
                 FailureReason = $"Refund in status {refund.Status} cannot be completed"
+            };
+        }
+
+        // Issue #1202 (gaps N3): the verified webhook event carries the amount the gateway
+        // actually refunded for this leg. A refund executed at the gateway for less than
+        // requested (possible after currency/fee adjustments) is never finalized locally at
+        // the recorded full value — fail closed and leave the row for reconciliation.
+        if (gatewayReportedAmount.HasValue && gatewayReportedAmount.Value != refund.Amount)
+        {
+            logger.LogError(
+                "Refund {RefundId} for payment {PaymentId} cannot be completed from gateway webhook {GatewayRefundId}: the gateway reported {GatewayAmount} but the local row records {LocalAmount} {Currency}",
+                refund.Id,
+                refund.PaymentId,
+                gatewayRefundId,
+                gatewayReportedAmount.Value,
+                refund.Amount,
+                refund.Currency);
+            return new RefundExecutionOutcome
+            {
+                Success = false,
+                Refund = refund,
+                FailureReason =
+                    $"Gateway refund {gatewayRefundId} reported {gatewayReportedAmount.Value} {refund.Currency} " +
+                    $"but refund {refund.Id} records {refund.Amount} {refund.Currency}; the amount mismatch requires reconciliation"
             };
         }
 
@@ -612,8 +687,7 @@ public sealed class RefundProcessingService(
         refund.MarkCompleted(gatewayRefundId, gatewayName);
         await refundRepository.UpdateAsync(refund, cancellationToken).ConfigureAwait(false);
 
-        payment.ProcessRefund(refund.Amount, gatewayRefundId, refund.Reason);
-        await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+        await ApplyRefundToPaymentAsync(payment, refund, gatewayRefundId, cancellationToken).ConfigureAwait(false);
 
         await RecordRefundAccountingAsync(payment, refund, statusBeforeRefund, cancellationToken).ConfigureAwait(false);
 
@@ -646,8 +720,7 @@ public sealed class RefundProcessingService(
         refund.MarkCompleted($"chargeback_{refund.Id}", payment.Provider);
         await refundRepository.UpdateAsync(refund, cancellationToken).ConfigureAwait(false);
 
-        payment.ProcessRefund(refund.Amount, refund.GatewayRefundId!, refund.Reason);
-        await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+        await ApplyRefundToPaymentAsync(payment, refund, refund.GatewayRefundId!, cancellationToken).ConfigureAwait(false);
 
         await RecordRefundAccountingAsync(payment, refund, statusBeforeRefund, cancellationToken).ConfigureAwait(false);
 

@@ -36,5 +36,12 @@ public class TrustedDeviceConfiguration : IEntityTypeConfiguration<TrustedDevice
         // Indexes
         builder.HasIndex(x => x.UserId).HasDatabaseName("ix_trusteddevice_user_id");
         builder.HasIndex(x => new { x.UserId, x.DeviceFingerprint }).IsUnique().HasDatabaseName("ix_trusteddevice_user_fingerprint");
+
+        // Issue #1156: principal user relationship; Restrict because user removal is
+        // soft-delete and must never cascade trust decisions away.
+        builder.HasOne<GameGuild.Identity.Users.User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

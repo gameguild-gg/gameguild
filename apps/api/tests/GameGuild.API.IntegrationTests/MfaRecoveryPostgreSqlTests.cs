@@ -18,6 +18,8 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services.Email;
 
 namespace GameGuild.API.IntegrationTests;
 
@@ -33,6 +35,8 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         using var secondScope = fixture.Factory.Services.CreateScope();
         var first = firstScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var second = secondScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        // UserId references the principal Users table (issue #1156): persist the owner.
+        first.Set<GameGuild.Identity.Users.User>().Add(SyntheticUser(userId));
         first.Set<UserMfaConfiguration>().Add(new UserMfaConfiguration
         {
             UserId = userId, IsEnabled = true, IsSetupComplete = true,
@@ -248,6 +252,8 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         using var scope = fixture.Factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var id = Guid.NewGuid();
+        // UserId references the principal Users table (issue #1156): persist the owner.
+        context.Set<GameGuild.Identity.Users.User>().Add(SyntheticUser(id));
         context.Set<UserMfaConfiguration>().Add(new UserMfaConfiguration
         {
             UserId = id, IsEnabled = true, IsSetupComplete = true,
@@ -255,6 +261,15 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         });
         await context.SaveChangesAsync();
         return id;
+    }
+
+    private static GameGuild.Identity.Users.User SyntheticUser(Guid userId)
+    {
+        // The handle is generated from the display name, so the marker keeps every
+        // synthetic owner's username unique under the partial unique index.
+        var user = GameGuild.Identity.Users.User.Create($"mfa-{userId:N}@example.test", $"Synthetic MFA owner {userId:N}");
+        user.Id = userId;
+        return user;
     }
 
     private static BackupCodeMfaService CreateBackupService(IUserMfaConfigurationRepository repository) =>
@@ -280,7 +295,9 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
 
         using var requested = await client.PostAsJsonAsync("/v1/auth/mfa/recovery:request", new { email });
         Assert.True(requested.StatusCode == HttpStatusCode.OK, await requested.Content.ReadAsStringAsync());
-        var requestToken = ExtractToken(Assert.Single(spy.Sent), "token=");
+        // Emails now go through the durable notification outbox (issue #1155); tokens are read
+        // from the queued notification rows instead of an intercepted direct-sender call.
+        var requestToken = await ExtractQueuedTokenAsync(factory, userId, NotificationType.MfaRecovery);
 
         using (var scope = factory.Services.CreateScope())
         {
@@ -295,7 +312,7 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         Assert.True(continued.StatusCode == HttpStatusCode.OK, await continued.Content.ReadAsStringAsync());
         using var continuedBody = JsonDocument.Parse(await continued.Content.ReadAsStringAsync());
         Assert.True(continuedBody.RootElement.GetProperty("success").GetBoolean());
-        var confirmationToken = ExtractToken(spy.Sent[1], "confirm=");
+        var confirmationToken = await ExtractQueuedTokenAsync(factory, userId, NotificationType.MfaRecoveryConfirmation);
 
         using var confirmed = await client.PostAsJsonAsync("/v1/auth/mfa/recovery:confirm", new { confirmationToken });
         Assert.True(confirmed.StatusCode == HttpStatusCode.OK, await confirmed.Content.ReadAsStringAsync());
@@ -401,13 +418,21 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         return (user.Id, tenant.Id);
     }
 
-    private static string ExtractToken(EmailMessage message, string marker)
+    private static async Task<string> ExtractQueuedTokenAsync(
+        Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> factory,
+        Guid userId,
+        NotificationType type)
     {
-        var start = message.PlainTextContent.IndexOf(marker, StringComparison.Ordinal);
-        Assert.True(start >= 0, $"No '{marker}' link in: {message.PlainTextContent}");
-        var token = message.PlainTextContent[(start + marker.Length)..];
-        var end = token.IndexOfAny([' ', '\n', '\r']);
-        return end < 0 ? token : token[..end];
+        using var scope = factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var protector = scope.ServiceProvider.GetRequiredService<NotificationMetadataProtector>();
+        var row = await context.Set<Notification>().AsNoTracking().SingleAsync(value => value.RecipientId == userId && value.Type == type);
+        var metadata = protector.GetForRendering(row, type);
+        Assert.False(string.IsNullOrWhiteSpace(metadata), "Queued notification metadata carried no token payload.");
+        using var parsed = JsonDocument.Parse(metadata!);
+        var token = parsed.RootElement.GetProperty("token").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(token), "Queued notification metadata carried no token.");
+        return token!;
     }
 
     private sealed class SpyEmailSender : IEmailSender

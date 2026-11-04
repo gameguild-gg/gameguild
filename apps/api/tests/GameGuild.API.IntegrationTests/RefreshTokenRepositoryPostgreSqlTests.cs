@@ -105,6 +105,8 @@ public sealed class RefreshTokenRepositoryPostgreSqlTests(ApiPostgreSqlFixture f
             ExpiresAt = now.AddHours(1), CreatedAt = now, UpdatedAt = now, LastUsedAt = now, IsActive = true
         };
         context.Set<User>().Add(user);
+        // otherUser belongs to a synthetic second account (issue #1156 FK principal).
+        context.Set<User>().Add(SyntheticUser(otherUser.UserId));
         context.Set<RefreshToken>().AddRange(survivor, otherUser);
         if (scenario != "unknown") { context.Set<RefreshToken>().Add(presented); }
         context.Set<UserSession>().Add(session);
@@ -220,8 +222,27 @@ public sealed class RefreshTokenRepositoryPostgreSqlTests(ApiPostgreSqlFixture f
     {
         using var scope = fixture.Factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        // RefreshToken.UserId references the principal Users table (issue #1156), so every
+        // synthetic owner needs a persisted user row.
+        foreach (var ownerId in tokens.Select(token => token.UserId).Distinct())
+        {
+            if (!await context.Set<User>().AnyAsync(user => user.Id == ownerId))
+            {
+                context.Set<User>().Add(SyntheticUser(ownerId));
+            }
+        }
+
         context.Set<RefreshToken>().AddRange(tokens);
         await context.SaveChangesAsync();
+    }
+
+    private static User SyntheticUser(Guid userId)
+    {
+        // The handle is generated from the display name, so the marker keeps every
+        // synthetic owner's username unique under the partial unique index.
+        var user = User.Create($"rt-{userId:N}@example.test", $"Synthetic refresh owner {userId:N}");
+        user.Id = userId;
+        return user;
     }
 
     private static RefreshToken Token(Guid userId, DateTime expiresAt, DateTime createdAt, bool revoked = false) => new()

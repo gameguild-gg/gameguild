@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using GameGuild.Identity.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +13,8 @@ public class ThreatDetectionService(
     IAuthenticationAttemptRepository authAttemptRepository,
     ILogger<ThreatDetectionService> logger,
     IConfiguration configuration,
-    ISiemIntegrationService siemService) : IThreatDetectionService
+    ISiemIntegrationService siemService,
+    IUserPreferencesRepository? userPreferencesRepository = null) : IThreatDetectionService
 {
     private const int DefaultMaxFailedAttemptsPerHour = 5;
     private const int DefaultThrottleMinutes = 15;
@@ -57,6 +59,23 @@ public class ThreatDetectionService(
         }
 
         var isSuspicious = currentCountry != previousCountry && timeBetween.TotalHours < 1;
+
+        if (isSuspicious && await IsCoveredByDeclaredTravelAsync(userId).ConfigureAwait(false))
+        {
+            // Issue #1115: the account owner declared this trip through their settings
+            // (general preferences "travelWindows"), so the geo transition is expected
+            // travel rather than an anomaly. Only the GeoVelocity signal is suppressed;
+            // every other anomaly signal (IP change, device change, brute force, ...)
+            // still applies, and the suppression itself is logged for audit.
+            logger.LogInformation(
+                "Impossible travel signal suppressed by declared travel window - UserId: {UserId}, From: {PreviousCountry} to {CurrentCountry} in {Hours:F2} hours",
+                userId,
+                previousCountry,
+                currentCountry,
+                timeBetween.TotalHours);
+
+            return false;
+        }
 
         if (isSuspicious)
         {
@@ -136,5 +155,37 @@ public class ThreatDetectionService(
         var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(fingerprint));
 
         return Convert.ToHexString(hash);
+    }
+
+    /// <summary>
+    ///     Fail-closed check of the user-declared travel windows (issue #1115). Any error
+    ///     (missing preferences, unreadable JSON, unavailable store) means "not declared"
+    ///     so the impossible-travel alert still fires. The preferences are only read
+    ///     after a suspicious geo transition was detected.
+    /// </summary>
+    private async Task<bool> IsCoveredByDeclaredTravelAsync(Guid userId)
+    {
+        if (userPreferencesRepository is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            var preferences = await userPreferencesRepository
+                .GetByUserIdAsync(userId, CancellationToken.None)
+                .ConfigureAwait(false);
+
+            return preferences is not null &&
+                   DeclaredTravelWindow.Covers(preferences.GetGeneralPreferences(), SystemClock.UtcNow);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.LogWarning(
+                "Declared travel window lookup failed (alerting anyway) - UserId: {UserId}, Exception: {ExceptionType}",
+                userId,
+                exception.GetType().Name);
+            return false;
+        }
     }
 }

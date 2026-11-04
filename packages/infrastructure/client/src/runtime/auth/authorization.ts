@@ -18,7 +18,7 @@
  * ```
  */
 
-import type { Session, SessionUser } from './types.js';
+import type { Session, SessionUser } from './types';
 
 // ─── Role Checks ─────────────────────────────────────────────────
 

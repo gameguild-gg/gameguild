@@ -61,6 +61,13 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
             .HasForeignKey(x => x.RoleId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Issue #1156: principal user relationship; Restrict because user removal is
+        // soft-delete and role-assignment history must survive.
+        builder.HasOne<GameGuild.Identity.Users.User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Configure indexes
         builder.HasIndex(x => x.UserId)
             .HasDatabaseName("idx_user_role_user_id");

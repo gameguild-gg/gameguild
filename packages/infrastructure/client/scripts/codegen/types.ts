@@ -80,7 +80,10 @@ class TypesGenerator extends BaseGenerator {
     if (legacyDtoAliases.length > 0) {
       lines.push('// Backwards-compatible aliases for names generated before DTO identity was preserved');
       for (const { legacyName, dtoName } of legacyDtoAliases) {
-        lines.push(`export type ${legacyName} = ${dtoName};`);
+        // Interface extension, not a type alias: rollup-plugin-dts (the tsup dts
+        // bundler) drops `export type X = Y;` alias declarations from the bundled
+        // entry, leaving dangling exports; interfaces survive the fold.
+        lines.push(`export interface ${legacyName} extends ${dtoName} {}`);
         lines.push(`export { ${dtoName}Schema as ${legacyName}Schema };`);
       }
       lines.push('');

@@ -162,6 +162,17 @@ public static class PaymentsModule
         services.AddScoped<IPaymentRetryQueueWorker, PaymentRetryQueueWorker>();
         services.AddHostedService<PaymentRetryQueueBackgroundService>();
 
+        // Pending-payment aging boundary (issue #1202 gaps N6): automated exit for
+        // outcome-unknown payments stuck Pending (unmapped, never processed) past a bounded
+        // timeout — failed with reason, non-retriable, for operator reconciliation. Opt-in
+        // via Payments:Aging:Enabled; mirrors billing's InvoiceAgingService sweep semantics.
+        services.AddSingleton<IValidateOptions<PaymentAgingOptions>, PaymentAgingOptionsValidator>();
+        services.AddOptions<PaymentAgingOptions>()
+            .Bind(configuration.GetSection(PaymentAgingOptions.SectionName))
+            .ValidateOnStart();
+        services.AddScoped<IPendingPaymentAgingWorker, PendingPaymentAgingWorker>();
+        services.AddHostedService<PendingPaymentAgingBackgroundService>();
+
         // Multi-gateway processing (issue #413): config-driven fail-closed routing,
         // failover policy with per-gateway circuit breaker, and per-gateway metrics.
         services.AddSingleton<IValidateOptions<GatewayRoutingOptions>, GatewayRoutingOptionsValidator>();

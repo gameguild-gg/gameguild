@@ -64,5 +64,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         // The original password hash guards history checks against concurrent updates.
         builder.Property(x => x.PasswordHash).IsConcurrencyToken();
         builder.Property(x => x.PasswordHistoryHashes).HasMaxLength(2600);
+        builder.Property(x => x.PasswordChangedAt);
+
+        // Issue #1157 note: the Email/Username unique indexes deliberately stay
+        // unfiltered — the platform's reviewed contract is that soft-deleted users
+        // RETAIN their email and handle (see UsernameModelContractTests), so no
+        // partial identifier indexes are added to this table.
     }
 }

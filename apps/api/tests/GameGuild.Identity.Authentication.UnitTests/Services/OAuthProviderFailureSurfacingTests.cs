@@ -18,9 +18,13 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 ///     <see cref="OAuthAuthService" /> must keep the failure diagnosable and side-effect free:
 ///     no user is provisioned or linked, no session is created and no tokens are minted from
 ///     a failed exchange; the failed attempt is recorded for lockout analytics and an
-///     <c>Authentication.ExternalLoginFailed</c> security audit event is emitted. The raw
-///     provider exception propagates so the API edge maps it to an error response — a
-///     provider outage is an infrastructure failure, never a silent sign-in.
+///     <c>Authentication.ExternalLoginFailed</c> security audit event is emitted. Provider
+///     unavailability (transport errors, timeouts, 5xx outage pages) surfaces as a typed
+///     <see cref="OAuthProviderUnavailableException" /> (issue #1116) whose inner exception is
+///     the raw provider failure, so the API edge can answer with a "provider down" outcome
+///     advertising the magic-link fallback; every other failure (malformed JSON, API-version
+///     change) still propagates undecorated — a provider outage is an infrastructure failure,
+///     never a silent sign-in.
 /// </summary>
 public sealed class OAuthProviderFailureSurfacingTests
 {
@@ -122,7 +126,11 @@ public sealed class OAuthProviderFailureSurfacingTests
 
         var act = () => CreateSut().GitHubCallbackSignInAsync(Callback());
 
-        await act.Should().ThrowAsync<HttpRequestException>();
+        // Issue #1116: a provider outage surfaces as the typed unavailability exception
+        // carrying the raw transport failure inside, never as a credential rejection.
+        var thrown = await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+        thrown.Which.Provider.Should().Be("GitHub");
+        thrown.Which.InnerException.Should().BeOfType<HttpRequestException>();
         AssertNoSignInSideEffects();
         AssertFailureAccounted("HttpRequestException");
         AssertExternalLoginFailedAudited();
@@ -131,13 +139,17 @@ public sealed class OAuthProviderFailureSurfacingTests
     [Fact]
     public async Task ProviderTimesOut_FailurePropagatesWithoutIssuingCredentialsOrSessions()
     {
-        // HttpClient timeout surface. Cancellation-class failures propagate undecorated so
-        // they are never mistaken for a credential rejection; no half-signed-in state remains.
+        // HttpClient timeout surface. A cancellation without a requested cancellation token
+        // is classified as provider unavailability (issue #1116): it surfaces as the typed
+        // outage exception with the timeout as its inner exception, so it is never mistaken
+        // for a credential rejection; no half-signed-in state remains.
         ProviderThrows(new TaskCanceledException("The request was canceled due to the configured HttpClient.Timeout"));
 
         var act = () => CreateSut().GitHubCallbackSignInAsync(Callback());
 
-        await act.Should().ThrowAsync<TaskCanceledException>();
+        var thrown = await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+        thrown.Which.Provider.Should().Be("GitHub");
+        thrown.Which.InnerException.Should().BeOfType<TaskCanceledException>();
         AssertNoSignInSideEffects();
     }
 
@@ -186,7 +198,9 @@ public sealed class OAuthProviderFailureSurfacingTests
             RedirectUri = "https://app.example.test/callback"
         });
 
-        await act.Should().ThrowAsync<HttpRequestException>();
+        var thrown = await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+        thrown.Which.Provider.Should().Be("Microsoft");
+        thrown.Which.InnerException.Should().BeOfType<HttpRequestException>();
         AssertNoSignInSideEffects();
         AssertFailureAccounted("HttpRequestException");
         AssertExternalLoginFailedAudited();
@@ -196,7 +210,8 @@ public sealed class OAuthProviderFailureSurfacingTests
     public async Task AuditSinkFailure_DoesNotMaskTheProviderFailure()
     {
         // The audit sink is best-effort: when it is unavailable the original provider
-        // failure (not the audit error) reaches the caller.
+        // failure (not the audit error) reaches the caller — today as the typed outage
+        // wrapper whose inner exception is the provider failure.
         ProviderThrows(new HttpRequestException("Response status code does not indicate success: 500"));
         _auditEventSinkMock
             .Setup(sink => sink.RecordAsync(It.IsAny<AuthenticationAuditEvent>(), It.IsAny<CancellationToken>()))
@@ -204,7 +219,8 @@ public sealed class OAuthProviderFailureSurfacingTests
 
         var act = () => CreateSut().GitHubCallbackSignInAsync(Callback());
 
-        await act.Should().ThrowAsync<HttpRequestException>();
+        var thrown = await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+        thrown.Which.InnerException.Should().BeOfType<HttpRequestException>();
         AssertNoSignInSideEffects();
     }
 }

@@ -9,7 +9,7 @@
  * encrypted token across multiple cookies when needed.
  */
 
-import type { CookieConfig } from './types.js';
+import type { CookieConfig } from './types';
 
 /** Maximum bytes per cookie (leave some room for name + attributes) */
 const MAX_COOKIE_SIZE = 3800;

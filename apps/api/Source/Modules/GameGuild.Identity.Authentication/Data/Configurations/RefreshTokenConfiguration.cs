@@ -27,6 +27,12 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<UserSession>().WithMany().HasForeignKey(x => x.SessionId)
             .OnDelete(DeleteBehavior.Restrict);
+        // Issue #1156: principal user relationship; Restrict because user removal is
+        // soft-delete and must never cascade credential material away.
+        builder.HasOne<GameGuild.Identity.Users.User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.Property(x => x.Token).HasMaxLength(500).IsRequired();
         builder.Property(x => x.ExpiresAt).IsRequired();
         builder.Property(x => x.IsRevoked).IsRequired();

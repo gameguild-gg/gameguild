@@ -202,6 +202,49 @@ public sealed class StripeEconomyFundingAdapterTests
         act.Should().Throw<Exception>();
     }
 
+    [Fact]
+    public void ReversalKey_Deduplicates_The_Same_Cumulative_Reversal_Level()
+    {
+        var fact = PaymentFact(StripePayment(12.34m));
+
+        var first = _adapter.ReversalIdempotencyKey(fact, 250);
+        var replay = _adapter.ReversalIdempotencyKey(fact, 250);
+
+        first.Should().Be(replay);
+        _adapter.ReversalIdempotencyKey(fact, 100).Should().NotBe(first,
+            "a different cumulative reversal level is a different protected operation");
+        _adapter.ReversalIdempotencyKey(PaymentFact(StripePayment(12.34m, "pi_other")), 250).Should().NotBe(first,
+            "another payment's reversal is a different protected operation");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void ReversalKey_Rejects_NonPositive_CumulativeHardUnits(long cumulativeProviderHardUnits)
+    {
+        var act = () => _adapter.ReversalIdempotencyKey(PaymentFact(StripePayment(12.34m)), cumulativeProviderHardUnits);
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void FactReversal_Rejects_Negative_Cumulative_And_Totals_Exceeding_The_Payment()
+    {
+        var fact = PaymentFact(StripePayment(12.34m));
+
+        var negative = () => _adapter.CreateReversal(
+            fact, -0.01m, 0m, ProviderReversalDisposition.ResponsibleDebt,
+            "invalid", new ReserveVersion(1), new PolicyVersion(1), Now);
+        negative.Should().Throw<ArgumentOutOfRangeException>();
+
+        // The fact overload holds no entity to validate, so its own bounds guard must catch a
+        // refunded+disputed total above the payment amount (entity-based callers validate first).
+        var overlapping = () => _adapter.CreateReversal(
+            fact, 2.34m, 10.01m, ProviderReversalDisposition.ResponsibleDebt,
+            "invalid", new ReserveVersion(1), new PolicyVersion(1), Now);
+        overlapping.Should().Throw<InvalidOperationException>().WithMessage("*cannot exceed*");
+    }
+
     private static Payment StripePayment(decimal amount, string objectId = "pi_123")
     {
         var payment = Payment.Create(Guid.NewGuid(), amount, "USD", $"stripe:{objectId}");

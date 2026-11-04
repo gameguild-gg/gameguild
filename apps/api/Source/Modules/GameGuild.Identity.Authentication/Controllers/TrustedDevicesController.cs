@@ -49,14 +49,22 @@ public sealed class TrustedDevicesController(ISessionManagementService sessionSe
     /// <summary>
     ///     Trust the current device
     /// </summary>
-    /// <param name="body">Device trust request with optional device name</param>
+    /// <remarks>
+    ///     Trusting a device is a security-sensitive grant, so it requires fresh verification
+    ///     (issue #1144): create a step-up challenge (POST /v1/auth/step-up/challenges) with
+    ///     operation type "trust-device", target reference "current-session", and payload hash
+    ///     SHA-256 of the trimmed device name; verify it with any MFA method and pass the
+    ///     returned receipt as <c>stepUpReceipt</c>.
+    /// </remarks>
+    /// <param name="body">Device trust request with optional device name and the step-up receipt</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Success confirmation</returns>
     [HttpPost]
     [EndpointSummary("Trust current device")]
-    [EndpointDescription("Marks the current device as trusted, allowing faster authentication in the future.")]
+    [EndpointDescription("Marks the current device as trusted. Requires fresh verification: pass a step-up receipt obtained by creating (operation type 'trust-device', target reference 'current-session', payload hash SHA-256 of the trimmed device name) and verifying a step-up challenge with any MFA method.")]
     [ProducesResponseType<SessionSuccessResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> TrustCurrentDevice([FromBody] TrustDeviceRequest body, CancellationToken ct)
     {
@@ -67,8 +75,16 @@ public sealed class TrustedDevicesController(ISessionManagementService sessionSe
             return BadRequest(new SessionErrorResponse { Error = "Current session device is unavailable" });
         }
 
+        if (string.IsNullOrWhiteSpace(body.StepUpReceipt))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Step-up verification required",
+                detail: "Trusting a device requires fresh verification. Create and verify a step-up challenge for operation 'trust-device' and pass the receipt as stepUpReceipt.");
+        }
+
         var success = await sender.Send(
-            new TrustDeviceCommand(userId, sessionId, body.DeviceName), ct).ConfigureAwait(false);
+            new TrustDeviceCommand(userId, sessionId, body.DeviceName, body.StepUpReceipt), ct).ConfigureAwait(false);
 
         if (!success)
         {

@@ -4,8 +4,8 @@
  * Handles automatic token refresh with mutex pattern to prevent concurrent refreshes.
  */
 
-import type { TokenProvider, TokenPair } from './types.js';
-import { TokenRefreshError } from './errors.js';
+import type { TokenProvider, TokenPair } from './types';
+import { TokenRefreshError } from './errors';
 
 export interface TokenRefreshConfig {
   /**

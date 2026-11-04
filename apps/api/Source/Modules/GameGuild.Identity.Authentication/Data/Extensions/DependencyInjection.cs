@@ -92,6 +92,15 @@ public static class DataDependencyInjection
             .Validate(static options => options.IsValid(), "Email-verification tenant identifiers must be non-empty.")
             .ValidateOnStart();
 
+        // Per-IP budget for passwordless sign-in delivery requests (issue #1090): magic-link
+        // and email-code requests share one fixed window per client IP, stored in the
+        // distributed cache (Redis in production) so the budget spans API instances.
+        services.AddOptions<PasswordlessRequestIpRateLimitOptions>()
+            .Bind(configuration.GetSection(PasswordlessRequestIpRateLimitOptions.SectionName))
+            .Validate(static options => options.IsValid(), "The passwordless per-IP rate limit must have a positive request count and window.")
+            .ValidateOnStart();
+        services.AddScoped<IPasswordlessRequestIpRateLimiter, DistributedCachePasswordlessRequestIpRateLimiter>();
+
         // Configure JWT options from configuration
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
 
@@ -100,6 +109,36 @@ public static class DataDependencyInjection
         // default policy is stateless, so the shared instance is served per scope.
         services.Configure<SignInComplianceGateOptions>(configuration.GetSection(SignInComplianceGateOptions.SectionName));
         services.TryAddScoped<ISignInCompliancePolicy>(static _ => AllowAllSignInCompliancePolicy.Instance);
+
+        // Sign-in geo-fencing (issue #1087): optional country blocking or step-up for
+        // enterprise tenants, disabled by default. The effective blocked set composes the
+        // platform-wide list with per-tenant additions; country resolution reuses the
+        // shared IGeolocationProvider (no-op fallback keeps the gate inert without a host
+        // provider because every lookup then resolves to an unknown country, which the
+        // policy treats as allowed unless configured to fail closed).
+        services.AddOptions<GeoFencingOptions>()
+            .Bind(configuration.GetSection(GeoFencingOptions.SectionName))
+            .Validate(static options => options.IsValid(), "Geo-fencing country codes must be two-letter ISO 3166-1 alpha-2 values and tenant keys must be tenant IDs.")
+            .ValidateOnStart();
+        services.AddScoped<IGeoFencingService, GeoFencingService>();
+
+        // Optional password age / rotation policy (issue #1088): disabled by default; a
+        // 90-day enterprise baseline is pre-wired. Legacy passwords without a change
+        // timestamp rotate on their next change instead of being retroactively expired.
+        services.AddOptions<PasswordAgePolicyOptions>()
+            .Bind(configuration.GetSection(PasswordAgePolicyOptions.SectionName))
+            .Validate(static options => options.IsValid(), "Password-age maximums must be positive and tenant keys must be tenant IDs.")
+            .ValidateOnStart();
+
+        // Proactive known-attacker IP blocklist (issue #1089): entries live in the
+        // distributed cache (Redis in production, shared by every API instance) and are
+        // managed through the admin endpoint. Local password sign-in rejects (default) or
+        // steps up matches; lookups fail open.
+        services.AddOptions<IpBlocklistOptions>()
+            .Bind(configuration.GetSection(IpBlocklistOptions.SectionName))
+            .Validate(static options => options.IsValid(), "The IP blocklist default entry lifetime must be positive.")
+            .ValidateOnStart();
+        services.AddScoped<IIpBlocklistService, DistributedCacheIpBlocklistService>();
 
         // Register repositories
         // NOTE: IUserRepository is registered by the Users module - no need to register here
@@ -120,6 +159,8 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthenticationFlowStateRepository, AuthenticationFlowStateRepository>();
         services.AddScoped<IAuthenticationOrchestrationService, AuthenticationOrchestrationService>();
         services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
+        // Expired/revoked trusted-device pruning (issue #1144); fails soft and retries per interval.
+        services.AddHostedService<TrustedDeviceCleanupBackgroundService>();
         // Issue #1085: per-user seen-device registry backing first-seen device detection.
         services.AddScoped<IUserDeviceFingerprintRepository, UserDeviceFingerprintRepository>();
         services.AddScoped<IMfaAttemptRepository, MfaAttemptRepository>();
@@ -133,6 +174,10 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthAttemptService, AuthAttemptService>();
         services.AddScoped<ISuspiciousLoginAlertPublisher, SuspiciousLoginAlertPublisher>();
         services.AddScoped<INewLoginAlertPublisher, NewLoginAlertPublisher>();
+        // Sessions-terminated owner notification (issue #1091): recorded when a password
+        // change/reset terminates the account's other sessions; the host-side notification
+        // bridge turns the durable event into the confirmation email.
+        services.AddScoped<IOtherSessionsTerminatedAlertPublisher, OtherSessionsTerminatedAlertPublisher>();
         // Issue #1083: the account lockout policy alerts the owner through the host-side
         // notification bridge when a fresh lockout engages.
         services.AddScoped<IAccountLockoutAlertPublisher, AccountLockoutAlertPublisher>();

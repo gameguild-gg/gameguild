@@ -37,5 +37,12 @@ public class MfaAttemptConfiguration : IEntityTypeConfiguration<MfaAttempt>
         builder.HasIndex(x => x.UserId).HasDatabaseName("ix_mfaattempt_user_id");
         builder.HasIndex(x => x.TenantId).HasDatabaseName("ix_mfaattempt_tenant_id");
         builder.HasIndex(x => x.AttemptedAt).HasDatabaseName("ix_mfaattempt_attempted_at");
+
+        // Issue #1156: principal user relationship; Restrict because user removal is
+        // soft-delete and attempt history must survive for audit.
+        builder.HasOne<GameGuild.Identity.Users.User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
