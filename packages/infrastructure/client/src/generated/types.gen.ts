@@ -13472,6 +13472,30 @@ Missing or unrecognized fingerprints fail closed to a device-trust challenge. */
   tenantId?: string | null;
 }
 
+/** A proactive blocklist entry for a known-attacker IP address (issue #1089). */
+export interface IdentityAuthenticationIpBlocklistEntry {
+  /** When the entry was added (UTC). */
+  addedAt?: string;
+  /** Identity of the administrator who added the entry. */
+  addedBy?: string | null;
+  /** When the entry stops matching (UTC); `null` means permanent. */
+  expiresAt?: string | null;
+  /** The exact client IP address (IPv4 or IPv6) covered by the entry. */
+  ipAddress: string | null;
+  /** Free-form operator note recorded when the entry was added. */
+  reason?: string | null;
+}
+
+/** Admin request body for adding or replacing a blocklist entry. */
+export interface IdentityAuthenticationIpBlocklistEntryInput {
+  /** When the entry stops matching (UTC); omit for the configured default lifetime. */
+  expiresAt?: string | null;
+  /** The exact client IP address to blocklist. */
+  ipAddress?: string | null;
+  /** Operator note recorded with the entry (source feed, incident, ...). */
+  reason?: string | null;
+}
+
 /** DTO for JWT signing key information (without exposing key material) */
 export interface IdentityAuthenticationJwtKeyInfoDto {
   algorithm?: string | null;
@@ -17922,6 +17946,10 @@ Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityB
   name: string;
   /** Collection of notifications for this user. */
   notifications?: IdentityUsersUserNotification[] | null;
+  /** When the current password was set (UTC). Null for legacy passwords created
+before the timestamp existed and for OAuth-only accounts without a password;
+the optional password-age policy (issue #1088) treats null as not expirable. */
+  passwordChangedAt?: string | null;
   /** Optional phone number */
   phoneNumber?: string | null;
   preferences?: IdentityUsersUserPreferences;
@@ -28990,6 +29018,8 @@ export let IdentityAuthenticationGuestSessionIssueInputSchema: z.ZodType<Identit
 export let IdentityAuthenticationGuestSessionOutputSchema: z.ZodType<IdentityAuthenticationGuestSessionOutput>;
 export let IdentityAuthenticationGuestSessionStatusSchema: z.ZodType<IdentityAuthenticationGuestSessionStatus>;
 export let IdentityAuthenticationInitiateOrchestratedAuthenticationRequestDtoSchema: z.ZodType<IdentityAuthenticationInitiateOrchestratedAuthenticationRequestDto>;
+export let IdentityAuthenticationIpBlocklistEntrySchema: z.ZodType<IdentityAuthenticationIpBlocklistEntry>;
+export let IdentityAuthenticationIpBlocklistEntryInputSchema: z.ZodType<IdentityAuthenticationIpBlocklistEntryInput>;
 export let IdentityAuthenticationJwtKeyInfoDtoSchema: z.ZodType<IdentityAuthenticationJwtKeyInfoDto>;
 export let IdentityAuthenticationLinkGoogleAccountInputSchema: z.ZodType<IdentityAuthenticationLinkGoogleAccountInput>;
 export let IdentityAuthenticationLocalSignInInputSchema: z.ZodType<IdentityAuthenticationLocalSignInInput>;
@@ -42633,6 +42663,22 @@ IdentityAuthenticationInitiateOrchestratedAuthenticationRequestDtoSchema = z.obj
   tenantId: z.string().uuid().nullable().optional(),
 });
 
+/** Zod schema for IdentityAuthenticationIpBlocklistEntry. A proactive blocklist entry for a known-attacker IP address (issue #1089). */
+IdentityAuthenticationIpBlocklistEntrySchema = z.object({
+  addedAt: z.string().datetime().optional(),
+  addedBy: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  ipAddress: z.string().nullable(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationIpBlocklistEntryInput. Admin request body for adding or replacing a blocklist entry. */
+IdentityAuthenticationIpBlocklistEntryInputSchema = z.object({
+  expiresAt: z.string().datetime().nullable().optional(),
+  ipAddress: z.string().nullable().optional(),
+  reason: z.string().nullable().optional(),
+});
+
 /** Zod schema for IdentityAuthenticationJwtKeyInfoDto. DTO for JWT signing key information (without exposing key material) */
 IdentityAuthenticationJwtKeyInfoDtoSchema = z.object({
   algorithm: z.string().nullable().optional(),
@@ -46225,6 +46271,7 @@ IdentityUsersUserSchema = z.object({
     .array(z.lazy(() => IdentityUsersUserNotificationSchema))
     .nullable()
     .optional(),
+  passwordChangedAt: z.string().datetime().nullable().optional(),
   phoneNumber: z.string().max(20).nullable().optional(),
   preferences: z.lazy(() => IdentityUsersUserPreferencesSchema).optional(),
   profile: z.lazy(() => IdentityUsersUserProfileSchema).optional(),

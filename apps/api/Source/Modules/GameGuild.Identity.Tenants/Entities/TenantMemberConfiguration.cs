@@ -36,7 +36,14 @@ public class TenantMemberConfiguration : IEntityTypeConfiguration<TenantMember>
 
         // Indexes
         builder.HasIndex(tm => new { tm.UserId, tm.TenantId }).IsUnique();
-        builder.HasIndex(tm => new { tm.TenantId, tm.IsActive });
+        // Issue #1157: membership resolution and roster listing run on every sign-in and
+        // tenant switch, and the global soft-delete filter is applied to both; the partial
+        // indexes keep deleted memberships out of those hot paths entirely.
+        builder.HasIndex(tm => tm.UserId)
+            .HasDatabaseName("ix_tenant_members_user_id_active")
+            .HasFilter("\"DeletedAt\" IS NULL");
+        builder.HasIndex(tm => new { tm.TenantId, tm.IsActive })
+            .HasFilter("\"DeletedAt\" IS NULL");
         builder.HasIndex(tm => tm.JoinedAt);
         builder.HasIndex(tm => tm.ParentMemberId);
     }

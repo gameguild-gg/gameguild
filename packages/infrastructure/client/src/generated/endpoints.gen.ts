@@ -20357,6 +20357,57 @@ export const postAuthGuestSessionEndpoint = {
 } as const;
 
 /**
+ * Lists every active blocklist entry, expired entries filtered out.
+ *
+ * Lists the active known-attacker IP blocklist entries stored in the distributed cache.
+ */
+export type GetAuthIpBlocklistInput = void;
+export type GetAuthIpBlocklistOutput = Types.IdentityAuthenticationIpBlocklistEntry[];
+export const getAuthIpBlocklistEndpoint = {
+  operationId: 'getAuthIpBlocklist' as const,
+  method: 'GET' as const,
+  path: '/v1/auth/ip-blocklist' as const,
+  tags: ['AuthIpBlocklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Adds or replaces a blocklist entry.
+ *
+ * Stores a known-attacker IP address in the shared blocklist. Omit expiresAt to apply the configured default entry lifetime.
+ */
+export interface PutAuthIpBlocklistInput {
+  body?: Types.IdentityAuthenticationIpBlocklistEntryInput;
+}
+export type PutAuthIpBlocklistOutput = void;
+export const putAuthIpBlocklistEndpoint = {
+  operationId: 'putAuthIpBlocklist' as const,
+  method: 'PUT' as const,
+  path: '/v1/auth/ip-blocklist' as const,
+  tags: ['AuthIpBlocklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Removes a blocklist entry.
+ *
+ * Removes the blocklist entry for the given IP address. Returns 404 when no entry exists.
+ */
+export interface DeleteAuthIpBlocklistInput {
+  query?: {
+    ipAddress?: string;
+  };
+}
+export type DeleteAuthIpBlocklistOutput = void;
+export const deleteAuthIpBlocklistEndpoint = {
+  operationId: 'deleteAuthIpBlocklist' as const,
+  method: 'DELETE' as const,
+  path: '/v1/auth/ip-blocklist' as const,
+  tags: ['AuthIpBlocklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Consume a passwordless magic sign-in link.
  *
  * Consumes a short-lived one-time magic-link token and returns access and refresh tokens.
@@ -36072,6 +36123,9 @@ export const endpoints = {
   postAuthGoogleSignIn: postAuthGoogleSignInEndpoint,
   getAuthGuestSession: getAuthGuestSessionEndpoint,
   postAuthGuestSession: postAuthGuestSessionEndpoint,
+  getAuthIpBlocklist: getAuthIpBlocklistEndpoint,
+  putAuthIpBlocklist: putAuthIpBlocklistEndpoint,
+  deleteAuthIpBlocklist: deleteAuthIpBlocklistEndpoint,
   postAuthMagicLinkConsume: postAuthMagicLinkConsumeEndpoint,
   postAuthMagicLinkRequest: postAuthMagicLinkRequestEndpoint,
   getAuthMfa: getAuthMfaEndpoint,
