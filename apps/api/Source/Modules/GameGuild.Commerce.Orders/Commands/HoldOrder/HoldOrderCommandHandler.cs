@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Commerce.Orders;
 
@@ -6,7 +7,8 @@ namespace GameGuild.Commerce.Orders;
 /// Handler for placing an order on hold
 /// </summary>
 public sealed class HoldOrderCommandHandler(
-    IOrderRepository orderRepository)
+    IOrderRepository orderRepository,
+    IActorContextAccessor actorContextAccessor)
     : ICommandHandler<HoldOrderCommand, Result<OrderOperationResult>>
 {
     public async Task<Result<OrderOperationResult>> Handle(
@@ -18,6 +20,10 @@ public sealed class HoldOrderCommandHandler(
         {
             return Result.Failure<OrderOperationResult>(Error.NotFound("Orders.NotFound", $"Order {request.OrderId} not found"));
         }
+
+        var authorizationError = OrderActorContext.Authorize(order, actorContextAccessor);
+        if (authorizationError is not null)
+            return Result.Failure<OrderOperationResult>(authorizationError);
 
         if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Processing)
         {

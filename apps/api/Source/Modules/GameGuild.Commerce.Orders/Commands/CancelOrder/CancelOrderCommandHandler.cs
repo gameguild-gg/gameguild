@@ -1,5 +1,6 @@
 using GameGuild.Commerce.Products;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Commerce.Orders;
 
@@ -8,6 +9,7 @@ namespace GameGuild.Commerce.Orders;
 /// </summary>
 public sealed class CancelOrderCommandHandler(
     IOrderRepository orderRepository,
+    IActorContextAccessor actorContextAccessor,
     IProductInventoryService? inventoryService = null)
     : ICommandHandler<CancelOrderCommand, Result>
 {
@@ -20,6 +22,10 @@ public sealed class CancelOrderCommandHandler(
         {
             return Result.Failure(Error.NotFound("Orders.NotFound", $"Order {request.OrderId} not found"));
         }
+
+        var authorizationError = OrderActorContext.Authorize(order, actorContextAccessor);
+        if (authorizationError is not null)
+            return Result.Failure(authorizationError);
 
         if (order.Status != OrderStatus.Pending)
         {

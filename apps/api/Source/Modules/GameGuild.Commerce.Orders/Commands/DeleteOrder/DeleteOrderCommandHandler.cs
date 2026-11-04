@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Commerce.Orders;
 
@@ -6,7 +7,8 @@ namespace GameGuild.Commerce.Orders;
 /// Handler for soft-deleting an order
 /// </summary>
 public sealed class DeleteOrderCommandHandler(
-    IOrderRepository orderRepository)
+    IOrderRepository orderRepository,
+    IActorContextAccessor actorContextAccessor)
     : ICommandHandler<DeleteOrderCommand, Result>
 {
     public async Task<Result> Handle(
@@ -18,6 +20,10 @@ public sealed class DeleteOrderCommandHandler(
         {
             return Result.Failure(Error.NotFound("Orders.NotFound", $"Order {request.OrderId} not found"));
         }
+
+        var authorizationError = OrderActorContext.Authorize(order, actorContextAccessor);
+        if (authorizationError is not null)
+            return Result.Failure(authorizationError);
 
         if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Cancelled)
         {
