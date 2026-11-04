@@ -50,5 +50,12 @@ public class UserWebAuthnCredentialConfiguration : IEntityTypeConfiguration<User
 
         builder.HasIndex(c => new { c.UserId, c.IsActive })
             .HasDatabaseName("IX_UserWebAuthnCredentials_UserId_IsActive");
+
+        // Issue #1156: principal user relationship; Restrict because user removal is
+        // soft-delete and must never cascade registered credentials away.
+        builder.HasOne<GameGuild.Identity.Users.User>()
+            .WithMany()
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

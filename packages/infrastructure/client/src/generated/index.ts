@@ -154,6 +154,7 @@ export * from './modules/auth-account-recovery.gen.js';
 export * from './modules/auth-api-keys.gen.js';
 export * from './modules/auth.gen.js';
 export * from './modules/auth-guest.gen.js';
+export * from './modules/auth-ip-blocklist.gen.js';
 export * from './modules/auth-scim-provisioning.gen.js';
 export * from './modules/auth-service-accounts.gen.js';
 export * from './modules/auth-sessions.gen.js';

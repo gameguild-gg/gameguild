@@ -8,10 +8,22 @@ public sealed class RequestEmailCodeCommandHandler(
     IUserRepository userRepository,
     IEmailCodeService emailCodeService,
     IPublisher publisher,
-    ILogger<RequestEmailCodeCommandHandler> logger) : ICommandHandler<RequestEmailCodeCommand, EmailCodeRequestResult>
+    ILogger<RequestEmailCodeCommandHandler> logger,
+    IPasswordlessRequestIpRateLimiter? ipRateLimiter = null) : ICommandHandler<RequestEmailCodeCommand, EmailCodeRequestResult>
 {
     public async Task<EmailCodeRequestResult> Handle(RequestEmailCodeCommand request, CancellationToken cancellationToken)
     {
+        // Per-IP budget shared with magic-link requests (issue #1090): the per-email
+        // resend throttle cannot stop one address flooding many different mailboxes.
+        if (ipRateLimiter is not null &&
+            !await ipRateLimiter.TryAdmitRequestAsync(request.IpAddress, cancellationToken).ConfigureAwait(false))
+        {
+            logger.LogInformation(
+                "Email-code request skipped: per-IP passwordless budget exhausted for {IpAddress}",
+                request.IpAddress ?? "unknown");
+            return new EmailCodeRequestResult();
+        }
+
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
         var user = await userRepository.GetByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false);
 

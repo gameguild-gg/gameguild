@@ -35,6 +35,13 @@ public sealed class ApiKeyConfiguration : IEntityTypeConfiguration<ApiKey>
         builder.HasIndex(key => key.IsActive).HasDatabaseName("ix_api_keys_is_active");
         builder.HasIndex(key => key.ExpiresAt).HasDatabaseName("ix_api_keys_expires_at");
         builder.HasIndex(key => key.ReplacesKeyId).HasDatabaseName("ix_api_keys_replaces_key_id");
+        // Issue #1156: the users table is the principal for every user-scoped
+        // authentication artifact. Restrict: user removal is soft-delete; a hard delete
+        // must not silently cascade credential material away.
+        builder.HasOne<GameGuild.Identity.Users.User>()
+            .WithMany()
+            .HasForeignKey(key => key.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.Ignore(key => key.DomainEvents);
         builder.Ignore(key => key.IsGlobal);
         builder.Ignore(key => key.IsNew);

@@ -114,7 +114,10 @@ public class FeatureFlagConfiguration : IEntityTypeConfiguration<FeatureFlag>
             .HasDatabaseName("idx_feature_flags_type");
 
         builder.HasIndex(x => new { x.Key, x.Environment })
-            .HasDatabaseName("idx_feature_flags_key_environment");
+            .HasDatabaseName("idx_feature_flags_key_environment")
+            // Issue #1157: flag evaluation runs on nearly every request and only sees
+            // non-deleted flags; the partial index keeps tombstones out of that path.
+            .HasFilter("\"DeletedAt\" IS NULL");
 
         builder.HasIndex(x => x.ExpiresAt)
             .HasDatabaseName("idx_feature_flags_expires_at");
