@@ -301,6 +301,10 @@ describe('CredentialsProvider', () => {
             expiresAt: new Date(Date.now() + 300_000).toISOString(),
           },
         }),
+        // The provider signs in through the generated client, whose runtime only
+        // decodes JSON bodies for application/json responses — match the wire
+        // contract the API actually serves (same init as the sibling mocks above).
+        { status: 200, headers: { 'content-type': 'application/json' } },
       ),
     );
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
