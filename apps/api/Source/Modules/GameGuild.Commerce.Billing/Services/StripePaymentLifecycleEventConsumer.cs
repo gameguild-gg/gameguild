@@ -90,6 +90,16 @@ public sealed class StripePaymentLifecycleEventConsumer(
                 or PaymentStatus.Processing
                 or PaymentStatus.RequiresAction)
             {
+                // Issue #1202 (gaps N5): the entity's transition table forbids Pending →
+                // Succeeded directly, so a resolvable Pending payment is routed through its
+                // legal intermediate (Pending → Processing) before the verified success is
+                // recorded — keeping the webhook reconciliation inside the state machine
+                // instead of throwing and poison-looping the inbox delivery.
+                if (payment.Status == PaymentStatus.Pending)
+                {
+                    payment.MarkAsProcessing(verifiedEvent.ProviderObjectId);
+                }
+
                 payment.MarkAsSucceeded(verifiedEvent.ProviderObjectId, payload.ChargeId);
                 await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
                 logger.LogInformation(
@@ -190,8 +200,17 @@ public sealed class StripePaymentLifecycleEventConsumer(
                     return true;
                 }
 
+                // Issue #1202 (gaps N3): the refund object's own amount travels on the
+                // verified event; the completion core verifies it against the local row
+                // before finalizing so a refund executed for less than requested is never
+                // recorded at full value.
                 var completion = await refundProcessingService
-                    .CompleteFromGatewayAsync(refund, payload.ObjectId, StripeProvider, cancellationToken)
+                    .CompleteFromGatewayAsync(
+                        refund,
+                        payload.ObjectId,
+                        StripeProvider,
+                        cancellationToken,
+                        gatewayReportedAmount: verifiedEvent.Amount)
                     .ConfigureAwait(false);
                 if (completion.Success)
                 {
@@ -282,7 +301,10 @@ public sealed class StripePaymentLifecycleEventConsumer(
         // Infrastructure failures (e.g. transient DB outages) propagate so the verified-event
         // inbox marks the delivery failed and redelivers; a swallowed exception would leave
         // the refund stuck in Processing forever. Business refusals arrive as failure results,
-        // handled by the warning branch above.
+        // handled by the warning branch above. The charge object's own "amount" is the
+        // ORIGINAL charge (not this refund leg) and carries no per-refund amount, so the
+        // coalescing path cannot perform the gaps-N3 amount verification — only the
+        // per-refund refund.created/refund.updated events can.
         var completion = await refundProcessingService
             .CompleteFromGatewayAsync(
                 openRefund,

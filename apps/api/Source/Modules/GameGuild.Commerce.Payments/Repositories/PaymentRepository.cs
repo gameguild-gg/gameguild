@@ -281,6 +281,53 @@ public class PaymentRepository(
         return payment;
     }
 
+    /// <inheritdoc />
+    public async Task ReloadAsync(Payment payment, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(payment);
+
+        var dbContext = Context as DbContext
+            ?? throw new InvalidOperationException(
+                "Reloading a payment after a concurrency conflict requires the application's relational DbContext.");
+
+        logger.LogDebug("Reloading payment {PaymentId} after an optimistic-concurrency conflict", payment.Id);
+        await dbContext.Entry(payment).ReloadAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<Payment>> GetStuckPendingAsync(
+        DateTime stuckBefore,
+        CancellationToken cancellationToken = default,
+        int? take = null)
+    {
+        logger.LogDebug("Getting payments stuck in Pending created before {StuckBefore}", stuckBefore);
+
+        // GatewayPaymentResultBinder.PrepareProcessingClaim deliberately leaves UNMAPPED
+        // payments Pending when the charge outcome is unknown; a payment whose provider
+        // mapping is complete is webhook-resolvable instead (issue #1202 gaps N6).
+        var query = Query
+            .Where(p => p.Status == PaymentStatus.Pending
+                        && p.ProcessedAt == null
+                        && p.CreatedAt < stuckBefore
+                        && (string.IsNullOrWhiteSpace(p.ProviderObjectId)
+                            || string.IsNullOrWhiteSpace(p.ProviderObjectType)
+                            || string.IsNullOrWhiteSpace(p.ProviderMonetaryLeg)));
+
+        if (take.HasValue)
+        {
+            return await query
+                .OrderBy(p => p.CreatedAt)
+                .Take(take.Value)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        return await query
+            .OrderBy(p => p.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public async Task<bool> ExistsByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Checking if payment exists with idempotency key: {IdempotencyKey}", LogRedaction.Sanitize(idempotencyKey));

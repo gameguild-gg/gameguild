@@ -116,6 +116,29 @@ public interface IPaymentRepository
     Task<Payment> UpdateAsync(Payment payment, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Reloads a tracked payment from the store, discarding its in-memory state (issue
+    /// #1202 gaps N2). Used by the refund legs after an optimistic-concurrency conflict:
+    /// the reloaded aggregate carries the concurrent leg's cumulative <c>RefundedAmount</c>
+    /// and the current Version token, so the retry re-applies against fresh state.
+    /// </summary>
+    Task ReloadAsync(Payment payment, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Gets outcome-unknown payments stuck in <see cref="PaymentStatus.Pending"/> past the
+    ///     aging cutoff (issue #1202 gaps N6): Stripe charges whose result was never observed
+    ///     AND whose provider mapping never got bound - the webhook cannot resolve them and no
+    ///     retry schedule exists for Pending. Setup-intent payments (RequiresAction) and mapped
+    ///     Pending payments are out of scope by construction.
+    /// </summary>
+    /// <param name="stuckBefore">Inclusive cutoff: only payments created strictly before it are returned.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="take">Optional cap on the number of payments returned per pass.</param>
+    Task<IEnumerable<Payment>> GetStuckPendingAsync(
+        DateTime stuckBefore,
+        CancellationToken cancellationToken = default,
+        int? take = null);
+
+    /// <summary>
     ///     Checks if a payment exists with the given idempotency key
     /// </summary>
     Task<bool> ExistsByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken = default);
