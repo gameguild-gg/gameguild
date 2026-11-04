@@ -226,6 +226,7 @@ public class ServiceAccountOperationsController(
     [EndpointDescription("Binds an X.509 client certificate (thumbprint plus optional SPKI key pin) to a service account, allowing certificate authentication in lieu of the client secret. Pins are normalized to the authentication-time form; a later certificate presentation matches on either the thumbprint or the SPKI pin.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> BindClientCertificate(Guid serviceAccountId, [FromBody] BindServiceAccountCertificateRequest request, CancellationToken cancellationToken)
     {
@@ -236,6 +237,16 @@ public class ServiceAccountOperationsController(
                 new BindServiceAccountCertificateCommand(serviceAccountId, request.Thumbprint, request.SpkiSha256),
                 cancellationToken).ConfigureAwait(false);
             return NoContent();
+        }
+        catch (ArgumentException exception) when (exception.ParamName is "thumbprint" or "spkiSha256")
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid certificate pin", detail: "Provide a valid certificate thumbprint and optional SHA-256 SPKI pin.");
+        }
+        catch (ServiceAccountCertificateBindingConflictException)
+        {
+            return Problem(statusCode: StatusCodes.Status409Conflict,
+                title: "Certificate binding conflict", detail: "The certificate is already bound to a service account.");
         }
         catch (InvalidOperationException)
         {

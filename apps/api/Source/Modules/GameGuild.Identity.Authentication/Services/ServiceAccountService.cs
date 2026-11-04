@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
@@ -242,8 +243,27 @@ public sealed class ServiceAccountService : IServiceAccountService
         var serviceAccount = await _repository.GetByIdAsync(serviceAccountId, cancellationToken)
                              ?? throw new InvalidOperationException($"Service account {serviceAccountId} not found");
 
+        var previousThumbprint = serviceAccount.CertificateThumbprint;
+        var previousSpki = serviceAccount.CertificateSpkiSha256;
+        var previousUpdatedAt = serviceAccount.UpdatedAt;
         serviceAccount.BindCertificate(normalizedThumbprint, normalizedSpki);
-        await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await _repository.UpdateAsync(serviceAccount, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            // A failed save must not leave the tracked account carrying the rejected pin.
+            serviceAccount.CertificateThumbprint = previousThumbprint;
+            serviceAccount.CertificateSpkiSha256 = previousSpki;
+            serviceAccount.UpdatedAt = previousUpdatedAt;
+            if (exception is DbUpdateException { InnerException: DbException { SqlState: "23505" } })
+            {
+                throw new ServiceAccountCertificateBindingConflictException(exception);
+            }
+
+            throw;
+        }
 
         _logger.LogInformation(
             "Bound client certificate {Thumbprint} to service account {ServiceAccountId}",
