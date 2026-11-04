@@ -75,7 +75,7 @@
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.0",
     "@changesets/cli": "^3.0.3",
-    "@dbml/cli": "^10.2.0",
+    "@dbml/cli": "^11.0.0",
     "@dbml/core": "^10.2.0",
     "@game-guild/eslint-config": "workspace:*",
     "@game-guild/prettier-config": "workspace:*",

@@ -42,5 +42,12 @@ public class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>
         builder.HasIndex(x => x.UserId).HasDatabaseName("ix_usersession_user_id");
         builder.HasIndex(x => x.RefreshToken).IsUnique().HasDatabaseName("ix_usersession_refresh_token");
         builder.HasIndex(x => x.ExpiresAt).HasDatabaseName("ix_usersession_expires_at");
+
+        // Issue #1156: principal user relationship; Restrict because user removal is
+        // soft-delete and must never cascade sessions away.
+        builder.HasOne<GameGuild.Identity.Users.User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

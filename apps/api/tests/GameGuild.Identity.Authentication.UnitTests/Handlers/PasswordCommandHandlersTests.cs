@@ -44,7 +44,7 @@ public sealed class PasswordCommandHandlersTests
     [Fact]
     public async Task RequestPasswordResetCommandHandler_UserFoundPublishesResetNotification()
     {
-        var user = new User { Id = Guid.NewGuid(), Email = "reset@test.com", Username = "reset-user" };
+        var user = new User { Id = Guid.NewGuid(), Email = "reset@test.com", Username = "reset-user", IsEmailVerified = true };
         var userRepository = new Mock<IUserRepository>();
         var emailService = new Mock<IEmailVerificationService>();
         var publisher = new Mock<IPublisher>();
@@ -71,6 +71,93 @@ public sealed class PasswordCommandHandlersTests
             Times.Once);
     }
 
+    // ── Issue #1124: account recovery must never unlock never-verified emails ──
+
+    [Fact]
+    public async Task RequestPasswordResetCommandHandler_NeverVerifiedEmail_DoesNotIssueTokenOrPublish()
+    {
+        // Attacker scenario: an account registered with an address that was never verified
+        // must not receive a recovery token (issue #1124).
+        var user = new User { Id = Guid.NewGuid(), Email = "never-verified@test.com", Username = "nv-user", IsEmailVerified = false };
+        var userRepository = new Mock<IUserRepository>();
+        var emailService = new Mock<IEmailVerificationService>();
+        var publisher = new Mock<IPublisher>();
+        userRepository.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        var handler = new RequestPasswordResetCommandHandler(
+            userRepository.Object,
+            emailService.Object,
+            publisher.Object,
+            NullLogger<RequestPasswordResetCommandHandler>.Instance);
+
+        var result = await handler.Handle(new RequestPasswordResetCommand { Email = user.Email }, CancellationToken.None);
+
+        // Enumeration-safe: the public outcome matches the verified path.
+        result.Success.Should().BeTrue();
+        result.Message.Should().Be("If an account with that email exists, a password reset link has been sent.");
+        emailService.Verify(s => s.GeneratePasswordResetTokenAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Never);
+        publisher.Verify(p => p.Publish(It.IsAny<PasswordResetRequestedNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RequestPasswordResetCommandHandler_UnknownEmail_StillReturnsGenericSuccess()
+    {
+        var userRepository = new Mock<IUserRepository>();
+        userRepository.Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+        var emailService = new Mock<IEmailVerificationService>();
+        var publisher = new Mock<IPublisher>();
+
+        var handler = new RequestPasswordResetCommandHandler(
+            userRepository.Object,
+            emailService.Object,
+            publisher.Object,
+            NullLogger<RequestPasswordResetCommandHandler>.Instance);
+
+        var result = await handler.Handle(new RequestPasswordResetCommand { Email = "unknown@test.com" }, CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        emailService.Verify(s => s.GeneratePasswordResetTokenAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Never);
+        publisher.Verify(p => p.Publish(It.IsAny<PasswordResetRequestedNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ResetPasswordCommandHandler_NeverVerifiedUser_RefusesEvenValidToken()
+    {
+        // Defense in depth: a token that slipped through an older issuance path is still
+        // refused at consume time for a never-verified account (issue #1124).
+        var userId = Guid.NewGuid();
+        var userRepository = new Mock<IUserRepository>();
+        var hasher = new Mock<IPasswordHasher>();
+        var emailService = new Mock<IEmailVerificationService>();
+        emailService.Setup(s => s.VerifyPasswordResetTokenAsync("token"))
+            .ReturnsAsync(new TokenValidationResult(true, userId, "never-verified@test.com"));
+        userRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = userId, Email = "never-verified@test.com", IsEmailVerified = false });
+        hasher.Setup(h => h.ValidatePasswordStrength("StrongPass1!"))
+            .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
+
+        var handler = new ResetPasswordCommandHandler(
+            userRepository.Object,
+            hasher.Object,
+            emailService.Object,
+            NullLogger<ResetPasswordCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new ResetPasswordCommand
+            {
+                Token = "token",
+                NewPassword = "StrongPass1!",
+                ConfirmPassword = "StrongPass1!"
+            },
+            CancellationToken.None);
+
+        result.Success.Should().BeFalse();
+        hasher.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never);
+        userRepository.Verify(r => r.UpdatePasswordHashAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     [Fact]
     public async Task ResetPasswordCommandHandler_ValidTokenUpdatesPasswordHash()
     {
@@ -81,7 +168,7 @@ public sealed class PasswordCommandHandlersTests
         emailService.Setup(s => s.VerifyPasswordResetTokenAsync("token"))
             .ReturnsAsync(new TokenValidationResult(true, userId, "reset@test.com"));
         userRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new User { Id = userId, Email = "reset@test.com" });
+            .ReturnsAsync(new User { Id = userId, Email = "reset@test.com", IsEmailVerified = true });
         hasher.Setup(h => h.ValidatePasswordStrength("StrongPass1!"))
             .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
         hasher.Setup(h => h.HashPassword("StrongPass1!"))
@@ -112,7 +199,7 @@ public sealed class PasswordCommandHandlersTests
     public async Task ResetPasswordCommandHandler_RejectsRecentlyUsedPassword()
     {
         var userId = Guid.NewGuid();
-        var user = new User { Id = userId, Email = "reset@test.com", PasswordHash = "current-hash" };
+        var user = new User { Id = userId, Email = "reset@test.com", PasswordHash = "current-hash", IsEmailVerified = true };
         user.SetPasswordHash("new-current-hash");
         var userRepository = new Mock<IUserRepository>();
         var hasher = new Mock<IPasswordHasher>();
@@ -184,6 +271,46 @@ public sealed class PasswordCommandHandlersTests
                     n.Token == "magic-token" &&
                     n.RedirectTo == redirectTo &&
                     n.Locale == locale),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    // ── Issue #1116: magic link is the fallback for OAuth-only accounts during outages ──
+
+    [Fact]
+    public async Task RequestMagicLinkCommandHandler_OAuthOnlyAccountWithoutPassword_ReceivesMagicLink()
+    {
+        // OAuth-only account: the email is known from the OAuth link and the user has no
+        // password. When the provider is down (issue #1116) this is the only sign-in path,
+        // and it must work without any password ever being set.
+        var user = User.CreateOAuthUser("oauth-only@test.com", "OAuth Only");
+        user.HasPassword.Should().BeFalse();
+
+        var userRepository = new Mock<IUserRepository>();
+        var emailService = new Mock<IEmailVerificationService>();
+        var publisher = new Mock<IPublisher>();
+        var configuration = new ConfigurationBuilder().Build();
+
+        userRepository.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        emailService.Setup(s => s.GenerateMagicLinkTokenAsync(user.Id, user.Email))
+            .ReturnsAsync("magic-token");
+        publisher.Setup(p => p.Publish(It.IsAny<MagicLinkRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var handler = new RequestMagicLinkCommandHandler(
+            userRepository.Object,
+            emailService.Object,
+            publisher.Object,
+            configuration,
+            NullLogger<RequestMagicLinkCommandHandler>.Instance);
+
+        var result = await handler.Handle(new RequestMagicLinkCommand { Email = user.Email }, CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        publisher.Verify(
+            p => p.Publish(
+                It.Is<MagicLinkRequestedNotification>(n => n.Email == user.Email && n.Token == "magic-token"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -828,7 +955,7 @@ public sealed class PasswordCommandHandlersTests
         emailService.Setup(s => s.VerifyPasswordResetTokenAsync("token"))
             .ReturnsAsync(new TokenValidationResult(true, userId, "reset@test.com"));
         userRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new User { Id = userId, Email = "reset@test.com" });
+            .ReturnsAsync(new User { Id = userId, Email = "reset@test.com", IsEmailVerified = true });
         hasher.Setup(h => h.ValidatePasswordStrength("StrongPass1!"))
             .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
         hasher.Setup(h => h.HashPassword("StrongPass1!"))
@@ -874,7 +1001,7 @@ public sealed class PasswordCommandHandlersTests
         emailService.Setup(s => s.VerifyPasswordResetTokenAsync("token"))
             .ReturnsAsync(new TokenValidationResult(true, userId, "reset@test.com"));
         userRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new User { Id = userId, Email = "reset@test.com" });
+            .ReturnsAsync(new User { Id = userId, Email = "reset@test.com", IsEmailVerified = true });
         hasher.Setup(h => h.ValidatePasswordStrength("StrongPass1!"))
             .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
         hasher.Setup(h => h.HashPassword("StrongPass1!"))
@@ -883,6 +1010,10 @@ public sealed class PasswordCommandHandlersTests
             .ReturnsAsync(true);
         sessionRepository.Setup(r => r.TerminateAllForUserAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+        // The sessions-terminated notification (issue #1091) counts the active sessions
+        // before the legacy repository fallback terminates them.
+        sessionRepository.Setup(r => r.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<UserSession>());
         var options = new SessionOptions { TerminateSessionsOnPasswordChange = true };
 
         var handler = new ResetPasswordCommandHandler(

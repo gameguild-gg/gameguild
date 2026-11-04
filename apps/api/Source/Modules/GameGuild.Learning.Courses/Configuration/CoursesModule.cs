@@ -58,6 +58,13 @@ public static class CoursesModule
         // Prerequisites
         services.AddScoped<IPrerequisiteService, PrerequisiteService>();
 
+        // Scheduled publish (issue #1226 N10): the schedule lifecycle operations only
+        // record the publishAt instant; this worker realizes it when due.
+        services.AddOptions<ScheduledPublishWorkerOptions>()
+            .BindConfiguration(ScheduledPublishWorkerOptions.SectionName);
+        services.AddScoped<IPublishDueProgramsWorker, PublishDueProgramsWorker>();
+        services.AddHostedService<ScheduledPublishBackgroundService>();
+
         // Product integration
         services.AddScoped<IProductProgramProvider, ProductProgramProvider>();
 

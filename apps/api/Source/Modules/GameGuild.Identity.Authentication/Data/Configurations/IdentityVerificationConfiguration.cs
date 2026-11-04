@@ -37,5 +37,12 @@ public class IdentityVerificationConfiguration : IEntityTypeConfiguration<Identi
         builder.HasIndex(x => x.UserId).HasDatabaseName("ix_identityverification_user_id");
         builder.HasIndex(x => x.Status).HasDatabaseName("ix_identityverification_status");
         builder.HasIndex(x => new { x.UserId, x.VerificationType }).HasDatabaseName("ix_identityverification_user_type");
+
+        // Issue #1156: principal user relationship; Restrict because user removal is
+        // soft-delete and verification history must survive for compliance.
+        builder.HasOne<GameGuild.Identity.Users.User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

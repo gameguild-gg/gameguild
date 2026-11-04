@@ -448,6 +448,25 @@ internal sealed class RefundsTestDbContext(
     public Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
         => Database.BeginTransactionAsync(cancellationToken);
 
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        // Mirrors the production ApplicationDbContext pipeline so the EntityBase.Version
+        // optimistic-concurrency token behaves like it does at runtime (issue #1202 gaps N2):
+        // every Added/Modified entity save advances the token, making stale-copy writes
+        // surface as DbUpdateConcurrencyException exactly like production.
+        foreach (var entry in ChangeTracker.Entries())
+        {
+            if (entry.Entity is GameGuild.EntityBase entity &&
+                entry.State is EntityState.Added or EntityState.Modified)
+            {
+                entry.Property(nameof(GameGuild.EntityBase.Version)).CurrentValue =
+                    (int)entry.Property(nameof(GameGuild.EntityBase.Version)).CurrentValue! + 1;
+            }
+        }
+
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
     protected override void OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Payment>();

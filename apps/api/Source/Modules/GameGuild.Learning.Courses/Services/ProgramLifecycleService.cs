@@ -122,9 +122,7 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
   public async Task<Program> SchedulePublishAsync(Guid id, DateTime publishAt) {
     var program = await GetRequiredProgramAsync(id).ConfigureAwait(false);
 
-    program.SetMetadata("scheduledPublishAt", publishAt);
-    program.Touch();
-    await context.SaveChangesAsync().ConfigureAwait(false);
+    await ScheduleAsync(program, publishAt).ConfigureAwait(false);
 
     return program;
   }
@@ -233,15 +231,35 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
             return null;
         }
 
-        program.Status = ContentStatus.Published;
-    program.Visibility = ContentVisibility.Public;
-    program.Touch();
-    await context.SaveChangesAsync().ConfigureAwait(false);
+    await ScheduleAsync(program, publishAt).ConfigureAwait(false);
 
     return program;
   }
 
   // ── Private Helpers ─────────────────────────────────────────────────
+
+  /// <summary>
+  /// Shared scheduling semantics (issue #1226 N10): a publish time already due is
+  /// applied immediately; a future time only records the schedule — the status and
+  /// visibility stay untouched and the scheduled-publish worker realizes the
+  /// transition when the instant arrives.
+  /// </summary>
+  private async Task ScheduleAsync(Program program, DateTime publishAt) {
+    var normalized = publishAt.ToUniversalTime();
+
+    if (normalized <= SystemClock.UtcNow) {
+      program.Status = ContentStatus.Published;
+      program.Visibility = ContentVisibility.Public;
+      program.ScheduledPublishAt = null;
+      program.Touch();
+      await context.SaveChangesAsync().ConfigureAwait(false);
+      return;
+    }
+
+    program.ScheduledPublishAt = normalized;
+    program.Touch();
+    await context.SaveChangesAsync().ConfigureAwait(false);
+  }
 
   private async Task<Program?> GetProgramByIdAsync(Guid id) {
     return await context.Set<Program>().Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id);

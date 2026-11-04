@@ -50,6 +50,50 @@ public class CertificateService : ICertificateService, ICertificateIssuanceServi
     {
         try
         {
+            // Eligibility gate (issue #1226 N1): issuance must verify the enrollment it
+            // certifies exists, belongs to the requested recipient and course, and is
+            // completed — the same checks CheckEligibilityAsync applies to interactive
+            // eligibility queries. Baking the gate into issuance itself means every
+            // caller (the endpoint command, the program-completion flow) inherits it
+            // instead of relying on each call site remembering to check first.
+            var enrollment = await _context.Set<ProgramEnrollment>()
+                .FirstOrDefaultAsync(e => e.Id == enrollmentId).ConfigureAwait(false);
+
+            if (enrollment is null)
+            {
+                _logger.LogWarning(
+                    "Cannot issue certificate: enrollment {EnrollmentId} not found", enrollmentId);
+                return Result.Failure<Certificate>(Error.NotFound("Enrollment", "Enrollment not found"));
+            }
+
+            if (enrollment.UserId != userId)
+            {
+                _logger.LogWarning(
+                    "Cannot issue certificate: enrollment {EnrollmentId} does not belong to user {UserId}",
+                    enrollmentId, userId);
+                return Result.Failure<Certificate>(
+                    Error.Forbidden("Certificate", "The enrollment does not belong to the requested recipient"));
+            }
+
+            if (enrollment.ProgramId != courseId)
+            {
+                _logger.LogWarning(
+                    "Cannot issue certificate: enrollment {EnrollmentId} belongs to program {ActualProgramId}, not {CourseId}",
+                    enrollmentId, enrollment.ProgramId, courseId);
+                return Result.Failure<Certificate>(
+                    Error.Conflict("Certificate", "The enrollment does not belong to the requested course"));
+            }
+
+            if (enrollment.CompletionStatus != CompletionStatus.Completed &&
+                enrollment.CompletionStatus != CompletionStatus.CompletedWithCertificate)
+            {
+                _logger.LogInformation(
+                    "Cannot issue certificate: enrollment {EnrollmentId} is not completed (status {Status})",
+                    enrollmentId, enrollment.CompletionStatus);
+                return Result.Failure<Certificate>(
+                    Error.Conflict("Certificate", "Enrollment is not completed"));
+            }
+
             // Check if certificate already exists for this enrollment
             var existing = await _context.Set<Certificate>()
                 .FirstOrDefaultAsync(c => c.EnrollmentId == enrollmentId && c.TemplateId == templateId).ConfigureAwait(false);
@@ -408,6 +452,10 @@ public class CertificateService : ICertificateService, ICertificateIssuanceServi
     {
         try
         {
+            // Interactive eligibility query. The authoritative gate lives inside
+            // IssueCertificateAsync (issue #1226 N1): issuance enforces the same
+            // enrollment-exists + completed checks itself, so this method can never be
+            // bypassed by calling issuance directly.
             _logger.LogInformation("Checking certificate eligibility for enrollment {EnrollmentId}", enrollmentId);
 
             // Get enrollment to check completion status
