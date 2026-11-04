@@ -5,8 +5,9 @@ against `74e9bba4c` and was re-verified after develop advanced (PRs #1185–#120
 the only client regeneration in that window (`d3e340865`) added Cloudflare
 Turnstile request fields for issue #1082 — `endpoints.gen.ts` is unchanged, so
 the counts below are the historical audit snapshot. The F1/F2 correction notes
-describe the current implementation; the adjacent transport and generated-client
-findings remain separate unresolved work, not a newly certified surface audit.
+describe the current implementation, and F5 corrects a controller-count false
+positive. The adjacent F3/F4 transport findings remain unresolved; these scoped
+corrections are not a newly certified surface audit.
 
 Sources of truth:
 
@@ -421,18 +422,38 @@ The gap is widening, not closing: the Cloudflare Turnstile hardening
 still posts by hand, so the next CAPTCHA-related change can again ship without
 the pipeline noticing.
 
-### F5 — VERSIONED-DIFF: 7 live Orders actions missing from the generated client
+### F5 — corrected: Orders exposes seven reviewed operations, all present in the client
 
-`Commerce.Orders/Controllers/OrdersController.cs` serves 14 actions; the client
-(`orders.gen.ts`, 7 endpoints) covers only 7. Missing
-(`OrdersController.cs:143,159,250,266,345,361` + HEAD):
-`POST /v1/orders/{orderId}:cancel`, `POST …:refund`, `PATCH /v1/orders/{orderId}`,
-`DELETE /v1/orders/{orderId}`, `POST …:hold`, `POST …:release`, `HEAD /v1/orders/{orderId}`.
-The client was regenerated after these actions landed (regen `4db4ca6e2` 2026-11-02;
-`:hold`/`:release` added by `2ab11e06a` 2026-08-30, an ancestor), so the OpenAPI
-document itself is dropping them — regenerate via the real pipeline
-(`scripts/ci/verify-openapi-surface.sh` or the PR `openapi-<sha>` artifact) and
-diff, never hand-splice.
+The original scan counted 14 compiled `OrdersController` methods as live HTTP
+actions. The host unconditionally registers
+`MinimumOrderRouteApplicationModelConvention`, which removes every Orders action
+without `[MinimumOrderRoute]` from the MVC application model. This affects runtime
+routing as well as OpenAPI. Cancel, refund, patch, delete, hold, release and HEAD
+are deliberately excluded pending production safety review; their absence from
+the generated client is not VERSIONED-DIFF.
+
+The seven reviewed operations are list, get-by-id, create, add-item, capture,
+complete and payment-intent. All seven appear in
+`generated/modules/commerce-orders.gen.ts`.
+
+Evidence rechecked on 2026-11-04:
+
+- `ModuleOpenApiIntegrationTests.Swagger_ShouldExposeOnlyTheVerifiedOrderSurface`
+  asserts the exact seven method/path pairs in the hosted OpenAPI document.
+- `Runtime_ShouldRouteOnlyVerifiedOrderOperations` checks the actual HTTP boundary:
+  the excluded cancel action returns 404, list remains authenticated, and the
+  reviewed get/payment-intent routes are available to routing.
+- Both tests passed in [CI run 41495243956](https://github.com/gameguild-gg/gameguild/actions/runs/41495243956)
+  at `a54a689798c3c15b823bbdf731884fd62f92ac6b`, retained in the
+  `full-application-openapi-a54a689798c3c15b823bbdf731884fd62f92ac6b` TRX artifact.
+  The convention, its host registration, marker attribute and these tests are
+  unchanged at `c42b1049`. The controller's intervening change adds the API rate
+  limit policy; its route and action markers are unchanged. This is scoped routing
+  evidence, not a fresh execution of the entire current API.
+
+Do not expose unreviewed actions or hand-edit generated files to satisfy a source
+method count. Future reviewed route additions must still use the real OpenAPI
+capture and generation pipeline described below.
 
 ### F6 — live controller surface outside the versioned contract (171 actions)
 
@@ -453,8 +474,10 @@ diff, never hand-splice.
   `LedgersController.cs` (11),
   `Gamification.Achievements/Controllers/AchievementsController.cs` (11).
   These are callable HTTP endpoints that no generated client can express.
-- **20 accounted** by F5 (7 orders), the 12 version-parameterized routes (below) and
-  one catch-all (`OpenGraphController` `{*slug}`).
+- **20 historically accounted** by F5 (7 Orders methods excluded from MVC, as
+  corrected above), the 12 version-parameterized routes (below) and one catch-all
+  (`OpenGraphController` `{*slug}`). The seven excluded methods are not live HTTP
+  endpoints; the historical headline count must not be read as a current inventory.
 
 ### F7 — version-as-path-parameter quirk (12 endpoints, not drift)
 
@@ -481,9 +504,11 @@ deprecation-review backlog this matrix exists to track.
 
 ## Gaps (process and tooling, with file:line)
 
-- **G1** — No CI check compares controllers against the generated client: F5 (7
-  missing Orders actions) passed `4db4ca6e2` regeneration undetected. The
-  verify-openapi lane validates the document hash, not controller↔client parity.
+- **G1** — A repository-wide controller-to-client parity check would need to use
+  the composed MVC surface, including intentional exclusions. F5 is not evidence
+  of generator drift: existing OpenAPI and runtime integration tests explicitly
+  enforce the seven-operation Orders boundary. The verify-openapi lane validates
+  generation against the captured document, not every compiled controller method.
 - **G2** — The hand-rolled transports (F3/F4) sit in
   `packages/infrastructure/client/src/runtime/auth/` and
   `…/integrations/next/` — inside the same package that ships the generated
