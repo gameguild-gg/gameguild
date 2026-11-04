@@ -2,16 +2,15 @@
  * Extended Handlers Tests — signIn success, signUp full flow, OAuth, updateSession, form-urlencoded
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest';
 import { createHandlers } from '../../src/integrations/next/handlers.js';
 import { signStatePayload, stateCookieName } from '../../src/integrations/next/oauth-state.js';
-import type { ResolvedAuthConfig, ProviderResult } from '../../src/runtime/auth/types.js';
+import type { ResolvedAuthConfig, ProviderResult, JWTPayload, Session, CredentialsProviderConfig } from '../../src/runtime/auth/types.js';
+
+type AuthResponseBody = { user?: Session['user']; url?: string; error?: string; message?: string };
 
 async function createOAuthCallbackRequest(providerId: string, secret: string, code = 'abc123', state = 'xyz'): Promise<Request> {
-  const cookie = await signStatePayload(
-    { state, redirectTo: '/', flow: 'signin', exp: Date.now() + 600_000 },
-    secret,
-  );
+  const cookie = await signStatePayload({ state, redirectTo: '/', flow: 'signin', exp: Date.now() + 600_000 }, secret);
   return new Request(`http://localhost/api/auth/callback/${providerId}?code=${code}&state=${state}`, {
     headers: { cookie: `${stateCookieName(providerId)}=${cookie}` },
   });
@@ -45,7 +44,7 @@ vi.mock('../../src/runtime/auth/csrf.js', () => ({
 }));
 
 vi.mock('../../src/runtime/auth/session.js', () => ({
-  createJWTPayload: vi.fn((result: any) => ({
+  createJWTPayload: vi.fn((result: ProviderResult): JWTPayload => ({
     user: result.user,
     accessToken: result.tokens.accessToken,
     refreshToken: result.tokens.refreshToken,
@@ -70,7 +69,7 @@ vi.mock('../../src/runtime/auth/session.js', () => ({
     return { session: null, token: null, updated: false };
   }),
   encodeSession: vi.fn(async () => 'new-encrypted-token'),
-  toSession: vi.fn((token: any) => ({
+  toSession: vi.fn((token: JWTPayload): Session => ({
     user: token.user,
     expires: new Date(Date.now() + 86400000).toISOString(),
   })),
@@ -83,11 +82,11 @@ function makeConfig(overrides?: Partial<ResolvedAuthConfig>): ResolvedAuthConfig
         id: 'credentials',
         name: 'Credentials',
         type: 'credentials',
-        authorize: vi.fn(async (creds: any) => ({
+        authorize: vi.fn(async (creds: Parameters<CredentialsProviderConfig['authorize']>[0]) => ({
           tokens: { accessToken: 'at', refreshToken: 'rt', tokenType: 'Bearer' as const },
-          user: { id: '1', email: creds.email || 'a@b.com', name: 'Test', image: null },
+          user: { id: '1', email: typeof creds.email === 'string' ? creds.email : 'a@b.com', name: 'Test', image: null },
         })),
-      } as any,
+      },
     ],
     callbacks: {
       jwt: async ({ token }) => token,
@@ -119,7 +118,7 @@ function makeConfig(overrides?: Partial<ResolvedAuthConfig>): ResolvedAuthConfig
 
 function buildRequest(path: string, options: RequestInit & { cookies?: Record<string, string> } = {}): Request {
   const { cookies: cookiesObj, ...init } = options;
-  const headers = new Headers(init.headers as HeadersInit | undefined);
+  const headers = new Headers(init.headers);
   if (cookiesObj) {
     const cookieStr = Object.entries(cookiesObj)
       .map(([k, v]) => `${k}=${v}`)
@@ -133,7 +132,7 @@ function buildRequest(path: string, options: RequestInit & { cookies?: Record<st
 }
 
 describe('Handlers — signIn extended', () => {
-  let fetchSpy: any;
+  let fetchSpy: MockInstance<typeof global.fetch> | undefined;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -159,8 +158,9 @@ describe('Handlers — signIn extended', () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body = (await response.json()) as AuthResponseBody;
     expect(body.user).toBeDefined();
+    if (!body.user) throw new Error('Expected an authenticated user');
     expect(body.user.email).toBeDefined();
   });
 
@@ -196,7 +196,7 @@ describe('Handlers — signIn extended', () => {
       callbacks: {
         jwt: async ({ token }) => token,
         session: async ({ session }) => session,
-        signIn: async () => 'http://redirect.example.com/path' as any,
+        signIn: async () => 'http://redirect.example.com/path',
         redirect: async ({ url, baseUrl }) => (url.startsWith('/') ? `${baseUrl}${url}` : url),
         authorized: async ({ auth }) => !!auth,
       },
@@ -262,7 +262,7 @@ describe('Handlers — signIn extended', () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body = (await response.json()) as AuthResponseBody;
     expect(body.url).toContain('github.com');
   });
 
@@ -290,7 +290,7 @@ describe('Handlers — signIn extended', () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body = (await response.json()) as AuthResponseBody;
     expect(body.user).toBeDefined();
   });
 
@@ -319,7 +319,7 @@ describe('Handlers — signIn extended', () => {
 });
 
 describe('Handlers — signUp extended', () => {
-  let fetchSpy: any;
+  let fetchSpy: MockInstance<typeof global.fetch> | undefined;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -334,9 +334,9 @@ describe('Handlers — signUp extended', () => {
         JSON.stringify({
           accessToken: 'at',
           refreshToken: 'rt',
-          userId: '1',
+          userId: '11111111-1111-4111-8111-111111111111',
         }),
-        { status: 200 },
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
       ),
     );
 
@@ -358,7 +358,7 @@ describe('Handlers — signUp extended', () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body = (await response.json()) as AuthResponseBody;
     expect(body.user).toBeDefined();
   });
 
@@ -368,10 +368,10 @@ describe('Handlers — signUp extended', () => {
         JSON.stringify({
           accessToken: 'at',
           refreshToken: 'rt',
-          userId: 'renter',
+          userId: '11111111-1111-4111-8111-111111111111',
           email: 'renter@example.com',
         }),
-        { status: 200 },
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
       ),
     );
     const signIn = vi.fn(async () => false as const);
@@ -416,7 +416,7 @@ describe('Handlers — signUp extended', () => {
 
     const response = await POST(request);
     expect(response.status).toBeGreaterThanOrEqual(400);
-    const body = await response.json();
+    const body = (await response.json()) as AuthResponseBody;
     expect(body.message || body.error).toBeDefined();
   });
 
@@ -449,10 +449,10 @@ describe('Handlers — signUp extended', () => {
         JSON.stringify({
           accessToken: 'at',
           refreshToken: 'rt',
-          userId: '1',
-          upgradedFromGuestSessionId: '11111111-2222-3333-4444-555555555555',
+          userId: '11111111-1111-4111-8111-111111111111',
+          upgradedFromGuestSessionId: '33333333-3333-4333-8333-333333333333',
         }),
-        { status: 200 },
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
       ),
     );
 
@@ -477,20 +477,24 @@ describe('Handlers — signUp extended', () => {
       'http://localhost:8080/v1/auth/sign-up',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({
-          username: 'guestup',
-          email: 'guest@example.com',
-          password: 'Password1!',
-          guestAccessToken: 'guest-access-token',
-        }),
       }),
     );
+    expect(fetchSpy).toHaveBeenCalledOnce();
+    const requestBody = fetchSpy.mock.calls[0]?.[1]?.body;
+    if (typeof requestBody !== 'string') throw new Error('Expected a JSON request body');
+    expect(JSON.parse(requestBody)).toEqual({
+      username: 'guestup',
+      email: 'guest@example.com',
+      password: 'Password1!',
+      guestAccessToken: 'guest-access-token',
+    });
   });
 
   it('omits the guest field entirely when no guest bearer is presented', async () => {
     fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ accessToken: 'at', refreshToken: 'rt', userId: '1' }), {
+      new Response(JSON.stringify({ accessToken: 'at', refreshToken: 'rt', userId: '11111111-1111-4111-8111-111111111111' }), {
         status: 200,
+        headers: { 'Content-Type': 'application/json' },
       }),
     );
 
@@ -510,14 +514,12 @@ describe('Handlers — signUp extended', () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    const signupCall = fetchSpy.mock.calls.find(
-      ([url]) => typeof url === 'string' && url.includes('/v1/auth/sign-up'),
-    ) as [string, RequestInit] | undefined;
+    const signupCall = fetchSpy.mock.calls.find(([url]) => typeof url === 'string' && url.includes('/v1/auth/sign-up'));
     expect(signupCall).toBeDefined();
     if (!signupCall) throw new Error('sign-up upstream call missing');
-    expect(JSON.parse(String(signupCall[1].body))).not.toHaveProperty(
-      'guestAccessToken',
-    );
+    const requestBody = signupCall[1]?.body;
+    if (typeof requestBody !== 'string') throw new Error('Expected a JSON request body');
+    expect(JSON.parse(requestBody)).not.toHaveProperty('guestAccessToken');
   });
 });
 
@@ -538,7 +540,7 @@ describe('Handlers — updateSession', () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body = (await response.json()) as AuthResponseBody;
     expect(body.user).toBeDefined();
   });
 
@@ -553,7 +555,7 @@ describe('Handlers — updateSession', () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body = (await response.json()) as AuthResponseBody;
     // No session token → empty response
     expect(body.user).toBeUndefined();
   });
@@ -689,7 +691,7 @@ describe('Handlers — debug logging', () => {
 });
 
 describe('Handlers — signOut with session token', () => {
-  let fetchSpy: any;
+  let fetchSpy: MockInstance<typeof global.fetch> | undefined;
 
   beforeEach(() => {
     vi.clearAllMocks();

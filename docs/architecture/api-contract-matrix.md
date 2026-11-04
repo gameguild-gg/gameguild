@@ -7,8 +7,9 @@ Turnstile request fields for issue #1082 — `endpoints.gen.ts` is unchanged, so
 the counts below are the historical audit snapshot. The F1/F2 correction notes
 describe the current implementation, and F5 corrects a controller-count false
 positive. The adjacent F3/F4 transport findings remain unresolved; these scoped
-corrections are not a newly certified surface audit. F4 also records the subsequent
-password/MFA credential-provider migration; the other provider transports remain.
+corrections are not a newly certified surface audit. F3 records the subsequent
+Next registration migration, and F4 records the password/MFA credential-provider
+migration; the other provider transports remain.
 
 Sources of truth:
 
@@ -390,14 +391,24 @@ actual successful empty collection renders the empty state. A later successful
 server render replaces the alert with fresh campaign data. These corrections do
 not resolve F3/F4/F5 or turn the no-caller inventory into a deletion list.
 
-### F3 — parallel hand-rolled transport shadows 17+ generated endpoints
+### F3 — Next registration migrated; parallel transports remain
 
-The client package's own runtime and the web app hand-fetch URLs that also exist as
-generated methods, so contract drift here is invisible to TypeScript:
+The original audit identified 17+ generated endpoints shadowed by hand-written
+transports in the client runtime and web app. The Next route and server-action
+registration paths now share `runtime/auth/sign-up.ts`, which calls generated
+`AuthModule.postAuthSignUp`. Generated schemas validate both directions before
+session finalization. CAPTCHA and guest-continuity fields, legacy profile/claims,
+callbacks and redirects are retained; malformed, denied, incomplete and pending
+MFA/step-up responses never create an ordinary session. Network/server/response
+failures produce a service-unavailable error, distinct from invalid registration.
 
-- `packages/infrastructure/client/src/integrations/next/actions.ts:239` (`/v1/auth/sign-up`),
-  `:292` (`/v1/auth/tokens:revoke`);
-- `…/integrations/next/handlers.ts:533` (`/v1/auth/sign-up`), `:575` (`/v1/auth/tokens:revoke`), `:364` (F1);
+Remaining transports from the historical inventory (line numbers below belong to
+the original audit, not the current source):
+
+- `packages/infrastructure/client/src/integrations/next/actions.ts` and
+  `…/integrations/next/handlers.ts`: `/v1/auth/tokens:revoke` remains hand-written;
+  their `/v1/auth/sign-up` calls are now generated. The old enrollment route is
+  covered separately by the F1 correction;
 - `…/runtime/auth/extended-operations.ts:162` (`/v1/auth/mfa/verify`), `:201` (`/v1/auth/mfa/methods`),
   `:220` (`/v1/auth/password:reset-request`), `:299` (`/v1/auth/sessions`),
   `:314` (`/v1/auth/sessions/{id}`);

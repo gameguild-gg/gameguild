@@ -22,6 +22,8 @@ import { createCSRFToken, validateCSRFToken } from '../../runtime/auth/csrf.js';
 import { decodeJWT } from '../../runtime/auth/jwt.js';
 import { resolveAuthPermissions, resolveAuthRoles } from '../../runtime/auth/claims.js';
 import { AuthError, CredentialsSignInError, ProviderNotFoundError, CSRFError, SignUpError } from '../../runtime/auth/errors.js';
+import { registerAccount } from '../../runtime/auth/sign-up.js';
+import type { IdentityAuthenticationLocalSignUpInput } from '../../generated/types.gen.js';
 import { type OAuthProviderWithMethods, getOAuthExchangeToken, getOAuthAuthorizeUrl, getOAuthHandleCallback } from './oauth-helpers.js';
 import {
   STATE_COOKIE_MAX_AGE,
@@ -482,7 +484,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
       });
     }
 
-    const signUpBody: Record<string, unknown> = { username, email, password };
+    const signUpBody: IdentityAuthenticationLocalSignUpInput = { username, email, password };
     if (firstName) signUpBody.firstName = firstName;
     if (lastName) signUpBody.lastName = lastName;
     if (tenantId) signUpBody.tenantId = tenantId;
@@ -492,22 +494,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     if (guestAccessToken) signUpBody.guestAccessToken = guestAccessToken;
     if (turnstileToken) signUpBody.turnstileToken = turnstileToken;
 
-    const response = await fetch(`${config.apiUrl}/v1/auth/sign-up`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(signUpBody),
-    });
-
-    if (!response.ok) {
-      /* v8 ignore start -- error response parsing */
-      const errorData = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-      throw new SignUpError((errorData.message as string) || (errorData.detail as string) || 'Sign-up failed', {
-        fieldErrors: errorData.errors as Record<string, string[]> | undefined,
-      });
-      /* v8 ignore stop */
-    }
-
-    const data = (await response.json()) as Record<string, unknown>;
+    const data = await registerAccount(config.apiUrl, signUpBody);
     const providerResult = parseBackendAuthResponse(data, email, username);
     const signInAllowed = await config.callbacks.signIn({
       user: providerResult.user,

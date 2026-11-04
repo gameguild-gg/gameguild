@@ -11,7 +11,9 @@ import type { ResolvedAuthConfig, Session, ProviderResult, CredentialsProviderCo
 import { decodeJWT } from '../../runtime/auth/jwt.js';
 import { SessionStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies.js';
 import { createJWTPayload, processSession, encodeSession, refreshAccessToken, toSession } from '../../runtime/auth/session.js';
-import { CredentialsSignInError, ProviderNotFoundError, SignUpError } from '../../runtime/auth/errors.js';
+import { CredentialsSignInError, ProviderNotFoundError } from '../../runtime/auth/errors.js';
+import { registerAccount } from '../../runtime/auth/sign-up.js';
+import type { IdentityAuthenticationLocalSignUpInput } from '../../generated/types.gen.js';
 import { applyResponseCookies, parseBackendAuthResponse } from './handlers.js';
 import { type OAuthProviderWithMethods, getOAuthExchangeToken } from './oauth-helpers.js';
 
@@ -125,9 +127,12 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
             name,
             value: '',
             options: {
-              httpOnly: cookieOptions.httpOnly, secure: cookieOptions.secure,
-              sameSite: cookieOptions.sameSite, path: cookieOptions.path,
-              domain: cookieOptions.domain, maxAge: 0,
+              httpOnly: cookieOptions.httpOnly,
+              secure: cookieOptions.secure,
+              sameSite: cookieOptions.sameSite,
+              path: cookieOptions.path,
+              domain: cookieOptions.domain,
+              maxAge: 0,
             },
           });
         },
@@ -287,7 +292,7 @@ export function createSignUpAction(config: ResolvedAuthConfig) {
   ): Promise<void> {
     const { redirectTo, redirect: shouldRedirect = true } = options ?? {};
 
-    const body: Record<string, unknown> = {
+    const body: IdentityAuthenticationLocalSignUpInput = {
       username: credentials.username,
       email: credentials.email,
       password: credentials.password,
@@ -297,20 +302,7 @@ export function createSignUpAction(config: ResolvedAuthConfig) {
     if (credentials.tenantId) body.tenantId = credentials.tenantId;
     if (credentials.turnstileToken) body.turnstileToken = credentials.turnstileToken;
 
-    const response = await fetch(`${config.apiUrl}/v1/auth/sign-up`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      const errorData = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-      throw new SignUpError((errorData.message as string) || (errorData.detail as string) || 'Sign-up failed', {
-        fieldErrors: errorData.errors as Record<string, string[]> | undefined,
-      });
-    }
-
-    const data = (await response.json()) as Record<string, unknown>;
+    const data = await registerAccount(config.apiUrl, body);
     const result = parseBackendAuthResponse(data, credentials.email, credentials.username);
 
     await finalizeServerAction(result, 'signUp', config, sessionStore);
@@ -483,11 +475,15 @@ async function finalizeServerAction(
   if (adapter) {
     // Storage policy: an explicit non-remember sign-in gets a browser-session cookie;
     // remember-me (or the configured default) keeps the durable Max-Age cookie.
-    sessionStore.write(encrypted, (name, value, opts) => {
-      adapter.set(name, value, opts);
-    }, {
-      storage: token.rememberMe === false ? 'session' : 'persistent',
-    });
+    sessionStore.write(
+      encrypted,
+      (name, value, opts) => {
+        adapter.set(name, value, opts);
+      },
+      {
+        storage: token.rememberMe === false ? 'session' : 'persistent',
+      },
+    );
   }
   /* v8 ignore stop */
 }

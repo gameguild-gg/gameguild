@@ -93,7 +93,7 @@ vi.mock('../../src/runtime/auth/session.js', () => ({
 }));
 
 vi.mock('../../src/integrations/next/handlers.js', async (importOriginal) => ({
-  ...await importOriginal<typeof import('../../src/integrations/next/handlers.js')>(),
+  ...(await importOriginal<typeof import('../../src/integrations/next/handlers.js')>()),
   parseCookieHeader: vi.fn((header: string) => {
     const map = new Map<string, string>();
     for (const pair of header.split(';')) {
@@ -102,10 +102,12 @@ vi.mock('../../src/integrations/next/handlers.js', async (importOriginal) => ({
     }
     return map;
   }),
-  parseBackendAuthResponse: vi.fn((data: Partial<Record<'accessToken' | 'refreshToken' | 'userId', string>>, email?: string, name?: string): ProviderResult => ({
-    tokens: { accessToken: data.accessToken || 'at', refreshToken: data.refreshToken || 'rt', tokenType: 'Bearer' },
-    user: { id: data.userId || '1', email: email || '', name: name || null, image: null },
-  })),
+  parseBackendAuthResponse: vi.fn(
+    (data: Partial<Record<'accessToken' | 'refreshToken' | 'userId', string>>, email?: string, name?: string): ProviderResult => ({
+      tokens: { accessToken: data.accessToken || 'at', refreshToken: data.refreshToken || 'rt', tokenType: 'Bearer' },
+      user: { id: data.userId || '1', email: email || '', name: name || null, image: null },
+    }),
+  ),
   serializeCookie: vi.fn(
     (name: string, value: string, options: Record<string, unknown>) => `${name}=${value}; Path=${options.path ?? '/'}; Max-Age=${options.maxAge ?? ''}`,
   ),
@@ -383,9 +385,9 @@ describe('createSignUpAction — extended', () => {
         JSON.stringify({
           accessToken: 'at',
           refreshToken: 'rt',
-          userId: '1',
+          userId: '11111111-1111-4111-8111-111111111111',
         }),
-        { status: 200 },
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
       ),
     );
 
@@ -396,7 +398,11 @@ describe('createSignUpAction — extended', () => {
   });
 
   it('should send optional fields in sign-up body', async () => {
-    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: 'at', refreshToken: 'rt' }), { status: 200 }));
+    fetchSpy = vi
+      .spyOn(global, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ accessToken: 'at', refreshToken: 'rt' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+      );
 
     const config = makeConfig();
     const signUp = createSignUpAction(config);
@@ -408,7 +414,7 @@ describe('createSignUpAction — extended', () => {
         password: 'Password1!',
         firstName: 'Test',
         lastName: 'User',
-        tenantId: 'tenant-1',
+        tenantId: '22222222-2222-4222-8222-222222222222',
       },
       { redirect: false },
     );
@@ -422,11 +428,15 @@ describe('createSignUpAction — extended', () => {
     const sentBody = parsedBody as Record<string, unknown>;
     expect(sentBody.firstName).toBe('Test');
     expect(sentBody.lastName).toBe('User');
-    expect(sentBody.tenantId).toBe('tenant-1');
+    expect(sentBody.tenantId).toBe('22222222-2222-4222-8222-222222222222');
   });
 
   it('should redirect after successful signup by default', async () => {
-    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: 'at', refreshToken: 'rt' }), { status: 200 }));
+    fetchSpy = vi
+      .spyOn(global, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ accessToken: 'at', refreshToken: 'rt' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+      );
 
     const config = makeConfig();
     const signUp = createSignUpAction(config);
@@ -448,7 +458,9 @@ describe('createSignUpAction — extended', () => {
     const config = makeConfig();
     const signUp = createSignUpAction(config);
 
-    await expect(signUp({ username: 'testuser', email: 'taken@example.com', password: 'pw' }, { redirect: false })).rejects.toThrow('Validation failed');
+    await expect(signUp({ username: 'testuser', email: 'taken@example.com', password: 'Password1!' }, { redirect: false })).rejects.toThrow(
+      'Validation failed',
+    );
   });
 });
 
