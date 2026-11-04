@@ -29,13 +29,13 @@ export type {
   SessionStatus,
   UseSessionReturn,
   SessionProviderProps,
-} from './types.js';
+} from './types';
 
 // Token refresh manager
-export { TokenRefreshManager, type TokenRefreshConfig } from './refresh.js';
+export { TokenRefreshManager, type TokenRefreshConfig } from './refresh';
 
 // JWT encrypt/decrypt
-export { encodeJWT, decodeJWT } from './jwt.js';
+export { encodeJWT, decodeJWT } from './jwt';
 
 // Cookie management
 export {
@@ -46,13 +46,13 @@ export {
   getCookieName,
   type ResolvedCookieOptions,
   type CookieSerializeOptions,
-} from './cookies.js';
+} from './cookies';
 
 // CSRF protection
-export { createCSRFToken, validateCSRFToken } from './csrf.js';
+export { createCSRFToken, validateCSRFToken } from './csrf';
 
 // Session management
-export { createJWTPayload, toSession, shouldRefreshToken, refreshAccessToken, processSession, encodeSession } from './session.js';
+export { createJWTPayload, toSession, shouldRefreshToken, refreshAccessToken, processSession, encodeSession } from './session';
 
 // Error types
 export {
@@ -61,6 +61,7 @@ export {
   AccountLockedError,
   AuthServiceUnavailableError,
   MfaRequiredError,
+  parseMfaEnrollmentOffer,
   SignUpError,
   SessionExpiredError,
   InvalidSessionError,
@@ -74,7 +75,7 @@ export {
   isAuthError,
   isReauthRequired,
   isCredentialsError,
-} from './errors.js';
+} from './errors';
 
 // Provider factories
 export {
@@ -86,4 +87,4 @@ export {
   type GoogleProviderOptions,
   type GitHubProviderOptions,
   type DiscordProviderOptions,
-} from './providers/index.js';
+} from './providers/index';

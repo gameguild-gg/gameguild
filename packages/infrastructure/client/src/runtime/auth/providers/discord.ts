@@ -22,9 +22,9 @@
  * ```
  */
 
-import type { OAuthProviderConfig, ProviderResult, SessionUser } from '../types.js';
-import { OAuthError } from '../errors.js';
-import { assertSafeServiceUrl } from '../../security/safe-remote-url.js';
+import type { OAuthProviderConfig, ProviderResult, SessionUser } from '../types';
+import { OAuthError } from '../errors';
+import { assertSafeServiceUrl } from '../../security/safe-remote-url';
 
 /**
  * Options for the Discord provider

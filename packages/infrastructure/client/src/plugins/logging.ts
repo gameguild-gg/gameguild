@@ -4,10 +4,10 @@
  * Request/response logging with redaction of sensitive data.
  */
 
-import { err } from '../runtime/result/helpers.js';
-import type { Result } from '../runtime/result/types.js';
-import type { ApiError } from '../runtime/errors/types.js';
-import type { Interceptor, RequestConfig, ApiResponse } from '../runtime/transport/types.js';
+import { err } from '../runtime/result/helpers';
+import type { Result } from '../runtime/result/types';
+import type { ApiError } from '../runtime/errors/types';
+import type { Interceptor, RequestConfig, ApiResponse } from '../runtime/transport/types';
 
 /**
  * Log levels

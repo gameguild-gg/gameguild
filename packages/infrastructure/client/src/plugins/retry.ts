@@ -4,11 +4,11 @@
  * Automatic retry with exponential backoff for failed requests.
  */
 
-import { err } from '../runtime/result/helpers.js';
-import type { Result } from '../runtime/result/types.js';
-import type { ApiError } from '../runtime/errors/types.js';
-import type { Interceptor, RequestConfig, Transport } from '../runtime/transport/types.js';
-import { isRetryableError, getRetryAfter } from '../runtime/errors/guards.js';
+import { err } from '../runtime/result/helpers';
+import type { Result } from '../runtime/result/types';
+import type { ApiError } from '../runtime/errors/types';
+import type { Interceptor, RequestConfig, Transport } from '../runtime/transport/types';
+import { isRetryableError, getRetryAfter } from '../runtime/errors/guards';
 
 /**
  * Configuration for retry plugin
@@ -80,7 +80,7 @@ export function createRetryPlugin(userConfig?: RetryConfig): {
   return {
     wrapTransport(transport: Transport): Transport {
       return {
-        async request<T>(requestConfig: RequestConfig): Promise<Result<import('../runtime/transport/types.js').ApiResponse<T>, ApiError>> {
+        async request<T>(requestConfig: RequestConfig): Promise<Result<import('../runtime/transport/types').ApiResponse<T>, ApiError>> {
           let attempt = 0;
           let lastError: ApiError | null = null;
 

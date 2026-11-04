@@ -20,10 +20,11 @@
  */
 
 // ─── GameGuildAuth Factory ───────────────────────────────────────
-export { GameGuildAuth } from './auth.js';
+export { GameGuildAuth } from './auth';
+export { createMfaEnrollmentCompleteAction, type MfaEnrollmentCompleteResult } from './actions';
 
 // ─── Provider Factories (re-exported for convenience) ────────────
-export { CredentialsProvider, GoogleProvider, GitHubProvider, DiscordProvider } from '../../runtime/auth/providers/index.js';
+export { CredentialsProvider, GoogleProvider, GitHubProvider, DiscordProvider } from '../../runtime/auth/providers/index';
 
 // ─── Auth Types ──────────────────────────────────────────────────
 export type {
@@ -38,14 +39,14 @@ export type {
   ProviderResult,
   CookieConfig,
   PagesConfig,
-} from '../../runtime/auth/types.js';
+} from '../../runtime/auth/types';
 
 // ─── Server Client Utilities (existing) ──────────────────────────
 
-import { createServerClient, type ServerClientConfig } from '../../server.js';
-import type { ApiClient } from '../../runtime/client.js';
-import type { TokenProvider } from '../../runtime/auth/types.js';
-import type { TenantProvider } from '../../runtime/tenant/types.js';
+import { createServerClient, type ServerClientConfig } from '../../server';
+import type { ApiClient } from '../../runtime/client';
+import type { TokenProvider } from '../../runtime/auth/types';
+import type { TenantProvider } from '../../runtime/tenant/types';
 
 export type { ServerClientConfig };
 

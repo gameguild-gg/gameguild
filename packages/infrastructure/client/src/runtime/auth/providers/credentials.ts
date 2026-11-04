@@ -22,11 +22,11 @@
  * ```
  */
 
-import type { CredentialsProviderConfig, ProviderResult, SessionUser } from '../types.js';
-import { AccountLockedError, AuthServiceUnavailableError, CredentialsSignInError, MfaRequiredError } from '../errors.js';
-import { resolveAuthPermissions, resolveAuthRoles } from '../claims.js';
-import { AuthModule } from '../../../generated/modules/auth.gen.js';
-import { createServerClient } from '../../../server.js';
+import type { CredentialsProviderConfig, ProviderResult, SessionUser } from '../types';
+import { AccountLockedError, AuthServiceUnavailableError, CredentialsSignInError, MfaRequiredError, parseMfaEnrollmentOffer } from '../errors';
+import { resolveAuthPermissions, resolveAuthRoles } from '../claims';
+import { AuthModule } from '../../../generated/modules/auth.gen';
+import { createServerClient } from '../../../server';
 
 /**
  * Options for the credentials provider
@@ -162,6 +162,7 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
             mfaSessionId: data.mfaSessionId ?? undefined,
             mfaToken: typeof data.mfaToken === 'string' ? data.mfaToken : undefined,
             availableMethods: Array.isArray(data.availableMethods) ? data.availableMethods.filter((m): m is string => typeof m === 'string') : undefined,
+            mfaEnrollment: parseMfaEnrollmentOffer(data.mfaEnrollment),
           });
         }
 

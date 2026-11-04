@@ -23,10 +23,10 @@
  * ```
  */
 
-import { err } from '../runtime/result/helpers.js';
-import type { Result } from '../runtime/result/types.js';
-import type { ApiError } from '../runtime/errors/types.js';
-import type { RequestConfig, Transport, ApiResponse } from '../runtime/transport/types.js';
+import { err } from '../runtime/result/helpers';
+import type { Result } from '../runtime/result/types';
+import type { ApiError } from '../runtime/errors/types';
+import type { RequestConfig, Transport, ApiResponse } from '../runtime/transport/types';
 
 /**
  * Configuration for auth retry plugin

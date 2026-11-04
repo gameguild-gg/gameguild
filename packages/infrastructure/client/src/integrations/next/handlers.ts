@@ -16,16 +16,16 @@
  *   GET  /api/auth/callback/:provider — OAuth callback
  */
 
-import type { ResolvedAuthConfig, Session, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types.js';
-import { SessionStore, CsrfStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies.js';
-import { createJWTPayload, processSession, encodeSession, toSession } from '../../runtime/auth/session.js';
-import { createCSRFToken, validateCSRFToken } from '../../runtime/auth/csrf.js';
-import { decodeJWT } from '../../runtime/auth/jwt.js';
-import { resolveAuthPermissions, resolveAuthRoles } from '../../runtime/auth/claims.js';
-import { AuthError, CredentialsSignInError, ProviderNotFoundError, CSRFError, SignUpError, AuthServiceUnavailableError } from '../../runtime/auth/errors.js';
-import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen.js';
-import { createServerClient } from '../../server.js';
-import { type OAuthProviderWithMethods, getOAuthExchangeToken, getOAuthAuthorizeUrl, getOAuthHandleCallback } from './oauth-helpers.js';
+import type { ResolvedAuthConfig, Session, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types';
+import { SessionStore, CsrfStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies';
+import { createJWTPayload, processSession, encodeSession, toSession } from '../../runtime/auth/session';
+import { createCSRFToken, validateCSRFToken } from '../../runtime/auth/csrf';
+import { decodeJWT } from '../../runtime/auth/jwt';
+import { resolveAuthPermissions, resolveAuthRoles } from '../../runtime/auth/claims';
+import { AuthError, CredentialsSignInError, ProviderNotFoundError, CSRFError, SignUpError, AuthServiceUnavailableError } from '../../runtime/auth/errors';
+import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen';
+import { createServerClient } from '../../server';
+import { type OAuthProviderWithMethods, getOAuthExchangeToken, getOAuthAuthorizeUrl, getOAuthHandleCallback } from './oauth-helpers';
 import {
   STATE_COOKIE_MAX_AGE,
   constantTimeEqual,
@@ -34,7 +34,7 @@ import {
   stateCookieName,
   stateCookieOptions,
   verifyStateCookie,
-} from './oauth-state.js';
+} from './oauth-state';
 
 /**
  * Internal cookie setter that collects Set-Cookie headers
