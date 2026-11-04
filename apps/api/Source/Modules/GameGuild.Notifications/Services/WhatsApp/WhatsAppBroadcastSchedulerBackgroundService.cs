@@ -12,8 +12,8 @@ namespace GameGuild.Notifications.Services.WhatsApp;
 ///     Scheduled campaigns whose time has come, claims them, and delegates to
 ///     <see cref="IWhatsAppBroadcastService.SendAsync"/>. Single-flight by the
 ///     campaign state machine (Draft/Scheduled -> Sending) — a second claim attempt on
-///     an in-flight campaign fails benignly. Dormant while the channel is unconfigured
-///     because no broadcasts can be sent in that state.
+///     an in-flight campaign fails benignly. Exits immediately while the channel is
+///     unconfigured — a disabled channel must not poll the database (issue #1218 G6).
 /// </summary>
 public sealed class WhatsAppBroadcastSchedulerBackgroundService(
     IServiceProvider serviceProvider,
@@ -28,6 +28,7 @@ public sealed class WhatsAppBroadcastSchedulerBackgroundService(
         if (!settings.Value.Enabled)
         {
             logger.LogInformation("WhatsAppBroadcastSchedulerBackgroundService is dormant because WhatsApp delivery is disabled");
+            return;
         }
 
         logger.LogInformation("WhatsAppBroadcastSchedulerBackgroundService started");
