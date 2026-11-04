@@ -172,7 +172,10 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
             },
             createdAt: now.AddDays(-1));
 
-        // Held attempt from Portugal through paypal, today.
+        // Held attempt from Portugal through paypal, today. Seeded at `now` (the window end is
+        // inclusive) rather than now-minus-hours: an hour-offset seed crosses the UTC midnight
+        // boundary when the suite runs shortly after 00:00 UTC and lands the "today" payment in
+        // the yesterday bucket, flipping the per-day trend this test pins.
         await AddPaymentAsync(
             _tenantId,
             payment =>
@@ -181,11 +184,11 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
                 payment.MarkAsProcessing();
                 payment.RecordFraudAssessment(FraudDecision.Review, 55, "held", null);
             },
-            createdAt: now.AddHours(-1),
+            createdAt: now,
             provider: "paypal");
 
         // Attempt without a recorded country through stripe, today.
-        await AddPaymentAsync(_tenantId, payment => payment.MarkAsProcessing(), createdAt: now.AddHours(-2));
+        await AddPaymentAsync(_tenantId, payment => payment.MarkAsProcessing(), createdAt: now);
 
         var handler = new GetFraudStatisticsQueryHandler(_context);
         var report = await handler.Handle(new GetFraudStatisticsQuery(), CancellationToken.None);

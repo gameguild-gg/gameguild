@@ -19,6 +19,9 @@ public class StripePaymentService(
     private readonly Func<PaymentIntentCreateOptions, RequestOptions, CancellationToken, Task<PaymentIntent>>
         _createPaymentIntentAsync = static (createOptions, requestOptions, cancellationToken) =>
             new PaymentIntentService().CreateAsync(createOptions, requestOptions, cancellationToken);
+    private readonly Func<RefundCreateOptions, RequestOptions, CancellationToken, Task<Stripe.Refund>>
+        _createRefundAsync = static (createOptions, requestOptions, cancellationToken) =>
+            new RefundService().CreateAsync(createOptions, requestOptions, cancellationToken);
     private readonly Func<string, DisputeCloseOptions, RequestOptions, CancellationToken, Task<Dispute>>
         _closeDisputeAsync = static (disputeId, closeOptions, requestOptions, cancellationToken) =>
             new Stripe.DisputeService().CloseAsync(disputeId, closeOptions, requestOptions, cancellationToken);
@@ -33,6 +36,7 @@ public class StripePaymentService(
         IOptions<StripeGatewayOptions> options,
         ILogger<StripePaymentService> logger,
         Func<PaymentIntentCreateOptions, RequestOptions, CancellationToken, Task<PaymentIntent>>? createPaymentIntentAsync = null,
+        Func<RefundCreateOptions, RequestOptions, CancellationToken, Task<Stripe.Refund>>? createRefundAsync = null,
         Func<string, DisputeCloseOptions, RequestOptions, CancellationToken, Task<Dispute>>? closeDisputeAsync = null,
         Func<string, DisputeUpdateOptions, RequestOptions, CancellationToken, Task<Dispute>>? updateDisputeAsync = null,
         Func<FileCreateOptions, RequestOptions, CancellationToken, Task<Stripe.File>>? uploadEvidenceFileAsync = null)
@@ -43,6 +47,11 @@ public class StripePaymentService(
         // fall through to a misconfigured delegate.
         ArgumentNullException.ThrowIfNull(createPaymentIntentAsync);
         _createPaymentIntentAsync = createPaymentIntentAsync;
+
+        if (createRefundAsync is not null)
+        {
+            _createRefundAsync = createRefundAsync;
+        }
 
         if (closeDisputeAsync is not null)
         {
@@ -730,6 +739,16 @@ public class StripePaymentService(
         GatewayRefundRequest request,
         CancellationToken cancellationToken)
     {
+        // Issue #1202 (gaps N1): resolve — and fail closed on — the minor-unit currency
+        // BEFORE the gateway try/catch below. The generic handler folds any exception into
+        // a refund-failure result, which would silently turn the mis-scale guard into a
+        // gateway decline instead of the programming-error signal callers must see.
+        string? refundCurrency = null;
+        if (request.Amount.HasValue)
+        {
+            refundCurrency = ResolveRefundCurrency(request);
+        }
+
         try
         {
             var createOptions = new RefundCreateOptions
@@ -740,7 +759,13 @@ public class StripePaymentService(
 
             if (request.Amount.HasValue)
             {
-                createOptions.Amount = StripeAmountConverter.ToStripeAmount(request.Amount.Value, "USD");
+                // The minor-unit conversion must use the PAYMENT's actual currency — the
+                // same source the charge leg uses — never a hardcoded one. A hardcoded
+                // two-decimal currency over-refunds zero-decimal currencies (JPY: 100x)
+                // and under-refunds three-decimal ones (KWD/BHD).
+                createOptions.Amount = StripeAmountConverter.ToStripeAmount(
+                    request.Amount.Value,
+                    refundCurrency!);
             }
 
             var requestOptions = new RequestOptions
@@ -749,7 +774,7 @@ public class StripePaymentService(
                 StripeAccount = ResolveConnectedAccountId()
             };
 
-            var refund = await _refundService.CreateAsync(
+            var refund = await _createRefundAsync(
                 createOptions,
                 requestOptions,
                 cancellationToken).ConfigureAwait(false);
@@ -797,6 +822,19 @@ public class StripePaymentService(
         logger.LogDebug("Using simulated refund response for development/testing");
         return SimulatedPaymentResultFactory.RefundSuccess(request.Amount ?? 0, logger);
     }
+
+    /// <summary>
+    ///     Resolves the currency whose minor-unit exponent scales an explicit refund amount
+    ///     (issue #1202 / gaps N1). The refund request carries the payment's actual currency
+    ///     (populated by <c>RefundProcessingService.BuildRefundGatewayRequest</c> from the
+    ///     refund row, which inherits the payment's currency). Fail closed when it is missing:
+    ///     guessing a two-decimal default would silently mis-scale every other exponent.
+    /// </summary>
+    private static string ResolveRefundCurrency(GatewayRefundRequest request) =>
+        string.IsNullOrWhiteSpace(request.Currency)
+            ? throw new InvalidOperationException(
+                $"A refund amount for transaction {request.OriginalTransactionId} cannot be converted to minor units without the payment's currency.")
+            : request.Currency;
 
     private RequestOptions CreateRequestOptions() => new()
     {

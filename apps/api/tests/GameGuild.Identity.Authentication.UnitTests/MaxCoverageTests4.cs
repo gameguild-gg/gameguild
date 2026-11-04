@@ -9,6 +9,7 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -549,7 +550,7 @@ public sealed class JwtTokenServiceRetryTests
 // ════════════════════════════════════════════════════════════════════════════
 public sealed class EmailVerificationBranchTests
 {
-    private readonly MemoryCache _cache;
+    private readonly MemoryDistributedCache _cache;
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IPublisher> _publisher = new();
     private readonly EmailVerificationService _sut;
@@ -557,7 +558,7 @@ public sealed class EmailVerificationBranchTests
 
     public EmailVerificationBranchTests()
     {
-        _cache = new MemoryCache(new MemoryCacheOptions());
+        _cache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
         _publisher.Setup(p => p.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _sut = new EmailVerificationService(

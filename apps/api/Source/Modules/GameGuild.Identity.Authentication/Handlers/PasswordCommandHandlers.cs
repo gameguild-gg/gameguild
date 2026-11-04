@@ -62,7 +62,20 @@ public sealed class RequestPasswordResetCommandHandler(
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
         var user = await userRepository.GetByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false);
-        if (user is not null)
+        if (user is not null && !user.IsEmailVerified)
+        {
+            // Account-recovery takeover guard (issue #1124): an attacker can register with a
+            // victim's address and never verify it; a reset link would then be delivered to
+            // the address they do not own ONLY if the mailbox were theirs — but for never-
+            // verified addresses ownership was never proven, so recovery is refused outright.
+            // The response stays identical to the known-account path so the refusal itself
+            // does not become a verification-status oracle.
+            logger.LogInformation(
+                "Password reset refused for never-verified email (user {UserId}) from {IpAddress}",
+                user.Id,
+                request.IpAddress ?? "unknown");
+        }
+        else if (user is not null)
         {
             var token = await emailVerificationService.GeneratePasswordResetTokenAsync(user.Id, user.Email).ConfigureAwait(false);
             await publisher.Publish(
@@ -136,6 +149,19 @@ public sealed class ResetPasswordCommandHandler(
             {
                 Success = false,
                 Message = "User not found"
+            };
+        }
+
+        if (!user.IsEmailVerified)
+        {
+            // Issue #1124 (defense in depth): reset tokens are no longer issued for
+            // never-verified addresses, but any token issued by an older or parallel path
+            // is refused here as well — an unverified address must never unlock recovery.
+            logger.LogInformation("Password reset refused at consume time for never-verified user {UserId}", userId);
+            return new PasswordResetResult
+            {
+                Success = false,
+                Message = "Invalid or expired reset token"
             };
         }
 
