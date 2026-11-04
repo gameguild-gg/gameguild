@@ -9,6 +9,8 @@ using Moq;
 using Xunit;
 
 using LearningProgram = GameGuild.Learning.Courses.Program;
+using LearningCompletionStatus = GameGuild.Learning.Courses.CompletionStatus;
+using LearningProgramEnrollment = GameGuild.Learning.Courses.ProgramEnrollment;
 
 namespace GameGuild.Learning.Certificates.Tests;
 
@@ -188,11 +190,23 @@ public class CertificateAnchoringTests
         CertificateAnchoringDbContext context)
     {
         var courseId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var template = CertificateTemplate.Create(courseId, "Completion", "<html />");
         context.Set<CertificateTemplate>().Add(template);
+        // The issuance eligibility gate (#1226 N1, merged with #1275) rejects enrollments
+        // that do not exist, do not belong to the recipient or are not completed, so the
+        // fixture seeds a completed enrollment instead of minting against a random id.
+        var enrollment = new LearningProgramEnrollment
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            ProgramId = courseId,
+            CompletionStatus = LearningCompletionStatus.Completed,
+        };
+        context.Set<LearningProgramEnrollment>().Add(enrollment);
         context.SaveChanges();
 
-        return (template.Id, Guid.NewGuid(), Guid.NewGuid(), courseId);
+        return (template.Id, enrollment.Id, userId, courseId);
     }
 
     private sealed class RecordingCertificateAnchoring : ICertificateAnchoring
@@ -272,6 +286,9 @@ public class CertificateAnchoringTests
                 program.Ignore(entity => entity.ProgramRatings);
                 program.Ignore(entity => entity.ProgramWishlists);
             });
+            // The eligibility gate resolves ProgramEnrollment through IApplicationDbContext,
+            // so the in-memory anchoring fixture carries the enrollment shape as well.
+            modelBuilder.Entity<LearningProgramEnrollment>(enrollment => enrollment.HasKey(entity => entity.Id));
         }
     }
 }

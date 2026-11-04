@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Learning;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using Xunit;
 
 namespace GameGuild.Learning.Experience.Recommendations.UnitTests;
@@ -25,6 +26,11 @@ public class LearningEventHandlersRegistrationTests
     {
         var services = new ServiceCollection();
 
+        // The central AddCqrs scan registers the handlers but not their module
+        // dependencies; the product composition supplies those from the host. The
+        // registration pin only needs constructible doubles to resolve each handler.
+        services.AddScoped<IApplicationDbContext>(_ => Mock.Of<IApplicationDbContext>());
+        services.AddScoped<IRecommendationEngine>(_ => Mock.Of<IRecommendationEngine>());
         services.AddCqrs(typeof(CourseCompletedLearningProfileHandler).Assembly);
 
         using var provider = services.BuildServiceProvider();
