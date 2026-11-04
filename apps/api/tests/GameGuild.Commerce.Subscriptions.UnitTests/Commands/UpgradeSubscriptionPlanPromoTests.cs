@@ -68,7 +68,9 @@ public class UpgradeSubscriptionPlanPromoTests
             new UpgradeSubscriptionPlanCommand(subscription.Id, newPlan.Id, PromoCodes: ["SAVE5"]),
             CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*SAVE5*");
+        // Issue #1290: a total promo rejection surfaces as the domain exception the
+        // middleware maps to 422 — never a 500-class InvalidOperationException.
+        await act.Should().ThrowAsync<SubscriptionPromoCodesRejectedException>().WithMessage("*SAVE5*");
         _lifecycle.Verify(l => l.UpgradePlanAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Never,
             "a fully rejected quote must fail before any mutation");
         _coordinator.Verify(c => c.RecordSubscriptionUsageAsync(It.IsAny<SubscriptionPromoUsageRecordRequest>(), It.IsAny<CancellationToken>()), Times.Never);
