@@ -2100,6 +2100,23 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Elevated-role MFA compliance grace at sign-in (hotfix login-mfa-turnstile)
+
+When a subject's MFA requirement comes only from an elevated role
+(SYSTEMADMIN/ADMIN/TENANTADMIN/OWNER per `MfaSubjectRequirementPolicy`) and the
+subject has no enrolled factor, sign-in issues ordinary credentials instead of
+forcing an enrollment dead-end. The response carries `mfaCompliancePending`
+and the access token carries the `mfa_compliance_pending` claim so the
+frontend can render a persistent compliance banner. The behavior is unchanged
+when the subject has an enrolled factor (the MFA challenge still applies) and
+when `MfaOptions.RequireMfaByDefault` is true (the requirement is then
+default-sourced, not role-only, and the enrollment challenge is forced).
+`ReadSessionProofAsync` mirrors this: an evidence-less refresh session is
+rejected when the subject has since enrolled or the requirement is
+default-sourced, but a role-only requirement with no enrolled factor refreshes
+without a proof. `MfaRequirementDecision` records `RequiredByDefault` so the
+completion re-checks distinguish the two sources.
+
 ### Service-account source restrictions (#1190)
 
 When a service account has an IP allowlist configured, both client-secret and

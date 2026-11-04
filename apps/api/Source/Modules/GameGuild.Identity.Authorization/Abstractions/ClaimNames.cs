@@ -62,6 +62,12 @@ public static class ClaimNames
     public const string MfaTimestamp = "mfa_timestamp";
 
     /// <summary>
+    ///     MFA compliance pending claim: the subject's elevated-role MFA requirement is unmet
+    ///     (no enrolled factor) but the session was issued anyway per policy.
+    /// </summary>
+    public const string MfaCompliancePending = "mfa_compliance_pending";
+
+    /// <summary>
     ///     Guest session id claim. Guests live in their own identity namespace: a guest
     ///     principal NEVER carries <see cref="Subject"/>, <see cref="UserId"/> or
     ///     <see cref="NameIdentifier"/> claims, so no guest can resolve to a real user id.

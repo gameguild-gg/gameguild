@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Configuration.ApplicationLayer;
@@ -317,6 +318,7 @@ public class LocalAuthService(
             {
                 throw new InvalidOperationException("Required MFA cannot be skipped during credential issuance.");
             }
+            var mfaCompliancePending = preparation.MfaCompliancePending;
             var tokenVersion = authenticatedVersion;
 
             var refreshTokenExpiryDays = RefreshTokenLifetimeResolver.ResolveExpirationDays(
@@ -337,6 +339,18 @@ public class LocalAuthService(
                 tokenVersion,
                 sessionId,
                 cancellationToken).ConfigureAwait(false);
+            if (mfaCompliancePending)
+            {
+                accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+                    authenticatedUserId,
+                    authenticatedUser?.Email ?? request.Email,
+                    tenantAccessContext.Roles.ToArray(),
+                    tenantAccessContext.TenantId,
+                    tokenVersion,
+                    sessionId,
+                    new[] { new Claim(GameGuild.Identity.Authorization.ClaimNames.MfaCompliancePending, "true") },
+                    cancellationToken).ConfigureAwait(false);
+            }
             var refreshTokenHash = refreshTokenHasher.HashToken(refreshToken);
             var session = await sessionManagementService.CreateSessionAsync(
                 sessionId,
@@ -406,7 +420,8 @@ public class LocalAuthService(
                 Email = authenticatedUser?.Email ?? request.Email,
                 SessionId = sessionId,
                 TenantId = tenantAccessContext.TenantId,
-                AvailableTenants = tenantAccessContext.AvailableTenants
+                AvailableTenants = tenantAccessContext.AvailableTenants,
+                MfaCompliancePending = mfaCompliancePending
             };
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -1042,7 +1057,7 @@ public class LocalAuthService(
             SessionId = sessionId,
             TenantId = tenantAccessContext.TenantId,
             AvailableTenants = tenantAccessContext.AvailableTenants
-        };
+            };
     }
 
     private async Task InvalidateSessionsAfterRefreshReplayAsync(

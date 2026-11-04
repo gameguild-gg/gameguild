@@ -21,6 +21,21 @@ vi.mock('@game-guild/client/react', () => ({
   useAuth: () => mockAuth,
 }));
 
+// Turnstile harness: renders a DOM anchor for the (lazily mounted) wallet
+// widget and reports onToken(null) on mount — mirroring the unset-site-key
+// dev/e2e path where the challenge is disabled and the token resolves null.
+const turnstileHarness = vi.hoisted(() => ({
+  mounted: 0,
+}));
+
+vi.mock('@/components/antibot/turnstile-widget', () => ({
+  TurnstileWidget: (props: { id?: string; onToken: (token: string | null) => void }) => {
+    turnstileHarness.mounted += 1;
+    queueMicrotask(() => props.onToken(null));
+    return <div id={props.id} data-testid={props.id} />;
+  },
+}));
+
 const { WalletSignInButtons } = await import('@/components/wallet-sign-in-buttons');
 
 const LABELS = {
@@ -85,6 +100,23 @@ describe('WalletSignInButtons', () => {
     expect(screen.getByTestId('walletconnect-sign-in-button')).toHaveTextContent(
       'Continue with WalletConnect',
     );
+  });
+
+  it('does not render the wallet Turnstile widget until the wallet flow starts', async () => {
+    turnstileHarness.mounted = 0;
+    const adapters = buildAdapters(createMockEip1193Provider(), createMockEip1193Provider());
+    const { user } = renderWithUser(<WalletSignInButtons labels={LABELS} adapters={adapters} />);
+
+    await screen.findByTestId('metamask-sign-in-button');
+    // Hotfix: exactly one Turnstile on initial /sign-in render — the wallet
+    // challenge mounts only after a wallet button is clicked.
+    expect(turnstileHarness.mounted).toBe(0);
+
+    await user.click(screen.getByTestId('metamask-sign-in-button'));
+
+    await waitFor(() => {
+      expect(turnstileHarness.mounted).toBe(1);
+    });
   });
 
   it('renders nothing when no wallet is available', async () => {

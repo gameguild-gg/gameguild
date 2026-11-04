@@ -153,7 +153,8 @@ public sealed class MfaEnrollmentSessionFixture
         Subjects.Setup(port => port.ReadCurrentAsync(User.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => new SignInMfaSubjectState(User, Enrolled, null));
         Policy.Setup(port => port.EvaluateAsync(User.Id, TenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(() => new MfaRequirementDecision(User.Id, TenantId, PolicyRequiresMfa, ["Member"], PolicyFingerprint));
+            .ReturnsAsync(() => new MfaRequirementDecision(User.Id, TenantId, PolicyRequiresMfa, ["Member"], PolicyFingerprint,
+                RequiredByDefault: PolicyRequiresMfa));
         RecoveryRequests.Setup(port => port.FindLiveByUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((MfaRecoveryRequest?)null);
 

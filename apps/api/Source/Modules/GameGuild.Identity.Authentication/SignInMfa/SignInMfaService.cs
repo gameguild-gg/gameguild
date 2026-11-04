@@ -51,6 +51,12 @@ public sealed class SignInMfaService(
         {
             return SignInMfaPreparation.PermitWithoutMfa(current.User, decision);
         }
+        if (decision.RequiresMfa && !decision.RequiredByDefault && !current!.HasEnrolledMfa && !requiresRiskStepUp)
+        {
+            // Elevated-role-only requirement with no enrolled factor: dropping MFA is honored at
+            // sign-in. Compliance is reported instead of forcing an enrollment dead-end.
+            return SignInMfaPreparation.PermitWithoutMfa(current.User, decision, mfaCompliancePending: true);
+        }
 
         var token = SignInMfaChallengeToken.Create();
         if (!SignInMfaChallengeToken.TryHash(token, out var hash)) { throw new InvalidOperationException("Challenge creation failed."); }
@@ -193,7 +199,7 @@ public sealed class SignInMfaService(
         cancellationToken.ThrowIfCancellationRequested();
         if (stored is null)
         {
-            if (decision.RequiresMfa || current!.HasEnrolledMfa)
+            if (current!.HasEnrolledMfa || decision.RequiredByDefault)
             {
                 throw new AuthenticationRequiredException("MFA verification is required before refreshing this session.");
             }

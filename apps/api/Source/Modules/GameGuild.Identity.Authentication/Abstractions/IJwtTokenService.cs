@@ -30,6 +30,19 @@ public interface IJwtTokenService
         Guid sessionId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Generates an access token with additional claims (e.g. the MFA compliance-pending marker).
+    /// </summary>
+    Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        Guid sessionId,
+        IEnumerable<Claim> additionalClaims,
+        CancellationToken cancellationToken = default);
+
     Task<string> GenerateAccessTokenAsync(
         Guid userId,
         string email,

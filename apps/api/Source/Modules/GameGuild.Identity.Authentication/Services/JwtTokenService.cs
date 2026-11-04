@@ -53,6 +53,7 @@ public sealed class JwtTokenService(
         "actor_kind", "actor_type", "client_id", "grant_type", "scope",
         ClaimNames.UserId, ClaimNames.TenantId, ClaimNames.Group,
         ClaimNames.MfaVerified, ClaimNames.MfaTime, ClaimNames.MfaTimestamp, ClaimNames.EmailVerified,
+        ClaimNames.MfaCompliancePending,
         JwtClaimTypes.TenantId, JwtClaimTypes.SessionId, JwtClaimTypes.MfaEnabled,
         JwtClaimTypes.TenantPermissionFlags1, JwtClaimTypes.TenantPermissionFlags2
     }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
@@ -93,6 +94,29 @@ public sealed class JwtTokenService(
             sessionId,
             cancellationToken,
             null);
+    }
+
+    public Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        Guid sessionId,
+        IEnumerable<Claim> additionalClaims,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(additionalClaims);
+        return GenerateAccessTokenCoreAsync(
+            userId,
+            email,
+            roles,
+            tenantId,
+            tokenVersion,
+            new DateTimeOffset(DateTime.SpecifyKind(SystemClock.UtcNow, DateTimeKind.Utc)),
+            sessionId,
+            cancellationToken,
+            additionalClaims);
     }
 
     public Task<string> GenerateAccessTokenAsync(

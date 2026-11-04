@@ -72,7 +72,8 @@ public sealed class MfaSubjectRequirementPolicy(ISender sender, MfaOptions mfaOp
         });
         var fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(fingerprintSource)))
             .ToLowerInvariant();
-        return new MfaRequirementDecision(subjectId, tenantId, requiresMfa, Array.AsReadOnly(roles), fingerprint);
+        return new MfaRequirementDecision(subjectId, tenantId, requiresMfa, Array.AsReadOnly(roles), fingerprint,
+            RequiredByDefault: enabled && requireByDefault);
     }
 
     private static bool IsElevatedRole(string role) =>

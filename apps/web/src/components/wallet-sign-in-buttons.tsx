@@ -112,6 +112,16 @@ function WalletButtonGroup({
   const { signIn } = useAuth();
   // Keep the anti-bot token with the wallet context and clear it on challenge failure.
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  // Lazy anti-bot (hotfix: duplicate Turnstile on /sign-in): the wallet widget
+  // mounts only after the user actually starts the wallet flow, so the initial
+  // /sign-in render shows exactly one challenge (the email form's). The token
+  // is only needed for /api/auth/web3/challenge, so deferring the render is
+  // safe — the SIWE journey below is gated on `tokenResolved`, which the
+  // widget sets on its first onToken callback (a real token when the site key
+  // is set, or null immediately when the challenge is disabled in dev/e2e).
+  const [flowStarted, setFlowStarted] = useState(false);
+  const [pendingWalletId, setPendingWalletId] = useState<string | null>(null);
+  const [tokenResolved, setTokenResolved] = useState(false);
   // Accessed through the context object (not destructured): the linter's
   // unbound-method rule fires on functions separated from their owning
   // object. `useWeb3` (not the `useWallet` snapshot) exposes `authenticate`
@@ -168,14 +178,30 @@ function WalletButtonGroup({
     [signIn, redirectTo, turnstileToken],
   );
 
-  async function handleConnect(walletId: string) {
+  async function handleConnect(walletId: string, proceed: boolean) {
     web3.clearError();
     try {
+      if (!proceed) {
+        // First click arms the lazy anti-bot widget and waits for its first
+        // token (or its disabled-report null) before the challenge call, so
+        // the SIWE flow never fires without a captured proof.
+        setFlowStarted(true);
+        setPendingWalletId(walletId);
+        return;
+      }
       await web3.connect(walletId);
       await web3.authenticate(transport);
     } catch {
       // State machine already surfaced the error below the buttons.
     }
+  }
+
+  function handleToken(token: string | null) {
+    setTurnstileToken(token);
+    setTokenResolved(true);
+    const walletId = pendingWalletId;
+    setPendingWalletId(null);
+    if (walletId) void handleConnect(walletId, true);
   }
 
   const availableWallets = web3.wallets.filter((wallet) => wallet.available);
@@ -204,14 +230,16 @@ function WalletButtonGroup({
 
   return (
     <div className="contents" data-testid="wallet-sign-in-buttons">
-      <TurnstileWidget onToken={setTurnstileToken} id="wallet-sign-in-turnstile" />
+      {flowStarted ? (
+        <TurnstileWidget onToken={handleToken} id="wallet-sign-in-turnstile" />
+      ) : null}
       {availableWallets.map((wallet) => (
         <button
           key={wallet.id}
           type="button"
           data-testid={`${wallet.id}-sign-in-button`}
-          disabled={isPending}
-          onClick={() => void handleConnect(wallet.id)}
+          disabled={isPending || pendingWalletId !== null}
+          onClick={() => void handleConnect(wallet.id, tokenResolved)}
           className="flex h-10 w-full items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 text-sm font-medium text-white shadow-xs transition hover:bg-white/15 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
         >
           {walletIcon}
