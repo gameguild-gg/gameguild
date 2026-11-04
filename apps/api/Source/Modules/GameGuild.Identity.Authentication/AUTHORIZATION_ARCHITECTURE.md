@@ -2100,6 +2100,43 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Service-account source restrictions (#1190)
+
+When a service account has an IP allowlist configured, both client-secret and
+certificate authentication reject a missing or empty caller IP. The restriction
+is evaluated before accepting either credential and never updates successful-
+authentication metadata on denial. Source denials remain logged but do not consume
+the credential-failure lockout budget, preventing callers outside the allowlist
+from locking the account. Accounts without an
+IP restriction retain their existing behavior. The request-facing token endpoint
+derives the caller IP from the server connection rather than the request body.
+
+The certificate-removal endpoint requires an authenticated user administrator.
+HTTP authentication is enforced by `[Authorize]`; the command enforces the
+administrator role and target-tenant boundary.
+Its command handler checks the server-side actor and the target account's tenant
+before clearing both certificate pins; only a SystemAdmin can remove pins from
+global accounts or another tenant. Removal is idempotent and preserves the client
+secret and account activity state. The durable use-case operation event records
+the mutation without including certificate pins. Failed persistence restores the
+tracked binding and propagates the failure.
+
+Certificate thumbprints support both the documented 40-character SHA-1 and
+64-character SHA-256 forms in persistence, client-ID authentication, and the
+trusted-CA mTLS lookup. Multiple accounts matching different digests of the same
+certificate remain ambiguous and are denied. Normalization uses a fixed-size
+buffer, so the supplied pin length cannot control stack allocation. Malformed
+pins return 400; a unique certificate-binding conflict returns 409 without
+exposing database diagnostics or retaining rejected pins in the tracked entity.
+
+Credential failures lock a service account for the configured
+`AuthenticationSecurity:AccountLockoutDurationMinutes` (30 minutes by default).
+An explicit nullable automatic-lockout deadline distinguishes these locks from
+administrative holds. Expiry permits a new authentication attempt and resets the
+old failure window before counting a new invalid credential. Manual locks and
+legacy locks without a deadline remain locked until explicitly unlocked; placing
+an administrative hold clears any automatic deadline.
+
 ### JWT rotation and sensitive MFA mutations (#1141, #1123, #1153)
 
 The scoped `IKeyRotationService` and hosted rotation worker are explicitly registered.

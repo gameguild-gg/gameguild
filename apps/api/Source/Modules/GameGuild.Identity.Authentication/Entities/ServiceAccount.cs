@@ -121,6 +121,9 @@ public class ServiceAccount
     /// </summary>
     public DateTime? LockedAt { get; set; }
 
+    /// <summary>End of an automatic credential-failure lockout. Null preserves administrative and legacy locks.</summary>
+    public DateTime? AutomaticLockoutEndsAt { get; set; }
+
     /// <summary>
     ///     Allowed IP addresses (comma-separated CIDR notation). Empty means all IPs allowed.
     /// </summary>
@@ -128,10 +131,10 @@ public class ServiceAccount
     public string? AllowedIpAddresses { get; set; }
 
     /// <summary>
-    ///     SHA-1 thumbprint (uppercase hex, no separators) of the X.509 client certificate
+    ///     SHA-1 or SHA-256 thumbprint (uppercase hex, no separators) of the X.509 client certificate
     ///     bound to this service account. Null when the account authenticates by secret only.
     /// </summary>
-    [MaxLength(40)]
+    [MaxLength(64)]
     public string? CertificateThumbprint { get; set; }
 
     /// <summary>
@@ -148,7 +151,7 @@ public class ServiceAccount
     {
         get
         {
-            if (!IsActive || IsLocked) { return false; }
+            if (!IsActive || (IsLocked && (!AutomaticLockoutEndsAt.HasValue || SystemClock.UtcNow < AutomaticLockoutEndsAt.Value))) { return false; }
 
             return !ExpiresAt.HasValue || SystemClock.UtcNow < ExpiresAt.Value;
         }
@@ -173,6 +176,7 @@ public class ServiceAccount
     /// </summary>
     public void RecordSuccessfulAuthentication(string? ipAddress)
     {
+        ReleaseExpiredAutomaticLockout();
         LastAuthenticatedAt = SystemClock.UtcNow;
         LastAuthenticatedFromIp = ipAddress;
         AuthenticationCount++;
@@ -183,13 +187,31 @@ public class ServiceAccount
     ///     Records a failed authentication attempt.
     /// </summary>
     /// <param name="lockThreshold">Number of failed attempts before locking.</param>
-    public void RecordFailedAuthentication(int lockThreshold = 10)
+    /// <param name="lockoutDuration">Bounded automatic lockout duration; defaults to thirty minutes.</param>
+    public void RecordFailedAuthentication(int lockThreshold = 10, TimeSpan? lockoutDuration = null)
     {
+        var duration = lockoutDuration ?? TimeSpan.FromMinutes(30);
+        if (lockThreshold < 1 || duration <= TimeSpan.Zero || duration > TimeSpan.FromDays(1))
+        {
+            throw new ArgumentOutOfRangeException(nameof(lockoutDuration), "Automatic lockout requires a positive threshold and a duration of at most one day.");
+        }
+
+        ReleaseExpiredAutomaticLockout();
+        if (IsLocked) return;
         FailedAuthenticationAttempts++;
         if (FailedAuthenticationAttempts >= lockThreshold)
         {
             IsLocked = true;
             LockedAt = SystemClock.UtcNow;
+            AutomaticLockoutEndsAt = LockedAt.Value.Add(duration);
+        }
+    }
+
+    private void ReleaseExpiredAutomaticLockout()
+    {
+        if (IsLocked && AutomaticLockoutEndsAt.HasValue && SystemClock.UtcNow >= AutomaticLockoutEndsAt.Value)
+        {
+            Unlock();
         }
     }
 
@@ -200,6 +222,7 @@ public class ServiceAccount
     {
         IsLocked = false;
         LockedAt = null;
+        AutomaticLockoutEndsAt = null;
         FailedAuthenticationAttempts = 0;
     }
 
@@ -211,6 +234,7 @@ public class ServiceAccount
     {
         IsLocked = true;
         LockedAt = SystemClock.UtcNow;
+        AutomaticLockoutEndsAt = null;
         UpdatedAt = SystemClock.UtcNow;
     }
 
