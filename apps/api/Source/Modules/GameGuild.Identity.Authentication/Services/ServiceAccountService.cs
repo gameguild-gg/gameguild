@@ -95,10 +95,10 @@ public sealed class ServiceAccountService : IServiceAccountService
             return null;
         }
 
-        // Validate IP address if restrictions are set
-        if (!string.IsNullOrEmpty(serviceAccount.AllowedIpAddresses) && !string.IsNullOrEmpty(ipAddress))
+        // Configured restrictions also reject an unavailable caller IP.
+        if (!string.IsNullOrEmpty(serviceAccount.AllowedIpAddresses))
         {
-            if (!IsIpAllowed(ipAddress, serviceAccount.AllowedIpAddresses))
+            if (string.IsNullOrEmpty(ipAddress) || !IsIpAllowed(ipAddress, serviceAccount.AllowedIpAddresses))
             {
                 _logger.LogWarning(
                     "Authentication failed: IP {IpAddress} not in allowed list for service account {ServiceAccountId}",
@@ -157,10 +157,10 @@ public sealed class ServiceAccountService : IServiceAccountService
             return null;
         }
 
-        // Validate IP address if restrictions are set
-        if (!string.IsNullOrEmpty(serviceAccount.AllowedIpAddresses) && !string.IsNullOrEmpty(ipAddress))
+        // Apply the same fail-closed restriction to certificate authentication.
+        if (!string.IsNullOrEmpty(serviceAccount.AllowedIpAddresses))
         {
-            if (!IsIpAllowed(ipAddress, serviceAccount.AllowedIpAddresses))
+            if (string.IsNullOrEmpty(ipAddress) || !IsIpAllowed(ipAddress, serviceAccount.AllowedIpAddresses))
             {
                 _logger.LogWarning(
                     "Authentication failed: IP {IpAddress} not in allowed list for service account {ServiceAccountId}",

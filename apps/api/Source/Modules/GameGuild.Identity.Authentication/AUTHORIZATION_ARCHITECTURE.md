@@ -2100,6 +2100,15 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Service-account source restrictions (#1190)
+
+When a service account has an IP allowlist configured, both client-secret and
+certificate authentication reject a missing or empty caller IP. The restriction
+is evaluated before accepting either credential, records the failed attempt and
+never updates successful-authentication metadata on denial. Accounts without an
+IP restriction retain their existing behavior. The request-facing token endpoint
+derives the caller IP from the server connection rather than the request body.
+
 ### JWT rotation and sensitive MFA mutations (#1141, #1123, #1153)
 
 The scoped `IKeyRotationService` and hosted rotation worker are explicitly registered.
