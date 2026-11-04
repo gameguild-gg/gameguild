@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using FluentAssertions;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
 namespace GameGuild.API.UnitTests.Architecture;
@@ -190,9 +192,14 @@ public sealed class UnavailableUseCaseSurfaceGuardTests
     }
 
     /// <summary>
-    ///     Controller files (under any <c>Controllers/</c> directory) that reference a
+    ///     Controller files (under any <c>Controllers/</c> directory) that dispatch a
     ///     planned command, with the class-level route template and the action-level
-    ///     HTTP templates that dispatch them, from a source scan.
+    ///     HTTP templates that dispatch them. Attribution is Roslyn-based: an action
+    ///     "dispatches" a planned command when the command is bound as an action
+    ///     parameter (<c>[FromBody] XCommand command</c>) or when the action's
+    ///     <c>Send(...)</c> argument is (or is assigned from) a <c>new XCommand(...)</c>
+    ///     construction inside that action — so references in private helpers or doc
+    ///     comments never contaminate a neighboring route.
     /// </summary>
     private static IEnumerable<(string Controller, string Route, IReadOnlyList<(string Template, string Command)> Actions)>
         FindControllerRoutesDispatchingPlannedCommands(IReadOnlySet<string> plannedCommands)
@@ -205,50 +212,127 @@ public sealed class UnavailableUseCaseSurfaceGuardTests
                 continue;
             }
 
-            var text = file.Text;
-            var classRoute = Regex.Match(text, @"\[Route\(""(?<template>[^""]+)""\)\]");
-            if (!classRoute.Success)
-            {
-                continue;
-            }
-
+            var root = CSharpSyntaxTree.ParseText(file.Text).GetCompilationUnitRoot();
+            var controllerClasses = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
             var actions = new List<(string Template, string Command)>();
-            var actionMatches = Regex.Matches(text,
-                    @"\[Http(?<method>Get|Post|Put|Patch|Delete)(?:\(""(?<template>[^""]*)"")?\)")
-                .OfType<Match>()
-                .ToList();
-            foreach (var command in plannedCommands)
+            string? classRoute = null;
+
+            foreach (var controller in controllerClasses)
             {
-                foreach (var reference in Regex.Matches(text, $@"\b{Regex.Escape(command)}\b").OfType<Match>())
-                {
-                    // Attribute the reference to the nearest [Http*] action above it.
-                    var action = actionMatches
-                        .Where(match => match.Index < reference.Index)
-                        .OrderByDescending(match => match.Index)
-                        .FirstOrDefault();
-                    if (action is null)
+                classRoute ??= controller.AttributeLists
+                    .SelectMany(list => list.Attributes)
+                    .Select(attribute => new
                     {
-                        continue;
+                        attribute.Name,
+                        Template = (attribute.ArgumentList?.Arguments.FirstOrDefault()?.Expression
+                            as LiteralExpressionSyntax)?.Token.ValueText
+                    })
+                    .Where(candidate => candidate.Name.ToString().Contains("Route", StringComparison.Ordinal)
+                                        && candidate.Template is not null)
+                    .Select(candidate => candidate.Template!)
+                    .FirstOrDefault();
+                if (classRoute is null)
+                {
+                    continue;
+                }
+
+                foreach (var method in controller.Members.OfType<MethodDeclarationSyntax>())
+                {
+                    var httpTemplate = method.AttributeLists
+                        .SelectMany(list => list.Attributes)
+                        .Select(attribute => new
+                        {
+                            IsHttp = Regex.IsMatch(attribute.Name.ToString(), @"Http(Get|Post|Put|Patch|Delete)"),
+                            Template = (attribute.ArgumentList?.Arguments.FirstOrDefault()?.Expression
+                                as LiteralExpressionSyntax)?.Token.ValueText ?? string.Empty
+                        })
+                        .Where(candidate => candidate.IsHttp)
+                        .Select(candidate => candidate.Template)
+                        .FirstOrDefault();
+                    if (httpTemplate is null)
+                    {
+                        continue; // not a routed action
                     }
 
-                    actions.Add((action.Groups["template"].Value, command));
+                    foreach (var command in CommandsDispatchedBy(method, plannedCommands))
+                    {
+                        actions.Add((httpTemplate, command));
+                    }
                 }
             }
 
-            if (actions.Count > 0)
+            if (actions.Count > 0 && classRoute is not null)
             {
                 yield return (
                     Path.GetFileNameWithoutExtension(file.Path),
-                    classRoute.Groups["template"].Value,
+                    classRoute,
                     actions.Distinct().ToList());
             }
         }
     }
 
     /// <summary>
+    ///     The planned commands a single action dispatches: bound as a parameter, or
+    ///     constructed (directly in <c>Send</c> or via a local assigned in the action).
+    /// </summary>
+    private static IEnumerable<string> CommandsDispatchedBy(
+        MethodDeclarationSyntax method,
+        IReadOnlySet<string> plannedCommands)
+    {
+        var dispatched = new HashSet<string>(StringComparer.Ordinal);
+
+        // 1. Planned commands bound as action parameters (sent directly or handed to
+        //    a private helper that sends them).
+        foreach (var parameter in method.ParameterList.Parameters)
+        {
+            var typeName = parameter.Type?.ToString().Split('.')[^1];
+            if (typeName is not null && plannedCommands.Contains(typeName))
+            {
+                dispatched.Add(typeName);
+            }
+        }
+
+        // 2. Planned commands constructed inside the action and passed to Send.
+        foreach (var invocation in method.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            var callee = invocation.Expression.ToString();
+            if (!callee.EndsWith(".Send", StringComparison.Ordinal)
+                && !callee.EndsWith(".SendAsync", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var argument = invocation.ArgumentList.Arguments.FirstOrDefault()?.Expression;
+            var constructed = argument switch
+            {
+                ObjectCreationExpressionSyntax creation => creation.Type.ToString().Split('.')[^1],
+                IdentifierNameSyntax identifier => ResolveLocalConstruction(method, identifier.Identifier.ValueText),
+                _ => null
+            };
+            if (constructed is not null && plannedCommands.Contains(constructed))
+            {
+                dispatched.Add(constructed);
+            }
+        }
+
+        return dispatched;
+    }
+
+    private static string? ResolveLocalConstruction(MethodDeclarationSyntax method, string identifier) =>
+        method.DescendantNodes()
+            .OfType<VariableDeclaratorSyntax>()
+            .Where(declarator => declarator.Identifier.ValueText == identifier)
+            .Select(declarator => declarator.Initializer?.Value as ObjectCreationExpressionSyntax)
+            .Where(creation => creation is not null)
+            .Select(creation => creation!.Type.ToString().Split('.')[^1])
+            .FirstOrDefault();
+
+
+    /// <summary>
     ///     The client-visible path candidates for a controller route + action template
-    ///     pair: <c>{version:apiVersion}</c> expands to the advertised versioned
-    ///     prefixes (v1..v3) and remaining parameters keep the client's constraint-less
+    ///     pair: <c>{version:apiVersion}</c> expands to the version digit of the
+    ///     advertised versioned prefixes (v1..v3 — the literal "v" stays from the
+    ///     template) and remaining parameters keep the client's constraint-less
     ///     <c>{name}</c> form.
     /// </summary>
     private static IEnumerable<string> ExpandAdvertisablePath(string controllerRoute, string actionTemplate)
@@ -258,11 +342,10 @@ public sealed class UnavailableUseCaseSurfaceGuardTests
             : controllerRoute.TrimEnd('/') + "/" + actionTemplate.TrimStart('/');
 
         var normalized = Regex.Replace(combined, @"\{(?<name>[A-Za-z][A-Za-z0-9]*)(?::[^}]*)?\}", "{${name}}");
-        var versionless = Regex.Replace(normalized, @"\{version\}", "v{version}");
 
         for (var version = 1; version <= 3; version++)
         {
-            yield return "/" + versionless.Replace("{version}", $"v{version}", StringComparison.Ordinal);
+            yield return "/" + normalized.Replace("{version}", version.ToString(), StringComparison.Ordinal);
         }
     }
 

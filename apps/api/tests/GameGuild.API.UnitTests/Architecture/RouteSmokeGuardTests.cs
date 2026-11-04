@@ -77,27 +77,27 @@ public sealed class RouteSmokeGuardTests(RouteSmokeHostFixture host)
                 }
 
                 HttpStatusCode? statusCode;
-                string failureDetail;
                 try
                 {
                     using var response = await client.SendAsync(request);
                     statusCode = response.StatusCode;
-                    failureDetail = ((int)response.StatusCode).ToString();
                 }
                 catch (Exception exception) when (
                     exception is HttpRequestException or TaskCanceledException or OperationCanceledException)
                 {
+                    // Transport failures and timeouts count as wiring failures: a route that
+                    // cannot answer at all is at least as broken as one that answers 5xx.
                     statusCode = null;
-                    failureDetail = exception is TaskCanceledException or OperationCanceledException
-                        ? "timeout"
-                        : "transport:" + exception.GetType().Name;
+                    _ = exception;
                 }
 
                 var failed = statusCode is null || (int)statusCode >= 500;
                 if (failed)
                 {
+                    // The baseline key is deliberately status-independent (route + principal
+                    // pass) so a 500<->503 flip tightens the fix, not churns the baseline.
                     violations.Add(WiringGapBaseline.Id(
-                        WiringGapBaseline.GuardIds.RouteSmoke, $"{method} {path}|{principalPass}|{failureDetail}"));
+                        WiringGapBaseline.GuardIds.RouteSmoke, $"{method} {path}|{principalPass}"));
                 }
             }
         }
@@ -150,8 +150,13 @@ public sealed class RouteSmokeGuardTests(RouteSmokeHostFixture host)
 
     /// <summary>
     ///     Route classes that need setup a wiring smoke cannot provide. Every entry
-    ///     needs a comment; the class check is a prefix/method match so it stays
-    ///     coarse on purpose.
+    ///     needs a comment; the class check is a prefix match so it stays coarse on
+    ///     purpose. NOTE on the classes the task anticipated: provider webhooks
+    ///     (e.g. <c>/api/v1/billing/webhooks/*</c>) fail SIGNATURE validation on a
+    ///     synthetic body and answer 400/401 — not 5xx — so they do not need an
+    ///     exclusion; multipart upload endpoints answer 415/400 on the JSON smoke
+    ///     body for the same reason. Only routes whose DESIGNED failure mode is a
+    ///     5xx belong here.
     /// </summary>
     private static class ExcludedRouteClasses
     {

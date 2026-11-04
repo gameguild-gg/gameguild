@@ -86,6 +86,7 @@ public sealed class WiringRequestHandlerResolutionGuardTests(WiringGapHostFixtur
                     violations.Add(WiringGapBaseline.Id(
                         WiringGapBaseline.GuardIds.RequestHandlerResolution, Describe(request, response))
                         + $"|ambiguous:{implementations.Count}");
+                    resolvedAtLeastOne = true; // the ambiguity violation is the finding; the request is not dead
                     continue;
                 }
 
