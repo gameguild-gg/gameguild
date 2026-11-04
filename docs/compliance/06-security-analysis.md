@@ -2,6 +2,7 @@
 
 > Modules `GameGuild.Compliance.Audit` / `Consent` / `FERPA` / `KYC` · Documented against `develop` commit `ac959fd8f`.
 > Citation shorthand as in `01-user-flows.md`. Companion gap register: `07-gaps.md`.
+> **Superseded in depth (not withdrawn) by [`08-stride-threat-model.md`](08-stride-threat-model.md)** — the full per-family regulatory STRIDE model (re-verified against develop 21b58ac6a7, including the #1268 open-PR status of N1). This lite pass remains the quick-reference summary.
 
 ## 1. Tamper evidence (T — tampering)
 
