@@ -81,6 +81,20 @@ describe('(auth) layout authenticated redirect (issue #864)', () => {
     ).rejects.toThrow('redirect:/en-US/feed');
   });
 
+  it('keeps an authenticated user on /sign-in/2fa so one-time recovery codes stay visible', async () => {
+    mocks.auth.mockResolvedValue({ user: { id: 'u1' } });
+    gameguildPath('/sign-in/2fa?redirectTo=%2Ffeed');
+
+    const ui = await Layout({
+      children: <div data-testid="mfa-completion">codes</div>,
+      params: Promise.resolve({ locale: 'en-US' }),
+    } as never);
+    render(ui);
+
+    expect(screen.getByTestId('mfa-completion')).toBeInTheDocument();
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+
   it('falls back to the locale feed when no path was forwarded', async () => {
     mocks.auth.mockResolvedValue({ user: { id: 'u1' } });
     gameguildPath(null);

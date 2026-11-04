@@ -51,7 +51,7 @@ describe('Type Generator', () => {
 
     const output = generateTypes(spec);
 
-    expect(output).toContain('export type User = UserDto;');
+    expect(output).toContain('export interface User extends UserDto {}');
     expect(output).toContain('export { UserDtoSchema as UserSchema };');
   });
 
@@ -78,7 +78,7 @@ describe('Type Generator', () => {
 
     const output = generateTypes(spec);
 
-    expect(output).not.toContain('export type User = UserDto;');
+    expect(output).not.toContain('export interface User extends UserDto {}');
     expect(output).not.toContain('export { UserDtoSchema as UserSchema };');
   });
 

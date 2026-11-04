@@ -6,7 +6,7 @@
  * Generated from: GameGuild API
  * API Version: 4.4.0
  */
-import type * as Types from './types.gen.js';
+import type * as Types from './types.gen';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Endpoint Definitions
@@ -4232,7 +4232,7 @@ export const getApiRatingsMyEndpoint = {
 export interface PostApiRatingsMyBatchInput {
   body?: Types.SocialRatingsBatchSummaryInput;
 }
-export type PostApiRatingsMyBatchOutput = Record<string, SocialRatingsRatingDto>;
+export type PostApiRatingsMyBatchOutput = Record<string, Types.SocialRatingsRatingDto>;
 export const postApiRatingsMyBatchEndpoint = {
   operationId: 'postApiRatingsMyBatch' as const,
   method: 'POST' as const,
@@ -4265,7 +4265,7 @@ export const getApiRatingsRecentReviewsEndpoint = {
 export interface PostApiRatingsSummariesBatchInput {
   body?: Types.SocialRatingsBatchSummaryInput;
 }
-export type PostApiRatingsSummariesBatchOutput = Record<string, SocialRatingsRatingSummaryDto>;
+export type PostApiRatingsSummariesBatchOutput = Record<string, Types.SocialRatingsRatingSummaryDto>;
 export const postApiRatingsSummariesBatchEndpoint = {
   operationId: 'postApiRatingsSummariesBatch' as const,
   method: 'POST' as const,

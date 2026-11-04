@@ -5,7 +5,7 @@
  */
 
 import { ZodError, ZodIssue } from 'zod';
-import type { ApiError } from './types.js';
+import type { ApiError } from './types';
 
 export interface ValidationErrorDetail {
   field: string;

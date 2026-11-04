@@ -16,9 +16,15 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
   // callbackUrl/redirectTo QUERY the dashboard guard attached to /sign-in —
   // parse it from the forwarded query, never from the path (the path here is
   // the auth page itself, and redirecting to it would loop).
+  // 2FA exception: completing a sign-in-bound enrollment finalizes the session
+  // cookie while the one-time recovery codes are still on screen. The user must
+  // acknowledge them before the authenticated bounce fires, so this route stays
+  // reachable with a live session (the form's Continue button performs the exit).
+  const forwarded = (await headers()).get('x-gameguild-path') ?? '';
+  const onMfaCompletion = forwarded.startsWith('/sign-in/2fa');
+
   const session = await auth();
-  if (session) {
-    const forwarded = (await headers()).get('x-gameguild-path') ?? '';
+  if (session && !onMfaCompletion) {
     const queryStart = forwarded.indexOf('?');
     const params = new URLSearchParams(queryStart >= 0 ? forwarded.slice(queryStart) : '');
     let callbackUrl = resolveAllowedAuthRedirect(

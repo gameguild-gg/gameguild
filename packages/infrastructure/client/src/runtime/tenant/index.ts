@@ -4,4 +4,4 @@
  * Re-exports all tenant-related types.
  */
 
-export type { TenantConfig, TenantProvider } from './types.js';
+export type { TenantConfig, TenantProvider } from './types';
