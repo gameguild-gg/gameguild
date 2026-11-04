@@ -14,10 +14,10 @@
 | 4 | Identity.Tenants | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
 | 5 | Identity.Provisioning | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
 | 6 | Identity.Context | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 🟡 abstrações | 0.5/8 |
-| 7 | Commerce.Payments | ✅ 6 | ✅ 22 ctrl/~120 endpoints | ✅ c/ Stripe webhooks | ✅ 4 | ✅ 5 | ❌ | ❌ | ❌ | 5/8 |
-| 8 | Commerce.Billing | ✅ 2+ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | 5/8 |
-| 9 | Commerce.Orders | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | 5/8 |
-| 10 | Commerce.Subscriptions | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | 5/8 |
+| 7 | Commerce.Payments | ✅ 6 | ✅ 22 ctrl/~120 endpoints | ✅ c/ Stripe webhooks | ✅ 4 | ✅ 5 | ✅ 8 famílias (07-stride) | ✅ 7 (08-dfds) | ✅ commerce/09 | **8/8** |
+| 8 | Commerce.Billing | ✅ 2+ | ✅ | ✅ | ✅ | ✅ | ✅ 9 famílias (billing-orders/07) | ✅ 9 (billing-orders/08) | ✅ commerce/09 | **8/8** |
+| 9 | Commerce.Orders | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (billing-orders/07 §6-7 pós-#1229) | ✅ (billing-orders/08 F6-F7) | ✅ commerce/09 | **8/8** |
+| 10 | Commerce.Subscriptions | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (billing-orders/07 §1-5 pós-#1229) | ✅ (billing-orders/08 F1-F5) | ✅ commerce/09 | **8/8** |
 | 11 | Commerce.Products | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
 | 12 | Compliance.Audit | ✅ | ✅ 38 tabelas | ✅ 3 sinks | ✅ | ✅ 7 famílias (K2 payments ausente) | ✅ 8 famílias F1-F8 | ✅ L0+8 L1 | ✅ | **8/8** |
 | 13 | Compliance.Consent | ✅ | ✅ | ✅ | ✅ | ✅ (compliance/10 §4) | ✅ F5 + #1268 aberto | ✅ | ✅ | **8/8** (N1/N2 residuais — #1268 pendente) |
@@ -73,19 +73,19 @@
 
 | Métrica | Valor |
 |---|---|
-| Módulos com package completo (8/8) | **6** (Authentication + Compliance.Audit/Consent/FERPA/KYC + Finance.Economy — commerce money-path em entrega paralela) |
+| Módulos com package completo (8/8) | **10** (Authentication + Payments + Billing + Orders + Subscriptions + Compliance.Audit/Consent/FERPA/KYC + Finance.Economy) |
 | Módulos ≥4/8 (kit funcional, faltam STRIDE/DFD/arq) | **29** |
 | Módulos 0/8 (sem nada) | **15** (+2 contracts-only n/a) |
 | Endpoints com matriz de wiring | **~1.470** de ~2.115 gerados |
 | Fluxos de usuário documentados | **~60** |
 | Máquinas de estado | **~30** |
-| STRIDE | auth (12 fluxos) + compliance (F1-F8) + economy (E1-E9) — commerce money-path em entrega paralela |
-| DFDs | 17 (auth) + compliance (L0 + 8 famílias) + economy (L0 + 9 famílias) |
+| STRIDE | auth (12 fluxos) + commerce (17 famílias — payments 8 + billing/orders/subs 9) + compliance (F1-F8) + economy (E1-E9) |
+| DFDs | 17 (auth) + 16 (commerce — nível 0 + nível 1 por família) + compliance (L0 + 8 famílias) + economy (L0 + 9 famílias) |
 | Sequências cross-module | auth + economy + compliance (audit-sink fan-in, KYC gates, FERPA-Learning) |
 
 ## Próximas ondas (ordem de risco)
 
-1. **Payments + Billing/Orders/Subscriptions**: STRIDE + DFDs + arquitetura (dinheiro sem análise de ameaças) — em entrega paralela (docs/money-security-package)
+1. ~~**Payments + Billing/Orders/Subscriptions**: STRIDE + DFDs + arquitetura~~ — **entregue** (docs/commerce/payments/07-08, docs/commerce/billing-orders/07-08, docs/commerce/09-security-architecture; verificação pós-#1266/#1229 incluída nos docs 07)
 2. ~~**Compliance (4) + Economy**: STRIDE regulatório + DFDs + arquitetura + sequências do compliance~~ **ENTREGUE** — compliance/08-11 + economy/08-10; K4 economy (mint reversal) confirmado FIXED pós-#1266; N1 compliance re-verificado VIVO (PR #1268 aberto)
 3. **Authorization + Learning + Social/Platform**: STRIDE + DFDs + arquitetura + sequências (3 famílias)
 4. **Módulos 0/8 — hot-path primeiro**: Identity.Users + Tenants + Provisioning → Notifications + TrustSafety → FinancialCrime (AML) → Products + Content + Ledgers/Achievements + Mentorship/Ratings

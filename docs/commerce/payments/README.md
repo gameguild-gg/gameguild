@@ -13,6 +13,9 @@
 | [`04-event-flow-inventory.md`](04-event-flow-inventory.md) | Payment events → outbox/inbox → consumers (Economy, Notifications, Compliance.Audit), Stripe webhook ingress path (signature → idempotency → routing), retry/DLQ posture per consumer |
 | [`05-cross-module-sequences.md`](05-cross-module-sequences.md) | `sequenceDiagram` cross-module interactions — Payments↔Economy, Payments↔Notifications, Payments↔Compliance, Payments↔Stripe (API + webhooks, timeouts, fail-open/fail-closed verdicts) |
 | [`06-gaps.md`](06-gaps.md) | Gaps with file:line, marked KNOWN (already tracked) vs NEW (found by this audit) |
+| [`07-stride-threat-model.md`](07-stride-threat-model.md) | STRIDE per flow family (initiation, methods, refunds, fraud, disputes, webhook ingress, Economy, config surfaces) — every threat mitigated by file:line or registered as residual; includes the post-#1266 verification notes (N1-N6, N9, N11, N13 fixed; N7, N8, N10, N12, N14, N15 open) |
+| [`08-dfds.md`](08-dfds.md) | Level-0 context + level-1 DFDs per flow family with explicit trust boundaries (client → API → Stripe → webhook ingress → outbox → Economy) |
+| [`../09-security-architecture.md`](../09-security-architecture.md) | Cross-module money-path architecture — component diagram, trust boundaries, who-can-move-money permission map, plan→economy-reversal integrity chain, fail-open/closed verdicts per external dependency. |
 
 ## Conventions
 
