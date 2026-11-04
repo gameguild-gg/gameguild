@@ -34,6 +34,9 @@ import { createClient } from '../../client.js';
 import { AuthModule } from '../../generated/modules/auth.gen.js';
 import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen.js';
 import type { IdentityAuthenticationMfaMethod } from '../../generated/types.gen.js';
+import type { ApiError } from '../errors/types.js';
+import { isApiError } from '../errors/guards.js';
+import type { Result } from '../result/types.js';
 import { parseBackendAuthResponse } from '../../integrations/next/handlers.js';
 import { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError, parseErrorBody, extractErrorMessage } from './errors.js';
 import { assertSafeServiceUrl } from '../security/safe-remote-url.js';
@@ -70,6 +73,8 @@ export interface MfaSetupResult {
 export interface PasswordResetRequestInput {
   /** Email address to send reset link to */
   email: string;
+  /** Optional tenant context supported by the reset endpoint. */
+  tenantId?: string;
 }
 
 export interface PasswordResetConfirmInput {
@@ -77,6 +82,10 @@ export interface PasswordResetConfirmInput {
   token: string;
   /** The new password */
   newPassword: string;
+  /** Defaults to newPassword for existing callers that supplied only one password. */
+  confirmPassword?: string;
+  /** Optional tenant context associated with the reset request. */
+  tenantId?: string;
 }
 
 export interface PasswordChangeInput {
@@ -84,6 +93,10 @@ export interface PasswordChangeInput {
   currentPassword: string;
   /** New password */
   newPassword: string;
+  /** Defaults to newPassword for existing callers. An explicit mismatch is rejected. */
+  confirmPassword?: string;
+  /** Omit to retain the backend's default session-revocation policy. */
+  revokeOtherSessions?: boolean;
 }
 
 export interface EmailVerificationInput {
@@ -313,45 +326,97 @@ export async function getMfaMethods(apiUrl: string, accessToken: string): Promis
 
 // ─── Password Operations ─────────────────────────────────────────
 
+function passwordClient(apiUrl: string, accessToken?: string): AuthModule {
+  return new AuthModule(
+    createClient({
+      baseUrl: apiUrl,
+      ...(accessToken ? { auth: { getAccessToken: () => Promise.resolve(accessToken) } } : {}),
+      autoRefresh: false,
+      timeout: 5_000,
+      devtools: { enabled: false },
+    }),
+  );
+}
+
+async function completePasswordOperation(
+  operation: Promise<Result<{ success?: boolean; message?: string | null }, ApiError>>,
+  fallbackMessage: string,
+): Promise<void> {
+  try {
+    const response = await operation;
+    if (!response.ok) {
+      throw new PasswordResetError(
+        response.error.status === 0 || response.error.code === 'PARSE_ERROR' || response.error.status >= 500
+          ? fallbackMessage
+          : response.error.detail || response.error.message || fallbackMessage,
+      );
+    }
+    if (response.data.success !== true) throw new PasswordResetError(response.data.message || fallbackMessage);
+  } catch (error) {
+    if (error instanceof PasswordResetError) throw error;
+    throw new PasswordResetError(fallbackMessage);
+  }
+}
+
 /**
  * Request a password reset email.
  *
- * Always returns void (never reveals whether the email exists).
+ * HTTP outcomes always resolve without account information. Invalid local input
+ * and network failures throw PasswordResetError, without upstream account details.
  */
 export async function requestPasswordReset(apiUrl: string, input: PasswordResetRequestInput): Promise<void> {
-  await fetch(assertSafeServiceUrl(`${apiUrl}/v1/auth/password:reset-request`, apiUrl), {
-    redirect: 'error',
-    method: 'POST',
-    headers: JSON_HEADERS,
-    body: JSON.stringify({ email: input.email }),
-  });
-  // Always succeed from the client's perspective (prevent email enumeration)
+  if (!input || typeof input !== 'object') throw new PasswordResetError('Invalid password reset request');
+  try {
+    const response = await passwordClient(apiUrl).postAuthPasswordResetRequest({
+      email: input.email,
+      ...(input.tenantId !== undefined ? { tenantId: input.tenantId } : {}),
+    });
+    if (!response.ok && response.error.status === 0) throw new PasswordResetError('Password reset request is temporarily unavailable');
+    // Do not expose HTTP errors, account flags or malformed remote acknowledgements.
+  } catch (error) {
+    if (error instanceof PasswordResetError) throw error;
+    if (isApiError(error) && error.metadata?.context === 'response') return;
+    throw new PasswordResetError(
+      isApiError(error) && error.metadata?.context === 'request' ? 'Invalid password reset request' : 'Password reset request is temporarily unavailable',
+    );
+  }
 }
 
 /**
  * Confirm a password reset with the token from the email.
  */
 export async function confirmPasswordReset(apiUrl: string, input: PasswordResetConfirmInput): Promise<void> {
-  await postOrThrow(apiUrl, `${apiUrl}/v1/auth/password:reset`, {
-    body: { token: input.token, newPassword: input.newPassword },
-    errorClass: PasswordResetError,
-    fallbackMessage: 'Password reset failed',
-  });
+  if (!input || typeof input !== 'object') throw new PasswordResetError('Invalid password reset request');
+  const confirmPassword = input.confirmPassword === undefined ? input.newPassword : input.confirmPassword;
+  if (confirmPassword !== input.newPassword) throw new PasswordResetError('Password confirmation does not match');
+  await completePasswordOperation(
+    passwordClient(apiUrl).postAuthPasswordReset({
+      token: input.token,
+      newPassword: input.newPassword,
+      confirmPassword,
+      ...(input.tenantId !== undefined ? { tenantId: input.tenantId } : {}),
+    }),
+    'Password reset failed',
+  );
 }
 
 /**
  * Change password for the authenticated user.
  */
 export async function changePassword(apiUrl: string, input: PasswordChangeInput, accessToken: string): Promise<void> {
-  await postOrThrow(apiUrl, `${apiUrl}/v1/auth/password:change`, {
-    headers: authHeaders(accessToken),
-    body: {
+  if (!input || typeof input !== 'object') throw new PasswordResetError('Invalid password change request');
+  if (typeof accessToken !== 'string' || !accessToken.trim()) throw new PasswordResetError('Password change requires an access token');
+  const confirmPassword = input.confirmPassword === undefined ? input.newPassword : input.confirmPassword;
+  if (confirmPassword !== input.newPassword) throw new PasswordResetError('Password confirmation does not match');
+  await completePasswordOperation(
+    passwordClient(apiUrl, accessToken).postAuthPasswordChange({
       currentPassword: input.currentPassword,
       newPassword: input.newPassword,
-    },
-    errorClass: PasswordResetError,
-    fallbackMessage: 'Password change failed',
-  });
+      confirmPassword,
+      ...(input.revokeOtherSessions !== undefined ? { revokeOtherSessions: input.revokeOtherSessions } : {}),
+    }),
+    'Password change failed',
+  );
 }
 
 // ─── Email Verification ──────────────────────────────────────────

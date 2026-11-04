@@ -8,7 +8,7 @@ the counts below are the historical audit snapshot. The F1/F2 correction notes
 describe the current implementation, and F5 corrects a controller-count false
 positive. The adjacent F3/F4 transport findings remain unresolved; these scoped
 corrections are not a newly certified surface audit. F3 records the subsequent
-Next registration/token-revocation and MFA-operation migrations, and F4 records the password/MFA credential-provider
+Next registration/token-revocation, MFA and password-operation migrations, and F4 records the password/MFA credential-provider
 migration; the other provider transports remain.
 
 Sources of truth:
@@ -114,9 +114,9 @@ exercised, but not through its generated method (finding F3).
 | POST | `/v1/auth/orchestrated/{flowId}:complete` | `postAuthOrchestratedComplete` | — |
 | POST | `/v1/auth/orchestrated/{flowId}:process-step` | `postAuthOrchestratedProcessStep` | — |
 | POST | `/v1/auth/orchestrated:initiate` | `postAuthOrchestratedInitiate` | — |
-| POST | `/v1/auth/password:change` | `postAuthPasswordChange` | `lib/auth/password-change-action.ts` |
-| POST | `/v1/auth/password:reset` | `postAuthPasswordReset` | raw fetch only (F3) |
-| POST | `/v1/auth/password:reset-request` | `postAuthPasswordResetRequest` | raw fetch only (F3) |
+| POST | `/v1/auth/password:change` | `postAuthPasswordChange` | `lib/auth/password-change-action.ts`; SDK helper migrated (F3) |
+| POST | `/v1/auth/password:reset` | `postAuthPasswordReset` | SDK reset migrated (F3); counts remain historical |
+| POST | `/v1/auth/password:reset-request` | `postAuthPasswordResetRequest` | SDK request migrated (F3); counts remain historical |
 | POST | `/v1/auth/polymorphic` | `postAuthPolymorphic` | — |
 | POST | `/v1/auth/saml/{slug}:assertion-consumer` | `postAuthSamlAssertionConsumer` | `app/api/auth/saml/[slug]/callback/route.ts` |
 | GET | `/v1/auth/saml/{slug}:logout-url` | `getAuthSamlLogoutUrl` | — |
@@ -391,7 +391,7 @@ actual successful empty collection renders the empty state. A later successful
 server render replaces the alert with fresh campaign data. These corrections do
 not resolve F3/F4/F5 or turn the no-caller inventory into a deletion list.
 
-### F3 — Next registration/token revocation and MFA operations migrated; parallel transports remain
+### F3 — SDK registration/logout, MFA and password operations migrated; other transports remain
 
 The original audit identified 17+ generated endpoints shadowed by hand-written
 transports in the client runtime and web app. The Next route and server-action
@@ -447,10 +447,32 @@ payload logging and has a five-second request budget. Failures preserve the publ
 `MfaVerificationError` type. The backend completion endpoint returns generic
 verification failure; this adapter does not invent an attempts-remaining count.
 
+The SDK reset request, reset confirmation and authenticated password change now
+call generated `AuthModule` operations. Both mutations were missing the backend's
+mandatory `confirmPassword`; existing callers now send their `newPassword` as the
+confirmation, while explicit mismatches fail locally. Generated validators check
+the request and reply, and mutation completion requires `success: true`, rather
+than treating any HTTP success as proof that the password changed. Errors retain
+the public `PasswordResetError` type.
+
+Optional reset tenant context and change-session revocation policy are forwarded
+through the supported DTO fields. Omission preserves the backend's revocation
+default, and an empty current password still supports its OAuth-only initial-password
+flow. Change uses the supplied actor bearer; reset stays anonymous. Caller-provided
+actor, IP, tenant or session assertions cannot replace the authenticated change
+context. These operations do not rotate credentials, log payloads or wait beyond
+the five-second request budget.
+
+Reset-request HTTP outcomes remain indistinguishable to callers: success, rejection,
+account flags and malformed remote acknowledgements all resolve without account
+information. Local syntax errors and network/deadline failures produce generic
+typed errors. This preserves the existing neutral HTTP acknowledgement; it does not
+claim that an email was delivered when the server rejected or failed the request.
+
 Remaining transports from the historical inventory (line numbers below belong to
 the original audit, not the current source):
 
-- `…/runtime/auth/extended-operations.ts:220` (`/v1/auth/password:reset-request`), `:299` (`/v1/auth/sessions`),
+- `…/runtime/auth/extended-operations.ts:299` (`/v1/auth/sessions`),
   `:314` (`/v1/auth/sessions/{id}`);
 - `apps/web/src/lib/auth/password-actions.ts:29,78`; `apps/web/src/lib/auth/email-code-request.ts:14`;
   `apps/web/src/lib/auth/magic-link-request.ts:16`;

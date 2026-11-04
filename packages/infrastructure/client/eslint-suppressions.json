@@ -249,7 +249,7 @@
   },
   "tests/auth/extended-operations.test.ts": {
     "@typescript-eslint/require-await": {
-      "count": 4
+      "count": 3
     }
   },
   "tests/auth/providers/discord.test.ts": {

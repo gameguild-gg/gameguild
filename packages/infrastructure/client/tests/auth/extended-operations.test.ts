@@ -78,36 +78,32 @@ describe('Extended Auth Operations', () => {
   });
 
   describe('Password Reset', () => {
-    it('requestPasswordReset always succeeds (prevents email enumeration)', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: false }); // Even on failure
+    it('requestPasswordReset always acknowledges HTTP failures (prevents email enumeration)', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({}, { status: 404 }));
       await expect(requestPasswordReset(API_URL, { email: 'x@y.com' })).resolves.toBeUndefined();
     });
 
-    it('confirmPasswordReset calls correct endpoint', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
-      await confirmPasswordReset(API_URL, { token: 'reset-token', newPassword: 'newpass' });
-
-      expect(mockFetch).toHaveBeenCalledWith(`${API_URL}/v1/auth/password:reset`, expect.objectContaining({ method: 'POST' }));
+    it('confirmPasswordReset calls correct endpoint with mandatory confirmation', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({ success: true }));
+      await confirmPasswordReset(API_URL, { token: 'reset-token', newPassword: 'new-password' });
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe(`${API_URL}/v1/auth/password:reset`);
+      expect(options.method).toBe('POST');
+      expect(JSON.parse(options.body as string)).toEqual({ token: 'reset-token', newPassword: 'new-password', confirmPassword: 'new-password' });
     });
 
     it('confirmPasswordReset throws PasswordResetError on failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ message: 'Token expired' }),
-      });
-
-      await expect(confirmPasswordReset(API_URL, { token: 'bad', newPassword: 'x' })).rejects.toThrow(PasswordResetError);
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Token expired' }, { status: 400 }));
+      await expect(confirmPasswordReset(API_URL, { token: 'bad', newPassword: 'new-password' })).rejects.toThrow(PasswordResetError);
     });
 
-    it('changePassword sends auth header', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
-      await changePassword(API_URL, { currentPassword: 'old', newPassword: 'new' }, TOKEN);
-
+    it('changePassword sends auth header and mandatory confirmation', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({ success: true }));
+      await changePassword(API_URL, { currentPassword: 'old', newPassword: 'new-password' }, TOKEN);
       const [url, opts] = mockFetch.mock.calls[0];
       expect(url).toBe(`${API_URL}/v1/auth/password:change`);
       expect(new Headers(opts.headers).get('Authorization')).toBe(`Bearer ${TOKEN}`);
+      expect(JSON.parse(opts.body as string)).toEqual({ currentPassword: 'old', newPassword: 'new-password', confirmPassword: 'new-password' });
     });
   });
 
