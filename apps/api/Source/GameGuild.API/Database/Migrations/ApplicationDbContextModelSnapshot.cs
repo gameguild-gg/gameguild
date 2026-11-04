@@ -20664,14 +20664,18 @@ namespace GameGuild.API.Database.Migrations
                         .HasDefaultValue(0L)
                         .HasColumnName("authentication_count");
 
+                    b.Property<DateTime?>("AutomaticLockoutEndsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("automatic_lockout_ends_at");
+
                     b.Property<string>("CertificateSpkiSha256")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("certificate_spki_sha256");
 
                     b.Property<string>("CertificateThumbprint")
-                        .HasMaxLength(40)
-                        .HasColumnType("character varying(40)")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
                         .HasColumnName("certificate_thumbprint");
 
                     b.Property<string>("ClientId")

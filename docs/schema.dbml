@@ -14234,8 +14234,9 @@ Table "gameguild.authentication"."service_accounts" {
   "failed_authentication_attempts" integer [not null, default: 0]
   "is_locked" boolean [not null, default: false]
   "locked_at" timestamp
+  "automatic_lockout_ends_at" timestamp
   "allowed_ip_addresses" "character varying(2000)"
-  "certificate_thumbprint" "character varying(40)"
+  "certificate_thumbprint" "character varying(64)"
   "certificate_spki_sha256" "character varying(64)"
 
   Indexes {
