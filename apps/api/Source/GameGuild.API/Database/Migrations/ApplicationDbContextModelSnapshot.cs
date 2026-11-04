@@ -25729,6 +25729,9 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(160)
                         .HasColumnType("character varying(160)");
 
+                    b.Property<DateTime?>("DeadLetteredAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("LastError")
                         .HasColumnType("text");
 
@@ -25759,9 +25762,9 @@ namespace GameGuild.API.Database.Migrations
 
                             t.HasCheckConstraint("CK_AcademicOutboxDeliveries_ErrorSize", "\"LastError\" IS NULL OR octet_length(\"LastError\") <= 4096");
 
-                            t.HasCheckConstraint("CK_AcademicOutboxDeliveries_Lifecycle", "(\"Status\" = 'processing') = (\"ClaimedAt\" IS NOT NULL AND \"ClaimedBy\" IS NOT NULL) AND (\"Status\" = 'confirmed') = (\"ConfirmedAt\" IS NOT NULL) AND (\"Status\" = 'failed') = (\"NextAttemptAt\" IS NOT NULL)");
+                            t.HasCheckConstraint("CK_AcademicOutboxDeliveries_Lifecycle", "(\"Status\" = 'processing') = (\"ClaimedAt\" IS NOT NULL AND \"ClaimedBy\" IS NOT NULL) AND (\"Status\" = 'confirmed') = (\"ConfirmedAt\" IS NOT NULL) AND (\"Status\" = 'failed') = (\"NextAttemptAt\" IS NOT NULL) AND (\"Status\" = 'dead_lettered') = (\"DeadLetteredAt\" IS NOT NULL) AND (\"DeadLetteredAt\" IS NULL OR (\"NextAttemptAt\" IS NULL AND \"ConfirmedAt\" IS NULL))");
 
-                            t.HasCheckConstraint("CK_AcademicOutboxDeliveries_Status", "\"Status\" IN ('pending', 'processing', 'confirmed', 'failed')");
+                            t.HasCheckConstraint("CK_AcademicOutboxDeliveries_Status", "\"Status\" IN ('pending', 'processing', 'confirmed', 'failed', 'deadlettered')");
                         });
                 });
 
