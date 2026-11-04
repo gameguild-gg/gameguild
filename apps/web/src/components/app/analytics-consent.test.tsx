@@ -4,26 +4,38 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PrivacyPreferenceData } from '@/lib/user-settings/preferences-mappers';
 
 const mocks = vi.hoisted(() => ({
-  getPrivacyPreference: vi.fn(),
-  gtmProps: [] as Array<Record<string, unknown>>,
-  gaProps: [] as Array<Record<string, unknown>>,
+  getAuthenticatedUserId: vi.fn(),
+  getRecordedPrivacyConsent: vi.fn(),
+  gtmMounted: [] as Array<Record<string, unknown>>,
+  gaMounted: [] as Array<Record<string, unknown>>,
+  banners: [] as Array<Record<string, unknown>>,
 }));
 
+vi.mock('@/lib/user-settings/api-client', () => ({
+  getAuthenticatedUserId: mocks.getAuthenticatedUserId,
+}));
 vi.mock('@/lib/user-settings/queries', () => ({
-  getPrivacyPreference: mocks.getPrivacyPreference,
+  getRecordedPrivacyConsent: mocks.getRecordedPrivacyConsent,
 }));
 
 vi.mock('./google-tag-manager', () => ({
   GoogleTagManager: (props: Record<string, unknown>) => {
-    mocks.gtmProps.push(props);
+    mocks.gtmMounted.push(props);
     return <div data-testid="gtm-mount" />;
   },
 }));
 
 vi.mock('./google-analytics', () => ({
   GoogleAnalytics: (props: Record<string, unknown>) => {
-    mocks.gaProps.push(props);
+    mocks.gaMounted.push(props);
     return <div data-testid="ga-mount" />;
+  },
+}));
+
+vi.mock('./consent-banner', () => ({
+  ConsentBanner: (props: Record<string, unknown>) => {
+    mocks.banners.push(props);
+    return <div data-testid="consent-banner" />;
   },
 }));
 
@@ -46,9 +58,11 @@ function privacy(overrides: Partial<PrivacyPreferenceData> = {}): PrivacyPrefere
 describe('AnalyticsConsent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getPrivacyPreference.mockResolvedValue(privacy());
-    mocks.gtmProps.length = 0;
-    mocks.gaProps.length = 0;
+    mocks.getAuthenticatedUserId.mockResolvedValue(null);
+    mocks.getRecordedPrivacyConsent.mockResolvedValue({ preference: privacy(), analyticsCookiesRecorded: true });
+    mocks.gtmMounted.length = 0;
+    mocks.gaMounted.length = 0;
+    mocks.banners.length = 0;
     delete process.env[GTM_ENV_KEY];
     delete process.env[GA_ENV_KEY];
   });
@@ -62,9 +76,10 @@ describe('AnalyticsConsent', () => {
     const { container } = render(await AnalyticsConsent());
 
     expect(container).toBeEmptyDOMElement();
-    expect(mocks.getPrivacyPreference).not.toHaveBeenCalled();
-    expect(mocks.gtmProps).toHaveLength(0);
-    expect(mocks.gaProps).toHaveLength(0);
+    expect(mocks.getRecordedPrivacyConsent).not.toHaveBeenCalled();
+    expect(mocks.gtmMounted).toHaveLength(0);
+    expect(mocks.gaMounted).toHaveLength(0);
+    expect(mocks.banners).toHaveLength(0);
   });
 
   it('treats blank analytics ids as unset', async () => {
@@ -74,59 +89,64 @@ describe('AnalyticsConsent', () => {
     const { container } = render(await AnalyticsConsent());
 
     expect(container).toBeEmptyDOMElement();
-    expect(mocks.getPrivacyPreference).not.toHaveBeenCalled();
+    expect(mocks.getRecordedPrivacyConsent).not.toHaveBeenCalled();
   });
 
-  it('mounts only the GTM loader when just the container id is set', async () => {
-    process.env[GTM_ENV_KEY] = 'GTM-TESTID';
-
-    render(await AnalyticsConsent());
-
-    expect(mocks.getPrivacyPreference).toHaveBeenCalledTimes(1);
-    expect(mocks.gtmProps).toEqual([{ containerId: 'GTM-TESTID', consent: true }]);
-    expect(mocks.gaProps).toHaveLength(0);
-  });
-
-  it('mounts only the GA4 loader when just the measurement id is set', async () => {
-    process.env[GA_ENV_KEY] = 'G-TESTID';
-
-    render(await AnalyticsConsent());
-
-    expect(mocks.getPrivacyPreference).toHaveBeenCalledTimes(1);
-    expect(mocks.gaProps).toEqual([{ measurementId: 'G-TESTID', consent: true }]);
-    expect(mocks.gtmProps).toHaveLength(0);
-  });
-
-  it('mounts both loaders with a single consent read when both ids are set', async () => {
+  it('mounts loaders plus the anonymous consent banner for anonymous visitors', async () => {
     process.env[GTM_ENV_KEY] = 'GTM-TESTID';
     process.env[GA_ENV_KEY] = 'G-TESTID';
 
     render(await AnalyticsConsent());
 
-    expect(mocks.getPrivacyPreference).toHaveBeenCalledTimes(1);
-    expect(mocks.gtmProps).toEqual([{ containerId: 'GTM-TESTID', consent: true }]);
-    expect(mocks.gaProps).toEqual([{ measurementId: 'G-TESTID', consent: true }]);
+    expect(mocks.getRecordedPrivacyConsent).not.toHaveBeenCalled();
+    expect(mocks.gtmMounted).toEqual([{ containerId: 'GTM-TESTID' }]);
+    expect(mocks.gaMounted).toEqual([{ measurementId: 'G-TESTID' }]);
+    expect(mocks.banners).toEqual([{}]);
   });
 
-  it('keeps the loaders dormant when the analytics-cookie switch is off', async () => {
+  it('syncs the server privacy preference for signed-in users (no banner choice surface)', async () => {
     process.env[GTM_ENV_KEY] = 'GTM-TESTID';
-    process.env[GA_ENV_KEY] = 'G-TESTID';
-    mocks.getPrivacyPreference.mockResolvedValue(privacy({ analyticsCookies: false }));
+    mocks.getAuthenticatedUserId.mockResolvedValue('user-1');
+    mocks.getRecordedPrivacyConsent.mockResolvedValue({
+      preference: privacy({ analyticsCookies: false }),
+      analyticsCookiesRecorded: true,
+    });
 
     render(await AnalyticsConsent());
 
-    expect(mocks.gtmProps).toEqual([{ containerId: 'GTM-TESTID', consent: false }]);
-    expect(mocks.gaProps).toEqual([{ measurementId: 'G-TESTID', consent: false }]);
+    expect(mocks.getRecordedPrivacyConsent).toHaveBeenCalledTimes(1);
+    expect(mocks.banners).toEqual([{ serverAnalyticsConsent: false }]);
   });
 
-  it('fails closed when the preference read fails', async () => {
-    process.env[GTM_ENV_KEY] = 'GTM-TESTID';
+  it('passes the granted server preference for signed-in users', async () => {
     process.env[GA_ENV_KEY] = 'G-TESTID';
-    mocks.getPrivacyPreference.mockRejectedValue(new Error('preferences API unavailable'));
+    mocks.getAuthenticatedUserId.mockResolvedValue('user-1');
 
     render(await AnalyticsConsent());
 
-    expect(mocks.gtmProps).toEqual([{ containerId: 'GTM-TESTID', consent: false }]);
-    expect(mocks.gaProps).toEqual([{ measurementId: 'G-TESTID', consent: false }]);
+    expect(mocks.banners).toEqual([{ serverAnalyticsConsent: true }]);
+  });
+
+  it('fails closed when the preference read fails for a signed-in user', async () => {
+    process.env[GA_ENV_KEY] = 'G-TESTID';
+    mocks.getAuthenticatedUserId.mockResolvedValue('user-1');
+    mocks.getRecordedPrivacyConsent.mockRejectedValue(new Error('preferences API unavailable'));
+
+    render(await AnalyticsConsent());
+
+    expect(mocks.banners).toEqual([{ serverAnalyticsConsent: false }]);
+  });
+
+  it('treats a missing/unrecorded preference as undecided — no implicit analytics grant', async () => {
+    process.env[GA_ENV_KEY] = 'G-TESTID';
+    mocks.getAuthenticatedUserId.mockResolvedValue('user-1');
+    mocks.getRecordedPrivacyConsent.mockResolvedValue({
+      preference: privacy({ analyticsCookies: true }),
+      analyticsCookiesRecorded: false,
+    });
+
+    render(await AnalyticsConsent());
+
+    expect(mocks.banners).toEqual([{}]);
   });
 });

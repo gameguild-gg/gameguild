@@ -4,6 +4,8 @@ import { buttonVariants } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import { PUBLIC_PROGRAM_PACKAGES, getCoursesForProgram, getPublicProgramPackage } from '@/lib/courses/public-programs';
+import { buildPageMetadata } from '@/lib/seo';
+import { buildCourseJsonLd, JsonLd } from '@/lib/seo/jsonld';
 import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock, GraduationCap, Layers3, Target } from 'lucide-react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -31,10 +33,12 @@ export async function generateMetadata({ params }: ProgramDetailPageProps) {
     };
   }
 
-  return {
-    title: `${program.title} | GameGuild Programs`,
+  return buildPageMetadata({
+    path: `/programs/${slug}`,
+    title: `${program.title} — GameGuild`,
     description: program.summary,
-  };
+  twitterLargeCard: true,
+  });
 }
 
 export default async function ProgramDetailPage({ params }: ProgramDetailPageProps) {
@@ -50,6 +54,14 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#070a12] text-white">
+      <JsonLd
+        data={buildCourseJsonLd({
+          name: program.title,
+          description: program.summary,
+          url: `/programs/${slug}`,
+          imageUrl: program.image,
+        })}
+      />
       <section className="relative">
         <div className="absolute inset-0">
           <Image src={program.image} alt={program.title} fill className="object-cover" sizes="100vw" priority />

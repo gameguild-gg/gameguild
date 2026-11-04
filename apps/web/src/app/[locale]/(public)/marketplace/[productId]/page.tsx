@@ -3,6 +3,7 @@ import { AddToCartForm } from '@/components/marketplace/add-to-cart-form';
 import { CurrencyPriceDisplay } from '@/components/currency/currency-price-display';
 import { Link } from '@/i18n/navigation';
 import { getMarketplaceProduct } from '@/lib/marketplace/queries';
+import { buildProductJsonLd, JsonLd } from '@/lib/seo/jsonld';
 import { Badge } from '@game-guild/ui/components/badge';
 import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
@@ -46,6 +47,17 @@ export default async function MarketplaceProductPage({ params }: { params: Promi
 
   return (
     <main className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_22rem] lg:px-8">
+      <JsonLd
+        data={buildProductJsonLd({
+          name: product.name ?? 'Marketplace product',
+          description: product.shortDescription ?? product.description,
+          url: `/marketplace/${productId}`,
+          imageUrl: product.imageUrl ?? undefined,
+          offer: typeof price?.currentPrice === 'number'
+            ? { price: price.currentPrice, priceCurrency: price.currency }
+            : null,
+        })}
+      />
       <section className="space-y-5">
         <Badge variant="outline">{product.type}</Badge>
         <h1 className="text-4xl font-semibold tracking-tight">{product.name}</h1>

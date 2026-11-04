@@ -3,6 +3,19 @@ import { communityOpportunities } from '@/lib/community/public-community';
 import { ArrowRight, BriefcaseBusiness, ClipboardCheck, MessageSquareText, UsersRound } from 'lucide-react';
 import React from 'react';
 
+import { buildPageMetadata } from '@/lib/seo';
+
+// No JobPosting JSON-LD: listings are static community-role copy without
+// structured data (datePosted, validThrough, hiringOrganization); emitting it
+// would fabricate required fields (issue #1208 guidance).
+
+export const metadata = buildPageMetadata({
+  path: '/jobs',
+  title: 'Community Opportunities — GameGuild',
+  description: 'Mentor builders, review projects, and support community sessions — practical GameGuild roles that help members improve projects while building professional credibility.',
+  twitterLargeCard: true,
+});
+
 const contributionTracks = [
   {
     title: 'Mentor builders',
