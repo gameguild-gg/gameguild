@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,10 +40,11 @@ public class CohortsController : BaseApiController
     /// Create a new cohort
     /// </summary>
     [HttpPost]
+    [RequireContentTypePermission<Cohort>(PermissionType.Create)]
     public async Task<ActionResult<CohortDto>> CreateCohort([FromBody] CreateCohortRequest request)
     {
         var actor = _actorContextAccessor.ActorContext;
-        
+
         // Use tenant from actor if not specified in request
         var effectiveRequest = request with { TenantId = request.TenantId ?? actor.TenantId };
 
@@ -107,13 +109,14 @@ public class CohortsController : BaseApiController
     /// Update a cohort
     /// </summary>
     [HttpPut("{id:guid}")]
+    [RequireResourcePermission<PermissionType, Cohort>(PermissionType.Edit)]
     public async Task<ActionResult<CohortDto>> UpdateCohort(Guid id, [FromBody] UpdateCohortRequest request)
     {
         var result = await _sender.Send(new UpdateCohortCommand(id, request)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == ErrorType.NotFound 
-                ? NotFound(result.Error) 
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
                 : BadRequest(result.Error);
         }
 
@@ -124,13 +127,14 @@ public class CohortsController : BaseApiController
     /// Open a cohort for enrollment
     /// </summary>
     [HttpPost("{id:guid}/open")]
+    [RequireResourcePermission<PermissionType, Cohort>(PermissionType.Edit)]
     public async Task<ActionResult<CohortDto>> OpenCohort(Guid id)
     {
         var result = await _sender.Send(new OpenCohortCommand(id)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == ErrorType.NotFound 
-                ? NotFound(result.Error) 
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
                 : BadRequest(result.Error);
         }
 
@@ -141,13 +145,14 @@ public class CohortsController : BaseApiController
     /// Close a cohort for enrollment
     /// </summary>
     [HttpPost("{id:guid}/close")]
+    [RequireResourcePermission<PermissionType, Cohort>(PermissionType.Edit)]
     public async Task<ActionResult<CohortDto>> CloseCohort(Guid id)
     {
         var result = await _sender.Send(new CloseCohortCommand(id)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == ErrorType.NotFound 
-                ? NotFound(result.Error) 
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
                 : BadRequest(result.Error);
         }
 
@@ -158,13 +163,14 @@ public class CohortsController : BaseApiController
     /// Mark a cohort as completed
     /// </summary>
     [HttpPost("{id:guid}/complete")]
+    [RequireResourcePermission<PermissionType, Cohort>(PermissionType.Edit)]
     public async Task<ActionResult<CohortDto>> CompleteCohort(Guid id)
     {
         var result = await _sender.Send(new CompleteCohortCommand(id)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == ErrorType.NotFound 
-                ? NotFound(result.Error) 
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
                 : BadRequest(result.Error);
         }
 
@@ -175,13 +181,14 @@ public class CohortsController : BaseApiController
     /// Cancel a cohort
     /// </summary>
     [HttpPost("{id:guid}/cancel")]
+    [RequireResourcePermission<PermissionType, Cohort>(PermissionType.Edit)]
     public async Task<ActionResult<CohortDto>> CancelCohort(Guid id)
     {
         var result = await _sender.Send(new CancelCohortCommand(id)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == ErrorType.NotFound 
-                ? NotFound(result.Error) 
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
                 : BadRequest(result.Error);
         }
 
@@ -192,13 +199,14 @@ public class CohortsController : BaseApiController
     /// Delete a cohort
     /// </summary>
     [HttpDelete("{id:guid}")]
+    [RequireResourcePermission<PermissionType, Cohort>(PermissionType.Delete)]
     public async Task<ActionResult> DeleteCohort(Guid id)
     {
         var result = await _sender.Send(new DeleteCohortCommand(id)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == ErrorType.NotFound 
-                ? NotFound(result.Error) 
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
                 : BadRequest(result.Error);
         }
 
