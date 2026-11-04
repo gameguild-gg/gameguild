@@ -84,13 +84,14 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
     // (ReplayCommitsContainmentAuditAndMetricWhileReturningNoCredentials,
     // ExplicitRevocationCommitsAuditAndMetricForOwnedTokenOrWholeAccount).
 
-    [Theory]
-    [InlineData("Member", false)]
-    [InlineData("Owner", true)]
-    [InlineData("Admin", true)]
-    public async Task LocalAuth_SignIn_WithTenantMemberships_ShouldPopulateTenantContext(string membershipRole, bool requiresMfa)
+    // The Owner/Admin variants require transactional PostgreSQL enrollment and now
+    // run at the HTTP boundary in MfaSignInEnrollmentPostgreSqlTests, including
+    // tenant binding and no ordinary credentials/session before the second factor.
+    [Fact]
+    public async Task LocalAuth_SignIn_WithTenantMemberships_ShouldPopulateTenantContext()
     {
         // Arrange
+        const string membershipRole = "Member";
         var email = $"tenant.flow.{Guid.NewGuid()}@test.com";
         var password = "TenantPassword123!";
 
@@ -148,7 +149,6 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
             Password = password,
             TenantId = tenantTwo.Id
         };
-        var sessionsBefore = await _dbContext.Set<UserSession>().CountAsync(session => session.UserId == userId);
 
         // Act
         var signInResult = await _authService.LocalSignInAsync(signInRequest);
@@ -156,20 +156,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
         // Assert
         signInResult.TenantId.Should().Be(tenantTwo.Id);
         signInResult.UserId.Should().Be(userId);
-        signInResult.RequiresMfa.Should().Be(requiresMfa);
-        if (requiresMfa)
-        {
-            // Elevated memberships retain the resolved binding, but need a verified second factor
-            // before the complete tenant list or ordinary credentials can be returned.
-            signInResult.Success.Should().BeFalse();
-            signInResult.MfaToken.Should().NotBeNullOrEmpty();
-            signInResult.AvailableTenants.Should().BeNull();
-            signInResult.AccessToken.Should().BeEmpty();
-            signInResult.RefreshToken.Should().BeEmpty();
-            signInResult.SessionId.Should().BeEmpty();
-            (await _dbContext.Set<UserSession>().CountAsync(session => session.UserId == userId)).Should().Be(sessionsBefore);
-            return;
-        }
+        signInResult.RequiresMfa.Should().BeFalse();
 
         signInResult.Success.Should().BeTrue();
         signInResult.AccessToken.Should().NotBeNullOrEmpty();
