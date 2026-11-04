@@ -44,7 +44,7 @@
  */
 
 import { spawn, spawnSync } from "node:child_process";
-import { resolvePnpmProcess } from "./pnpm-process.mjs";
+import { startCodingCycleWeb } from "./coding-cycle-web-runtime.mjs";
 import { randomUUID } from "node:crypto";
 import { createMfaSignInContinuation, E2E_ADMIN_TOTP_SECRET } from "./sign-in-mfa-support.mjs";
 import { verifyCodingCycleToolchain } from "./coding-cycle-toolchain-support.mjs";
@@ -109,6 +109,7 @@ const EVIDENCE = resolve(ARTIFACTS, "evidence");
 const RUNTIME = resolve(ARTIFACTS, "runtime");
 const API_LOG = resolve(RUNTIME, "api.log");
 const WEB_LOG = resolve(RUNTIME, "web.log");
+const WEB_BUILD_LOG = resolve(RUNTIME, "web-build.log");
 const PG_LOG = resolve(RUNTIME, "pg.log");
 
 const HEADLESS = !["0", "false", "no"].includes(
@@ -409,13 +410,12 @@ async function bootStack() {
 
   // --- Next.js web ---
   const webEnv = [
-    `NODE_ENV=development`,
-    // Cold webpack compilation of both personas exceeded Next's default heap
-    // restart threshold in CI (run 41797799470), dropping the instructor CSRF
-    // request. Match the bounded heap used by the sign-in/session browser gates.
+    `NODE_ENV=production`,
+    // Bound compilation separately from the browser/IDE workload. Development
+    // webpack retention restarted the server even with this heap and cache off.
     `NODE_OPTIONS=--max-old-space-size=6144`,
-    // Avoid retaining webpack's cache during both cold persona compilations.
-    // The bounded heap alone still hit Next's restart threshold in run 41806918808.
+    // Keep the isolated compilation cache bounded; the compiler exits before
+    // either persona loads the IDE (dev mode restarted even with its cache off).
     `GAMEGUILD_DISABLE_WEBPACK_CACHE=1`,
     `CODING_CYCLE_E2E=1`,
     `API_URL=${API_BASE}`,
@@ -430,29 +430,15 @@ async function bootStack() {
     `AUTH_TRUST_HOST=true`,
   ];
   log(`starting web on ${WEB_PORT} (${WEB_BASE})`);
-  // NO --hostname: binding 127.0.0.1 breaks Next 16.3 dev middleware URL
-  // construction — next-intl's default-locale handling then 307-loops
-  // unprefixed routes onto themselves (/sign-in → /sign-in). The default
-  // bind (*:port) serves both localhost and 127.0.0.1 correctly.
-  const webInvocation = await resolvePnpmProcess(
-    ["exec", "next", "dev", "--webpack", "--port", String(WEB_PORT)],
-    { env: process.env },
-  );
-  const web = spawn(
-    webInvocation.command,
-    webInvocation.args,
-    {
-      cwd: WEB_DIR,
-      env: { ...process.env, ...envArrayToObject(webEnv) },
-      detached: process.platform !== "win32",
-      // Execute pnpm's native executable or JavaScript entry point directly.
-      shell: false,
-      windowsHide: true,
-      stdio: ["ignore", "pipe", "pipe"],
+  const web = await startCodingCycleWeb({
+    cwd: WEB_DIR,
+    port: WEB_PORT,
+    env: { ...process.env, ...envArrayToObject(webEnv) },
+    registerChild(proc, label) {
+      children.push({ proc, label });
+      pipeLog(proc, label === "web-build" ? WEB_BUILD_LOG : WEB_LOG);
     },
-  );
-  children.push({ proc: web, label: "web" });
-  pipeLog(web, WEB_LOG);
+  });
   await waitForHttp(`${WEB_BASE}/api/health`, "GameGuild web", WEB_LOG, 240_000, web);
   log("web ready");
 }
@@ -470,7 +456,7 @@ function pipeLog(proc, file) {
   const stream = createWriteStream(file);
   proc.stdout?.on("data", (d) => stream.write(d));
   proc.stderr?.on("data", (d) => stream.write(d));
-  proc.on("exit", () => stream.end());
+  proc.on("close", () => stream.end());
 }
 
 // ---------------------------------------------------------------------------
