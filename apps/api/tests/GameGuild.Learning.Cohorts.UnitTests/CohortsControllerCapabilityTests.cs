@@ -32,7 +32,10 @@ public class CohortsControllerCapabilityTests
 
         attribute.ResourceType.Should().Be(typeof(Cohort));
         attribute.ResourceIdParameterName.Should().Be("id", "cohort mutations address the cohort by route id");
-        attribute.RequiredPermission.ToString().Should().Be(permissionName);
+        // PermissionType.Delete is an alias of PermissionType.SoftDelete (both = 26), and
+        // a boxed enum's ToString() resolves a duplicated value to the last-declared name,
+        // so the pin compares enum values — the required permission, not its alias spelling.
+        attribute.RequiredPermission.Should().Be(Enum.Parse<PermissionType>(permissionName));
     }
 
     [Fact]
