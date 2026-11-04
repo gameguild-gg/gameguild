@@ -3,7 +3,9 @@ using FluentAssertions;
 namespace GameGuild.API.UnitTests.Architecture;
 
 /// <summary>
-///     Ratchet baseline for the wiring-gap pipeline guards (G1-G6).
+///     Ratchet baseline for the wiring-gap pipeline guards (G1-G9; G8 keeps its
+///     own dedicated allowlist, see
+///     <see cref="UnavailableUseCaseSurfaceGuardTests"/>).
 ///     Each guard reports violations with a stable identifier of the form
 ///     <c>G&lt;n&gt;|&lt;item&gt;</c>. Violations listed in
 ///     <c>Architecture/wiring-gap-baseline.txt</c> are today's KNOWN gaps —
@@ -116,6 +118,9 @@ public static class WiringGapBaseline
         public const string EventProducer = "G4";
         public const string OptionsBinding = "G5";
         public const string StubMiddleware = "G6";
+        public const string RequestHandlerResolution = "G7";
+        public const string UnavailableUseCaseSurface = "G8";
+        public const string RouteSmoke = "E9";
     }
 
     /// <summary>
