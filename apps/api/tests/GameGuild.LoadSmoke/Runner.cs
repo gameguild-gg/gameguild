@@ -199,7 +199,7 @@ internal static class Runner
     {
         var server = factory.Services.GetRequiredService<IServer>();
         Assert.StartsWith("Microsoft.AspNetCore.Server.Kestrel", server.GetType().Namespace!);
-        var address = new Uri(Assert.Single(factory.Services.GetRequiredService<IServerAddressesFeature>()!.Addresses));
+        var address = new Uri(Assert.Single(server.Features.Get<IServerAddressesFeature>()!.Addresses));
         Assert.True(address.IsLoopback && address.Scheme == "http" && address.Port > 0);
         return address;
     }
