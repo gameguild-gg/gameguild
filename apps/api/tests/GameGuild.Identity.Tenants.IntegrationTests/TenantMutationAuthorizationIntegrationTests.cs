@@ -28,6 +28,12 @@ public sealed class TenantMutationAuthorizationIntegrationTests : IClassFixture<
     private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
     private readonly IActorContextAccessor _actorAccessor;
 
+    // NOTE: the InMemory database name MUST be fixed per factory instance. The
+    // AddDbContext options lambda runs per scope, so an inline Guid.NewGuid() here
+    // silently gave every scope its own empty database (seeds invisible to the
+    // handlers) — the exact failure the first CI run surfaced.
+    private readonly string _databaseName = $"TenantMutationAuthz_{Guid.NewGuid():N}";
+
     public TenantMutationAuthorizationIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory)
     {
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
@@ -51,7 +57,7 @@ public sealed class TenantMutationAuthorizationIntegrationTests : IClassFixture<
 
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
-                    options.UseInMemoryDatabase($"TenantMutationAuthz_{Guid.NewGuid()}");
+                    options.UseInMemoryDatabase(_databaseName);
                 });
                 services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
             });
@@ -135,7 +141,7 @@ public sealed class TenantMutationAuthorizationIntegrationTests : IClassFixture<
     }
 
     [Fact]
-    public async Task Purge_IsDeniedForAnAdminMembership_AndAllowedForTheOwner()
+    public async Task Purge_IsDeniedForAnAdminMembership_AndGatedByTheDeletionContractForTheOwner()
     {
         var archivedTenantId = await SeedTenantAsync(isArchived: true);
         var adminId = Guid.NewGuid();
@@ -160,13 +166,41 @@ public sealed class TenantMutationAuthorizationIntegrationTests : IClassFixture<
             var sender = scope.ServiceProvider.GetRequiredService<ISender>();
             using var actor = BeginUserScope(ownerId, liveTenantId);
 
-            await sender.Send(new DeleteTenantCommand(liveTenantId));
+            // The Owner passes the ownership gate but still meets the entity's
+            // deletion contract (issue #1287 T1a): ValidateForDeletion refuses while
+            // the tenant has active members — the Owner's own membership counts.
+            // Notice the guard's membership lookup hydrates the tenant's members via
+            // relationship fixup in the shared scoped context, so the contract sees
+            // real rows here (not the empty collection a bare GetByIdAsync loads).
+            Func<Task> ownerPurge = () => sender.Send(new DeleteTenantCommand(liveTenantId));
+            await ownerPurge.Should().ThrowAsync<BusinessRuleViolationException>()
+                .Where(ex => ex.Message.Contains("active members", StringComparison.OrdinalIgnoreCase));
         }
 
         using (var scope = _factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            (await context.Set<Tenant>().FirstOrDefaultAsync(t => t.Id == liveTenantId)).Should().BeNull("the Owner purge deleted the tenant");
+            (await context.Set<Tenant>().FirstOrDefaultAsync(t => t.Id == liveTenantId)).Should().NotBeNull(
+                "the deletion contract refused the purge while members remain");
+        }
+
+        // With no active membership blocking the contract, the platform administrator
+        // completes the destructive tier end-to-end.
+        var memberlessTenantId = await SeedTenantAsync(isArchived: true);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var sender = scope.ServiceProvider.GetRequiredService<ISender>();
+            using var actor = BeginUserScope(Guid.NewGuid(), memberlessTenantId, roles: ["SystemAdmin"]);
+
+            await sender.Send(new DeleteTenantCommand(memberlessTenantId));
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            (await context.Set<Tenant>().FirstOrDefaultAsync(t => t.Id == memberlessTenantId)).Should().BeNull(
+                "the platform administrator purge deleted the memberless tenant");
         }
     }
 
