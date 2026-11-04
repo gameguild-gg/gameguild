@@ -900,8 +900,9 @@ if [[ "$gate_profile" == full || "$gate_profile" == release || "$gate_profile" =
 
   run "${pnpm_command[@]}" --filter @game-guild/web run build:emception-dependencies
   run "${pnpm_command[@]}" --filter @game-guild/web run sync:emception
-  GAMEGUILD_DISABLE_WEBPACK_CACHE=1 NODE_OPTIONS=--max-old-space-size=12288 \
-    run "${pnpm_command[@]}" --filter @game-guild/web exec next build --webpack
+  # Frontend build type-checks the source-resolved client; needs heap headroom.
+  export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=12288}"
+  GAMEGUILD_DISABLE_WEBPACK_CACHE=1 run "${pnpm_command[@]}" --filter @game-guild/web exec next build --webpack
 }
 
 {
