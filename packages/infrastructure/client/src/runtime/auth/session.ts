@@ -254,7 +254,15 @@ export async function processSession(
   if (shouldRefreshToken(currentToken)) {
     const rotationAllowed =
       typeof allowRefreshOption === 'function' ? allowRefreshOption() : allowRefreshOption !== false;
-    if (rotationAllowed) {
+    if (!rotationAllowed) {
+      // Fail closed: an already-expired access token must not surface as an
+      // authenticated session whose bearer is rejected downstream.
+      const accessExpired =
+        currentToken.accessTokenExpires != null && Date.now() >= currentToken.accessTokenExpires;
+      if (accessExpired) {
+        return { session: null, token: null, updated: false };
+      }
+    } else {
     try {
       currentToken = await refreshAccessToken(currentToken, config);
       tokenUpdated = true;
