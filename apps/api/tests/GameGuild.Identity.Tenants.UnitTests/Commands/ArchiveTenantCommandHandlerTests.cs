@@ -12,7 +12,7 @@ public class ArchiveTenantCommandHandlerTests
     public ArchiveTenantCommandHandlerTests()
     {
         _tenantRepositoryMock = new Mock<ITenantRepository>();
-        _handler = new ArchiveTenantCommandHandler(_tenantRepositoryMock.Object);
+        _handler = new ArchiveTenantCommandHandler(_tenantRepositoryMock.Object, new AllowAllTenantAdministrationGuard());
     }
 
     [Fact]

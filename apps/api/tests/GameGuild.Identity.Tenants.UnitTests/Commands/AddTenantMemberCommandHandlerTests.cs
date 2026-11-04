@@ -139,7 +139,7 @@ public class AddTenantMemberCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_Should_Create_Member_And_Add_Domain_Event()
+    public async Task Handle_Should_Create_Member_Without_Raising_InMemory_Domain_Event()
     {
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
@@ -160,7 +160,9 @@ public class AddTenantMemberCommandHandlerTests
         capturedMember.Should().NotBeNull();
         capturedMember!.IsActive.Should().BeTrue();
         capturedMember.Metadata.Should().BeNull();
-        tenant.DomainEvents.Should().Contain(e => e is TenantMemberAddedEvent);
+        // Issue #1287 T8: the discarded TenantMemberAddedEvent raise is gone — the
+        // durable invite event (TenantMemberInviteRequestedV1) is the only outbound.
+        tenant.DomainEvents.Should().BeEmpty();
     }
 
     [Fact]
