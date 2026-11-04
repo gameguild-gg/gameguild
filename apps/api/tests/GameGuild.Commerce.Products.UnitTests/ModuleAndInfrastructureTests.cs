@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -19,38 +20,36 @@ public class ModuleAndInfrastructureTests
     public void AddProductsModule_RegistersAllServices()
     {
         var services = new ServiceCollection();
-        services.AddProductsModule(new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
+        services.AddProductsModule(new ConfigurationBuilder().Build());
         services.Count.Should().BeGreaterThan(0);
     }
 
     /// <summary>
     ///     Issue #1290 P1: the host must compose AddProductsModule for the promo coordinator,
-    ///     the fraud-review ticket coordinator, the promo defenses, the pricing scheduling
-    ///     worker and the four options bindings to exist. This pins the module's own half of
-    ///     that contract: everything the method claims to register resolves from a bare
-    ///     service provider built from it.
+    ///     the fraud-review ticket coordinator, the promo defenses and the pricing scheduling
+    ///     worker to exist. This pins the module's own half of that contract by descriptor —
+    ///     the implementations' constructors need the full host graph, so end-to-end
+    ///     resolution over the composed API host is covered separately by
+    ///     SubscriptionPromoWiringIntegrationTests.
     /// </summary>
     [Fact]
     public void AddProductsModule_RegistersPromoAndDefenseSeams_OptionsAndSchedulerWorker()
     {
         var services = new ServiceCollection();
-        services.AddProductsModule(new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
+        services.AddProductsModule(new ConfigurationBuilder().Build());
 
-        using var provider = services.BuildServiceProvider();
+        void Registered(Type service, Type implementation) => services.Should().Contain(d =>
+            d.ServiceType == service && d.ImplementationType == implementation,
+            $"{service.Name} must be registered by the module method (issue #1290)");
 
         // P2 seam: subscription creation with promo codes requires this coordinator.
-        provider.GetRequiredService<GameGuild.Commerce.ISubscriptionPromoCoordinator>()
-            .Should().BeOfType<SubscriptionPromoCoordinator>();
+        Registered(typeof(GameGuild.Commerce.ISubscriptionPromoCoordinator), typeof(SubscriptionPromoCoordinator));
         // P3 seam: fraud Review outcomes open a support ticket through this coordinator.
-        provider.GetRequiredService<GameGuild.Commerce.IFraudReviewTicketCoordinator>()
-            .Should().BeOfType<FraudReviewSupportTicketCoordinator>();
+        Registered(typeof(GameGuild.Commerce.IFraudReviewTicketCoordinator), typeof(FraudReviewSupportTicketCoordinator));
         // P4 seams: CAPTCHA gate, usage-anomaly evaluator and customer-state resolver.
-        provider.GetRequiredService<IPromoRedemptionCaptchaGate>()
-            .Should().BeOfType<PromoRedemptionCaptchaGate>();
-        provider.GetRequiredService<IPromoUsageAnomalyEvaluator>()
-            .Should().BeOfType<PromoUsageAnomalyEvaluator>();
-        provider.GetRequiredService<IPromoCustomerStateResolver>()
-            .Should().BeOfType<PromoCustomerStateResolver>();
+        Registered(typeof(IPromoRedemptionCaptchaGate), typeof(PromoRedemptionCaptchaGate));
+        Registered(typeof(IPromoUsageAnomalyEvaluator), typeof(PromoUsageAnomalyEvaluator));
+        Registered(typeof(IPromoCustomerStateResolver), typeof(PromoCustomerStateResolver));
 
         // The pricing scheduling worker is hosted (P1: it was registered but never running
         // because the module method itself was never invoked by the host).
@@ -63,7 +62,7 @@ public class ModuleAndInfrastructureTests
     [Fact]
     public void AddProductsModule_BindsTheFourOptionsClassesToTheirSections()
     {
-        var configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+        var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["PricingScheduling:WorkerEnabled"] = "false",
@@ -108,7 +107,7 @@ public class ModuleAndInfrastructureTests
     public void AddProductsModule_WithEmptyConfiguration_KeepsSafeDefaults()
     {
         var services = new ServiceCollection();
-        services.AddProductsModule(new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
+        services.AddProductsModule(new ConfigurationBuilder().Build());
 
         using var provider = services.BuildServiceProvider();
 

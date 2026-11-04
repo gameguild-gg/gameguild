@@ -56,7 +56,7 @@ public sealed class PricingSchedulingBackgroundServiceTests
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         await worker.StartAsync(cts.Token);
 
-        var sweepRan = await Task.WhenAny(sweepCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5))).ConfigureAwait(false);
+        var sweepRan = await Task.WhenAny(sweepCompleted.Task, Task.Delay(TimeSpan.FromSeconds(5)));
         sweepRan.Should().Be(sweepCompleted.Task, "the first tick runs one scheduling pass immediately");
 
         await worker.StopAsync(CancellationToken.None);
@@ -81,10 +81,17 @@ public sealed class PricingSchedulingBackgroundServiceTests
             }),
             NullLogger<PricingSchedulingBackgroundService>.Instance);
 
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         await worker.StartAsync(cts.Token);
+
+        // .NET 10 runs the whole of ExecuteAsync on the thread pool, so the disabled
+        // pass may not have finished when StartAsync returns: wait for it to complete
+        // (successfully) before stopping, otherwise the stop can cancel the unscheduled
+        // body and surface as a TaskCanceledException instead of a clean shutdown.
+        var disabledPass = await Task.WhenAny(worker.ExecuteTask!, Task.Delay(TimeSpan.FromSeconds(5)));
+        disabledPass.Should().Be(worker.ExecuteTask, "the disabled worker returns immediately");
+
         await worker.StopAsync(CancellationToken.None);
-        await (worker.ExecuteTask ?? Task.CompletedTask);
 
         sweep.Verify(
             s => s.RunSchedulingSweepAsync(It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()),
