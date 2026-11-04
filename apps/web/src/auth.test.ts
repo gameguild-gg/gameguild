@@ -241,4 +241,23 @@ describe("request-bound authentication readers", () => {
       "gameguild.session-token", "encrypted-session", { httpOnly: true, path: "/" },
     );
   });
+
+  it("the persistence probe runs at most once per cookie store", async () => {
+    const authModule = await import("./auth");
+    expect(await authModule.auth()).toBe(session);
+    const options = state.processSession.mock.calls[0][2] as { allowRefresh: () => boolean };
+    expect(options.allowRefresh()).toBe(true);
+    expect(options.allowRefresh()).toBe(true);
+    expect(state.cookieSet).toHaveBeenCalledTimes(1);
+  });
+
+  it("a probe never clobbers a sibling's rotated cookie on the same store", async () => {
+    const authModule = await import("./auth");
+    // Sibling reader completes a rotation on this store first: the probe path
+    // must not rewrite the pre-rotation encrypted value.
+    expect(await authModule.readSessionUnCached()).toBe(session);
+    expect(state.cookieSet).not.toHaveBeenCalledWith(
+      "gameguild.session-token", "encrypted-session", { httpOnly: true, path: "/" },
+    );
+  });
 });
