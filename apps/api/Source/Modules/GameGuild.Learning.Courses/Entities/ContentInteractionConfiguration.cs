@@ -17,6 +17,14 @@ public class ContentInteractionConfiguration : IEntityTypeConfiguration<ContentI
       .IsUnique()
       .HasFilter("\"SubmittedAt\" IS NULL AND \"DeletedAt\" IS NULL");
 
+    // Issue #1157: progress lookups list a learner's interactions per content; the
+    // attribute-declared lookup indexes become partial so soft-deleted rows never ride
+    // along on those hot paths.
+    builder.HasIndex(interaction => interaction.ContentId)
+      .HasFilter("\"DeletedAt\" IS NULL");
+    builder.HasIndex(interaction => interaction.UserId)
+      .HasFilter("\"DeletedAt\" IS NULL");
+
     // Configure relationship with ProgramUser (can't be done with annotations)
     builder.HasOne(ci => ci.ProgramUser).WithMany(pu => pu.ContentInteractions).HasForeignKey(ci => ci.ProgramUserId).OnDelete(DeleteBehavior.Cascade);
 

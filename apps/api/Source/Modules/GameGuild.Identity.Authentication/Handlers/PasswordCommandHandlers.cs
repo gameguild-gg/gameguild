@@ -113,7 +113,8 @@ public sealed class ResetPasswordCommandHandler(
     ILogger<ResetPasswordCommandHandler> logger,
     IUserSessionRepository? userSessionRepository = null,
     SessionOptions? sessionOptions = null,
-    IPasswordChangeRevocationService? passwordRevocation = null) : ICommandHandler<ResetPasswordCommand, PasswordResetResult>
+    IPasswordChangeRevocationService? passwordRevocation = null,
+    IOtherSessionsTerminatedAlertPublisher? sessionTerminatedAlerts = null) : ICommandHandler<ResetPasswordCommand, PasswordResetResult>
 {
     public async Task<PasswordResetResult> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
     {
@@ -179,18 +180,33 @@ public sealed class ResetPasswordCommandHandler(
 
         if (sessionOptions?.TerminateSessionsOnPasswordChange == true)
         {
+            var resetRevokedSessions = 0;
             if (passwordRevocation is not null)
             {
                 // Full revocation battery (issue #278): refresh tokens, sessions and the
                 // versioned cutoff covering legacy access tokens, all audited.
-                await passwordRevocation.RevokeAllSessionsAndTokensAsync(userId, "Password reset", cancellationToken)
+                resetRevokedSessions = await passwordRevocation.RevokeAllSessionsAndTokensAsync(userId, "Password reset", cancellationToken)
                     .ConfigureAwait(false);
             }
             else if (userSessionRepository is not null)
             {
+                var activeSessions = await userSessionRepository.GetActiveByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+                resetRevokedSessions = activeSessions.Count;
                 await userSessionRepository.TerminateAllForUserAsync(
                     userId,
                     SessionTerminationReason.SecurityViolation.ToString(),
+                    cancellationToken).ConfigureAwait(false);
+            }
+
+            // Issue #1091: the owner is notified that every other session was terminated
+            // by this password reset, instead of silently losing signed-in devices.
+            if (sessionTerminatedAlerts is not null)
+            {
+                await sessionTerminatedAlerts.RecordAsync(
+                    userId,
+                    tenantId: null,
+                    SessionTerminationReason.PasswordChanged.ToString(),
+                    resetRevokedSessions,
                     cancellationToken).ConfigureAwait(false);
             }
         }
@@ -212,7 +228,8 @@ public sealed class ChangePasswordCommandHandler(
     ILogger<ChangePasswordCommandHandler> logger,
     IUserSessionRepository? userSessionRepository = null,
     SessionOptions? sessionOptions = null,
-    IPasswordChangeRevocationService? passwordRevocation = null) : ICommandHandler<ChangePasswordCommand, PasswordChangeResult>
+    IPasswordChangeRevocationService? passwordRevocation = null,
+    IOtherSessionsTerminatedAlertPublisher? sessionTerminatedAlerts = null) : ICommandHandler<ChangePasswordCommand, PasswordChangeResult>
 {
     public async Task<PasswordChangeResult> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
     {
@@ -297,6 +314,18 @@ public sealed class ChangePasswordCommandHandler(
         else if (request.RevokeOtherSessions)
         {
             logger.LogInformation("Skipping session revocation for user {UserId}: no session id or session repository", request.UserId);
+        }
+
+        // Issue #1091: the owner is notified that all other sessions were terminated by
+        // this password change, instead of silently losing every other signed-in device.
+        if (sessionTerminatedAlerts is not null && revokedSessions > 0)
+        {
+            await sessionTerminatedAlerts.RecordAsync(
+                request.UserId,
+                tenantId: null,
+                SessionTerminationReason.PasswordChanged.ToString(),
+                revokedSessions,
+                cancellationToken).ConfigureAwait(false);
         }
 
         logger.LogInformation("Password changed for user {UserId}; revoked sessions: {RevokedSessions}", request.UserId, revokedSessions);

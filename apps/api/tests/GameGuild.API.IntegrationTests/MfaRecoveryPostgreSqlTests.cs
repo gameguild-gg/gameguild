@@ -35,6 +35,8 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         using var secondScope = fixture.Factory.Services.CreateScope();
         var first = firstScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var second = secondScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        // UserId references the principal Users table (issue #1156): persist the owner.
+        first.Set<GameGuild.Identity.Users.User>().Add(SyntheticUser(userId));
         first.Set<UserMfaConfiguration>().Add(new UserMfaConfiguration
         {
             UserId = userId, IsEnabled = true, IsSetupComplete = true,
@@ -250,6 +252,8 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         using var scope = fixture.Factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var id = Guid.NewGuid();
+        // UserId references the principal Users table (issue #1156): persist the owner.
+        context.Set<GameGuild.Identity.Users.User>().Add(SyntheticUser(id));
         context.Set<UserMfaConfiguration>().Add(new UserMfaConfiguration
         {
             UserId = id, IsEnabled = true, IsSetupComplete = true,
@@ -257,6 +261,15 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         });
         await context.SaveChangesAsync();
         return id;
+    }
+
+    private static GameGuild.Identity.Users.User SyntheticUser(Guid userId)
+    {
+        // The handle is generated from the display name, so the marker keeps every
+        // synthetic owner's username unique under the partial unique index.
+        var user = GameGuild.Identity.Users.User.Create($"mfa-{userId:N}@example.test", $"Synthetic MFA owner {userId:N}");
+        user.Id = userId;
+        return user;
     }
 
     private static BackupCodeMfaService CreateBackupService(IUserMfaConfigurationRepository repository) =>

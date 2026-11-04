@@ -423,7 +423,10 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
                 .HasForeignKey(member => member.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
             builder.HasIndex(testingEvent => testingEvent.TenantId);
-            builder.HasIndex(testingEvent => new { testingEvent.TenantId, testingEvent.Status, testingEvent.StartsAt });
+            // Issue #1157: the tenant event calendar lists non-deleted events; the partial
+            // index keeps soft-deleted rows out of the hot listing path entirely.
+            builder.HasIndex(testingEvent => new { testingEvent.TenantId, testingEvent.Status, testingEvent.StartsAt })
+                .HasFilter("\"DeletedAt\" IS NULL");
             builder.HasIndex(testingEvent => new { testingEvent.RecurrenceSeriesId, testingEvent.RecurrenceOccurrence })
                 .HasDatabaseName("IX_testing_events_recurrence_series_occurrence");
 

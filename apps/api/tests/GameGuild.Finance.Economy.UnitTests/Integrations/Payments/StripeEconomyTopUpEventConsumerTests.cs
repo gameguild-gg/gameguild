@@ -101,6 +101,97 @@ public sealed class StripeEconomyTopUpEventConsumerTests
     }
 
     [Fact]
+    public async Task TryConsumeAsync_RefundedCharge_ReversesTheMintThroughTheProviderReversalPath()
+    {
+        var fixture = RefundedFixture(cumulativeRefunded: 2.50m, expectedHardUnits: 250);
+
+        var handled = await fixture.Consumer.TryConsumeAsync(
+            Event("charge.refunded") with { CumulativeRefundedAmount = 2.50m }, default);
+
+        // Released on purpose: the Commerce billing lifecycle consumer still owns completing
+        // the local refund row from this same event (issue #1202 gaps N4).
+        handled.Should().BeFalse();
+        fixture.Protected.Calls.Should().Be(1);
+        fixture.Protected.Intent!.Capability.Should().Be(EconomyValueMovementCapability.ReverseProviderFunding);
+        fixture.Protected.Intent.TemplateKind.Should().Be(PostingTemplateKind.ProviderReversalFull);
+        fixture.Protected.Intent.Amount.Units.Should().Be(250);
+        fixture.Protected.Intent.IdempotencyKey.Should().Be(new IdempotencyKey("reverse-key"));
+        fixture.ReversalGateway.Verify(gateway => gateway.Reverse(
+            It.Is<PersistedProviderReversal>(reversal =>
+                reversal.Command.CumulativeProviderHardUnits == 250 &&
+                reversal.Command.IrrecoverableDisposition == ProviderReversalDisposition.ResponsibleDebt)),
+            Times.Once);
+        // No provider-event state transition: the reversal lives in the ledger; the top-up row
+        // keeps its Posted posting binding.
+        fixture.TopUps.Verify(candidate => candidate.ApplyAsync(
+            It.IsAny<EconomyTopUpProviderEvent>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TryConsumeAsync_PartiallyRefundedCharge_UsesThePartialReversalTemplate()
+    {
+        var fixture = RefundedFixture(cumulativeRefunded: 1.00m, expectedHardUnits: 100);
+
+        var handled = await fixture.Consumer.TryConsumeAsync(
+            Event("charge.refunded") with { CumulativeRefundedAmount = 1.00m }, default);
+
+        handled.Should().BeFalse();
+        fixture.Protected.Intent!.TemplateKind.Should().Be(PostingTemplateKind.ProviderReversalPartial);
+        fixture.Protected.Intent.Amount.Units.Should().Be(100);
+        fixture.ReversalGateway.Verify(gateway => gateway.Reverse(It.IsAny<PersistedProviderReversal>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TryConsumeAsync_RefundedChargeForANonPostedTopUp_IsReleasedWithoutReversal()
+    {
+        var fixture = Fixture();
+        fixture.TopUps.Setup(candidate => candidate.FindAsync(
+                It.IsAny<EconomyTopUpProviderIdentity>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Context(EconomyTopUpProviderStatus.Processing));
+
+        var handled = await fixture.Consumer.TryConsumeAsync(Event("charge.refunded"), default);
+
+        handled.Should().BeFalse();
+        fixture.Protected.Calls.Should().Be(0,
+            "nothing was minted for a non-Posted top-up, so a refund has no mint to reverse");
+    }
+
+    [Fact]
+    public async Task TryConsumeAsync_RefundedChargeForANonTopUpIntent_IsReleased()
+    {
+        var fixture = Fixture();
+        fixture.TopUps.Setup(candidate => candidate.FindAsync(
+                It.IsAny<EconomyTopUpProviderIdentity>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((EconomyTopUpSettlementContext?)null);
+
+        var handled = await fixture.Consumer.TryConsumeAsync(Event("charge.refunded"), default);
+
+        handled.Should().BeFalse();
+        fixture.Protected.Calls.Should().Be(0);
+        fixture.ReversalGateway.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task TryConsumeAsync_RefundedTopUpWithSubCentTotals_FailsClosed()
+    {
+        var fixture = Fixture();
+        fixture.TopUps.Setup(candidate => candidate.FindAsync(
+                It.IsAny<EconomyTopUpProviderIdentity>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Context(EconomyTopUpProviderStatus.Posted));
+
+        // 0.005 USD refunds cannot be represented in whole HardCoin units; minting a rounded
+        // reversal would silently move value, so the conversion must fail closed.
+        var action = () => fixture.Consumer.TryConsumeAsync(
+            Event("charge.refunded") with { CumulativeRefundedAmount = 0.005m }, default).AsTask();
+
+        await action.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*exactly representable*");
+        fixture.Protected.Calls.Should().Be(0,
+            "no protected operation may open for an unrepresentable reversal amount");
+        fixture.ReversalGateway.VerifyNoOtherCalls();
+    }
+
+    [Fact]
     public async Task TryConsumeAsync_HoldsProviderFundsAndRethrowsWhenAuthorizationFails()
     {
         var fixture = SuccessfulFixture();
@@ -176,6 +267,64 @@ public sealed class StripeEconomyTopUpEventConsumerTests
         }
     }
 
+    private static ConsumerFixture RefundedFixture(decimal cumulativeRefunded, long expectedHardUnits)
+    {
+        var fixture = Fixture();
+        var context = Context(EconomyTopUpProviderStatus.Posted);
+        var observation = new ObserveHardCoinTopUpCommand(
+            new SourceStampId(SourceValue),
+            new WalletId(WalletValue),
+            new ProviderMonetaryLeg(
+                "stripe", "test", "acct_platform", "payment_intent:pi_topup", "capture"),
+            "evidence",
+            250,
+            OccurredAt);
+        var authority = new RegisteredPostingAuthority(
+            Guid.NewGuid(), ActorId, TenantId, fixture.Protected.Authorization.RiskDecisionId,
+            fixture.Protected.Authorization.OperationFingerprint, 1);
+        var templateKind = expectedHardUnits >= 250
+            ? PostingTemplateKind.ProviderReversalFull
+            : PostingTemplateKind.ProviderReversalPartial;
+        var reversalCommand = new ReverseTopUpCommand(
+            new PostingId(PostingValue),
+            new IdempotencyKey("reverse-key"),
+            observation.SourceId,
+            expectedHardUnits,
+            ProviderReversalDisposition.ResponsibleDebt,
+            "evidence",
+            new ReserveVersion(1),
+            new PolicyVersion(1),
+            OccurredAt);
+        fixture.TopUps.Setup(candidate => candidate.FindAsync(
+                It.IsAny<EconomyTopUpProviderIdentity>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(context);
+        fixture.Adapter.Setup(candidate => candidate.CreateObservation(
+                context.Payment, context.TopUp.WalletId, It.IsAny<string>(), OccurredAt))
+            .Returns(observation);
+        fixture.Adapter.Setup(candidate => candidate.ReversalIdempotencyKey(context.Payment, expectedHardUnits))
+            .Returns(new IdempotencyKey("reverse-key"));
+        fixture.Capabilities.Setup(candidate => candidate.ResolveAuthorityAsync(
+                StripeEconomyTopUpEventConsumer.RegisteredReversalCapabilityName,
+                templateKind,
+                fixture.Protected.Authorization.Receipt,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(authority);
+        fixture.Adapter.Setup(candidate => candidate.CreateReversal(
+                context.Payment,
+                cumulativeRefunded,
+                0m,
+                ProviderReversalDisposition.ResponsibleDebt,
+                It.IsAny<string>(),
+                It.IsAny<ReserveVersion>(),
+                It.IsAny<PolicyVersion>(),
+                It.IsAny<DateTimeOffset>()))
+            .Returns(reversalCommand);
+        fixture.ReversalGateway.Setup(candidate => candidate.Reverse(It.IsAny<PersistedProviderReversal>()))
+            .Returns(new PersistedProviderReversalReceipt(
+                new PostingId(PostingValue), expectedHardUnits, 0, 0, 0, false));
+        return fixture;
+    }
+
     private static ConsumerFixture SuccessfulFixture()
     {
         var fixture = Fixture();
@@ -243,6 +392,7 @@ public sealed class StripeEconomyTopUpEventConsumerTests
         var adapter = new Mock<IStripeEconomyFundingAdapter>(MockBehavior.Strict);
         var funding = new Mock<IHardCoinFundingGateway>(MockBehavior.Strict);
         var capabilities = new Mock<IRegisteredPostingCapabilityResolver>(MockBehavior.Strict);
+        var reversalGateway = new Mock<IProviderReversalGateway>(MockBehavior.Strict);
         var protectedOperations = new StubTrustedAuthorizer();
         var time = new FixedTimeProvider(OccurredAt.AddMinutes(1));
         return new ConsumerFixture(
@@ -252,11 +402,13 @@ public sealed class StripeEconomyTopUpEventConsumerTests
                 funding.Object,
                 protectedOperations,
                 capabilities.Object,
+                reversalGateway.Object,
                 time),
             topUps,
             adapter,
             funding,
             capabilities,
+            reversalGateway,
             protectedOperations);
     }
 
@@ -312,6 +464,7 @@ public sealed class StripeEconomyTopUpEventConsumerTests
         Mock<IStripeEconomyFundingAdapter> Adapter,
         Mock<IHardCoinFundingGateway> Funding,
         Mock<IRegisteredPostingCapabilityResolver> Capabilities,
+        Mock<IProviderReversalGateway> ReversalGateway,
         StubTrustedAuthorizer Protected);
 
     private sealed class StubTrustedAuthorizer : IEconomyTrustedProtectedOperationAuthorizer

@@ -20,6 +20,8 @@ public static class CohortsModule
         services.AddSingleton<CohortScheduleGenerator>();
         services.AddSingleton<ScheduleConflictDetector>();
         services.AddScoped<IProgramContentScheduleGuard, ProgramContentScheduleGuard>();
+        // Cohort capacity gate consumed by the Enrollments module (issue #1226 N17).
+        services.AddScoped<GameGuild.Learning.Abstractions.ICohortEnrollmentGuard, CohortEnrollmentGuard>();
 
         return services;
     }

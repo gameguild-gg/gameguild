@@ -37,5 +37,12 @@ public class BlockchainCertificateAnchorConfiguration : IEntityTypeConfiguration
         builder.HasIndex(x => x.UserId).HasDatabaseName("ix_blockchaincertificateanchor_user_id");
         builder.HasIndex(x => x.CertificateHash).IsUnique().HasDatabaseName("ix_blockchaincertificateanchor_certificate_hash");
         builder.HasIndex(x => x.TransactionHash).HasDatabaseName("ix_blockchaincertificateanchor_transaction_hash");
+
+        // Issue #1156: principal user relationship; Restrict because user removal is
+        // soft-delete and anchored certificate evidence must survive.
+        builder.HasOne<GameGuild.Identity.Users.User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

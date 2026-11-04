@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Learning.Certificates;
+using GameGuild.Learning.Courses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -14,21 +15,36 @@ public class ControllerTests
     private readonly Mock<ICertificateService> _certSvc = new();
     private readonly Mock<ICertificateTemplateService> _tmplSvc = new();
     private readonly Mock<IActorContextAccessor> _actor = new();
+    private readonly Mock<ICourseAccessEvaluator> _courseAccess = new();
     private readonly Mock<ILogger<CertificatesController>> _log = new();
     private readonly Mock<ISender> _sender = new();
 
-    private CertificatesController CreateController(Guid? userId = null, Guid? tenantId = null)
+    private CertificatesController CreateController(
+        Guid? userId = null,
+        Guid? tenantId = null,
+        bool isSystemAdmin = false,
+        bool canEditCourse = true)
     {
+        var roles = new HashSet<string>();
+        if (isSystemAdmin)
+        {
+            roles.Add("SystemAdmin");
+        }
+
         _actor.Setup(a => a.ActorContext).Returns(new ActorContext
         {
             ActorKind = ActorKind.User,
             SubjectId = (userId ?? Guid.NewGuid()).ToString(),
             TenantId = tenantId ?? Guid.NewGuid(),
             IsAuthenticated = true,
-            Roles = new HashSet<string>(),
+            Roles = roles,
             Permissions = new HashSet<string>()
         });
-        return new CertificatesController(_certSvc.Object, _tmplSvc.Object, _actor.Object, _log.Object, _sender.Object);
+        _courseAccess
+            .Setup(evaluator => evaluator.HasCapabilityAsync(It.IsAny<Guid>(), CourseCapability.Edit, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(canEditCourse);
+        return new CertificatesController(
+            _certSvc.Object, _tmplSvc.Object, _actor.Object, _courseAccess.Object, _log.Object, _sender.Object);
     }
 
     [Fact] public void Ctor_Creates() => CreateController().Should().NotBeNull();
@@ -43,12 +59,34 @@ public class ControllerTests
     }
 
     [Fact]
-    public async Task GetCertificate_Found_ReturnsOk()
+    public async Task GetCertificate_Found_ReturnsOkForTheRecipient()
     {
+        var uid = Guid.NewGuid();
+        var id = Guid.NewGuid();
+        var certificate = Certificate.Issue(Guid.NewGuid(), Guid.NewGuid(), uid, Guid.NewGuid(), "U", "C");
+        _certSvc.Setup(s => s.GetCertificateByIdAsync(id)).ReturnsAsync(certificate);
+        var r = await CreateController(userId: uid).GetCertificate(id);
+        r.Result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task GetCertificate_ForbiddenForAnotherRecipient()
+    {
+        // Issue #1226 N6: reading a certificate by id is recipient-scoped.
         var id = Guid.NewGuid();
         _certSvc.Setup(s => s.GetCertificateByIdAsync(id))
             .ReturnsAsync(Certificate.Issue(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "U", "C"));
         var r = await CreateController().GetCertificate(id);
+        r.Result.Should().BeOfType<ForbidResult>();
+    }
+
+    [Fact]
+    public async Task GetCertificate_ReturnsOtherRecipientsCertificateForSystemAdmin()
+    {
+        var id = Guid.NewGuid();
+        _certSvc.Setup(s => s.GetCertificateByIdAsync(id))
+            .ReturnsAsync(Certificate.Issue(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "U", "C"));
+        var r = await CreateController(isSystemAdmin: true).GetCertificate(id);
         r.Result.Should().BeOfType<OkObjectResult>();
     }
 
@@ -70,12 +108,22 @@ public class ControllerTests
     }
 
     [Fact]
-    public async Task GetCourseCertificates_ReturnsOk()
+    public async Task GetCourseCertificates_ReturnsOkForCourseStaff()
     {
         var cId = Guid.NewGuid(); var tid = Guid.NewGuid();
         _certSvc.Setup(s => s.GetCourseCertificatesAsync(cId, tid)).ReturnsAsync(new List<Certificate>());
-        var r = await CreateController(tenantId: tid).GetCourseCertificates(cId);
+        var r = await CreateController(tenantId: tid, canEditCourse: true).GetCourseCertificates(cId);
         r.Result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task GetCourseCertificates_ForbiddenWithoutCourseEditCapability()
+    {
+        // Issue #1226 N6/N7: the course-wide recipient list is staff data.
+        var cId = Guid.NewGuid();
+        var r = await CreateController(canEditCourse: false).GetCourseCertificates(cId);
+        r.Result.Should().BeOfType<ForbidResult>();
+        _certSvc.Verify(s => s.GetCourseCertificatesAsync(It.IsAny<Guid>(), It.IsAny<Guid?>()), Times.Never);
     }
 
     [Fact]

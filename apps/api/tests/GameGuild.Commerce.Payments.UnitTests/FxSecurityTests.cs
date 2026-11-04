@@ -343,6 +343,46 @@ public class FxSecurityTests
         suggestion.Source.Should().Be("edge-header");
     }
 
+    [Fact]
+    public void Suggestion_QueryCarriesNoAuthorizeRequestAttribute_ForAnonymousDelivery()
+    {
+        // Issue #1202 (gaps N9): AuthorizationBehavior rejects unauthenticated actors before
+        // its empty-permission skip, so an [AuthorizeRequest("")] on this anonymous endpoint
+        // surfaced as a 500 to every public pricing page visitor.
+        typeof(GetCurrencySuggestionQuery)
+            .GetCustomAttributes(typeof(GameGuild.Identity.Authorization.AuthorizeRequestAttribute), inherit: true)
+            .Should().BeEmpty(
+                "the suggestion query is served to anonymous callers and must not enter the permission pipeline");
+    }
+
+    [Fact]
+    public async Task Suggestion_AnonymousCallerPassesTheAuthorizationPipeline()
+    {
+        var anonymous = new Mock<IActorContextAccessor>();
+        anonymous.SetupGet(accessor => accessor.ActorContext).Returns(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = null,
+            TenantId = null,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            TypedAttributes = ActorAttributes.Empty,
+            AuthScheme = "Test",
+            IsAuthenticated = false,
+        });
+        var acl = new Mock<GameGuild.Identity.Authorization.IAccessControlListService>();
+        var behavior = new GameGuild.Identity.Authorization.AuthorizationBehavior<
+            GetCurrencySuggestionQuery, CurrencySuggestionDto>(anonymous.Object, acl.Object);
+
+        var result = await behavior.Handle(
+            new GetCurrencySuggestionQuery("JP"),
+            () => Task.FromResult(new CurrencySuggestionDto("JPY", "JP", "edge-header", false, null, "notice")),
+            CancellationToken.None);
+
+        result.SuggestedCurrency.Should().Be("JPY");
+        acl.VerifyNoOtherCalls();
+    }
+
     // ────────────────────────────── Helpers ──────────────────────────────
 
     private static FxRateSet RateSet(IReadOnlyDictionary<string, decimal> rates)
