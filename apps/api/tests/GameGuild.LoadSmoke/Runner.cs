@@ -110,6 +110,10 @@ internal static class Runner
                 builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
                     new Dictionary<string, string?> { ["RateLimiting:AuthenticationRequestsPerMinute"] = "10000" }));
             });
+            // Real sockets, not the in-memory TestServer handler: latency budgets must include
+            // the actual Kestrel HTTP transport (same pattern as the session-state acceptance).
+            realAuthHost.UseKestrel(options => options.Listen(IPAddress.Loopback, 0));
+            syntheticHost.UseKestrel(options => options.Listen(IPAddress.Loopback, 0));
             var realAuthAddress = ListenAddress(realAuthHost);
             var syntheticAddress = ListenAddress(syntheticHost);
 
