@@ -31,6 +31,7 @@ public class LearningEventHandlersRegistrationTests
         // registration pin only needs constructible doubles to resolve each handler.
         services.AddScoped<IApplicationDbContext>(_ => Mock.Of<IApplicationDbContext>());
         services.AddScoped<IRecommendationEngine>(_ => Mock.Of<IRecommendationEngine>());
+        services.AddScoped(typeof(Microsoft.Extensions.Logging.ILogger<>), typeof(Microsoft.Extensions.Logging.Abstractions.NullLogger<>));
         services.AddCqrs(typeof(CourseCompletedLearningProfileHandler).Assembly);
 
         using var provider = services.BuildServiceProvider();
