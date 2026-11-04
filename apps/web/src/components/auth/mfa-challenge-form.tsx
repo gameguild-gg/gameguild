@@ -60,9 +60,15 @@ export function MfaChallengeForm({
 
   async function copyText(text: string, kind: "secret" | "codes") {
     if (!navigator.clipboard?.writeText) return;
-    await navigator.clipboard.writeText(text);
-    setCopied(kind);
-    window.setTimeout(() => setCopied(null), 1500);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(kind);
+      window.setTimeout(() => setCopied(null), 1500);
+    } catch {
+      // Clipboard permission denied: keep the button in its idle label —
+      // never claim the codes were copied, and never leak an
+      // unhandledrejection into the page.
+    }
   }
 
   function handleStartAgain() {
