@@ -25,7 +25,7 @@
 import type { CredentialsProviderConfig, ProviderResult, SessionUser } from '../types.js';
 import { AccountLockedError, AuthServiceUnavailableError, CredentialsSignInError, MfaRequiredError } from '../errors.js';
 import { resolveAuthPermissions, resolveAuthRoles } from '../claims.js';
-import { GeneratedApi } from '../../../generated/index.js';
+import { AuthModule } from '../../../generated/modules/auth.gen.js';
 import { createServerClient } from '../../../server.js';
 
 /**
@@ -107,14 +107,14 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
           throw new CredentialsSignInError('A valid MFA challenge, method and code are required');
         }
 
-        const auth = new GeneratedApi.AuthModule(
+        const auth = new AuthModule(
           createServerClient({
             baseUrl: apiUrl,
             auth: { getAccessToken: async () => null },
           }),
         );
 
-        let result: Awaited<ReturnType<GeneratedApi.AuthModule['postAuthSignIn']>>;
+        let result: Awaited<ReturnType<AuthModule['postAuthSignIn']>>;
         try {
           result = completingMfa
             ? await auth.postAuthMfaSignInComplete({

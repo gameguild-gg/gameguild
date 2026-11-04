@@ -23,7 +23,7 @@ import { createCSRFToken, validateCSRFToken } from '../../runtime/auth/csrf.js';
 import { decodeJWT } from '../../runtime/auth/jwt.js';
 import { resolveAuthPermissions, resolveAuthRoles } from '../../runtime/auth/claims.js';
 import { AuthError, CredentialsSignInError, ProviderNotFoundError, CSRFError, SignUpError, AuthServiceUnavailableError } from '../../runtime/auth/errors.js';
-import { GeneratedApi } from '../../generated/index.js';
+import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen.js';
 import { createServerClient } from '../../server.js';
 import { type OAuthProviderWithMethods, getOAuthExchangeToken, getOAuthAuthorizeUrl, getOAuthHandleCallback } from './oauth-helpers.js';
 import {
@@ -377,9 +377,9 @@ export function createHandlers(config: ResolvedAuthConfig) {
       baseUrl: config.apiUrl,
       auth: { getAccessToken: async () => accessToken },
     });
-    let result: Awaited<ReturnType<GeneratedApi.AuthMultiFactorModule['postAuthMfaTotpSetup']>>;
+    let result: Awaited<ReturnType<AuthMultiFactorModule['postAuthMfaTotpSetup']>>;
     try {
-      result = await new GeneratedApi.AuthMultiFactorModule(api).postAuthMfaTotpSetup();
+      result = await new AuthMultiFactorModule(api).postAuthMfaTotpSetup();
     } catch {
       throw new AuthServiceUnavailableError();
     }

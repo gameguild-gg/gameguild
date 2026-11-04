@@ -455,7 +455,7 @@ describe('credentials provider — fallback chains (L120)', () => {
           accessToken: 'at',
           refreshToken: 'rt',
           user: {
-            id: 'bu-id',
+            id: '44444444-4444-4444-8444-444444444444',
             email: 'bu@email.com',
             username: 'backenduser',
           },
@@ -471,7 +471,7 @@ describe('credentials provider — fallback chains (L120)', () => {
     const result = await provider.authorize!({ email: 'user@test.com', password: 'password' }, undefined as any);
     expect(result).not.toBeNull();
     const user = result!.user;
-    expect(user.id).toBe('bu-id');
+    expect(user.id).toBe('44444444-4444-4444-8444-444444444444');
     expect(user.email).toBe('bu@email.com');
     expect(user.name).toBe('backenduser');
     expect(user.image).toBeNull();

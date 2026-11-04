@@ -34,8 +34,16 @@ async function loadCampaigns(token: string): Promise<{ campaigns: PromoCampaignR
   }
 }
 
+/** The fields the console treats as required; absent values indicate contract drift. */
+type RenderableCampaign = CommerceProductsPromoCampaignDto & {
+  id: string;
+  name: string;
+  key: string;
+  status: string;
+};
+
 /** A row is renderable only when the fields the console treats as required are present. */
-function isRenderableCampaign(campaign: CommerceProductsPromoCampaignDto | null | undefined): campaign is CommerceProductsPromoCampaignDto {
+function isRenderableCampaign(campaign: CommerceProductsPromoCampaignDto | null | undefined): campaign is RenderableCampaign {
   return (
     !!campaign &&
     typeof campaign.id === 'string' &&
@@ -45,7 +53,7 @@ function isRenderableCampaign(campaign: CommerceProductsPromoCampaignDto | null 
   );
 }
 
-function toCampaignRow(campaign: CommerceProductsPromoCampaignDto): PromoCampaignRow {
+function toCampaignRow(campaign: RenderableCampaign): PromoCampaignRow {
   return {
     id: campaign.id,
     name: campaign.name,

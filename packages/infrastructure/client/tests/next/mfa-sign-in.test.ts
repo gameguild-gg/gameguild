@@ -139,7 +139,7 @@ describe('native limited MFA through Next handlers', () => {
           accessToken: 'verified-access',
           refreshToken: 'verified-refresh',
           expiresIn: 3600,
-          userId: 'verified-user',
+          userId: '33333333-3333-4333-8333-333333333333',
           email: 'server@example.com',
           mfaEnrollmentBackupCodes: ['one-time-code'],
         }),
