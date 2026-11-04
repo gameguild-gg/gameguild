@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { EventEmitter, once } from "node:events";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -168,28 +169,70 @@ for (const platform of ["win32", "linux"]) {
 
   test(`coding cycle preserves ${platform} web process contract`, async () => {
     const source = await readFile(path.join(root, "apps/web/scripts/coding-cycle-browser-e2e.mjs"), "utf8");
-    const { calls, child, sandbox } = context(platform);
-    const webStart = source.indexOf("  const web = spawn(");
-    const invocationStart = source.lastIndexOf("  const webInvocation = ", webStart);
-    const end = source.indexOf("\n  children.push({ proc: web", webStart);
+    const runtime = await readFile(path.join(root, "apps/web/scripts/coding-cycle-web-runtime.mjs"), "utf8");
+    const runtimeModule = runtime.replace(/^import [^\n]+\n/gm, "").replace(/^export /gm, "");
+    const { calls, sandbox } = context(platform);
+    const webStart = source.indexOf("  const web = await startCodingCycleWeb({");
+    const end = source.indexOf("\n  await waitForHttp", webStart);
     assert.notEqual(webStart, -1);
     assert.notEqual(end, -1);
-    const start = invocationStart === -1 ? webStart : invocationStart;
+    const nextEntry = "/owned next & literal/dist/bin/next";
+    const logs = [];
+    sandbox.join = path.join;
+    sandbox.once = once;
+    sandbox.createRequire = (manifest) => {
+      assert.equal(manifest, path.join(sandbox.WEB_DIR, "package.json"));
+      return { resolve(specifier) {
+        assert.equal(specifier, "next/dist/bin/next");
+        return nextEntry;
+      } };
+    };
+    sandbox.spawn = (command, args, options) => {
+      const child = new EventEmitter();
+      calls.push({ command, args: [...args], options, child });
+      setImmediate(() => {
+        child.emit("spawn");
+        if (args[1] === "build") setImmediate(() => child.emit("close", 0, null));
+      });
+      return child;
+    };
     sandbox.WEB_PORT = 3210;
     sandbox.WEB_DIR = "/owned web & literal";
     sandbox.webEnv = { OWNED_WEB: "literal & environment" };
     sandbox.envArrayToObject = (value) => value;
-    const web = await vm.runInNewContext(`(async () => { ${source.slice(start, end)}\n return web; })()`, sandbox);
-    assert.equal(web, child);
-    assert.equal(calls.length, 1);
-    const args = ["exec", "next", "dev", "--webpack", "--port", "3210"];
-    assert.equal(calls[0].command, platform === "win32" ? nodePath : "pnpm");
-    assert.deepEqual(calls[0].args, platform === "win32" ? [pnpmEntry, ...args] : args);
-    assert.equal(calls[0].options.cwd, sandbox.WEB_DIR);
-    assert.equal(calls[0].options.env.OWNED_MARKER, environment.OWNED_MARKER);
-    assert.equal(calls[0].options.env.OWNED_WEB, sandbox.webEnv.OWNED_WEB);
-    assert.equal(calls[0].options.detached, platform !== "win32");
-    assert.deepEqual([...calls[0].options.stdio], ["ignore", "pipe", "pipe"]);
-    assert.equal(calls[0].options.shell, false);
+    sandbox.children = [];
+    sandbox.WEB_BUILD_LOG = "/owned web-build.log";
+    sandbox.WEB_LOG = "/owned web.log";
+    sandbox.pipeLog = (child, file) => logs.push({ child, file });
+    const web = await vm.runInNewContext(`(async () => {
+      ${runtimeModule}
+      ${source.slice(webStart, end)}
+      return web;
+    })()`, sandbox);
+    assert.equal(calls.length, 2);
+    assert.equal(web, calls[1].child);
+    assert.deepEqual(calls.map((call) => call.args), [
+      [nextEntry, "build", "--webpack"],
+      [nextEntry, "start", "--port", "3210"],
+    ]);
+    for (const call of calls) {
+      assert.equal(call.command, nodePath);
+      assert.equal(call.options.cwd, sandbox.WEB_DIR);
+      assert.equal(call.options.env.OWNED_MARKER, environment.OWNED_MARKER);
+      assert.equal(call.options.env.OWNED_WEB, sandbox.webEnv.OWNED_WEB);
+      assert.equal(call.options.env.NODE_ENV, "production");
+      assert.equal(call.options.env.CODING_CYCLE_E2E, "1");
+      assert.equal(call.options.detached, platform !== "win32");
+      assert.deepEqual([...call.options.stdio], ["ignore", "pipe", "pipe"]);
+      assert.equal(call.options.shell, false);
+      assert.equal(call.options.windowsHide, true);
+    }
+    assert.deepEqual(Array.from(sandbox.children, ({ label }) => label), ["web-build", "web"]);
+    assert.equal(sandbox.children[0].proc, calls[0].child);
+    assert.equal(sandbox.children[1].proc, web);
+    assert.deepEqual(logs, [
+      { child: calls[0].child, file: sandbox.WEB_BUILD_LOG },
+      { child: web, file: sandbox.WEB_LOG },
+    ]);
   });
 }

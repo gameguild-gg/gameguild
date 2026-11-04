@@ -427,6 +427,13 @@ class ArtifactContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             release.needs_source_release("not a list")
 
+    def test_runtime_and_grading_observation_changes_require_source_release(self):
+        for helper in ["web-runtime", "grading-transport", "grading-observer"]:
+            for suffix in [".mjs", ".test.mjs"]:
+                path = f"apps/web/scripts/coding-cycle-{helper}{suffix}"
+                with self.subTest(path=path):
+                    self.assertTrue(release.needs_source_release([path]))
+
     def test_rejects_invalid_repository_and_source_identity(self):
         for repository in ["../outside", "owner/..", "owner/.", "owner/repo?token=secret", "https://example.test/repo"]:
             with self.subTest(repository=repository), self.assertRaises(ValueError):

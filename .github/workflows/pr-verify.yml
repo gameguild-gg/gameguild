@@ -613,6 +613,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+      - name: Reclaim unused hosted toolchains for regression builds
+        if: runner.environment == 'github-hosted' && runner.os == 'Linux'
+        run: bash scripts/ci/reclaim-hosted-dotnet-disk.sh
       - uses: ./.github/actions/setup-node-workspace
       - uses: ./.github/actions/setup-dotnet
       - name: Run whole-solution regression shard

@@ -133,6 +133,21 @@ test('producer detection covers every source or workflow change that requires de
     assert.ok(matches.test(path), 'Producer does not run for: ' + path);
   }
   assert.equal(matches.test('docs/readme.md'), false);
+  for (const helper of ['web-runtime', 'grading-transport', 'grading-observer']) {
+    for (const suffix of ['.mjs', '.test.mjs']) {
+      assert.ok(matches.test(`apps/web/scripts/coding-cycle-${helper}${suffix}`));
+    }
+  }
+});
+
+test('grading observer browser regression runs after Chromium installation and before the real cycle', () => {
+  const install = emception.indexOf('      - name: Install Chromium for browser smoke tests');
+  const observer = emception.indexOf('      - name: Verify grading acknowledgement observation');
+  const cycle = emception.indexOf('      - name: Run instructor and learner coding assessment cycle');
+  assert.ok(install >= 0 && observer > install && cycle > observer);
+  const check = step(emception, 'Verify grading acknowledgement observation');
+  assert.match(check, /node --test apps\/web\/scripts\/coding-cycle-grading-observer\.test\.mjs/);
+  assert.doesNotMatch(check, /continue-on-error:| {8}if:/);
 });
 
 test('all existing Web credential, lint, type, test and production build gates remain mandatory', () => {
