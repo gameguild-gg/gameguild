@@ -1,6 +1,6 @@
 # GameGuild.Identity.Authorization — Documentation Package
 
-> The permission/authorization module audit package · Documented against `develop` commit `74e9bba4c`.
+> The permission/authorization module audit package · Original documents against `develop` commit `74e9bba4c`; the completion set (`cross-module-sequences.md`, `07`-`09`) against `7ae5a28a65` — post-#1203 (dead endpoints) and #1230 (governance enforcement).
 > Conventions follow the authentication module's merged docs (`docs/auth/flows/*`, `docs/security/*`, `docs/auth/event-flows.md`, `docs/auth/state-machines.md`).
 
 ## Scope
@@ -21,6 +21,10 @@
 | [`cqrs-wiring-matrix.md`](cqrs-wiring-matrix.md) | Every endpoint × command/query × validator × handler × auth attribute × rate limit × unit test × integration test × HOLE |
 | [`state-machines.md`](state-machines.md) | stateDiagram-v2 for permission grant, JIT elevation, access-review campaign + item, conditional policy version (+bundle family), role assignment — with transitions audits |
 | [`event-flows.md`](event-flows.md) | Every event/notification/webhook/audit stream with producer/consumer file:line and outbox durability |
+| [`cross-module-sequences.md`](cross-module-sequences.md) | The live middleware chain (authz↔auth), the audit sinks (authz↔Compliance.Audit), and the notification consumers (authz↔Notifications) with fail-open/fail-closed verdicts |
+| [`07-stride-threat-model.md`](07-stride-threat-model.md) | STRIDE with privilege-escalation focus — grant lifecycle, JIT elevation, ABAC/conditional fail-opens; #1230 fixes cited as mitigations, open items kept open (incl. the OPEN CodeQL alert on `ConditionalPolicyEvaluator`) |
+| [`08-dfds.md`](08-dfds.md) | Level-0 context + one level-1 DFD per flow family (F1-F7) with trust boundaries and a STRIDE cross-reference |
+| [`09-security-architecture.md`](09-security-architecture.md) | The four decision doors, cache/throttle layers, signed-bundle integrity chain, consolidated fail-open/fail-closed verdicts |
 | [`gaps.md`](gaps.md) | Consolidated gap register: already-filed (#1180) vs NEW, each with file:line, plus a suggested issue split |
 
 ## Headline findings
