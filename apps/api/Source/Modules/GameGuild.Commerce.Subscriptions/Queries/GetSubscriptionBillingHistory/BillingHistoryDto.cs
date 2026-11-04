@@ -3,7 +3,7 @@ namespace GameGuild.Commerce.Subscriptions;
 /// <summary>
 ///     DTO for billing history information
 /// </summary>
-public abstract class BillingHistoryDto
+public class BillingHistoryDto
 {
     public Guid Id { get; set; }
 

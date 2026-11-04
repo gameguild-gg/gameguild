@@ -51,6 +51,7 @@
     "build": "NODE_OPTIONS=--max-old-space-size=8192 tsup",
     "build:fast": "tsup --out-dir dist-fast",
     "build:watch": "tsup --watch",
+    "typecheck:public-api": "tsc -p tests/types/tsconfig.public-api.json",
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",

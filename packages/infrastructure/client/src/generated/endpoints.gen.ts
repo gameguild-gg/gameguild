@@ -4232,7 +4232,7 @@ export const getApiRatingsMyEndpoint = {
 export interface PostApiRatingsMyBatchInput {
   body?: Types.SocialRatingsBatchSummaryInput;
 }
-export type PostApiRatingsMyBatchOutput = Record<string, SocialRatingsRatingDto>;
+export type PostApiRatingsMyBatchOutput = Record<string, Types.SocialRatingsRatingDto>;
 export const postApiRatingsMyBatchEndpoint = {
   operationId: 'postApiRatingsMyBatch' as const,
   method: 'POST' as const,
@@ -4265,7 +4265,7 @@ export const getApiRatingsRecentReviewsEndpoint = {
 export interface PostApiRatingsSummariesBatchInput {
   body?: Types.SocialRatingsBatchSummaryInput;
 }
-export type PostApiRatingsSummariesBatchOutput = Record<string, SocialRatingsRatingSummaryDto>;
+export type PostApiRatingsSummariesBatchOutput = Record<string, Types.SocialRatingsRatingSummaryDto>;
 export const postApiRatingsSummariesBatchEndpoint = {
   operationId: 'postApiRatingsSummariesBatch' as const,
   method: 'POST' as const,
@@ -8951,7 +8951,7 @@ export const postBillingInvoicesAccountCreditsEndpoint = {
 /**
  * Retry invoice payment
  *
- * Accepts a local retry scheduling request for open or past-due invoices. External gateway capture requires configured payment-provider credentials.
+ * Dispatches a real payment retry for one of the caller's open or past-due invoices through the same payment retry path the automated retry queue uses. An overdue open invoice ages to past-due on the retry touch.
  */
 export interface PostBillingInvoicesRetryInput {
   invoiceId: string;
@@ -20440,9 +20440,11 @@ export const getAuthMfaBackupCodesEndpoint = {
 /**
  * Generate new backup codes (invalidates existing ones)
  *
- * Generates a new set of backup codes, invalidating any previously generated codes.
+ * Generates a new set of backup codes after password re-verification (issue #1153), invalidating any previously generated codes.
  */
-export type PostAuthMfaBackupCodesRegenerateInput = void;
+export interface PostAuthMfaBackupCodesRegenerateInput {
+  body?: Types.IdentityAuthenticationRegenerateBackupCodesInput;
+}
 export type PostAuthMfaBackupCodesRegenerateOutput = Types.IdentityAuthenticationBackupCodesOutput;
 export const postAuthMfaBackupCodesRegenerateEndpoint = {
   operationId: 'postAuthMfaBackupCodesRegenerate' as const,
@@ -20536,7 +20538,7 @@ export const postAuthMfaPushChallengeEndpoint = {
 /**
  * Register the mobile device for push MFA
  *
- * Registers (or replaces) the mobile device registration token used to deliver push MFA approval challenges.
+ * Registers (or replaces) the mobile device registration token used to deliver push MFA approval challenges, after password re-verification (issue #1153).
  */
 export interface PostAuthMfaPushRegisterDeviceInput {
   body?: Types.IdentityAuthenticationPushMfaDeviceInput;
@@ -21496,7 +21498,7 @@ export const postAuthSignOutEndpoint = {
 /**
  * Register a new user with email and password
  *
- * Creates a new user account with email and password credentials, returning authentication tokens on success.
+ * Creates a new user account with email and password credentials, returning authentication tokens on success. When Turnstile is configured (TURNSTILE_SECRET_KEY), turnstileToken is required and verified server-side (issue #1150).
  */
 export interface PostAuthSignUpInput {
   body?: Types.IdentityAuthenticationLocalSignUpInput;
@@ -21686,7 +21688,7 @@ export const deleteAuthTrustedContactsEndpoint = {
 /**
  * Redeems a trusted-contact invite token; the contact confirms participation.
  *
- * Consumes the single-use, expiring invite token emailed to the contact. Denials are generic and never reveal token state.
+ * Consumes the single-use, expiring invite token emailed to the contact. Denials are generic and never reveal token state. Rate limited per IP against the authentication budget.
  */
 export interface PostAuthTrustedContactsConfirmInput {
   body?: Types.IdentityAuthenticationConfirmTrustedContactInput;
@@ -21718,7 +21720,11 @@ export const getAuthTrustedDevicesEndpoint = {
 /**
  * Trust the current device
  *
- * Marks the current device as trusted, allowing faster authentication in the future.
+ * Trusting a device is a security-sensitive grant, so it requires fresh verification
+ * (issue #1144): create a step-up challenge (POST /v1/auth/step-up/challenges) with
+ * operation type "trust-device", target reference "current-session", and payload hash
+ * SHA-256 of the trimmed device name; verify it with any MFA method and pass the
+ * returned receipt as `stepUpReceipt`.
  */
 export interface PostAuthTrustedDevicesInput {
   body?: Types.IdentityAuthenticationTrustDeviceInput;

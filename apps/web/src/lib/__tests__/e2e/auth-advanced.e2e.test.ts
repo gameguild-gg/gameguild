@@ -841,7 +841,9 @@ describe(
       }
     });
 
-    it('trusts a new device', async () => {
+    // Issue #1144: trusting a device now requires fresh step-up verification, so a plain
+    // authenticated request without a step-up receipt is rejected with 403 and creates nothing.
+    it('rejects trusting a device without a step-up receipt', async () => {
       const client = authedClient(accessToken);
 
       const res = await client.request<{ message: string }>({
@@ -851,13 +853,13 @@ describe(
         requiresAuth: true,
       });
 
-      expect(res.ok).toBe(true);
-      if (res.ok) {
-        expect(res.data.message).toBeTruthy();
+      expect(res.ok).toBe(false);
+      if (!res.ok) {
+        expect(res.error?.status).toBe(403);
       }
     });
 
-    it('lists trusted devices after trusting one', async () => {
+    it('lists no trusted devices after the rejected trust request', async () => {
       const client = authedClient(accessToken);
 
       const res = await client.request<
@@ -874,7 +876,7 @@ describe(
 
       expect(res.ok).toBe(true);
       if (res.ok) {
-        expect(res.data.length).toBeGreaterThanOrEqual(1);
+        expect(res.data.length).toBe(0);
       }
     });
 

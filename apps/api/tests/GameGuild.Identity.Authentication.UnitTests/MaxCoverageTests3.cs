@@ -10,6 +10,7 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -1029,7 +1030,7 @@ public sealed class EmailVerificationServiceCoverageTests
 
     public EmailVerificationServiceCoverageTests()
     {
-        MemoryCache cache = new MemoryCache(new MemoryCacheOptions());
+        MemoryDistributedCache cache = new(Options.Create(new MemoryDistributedCacheOptions()));
         _publisher.Setup(p => p.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _sut = new EmailVerificationService(

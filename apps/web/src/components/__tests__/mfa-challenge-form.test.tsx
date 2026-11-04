@@ -8,9 +8,16 @@ import {
 } from '@/test/auth-test-helpers';
 
 let mockAuth: MockUseAuthReturn;
+let mockLocationHref: (url: string) => void;
+const originalLocation = window.location;
+const mockCompleteMfaEnrollment = vi.fn<(...args: unknown[]) => Promise<unknown>>();
 
 vi.mock('@game-guild/client/react', () => ({
   useAuth: () => mockAuth,
+}));
+
+vi.mock('@/lib/auth/mfa-sign-in-actions', () => ({
+  completeMfaEnrollmentAction: (...args: unknown[]) => mockCompleteMfaEnrollment(...args),
 }));
 
 vi.mock('next-intl', () => ({
@@ -31,12 +38,37 @@ const challenge = {
   availableMethods: ['Totp', 'BackupCode'],
 };
 
+const enrollmentChallenge = {
+  mfaToken: 'x'.repeat(43),
+  availableMethods: ['TOTP'],
+  mfaEnrollment: {
+    secretKey: 'SYNTHETIC-SETUP',
+    qrCodeUri: 'otpauth://totp/Example?secret=SYNTHETIC',
+    expiresAt: new Date(Date.now() + 300_000).toISOString(),
+  },
+};
+
 describe('MfaChallengeForm', () => {
   beforeEach(() => {
     mockAuth = createMockUseAuth();
+    mockLocationHref = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: {
+        ...originalLocation,
+        set href(url: string) {
+          mockLocationHref(url);
+        },
+      },
+      writable: true,
+      configurable: true,
+    });
   });
 
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    (window as unknown as { location: Location }).location = originalLocation;
+    vi.clearAllMocks();
+  });
 
   it('renders the challenge form with the code input when a challenge is active', () => {
     mockAuth.mfaChallenge = challenge;
@@ -97,5 +129,96 @@ describe('MfaChallengeForm', () => {
     render(<MfaChallengeForm />);
 
     expect(screen.getByText('Invalid code')).toBeInTheDocument();
+  });
+
+  it('renders the enrollment setup with QR, setup key, and no method selector', () => {
+    mockAuth.mfaChallenge = enrollmentChallenge;
+    render(<MfaChallengeForm />);
+
+    expect(screen.getByTestId('mfa-enrollment-qr')).toBeInTheDocument();
+    expect(screen.getByTestId('mfa-enrollment-secret')).toHaveTextContent('SYNTHETIC-SETUP');
+    expect(screen.queryByLabelText('signIn.mfa.methodLabel')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('signIn.mfa.copySecret')).toBeInTheDocument();
+  });
+
+  it('submits enrollment through the server action with the held mfaToken and code', async () => {
+    mockAuth.mfaChallenge = enrollmentChallenge;
+    mockCompleteMfaEnrollment.mockResolvedValue({ success: true, backupCodes: [] });
+    const { user } = renderWithUser(<MfaChallengeForm redirectTo="/workspace" />);
+
+    await user.type(screen.getByLabelText('signIn.mfa.codeLabel'), '123456');
+    await user.click(screen.getByRole('button', { name: 'signIn.mfa.enrollSubmit' }));
+
+    await waitFor(() => {
+      expect(mockCompleteMfaEnrollment).toHaveBeenCalledWith(enrollmentChallenge.mfaToken, '123456');
+    });
+    expect(mockAuth.signIn).not.toHaveBeenCalled();
+  });
+
+  it('surfaces an enrollment denial inline and keeps the setup', async () => {
+    mockAuth.mfaChallenge = enrollmentChallenge;
+    mockCompleteMfaEnrollment.mockResolvedValue({ success: false, message: 'Additional verification failed' });
+    const { user } = renderWithUser(<MfaChallengeForm />);
+
+    await user.type(screen.getByLabelText('signIn.mfa.codeLabel'), '000000');
+    await user.click(screen.getByRole('button', { name: 'signIn.mfa.enrollSubmit' }));
+
+    expect(await screen.findByText('Additional verification failed')).toBeInTheDocument();
+    expect(screen.queryByTestId('mfa-enrollment-backup-codes')).not.toBeInTheDocument();
+    expect(screen.getByTestId('mfa-enrollment-secret')).toBeInTheDocument();
+  });
+
+  it('shows the fresh recovery codes exactly once and continues to the redirect target', async () => {
+    mockAuth.mfaChallenge = enrollmentChallenge;
+    mockCompleteMfaEnrollment.mockResolvedValue({ success: true, backupCodes: ['first-once-code', 'second-once-code'] });
+    const { user } = renderWithUser(<MfaChallengeForm redirectTo="/workspace" />);
+
+    await user.type(screen.getByLabelText('signIn.mfa.codeLabel'), '123456');
+    await user.click(screen.getByRole('button', { name: 'signIn.mfa.enrollSubmit' }));
+
+    const codes = await screen.findByTestId('mfa-enrollment-backup-codes');
+    expect(codes).toHaveTextContent('first-once-code');
+    expect(codes).toHaveTextContent('second-once-code');
+    expect(mockAuth.clearMfa).toHaveBeenCalled();
+
+    await user.click(screen.getByTestId('mfa-backup-codes-continue'));
+    expect(mockLocationHref).toHaveBeenCalledWith('/workspace');
+  });
+
+  it('does not claim the recovery codes were copied when the clipboard write fails', async () => {
+    mockAuth.mfaChallenge = enrollmentChallenge;
+    mockCompleteMfaEnrollment.mockResolvedValue({ success: true, backupCodes: ['first-once-code', 'second-once-code'] });
+    const writeText = vi.fn().mockRejectedValue(new DOMException('Permission denied', 'NotAllowedError'));
+    const { user } = renderWithUser(<MfaChallengeForm redirectTo="/workspace" />);
+    // user-event installs its own clipboard stub on setup; override it after render.
+    Object.defineProperty(globalThis.navigator, 'clipboard', { configurable: true, writable: true, value: { writeText } });
+
+    await user.type(screen.getByLabelText('signIn.mfa.codeLabel'), '123456');
+    await user.click(screen.getByRole('button', { name: 'signIn.mfa.enrollSubmit' }));
+    const codes = await screen.findByTestId('mfa-enrollment-backup-codes');
+    expect(codes).toBeInTheDocument();
+
+    await user.click(screen.getByTestId('mfa-backup-codes-copy'));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith('first-once-code\nsecond-once-code'));
+    expect(screen.queryByText('signIn.mfa.copied')).not.toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('signIn.mfa.copyFailed');
+    expect(codes).toHaveTextContent('first-once-code');
+
+    writeText.mockResolvedValue(undefined);
+    await user.click(screen.getByTestId('mfa-backup-codes-copy'));
+    expect(await screen.findByText('signIn.mfa.copied')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('keeps the setup key available for manual copying when the clipboard is unavailable', async () => {
+    mockAuth.mfaChallenge = enrollmentChallenge;
+    const { user } = renderWithUser(<MfaChallengeForm redirectTo="/workspace" />);
+    Object.defineProperty(globalThis.navigator, 'clipboard', { configurable: true, writable: true, value: undefined });
+
+    await user.click(screen.getByRole('button', { name: 'signIn.mfa.copySecret' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('signIn.mfa.copyFailed');
+    expect(screen.getByTestId('mfa-enrollment-secret')).toHaveTextContent(enrollmentChallenge.mfaEnrollment.secretKey);
+    expect(screen.queryByText('signIn.mfa.copied')).not.toBeInTheDocument();
   });
 });

@@ -454,6 +454,7 @@ export interface AuthInstance {
       firstName?: string;
       lastName?: string;
       tenantId?: string;
+      turnstileToken?: string;
     },
     options?: { redirectTo?: string; redirect?: boolean },
   ) => Promise<Response | ProviderResult | void>;

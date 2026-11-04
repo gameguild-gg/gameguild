@@ -8,10 +8,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/lib/antibot/turnstile', () => ({ verifyTurnstileToken: mocks.verifyTurnstileToken }));
 vi.mock('@/lib/server/forwarded-headers', () => ({ forwardedIpHeaders: mocks.forwardedIpHeaders }));
 
-import {
-  requestPasswordResetAction,
-  completePasswordResetAction,
-} from './password-actions';
+import { requestPasswordResetAction, completePasswordResetAction } from './password-actions';
 
 const API_URL = 'http://localhost:8080';
 
@@ -45,7 +42,7 @@ describe('password-actions Turnstile gating', () => {
     });
 
     it('proceeds to the API when verification succeeds and forwards XFF but not the token', async () => {
-      const fetchMock = fetchResponding(200);
+      const fetchMock = fetchResponding(200, { success: true });
       vi.stubGlobal('fetch', fetchMock);
 
       const result = await requestPasswordResetAction('user@example.com', 'tok-123');
@@ -53,8 +50,8 @@ describe('password-actions Turnstile gating', () => {
       expect(result).toEqual({ success: true, data: undefined });
       expect(fetchMock).toHaveBeenCalledTimes(1);
       const [url, init] = fetchMock.mock.calls[0];
-      expect(String(url)).toBe('/v1/auth/password:reset-request');
-      expect(init.headers['X-Forwarded-For']).toBe('203.0.113.7');
+      expect(String(url)).toBe(`${API_URL}/v1/auth/password:reset-request`);
+      expect(new Headers(init.headers).get('X-Forwarded-For')).toBe('203.0.113.7');
       expect(JSON.parse(init.body)).toEqual({ email: 'user@example.com' });
       expect(JSON.parse(init.body).turnstileToken).toBeUndefined();
     });
@@ -81,7 +78,7 @@ describe('password-actions Turnstile gating', () => {
     });
 
     it('proceeds to the API when verification succeeds and forwards XFF but not the turnstile token', async () => {
-      const fetchMock = fetchResponding(200);
+      const fetchMock = fetchResponding(200, { success: true });
       vi.stubGlobal('fetch', fetchMock);
 
       const result = await completePasswordResetAction('reset-token', 'newpassword1', 'newpassword1', 'tok-456');
@@ -89,9 +86,9 @@ describe('password-actions Turnstile gating', () => {
       expect(result).toEqual({ success: true, data: undefined });
       expect(fetchMock).toHaveBeenCalledTimes(1);
       const [url, init] = fetchMock.mock.calls[0];
-      expect(String(url)).toBe('/v1/auth/password:reset');
-      expect(init.headers['X-Forwarded-For']).toBe('203.0.113.7');
-      expect(JSON.parse(init.body)).toEqual({ token: 'reset-token', newPassword: 'newpassword1' });
+      expect(String(url)).toBe(`${API_URL}/v1/auth/password:reset`);
+      expect(new Headers(init.headers).get('X-Forwarded-For')).toBe('203.0.113.7');
+      expect(JSON.parse(init.body)).toEqual({ token: 'reset-token', newPassword: 'newpassword1', confirmPassword: 'newpassword1' });
       expect(JSON.parse(init.body).turnstileToken).toBeUndefined();
     });
 

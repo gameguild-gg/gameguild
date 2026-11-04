@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -218,6 +219,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     [HttpPatch("v{version:apiVersion}/subscriptions/{subscriptionId:guid}")]
     [EndpointSummary("Partially update subscription")]
     [EndpointDescription("Updates specific fields of a subscription. Only provided fields are updated.")]
+    [RequirePermission(MonetizationPermission.Keys.Configure)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -244,6 +246,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     [HttpPut("v{version:apiVersion}/subscriptions/{subscriptionId:guid}")]
     [EndpointSummary("Full update subscription")]
     [EndpointDescription("Performs a full replacement of subscription data. All fields will be updated.")]
+    [RequirePermission(MonetizationPermission.Keys.Configure)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -270,6 +273,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     [HttpDelete("v{version:apiVersion}/subscriptions/{subscriptionId:guid}")]
     [EndpointSummary("Delete subscription")]
     [EndpointDescription("Permanently deletes a subscription. Use cancel action for soft removal.")]
+    [RequirePermission(MonetizationPermission.Keys.Configure)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteSubscription(Guid subscriptionId, CancellationToken ct)

@@ -3,9 +3,29 @@ using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
 using Moq;
 using Xunit;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 public sealed class SignInMfaMappingOutcomeTests
 {
+    [Fact]
+    public void CompletedResponseStillSerializesItsActualCredentialExpiries()
+    {
+        var expiresAt = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+        var response = new SignInResponse
+        {
+            Success = true,
+            ExpiresAt = expiresAt,
+            AccessTokenExpiresAt = expiresAt.AddMinutes(5),
+            RefreshTokenExpiresAt = expiresAt.AddDays(30)
+        };
+        using var json = JsonDocument.Parse(JsonSerializer.Serialize(response, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+
+        Assert.Equal(response.ExpiresAt, json.RootElement.GetProperty("expiresAt").GetDateTime());
+        Assert.Equal(response.AccessTokenExpiresAt, json.RootElement.GetProperty("accessTokenExpiresAt").GetDateTime());
+        Assert.Equal(response.RefreshTokenExpiresAt, json.RootElement.GetProperty("refreshTokenExpiresAt").GetDateTime());
+    }
+
     [Theory]
     [InlineData(SignInMfaPurpose.VerifyFactor, false)]
     [InlineData(SignInMfaPurpose.EnrollFactor, false)]
@@ -51,6 +71,14 @@ public sealed class SignInMfaMappingOutcomeTests
         Assert.True(mapped.User.EmailVerified);
         Assert.Null(mapped.User.PhoneNumber);
         Assert.False(mapped.User.PhoneNumberVerified);
+        var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        jsonOptions.Converters.Add(new JsonStringEnumConverter());
+        using var json = JsonDocument.Parse(JsonSerializer.Serialize<SignInResponse>(mapped, jsonOptions));
+        foreach (var expiryField in new[] { "expiresAt", "accessTokenExpiresAt", "refreshTokenExpiresAt" })
+        {
+            Assert.False(json.RootElement.TryGetProperty(expiryField, out _),
+                "A pending first factor must not publish an unspecified default credential expiry.");
+        }
         Assert.Equal(tenantId, mapped.TenantId);
         Assert.Null(mapped.AvailableTenants);
         repository.VerifyNoOtherCalls();

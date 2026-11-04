@@ -55,20 +55,52 @@ public sealed class SignInMfaService(
         var token = SignInMfaChallengeToken.Create();
         if (!SignInMfaChallengeToken.TryHash(token, out var hash)) { throw new InvalidOperationException("Challenge creation failed."); }
         var now = _time.GetUtcNow();
+        var completingEnrollment = !current!.HasEnrolledMfa;
         var challenge = new SignInMfaChallenge
         {
             Id = Guid.NewGuid(), SubjectId = verifiedSubjectId, SubjectTokenVersion = verifiedTokenVersion,
             TenantId = decision.TenantId, PolicyFingerprint = decision.PolicyFingerprint, TokenHash = hash,
-            FirstFactor = firstFactor, Purpose = current!.HasEnrolledMfa ? SignInMfaPurpose.VerifyFactor : SignInMfaPurpose.EnrollFactor,
+            FirstFactor = firstFactor, Purpose = completingEnrollment ? SignInMfaPurpose.EnrollFactor : SignInMfaPurpose.VerifyFactor,
             CreatedAt = now, ExpiresAt = now.AddMinutes(5)
         };
+        SignInMfaEnrollmentSetup? setup = null;
+        if (completingEnrollment)
+        {
+            // Serialize against settings enrollment and concurrent sign-ins before provisioning.
+            await enrollment.AcquireSubjectLockAsync(verifiedSubjectId, cancellationToken).ConfigureAwait(false);
+            // Enrollment state was read before the lock; a concurrent completion (settings
+            // setup or another sign-in) may have enabled the factor while this request waited.
+            // Re-read the subject under the lock and fall back to a verification challenge.
+            var locked = await subjects.ReadCurrentAsync(verifiedSubjectId, cancellationToken).ConfigureAwait(false);
+            RequireAccount(locked, verifiedSubjectId, verifiedTokenVersion);
+            if (IsLocked(locked!)) { return SignInMfaPreparation.WithOutcome(Denied()); }
+            if (locked!.HasEnrolledMfa)
+            {
+                current = locked;
+                challenge = new SignInMfaChallenge
+                {
+                    Id = Guid.NewGuid(), SubjectId = verifiedSubjectId, SubjectTokenVersion = verifiedTokenVersion,
+                    TenantId = decision.TenantId, PolicyFingerprint = decision.PolicyFingerprint, TokenHash = hash,
+                    FirstFactor = firstFactor, Purpose = SignInMfaPurpose.VerifyFactor,
+                    CreatedAt = now, ExpiresAt = now.AddMinutes(5)
+                };
+            }
+            else
+            {
+                setup = await enrollment.StartOrResumeAsync(verifiedSubjectId, current.User.Email, now, challenge.ExpiresAt,
+                    cancellationToken).ConfigureAwait(false);
+                challenge.EnrollmentConfigurationId = setup.ConfigurationId;
+                challenge.EnrollmentSecretFingerprint = setup.SecretFingerprint;
+                challenge.EnrollmentInitializedAt = now;
+            }
+        }
         await challenges.AddAsync(challenge, cancellationToken).ConfigureAwait(false);
         await RecordAsync("Authentication.MfaSignInRequired", challenge, false, firstFactor.ToString(), deviceInfo,
             null, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         // This marker is created only after challenge persistence and audit both succeed.
         return SignInMfaPreparation.WithOutcome(new SignInMfaPendingResponse(token, challenge.ExpiresAt, challenge.Purpose,
-            requiresRiskStepUp, current.User, decision.TenantId));
+            requiresRiskStepUp, current.User, decision.TenantId, setup));
     }
 
     public async Task<SignInResponse> CompleteCodeAsync(string bearer, string code, MfaMethod method,
@@ -227,7 +259,7 @@ public sealed class SignInMfaService(
 internal sealed class SignInMfaPendingResponse : SignInResponse, ICommitOnFailureOutcome
 {
     public SignInMfaPendingResponse(string bearer, DateTimeOffset expiresAt, SignInMfaPurpose purpose, bool requiresRiskStepUp,
-        User verifiedSubject, Guid tenantId)
+        User verifiedSubject, Guid tenantId, SignInMfaEnrollmentSetup? enrollment = null)
     {
         ArgumentNullException.ThrowIfNull(verifiedSubject);
         if (verifiedSubject.Id == Guid.Empty || tenantId == Guid.Empty)
@@ -242,6 +274,9 @@ internal sealed class SignInMfaPendingResponse : SignInResponse, ICommitOnFailur
         StepUpToken = requiresRiskStepUp ? bearer : null;
         StepUpExpiresAt = expiresAt.UtcDateTime;
         AvailableMethods = purpose == SignInMfaPurpose.VerifyFactor ? ["TOTP", "BackupCode"] : ["TOTP"];
+        // Only a sign-in-driven enrollment carries the provisioning payload.
+        MfaEnrollment = enrollment is null ? null : new SignInMfaEnrollmentOffer(enrollment.SecretKey,
+            enrollment.QrCodeUri, enrollment.SetupExpiresAt);
         UserId = verifiedSubject.Id;
         Email = verifiedSubject.Email;
         TenantId = tenantId;
@@ -250,6 +285,9 @@ internal sealed class SignInMfaPendingResponse : SignInResponse, ICommitOnFailur
             authenticationComplete: false, fallbackCreatedAt: verifiedSubject.CreatedAt);
     }
 }
+
+/// <summary>One-time TOTP provisioning offered at sign-in when a required-MFA subject has no enrolled factor.</summary>
+public sealed record SignInMfaEnrollmentOffer(string SecretKey, string QrCodeUri, DateTimeOffset ExpiresAt);
 
 internal sealed class SignInMfaCommittedDenial : SignInResponse, ICommitOnFailureOutcome
 {

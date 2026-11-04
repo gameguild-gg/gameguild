@@ -106,6 +106,13 @@ public interface IServiceAccountService
     Task UpdateScopesAsync(Guid serviceAccountId, string scopes, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Persists changes made to a service account entity (name, description, scopes,
+    ///     expiry — issue #1142). Without this, PATCH mutated a tracked entity that
+    ///     nothing ever saved.
+    /// </summary>
+    Task<ServiceAccount> UpdateAsync(ServiceAccount account, CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Binds an X.509 client certificate (thumbprint and optional SPKI key pin) to a service
     ///     account, allowing certificate authentication in lieu of the client secret (issue #1146).
     ///     The thumbprint and SPKI pin are normalized exactly like the authentication-time

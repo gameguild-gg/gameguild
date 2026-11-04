@@ -40,7 +40,19 @@
       "submit": "Verificar e entrar",
       "startAgain": "Começar o acesso novamente",
       "noChallenge": "Nenhum desafio de dois fatores ativo. Inicie o acesso para receber um novo código.",
-      "backToSignIn": "Voltar ao acesso"
+      "backToSignIn": "Voltar ao acesso",
+      "enrollDescription": "Sua conta exige autenticação de dois fatores. Escaneie o código QR com seu app autenticador ou cole a chave de configuração e insira o código de 6 dígitos para concluir o acesso.",
+      "enrollQrLabel": "Código QR do app autenticador",
+      "secretLabel": "Chave de configuração",
+      "copySecret": "Copiar chave de configuração",
+      "copied": "Copiado",
+      "enrollSubmit": "Verificar e concluir configuração",
+      "enrollFailed": "Não foi possível concluir a configuração. Verifique o código e tente novamente.",
+      "backupCodesTitle": "Salve seus códigos de recuperação",
+      "backupCodesDescription": "Estes códigos de recuperação são exibidos apenas uma vez. Guarde-os em um local seguro antes de continuar — cada um permite acessar sem o app autenticador.",
+      "copyBackupCodes": "Copiar todos os códigos",
+      "copyFailed": "Não foi possível copiar. Selecione a chave ou os códigos e copie manualmente.",
+      "backupCodesContinue": "Guardei meus códigos — continuar"
     }
   },
   "magicLink": {
@@ -318,7 +330,12 @@
           "regenerate": "Regenerar códigos",
           "regenerated": "Novos códigos de recuperação gerados. Os anteriores foram invalidados.",
           "freshWarning": "Estes códigos são exibidos apenas uma vez. Guarde-os em local seguro agora.",
-          "hide": "Salvei meus códigos"
+          "hide": "Salvei meus códigos",
+          "confirmTitle": "Regenerar códigos de recuperação",
+          "confirmDescription": "Informe a senha da conta para re-verificar antes de emitir novos códigos de recuperação. Os códigos anteriores serão invalidados.",
+          "passwordLabel": "Senha da conta",
+          "cancel": "Cancelar",
+          "wrongPassword": "Falha na verificação da senha. Os códigos de recuperação não foram alterados."
         },
         "disable": {
           "title": "Desativar MFA",

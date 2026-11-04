@@ -4,7 +4,12 @@ Last audited: 2026-11-02 against `develop` (`ac959fd8f`). The endpoint scan ran
 against `74e9bba4c` and was re-verified after develop advanced (PRs #1185–#1201):
 the only client regeneration in that window (`d3e340865`) added Cloudflare
 Turnstile request fields for issue #1082 — `endpoints.gen.ts` is unchanged, so
-every count below stands.
+the counts below are the historical audit snapshot. The F1/F2 correction notes
+describe the current implementation, and F5 corrects a controller-count false
+positive. The adjacent F3/F4 transport findings remain unresolved; these scoped
+corrections are not a newly certified surface audit. F3 records the subsequent
+Next registration/token-revocation, extended-auth and web password-action migrations, and F4 records the password/MFA credential-provider
+migration; the other provider transports remain.
 
 Sources of truth:
 
@@ -109,9 +114,9 @@ exercised, but not through its generated method (finding F3).
 | POST | `/v1/auth/orchestrated/{flowId}:complete` | `postAuthOrchestratedComplete` | — |
 | POST | `/v1/auth/orchestrated/{flowId}:process-step` | `postAuthOrchestratedProcessStep` | — |
 | POST | `/v1/auth/orchestrated:initiate` | `postAuthOrchestratedInitiate` | — |
-| POST | `/v1/auth/password:change` | `postAuthPasswordChange` | `lib/auth/password-change-action.ts` |
-| POST | `/v1/auth/password:reset` | `postAuthPasswordReset` | raw fetch only (F3) |
-| POST | `/v1/auth/password:reset-request` | `postAuthPasswordResetRequest` | raw fetch only (F3) |
+| POST | `/v1/auth/password:change` | `postAuthPasswordChange` | `lib/auth/password-change-action.ts`; SDK helper migrated (F3) |
+| POST | `/v1/auth/password:reset` | `postAuthPasswordReset` | SDK reset migrated (F3); counts remain historical |
+| POST | `/v1/auth/password:reset-request` | `postAuthPasswordResetRequest` | SDK request migrated (F3); counts remain historical |
 | POST | `/v1/auth/polymorphic` | `postAuthPolymorphic` | — |
 | POST | `/v1/auth/saml/{slug}:assertion-consumer` | `postAuthSamlAssertionConsumer` | `app/api/auth/saml/[slug]/callback/route.ts` |
 | GET | `/v1/auth/saml/{slug}:logout-url` | `getAuthSamlLogoutUrl` | — |
@@ -120,9 +125,9 @@ exercised, but not through its generated method (finding F3).
 | GET | `/v1/auth/session-state` | `getAuthSessionState` | `app/[locale]/(dashboards)/workspace/settings/account/page.tsx` |
 | POST | `/v1/auth/sign-in` | `postAuthSignIn` | — (raw transport, F3/F4) |
 | POST | `/v1/auth/sign-out` | `postAuthSignOut` | — (raw transport, F3/F4) |
-| POST | `/v1/auth/sign-up` | `postAuthSignUp` | raw fetch only (F3) |
+| POST | `/v1/auth/sign-up` | `postAuthSignUp` | SDK Next registration migrated (F3); counts remain historical |
 | POST | `/v1/auth/tokens:refresh` | `postAuthTokensRefresh` | — (raw transport, F3/F4) |
-| POST | `/v1/auth/tokens:revoke` | `postAuthTokensRevoke` | raw fetch only (F3) |
+| POST | `/v1/auth/tokens:revoke` | `postAuthTokensRevoke` | SDK Next logout migrated (F3); counts remain historical |
 | POST | `/v1/auth/web3/challenge` | `postAuthWeb3Challenge` | — (raw transport, F3/F4) |
 | POST | `/v1/auth/web3:verify` | `postAuthWeb3Verify` | — (raw transport, F3/F4) |
 
@@ -288,14 +293,14 @@ exercised, but not through its generated method (finding F3).
 
 ### Auth module findings
 
-- **A1 — the primary credential flows bypass the generated client entirely.**
-  Password sign-in, sign-out, token refresh, sign-up, password reset, email-code,
+- **A1 — primary credential transport gap (historical audit).**
+  At audit time, password sign-in, sign-out, token refresh, sign-up, password reset, email-code,
   magic-link, web3 and MFA-verify all reach the API through hand-rolled `fetch`
   calls in `apps/web/src/lib/auth/*` and
   `packages/infrastructure/client/src/runtime/auth/*` (see F3/F4), so their
-  generated methods show as "never called" while the endpoints are among the
-  hottest in production. The generated auth surface is exercised mainly for
-  session/device/MFA settings management.
+  generated methods showed as "never called" while the endpoints were among the
+  hottest in production. The F3/F4 correction notes record subsequent generated
+  migrations; these historical audit counts have not been recertified.
 - **A2 — complete dead clusters (0 callers, any transport)**: account recovery (6),
   API keys (4), SCIM tokens (4), service accounts (15), roles (9), WebAuthn (13),
   trusted contacts (4), signing keys (3), admin MFA reset, MFA email/push/recovery
@@ -357,6 +362,13 @@ Next auth handler's MFA-enrollment action gets a 404. Either implement the
 endpoint, point the handler at `/v1/auth/mfa/sign-in/complete`, or remove the
 action.
 
+**Correction (issue #1217, F1):** the SDK no longer dispatches that standalone
+enrollment action or fetches the unserved API path. Required-MFA sign-in already
+returns the sign-in-bound `mfaEnrollment` offer; the Next handler passes that offer
+to the UI without issuing a session. Completion continues through the real
+`/v1/auth/mfa/sign-in/complete` route with the limited bearer and proof. Tests cover
+the offer, local rejection of the obsolete action, CSRF and session isolation.
+
 ### F2 — CLIENT-CALL-NO-ENDPOINT: promo-campaigns dashboard calls wrong path prefix
 
 `apps/web/src/app/api/billing/promo-campaigns/route.ts:50` and
@@ -371,51 +383,239 @@ has the correct path (`/v1/promo-campaigns`, `endpoints.gen.ts:27570`). The page
 silently swallows the failure (`if (!response.ok) return [];`), so the dashboard
 renders empty instead of erroring.
 
-### F3 — parallel hand-rolled transport shadows 17+ generated endpoints
+**Correction (issue #1217, F2):** the page and all campaign proxy calls now use
+`/v1/promo-campaigns`, including performance and lifecycle routes. A proxy test
+derives the expected prefix from `PromoCampaignsController` itself. Initial HTTP,
+network and malformed-response failures render a safe server-side alert; only an
+actual successful empty collection renders the empty state. A later successful
+server render replaces the alert with fresh campaign data. These corrections do
+not resolve F3/F4/F5 or turn the no-caller inventory into a deletion list.
 
-The client package's own runtime and the web app hand-fetch URLs that also exist as
-generated methods, so contract drift here is invisible to TypeScript:
+### F3 — SDK registration/logout and extended auth migrated; web transports remain
 
-- `packages/infrastructure/client/src/integrations/next/actions.ts:239` (`/v1/auth/sign-up`),
-  `:292` (`/v1/auth/tokens:revoke`);
-- `…/integrations/next/handlers.ts:533` (`/v1/auth/sign-up`), `:575` (`/v1/auth/tokens:revoke`), `:364` (F1);
-- `…/runtime/auth/extended-operations.ts:162` (`/v1/auth/mfa/verify`), `:201` (`/v1/auth/mfa/methods`),
-  `:220` (`/v1/auth/password:reset-request`), `:299` (`/v1/auth/sessions`),
-  `:314` (`/v1/auth/sessions/{id}`);
-- `apps/web/src/lib/auth/password-actions.ts:29,78`; `apps/web/src/lib/auth/email-code-request.ts:14`;
+The original audit identified 17+ generated endpoints shadowed by hand-written
+transports in the client runtime and web app. The Next route and server-action
+registration paths now share `runtime/auth/sign-up.ts`, which calls generated
+`AuthModule.postAuthSignUp`. Generated schemas validate both directions before
+session finalization. CAPTCHA and guest-continuity fields, legacy profile/claims,
+callbacks and redirects are retained; malformed, denied, incomplete and pending
+MFA/step-up responses never create an ordinary session. Network/server/response
+failures produce a service-unavailable error, distinct from invalid registration.
+
+The two Next logout paths now call generated `AuthModule.postAuthTokensRevoke`
+through `runtime/auth/sign-out.ts`. Revocation carries the access bearer from the
+decrypted session: the endpoint requires `[Authorize]` and its handler enforces
+refresh-token ownership. The old calls supplied no bearer, so could clear local
+cookies while leaving remote refresh credentials valid. Missing/malformed tokens
+are not sent, and request-body actor/token fields cannot replace the session's
+credentials. Logout never refreshes or rotates tokens. Revocation has a five-second
+request budget; failure still permits local cookie cleanup. Server authorization
+and ownership checks are unchanged. The old enrollment route is covered by F1.
+
+Authenticated `setupTotpMfa` and `getMfaMethods` now use generated
+`AuthMultiFactorModule` operations with the current actor's bearer, no automatic
+refresh, quiet diagnostics and a five-second request budget. Setup uses the served
+`/v1/auth/mfa/totp:setup` action (the old `/totp/setup` route is absent), maps
+`secretKey` to the public `secret` field and explicitly returns
+`requiresVerification: true`. It validates the provisioning data: the controller
+leaves `isSuccess` at its DTO default even on a successful HTTP response. Missing,
+invalid or denied provisioning throws `MfaVerificationError`.
+
+Method discovery validates the backend's method-info objects and returns the
+existing string names (`totp`, `backup_code`, etc.) for available methods, including
+those available for enrollment but not enabled yet. Valid null/empty lists and HTTP
+rejections retain the empty-list fallback. Invalid successful responses and network
+failures throw a typed error instead of returning unchecked data. These settings
+operations do not complete the limited-challenge sign-in flow, which remains
+separate.
+
+`verifyMfa` now completes that sign-in flow through generated
+`AuthModule.postAuthMfaSignInComplete` at `/v1/auth/mfa/sign-in/complete`, instead
+of posting a session ID to the authenticated settings-verification route. It takes
+the opaque first-factor `mfaToken`, TOTP or backup-code proof and an optional device
+binding. Actor/tenant/IP assertions and the deprecated ordinary-bearer argument
+are never forwarded. The deprecated `mfaSessionId` input accepts an opaque challenge
+only when no explicit `mfaToken` was supplied; a session GUID cannot authenticate.
+Unsupported SMS, invalid challenges and oversized proofs fail before network access.
+
+Generated validation precedes the result mapping. Denied, pending MFA/step-up,
+malformed and incomplete replies cannot yield ordinary credentials; completion
+requires access/refresh credentials and a validated identity. Legacy profile/claim
+extensions remain supported, and one-time enrollment backup codes are returned
+separately from tokens. This operation has no automatic refresh or diagnostic
+payload logging and has a five-second request budget. Failures preserve the public
+`MfaVerificationError` type. The backend completion endpoint returns generic
+verification failure; this adapter does not invent an attempts-remaining count.
+
+The SDK reset request, reset confirmation and authenticated password change now
+call generated `AuthModule` operations. Both mutations were missing the backend's
+mandatory `confirmPassword`; existing callers now send their `newPassword` as the
+confirmation, while explicit mismatches fail locally. Generated validators check
+the request and reply, and mutation completion requires `success: true`, rather
+than treating any HTTP success as proof that the password changed. Errors retain
+the public `PasswordResetError` type.
+
+Optional reset tenant context and change-session revocation policy are forwarded
+through the supported DTO fields. Omission preserves the backend's revocation
+default, and an empty current password still supports its OAuth-only initial-password
+flow. Change uses the supplied actor bearer; reset stays anonymous. Caller-provided
+actor, IP, tenant or session assertions cannot replace the authenticated change
+context. These operations do not rotate credentials, log payloads or wait beyond
+the five-second request budget.
+
+Reset-request HTTP outcomes remain indistinguishable to callers: success, rejection,
+account flags and malformed remote acknowledgements all resolve without account
+information. Local syntax errors and network/deadline failures produce generic
+typed errors. This preserves the existing neutral HTTP acknowledgement; it does not
+claim that an email was delivered when the server rejected or failed the request.
+
+The three SDK email helpers now use generated operations. Authenticated
+`sendVerificationEmail` previously sent no body to an endpoint that requires an
+email address. It now reads the server-authenticated actor ID from session state,
+uses that ID for the protected own-user read, checks the returned profile ID and
+submits that profile's email. It never decodes a JWT to infer identity or accepts a
+caller-supplied recipient. Revoked tokens, invalid bound sessions and mismatched
+profiles fail before sending; an authenticated stateless principal does not need
+a browser session. The user controller retains its self-read policy and actor
+guard; policy denials stop the operation without a recipient fallback. All three
+requests share one five-second operation budget, including body
+consumption, without token refresh or diagnostic payload logging.
+
+Anonymous resend still sends only the caller's email, and token verification may
+forward the endpoint's optional tenant context. Generated schemas validate both
+directions; verification requires explicit `success: true`. Send/resend return no
+server message and make no email-delivery or account-existence claim.
+Failures preserve `EmailVerificationError`, and malformed or unsuccessful replies
+cannot report email verification as complete.
+
+The four SDK session helpers now use `AuthSessionsModule`. Listing explicitly
+validates every row because the generated collection method currently only casts
+its result. Native arrays and the existing `{ sessions }` envelope are supported;
+the native nullable device/location objects are normalized to optional fields
+before schema validation. Required identity, timestamps and current-session fields
+must be present. `lastUsedAt` maps to public `lastActiveAt`, and
+`deviceInfo.userAgent` maps to `userAgent`; missing details are not fabricated.
+Invalid collections fail with `AuthServiceUnavailableError`, rather than appearing
+as an empty or partial list. The existing HTTP-rejection empty-list fallback remains.
+
+Single-session termination validates the UUID before calling the generated method,
+whose path currently interpolates the ID. Traversal, query and fragment text never
+reaches the transport. Mutations use the current actor bearer with no request body,
+automatic refresh or payload logging, and a five-second request budget. Generated
+acknowledgements are validated; bulk counts must be non-negative integers, including
+the valid zero-session case. Errors retain `SessionTerminationError`. Actor, tenant
+and current-session decisions remain in the backend, and local cookie cleanup
+remains the caller's responsibility. The obsolete raw-fetch helpers were removed:
+all thirteen functions in `runtime/auth/extended-operations.ts` now use generated
+operations. This is not a claim that other SDK providers or web transports migrated.
+
+The web password-reset server actions also call generated operations. The completion
+action already accepted `confirmPassword` from the form but omitted it from its
+backend body; it now forwards that required field and requires validated
+`success: true` before reporting completion. Request acknowledgements retain their
+neutral successful-HTTP behavior, while rejected HTTP requests still return the
+existing action failure shape. CAPTCHA verification precedes API work, and the
+existing corroborated Cloudflare IP helper supplies forwarded headers. The CAPTCHA
+proof never enters the API DTO. Runtime input-kind checks cover the public actions;
+API configuration is resolved per invocation. API calls have a five-second budget,
+no token refresh or diagnostic payload logging; malformed replies and network
+exceptions become generic failures without echoing credentials. The CAPTCHA
+verifier's separate timeout and availability policy remain unchanged.
+
+Remaining transports from the historical inventory (line numbers below belong to
+the original audit, not the current source):
+
+- `apps/web/src/lib/auth/email-code-request.ts:14`;
   `apps/web/src/lib/auth/magic-link-request.ts:16`;
   `apps/web/src/app/api/auth/session-state/route.ts:18`;
   `apps/web/src/lib/workspace-actions.ts:506` (`/v1/assets`);
   `apps/web/src/app/api/assets/[assetId]/route.ts:45`, `apps/web/src/app/api/courses/content-reports/route.ts:105`;
   `apps/web/src/app/api/audit/permission-patterns/route.ts:28` (`/v1/audit-queries/:execute`).
 
-### F4 — password sign-in itself is not the generated method
+### F4 — password/MFA sign-in migrated; other provider transports remain
 
-`packages/infrastructure/client/src/runtime/auth/providers/credentials.ts:38-111`
-defaults to `fetch`-posting `/v1/auth/sign-in` (falling back to
-`/v1/auth/mfa/sign-in/complete`), and `apps/web/src/lib/auth/web3-credentials.ts`,
-`email-code-credentials.ts`, `magic-link-credentials.ts` do the same for their
-flows. `postAuthSignIn` (`endpoints.gen.ts`, `AuthModule`) has zero callers. This
-is F3's highest-impact instance: the single most security-critical endpoint in the
-contract is validated by neither the generated types nor `safeParse` schemas.
-The gap is widening, not closing: the Cloudflare Turnstile hardening
-(`d3e340865`, issue #1082) added `turnstileToken` to this raw-fetch body
-(`credentials.ts:82,108`) and to the generated request types — but the runtime
-still posts by hand, so the next CAPTCHA-related change can again ship without
-the pipeline noticing.
+The original audit found that
+`packages/infrastructure/client/src/runtime/auth/providers/credentials.ts` built
+its password and MFA completion requests by hand. The generated `postAuthSignIn`
+had no callers, including after the Turnstile field was added for #1082.
 
-### F5 — VERSIONED-DIFF: 7 live Orders actions missing from the generated client
+The 2026-11-04 correction routes the default credentials provider through
+`AuthModule.postAuthSignIn` and `AuthModule.postAuthMfaSignInComplete`, using the
+shared client transport and generated request/response validation. CAPTCHA,
+tenant and persistence fields now participate in that contract. Malformed
+successful responses cannot become sessions or be mistaken for MFA challenges.
+The custom sign-in path remains supported through a request interceptor; it uses
+the same generated sign-in contract. Older profile extensions and claim arrays
+remain compatible without overriding validated contract fields.
 
-`Commerce.Orders/Controllers/OrdersController.cs` serves 14 actions; the client
-(`orders.gen.ts`, 7 endpoints) covers only 7. Missing
-(`OrdersController.cs:143,159,250,266,345,361` + HEAD):
-`POST /v1/orders/{orderId}:cancel`, `POST …:refund`, `PATCH /v1/orders/{orderId}`,
-`DELETE /v1/orders/{orderId}`, `POST …:hold`, `POST …:release`, `HEAD /v1/orders/{orderId}`.
-The client was regenerated after these actions landed (regen `4db4ca6e2` 2026-11-02;
-`:hold`/`:release` added by `2ab11e06a` 2026-08-30, an ancestor), so the OpenAPI
-document itself is dropping them — regenerate via the real pipeline
-(`scripts/ci/verify-openapi-surface.sh` or the PR `openapi-<sha>` artifact) and
-diff, never hand-splice.
+Credential diagnostics are explicitly disabled, including console groups. The
+shared error adapter accepts legacy string `message` payloads after standard
+ProblemDetails fields, preserving account-lock and invalid-credential messages;
+service outages and malformed responses remain service failures. MFA challenges
+and one-time recovery-code handling retain their existing no-session/no-persistence
+boundaries.
+
+The provider's completion checks also reject an explicit unsuccessful result or
+unfinished step-up, and require the mapped actor identity and refresh credential
+before returning an ordinary provider result. The limited MFA branch is handled
+first so `success: false` challenges retain their existing continuation flow.
+Legacy responses without the success flag and validated nested profile identities
+remain supported. `tests/next/credentials-session-contract.test.ts` follows real
+CSRF verification through encrypted cookie creation; rejected or incomplete
+responses never issue an ordinary session cookie.
+
+Wire-level checks also found two API/schema mismatches that the old raw transport
+had hidden. The host now preserves nullable enum references in serialized OpenAPI
+without making the shared enum nullable. Pending first factors omit default,
+unspecified credential expiry timestamps; completed sign-ins retain their actual
+expiries. The client generator accepts RFC3339 date-time offsets, including the
+`DateTimeOffset` expiry in the native enrollment offer, while timezone-free
+timestamps remain invalid. The client was regenerated from the freshly built
+full host's captured OpenAPI document; generated files were not hand-edited.
+
+`tests/auth/providers/credentials-contract.test.ts` exercises invalid requests,
+malformed successful responses, the actual fetch boundary and compatibility
+controls, including two synthetic fixtures serialized by the native pending-MFA
+response constructor. Existing provider, Next handler and enrollment-action tests retain the
+MFA and callback behavior checks with JSON responses and valid identifier fixtures.
+
+`apps/web/src/lib/auth/web3-credentials.ts`, `email-code-credentials.ts` and
+`magic-link-credentials.ts` still use separate transports for their flows. They
+and the other F3 call sites remain unresolved; this correction does not close the
+whole #1217 issue or certify the historical endpoint inventory.
+
+### F5 — corrected: Orders exposes seven reviewed operations, all present in the client
+
+The original scan counted 14 compiled `OrdersController` methods as live HTTP
+actions. The host unconditionally registers
+`MinimumOrderRouteApplicationModelConvention`, which removes every Orders action
+without `[MinimumOrderRoute]` from the MVC application model. This affects runtime
+routing as well as OpenAPI. Cancel, refund, patch, delete, hold, release and HEAD
+are deliberately excluded pending production safety review; their absence from
+the generated client is not VERSIONED-DIFF.
+
+The seven reviewed operations are list, get-by-id, create, add-item, capture,
+complete and payment-intent. All seven appear in
+`generated/modules/commerce-orders.gen.ts`.
+
+Evidence rechecked on 2026-11-04:
+
+- `ModuleOpenApiIntegrationTests.Swagger_ShouldExposeOnlyTheVerifiedOrderSurface`
+  asserts the exact seven method/path pairs in the hosted OpenAPI document.
+- `Runtime_ShouldRouteOnlyVerifiedOrderOperations` checks the actual HTTP boundary:
+  the excluded cancel action returns 404, list remains authenticated, and the
+  reviewed get/payment-intent routes are available to routing.
+- Both tests passed in [CI run 41495243956](https://github.com/gameguild-gg/gameguild/actions/runs/41495243956)
+  at `a54a689798c3c15b823bbdf731884fd62f92ac6b`, retained in the
+  `full-application-openapi-a54a689798c3c15b823bbdf731884fd62f92ac6b` TRX artifact.
+  The convention, its host registration, marker attribute and these tests are
+  unchanged at `c42b1049`. The controller's intervening change adds the API rate
+  limit policy; its route and action markers are unchanged. This is scoped routing
+  evidence, not a fresh execution of the entire current API.
+
+Do not expose unreviewed actions or hand-edit generated files to satisfy a source
+method count. Future reviewed route additions must still use the real OpenAPI
+capture and generation pipeline described below.
 
 ### F6 — live controller surface outside the versioned contract (171 actions)
 
@@ -436,8 +636,10 @@ diff, never hand-splice.
   `LedgersController.cs` (11),
   `Gamification.Achievements/Controllers/AchievementsController.cs` (11).
   These are callable HTTP endpoints that no generated client can express.
-- **20 accounted** by F5 (7 orders), the 12 version-parameterized routes (below) and
-  one catch-all (`OpenGraphController` `{*slug}`).
+- **20 historically accounted** by F5 (7 Orders methods excluded from MVC, as
+  corrected above), the 12 version-parameterized routes (below) and one catch-all
+  (`OpenGraphController` `{*slug}`). The seven excluded methods are not live HTTP
+  endpoints; the historical headline count must not be read as a current inventory.
 
 ### F7 — version-as-path-parameter quirk (12 endpoints, not drift)
 
@@ -464,9 +666,11 @@ deprecation-review backlog this matrix exists to track.
 
 ## Gaps (process and tooling, with file:line)
 
-- **G1** — No CI check compares controllers against the generated client: F5 (7
-  missing Orders actions) passed `4db4ca6e2` regeneration undetected. The
-  verify-openapi lane validates the document hash, not controller↔client parity.
+- **G1** — A repository-wide controller-to-client parity check would need to use
+  the composed MVC surface, including intentional exclusions. F5 is not evidence
+  of generator drift: existing OpenAPI and runtime integration tests explicitly
+  enforce the seven-operation Orders boundary. The verify-openapi lane validates
+  generation against the captured document, not every compiled controller method.
 - **G2** — The hand-rolled transports (F3/F4) sit in
   `packages/infrastructure/client/src/runtime/auth/` and
   `…/integrations/next/` — inside the same package that ships the generated

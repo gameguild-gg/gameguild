@@ -13991,6 +13991,31 @@ Table "gameguild.authentication"."identityverification" {
   }
 }
 
+Table "gameguild.authentication"."jwt_signing_keys" {
+  "id" uuid [not null]
+  "key_id" "character varying(50)" [not null]
+  "key_material" "character varying(1000)" [not null]
+  "algorithm" "character varying(20)" [not null]
+  "is_active" boolean [not null]
+  "valid_from" timestamp [not null]
+  "expires_at" timestamp [not null]
+  "rotated_at" timestamp
+  "rotation_reason" "character varying(200)"
+  "key_version" integer [not null]
+  "version" integer [not null]
+  "created_at" timestamp [not null]
+  "updated_at" timestamp [not null]
+  "deleted_at" timestamp
+  "tenant_id" uuid
+
+  Indexes {
+    id [pk, name: "PK_jwt_signing_keys"]
+    expires_at [name: "ix_jwt_signing_keys_expires_at"]
+    is_active [name: "ix_jwt_signing_keys_is_active"]
+    key_id [unique, name: "ux_jwt_signing_keys_key_id"]
+  }
+}
+
 Table "gameguild.authentication"."magic_link_tokens" {
   "token_hash" character(64) [not null]
   "user_id" uuid [not null]

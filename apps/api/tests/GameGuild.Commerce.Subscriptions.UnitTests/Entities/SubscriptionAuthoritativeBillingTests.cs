@@ -164,6 +164,37 @@ public sealed class SubscriptionAuthoritativeBillingTests
         subscription.NextBillingDate.Should().BeAfter(nextBillingBeforeRenewal);
     }
 
+    [Fact]
+    public void RecordPayment_ShouldHealPastDueToActive_OnConfirmedCyclePayment()
+    {
+        // Issue #1205 G-11: a subscription that failed once then paid recovers on the
+        // payment itself — no operator :reactivate needed, and auto-renew is untouched.
+        var subscription = CreateActiveSubscription();
+        subscription.RecordPayment(29.99m, "USD", PaymentDate, "payment-1", forBillingCycle: 1);
+        subscription.RecordPaymentFailure("card declined", PaymentDate.AddMonths(1));
+        subscription.Status.Should().Be(SubscriptionStatus.PastDue);
+        subscription.SetAutoRenew(false);
+
+        var result = subscription.RecordPayment(29.99m, "USD", PaymentDate.AddMonths(1).AddDays(3), "payment-2", forBillingCycle: 2);
+
+        result.IsSuccess.Should().BeTrue();
+        subscription.Status.Should().Be(SubscriptionStatus.Active, "a confirmed cycle payment heals PastDue");
+        subscription.AutoRenew.Should().BeFalse("healing must not force-enable auto-renew");
+    }
+
+    [Fact]
+    public void RecordPayment_ShouldLeaveActiveSubscriptionActive_AndNotRaiseHealForActive()
+    {
+        var subscription = CreateActiveSubscription();
+        subscription.SetAutoRenew(false);
+
+        var result = subscription.RecordPayment(29.99m, "USD", PaymentDate, "payment-1", forBillingCycle: 1);
+
+        result.IsSuccess.Should().BeTrue();
+        subscription.Status.Should().Be(SubscriptionStatus.Active);
+        subscription.AutoRenew.Should().BeFalse();
+    }
+
     private static Subscription CreateActiveSubscription()
     {
         var subscription = new Subscription(

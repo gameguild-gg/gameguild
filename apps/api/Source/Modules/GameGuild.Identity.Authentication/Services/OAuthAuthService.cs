@@ -31,7 +31,10 @@ public class OAuthAuthService(
     ILogger<OAuthAuthService> logger,
     IOptions<JwtOptions>? jwtOptions = null,
     IAuthenticationAuditEventSink? auditEventSink = null,
-    ISamlFederationService? samlFederationService = null
+    ISamlFederationService? samlFederationService = null,
+    IAuthenticationAnomalyDetectionService? anomalyDetectionService = null,
+    ISuspiciousLoginAlertPublisher? suspiciousLoginAlerts = null,
+    IPublisher? eventPublisher = null
 ) : IOAuthAuthService
 {
     public async Task<SignInResponse> GitHubSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
@@ -42,6 +45,7 @@ public class OAuthAuthService(
         var githubUser = await RunProviderAuthenticationAsync(
             "GitHub",
             stopwatch,
+            cancellationToken,
             () => oauthService.GetUserProfileAsync("github", request.AccessToken)).ConfigureAwait(false);
 
         var email = githubUser.Email ?? throw new UnauthorizedAccessException("Email not available from GitHub profile");
@@ -69,6 +73,7 @@ public class OAuthAuthService(
         var googleUser = await RunProviderAuthenticationAsync(
             "Google",
             stopwatch,
+            cancellationToken,
             () => oauthService.GetUserProfileAsync("google", request.AccessToken)).ConfigureAwait(false);
 
         var email = googleUser.Email ?? throw new UnauthorizedAccessException("Email not available from Google profile");
@@ -96,6 +101,7 @@ public class OAuthAuthService(
         var microsoftUser = await RunProviderAuthenticationAsync(
             "Microsoft",
             stopwatch,
+            cancellationToken,
             () => oauthService.GetUserProfileAsync("microsoft", request.AccessToken)).ConfigureAwait(false);
         var email = microsoftUser.Email ?? throw new UnauthorizedAccessException("Email not available from Microsoft profile");
         var grantedScopes = oauthService.ResolveAuthorizationScopes("microsoft");
@@ -135,10 +141,11 @@ public class OAuthAuthService(
         }
 
         // Cryptographically verify the Google ID token (signature, iss, aud, exp).
-        // Verifier throws UnauthorizedAccessException on any failure → caller surfaces 401.
+        // Invalid credentials surface as 401; provider availability failures surface as 503.
         var googleUser = await RunProviderAuthenticationAsync(
             "GoogleIdToken",
             stopwatch,
+            cancellationToken,
             () => googleIdTokenVerifier.VerifyAsync(request.IdToken, cancellationToken)).ConfigureAwait(false);
 
         var email = googleUser.Email;
@@ -172,6 +179,7 @@ public class OAuthAuthService(
         var discordUser = await RunProviderAuthenticationAsync(
             "Discord",
             stopwatch,
+            cancellationToken,
             () => oauthService.HandleCallbackAsync("discord", request.Code, request.State, request.RedirectUri))
             .ConfigureAwait(false);
 
@@ -212,6 +220,7 @@ public class OAuthAuthService(
         var githubUser = await RunProviderAuthenticationAsync(
             "GitHub",
             stopwatch,
+            cancellationToken,
             () => oauthService.HandleCallbackAsync("github", request.Code, request.State, request.RedirectUri))
             .ConfigureAwait(false);
 
@@ -295,6 +304,7 @@ public class OAuthAuthService(
         var profile = await RunProviderAuthenticationAsync(
             displayName,
             stopwatch,
+            cancellationToken,
             () => oauthService.HandleCallbackAsync(providerKey, code, state, redirectUri))
             .ConfigureAwait(false);
 
@@ -337,6 +347,7 @@ public class OAuthAuthService(
         var (user, identity) = await RunProviderAuthenticationAsync(
             authenticationMethod,
             stopwatch,
+            cancellationToken,
             async () =>
             {
                 var federatedIdentity = await oidcFederationService
@@ -410,6 +421,7 @@ public class OAuthAuthService(
         var (user, identity) = await RunProviderAuthenticationAsync(
             authenticationMethod,
             stopwatch,
+            cancellationToken,
             async () =>
             {
                 var federatedIdentity = await federationService
@@ -630,7 +642,66 @@ public class OAuthAuthService(
             TenantId: tenantAccessContext.TenantId,
             Metadata: new { Provider = authenticationMethod, SessionId = sessionId, DurationMs = stopwatch.ElapsedMilliseconds })).ConfigureAwait(false);
 
+        // Sign-in risk coverage (issue #1199): every federated family funnels through this
+        // completion, so the confirmed containment signals (impossible travel, brute force)
+        // are evaluated here too — not only on the local password path. Best-effort: analysis
+        // failures never fail the sign-in, and the publisher swallows its own failures.
+        await AlertFederatedSignInRisksAsync(user, tenantAccessContext.TenantId, authenticationMethod, ipAddress, userAgent, cancellationToken)
+            .ConfigureAwait(false);
+
+        // In-process sign-in telemetry (issue #1199) with the precise provider method.
+        await AuthenticationEventDispatch.PublishAsync(
+            eventPublisher,
+            new UserSignedInEvent(user.Id, user.Email, authenticationMethod, ipAddress, userAgent, SystemClock.UtcNow),
+            logger,
+            cancellationToken).ConfigureAwait(false);
+
         return response;
+    }
+
+    /// <summary>
+    ///     Evaluates the shared anomaly analysis for a completing federated sign-in and forwards
+    ///     the confirmed containment signals (impossible travel, brute force) to the durable
+    ///     suspicious-login alert publisher (issue #1199: the containment revocation must cover
+    ///     federated sessions, not only local password sign-ins). Analysis is best-effort.
+    /// </summary>
+    private async Task AlertFederatedSignInRisksAsync(
+        User user,
+        Guid? tenantId,
+        string authenticationMethod,
+        string? ipAddress,
+        string? userAgent,
+        CancellationToken cancellationToken)
+    {
+        if (anomalyDetectionService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var analysis = await anomalyDetectionService.AnalyzeLoginAttemptAsync(new AuthenticationAttemptContext
+            {
+                UserId = user.Id,
+                Identifier = user.Email.ToLowerInvariant(),
+                AuthenticationMethod = authenticationMethod,
+                IpAddress = ipAddress ?? "unknown",
+                UserAgent = userAgent ?? "Unknown",
+                TenantId = tenantId,
+                AttemptedAt = SystemClock.UtcNow
+            }).ConfigureAwait(false);
+
+            await AuthenticationEventDispatch.AlertConfirmedSignInRisksAsync(
+                suspiciousLoginAlerts, user.Id, tenantId, analysis, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not analyze the federated sign-in risk for user {UserId} ({Method})", user.Id, authenticationMethod);
+        }
     }
 
     /// <summary>Audit action types for identity-provider integration events (issue #180). Kept as
@@ -664,11 +735,23 @@ public class OAuthAuthService(
     private async Task<T> RunProviderAuthenticationAsync<T>(
         string authenticationMethod,
         Stopwatch stopwatch,
+        CancellationToken cancellationToken,
         Func<Task<T>> authenticate)
     {
         try
         {
             return await authenticate().ConfigureAwait(false);
+        }
+        catch (Exception exception) when (OAuthProviderUnavailableException.IsProviderUnavailability(exception, cancellationToken))
+        {
+            // Record the provider outage and preserve its typed outcome for the API's
+            // fallback response. Request cancellation remains cancellation.
+            await RecordFailedOAuthAttemptAsync(authenticationMethod, stopwatch, exception).ConfigureAwait(false);
+            if (exception is OAuthProviderUnavailableException)
+            {
+                throw;
+            }
+            throw new OAuthProviderUnavailableException(authenticationMethod, exception);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -708,6 +791,21 @@ public class OAuthAuthService(
             UserAgent: httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString(),
             ErrorMessage: exception.GetType().Name,
             Metadata: new { Provider = authenticationMethod, DurationMs = stopwatch.ElapsedMilliseconds })).ConfigureAwait(false);
+
+        // In-process failure telemetry (issue #1199). The identifier is the same synthetic
+        // audit identity recorded above (no real account may exist); the client response stays
+        // the provider error mapped by the caller.
+        var failedHttpContext = httpContextAccessor.HttpContext;
+        await AuthenticationEventDispatch.PublishAsync(
+            eventPublisher,
+            new AuthenticationFailedEvent(
+                $"oauth-{authenticationMethod.ToLowerInvariant()}@audit.invalid",
+                exception.GetType().Name,
+                authAttemptService.GetClientIpAddress(failedHttpContext),
+                failedHttpContext?.Request.Headers.UserAgent.ToString(),
+                SystemClock.UtcNow),
+            logger,
+            CancellationToken.None).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -721,6 +819,12 @@ public class OAuthAuthService(
     /// </summary>
     private async Task<User> ResolveExternalUserAsync(string provider, string email, string providerKey, string? name, bool emailVerified, string[] grantedScopes, CancellationToken cancellationToken)
     {
+        // Email case normalization (issue #1118): providers may return mixed-case addresses
+        // (User@Gmail.com) while accounts are stored lowercase. Normalize before any
+        // matching so a casing change never mints a duplicate account or breaks linking;
+        // every other surface (sign-up, magic link, password reset) already normalizes.
+        email = email.Trim().ToLowerInvariant();
+
         var existingLink = await externalLoginRepository
             .GetByProviderKeyAsync(provider, providerKey, cancellationToken)
             .ConfigureAwait(false);

@@ -175,6 +175,7 @@ public sealed class InvoicePromoApplicationTests
                 Mock.Of<IUserRepository>(),
                 Mock.Of<INotificationService>(),
                 Mock.Of<GameGuild.Commerce.Payments.IReferralService>(),
+                Mock.Of<IInvoiceAgingService>(),
                 NullLogger<InvoiceGenerationService>.Instance,
                 PromoCoordinator.Object);
         }
