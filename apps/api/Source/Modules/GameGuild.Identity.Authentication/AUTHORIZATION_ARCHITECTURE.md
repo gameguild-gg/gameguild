@@ -2101,6 +2101,17 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Email MFA lifecycle (#1271)
+
+Email challenge delivery and verification require an enabled configuration with an
+enrolled address. Verification reads the current configuration before consuming a
+code; a denied sign-in check leaves pending enrollment codes available for setup. Confirmed
+email enrollment records completed setup. Disabling MFA clears the enrolled email
+address and completed-setup flag along with the other factors, and still revokes
+issued tokens. Previously enabled email enrollments remain usable even when their
+legacy completed-setup flag is false; no data migration or forced reenrollment is
+required by this change.
+
 ### JWT rotation and sensitive MFA mutations (#1141, #1123, #1153)
 
 The scoped `IKeyRotationService` and hosted rotation worker are explicitly registered.
