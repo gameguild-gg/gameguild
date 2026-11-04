@@ -4,6 +4,7 @@ using GameGuild.Learning;
 using GameGuild.Learning.Abstractions;
 using GameGuild.Learning.Courses;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -414,6 +415,7 @@ public sealed class EnrollmentsController(
     }
 
     [HttpGet("users/{userId:guid}")]
+    [ProducesResponseType<IReadOnlyList<EnrollmentDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetByUser(Guid userId, [FromQuery] EnrollmentStatus? status, CancellationToken cancellationToken)
     {
         if (!CanAccessUserData(userId))
@@ -427,6 +429,7 @@ public sealed class EnrollmentsController(
     }
 
     [HttpGet("courses/{courseId:guid}")]
+    [ProducesResponseType<IReadOnlyList<EnrollmentDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetByCourse(Guid courseId, [FromQuery] EnrollmentStatus? status, CancellationToken cancellationToken)
     {
         if (!await CanReadRosterAsync(courseId, cancellationToken).ConfigureAwait(false))
@@ -440,6 +443,7 @@ public sealed class EnrollmentsController(
     }
 
     [HttpPost]
+    [ProducesResponseType<EnrollmentDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Enroll(EnrollUserRequest request, CancellationToken cancellationToken)
     {
         // Ownership gate (issue #1226 N6): enroll the acting user, or anybody only
