@@ -8,7 +8,7 @@ the counts below are the historical audit snapshot. The F1/F2 correction notes
 describe the current implementation, and F5 corrects a controller-count false
 positive. The adjacent F3/F4 transport findings remain unresolved; these scoped
 corrections are not a newly certified surface audit. F3 records the subsequent
-Next registration/token-revocation, MFA and password-operation migrations, and F4 records the password/MFA credential-provider
+Next registration/token-revocation, MFA, password and email-operation migrations, and F4 records the password/MFA credential-provider
 migration; the other provider transports remain.
 
 Sources of truth:
@@ -391,7 +391,7 @@ actual successful empty collection renders the empty state. A later successful
 server render replaces the alert with fresh campaign data. These corrections do
 not resolve F3/F4/F5 or turn the no-caller inventory into a deletion list.
 
-### F3 — SDK registration/logout, MFA and password operations migrated; other transports remain
+### F3 — SDK auth migrations; session and web transports remain
 
 The original audit identified 17+ generated endpoints shadowed by hand-written
 transports in the client runtime and web app. The Next route and server-action
@@ -468,6 +468,25 @@ account flags and malformed remote acknowledgements all resolve without account
 information. Local syntax errors and network/deadline failures produce generic
 typed errors. This preserves the existing neutral HTTP acknowledgement; it does not
 claim that an email was delivered when the server rejected or failed the request.
+
+The three SDK email helpers now use generated operations. Authenticated
+`sendVerificationEmail` previously sent no body to an endpoint that requires an
+email address. It now reads the server-authenticated actor ID from session state,
+uses that ID for the protected own-user read, checks the returned profile ID and
+submits that profile's email. It never decodes a JWT to infer identity or accepts a
+caller-supplied recipient. Revoked tokens, invalid bound sessions and mismatched
+profiles fail before sending; an authenticated stateless principal does not need
+a browser session. The user controller retains its self-read policy and actor
+guard; policy denials stop the operation without a recipient fallback. All three
+requests share one five-second operation budget, including body
+consumption, without token refresh or diagnostic payload logging.
+
+Anonymous resend still sends only the caller's email, and token verification may
+forward the endpoint's optional tenant context. Generated schemas validate both
+directions; verification requires explicit `success: true`. Send/resend return no
+server message and make no email-delivery or account-existence claim.
+Failures preserve `EmailVerificationError`, and malformed or unsuccessful replies
+cannot report email verification as complete.
 
 Remaining transports from the historical inventory (line numbers below belong to
 the original audit, not the current source):

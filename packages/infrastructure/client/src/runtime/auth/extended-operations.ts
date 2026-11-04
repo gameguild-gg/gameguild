@@ -33,6 +33,8 @@ import type { ProviderResult } from './types.js';
 import { createClient } from '../../client.js';
 import { AuthModule } from '../../generated/modules/auth.gen.js';
 import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen.js';
+import { UsersModule } from '../../generated/modules/users.gen.js';
+import type { ApiClient } from '../client.js';
 import type { IdentityAuthenticationMfaMethod } from '../../generated/types.gen.js';
 import type { ApiError } from '../errors/types.js';
 import { isApiError } from '../errors/guards.js';
@@ -102,6 +104,8 @@ export interface PasswordChangeInput {
 export interface EmailVerificationInput {
   /** The verification token from the email link */
   token: string;
+  /** Optional tenant context supported by the verification endpoint. */
+  tenantId?: string;
 }
 
 export interface SessionInfo {
@@ -421,15 +425,70 @@ export async function changePassword(apiUrl: string, input: PasswordChangeInput,
 
 // ─── Email Verification ──────────────────────────────────────────
 
+/** One operation budget, including the authenticated identity/profile lookups. */
+function emailClient(apiUrl: string, accessToken?: string): ApiClient {
+  const deadline = Date.now() + 5_000;
+  return createClient({
+    baseUrl: apiUrl,
+    ...(accessToken ? { auth: { getAccessToken: () => Promise.resolve(accessToken) } } : {}),
+    autoRefresh: false,
+    timeout: 5_000,
+    devtools: { enabled: false },
+    interceptors: [
+      {
+        onRequest(request) {
+          const remaining = deadline - Date.now();
+          if (remaining <= 0) return Promise.reject(new EmailVerificationError('Email verification timed out'));
+          return Promise.resolve({ ...request, timeout: remaining });
+        },
+      },
+    ],
+  });
+}
+
+async function completeEmailOperation(
+  operation: Promise<Result<{ success?: boolean; message?: string | null }, ApiError>>,
+  fallbackMessage: string,
+  requireSuccess = false,
+): Promise<void> {
+  try {
+    const response = await operation;
+    if (!response.ok)
+      throw new EmailVerificationError(
+        response.error.status === 0 || response.error.status >= 500 || response.error.code === 'PARSE_ERROR'
+          ? fallbackMessage
+          : response.error.detail || response.error.message || fallbackMessage,
+      );
+    if (requireSuccess && response.data.success !== true) throw new EmailVerificationError(response.data.message || fallbackMessage);
+  } catch (error) {
+    if (error instanceof EmailVerificationError) throw error;
+    throw new EmailVerificationError(fallbackMessage);
+  }
+}
+
 /**
  * Send a verification email to the authenticated user.
  */
 export async function sendVerificationEmail(apiUrl: string, accessToken: string): Promise<void> {
-  await postOrThrow(apiUrl, `${apiUrl}/v1/auth/email:send-verification`, {
-    headers: authHeaders(accessToken),
-    errorClass: EmailVerificationError,
-    fallbackMessage: 'Failed to send verification email',
-  });
+  if (typeof accessToken !== 'string' || !accessToken.trim()) throw new EmailVerificationError('Email verification requires an access token');
+  try {
+    const client = emailClient(apiUrl, accessToken);
+    const auth = new AuthModule(client);
+    // Resolve identity from the authenticated server principal, not unverified JWT claims.
+    const state = await auth.getAuthSessionState();
+    if (!state.ok || !state.data.userId || state.data.tokenRevoked === true || (state.data.sessionId && state.data.sessionValid !== true)) {
+      throw new EmailVerificationError('Unable to resolve the authenticated email');
+    }
+    const userId = state.data.userId;
+    const profile = await new UsersModule(client).getUsersForGetUsersByUserId(userId);
+    if (!profile.ok || profile.data.id?.toLowerCase() !== userId.toLowerCase() || typeof profile.data.email !== 'string') {
+      throw new EmailVerificationError('Unable to resolve the authenticated email');
+    }
+    await completeEmailOperation(auth.postAuthEmailSendVerification({ email: profile.data.email }), 'Failed to send verification email');
+  } catch (error) {
+    if (error instanceof EmailVerificationError) throw error;
+    throw new EmailVerificationError('Failed to send verification email');
+  }
 }
 
 /**
@@ -439,22 +498,26 @@ export async function sendVerificationEmail(apiUrl: string, accessToken: string)
  * This variant is used when the user is not yet authenticated (e.g. post-signup).
  */
 export async function resendVerificationEmail(apiUrl: string, input: { email: string }): Promise<void> {
-  await postOrThrow(apiUrl, `${apiUrl}/v1/auth/email:send-verification`, {
-    body: { email: input.email },
-    errorClass: EmailVerificationError,
-    fallbackMessage: 'Failed to resend verification email',
-  });
+  if (!input || typeof input !== 'object') throw new EmailVerificationError('Invalid verification email request');
+  await completeEmailOperation(
+    new AuthModule(emailClient(apiUrl)).postAuthEmailSendVerification({ email: input.email }),
+    'Failed to resend verification email',
+  );
 }
 
 /**
  * Verify email with the token from the verification email.
  */
 export async function verifyEmail(apiUrl: string, input: EmailVerificationInput): Promise<void> {
-  await postOrThrow(apiUrl, `${apiUrl}/v1/auth/email:verify`, {
-    body: { token: input.token },
-    errorClass: EmailVerificationError,
-    fallbackMessage: 'Email verification failed',
-  });
+  if (!input || typeof input !== 'object') throw new EmailVerificationError('Invalid email verification request');
+  await completeEmailOperation(
+    new AuthModule(emailClient(apiUrl)).postAuthEmailVerify({
+      token: input.token,
+      ...(input.tenantId !== undefined ? { tenantId: input.tenantId } : {}),
+    }),
+    'Email verification failed',
+    true,
+  );
 }
 
 // ─── Session Management ──────────────────────────────────────────

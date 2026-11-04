@@ -108,30 +108,29 @@ describe('Extended Auth Operations', () => {
   });
 
   describe('Email Verification', () => {
-    it('sendVerificationEmail calls correct endpoint with auth', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
+    it('sendVerificationEmail resolves the actor email before sending the required body with auth', async () => {
+      const userId = '11111111-1111-4111-8111-111111111111';
+      mockFetch
+        .mockResolvedValueOnce(Response.json({ userId }))
+        .mockResolvedValueOnce(Response.json({ id: userId, email: 'actor@example.com' }))
+        .mockResolvedValueOnce(Response.json({ message: 'Acknowledged' }));
       await sendVerificationEmail(API_URL, TOKEN);
-
-      const [url, opts] = mockFetch.mock.calls[0];
+      const [url, opts] = mockFetch.mock.calls[2];
       expect(url).toBe(`${API_URL}/v1/auth/email:send-verification`);
       expect(new Headers(opts.headers).get('Authorization')).toBe(`Bearer ${TOKEN}`);
+      expect(JSON.parse(opts.body as string)).toEqual({ email: 'actor@example.com' });
+      expect(mockFetch.mock.calls[0][0]).toBe(`${API_URL}/v1/auth/session-state`);
+      expect(mockFetch.mock.calls[1][0]).toBe(`${API_URL}/v1/users/${userId}`);
     });
 
     it('sendVerificationEmail throws on failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ message: 'Rate limited' }),
-      });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Unauthorized' }, { status: 401 }));
       await expect(sendVerificationEmail(API_URL, TOKEN)).rejects.toThrow(EmailVerificationError);
     });
 
     it('resendVerificationEmail calls anonymous endpoint with email body', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Acknowledged' }));
       await resendVerificationEmail(API_URL, { email: 'user@example.com' });
-
       expect(mockFetch).toHaveBeenCalledWith(
         `${API_URL}/v1/auth/email:send-verification`,
         expect.objectContaining({
@@ -142,10 +141,8 @@ describe('Extended Auth Operations', () => {
     });
 
     it('verifyEmail calls correct endpoint', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ success: true }));
       await verifyEmail(API_URL, { token: 'verify-token' });
-
       expect(mockFetch).toHaveBeenCalledWith(`${API_URL}/v1/auth/email:verify`, expect.objectContaining({ method: 'POST' }));
     });
   });
