@@ -448,30 +448,28 @@ describe('credentials provider — fallback chains (L120)', () => {
   });
 
   it('uses backendUser fallbacks when direct fields are missing', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
         // No userId, no email at top level — falls to backendUser
         accessToken: 'at',
         refreshToken: 'rt',
         user: {
-          id: 'bu-id',
+          id: '44444444-4444-4444-8444-444444444444',
           email: 'bu@email.com',
           displayName: 'Backend User',
           profilePictureUrl: 'https://img.com/pic.png',
         },
       }),
-    });
+    );
 
     const provider = CredentialsProvider({
       apiUrl: 'http://localhost:8080',
     });
 
-    const result = await provider.authorize!({ email: 'user@test.com', password: 'password' }, undefined as any);
+    const result = await provider.authorize({ email: 'user@test.com', password: 'password' }, undefined);
     expect(result).not.toBeNull();
     const user = result!.user;
-    expect(user.id).toBe('bu-id');
+    expect(user.id).toBe('44444444-4444-4444-8444-444444444444');
     expect(user.email).toBe('bu@email.com');
     expect(user.name).toBe('Backend User');
     expect(user.image).toBe('https://img.com/pic.png');

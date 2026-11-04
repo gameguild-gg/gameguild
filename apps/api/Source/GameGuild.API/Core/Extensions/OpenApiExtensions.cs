@@ -219,6 +219,7 @@ public static class OpenApiExtensions
                     c.IncludeXmlComments(() => xmlComments.Value);
                 }
                 c.SchemaFilter<FlagsEnumSchemaFilter>();
+                c.SchemaFilter<NullableEnumSchemaFilter>();
                 c.DocumentFilter<OpenApiServerDocumentFilter>(options);
                 c.DocumentFilter<ConfiguredOpenApiDocumentFilter>(options);
                 c.DocumentFilter<DeterministicOpenApiDocumentFilter>();

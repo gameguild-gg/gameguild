@@ -7,7 +7,8 @@ Turnstile request fields for issue #1082 — `endpoints.gen.ts` is unchanged, so
 the counts below are the historical audit snapshot. The F1/F2 correction notes
 describe the current implementation, and F5 corrects a controller-count false
 positive. The adjacent F3/F4 transport findings remain unresolved; these scoped
-corrections are not a newly certified surface audit.
+corrections are not a newly certified surface audit. F4 also records the subsequent
+password/MFA credential-provider migration; the other provider transports remain.
 
 Sources of truth:
 
@@ -407,20 +408,48 @@ generated methods, so contract drift here is invisible to TypeScript:
   `apps/web/src/app/api/assets/[assetId]/route.ts:45`, `apps/web/src/app/api/courses/content-reports/route.ts:105`;
   `apps/web/src/app/api/audit/permission-patterns/route.ts:28` (`/v1/audit-queries/:execute`).
 
-### F4 — password sign-in itself is not the generated method
+### F4 — password/MFA sign-in migrated; other provider transports remain
 
-`packages/infrastructure/client/src/runtime/auth/providers/credentials.ts:38-111`
-defaults to `fetch`-posting `/v1/auth/sign-in` (falling back to
-`/v1/auth/mfa/sign-in/complete`), and `apps/web/src/lib/auth/web3-credentials.ts`,
-`email-code-credentials.ts`, `magic-link-credentials.ts` do the same for their
-flows. `postAuthSignIn` (`endpoints.gen.ts`, `AuthModule`) has zero callers. This
-is F3's highest-impact instance: the single most security-critical endpoint in the
-contract is validated by neither the generated types nor `safeParse` schemas.
-The gap is widening, not closing: the Cloudflare Turnstile hardening
-(`d3e340865`, issue #1082) added `turnstileToken` to this raw-fetch body
-(`credentials.ts:82,108`) and to the generated request types — but the runtime
-still posts by hand, so the next CAPTCHA-related change can again ship without
-the pipeline noticing.
+The original audit found that
+`packages/infrastructure/client/src/runtime/auth/providers/credentials.ts` built
+its password and MFA completion requests by hand. The generated `postAuthSignIn`
+had no callers, including after the Turnstile field was added for #1082.
+
+The 2026-11-04 correction routes the default credentials provider through
+`AuthModule.postAuthSignIn` and `AuthModule.postAuthMfaSignInComplete`, using the
+shared client transport and generated request/response validation. CAPTCHA,
+tenant and persistence fields now participate in that contract. Malformed
+successful responses cannot become sessions or be mistaken for MFA challenges.
+The custom sign-in path remains supported through a request interceptor; it uses
+the same generated sign-in contract. Older profile extensions and claim arrays
+remain compatible without overriding validated contract fields.
+
+Credential diagnostics are explicitly disabled, including console groups. The
+shared error adapter accepts legacy string `message` payloads after standard
+ProblemDetails fields, preserving account-lock and invalid-credential messages;
+service outages and malformed responses remain service failures. MFA challenges
+and one-time recovery-code handling retain their existing no-session/no-persistence
+boundaries.
+
+Wire-level checks also found two API/schema mismatches that the old raw transport
+had hidden. The host now preserves nullable enum references in serialized OpenAPI
+without making the shared enum nullable. Pending first factors omit default,
+unspecified credential expiry timestamps; completed sign-ins retain their actual
+expiries. The client generator accepts RFC3339 date-time offsets, including the
+`DateTimeOffset` expiry in the native enrollment offer, while timezone-free
+timestamps remain invalid. The client was regenerated from the freshly built
+full host's captured OpenAPI document; generated files were not hand-edited.
+
+`tests/auth/providers/credentials-contract.test.ts` exercises invalid requests,
+malformed successful responses, the actual fetch boundary and compatibility
+controls, including two synthetic fixtures serialized by the native pending-MFA
+response constructor. Existing provider, Next handler and enrollment-action tests retain the
+MFA and callback behavior checks with JSON responses and valid identifier fixtures.
+
+`apps/web/src/lib/auth/web3-credentials.ts`, `email-code-credentials.ts` and
+`magic-link-credentials.ts` still use separate transports for their flows. They
+and the other F3 call sites remain unresolved; this correction does not close the
+whole #1217 issue or certify the historical endpoint inventory.
 
 ### F5 — corrected: Orders exposes seven reviewed operations, all present in the client
 
