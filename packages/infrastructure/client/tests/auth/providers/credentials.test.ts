@@ -136,6 +136,7 @@ describe('CredentialsProvider', () => {
       Response.json(
         {
           accessToken: 'token',
+          refreshToken: 'synthetic-refresh',
           userId: '11111111-1111-4111-8111-111111111111',
         },
         { status: 200 },
@@ -155,7 +156,9 @@ describe('CredentialsProvider', () => {
   it('should include tenantId in request body when provided', async () => {
     const mockFetch = vi
       .fn<typeof fetch>()
-      .mockResolvedValue(Response.json({ accessToken: 'token', userId: '11111111-1111-4111-8111-111111111111' }, { status: 200 }));
+      .mockResolvedValue(
+        Response.json({ accessToken: 'token', refreshToken: 'synthetic-refresh', userId: '11111111-1111-4111-8111-111111111111' }, { status: 200 }),
+      );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
@@ -168,7 +171,9 @@ describe('CredentialsProvider', () => {
   it('should include rememberMe=true in request body when requested', async () => {
     const mockFetch = vi
       .fn<typeof fetch>()
-      .mockResolvedValue(Response.json({ accessToken: 'token', userId: '11111111-1111-4111-8111-111111111111' }, { status: 200 }));
+      .mockResolvedValue(
+        Response.json({ accessToken: 'token', refreshToken: 'synthetic-refresh', userId: '11111111-1111-4111-8111-111111111111' }, { status: 200 }),
+      );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
@@ -182,7 +187,9 @@ describe('CredentialsProvider', () => {
   it('should omit rememberMe from the request body when not requested', async () => {
     const mockFetch = vi
       .fn<typeof fetch>()
-      .mockResolvedValue(Response.json({ accessToken: 'token', userId: '11111111-1111-4111-8111-111111111111' }, { status: 200 }));
+      .mockResolvedValue(
+        Response.json({ accessToken: 'token', refreshToken: 'synthetic-refresh', userId: '11111111-1111-4111-8111-111111111111' }, { status: 200 }),
+      );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
@@ -349,7 +356,9 @@ describe('CredentialsProvider', () => {
   it('should use __apiUrl from credentials as fallback', async () => {
     const mockFetch = vi
       .fn<typeof fetch>()
-      .mockResolvedValue(Response.json({ accessToken: 'token', userId: '11111111-1111-4111-8111-111111111111' }, { status: 200 }));
+      .mockResolvedValue(
+        Response.json({ accessToken: 'token', refreshToken: 'synthetic-refresh', userId: '11111111-1111-4111-8111-111111111111' }, { status: 200 }),
+      );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider(); // no apiUrl in options

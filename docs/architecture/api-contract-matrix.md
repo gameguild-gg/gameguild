@@ -555,6 +555,15 @@ service outages and malformed responses remain service failures. MFA challenges
 and one-time recovery-code handling retain their existing no-session/no-persistence
 boundaries.
 
+The provider's completion checks also reject an explicit unsuccessful result or
+unfinished step-up, and require the mapped actor identity and refresh credential
+before returning an ordinary provider result. The limited MFA branch is handled
+first so `success: false` challenges retain their existing continuation flow.
+Legacy responses without the success flag and validated nested profile identities
+remain supported. `tests/next/credentials-session-contract.test.ts` follows real
+CSRF verification through encrypted cookie creation; rejected or incomplete
+responses never issue an ordinary session cookie.
+
 Wire-level checks also found two API/schema mismatches that the old raw transport
 had hidden. The host now preserves nullable enum references in serialized OpenAPI
 without making the shared enum nullable. Pending first factors omit default,

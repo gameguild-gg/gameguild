@@ -181,6 +181,10 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
           });
         }
 
+        if (data.success === false || data.requiresStepUp === true) {
+          throw new CredentialsSignInError('Authentication did not complete');
+        }
+
         if (typeof data.accessToken !== 'string' || !data.accessToken.trim()) {
           throw new CredentialsSignInError('Authentication did not complete');
         }
@@ -197,10 +201,14 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
           permissions: resolveAuthPermissions(data, backendUser),
         };
 
+        if (!user.id.trim() || typeof data.refreshToken !== 'string' || !data.refreshToken.trim()) {
+          throw new AuthServiceUnavailableError('Authentication service returned an incomplete sign-in response.');
+        }
+
         const result: ProviderResult = {
           tokens: {
             accessToken: data.accessToken,
-            refreshToken: data.refreshToken as string,
+            refreshToken: data.refreshToken,
             expiresIn: data.expiresIn as number | undefined,
             accessTokenExpiresAt: data.accessTokenExpiresAt as string | undefined,
             refreshTokenExpiresAt: data.refreshTokenExpiresAt as string | undefined,
