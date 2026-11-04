@@ -50,6 +50,7 @@ import { createMfaSignInContinuation, E2E_ADMIN_TOTP_SECRET } from "./sign-in-mf
 import { verifyCodingCycleToolchain } from "./coding-cycle-toolchain-support.mjs";
 import { assertRenderedEditorSource } from "./coding-cycle-editor-support.mjs";
 import { evaluateGradingTransport } from "./coding-cycle-grading-transport.mjs";
+import { observeGradingAcknowledgement } from "./coding-cycle-grading-observer.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync, writeFileSync, createWriteStream, rmSync, appendFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -1392,19 +1393,14 @@ async function instructorJourney(fixture, browser) {
     page.on("response", onGradeResponse);
     page.on("requestfinished", onGradeFinished);
     page.on("requestfailed", onGradeFailed);
+    let acknowledgementObserver;
     try {
       const submitGrade = gradingPanel.getByTestId("submit-grade");
       await submitGrade.waitFor({ state: "visible", timeout: 10_000 });
+      acknowledgementObserver = await observeGradingAcknowledgement(page);
       const gradeResponsePromise = page.waitForResponse((response) => {
         return isGradeRequest(response.request());
       }, { timeout: 120_000 }).then((response) => ({ response, error: null }), (error) => ({ response: null, error }));
-      // Observe the acknowledgement independently of the remaining RSC stream.
-      void page.getByTestId("needs-grading-badge").filter({ hasText: /0 to grade/ })
-        .waitFor({ state: "visible", timeout: 120_000 })
-        .then(() => traceGradingEvent("ui:zero-badge"), () => traceGradingEvent("ui:zero-badge-not-observed"));
-      void page.getByTestId("result-release-status").filter({ hasText: "Ready to release" })
-        .waitFor({ state: "visible", timeout: 120_000 })
-        .then(() => traceGradingEvent("ui:final-result"), () => traceGradingEvent("ui:final-result-not-observed"));
       traceGradingEvent("click:submit");
       await submitGrade.click();
       traceGradingEvent("click:returned");
@@ -1456,6 +1452,8 @@ async function instructorJourney(fixture, browser) {
       await page.getByTestId("result-release-status").filter({ hasText: "Ready to release" })
         .waitFor({ state: "visible", timeout: 15_000 });
       gradingProof.releaseStatus = await page.getByTestId("result-release-status").textContent({ timeout: 5000 });
+      gradingEvents.push(...await acknowledgementObserver.collect());
+      gradingEvents.sort((left, right) => Date.parse(left.at) - Date.parse(right.at));
       gradingProof.events = gradingEvents;
       const transport = evaluateGradingTransport(gradingProof);
       gradingProof.mutation.transportClassification = transport.mode ?? "unconfirmed";
@@ -1492,6 +1490,14 @@ async function instructorJourney(fixture, browser) {
       page.off("response", onGradeResponse);
       page.off("requestfinished", onGradeFinished);
       page.off("requestfailed", onGradeFailed);
+      if (acknowledgementObserver) {
+        const observations = await acknowledgementObserver.collect().catch(() => []);
+        for (const observation of observations) {
+          if (!gradingEvents.some((entry) => entry.event === observation.event && entry.at === observation.at)) gradingEvents.push(observation);
+        }
+        gradingEvents.sort((left, right) => Date.parse(left.at) - Date.parse(right.at));
+      }
+      await acknowledgementObserver?.dispose().catch(() => {});
       gradingProof.events = gradingEvents;
       writeFileSync(resolve(ARTIFACTS, "grading-refresh-proof.json"), JSON.stringify(gradingProof, null, 2));
       log(`grading-refresh-proof ${JSON.stringify(gradingProof)}`);
