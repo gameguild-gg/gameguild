@@ -8,7 +8,7 @@ the counts below are the historical audit snapshot. The F1/F2 correction notes
 describe the current implementation, and F5 corrects a controller-count false
 positive. The adjacent F3/F4 transport findings remain unresolved; these scoped
 corrections are not a newly certified surface audit. F3 records the subsequent
-Next registration/token-revocation and extended-auth migrations, and F4 records the password/MFA credential-provider
+Next registration/token-revocation, extended-auth and web password-action migrations, and F4 records the password/MFA credential-provider
 migration; the other provider transports remain.
 
 Sources of truth:
@@ -509,10 +509,23 @@ remains the caller's responsibility. The obsolete raw-fetch helpers were removed
 all thirteen functions in `runtime/auth/extended-operations.ts` now use generated
 operations. This is not a claim that other SDK providers or web transports migrated.
 
+The web password-reset server actions also call generated operations. The completion
+action already accepted `confirmPassword` from the form but omitted it from its
+backend body; it now forwards that required field and requires validated
+`success: true` before reporting completion. Request acknowledgements retain their
+neutral successful-HTTP behavior, while rejected HTTP requests still return the
+existing action failure shape. CAPTCHA verification precedes API work, and the
+existing corroborated Cloudflare IP helper supplies forwarded headers. The CAPTCHA
+proof never enters the API DTO. Runtime input-kind checks cover the public actions;
+API configuration is resolved per invocation. API calls have a five-second budget,
+no token refresh or diagnostic payload logging; malformed replies and network
+exceptions become generic failures without echoing credentials. The CAPTCHA
+verifier's separate timeout and availability policy remain unchanged.
+
 Remaining transports from the historical inventory (line numbers below belong to
 the original audit, not the current source):
 
-- `apps/web/src/lib/auth/password-actions.ts:29,78`; `apps/web/src/lib/auth/email-code-request.ts:14`;
+- `apps/web/src/lib/auth/email-code-request.ts:14`;
   `apps/web/src/lib/auth/magic-link-request.ts:16`;
   `apps/web/src/app/api/auth/session-state/route.ts:18`;
   `apps/web/src/lib/workspace-actions.ts:506` (`/v1/assets`);
