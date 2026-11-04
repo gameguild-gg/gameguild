@@ -200,7 +200,7 @@ for (const platform of ["win32", "linux"]) {
   test(`coding cycle gives the ${platform} web worker a bounded heap independent of its parent`, async () => {
     const source = await readFile(path.join(root, "apps/web/scripts/coding-cycle-browser-e2e.mjs"), "utf8");
     const { calls, sandbox } = context(platform);
-    sandbox.process.env = { ...environment, NODE_OPTIONS: "--max-old-space-size=128" };
+    sandbox.process.env = { ...environment, NODE_OPTIONS: "--no-warnings --max-old-space-size=128" };
     sandbox.API_BASE = "http://127.0.0.1:48123";
     sandbox.WEB_BASE = "http://localhost:48124";
     sandbox.WEB_PORT = 48124;
@@ -213,13 +213,14 @@ for (const platform of ["win32", "linux"]) {
     assert.notEqual(end, -1);
     await vm.runInNewContext(`(async () => { ${source.slice(start, end)} })()`, sandbox);
     assert.equal(calls.length, 1);
-    const heap = spawnSync(process.execPath, ["-e", "console.log(require('node:v8').getHeapStatistics().heap_size_limit)"], {
+    const heap = spawnSync(process.execPath, ["-e", "process.emitWarning('coding-cycle NODE_OPTIONS probe'); console.log(require('node:v8').getHeapStatistics().heap_size_limit)"], {
       encoding: "utf8",
       env: { ...process.env, ...calls[0].options.env },
       timeout: 10_000,
       windowsHide: true,
     });
     assert.equal(heap.status, 0, heap.stderr);
+    assert.equal(heap.stderr, "", "the inherited --no-warnings option must remain active");
     const heapBytes = Number(heap.stdout.trim());
     assert.ok(heapBytes >= 6144 * 1024 * 1024, `worker heap was only ${heapBytes} bytes`);
     assert.ok(heapBytes <= 6400 * 1024 * 1024, `worker heap was not bounded: ${heapBytes} bytes`);
