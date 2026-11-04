@@ -17,7 +17,7 @@ export class LearningEnrollmentsModule {
 
   /**
    */
-  async postApiLearningEnrollments(body: Types.LearningEnrollmentsEnrollUserInput): Promise<Result<Types.LearningEnrollmentsEnrollmentDto, ApiError>> {
+  async postApiLearningEnrollments(body: Types.LearningEnrollmentsEnrollUserInput): Promise<Result<void, ApiError>> {
     const url = '/api/learning/enrollments';
 
     // Validate request body
@@ -30,13 +30,7 @@ export class LearningEnrollmentsModule {
       requiresAuth: true,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningEnrollmentsEnrollmentDtoSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<void, ApiError>;
   }
 
   /**
@@ -87,10 +81,7 @@ export class LearningEnrollmentsModule {
 
   /**
    */
-  async getApiLearningEnrollmentsCourses(
-    courseId: string,
-    query?: { status?: Types.LearningEnrollmentsEnrollmentStatus },
-  ): Promise<Result<Types.LearningEnrollmentsEnrollmentDto[], ApiError>> {
+  async getApiLearningEnrollmentsCourses(courseId: string, query?: { status?: Types.LearningEnrollmentsEnrollmentStatus }): Promise<Result<void, ApiError>> {
     const url = `/api/learning/enrollments/courses/${courseId}`;
 
     const result = await this.client.request({
@@ -100,15 +91,12 @@ export class LearningEnrollmentsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Types.LearningEnrollmentsEnrollmentDto[], ApiError>;
+    return result as Result<void, ApiError>;
   }
 
   /**
    */
-  async getApiLearningEnrollmentsUsers(
-    userId: string,
-    query?: { status?: Types.LearningEnrollmentsEnrollmentStatus },
-  ): Promise<Result<Types.LearningEnrollmentsEnrollmentDto[], ApiError>> {
+  async getApiLearningEnrollmentsUsers(userId: string, query?: { status?: Types.LearningEnrollmentsEnrollmentStatus }): Promise<Result<void, ApiError>> {
     const url = `/api/learning/enrollments/users/${userId}`;
 
     const result = await this.client.request({
@@ -118,7 +106,7 @@ export class LearningEnrollmentsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Types.LearningEnrollmentsEnrollmentDto[], ApiError>;
+    return result as Result<void, ApiError>;
   }
 }
 
