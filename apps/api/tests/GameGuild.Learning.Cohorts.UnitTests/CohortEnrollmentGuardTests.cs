@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.Learning.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
@@ -140,7 +141,7 @@ public class CohortEnrollmentGuardTests
     {
         // Wiring pin: the Cohorts module supplies the ICohortEnrollmentGuard
         // implementation consumed by the Enrollments module.
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
         services.AddScoped<IApplicationDbContext>(_ => Mock.Of<IApplicationDbContext>());
         services.AddCohortsModule();
         using var provider = services.BuildServiceProvider();

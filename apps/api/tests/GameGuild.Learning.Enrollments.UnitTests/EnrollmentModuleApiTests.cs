@@ -354,22 +354,16 @@ public sealed class EnrollmentServiceTests
 
     private sealed class StubCohortEnrollmentGuard : ICohortEnrollmentGuard
     {
-        private Result _nextReservation = Result.Success();
-
         public List<Guid> ReservedCohortIds { get; } = [];
 
         public List<Guid> ReleasedCohortIds { get; } = [];
 
-        public Result NextReservation
-        {
-            get => _nextReservation;
-            init => _nextReservation = value;
-        }
+        public Result NextReservation { get; init; } = Result.Success();
 
         public Task<Result> ReserveCapacityAsync(Guid cohortId, CancellationToken cancellationToken = default)
         {
             ReservedCohortIds.Add(cohortId);
-            return Task.FromResult(_nextReservation);
+            return Task.FromResult(NextReservation);
         }
 
         public Task<Result> ReleaseCapacityAsync(Guid cohortId, CancellationToken cancellationToken = default)

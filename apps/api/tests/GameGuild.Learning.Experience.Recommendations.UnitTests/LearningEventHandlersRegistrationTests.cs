@@ -13,10 +13,10 @@ namespace GameGuild.Learning.Experience.Recommendations.UnitTests;
 /// handlers (including every <c>IDomainEventHandler&lt;T&gt;</c>, which is an
 /// <c>INotificationHandler&lt;T&gt;</c>) are registered centrally: the API discovers each
 /// enabled module's assembly (ModuleAssemblyCatalog; Learning.Experience.Recommendations
-/// is enabled in the product composition) and <see cref="ServiceCollectionExtensions.AddCqrs"/>
-/// scans it for notification handlers. This test pins that path so the wiring cannot
-/// silently regress. The remaining telemetry gap — no producers raise these events — is
-/// K1, tracked separately in issue #1184 G4.
+/// is enabled in the product composition) and <c>AddCqrs</c> scans it for notification
+/// handlers. This test pins that path so the wiring cannot silently regress. The
+/// remaining telemetry gap — no producers raise these events — is K1, tracked separately
+/// in issue #1184 G4.
 /// </summary>
 public class LearningEventHandlersRegistrationTests
 {
