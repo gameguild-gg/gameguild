@@ -40,13 +40,13 @@
         "../../packages/ui/src/*"
       ],
       "@game-guild/client": [
-        "../../packages/infrastructure/client/src/index"
+        "../../packages/infrastructure/client/dist/index"
       ],
       "@game-guild/client/react": [
-        "../../packages/infrastructure/client/src/integrations/react/index"
+        "../../packages/infrastructure/client/dist/react"
       ],
       "@game-guild/client/next": [
-        "../../packages/infrastructure/client/src/integrations/next/index"
+        "../../packages/infrastructure/client/dist/next"
       ],
       "next": [
         "./node_modules/next"
