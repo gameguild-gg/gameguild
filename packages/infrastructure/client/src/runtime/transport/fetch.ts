@@ -4,12 +4,12 @@
  * HTTP transport implementation using the Fetch API.
  */
 
-import { ok, err } from '../result/helpers.js';
-import { createApiError, createNetworkError } from '../errors/transform.js';
-import { assertSafeServiceUrl } from '../security/safe-remote-url.js';
-import type { Result } from '../result/types.js';
-import type { ApiError } from '../errors/types.js';
-import type { ApiResponse, RequestConfig, Transport, TransportConfig, Interceptor } from './types.js';
+import { ok, err } from '../result/helpers';
+import { createApiError, createNetworkError } from '../errors/transform';
+import { assertSafeServiceUrl } from '../security/safe-remote-url';
+import type { Result } from '../result/types';
+import type { ApiError } from '../errors/types';
+import type { ApiResponse, RequestConfig, Transport, TransportConfig, Interceptor } from './types';
 
 /**
  * Generate a unique request ID (UUID v4 format)

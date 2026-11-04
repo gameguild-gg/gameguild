@@ -218,7 +218,7 @@ async function generate(): Promise<void> {
  * Generate index file that re-exports all generated code
  */
 function generateIndex(moduleNames: string[]): string {
-  const moduleExports = moduleNames.map((name) => `export * from './modules/${name}.gen.js';`).join('\n');
+  const moduleExports = moduleNames.map((name) => `export * from './modules/${name}.gen';`).join('\n');
 
   return `/**
  * @game-guild/client - Generated API Types and Endpoints
@@ -231,13 +231,13 @@ function generateIndex(moduleNames: string[]): string {
  */
 
 // Re-export all types
-export * from './types.gen.js';
+export * from './types.gen';
 
 // Re-export error types
-export * from './errors.gen.js';
+export * from './errors.gen';
 
 // Re-export endpoint definitions
-export * from './endpoints.gen.js';
+export * from './endpoints.gen';
 
 // Re-export module-grouped endpoints
 ${moduleExports}

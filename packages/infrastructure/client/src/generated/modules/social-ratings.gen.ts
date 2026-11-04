@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from '../../runtime/client';
+import type { Result } from '../../runtime/result/types';
+import type { ApiError } from '../../runtime/errors/types';
+import * as Types from '../types.gen';
+import { safeParse } from '../../runtime/errors/validation';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -287,7 +287,7 @@ export class SocialRatingsModule {
   /**
    * Get current user's ratings for multiple entities (batch)
    */
-  async postApiRatingsMyBatch(body: Types.SocialRatingsBatchSummaryInput): Promise<Result<Record<string, SocialRatingsRatingDto>, ApiError>> {
+  async postApiRatingsMyBatch(body: Types.SocialRatingsBatchSummaryInput): Promise<Result<Record<string, Types.SocialRatingsRatingDto>, ApiError>> {
     const url = '/api/ratings/my/batch';
 
     // Validate request body
@@ -300,7 +300,7 @@ export class SocialRatingsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Record<string, SocialRatingsRatingDto>, ApiError>;
+    return result as Result<Record<string, Types.SocialRatingsRatingDto>, ApiError>;
   }
 
   /**
@@ -322,7 +322,9 @@ export class SocialRatingsModule {
   /**
    * Get summaries for multiple entities (batch)
    */
-  async postApiRatingsSummariesBatch(body: Types.SocialRatingsBatchSummaryInput): Promise<Result<Record<string, SocialRatingsRatingSummaryDto>, ApiError>> {
+  async postApiRatingsSummariesBatch(
+    body: Types.SocialRatingsBatchSummaryInput,
+  ): Promise<Result<Record<string, Types.SocialRatingsRatingSummaryDto>, ApiError>> {
     const url = '/api/ratings/summaries/batch';
 
     // Validate request body
@@ -335,7 +337,7 @@ export class SocialRatingsModule {
       requiresAuth: false,
     });
 
-    return result as Result<Record<string, SocialRatingsRatingSummaryDto>, ApiError>;
+    return result as Result<Record<string, Types.SocialRatingsRatingSummaryDto>, ApiError>;
   }
 
   /**

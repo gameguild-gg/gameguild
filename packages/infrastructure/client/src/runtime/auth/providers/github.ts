@@ -21,10 +21,10 @@
  * ```
  */
 
-import type { OAuthProviderConfig, ProviderResult, SessionUser } from '../types.js';
-import { OAuthError, parseErrorBody, extractErrorMessage } from '../errors.js';
-import { resolveAuthPermissions, resolveAuthRoles } from '../claims.js';
-import { assertSafeServiceUrl } from '../../security/safe-remote-url.js';
+import type { OAuthProviderConfig, ProviderResult, SessionUser } from '../types';
+import { OAuthError, parseErrorBody, extractErrorMessage } from '../errors';
+import { resolveAuthPermissions, resolveAuthRoles } from '../claims';
+import { assertSafeServiceUrl } from '../../security/safe-remote-url';
 
 /**
  * Options for the GitHub provider

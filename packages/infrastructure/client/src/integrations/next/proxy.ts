@@ -23,10 +23,10 @@
  * ```
  */
 
-import type { Session, ResolvedAuthConfig } from '../../runtime/auth/types.js';
-import { encodeSession, processSession } from '../../runtime/auth/session.js';
-import { SessionStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies.js';
-import { applyResponseCookies, parseCookieHeader } from './handlers.js';
+import type { Session, ResolvedAuthConfig } from '../../runtime/auth/types';
+import { encodeSession, processSession } from '../../runtime/auth/session';
+import { SessionStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies';
+import { applyResponseCookies, parseCookieHeader } from './handlers';
 
 /**
  * Create a proxy-compatible auth checker.

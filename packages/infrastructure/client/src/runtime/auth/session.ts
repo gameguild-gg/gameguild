@@ -8,10 +8,10 @@
  * JWT encryption, cookies, and callbacks.
  */
 
-import type { JWTPayload, Session, ProviderResult, ResolvedAuthConfig } from './types.js';
-import { encodeJWT, decodeJWT } from './jwt.js';
-import { TokenRefreshError } from './errors.js';
-import { resolveAuthPermissions, resolveAuthRoles } from './claims.js';
+import type { JWTPayload, Session, ProviderResult, ResolvedAuthConfig } from './types';
+import { encodeJWT, decodeJWT } from './jwt';
+import { TokenRefreshError } from './errors';
+import { resolveAuthPermissions, resolveAuthRoles } from './claims';
 
 /** Threshold before access token expiry to trigger refresh (30 seconds) */
 const REFRESH_THRESHOLD_MS = 30_000;

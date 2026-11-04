@@ -8,12 +8,12 @@
 
 | # | Módulo | Fluxos usuário | Matriz endpoints | Eventos | Estados | Sequências | STRIDE | DFDs | Arquitetura | Score |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Identity.Authentication | ✅ 22 | ✅ 250 endpoints | ✅ 26 tipos | ✅ 9 máquinas | ✅ 6 | ✅ 12 famílias | ✅ 17 | ✅ | **8/8** |
-| 2 | Identity.Authorization | ✅ 7 | ✅ 177 endpoints | ✅ | ✅ 5 máquinas | ❌ | ❌ | ❌ | ❌ | 4/8 |
-| 3 | Identity.Users | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
-| 4 | Identity.Tenants | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
-| 5 | Identity.Provisioning | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
-| 6 | Identity.Context | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 🟡 abstrações | 0.5/8 |
+| 1 | Identity.Authentication | ✅ 22 | ✅ 250 endpoints | ✅ 26 tipos | ✅ 9 máquinas | ✅ 6 | ✅ 12 famílias | ✅ 17 | ✅ | **8/8** (spot-audit 2026-11: 29 citações vs develop 7ae5a28a65 — 21 exatas, 8 com drift +N, 0 afirmação falsa; ver docs/auth/spot-audit-2026-11.md) |
+| 2 | Identity.Authorization | ✅ 7 | ✅ 177 endpoints | ✅ | ✅ 5 máquinas | ✅ cross-module-sequences | ✅ 07-stride (7 famílias, pós-#1230) | ✅ 08-dfds (L0 + 7×L1) | ✅ 09-security-architecture | **8/8** |
+| 3 | Identity.Users | ✅ 2 famílias c/ matrizes de borda | ✅ 53 endpoints (matriz completa × 11 tipos mortos G7) | ✅ 2 duráveis + 9 in-process (censos) | ✅ 3 máquinas | ✅ lite | ✅ 07-stride | ✅ 08-dfds | ✅ 09-architecture | **8/8** (docs/identity/users/) |
+| 4 | Identity.Tenants | ✅ 2 famílias c/ matrizes de borda | ✅ 46 endpoints (T1: 4 controllers só `[Authorize]`) | ✅ censos (7 eventos no vazio + 3 mortos G4) | ✅ 3 máquinas | ✅ lite | ✅ 07-stride (takeover) | ✅ 08-dfds | ✅ 09-architecture | **8/8** (docs/identity/tenants/) |
+| 5 | Identity.Provisioning | ✅ 2 famílias | ✅ 26 endpoints / 12 contratos | ✅ audit streams (Null-sink caveat) | ✅ 2 máquinas (token c/ grace) | ✅ lite | ✅ 07-stride | ✅ 08-dfds | ✅ 09-architecture | **8/8** (docs/identity/provisioning/) |
+| 6 | Identity.Context | n/a | n/a | n/a | n/a | n/a | n/a | n/a | ✅ inventário de abstrações × implementações (docs/identity/context.md) | 1/8 (7×n/a) |
 | 7 | Commerce.Payments | ✅ 6 | ✅ 22 ctrl/~120 endpoints | ✅ c/ Stripe webhooks | ✅ 4 | ✅ 5 | ✅ 8 famílias (07-stride) | ✅ 7 (08-dfds) | ✅ commerce/09 | **8/8** |
 | 8 | Commerce.Billing | ✅ 2+ | ✅ | ✅ | ✅ | ✅ | ✅ 9 famílias (billing-orders/07) | ✅ 9 (billing-orders/08) | ✅ commerce/09 | **8/8** |
 | 9 | Commerce.Orders | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (billing-orders/07 §6-7 pós-#1229) | ✅ (billing-orders/08 F6-F7) | ✅ commerce/09 | **8/8** |
@@ -73,19 +73,20 @@
 
 | Métrica | Valor |
 |---|---|
-| Módulos com package completo (8/8) | **10** (Authentication + Payments + Billing + Orders + Subscriptions + Compliance.Audit/Consent/FERPA/KYC + Finance.Economy) |
+| Módulos com package completo (8/8) | **14** (Authentication + Authorization + Users + Tenants + Provisioning + Payments + Billing + Orders + Subscriptions + Compliance.Audit/Consent/FERPA/KYC + Finance.Economy) |
 | Módulos ≥4/8 (kit funcional, faltam STRIDE/DFD/arq) | **29** |
-| Módulos 0/8 (sem nada) | **15** (+2 contracts-only n/a) |
-| Endpoints com matriz de wiring | **~1.470** de ~2.115 gerados |
-| Fluxos de usuário documentados | **~60** |
-| Máquinas de estado | **~30** |
-| STRIDE | auth (12 fluxos) + commerce (17 famílias — payments 8 + billing/orders/subs 9) + compliance (F1-F8) + economy (E1-E9) |
-| DFDs | 17 (auth) + 16 (commerce — nível 0 + nível 1 por família) + compliance (L0 + 8 famílias) + economy (L0 + 9 famílias) |
-| Sequências cross-module | auth + economy + compliance (audit-sink fan-in, KYC gates, FERPA-Learning) |
+| Módulos 0/8 (sem nada) | **12** (+2 contracts-only n/a) |
+| Endpoints com matriz de wiring | **~1.770** de ~2.115 gerados (base ~1.470 + 177 authz + ~125 users/tenants/provisioning) |
+| Fluxos de usuário documentados | **~66** (+2 famílias cada de users/tenants/provisioning) |
+| Máquinas de estado | **~38** (+3 users, +3 tenants, +2 provisioning) |
+| STRIDE | auth (12 fluxos) + commerce (17 famílias) + compliance (F1-F8) + economy (E1-E9) + **identity (4 docs: authz 7 famílias + users + tenants + provisioning)** |
+| DFDs | 17 (auth) + 16 (commerce) + compliance (L0 + 8 famílias) + economy (L0 + 9 famílias) + **10 identity (authz L0+7×L1; users/tenants/provisioning L0+3×L1 cada)** |
+| Sequências cross-module | auth + economy + compliance (audit-sink fan-in, KYC gates, FERPA-Learning) + **authz cross-module-sequences** (+ sets lite de users/tenants/provisioning) |
 
 ## Próximas ondas (ordem de risco)
 
 1. ~~**Payments + Billing/Orders/Subscriptions**: STRIDE + DFDs + arquitetura~~ — **entregue** (docs/commerce/payments/07-08, docs/commerce/billing-orders/07-08, docs/commerce/09-security-architecture; verificação pós-#1266/#1229 incluída nos docs 07)
-2. ~~**Compliance (4) + Economy**: STRIDE regulatório + DFDs + arquitetura + sequências do compliance~~ **ENTREGUE** — compliance/08-11 + economy/08-10; K4 economy (mint reversal) confirmado FIXED pós-#1266; N1 compliance re-verificado VIVO (PR #1268 aberto)
-3. **Authorization + Learning + Social/Platform**: STRIDE + DFDs + arquitetura + sequências (3 famílias)
-4. **Módulos 0/8 — hot-path primeiro**: Identity.Users + Tenants + Provisioning → Notifications + TrustSafety → FinancialCrime (AML) → Products + Content + Ledgers/Achievements + Mentorship/Ratings
+2. ~~**Authorization completion + Identity.Users/Tenants/Provisioning + auth spot-audit**~~ — **entregue** (docs/authorization/ cross-module-sequences + 07/08/09; docs/identity/{users,tenants,provisioning}/ completos + docs/identity/context.md; spot-audit 29 citações em docs/auth/spot-audit-2026-11.md — 0 afirmações falsas). Achados críticos abertos: takeover de tenants (4 controllers sem política, docs/identity/tenants/gaps.md T1), permissão self nunca semeada (users 403, docs/identity/users/gaps.md U5), eventos AddDomainEvent descartados (tenants T8, repo-wide)
+3. ~~**Compliance (4) + Economy**: STRIDE regulatório + DFDs + arquitetura + sequências do compliance~~ **ENTREGUE** — compliance/08-11 + economy/08-10; K4 economy (mint reversal) confirmado FIXED pós-#1266; N1 compliance re-verificado VIVO (PR #1268 aberto)
+4. **Learning + Social/Platform**: STRIDE + DFDs + arquitetura + sequências (3 famílias)
+5. **Módulos 0/8 — hot-path primeiro**: Notifications + TrustSafety → FinancialCrime (AML) → Products + Content + Ledgers/Achievements + Mentorship/Ratings
