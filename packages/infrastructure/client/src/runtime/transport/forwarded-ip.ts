@@ -8,8 +8,8 @@
  * used as a fallback.
  */
 
-import { createHeaderInterceptor } from './fetch.js';
-import type { Interceptor } from './types.js';
+import { createHeaderInterceptor } from './fetch';
+import type { Interceptor } from './types';
 
 /**
  * Resolve the forwarded-IP headers from a header getter.
@@ -38,8 +38,10 @@ export function resolveForwardedIpHeader(get: (name: string) => string | null): 
 export function createForwardedIpHeaderInterceptor(): Interceptor {
   return createHeaderInterceptor(async () => {
     try {
-      const { headers } = await import('next/headers');
-      const requestHeaders = await headers();
+      const mod = (await import('next/headers')) as unknown as {
+        headers: () => Promise<{ get(name: string): string | null }>;
+      };
+      const requestHeaders = await mod.headers();
       return resolveForwardedIpHeader((name) => requestHeaders.get(name));
     } catch {
       // Not running in a Next.js request scope (or `next` is not resolvable).

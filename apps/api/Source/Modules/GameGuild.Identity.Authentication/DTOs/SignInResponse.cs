@@ -82,6 +82,13 @@ public class SignInResponse
     public string[]? MfaEnrollmentBackupCodes { get; set; }
 
     /// <summary>
+    ///     One-time TOTP provisioning payload, present only when sign-in requires enrollment because the
+    ///     subject needs MFA but has no enrolled factor (e.g. after an admin reset).
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public SignInMfaEnrollmentOffer? MfaEnrollment { get; set; }
+
+    /// <summary>
     ///     User information
     /// </summary>
     public UserDto User { get; set; } = new UserDto();

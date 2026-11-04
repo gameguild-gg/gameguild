@@ -25,13 +25,20 @@ public sealed class SignInMfaChallenge
 
     public void ValidateForPersistence()
     {
+        var enrollmentBound = EnrollmentConfigurationId.HasValue ||
+            EnrollmentSecretFingerprint is not null || EnrollmentInitializedAt is not null;
         if (Id == Guid.Empty || SubjectId == Guid.Empty || TenantId == Guid.Empty || SubjectTokenVersion < 1 ||
             !SignInMfaChallengeToken.IsDigest(TokenHash) || !SignInMfaChallengeToken.IsDigest(PolicyFingerprint) ||
             !Enum.IsDefined(Purpose) || !Enum.IsDefined(FirstFactor) || CreatedAt == default ||
             CreatedAt.Offset != TimeSpan.Zero || ExpiresAt.Offset != TimeSpan.Zero ||
             ExpiresAt <= CreatedAt || ExpiresAt - CreatedAt > TimeSpan.FromMinutes(5) ||
             ConsumedAt is not null || RevokedAt is not null || VerificationMethod is not null ||
-            EnrollmentConfigurationId is not null || EnrollmentSecretFingerprint is not null || EnrollmentInitializedAt is not null)
+            // Enrollment evidence is all-or-nothing and pairs only with the enrollment purpose.
+            enrollmentBound != (Purpose == SignInMfaPurpose.EnrollFactor) ||
+            Purpose == SignInMfaPurpose.EnrollFactor && (
+                EnrollmentConfigurationId is not { } configurationId || configurationId == Guid.Empty ||
+                !SignInMfaChallengeToken.IsDigest(EnrollmentSecretFingerprint ?? string.Empty) ||
+                EnrollmentInitializedAt is not { } initialized || initialized < CreatedAt || initialized >= ExpiresAt))
         {
             throw new ArgumentException("Invalid first-factor challenge state.");
         }

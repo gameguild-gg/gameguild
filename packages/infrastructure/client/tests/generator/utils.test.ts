@@ -67,7 +67,10 @@ describe('generator utility helpers', () => {
     expect(qualifyType('User | null')).toBe('Types.User | null');
     expect(qualifyType('{ id: string }')).toBe('{ id: string }');
     expect(qualifyType('(value: string) => void')).toBe('(value: string) => void');
-    expect(qualifyType('Record<string, User>')).toBe('Record<string, User>');
+    // The value type argument must be qualified — bare DTO names in
+    // endpoints.gen.ts do not resolve (they live in the Types namespace).
+    expect(qualifyType('Record<string, User>')).toBe('Record<string, Types.User>');
+    expect(qualifyType('Partial<User>')).toBe('Partial<Types.User>');
     expect(qualifyType('Types.User')).toBe('Types.User');
     expect(qualifyType('Errors.ApiError')).toBe('Errors.ApiError');
     expect(qualifyType('Array<User>[]', 'Models')).toBe('Array<Models.User>[]');

@@ -29,13 +29,13 @@
  * ```
  */
 
-import type { ProviderResult } from './types.js';
-import { parseBackendAuthResponse } from '../../integrations/next/handlers.js';
-import { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError, parseErrorBody, extractErrorMessage } from './errors.js';
-import { assertSafeServiceUrl } from '../security/safe-remote-url.js';
+import type { ProviderResult } from './types';
+import { parseBackendAuthResponse } from '../../integrations/next/handlers';
+import { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError, parseErrorBody, extractErrorMessage } from './errors';
+import { assertSafeServiceUrl } from '../security/safe-remote-url';
 
 // Re-export error classes so existing consumers don't break
-export { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError } from './errors.js';
+export { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError } from './errors';
 
 // ─── Types ───────────────────────────────────────────────────────
 

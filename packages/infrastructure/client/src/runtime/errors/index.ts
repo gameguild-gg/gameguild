@@ -17,7 +17,7 @@ export type {
   ServerError,
   SpecificApiError,
   ValidationError,
-} from './types.js';
+} from './types';
 
 export {
   isApiError,
@@ -38,7 +38,7 @@ export {
   getRequiredFeature,
   getRequiredPermissions,
   getRetryAfter,
-} from './guards.js';
+} from './guards';
 
-export { createApiError, createNetworkError } from './transform.js';
-export { transformZodError, isZodError, safeParse } from './validation.js';
+export { createApiError, createNetworkError } from './transform';
+export { transformZodError, isZodError, safeParse } from './validation';

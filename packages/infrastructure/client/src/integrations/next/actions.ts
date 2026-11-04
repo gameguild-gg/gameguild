@@ -7,13 +7,13 @@
  * They read/write cookies directly via next/headers and can trigger redirects.
  */
 
-import type { ResolvedAuthConfig, Session, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types.js';
-import { decodeJWT } from '../../runtime/auth/jwt.js';
-import { SessionStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies.js';
-import { createJWTPayload, processSession, encodeSession, refreshAccessToken, toSession } from '../../runtime/auth/session.js';
-import { CredentialsSignInError, ProviderNotFoundError, SignUpError } from '../../runtime/auth/errors.js';
-import { applyResponseCookies, parseBackendAuthResponse } from './handlers.js';
-import { type OAuthProviderWithMethods, getOAuthExchangeToken } from './oauth-helpers.js';
+import type { ResolvedAuthConfig, Session, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types';
+import { decodeJWT } from '../../runtime/auth/jwt';
+import { SessionStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies';
+import { createJWTPayload, processSession, encodeSession, refreshAccessToken, toSession } from '../../runtime/auth/session';
+import { CredentialsSignInError, ProviderNotFoundError, SignUpError } from '../../runtime/auth/errors';
+import { applyResponseCookies, parseBackendAuthResponse } from './handlers';
+import { type OAuthProviderWithMethods, getOAuthExchangeToken } from './oauth-helpers';
 
 /**
  * Cookie adapter — abstracts next/headers cookies() API.
@@ -103,7 +103,7 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
     // Return a proxy wrapper
     return async (request: Request): Promise<Response> => {
       // Read session from request cookies
-      const { parseCookieHeader } = await import('./handlers.js');
+      const { parseCookieHeader } = await import('./handlers');
       const cookieHeader = request.headers.get('cookie') || '';
       const cookieMap = parseCookieHeader(cookieHeader);
 
@@ -205,6 +205,61 @@ export function createSignInAction(config: ResolvedAuthConfig) {
       });
       redirect(url);
     }
+  };
+}
+
+/**
+ * Result of completing a sign-in-bound MFA enrollment.
+ * `backupCodes` are one-time response data: they ride only this action's
+ * return value and are never persisted into the JWT/session or cookies.
+ */
+export interface MfaEnrollmentCompleteResult {
+  success: boolean;
+  message?: string;
+  backupCodes?: string[];
+}
+
+/**
+ * Create a server-action that completes a required-MFA enrollment during
+ * sign-in (Totp only). Mirrors the signIn action's pipeline — provider
+ * authorize, signIn callback gate, JWT/session finalization — while the
+ * fresh recovery codes are surfaced exactly once to the caller, the same
+ * one-time mechanism the settings recovery-code surface uses.
+ */
+export function createMfaEnrollmentCompleteAction(config: ResolvedAuthConfig) {
+  const { sessionStore } = createCookieHelpers(config);
+
+  return async function completeMfaEnrollment(mfaToken: string, code: string): Promise<MfaEnrollmentCompleteResult> {
+    const providerConfig = config.providers.find((p) => p.id === 'credentials');
+    if (!providerConfig || providerConfig.type !== 'credentials') {
+      return { success: false, message: 'Credentials sign-in is not configured' };
+    }
+
+    let result: ProviderResult | null = null;
+    try {
+      result = await providerConfig.authorize({ mfaToken, method: 'Totp', code, __apiUrl: config.apiUrl }, undefined);
+    } catch (error) {
+      return { success: false, message: error instanceof Error && error.message ? error.message : 'Additional verification failed' };
+    }
+
+    if (!result) {
+      return { success: false, message: 'Additional verification failed' };
+    }
+
+    // signIn callback
+    const allowed = await config.callbacks.signIn({
+      user: result.user,
+      provider: 'credentials',
+    });
+    if (allowed === false) {
+      return { success: false, message: 'Sign-in denied' };
+    }
+
+    // Finalize auth: create JWT, run callbacks, encrypt, write cookie.
+    // The one-time codes stay out of the token and session claims.
+    await finalizeServerAction(result, 'signIn', config, sessionStore);
+
+    return { success: true, backupCodes: result.mfaEnrollmentBackupCodes ?? [] };
   };
 }
 

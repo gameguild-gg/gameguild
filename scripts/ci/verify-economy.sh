@@ -421,6 +421,9 @@ build_client() {
 }
 
 verify_web_tests() {
+  # Web workers type-process the generated client from package source
+  # (tsconfig paths); that needs more than the default V8 heap.
+  export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=12288}"
   gate_stage='frontend-tests'
   local web_evidence="$artifact_root/vitest/web.json"
   local economy_web_evidence="$artifact_root/vitest/economy-coverage.json"
@@ -897,6 +900,8 @@ if [[ "$gate_profile" == full || "$gate_profile" == release || "$gate_profile" =
 
   run "${pnpm_command[@]}" --filter @game-guild/web run build:emception-dependencies
   run "${pnpm_command[@]}" --filter @game-guild/web run sync:emception
+  # Frontend build type-checks the source-resolved client; needs heap headroom.
+  export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=12288}"
   GAMEGUILD_DISABLE_WEBPACK_CACHE=1 run "${pnpm_command[@]}" --filter @game-guild/web exec next build --webpack
 }
 
