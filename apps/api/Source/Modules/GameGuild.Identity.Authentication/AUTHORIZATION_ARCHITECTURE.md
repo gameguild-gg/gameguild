@@ -264,8 +264,9 @@ The parent retains provider/UI, linking and complete product journey requirement
 
 ## 2026-10-05 unavailable-account token boundary — #262 / #263
 
-Otherwise active refresh issuance requires a user returned by the existing live-user repository,
-before tenant provisioning, token generation or session mutation. Missing/deleted
+Otherwise active refresh issuance requires a user returned by the existing live-user repository
+and acceptance by the same account authentication policy used at sign-in, before tenant
+provisioning, token generation or session mutation. Missing/deleted, inactive and suspended
 accounts receive generic invalid-refresh denial before issuance; revoked/replaced
 replay still commits containment of extant tokens/sessions without inventing a
 profile or version update. Fallback email/version identities
