@@ -35,7 +35,11 @@ export class AuthTrustedDevicesModule {
   /**
    * Trust the current device
    *
-   * Marks the current device as trusted, allowing faster authentication in the future.
+   * Trusting a device is a security-sensitive grant, so it requires fresh verification
+   * (issue #1144): create a step-up challenge (POST /v1/auth/step-up/challenges) with
+   * operation type "trust-device", target reference "current-session", and payload hash
+   * SHA-256 of the trimmed device name; verify it with any MFA method and pass the
+   * returned receipt as `stepUpReceipt`.
    */
   async postAuthTrustedDevices(
     body: Types.IdentityAuthenticationTrustDeviceInput,

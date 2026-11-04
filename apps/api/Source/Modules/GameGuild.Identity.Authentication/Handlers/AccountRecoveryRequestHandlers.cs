@@ -1,8 +1,9 @@
+using System.Text.Json;
 using GameGuild.CQRS;
-using GameGuild.Email;
 using GameGuild.Identity.Users;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -12,17 +13,18 @@ namespace GameGuild.Identity.Authentication;
 ///     Opens a delegated account recovery for an email address (issue #209). Only an
 ///     account with recovery factors (confirmed trusted contacts and/or an enrolled
 ///     passkey) gets a request; the response never reveals account existence or state.
-///     Recovery codes are single-use and stored as digests.
+///     Recovery codes are single-use and stored as digests. Approval-code and owner-notice
+///     emails are queued through the durable notification outbox (issue #1145) so a
+///     transient SMTP failure can no longer lose them.
 /// </summary>
 public sealed class RequestAccountRecoveryCommandHandler(
     IUserRepository userRepository,
     ITrustedContactStore contactStore,
     IAccountRecoveryStore recoveryStore,
     IWebAuthnCredentialRepository webAuthnCredentials,
-    IEmailSender emailSender,
+    INotificationService notificationService,
     IMemoryCache memoryCache,
     IOptions<AccountRecoveryOptions> options,
-    IConfiguration configuration,
     IAuthenticationAuditEventSink auditSink,
     ILogger<RequestAccountRecoveryCommandHandler> logger) : ICommandHandler<RequestAccountRecoveryCommand, AccountRecoveryRequestResult>
 {
@@ -95,9 +97,11 @@ public sealed class RequestAccountRecoveryCommandHandler(
         };
 
         var approvals = new List<RecoveryApproval>(confirmedContacts.Count);
+        var contactCodes = new List<(TrustedContact Contact, string Code)>(confirmedContacts.Count);
         foreach (var contact in confirmedContacts)
         {
             var code = AccountRecoveryTokens.Generate(AccountRecoveryTokens.ApprovalCodeBytes);
+            contactCodes.Add((contact, code));
             approvals.Add(new RecoveryApproval
             {
                 Id = Guid.NewGuid(),
@@ -109,7 +113,6 @@ public sealed class RequestAccountRecoveryCommandHandler(
                 ApprovalCodeHash = AccountRecoveryTokens.Hash(code),
                 IssuedAt = now
             });
-            await SendContactCodeEmailAsync(contact.Email, user.Email, code, recovery, cancellationToken).ConfigureAwait(false);
         }
 
         try
@@ -122,7 +125,16 @@ public sealed class RequestAccountRecoveryCommandHandler(
             return ApplyRateLimit(new AccountRecoveryRequestResult());
         }
 
-        await SendOwnerNoticeEmailAsync(user.Email, recovery, cancellationToken).ConfigureAwait(false);
+        // Emails are queued AFTER the request row exists (codes without a persisted request are
+        // unusable) and through the durable outbox, so transient SMTP failures retry instead of
+        // losing the codes (issue #1145). A failed durable enqueue aborts the command rather than
+        // acknowledging a lost notification.
+        foreach (var (contact, code) in contactCodes)
+        {
+            await QueueContactCodeEmailAsync(contact.Email, user, code, recovery, cancellationToken).ConfigureAwait(false);
+        }
+
+        await QueueOwnerNoticeEmailAsync(user, recovery, cancellationToken).ConfigureAwait(false);
         await AuditAsync("AccountRecovery.RequestOpened", user.Id, user.TenantId, success: true, request, cancellationToken).ConfigureAwait(false);
         logger.LogInformation(
             "Account recovery opened for user {UserId}: {Contacts} contacts, passkey {HasPasskey}, threshold {Threshold}",
@@ -135,40 +147,67 @@ public sealed class RequestAccountRecoveryCommandHandler(
         return ApplyRateLimit(new AccountRecoveryRequestResult());
     }
 
-    private Task SendContactCodeEmailAsync(string contactEmail, string ownerEmail, string code, AccountRecoveryRequest recovery, CancellationToken cancellationToken)
+    /// <summary>
+    ///     Queues a single-use approval code for one trusted contact through the durable
+    ///     notification pipeline (issue #1145).
+    /// </summary>
+    private async Task QueueContactCodeEmailAsync(string contactEmail, User owner, string code, AccountRecoveryRequest recovery, CancellationToken cancellationToken)
     {
-        var link = $"{ResolveWebBaseUrl()}/auth/account-recovery/approve";
-        var plain = $"A recovery was requested for the GameGuild account {ownerEmail}, which lists you as a trusted recovery contact.\n\n" +
-            $"Approvals are accepted from {recovery.CooldownEndsAt:u} (UTC) until {recovery.ApprovalWindowEndsAt:u} (UTC).\n" +
-            $"Your single-use recovery code: {code}\n\n" +
-            $"Submit it at {link} if you verified with the account owner that this request is legitimate.\n" +
-            "If you were not expecting this, ignore this email; codes expire with the recovery request.";
-        var html = $"<p>A recovery was requested for the GameGuild account {ownerEmail}, which lists you as a trusted recovery contact.</p>" +
-            $"<p>Approvals are accepted from {recovery.CooldownEndsAt:u} (UTC) until {recovery.ApprovalWindowEndsAt:u} (UTC).</p>" +
-            $"<p>Your single-use recovery code: <code>{code}</code></p>" +
-            $"<p>Submit it at <a href=\"{link}\">{link}</a> if you verified with the account owner that this request is legitimate.</p>" +
-            "<p>If you were not expecting this, ignore this email; codes expire with the recovery request.</p>";
+        var metadata = JsonSerializer.Serialize(new
+        {
+            code,
+            contactEmail,
+            ownerEmail = owner.Email,
+            windowStart = recovery.CooldownEndsAt.ToString("u"),
+            windowEnd = recovery.ApprovalWindowEndsAt.ToString("u")
+        });
 
-        return emailSender.SendAsync(new EmailMessage(contactEmail, "Account recovery approval code", plain, html), cancellationToken);
+        var result = await notificationService.SendAsync(
+            null,
+            NotificationType.TrustedContactRecoveryCode,
+            "Account recovery approval code",
+            "A recovery was requested for a GameGuild account that lists you as a trusted recovery contact.",
+            NotificationChannel.Email,
+            owner.TenantId,
+            metadata: metadata,
+            recipientEmail: contactEmail,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        if (result is null || result.IsFailure)
+        {
+            throw new InvalidOperationException("Trusted-contact recovery code was not durably queued.");
+        }
     }
 
-    private Task SendOwnerNoticeEmailAsync(string ownerEmail, AccountRecoveryRequest recovery, CancellationToken cancellationToken)
+    /// <summary>
+    ///     Queues the owner's recovery-requested notice through the durable notification
+    ///     pipeline (issue #1145). Carries no bearer material, so its metadata is not
+    ///     credential-protected.
+    /// </summary>
+    private async Task QueueOwnerNoticeEmailAsync(User owner, AccountRecoveryRequest recovery, CancellationToken cancellationToken)
     {
-        var link = $"{ResolveWebBaseUrl()}/auth/account-recovery/cancel";
-        var plain = "A delegated account recovery was requested for your account.\n\n" +
-            $"Your trusted contacts were emailed single-use approval codes. Approvals are accepted from {recovery.CooldownEndsAt:u} (UTC) until {recovery.ApprovalWindowEndsAt:u} (UTC).\n\n" +
-            $"If this was not you, cancel the recovery at {link} while you still have access, or contact support immediately.";
-        var html = "<p>A delegated account recovery was requested for your account.</p>" +
-            $"<p>Your trusted contacts were emailed single-use approval codes. Approvals are accepted from {recovery.CooldownEndsAt:u} (UTC) until {recovery.ApprovalWindowEndsAt:u} (UTC).</p>" +
-            $"<p>If this was not you, <a href=\"{link}\">cancel the recovery</a> while you still have access, or contact support immediately.</p>";
+        var metadata = JsonSerializer.Serialize(new
+        {
+            ownerEmail = owner.Email,
+            windowStart = recovery.CooldownEndsAt.ToString("u"),
+            windowEnd = recovery.ApprovalWindowEndsAt.ToString("u")
+        });
 
-        return emailSender.SendAsync(new EmailMessage(ownerEmail, "Account recovery requested", plain, html), cancellationToken);
-    }
+        var result = await notificationService.SendAsync(
+            owner.Id,
+            NotificationType.AccountRecoveryOwnerNotice,
+            "Account recovery requested",
+            "A delegated account recovery was requested for your account.",
+            NotificationChannel.Email,
+            owner.TenantId,
+            metadata: metadata,
+            recipientEmail: owner.Email,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
 
-    private string ResolveWebBaseUrl()
-    {
-        var baseUrl = configuration["App:BaseUrl"];
-        return string.IsNullOrWhiteSpace(baseUrl) ? "http://localhost:3000" : baseUrl.TrimEnd('/');
+        if (result is null || result.IsFailure)
+        {
+            throw new InvalidOperationException("Account recovery owner notice was not durably queued.");
+        }
     }
 
     private Task AuditAsync(string actionType, Guid userId, Guid? tenantId, bool success, RequestAccountRecoveryCommand request, CancellationToken cancellationToken) =>

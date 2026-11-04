@@ -1,18 +1,28 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Handles verification/reset token generation, validation, and email dispatch coordination.
+///     Verification and password-reset tokens live in <see cref="IDistributedCache"/> (Redis in
+///     production, the host's distributed-memory cache in single-node/dev) so a restart or a
+///     load-balanced request landing on another node never strands a pending token — the same
+///     durability posture as the database-backed magic-link store. The abstraction has no atomic
+///     compare-and-delete, so one-time consumption uses a claim protocol: a consumed sentinel is
+///     written before removal, making a token read as unavailable to every reader the moment it
+///     is claimed; simultaneous cross-instance presentations are bounded by that protocol rather
+///     than an interlocked in-process flag.
 /// </summary>
 public class EmailVerificationService(
     ILogger<EmailVerificationService> logger,
-    IMemoryCache memoryCache,
+    IDistributedCache cache,
     IPublisher publisher,
     IUserRepository? userRepository = null,
     IMagicLinkTokenStore? magicLinkTokenStore = null) : IEmailVerificationService
@@ -23,6 +33,24 @@ public class EmailVerificationService(
     private const string EmailVerificationTokenType = "email_verification";
     private const string PasswordResetTokenType = "password_reset";
     private const string MagicLinkTokenType = "magic_link";
+
+    /// <summary>
+    ///     Sentinel written under the claim lock before the entry is removed. It is deliberately
+    ///     not valid <see cref="TokenInfo"/> JSON, so every reader (validity checks included)
+    ///     treats a claimed token as unavailable even while its removal is still in flight.
+    /// </summary>
+    private const string ConsumedMarker = "emailverify:consumed";
+
+    /// <summary>Claim lock striping: a fixed pool per token-key digest, shared by every service
+    ///     instance in the process so concurrent consumers of one token serialize their claim.</summary>
+    private const int ClaimLockCount = 256;
+
+    private static readonly TimeSpan ResendRateLimitWindow = TimeSpan.FromMinutes(2);
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly SemaphoreSlim[] ClaimLocks = Enumerable
+        .Range(0, ClaimLockCount)
+        .Select(_ => new SemaphoreSlim(1, 1))
+        .ToArray();
 
     public Task<string> GenerateVerificationTokenAsync(Guid userId, string email)
     {
@@ -44,7 +72,7 @@ public class EmailVerificationService(
         return token;
     }
 
-    private Task<string> GenerateTokenAsync(Guid userId, string email, string tokenType, TimeSpan lifetime)
+    private async Task<string> GenerateTokenAsync(Guid userId, string email, string tokenType, TimeSpan lifetime)
     {
         try
         {
@@ -57,15 +85,17 @@ public class EmailVerificationService(
                 ExpiresAt = SystemClock.UtcNow.Add(lifetime)
             };
 
-            memoryCache.Set(GetTokenCacheKey(token), tokenInfo, new MemoryCacheEntryOptions
-            {
-                AbsoluteExpiration = tokenInfo.ExpiresAt
-            }.SetSize(1));
+            // The cache entry expires with the token, so an unconsumed token never outlives its TTL.
+            await cache.SetStringAsync(
+                GetTokenCacheKey(token),
+                JsonSerializer.Serialize(tokenInfo, JsonOptions),
+                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = lifetime },
+                CancellationToken.None).ConfigureAwait(false);
 
             // codeql[cs/cleartext-storage-of-sensitive-information] tokenType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
             // codeql[cs/exposure-of-sensitive-information] tokenType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
             logger.LogInformation("Generated {TokenType} token for user {UserId}", tokenType, LogRedaction.RedactId(userId, "uid"));
-            return Task.FromResult(token);
+            return token;
         }
         catch (Exception ex)
         {
@@ -160,7 +190,7 @@ public class EmailVerificationService(
         }
     }
 
-    private Task<TokenValidationResult> ValidateAndConsumeTokenAsync(
+    private async Task<TokenValidationResult> ValidateAndConsumeTokenAsync(
         string token,
         string expectedType,
         Guid? expectedUserId,
@@ -173,16 +203,17 @@ public class EmailVerificationService(
                 // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
                 // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                 logger.LogWarning("Empty {TokenType} token used", expectedType);
-                return Task.FromResult(TokenValidationResult.Failed("Token is required"));
+                return TokenValidationResult.Failed("Token is required");
             }
 
             var tokenKey = GetTokenCacheKey(token);
-            if (!memoryCache.TryGetValue(tokenKey, out TokenInfo? tokenInfo) || tokenInfo == null)
+            var tokenInfo = await GetTokenInfoAsync(tokenKey).ConfigureAwait(false);
+            if (tokenInfo is null)
             {
                 // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
                 // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                 logger.LogWarning("Invalid {TokenType} token used", expectedType);
-                return Task.FromResult(TokenValidationResult.Failed("Invalid token"));
+                return TokenValidationResult.Failed("Invalid token");
             }
 
             if (expectedUserId.HasValue && tokenInfo.UserId != expectedUserId.Value)
@@ -192,16 +223,16 @@ public class EmailVerificationService(
                     LogRedaction.RedactId(expectedUserId, "uid"),
                     LogRedaction.RedactId(tokenInfo.UserId, "uid"));
 
-                return Task.FromResult(TokenValidationResult.Failed("Token does not belong to the requested user"));
+                return TokenValidationResult.Failed("Token does not belong to the requested user");
             }
 
             if (tokenInfo.ExpiresAt < SystemClock.UtcNow)
             {
-                memoryCache.Remove(tokenKey);
+                await cache.RemoveAsync(tokenKey, CancellationToken.None).ConfigureAwait(false);
                 // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
                 // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                 logger.LogWarning("Expired {TokenType} token used for user {UserId}", expectedType, LogRedaction.RedactId(tokenInfo.UserId, "uid"));
-                return Task.FromResult(TokenValidationResult.Failed("Expired token"));
+                return TokenValidationResult.Failed("Expired token");
             }
 
             if (tokenInfo.Type != expectedType)
@@ -213,35 +244,57 @@ public class EmailVerificationService(
                     // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
                     expectedType);
 
-                return Task.FromResult(TokenValidationResult.Failed("Invalid token type"));
+                return TokenValidationResult.Failed("Invalid token type");
             }
 
-            if (!tokenInfo.TryConsume())
+            // One-time claim. The striped lock serializes claimants in this process (all scopes,
+            // all service instances); under the lock the entry is re-read, a non-JSON consumed
+            // sentinel is written so the token reads as unavailable immediately, and only then is
+            // the entry removed. Cross-instance claimants race only on the cache itself —
+            // IDistributedCache has no atomic compare-and-delete, which the interface documents
+            // as the protocol bound (the same bound the SAML pending-request store accepts).
+            var claimLock = ClaimLocks[(int)((uint)tokenKey.GetHashCode(StringComparison.Ordinal) % ClaimLockCount)];
+            await claimLock.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+            try
             {
-                // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
-                // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
-                logger.LogWarning("Already consumed {TokenType} token used", expectedType);
-                return Task.FromResult(TokenValidationResult.Failed("Invalid token"));
+                // Re-read under the lock: a concurrent claimant (any scope in this process)
+                // either already wrote the sentinel or already removed the entry.
+                var current = await cache.GetStringAsync(tokenKey, CancellationToken.None).ConfigureAwait(false);
+                if (string.IsNullOrEmpty(current) || string.Equals(current, ConsumedMarker, StringComparison.Ordinal))
+                {
+                    // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
+                    // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
+                    logger.LogWarning("Already consumed {TokenType} token used", expectedType);
+                    return TokenValidationResult.Failed("Invalid token");
+                }
+
+                await cache.SetStringAsync(tokenKey, ConsumedMarker, CancellationToken.None).ConfigureAwait(false);
             }
+            finally
+            {
+                claimLock.Release();
+            }
+
+            await cache.RemoveAsync(tokenKey, CancellationToken.None).ConfigureAwait(false);
 
             if (markEmailVerified)
             {
-                memoryCache.Set(VerifiedKeyPrefix + tokenInfo.UserId, true, new MemoryCacheEntryOptions().SetSize(1));
+                // No expiration: the verified marker outlives the token, mirroring the previous
+                // non-expiring in-process entry.
+                await cache.SetStringAsync(VerifiedKeyPrefix + tokenInfo.UserId, "true", CancellationToken.None).ConfigureAwait(false);
             }
-
-            memoryCache.Remove(tokenKey);
 
             // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
             // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
             logger.LogInformation("{TokenType} token consumed successfully for user {UserId}", expectedType, LogRedaction.RedactId(tokenInfo.UserId, "uid"));
-            return Task.FromResult(new TokenValidationResult(true, tokenInfo.UserId, tokenInfo.Email));
+            return new TokenValidationResult(true, tokenInfo.UserId, tokenInfo.Email);
         }
         catch (Exception ex)
         {
             // codeql[cs/cleartext-storage-of-sensitive-information] expectedType is the fixed "password_reset"/"email_verification" discriminator constant, not a credential
             // codeql[cs/exposure-of-sensitive-information] expectedType is the fixed "email_verification"/"password_reset" discriminator constant, not personal data
             logger.LogError("Error verifying {TokenType} token: {ErrorType}", expectedType, ex.GetType().FullName);
-            return Task.FromResult(TokenValidationResult.Failed("Token verification failed"));
+            return TokenValidationResult.Failed("Token verification failed");
         }
     }
 
@@ -258,7 +311,10 @@ public class EmailVerificationService(
                 }
             }
 
-            return memoryCache.TryGetValue(VerifiedKeyPrefix + userId, out bool verified) && verified;
+            return string.Equals(
+                await cache.GetStringAsync(VerifiedKeyPrefix + userId, CancellationToken.None).ConfigureAwait(false),
+                "true",
+                StringComparison.Ordinal);
         }
         catch (Exception ex)
         {
@@ -278,11 +334,12 @@ public class EmailVerificationService(
             var emailDigest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(email.Trim().ToLowerInvariant())));
             var rateLimitKey = RateLimitKeyPrefix + $"{userId}:{emailDigest}";
 
-            if (memoryCache.TryGetValue(rateLimitKey, out DateTime lastSent))
+            var lastSentRaw = await cache.GetStringAsync(rateLimitKey, CancellationToken.None).ConfigureAwait(false);
+            if (DateTime.TryParse(lastSentRaw, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var lastSent))
             {
                 var timeSinceLastSent = SystemClock.UtcNow - lastSent;
 
-                if (timeSinceLastSent < TimeSpan.FromMinutes(2))
+                if (timeSinceLastSent < ResendRateLimitWindow)
                 {
                     logger.LogWarning(
                         "Rate limit exceeded for resending verification email to user {UserId}. Last sent {Seconds} seconds ago",
@@ -296,10 +353,11 @@ public class EmailVerificationService(
             var token = await GenerateVerificationTokenAsync(userId, email).ConfigureAwait(false);
             await SendVerificationEmailAsync(email, token).ConfigureAwait(false);
 
-            memoryCache.Set(rateLimitKey, SystemClock.UtcNow, new MemoryCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
-            }.SetSize(1));
+            await cache.SetStringAsync(
+                rateLimitKey,
+                SystemClock.UtcNow.ToString("O", CultureInfo.InvariantCulture),
+                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = ResendRateLimitWindow },
+                CancellationToken.None).ConfigureAwait(false);
 
             logger.LogInformation("Resent verification email to user {UserId}", LogRedaction.RedactId(userId, "uid"));
             return true;
@@ -327,18 +385,42 @@ public class EmailVerificationService(
                 return true;
             }
 
-            if (!memoryCache.TryGetValue(GetTokenCacheKey(token), out TokenInfo? tokenInfo) || tokenInfo is null)
+            var tokenInfo = await GetTokenInfoAsync(GetTokenCacheKey(token)).ConfigureAwait(false);
+            if (tokenInfo is null)
             {
                 return false;
             }
 
-            return !tokenInfo.IsConsumed && tokenInfo.ExpiresAt >= SystemClock.UtcNow &&
+            return tokenInfo.ExpiresAt >= SystemClock.UtcNow &&
                 (tokenInfo.Type == EmailVerificationTokenType || tokenInfo.Type == PasswordResetTokenType);
         }
         catch (Exception ex)
         {
             logger.LogError("Error checking token validity: {ErrorType}", ex.GetType().FullName);
             return false;
+        }
+    }
+
+    /// <summary>
+    ///     Reads a token entry. A missing entry, the consumed sentinel, or an unparsable payload
+    ///     (which the claim protocol can write transiently) all read as "no token available".
+    /// </summary>
+    private async Task<TokenInfo?> GetTokenInfoAsync(string tokenKey)
+    {
+        var payload = await cache.GetStringAsync(tokenKey, CancellationToken.None).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<TokenInfo>(payload, JsonOptions);
+        }
+        catch (JsonException)
+        {
+            // The consumed sentinel (or a torn write) is not TokenInfo JSON by design.
+            return null;
         }
     }
 

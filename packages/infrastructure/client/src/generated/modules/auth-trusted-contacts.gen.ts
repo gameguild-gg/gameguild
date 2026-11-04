@@ -87,7 +87,7 @@ export class AuthTrustedContactsModule {
   /**
    * Redeems a trusted-contact invite token; the contact confirms participation.
    *
-   * Consumes the single-use, expiring invite token emailed to the contact. Denials are generic and never reveal token state.
+   * Consumes the single-use, expiring invite token emailed to the contact. Denials are generic and never reveal token state. Rate limited per IP against the authentication budget.
    */
   async postAuthTrustedContactsConfirm(
     body: Types.IdentityAuthenticationConfirmTrustedContactInput,

@@ -1,7 +1,8 @@
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using GameGuild.CQRS;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -16,20 +17,20 @@ public sealed class EmailTokenSingleUseSecurityTests
     [Theory]
     [InlineData("verification")]
     [InlineData("reset")]
-    public async Task GeneratedMemoryTokens_StoreOnlyTheirDigestAsTheCacheKey(string kind)
+    public async Task GeneratedDistributedTokens_StoreOnlyTheirDigestAsTheCacheKey(string kind)
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = new RecordingKeyCache();
         var token = await Generate(CreateService(cache), kind, Guid.NewGuid());
-        var key = Assert.Single(cache.Keys).ToString()!;
+        var key = Assert.Single(cache.Keys);
 
         Assert.DoesNotContain(token, key, StringComparison.Ordinal);
         Assert.Equal(TokenPrefix + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token))), key);
     }
 
     [Fact]
-    public async Task GeneratedMagicLink_UsesDurableStoreWithoutPopulatingMemoryCache()
+    public async Task GeneratedMagicLink_UsesDurableStoreWithoutPopulatingTheTokenCache()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = new RecordingKeyCache();
         var store = new Mock<IMagicLinkTokenStore>();
         var userId = Guid.NewGuid();
         var started = DateTimeOffset.UtcNow;
@@ -78,7 +79,7 @@ public sealed class EmailTokenSingleUseSecurityTests
     [Theory]
     [InlineData("verification")]
     [InlineData("reset")]
-    public async Task ClaimedMemoryToken_IsAlreadyInvalidWhileCacheRemovalIsPending(string kind)
+    public async Task ClaimedDistributedToken_IsAlreadyInvalidWhileCacheRemovalIsPending(string kind)
     {
         using var cache = new SuspendedRemovalCache();
         var userId = Guid.NewGuid();
@@ -107,9 +108,8 @@ public sealed class EmailTokenSingleUseSecurityTests
     [InlineData("magic")]
     public async Task SequentialConsumption_PreservesIdentityAndRejectsReplay(string kind)
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var service = CreateService(EmailVerificationServiceTests.CreateCache());
         var userId = Guid.NewGuid();
-        var service = CreateService(cache);
         var token = await Generate(service, kind, userId);
 
         Assert.True(await service.IsTokenValidAsync(token));
@@ -124,8 +124,7 @@ public sealed class EmailTokenSingleUseSecurityTests
     [Fact]
     public async Task WrongPurpose_DoesNotConsumeTheValidToken()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
-        var service = CreateService(cache);
+        var service = CreateService(EmailVerificationServiceTests.CreateCache());
         var token = await service.GenerateMagicLinkTokenAsync(Guid.NewGuid(), Email);
 
         Assert.False((await service.VerifyPasswordResetTokenAsync(token)).Success);
@@ -136,8 +135,7 @@ public sealed class EmailTokenSingleUseSecurityTests
     [Fact]
     public async Task WrongUser_DoesNotConsumeTheValidToken()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
-        var service = CreateService(cache);
+        var service = CreateService(EmailVerificationServiceTests.CreateCache());
         var userId = Guid.NewGuid();
         var token = await service.GenerateVerificationTokenAsync(userId, Email);
 
@@ -146,7 +144,7 @@ public sealed class EmailTokenSingleUseSecurityTests
         Assert.True(await service.VerifyEmailTokenAsync(userId, token));
     }
 
-    private static EmailVerificationService CreateService(IMemoryCache cache, IMagicLinkTokenStore? magicStore = null) =>
+    private static EmailVerificationService CreateService(IDistributedCache cache, IMagicLinkTokenStore? magicStore = null) =>
         new(NullLogger<EmailVerificationService>.Instance, cache, Mock.Of<IPublisher>(),
             magicLinkTokenStore: magicStore ?? new EmailVerificationServiceTests.InMemoryMagicLinkTokenStore());
 
@@ -167,45 +165,137 @@ public sealed class EmailTokenSingleUseSecurityTests
         _ => throw new ArgumentOutOfRangeException(nameof(kind))
     };
 
-    private sealed class SynchronizedReadCache : IMemoryCache
+    /// <summary>
+    ///     Wraps the real distributed-memory cache and records every key touched, standing in for
+    ///     the key enumeration the distributed abstraction does not expose.
+    /// </summary>
+    private sealed class RecordingKeyCache : IDistributedCache
     {
-        private readonly MemoryCache _inner = new(new MemoryCacheOptions());
+        private readonly Microsoft.Extensions.Caching.Distributed.MemoryDistributedCache _inner =
+            new(Microsoft.Extensions.Options.Options.Create(
+                new Microsoft.Extensions.Caching.Memory.MemoryDistributedCacheOptions()));
+        private readonly ConcurrentDictionary<string, byte> _keys = new();
+
+        public IReadOnlyCollection<string> Keys => _keys.Keys.ToArray();
+
+        public byte[]? Get(string key)
+        {
+            _keys[key] = 1;
+            return _inner.Get(key);
+        }
+
+        public Task<byte[]?> GetAsync(string key, CancellationToken token = default)
+        {
+            _keys[key] = 1;
+            return _inner.GetAsync(key, token);
+        }
+
+        public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
+        {
+            _keys[key] = 1;
+            _inner.Set(key, value, options);
+        }
+
+        public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
+        {
+            _keys[key] = 1;
+            return _inner.SetAsync(key, value, options, token);
+        }
+
+        public void Refresh(string key)
+        {
+            _keys[key] = 1;
+            _inner.Refresh(key);
+        }
+
+        public Task RefreshAsync(string key, CancellationToken token = default)
+        {
+            _keys[key] = 1;
+            return _inner.RefreshAsync(key, token);
+        }
+
+        public void Remove(string key)
+        {
+            _keys[key] = 1;
+            _inner.Remove(key);
+        }
+
+        public Task RemoveAsync(string key, CancellationToken token = default)
+        {
+            _keys[key] = 1;
+            return _inner.RemoveAsync(key, token);
+        }
+    }
+
+    private sealed class SynchronizedReadCache : IDistributedCache, IDisposable
+    {
+        private readonly Microsoft.Extensions.Caching.Distributed.MemoryDistributedCache _inner =
+            new(Microsoft.Extensions.Options.Options.Create(
+                new Microsoft.Extensions.Caching.Memory.MemoryDistributedCacheOptions()));
         private readonly Barrier _barrier = new(4);
         private int _readCount;
         private int _synchronizationFailed;
         private bool _synchronize;
         public bool SynchronizationFailed => Volatile.Read(ref _synchronizationFailed) != 0;
         public void SynchronizeNextTokenReads() => _synchronize = true;
-        public ICacheEntry CreateEntry(object key) => _inner.CreateEntry(key);
-        public void Remove(object key) => _inner.Remove(key);
-        public bool TryGetValue(object key, out object? value)
+
+        public byte[]? Get(string key)
         {
-            var found = _inner.TryGetValue(key, out value);
-            if (_synchronize && key is string text && text.StartsWith(TokenPrefix, StringComparison.Ordinal) &&
-                Interlocked.Increment(ref _readCount) <= 4 && !_barrier.SignalAndWait(TimeSpan.FromSeconds(10)))
+            Synchronize(key);
+            return _inner.Get(key);
+        }
+
+        public Task<byte[]?> GetAsync(string key, CancellationToken token = default)
+        {
+            Synchronize(key);
+            return _inner.GetAsync(key, token);
+        }
+
+        public void Set(string key, byte[] value, DistributedCacheEntryOptions options) => _inner.Set(key, value, options);
+        public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default) => _inner.SetAsync(key, value, options, token);
+        public void Refresh(string key) => _inner.Refresh(key);
+        public Task RefreshAsync(string key, CancellationToken token = default) => _inner.RefreshAsync(key, token);
+        public void Remove(string key) => _inner.Remove(key);
+        public Task RemoveAsync(string key, CancellationToken token = default) => _inner.RemoveAsync(key, token);
+
+        private void Synchronize(string key)
+        {
+            if (!_synchronize || key is not { Length: > 0 } || !key.StartsWith(TokenPrefix, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            if (Interlocked.Increment(ref _readCount) <= 4 && !_barrier.SignalAndWait(TimeSpan.FromSeconds(10)))
             {
                 Interlocked.Exchange(ref _synchronizationFailed, 1);
             }
-            return found;
         }
+
         public void Dispose()
         {
             _barrier.Dispose();
-            _inner.Dispose();
         }
     }
 
-    private sealed class SuspendedRemovalCache : IMemoryCache
+    private sealed class SuspendedRemovalCache : IDistributedCache, IDisposable
     {
-        private readonly MemoryCache _inner = new(new MemoryCacheOptions());
+        private readonly Microsoft.Extensions.Caching.Distributed.MemoryDistributedCache _inner =
+            new(Microsoft.Extensions.Options.Options.Create(
+                new Microsoft.Extensions.Caching.Memory.MemoryDistributedCacheOptions()));
         public ManualResetEventSlim RemovalStarted { get; } = new();
         public ManualResetEventSlim AllowRemoval { get; } = new();
         public bool SuspendRemoval { get; set; }
-        public ICacheEntry CreateEntry(object key) => _inner.CreateEntry(key);
-        public bool TryGetValue(object key, out object? value) => _inner.TryGetValue(key, out value);
-        public void Remove(object key)
+
+        public byte[]? Get(string key) => _inner.Get(key);
+        public Task<byte[]?> GetAsync(string key, CancellationToken token = default) => _inner.GetAsync(key, token);
+        public void Set(string key, byte[] value, DistributedCacheEntryOptions options) => _inner.Set(key, value, options);
+        public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default) => _inner.SetAsync(key, value, options, token);
+        public void Refresh(string key) => _inner.Refresh(key);
+        public Task RefreshAsync(string key, CancellationToken token = default) => _inner.RefreshAsync(key, token);
+
+        public void Remove(string key)
         {
-            if (SuspendRemoval && key is string text && text.StartsWith(TokenPrefix, StringComparison.Ordinal))
+            if (ShouldSuspend(key))
             {
                 RemovalStarted.Set();
                 if (!AllowRemoval.Wait(TimeSpan.FromSeconds(10)))
@@ -213,14 +303,33 @@ public sealed class EmailTokenSingleUseSecurityTests
                     throw new TimeoutException("The test did not release suspended token removal.");
                 }
             }
+
             _inner.Remove(key);
         }
+
+        public async Task RemoveAsync(string key, CancellationToken token = default)
+        {
+            if (ShouldSuspend(key))
+            {
+                RemovalStarted.Set();
+                var released = await Task.Run(() => AllowRemoval.Wait(TimeSpan.FromSeconds(10)), token).ConfigureAwait(false);
+                if (!released)
+                {
+                    throw new TimeoutException("The test did not release suspended token removal.");
+                }
+            }
+
+            await _inner.RemoveAsync(key, token).ConfigureAwait(false);
+        }
+
+        private bool ShouldSuspend(string key) =>
+            SuspendRemoval && key.StartsWith(TokenPrefix, StringComparison.Ordinal);
+
         public void Dispose()
         {
             AllowRemoval.Set();
             AllowRemoval.Dispose();
             RemovalStarted.Dispose();
-            _inner.Dispose();
         }
     }
 }

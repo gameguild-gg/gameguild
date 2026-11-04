@@ -55,13 +55,16 @@ public class WebAuthnRegistrationService(
                 };
             }
 
-            // Generate registration options
+            // Generate registration options.
+            // Indirect conveyance (issue #1143): the RP asks for an anonymized attestation object
+            // so authenticator provenance can be validated for enterprise policy without receiving
+            // uniquely-identifying certificate data. None disabled that visibility entirely.
             var options = fido2.RequestNewCredential(new RequestNewCredentialParams
             {
                 User = user,
                 ExcludeCredentials = excludeCredentials,
                 AuthenticatorSelection = authenticatorSelection,
-                AttestationPreference = AttestationConveyancePreference.None
+                AttestationPreference = AttestationConveyancePreference.Indirect
             });
 
             // Store session for later verification (distributed challenge store, issue #234)
@@ -116,6 +119,14 @@ public class WebAuthnRegistrationService(
                 return new WebAuthnRegistrationResult { Success = false, Error = "Registration session not found or expired" };
             }
 
+            // Read the authenticator's own user-verification flag from the attestation auth data
+            // instead of assuming the ceremony verified the user (issue #1143). Parse failures of
+            // well-formed envelopes surface here first and land in the same failure-result path
+            // the malformed-payload tests pin.
+            var userVerified = AuthenticatorAttestationResponse
+                .Parse(attestationResponseObj)
+                .AttestationObject.AuthData.UserVerified;
+
             // Verify the credential
             var credential = await fido2.MakeNewCredentialAsync(new MakeNewCredentialParams
             {
@@ -152,7 +163,7 @@ public class WebAuthnRegistrationService(
                     ? string.Join(",", attestationResponseObj.Response.Transports)
                     : null,
                 IsPasswordless = isPasswordless,
-                UserVerified = true,
+                UserVerified = userVerified,
                 BackedUp = credential.IsBackedUp,
                 RegisteredFromIp = ipAddress,
                 RegisteredUserAgent = userAgent,

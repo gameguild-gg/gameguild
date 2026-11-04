@@ -14262,6 +14262,10 @@ export interface IdentityAuthenticationStepUpReceiptOutput {
 /** Request to trust a device */
 export interface IdentityAuthenticationTrustDeviceInput {
   deviceName?: string | null;
+  /** Fresh step-up receipt proving the caller just re-verified with an MFA factor for the
+`trust-device` operation (issue #1144). Obtain it from the step-up challenge
+flow bound to this device name. */
+  stepUpReceipt?: string | null;
 }
 
 /** Outcome of a trusted-contact mutation by the owner. */
@@ -43266,6 +43270,7 @@ IdentityAuthenticationStepUpReceiptOutputSchema = z.object({
 /** Zod schema for IdentityAuthenticationTrustDeviceInput. Request to trust a device */
 IdentityAuthenticationTrustDeviceInputSchema = z.object({
   deviceName: z.string().nullable().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationTrustedContactActionResult. Outcome of a trusted-contact mutation by the owner. */

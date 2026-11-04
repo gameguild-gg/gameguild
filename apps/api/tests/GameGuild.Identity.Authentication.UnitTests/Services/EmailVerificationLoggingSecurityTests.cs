@@ -1,7 +1,7 @@
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authentication.UnitTests.Handlers;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Distributed;
 using Moq;
 using Xunit;
 
@@ -19,8 +19,7 @@ public sealed class EmailVerificationLoggingSecurityTests
     public async Task TokenLifecycle_RedactsUserIdentityAndPreservesTokenResults(string kind)
     {
         var logger = new TestLogger<EmailVerificationService>();
-        using var cache = new MemoryCache(new MemoryCacheOptions());
-        var service = new EmailVerificationService(logger, cache, Publisher().Object,
+        var service = new EmailVerificationService(logger, EmailVerificationServiceTests.CreateCache(), Publisher().Object,
             magicLinkTokenStore: new global::GameGuild.Identity.Authentication.UnitTests.Services.EmailVerificationServiceTests.InMemoryMagicLinkTokenStore());
         var userId = Guid.NewGuid();
         var token = kind switch
@@ -52,8 +51,7 @@ public sealed class EmailVerificationLoggingSecurityTests
     public async Task UserMismatch_LogsRedactedExpectedAndActualIdsWithoutConsumingToken()
     {
         var logger = new TestLogger<EmailVerificationService>();
-        using var cache = new MemoryCache(new MemoryCacheOptions());
-        var service = new EmailVerificationService(logger, cache, Publisher().Object,
+        var service = new EmailVerificationService(logger, EmailVerificationServiceTests.CreateCache(), Publisher().Object,
             magicLinkTokenStore: new global::GameGuild.Identity.Authentication.UnitTests.Services.EmailVerificationServiceTests.InMemoryMagicLinkTokenStore());
         var actual = Guid.NewGuid();
         var expected = Guid.NewGuid();
@@ -82,10 +80,13 @@ public sealed class EmailVerificationLoggingSecurityTests
         var userId = Guid.NewGuid();
         var original = new InvalidOperationException($"{SensitiveEmail} {SensitiveToken} {userId}\r\nforged");
         var logger = new TestLogger<EmailVerificationService>();
-        using var cache = new MemoryCache(new MemoryCacheOptions());
-        var failingCache = new Mock<IMemoryCache>();
-        failingCache.Setup(value => value.CreateEntry(It.IsAny<object>())).Throws(original);
-        failingCache.Setup(value => value.TryGetValue(It.IsAny<object>(), out It.Ref<object?>.IsAny)).Throws(original);
+        var cache = EmailVerificationServiceTests.CreateCache();
+        var failingCache = new Mock<IDistributedCache>();
+        failingCache.Setup(value => value.SetAsync(It.IsAny<string>(), It.IsAny<byte[]>(),
+            It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>())).Throws(original);
+        // GetStringAsync is an extension over GetAsync; the interface method is what Moq can stub.
+        failingCache.Setup(value => value.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Throws(original);
         var publisher = Publisher();
         publisher.Setup(value => value.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(original);
@@ -133,7 +134,7 @@ public sealed class EmailVerificationLoggingSecurityTests
     public async Task Resend_RateLimitsEachUserAndAddressIndependentlyWithoutEmailInCacheKeys()
     {
         var logger = new TestLogger<EmailVerificationService>();
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = new EmailVerificationServiceTests.RecordingDistributedCache();
         var publisher = Publisher();
         var service = new EmailVerificationService(logger, cache, publisher.Object,
             magicLinkTokenStore: new global::GameGuild.Identity.Authentication.UnitTests.Services.EmailVerificationServiceTests.InMemoryMagicLinkTokenStore());
@@ -149,7 +150,7 @@ public sealed class EmailVerificationLoggingSecurityTests
         (await service.ResendVerificationEmailAsync(secondUser, SensitiveEmail)).Should().BeFalse();
 
         publisher.Verify(value => value.Publish(It.IsAny<EmailVerificationRequestedNotification>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
-        var rateLimitKeys = cache.Keys.OfType<string>().Where(key => key.StartsWith("emailverify:ratelimit:", StringComparison.Ordinal)).ToArray();
+        var rateLimitKeys = cache.Keys.Where(key => key.StartsWith("emailverify:ratelimit:", StringComparison.Ordinal)).ToArray();
         rateLimitKeys.Should().HaveCount(3).And.OnlyHaveUniqueItems();
         rateLimitKeys.Should().OnlyContain(key => !key.Contains(SensitiveEmail) && !key.Contains(secondEmail));
         AssertPrivateLogs(logger, firstUser.ToString(), secondUser.ToString(), secondEmail);
@@ -159,7 +160,7 @@ public sealed class EmailVerificationLoggingSecurityTests
     public async Task Resend_MixedCaseAndWhitespaceEmails_ShareOneRateLimitBucket()
     {
         var logger = new TestLogger<EmailVerificationService>();
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = new EmailVerificationServiceTests.RecordingDistributedCache();
         var publisher = Publisher();
         var service = new EmailVerificationService(logger, cache, publisher.Object,
             magicLinkTokenStore: new global::GameGuild.Identity.Authentication.UnitTests.Services.EmailVerificationServiceTests.InMemoryMagicLinkTokenStore());
@@ -169,7 +170,7 @@ public sealed class EmailVerificationLoggingSecurityTests
         (await service.ResendVerificationEmailAsync(userId, SensitiveEmail.ToUpperInvariant())).Should().BeFalse();
         (await service.ResendVerificationEmailAsync(userId, $" {SensitiveEmail} ")).Should().BeFalse();
 
-        var rateLimitKeys = cache.Keys.OfType<string>().Where(key => key.StartsWith("emailverify:ratelimit:", StringComparison.Ordinal)).ToArray();
+        var rateLimitKeys = cache.Keys.Where(key => key.StartsWith("emailverify:ratelimit:", StringComparison.Ordinal)).ToArray();
         rateLimitKeys.Should().HaveCount(1);
     }
 
