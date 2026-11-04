@@ -1,0 +1,100 @@
+name: Load smoke
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - ".github/workflows/load-smoke.yml"
+      - ".github/actions/setup-node-workspace/**"
+      - ".github/actions/setup-dotnet/**"
+      - "apps/api/Source/**"
+      - "apps/api/Directory.*"
+      - "apps/api/tests/GameGuild.LoadSmoke/**"
+      - "apps/api/tests/GameGuild.API.IntegrationTests/Infrastructure/**"
+      - "apps/api/tests/GameGuild.TestSupport.Finance.Economy/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "scripts/ci/**"
+  push:
+    branches: [develop, main]
+    paths:
+      - ".github/workflows/load-smoke.yml"
+      - ".github/actions/setup-node-workspace/**"
+      - ".github/actions/setup-dotnet/**"
+      - "apps/api/Source/**"
+      - "apps/api/Directory.*"
+      - "apps/api/tests/GameGuild.LoadSmoke/**"
+      - "apps/api/tests/GameGuild.API.IntegrationTests/Infrastructure/**"
+      - "apps/api/tests/GameGuild.TestSupport.Finance.Economy/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "scripts/ci/**"
+
+permissions:
+  contents: read
+
+jobs:
+  load-smoke:
+    name: Hot-path load smoke API PostgreSQL
+    runs-on: ${{ fromJSON('["ubuntu-latest"]')[0] }}
+    timeout-minutes: 45
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Bind evidence to the actual hosted checkout
+        shell: bash
+        run: |
+          mkdir -p artifacts/load-smoke
+          git -c core.commitGraph=false rev-parse HEAD > artifacts/load-smoke/checkout-commit.txt
+          git -c core.commitGraph=false rev-parse 'HEAD^{tree}' > artifacts/load-smoke/checkout-tree.txt
+      - uses: ./.github/actions/setup-node-workspace
+      - uses: ./.github/actions/setup-dotnet
+      - name: Build the load smoke runner
+        run: >-
+          dotnet build apps/api/tests/GameGuild.LoadSmoke/GameGuild.LoadSmoke.csproj
+          --configuration Release --disable-build-servers
+          -m:2 -p:UseSharedCompilation=false
+      - name: Release compiler memory before execution
+        run: dotnet build-server shutdown
+      - name: Drive the five hottest paths against migrated PostgreSQL
+        shell: bash
+        run: |
+          dotnet apps/api/tests/GameGuild.LoadSmoke/bin/Release/net10.0/GameGuild.LoadSmoke.dll \
+            "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/artifacts/load-smoke"
+      - name: Require zero 5xx and held p95 budgets
+        shell: bash
+        run: |
+          node --max-old-space-size=128 --input-type=module - <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import assert from 'node:assert/strict';
+          const report = JSON.parse(readFileSync('artifacts/load-smoke/load-smoke.json', 'utf8'));
+          assert.equal(report.passed, true, JSON.stringify(report.failures, null, 2));
+          assert.equal(report.failures.length, 0);
+          const paths = new Set(report.profiles.map(profile => profile.path));
+          for (const expected of ['sign-in', 'feed-page', 'wallet-read', 'product-browse', 'checkout-initiation', 'cart-add-item']) {
+            assert.ok(paths.has(expected), `missing profile for ${expected}`);
+          }
+          for (const profile of report.profiles) {
+            assert.ok(profile.requests > 0, `${profile.path} recorded no requests`);
+            assert.equal(
+              Object.keys(profile.statusCounts).every(code => Number(code) < 500),
+              true,
+              `${profile.path} recorded 5xx statuses: ${JSON.stringify(profile.statusCounts)}`);
+            assert.ok(profile.p95Ms <= profile.budgetMs, `${profile.path} p95 ${profile.p95Ms}ms over budget ${profile.budgetMs}ms`);
+          }
+          assert.equal(report.profile.concurrency > 0, true);
+          assert.equal(report.profile.database.startsWith('Migrated PostgreSQL'), true);
+          NODE
+      - name: Retain source-bound load smoke evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: load-smoke-${{ github.sha }}
+          if-no-files-found: error
+          path: artifacts/load-smoke/
