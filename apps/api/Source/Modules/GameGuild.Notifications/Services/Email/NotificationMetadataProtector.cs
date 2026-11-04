@@ -11,7 +11,9 @@ public sealed class NotificationMetadataProtector(IDataProtectionProvider provid
 
     public static bool RequiresProtection(NotificationType type) =>
         type is NotificationType.EmailVerification or NotificationType.PasswordReset or NotificationType.MagicLink or NotificationType.EmailCode
-            or NotificationType.SmsMfaCode or NotificationType.PushMfaChallenge;
+            or NotificationType.SmsMfaCode or NotificationType.PushMfaChallenge
+            or NotificationType.MfaRecovery or NotificationType.MfaRecoveryConfirmation
+            or NotificationType.TrustedContactInvite or NotificationType.TrustedContactRecoveryCode;
 
     public bool ProtectForStorage(Notification notification)
     {

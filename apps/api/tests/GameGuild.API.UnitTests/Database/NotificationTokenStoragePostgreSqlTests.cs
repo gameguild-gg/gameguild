@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -281,7 +282,7 @@ public sealed class NotificationTokenStoragePostgreSqlTests(NotificationTokenSto
     private static async Task<(Notification Notification, string Token)> Queue(ApplicationDbContext context, string kind)
     {
         var user = await CreateUser(context);
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
         var generator = new EmailVerificationService(NullLogger<EmailVerificationService>.Instance, cache, Mock.Of<IPublisher>(),
             magicLinkTokenStore: new DatabaseMagicLinkTokenStore(context));
         var token = kind switch
