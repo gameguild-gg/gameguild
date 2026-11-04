@@ -9,6 +9,15 @@ import { getPublishedProjects } from '@/lib/projects/public-projects';
 import { ArrowRight, CalendarDays, MessageSquare, Sparkles, Users } from 'lucide-react';
 import React from 'react';
 
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata = buildPageMetadata({
+  path: '/community',
+  title: 'Community — GameGuild',
+  description: 'Meet builders, follow project progress, join critique rooms, and move from course exercises to public project outcomes with the GameGuild community.',
+  twitterLargeCard: true,
+});
+
 export default async function CommunityPage(): Promise<React.JSX.Element> {
   const [publishedProjects, memberSpotlights, playtests, activities, groups] = await Promise.all([
     getPublishedProjects(),

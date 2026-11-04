@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { getMemberProject } from '@/lib/community/queries/members';
+import { buildCreativeWorkJsonLd, JsonLd } from '@/lib/seo/jsonld';
 
 // Dynamic metadata for the public portfolio-project page; shares the request-scoped
 // lookup with the page body.
@@ -54,6 +55,17 @@ export default async function Page({
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
+      <JsonLd
+        data={buildCreativeWorkJsonLd({
+          name: result.project.title,
+          description: result.project.description,
+          url: `/members/${member}/projects/${project}`,
+          authorName: result.member.displayName,
+          authorUrl: `/members/${member}`,
+          imageUrl: result.project.imageUrl ?? undefined,
+          externalUrl: result.project.url ?? undefined,
+        })}
+      />
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8">
         <Link
           href={`/${locale}/members/${member}`}

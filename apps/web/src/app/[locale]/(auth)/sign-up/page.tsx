@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { SignupForm } from "@/components/signup-form"
 import { GoogleOneTap } from '@/components/google-one-tap';
@@ -6,6 +7,8 @@ import { GoogleSignInButton } from '@/components/google-sign-in-button';
 import { resolveAllowedAuthRedirect } from '@/lib/auth/cross-domain-auth';
 import { auth } from '@/auth';
 import { AuthErrorNotice } from '@/components/auth/auth-error-notice';
+
+export const metadata: Metadata = { robots: { index: false } };
 
 const GUEST_SESSION_ID_PATTERN =
   /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;

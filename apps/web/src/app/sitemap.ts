@@ -5,10 +5,10 @@ import { getAllBlogPostsForSitemap, getAllPublishedProjectsForSitemap } from '@/
 import { buildBlogAbsoluteCanonicalUrl, BLOG_SITE_BASE_URL } from '@/lib/blogs/seo';
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://gameguild.gg';
+// Auth routes are intentionally excluded: sign-in/sign-up are noindexed utility
+// pages and should not be advertised to crawlers.
 const staticRoutes = [
   '',
-  '/sign-in',
-  '/sign-up',
   '/courses',
   '/projects',
   '/community',
@@ -32,8 +32,12 @@ const staticRoutes = [
 // NOTE: This must stay a single sitemap (no `generateSitemaps`). With `generateSitemaps`
 // Next.js serves the sitemap at `/sitemap/<id>.xml` and `/sitemap.xml` 404s — which is
 // what robots.ts advertises. sitemap.test.ts guards this coupling.
+//
+// lastmod policy: only emit a real, content-derived timestamp when the source data has
+// one (blog posts: publishedAt). Google treats an absent lastmod as better than a fake
+// one, and our project/course/program sources expose no updatedAt — so those entries
+// omit lastmod entirely. Never emit sitemap generation time as lastmod.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
   const [projects, catalog, blogPosts] = await Promise.all([
     getAllPublishedProjectsForSitemap().catch(() => []),
     getPublicCourseCatalog().catch(() => null),
@@ -45,39 +49,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .filter((slug): slug is string => Boolean(slug))
         .map((slug) => ({
           url: `${baseUrl}/courses/${slug}`,
-          lastModified: now,
-          changeFrequency: 'weekly' as const,
-          priority: 0.7,
         }))
     : [];
 
   return [
     ...staticRoutes.map((route) => ({
       url: `${baseUrl}${route}`,
-      lastModified: now,
-      changeFrequency: route === '' ? ('daily' as const) : ('monthly' as const),
-      priority: route === '' ? 1 : 0.6,
     })),
     ...projects.map((project) => ({
       url: `${baseUrl}/projects/${project.slug}`,
-      lastModified: now,
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
     })),
     ...PUBLIC_PROGRAM_PACKAGES.map((program) => ({
       url: `${baseUrl}/programs/${program.slug}`,
-      lastModified: now,
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
     })),
     ...courseRoutes,
     ...blogPosts
       .filter((post) => post.slug && post.primaryAuthorHandle)
       .map((post) => ({
         url: buildBlogAbsoluteCanonicalUrl(BLOG_SITE_BASE_URL, post.primaryAuthorHandle ?? '', post.slug ?? ''),
-        lastModified: post.publishedAt ? new Date(post.publishedAt) : now,
-        changeFrequency: 'weekly' as const,
-        priority: 0.6,
+        lastModified: post.publishedAt ? new Date(post.publishedAt) : undefined,
       })),
   ];
 }
