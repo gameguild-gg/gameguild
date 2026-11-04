@@ -56263,8 +56263,6 @@ export interface LearningCoursesUpdateProgress extends LearningCoursesUpdateProg
 export { LearningCoursesUpdateProgressDtoSchema as LearningCoursesUpdateProgressSchema };
 export interface LearningCoursesUserProgress extends LearningCoursesUserProgressDto {}
 export { LearningCoursesUserProgressDtoSchema as LearningCoursesUserProgressSchema };
-export interface LearningEnrollmentsEnrollment extends LearningEnrollmentsEnrollmentDto {}
-export { LearningEnrollmentsEnrollmentDtoSchema as LearningEnrollmentsEnrollmentSchema };
 export interface LearningExperienceDiscoveryCourseCollection extends LearningExperienceDiscoveryCourseCollectionDto {}
 export { LearningExperienceDiscoveryCourseCollectionDtoSchema as LearningExperienceDiscoveryCourseCollectionSchema };
 export interface LearningExperienceDiscoveryCreateCourseCollection extends LearningExperienceDiscoveryCreateCourseCollectionDto {}
