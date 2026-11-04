@@ -166,7 +166,9 @@ public sealed class SubscriptionPromoWiringIntegrationTests : IClassFixture<WebA
             usage.PromoCodeId.Should().Be(promoId);
             usage.DiscountApplied.Should().Be(5.00m);
             usage.Currency.Should().Be("USD");
-            usage.IdempotencyKey.Should().Be("wiring-happy-1");
+            // The coordinator derives a per-code key from the caller's base key
+            // (SubscriptionPromoCoordinator.RecordSubscriptionUsageAsync).
+            usage.IdempotencyKey.Should().Be("wiring-happy-1:code:WIRING5");
 
             (await dbContext.Set<PromoCode>().SingleAsync(p => p.Id == promoId)).CurrentUses
                 .Should().Be(1, "one usage row is recorded and counted for the applied code");
@@ -193,13 +195,19 @@ public sealed class SubscriptionPromoWiringIntegrationTests : IClassFixture<WebA
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity,
             $"a fully-rejected promo quote is a client-input outcome (422), never a 500 — got {(int)response.StatusCode}");
 
+        // The composed host's ProblemDetails pipeline masks the detail text for domain
+        // exceptions (the rejection reason itself — "Promo code has expired" — is pinned by
+        // CreateSubscriptionPromoTests at the handler level), so only the status contract
+        // is asserted here.
         var body = await response.Content.ReadAsStringAsync();
-        body.Should().Contain("expired");
+        body.Should().Contain("\"status\": 422", "the domain-violation ProblemDetails carries the 422 status");
 
         using (var scope = _factory.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            (await dbContext.Set<Subscription>().CountAsync(s => s.TenantId == TenantId)).Should().Be(0,
+            // Scope to this test's plan: the class shares one in-memory database across its
+            // tests, so a tenant-wide count would see rows created by sibling tests.
+            (await dbContext.Set<Subscription>().CountAsync(s => s.PlanId == planId)).Should().Be(0,
                 "a rejected quote must fail closed before any subscription is created");
         }
     }
