@@ -64,7 +64,7 @@ class EndpointsGenerator extends BaseGenerator {
   }
 
   protected generateImports(): string {
-    return `import type * as Types from './types.gen.js';
+    return `import type * as Types from './types.gen';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */`;
   }
