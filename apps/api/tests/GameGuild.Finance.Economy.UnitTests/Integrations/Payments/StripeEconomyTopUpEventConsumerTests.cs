@@ -172,6 +172,26 @@ public sealed class StripeEconomyTopUpEventConsumerTests
     }
 
     [Fact]
+    public async Task TryConsumeAsync_RefundedTopUpWithSubCentTotals_FailsClosed()
+    {
+        var fixture = Fixture();
+        fixture.TopUps.Setup(candidate => candidate.FindAsync(
+                It.IsAny<EconomyTopUpProviderIdentity>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Context(EconomyTopUpProviderStatus.Posted));
+
+        // 0.005 USD refunds cannot be represented in whole HardCoin units; minting a rounded
+        // reversal would silently move value, so the conversion must fail closed.
+        var action = () => fixture.Consumer.TryConsumeAsync(
+            Event("charge.refunded") with { CumulativeRefundedAmount = 0.005m }, default).AsTask();
+
+        await action.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*exactly representable*");
+        fixture.Protected.Calls.Should().Be(0,
+            "no protected operation may open for an unrepresentable reversal amount");
+        fixture.ReversalGateway.VerifyNoOtherCalls();
+    }
+
+    [Fact]
     public async Task TryConsumeAsync_HoldsProviderFundsAndRethrowsWhenAuthorizationFails()
     {
         var fixture = SuccessfulFixture();
