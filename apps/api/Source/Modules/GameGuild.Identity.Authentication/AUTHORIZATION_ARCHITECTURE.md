@@ -2101,6 +2101,16 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### API-key rotation finalization (#1271)
+
+API-key authentication rejects an expired rotation overlap immediately. A hosted
+worker also persists the revocation independently of credential use: at startup
+and every minute, it processes at most 128 overdue active keys in a fresh scope.
+Future overlap windows, replacement keys and existing manual revocations are left
+unchanged. Store failures retry on the next interval, and host cancellation stops
+both an in-flight batch and the timer wait. The lazy authentication finalizer stays
+available as a fallback.
+
 ### Email MFA lifecycle (#1271)
 
 Email challenge delivery and verification require an enabled configuration with an

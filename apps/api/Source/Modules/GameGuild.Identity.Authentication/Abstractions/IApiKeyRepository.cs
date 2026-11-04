@@ -62,4 +62,10 @@ public interface IApiKeyRepository
     ///     closed (no-op when there is nothing to finalize).
     /// </summary>
     Task FinalizeRotationRevocationAsync(ApiKey apiKey, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Finalize a bounded batch of active keys whose rotation overlap has ended.
+    ///     This system-maintenance operation runs independently of credential use.
+    /// </summary>
+    Task<int> FinalizeExpiredRotationRevocationsAsync(int batchSize, CancellationToken cancellationToken = default);
 }
