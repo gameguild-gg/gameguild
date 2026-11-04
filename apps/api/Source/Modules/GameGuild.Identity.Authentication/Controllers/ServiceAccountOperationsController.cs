@@ -253,4 +253,26 @@ public class ServiceAccountOperationsController(
             return NotFound();
         }
     }
+
+    /// <summary>Removes both certificate pins; client-secret authentication remains available.</summary>
+    [HttpDelete("{serviceAccountId:guid}/client-certificate")]
+    [Authorize(Policy = "RequireAdminRole")]
+    [EndpointSummary("Unbind client certificate")]
+    [EndpointDescription("Removes the certificate thumbprint and SPKI pin. Requires an administrator in the account's tenant, or a system administrator for a global or cross-tenant account.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UnbindClientCertificate(Guid serviceAccountId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await sender.Send(new UnbindServiceAccountCertificateCommand(serviceAccountId), cancellationToken).ConfigureAwait(false)
+                ? NoContent()
+                : NotFound();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
 }

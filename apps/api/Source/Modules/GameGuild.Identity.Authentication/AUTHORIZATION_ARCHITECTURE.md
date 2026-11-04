@@ -2109,6 +2109,14 @@ never updates successful-authentication metadata on denial. Accounts without an
 IP restriction retain their existing behavior. The request-facing token endpoint
 derives the caller IP from the server connection rather than the request body.
 
+The certificate-removal endpoint requires an authenticated user administrator.
+Its command handler checks the server-side actor and the target account's tenant
+before clearing both certificate pins; only a SystemAdmin can remove pins from
+global accounts or another tenant. Removal is idempotent and preserves the client
+secret and account activity state. The durable use-case operation event records
+the mutation without including certificate pins. Failed persistence restores the
+tracked binding and propagates the failure.
+
 ### JWT rotation and sensitive MFA mutations (#1141, #1123, #1153)
 
 The scoped `IKeyRotationService` and hosted rotation worker are explicitly registered.
