@@ -8,7 +8,7 @@ the counts below are the historical audit snapshot. The F1/F2 correction notes
 describe the current implementation, and F5 corrects a controller-count false
 positive. The adjacent F3/F4 transport findings remain unresolved; these scoped
 corrections are not a newly certified surface audit. F3 records the subsequent
-Next registration/token-revocation migrations, and F4 records the password/MFA credential-provider
+Next registration/token-revocation and MFA-settings migrations, and F4 records the password/MFA credential-provider
 migration; the other provider transports remain.
 
 Sources of truth:
@@ -391,7 +391,7 @@ actual successful empty collection renders the empty state. A later successful
 server render replaces the alert with fresh campaign data. These corrections do
 not resolve F3/F4/F5 or turn the no-caller inventory into a deletion list.
 
-### F3 — Next registration/token revocation migrated; parallel transports remain
+### F3 — Next registration/token revocation and MFA settings migrated; parallel transports remain
 
 The original audit identified 17+ generated endpoints shadowed by hand-written
 transports in the client runtime and web app. The Next route and server-action
@@ -412,10 +412,27 @@ credentials. Logout never refreshes or rotates tokens. Revocation has a five-sec
 request budget; failure still permits local cookie cleanup. Server authorization
 and ownership checks are unchanged. The old enrollment route is covered by F1.
 
+Authenticated `setupTotpMfa` and `getMfaMethods` now use generated
+`AuthMultiFactorModule` operations with the current actor's bearer, no automatic
+refresh, quiet diagnostics and a five-second request budget. Setup uses the served
+`/v1/auth/mfa/totp:setup` action (the old `/totp/setup` route is absent), maps
+`secretKey` to the public `secret` field and explicitly returns
+`requiresVerification: true`. It validates the provisioning data: the controller
+leaves `isSuccess` at its DTO default even on a successful HTTP response. Missing,
+invalid or denied provisioning throws `MfaVerificationError`.
+
+Method discovery validates the backend's method-info objects and returns the
+existing string names (`totp`, `backup_code`, etc.) for available methods, including
+those available for enrollment but not enabled yet. Valid null/empty lists and HTTP
+rejections retain the empty-list fallback. Invalid successful responses and network
+failures throw a typed error instead of returning unchecked data. These settings
+operations do not complete the limited-challenge sign-in flow, which remains
+separate.
+
 Remaining transports from the historical inventory (line numbers below belong to
 the original audit, not the current source):
 
-- `…/runtime/auth/extended-operations.ts:162` (`/v1/auth/mfa/verify`), `:201` (`/v1/auth/mfa/methods`),
+- `…/runtime/auth/extended-operations.ts:162` (`/v1/auth/mfa/verify`),
   `:220` (`/v1/auth/password:reset-request`), `:299` (`/v1/auth/sessions`),
   `:314` (`/v1/auth/sessions/{id}`);
 - `apps/web/src/lib/auth/password-actions.ts:29,78`; `apps/web/src/lib/auth/email-code-request.ts:14`;

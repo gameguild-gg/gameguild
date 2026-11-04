@@ -248,14 +248,8 @@
     }
   },
   "tests/auth/extended-operations.test.ts": {
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 5
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 4
-    },
     "@typescript-eslint/require-await": {
-      "count": 11
+      "count": 7
     }
   },
   "tests/auth/providers/discord.test.ts": {

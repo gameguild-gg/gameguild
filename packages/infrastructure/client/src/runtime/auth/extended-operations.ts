@@ -30,6 +30,9 @@
  */
 
 import type { ProviderResult } from './types.js';
+import { createClient } from '../../client.js';
+import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen.js';
+import type { IdentityAuthenticationMfaMethod } from '../../generated/types.gen.js';
 import { parseBackendAuthResponse } from '../../integrations/next/handlers.js';
 import { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError, parseErrorBody, extractErrorMessage } from './errors.js';
 import { assertSafeServiceUrl } from '../security/safe-remote-url.js';
@@ -145,6 +148,28 @@ async function postOrThrow(
 
 // ─── MFA Operations ─────────────────────────────────────────────
 
+/** Settings use the current actor's bearer, never a sign-in challenge or a refresh flow. */
+function mfaSettingsClient(apiUrl: string, accessToken: string): AuthMultiFactorModule {
+  return new AuthMultiFactorModule(
+    createClient({
+      baseUrl: apiUrl,
+      auth: { getAccessToken: () => Promise.resolve(accessToken) },
+      autoRefresh: false,
+      timeout: 5_000,
+      devtools: { enabled: false },
+    }),
+  );
+}
+
+const MFA_METHOD_NAMES: Record<IdentityAuthenticationMfaMethod, string> = {
+  Totp: 'totp',
+  BackupCode: 'backup_code',
+  Sms: 'sms',
+  Email: 'email',
+  WebAuthn: 'webauthn',
+  Push: 'push',
+};
+
 /**
  * Complete MFA verification after a sign-in attempt returned MfaRequiredError.
  *
@@ -185,28 +210,50 @@ export async function verifyMfa(apiUrl: string, input: MfaVerifyInput, accessTok
  * Set up TOTP-based MFA for the authenticated user.
  */
 export async function setupTotpMfa(apiUrl: string, accessToken: string): Promise<MfaSetupResult> {
-  const response = await postOrThrow(apiUrl, `${apiUrl}/v1/auth/mfa/totp/setup`, {
-    headers: authHeaders(accessToken),
-    errorClass: MfaVerificationError,
-    fallbackMessage: 'TOTP setup failed',
-  });
+  if (typeof accessToken !== 'string' || !accessToken.trim()) throw new MfaVerificationError('TOTP setup requires an access token');
+  try {
+    const result = await mfaSettingsClient(apiUrl, accessToken).postAuthMfaTotpSetup();
+    if (!result.ok) throw new MfaVerificationError(result.error.detail || result.error.message || 'TOTP setup failed');
 
-  return (await response.json()) as MfaSetupResult;
+    const data = result.data;
+    // The controller leaves IsSuccess at its DTO default even on HTTP 200.
+    // Require the actual provisioning fields; a flag alone cannot make setup ready.
+    if (data.errorMessage || !data.secretKey?.trim() || !data.qrCodeUri?.startsWith('otpauth://totp/')) {
+      throw new MfaVerificationError('TOTP setup returned incomplete provisioning data');
+    }
+
+    return {
+      secret: data.secretKey,
+      qrCodeUri: data.qrCodeUri,
+      ...(data.backupCodes ? { backupCodes: data.backupCodes } : {}),
+      requiresVerification: true,
+    };
+  } catch (error) {
+    if (error instanceof MfaVerificationError) throw error;
+    throw new MfaVerificationError('TOTP setup failed');
+  }
 }
 
 /**
  * Get available MFA methods for the authenticated user.
+ * Returns stable method names, including methods available for enrollment.
+ * HTTP rejection retains the empty-list fallback; malformed replies and network
+ * failures throw MfaVerificationError rather than masquerading as valid data.
  */
 export async function getMfaMethods(apiUrl: string, accessToken: string): Promise<string[]> {
-  const response = await fetch(assertSafeServiceUrl(`${apiUrl}/v1/auth/mfa/methods`, apiUrl), {
-    redirect: 'error',
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  if (typeof accessToken !== 'string' || !accessToken.trim()) return [];
+  try {
+    const result = await mfaSettingsClient(apiUrl, accessToken).getAuthMfaMethods();
+    if (!result.ok) {
+      if (result.error.status >= 400) return [];
+      throw new MfaVerificationError('Failed to list MFA methods');
+    }
 
-  if (!response.ok) return [];
-
-  const data = (await response.json()) as { methods?: string[] };
-  return data.methods ?? [];
+    return (result.data.methods ?? []).filter((method) => method.isAvailable).map((method) => MFA_METHOD_NAMES[method.method]);
+  } catch (error) {
+    if (error instanceof MfaVerificationError) throw error;
+    throw new MfaVerificationError('Failed to list MFA methods');
+  }
 }
 
 // ─── Password Operations ─────────────────────────────────────────
