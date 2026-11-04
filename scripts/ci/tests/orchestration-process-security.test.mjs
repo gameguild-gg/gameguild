@@ -225,3 +225,27 @@ for (const platform of ["win32", "linux"]) {
     assert.ok(heapBytes <= 6400 * 1024 * 1024, `worker heap was not bounded: ${heapBytes} bytes`);
   });
 }
+
+
+for (const [mode, codingCycle, expected] of [
+  ["development", "1", false],
+  ["development", undefined, undefined],
+  ["development", "0", undefined],
+  ["production", "1", undefined],
+]) {
+  test(`coding-cycle fixed worker policy for ${mode}/${codingCycle ?? "unset"}`, async () => {
+    const source = await readFile(path.join(root, "apps/web/next.config.ts"), "utf8");
+    const start = source.indexOf("  experimental: {");
+    const end = source.indexOf("\n  },", start);
+    assert.notEqual(start, -1);
+    assert.notEqual(end, -1);
+    const env = { NODE_ENV: mode };
+    if (codingCycle !== undefined) env.CODING_CYCLE_E2E = codingCycle;
+    const config = vm.runInNewContext(`({ ${source.slice(start, end + 5)} })`, {
+      process: { env },
+    });
+    assert.equal(config.experimental.devMemoryThresholdRestart, expected);
+    assert.equal(config.experimental.authInterrupts, true);
+    assert.equal(config.experimental.cpus, 1);
+  });
+}

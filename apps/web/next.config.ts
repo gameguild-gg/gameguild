@@ -80,6 +80,12 @@ const nextConfig: NextConfig = {
   experimental: {
     authInterrupts: true,
     cpus: 1,
+    // The isolated browser journey owns one fixed worker. Next's proactive
+    // 80% heap restart can interrupt a completed Server Action response.
+    // The runner retains its 6 GiB V8 hard limit and full browser assertions.
+    ...(process.env.NODE_ENV === "development" && process.env.CODING_CYCLE_E2E === "1"
+      ? { devMemoryThresholdRestart: false }
+      : {}),
   },
   turbopack: {
     rules: {
