@@ -17,7 +17,7 @@ async function loadCampaigns(token: string): Promise<{ campaigns: PromoCampaignR
   const modules = new GeneratedApi.CommerceProductsPromoCampaignsModule(
     createServerClient({
       baseUrl: apiUrl,
-      auth: { getAccessToken: async () => token },
+      auth: { getAccessToken: () => Promise.resolve(token) },
     }),
   );
 

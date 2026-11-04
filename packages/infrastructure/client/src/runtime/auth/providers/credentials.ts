@@ -110,7 +110,7 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
         const auth = new AuthModule(
           createServerClient({
             baseUrl: apiUrl,
-            auth: { getAccessToken: async () => null },
+            auth: { getAccessToken: () => Promise.resolve(null) },
           }),
         );
 
@@ -161,9 +161,7 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
           throw new MfaRequiredError('Multi-factor authentication required', {
             mfaSessionId: data.mfaSessionId ?? undefined,
             mfaToken: typeof data.mfaToken === 'string' ? data.mfaToken : undefined,
-            availableMethods: Array.isArray(data.availableMethods)
-              ? data.availableMethods.filter((m): m is string => typeof m === 'string')
-              : undefined,
+            availableMethods: Array.isArray(data.availableMethods) ? data.availableMethods.filter((m): m is string => typeof m === 'string') : undefined,
           });
         }
 

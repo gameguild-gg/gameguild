@@ -10,14 +10,14 @@ const PAGE_TAKE = 50;
 const CAMPAIGN_STATUSES = ["Draft", "Active", "Paused", "Completed", "Cancelled", "Archived"] as const;
 
 const LIFECYCLE_ACTIONS = {
-  activate: (module: GeneratedApi.CommerceProductsPromoCampaignsModule, campaignId: string) =>
-    module.postPromoCampaignsActivate(campaignId),
-  pause: (module: GeneratedApi.CommerceProductsPromoCampaignsModule, campaignId: string) =>
-    module.postPromoCampaignsPause(campaignId),
-  complete: (module: GeneratedApi.CommerceProductsPromoCampaignsModule, campaignId: string) =>
-    module.postPromoCampaignsComplete(campaignId),
-  cancel: (module: GeneratedApi.CommerceProductsPromoCampaignsModule, campaignId: string) =>
-    module.postPromoCampaignsCancel(campaignId),
+  activate: (campaigns: GeneratedApi.CommerceProductsPromoCampaignsModule, campaignId: string) =>
+    campaigns.postPromoCampaignsActivate(campaignId),
+  pause: (campaigns: GeneratedApi.CommerceProductsPromoCampaignsModule, campaignId: string) =>
+    campaigns.postPromoCampaignsPause(campaignId),
+  complete: (campaigns: GeneratedApi.CommerceProductsPromoCampaignsModule, campaignId: string) =>
+    campaigns.postPromoCampaignsComplete(campaignId),
+  cancel: (campaigns: GeneratedApi.CommerceProductsPromoCampaignsModule, campaignId: string) =>
+    campaigns.postPromoCampaignsCancel(campaignId),
 } as const;
 
 function campaignModules(token: string): GeneratedApi.CommerceProductsPromoCampaignsModule {
@@ -25,7 +25,7 @@ function campaignModules(token: string): GeneratedApi.CommerceProductsPromoCampa
   return new GeneratedApi.CommerceProductsPromoCampaignsModule(
     createServerClient({
       baseUrl: apiUrl,
-      auth: { getAccessToken: async () => token },
+      auth: { getAccessToken: () => Promise.resolve(token) },
     }),
   );
 }
@@ -51,13 +51,13 @@ export async function GET(request: NextRequest): Promise<Response> {
 
   const parameters = new URL(request.url).searchParams;
   const campaignId = parameters.get("campaignId");
-  const module = campaignModules(token);
+  const campaigns = campaignModules(token);
 
   if (campaignId) {
     const from = parameters.get("from");
     const to = parameters.get("to");
     try {
-      const result = await module.getPromoCampaignsPerformance(campaignId, {
+      const result = await campaigns.getPromoCampaignsPerformance(campaignId, {
         ...(from ? { from } : {}),
         ...(to ? { to } : {}),
       });
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest): Promise<Response> {
   if (searchTerm) listParameters.searchTerm = searchTerm;
 
   try {
-    const result = await module.getPromoCampaignsForGetPromoCampaigns(listParameters);
+    const result = await campaigns.getPromoCampaignsForGetPromoCampaigns(listParameters);
     return result.ok ? NextResponse.json(result.data ?? {}) : upstreamError(result.error);
   } catch {
     return upstreamError({ status: 502, message: "The campaign list violated its API contract." });

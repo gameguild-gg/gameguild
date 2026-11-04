@@ -375,7 +375,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
 
     const api = createServerClient({
       baseUrl: config.apiUrl,
-      auth: { getAccessToken: async () => accessToken },
+      auth: { getAccessToken: () => Promise.resolve(accessToken) },
     });
     let result: Awaited<ReturnType<AuthMultiFactorModule['postAuthMfaTotpSetup']>>;
     try {
