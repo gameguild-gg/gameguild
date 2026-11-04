@@ -148,65 +148,51 @@ describe('Extended Auth Operations', () => {
   });
 
   describe('Session Management', () => {
-    it('listSessions returns session array', async () => {
+    it('listSessions returns the mapped session array', async () => {
       const sessions = [
-        { id: 's1', createdAt: '2024-01-01', lastActiveAt: '2024-01-02', isCurrent: true },
-        { id: 's2', createdAt: '2024-01-01', lastActiveAt: '2024-01-01', isCurrent: false },
+        { id: '11111111-1111-4111-8111-111111111111', createdAt: '2024-01-01T00:00:00Z', lastUsedAt: '2024-01-02T00:00:00Z', isCurrent: true },
+        { id: '22222222-2222-4222-8222-222222222222', createdAt: '2024-01-01T00:00:00Z', lastUsedAt: '2024-01-01T00:00:00Z', isCurrent: false },
       ];
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => sessions,
-      });
-
+      mockFetch.mockResolvedValueOnce(Response.json(sessions));
       const result = await listSessions(API_URL, TOKEN);
       expect(result).toHaveLength(2);
       expect(result[0].isCurrent).toBe(true);
+      expect(result[0].lastActiveAt).toBe('2024-01-02T00:00:00Z');
     });
 
-    it('listSessions returns empty array on failure', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: false });
-      const result = await listSessions(API_URL, TOKEN);
-      expect(result).toEqual([]);
+    it('listSessions returns empty array on HTTP failure', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({}, { status: 401 }));
+      await expect(listSessions(API_URL, TOKEN)).resolves.toEqual([]);
     });
 
-    it('terminateSession calls DELETE with session ID', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
-      await terminateSession(API_URL, 'session-123', TOKEN);
-
+    it('terminateSession calls DELETE with a session UUID', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Terminated' }));
+      await terminateSession(API_URL, '11111111-1111-4111-8111-111111111111', TOKEN);
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe(`${API_URL}/v1/auth/sessions/session-123`);
+      expect(url).toBe(`${API_URL}/v1/auth/sessions/11111111-1111-4111-8111-111111111111`);
       expect(opts.method).toBe('DELETE');
+      expect(new Headers(opts.headers).get('Authorization')).toBe(`Bearer ${TOKEN}`);
     });
 
-    it('terminateSession throws SessionTerminationError on failure', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: false });
-
-      await expect(terminateSession(API_URL, 'session-bad', TOKEN)).rejects.toThrow(SessionTerminationError);
+    it('terminateSession throws SessionTerminationError on HTTP failure', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({}, { status: 404 }));
+      await expect(terminateSession(API_URL, '11111111-1111-4111-8111-111111111111', TOKEN)).rejects.toThrow(SessionTerminationError);
     });
 
     it('terminateOtherSessions calls correct endpoint', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Terminated', terminatedCount: 1 }));
       await terminateOtherSessions(API_URL, TOKEN);
-
       expect(mockFetch).toHaveBeenCalledWith(`${API_URL}/v1/auth/sessions:terminate-others`, expect.objectContaining({ method: 'POST' }));
     });
 
     it('terminateOtherSessions throws SessionTerminationError on failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ message: 'Failed' }),
-      });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ detail: 'Failed' }, { status: 403 }));
       await expect(terminateOtherSessions(API_URL, TOKEN)).rejects.toThrow(SessionTerminationError);
     });
 
     it('terminateAllSessions calls correct endpoint', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Terminated', terminatedCount: 2 }));
       await terminateAllSessions(API_URL, TOKEN);
-
       expect(mockFetch).toHaveBeenCalledWith(`${API_URL}/v1/auth/sessions:terminate-all`, expect.objectContaining({ method: 'POST' }));
     });
 

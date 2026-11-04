@@ -247,11 +247,6 @@
       "count": 2
     }
   },
-  "tests/auth/extended-operations.test.ts": {
-    "@typescript-eslint/require-await": {
-      "count": 2
-    }
-  },
   "tests/auth/providers/discord.test.ts": {
     "@typescript-eslint/no-unsafe-member-access": {
       "count": 1
@@ -547,7 +542,7 @@
       "count": 1
     },
     "@typescript-eslint/require-await": {
-      "count": 27
+      "count": 26
     }
   },
   "tests/gaps/final-gaps.test.ts": {

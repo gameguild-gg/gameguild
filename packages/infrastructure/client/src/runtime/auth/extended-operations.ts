@@ -10,7 +10,7 @@
  * - Email verification (send + confirm)
  * - Session management (list, terminate)
  *
- * These are plain async functions that call the .NET backend API directly.
+ * These plain async functions use generated operations for the .NET backend API.
  * They can be used from:
  * - Server Actions (Next.js)
  * - Route handlers
@@ -29,19 +29,21 @@
  * ```
  */
 
+import { z } from 'zod';
 import type { ProviderResult } from './types.js';
 import { createClient } from '../../client.js';
 import { AuthModule } from '../../generated/modules/auth.gen.js';
 import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen.js';
 import { UsersModule } from '../../generated/modules/users.gen.js';
+import { AuthSessionsModule } from '../../generated/modules/auth-sessions.gen.js';
+import { IdentityAuthenticationSessionOutputSchema } from '../../generated/types.gen.js';
 import type { ApiClient } from '../client.js';
 import type { IdentityAuthenticationMfaMethod } from '../../generated/types.gen.js';
 import type { ApiError } from '../errors/types.js';
 import { isApiError } from '../errors/guards.js';
 import type { Result } from '../result/types.js';
 import { parseBackendAuthResponse } from '../../integrations/next/handlers.js';
-import { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError, parseErrorBody, extractErrorMessage } from './errors.js';
-import { assertSafeServiceUrl } from '../security/safe-remote-url.js';
+import { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError, AuthServiceUnavailableError } from './errors.js';
 
 // Re-export error classes so existing consumers don't break
 export { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError } from './errors.js';
@@ -121,51 +123,6 @@ export interface SessionInfo {
   lastActiveAt: string;
   /** Whether this is the current session */
   isCurrent: boolean;
-}
-
-// ─── Shared Fetch Helpers (DRY) ──────────────────────────────────
-
-/**
- * Build headers for an authenticated JSON request.
- */
-function authHeaders(accessToken: string): Record<string, string> {
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${accessToken}`,
-  };
-}
-
-const JSON_HEADERS: Record<string, string> = {
-  'Content-Type': 'application/json',
-};
-
-/**
- * POST to a backend endpoint and throw a typed error on failure.
- * Eliminates the repeated fetch + parse-error-body + throw pattern.
- */
-async function postOrThrow(
-  apiUrl: string,
-  url: string,
-  options: {
-    body?: unknown;
-    headers?: Record<string, string>;
-    errorClass: new (message: string) => Error;
-    fallbackMessage: string;
-  },
-): Promise<Response> {
-  const response = await fetch(assertSafeServiceUrl(url, apiUrl), {
-    redirect: 'error',
-    method: 'POST',
-    headers: options.headers ?? JSON_HEADERS,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
-
-  if (!response.ok) {
-    const errorData = await parseErrorBody(response);
-    throw new options.errorClass(extractErrorMessage(errorData, options.fallbackMessage));
-  }
-
-  return response;
 }
 
 // ─── MFA Operations ─────────────────────────────────────────────
@@ -522,32 +479,97 @@ export async function verifyEmail(apiUrl: string, input: EmailVerificationInput)
 
 // ─── Session Management ──────────────────────────────────────────
 
+function sessionClient(apiUrl: string, accessToken: string): AuthSessionsModule {
+  if (typeof accessToken !== 'string' || !accessToken.trim()) throw new SessionTerminationError('Session operation requires an access token');
+  return new AuthSessionsModule(
+    createClient({
+      baseUrl: apiUrl,
+      auth: { getAccessToken: () => Promise.resolve(accessToken) },
+      autoRefresh: false,
+      timeout: 5_000,
+      devtools: { enabled: false },
+    }),
+  );
+}
+
+async function completeSessionOperation(
+  operation: Promise<Result<{ message: string | null; terminatedCount?: number }, ApiError>>,
+  fallbackMessage: string,
+): Promise<void> {
+  try {
+    const response = await operation;
+    if (!response.ok)
+      throw new SessionTerminationError(
+        response.error.status === 0 || response.error.status >= 500 || response.error.code === 'PARSE_ERROR'
+          ? fallbackMessage
+          : response.error.detail || response.error.message || fallbackMessage,
+      );
+    if (response.data.terminatedCount !== undefined && response.data.terminatedCount < 0) throw new SessionTerminationError(fallbackMessage);
+  } catch (error) {
+    if (error instanceof SessionTerminationError) throw error;
+    throw new SessionTerminationError(fallbackMessage);
+  }
+}
+
 /**
  * List all active sessions for the authenticated user.
  */
 export async function listSessions(apiUrl: string, accessToken: string): Promise<SessionInfo[]> {
-  const response = await fetch(assertSafeServiceUrl(`${apiUrl}/v1/auth/sessions`, apiUrl), {
-    redirect: 'error',
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-
-  if (!response.ok) return [];
-
-  const data = (await response.json()) as { sessions?: SessionInfo[] } | SessionInfo[];
-  return Array.isArray(data) ? data : (data.sessions ?? []);
+  if (typeof accessToken !== 'string' || !accessToken.trim()) return [];
+  try {
+    const response = await sessionClient(apiUrl, accessToken).getAuthSessions();
+    if (!response.ok) {
+      if (response.error.status >= 400) return [];
+      throw new AuthServiceUnavailableError('Failed to read authentication sessions');
+    }
+    // The generated collection method currently casts its result without parsing it.
+    // Normalize the legacy envelope, then validate every row before returning any.
+    const raw: unknown = response.data;
+    const collection = raw !== null && typeof raw === 'object' && !Array.isArray(raw) && 'sessions' in raw ? raw.sessions : raw;
+    const sessions = z
+      .preprocess((value) => {
+        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+          // Native SessionResponse declares these enrichment objects nullable;
+          // the generated schema models them as optional non-null references.
+          return {
+            ...value,
+            ...('deviceInfo' in value && value.deviceInfo === null ? { deviceInfo: undefined } : {}),
+            ...('location' in value && value.location === null ? { location: undefined } : {}),
+          };
+        }
+        return value;
+      }, IdentityAuthenticationSessionOutputSchema)
+      .array()
+      .parse(collection);
+    return sessions.map((session) => {
+      if (!session.id || !session.createdAt || !session.lastUsedAt || typeof session.isCurrent !== 'boolean') {
+        throw new AuthServiceUnavailableError('Authentication sessions returned incomplete data');
+      }
+      return {
+        id: session.id,
+        createdAt: session.createdAt,
+        lastActiveAt: session.lastUsedAt,
+        isCurrent: session.isCurrent,
+        ...(typeof session.ipAddress === 'string' ? { ipAddress: session.ipAddress } : {}),
+        ...(typeof session.deviceInfo?.userAgent === 'string' ? { userAgent: session.deviceInfo.userAgent } : {}),
+      };
+    });
+  } catch (error) {
+    if (error instanceof AuthServiceUnavailableError) throw error;
+    throw new AuthServiceUnavailableError('Failed to read authentication sessions');
+  }
 }
 
 /**
  * Terminate a specific session by ID.
  */
 export async function terminateSession(apiUrl: string, sessionId: string, accessToken: string): Promise<void> {
-  const response = await fetch(assertSafeServiceUrl(`${apiUrl}/v1/auth/sessions/${sessionId}`, apiUrl), {
-    redirect: 'error',
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-
-  if (!response.ok) {
+  try {
+    // The generated path interpolates this value; the native MVC route is :guid.
+    const id = z.string().uuid().parse(sessionId);
+    await completeSessionOperation(sessionClient(apiUrl, accessToken).deleteAuthSessions(id), 'Failed to terminate session');
+  } catch (error) {
+    if (error instanceof SessionTerminationError) throw error;
     throw new SessionTerminationError('Failed to terminate session');
   }
 }
@@ -556,20 +578,12 @@ export async function terminateSession(apiUrl: string, sessionId: string, access
  * Terminate all sessions except the current one.
  */
 export async function terminateOtherSessions(apiUrl: string, accessToken: string): Promise<void> {
-  await postOrThrow(apiUrl, `${apiUrl}/v1/auth/sessions:terminate-others`, {
-    headers: authHeaders(accessToken),
-    errorClass: SessionTerminationError,
-    fallbackMessage: 'Failed to terminate other sessions',
-  });
+  await completeSessionOperation(sessionClient(apiUrl, accessToken).postAuthSessionsTerminateOthers(), 'Failed to terminate other sessions');
 }
 
 /**
  * Terminate all sessions (including current — forces re-login).
  */
 export async function terminateAllSessions(apiUrl: string, accessToken: string): Promise<void> {
-  await postOrThrow(apiUrl, `${apiUrl}/v1/auth/sessions:terminate-all`, {
-    headers: authHeaders(accessToken),
-    errorClass: SessionTerminationError,
-    fallbackMessage: 'Failed to terminate all sessions',
-  });
+  await completeSessionOperation(sessionClient(apiUrl, accessToken).postAuthSessionsTerminateAll(), 'Failed to terminate all sessions');
 }

@@ -8,7 +8,7 @@ the counts below are the historical audit snapshot. The F1/F2 correction notes
 describe the current implementation, and F5 corrects a controller-count false
 positive. The adjacent F3/F4 transport findings remain unresolved; these scoped
 corrections are not a newly certified surface audit. F3 records the subsequent
-Next registration/token-revocation, MFA, password and email-operation migrations, and F4 records the password/MFA credential-provider
+Next registration/token-revocation and extended-auth migrations, and F4 records the password/MFA credential-provider
 migration; the other provider transports remain.
 
 Sources of truth:
@@ -391,7 +391,7 @@ actual successful empty collection renders the empty state. A later successful
 server render replaces the alert with fresh campaign data. These corrections do
 not resolve F3/F4/F5 or turn the no-caller inventory into a deletion list.
 
-### F3 — SDK auth migrations; session and web transports remain
+### F3 — SDK registration/logout and extended auth migrated; web transports remain
 
 The original audit identified 17+ generated endpoints shadowed by hand-written
 transports in the client runtime and web app. The Next route and server-action
@@ -488,11 +488,30 @@ server message and make no email-delivery or account-existence claim.
 Failures preserve `EmailVerificationError`, and malformed or unsuccessful replies
 cannot report email verification as complete.
 
+The four SDK session helpers now use `AuthSessionsModule`. Listing explicitly
+validates every row because the generated collection method currently only casts
+its result. Native arrays and the existing `{ sessions }` envelope are supported;
+the native nullable device/location objects are normalized to optional fields
+before schema validation. Required identity, timestamps and current-session fields
+must be present. `lastUsedAt` maps to public `lastActiveAt`, and
+`deviceInfo.userAgent` maps to `userAgent`; missing details are not fabricated.
+Invalid collections fail with `AuthServiceUnavailableError`, rather than appearing
+as an empty or partial list. The existing HTTP-rejection empty-list fallback remains.
+
+Single-session termination validates the UUID before calling the generated method,
+whose path currently interpolates the ID. Traversal, query and fragment text never
+reaches the transport. Mutations use the current actor bearer with no request body,
+automatic refresh or payload logging, and a five-second request budget. Generated
+acknowledgements are validated; bulk counts must be non-negative integers, including
+the valid zero-session case. Errors retain `SessionTerminationError`. Actor, tenant
+and current-session decisions remain in the backend, and local cookie cleanup
+remains the caller's responsibility. The obsolete raw-fetch helpers were removed:
+all thirteen functions in `runtime/auth/extended-operations.ts` now use generated
+operations. This is not a claim that other SDK providers or web transports migrated.
+
 Remaining transports from the historical inventory (line numbers below belong to
 the original audit, not the current source):
 
-- `…/runtime/auth/extended-operations.ts:299` (`/v1/auth/sessions`),
-  `:314` (`/v1/auth/sessions/{id}`);
 - `apps/web/src/lib/auth/password-actions.ts:29,78`; `apps/web/src/lib/auth/email-code-request.ts:14`;
   `apps/web/src/lib/auth/magic-link-request.ts:16`;
   `apps/web/src/app/api/auth/session-state/route.ts:18`;
