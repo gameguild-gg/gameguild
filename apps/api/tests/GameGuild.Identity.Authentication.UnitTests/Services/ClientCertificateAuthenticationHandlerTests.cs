@@ -1,6 +1,7 @@
 using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography;
 using FluentAssertions;
 using GameGuild.Identity.Authentication.UnitTests.Infrastructure;
 using GameGuild.Identity.Context.Actors;
@@ -53,6 +54,20 @@ public sealed class ClientCertificateAuthenticationHandlerTests : IDisposable
         principal.FindAll("scope").Select(claim => claim.Value).Should().BeEquivalentTo("read:users", "write:jobs");
         // The same claims ActorContextMiddleware uses resolve the service actor kind.
         ActorKindResolverFixtures.ResolveFromPrincipal(principal).Should().Be("Service");
+    }
+
+    [Fact]
+    public async Task CertificateBoundBySha256Thumbprint_AlsoAuthenticates()
+    {
+        var account = CreateAccount(Guid.NewGuid());
+        account.BindCertificate(_clientCertificate.GetCertHashString(HashAlgorithmName.SHA256));
+        await using var dbContext = CreateDbContext();
+        dbContext.ServiceAccounts.Add(account);
+        await dbContext.SaveChangesAsync();
+        var (handler, context) = CreateHandler(dbContext, allowlist: [_certificateAuthority]);
+        context.Connection.ClientCertificate = _clientCertificate;
+
+        (await handler.AuthenticateAsync()).Succeeded.Should().BeTrue();
     }
 
     [Fact]
@@ -148,8 +163,9 @@ public sealed class ClientCertificateAuthenticationHandlerTests : IDisposable
         var result = await handler.AuthenticateAsync();
 
         result.Succeeded.Should().BeFalse();
-        // The rejected attempt counts toward lockout, matching the secret path.
-        dbContext.ServiceAccounts.Single().FailedAuthenticationAttempts.Should().Be(1);
+        // An outside source must not be able to exhaust another account's credential budget.
+        dbContext.ServiceAccounts.Single().FailedAuthenticationAttempts.Should().Be(0);
+        dbContext.ServiceAccounts.Single().IsLocked.Should().BeFalse();
     }
 
     [Fact]
@@ -167,6 +183,52 @@ public sealed class ClientCertificateAuthenticationHandlerTests : IDisposable
 
         result.Succeeded.Should().BeFalse();
         result.Failure!.Message.Should().Contain("ambiguous");
+    }
+
+    [Fact]
+    public async Task DifferentDigestBindingsOfTheSameCertificate_RemainAmbiguousAndAreRejected()
+    {
+        await using var dbContext = CreateDbContext();
+        dbContext.ServiceAccounts.Add(CreateAccount(Guid.NewGuid(), certificate: _clientCertificate));
+        var sha256Account = CreateAccount(Guid.NewGuid(), clientId: "sha256-bound");
+        sha256Account.BindCertificate(_clientCertificate.GetCertHashString(HashAlgorithmName.SHA256));
+        dbContext.ServiceAccounts.Add(sha256Account);
+        await dbContext.SaveChangesAsync();
+        var (handler, context) = CreateHandler(dbContext, allowlist: [_certificateAuthority]);
+        context.Connection.ClientCertificate = _clientCertificate;
+
+        var result = await handler.AuthenticateAsync();
+
+        result.Succeeded.Should().BeFalse();
+        result.Failure!.Message.Should().Contain("ambiguous");
+        dbContext.ServiceAccounts.All(account => account.AuthenticationCount == 0).Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("expired-automatic", true)]
+    [InlineData("active-automatic", false)]
+    [InlineData("manual", false)]
+    [InlineData("inactive", false)]
+    public async Task CertificateAuthentication_OnlyExpiredAutomaticLockoutCanBeReleased(string state, bool expectedSuccess)
+    {
+        var account = CreateAccount(Guid.NewGuid(), certificate: _clientCertificate);
+        account.IsLocked = true;
+        account.LockedAt = SystemClock.UtcNow.AddHours(-2);
+        account.AutomaticLockoutEndsAt = state == "manual" ? null : SystemClock.UtcNow.AddMinutes(state == "active-automatic" ? 10 : -1);
+        if (state == "inactive") account.IsActive = false;
+        await using var dbContext = CreateDbContext();
+        dbContext.ServiceAccounts.Add(account);
+        await dbContext.SaveChangesAsync();
+        var (handler, context) = CreateHandler(dbContext, allowlist: [_certificateAuthority]);
+        context.Connection.ClientCertificate = _clientCertificate;
+
+        (await handler.AuthenticateAsync()).Succeeded.Should().Be(expectedSuccess);
+        if (expectedSuccess)
+        {
+            account.IsLocked.Should().BeFalse();
+            account.AutomaticLockoutEndsAt.Should().BeNull();
+        }
+        else account.IsLocked.Should().BeTrue();
     }
 
     [Fact]

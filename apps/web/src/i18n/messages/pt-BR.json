@@ -388,6 +388,7 @@
       "backupCodesNone": "Nenhum código de backup restante.",
       "regenerateConfirm": "Gerar um novo conjunto de códigos de backup? Seus códigos atuais deixarão de funcionar.",
       "nudge": {
+        "requiredTitle": "A autenticação de dois fatores é obrigatória para contas de administrador. Ative-a para manter seu acesso.",
         "title": "Proteja sua conta — ative a autenticação de dois fatores",
         "action": "Configurar 2FA",
         "dismiss": "Dispensar lembrete de dois fatores"

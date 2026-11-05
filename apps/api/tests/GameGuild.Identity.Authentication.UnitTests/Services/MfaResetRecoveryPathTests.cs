@@ -115,7 +115,7 @@ public sealed class MfaResetRecoveryPathTests
             _subjects.Setup(port => port.ReadCurrentAsync(subjectId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new SignInMfaSubjectState(user, HasEnrolledMfa: false, LockedOutUntil: null));
             _policy.Setup(port => port.EvaluateAsync(subjectId, tenantId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new MfaRequirementDecision(subjectId, tenantId, true, ["Member"], Digest()));
+                .ReturnsAsync(new MfaRequirementDecision(subjectId, tenantId, true, ["Member"], Digest(), RequiredByDefault: true));
             _enrollment.Setup(port => port.AcquireSubjectLockAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
             _enrollment.Setup(port => port.StartOrResumeAsync(subjectId, user.Email, It.IsAny<DateTimeOffset>(),

@@ -427,8 +427,9 @@ public sealed class SignInMfaServiceTests
         fixture.SessionEvidence.Setup(port => port.FindAsync(fixture.Issued.SessionId, It.IsAny<CancellationToken>())).ReturnsAsync(stored);
         var restored = await fixture.ReadSessionAsync(proof.FirstFactorVerifiedAt);
         Assert.NotNull(restored);
-        Assert.Equal(proof.VerifiedAt, restored.VerifiedAt);
-        Assert.Equal(proof.FirstFactorVerifiedAt, restored.FirstFactorVerifiedAt);
+        Assert.Equal(proof.VerifiedAt, restored!.Proof!.VerifiedAt);
+        Assert.Equal(proof.FirstFactorVerifiedAt, restored.Proof.FirstFactorVerifiedAt);
+        Assert.False(restored.MfaCompliancePending);
         fixture.Issuer.VerifyNoOtherCalls();
     }
 
@@ -468,12 +469,88 @@ public sealed class SignInMfaServiceTests
     }
 
     [Fact]
+    public async Task ElevatedRoleOnlyRequirementWithoutAFactorSignsInWithCompliancePending()
+    {
+        var fixture = new FlowFixture { Enrolled = false };
+        fixture.Decision = fixture.Decision with { RequiredByDefault = false };
+        var result = await fixture.BeginAsync();
+        Assert.True(result.Success);
+        Assert.True(result.MfaCompliancePending);
+        Assert.Equal(new[] { "subject", "policy", "issue" }, fixture.Trace);
+        Assert.Empty(fixture.Stored);
+    }
+
+    [Fact]
+    public async Task OptionalUnenrolledBeginIssuesWithoutTheComplianceMarker()
+    {
+        var fixture = new FlowFixture { Enrolled = false };
+        fixture.Decision = fixture.Decision with { RequiresMfa = false, RequiredByDefault = false };
+        var result = await fixture.BeginAsync();
+        Assert.Same(fixture.Issued, result);
+        Assert.False(result.MfaCompliancePending);
+    }
+
+    [Fact]
+    public async Task EnrolledUserIsStillChallengedUnderARoleOnlyRequirement()
+    {
+        var fixture = new FlowFixture { Enrolled = true };
+        fixture.Decision = fixture.Decision with { RequiredByDefault = false };
+        var result = await fixture.BeginAsync();
+        AssertLimited(result, fixture.User, fixture.TenantId);
+        Assert.False(fixture.Decision.RequiredByDefault);
+        fixture.Issuer.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task RequireMfaByDefaultStillForcesTheEnrollmentChallenge()
+    {
+        var fixture = new FlowFixture { Enrolled = false };
+        fixture.SetupEnrollment(Guid.NewGuid(), FlowFixture.Digest(), "by-default-secret", "otpauth://totp/by-default");
+        var result = await fixture.BeginAsync();
+        AssertLimited(result, fixture.User, fixture.TenantId);
+        Assert.Contains("enrollment", result.Message, StringComparison.OrdinalIgnoreCase);
+        var stored = Assert.Single(fixture.Stored);
+        Assert.Equal(SignInMfaPurpose.EnrollFactor, stored.Purpose);
+        fixture.Issuer.VerifyNoOtherCalls();
+    }
+
+    [Fact]
     public async Task OptionalUnenrolledSessionRetainsOrdinaryRefresh()
     {
         var fixture = new FlowFixture { Enrolled = false };
-        fixture.Decision = fixture.Decision with { RequiresMfa = false };
+        fixture.Decision = fixture.Decision with { RequiresMfa = false, RequiredByDefault = false };
         fixture.SessionEvidence.Setup(port => port.FindAsync(fixture.Issued.SessionId, It.IsAny<CancellationToken>())).ReturnsAsync((SessionMfaEvidence?)null);
         Assert.Null(await fixture.ReadSessionAsync(DateTimeOffset.UtcNow.AddMinutes(-1)));
+    }
+
+    [Fact]
+    public async Task ElevatedRoleOnlyUnenrolledSessionRetainsOrdinaryRefresh()
+    {
+        var fixture = new FlowFixture { Enrolled = false };
+        fixture.Decision = fixture.Decision with { RequiredByDefault = false };
+        fixture.SessionEvidence.Setup(port => port.FindAsync(fixture.Issued.SessionId, It.IsAny<CancellationToken>())).ReturnsAsync((SessionMfaEvidence?)null);
+        Assert.Null((await fixture.ReadSessionAsync(DateTimeOffset.UtcNow.AddMinutes(-1)))!.Proof);
+    }
+
+    [Fact]
+    public async Task ElevatedRoleOnlyUnenrolledRefreshReportsCompliancePending()
+    {
+        var fixture = new FlowFixture { Enrolled = false };
+        fixture.Decision = fixture.Decision with { RequiredByDefault = false };
+        fixture.SessionEvidence.Setup(port => port.FindAsync(fixture.Issued.SessionId, It.IsAny<CancellationToken>())).ReturnsAsync((SessionMfaEvidence?)null);
+        var session = await fixture.ReadSessionAsync(DateTimeOffset.UtcNow.AddMinutes(-1));
+        Assert.NotNull(session);
+        Assert.Null(session!.Proof);
+        Assert.True(session.MfaCompliancePending);
+    }
+
+    [Fact]
+    public async Task EnrolledSubjectOnEvidencelessRefreshFailsClosedWithoutTheMarker()
+    {
+        var fixture = new FlowFixture { Enrolled = true };
+        fixture.Decision = fixture.Decision with { RequiredByDefault = false };
+        fixture.SessionEvidence.Setup(port => port.FindAsync(fixture.Issued.SessionId, It.IsAny<CancellationToken>())).ReturnsAsync((SessionMfaEvidence?)null);
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() => fixture.ReadSessionAsync(DateTimeOffset.UtcNow.AddMinutes(-1)));
     }
 
     private static void AssertLimited(SignInResponse result, User verifiedSubject, Guid tenantId)
@@ -546,7 +623,7 @@ public sealed class SignInMfaServiceTests
         {
             VerifiedSubjectId = User.Id;
             VerifiedVersion = User.TokenVersion;
-            Decision = new MfaRequirementDecision(User.Id, TenantId, true, ["Member"], Digest());
+            Decision = new MfaRequirementDecision(User.Id, TenantId, true, ["Member"], Digest(), RequiredByDefault: true);
             Assert.True(SignInMfaChallengeToken.TryHash(Bearer, out var hash));
             Challenge = new SignInMfaChallenge { Id = Guid.NewGuid(), SubjectId = User.Id, TenantId = TenantId,
                 SubjectTokenVersion = User.TokenVersion, TokenHash = hash, PolicyFingerprint = Decision.PolicyFingerprint,
@@ -592,10 +669,10 @@ public sealed class SignInMfaServiceTests
                 AfterVerification?.Invoke();
                 return new MfaVerificationResult { IsSuccess = VerificationSuccess, RequiresAdditionalVerification = AdditionalProof };
             });
-            Issuer.Setup(port => port.IssueAsync(It.IsAny<User>(), TenantId, Device, It.IsAny<CancellationToken>())).ReturnsAsync(() =>
+            Issuer.Setup(port => port.IssueAsync(It.IsAny<User>(), TenantId, Device, It.IsAny<CancellationToken>(), It.IsAny<bool>())).ReturnsAsync((User _, Guid _, DeviceInfo _, CancellationToken _, bool compliancePending) =>
             {
                 Trace.Add("issue");
-                return Issued;
+                return compliancePending ? IssuedWithCompliance() : Issued;
             });
             Issuer.Setup(port => port.IssueMfaAsync(It.IsAny<User>(), TenantId, Device, It.IsAny<SignInMfaProof>(), It.IsAny<CancellationToken>())).ReturnsAsync(() =>
             {
@@ -661,11 +738,20 @@ public sealed class SignInMfaServiceTests
         }
 
         public static string Digest() => Convert.ToHexString(SHA256.HashData(RandomNumberGenerator.GetBytes(32))).ToLowerInvariant();
+        public SignInResponse IssuedWithCompliance() => new()
+        {
+            Success = Issued.Success, Message = Issued.Message, AccessToken = Issued.AccessToken,
+            RefreshToken = Issued.RefreshToken, UserId = Issued.UserId, Email = Issued.Email,
+            SessionId = Issued.SessionId, TenantId = Issued.TenantId, AvailableTenants = Issued.AvailableTenants,
+            ExpiresAt = Issued.ExpiresAt, RefreshTokenExpiresAt = Issued.RefreshTokenExpiresAt,
+            AccessTokenExpiresAt = Issued.AccessTokenExpiresAt, ExpiresIn = Issued.ExpiresIn,
+            MfaCompliancePending = true
+        };
         public Task<SignInResponse> BeginAsync(SignInFirstFactor factor = SignInFirstFactor.Password, bool risk = false) =>
             Service().BeginAsync(VerifiedSubjectId, VerifiedVersion, TenantId, Device, factor, risk, CancellationToken.None);
         public Task<SignInResponse> CompleteAsync(string? bearer = null, MfaMethod method = MfaMethod.BackupCode, string? code = null, CancellationToken cancellationToken = default) =>
             Service().CompleteCodeAsync(bearer ?? Bearer, code ?? Code, method, Device, cancellationToken);
-        public Task<SignInMfaProof?> ReadSessionAsync(DateTimeOffset authenticatedAt) =>
+        public Task<SignInMfaSessionProof?> ReadSessionAsync(DateTimeOffset authenticatedAt) =>
             Service().ReadSessionProofAsync(VerifiedSubjectId, VerifiedVersion, TenantId, Issued.SessionId, authenticatedAt, CancellationToken.None);
         private SignInMfaService Service() => new(Subjects.Object, Policy.Object, Store.Object, Mfa.Object, Issuer.Object, Audit.Object, SessionEvidence.Object, Enrollment.Object, RecoveryRequests.Object);
         public void ApplySubjectFault(string mode)

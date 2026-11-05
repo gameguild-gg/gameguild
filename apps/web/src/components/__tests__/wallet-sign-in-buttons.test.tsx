@@ -21,6 +21,32 @@ vi.mock('@game-guild/client/react', () => ({
   useAuth: () => mockAuth,
 }));
 
+// Turnstile harness: renders a DOM anchor for the (lazily mounted) wallet
+// widget. `mode` controls the first terminal outcome — 'token' resolves a
+// real token (the prod path), 'null' resolves null without an error (the
+// unset-site-key dev/e2e path), 'error' fires onError + onToken(null) (a
+// script/challenge load failure or token expiry).
+const turnstileHarness = vi.hoisted(() => ({
+  mounted: 0,
+  mode: 'null' as 'null' | 'token' | 'error',
+  token: 'tok-0.ABC',
+}));
+
+vi.mock('@/components/antibot/turnstile-widget', () => ({
+  TurnstileWidget: (props: {
+    id?: string;
+    onToken: (token: string | null) => void;
+    onError?: () => void;
+  }) => {
+    turnstileHarness.mounted += 1;
+    queueMicrotask(() => {
+      if (turnstileHarness.mode === 'error') props.onError?.();
+      props.onToken(turnstileHarness.mode === 'token' ? turnstileHarness.token : null);
+    });
+    return <div id={props.id} data-testid={props.id} />;
+  },
+}));
+
 const { WalletSignInButtons } = await import('@/components/wallet-sign-in-buttons');
 
 const LABELS = {
@@ -64,6 +90,7 @@ describe('WalletSignInButtons', () => {
     mockAuth = createMockUseAuth();
     fetchMock = mockChallengeEndpoint();
     vi.stubGlobal('fetch', fetchMock);
+    turnstileHarness.mode = 'null';
   });
 
   afterEach(() => {
@@ -85,6 +112,96 @@ describe('WalletSignInButtons', () => {
     expect(screen.getByTestId('walletconnect-sign-in-button')).toHaveTextContent(
       'Continue with WalletConnect',
     );
+  });
+
+  it('does not render the wallet Turnstile widget until the wallet flow starts', async () => {
+    turnstileHarness.mounted = 0;
+    const adapters = buildAdapters(createMockEip1193Provider(), createMockEip1193Provider());
+    const { user } = renderWithUser(<WalletSignInButtons labels={LABELS} adapters={adapters} />);
+
+    await screen.findByTestId('metamask-sign-in-button');
+    // Hotfix: exactly one Turnstile on initial /sign-in render — the wallet
+    // challenge mounts only after a wallet button is clicked.
+    expect(turnstileHarness.mounted).toBe(0);
+
+    await user.click(screen.getByTestId('metamask-sign-in-button'));
+
+    await waitFor(() => {
+      expect(turnstileHarness.mounted).toBe(1);
+    });
+  });
+
+  it('sends the solved Turnstile token with the first challenge request (stale-closure regression)', async () => {
+    turnstileHarness.mounted = 0;
+    turnstileHarness.mode = 'token';
+    const adapters = buildAdapters(createMockEip1193Provider(), createMockEip1193Provider());
+    const { user } = renderWithUser(<WalletSignInButtons labels={LABELS} adapters={adapters} />);
+
+    await user.click(await screen.findByTestId('metamask-sign-in-button'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('wallet-connected')).toBeInTheDocument();
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, challengeRequest] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(challengeRequest.body))).toMatchObject({
+      turnstileToken: 'tok-0.ABC',
+    });
+  });
+
+  it('recovers when the widget errors: buttons re-enable and the retry remounts a fresh widget', async () => {
+    turnstileHarness.mounted = 0;
+    turnstileHarness.mode = 'error';
+    const adapters = buildAdapters(createMockEip1193Provider(), createMockEip1193Provider());
+    const { user } = renderWithUser(<WalletSignInButtons labels={LABELS} adapters={adapters} />);
+
+    const button = await screen.findByTestId('metamask-sign-in-button');
+    await user.click(button);
+    await waitFor(() => {
+      expect(turnstileHarness.mounted).toBe(1);
+    });
+
+    // Error recovery: the pending lock releases and the widget unmounts…
+    await waitFor(() => {
+      expect(screen.getByTestId('metamask-sign-in-button')).toBeEnabled();
+    });
+    expect(screen.queryByTestId('wallet-sign-in-turnstile')).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    // …and the retry remounts a fresh widget and completes the flow.
+    turnstileHarness.mode = 'token';
+    await user.click(screen.getByTestId('metamask-sign-in-button'));
+    await waitFor(() => {
+      expect(turnstileHarness.mounted).toBe(2);
+      expect(screen.getByTestId('wallet-connected')).toBeInTheDocument();
+    });
+    const [, challengeRequest] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(challengeRequest.body))).toMatchObject({
+      turnstileToken: 'tok-0.ABC',
+    });
+  });
+
+  it('resets a resolved token after a failed attempt so the retry re-arms the widget', async () => {
+    turnstileHarness.mounted = 0;
+    turnstileHarness.mode = 'token';
+    const metamask = createMockEip1193Provider();
+    metamask.failNextRequest(Object.assign(new Error('User rejected'), { code: 4001 }));
+    const adapters = buildAdapters(metamask, createMockEip1193Provider());
+    const { user } = renderWithUser(<WalletSignInButtons labels={LABELS} adapters={adapters} />);
+
+    await user.click(await screen.findByTestId('metamask-sign-in-button'));
+    await screen.findByRole('alert');
+
+    // Stale-token recovery: the resolved flag is cleared and the widget
+    // remounts on the next click instead of replaying the expired proof.
+    const button = await screen.findByTestId('metamask-sign-in-button');
+    await waitFor(() => expect(button).toBeEnabled());
+    const mountedBefore = turnstileHarness.mounted;
+    await user.click(button);
+    await waitFor(() => {
+      expect(turnstileHarness.mounted).toBe(mountedBefore + 1);
+    });
   });
 
   it('renders nothing when no wallet is available', async () => {

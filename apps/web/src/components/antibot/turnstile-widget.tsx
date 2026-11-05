@@ -5,6 +5,13 @@ import { useEffect, useRef } from "react";
 export interface TurnstileWidgetProps {
   /** Receives the Turnstile token once solved, or null when the widget errors, expires, or is disabled. */
   onToken: (token: string | null) => void;
+  /**
+   * Distinguishes failures from the disabled path (finding c, hotfix PR
+   * #1303): fires when the script fails to load, the challenge errors, or a
+   * solved token expires — letting hosts reset their flow instead of
+   * dead-locking on a token that will never arrive.
+   */
+  onError?: () => void;
   /** Optional Turnstile `action` (validated server-side against the expected value). */
   action?: string;
   /** Optional DOM id for the widget container (test/automation anchoring). */
@@ -71,13 +78,15 @@ function loadTurnstileScript(onAvailable?: (available: boolean) => void): void {
  * - Key set → renders the challenge; every terminal outcome (success, error,
  *   expire) is reported through `onToken`.
  */
-export function TurnstileWidget({ onToken, action, id }: TurnstileWidgetProps) {
+export function TurnstileWidget({ onToken, onError, action, id }: TurnstileWidgetProps) {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const notifiedDisabled = useRef(false);
   const onTokenRef = useRef(onToken);
+  const onErrorRef = useRef(onError);
   // Render-phase ref writes are forbidden by react-hooks/refs.
   useEffect(() => {
     onTokenRef.current = onToken;
+    onErrorRef.current = onError;
   });
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -111,8 +120,14 @@ export function TurnstileWidget({ onToken, action, id }: TurnstileWidgetProps) {
         sitekey: siteKey,
         ...(action ? { action } : {}),
         callback: (token: string) => onTokenRef.current?.(token),
-        "error-callback": () => onTokenRef.current?.(null),
-        "expired-callback": () => onTokenRef.current?.(null),
+        "error-callback": () => {
+          onTokenRef.current?.(null);
+          onErrorRef.current?.();
+        },
+        "expired-callback": () => {
+          onTokenRef.current?.(null);
+          onErrorRef.current?.();
+        },
         theme: "auto",
       });
     };
@@ -127,6 +142,7 @@ export function TurnstileWidget({ onToken, action, id }: TurnstileWidgetProps) {
           render();
         } else {
           onTokenRef.current?.(null);
+          onErrorRef.current?.();
         }
       });
       poll = window.setInterval(() => {
@@ -138,6 +154,7 @@ export function TurnstileWidget({ onToken, action, id }: TurnstileWidgetProps) {
       timeout = window.setTimeout(() => {
         clearTimers();
         onTokenRef.current?.(null);
+        onErrorRef.current?.();
       }, 15_000);
     }
 
