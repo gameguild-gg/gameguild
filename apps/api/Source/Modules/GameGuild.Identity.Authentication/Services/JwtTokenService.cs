@@ -53,6 +53,7 @@ public sealed class JwtTokenService(
         "actor_kind", "actor_type", "client_id", "grant_type", "scope",
         ClaimNames.UserId, ClaimNames.TenantId, ClaimNames.Group,
         ClaimNames.MfaVerified, ClaimNames.MfaTime, ClaimNames.MfaTimestamp, ClaimNames.EmailVerified,
+        ClaimNames.MfaCompliancePending,
         JwtClaimTypes.TenantId, JwtClaimTypes.SessionId, JwtClaimTypes.MfaEnabled,
         JwtClaimTypes.TenantPermissionFlags1, JwtClaimTypes.TenantPermissionFlags2
     }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
@@ -95,6 +96,49 @@ public sealed class JwtTokenService(
             null);
     }
 
+    /// <summary>
+    ///     Generates an access token carrying the MFA compliance-pending marker claim. The marker
+    ///     is a trusted builder parameter because the claim type is reserved against the
+    ///     untrusted additional-claims path.
+    /// </summary>
+    public Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        Guid sessionId,
+        bool mfaCompliancePending,
+        CancellationToken cancellationToken = default)
+    {
+        return GenerateAccessTokenCoreAsync(
+            userId,
+            email,
+            roles,
+            tenantId,
+            tokenVersion,
+            new DateTimeOffset(DateTime.SpecifyKind(SystemClock.UtcNow, DateTimeKind.Utc)),
+            sessionId,
+            cancellationToken,
+            additionalClaims: null,
+            mfaCompliancePending);
+    }
+
+    public Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        DateTimeOffset authenticatedAt,
+        Guid sessionId,
+        bool mfaCompliancePending,
+        CancellationToken cancellationToken = default)
+    {
+        return GenerateAccessTokenCoreAsync(userId, email, roles, tenantId, tokenVersion, authenticatedAt,
+            sessionId, cancellationToken, null, mfaCompliancePending);
+    }
+
     public Task<string> GenerateAccessTokenAsync(
         Guid userId,
         string email,
@@ -129,7 +173,7 @@ public sealed class JwtTokenService(
         if (sessionId == Guid.Empty) { throw new AuthenticationRequiredException("An authenticated session is required."); }
         proof.RequireBinding(userId, tenantId, tokenVersion, authenticatedAt, DateTimeOffset.UtcNow);
         return GenerateAccessTokenCoreAsync(userId, email, roles, tenantId, tokenVersion, authenticatedAt,
-            sessionId, cancellationToken, null, proof);
+            sessionId, cancellationToken, null, mfaProof: proof);
     }
 
     private async Task<string> GenerateAccessTokenCoreAsync(
@@ -142,6 +186,7 @@ public sealed class JwtTokenService(
         Guid? sessionId,
         CancellationToken cancellationToken,
         IEnumerable<Claim>? additionalClaims,
+        bool mfaCompliancePending = false,
         SignInMfaProof? mfaProof = null)
     {
         if (roles == null) throw new ArgumentNullException(nameof(roles));
@@ -174,6 +219,11 @@ public sealed class JwtTokenService(
             if (additionalClaims is not null)
             {
                 AppendAdditionalClaims(claims, additionalClaims);
+            }
+
+            if (mfaCompliancePending)
+            {
+                claims.Add(new Claim(ClaimNames.MfaCompliancePending, "true"));
             }
 
             if (mfaProof is not null)

@@ -1,6 +1,8 @@
 using GameGuild;
 using GameGuild.Identity.Authentication;
 
+[assembly: UseCaseEventContract(typeof(UnbindServiceAccountCertificateCommand), "identity.authentication.unbind-service-account-certificate", NoDomainEventReason = "Certificate removal is observed through the durable operation event without copying certificate pins into event payloads.")]
+
 [assembly: UseCaseEventContract(typeof(LocalSignUpCommand), "identity.authentication.local-sign-up", NoDomainEventReason = "Account creation is observed through the durable operation event without copying credentials or tokens into event payloads.")]
 [assembly: UseCaseEventContract(typeof(LocalSignInCommand), "identity.authentication.local-sign-in", NoDomainEventReason = "Sign-in state changes are observed through the durable operation event without copying credentials or tokens into event payloads.")]
 [assembly: UseCaseEventContract(typeof(CompleteMfaSignInCommand), "identity.authentication.complete-mfa-sign-in", NoDomainEventReason = "MFA completion is observed through the durable operation event without copying challenge bearers, factor proofs or issued credentials into event payloads.")]

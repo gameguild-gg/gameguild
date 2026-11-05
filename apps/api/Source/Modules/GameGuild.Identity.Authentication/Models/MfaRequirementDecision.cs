@@ -9,4 +9,5 @@ public sealed record MfaRequirementDecision(
     Guid TenantId,
     bool RequiresMfa,
     IReadOnlyList<string> Roles,
-    string PolicyFingerprint);
+    string PolicyFingerprint,
+    bool RequiredByDefault = false);

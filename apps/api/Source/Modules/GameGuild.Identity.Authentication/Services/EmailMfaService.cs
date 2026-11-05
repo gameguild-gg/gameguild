@@ -82,6 +82,7 @@ public sealed class EmailMfaService(
 
         configuration.EmailMfaAddress = entry.Email;
         configuration.IsEnabled = true;
+        configuration.IsSetupComplete = true;
         configuration.UpdatedAt = SystemClock.UtcNow;
         await mfaConfigRepository.UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
 
@@ -94,11 +95,12 @@ public sealed class EmailMfaService(
     public async Task<EmailMfaChallengeResult> SendChallengeAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var configuration = await mfaConfigRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
-        if (configuration?.EmailMfaAddress is not { } emailAddress)
+        if (configuration is not { IsEnabled: true } || string.IsNullOrWhiteSpace(configuration.EmailMfaAddress))
         {
             return Failure("Email MFA is not enrolled for this account.");
         }
 
+        var emailAddress = configuration.EmailMfaAddress;
         var code = await IssueCodeAsync(userId, emailAddress, isEnrollment: false, cancellationToken).ConfigureAwait(false);
         return code is null
             ? Failure("A verification code was sent recently. Wait before requesting another.")
@@ -111,10 +113,20 @@ public sealed class EmailMfaService(
     }
 
     /// <inheritdoc />
-    public Task<bool> VerifyCodeAsync(Guid userId, string code, CancellationToken cancellationToken = default)
+    public Task<bool> VerifyCodeAsync(Guid userId, string code) =>
+        VerifyCodeAsync(userId, code, CancellationToken.None);
+
+    /// <inheritdoc />
+    public async Task<bool> VerifyCodeAsync(Guid userId, string code, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(ConsumeCode(userId, code) is not null);
+        var configuration = await mfaConfigRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        if (configuration is not { IsEnabled: true } || string.IsNullOrWhiteSpace(configuration.EmailMfaAddress))
+        {
+            return false;
+        }
+
+        return ConsumeCode(userId, code) is not null;
     }
 
     private async Task<string?> IssueCodeAsync(Guid userId, string email, bool isEnrollment, CancellationToken cancellationToken)

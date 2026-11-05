@@ -22,7 +22,8 @@ public interface IAuthenticationAttemptRepository
     Task<List<AuthenticationAttempt>> GetByUserIdAsync(Guid userId, int limit = 50, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Gets failed authentication attempts for a specific identifier within a time window.
+    ///     Gets failed credential attempts for abuse detection within a time window.
+    ///     Classified provider unavailability is excluded; forensic lookup methods retain it.
     /// </summary>
     Task<List<AuthenticationAttempt>> GetFailedAttemptsAsync(string identifier, DateTime since, CancellationToken cancellationToken = default);
 
@@ -30,6 +31,7 @@ public interface IAuthenticationAttemptRepository
     ///     Counts failed password sign-in attempts for a normalized account identifier
     ///     (email) since the given UTC timestamp. Used by the progressive sign-in
     ///     backoff (issue #1084); the count is per account, not per source IP.
+    ///     Classified provider unavailability never contributes to this credential budget.
     /// </summary>
     Task<int> CountRecentFailedAttemptsAsync(string email, DateTime since, CancellationToken cancellationToken = default);
 

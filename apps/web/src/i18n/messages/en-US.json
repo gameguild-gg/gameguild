@@ -388,6 +388,7 @@
       "backupCodesNone": "No backup codes remaining.",
       "regenerateConfirm": "Generate a new set of backup codes? Your current codes will stop working.",
       "nudge": {
+        "requiredTitle": "Two-factor authentication is required for administrator accounts. Enable it to keep your access.",
         "title": "Protect your account — enable two-factor authentication",
         "action": "Set up 2FA",
         "dismiss": "Dismiss two-factor reminder"

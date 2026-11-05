@@ -1,4 +1,5 @@
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography;
 using FluentAssertions;
 using GameGuild.Identity.Authentication.UnitTests.Infrastructure;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -151,6 +152,28 @@ public sealed class ServiceAccountCertificateAuthenticationTests : IDisposable
         account.UnbindCertificate();
         account.CertificateThumbprint.Should().BeNull();
         account.CertificateSpkiSha256.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task AuthenticateWithCertificateAsync_WithBoundSha256Thumbprint_ReturnsAccount()
+    {
+        var account = CreateBoundAccount();
+        account.BindCertificate(_clientCertificate.GetCertHashString(HashAlgorithmName.SHA256));
+        var repository = new Mock<IServiceAccountRepository>();
+        repository.Setup(repo => repo.GetByClientIdAsync(account.ClientId, It.IsAny<CancellationToken>())).ReturnsAsync(account);
+
+        (await CreateService(repository).AuthenticateWithCertificateAsync(account.ClientId, _clientCertificate, null))
+            .Should().BeSameAs(account);
+    }
+
+    [Fact]
+    public void CertificateThumbprintMapping_AccommodatesBothDocumentedDigestLengths()
+    {
+        var builder = new Microsoft.EntityFrameworkCore.ModelBuilder();
+        new ServiceAccountConfiguration().Configure(builder.Entity<ServiceAccount>());
+
+        builder.Model.FindEntityType(typeof(ServiceAccount))!.FindProperty(nameof(ServiceAccount.CertificateThumbprint))!
+            .GetMaxLength().Should().Be(64);
     }
 
     private static ServiceAccount CreateBoundAccount()
