@@ -107,7 +107,7 @@ flowchart TD
 
 The contract that holds: **the money path is closed** — plan price (cents) is authoritative, resolved through `IPlanPricingResolver` for preview/checkout/renewal alike (issue #416 note in `SubscriptionPlanPricingResolver.cs:10-14`), and the payments handler rejects any requested amount that diverges (`:50-53`), the #1266-era hardening documented in `docs/commerce/payments/01-user-flows.md` edge 2.
 
-The contract that does NOT hold: nothing reconciles `ProductPricing` (what the product page shows) with `SubscriptionPlan.MonthlyPriceInCents` (what is billed). A merchandiser editing one without the other produces an honest-but-wrong price tag; the guard downstream only protects the charge, not the display. `ProductSubscriptionPlan` (`ProductsModule.cs:258-266`) is a third, orphaned plan table with no reader outside the module (`06-gaps.md` P5).
+The contract that does NOT hold: nothing reconciles `ProductPricing` (what the product page shows) with `SubscriptionPlan.MonthlyPriceInCents` (what is billed). A merchandiser editing one without the other produces an honest-but-wrong price tag; the guard downstream only protects the charge, not the display. `ProductSubscriptionPlan` (`ProductsModule.cs:258-266`) is a third, orphaned plan table with no reader outside the module — **deprecated as of #1290: do not read, write, or extend it** (`06-gaps.md` P5).
 
 ## 6. Shared surfaces with the payments/billing matrices
 

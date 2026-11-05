@@ -95,10 +95,11 @@ public sealed class UpgradeSubscriptionPlanCommandHandler(
 
             if (promoQuote.AppliedCodes.Count == 0)
             {
-                // Fail closed before mutation, mirroring subscription creation.
-                var reasons = string.Join("; ", promoQuote.RejectedCodes.Select(r => $"{r.Code}: {r.Reason}"));
-                throw new InvalidOperationException(
-                    $"None of the supplied promo codes could be applied to plan {request.NewPlanId}. {reasons}");
+                // Fail closed before mutation, mirroring subscription creation. Domain
+                // exception (issue #1290) so the middleware answers 422, not 500.
+                throw new SubscriptionPromoCodesRejectedException(
+                    request.NewPlanId,
+                    promoQuote.RejectedCodes.Select(r => $"{r.Code}: {r.Reason}"));
             }
         }
 
