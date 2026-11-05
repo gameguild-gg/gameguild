@@ -448,21 +448,21 @@ describe('credentials provider — fallback chains (L120)', () => {
   });
 
   it('uses backendUser fallbacks when direct fields are missing', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        // No userId, no email at top level — falls to backendUser
-        accessToken: 'at',
-        refreshToken: 'rt',
-        user: {
-          id: 'bu-id',
-          email: 'bu@email.com',
-          displayName: 'Backend User',
-          profilePictureUrl: 'https://img.com/pic.png',
-        },
-      }),
-    });
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          // No userId, no email at top level — falls to backendUser
+          accessToken: 'at',
+          refreshToken: 'rt',
+          user: {
+            id: '44444444-4444-4444-8444-444444444444',
+            email: 'bu@email.com',
+            username: 'backenduser',
+          },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    );
 
     const provider = CredentialsProvider({
       apiUrl: 'http://localhost:8080',
@@ -471,10 +471,10 @@ describe('credentials provider — fallback chains (L120)', () => {
     const result = await provider.authorize!({ email: 'user@test.com', password: 'password' }, undefined as any);
     expect(result).not.toBeNull();
     const user = result!.user;
-    expect(user.id).toBe('bu-id');
+    expect(user.id).toBe('44444444-4444-4444-8444-444444444444');
     expect(user.email).toBe('bu@email.com');
-    expect(user.name).toBe('Backend User');
-    expect(user.image).toBe('https://img.com/pic.png');
+    expect(user.name).toBe('backenduser');
+    expect(user.image).toBeNull();
   });
 });
 

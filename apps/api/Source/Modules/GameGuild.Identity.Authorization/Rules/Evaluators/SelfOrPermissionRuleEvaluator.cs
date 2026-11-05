@@ -9,7 +9,8 @@ namespace GameGuild.Identity.Authorization;
 ///     Rule that allows action if user is acting on themselves OR has a management permission.
 ///     Classic pattern: "edit self" OR "manage users"
 ///     Parameters:
-///     - selfPermission: string - Permission required for self-action (e.g., "users:edit:self")
+///     - selfPermission: string - Retained for rule-definition compatibility; self-actions no
+///       longer require a granted permission (issue #1287 U5 — see the self branch below)
 ///     - anyPermission: string - Permission that allows action on anyone (e.g., "users:manage")
 ///     - resourceUserIdPath: string (optional) - Path to extract target user ID from resource (default: "UserId")
 /// </summary>
@@ -59,7 +60,34 @@ public sealed class SelfOrPermissionRuleEvaluator : IRuleEvaluator
             return RuleEvaluationResult.Success();
         }
 
-        // Extract tenant ID from context (now Guid?) or claims
+        var anyPermission = parameters.GetString("anyPermission");
+        var targetUserId = GetTargetUserIdFromResource(context.Resource, parameters);
+
+        if (!targetUserId.HasValue || targetUserId.Value == Guid.Empty)
+        {
+            return RuleEvaluationResult.Fail("Cannot determine target user");
+        }
+
+        if (currentUserId.Value == targetUserId.Value)
+        {
+            // Issue #1287 U5 (the users 403 root cause): a self-action is authorized by
+            // the strength of the authenticated identity itself — the request targets
+            // the caller's own resource, which is exactly what the "Self" half of this
+            // rule promises ("Read own user data OR manage any user"). Requiring a
+            // granted permission here made every self-service endpoint effectively
+            // admin-only, because no role definition, seeder or sign-up flow ever
+            // granted users:read:self / users:edit:self: ordinary users got 403 on
+            // their OWN preferences (the e2e account-page failure signature), and a
+            // seeding strategy could not fix users without a tenant context anyway
+            // (permission lookups are tenant-scoped; the ReadSelf policy deliberately
+            // allows no-tenant requests — so the self branch deliberately runs before
+            // any tenant resolution). The anyPermission branch below still governs
+            // every action on OTHER users.
+            return RuleEvaluationResult.Success();
+        }
+
+        // Acting on another user: tenant context + target membership + management
+        // permission. Extract tenant ID from context (now Guid?) or claims.
         Guid tenantId;
         if (_tenantContext.HasTenant && _tenantContext.TenantId.HasValue && _tenantContext.TenantId.Value != Guid.Empty)
         {
@@ -72,33 +100,6 @@ public sealed class SelfOrPermissionRuleEvaluator : IRuleEvaluator
             {
                 return RuleEvaluationResult.Fail("Could not determine tenant ID for permission check");
             }
-        }
-
-        var selfPermission = parameters.GetString("selfPermission");
-        var anyPermission = parameters.GetString("anyPermission");
-        var targetUserId = GetTargetUserIdFromResource(context.Resource, parameters);
-
-        if (!targetUserId.HasValue || targetUserId.Value == Guid.Empty)
-        {
-            return RuleEvaluationResult.Fail("Cannot determine target user");
-        }
-
-        if (currentUserId.Value == targetUserId.Value)
-        {
-            if (string.IsNullOrEmpty(selfPermission))
-            {
-                return RuleEvaluationResult.Fail("Self-action permission is not configured");
-            }
-
-            var hasSelfPermission = await _permissionService.HasPermissionAsync(
-                currentUserId.Value, tenantId, selfPermission, cancellationToken).ConfigureAwait(false);
-            if (hasSelfPermission)
-            {
-                return RuleEvaluationResult.Success();
-            }
-
-            return RuleEvaluationResult.Fail(
-                $"Self-action requires permission '{selfPermission}'");
         }
 
         var targetBelongsToTenant = await _tenantMembershipChecker.IsUserMemberOfTenantAsync(

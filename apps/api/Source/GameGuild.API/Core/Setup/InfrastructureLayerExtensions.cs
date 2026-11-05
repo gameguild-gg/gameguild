@@ -345,10 +345,13 @@ public static class InfrastructureLayerExtensions
         services.AddLocalizationServices();
         logger.LogInformation("Localization Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10h. Tenants Module - explicit registrations (ITenantResolver doesn't match
-        // the I*Service / I*Repository convention used by AddRepositories)
+        // 10h. Tenants Module - explicit registrations (ITenantResolver and the
+        // administration guard don't match the I*Service / I*Repository convention
+        // used by AddRepositories)
         stepStopwatch.Restart();
         services.AddScoped<ITenantResolver, TenantResolver>();
+        // Issue #1287 T1: ownership/role gate for tenant lifecycle mutations.
+        services.AddScoped<ITenantAdministrationGuard, TenantAdministrationGuard>();
         logger.LogInformation("Tenants Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 11. Repositories

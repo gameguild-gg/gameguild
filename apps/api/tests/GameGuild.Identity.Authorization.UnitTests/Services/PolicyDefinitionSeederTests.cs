@@ -51,6 +51,38 @@ public class PolicyDefinitionSeederTests
         repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    ///     Issue #1287 U5: the seeded Users self policies must not require a granted
+    ///     users:*:self permission for self-actions — no role or seeder ever granted
+    ///     those keys, which made the self-service surface effectively admin-only.
+    ///     The canonical definitions therefore carry no selfPermission parameter.
+    /// </summary>
+    [Theory]
+    [InlineData(Policies.UsersReadSelf)]
+    [InlineData(Policies.UsersEditSelf)]
+    [InlineData(Policies.UsersDeleteSelf)]
+    public async Task SeedAsync_UsersSelfPolicies_DoNotRequireGrantedSelfPermissions(string policyName)
+    {
+        var repo = new Mock<IPolicyDefinitionRepository>();
+        repo.Setup(r => r.GetByNameAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PolicyDefinitionEntity?)null);
+
+        var added = new List<PolicyDefinitionEntity>();
+        repo.Setup(r => r.AddAsync(It.IsAny<PolicyDefinitionEntity>(), It.IsAny<CancellationToken>()))
+            .Callback<PolicyDefinitionEntity, CancellationToken>((p, _) => added.Add(p))
+            .Returns(Task.CompletedTask);
+
+        var seeder = new PolicyDefinitionSeeder(repo.Object, NullLogger<PolicyDefinitionSeeder>.Instance);
+
+        await seeder.SeedAsync(CancellationToken.None);
+
+        var policy = added.Single(p => p.PolicyName == policyName);
+        policy.RulesJson.Should().NotContain("selfPermission",
+            "self-actions are authorized by the authenticated identity (issue #1287 U5), not by a granted permission");
+        policy.RulesJson.Should().Contain("users:manage",
+            "actions on other users still require the management permission");
+    }
+
     [Fact]
     public async Task SeedAsync_SeedsDomainPolicies_ThroughContributors()
     {
