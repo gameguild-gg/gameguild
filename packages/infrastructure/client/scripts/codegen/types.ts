@@ -68,22 +68,31 @@ class TypesGenerator extends BaseGenerator {
     }
 
     const knownSchemaNames = new Set(schemaEntries.map(({ sanitizedName }) => sanitizedName));
-    const legacyDtoAliases = schemaEntries.flatMap(({ sanitizedName }) => {
+    const legacyDtoAliases = schemaEntries.flatMap(({ sanitizedName, schema }) => {
       if (!/Dto$/i.test(sanitizedName)) return [];
 
       const legacyName = sanitizedName.replace(/Dto$/i, '');
       if (!legacyName || knownSchemaNames.has(legacyName)) return [];
 
-      return [{ legacyName, dtoName: sanitizedName }];
+      // `interface X extends Y` is invalid TS unless Y is an object interface;
+      // enum/union/allOf/primitive Dtos alias via `type` instead.
+      const isObjectInterface =
+        !schema.enum && !schema.oneOf && !schema.anyOf && !schema.allOf && (schema.type === 'object' || !!schema.properties);
+
+      return [{ legacyName, dtoName: sanitizedName, isObjectInterface }];
     });
 
     if (legacyDtoAliases.length > 0) {
       lines.push('// Backwards-compatible aliases for names generated before DTO identity was preserved');
-      for (const { legacyName, dtoName } of legacyDtoAliases) {
-        // Interface extension, not a type alias: rollup-plugin-dts (the tsup dts
-        // bundler) drops `export type X = Y;` alias declarations from the bundled
-        // entry, leaving dangling exports; interfaces survive the fold.
-        lines.push(`export interface ${legacyName} extends ${dtoName} {}`);
+      for (const { legacyName, dtoName, isObjectInterface } of legacyDtoAliases) {
+        if (isObjectInterface) {
+          // Interface extension, not a type alias: rollup-plugin-dts (the tsup dts
+          // bundler) drops `export type X = Y;` alias declarations from the bundled
+          // entry, leaving dangling exports; interfaces survive the fold.
+          lines.push(`export interface ${legacyName} extends ${dtoName} {}`);
+        } else {
+          lines.push(`export type ${legacyName} = ${dtoName};`);
+        }
         lines.push(`export { ${dtoName}Schema as ${legacyName}Schema };`);
       }
       lines.push('');

@@ -15,7 +15,7 @@ namespace GameGuild.Learning.Cohorts;
 /// </summary>
 public sealed class CohortEnrollmentGuard(IApplicationDbContext context) : ICohortEnrollmentGuard
 {
-    public async Task<Result> ReserveCapacityAsync(Guid cohortId, CancellationToken cancellationToken = default)
+    public async Task<Result> ReserveCapacityAsync(Guid cohortId, Guid courseId, CancellationToken cancellationToken = default)
     {
         var cohort = await context.Set<Cohort>()
             .FirstOrDefaultAsync(candidate => candidate.Id == cohortId, cancellationToken)
@@ -24,6 +24,11 @@ public sealed class CohortEnrollmentGuard(IApplicationDbContext context) : ICoho
         if (cohort is null)
         {
             return Result.Failure(Error.NotFound("Cohort", "Cohort not found"));
+        }
+
+        if (cohort.CourseId != courseId)
+        {
+            return Result.Failure(Error.Conflict("Cohort", "Cohort does not belong to the requested course"));
         }
 
         if (!cohort.CanEnroll())
