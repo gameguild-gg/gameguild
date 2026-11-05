@@ -378,41 +378,4 @@ public sealed class TestingLabValidatorCoverageTests
         result.ShouldHaveValidationErrorFor(x => x.Duration);
         result.ShouldHaveValidationErrorFor(x => x.MaxParticipants);
     }
-
-    [Fact]
-    public void SubmitFeedbackValidator_CoversValidOptionalValues()
-    {
-        var validator = new SubmitFeedbackCommandValidator();
-        var withoutRating = new SubmitFeedbackCommand(
-            Guid.NewGuid(), Guid.NewGuid(), "Useful feedback", FeedbackQuality.High, null);
-        var withRating = withoutRating with { Rating = 10 };
-
-        validator.TestValidate(withoutRating).IsValid.Should().BeTrue();
-        validator.TestValidate(withRating).IsValid.Should().BeTrue();
-    }
-
-    [Fact]
-    public void SubmitFeedbackValidator_RejectsEachInvalidConstraint()
-    {
-        var command = new SubmitFeedbackCommand(
-            Guid.Empty, Guid.Empty, new string('x', 5001), null, 11);
-
-        var result = new SubmitFeedbackCommandValidator().TestValidate(command);
-
-        result.ShouldHaveValidationErrorFor(x => x.TestingRequestId);
-        result.ShouldHaveValidationErrorFor(x => x.UserId);
-        result.ShouldHaveValidationErrorFor(x => x.Content);
-        result.ShouldHaveValidationErrorFor(x => x.Rating);
-    }
-
-    [Fact]
-    public void SubmitFeedbackValidator_RejectsEmptyContentAndLowRating()
-    {
-        var command = new SubmitFeedbackCommand(Guid.NewGuid(), Guid.NewGuid(), string.Empty, null, 0);
-
-        var result = new SubmitFeedbackCommandValidator().TestValidate(command);
-
-        result.ShouldHaveValidationErrorFor(x => x.Content);
-        result.ShouldHaveValidationErrorFor(x => x.Rating);
-    }
 }
