@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { BlogPostCard } from '@/components/blogs/blog-post-card';
 import { BLOG_INDEX_PATH, buildBlogAuthorPath, isReservedBlogSegment } from '@/lib/blogs/seo';
 import { getAuthorPosts } from '@/lib/blogs/queries';
+import { buildPageMetadata } from '@/lib/seo';
 
 interface AuthorPageProps {
   readonly params: Promise<{ username: string }>;
@@ -19,11 +20,12 @@ function cursorFromParams(searchParams: { before?: string; beforeId?: string }):
 
 export async function generateMetadata({ params }: AuthorPageProps): Promise<Metadata> {
   const { username } = await params;
-  return {
-    title: `${decodeURIComponent(username)} — posts`,
-    description: `All published posts by ${decodeURIComponent(username)} on GameGuild.`,
-    robots: { index: true, follow: true },
-  };
+  const handle = decodeURIComponent(username);
+  return buildPageMetadata({
+    path: `/blogs/${handle}`,
+    title: `${handle} — posts — GameGuild`,
+    description: `All published posts by ${handle} on GameGuild.`,
+  });
 }
 
 export default async function AuthorBlogPage({ params, searchParams }: AuthorPageProps) {

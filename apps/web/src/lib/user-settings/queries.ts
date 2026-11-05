@@ -157,6 +157,40 @@ export async function getPrivacyPreference(): Promise<PrivacyPreferenceData> {
   return normalizePrivacy(result.data);
 }
 
+/**
+ * Privacy preference plus whether the analytics-cookie field was explicitly
+ * recorded. Consent (#1206) must never treat a server default (missing row
+ * or missing field) as an opt-in — only a recorded `AnalyticsCookies`
+ * choice is authoritative for the consent store.
+ */
+export interface RecordedPrivacyConsent {
+  readonly preference: PrivacyPreferenceData;
+  readonly analyticsCookiesRecorded: boolean;
+}
+
+export async function getRecordedPrivacyConsent(): Promise<RecordedPrivacyConsent> {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) return { preference: normalizePrivacy(null), analyticsCookiesRecorded: false };
+
+  const client = getUserSettingsApiClient();
+  const result = await client.request<unknown>({
+    method: 'GET',
+    path: `/v1/users/${userId}/preferences/privacy`,
+    requiresAuth: true,
+  });
+
+  if (!result.ok) {
+    if (result.error.status === 404) {
+      return { preference: normalizePrivacy(null), analyticsCookiesRecorded: false };
+    }
+    throw new Error(`Unable to load privacy preferences (${result.error.status}): ${result.error.message}`);
+  }
+
+  const dto = result.data;
+  const recorded = typeof dto === 'object' && dto !== null && 'AnalyticsCookies' in dto;
+  return { preference: normalizePrivacy(dto), analyticsCookiesRecorded: recorded };
+}
+
 export async function getAccessibilityPreference(): Promise<AccessibilityPreferenceData> {
   const userId = await getAuthenticatedUserId();
   if (!userId) return normalizeAccessibility(null);

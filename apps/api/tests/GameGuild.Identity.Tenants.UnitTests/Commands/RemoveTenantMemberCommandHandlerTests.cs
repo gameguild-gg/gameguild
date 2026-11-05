@@ -30,7 +30,7 @@ public class RemoveTenantMemberCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_Should_Delete_Member_And_Add_Event_When_Tenant_Found()
+    public async Task Handle_Should_Delete_Member_Without_Raising_InMemory_Domain_Event_When_Tenant_Found()
     {
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
@@ -46,7 +46,8 @@ public class RemoveTenantMemberCommandHandlerTests
 
         result.Success.Should().BeTrue();
         _memberRepositoryMock.Verify(r => r.DeleteAsync(member.Id, It.IsAny<CancellationToken>()), Times.Once);
-        tenant.DomainEvents.Should().Contain(e => e is TenantMemberRemovedEvent);
+        // Issue #1287 T8: the discarded TenantMemberRemovedEvent raise is gone.
+        tenant.DomainEvents.Should().BeEmpty();
     }
 
     [Fact]

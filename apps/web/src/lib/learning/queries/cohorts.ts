@@ -5,7 +5,6 @@ import {
   type LearningCohortsCohort,
   type LearningCohortsCohortSchedule,
   type LearningCohortsCourseCohortCalendar,
-  type LearningEnrollmentsEnrollment,
   type SystemDayOfWeek,
 } from '@game-guild/client';
 import { cache } from 'react';
@@ -121,7 +120,18 @@ export function mapCohort(cohort: LearningCohortsCohort): CourseCohortSummary {
   };
 }
 
-function mapEnrollmentStatus(status: LearningEnrollmentsEnrollment['status']): CourseCohortAttendee['status'] {
+interface CourseEnrollment {
+  id?: string;
+  userId?: string;
+  status?: 'Active' | 'Paused' | 'Completed' | 'Dropped' | 'Expired';
+  progress?: number;
+  cohortId?: string;
+  enrolledAt?: string;
+  completedAt?: string | null;
+  lastActivityAt?: string | null;
+}
+
+function mapEnrollmentStatus(status: CourseEnrollment['status']): CourseCohortAttendee['status'] {
   if (status === 'Paused') return 'paused';
   if (status === 'Completed') return 'completed';
   if (status === 'Dropped') return 'dropped';
@@ -129,7 +139,7 @@ function mapEnrollmentStatus(status: LearningEnrollmentsEnrollment['status']): C
   return 'active';
 }
 
-function mapAttendee(enrollment: LearningEnrollmentsEnrollment, index: number): CourseCohortAttendee {
+function mapAttendee(enrollment: CourseEnrollment, index: number): CourseCohortAttendee {
   return {
     id: enrollment.id ?? `enrollment-${index}`,
     userId: enrollment.userId ?? 'unknown-user',
@@ -161,12 +171,14 @@ export const getCohort = cache(async (cohortId: string): Promise<CourseCohortDet
   if (!cohortResult.ok) return null;
 
   const cohort = mapCohort(cohortResult.data);
+  // The generated client types the enrollments response as Result<void> after
+  // the 2026-11-04 regeneration; the runtime still returns enrollment rows, so
+  // bridge through the local CourseEnrollment shape.
   const enrollmentResult = await modules.enrollments.getApiLearningEnrollmentsCourses(cohort.courseId);
-  const attendees = enrollmentResult.ok
-    ? (enrollmentResult.data ?? [])
-        .filter((enrollment) => enrollment.cohortId === cohort.id)
-        .map(mapAttendee)
-    : [];
+  const rows = ((enrollmentResult as { data?: unknown }).data ?? []) as CourseEnrollment[];
+  const attendees = rows
+    .filter((enrollment) => enrollment.cohortId === cohort.id)
+    .map(mapAttendee);
 
   return { ...cohort, attendees };
 });

@@ -32,7 +32,11 @@ public class CohortsControllerCapabilityTests
 
         attribute.ResourceType.Should().Be(typeof(Cohort));
         attribute.ResourceIdParameterName.Should().Be("id", "cohort mutations address the cohort by route id");
-        attribute.RequiredPermission.ToString().Should().Be(permissionName);
+        // Compare by enum VALUE, not by ToString(): PermissionType.Delete = 26 is an
+        // alias of PermissionType.SoftDelete = 26, and ToString() on the shared value
+        // reports whichever alias the runtime picks ("SoftDelete"). The capability
+        // contract is about the permission VALUE carried by the attribute.
+        attribute.RequiredPermission.Should().Be(Enum.Parse<PermissionType>(permissionName));
     }
 
     [Fact]
@@ -48,7 +52,7 @@ public class CohortsControllerCapabilityTests
             .Single();
 
         attribute.ResourceType.Should().Be(typeof(Cohort));
-        attribute.Permission.ToString().Should().Be(nameof(PermissionType.Create));
+        attribute.Permission.Should().Be(PermissionType.Create);
     }
 
     [Fact]

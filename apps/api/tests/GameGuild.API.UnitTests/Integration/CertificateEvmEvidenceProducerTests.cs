@@ -13,7 +13,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using LearningCompletionStatus = GameGuild.Learning.Courses.CompletionStatus;
 using LearningProgramEnrollment = GameGuild.Learning.Courses.ProgramEnrollment;
 
 namespace GameGuild.API.UnitTests.Integration;
@@ -131,12 +130,14 @@ public sealed class CertificateEvmEvidenceProducerTests
         var marker = Guid.NewGuid().ToString("N");
         var user = User.Create($"certificate-{marker}@example.test", "Composition recipient"); user.Username = marker;
         var template = CertificateTemplate.Create(Guid.NewGuid(), "Composition fixture", "<div>Fixture</div>");
-        // The issuance eligibility gate (#1226 N1, merged with #1275) requires the
-        // enrollment to exist and be completed before composition may mint a certificate.
         var enrollment = new LearningProgramEnrollment
         {
-            Id = Guid.NewGuid(), UserId = user.Id, ProgramId = template.CourseId,
-            CompletionStatus = LearningCompletionStatus.Completed,
+            Id = Guid.NewGuid(),
+            ProgramId = template.CourseId,
+            UserId = user.Id,
+            EnrollmentStatus = GameGuild.Learning.Courses.EnrollmentStatus.Active,
+            CompletionStatus = GameGuild.Learning.Courses.CompletionStatus.Completed,
+            TenantId = null,
         };
         context.AddRange(user, template, enrollment); await context.SaveChangesAsync();
         var actors = new Mock<IActorContextAccessor>(); actors.SetupGet(a => a.ActorContext).Returns(ActorContext.Anonymous);
