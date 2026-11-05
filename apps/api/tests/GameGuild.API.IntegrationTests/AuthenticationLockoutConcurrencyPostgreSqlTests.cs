@@ -161,6 +161,98 @@ public sealed class AuthenticationLockoutConcurrencyPostgreSqlTests(ApiPostgreSq
         failedAttempts.Should().Be(5);
     }
 
+    [Fact]
+    public async Task ConcurrentSignInsForDifferentAccountsFromOneCleanIp_AreAllAdmitted()
+    {
+        // Issue #1309: the load-smoke shape — N valid sign-ins for N distinct accounts,
+        // all from ONE source address, all in flight at the same time. The shared
+        // per-source-IP advisory lock must not turn that overlap into generic
+        // invalid-credentials denials: a source address without failed attempts in the
+        // admission window has nothing to serialize and admits every request, while the
+        // per-account lock keeps same-account concurrency serialized (previous test).
+        const string sourceIp = "198.51.100.77";
+        const int concurrency = 10;
+        var emails = Enumerable.Range(0, concurrency)
+            .Select(_ => $"lockout-clean-{Guid.NewGuid():N}@example.test")
+            .ToArray();
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseNpgsql(fixture.ConnectionString)
+            .Options;
+        var databases = new ApplicationDbContext[concurrency];
+        var providers = new ServiceProvider[concurrency];
+        for (var index = 0; index < concurrency; index++)
+        {
+            databases[index] = new ApplicationDbContext(options);
+            providers[index] = CreateServices(databases[index], new AuthenticationSecurityOptions
+            {
+                MaxFailedAttemptsPerHour = 5,
+                // A deliberately tight ceiling proves the point: even with a two-failure
+                // hourly IP budget, zero prior failures means no shared IP lock and no
+                // denial — the ceiling binds attempts, not clean in-flight overlap.
+                MaxAttemptsPerIpPerHour = 2,
+                EnableIpThrottling = true
+            });
+        }
+
+        var enteredCount = 0;
+        var allEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseAll = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var nextCalled = new bool[concurrency];
+        var contexts = new ActionExecutingContext[concurrency];
+
+        var requests = Enumerable.Range(0, concurrency).Select(index =>
+        {
+            var (context, actionContext) = CreateContext(providers[index], emails[index], sourceIp);
+            contexts[index] = context;
+            return new AuthenticationLockoutActionFilter().OnActionExecutionAsync(context, async () =>
+            {
+                nextCalled[index] = true;
+                if (Interlocked.Increment(ref enteredCount) == concurrency)
+                {
+                    allEntered.TrySetResult();
+                }
+
+                // Hold every admitted sign-in inside the pipeline until all ten are in,
+                // maximizing the contention window the admission locks must survive.
+                await releaseAll.Task.ConfigureAwait(false);
+                databases[index].Set<AuthenticationAttempt>().Add(CreateAttempt(emails[index], DateTime.UtcNow, sourceIp));
+                await databases[index].SaveChangesAsync().ConfigureAwait(false);
+                return new ActionExecutedContext(actionContext, [], new object());
+            });
+        }).ToArray();
+
+        try
+        {
+            // A bounded wait turns a regression (some sign-in denied, allEntered never
+            // completing) into a timeout failure instead of a hung test.
+            await allEntered.Task.WaitAsync(TimeSpan.FromSeconds(30));
+        }
+        finally
+        {
+            releaseAll.TrySetResult();
+        }
+
+        await Task.WhenAll(requests).WaitAsync(TimeSpan.FromSeconds(30));
+        foreach (var provider in providers)
+        {
+            await provider.DisposeAsync();
+        }
+
+        foreach (var database in databases)
+        {
+            await database.DisposeAsync();
+        }
+
+        nextCalled.Should().OnlyContain(flag => flag);
+        contexts.Should().OnlyContain(context => context.Result is null);
+
+        await using var queryDatabase = new ApplicationDbContext(options);
+        var failedAttempts = await queryDatabase.Set<AuthenticationAttempt>()
+            .AsNoTracking()
+            .CountAsync(attempt => attempt.IpAddress == sourceIp && !attempt.IsSuccessful);
+        failedAttempts.Should().Be(concurrency);
+    }
+
     private static ServiceProvider CreateServices(
         ApplicationDbContext database,
         AuthenticationSecurityOptions? securityOptions = null)
