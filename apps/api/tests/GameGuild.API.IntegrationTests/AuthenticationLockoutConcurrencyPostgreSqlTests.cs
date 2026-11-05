@@ -244,7 +244,7 @@ public sealed class AuthenticationLockoutConcurrencyPostgreSqlTests(ApiPostgreSq
         }
 
         nextCalled.Should().OnlyContain(flag => flag);
-        contexts.Should().OnlyContain(context => context.Result is null);
+        contexts.Should().OnlyContain(context => context.Result == null);
 
         await using var queryDatabase = new ApplicationDbContext(options);
         var failedAttempts = await queryDatabase.Set<AuthenticationAttempt>()
