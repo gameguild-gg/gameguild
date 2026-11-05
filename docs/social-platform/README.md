@@ -1,6 +1,6 @@
 # GameGuild Social + Platform — Documentation Package
 
-> Social family (9 sub-modules) + Platform family (13 sub-modules) · Documented against `develop` commit `43603cb5b`.
+> Social family (9 sub-modules) + Platform family (13 sub-modules) · Documents 01–05 cut against `develop` commit `43603cb5b`; the security completion (07–10) against `ce31d585` with every reused citation re-verified.
 > Scope: **510 endpoints across 45 controllers / module-API files** (Social 127, Platform 383), plus the service-only modules (`Social.Announcements`, `ProjectWork`, `Localization`, `Teams`, `Tags`) that carry no HTTP surface.
 
 ## Scope
@@ -47,7 +47,11 @@ All 22 assemblies are enabled in the host: the Social nine plus `GameJams`, `Lau
 | [`02-cqrs-wiring-matrix.md`](02-cqrs-wiring-matrix.md) | Route → command/query/service → validator → handler → auth → rate limit → unit test → HOLE? for all 45 controller files; cross-references the CI wiring-gap guard instead of re-deriving the handler-less surface |
 | [`03-state-machines.md`](03-state-machines.md) | `stateDiagram-v2` for jam, project (+ project version), asset moderation, group membership, TestingLab event/session, blog post; transition-audit tables with defect index |
 | [`04-event-inventory.md`](04-event-inventory.md) | Every event/notification/stream with producer/consumer `file:line` — the 12 orphan `Post*` events, the announcement bridge, blog-AI credit ledger, AI quota/billing trail, asset moderation + outbox events; cross-module `sequenceDiagram`s (Social↔Notifications, Platform↔Economy.AiCredits, Assets↔Openinary) |
-| [`05-gaps.md`](05-gaps.md) | 5 KNOWN (cross-referenced to the merged packages' issues #1199–#1226) + 14 NEW gaps with `file:line` (2 candidates withdrawn on verification) |
+| [`05-gaps.md`](05-gaps.md) | 5 KNOWN (cross-referenced to the merged packages' issues #1199–#1226) + 14 NEW gaps with `file:line` (2 candidates withdrawn on verification) — filed as issue **#1250** |
+| [`07-stride-threat-model.md`](07-stride-threat-model.md) | S/T/R/I/D/E for 12 families — Social C1 post lifecycle/moderation truth, C2 feed assembly, C3 group membership/takeover, C4 blog publish, C5 reactions, C6 profile exposure [PII]; Platform P1 asset upload→moderation (malware), P2 jam scoring integrity, P3 project data exfiltration, P4 TestingLab session, P5 AI credit theft — cross-refs every #1250 finding and adds **SP1–SP5** (profile read-side visibility, scan-disabled clean pass, anonymous share/statistics, repost block evasion, NoOp AI billing recorder) |
+| [`08-dfds.md`](08-dfds.md) | L0 context + one L1 per STRIDE family (12); trust boundaries TB1–TB7 explicit (user↔web↔API↔moderation queue↔CDN/assets↔AI provider↔tenant); PII flows marked |
+| [`09-security-architecture.md`](09-security-architecture.md) | component diagram; the moderation pipeline (ModerationClassificationWorker + the TrustSafety disabled truth + SP2/N13 fail-open map); the feed ranking trust boundary (there is none — and why that is the control); who-can-moderate permission map; the CDN token boundary; the AI credit wallet boundary; consolidated fail-open/fail-closed table |
+| [`10-cross-module-sequences.md`](10-cross-module-sequences.md) | Social↔Notifications (announcements bridge), Platform↔Economy (AI credits), Assets↔Openinary (provider, 120 s + retry 3), plus ClamAV and token-delivery seams — timeout inventory and per-call fail-open/fail-closed verdicts per the auth package conventions |
 
 ## Headline findings
 
