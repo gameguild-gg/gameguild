@@ -893,7 +893,7 @@ public class LocalAuthService(
 
         var userId = storedToken.UserId;
         var user = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
-        if (user is null)
+        if (user is null || user.IsDeleted || !user.ValidateForAuthentication(user.TokenVersion).IsSuccess)
         {
             await RecordRefreshRejectionAsync(storedToken, RefreshTokenLifecycleReason.UserUnavailable, cancellationToken).ConfigureAwait(false);
             logger.LogWarning("Rejected refresh token for an unavailable user {UserId}", userId);
