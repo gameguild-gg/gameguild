@@ -276,6 +276,9 @@ public sealed class CertificateEvmOutboxPostgreSqlTests(CertificateEvmOutboxPost
         var course = new Course { Id = Guid.NewGuid(), Title = "Certificate fixture", Slug = "certificate-" + marker, CreatorId = user.Id };
         var tenant = Guid.NewGuid();
         var template = CertificateTemplate.Create(course.Id, "Certificate template", "<div>Certificate fixture</div>", tenant);
+        // The issuance eligibility gate (#1226 N1, merged with #1275) rejects enrollments
+        // that do not exist, so the fixture seeds a completed enrollment owned by the
+        // certificate recipient instead of minting certificates against a random id.
         var enrollment = new ProgramEnrollment
         {
             Id = Guid.NewGuid(),

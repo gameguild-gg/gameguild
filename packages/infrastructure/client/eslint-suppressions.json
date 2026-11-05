@@ -181,11 +181,6 @@
       "count": 2
     }
   },
-  "src/runtime/auth/providers/credentials.ts": {
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    }
-  },
   "src/runtime/auth/providers/discord.ts": {
     "@typescript-eslint/no-unsafe-assignment": {
       "count": 2

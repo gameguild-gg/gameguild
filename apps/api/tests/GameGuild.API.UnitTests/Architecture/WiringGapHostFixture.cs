@@ -22,7 +22,11 @@ namespace GameGuild.API.UnitTests.Architecture;
 ///     production host registers — including modules whose wiring only exists at
 ///     registration time.
 /// </summary>
-public sealed class WiringGapHostFixture : WebApplicationFactory<Program>
+/// <remarks>
+///     Not sealed: <see cref="RouteSmokeHostFixture"/> (guard E9) derives from this
+///     recipe to add a synthetic authentication scheme and stays PG-free the same way.
+/// </remarks>
+public class WiringGapHostFixture : WebApplicationFactory<Program>
 {
     static WiringGapHostFixture() => Core.TestDataProtectionEnvironment.EnsureConfigured();
 
