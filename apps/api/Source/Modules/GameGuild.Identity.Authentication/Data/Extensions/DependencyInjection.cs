@@ -169,6 +169,7 @@ public static class DataDependencyInjection
         services.AddScoped<IServiceAccountRepository, ServiceAccountRepository>();
         services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>();
         services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
+        services.AddHostedService<ApiKeyRotationRevocationBackgroundService>();
 
         // Core authentication services - focused sub-services
         services.AddScoped<IAuthAttemptService, AuthAttemptService>();

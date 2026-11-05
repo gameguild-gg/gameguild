@@ -158,10 +158,12 @@ public sealed class MfaAttemptTrackingService(
 
             // Soft delete or disable
             mfaConfig.IsEnabled = false;
+            mfaConfig.IsSetupComplete = false;
             mfaConfig.UpdatedAt = SystemClock.UtcNow;
             mfaConfig.TotpSecretKey = null;
             mfaConfig.BackupCodes = null;
             mfaConfig.SmsPhoneNumber = null;
+            mfaConfig.EmailMfaAddress = null;
             mfaConfig.PushDeviceToken = null;
             mfaConfig.FailedAttempts = 0;
 

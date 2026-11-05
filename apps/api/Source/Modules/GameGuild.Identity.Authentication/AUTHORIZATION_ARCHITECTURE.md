@@ -264,8 +264,9 @@ The parent retains provider/UI, linking and complete product journey requirement
 
 ## 2026-10-05 unavailable-account token boundary — #262 / #263
 
-Otherwise active refresh issuance requires a user returned by the existing live-user repository,
-before tenant provisioning, token generation or session mutation. Missing/deleted
+Otherwise active refresh issuance requires a user returned by the existing live-user repository
+and acceptance by the same account authentication policy used at sign-in, before tenant
+provisioning, token generation or session mutation. Missing/deleted, inactive and suspended
 accounts receive generic invalid-refresh denial before issuance; revoked/replaced
 replay still commits containment of extant tokens/sessions without inventing a
 profile or version update. Fallback email/version identities
@@ -2100,6 +2101,57 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Elevated-role MFA compliance grace at sign-in (hotfix login-mfa-turnstile)
+
+When a subject's MFA requirement comes only from an elevated role
+(SYSTEMADMIN/ADMIN/TENANTADMIN/OWNER per `MfaSubjectRequirementPolicy`) and the
+subject has no enrolled factor, sign-in issues ordinary credentials instead of
+forcing an enrollment dead-end. The response carries `mfaCompliancePending`
+and the access token carries the `mfa_compliance_pending` claim so the
+frontend can render a persistent compliance banner. The behavior is unchanged
+when the subject has an enrolled factor (the MFA challenge still applies) and
+when `MfaOptions.RequireMfaByDefault` is true (the requirement is then
+default-sourced, not role-only, and the enrollment challenge is forced).
+`ReadSessionProofAsync` mirrors this: an evidence-less refresh session is
+rejected when the subject has since enrolled or the requirement is
+default-sourced, but a role-only requirement with no enrolled factor refreshes
+without a proof. `MfaRequirementDecision` records `RequiredByDefault` so the
+completion re-checks distinguish the two sources.
+
+### Provider outages and abuse budgets (#1271)
+
+The provider boundary classifies availability failures before recording them with
+the reserved `OAuthProviderUnavailableException` failure reason. Failed-attempt
+history, central authentication audit and external-login audit remain recorded.
+External-login audit metadata retains the original exception type for diagnosis;
+exception messages and credentials are not added to that metadata.
+These operational failures do not increment the client enumeration budget or
+enter the failed-credential queries used by brute-force detection and backoff.
+Credential rejections, unknown failures and ambiguous historical HTTP errors
+continue to count. Caller cancellation remains cancellation without a failed
+authentication audit. No account-wide revocation policy is added by this change.
+
+### API-key rotation finalization (#1271)
+
+API-key authentication rejects an expired rotation overlap immediately. A hosted
+worker also persists the revocation independently of credential use: at startup
+and every minute, it processes at most 128 overdue active keys in a fresh scope.
+Future overlap windows, replacement keys and existing manual revocations are left
+unchanged. Store failures retry on the next interval, and host cancellation stops
+both an in-flight batch and the timer wait. The lazy authentication finalizer stays
+available as a fallback.
+
+### Email MFA lifecycle (#1271)
+
+Email challenge delivery and verification require an enabled configuration with an
+enrolled address. Verification reads the current configuration before consuming a
+code; a denied sign-in check leaves pending enrollment codes available for setup. Confirmed
+email enrollment records completed setup. Disabling MFA clears the enrolled email
+address and completed-setup flag along with the other factors, and still revokes
+issued tokens. Previously enabled email enrollments remain usable even when their
+legacy completed-setup flag is false; no data migration or forced reenrollment is
+required by this change.
+
 ### Service-account source restrictions (#1190)
 
 When a service account has an IP allowlist configured, both client-secret and
@@ -2137,7 +2189,7 @@ old failure window before counting a new invalid credential. Manual locks and
 legacy locks without a deadline remain locked until explicitly unlocked; placing
 an administrative hold clears any automatic deadline.
 
-### JWT rotation and sensitive MFA mutations (#1141, #1123, #1153)
+### JWT rotation and sensitive MFA mutations (#1141, #1123, #1153, #1189)
 
 The scoped `IKeyRotationService` and hosted rotation worker are explicitly registered.
 User and service-account JWTs use the active HS256 store key with its `kid`; the
@@ -2157,6 +2209,21 @@ Normal rotation retains the predecessor for at least the configured access-token
 lifetime plus clock skew, covering tokens issued just before a late rotation. The
 cached snapshot is per process; authenticated bearer requests read the shared store
 for cross-process freshness rather than claiming distributed cache invalidation.
+
+Initialization and rotation acquire one global PostgreSQL transaction advisory lock
+before reading the key generation. Initialization rechecks for a live key under that
+lock. Activation and retirement share one tracked save, including the host's audit
+and entity-version hooks. A rotation retires every active predecessor left by an older
+race, preserves live predecessors for the token lifetime plus clock skew, and leaves
+expired keys expired. Generation numbers advance from the greatest stored version.
+Direct callers own a read-committed transaction with the configured execution strategy;
+a stable rotation identifier prevents duplicate generations after an ambiguous commit.
+Failures roll back that transaction and restore tracked state before retrying.
+An existing read-committed caller transaction retains ownership and the lock until
+its commit or rollback. Rotation does not publish that transaction's uncommitted key
+set to the process cache; subsequent validation refreshes from the committed store.
+Other relational providers or caller isolation levels fail closed rather than claim
+the same concurrency guarantee. Non-relational test contexts do not establish it.
 
 Backup-code regeneration and push-device registration require password re-verification
 inside their command handlers. Missing verifiers, passwordless accounts and incorrect

@@ -219,6 +219,7 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
           tenantId: data.tenantId as string | undefined,
           availableTenants: data.availableTenants as Array<{ id: string; name: string }> | undefined,
           rememberMe,
+          ...(data.mfaCompliancePending === true ? { mfaCompliancePending: true } : {}),
           ...(completingMfa && Array.isArray(data.mfaEnrollmentBackupCodes)
             ? { mfaEnrollmentBackupCodes: data.mfaEnrollmentBackupCodes.filter((c): c is string => typeof c === 'string') }
             : {}),

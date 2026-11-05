@@ -23,7 +23,7 @@ public class AuthenticationAttemptRepository(IApplicationDbContext context) : IA
 
     public async Task<List<AuthenticationAttempt>> GetFailedAttemptsAsync(string identifier, DateTime since, CancellationToken cancellationToken = default)
     {
-        return await AuthenticationAttempts.Where(a => (a.Email == identifier.ToLowerInvariant() || a.IpAddress == identifier) && !a.IsSuccessful && a.AttemptedAt >= since)
+        return await AuthenticationAttempts.Where(a => (a.Email == identifier.ToLowerInvariant() || a.IpAddress == identifier) && !a.IsSuccessful && a.FailureReason != nameof(OAuthProviderUnavailableException) && a.AttemptedAt >= since)
             .OrderByDescending(a => a.AttemptedAt)
             .ToListAsync(cancellationToken);
     }
@@ -33,7 +33,7 @@ public class AuthenticationAttemptRepository(IApplicationDbContext context) : IA
     {
         var normalizedEmail = email.ToLowerInvariant();
         return await AuthenticationAttempts
-            .CountAsync(a => a.Email == normalizedEmail && !a.IsSuccessful && a.AttemptedAt >= since, cancellationToken)
+            .CountAsync(a => a.Email == normalizedEmail && !a.IsSuccessful && a.FailureReason != nameof(OAuthProviderUnavailableException) && a.AttemptedAt >= since, cancellationToken)
             .ConfigureAwait(false);
     }
 

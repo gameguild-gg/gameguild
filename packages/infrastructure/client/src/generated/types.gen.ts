@@ -14213,6 +14213,10 @@ identity provider for this sign-in. Null for non-federated flows. */
   expiresIn?: number;
   /** Response message */
   message?: string | null;
+  /** True when the subject's MFA requirement comes only from an elevated role and sign-in
+completed without a second factor because no factor is enrolled. Compliance is
+enforced via a persistent UI banner instead of blocking sign-in. */
+  mfaCompliancePending?: boolean;
   mfaEnrollment?: IdentityAuthenticationSignInMfaEnrollmentOffer;
   /** Recovery codes returned once, only when a limited enrollment finishes with verified TOTP. */
   mfaEnrollmentBackupCodes?: string[] | null;
@@ -43408,6 +43412,7 @@ IdentityAuthenticationSignInOutputSchema = z.object({
   expiresAt: z.string().datetime({ offset: true }).optional(),
   expiresIn: z.number().int().optional(),
   message: z.string().nullable().optional(),
+  mfaCompliancePending: z.boolean().optional(),
   mfaEnrollment: z.lazy(() => IdentityAuthenticationSignInMfaEnrollmentOfferSchema).optional(),
   mfaEnrollmentBackupCodes: z.array(z.string()).nullable().optional(),
   mfaSessionId: z.string().nullable().optional(),
