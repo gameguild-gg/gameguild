@@ -7,6 +7,15 @@ import { getPublicPlaytests } from '@/lib/community/public-community-queries';
 import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import { AlertTriangle, ArrowRight, BookOpen, FlaskConical } from 'lucide-react';
 
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata = buildPageMetadata({
+  path: '/courses',
+  title: 'Courses — GameGuild',
+  description: 'GameGuild courses are organized into focused production packages: programming foundations, AI systems, launch operations, portfolio presentation, and data-informed game decisions.',
+  twitterLargeCard: true,
+});
+
 export default async function CoursesPage() {
   const [catalog, playtests] = await Promise.all([getPublicCourseCatalog(), getPublicPlaytests(1)]);
 

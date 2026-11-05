@@ -11,9 +11,10 @@ using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using CompletionStatus = GameGuild.Learning.Courses.CompletionStatus;
 using Course = GameGuild.Learning.Courses.Program;
-using LearningCompletionStatus = GameGuild.Learning.Courses.CompletionStatus;
-using LearningProgramEnrollment = GameGuild.Learning.Courses.ProgramEnrollment;
+using EnrollmentStatus = GameGuild.Learning.Courses.EnrollmentStatus;
+using ProgramEnrollment = GameGuild.Learning.Courses.ProgramEnrollment;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -278,10 +279,14 @@ public sealed class CertificateEvmOutboxPostgreSqlTests(CertificateEvmOutboxPost
         // The issuance eligibility gate (#1226 N1, merged with #1275) rejects enrollments
         // that do not exist, so the fixture seeds a completed enrollment owned by the
         // certificate recipient instead of minting certificates against a random id.
-        var enrollment = new LearningProgramEnrollment
+        var enrollment = new ProgramEnrollment
         {
-            Id = Guid.NewGuid(), UserId = user.Id, ProgramId = course.Id,
-            CompletionStatus = LearningCompletionStatus.Completed,
+            Id = Guid.NewGuid(),
+            ProgramId = course.Id,
+            UserId = user.Id,
+            EnrollmentStatus = EnrollmentStatus.Active,
+            CompletionStatus = CompletionStatus.Completed,
+            TenantId = tenant,
         };
         context.AddRange(user, course, template, enrollment); await context.SaveChangesAsync(Ct);
         return (template.Id, enrollment.Id, user.Id, course.Id, tenant);

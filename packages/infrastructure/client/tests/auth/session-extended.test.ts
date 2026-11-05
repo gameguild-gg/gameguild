@@ -123,6 +123,82 @@ describe('processSession', () => {
     expect(result.updated).toBe(false);
   });
 
+  it('skips refresh for a near-expiry token when rotation cannot be persisted', async () => {
+    vi.mocked(decodeJWT).mockResolvedValueOnce({
+      user: { id: 'synthetic-owner' }, accessToken: 'synthetic-access', refreshToken: 'synthetic-refresh',
+      accessTokenExpires: Date.now() + 15_000, exp: Math.floor(Date.now() / 1000) + 3600,
+    });
+    const fetchMock = vi.spyOn(global, 'fetch');
+    try {
+      const result = await processSession('synthetic-near-expiry', makeConfig(), { allowRefresh: false });
+      expect(result.session?.user.id).toBe('synthetic-owner');
+      expect(result.token?.accessToken).toBe('synthetic-access');
+      expect(result.updated).toBe(false);
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it('probes lazy allowRefresh only when a refresh is due', async () => {
+    vi.mocked(decodeJWT).mockResolvedValueOnce({
+      user: { id: 'synthetic-owner' }, accessToken: 'synthetic-access', refreshToken: 'synthetic-refresh',
+      accessTokenExpires: Date.now() + 15_000, exp: Math.floor(Date.now() / 1000) + 3600,
+    });
+    const fetchMock = vi.spyOn(global, 'fetch');
+    const probe = vi.fn(() => false);
+    try {
+      const result = await processSession('synthetic-near-expiry', makeConfig(), { allowRefresh: probe });
+      expect(probe).toHaveBeenCalledTimes(1);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(result.session?.user.id).toBe('synthetic-owner');
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it('does not probe allowRefresh when the access token is still fresh', async () => {
+    const probe = vi.fn(() => true);
+    const result = await processSession('valid-encrypted', makeConfig(), { allowRefresh: probe });
+    expect(probe).not.toHaveBeenCalled();
+    expect(result.session?.user.id).toBe('1');
+  });
+
+  it('fails closed for an expired access token when rotation is blocked by a boolean', async () => {
+    vi.mocked(decodeJWT).mockResolvedValueOnce({
+      user: { id: 'synthetic-owner' }, accessToken: 'synthetic-access', refreshToken: 'synthetic-refresh',
+      accessTokenExpires: Date.now() - 1_000, exp: Math.floor(Date.now() / 1000) + 3600,
+    });
+    const fetchMock = vi.spyOn(global, 'fetch');
+    try {
+      const result = await processSession('synthetic-expired', makeConfig(), { allowRefresh: false });
+      expect(result.session).toBeNull();
+      expect(result.token).toBeNull();
+      expect(result.updated).toBe(false);
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  it('fails closed for an expired access token when rotation is blocked by a callback', async () => {
+    vi.mocked(decodeJWT).mockResolvedValueOnce({
+      user: { id: 'synthetic-owner' }, accessToken: 'synthetic-access', refreshToken: 'synthetic-refresh',
+      accessTokenExpires: Date.now() - 1_000, exp: Math.floor(Date.now() / 1000) + 3600,
+    });
+    const fetchMock = vi.spyOn(global, 'fetch');
+    const probe = vi.fn(() => false);
+    try {
+      const result = await processSession('synthetic-expired', makeConfig(), { allowRefresh: probe });
+      expect(probe).toHaveBeenCalledTimes(1);
+      expect(result.session).toBeNull();
+      expect(result.token).toBeNull();
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
   it('should return null session for invalid token', async () => {
     const result = await processSession('invalid-token', makeConfig());
 
