@@ -45,7 +45,16 @@ public class EntityNotFoundException : DomainException
     public Guid EntityId { get; }
 
     public EntityNotFoundException(string entityType, Guid entityId)
-        : base($"{entityType} with ID {entityId} was not found")
+        : this(entityType, entityId, $"{entityType} with ID {entityId} was not found")
+    {
+    }
+
+    /// <summary>
+    ///     Allows a precise message when the lookup key is not the entity ID itself
+    ///     (e.g. "wallet for user {userId}") while keeping the 404 mapping.
+    /// </summary>
+    public EntityNotFoundException(string entityType, Guid entityId, string message)
+        : base(message)
     {
         EntityType = entityType;
         EntityId = entityId;

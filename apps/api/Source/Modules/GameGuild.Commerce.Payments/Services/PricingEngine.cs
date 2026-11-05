@@ -58,7 +58,7 @@ public sealed class PricingEngine(
 
             if (planPrice is null)
             {
-                throw new InvalidOperationException($"Subscription plan {request.PlanId} not found or has no pricing.");
+                throw new EntityNotFoundException("SubscriptionPlan", request.PlanId.Value);
             }
 
             baseAmount = planPrice.Amount;
