@@ -12,6 +12,7 @@
  *   POST /api/auth/signup   — Sign up (credentials only)
  *   POST /api/auth/signout  — Sign out
  *   POST /api/auth/session  — Update session
+ *   POST /api/auth/mfa/enrollment — Start authenticator (TOTP) enrollment for the signed-in session
  *   GET  /api/auth/callback/:provider — OAuth callback
  */
 
@@ -22,6 +23,8 @@ import { createCSRFToken, validateCSRFToken } from '../../runtime/auth/csrf';
 import { decodeJWT } from '../../runtime/auth/jwt';
 import { resolveAuthPermissions, resolveAuthRoles } from '../../runtime/auth/claims';
 import { AuthError, CredentialsSignInError, ProviderNotFoundError, CSRFError, SignUpError, AuthServiceUnavailableError } from '../../runtime/auth/errors';
+import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen';
+import { createServerClient } from '../../server';
 import { type OAuthProviderWithMethods, getOAuthExchangeToken, getOAuthAuthorizeUrl, getOAuthHandleCallback } from './oauth-helpers';
 import {
   STATE_COOKIE_MAX_AGE,
@@ -335,7 +338,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
           return await handleSignUp(body, responseCookies);
         case 'mfa':
           if (providerId !== 'enrollment') return buildResponse({ error: 'Unknown action' }, 404, responseCookies);
-          return await handleMfaEnrollment(body, responseCookies);
+          return await handleMfaEnrollment(cookies, responseCookies);
         case 'signout':
           return await handleSignOut(cookies, responseCookies);
         case 'session':
@@ -354,32 +357,44 @@ export function createHandlers(config: ResolvedAuthConfig) {
 
   // ─── Handler Implementations (inside closure — access buildResponse) ───
 
-  async function handleMfaEnrollment(body: Record<string, unknown>, responseCookies: ResponseCookies): Promise<Response> {
-    const { mfaToken } = body;
-    if (typeof mfaToken !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(mfaToken)) {
-      throw new AuthError('A valid MFA challenge is required', { type: 'MfaEnrollment', status: 400 });
-    }
-    let response: Response;
-    try {
-      response = await fetch(`${config.apiUrl}/v1/auth/mfa/sign-in/enrollment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mfaToken }),
+  async function handleMfaEnrollment(cookies: Map<string, string>, responseCookies: ResponseCookies): Promise<Response> {
+    // The API removed the challenge-based enrollment route with the sign-in-flow
+    // redesign (#838): enrollment is a settings-time operation on the caller's
+    // authenticated session, served by POST /v1/auth/mfa/totp:setup. Issue #1217
+    // (F1): call that real endpoint through the generated client instead of the
+    // unserved /v1/auth/mfa/sign-in/enrollment route.
+    const encryptedToken = sessionStore.read((name) => cookies.get(name));
+    const session = encryptedToken ? await decodeJWT({ token: encryptedToken, secret: config.secret }) : null;
+    const accessToken = session?.accessToken;
+    if (typeof accessToken !== 'string' || !accessToken) {
+      throw new AuthError('Sign in before starting authenticator setup. MFA enrollment lives in account settings.', {
+        type: 'MfaEnrollment',
+        status: 401,
       });
+    }
+
+    const api = createServerClient({
+      baseUrl: config.apiUrl,
+      auth: { getAccessToken: () => Promise.resolve(accessToken) },
+    });
+    let result: Awaited<ReturnType<AuthMultiFactorModule['postAuthMfaTotpSetup']>>;
+    try {
+      result = await new AuthMultiFactorModule(api).postAuthMfaTotpSetup();
     } catch {
       throw new AuthServiceUnavailableError();
     }
-    if (!response.ok) {
-      if (response.status >= 500) throw new AuthServiceUnavailableError();
+    if (!result.ok) {
+      const status = result.error.status ?? 500;
+      if (status >= 500) throw new AuthServiceUnavailableError();
       throw new AuthError('Unable to start authenticator setup. Sign in again if the challenge has expired.', {
         type: 'MfaEnrollment',
-        status: [400, 401, 403, 409, 423, 429].includes(response.status) ? response.status : 401,
+        status: [400, 401, 403, 409, 423, 429].includes(status) ? status : 401,
       });
     }
-    const data = (await response.json()) as Record<string, unknown>;
+    const data = result.data;
     if (
-      data.success !== true ||
-      typeof data.secretKey !== 'string' ||
+      data?.isSuccess === false ||
+      typeof data?.secretKey !== 'string' ||
       !data.secretKey ||
       typeof data.qrCodeUri !== 'string' ||
       !data.qrCodeUri.startsWith('otpauth://totp/') ||
