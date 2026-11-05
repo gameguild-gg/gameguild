@@ -2172,7 +2172,7 @@ old failure window before counting a new invalid credential. Manual locks and
 legacy locks without a deadline remain locked until explicitly unlocked; placing
 an administrative hold clears any automatic deadline.
 
-### JWT rotation and sensitive MFA mutations (#1141, #1123, #1153)
+### JWT rotation and sensitive MFA mutations (#1141, #1123, #1153, #1189)
 
 The scoped `IKeyRotationService` and hosted rotation worker are explicitly registered.
 User and service-account JWTs use the active HS256 store key with its `kid`; the
@@ -2192,6 +2192,21 @@ Normal rotation retains the predecessor for at least the configured access-token
 lifetime plus clock skew, covering tokens issued just before a late rotation. The
 cached snapshot is per process; authenticated bearer requests read the shared store
 for cross-process freshness rather than claiming distributed cache invalidation.
+
+Initialization and rotation acquire one global PostgreSQL transaction advisory lock
+before reading the key generation. Initialization rechecks for a live key under that
+lock. Activation and retirement share one tracked save, including the host's audit
+and entity-version hooks. A rotation retires every active predecessor left by an older
+race, preserves live predecessors for the token lifetime plus clock skew, and leaves
+expired keys expired. Generation numbers advance from the greatest stored version.
+Direct callers own a read-committed transaction with the configured execution strategy;
+a stable rotation identifier prevents duplicate generations after an ambiguous commit.
+Failures roll back that transaction and restore tracked state before retrying.
+An existing read-committed caller transaction retains ownership and the lock until
+its commit or rollback. Rotation does not publish that transaction's uncommitted key
+set to the process cache; subsequent validation refreshes from the committed store.
+Other relational providers or caller isolation levels fail closed rather than claim
+the same concurrency guarantee. Non-relational test contexts do not establish it.
 
 Backup-code regeneration and push-device registration require password re-verification
 inside their command handlers. Missing verifiers, passwordless accounts and incorrect
