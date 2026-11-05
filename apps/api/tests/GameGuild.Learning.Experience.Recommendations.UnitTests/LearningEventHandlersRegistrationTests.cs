@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Learning;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -26,12 +27,15 @@ public class LearningEventHandlersRegistrationTests
     {
         var services = new ServiceCollection();
 
-        // The central AddCqrs scan registers the handlers but not their module
-        // dependencies; the product composition supplies those from the host. The
-        // registration pin only needs constructible doubles to resolve each handler.
+        // AddCqrs only registers the mediator and the scanned handlers — the host is
+        // expected to supply their dependencies. Register the minimal stubs so the
+        // resolution below proves the REGISTRATION without failing on construction
+        // (IApplicationDbContext for six handlers, IRecommendationEngine for the
+        // progress-milestone refresher, ILogger<T> for all of them).
         services.AddScoped<IApplicationDbContext>(_ => Mock.Of<IApplicationDbContext>());
         services.AddScoped<IRecommendationEngine>(_ => Mock.Of<IRecommendationEngine>());
-        services.AddScoped(typeof(Microsoft.Extensions.Logging.ILogger<>), typeof(Microsoft.Extensions.Logging.Abstractions.NullLogger<>));
+        services.AddScoped(typeof(Microsoft.Extensions.Logging.ILogger<>), typeof(NullLogger<>));
+
         services.AddCqrs(typeof(CourseCompletedLearningProfileHandler).Assembly);
 
         using var provider = services.BuildServiceProvider();

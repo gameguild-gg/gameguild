@@ -1,16 +1,19 @@
 using FluentAssertions;
 using GameGuild.Identity.Users;
 using GameGuild.Learning.Abstractions;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
 using LearningProgram = GameGuild.Learning.Courses.Program;
-using LearningCompletionStatus = GameGuild.Learning.Courses.CompletionStatus;
 using LearningProgramEnrollment = GameGuild.Learning.Courses.ProgramEnrollment;
+using CompletionStatus = GameGuild.Learning.Courses.CompletionStatus;
+using EnrollmentStatus = GameGuild.Learning.Courses.EnrollmentStatus;
 
 namespace GameGuild.Learning.Certificates.Tests;
 
@@ -189,20 +192,21 @@ public class CertificateAnchoringTests
         CertificateService service,
         CertificateAnchoringDbContext context)
     {
-        var courseId = Guid.NewGuid();
         var userId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
         var template = CertificateTemplate.Create(courseId, "Completion", "<html />");
-        context.Set<CertificateTemplate>().Add(template);
-        // The issuance eligibility gate (#1226 N1, merged with #1275) rejects enrollments
-        // that do not exist, do not belong to the recipient or are not completed, so the
-        // fixture seeds a completed enrollment instead of minting against a random id.
+        // The #1226 issuance eligibility gate requires a real, completed enrollment that
+        // belongs to the recipient and the course — seed one instead of random ids
+        // (same fix as the EVM fixtures in PR #1302).
         var enrollment = new LearningProgramEnrollment
         {
             Id = Guid.NewGuid(),
-            UserId = userId,
             ProgramId = courseId,
-            CompletionStatus = LearningCompletionStatus.Completed,
+            UserId = userId,
+            EnrollmentStatus = EnrollmentStatus.Active,
+            CompletionStatus = CompletionStatus.Completed,
         };
+        context.Set<CertificateTemplate>().Add(template);
         context.Set<LearningProgramEnrollment>().Add(enrollment);
         context.SaveChanges();
 
@@ -286,9 +290,23 @@ public class CertificateAnchoringTests
                 program.Ignore(entity => entity.ProgramRatings);
                 program.Ignore(entity => entity.ProgramWishlists);
             });
-            // The eligibility gate resolves ProgramEnrollment through IApplicationDbContext,
-            // so the in-memory anchoring fixture carries the enrollment shape as well.
-            modelBuilder.Entity<LearningProgramEnrollment>(enrollment => enrollment.HasKey(entity => entity.Id));
+            // The eligibility gate queries Set<ProgramEnrollment>() on every issuance,
+            // so the enrollment must be part of this InMemory model. PercentValue is a
+            // readonly struct with a private constructor: conventions cannot map it, so
+            // mirror the converters CoursesModelConfiguration applies in the real model.
+            modelBuilder.Entity<LearningProgramEnrollment>(enrollment =>
+            {
+                enrollment.HasKey(entity => entity.Id);
+                enrollment.Property(entity => entity.ProgressPercentage).HasConversion(PercentConverter);
+                enrollment.Property(entity => entity.FinalGrade).HasConversion(NullablePercentConverter);
+            });
         }
+
+        private static readonly ValueConverter<PercentValue, int> PercentConverter =
+            new(value => value.Units, value => PercentValue.FromUnits(value));
+
+        private static readonly ValueConverter<PercentValue?, int?> NullablePercentConverter =
+            new(value => value.HasValue ? value.Value.Units : null,
+                value => value == null ? null : PercentValue.FromUnits(value.Value));
     }
 }
