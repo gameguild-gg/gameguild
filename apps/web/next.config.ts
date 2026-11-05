@@ -102,7 +102,23 @@ const nextConfig: NextConfig = {
             "@game-guild/client":
               "../../packages/infrastructure/client/dist-fast/index.js",
           }
-        : {}),
+        : {
+            // Runtime resolves the built client regardless of tsconfig
+            // "paths" (which point at package source so tsc/typed-lint
+            // avoid the rollup-plugin-dts mangling in the bundled d.ts).
+            "@game-guild/client/react": path.resolve(
+              __dirname,
+              "../../packages/infrastructure/client/dist/react.js",
+            ),
+            "@game-guild/client/next": path.resolve(
+              __dirname,
+              "../../packages/infrastructure/client/dist/next.js",
+            ),
+            "@game-guild/client": path.resolve(
+              __dirname,
+              "../../packages/infrastructure/client/dist/index.js",
+            ),
+          }),
       module: {
         browser: "./src/lib/browser-node-module-stub.ts",
       },
