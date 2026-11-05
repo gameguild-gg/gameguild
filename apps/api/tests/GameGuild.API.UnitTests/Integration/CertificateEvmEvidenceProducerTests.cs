@@ -13,7 +13,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using LearningCompletionStatus = GameGuild.Learning.Courses.CompletionStatus;
 using LearningProgramEnrollment = GameGuild.Learning.Courses.ProgramEnrollment;
 
 namespace GameGuild.API.UnitTests.Integration;
@@ -135,8 +134,12 @@ public sealed class CertificateEvmEvidenceProducerTests
         // enrollment to exist and be completed before composition may mint a certificate.
         var enrollment = new LearningProgramEnrollment
         {
-            Id = Guid.NewGuid(), UserId = user.Id, ProgramId = template.CourseId,
-            CompletionStatus = LearningCompletionStatus.Completed,
+            Id = Guid.NewGuid(),
+            ProgramId = template.CourseId,
+            UserId = user.Id,
+            EnrollmentStatus = GameGuild.Learning.Courses.EnrollmentStatus.Active,
+            CompletionStatus = GameGuild.Learning.Courses.CompletionStatus.Completed,
+            TenantId = null,
         };
         context.AddRange(user, template, enrollment); await context.SaveChangesAsync();
         var actors = new Mock<IActorContextAccessor>(); actors.SetupGet(a => a.ActorContext).Returns(ActorContext.Anonymous);

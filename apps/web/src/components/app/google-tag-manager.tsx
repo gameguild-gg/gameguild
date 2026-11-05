@@ -1,7 +1,9 @@
 'use client';
 
+import { ensureConsentDefaults, pushConsentUpdate, type ConsentWindow } from '@/lib/consent/consent-mode';
+import { DENIED_CONSENT, subscribeConsent } from '@/lib/consent/store';
 import Script from 'next/script';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Window shape expected by the standard Google Tag Manager container snippet.
@@ -17,39 +19,44 @@ export interface GoogleTagManagerProps {
    * GTM container id (for example `GTM-XXXXXXX`). When missing or blank the
    * component is a complete no-op: it renders nothing, never touches
    * `window.dataLayer`, and injects no scripts. This keeps development and
-   * undeployed environments free of any GTM/GA signature.
+   * undeployed environments free of any GTM signature.
    */
   readonly containerId?: string;
-  /**
-   * Analytics-cookie consent read from the user's privacy settings (the
-   * `#privacy-analytics-cookies` switch). The loader stays dormant until
-   * consent is granted.
-   */
-  readonly consent?: boolean;
 }
 
 /**
- * Consent-gated Google Tag Manager container loader.
+ * Google Consent Mode v2 gated Google Tag Manager container loader.
  *
- * Renders the standard GTM pair — a `gtm.js` script loader plus the
- * `<noscript>` iframe fallback — and initializes `window.dataLayer` with the
- * `gtm.start` event, matching Google's documented embed. The component only
- * mounts when both a container id is configured and the user granted
- * analytics-cookie consent; consent is evaluated per server render, so
- * turning the switch off removes the container from the next page load.
+ * Installs the denied-by-default consent command before any GTM code runs.
+ * The container transport (`gtm.js` + `<noscript>` iframe) only mounts once
+ * a granted consent purpose exists (analytics or marketing); a revocation
+ * pushes a `denied` consent update so the container stops processing.
  */
-export function GoogleTagManager({ containerId: rawContainerId, consent = false }: GoogleTagManagerProps) {
+export function GoogleTagManager({ containerId: rawContainerId }: GoogleTagManagerProps) {
   const containerId = rawContainerId?.trim() || undefined;
-  const enabled = Boolean(containerId) && consent;
+  const [transportReady, setTransportReady] = useState(false);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!containerId) return;
 
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-  }, [enabled]);
+    const w = window as ConsentWindow;
+    ensureConsentDefaults(w);
 
-  if (!enabled) return null;
+    let started = false;
+    return subscribeConsent((state) => {
+      // null (missing/invalid/cleared record) is a denial — fail closed so a
+      // started container never keeps its previous grant.
+      const effective = state ?? DENIED_CONSENT;
+      pushConsentUpdate(w, effective);
+      if ((effective.analytics || effective.marketing) && !started) {
+        started = true;
+        w.dataLayer!.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        setTransportReady(true);
+      }
+    });
+  }, [containerId]);
+
+  if (!containerId || !transportReady) return null;
 
   return (
     <>
