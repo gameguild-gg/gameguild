@@ -260,7 +260,6 @@ E9|POST /v1/auth/account-recovery/approve-passkey:begin|anon # NEW gap found by 
 E9|POST /v1/auth/account-recovery/approve-passkey:begin|authed # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: auth flows 500 on empty smoke payload (missing required context not mapped to 4xx)
 E9|POST /v1/auth/guest-session|anon # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: auth flows 500 on empty smoke payload (missing required context not mapped to 4xx)
 E9|POST /v1/auth/guest-session|authed # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: auth flows 500 on empty smoke payload (missing required context not mapped to 4xx)
-E9|POST /v1/auth/mfa/backup-codes:regenerate|authed # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: auth flows 500 on empty smoke payload (missing required context not mapped to 4xx)
 E9|POST /v1/auth/mfa/totp:setup|authed # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: auth flows 500 on empty smoke payload (missing required context not mapped to 4xx)
 E9|POST /v1/auth/saml/1:sign-in-authorize|anon # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: external IdP (SAML/OIDC) endpoints answer 503 with no provider configured - designed degradation, not a wiring gap
 E9|POST /v1/auth/saml/1:sign-in-authorize|authed # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: external IdP (SAML/OIDC) endpoints answer 503 with no provider configured - designed degradation, not a wiring gap
