@@ -101,8 +101,8 @@ public sealed class JwtSigningKeyConcurrencyPostgreSqlTests(JwtKeyConcurrencyFix
         var cache = new JwtSigningKeyCache();
         await using (var seed = new JwtConcurrencyContext(Options)) { await Service(seed, cache).InitializeAsync(_deadline.Token); }
         var before = (await Persisted()).Single();
-        await using var failing = new JwtConcurrencyContext(Options, () => throw new JwtConcurrencyWriteFailure());
-        await Assert.ThrowsAsync<JwtConcurrencyWriteFailure>(
+        await using var failing = new JwtConcurrencyContext(Options, () => throw new JwtConcurrencyWriteFailureException());
+        await Assert.ThrowsAsync<JwtConcurrencyWriteFailureException>(
             () => Service(failing, cache).RotateKeyAsync(cancellationToken: _deadline.Token));
         var after = await Persisted();
         var fallback = new SymmetricSecurityKey(RandomNumberGenerator.GetBytes(64)) { KeyId = "synthetic-fallback" };
@@ -217,7 +217,7 @@ public sealed class JwtSigningKeyConcurrencyPostgreSqlTests(JwtKeyConcurrencyFix
     }
 }
 
-sealed class JwtConcurrencyWriteFailure : Exception;
+sealed class JwtConcurrencyWriteFailureException : Exception;
 sealed class JwtConcurrencyCommitFailure : DbTransactionInterceptor
 {
     public int Injections { get; private set; }
