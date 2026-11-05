@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom/vitest';
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CONSENT_STATE_VERSION, CONSENT_STORAGE_KEY } from '@/lib/consent/state';
+import { saveConsent, CONSENT_STORAGE_KEY, CONSENT_STATE_VERSION } from '@/lib/consent/store';
 
 const scriptRenders: Array<Record<string, unknown>> = [];
 
@@ -126,5 +126,50 @@ describe('GoogleTagManager (consent mode v2)', () => {
     const layer = dataLayer()!;
     expect(layer[0]).toMatchObject({ event: 'existing' });
     expect(layer.some((entry) => entry['event'] === 'gtm.js')).toBe(true);
+  });
+
+  it('unmounts the container transport when consent is revoked', () => {
+    persistConsent(true);
+    const { container } = render(<GoogleTagManager containerId="GTM-TESTID" />);
+    expect(container.querySelector('noscript')).not.toBeNull();
+    expect(scriptRenders.length).toBeGreaterThan(0);
+
+    // Simulate an injected loader element, as next/script would create in a browser.
+    const loader = document.createElement('script');
+    loader.id = 'gg-gtm-loader';
+    document.body.appendChild(loader);
+
+    act(() => {
+      saveConsent({ analytics: false, marketing: false });
+    });
+
+    expect(container).toBeEmptyDOMElement();
+    expect(document.getElementById('gg-gtm-loader')).toBeNull();
+    const update = dataLayer()!.filter((entry) => Array.isArray(entry) && entry[1] === 'update').pop();
+    expect(update).toEqual([
+      'consent',
+      'update',
+      { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' },
+    ]);
+  });
+
+  it('remounts on re-grant without duplicating gtm.start', () => {
+    persistConsent(true);
+    const { container } = render(<GoogleTagManager containerId="GTM-TESTID" />);
+    expect(container.querySelector('noscript')).not.toBeNull();
+
+    act(() => {
+      saveConsent({ analytics: false, marketing: false });
+    });
+    expect(container).toBeEmptyDOMElement();
+
+    act(() => {
+      saveConsent({ analytics: true, marketing: false });
+    });
+
+    expect(container.querySelector('noscript')).not.toBeNull();
+    const layer = dataLayer()!;
+    const startEntries = layer.filter((entry) => entry['event'] === 'gtm.js' && typeof entry['gtm.start'] === 'number');
+    expect(startEntries).toHaveLength(1);
   });
 });
