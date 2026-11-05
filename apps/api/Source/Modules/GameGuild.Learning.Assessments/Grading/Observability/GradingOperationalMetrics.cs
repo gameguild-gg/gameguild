@@ -25,6 +25,11 @@ public static class GradingOperationalMetrics
         "deliveries",
         "Academic outbox deliveries scheduled for retry after a technical failure.");
 
+    private static readonly Counter<long> OutboxDeadLettered = Meter.CreateCounter<long>(
+        "gameguild_grading_outbox_deliveries_dead_lettered_total",
+        "deliveries",
+        "Academic outbox deliveries moved to the terminal dead-letter state after exhausting the attempt ceiling.");
+
     private static readonly Counter<long> DeadlineResumes = Meter.CreateCounter<long>(
         "gameguild_grading_deadline_resumes_total",
         "executions",
@@ -47,6 +52,11 @@ public static class GradingOperationalMetrics
 
     public static void RecordOutboxFailure(string eventType, string consumerKey) =>
         OutboxFailed.Add(1, Tags(
+            ("grading.event_type", eventType),
+            ("grading.consumer_key", consumerKey)));
+
+    public static void RecordOutboxDeadLettered(string eventType, string consumerKey) =>
+        OutboxDeadLettered.Add(1, Tags(
             ("grading.event_type", eventType),
             ("grading.consumer_key", consumerKey)));
 

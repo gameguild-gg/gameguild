@@ -8,8 +8,8 @@ namespace GameGuild.Notifications.Services.WhatsApp;
 /// <summary>
 ///     Host wrapper for <see cref="WhatsAppDispatcherService"/> (issue #54): scope-per-pass
 ///     loop honoring Interval, logging exceptions without crashing, first sweep delayed so
-///     startup is never blocked. Dormant (single cheap sweep per interval) while the
-///     channel is unconfigured because no WhatsApp rows are queued in that state.
+///     startup is never blocked. Exits immediately while the channel is unconfigured — a
+///     disabled channel must not poll the database (issue #1218 G6).
 /// </summary>
 public sealed class WhatsAppDispatcherBackgroundService(
     IServiceProvider serviceProvider,
@@ -24,6 +24,7 @@ public sealed class WhatsAppDispatcherBackgroundService(
         if (!settings.Value.Enabled)
         {
             logger.LogInformation("WhatsAppDispatcherBackgroundService is dormant because WhatsApp delivery is disabled (no provider configured)");
+            return;
         }
 
         logger.LogInformation("WhatsAppDispatcherBackgroundService started");

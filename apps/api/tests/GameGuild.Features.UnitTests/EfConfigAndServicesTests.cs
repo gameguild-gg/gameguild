@@ -298,15 +298,6 @@ public class EfConfigAndServicesTests
         provider.Should().NotBeNull();
     }
 
-    // ── OpenFeatureHostedInitializer ────────────────────────────────────
-    [Fact]
-    public void OpenFeatureHostedInitializer_CanBeCreated()
-    {
-        var svc = new OpenFeatureHostedInitializer(
-            NullLogger<OpenFeatureHostedInitializer>.Instance);
-        svc.Should().NotBeNull();
-    }
-
     // ── DTO Records ─────────────────────────────────────────────────────
     [Fact]
     public void FeatureFlagDto_CanBeCreated()

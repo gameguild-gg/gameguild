@@ -228,5 +228,9 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
         // expiry dates and manual whitelist overrides, evaluated as a payment fraud signal
         // and administered through the fraud/blacklist endpoints.
         modelBuilder.ApplyConfiguration(new FraudBlacklistEntryConfiguration());
+        // Durable background fraud re-scoring queue (issue #1218 G3): persisted deferred
+        // jobs swept by FraudBackgroundScoringHostedService — replaces the volatile
+        // in-memory channel that lost jobs on restart.
+        modelBuilder.ApplyConfiguration(new FraudBackgroundScoringJobConfiguration());
     }
 }
