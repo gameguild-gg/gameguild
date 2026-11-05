@@ -242,6 +242,80 @@ public class OAuthAuthServiceTests
             Times.Once);
     }
 
+    // ── (2b) Mixed-case provider email → normalized match, no duplicate (issue #1118) ──
+
+    [Fact]
+    public async Task GoogleIdTokenSignInAsync_MixedCaseEmail_MatchesLowercaseAccount_NoDuplicate()
+    {
+        // Account was created with the lowercase form; Google now returns mixed case.
+        var existingUser = User.CreateWithPassword(
+            "user@gmail.com",
+            "existing",
+            BCrypt.Net.BCrypt.HashPassword("irrelevant"));
+
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ExternalLogin?)null);
+        // The repository must be queried with the normalized address, exactly like the
+        // sign-up and recovery paths; a raw-case lookup would miss the stored row.
+        _userRepoMock.Setup(x => x.GetByEmailAsync("user@gmail.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+
+        _googleVerifierMock
+            .Setup(x => x.VerifyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new VerifiedGoogleUser
+            {
+                Sub = "google-sub-mixed-case",
+                Email = "User@Gmail.com",
+                EmailVerified = true,
+                Name = "Now Linked"
+            });
+
+        var result = await CreateSut().GoogleIdTokenSignInAsync(Request());
+
+        result.UserId.Should().Be(existingUser.Id);
+
+        _userRepoMock.Verify(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+        _userRepoMock.Verify(x => x.GetByEmailAsync("User@Gmail.com", It.IsAny<CancellationToken>()), Times.Never);
+        _externalLoginRepoMock.Verify(
+            x => x.UpsertAsync(It.Is<ExternalLogin>(e => e.UserId == existingUser.Id && e.ProviderKey == "google-sub-mixed-case"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    // ── (2c) Mixed-case provider email, no account → provisioned lowercase ──
+
+    [Fact]
+    public async Task GoogleIdTokenSignInAsync_MixedCaseEmail_NewAccount_StoredLowercase()
+    {
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ExternalLogin?)null);
+        _userRepoMock.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        _googleVerifierMock
+            .Setup(x => x.VerifyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new VerifiedGoogleUser
+            {
+                Sub = "google-sub-new-mixed",
+                Email = "New.User@GMail.com",
+                EmailVerified = true,
+                Name = "New User"
+            });
+
+        User? provisioned = null;
+        _userRepoMock
+            .Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Callback<User, CancellationToken>((user, _) => provisioned = user)
+            .Returns(Task.CompletedTask);
+
+        var result = await CreateSut().GoogleIdTokenSignInAsync(Request());
+
+        result.Success.Should().BeTrue();
+        provisioned.Should().NotBeNull();
+        provisioned!.Email.Should().Be("new.user@gmail.com");
+    }
+
     // ── (3) Unverified email match → reject, no link ────────────────────────
 
     [Fact]
@@ -896,6 +970,98 @@ public class OAuthAuthServiceTests
         result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(60), TimeSpan.FromSeconds(5));
         result.ExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddDays(7), TimeSpan.FromSeconds(5));
         result.RefreshTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddDays(7), TimeSpan.FromSeconds(5));
+    }
+
+    // ── Issue #1116: provider downtime must surface as a typed outage, not a bare 401 ──
+
+    [Fact]
+    public async Task GitHubSignInAsync_ProviderUnreachable_ThrowsOAuthProviderUnavailable()
+    {
+        _oauthServiceMock
+            .Setup(x => x.GetUserProfileAsync("github", It.IsAny<string>()))
+            .ThrowsAsync(new HttpRequestException("connection refused"));
+
+        var act = () => CreateSut().GitHubSignInAsync(new OAuthSignInRequest { AccessToken = "gh-token" });
+
+        var thrown = await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+        thrown.Which.Provider.Should().Be("GitHub");
+        thrown.Which.InnerException.Should().BeOfType<HttpRequestException>();
+
+        // The outage is still audited as a failed attempt.
+        _authAttemptServiceMock.Verify(
+            x => x.RecordFailedAttemptAsync(It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<string>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GitHubSignInAsync_Provider5xx_ThrowsOAuthProviderUnavailable()
+    {
+        _oauthServiceMock
+            .Setup(x => x.GetUserProfileAsync("github", It.IsAny<string>()))
+            .ThrowsAsync(new HttpRequestException("server error", null, System.Net.HttpStatusCode.BadGateway));
+
+        var act = () => CreateSut().GitHubSignInAsync(new OAuthSignInRequest { AccessToken = "gh-token" });
+
+        await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+    }
+
+    [Fact]
+    public async Task GitHubSignInAsync_ProviderTimeout_ThrowsOAuthProviderUnavailable()
+    {
+        _oauthServiceMock
+            .Setup(x => x.GetUserProfileAsync("github", It.IsAny<string>()))
+            .ThrowsAsync(new TaskCanceledException("HttpClient timeout"));
+
+        var act = () => CreateSut().GitHubSignInAsync(new OAuthSignInRequest { AccessToken = "gh-token" });
+
+        await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+    }
+
+    [Fact]
+    public async Task GitHubSignInAsync_ProviderRejectsCredential_KeepsOriginalException()
+    {
+        // A 401 from the provider (bad token) is a credential rejection, not an outage:
+        // it must keep flowing as its original exception type, not the outage wrapper.
+        _oauthServiceMock
+            .Setup(x => x.GetUserProfileAsync("github", It.IsAny<string>()))
+            .ThrowsAsync(new HttpRequestException("unauthorized", null, System.Net.HttpStatusCode.Unauthorized));
+
+        var act = () => CreateSut().GitHubSignInAsync(new OAuthSignInRequest { AccessToken = "gh-token" });
+
+        var thrown = await act.Should().ThrowAsync<HttpRequestException>();
+        thrown.Which.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
+    }
+
+    [Theory]
+    [InlineData(true, typeof(HttpRequestException))]       // transport failure, no status
+    [InlineData(true, typeof(TimeoutException))]
+    [InlineData(true, typeof(TaskCanceledException))]      // HttpClient timeout (token never cancelled)
+    [InlineData(true, typeof(OperationCanceledException))] // timeout shape with no requested token
+    public void IsProviderUnavailability_ClassifiesTransportAndTimeoutsOnly(bool expected, Type exceptionType)
+    {
+        var exception = (Exception)Activator.CreateInstance(exceptionType)!;
+
+        OAuthProviderUnavailableException.IsProviderUnavailability(exception).Should().Be(expected);
+    }
+
+    [Fact]
+    public void IsProviderUnavailability_GenuineCallerCancellationIsNotAnOutage()
+    {
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+        var cancellation = new OperationCanceledException(cancellationTokenSource.Token);
+
+        OAuthProviderUnavailableException.IsProviderUnavailability(cancellation).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsProviderUnavailability_ClassifiesHttpStatusCodes()
+    {
+        var badGateway = new HttpRequestException("bad gateway", null, System.Net.HttpStatusCode.BadGateway);
+        var unauthorized = new HttpRequestException("no", null, System.Net.HttpStatusCode.Unauthorized);
+
+        OAuthProviderUnavailableException.IsProviderUnavailability(badGateway).Should().BeTrue();
+        OAuthProviderUnavailableException.IsProviderUnavailability(unauthorized).Should().BeFalse();
     }
 
     [Fact]

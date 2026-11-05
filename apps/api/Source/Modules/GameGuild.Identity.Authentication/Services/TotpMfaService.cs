@@ -206,7 +206,7 @@ public sealed class TotpMfaService(
     /// <summary>
     ///     Generates a Base32-encoded secret key for TOTP (160 bits = 32 characters).
     /// </summary>
-    private static string GenerateBase32Secret()
+    internal static string GenerateBase32Secret()
     {
         const string base32Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
         var secret = new char[32];

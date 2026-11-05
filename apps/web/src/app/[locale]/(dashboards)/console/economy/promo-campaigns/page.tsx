@@ -1,6 +1,7 @@
 import { PromoCampaignsConsole, type PromoCampaignRow } from '@/components/billing/promo-campaigns-console';
 import { redirect } from '@/i18n/navigation';
 import { getRequestAuthContext, auth } from '@/auth';
+import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
 
 const CONSOLE_PATH = '/console/economy/promo-campaigns';
 
@@ -10,14 +11,22 @@ function apiBaseUrl(): string {
 
 /** Server-side campaign list loader: the caller's session token authorizes the
  * read; the promo-campaigns controller keeps enforcing its permission policy. */
-async function loadCampaigns(token: string): Promise<readonly PromoCampaignRow[]> {
-  const response = await fetch(`${apiBaseUrl()}/api/v1/promo-campaigns?skip=0&take=50`, {
-    headers: { authorization: `Bearer ${token}`, accept: 'application/json', 'content-type': 'application/json' },
-    cache: 'no-store',
-  });
-  if (!response.ok) return [];
-  const payload = (await response.json().catch(() => null)) as { items?: PromoCampaignRow[] } | null;
-  return payload?.items ?? [];
+async function loadCampaigns(token: string): Promise<{ campaigns: readonly PromoCampaignRow[]; error: string | null }> {
+  const failure = { campaigns: [], error: 'Campaigns could not be loaded. Please try again later.' };
+  try {
+    const response = await fetch(`${apiBaseUrl()}/v1/promo-campaigns?skip=0&take=50`, {
+      headers: { authorization: `Bearer ${token}`, accept: 'application/json', 'content-type': 'application/json' },
+      cache: 'no-store',
+    });
+    if (!response.ok) {
+      return { campaigns: [], error: `Campaigns could not be loaded (HTTP ${response.status}). Please try again later.` };
+    }
+    const payload = (await response.json()) as { items?: PromoCampaignRow[] } | null;
+    if (!payload || !Array.isArray(payload.items)) return failure;
+    return { campaigns: payload.items, error: null };
+  } catch {
+    return failure;
+  }
 }
 
 /**
@@ -41,7 +50,7 @@ export default async function PromoCampaignsPage({
     throw new Error('Unauthenticated console access');
   }
 
-  const campaigns = await loadCampaigns(token);
+  const { campaigns, error } = await loadCampaigns(token);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
@@ -52,7 +61,12 @@ export default async function PromoCampaignsPage({
           redemption, conversion and customer-acquisition-cost attribution pulled from the promo engine.
         </p>
       </header>
-      <PromoCampaignsConsole initialCampaigns={campaigns} />
+      {error ? (
+        <Alert variant="destructive">
+          <AlertTitle>Campaign dashboard error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : <PromoCampaignsConsole initialCampaigns={campaigns} />}
     </div>
   );
 }

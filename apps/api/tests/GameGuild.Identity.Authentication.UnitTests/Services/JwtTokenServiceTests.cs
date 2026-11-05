@@ -24,6 +24,7 @@ public class JwtTokenServiceTests
     private readonly Mock<IRefreshTokenHasher> _refreshTokenHasherMock;
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
     private readonly Mock<IOptions<JwtOptions>> _jwtOptionsMock;
+    private readonly Mock<GameGuild.CQRS.IPublisher> _publisherMock = new();
     private readonly JwtTokenService _service;
     private readonly JwtOptions _jwtOptions;
 
@@ -51,7 +52,8 @@ public class JwtTokenServiceTests
             _refreshTokenRepositoryMock.Object,
             _refreshTokenHasherMock.Object,
             _httpContextAccessorMock.Object,
-            _jwtOptionsMock.Object
+            _jwtOptionsMock.Object,
+            eventPublisher: _publisherMock.Object
         );
     }
 
@@ -145,8 +147,10 @@ public class JwtTokenServiceTests
         AssertPrivateLogs(failure.GetType().FullName!, serviceId, clientId, privateDetail);
         var information = _loggerMock.Invocations.Should().ContainSingle(call =>
             call.Method.Name == nameof(ILogger.Log) && Equals(call.Arguments[0], LogLevel.Information)).Subject;
-        information.Arguments[2].ToString().Should().Contain(LogRedaction.RedactId(serviceId, "said"))
-            .And.Contain(LogRedaction.RedactId(clientId, "cid"));
+        information.Arguments[2].ToString().Should().Contain(LogRedaction.ProtectIdentifier(serviceId))
+            .And.Contain(LogRedaction.ProtectIdentifier(clientId))
+            .And.NotContain(LogRedaction.RedactId(serviceId, "said"))
+            .And.NotContain(LogRedaction.RedactId(clientId, "cid"));
     }
 
     [Fact]
@@ -464,7 +468,9 @@ public class JwtTokenServiceTests
         log.Arguments[0].Should().Be(LogLevel.Information);
         log.Arguments[3].Should().BeNull();
         var loggedUserId = loggedProperties.Single(property => property.Key == "UserId").Value.Should().BeOfType<string>().Subject;
-        loggedUserId.Should().MatchRegex("^uid:[0-9a-f]{8}$");
+        loggedUserId.Should().MatchRegex("^id:[0-9a-f]{64}$");
+        loggedUserId.Should().Be(LogRedaction.ProtectIdentifier(userId));
+        loggedUserId.Should().NotBe(LogRedaction.RedactId(userId, "uid"));
         loggedProperties.Should().NotContain(property => property.Key == "DeviceId");
         log.Arguments[2].ToString().Should().Be($"Generating refresh token for user: {loggedUserId}");
         foreach (var entry in _loggerMock.Invocations.Where(invocation => invocation.Method.Name == nameof(ILogger.Log)))
@@ -576,5 +582,63 @@ public class JwtTokenServiceTests
 
         // Assert
         token1.Should().NotBe(token2);
+    }
+
+    // ── In-process event emission (issue #1199: the dead event layer) ──────
+
+    [Fact]
+    public async Task GenerateRefreshTokenAsync_PublishesRefreshTokenGeneratedEvent()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var deviceInfo = new DeviceInfo { Fingerprint = "device-emit", IpAddress = "127.0.0.1", UserAgent = "Test Agent" };
+
+        RefreshToken? capturedToken = null;
+        _refreshTokenRepositoryMock
+            .Setup(x => x.CreateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()))
+            .Callback<RefreshToken, CancellationToken>((token, _) => capturedToken = token)
+            .ReturnsAsync((RefreshToken rt, CancellationToken _) => rt);
+
+        // Act
+        await _service.GenerateRefreshTokenAsync(userId, deviceInfo, CancellationToken.None);
+
+        // Assert
+        capturedToken.Should().NotBeNull();
+        _publisherMock.Verify(
+            x => x.Publish(It.Is<RefreshTokenGeneratedEvent>(e =>
+                e.TokenId == capturedToken!.Id.ToString() &&
+                e.UserId == userId &&
+                e.ExpiresAt == capturedToken.ExpiresAt),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RevokeRefreshTokenAsync_PublishesRefreshTokenRevokedEvent()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tokenId = Guid.NewGuid();
+        var storedHash = "hash-of-token";
+        _refreshTokenHasherMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns(storedHash);
+        _refreshTokenRepositoryMock
+            .Setup(x => x.GetByTokenAsync(storedHash, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RefreshToken { Id = tokenId, UserId = userId, Token = storedHash, ExpiresAt = DateTime.UtcNow.AddDays(1) });
+        _refreshTokenRepositoryMock
+            .Setup(x => x.UpdateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((RefreshToken rt, CancellationToken _) => rt);
+
+        // Act
+        var result = await _service.RevokeRefreshTokenAsync("the-token", CancellationToken.None);
+
+        // Assert
+        result.Should().BeTrue();
+        _publisherMock.Verify(
+            x => x.Publish(It.Is<RefreshTokenRevokedEvent>(e =>
+                e.TokenId == tokenId.ToString() &&
+                e.UserId == userId &&
+                e.Reason == "Revoked"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

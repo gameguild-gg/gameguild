@@ -89,16 +89,18 @@ public sealed class ServiceAccountMutationCommandHandler(
 
         if (!string.IsNullOrEmpty(command.Scopes))
         {
-            await serviceAccountService.UpdateScopesAsync(
-                command.ServiceAccountId,
-                command.Scopes,
-                cancellationToken).ConfigureAwait(false);
+            account.Scopes = command.Scopes;
         }
 
         if (command.ExpiresAt.HasValue)
         {
             account.ExpiresAt = command.ExpiresAt.Value;
         }
+
+        // Issue #1142: the handler previously mutated the tracked entity and only saved
+        // when scopes changed (via UpdateScopesAsync); name/description/expiry patches
+        // were silently lost. Every PATCH now persists through one save.
+        await serviceAccountService.UpdateAsync(account, cancellationToken).ConfigureAwait(false);
 
         return true;
     }

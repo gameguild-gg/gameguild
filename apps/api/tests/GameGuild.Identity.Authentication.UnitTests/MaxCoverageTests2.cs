@@ -34,7 +34,8 @@ public class SessionControllerCovTests
             .ReturnsAsync(new User { Id = _userId });
         _controller = new SessionController(_sessionService.Object, new CommandHandlerSender(
             _sessionService.Object, actor.Object, users.Object,
-            Mock.Of<IRefreshTokenRepository>(), Mock.Of<IVersionedUserTokenRevocationService>(), Mock.Of<IRefreshTokenLifecycleRecorder>()));
+            Mock.Of<IRefreshTokenRepository>(), Mock.Of<IVersionedUserTokenRevocationService>(), Mock.Of<IRefreshTokenLifecycleRecorder>(),
+            Mock.Of<IStepUpReceiptService>()));
         SetUser(_userId);
     }
 
@@ -344,14 +345,50 @@ public class MfaControllerCovTests
     }
 
     [Fact]
-    public async Task RegenerateBackupCodes_ReturnsNewCodes()
+    public async Task RegenerateBackupCodes_WithVerifiedPassword_ReturnsNewCodes()
     {
+        // Issue #1153: regeneration now requires password re-verification before the
+        // handler rotates the recovery codes.
         _mfaService.Setup(s => s.GenerateBackupCodesAsync(
             _userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { "CODE1", "CODE2" });
 
-        var result = await _controller.RegenerateBackupCodes(CancellationToken.None);
+        var controller = new MfaController(
+            _mfaService.Object,
+            new CommandHandlerSender(_mfaService.Object, CreateReverification(verified: true)));
+        SetControllerUser(controller, _userId);
+
+        var result = await controller.RegenerateBackupCodes(
+            new RegenerateBackupCodesRequest { Password = "correct-password" }, CancellationToken.None);
         result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task RegenerateBackupCodes_WithWrongPassword_ReturnsBadRequest()
+    {
+        // Issue #1153: a bearer token alone must not rotate the recovery codes.
+        var controller = new MfaController(
+            _mfaService.Object,
+            new CommandHandlerSender(_mfaService.Object, CreateReverification(verified: false)));
+        SetControllerUser(controller, _userId);
+
+        var result = await controller.RegenerateBackupCodes(
+            new RegenerateBackupCodesRequest { Password = "wrong-password" }, CancellationToken.None);
+        result.Should().BeOfType<BadRequestObjectResult>();
+        _mfaService.Verify(s => s.GenerateBackupCodesAsync(
+            It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private MfaReverificationService CreateReverification(bool verified)
+    {
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetByIdAsync(_userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = _userId, PasswordHash = "stored-hash" });
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(h => h.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(verified);
+        return new MfaReverificationService(
+            userRepo.Object, hasher.Object, NullLogger<MfaReverificationService>.Instance);
     }
 
     [Fact]
@@ -464,7 +501,8 @@ public class TrustedDevicesControllerCovTests
 
     public TrustedDevicesControllerCovTests()
     {
-        _controller = new TrustedDevicesController(_sessionService.Object, new CommandHandlerSender(_sessionService.Object));
+        _controller = new TrustedDevicesController(_sessionService.Object, new CommandHandlerSender(
+            _sessionService.Object, Mock.Of<IStepUpReceiptService>()));
         _controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext
@@ -513,11 +551,11 @@ public class TrustedDevicesControllerCovTests
     public async Task TrustCurrentDevice_Success_ReturnsOk()
     {
         _sessionService.Setup(s => s.TrustDeviceAsync(
-            _userId, It.IsAny<string>(), "My Phone", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            _userId, It.IsAny<string>(), "My Phone", It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var result = await _controller.TrustCurrentDevice(
-            new TrustDeviceRequest { DeviceName = "My Phone" }, CancellationToken.None);
+            new TrustDeviceRequest { DeviceName = "My Phone", StepUpReceipt = "step-up-receipt" }, CancellationToken.None);
         result.Should().BeOfType<OkObjectResult>();
     }
 
@@ -525,12 +563,25 @@ public class TrustedDevicesControllerCovTests
     public async Task TrustCurrentDevice_Failure_ReturnsBadRequest()
     {
         _sessionService.Setup(s => s.TrustDeviceAsync(
-            _userId, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            _userId, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         var result = await _controller.TrustCurrentDevice(
-            new TrustDeviceRequest { DeviceName = "Device" }, CancellationToken.None);
+            new TrustDeviceRequest { DeviceName = "Device", StepUpReceipt = "step-up-receipt" }, CancellationToken.None);
         result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task TrustCurrentDevice_WithoutStepUpReceipt_ReturnsForbidden()
+    {
+        // Fresh verification gate (issue #1144): trusting a device requires a step-up receipt.
+        var result = await _controller.TrustCurrentDevice(
+            new TrustDeviceRequest { DeviceName = "My Phone" }, CancellationToken.None);
+        var forbidden = result.Should().BeOfType<ObjectResult>().Subject;
+        forbidden.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        _sessionService.Verify(s => s.TrustDeviceAsync(
+            It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

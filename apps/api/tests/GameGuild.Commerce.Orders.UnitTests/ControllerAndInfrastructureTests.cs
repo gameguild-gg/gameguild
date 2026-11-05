@@ -465,13 +465,13 @@ public class OrdersInfrastructureTests
         {
             new CreateOrderCommandHandler(orderRepo, actor),
             new AddProductToOrderCommandHandler(orderRepo, productRepo, pricingRepo, promoService, Mock.Of<IPromoCodeUsageRecorder>(), Mock.Of<GameGuild.Commerce.IPricingDecisionLedgerWriter>(), dbContext, actor),
-            new CancelOrderCommandHandler(orderRepo),
+            new CancelOrderCommandHandler(orderRepo, actor),
             new CaptureOrderCommandHandler(orderRepo, Mock.Of<IOrderPaymentProcessor>(), actor),
             new CompleteOrderCommandHandler(orderRepo, entitlementService, dbContext, OrderTestFactory.CreatePaymentAuthority(), actor),
-            new DeleteOrderCommandHandler(orderRepo),
-            new HoldOrderCommandHandler(orderRepo),
-            new RefundOrderCommandHandler(orderRepo, entitlementService),
-            new ReleaseOrderCommandHandler(orderRepo),
+            new DeleteOrderCommandHandler(orderRepo, actor),
+            new HoldOrderCommandHandler(orderRepo, actor),
+            new RefundOrderCommandHandler(orderRepo, Mock.Of<IOrderPaymentRefunder>(), entitlementService, actor),
+            new ReleaseOrderCommandHandler(orderRepo, actor),
             new UpdateOrderCommandHandler(orderRepo, actor)
         };
 

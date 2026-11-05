@@ -17,15 +17,24 @@ public sealed class GoogleIdTokenVerifier : IGoogleIdTokenVerifier
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<GoogleIdTokenVerifier> _logger;
+    private readonly Func<string, GoogleJsonWebSignature.ValidationSettings, Task<GoogleJsonWebSignature.Payload>> _validate;
 
     public GoogleIdTokenVerifier(IConfiguration configuration, ILogger<GoogleIdTokenVerifier> logger)
+        : this(configuration, logger, (token, settings) => GoogleJsonWebSignature.ValidateAsync(token, settings))
+    {
+    }
+
+    internal GoogleIdTokenVerifier(IConfiguration configuration, ILogger<GoogleIdTokenVerifier> logger,
+        Func<string, GoogleJsonWebSignature.ValidationSettings, Task<GoogleJsonWebSignature.Payload>> validate)
     {
         _configuration = configuration;
         _logger = logger;
+        _validate = validate;
     }
 
     public async Task<VerifiedGoogleUser> VerifyAsync(string idToken, CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
         // Fail closed: empty clientId ⇒ ValidateAsync's audience check would
         // reject everything anyway, but rejecting here avoids a network round
         // trip and makes the misconfiguration explicit in logs.
@@ -45,14 +54,22 @@ public sealed class GoogleIdTokenVerifier : IGoogleIdTokenVerifier
         GoogleJsonWebSignature.Payload payload;
         try
         {
-            payload = await GoogleJsonWebSignature.ValidateAsync(
+            payload = await _validate(
                 idToken,
                 new GoogleJsonWebSignature.ValidationSettings { Audience = new[] { clientId } }
-            ).ConfigureAwait(false);
+            ).WaitAsync(ct).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (OAuthProviderUnavailableException.IsProviderUnavailability(ex, ct))
+        {
+            throw new OAuthProviderUnavailableException("Google", ex);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
-            // Wrap every library failure (InvalidJwtException, JWKS fetch errors,
+            // Wrap credential failures (InvalidJwtException,
             // aud/iss/exp mismatch, signature mismatch) into a single 401-equivalent
             // so callers cannot distinguish malformed from forged — both are 401.
             _logger.LogWarning(ex, "Google ID token validation rejected a token");

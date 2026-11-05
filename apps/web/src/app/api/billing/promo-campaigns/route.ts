@@ -33,7 +33,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
   if (campaignId) {
     const response = await fetch(
-      `${apiBaseUrl()}/api/v1/promo-campaigns/${encodeURIComponent(campaignId)}/performance`,
+      `${apiBaseUrl()}/v1/promo-campaigns/${encodeURIComponent(campaignId)}/performance`,
       { headers, cache: "no-store", signal: request.signal },
     );
     return passthrough(response);
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest): Promise<Response> {
   if (status) listParameters.set("status", status);
   if (searchTerm) listParameters.set("searchTerm", searchTerm);
 
-  const response = await fetch(`${apiBaseUrl()}/api/v1/promo-campaigns?${listParameters.toString()}`, {
+  const response = await fetch(`${apiBaseUrl()}/v1/promo-campaigns?${listParameters.toString()}`, {
     headers,
     cache: "no-store",
     signal: request.signal,
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest): Promise<Response> {
   }
 
   const response = await fetch(
-    `${apiBaseUrl()}/api/v1/promo-campaigns/${encodeURIComponent(body.campaignId)}:${body.action}`,
+    `${apiBaseUrl()}/v1/promo-campaigns/${encodeURIComponent(body.campaignId)}:${body.action}`,
     {
       method: "POST",
       headers: upstreamHeaders(token),

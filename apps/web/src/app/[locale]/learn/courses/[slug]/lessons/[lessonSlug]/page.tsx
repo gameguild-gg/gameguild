@@ -83,7 +83,7 @@ export default async function LessonPage({
             courseId={access.course.id}
             enrollmentId={access.course.enrollmentId}
             itemId={item.id}
-            format={item.lessonFormat}
+            format={item.lessonFormat ?? undefined}
             content={item.content}
           />
         </div>

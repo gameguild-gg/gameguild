@@ -1,6 +1,6 @@
 # Authorization CQRS Wiring Matrix — every controller, every endpoint
 
-> Module `GameGuild.Identity.Authorization` + its authorization-surface controllers in `GameGuild.Identity.Authentication` · Documented against `develop` commit `74e9bba4c`.
+> Module `GameGuild.Identity.Authorization` + its authorization-surface controllers in `GameGuild.Identity.Authentication` · Documented against `develop` commit `74e9bba4c`; the 15 handler-less 500 holes were fixed by issue **#1203** (rows marked *fixed in #1203*; handlers in `GameGuild.Identity.Authentication/Handlers/AbacPolicyQueryHandlers.cs` and `.../ConditionalPolicyQueryHandlers.cs`, pipeline coverage in `GameGuild.API.IntegrationTests/PolicyManagementQueriesPostgreSqlHttpTests`).
 > Scope: **24 controllers, 177 endpoints**. Columns follow the auth-package convention: route · command/query · validator · handler · auth attribute · rate limit · unit test · integration test · HOLE.
 > The task framing said "11 controllers, ~110 endpoints" (echoing #1180's count of the hidden policy surface); the real authorization surface at this commit is larger — 19 controller classes live in the Authorization module and 5 authorization-surface controllers live in the Authentication module. All are listed.
 
@@ -231,38 +231,38 @@ Legend:
 | Route | Command/Query | Val | Handler | Auth | Rate | Unit test | Integration | HOLE |
 |---|---|---|---|---|---|---|---|---|
 | POST `` :32 | `CreateAbacPolicyCommand` | — | **UNAV** | `[Authorize]` | — | AbacPolicyControllerTests (mapping-only) | — | **YES** 422 unavailable |
-| GET `{policyId}` :43 | `GetAbacPolicyQuery` | — | **NONE** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 500 |
+| GET `{policyId}` :43 | `GetAbacPolicyQuery` | — | `GameGuild.Identity.Authentication/Handlers/AbacPolicyQueryHandlers.cs:61` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
 | PUT `{policyId}` :55 | `UpdateAbacPolicyCommand` | — | **UNAV** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 422 |
 | DELETE `{policyId}` :67 | `DeleteAbacPolicyCommand` | — | **UNAV** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 422 |
-| GET `` :79 | `GetAbacPoliciesQuery` | — | **NONE** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 500 |
+| GET `` :79 | `GetAbacPoliciesQuery` | — | `Handlers/AbacPolicyQueryHandlers.cs:87` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
 | POST `:evaluate` :101 | `EvaluateAbacPoliciesCommand` | — | `GameGuild.Identity.Authentication/Handlers/PolicyEvaluationCommandHandlers.cs:74` | `[Authorize]` | — | PolicyEvaluationCommandHandlersTests | AccessControlIntegrationTests | — |
 | POST `:evaluate-bulk` :112 | `BulkEvaluateAbacPoliciesCommand` | — | `:123` | `[Authorize]` | — | PolicyEvaluationCommandHandlersTests | AccessControlIntegrationTests | — |
 | POST `:test-expression` :123 | `TestAbacExpressionCommand` | — | `:200` | `[Authorize]` | — | TestAbacExpressionCommandHandlerTests | — | — |
 | POST `{policyId}:activate` :138 | `ActivateAbacPolicyCommand` | — | **UNAV** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 422 |
 | POST `{policyId}:deactivate` :150 | `DeactivateAbacPolicyCommand` | — | **UNAV** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 422 |
 | POST `{policyId}:clone` :162 | `CloneAbacPolicyCommand` | — | **UNAV** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 422 |
-| GET `statistics` :178 | `GetAbacPolicyStatisticsQuery` | — | **NONE** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 500 |
-| GET `{policyId}/usage` :190 | `GetAbacPolicyUsageQuery` | — | **NONE** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 500 |
-| GET `{policyId}/audit-trail` :202 | `GetAbacPolicyAuditTrailQuery` | — | **NONE** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 500 |
+| GET `statistics` :178 | `GetAbacPolicyStatisticsQuery` | — | `Handlers/AbacPolicyQueryHandlers.cs:128` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
+| GET `{policyId}/usage` :190 | `GetAbacPolicyUsageQuery` | — | `Handlers/AbacPolicyQueryHandlers.cs:166` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
+| GET `{policyId}/audit-trail` :202 | `GetAbacPolicyAuditTrailQuery` | — | `Handlers/AbacPolicyQueryHandlers.cs:198` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
 | POST `:validate` :218 | `ValidateAbacPolicyCommand` | — | **UNAV** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 422 |
-| GET `conflicts` :229 | `GetAbacPolicyConflictsQuery` | — | **NONE** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 500 |
-| GET `templates` :245 | `GetAbacPolicyTemplatesQuery` | — | **NONE** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 500 |
+| GET `conflicts` :229 | `GetAbacPolicyConflictsQuery` | — | `Handlers/AbacPolicyQueryHandlers.cs:265` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
+| GET `templates` :245 | `GetAbacPolicyTemplatesQuery` | — | `Handlers/AbacPolicyQueryHandlers.cs:347` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
 | POST `templates/{templateId}:instantiate` :257 | `CreateAbacPolicyFromTemplateCommand` | — | **UNAV** | `[Authorize]` | — | AbacPolicyControllerTests | — | **YES** 422 |
 
-### 2.2 ConditionalPolicyCrudController — `v{v}/conditional-policies` (`GameGuild.Identity.Authentication/Controllers/ConditionalPolicyCrudController.cs:20`, `IgnoreApi` :18) — **all 11 endpoints dead**
+### 2.2 ConditionalPolicyCrudController — `v{v}/conditional-policies` (`GameGuild.Identity.Authentication/Controllers/ConditionalPolicyCrudController.cs:20`, `IgnoreApi` :18) — **8 of 11 endpoints dead (422); the 3 reads fixed in #1203**
 
 | Route | Command/Query | Val | Handler | Auth | Rate | Unit test | Integration | HOLE |
 |---|---|---|---|---|---|---|---|---|
 | POST `` :31 | `CreateConditionalPolicyCommand` | — | **UNAV** | `[Authorize]` | — | ConditionalPolicyCrudControllerTests | — | **YES** 422 |
-| GET `{policyId}` :42 | `GetConditionalPolicyQuery` | — | **NONE** | `[Authorize]` | — | ConditionalPolicyCrudControllerTests | — | **YES** 500 |
+| GET `{policyId}` :42 | `GetConditionalPolicyQuery` | — | `GameGuild.Identity.Authentication/Handlers/ConditionalPolicyQueryHandlers.cs:64` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
 | PUT `{policyId}` :54 | `UpdateConditionalPolicyCommand` | — | **UNAV** | `[Authorize]` | — | ConditionalPolicyCrudControllerTests | — | **YES** 422 |
 | DELETE `{policyId}` :66 | `DeleteConditionalPolicyCommand` | — | **UNAV** | `[Authorize]` | — | ConditionalPolicyCrudControllerTests | — | **YES** 422 |
-| GET `` :78 | `GetConditionalPoliciesQuery` | — | **NONE** | `[Authorize]` | — | ConditionalPolicyCrudControllerTests | — | **YES** 500 |
+| GET `` :78 | `GetConditionalPoliciesQuery` | — | `Handlers/ConditionalPolicyQueryHandlers.cs:90` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
 | POST `{policyId}:activate` :100 | `ActivateConditionalPolicyCommand` | — | **UNAV** | `[Authorize]` | — | ConditionalPolicyCrudControllerTests | — | **YES** 422 |
 | POST `{policyId}:deactivate` :112 | `DeactivateConditionalPolicyCommand` | — | **UNAV** | `[Authorize]` | — | ConditionalPolicyCrudControllerTests | — | **YES** 422 |
 | POST `{policyId}:clone` :124 | `CloneConditionalPolicyCommand` | — | **UNAV** | `[Authorize]` | — | ConditionalPolicyCrudControllerTests | — | **YES** 422 |
 | PUT `{policyId}/priority` :136 | `UpdateConditionalPolicyPriorityCommand` | — | **UNAV** | `[Authorize]` | — | ConditionalPolicyCrudControllerTests | — | **YES** 422 |
-| GET `templates` :152 | `GetConditionalPolicyTemplatesQuery` | — | **NONE** | `[Authorize]` | — | ConditionalPolicyCrudControllerTests | — | **YES** 500 |
+| GET `templates` :152 | `GetConditionalPolicyTemplatesQuery` | — | `Handlers/ConditionalPolicyQueryHandlers.cs:433` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
 | POST `templates/{templateId}:instantiate` :164 | `CreateConditionalPolicyFromTemplateCommand` | — | **UNAV** | `[Authorize]` | — | ConditionalPolicyCrudControllerTests | — | **YES** 422 |
 
 ### 2.3 ConditionalPolicyEvaluationController — `v{v}/conditional-policies` (`:20`, `IgnoreApi` :18)
@@ -272,13 +272,13 @@ Legend:
 | POST `:evaluate` :31 | `EvaluateConditionalPoliciesCommand` | — | `PolicyEvaluationCommandHandlers.cs:280` | `[Authorize]` | — | PolicyEvaluationCommandHandlersTests | AccessControlIntegrationTests | — |
 | POST `:evaluate-bulk` :42 | `BulkEvaluateConditionalPoliciesCommand` | — | `:323` | `[Authorize]` | — | ConditionalPolicyEvaluationControllerTests | — | — |
 | POST `:test-rule` :53 | `TestConditionalPolicyRuleCommand` | — | `:403` | `[Authorize]` | — | PolicyEvaluationCommandHandlersTests | — | — |
-| GET `statistics` :68 | `GetConditionalPolicyStatisticsQuery` | — | **NONE** | `[Authorize]` | — | ConditionalPolicyEvaluationControllerTests | — | **YES** 500 |
-| GET `{policyId}/usage` :80 | `GetConditionalPolicyUsageQuery` | — | **NONE** | `[Authorize]` | — | ConditionalPolicyEvaluationControllerTests | — | **YES** 500 |
-| GET `{policyId}/evaluation-history` :92 | `GetConditionalPolicyEvaluationHistoryQuery` | — | **NONE** | `[Authorize]` | — | ConditionalPolicyEvaluationControllerTests | — | **YES** 500 |
+| GET `statistics` :68 | `GetConditionalPolicyStatisticsQuery` | — | `GameGuild.Identity.Authentication/Handlers/ConditionalPolicyQueryHandlers.cs:129` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
+| GET `{policyId}/usage` :80 | `GetConditionalPolicyUsageQuery` | — | `Handlers/ConditionalPolicyQueryHandlers.cs:166` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
+| GET `{policyId}/evaluation-history` :92 | `GetConditionalPolicyEvaluationHistoryQuery` | — | `Handlers/ConditionalPolicyQueryHandlers.cs:198` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
 | POST `:validate` :108 | `ValidateConditionalPolicyCommand` | — | `:544` | `[Authorize]` | — | ConditionalPolicyEvaluationControllerTests | — | — |
-| GET `conflicts` :119 | `GetConditionalPolicyConflictsQuery` | — | **NONE** | `[Authorize]` | — | ConditionalPolicyEvaluationControllerTests | — | **YES** 500 |
+| GET `conflicts` :119 | `GetConditionalPolicyConflictsQuery` | — | `Handlers/ConditionalPolicyQueryHandlers.cs:236` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
 | POST `:simulate` :131 | `SimulateConditionalPolicyCommand` | — | `:465` | `[Authorize]` | — | PolicyEvaluationCommandHandlersTests | — | — |
-| GET `condition-types` :146 | `GetPolicyConditionTypesQuery` | — | **NONE** | `[Authorize]` | — | ConditionalPolicyEvaluationControllerTests | — | **YES** 500 |
+| GET `condition-types` :146 | `GetPolicyConditionTypesQuery` | — | `Handlers/ConditionalPolicyQueryHandlers.cs:318` | `[Authorize]` | — | PolicyManagementQueriesPostgreSqlHttpTests (pipeline) | PolicyManagementQueriesPostgreSqlHttpTests | fixed in #1203 |
 | POST `:validate-condition` :158 | `ValidateConditionCommand` | — | `:590` | `[Authorize]` | — | ConditionalPolicyEvaluationControllerTests | — | — |
 
 ### 2.4 PermissionEvaluationController — `v{v}/permissions` (`:28`, `IgnoreApi` :25, rate-limited :26)
@@ -316,11 +316,11 @@ Legend:
 | Controllers (Authorization module) | 19 classes in 16 files |
 | Controllers (Authentication module, authorization surface) | 5 |
 | Total endpoints | **177** |
-| Endpoints with real handlers | 146 |
-| Dead endpoints — 422 unavailable-contract | 16 (ABAC 8, Conditional CRUD 8) |
-| Dead endpoints — 500 handler-not-found | 15 (ABAC 7, Conditional 8) |
+| Endpoints with real handlers | 161 (146 + the 15 read queries fixed by #1203) |
+| Dead endpoints — 422 unavailable-contract | 16 (ABAC 8, Conditional CRUD 8) — still planned surface, guarded hidden from OpenAPI by `PlannedAuthorizationSurfaceGuardTests` |
+| Dead endpoints — 500 handler-not-found | 0 (15 fixed by #1203) |
 | Endpoints with FluentValidation validators | 17 (JIT 4, DelegatedAdmin 2, AccessReview 6, SoD 4, Delegation 2 — queries unvalidated by convention) |
 | Controllers with rate limiting | 2 (`PolicyBundlesController`, `PermissionEvaluationController`) |
 | Controllers hidden from OpenAPI | 4 (Abac, ConditionalPolicyCrud, ConditionalPolicyEvaluation, PermissionEvaluation) |
 
-**The 31 dead endpoints are the headline wiring hole**: every one is routed, `[Authorize]`-guarded, and covered by mapping-only controller tests that mock `IMediator` — the suite stays green while the endpoint cannot serve traffic. Two different failure modes exist (422 designed-unavailable vs 500 forgot-to-implement); the read-side queries never got the `UnavailableReason` contract treatment the write-side got, which is why they fail with a different, uglier status.
+**The 31 dead endpoints were the headline wiring hole**: every one is routed, `[Authorize]`-guarded, and was covered by mapping-only controller tests that mock `IMediator` — the suite stayed green while the endpoints could not serve traffic. Issue **#1203** closed the 15 handler-less 500s (real query handlers + pipeline-level PG tests replacing the mocked read-side tests) and pinned the remaining 16 as designed-unavailable 422s: they keep the `UnavailableReason` contract and their controllers stay hidden from the generated client (`PlannedAuthorizationSurfaceGuardTests`). Two different failure modes existed (422 designed-unavailable vs 500 forgot-to-implement); the read-side queries never got the `UnavailableReason` contract treatment the write-side got, which is why they failed with a different, uglier status — #1203 resolved that by implementing them instead.

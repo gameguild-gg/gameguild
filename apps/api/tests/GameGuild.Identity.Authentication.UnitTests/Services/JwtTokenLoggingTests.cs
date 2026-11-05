@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.AspNetCore.Http;
@@ -13,12 +14,17 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 
 public sealed class JwtTokenLoggingTests
 {
+    private static readonly HashSet<string> PrivateLogFields = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "UserId", "TokenId", "ServiceAccountId", "ClientId"
+    };
+
     private readonly Mock<ILogger<JwtTokenService>> _logger = new();
     private readonly Mock<IRefreshTokenRepository> _repository = new();
     private readonly Mock<IRefreshTokenHasher> _hasher = new();
     private readonly JwtOptions _options = new()
     {
-        SecretKey = "ThisIsAVerySecureSecretKeyForTestingPurposesOnly12345",
+        SecretKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
         Issuer = "LoggingTests",
         Audience = "LoggingTests",
         AccessTokenExpirationMinutes = 15,
@@ -46,7 +52,7 @@ public sealed class JwtTokenLoggingTests
         Assert.Equal(email, parsed.Claims.Single(claim => claim.Type == JwtRegisteredClaimNames.Email).Value);
         Assert.Equal(tenantId.ToString(), parsed.Claims.Single(claim => claim.Type == "tenant_id").Value);
         Assert.Equal("User", parsed.Claims.Single(claim => claim.Type == "role").Value);
-        AssertPrivateLogs(2, email, token);
+        AssertPrivateLogs(2, userId.ToString(), tenantId.ToString(), email, token);
     }
 
     [Theory]
@@ -78,7 +84,7 @@ public sealed class JwtTokenLoggingTests
         Assert.Equal(token, hashedInput);
         Assert.NotEqual(token, persisted.Token);
         _repository.Verify(repository => repository.CreateAsync(It.IsAny<RefreshToken>(), cancellation.Token), Times.Once);
-        AssertPrivateLogs(2, fingerprint, "FORGED-ENTRY", token);
+        AssertPrivateLogs(2, userId.ToString(), persisted.Id.ToString(), fingerprint, "FORGED-ENTRY", token);
     }
 
     [Fact]
@@ -91,7 +97,7 @@ public sealed class JwtTokenLoggingTests
         await Assert.ThrowsAsync<ArgumentException>(() =>
             CreateService().GenerateAccessTokenAsync(userId, email, ["User"], null));
 
-        AssertPrivateLogs(2, email);
+        AssertPrivateLogs(2, userId.ToString(), email);
     }
 
     [Fact]
@@ -109,7 +115,7 @@ public sealed class JwtTokenLoggingTests
 
         Assert.NotEmpty(token);
         _repository.Verify(repository => repository.CreateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()), Times.Exactly(3));
-        AssertPrivateLogs(4, detail, "credential-marker", token);
+        AssertPrivateLogs(4, userId.ToString(), detail, "credential-marker", token);
     }
 
     [Fact]
@@ -126,7 +132,7 @@ public sealed class JwtTokenLoggingTests
             CreateService().GenerateRefreshTokenAsync(userId, new DeviceInfo { Fingerprint = detail }));
 
         Assert.Same(failure, actual);
-        AssertPrivateLogs(2, detail, "credential-marker");
+        AssertPrivateLogs(2, userId.ToString(), detail, "credential-marker");
         Assert.Contains(_logger.Invocations, call => call.Method.Name == "Log" && (LogLevel)call.Arguments[0] == LogLevel.Error);
     }
 
@@ -154,7 +160,7 @@ public sealed class JwtTokenLoggingTests
         Assert.True(row.IsRevoked);
         _repository.Verify(repository => repository.UpdateAsync(row, It.IsAny<CancellationToken>()),
             alreadyRevoked ? Times.Never() : Times.Once());
-        AssertPrivateLogs(2, token);
+        AssertPrivateLogs(2, row.Id.ToString(), row.UserId.ToString(), token);
     }
 
     [Fact]
@@ -187,7 +193,7 @@ public sealed class JwtTokenLoggingTests
         Assert.Equal(serviceName, parsed.Claims.Single(claim => claim.Type == "service_name").Value);
         Assert.Equal("read", parsed.Claims.Single(claim => claim.Type == "scope").Value);
         Assert.Equal(tenantId.ToString(), parsed.Claims.Single(claim => claim.Type == "tenant_id").Value);
-        AssertPrivateLogs(2, accountId, clientId, serviceName, result.Token);
+        AssertPrivateLogs(2, accountId, clientId, tenantId.ToString(), serviceName, result.Token);
     }
 
     [Fact]
@@ -256,9 +262,14 @@ public sealed class JwtTokenLoggingTests
         {
             Assert.Null(call.Arguments[3]);
             var state = Assert.IsAssignableFrom<IEnumerable<KeyValuePair<string, object?>>>(call.Arguments[2]);
+            Assert.DoesNotContain(state, entry => entry.Key is "DeviceId" or "DeviceFingerprint" or "Fingerprint");
+            foreach (var entry in state.Where(entry => PrivateLogFields.Contains(entry.Key)))
+            {
+                Assert.Matches("^(none|id:[0-9a-f]{64})$", Assert.IsType<string>(entry.Value));
+            }
             var text = call.Arguments[2].ToString() ?? string.Empty;
             Assert.All(state.Where(entry => entry.Key != "{OriginalFormat}"),
-                entry => Assert.True(entry.Value is DateTime or int or Guid or string));
+                entry => Assert.True(entry.Value is DateTime or int or string));
             foreach (var forbidden in forbiddenValues)
             {
                 Assert.DoesNotContain(forbidden, text, StringComparison.Ordinal);

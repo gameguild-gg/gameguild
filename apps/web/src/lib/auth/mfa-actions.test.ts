@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   getAuthMfa: vi.fn(),
   getAuthMfaMethods: vi.fn(),
   getAuthMfaBackupCodes: vi.fn(),
+  regenerate: vi.fn(),
   revalidatePath: vi.fn(),
 }));
 
@@ -18,15 +19,33 @@ vi.mock('@game-guild/client', () => ({
       getAuthMfa = mocks.getAuthMfa;
       getAuthMfaMethods = mocks.getAuthMfaMethods;
       getAuthMfaBackupCodes = mocks.getAuthMfaBackupCodes;
+      postAuthMfaBackupCodesRegenerate = mocks.regenerate;
     },
   },
 }));
 
-const { loadMfaData } = await import('./mfa-actions');
+const { loadMfaData, regenerateBackupCodesAction } = await import('./mfa-actions');
 
 const CONFIGURATION = { isEnabled: true } as never;
 const METHODS = { methods: [] } as never;
 const BACKUP_CODES = { hasBackupCodes: false } as never;
+
+describe('backup-code password re-verification transport', () => {
+  it('forwards the password and returns the newly issued codes', async () => {
+    const password = crypto.randomUUID();
+    mocks.regenerate.mockResolvedValueOnce({ ok: true, data: { codes: ['new-recovery-code'] } });
+    const result = await regenerateBackupCodesAction(password);
+    expect(mocks.regenerate).toHaveBeenLastCalledWith({ password });
+    expect(result).toMatchObject({ success: true, codes: ['new-recovery-code'] });
+  });
+
+  it('returns no recovery codes after the API refuses the password', async () => {
+    mocks.regenerate.mockResolvedValueOnce({ ok: false, error: { message: 'Password verification failed', status: 400 } });
+    const result = await regenerateBackupCodesAction(crypto.randomUUID());
+    expect(result).toMatchObject({ success: false });
+    expect(result.codes).toBeUndefined();
+  });
+});
 
 describe('loadMfaData (issue #864 contract-drift defense)', () => {
   beforeEach(() => {

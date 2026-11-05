@@ -20122,6 +20122,91 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("identityverification", "gameguild.authentication");
                 });
 
+            modelBuilder.Entity("GameGuild.Identity.Authentication.JwtSigningKey", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Algorithm")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("algorithm");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("KeyId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("key_id");
+
+                    b.Property<string>("KeyMaterial")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("key_material");
+
+                    b.Property<int>("KeyVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("key_version");
+
+                    b.Property<DateTime?>("RotatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("rotated_at");
+
+                    b.Property<string>("RotationReason")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("rotation_reason");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<DateTime>("ValidFrom")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("valid_from");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_jwt_signing_keys_expires_at");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("ix_jwt_signing_keys_is_active");
+
+                    b.HasIndex("KeyId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_jwt_signing_keys_key_id");
+
+                    b.ToTable("jwt_signing_keys", "gameguild.authentication");
+                });
+
             modelBuilder.Entity("GameGuild.Identity.Authentication.MagicLinkToken", b =>
                 {
                     b.Property<string>("TokenHash")
@@ -20579,14 +20664,18 @@ namespace GameGuild.API.Database.Migrations
                         .HasDefaultValue(0L)
                         .HasColumnName("authentication_count");
 
+                    b.Property<DateTime?>("AutomaticLockoutEndsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("automatic_lockout_ends_at");
+
                     b.Property<string>("CertificateSpkiSha256")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("certificate_spki_sha256");
 
                     b.Property<string>("CertificateThumbprint")
-                        .HasMaxLength(40)
-                        .HasColumnType("character varying(40)")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
                         .HasColumnName("certificate_thumbprint");
 
                     b.Property<string>("ClientId")

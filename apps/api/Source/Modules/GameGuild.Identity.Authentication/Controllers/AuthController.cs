@@ -32,7 +32,7 @@ public sealed class AuthController(ISender sender) : BaseApiController
     [AllowAnonymous]
     [HttpPost("v{version:apiVersion}/auth/sign-up")]
     [EndpointSummary("Register a new user")]
-    [EndpointDescription("Creates a new user account with email and password credentials, returning authentication tokens on success.")]
+    [EndpointDescription("Creates a new user account with email and password credentials, returning authentication tokens on success. When Turnstile is configured (TURNSTILE_SECRET_KEY), turnstileToken is required and verified server-side (issue #1150).")]
     [ProducesResponseType<SignInResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -45,7 +45,8 @@ public sealed class AuthController(ISender sender) : BaseApiController
             Password = body.Password,
             Username = body.Username,
             TenantId = body.TenantId,
-            GuestAccessToken = body.GuestAccessToken
+            GuestAccessToken = body.GuestAccessToken,
+            TurnstileToken = body.TurnstileToken
         };
 
         SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
@@ -360,6 +361,10 @@ public sealed class AuthController(ISender sender) : BaseApiController
             SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
             return Ok(result);
         }
+        catch (OAuthProviderUnavailableException ex)
+        {
+            return OAuthProviderUnavailable(ex);
+        }
         catch (UnauthorizedAccessException ex)
         {
             return Unauthorized(new ProblemDetails
@@ -411,6 +416,10 @@ public sealed class AuthController(ISender sender) : BaseApiController
             var result = await sender.Send(command, ct).ConfigureAwait(false);
             return Ok(result);
         }
+        catch (OAuthProviderUnavailableException ex)
+        {
+            return OAuthProviderUnavailable(ex);
+        }
         catch (InvalidOperationException ex)
         {
             return OidcNotConfigured(ex);
@@ -449,6 +458,10 @@ public sealed class AuthController(ISender sender) : BaseApiController
         {
             SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
             return Ok(result);
+        }
+        catch (OAuthProviderUnavailableException ex)
+        {
+            return OAuthProviderUnavailable(ex);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -584,6 +597,10 @@ public sealed class AuthController(ISender sender) : BaseApiController
         {
             SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
             return Ok(result);
+        }
+        catch (OAuthProviderUnavailableException ex)
+        {
+            return OAuthProviderUnavailable(ex);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -806,6 +823,12 @@ public sealed class AuthController(ISender sender) : BaseApiController
         {
             SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
             return Ok(result);
+        }
+        catch (OAuthProviderUnavailableException ex)
+        {
+            // Issue #1116: provider outage on the token-style OAuth endpoints — same 503 +
+            // magic-link fallback advertisement as the authorization-code callbacks.
+            return OAuthProviderUnavailable(ex);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -1050,6 +1073,10 @@ public sealed class AuthController(ISender sender) : BaseApiController
             SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
             return Ok(result);
         }
+        catch (OAuthProviderUnavailableException ex)
+        {
+            return OAuthProviderUnavailable(ex);
+        }
         catch (UnauthorizedAccessException ex)
         {
             return Unauthorized(new ProblemDetails
@@ -1063,6 +1090,27 @@ public sealed class AuthController(ISender sender) : BaseApiController
         {
             return GitHubNotConfigured(ex);
         }
+    }
+
+    /// <summary>
+    ///     Issue #1116: when the OAuth provider itself is down (connection errors, timeouts,
+    ///     5xx), answer with a 503 that advertises the magic-link fallback so OAuth-only
+    ///     accounts are not locked out during an outage — the magic-link request endpoint
+    ///     needs no password, the email already known from the OAuth link is enough.
+    /// </summary>
+    private ObjectResult OAuthProviderUnavailable(OAuthProviderUnavailableException ex)
+    {
+        var problem = new ProblemDetails
+        {
+            Status = StatusCodes.Status503ServiceUnavailable,
+            Title = "OAuth provider unavailable",
+            Detail = ex.Message
+        };
+        problem.Extensions["errorCode"] = "oauth_provider_unavailable";
+        problem.Extensions["provider"] = ex.Provider;
+        problem.Extensions["magicLinkFallback"] = true;
+
+        return new ObjectResult(problem) { StatusCode = StatusCodes.Status503ServiceUnavailable };
     }
 
     private ObjectResult GitHubNotConfigured(InvalidOperationException ex)

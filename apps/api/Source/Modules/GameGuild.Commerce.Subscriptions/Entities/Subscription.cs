@@ -452,9 +452,11 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
     public void Suspend(string? reason = null)
     {
         TransitionTo(SubscriptionStatus.Suspended);
-        AutoRenew = false;
 
-        if (!string.IsNullOrEmpty(reason)) { Metadata = JsonSerializer.Serialize(new { suspensionReason = reason }); }
+        // Issue #1205 G-10: record the pre-suspension auto-renew preference BEFORE the
+        // suspension turns it off, so Reactivate can restore rather than force-enable it.
+        Metadata = MergeSuspensionMetadata(Metadata, reason, AutoRenew);
+        AutoRenew = false;
 
         Raise(new SubscriptionSuspendedEvent(Id, TenantId!.Value, reason));
     }
@@ -465,10 +467,101 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
     public void Reactivate()
     {
         TransitionTo(SubscriptionStatus.Active);
-        AutoRenew = true;
-        Metadata = null;
+
+        // Issue #1205 G-10: restore the recorded pre-suspension auto-renew preference
+        // instead of force-enabling billing; when no preference was recorded (legacy
+        // suspensions) the current value stands. Only the suspension bookkeeping keys
+        // are removed — the rest of the metadata (e.g. creation-time fraud-review
+        // evidence) is preserved.
+        Metadata = RemoveSuspensionMetadata(Metadata, out var autoRenewBeforeSuspension);
+        if (autoRenewBeforeSuspension.HasValue)
+        {
+            AutoRenew = autoRenewBeforeSuspension.Value;
+        }
 
         Raise(new SubscriptionReactivatedEvent(Id, TenantId!.Value));
+    }
+
+    /// <summary>
+    ///     Merges the suspension bookkeeping keys (<c>suspensionReason</c>,
+    ///     <c>autoRenewBeforeSuspension</c>) into the existing metadata JSON instead of
+    ///     replacing it, so prior keys — including fraud-review evidence — survive a
+    ///     suspension (issue #1205 G-10).
+    /// </summary>
+    private static string? MergeSuspensionMetadata(string? existing, string? reason, bool autoRenew)
+    {
+        var values = new Dictionary<string, object?>();
+
+        if (!string.IsNullOrWhiteSpace(existing))
+        {
+            try
+            {
+                var existingValues = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(existing);
+                if (existingValues is not null)
+                {
+                    foreach (var (key, value) in existingValues)
+                    {
+                        values[key] = value;
+                    }
+                }
+            }
+            catch (JsonException)
+            {
+                // Non-JSON metadata cannot be merged; keep it under a reserved key.
+                values["priorMetadata"] = existing;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(reason))
+        {
+            values["suspensionReason"] = reason;
+        }
+
+        // Record the preference once per suspension chain so the value that existed
+        // before the first suspension is the one a later Reactivate restores.
+        if (!values.ContainsKey("autoRenewBeforeSuspension"))
+        {
+            values["autoRenewBeforeSuspension"] = autoRenew;
+        }
+
+        return JsonSerializer.Serialize(values);
+    }
+
+    /// <summary>
+    ///     Removes the suspension bookkeeping keys added by <see cref="Suspend" />,
+    ///     returning the pre-suspension auto-renew preference when one was recorded
+    ///     (issue #1205 G-10).
+    /// </summary>
+    private static string? RemoveSuspensionMetadata(string? existing, out bool? autoRenewBeforeSuspension)
+    {
+        autoRenewBeforeSuspension = null;
+
+        if (string.IsNullOrWhiteSpace(existing))
+        {
+            return null;
+        }
+
+        Dictionary<string, JsonElement> values;
+        try
+        {
+            values = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(existing) ?? [];
+        }
+        catch (JsonException)
+        {
+            // Non-JSON metadata stays untouched.
+            return existing;
+        }
+
+        if (values.TryGetValue("autoRenewBeforeSuspension", out var recorded) &&
+            recorded.ValueKind is JsonValueKind.True or JsonValueKind.False)
+        {
+            autoRenewBeforeSuspension = recorded.GetBoolean();
+        }
+
+        values.Remove("suspensionReason");
+        values.Remove("autoRenewBeforeSuspension");
+
+        return values.Count == 0 ? null : JsonSerializer.Serialize(values);
     }
 
     /// <summary>
@@ -717,6 +810,17 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
         BillingCycleCount = requestedCycle;
 
         Raise(new SubscriptionPaymentProcessedEvent(Id, TenantId ?? Guid.Empty, Amount.Amount, Amount.Currency, paymentDate));
+
+        // Issue #1205 G-11: a confirmed cycle payment heals PastDue — the state
+        // machine's "recovery payment" edge (PastDue → Active) fires on the payment
+        // itself, so IsActive-keyed features recover without an operator calling
+        // :reactivate. Auto-renew is left untouched (no force-enable).
+        if (Status == SubscriptionStatus.PastDue)
+        {
+            TransitionTo(SubscriptionStatus.Active);
+            Raise(new SubscriptionReactivatedEvent(Id, TenantId ?? Guid.Empty));
+        }
+
         return PaymentRecordResult.Success(idempotencyKey, requestedCycle);
     }
 

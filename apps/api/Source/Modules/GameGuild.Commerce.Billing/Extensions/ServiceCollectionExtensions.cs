@@ -71,6 +71,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<GameGuild.Commerce.Subscriptions.ISubscriptionInvoiceMaterializer, SubscriptionInvoiceMaterializer>();
         services.AddScoped<GameGuild.Notifications.Services.Email.IEmailRenderer, Services.Email.Renderers.InvoiceIssuedEmailRenderer>();
 
+        // Invoice aging (issue #1205 G-2): on-next-touch sweep moving overdue open invoices
+        // to PastDue — wired into invoice materialization and the manual retry path (no
+        // dedicated aging worker exists in the module yet).
+        services.AddScoped<IInvoiceAgingService, InvoiceAgingService>();
+
         // Event-sourced state reconstruction (issue #396): deterministic fold of the durable
         // billing event log into projected subscription state, verified against the live snapshot.
         services.AddSingleton<ISubscriptionEventStateProjection, SubscriptionEventStateProjectionService>();

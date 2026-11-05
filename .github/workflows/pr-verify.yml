@@ -121,7 +121,7 @@ jobs:
         run: |
           node --test apps/web/scripts/coding-cycle-grading-transport.test.mjs
           node --test scripts/ci/tests/classify-release-changes.test.mjs scripts/ci/tests/select-affected-dotnet-tests.test.mjs scripts/ci/tests/postgres-images.test.mjs scripts/ci/tests/pull-ci-image.test.mjs scripts/ci/tests/emception-web-artifacts.test.mjs apps/web/scripts/coding-cycle-editor-support.test.mjs apps/web/scripts/coding-cycle-toolchain-support.test.mjs
-          node --test scripts/ci/tests/dotnet-cache-policy.test.mjs
+          node --test scripts/ci/tests/dotnet-cache-policy.test.mjs scripts/ci/tests/reclaim-hosted-dotnet-disk.test.mjs
           node --test scripts/ci/tests/api-integration-filter.test.mjs
           node --max-old-space-size=128 --test scripts/ci/tests/required-artifact-upload.test.mjs
           node --test scripts/ci/tests/pr-required-gate.test.mjs
@@ -191,8 +191,14 @@ jobs:
       - uses: ./.github/actions/setup-node-workspace
       - name: Build generated client
         run: pnpm --filter @game-guild/client build
+      - name: Typecheck public client declaration namespaces
+        run: pnpm --filter @game-guild/client typecheck:public-api
       - name: Test client credentials, MFA, auth factory, transport and generator contracts
-        run: pnpm --filter @game-guild/client exec vitest run tests/auth/providers/credentials.test.ts tests/next/auth.test.ts tests/next/actions-extended.test.ts tests/gaps/final-gaps.test.ts tests/react/query-hooks-extended.test.ts tests/generator tests/transport --maxWorkers=1
+        run: pnpm --filter @game-guild/client exec vitest run tests/auth/errors.test.ts tests/auth/providers/credentials.test.ts tests/next/mfa-enrollment-action.test.ts tests/next/signup-captcha-forwarding.test.ts tests/next/auth.test.ts tests/next/actions-extended.test.ts tests/gaps/final-gaps.test.ts tests/react/use-auth-mfa.test.tsx tests/react/query-hooks-extended.test.ts tests/generator tests/transport --maxWorkers=1
+      - name: Test client metrics correlation contracts
+        run: pnpm --filter @game-guild/client exec vitest run tests/plugins/metrics-full.test.ts --maxWorkers=1
+      - name: Typecheck client metrics correlation contracts
+        run: pnpm --filter @game-guild/client exec tsc --noEmit --project tests/plugins/tsconfig.metrics.json
       - name: Test delivered WalletConnect runtime
         run: pnpm --filter @game-guild/web3 exec vitest run src/adapters/walletconnect.runtime.test.ts src/adapters/walletconnect.test.ts --maxWorkers=1
       - name: Acquire verified Toolchain release for Web
@@ -573,6 +579,9 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Reclaim unused hosted toolchains for the full solution build
+        if: runner.environment == 'github-hosted' && runner.os == 'Linux'
+        run: bash scripts/ci/reclaim-hosted-dotnet-disk.sh
       - uses: ./.github/actions/setup-node-workspace
       - uses: ./.github/actions/setup-dotnet
       - name: Build full solution and verify complete Economy coverage
@@ -604,6 +613,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+      - name: Reclaim unused hosted toolchains for regression builds
+        if: runner.environment == 'github-hosted' && runner.os == 'Linux'
+        run: bash scripts/ci/reclaim-hosted-dotnet-disk.sh
       - uses: ./.github/actions/setup-node-workspace
       - uses: ./.github/actions/setup-dotnet
       - name: Run whole-solution regression shard

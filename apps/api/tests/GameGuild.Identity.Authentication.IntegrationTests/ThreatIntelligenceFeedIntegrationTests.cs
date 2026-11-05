@@ -144,33 +144,9 @@ public sealed class ThreatIntelligenceFeedIntegrationTests
         });
     }
 
-    [Fact]
-    public async Task FedMaliciousClientIp_InEnforceMode_RaisesSignInToStepUp()
-    {
-        var (factory, client) = CreateHost("Enforce");
-        await using (factory)
-        {
-            var signUp = await SignUpUserAsync(factory);
-
-            var response = await client.PostAsJsonAsync("/v1/auth/sign-in", new LocalSignInRequest
-            {
-                Email = signUp.Email,
-                Password = "ThreatIntelTest123!"
-            });
-
-            var body = await response.Content.ReadAsStringAsync();
-            response.IsSuccessStatusCode.Should().BeTrue($"HTTP {response.StatusCode}: {body}");
-
-            var signIn = await response.Content.ReadFromJsonAsync<SignInResponse>(ResponseJsonOptions);
-            signIn.Should().NotBeNull();
-            signIn!.RequiresStepUp.Should().BeTrue(
-                "the client IP is fed as malicious and Enforce mode must raise the risk score into the step-up machinery");
-            signIn.Success.Should().BeFalse();
-            signIn.AccessToken.Should().BeNullOrEmpty("step-up must precede token issuance");
-            ((int)signIn.RiskLevel!.Value).Should().BeGreaterThanOrEqualTo((int)RiskLevel.High);
-            signIn.RiskFactors.Should().Contain(f => f.Contains("ThreatIntel:MaliciousIp", StringComparison.Ordinal));
-        }
-    }
+    // Enforce mode provisions a bound enrollment challenge, requiring the actual
+    // PostgreSQL request transaction. Its feed, pinned client IP, risk threshold,
+    // step-up and no-credentials assertions now run in MfaSignInEnrollmentPostgreSqlTests.
 
     [Fact]
     public async Task FedMaliciousClientIp_InDefaultObservationMode_DoesNotBlockOrStepUp()

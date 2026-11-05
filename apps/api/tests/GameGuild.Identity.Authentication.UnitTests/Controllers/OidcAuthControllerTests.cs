@@ -11,6 +11,25 @@ public class OidcAuthControllerTests
     private const string Slug = "corp-idp";
 
     [Fact]
+    public async Task OidcSignIn_DiscoveryOutage_Returns503AndFallbackWithoutUpstreamDetails()
+    {
+        var sender = new Mock<ISender>();
+        sender.Setup(s => s.Send(It.IsAny<OidcSignInCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OAuthProviderUnavailableException(Slug, new HttpRequestException("private upstream detail")));
+        var controller = new AuthController(sender.Object);
+
+        var result = await controller.OidcSignIn(Slug,
+            new OidcAuthorizeRequestDto { RedirectUri = "https://web.example.test/cb" }, CancellationToken.None);
+
+        var response = result.Should().BeOfType<ObjectResult>().Subject;
+        response.StatusCode.Should().Be(503);
+        var problem = response.Value.Should().BeOfType<ProblemDetails>().Subject;
+        problem.Extensions["errorCode"].Should().Be("oauth_provider_unavailable");
+        problem.Extensions["magicLinkFallback"].Should().Be(true);
+        problem.Detail.Should().NotContain("private upstream detail");
+    }
+
+    [Fact]
     public async Task OidcSignIn_ShouldReturnOk_WithAuthUrlAndState()
     {
         var sender = new Mock<ISender>();

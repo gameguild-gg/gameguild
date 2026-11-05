@@ -30,7 +30,8 @@ public sealed class SignInMfaService(
         {
             throw new InvalidOperationException("Current subject policy did not permit ordinary credentials.");
         }
-        return await IssueAsync(subject, decision.TenantId, deviceInfo, cancellationToken).ConfigureAwait(false);
+        return await IssueAsync(subject, decision.TenantId, deviceInfo, cancellationToken,
+            mfaCompliancePending: prepared.MfaCompliancePending).ConfigureAwait(false);
     }
 
     public async Task<SignInMfaPreparation> PrepareAsync(Guid verifiedSubjectId, int verifiedTokenVersion, Guid? requestedTenantId,
@@ -51,24 +52,62 @@ public sealed class SignInMfaService(
         {
             return SignInMfaPreparation.PermitWithoutMfa(current.User, decision);
         }
+        if (decision.RequiresMfa && !decision.RequiredByDefault && !current!.HasEnrolledMfa && !requiresRiskStepUp)
+        {
+            // Elevated-role-only requirement with no enrolled factor: dropping MFA is honored at
+            // sign-in. Compliance is reported instead of forcing an enrollment dead-end.
+            return SignInMfaPreparation.PermitWithoutMfa(current.User, decision, mfaCompliancePending: true);
+        }
 
         var token = SignInMfaChallengeToken.Create();
         if (!SignInMfaChallengeToken.TryHash(token, out var hash)) { throw new InvalidOperationException("Challenge creation failed."); }
         var now = _time.GetUtcNow();
+        var completingEnrollment = !current!.HasEnrolledMfa;
         var challenge = new SignInMfaChallenge
         {
             Id = Guid.NewGuid(), SubjectId = verifiedSubjectId, SubjectTokenVersion = verifiedTokenVersion,
             TenantId = decision.TenantId, PolicyFingerprint = decision.PolicyFingerprint, TokenHash = hash,
-            FirstFactor = firstFactor, Purpose = current!.HasEnrolledMfa ? SignInMfaPurpose.VerifyFactor : SignInMfaPurpose.EnrollFactor,
+            FirstFactor = firstFactor, Purpose = completingEnrollment ? SignInMfaPurpose.EnrollFactor : SignInMfaPurpose.VerifyFactor,
             CreatedAt = now, ExpiresAt = now.AddMinutes(5)
         };
+        SignInMfaEnrollmentSetup? setup = null;
+        if (completingEnrollment)
+        {
+            // Serialize against settings enrollment and concurrent sign-ins before provisioning.
+            await enrollment.AcquireSubjectLockAsync(verifiedSubjectId, cancellationToken).ConfigureAwait(false);
+            // Enrollment state was read before the lock; a concurrent completion (settings
+            // setup or another sign-in) may have enabled the factor while this request waited.
+            // Re-read the subject under the lock and fall back to a verification challenge.
+            var locked = await subjects.ReadCurrentAsync(verifiedSubjectId, cancellationToken).ConfigureAwait(false);
+            RequireAccount(locked, verifiedSubjectId, verifiedTokenVersion);
+            if (IsLocked(locked!)) { return SignInMfaPreparation.WithOutcome(Denied()); }
+            if (locked!.HasEnrolledMfa)
+            {
+                current = locked;
+                challenge = new SignInMfaChallenge
+                {
+                    Id = Guid.NewGuid(), SubjectId = verifiedSubjectId, SubjectTokenVersion = verifiedTokenVersion,
+                    TenantId = decision.TenantId, PolicyFingerprint = decision.PolicyFingerprint, TokenHash = hash,
+                    FirstFactor = firstFactor, Purpose = SignInMfaPurpose.VerifyFactor,
+                    CreatedAt = now, ExpiresAt = now.AddMinutes(5)
+                };
+            }
+            else
+            {
+                setup = await enrollment.StartOrResumeAsync(verifiedSubjectId, current.User.Email, now, challenge.ExpiresAt,
+                    cancellationToken).ConfigureAwait(false);
+                challenge.EnrollmentConfigurationId = setup.ConfigurationId;
+                challenge.EnrollmentSecretFingerprint = setup.SecretFingerprint;
+                challenge.EnrollmentInitializedAt = now;
+            }
+        }
         await challenges.AddAsync(challenge, cancellationToken).ConfigureAwait(false);
         await RecordAsync("Authentication.MfaSignInRequired", challenge, false, firstFactor.ToString(), deviceInfo,
             null, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         // This marker is created only after challenge persistence and audit both succeed.
         return SignInMfaPreparation.WithOutcome(new SignInMfaPendingResponse(token, challenge.ExpiresAt, challenge.Purpose,
-            requiresRiskStepUp, current.User, decision.TenantId));
+            requiresRiskStepUp, current.User, decision.TenantId, setup));
     }
 
     public async Task<SignInResponse> CompleteCodeAsync(string bearer, string code, MfaMethod method,
@@ -149,7 +188,7 @@ public sealed class SignInMfaService(
         return string.Equals(decision.PolicyFingerprint, challenge.PolicyFingerprint, StringComparison.Ordinal) ? current : null;
     }
 
-    public async Task<SignInMfaProof?> ReadSessionProofAsync(Guid subjectId, int tokenVersion, Guid tenantId, Guid sessionId,
+    public async Task<SignInMfaSessionProof?> ReadSessionProofAsync(Guid subjectId, int tokenVersion, Guid tenantId, Guid sessionId,
         DateTimeOffset authenticatedAt, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -161,11 +200,15 @@ public sealed class SignInMfaService(
         cancellationToken.ThrowIfCancellationRequested();
         if (stored is null)
         {
-            if (decision.RequiresMfa || current!.HasEnrolledMfa)
+            if (current!.HasEnrolledMfa || decision.RequiredByDefault)
             {
                 throw new AuthenticationRequiredException("MFA verification is required before refreshing this session.");
             }
-            return null;
+            // Fail closed unless the surviving requirement is role-only AND the subject still
+            // has no enrolled factor; only that reevaluated grace keeps the marker on refresh.
+            return decision.RequiresMfa && !current.HasEnrolledMfa
+                ? new SignInMfaSessionProof(null, MfaCompliancePending: true)
+                : null;
         }
         if (!current!.HasEnrolledMfa || IsLocked(current) || stored.SessionId != sessionId ||
             !string.Equals(stored.PolicyFingerprint, decision.PolicyFingerprint, StringComparison.Ordinal))
@@ -174,14 +217,14 @@ public sealed class SignInMfaService(
         }
         var proof = stored.ToProof();
         proof.RequireBinding(subjectId, tenantId, tokenVersion, authenticatedAt, _time.GetUtcNow());
-        return proof;
+        return new SignInMfaSessionProof(proof);
     }
 
     private async Task<SignInResponse> IssueAsync(User user, Guid tenantId, DeviceInfo device, CancellationToken cancellationToken,
-        SignInMfaProof? proof = null)
+        SignInMfaProof? proof = null, bool mfaCompliancePending = false)
     {
         var result = proof is null
-            ? await issuer.IssueAsync(user, tenantId, device, cancellationToken).ConfigureAwait(false)
+            ? await issuer.IssueAsync(user, tenantId, device, cancellationToken, mfaCompliancePending).ConfigureAwait(false)
             : await issuer.IssueMfaAsync(user, tenantId, device, proof, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         if (result is null || !result.Success || result.RequiresMfa || result.RequiresStepUp || result.UserId != user.Id ||
@@ -223,11 +266,16 @@ public sealed class SignInMfaService(
     private static SignInResponse Denied() => new() { Success = false, Message = "Additional verification failed" };
 }
 
+/// <summary>Refresh-time reevaluation outcome: the stored proof (if any) and the reevaluated compliance marker.</summary>
+/// <param name="Proof">Verified second-factor evidence for the session; null for an ordinary refresh.</param>
+/// <param name="MfaCompliancePending">True when the session refreshes under a role-only MFA requirement with no enrolled factor.</param>
+public sealed record SignInMfaSessionProof(SignInMfaProof? Proof, bool MfaCompliancePending = false);
+
 /// <summary>Server-only transaction outcome; the bearer is not an ordinary access or refresh credential.</summary>
 internal sealed class SignInMfaPendingResponse : SignInResponse, ICommitOnFailureOutcome
 {
     public SignInMfaPendingResponse(string bearer, DateTimeOffset expiresAt, SignInMfaPurpose purpose, bool requiresRiskStepUp,
-        User verifiedSubject, Guid tenantId)
+        User verifiedSubject, Guid tenantId, SignInMfaEnrollmentSetup? enrollment = null)
     {
         ArgumentNullException.ThrowIfNull(verifiedSubject);
         if (verifiedSubject.Id == Guid.Empty || tenantId == Guid.Empty)
@@ -242,6 +290,9 @@ internal sealed class SignInMfaPendingResponse : SignInResponse, ICommitOnFailur
         StepUpToken = requiresRiskStepUp ? bearer : null;
         StepUpExpiresAt = expiresAt.UtcDateTime;
         AvailableMethods = purpose == SignInMfaPurpose.VerifyFactor ? ["TOTP", "BackupCode"] : ["TOTP"];
+        // Only a sign-in-driven enrollment carries the provisioning payload.
+        MfaEnrollment = enrollment is null ? null : new SignInMfaEnrollmentOffer(enrollment.SecretKey,
+            enrollment.QrCodeUri, enrollment.SetupExpiresAt);
         UserId = verifiedSubject.Id;
         Email = verifiedSubject.Email;
         TenantId = tenantId;
@@ -250,6 +301,9 @@ internal sealed class SignInMfaPendingResponse : SignInResponse, ICommitOnFailur
             authenticationComplete: false, fallbackCreatedAt: verifiedSubject.CreatedAt);
     }
 }
+
+/// <summary>One-time TOTP provisioning offered at sign-in when a required-MFA subject has no enrolled factor.</summary>
+public sealed record SignInMfaEnrollmentOffer(string SecretKey, string QrCodeUri, DateTimeOffset ExpiresAt);
 
 internal sealed class SignInMfaCommittedDenial : SignInResponse, ICommitOnFailureOutcome
 {

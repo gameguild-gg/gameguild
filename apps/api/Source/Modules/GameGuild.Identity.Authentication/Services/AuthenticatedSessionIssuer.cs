@@ -16,7 +16,10 @@ public sealed class AuthenticatedSessionIssuer(
     IRefreshTokenRepository refreshTokenRepository,
     ISessionManagementService sessionManagementService,
     ISessionMfaEvidenceStore mfaEvidence,
-    INewLoginAlertPublisher? newLoginAlertPublisher = null) : IAuthenticatedSessionIssuer
+    INewLoginAlertPublisher? newLoginAlertPublisher = null,
+    IAuthenticationAnomalyDetectionService? anomalyDetection = null,
+    ISuspiciousLoginAlertPublisher? suspiciousLoginAlerts = null,
+    IPublisher? eventPublisher = null) : IAuthenticatedSessionIssuer
 {
     public Task<SignInResponse> IssueAsync(
         User user,
@@ -24,6 +27,14 @@ public sealed class AuthenticatedSessionIssuer(
         DeviceInfo deviceInfo,
         CancellationToken cancellationToken)
         => IssueCoreAsync(user, requestedTenantId, deviceInfo, null, cancellationToken);
+
+    public Task<SignInResponse> IssueAsync(
+        User user,
+        Guid? requestedTenantId,
+        DeviceInfo deviceInfo,
+        CancellationToken cancellationToken,
+        bool mfaCompliancePending)
+        => IssueCoreAsync(user, requestedTenantId, deviceInfo, null, cancellationToken, mfaCompliancePending);
 
     public Task<SignInResponse> IssueMfaAsync(User user, Guid? requestedTenantId, DeviceInfo deviceInfo,
         SignInMfaProof proof, CancellationToken cancellationToken)
@@ -33,10 +44,9 @@ public sealed class AuthenticatedSessionIssuer(
     }
 
     private async Task<SignInResponse> IssueCoreAsync(User user, Guid? requestedTenantId, DeviceInfo deviceInfo,
-        SignInMfaProof? proof, CancellationToken cancellationToken)
+        SignInMfaProof? proof, CancellationToken cancellationToken, bool mfaCompliancePending = false)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        ArgumentNullException.ThrowIfNull(user);
+        cancellationToken.ThrowIfCancellationRequested();        ArgumentNullException.ThrowIfNull(user);
         ArgumentNullException.ThrowIfNull(deviceInfo);
         if (user.Id == Guid.Empty || user.IsDeleted || !user.ValidateForAuthentication(user.TokenVersion).IsSuccess)
         {
@@ -102,9 +112,13 @@ public sealed class AuthenticatedSessionIssuer(
         }
         else
         {
-            accessToken = await jwtTokenService.GenerateAccessTokenAsync(
-                user.Id, user.Email, context.Roles.ToArray(), context.TenantId, user.TokenVersion,
-                new DateTimeOffset(storedToken.CreatedAt), sessionId, cancellationToken).ConfigureAwait(false);
+            accessToken = mfaCompliancePending
+                ? await jwtTokenService.GenerateAccessTokenAsync(
+                    user.Id, user.Email, context.Roles.ToArray(), context.TenantId, user.TokenVersion,
+                    sessionId, mfaCompliancePending: true, cancellationToken).ConfigureAwait(false)
+                : await jwtTokenService.GenerateAccessTokenAsync(
+                    user.Id, user.Email, context.Roles.ToArray(), context.TenantId, user.TokenVersion,
+                    new DateTimeOffset(storedToken.CreatedAt), sessionId, cancellationToken).ConfigureAwait(false);
         }
         cancellationToken.ThrowIfCancellationRequested();
         var handler = new JwtSecurityTokenHandler();
@@ -130,6 +144,47 @@ public sealed class AuthenticatedSessionIssuer(
                 user.Id, context.TenantId, sessionId, deviceSummary, cancellationToken).ConfigureAwait(false);
         }
 
+        // Sign-in risk coverage (issue #1199): this shared completion is the issuance point for
+        // the MFA-complete, passkey and magic-link families, which previously never reached the
+        // suspicious-login containment. Confirmed signals (impossible travel, brute force) are
+        // forwarded best-effort; analysis failures never fail issuance.
+        var authMethod = proof is not null ? $"Mfa:{proof.FirstFactor}:{proof.Method}" : "Session";
+        if (anomalyDetection is not null)
+        {
+            try
+            {
+                var analysis = await anomalyDetection.AnalyzeLoginAttemptAsync(new AuthenticationAttemptContext
+                {
+                    UserId = user.Id,
+                    Identifier = user.Email.ToLowerInvariant(),
+                    AuthenticationMethod = authMethod,
+                    IpAddress = deviceInfo.IpAddress ?? "unknown",
+                    UserAgent = deviceInfo.UserAgent ?? "Unknown",
+                    TenantId = context.TenantId,
+                    AttemptedAt = SystemClock.UtcNow
+                }).ConfigureAwait(false);
+
+                await AuthenticationEventDispatch.AlertConfirmedSignInRisksAsync(
+                    suspiciousLoginAlerts, user.Id, context.TenantId, analysis, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                // Defense-in-depth only; issuance is already durable at this point.
+            }
+        }
+
+        // In-process sign-in telemetry (issue #1199): the single completion point through which
+        // every issuer-backed sign-in family (MFA-complete, passkey, magic link) is finalized.
+        await AuthenticationEventDispatch.PublishAsync(
+            eventPublisher,
+            new UserSignedInEvent(user.Id, user.Email, authMethod, deviceInfo.IpAddress, deviceInfo.UserAgent, SystemClock.UtcNow),
+            null,
+            cancellationToken).ConfigureAwait(false);
+
         return new SignInResponse
         {
             Success = true,
@@ -141,6 +196,7 @@ public sealed class AuthenticatedSessionIssuer(
             SessionId = sessionId,
             TenantId = context.TenantId,
             AvailableTenants = context.AvailableTenants,
+            MfaCompliancePending = mfaCompliancePending,
             ExpiresAt = storedToken.ExpiresAt,
             RefreshTokenExpiresAt = storedToken.ExpiresAt,
             AccessTokenExpiresAt = accessExpiresAt,

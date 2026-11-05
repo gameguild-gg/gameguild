@@ -84,13 +84,14 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
     // (ReplayCommitsContainmentAuditAndMetricWhileReturningNoCredentials,
     // ExplicitRevocationCommitsAuditAndMetricForOwnedTokenOrWholeAccount).
 
-    [Theory]
-    [InlineData("Member", false)]
-    [InlineData("Owner", true)]
-    [InlineData("Admin", true)]
-    public async Task LocalAuth_SignIn_WithTenantMemberships_ShouldPopulateTenantContext(string membershipRole, bool requiresMfa)
+    // The Owner/Admin variants require transactional PostgreSQL enrollment and now
+    // run at the HTTP boundary in MfaSignInEnrollmentPostgreSqlTests, including
+    // tenant binding and no ordinary credentials/session before the second factor.
+    [Fact]
+    public async Task LocalAuth_SignIn_WithTenantMemberships_ShouldPopulateTenantContext()
     {
         // Arrange
+        const string membershipRole = "Member";
         var email = $"tenant.flow.{Guid.NewGuid()}@test.com";
         var password = "TenantPassword123!";
 
@@ -148,7 +149,6 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
             Password = password,
             TenantId = tenantTwo.Id
         };
-        var sessionsBefore = await _dbContext.Set<UserSession>().CountAsync(session => session.UserId == userId);
 
         // Act
         var signInResult = await _authService.LocalSignInAsync(signInRequest);
@@ -156,20 +156,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
         // Assert
         signInResult.TenantId.Should().Be(tenantTwo.Id);
         signInResult.UserId.Should().Be(userId);
-        signInResult.RequiresMfa.Should().Be(requiresMfa);
-        if (requiresMfa)
-        {
-            // Elevated memberships retain the resolved binding, but need a verified second factor
-            // before the complete tenant list or ordinary credentials can be returned.
-            signInResult.Success.Should().BeFalse();
-            signInResult.MfaToken.Should().NotBeNullOrEmpty();
-            signInResult.AvailableTenants.Should().BeNull();
-            signInResult.AccessToken.Should().BeEmpty();
-            signInResult.RefreshToken.Should().BeEmpty();
-            signInResult.SessionId.Should().BeEmpty();
-            (await _dbContext.Set<UserSession>().CountAsync(session => session.UserId == userId)).Should().Be(sessionsBefore);
-            return;
-        }
+        signInResult.RequiresMfa.Should().BeFalse();
 
         signInResult.Success.Should().BeTrue();
         signInResult.AccessToken.Should().NotBeNullOrEmpty();
@@ -977,6 +964,69 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
 
         userTokens.Should().AllSatisfy(token => token.IsRevoked.Should().BeTrue());
     }
+
+    /// <summary>
+    ///     Ghost-session regression (issue #1119): a soft-deleted user's live refresh token
+    ///     must be refused on rotation. The refresh path re-reads the user through the
+    ///     repository (which filters DeletedAt) and rejects unavailable users, so the
+    ///     token dies with the account instead of keeping a ghost session alive. The
+    ///     HTTP layer maps the thrown UnauthorizedAccessException to 401.
+    /// </summary>
+    /// <remarks>
+    ///     The token is NOT rotated while the user is alive: rotation runs the atomic
+    ///     ExecuteUpdate claim in RefreshTokenRepository.TryRevokeForRotationAsync, which
+    ///     the EF InMemory provider hosting this suite cannot translate (see the retirement
+    ///     note above LocalAuth_WithInvalidCredentials_ShouldFail). A freshly issued,
+    ///     never-revoked sign-in token is equally live for the ghost-session assertion,
+    ///     and the deleted-user refusal path rejects it long before any rotation step.
+    /// </remarks>
+    [Fact]
+    public async Task TokenLifecycle_DeletedUserWithLiveRefreshToken_ShouldRefuseRefresh()
+    {
+        // Arrange - create a user whose sign-in refresh token is live (never revoked,
+        // never rotated); soft-deleting the account must kill that token.
+        var email = $"ghost.session.{Guid.NewGuid()}@test.com";
+        var signUpResult = await _authService.LocalSignUpAsync(new LocalSignUpRequest
+        {
+            Email = email,
+            Username = $"ghost_user_{Guid.NewGuid():N}",
+            Password = GhostSessionPassword
+        });
+        var userId = signUpResult.UserId;
+
+        var signInResult = await _authService.LocalSignInAsync(new LocalSignInRequest
+        {
+            Email = email,
+            Password = GhostSessionPassword
+        });
+        signInResult.Success.Should().BeTrue();
+
+        var liveToken = signInResult.RefreshToken;
+
+        // Act - soft-delete the user exactly like the user-deletion flow does
+        var storedUser = await _dbContext.Set<User>().SingleAsync(u => u.Id == userId);
+        storedUser.MarkDeleted();
+        await _dbContext.SaveChangesAsync();
+
+        // Assert - the still-live refresh token must now be refused (401 path)
+        await FluentActions.Invoking(async () =>
+                await _authService.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = liveToken }))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+
+        // And the ghost cannot resurrect itself through sign-in either.
+        await FluentActions.Invoking(async () =>
+                await _authService.LocalSignInAsync(new LocalSignInRequest
+                {
+                    Email = email,
+                    Password = GhostSessionPassword
+                }))
+            .Should().ThrowAsync<Exception>();
+    }
+
+    /// <summary>
+    ///     Random password shared by the sign-up and sign-in steps of the regression.
+    /// </summary>
+    private static string GhostSessionPassword { get; } = $"Aa1!{Convert.ToHexString(RandomNumberGenerator.GetBytes(24))}";
 
     #endregion
 

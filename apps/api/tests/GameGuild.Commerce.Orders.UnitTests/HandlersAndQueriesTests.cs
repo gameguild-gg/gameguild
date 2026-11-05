@@ -489,7 +489,7 @@ public sealed class OrderCommandHandlerTests
         // The cancel handler loads the order with its line items so pending reservations can
         // be released (issue #401) — the fixture must mock that load path.
         var repository = CreateRepositoryWithOrder(order, includeLineItems: true);
-        var handler = new CancelOrderCommandHandler(repository.Object);
+        var handler = new CancelOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new CancelOrderCommand(order.Id, "customer request"), CancellationToken.None);
 
@@ -505,7 +505,7 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new CancelOrderCommandHandler(repository.Object);
+        var handler = new CancelOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor());
 
         var result = await handler.Handle(new CancelOrderCommand(Guid.NewGuid(), "reason"), CancellationToken.None);
 
@@ -520,7 +520,7 @@ public sealed class OrderCommandHandlerTests
         order.MarkAsPaid("provider-ref", "card", "ext-102");
         // Same line-items load path as the happy-path cancel (issue #401).
         var repository = CreateRepositoryWithOrder(order, includeLineItems: true);
-        var handler = new CancelOrderCommandHandler(repository.Object);
+        var handler = new CancelOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new CancelOrderCommand(order.Id, "reason"), CancellationToken.None);
 
@@ -965,7 +965,7 @@ public sealed class OrderCommandHandlerTests
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new DeleteOrderCommandHandler(repository.Object);
+        var handler = new DeleteOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new DeleteOrderCommand(order.Id), CancellationToken.None);
 
@@ -980,7 +980,7 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new DeleteOrderCommandHandler(repository.Object);
+        var handler = new DeleteOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor());
 
         var result = await handler.Handle(new DeleteOrderCommand(Guid.NewGuid()), CancellationToken.None);
 
@@ -994,7 +994,7 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         order.Cancel("cleanup");
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new DeleteOrderCommandHandler(repository.Object);
+        var handler = new DeleteOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new DeleteOrderCommand(order.Id), CancellationToken.None);
 
@@ -1008,7 +1008,7 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         order.MarkAsPaid("provider-ref", "card", "ext-103");
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new DeleteOrderCommandHandler(repository.Object);
+        var handler = new DeleteOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new DeleteOrderCommand(order.Id), CancellationToken.None);
 
@@ -1021,7 +1021,7 @@ public sealed class OrderCommandHandlerTests
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new HoldOrderCommandHandler(repository.Object);
+        var handler = new HoldOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new HoldOrderCommand(order.Id, "manual review"), CancellationToken.None);
 
@@ -1036,7 +1036,7 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new HoldOrderCommandHandler(repository.Object);
+        var handler = new HoldOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor());
 
         var result = await handler.Handle(new HoldOrderCommand(Guid.NewGuid(), "review"), CancellationToken.None);
 
@@ -1050,7 +1050,7 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         SetOrderStatus(order, OrderStatus.Processing);
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new HoldOrderCommandHandler(repository.Object);
+        var handler = new HoldOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new HoldOrderCommand(order.Id, "risk check"), CancellationToken.None);
 
@@ -1064,7 +1064,7 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         order.MarkAsPaid("provider-ref", "card", "ext-104");
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new HoldOrderCommandHandler(repository.Object);
+        var handler = new HoldOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new HoldOrderCommand(order.Id, "review"), CancellationToken.None);
 
@@ -1078,7 +1078,7 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Starter course", 40m);
         OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Add-on", 10m);
-        order.MarkAsPaid("provider-ref", "card", "ext-456");
+        OrderTestFactory.MarkOrderPaidAndFulfilled(order);
 
         var repository = new Mock<IOrderRepository>();
         repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
@@ -1092,7 +1092,10 @@ public sealed class OrderCommandHandlerTests
         entitlementService.Setup(mock => mock.RevokeEntitlementAsync(order.UserId, It.IsAny<Guid>(), "Order refunded", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var handler = new RefundOrderCommandHandler(repository.Object, entitlementService.Object);
+        var (refunder, _) = OrderTestFactory.CreateSucceedingRefunder();
+
+        var handler = new RefundOrderCommandHandler(
+            repository.Object, refunder.Object, entitlementService.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new RefundOrderCommand(order.Id, order.Total, "customer requested"), CancellationToken.None);
 
@@ -1104,13 +1107,150 @@ public sealed class OrderCommandHandlerTests
     }
 
     [Fact]
+    public async Task RefundOrderCommandHandler_FulfilledOrderCanBeRefunded()
+    {
+        // Issue #1205 G-4: the modern Pending→Processing→Paid→Fulfilled happy path must be
+        // refundable through the API.
+        var order = OrderTestFactory.CreatePendingOrder();
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Course", 30m);
+        OrderTestFactory.MarkOrderPaidAndFulfilled(order);
+
+        var repository = new Mock<IOrderRepository>();
+        repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+        repository.Setup(mock => mock.UpdateAsync(order, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        repository.Setup(mock => mock.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var (refunder, _) = OrderTestFactory.CreateSucceedingRefunder();
+
+        var handler = new RefundOrderCommandHandler(
+            repository.Object, refunder.Object, Mock.Of<IEntitlementService>(), OrderTestFactory.CreateActor(order));
+
+        var result = await handler.Handle(new RefundOrderCommand(order.Id, order.Total, "customer requested"), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        order.Status.Should().Be(OrderStatus.Refunded);
+        refunder.Verify(mock => mock.RefundAsync(
+            It.Is<AuthoritativeOrderRefund>(requested =>
+                requested.OrderId == order.Id &&
+                requested.PaymentId == order.PaymentId &&
+                requested.Amount == order.Total &&
+                requested.Currency == order.Currency &&
+                requested.RequestedByUserId == order.UserId),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RefundOrderCommandHandler_RejectsForeignActor()
+    {
+        var order = OrderTestFactory.CreatePendingOrder();
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Course", 30m);
+        OrderTestFactory.MarkOrderPaidAndFulfilled(order);
+
+        var repository = new Mock<IOrderRepository>();
+        repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+
+        var (refunder, _) = OrderTestFactory.CreateSucceedingRefunder();
+
+        var handler = new RefundOrderCommandHandler(
+            repository.Object, refunder.Object, Mock.Of<IEntitlementService>(),
+            OrderTestFactory.CreateActor(order, userId: Guid.NewGuid()));
+
+        var result = await handler.Handle(new RefundOrderCommand(order.Id, order.Total, "reason"), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.Forbidden");
+        order.Status.Should().Be(OrderStatus.Fulfilled);
+        refunder.Verify(mock => mock.RefundAsync(It.IsAny<AuthoritativeOrderRefund>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RefundOrderCommandHandler_FailedGatewayRefundLeavesOrderUntouched()
+    {
+        var order = OrderTestFactory.CreatePendingOrder();
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Course", 30m);
+        OrderTestFactory.MarkOrderPaidAndFulfilled(order);
+
+        var repository = new Mock<IOrderRepository>();
+        repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+
+        var refunder = new Mock<IOrderPaymentRefunder>();
+        refunder.Setup(mock => mock.RefundAsync(It.IsAny<AuthoritativeOrderRefund>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(OrderRefundResult.Failed("gateway declined the refund"));
+
+        var handler = new RefundOrderCommandHandler(
+            repository.Object, refunder.Object, Mock.Of<IEntitlementService>(), OrderTestFactory.CreateActor(order));
+
+        var result = await handler.Handle(new RefundOrderCommand(order.Id, order.Total, "reason"), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.RefundFailed");
+        order.Status.Should().Be(OrderStatus.Fulfilled);
+        repository.Verify(mock => mock.UpdateAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RefundOrderCommandHandler_RefundAwaitingApprovalDoesNotMutateOrder()
+    {
+        var order = OrderTestFactory.CreatePendingOrder();
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Course", 30m);
+        OrderTestFactory.MarkOrderPaidAndFulfilled(order);
+
+        var repository = new Mock<IOrderRepository>();
+        repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+
+        var refunder = new Mock<IOrderPaymentRefunder>();
+        refunder.Setup(mock => mock.RefundAsync(It.IsAny<AuthoritativeOrderRefund>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(OrderRefundResult.RequiresApproval(Guid.NewGuid()));
+
+        var handler = new RefundOrderCommandHandler(
+            repository.Object, refunder.Object, Mock.Of<IEntitlementService>(), OrderTestFactory.CreateActor(order));
+
+        var result = await handler.Handle(new RefundOrderCommand(order.Id, order.Total, "reason"), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.RefundRequiresApproval");
+        order.Status.Should().Be(OrderStatus.Fulfilled);
+        repository.Verify(mock => mock.UpdateAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RefundOrderCommandHandler_RejectsOrderWithoutPaymentBinding()
+    {
+        var order = OrderTestFactory.CreatePendingOrder();
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Course", 30m);
+        order.MarkAsPaid("provider-ref", "card", "ext-legacy"); // legacy path: no internal PaymentId
+
+        var repository = new Mock<IOrderRepository>();
+        repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+
+        var (refunder, _) = OrderTestFactory.CreateSucceedingRefunder();
+
+        var handler = new RefundOrderCommandHandler(
+            repository.Object, refunder.Object, Mock.Of<IEntitlementService>(), OrderTestFactory.CreateActor(order));
+
+        var result = await handler.Handle(new RefundOrderCommand(order.Id, order.Total, "reason"), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.PaymentRequired");
+        refunder.Verify(mock => mock.RefundAsync(It.IsAny<AuthoritativeOrderRefund>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task RefundOrderCommandHandler_ReturnsNotFoundWhenOrderDoesNotExist()
     {
         var repository = new Mock<IOrderRepository>();
         repository.Setup(mock => mock.GetWithLineItemsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new RefundOrderCommandHandler(repository.Object, Mock.Of<IEntitlementService>());
+        var handler = new RefundOrderCommandHandler(
+            repository.Object, Mock.Of<IOrderPaymentRefunder>(), Mock.Of<IEntitlementService>(), Mock.Of<IActorContextAccessor>());
 
         var result = await handler.Handle(new RefundOrderCommand(Guid.NewGuid(), 10m, "reason"), CancellationToken.None);
 
@@ -1126,7 +1266,10 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);
 
-        var handler = new RefundOrderCommandHandler(repository.Object, Mock.Of<IEntitlementService>());
+        var (refunder, _) = OrderTestFactory.CreateSucceedingRefunder();
+
+        var handler = new RefundOrderCommandHandler(
+            repository.Object, refunder.Object, Mock.Of<IEntitlementService>(), OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new RefundOrderCommand(order.Id, 10m, "reason"), CancellationToken.None);
 
@@ -1139,7 +1282,7 @@ public sealed class OrderCommandHandlerTests
     {
         var order = OrderTestFactory.CreatePendingOrder();
         OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Starter course", 40m);
-        order.MarkAsPaid("provider-ref", "card", "ext-457");
+        OrderTestFactory.MarkOrderPaidAndFulfilled(order);
 
         var repository = new Mock<IOrderRepository>();
         repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
@@ -1150,7 +1293,10 @@ public sealed class OrderCommandHandlerTests
             .Returns(Task.CompletedTask);
 
         var entitlementService = new Mock<IEntitlementService>();
-        var handler = new RefundOrderCommandHandler(repository.Object, entitlementService.Object);
+        var (refunder, _) = OrderTestFactory.CreateSucceedingRefunder();
+
+        var handler = new RefundOrderCommandHandler(
+            repository.Object, refunder.Object, entitlementService.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new RefundOrderCommand(order.Id, 10m, "partial refund"), CancellationToken.None);
 
@@ -1167,7 +1313,7 @@ public sealed class OrderCommandHandlerTests
     {
         var order = OrderTestFactory.CreatePendingOrder();
         OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Starter course", 40m);
-        order.MarkAsPaid("provider-ref", "card", "ext-458");
+        OrderTestFactory.MarkOrderPaidAndFulfilled(order);
         order.ProcessRefund(10m, "partial");
 
         var repository = new Mock<IOrderRepository>();
@@ -1182,7 +1328,10 @@ public sealed class OrderCommandHandlerTests
         entitlementService.Setup(mock => mock.RevokeEntitlementAsync(order.UserId, It.IsAny<Guid>(), "Order refunded", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var handler = new RefundOrderCommandHandler(repository.Object, entitlementService.Object);
+        var (refunder, _) = OrderTestFactory.CreateSucceedingRefunder();
+
+        var handler = new RefundOrderCommandHandler(
+            repository.Object, refunder.Object, entitlementService.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new RefundOrderCommand(order.Id, null, "final refund"), CancellationToken.None);
 
@@ -1200,7 +1349,7 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         order.PlaceOnHold("manual review");
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new ReleaseOrderCommandHandler(repository.Object);
+        var handler = new ReleaseOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new ReleaseOrderCommand(order.Id), CancellationToken.None);
 
@@ -1215,7 +1364,7 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new ReleaseOrderCommandHandler(repository.Object);
+        var handler = new ReleaseOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor());
 
         var result = await handler.Handle(new ReleaseOrderCommand(Guid.NewGuid()), CancellationToken.None);
 
@@ -1228,7 +1377,7 @@ public sealed class OrderCommandHandlerTests
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new ReleaseOrderCommandHandler(repository.Object);
+        var handler = new ReleaseOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new ReleaseOrderCommand(order.Id), CancellationToken.None);
 
@@ -1746,6 +1895,25 @@ internal static class OrderTestFactory
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(isSettled);
         return authority.Object;
+    }
+
+    /// <summary>
+    /// Moves an order through the modern capture flow (Paid with an internal payment
+    /// binding, then Fulfilled) so refund-handler tests exercise the documented happy path.
+    /// </summary>
+    public static void MarkOrderPaidAndFulfilled(Order order)
+    {
+        order.MarkAsPaidPendingFulfillment(Guid.NewGuid(), $"ext-{Guid.NewGuid():N}");
+        order.MarkAsFulfilled();
+    }
+
+    public static (Mock<IOrderPaymentRefunder> Refunder, Guid RefundId) CreateSucceedingRefunder()
+    {
+        var refundId = Guid.NewGuid();
+        var refunder = new Mock<IOrderPaymentRefunder>();
+        refunder.Setup(mock => mock.RefundAsync(It.IsAny<AuthoritativeOrderRefund>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(OrderRefundResult.Succeeded(refundId));
+        return (refunder, refundId);
     }
 
     public static OrderLineItem AddLineItem(
