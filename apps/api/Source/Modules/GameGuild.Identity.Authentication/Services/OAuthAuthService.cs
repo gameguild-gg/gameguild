@@ -746,12 +746,16 @@ public class OAuthAuthService(
         {
             // Record the provider outage and preserve its typed outcome for the API's
             // fallback response. Request cancellation remains cancellation.
-            await RecordFailedOAuthAttemptAsync(authenticationMethod, stopwatch, exception).ConfigureAwait(false);
+            var unavailable = exception as OAuthProviderUnavailableException
+                ?? new OAuthProviderUnavailableException(authenticationMethod, exception);
+            // Persist a stable, typed outage reason so operational failures remain audited
+            // without becoming credential-abuse evidence. Do not infer this from HTTP errors alone.
+            await RecordFailedOAuthAttemptAsync(authenticationMethod, stopwatch, unavailable).ConfigureAwait(false);
             if (exception is OAuthProviderUnavailableException)
             {
                 throw;
             }
-            throw new OAuthProviderUnavailableException(authenticationMethod, exception);
+            throw unavailable;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {

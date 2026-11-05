@@ -2101,6 +2101,17 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Provider outages and abuse budgets (#1271)
+
+The provider boundary classifies availability failures before recording them with
+the reserved `OAuthProviderUnavailableException` failure reason. Failed-attempt
+history, central authentication audit and external-login audit remain recorded.
+These operational failures do not increment the client enumeration budget or
+enter the failed-credential queries used by brute-force detection and backoff.
+Credential rejections, unknown failures and ambiguous historical HTTP errors
+continue to count. Caller cancellation remains cancellation without a failed
+authentication audit. No account-wide revocation policy is added by this change.
+
 ### API-key rotation finalization (#1271)
 
 API-key authentication rejects an expired rotation overlap immediately. A hosted
