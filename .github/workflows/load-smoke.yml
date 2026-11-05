@@ -67,7 +67,7 @@ jobs:
         run: |
           dotnet apps/api/tests/GameGuild.LoadSmoke/bin/Release/net10.0/GameGuild.LoadSmoke.dll \
             "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/artifacts/load-smoke"
-      - name: Require zero 5xx and held p95 budgets
+      - name: Require zero 5xx, expected statuses, and held p95 budgets
         shell: bash
         run: |
           node --max-old-space-size=128 --input-type=module - <<'NODE'
@@ -80,12 +80,17 @@ jobs:
           for (const expected of ['sign-in', 'feed-page', 'wallet-read', 'product-browse', 'checkout-initiation', 'cart-add-item']) {
             assert.ok(paths.has(expected), `missing profile for ${expected}`);
           }
+          // Documented path behavior (see the runner): sign-in tolerates the known
+          // concurrency-dependent 401 race (issue material, split recorded), wallet-read
+          // tolerates the no-wallet-yet 404. Everything else must be pure 2xx.
+          const tolerated = { 'sign-in': [200, 401], 'wallet-read': [200, 404] };
           for (const profile of report.profiles) {
             assert.ok(profile.requests > 0, `${profile.path} recorded no requests`);
-            assert.equal(
-              Object.keys(profile.statusCounts).every(code => Number(code) < 500),
-              true,
-              `${profile.path} recorded 5xx statuses: ${JSON.stringify(profile.statusCounts)}`);
+            const allowed = tolerated[profile.path] ?? [200];
+            for (const [code] of Object.entries(profile.statusCounts)) {
+              assert.ok(allowed.includes(Number(code)), `${profile.path} recorded unexpected status ${code}`);
+              assert.ok(Number(code) < 500, `${profile.path} recorded 5xx status ${code}`);
+            }
             assert.ok(profile.p95Ms <= profile.budgetMs, `${profile.path} p95 ${profile.p95Ms}ms over budget ${profile.budgetMs}ms`);
           }
           assert.equal(report.profile.concurrency > 0, true);
