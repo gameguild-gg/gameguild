@@ -102,8 +102,8 @@ public sealed class JwtSigningKeyConcurrencyPostgreSqlTests(JwtKeyConcurrencyFix
         await using (var seed = new JwtConcurrencyContext(Options)) { await Service(seed, cache).InitializeAsync(_deadline.Token); }
         var before = (await Persisted()).Single();
         await using var failing = new JwtConcurrencyContext(Options, () => throw new JwtConcurrencyWriteFailure());
-        try { await Service(failing, cache).RotateKeyAsync(cancellationToken: _deadline.Token); throw new JwtConcurrencyAssertionFailure("Expected the injected write failure."); }
-        catch (JwtConcurrencyWriteFailure) { }
+        await Assert.ThrowsAsync<JwtConcurrencyWriteFailure>(
+            () => Service(failing, cache).RotateKeyAsync(cancellationToken: _deadline.Token));
         var after = await Persisted();
         var fallback = new SymmetricSecurityKey(RandomNumberGenerator.GetBytes(64)) { KeyId = "synthetic-fallback" };
         Check(after.Count == 1 && after[0].Id == before.Id && after[0].IsActive, "Failed rotation changed the committed key set.");
@@ -146,8 +146,8 @@ public sealed class JwtSigningKeyConcurrencyPostgreSqlTests(JwtKeyConcurrencyFix
         Check(!wait.IsCompleted, "A competing initializer did not wait for the uncommitted owner.");
         await attempted.Task.WaitAsync(_deadline.Token);
         cancellation.Cancel();
-        try { await wait; throw new JwtConcurrencyAssertionFailure("Expected waiter cancellation."); }
-        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => wait);
+        Check(cancellation.IsCancellationRequested, "Expected the caller to cancel the waiter.");
         await transaction.CommitAsync(_deadline.Token);
         await using var third = new JwtConcurrencyContext(Options);
         await Service(third).InitializeAsync(_deadline.Token);
@@ -217,7 +217,6 @@ public sealed class JwtSigningKeyConcurrencyPostgreSqlTests(JwtKeyConcurrencyFix
     }
 }
 
-sealed class JwtConcurrencyAssertionFailure(string message) : Exception(message);
 sealed class JwtConcurrencyWriteFailure : Exception;
 sealed class JwtConcurrencyCommitFailure : DbTransactionInterceptor
 {
