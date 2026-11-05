@@ -87,7 +87,7 @@ public sealed class AuthenticationOrchestrationService(
         }
         var decision = await mfaPolicy.EvaluateAsync(user.Id, request.TenantId, cancellationToken).ConfigureAwait(false);
         RequireDecision(decision, user.Id, request.TenantId);
-        var requiresMfa = subject.HasEnrolledMfa || decision.RequiresMfa || requiredSteps.Contains(AuthenticationStep.MfaVerification);
+        var requiresMfa = subject.HasEnrolledMfa || decision.RequiredByDefault || requiredSteps.Contains(AuthenticationStep.MfaVerification);
         if (requiresMfa && !subject.HasEnrolledMfa)
         {
             throw new AuthenticationRequiredException("MFA setup is required before this sign-in can continue.");
@@ -194,7 +194,7 @@ public sealed class AuthenticationOrchestrationService(
             throw new AuthenticationRequiredException("MFA verification is temporarily locked out for this account.");
         }
 
-        var (_, binding) = await ReadBoundSubjectAsync(record, cancellationToken).ConfigureAwait(false);
+        var (_, binding, _) = await ReadBoundSubjectAsync(record, cancellationToken).ConfigureAwait(false);
         MfaMethod method;
         if (step == AuthenticationStep.RiskChallenge)
         {
@@ -257,7 +257,7 @@ public sealed class AuthenticationOrchestrationService(
             throw new AuthenticationRequiredException($"Authentication flow '{flowId}' has no identified user.");
         }
 
-        var (subject, binding) = await ReadBoundSubjectAsync(record, cancellationToken).ConfigureAwait(false);
+        var (subject, binding, decision) = await ReadBoundSubjectAsync(record, cancellationToken).ConfigureAwait(false);
         var user = subject.User;
         var device = new DeviceInfo
         {
@@ -265,8 +265,10 @@ public sealed class AuthenticationOrchestrationService(
             IpAddress = string.IsNullOrWhiteSpace(record.IpAddress) ? "unknown" : record.IpAddress,
             UserAgent = "AuthenticationOrchestration"
         };
+        var requiresMfa = state.RequiredSteps.Contains(AuthenticationStep.MfaVerification) || subject.HasEnrolledMfa;
+        var mfaCompliancePending = !requiresMfa && decision.RequiresMfa && !decision.RequiredByDefault;
         SignInResponse issued;
-        if (state.RequiredSteps.Contains(AuthenticationStep.MfaVerification) || subject.HasEnrolledMfa)
+        if (requiresMfa)
         {
             var data = DeserializeStepData(record.StepDataJson);
             if (!state.CompletedSteps.Contains(AuthenticationStep.MfaVerification) || data is null ||
@@ -282,12 +284,18 @@ public sealed class AuthenticationOrchestrationService(
                 binding.PolicyFingerprint, SignInFirstFactor.Password, new DateTimeOffset(record.InitiatedAt), verifiedAt, method);
             issued = await sessionIssuer.IssueMfaAsync(user, binding.TenantId, device, proof, cancellationToken).ConfigureAwait(false);
         }
+        else if (mfaCompliancePending)
+        {
+            issued = await sessionIssuer.IssueAsync(user, binding.TenantId, device, cancellationToken,
+                mfaCompliancePending: true).ConfigureAwait(false);
+        }
         else
         {
             issued = await sessionIssuer.IssueAsync(user, binding.TenantId, device, cancellationToken).ConfigureAwait(false);
         }
         if (issued is null || !issued.Success || issued.RequiresMfa || issued.RequiresStepUp || issued.UserId != user.Id ||
-            issued.TenantId != binding.TenantId || issued.SessionId == Guid.Empty || string.IsNullOrWhiteSpace(issued.AccessToken) ||
+            issued.TenantId != binding.TenantId || issued.MfaCompliancePending != mfaCompliancePending ||
+            issued.SessionId == Guid.Empty || string.IsNullOrWhiteSpace(issued.AccessToken) ||
             string.IsNullOrWhiteSpace(issued.RefreshToken) || issued.AccessTokenExpiresAt <= SystemClock.UtcNow)
         {
             throw new InvalidOperationException("Authenticated credentials could not be issued for the verified binding.");
@@ -373,7 +381,8 @@ public sealed class AuthenticationOrchestrationService(
         }
     }
 
-    private async Task<(SignInMfaSubjectState Subject, FlowBinding Binding)> ReadBoundSubjectAsync(AuthenticationFlowStateRecord record, CancellationToken cancellationToken)
+    private async Task<(SignInMfaSubjectState Subject, FlowBinding Binding, MfaRequirementDecision Decision)>
+        ReadBoundSubjectAsync(AuthenticationFlowStateRecord record, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var data = DeserializeStepData(record.StepDataJson);
@@ -394,11 +403,11 @@ public sealed class AuthenticationOrchestrationService(
         var decision = await mfaPolicy.EvaluateAsync(userId, binding.TenantId, cancellationToken).ConfigureAwait(false);
         RequireDecision(decision, userId, binding.TenantId);
         if (!string.Equals(binding.PolicyFingerprint, decision.PolicyFingerprint, StringComparison.Ordinal) ||
-            (subject.HasEnrolledMfa || decision.RequiresMfa) && !DeserializeSteps(record.RequiredStepsJson).Contains(AuthenticationStep.MfaVerification))
+            (subject.HasEnrolledMfa || decision.RequiredByDefault) && !DeserializeSteps(record.RequiredStepsJson).Contains(AuthenticationStep.MfaVerification))
         {
             throw new AuthenticationRequiredException("The sign-in policy changed; restart authentication.");
         }
-        return (subject, binding);
+        return (subject, binding, decision);
     }
 
     private async Task<bool> VerifyRiskChallengeAsync(AuthenticationFlowStateRecord record, FlowBinding binding, object stepData, CancellationToken cancellationToken)

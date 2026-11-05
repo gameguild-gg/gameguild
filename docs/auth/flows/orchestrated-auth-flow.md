@@ -21,7 +21,7 @@ Initiation accepts `identifier`, `password`, optional `tenantId` and `deviceFing
 
 `AuthenticationOrchestrationService.InitiateAuthenticationAsync` verifies the password with enumeration timing protection, evaluates risk and determines the challenge ladder. Analyzer failure assumes maximum risk. An unrecognized device adds `DeviceTrust`; risk at least 0.5 adds `MfaVerification`; risk at least 0.7 adds both MFA and `RiskChallenge`.
 
-The fresh `ISignInMfaSubjectReader` and `IMfaSubjectRequirementPolicy` then resolve the active subject and an authorized tenant. Enrolled MFA or mandatory MFA adds `MfaVerification` even at low risk. A subject who needs MFA but has no enrolled factor must use the existing enrollment path before restarting this flow; completion cannot bypass enrollment.
+The fresh `ISignInMfaSubjectReader` and `IMfaSubjectRequirementPolicy` then resolve the active subject and an authorized tenant. Enrolled MFA, a default-sourced MFA requirement, or the risk ladder adds `MfaVerification`; a default/risk requirement without an enrolled factor must use the existing enrollment path before restarting. At low risk, an elevated-role-only requirement with no enrolled factor follows the platform compliance grace: ordinary credentials carry `mfaCompliancePending` and the `mfa_compliance_pending` JWT claim. Completion re-evaluates the current policy and enrollment before choosing that path; a client cannot request grace.
 
 Private `StepDataJson` binds the flow to the selected tenant, account token version, policy fingerprint and enrolled-MFA status. Those fields, risk proof state and verification timestamps are excluded from public flow state. Legacy flows without this binding must restart.
 

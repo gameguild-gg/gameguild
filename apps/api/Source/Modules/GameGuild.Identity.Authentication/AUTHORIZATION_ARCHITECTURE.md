@@ -3080,7 +3080,11 @@ downgrade can never silently skip its new (lower) limits.
 
 Orchestrated completion uses `IAuthenticatedSessionIssuer`, including its persisted
 session/root refresh binding, authorized tenant JWT and server-created MFA evidence.
-The complete canonical credential response is preserved. Flow finalization and
+The complete canonical credential response is preserved, including the compliance
+marker when the current policy permits elevated-role-only MFA grace without an
+enrolled factor. Enrolled factors, default-sourced requirements and risk-required
+MFA still require verification or setup; completion rechecks the current policy.
+Flow finalization and
 credential persistence share the caller-owned Read Committed command transaction;
 a failure after finalization saves rolls back both. PostgreSQL row locks serialize
 step processing, completion and abandonment. A completed flow cannot issue again.

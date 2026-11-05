@@ -211,6 +211,99 @@ public sealed class OrchestratedAuthenticationPostgreSqlHttpTests(ApiPostgreSqlF
         Assert.True((await state.Content.ReadFromJsonAsync<AuthSessionStateDto>(Json))!.MfaVerifiedInCurrentToken);
     }
 
+    [Fact]
+    public async Task RoleOnlyMfaWithoutAnEnrolledFactorIssuesComplianceMarkedCredentials()
+    {
+        using var factory = CreateFactory();
+        var account = await SeedAsync(factory);
+        await AssignElevatedRoleAsync(factory, account);
+        using var client = factory.CreateClient();
+        var flow = await InitiateAsync(client, account);
+        Assert.DoesNotContain(AuthenticationStep.MfaVerification, flow.RequiredSteps);
+        using var completion = await client.PostAsync(Root + "/" + flow.FlowId + ":complete", null);
+        Assert.Equal(HttpStatusCode.OK, completion.StatusCode);
+        var issued = await completion.Content.ReadFromJsonAsync<SignInResponse>(Json);
+        Assert.NotNull(issued);
+        Assert.True(issued.Success);
+        Assert.True(issued.MfaCompliancePending);
+        var claims = new JwtSecurityTokenHandler().ReadJwtToken(issued.AccessToken).Claims.ToList();
+        Assert.Equal("true", Assert.Single(claims, claim => claim.Type == "mfa_compliance_pending").Value);
+        Assert.Equal(account.TenantId.ToString(), Assert.Single(claims, claim => claim.Type == "tenant_id").Value);
+        await AssertPersistedCredentialsAsync(factory, account.UserId, issued.SessionId, flow.FlowId);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", issued.AccessToken);
+        using var state = await client.GetAsync("/v1/auth/session-state");
+        Assert.Equal(HttpStatusCode.OK, state.StatusCode);
+        Assert.False((await state.Content.ReadFromJsonAsync<AuthSessionStateDto>(Json))!.MfaVerifiedInCurrentToken);
+    }
+
+    [Fact]
+    public async Task DefaultMfaRequirementStillRejectsAnUnenrolledElevatedSubject()
+    {
+        using var factory = CreateFactory();
+        var account = await SeedAsync(factory);
+        await AssignElevatedRoleAsync(factory, account);
+        factory.Services.GetRequiredService<MfaOptions>().RequireMfaByDefault = true;
+        using var client = factory.CreateClient();
+        using var response = await client.PostAsJsonAsync(Root + ":initiate", new
+        {
+            identifier = account.Email, password = account.Password,
+            tenantId = account.TenantId, deviceFingerprint = account.Fingerprint
+        });
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertNoCredentialsAsync(factory, account.UserId);
+    }
+
+    [Fact]
+    public async Task EnrolledElevatedRoleStillRequiresMfaAtLowRisk()
+    {
+        using var factory = CreateFactory();
+        var account = await SeedAsync(factory, enrolled: true);
+        await AssignElevatedRoleAsync(factory, account);
+        using var client = factory.CreateClient();
+        var flow = await InitiateAsync(client, account);
+        Assert.Contains(AuthenticationStep.MfaVerification, flow.RequiredSteps);
+        Assert.DoesNotContain(AuthenticationStep.MfaVerification, flow.CompletedSteps);
+        await AssertNoCredentialsAsync(factory, account.UserId);
+    }
+
+    [Fact]
+    public async Task RiskStepUpStillRejectsAnUnenrolledElevatedSubject()
+    {
+        using var factory = CreateFactory(score: 90);
+        var account = await SeedAsync(factory);
+        await AssignElevatedRoleAsync(factory, account);
+        using var client = factory.CreateClient();
+        using var response = await client.PostAsJsonAsync(Root + ":initiate", new
+        {
+            identifier = account.Email, password = account.Password,
+            tenantId = account.TenantId, deviceFingerprint = account.Fingerprint
+        });
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await AssertNoCredentialsAsync(factory, account.UserId);
+    }
+
+    private static async Task AssignElevatedRoleAsync(WebApplicationFactory<Program> factory, Account account)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var membership = await db.Set<TenantMember>().SingleAsync(row =>
+            row.UserId == account.UserId && row.TenantId == account.TenantId);
+        membership.Role = "Admin";
+        await db.SaveChangesAsync();
+        var policy = await scope.ServiceProvider.GetRequiredService<IMfaSubjectRequirementPolicy>()
+            .EvaluateAsync(account.UserId, account.TenantId, CancellationToken.None);
+        Assert.True(policy.RequiresMfa);
+        Assert.False(policy.RequiredByDefault);
+    }
+
+    private static async Task AssertNoCredentialsAsync(WebApplicationFactory<Program> factory, Guid userId)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Empty(await db.Set<UserSession>().AsNoTracking().Where(row => row.UserId == userId).ToListAsync());
+        Assert.Empty(await db.Set<RefreshToken>().AsNoTracking().Where(row => row.UserId == userId).ToListAsync());
+    }
+
     [Theory]
     [InlineData("inactive-account")]
     [InlineData("token-version")]
