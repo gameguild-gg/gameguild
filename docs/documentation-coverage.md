@@ -52,8 +52,8 @@
 | 42 | Platform.Teams | 🟡 críticos (família) | ✅ (02 família) | ✅ (04 família) | ✅ (03 família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
 | 43 | Platform.Tags | 🟡 críticos (família) | ✅ (02 família) | ✅ (04 família) | ✅ (03 família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
 | 44 | Platform.Resources | 🟡 críticos (família) | ✅ (02 família) | ✅ (04 família) | ✅ (03 família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
-| 45 | Content.Pages | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
-| 46 | Resources.Contents | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
+| 45 | Content.Pages | ✅ 6 famílias (página, consumo público, seções, recursos, propostas, leads) | ✅ 32 rotas / 5 ctrl (matriz completa × gates C1) | ✅ 17 eventos audit fail-closed + 17 use-case (04) | ✅ 4 máquinas (03) | ✅ (05: audit sink, render público, funil propostas) | ✅ 7 famílias S1-S7 | ✅ L0 + 5 L1 | ✅ content/09 | **8/8** (docs/content/; C1 gates só no PUT, C2 soft-delete invisível — gaps) |
+| 46 | Resources.Contents | ✅ 4 famílias (drafts, review, publish/schedule, contratos) | ✅ 18 rotas / 2 ctrl (+§3: 16 E9-500 reconciliados, 3 métodos sem rota) | ✅ zero-event module + 12 use-case (04) | ✅ ContentVersion 7 estados + atalhos (03) | ✅ (05: happy path, auto-approve, schedule sem worker, fronteira c/ Pages) | ✅ 6 famílias RS1-RS6 | ✅ L0 + 5 L1 | ✅ resources-contents/09 | **8/8** (docs/resources-contents/; R1: 16/18 rotas 500 no runtime — E9/#1278; R2 cancel-schedule sempre 500) |
 | 47 | Gamification.Achievements | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
 | 48 | Notifications | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
 | 49 | TrustSafety | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
@@ -73,15 +73,15 @@
 
 | Métrica | Valor |
 |---|---|
-| Módulos com package completo (8/8) | **18** (Authentication + Authorization + Users + Tenants + Provisioning + Payments + Billing + Orders + Subscriptions + Products + Compliance.Audit/Consent/FERPA/KYC/FinancialCrime + Finance.Economy + Finance.Ledgers + SharedKernel+host core) |
+| Módulos com package completo (8/8) | **20** (Authentication + Authorization + Users + Tenants + Provisioning + Payments + Billing + Orders + Subscriptions + Products + Compliance.Audit/Consent/FERPA/KYC/FinancialCrime + Finance.Economy + Finance.Ledgers + SharedKernel+host core + Content.Pages + Resources.Contents) |
 | Módulos ≥4/8 (kit funcional, faltam STRIDE/DFD/arq) | **29** |
-| Módulos 0/8 (sem nada) | **9** (+2 contracts-only n/a) |
-| Endpoints com matriz de wiring | **~1.890** de ~2.115 gerados (base ~1.470 + 177 authz + ~125 users/tenants/provisioning + 92 products + 24 ledgers + 5 financial-crime) |
-| Fluxos de usuário documentados | **~80** (+identity: 2 famílias cada de users/tenants/provisioning; +products 6, +financialcrime 5, +ledgers 3) |
-| Máquinas de estado | **~54** (+3 users, +3 tenants, +2 provisioning; +products 7, +financialcrime 5, +ledgers 4) |
-| STRIDE | auth (12 fluxos) + commerce (23 famílias — payments 8 + billing/orders/subs 9 + products 6) + compliance (14 famílias — F1-F8 + FinancialCrime F1-F6 c/ examinador AML) + economy (E1-E9) + identity (authz 7 famílias + users + tenants + provisioning) + finance-ledgers (5 famílias) + sharedkernel (6 superfícies — meta-modelo da fundação) |
-| DFDs | 17 (auth) + 23 (commerce — nível 0 + nível 1 por família, +products 6) + compliance (L0 + 14 famílias, +FinancialCrime 6 c/ examinador AML) + economy (L0 + 9) + 10 identity (authz L0+7×L1; users/tenants/provisioning L0+3×L1 cada) + finance-ledgers (L0 + 4) + sharedkernel (L0 substrato + 3×L1: jornada 26 mw, outbox, DataProtection) |
-| Sequências cross-module | auth + economy + compliance (audit-sink fan-in, KYC gates, FERPA-Learning) + authz cross-module-sequences (+ sets lite de users/tenants/provisioning) + commerce/products (checkout, promo-coordinator, fraud-ticket, price-truth pós-#1266) + finance-ledgers (outbox, fronteira Economy) + financialcrime (risk gates, 3 ledgers) |
+| Módulos 0/8 (sem nada) | **7** (+2 contracts-only n/a) |
+| Endpoints com matriz de wiring | **~1.940** de ~2.115 gerados (base ~1.470 + 177 authz + ~125 users/tenants/provisioning + 92 products + 24 ledgers + 5 financial-crime + 32 content-pages + 18 resources-contents) |
+| Fluxos de usuário documentados | **~90** (+identity: 2 famílias cada de users/tenants/provisioning; +products 6, +financialcrime 5, +ledgers 3; +content-pages 6, +resources-contents 4) |
+| Máquinas de estado | **~59** (+3 users, +3 tenants, +2 provisioning; +products 7, +financialcrime 5, +ledgers 4; +content 4, +resources-contents 1 máquina de 7 estados) |
+| STRIDE | auth (12 fluxos) + commerce (23 famílias — payments 8 + billing/orders/subs 9 + products 6) + compliance (14 famílias — F1-F8 + FinancialCrime F1-F6 c/ examinador AML) + economy (E1-E9) + identity (authz 7 famílias + users + tenants + provisioning) + finance-ledgers (5 famílias) + sharedkernel (6 superfícies — meta-modelo da fundação) + content (S1-S7) + resources-contents (RS1-RS6) |
+| DFDs | 17 (auth) + 23 (commerce — nível 0 + nível 1 por família, +products 6) + compliance (L0 + 14 famílias, +FinancialCrime 6 c/ examinador AML) + economy (L0 + 9) + 10 identity (authz L0+7×L1; users/tenants/provisioning L0+3×L1 cada) + finance-ledgers (L0 + 4) + sharedkernel (L0 substrato + 3×L1: jornada 26 mw, outbox, DataProtection) + content (L0 + 5 L1) + resources-contents (L0 + 5 L1) |
+| Sequências cross-module | auth + economy + compliance (audit-sink fan-in, KYC gates, FERPA-Learning) + authz cross-module-sequences (+ sets lite de users/tenants/provisioning) + commerce/products (checkout, promo-coordinator, fraud-ticket, price-truth pós-#1266) + finance-ledgers (outbox, fronteira Economy) + financialcrime (risk gates, 3 ledgers) + content (audit fail-closed, render público, funil propostas) + resources-contents (review→publish, auto-approve de contratos, schedule sem worker, fronteira c/ Content.Pages) |
 
 ## Próximas ondas (ordem de risco)
 
@@ -89,4 +89,4 @@
 2. ~~**Authorization completion + Identity.Users/Tenants/Provisioning + auth spot-audit**~~ — **entregue** (docs/authorization/ cross-module-sequences + 07/08/09; docs/identity/{users,tenants,provisioning}/ completos + docs/identity/context.md; spot-audit 29 citações em docs/auth/spot-audit-2026-11.md — 0 afirmações falsas). Achados críticos abertos: takeover de tenants (4 controllers sem política, docs/identity/tenants/gaps.md T1), permissão self nunca semeada (users 403, docs/identity/users/gaps.md U5), eventos AddDomainEvent descartados (tenants T8, repo-wide)
 3. ~~**Compliance (4) + Economy**: STRIDE regulatório + DFDs + arquitetura + sequências do compliance~~ **ENTREGUE** — compliance/08-11 + economy/08-10; K4 economy (mint reversal) confirmado FIXED pós-#1266; N1 compliance re-verificado VIVO (PR #1268 aberto)
 4. **Learning + Social/Platform**: STRIDE + DFDs + arquitetura + sequências (3 famílias)
-5. **Módulos 0/8 — hot-path primeiro**: Notifications + TrustSafety → ~~FinancialCrime (AML)~~ → ~~Products~~ + Content + ~~Ledgers~~/Achievements + Mentorship/Ratings — **FinancialCrime (docs/compliance-financialcrime/), Products (docs/commerce/products/) e Finance.Ledgers (docs/finance-ledgers/) entregues** (rows 16, 11, 18 — 8/8 cada; reconciliação dos 20 dead request types do Ledgers em finance-ledgers/02 §3; FC1 ingestão AML sem caller, P1 AddProductsModule nunca invocado)
+5. **Módulos 0/8 — hot-path primeiro**: Notifications + TrustSafety → ~~FinancialCrime (AML)~~ → ~~Products~~ + ~~Content~~ + ~~Ledgers~~/Achievements + Mentorship/Ratings — **FinancialCrime (docs/compliance-financialcrime/), Products (docs/commerce/products/), Finance.Ledgers (docs/finance-ledgers/) e Content (docs/content/ + docs/resources-contents/) entregues** (rows 16, 11, 18, 45, 46 — 8/8 cada; reconciliação dos 20 dead request types do Ledgers em finance-ledgers/02 §3; FC1 ingestão AML sem caller, P1 AddProductsModule nunca invocado; Content: 16/18 rotas de versioning 500 no runtime reconciliadas contra o baseline E9/#1278 em resources-contents/02 §3, C1 gates só no PUT, R2 cancel-schedule sempre 500)
