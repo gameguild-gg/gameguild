@@ -31,7 +31,7 @@ public class RatingCrudService(
                 r.EntityId == entityId &&
                 r.EntityType == entityType &&
                 r.UserId == userId &&
-                !r.IsDeleted, ct).ConfigureAwait(false);
+                r.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (existingRating != null)
         {
@@ -65,7 +65,7 @@ public class RatingCrudService(
     public async Task<Result<Rating>> GetByIdAsync(Guid ratingId, CancellationToken ct = default)
     {
         var rating = await db.Set<Rating>()
-            .FirstOrDefaultAsync(r => r.Id == ratingId && !r.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(r => r.Id == ratingId && r.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (rating == null)
         {
@@ -84,7 +84,7 @@ public class RatingCrudService(
                 r.EntityId == entityId &&
                 r.EntityType == entityType &&
                 r.UserId == userId &&
-                !r.IsDeleted, ct).ConfigureAwait(false);
+                r.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (rating == null)
         {
@@ -99,7 +99,7 @@ public class RatingCrudService(
         var userId = GetCurrentUserId();
 
         var rating = await db.Set<Rating>()
-            .FirstOrDefaultAsync(r => r.Id == ratingId && r.UserId == userId && !r.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(r => r.Id == ratingId && r.UserId == userId && r.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (rating == null)
         {
