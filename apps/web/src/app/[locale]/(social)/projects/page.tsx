@@ -4,6 +4,15 @@ import { getPublishedProjectsPage, PUBLIC_PROJECT_PAGE_SIZE } from '@/lib/projec
 import { isPublicProjectType } from '@/lib/projects/project-types';
 import React from 'react';
 
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata = buildPageMetadata({
+  path: '/projects',
+  title: 'Projects — GameGuild',
+  description: 'Explore community game projects on GameGuild — playable builds, devlogs, and works in progress from member studios and solo creators.',
+  twitterLargeCard: true,
+});
+
 interface ProjectsPageProps {
   searchParams: Promise<{ q?: string | string[]; type?: string | string[] }>;
 }

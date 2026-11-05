@@ -31,8 +31,8 @@ Sources of truth:
 | Called only via hand-rolled `fetch` (raw transport) | 17 |
 | Referenced only by tests | 8 |
 | **Never called by any transport (ENDPOINT-NO-CALLER candidates)** | **1,669** |
-| Controller endpoints with no client method (live HTTP, absent from contract) | 171 (95 hidden by design, 56 unversioned, 20 see F5/F6) |
-| Raw-fetch URLs with no API route (CLIENT-CALL-NO-ENDPOINT) | 2 (F1, F2) |
+| Controller endpoints with no client method (live HTTP, absent from contract) | 171 (102 hidden by design — 95 `IgnoreApi` + 7 Orders safety-allowlist, 56 unversioned, 13 see F6) |
+| Raw-fetch URLs with no API route (CLIENT-CALL-NO-ENDPOINT) | 2 (F1, F2) — both fixed by the #1217 PR |
 
 ### Finding classes
 
@@ -404,18 +404,28 @@ The gap is widening, not closing: the Cloudflare Turnstile hardening
 still posts by hand, so the next CAPTCHA-related change can again ship without
 the pipeline noticing.
 
-### F5 — VERSIONED-DIFF: 7 live Orders actions missing from the generated client
+### F5 — Orders actions absent from the generated client: deliberate, not drift (resolved)
 
-`Commerce.Orders/Controllers/OrdersController.cs` serves 14 actions; the client
-(`orders.gen.ts`, 7 endpoints) covers only 7. Missing
-(`OrdersController.cs:143,159,250,266,345,361` + HEAD):
-`POST /v1/orders/{orderId}:cancel`, `POST …:refund`, `PATCH /v1/orders/{orderId}`,
-`DELETE /v1/orders/{orderId}`, `POST …:hold`, `POST …:release`, `HEAD /v1/orders/{orderId}`.
-The client was regenerated after these actions landed (regen `4db4ca6e2` 2026-11-02;
-`:hold`/`:release` added by `2ab11e06a` 2026-08-30, an ancestor), so the OpenAPI
-document itself is dropping them — regenerate via the real pipeline
-(`scripts/ci/verify-openapi-surface.sh` or the PR `openapi-<sha>` artifact) and
-diff, never hand-splice.
+`Commerce.Orders/Controllers/OrdersController.cs` declares 14 actions; the client
+(`orders.gen.ts`, 7 endpoints) covers 7. Re-audited for issue #1217: the 7 absent
+actions (`POST /v1/orders/{orderId}:cancel`, `POST …:refund`, `PATCH
+/v1/orders/{orderId}`, `DELETE /v1/orders/{orderId}`, `POST …:hold`, `POST
+…:release`, `HEAD /v1/orders/{orderId}`) are **not live HTTP endpoints**.
+`MinimumOrderRouteApplicationModelConvention`
+(`GameGuild.API/Core/Conventions/MinimumOrderRouteApplicationModelConvention.cs:20-35`,
+registered at `PresentationServiceCollectionExtensions.cs:66`) removes every
+OrdersController action lacking `[MinimumOrderRoute]` from the application model
+before routing and OpenAPI generation — "exposes only the order operations that
+have completed the production safety review" (`16eaedb9a6`). The static
+controller scan behind this matrix counted declared actions, not composed routes,
+which misclassified the allowlist as VERSIONED-DIFF drift. The unit test
+`OrdersController_ExposesOnlyVerifiedCheckoutActionsToMinimumComposition`
+(`GameGuild.Commerce.Orders.UnitTests/ControllerAndInfrastructureTests.cs:434`)
+pins the 7-action allowlist. The client regenerated 2026-11-02 (`.metadata.json`
+hash `8c1287d2…`) and the OpenAPI consistency lane is green on develop-adjacent
+PRs (run 41812167882, 2026-11-04) — the generated client matches the served
+surface. No web caller fetches the 7 hidden actions by any transport, so there is
+nothing to migrate; regeneration is a no-op.
 
 ### F6 — live controller surface outside the versioned contract (171 actions)
 
@@ -436,8 +446,10 @@ diff, never hand-splice.
   `LedgersController.cs` (11),
   `Gamification.Achievements/Controllers/AchievementsController.cs` (11).
   These are callable HTTP endpoints that no generated client can express.
-- **20 accounted** by F5 (7 orders), the 12 version-parameterized routes (below) and
-  one catch-all (`OpenGraphController` `{*slug}`).
+- **13 accounted** by the 12 version-parameterized routes (F7 below) and one
+  catch-all (`OpenGraphController` `{*slug}`). The 7 Orders actions originally
+  counted here move to the hidden-by-design bucket: they are stripped from the
+  application model by the `MinimumOrderRoute` safety allowlist (see F5).
 
 ### F7 — version-as-path-parameter quirk (12 endpoints, not drift)
 

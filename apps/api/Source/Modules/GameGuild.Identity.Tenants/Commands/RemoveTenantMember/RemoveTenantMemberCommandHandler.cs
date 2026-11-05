@@ -30,7 +30,10 @@ public sealed class RemoveTenantMemberCommandHandler(ITenantRepository tenantRep
 
         await memberRepository.DeleteAsync(member.Id, cancellationToken).ConfigureAwait(false);
 
-        tenant.AddDomainEvent(new TenantMemberRemovedEvent(request.TenantId, request.UserId, "member@email.com", "Removed by request"));
+        // Issue #1287 T8: the TenantMemberRemovedEvent raise was removed — the
+        // persistence pipeline collected and discarded in-memory domain events
+        // without dispatching (#1202 precedent). Access-revocation fan-out, when it
+        // is needed, belongs on the durable integration-event outbox.
 
         return new RemoveTenantMemberResponse { Success = true, Message = "Member removed successfully" };
     }

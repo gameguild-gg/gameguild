@@ -45,10 +45,14 @@ describe('createMfaEnrollmentCompleteAction', () => {
           accessToken: 'verified-access',
           refreshToken: 'verified-refresh',
           expiresIn: 3600,
-          userId: 'verified-user',
+          userId: '33333333-3333-4333-8333-333333333333',
           email: 'enrolled@example.com',
           mfaEnrollmentBackupCodes: ['first-once-code', 'second-once-code'],
         }),
+        // The provider signs in through the generated client, whose runtime only
+        // decodes JSON bodies for application/json responses — match the wire
+        // contract the API actually serves.
+        { status: 200, headers: { 'content-type': 'application/json' } },
       ),
     );
     const result = await createMfaEnrollmentCompleteAction(config)(mfaToken, '123456');
@@ -74,14 +78,24 @@ describe('createMfaEnrollmentCompleteAction', () => {
   });
 
   it('reports a denial from the backend without finalizing a session', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: 'Additional verification failed' }), { status: 401 }));
+    // The API rejects a bad completion code with RFC 7807 ProblemDetails (the
+    // generated client surfaces title/detail), not a bare { message } body.
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ title: 'Additional verification failed', status: 401 }), {
+        status: 401,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
     const result = await createMfaEnrollmentCompleteAction(config)(mfaToken, 'wrong-code');
     expect(result).toEqual({ success: false, message: 'Additional verification failed' });
   });
 
   it('does not expose codes when the completion carries none', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ accessToken: 'verified-access', refreshToken: 'verified-refresh', userId: 'verified-user' })),
+      new Response(JSON.stringify({ accessToken: 'verified-access', refreshToken: 'verified-refresh', userId: '33333333-3333-4333-8333-333333333333' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
     );
     const result = await createMfaEnrollmentCompleteAction(config)(mfaToken, '123456');
     expect(result).toEqual({ success: true, backupCodes: [] });
