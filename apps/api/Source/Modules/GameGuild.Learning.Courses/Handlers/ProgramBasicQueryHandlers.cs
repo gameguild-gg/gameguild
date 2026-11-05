@@ -10,12 +10,13 @@ namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Query handlers for basic Program retrieval operations:
-/// get all, get by ID, get by slug, get published by slug, search, filter by category/difficulty/creator.
+/// get all, search, filter by category/difficulty/creator.
+/// The by-id / by-slug / published-by-slug reads are owned by the dedicated handlers in
+/// Queries/GetProgramById, Queries/GetProgramBySlug and Queries/GetPublishedProgramBySlug
+/// (issue #1277: this class previously registered verbatim duplicates of those three,
+/// which resolved last-wins-silently in DI).
 /// </summary>
 public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILogger<ProgramBasicQueryHandlers> logger) : IRequestHandler<GetAllProgramsQuery, IEnumerable<Program>>,
-                                                                                                                    IRequestHandler<GetProgramByIdQuery, Program?>,
-                                                                                                                    IRequestHandler<GetProgramBySlugQuery, Program?>,
-                                                                                                                    IRequestHandler<GetPublishedProgramBySlugQuery, Program?>,
                                                                                                                     IRequestHandler<SearchProgramsQuery, IEnumerable<Program>>,
                                                                                                                     IRequestHandler<GetProgramsByCategoryQuery, IEnumerable<Program>>,
                                                                                                                     IRequestHandler<GetProgramsByDifficultyQuery, IEnumerable<Program>>,
@@ -83,102 +84,6 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
     logger.LogInformation("Retrieved {Count} programs", programs.Count);
 
     return programs;
-  }
-
-  public async Task<Program?> Handle(GetProgramByIdQuery request, CancellationToken cancellationToken) {
-    logger.LogInformation("Getting program by ID: {ProgramId}", request.Id);
-
-    var query = context.Set<Program>()
-      .AsNoTracking() // Read-only query optimization
-      .Where(p => p.Id == request.Id && p.DeletedAt == null);
-
-    if (request.IncludeContent)
-        {
-            query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
-        }
-
-        if (request.IncludeEnrollments)
-        {
-            query = query.Include(p => p.ProgramUsers.Where(pu => pu.DeletedAt == null));
-        }
-
-        if (request.IncludeRatings)
-        {
-            query = query.Include(p => p.ProgramRatings);
-        }
-
-        var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-
-    if (program != null)
-        {
-            logger.LogInformation("Found program: {ProgramId}", program.Id);
-        }
-        else
-        {
-            logger.LogWarning("Program not found: {ProgramId}", request.Id);
-        }
-
-        return program;
-  }
-
-  public async Task<Program?> Handle(GetProgramBySlugQuery request, CancellationToken cancellationToken) {
-    logger.LogInformation("Getting program by slug: {Slug}", request.Slug);
-
-    var query = context.Set<Program>()
-      .AsNoTracking() // Read-only query optimization
-      .Where(p => p.Slug == request.Slug && p.DeletedAt == null);
-
-    if (request.IncludeContent)
-        {
-            query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
-        }
-
-        if (request.IncludeEnrollments)
-        {
-            query = query.Include(p => p.ProgramUsers.Where(pu => pu.DeletedAt == null));
-        }
-
-        if (request.IncludeRatings)
-        {
-            query = query.Include(p => p.ProgramRatings);
-        }
-
-        var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-
-    if (program != null)
-        {
-            logger.LogInformation("Found program by slug: {Slug}", request.Slug);
-        }
-        else
-        {
-            logger.LogWarning("Program not found by slug: {Slug}", request.Slug);
-        }
-
-        return program;
-  }
-
-  public async Task<Program?> Handle(GetPublishedProgramBySlugQuery request, CancellationToken cancellationToken) {
-    logger.LogInformation("Getting published program by slug: {Slug}", request.Slug);
-
-    var query = context.Set<Program>().Where(p => p.Slug == request.Slug && p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == ContentVisibility.Public);
-
-    if (request.IncludeContent)
-        {
-            query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
-        }
-
-        var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-
-    if (program != null)
-        {
-            logger.LogInformation("Found published program by slug: {Slug}", request.Slug);
-        }
-        else
-        {
-            logger.LogWarning("Published program not found by slug: {Slug}", request.Slug);
-        }
-
-        return program;
   }
 
   public async Task<IEnumerable<Program>> Handle(SearchProgramsQuery request, CancellationToken cancellationToken) {

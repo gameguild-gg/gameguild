@@ -10,13 +10,15 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Learning.Courses;
 
 /// <summary>
-/// Query handlers for Program enrollment, progress, content, ratings, and wishlist operations.
+/// Query handlers for Program enrollment, content, ratings, and wishlist operations.
+/// The user-progress read is owned by the dedicated handler in Queries/GetUserProgramProgress
+/// (issue #1277: this class previously registered a stale simplified duplicate of it that
+/// always reported zero completed content, resolving last-wins-silently in DI).
 /// </summary>
 public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbContext context, ILogger<ProgramEnrollmentAndProgressQueryHandlers> logger) : IRequestHandler<GetUserEnrolledProgramsQuery, IEnumerable<Program>>,
                                                                                                                                                     IRequestHandler<GetProgramEnrollmentsQuery, IEnumerable<ProgramUser>>,
                                                                                                                                                     IRequestHandler<CheckUserEnrollmentQuery, ProgramUser?>,
                                                                                                                                                     IRequestHandler<GetProgramContentQuery, IEnumerable<ProgramContent>>,
-                                                                                                                                                    IRequestHandler<GetUserProgramProgressQuery, ProgramUserProgress?>,
                                                                                                                                                     IRequestHandler<GetProgramRatingsQuery, IEnumerable<ProgramRating>>,
                                                                                                                                                     IRequestHandler<GetUserProgramRatingQuery, ProgramRating?>,
                                                                                                                                                     IRequestHandler<GetUserWishlistQuery, IEnumerable<Program>>,
@@ -111,33 +113,6 @@ public sealed class ProgramEnrollmentAndProgressQueryHandlers(IApplicationDbCont
     logger.LogInformation("Found {Count} enrolled programs for user {UserId}", programs.Count, request.UserId);
 
     return programs;
-  }
-
-  public async Task<ProgramUserProgress?> Handle(GetUserProgramProgressQuery request, CancellationToken cancellationToken) {
-    logger.LogInformation("Getting progress for user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);
-
-    var enrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == request.UserId && pu.IsActive).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-
-    if (enrollment == null)
-        {
-            return null;
-        }
-
-        var totalContent = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == request.ProgramId && pc.DeletedAt == null).CountAsync(cancellationToken).ConfigureAwait(false);
-
-    // Note: This is a simplified implementation. You might want to track actual content completion
-    var completedContent = 0; // This would need to be calculated from actual progress tracking
-    var timeSpent = TimeSpan.Zero; // This would need to be calculated from actual time tracking
-    var lastActivity = enrollment.UpdatedAt;
-    var isCompleted = enrollment.CompletedAt.HasValue; // Fixed: use CompletedAt instead of IsCompleted
-    var completedAt = enrollment.CompletedAt; // Fixed: use CompletedAt directly
-
-    var progressPercentage = totalContent > 0
-      ? PercentValue.FromRatio(completedContent, totalContent)
-      : PercentValue.Zero;
-    var progress = new ProgramUserProgress(request.ProgramId, request.UserId, completedContent, totalContent, progressPercentage, timeSpent, lastActivity, isCompleted, completedAt);
-
-    return progress;
   }
 
   public async Task<IEnumerable<Program>> Handle(GetUserWishlistQuery request, CancellationToken cancellationToken) {
