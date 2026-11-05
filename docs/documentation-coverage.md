@@ -26,8 +26,7 @@
 | 16 | Compliance.FinancialCrime | ✅ 5 (ingest FC1 designed-only) | ✅ 5 endpoints + 9 ops reconciled (02 §2) | ✅ evidence kind financial-crime | ✅ 5 máquinas | ✅ 5 | ✅ 6 famílias F1-F6 (examinador AML) | ✅ L0+6 (examinador) | ✅ financialcrime/09 | **8/8** (FC1-FC8 residuais no 06-gaps) |
 | 17 | Finance.Economy (7 subs) | ✅ 11 famílias (01: wallet, payout, settlement, bounty, ad-reward, AI-credit, treasury) | ✅ 71 endpoints / 19 ctrl (02; N9: 19 unthrottled) | ✅ 5 outboxes + 10 streams (04) | ✅ 9 stateDiagrams (03) | ✅ (economy/05) | ✅ 9 famílias E1-E9 | ✅ L0+9 L1 (10) | ✅ economy/09 | **8/8** (N1-N10 residuais no 07-gaps) |
 | 18 | Finance.Ledgers | ✅ 3 | ✅ 24 rotas + 20 dead types reconciliados (02 §3) | ✅ 1 durable + 12 dead | ✅ 4 máquinas (estados inalcançáveis mapeados) | ✅ 4 | ✅ 5 famílias F1-F5 | ✅ L0+4 | ✅ finance-ledgers/09 | **8/8** (L1-L8 residuais no 06-gaps) |
-<<<<<<< HEAD
-| 19 | Learning (12 subs) | ✅ 6 | ✅ 31 ctrl | ✅ | ✅ 5 | ✅ | ❌ | ❌ | ❌ | 5/8 |
+| 19 | Learning (12 subs) | ✅ 6 | ✅ 31 ctrl | ✅ | ✅ 5 | ✅ | ✅ 12 famílias SL1-SL12 (07, pós-#1226/#1275) | ✅ L0+4 L1 (08, PII marcado, LTI=TB3) | ✅ learning/09 (gate elegibilidade, ancoragem PII-free fail-closed, guard de cohort #1275, mapa who-can-grade) | **8/8** (N4/N5/N11/N16 + R-1..R-4 residuais no 06-gaps/07) |
 | 20 | Social.Posts | ✅ críticos (01: post lifecycle + moderation) | ✅ 127 endpoints família (02) | ✅ família (04) | ✅ 6 máquinas família (03) | ✅ família (social-platform/10) | ✅ C1-C6 (social-platform/07) | ✅ L0+L1 família (social-platform/08) | ✅ social-platform/09 | **8/8** |
 | 21 | Social.Feed | ✅ críticos (01) | ✅ família (02: 127 endpoints/9 sub) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ C1-C6 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
 | 22 | Social.Profiles | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ C1-C6 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** (SP1: ProfileVisibility ignorado — #1315) |
@@ -53,8 +52,6 @@
 | 42 | Platform.Teams | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
 | 43 | Platform.Tags | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
 | 44 | Platform.Resources | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
-=======
-| 19 | Learning (12 subs) | ✅ 6 | ✅ 31 ctrl | ✅ | ✅ 5 | ✅ | ✅ 12 famílias SL1-SL12 (07, pós-#1226/#1275) | ✅ L0+4 L1 (08, PII marcado, LTI=TB3) | ✅ learning/09 (gate elegibilidade, ancoragem PII-free fail-closed, guard de cohort #1275, mapa who-can-grade) | **8/8** (N4/N5/N11/N16 + R-1..R-4 residuais no 06-gaps/07) |
 | 20 | Social.Posts | 🟡 críticos | ✅ 127 endpoints (família) | ✅ | ✅ 6 (família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
 | 21 | Social.Feed | 🟡 críticos (família) | ✅ (02 família: 127 endpoints/9 sub) | ✅ (04 família) | ✅ (03 família: 6 máquinas) | ❌ | ❌ | ❌ | ❌ | 4/8 |
 | 22 | Social.Profiles | 🟡 críticos (família) | ✅ (02 família) | ✅ (04 família) | ✅ (03 família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
@@ -80,7 +77,6 @@
 | 42 | Platform.Teams | 🟡 críticos (família) | ✅ (02 família) | ✅ (04 família) | ✅ (03 família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
 | 43 | Platform.Tags | 🟡 críticos (família) | ✅ (02 família) | ✅ (04 família) | ✅ (03 família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
 | 44 | Platform.Resources | 🟡 críticos (família) | ✅ (02 família) | ✅ (04 família) | ✅ (03 família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
->>>>>>> origin/develop
 | 45 | Content.Pages | ✅ 6 famílias (página, consumo público, seções, recursos, propostas, leads) | ✅ 32 rotas / 5 ctrl (matriz completa × gates C1) | ✅ 17 eventos audit fail-closed + 17 use-case (04) | ✅ 4 máquinas (03) | ✅ (05: audit sink, render público, funil propostas) | ✅ 7 famílias S1-S7 | ✅ L0 + 5 L1 | ✅ content/09 | **8/8** (docs/content/; C1 gates só no PUT, C2 soft-delete invisível — gaps) |
 | 46 | Resources.Contents | ✅ 4 famílias (drafts, review, publish/schedule, contratos) | ✅ 18 rotas / 2 ctrl (+§3: 16 E9-500 reconciliados, 3 métodos sem rota) | ✅ zero-event module + 12 use-case (04) | ✅ ContentVersion 7 estados + atalhos (03) | ✅ (05: happy path, auto-approve, schedule sem worker, fronteira c/ Pages) | ✅ 6 famílias RS1-RS6 | ✅ L0 + 5 L1 | ✅ resources-contents/09 | **8/8** (docs/resources-contents/; R1: 16/18 rotas 500 no runtime — E9/#1278; R2 cancel-schedule sempre 500) |
 | 47 | Gamification.Achievements | ✅ achievement lifecycle (01) | ✅ 5 ctrl / all wired (02; G7: progress+levels zero callers) | ✅ 8 events declared-dead + AchievementUnlocked zero producers (04) | ✅ achievement lifecycle (03) | ✅ (05) | ✅ (07) | ✅ (08) | ✅ (09) | **8/8** (achievements:* nunca semeado — #1319) |
