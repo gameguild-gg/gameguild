@@ -81,8 +81,13 @@ export async function verifyMetadataRoutes({ webUrl, page, evidence }) {
     assert.equal(parsed.errors, 0);
     assert.equal(parsed.root, 'urlset');
     assert.equal(parsed.namespace, 'http://www.sitemaps.org/schemas/sitemap/0.9');
-    for (const route of ['/', '/sign-in', '/courses', '/programs/game-ai-systems']) {
+    // Auth routes are intentionally excluded from the sitemap (PR #1211:
+    // sign-in/sign-up are noindexed utility pages).
+    for (const route of ['/', '/courses', '/programs/game-ai-systems']) {
       assert.ok(parsed.locations.includes(route === '/' ? origin.origin : origin.origin + route), route);
+    }
+    for (const route of ['/sign-in', '/sign-up']) {
+      assert.ok(!parsed.locations.includes(origin.origin + route), route);
     }
     assert.ok(parsed.locations.every(location => ['http:', 'https:'].includes(new URL(location).protocol)));
     passed('The sitemap advertised by robots is served as valid XML with the expected application routes');
