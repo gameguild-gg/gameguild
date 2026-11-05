@@ -13761,6 +13761,8 @@ export interface IdentityAuthenticationOrchestratedFlowStateOutput {
   /** Steps already satisfied. */
   completedSteps?: IdentityAuthenticationAuthenticationStep[] | null;
   currentStep?: IdentityAuthenticationAuthenticationStep;
+  /** Stable denial code without private challenge details. */
+  errorCode?: string | null;
   /** When the flow expires; expired flows fail closed. */
   expiresAt?: string;
   /** Unique identifier of the flow; carried by the client across step processing and completion. */
@@ -13774,6 +13776,8 @@ export interface IdentityAuthenticationOrchestratedFlowStateOutput {
   requiredSteps?: IdentityAuthenticationAuthenticationStep[] | null;
   /** Risk score (0–1) that drove the challenge ladder for this flow. */
   riskScore?: number | null;
+  /** Whether this step verification was accepted. */
+  success?: boolean;
   /** The authenticated user, identified after primary-credential validation. */
   userId?: string | null;
 }
@@ -13848,10 +13852,12 @@ the configured failed-sign-in threshold; ignored otherwise. */
 }
 
 /** Request body to satisfy one challenge step of an orchestrated authentication flow.
-Exactly one proof field (TOTP code, backup code or WebAuthn assertion) is required. */
+Exactly one proof is required: TOTP, backup code or WebAuthn for MFA/device steps, or the dedicated risk code for RiskChallenge. */
 export interface IdentityAuthenticationProcessOrchestratedAuthenticationStepRequestDto {
   /** One-time backup code, when satisfying the step with a recovery code. */
   backupCode?: string | null;
+  /** Eight-digit out-of-band risk code; accepted only for the risk challenge. */
+  riskCode?: string | null;
   step: IdentityAuthenticationAuthenticationStep;
   /** TOTP verification code, when satisfying the step with the authenticator app. */
   totpCode?: string | null;
@@ -43030,6 +43036,7 @@ IdentityAuthenticationOrchestratedFlowStateOutputSchema = z.object({
     .nullable()
     .optional(),
   currentStep: z.lazy(() => IdentityAuthenticationAuthenticationStepSchema).optional(),
+  errorCode: z.string().nullable().optional(),
   expiresAt: z.string().datetime({ offset: true }).optional(),
   flowId: z.string().uuid().optional(),
   initiatedAt: z.string().datetime({ offset: true }).optional(),
@@ -43043,6 +43050,7 @@ IdentityAuthenticationOrchestratedFlowStateOutputSchema = z.object({
     .nullable()
     .optional(),
   riskScore: z.number().nullable().optional(),
+  success: z.boolean().optional(),
   userId: z.string().uuid().nullable().optional(),
 });
 
@@ -43099,9 +43107,10 @@ IdentityAuthenticationPolymorphicSignInInputSchema = z.object({
 });
 
 /** Zod schema for IdentityAuthenticationProcessOrchestratedAuthenticationStepRequestDto. Request body to satisfy one challenge step of an orchestrated authentication flow.
-Exactly one proof field (TOTP code, backup code or WebAuthn assertion) is required. */
+Exactly one proof is required: TOTP, backup code or WebAuthn for MFA/device steps, or the dedicated risk code for RiskChallenge. */
 IdentityAuthenticationProcessOrchestratedAuthenticationStepRequestDtoSchema = z.object({
   backupCode: z.string().nullable().optional(),
+  riskCode: z.string().nullable().optional(),
   step: z.lazy(() => IdentityAuthenticationAuthenticationStepSchema),
   totpCode: z.string().nullable().optional(),
   webAuthnAssertion: z.string().nullable().optional(),

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.DataProtection;
 using Moq;
 using Xunit;
 
@@ -32,13 +33,17 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     private readonly Mock<IWebAuthnAuthenticationService> _webAuthn = new();
     private readonly Mock<IMfaAttemptTrackingService> _mfaAttemptTracking = new();
     private readonly Mock<IUserMfaConfigurationRepository> _userMfaConfiguration = new();
-    private readonly Mock<IRoleRepository> _roleRepository = new();
-    private readonly Mock<IJwtTokenService> _jwtTokenService = new();
+    private readonly Mock<IAuthenticatedSessionIssuer> _sessionIssuer = new();
+    private readonly Mock<ISignInMfaSubjectReader> _subjects = new();
+    private readonly Mock<IMfaSubjectRequirementPolicy> _policy = new();
+    private readonly Guid _tenantId = Guid.NewGuid();
+    private bool _hasEnrolledMfa;
+    private string _riskCode = string.Empty;
     private readonly Mock<ISuspiciousLoginAlertPublisher> _suspiciousAlerts = new();
     private readonly Mock<GameGuild.CQRS.IPublisher> _eventsPublisher = new();
 
     private readonly InMemoryFlowStateStore _flowStates = new();
-    private readonly User _user = new() { Id = Guid.NewGuid(), Email = "user@example.com", IsActive = true, PasswordHash = "hash" };
+    private readonly User _user = new() { Id = Guid.NewGuid(), Email = "user@example.com", IsActive = true, IsEmailVerified = true, PasswordHash = "hash" };
     private readonly MutableTimeProvider _clock = new();
     private readonly AuthenticationOrchestrationService _sut;
 
@@ -98,15 +103,21 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
         _userMfaConfiguration
             .Setup(repository => repository.GetByUserIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserMfaConfiguration?)null);
-        _roleRepository
-            .Setup(repository => repository.GetUserRolesAsync(It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new Role { Name = "Member", IsActive = true }]);
-        _jwtTokenService
-            .Setup(service => service.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync("orchestrated-access-token");
-        _jwtTokenService
-            .Setup(service => service.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync("orchestrated-refresh-token");
+        _subjects.Setup(reader => reader.ReadCurrentAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns(async (Guid subjectId, CancellationToken ct) =>
+            {
+                var user = await _userRepository.Object.GetByIdAsync(subjectId, ct);
+                return user is null ? null : new SignInMfaSubjectState(user, _hasEnrolledMfa, null);
+            });
+        _policy.Setup(policy => policy.EvaluateAsync(_user.Id, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new MfaRequirementDecision(_user.Id, _tenantId, false, ["Member", "User"], new string('a', 64)));
+        _sessionIssuer.Setup(issuer => issuer.IssueAsync(It.IsAny<User>(), It.IsAny<Guid?>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
+            .Returns((User user, Guid? tenantId, DeviceInfo _, CancellationToken _) => Task.FromResult(Issued(user, tenantId)));
+        _sessionIssuer.Setup(issuer => issuer.IssueMfaAsync(It.IsAny<User>(), It.IsAny<Guid?>(), It.IsAny<DeviceInfo>(), It.IsAny<SignInMfaProof>(), It.IsAny<CancellationToken>()))
+            .Returns((User user, Guid? tenantId, DeviceInfo _, SignInMfaProof _, CancellationToken _) => Task.FromResult(Issued(user, tenantId)));
+        _eventsPublisher.Setup(publisher => publisher.Publish(It.IsAny<OrchestratedRiskCodeRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Callback((OrchestratedRiskCodeRequestedNotification notification, CancellationToken _) => _riskCode = notification.Code)
+            .Returns(Task.CompletedTask);
 
         _sut = new AuthenticationOrchestrationService(
             _flowStates,
@@ -121,9 +132,10 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
             _webAuthn.Object,
             _mfaAttemptTracking.Object,
             _userMfaConfiguration.Object,
-            _roleRepository.Object,
-            _jwtTokenService.Object,
-            Options.Create(new JwtOptions()),
+            _sessionIssuer.Object,
+            _subjects.Object,
+            _policy.Object,
+            new OrchestratedRiskChallengeVerifier(new EphemeralDataProtectionProvider(), _eventsPublisher.Object),
             NullLogger<AuthenticationOrchestrationService>.Instance,
             suspiciousLoginAlerts: _suspiciousAlerts.Object,
             eventPublisher: _eventsPublisher.Object);
@@ -165,7 +177,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task Complete_OnSatisfiedFlow_IssuesTokensThroughJwtTokenService()
+    public async Task Complete_OnSatisfiedFlow_IssuesCredentialsThroughPersistedSessionIssuer()
     {
         var state = await _sut.InitiateAuthenticationAsync(CreateRequest(deviceFingerprint: TrustedFingerprint));
 
@@ -179,12 +191,10 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
         result.TokenExpiresAt.Should().Be(_clock.FrozenUtcNow.AddMinutes(new JwtOptions().AccessTokenExpirationMinutes).UtcDateTime);
         result.DeviceTrusted.Should().BeTrue();
 
-        _jwtTokenService.Verify(
-            service => service.GenerateAccessTokenAsync(_user.Id, _user.Email, It.Is<string[]>(roles => roles.SequenceEqual(new[] { "Member" })), It.IsAny<Guid?>(), It.IsAny<int>(), result.SessionId!.Value, It.IsAny<CancellationToken>()),
-            Times.Once);
-        _jwtTokenService.Verify(
-            service => service.GenerateRefreshTokenAsync(_user.Id, It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()),
-            Times.Once);
+        _sessionIssuer.Verify(issuer => issuer.IssueAsync(_user, _tenantId,
+            It.Is<DeviceInfo>(device => device.Fingerprint == TrustedFingerprint), It.IsAny<CancellationToken>()), Times.Once);
+        result.ToSignInResponse().TenantId.Should().Be(_tenantId);
+        result.ToSignInResponse().RefreshTokenExpiresAt.Should().Be(_clock.FrozenUtcNow.AddDays(7).UtcDateTime);
 
         var persisted = await _flowStates.GetByFlowIdAsync(state.FlowId);
         persisted!.IsComplete.Should().BeTrue();
@@ -268,6 +278,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     [Fact]
     public async Task HighRiskTier_RequiresMfaThenRiskChallenge_InOrder_AndEnforcesStepOrder()
     {
+        _hasEnrolledMfa = true;
         _anomalyDetection
             .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
             .ReturnsAsync(new AuthenticationAnomalyResult { RiskScore = 80 });
@@ -292,9 +303,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
 
         // Completion is refused while steps are pending.
         await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.CompleteAuthenticationAsync(state.FlowId));
-        _jwtTokenService.Verify(
-            service => service.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        _sessionIssuer.VerifyNoOtherCalls();
 
         var afterMfa = await _sut.ProcessAuthenticationStepAsync(
             state.FlowId,
@@ -310,7 +319,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
         var afterRisk = await _sut.ProcessAuthenticationStepAsync(
             state.FlowId,
             AuthenticationStep.RiskChallenge,
-            new Dictionary<string, object> { ["backupCode"] = "AB12CD34" });
+            new Dictionary<string, object> { ["riskCode"] = _riskCode });
         afterRisk.CompletedSteps.Should().Contain(AuthenticationStep.RiskChallenge);
         afterRisk.IsComplete.Should().BeTrue();
 
@@ -323,6 +332,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     [Fact]
     public async Task MediumRiskTier_RequiresOnlyMfaVerification_ThenCompletes()
     {
+        _hasEnrolledMfa = true;
         _anomalyDetection
             .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
             .ReturnsAsync(new AuthenticationAnomalyResult { RiskScore = 60 });
@@ -387,7 +397,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
             .ReturnsAsync(new WebAuthnAuthenticationResult { Success = true, UserId = Guid.NewGuid() });
         var state = await _sut.InitiateAuthenticationAsync(CreateRequest(deviceFingerprint: UnknownFingerprint));
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() =>
             _sut.ProcessAuthenticationStepAsync(state.FlowId, AuthenticationStep.DeviceTrust, new Dictionary<string, object> { ["webAuthnAssertion"] = "{}" }));
 
         (await _sut.GetFlowStateAsync(state.FlowId))!.CompletedSteps.Should().NotContain(AuthenticationStep.DeviceTrust);
@@ -400,6 +410,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     [Fact]
     public async Task ExpiredFlow_FailsClosedForLookupStepsAndCompletion()
     {
+        _hasEnrolledMfa = true;
         _anomalyDetection
             .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
             .ReturnsAsync(new AuthenticationAnomalyResult { RiskScore = 60 });
@@ -408,15 +419,13 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
         _clock.AdvanceBy(AuthenticationOrchestrationService.FlowLifetime.Add(TimeSpan.FromSeconds(1)));
 
         (await _sut.GetFlowStateAsync(state.FlowId)).Should().BeNull();
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() =>
             _sut.ProcessAuthenticationStepAsync(state.FlowId, AuthenticationStep.MfaVerification, new Dictionary<string, object> { ["totpCode"] = "123456" }));
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _sut.CompleteAuthenticationAsync(state.FlowId));
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() => _sut.CompleteAuthenticationAsync(state.FlowId));
 
         var persisted = await _flowStates.GetByFlowIdAsync(state.FlowId);
-        persisted!.AbandonedAt.Should().NotBeNull();
-        _jwtTokenService.Verify(
-            service => service.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        persisted!.AbandonedAt.Should().BeNull("expired lookups are read-only and do not require a command transaction");
+        _sessionIssuer.VerifyNoOtherCalls();
         _totpMfa.Verify(
             service => service.VerifyTotpAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -425,6 +434,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     [Fact]
     public async Task AbandonedFlow_FailsClosedForLookupStepsAndCompletion()
     {
+        _hasEnrolledMfa = true;
         _anomalyDetection
             .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
             .ReturnsAsync(new AuthenticationAnomalyResult { RiskScore = 60 });
@@ -433,12 +443,10 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
         await _sut.AbandonAuthenticationFlowAsync(state.FlowId);
 
         (await _sut.GetFlowStateAsync(state.FlowId)).Should().BeNull();
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() =>
             _sut.ProcessAuthenticationStepAsync(state.FlowId, AuthenticationStep.MfaVerification, new Dictionary<string, object> { ["totpCode"] = "123456" }));
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _sut.CompleteAuthenticationAsync(state.FlowId));
-        _jwtTokenService.Verify(
-            service => service.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() => _sut.CompleteAuthenticationAsync(state.FlowId));
+        _sessionIssuer.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -447,9 +455,9 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
         var missing = Guid.NewGuid();
 
         (await _sut.GetFlowStateAsync(missing)).Should().BeNull();
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() =>
             _sut.ProcessAuthenticationStepAsync(missing, AuthenticationStep.MfaVerification, new Dictionary<string, object> { ["totpCode"] = "123456" }));
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _sut.CompleteAuthenticationAsync(missing));
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() => _sut.CompleteAuthenticationAsync(missing));
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -463,7 +471,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
             .Setup(hasher => hasher.VerifyPasswordWithWorkClassification(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(new PasswordVerificationResult(IsValid: false, WorkPerformed: true));
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(
             () => _sut.InitiateAuthenticationAsync(CreateRequest(deviceFingerprint: TrustedFingerprint)));
 
         _authAttemptService.Verify(
@@ -477,7 +485,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     {
         _user.IsActive = false;
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(
             () => _sut.InitiateAuthenticationAsync(CreateRequest(deviceFingerprint: TrustedFingerprint)));
 
         _flowStates.Stored.Should().BeEmpty();
@@ -499,7 +507,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
         var request = CreateRequest(deviceFingerprint: TrustedFingerprint);
         request.Context = new Dictionary<string, object>();
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _sut.InitiateAuthenticationAsync(request));
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() => _sut.InitiateAuthenticationAsync(request));
 
         _flowStates.Stored.Should().BeEmpty();
     }
@@ -511,6 +519,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     [Fact]
     public async Task Initiate_WhenRiskAnalysisFails_AssumesMaximumRisk()
     {
+        _hasEnrolledMfa = true;
         _anomalyDetection
             .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
             .ThrowsAsync(new InvalidOperationException("analyzer unavailable"));
@@ -525,6 +534,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     [Fact]
     public async Task ProcessStep_WhenMfaLockoutIsActive_FailsClosed()
     {
+        _hasEnrolledMfa = true;
         _anomalyDetection
             .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
             .ReturnsAsync(new AuthenticationAnomalyResult { RiskScore = 60 });
@@ -533,7 +543,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
             .ReturnsAsync(true);
         var state = await _sut.InitiateAuthenticationAsync(CreateRequest(deviceFingerprint: TrustedFingerprint));
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() =>
             _sut.ProcessAuthenticationStepAsync(state.FlowId, AuthenticationStep.MfaVerification, new Dictionary<string, object> { ["totpCode"] = "123456" }));
 
         _totpMfa.Verify(
@@ -544,6 +554,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     [Fact]
     public async Task ProcessStep_WhenVerificationFails_DelegatesToExistingLockoutTracking()
     {
+        _hasEnrolledMfa = true;
         _anomalyDetection
             .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
             .ReturnsAsync(new AuthenticationAnomalyResult { RiskScore = 60 });
@@ -552,7 +563,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
             .ReturnsAsync(false);
         var state = await _sut.InitiateAuthenticationAsync(CreateRequest(deviceFingerprint: TrustedFingerprint));
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() =>
             _sut.ProcessAuthenticationStepAsync(state.FlowId, AuthenticationStep.MfaVerification, new Dictionary<string, object> { ["totpCode"] = "000000" }));
 
         _mfaAttemptTracking.Verify(
@@ -564,12 +575,13 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     [Fact]
     public async Task ProcessStep_WithoutPayload_FailsClosed()
     {
+        _hasEnrolledMfa = true;
         _anomalyDetection
             .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
             .ReturnsAsync(new AuthenticationAnomalyResult { RiskScore = 60 });
         var state = await _sut.InitiateAuthenticationAsync(CreateRequest(deviceFingerprint: TrustedFingerprint));
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() =>
             _sut.ProcessAuthenticationStepAsync(state.FlowId, AuthenticationStep.MfaVerification, "not-a-payload"));
 
         _totpMfa.Verify(
@@ -612,6 +624,15 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
         Context = new Dictionary<string, object> { ["password"] = "correct-password" }
     };
 
+    private SignInResponse Issued(User user, Guid? tenantId) => new()
+    {
+        Success = true, UserId = user.Id, TenantId = tenantId, SessionId = Guid.NewGuid(),
+        AccessToken = "orchestrated-access-token", RefreshToken = "orchestrated-refresh-token",
+        AccessTokenExpiresAt = _clock.FrozenUtcNow.AddMinutes(new JwtOptions().AccessTokenExpirationMinutes).UtcDateTime,
+        RefreshTokenExpiresAt = _clock.FrozenUtcNow.AddDays(7).UtcDateTime,
+        ExpiresAt = _clock.FrozenUtcNow.AddDays(7).UtcDateTime
+    };
+
     private sealed class TestInitiateAuthenticationRequest : InitiateAuthenticationRequest;
 
     // ═══════════════════════════════════════════════════════════════════
@@ -621,6 +642,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
     [Fact]
     public async Task Initiate_HighRiskFlow_FiresStepUpSuspiciousLoginAlert()
     {
+        _hasEnrolledMfa = true;
         _anomalyDetection
             .Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
             .ReturnsAsync(new AuthenticationAnomalyResult
@@ -652,7 +674,7 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
             .Setup(hasher => hasher.VerifyPasswordWithWorkClassification(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(new PasswordVerificationResult(IsValid: false, WorkPerformed: true));
 
-        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(
+        var exception = await Assert.ThrowsAsync<AuthenticationRequiredException>(
             () => _sut.InitiateAuthenticationAsync(CreateRequest(deviceFingerprint: TrustedFingerprint)));
 
         exception.Message.Should().Be("Authentication failed");
@@ -696,6 +718,12 @@ public sealed class AuthenticationOrchestrationServiceTests : IDisposable
         public Task<AuthenticationFlowStateRecord?> GetByFlowIdAsync(Guid flowId, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(Stored.TryGetValue(flowId, out var record) ? Clone(record) : null);
+        }
+
+        public Task<AuthenticationFlowStateRecord?> GetForUpdateAsync(Guid flowId, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return GetByFlowIdAsync(flowId, cancellationToken);
         }
 
         public Task<AuthenticationFlowStateRecord> UpdateAsync(AuthenticationFlowStateRecord record, CancellationToken cancellationToken = default)

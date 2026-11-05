@@ -61,6 +61,9 @@ public class ProcessOrchestratedAuthenticationStepCommand : ICommand<Orchestrate
     ///     Serialized WebAuthn assertion, when satisfying the step with a passkey/security key.
     /// </summary>
     public string? WebAuthnAssertion { get; init; }
+
+    /// <summary>Out-of-band risk code; accepted only for the risk challenge.</summary>
+    public string? RiskCode { get; init; }
 }
 
 /// <summary>
