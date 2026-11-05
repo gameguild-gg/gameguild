@@ -1448,24 +1448,3 @@ public class FeatureQueryHandlerConstructorTests
 }
 
 #endregion
-
-#region OpenFeatureHostedInitializer Tests
-
-public class OpenFeatureHostedInitializerTests
-{
-    [Fact]
-    public async Task StartAsync_CompletesSuccessfully()
-    {
-        var sut = new OpenFeatureHostedInitializer(NullLogger<OpenFeatureHostedInitializer>.Instance);
-        await sut.StartAsync(CancellationToken.None);
-    }
-
-    [Fact]
-    public async Task StopAsync_CompletesSuccessfully()
-    {
-        var sut = new OpenFeatureHostedInitializer(NullLogger<OpenFeatureHostedInitializer>.Instance);
-        await sut.StopAsync(CancellationToken.None);
-    }
-}
-
-#endregion

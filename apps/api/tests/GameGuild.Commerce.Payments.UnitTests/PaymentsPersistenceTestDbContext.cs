@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace GameGuild.Commerce.Payments.UnitTests;
 
-internal sealed class PaymentsPersistenceTestDbContext(DbContextOptions<PaymentsPersistenceTestDbContext> options)
+internal class PaymentsPersistenceTestDbContext(DbContextOptions<PaymentsPersistenceTestDbContext> options)
     : DbContext(options), IApplicationDbContext
 {
     public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
@@ -30,6 +30,7 @@ internal sealed class PaymentsPersistenceTestDbContext(DbContextOptions<Payments
         modelBuilder.Entity<Refund>();
         modelBuilder.Entity<PaymentDispute>();
         modelBuilder.Entity<FraudBlacklistEntry>();
+        modelBuilder.Entity<FraudBackgroundScoringJob>();
         base.OnModelCreating(modelBuilder);
     }
 }

@@ -40,11 +40,16 @@ psql_dbc() { docker exec "$CONTAINER" psql -U postgres -d "$DB" -c "$1"; }
 schema_snapshot() { docker exec "$CONTAINER" pg_dump -s -U postgres "$DB" > "$1" 2>/dev/null; }
 
 ef() {
-  dotnet ef "$1" \
+  # dotnet-ef (>=10) only accepts the space form ("database update"); accept the
+  # dotted form ("database.update") this script is written against by expanding it.
+  local sub="${1//./ }"
+  shift
+  # shellcheck disable=SC2086 # intentional word split: "database update" is two tokens
+  dotnet ef $sub \
     --project "$API_PROJECT" \
     --startup-project "$API_PROJECT" \
     --connection "$CONNECTION" \
-    --no-build
+    --no-build "$@"
 }
 
 echo "[rehearsal] disposable PostgreSQL 17 on 127.0.0.1:$PORT (CI-pinned digest)"
@@ -61,7 +66,8 @@ ef database.update | tee "$EVIDENCE/forward.log" | tail -1
 CHAIN_LEN=$(ef migrations.list | grep -c .)
 APPLIED=$(psql_db "SELECT count(*) FROM \"__EFMigrationsHistory\";")
 FILE_LEN=$(ls "$REPO_ROOT/apps/api/Source/GameGuild.API/Database/Migrations" \
-  | grep -v 'Designer\.cs$' | grep -v 'ModelSnapshot\.cs$' | grep -v '\.Security\.cs$' | grep -c '\.cs$')
+  | grep -v 'Designer\.cs$' | grep -v '^ApplicationDbContextModelSnapshot\.cs$' \
+  | grep -v '\.Security\.cs$' | grep -c '\.cs$')
 echo "[rehearsal] 2/5 HISTORY COMPLETENESS: files=$FILE_LEN chain=$CHAIN_LEN applied=$APPLIED"
 if [[ "$FILE_LEN" != "$CHAIN_LEN" || "$CHAIN_LEN" != "$APPLIED" ]]; then
   echo "::error::history incomplete (files=$FILE_LEN chain=$CHAIN_LEN applied=$APPLIED)" | tee "$EVIDENCE/verdict.json"

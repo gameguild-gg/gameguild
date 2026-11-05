@@ -2,7 +2,8 @@
 
 Audit package over `GameGuild.SharedKernel` (`apps/api/Source/Modules/GameGuild.SharedKernel/`)
 and the API host core (`apps/api/Source/GameGuild.API/Core/`). Base: `origin/develop` @
-`43603cb5b` (2026-11-03). Companion packages: `docs/auth/` (event flows, state machines),
+`43603cb5b` (2026-11-03); docs 08–09 were cut at `ce31d5850c` (2026-11-05) with all reused
+cites re-verified. Companion packages: `docs/auth/` (event flows, state machines),
 `docs/authorization/`, `docs/economy/`, `docs/compliance/`.
 
 | Doc | Contents |
@@ -14,6 +15,8 @@ and the API host core (`apps/api/Source/GameGuild.API/Core/`). Base: `origin/dev
 | [05-security-primitives.md](05-security-primitives.md) | BCrypt work factor (default 12, bounds 10–16), SHA-256 token hashing, `LogRedaction`, certificate-protected DataProtection (env-only, fail-fast), env-only secret conventions, `AnonymousEndpointRegistry` contract |
 | [06-event-bridge-registry.md](06-event-bridge-registry.md) | Host security bridge registrations, notification `EmailRendererRegistry`, and the `UseCaseOperationOccurredV1` generic contract — 1,161 platform contracts (258 hand-written + 903 generated), 164 of them auth |
 | [07-gaps.md](07-gaps.md) | Seven NEW gaps (dead `ObservabilityBehavior`, unwired `IdempotencyMiddleware`/order validator, CSV locale drift, hand-rolled outboxes, unarmed order ratchet, soft-delete filter inconsistency) vs the known ratcheted set |
+| [08-stride-threat-model.md](08-stride-threat-model.md) | The meta-threat-model — STRIDE over the six foundation surfaces (CQRS pipeline position privilege, outbox poison-blast-radius/DLQ escape, middleware order tripwire, soft-delete resurrection, DataProtection key blast radius, LogRedaction escapes) with NEW findings S2-a/S2-b/S4-a/S4-b |
+| [09-dfds.md](09-dfds.md) | L0 (kernel as the substrate every module rides) + three L1s: one request's journey through all 26 middleware registrations and the behavior chain, the outbox write→lease→dispatch→DLQ→replay flow, the DataProtection key derivation chain |
 
 Cross-cutting summary: the foundation is deliberately **fail-closed everywhere** — unknown
 permissions throw, quota-service failures reject, unavailable commands resolve to explicit

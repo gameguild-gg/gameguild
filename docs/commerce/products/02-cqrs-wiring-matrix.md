@@ -5,21 +5,20 @@
 
 ## 0. DI wiring — the load-bearing section
 
-Three different mechanisms compose this module, and **one registration method is dead**:
+Four mechanisms compose this module. **The module method is now composed by the host (issue #1290 fix; at the documented commit `60100459e6` it was dead — see the status column):**
 
 | Mechanism | What it registers | Evidence | Status |
 |---|---|---|---|
 | Module scan (CQRS) | all command/query handlers + FluentValidation validators from the assembly | `API:/Core/Setup/ApplicationLayerExtensions.cs:110-145`; `Commerce.Products` in `ModuleConfiguration.CommonEnabledModules` (`API:/Core/Setup/ModuleConfiguration.cs:20`) | **live** — the G1 guard's empty baseline section confirms no handler is unregistered |
 | Convention scan (repositories/services) | `I{Name}Repository → {Name}Repository` and `I{Name}Service → {Name}Service` (+`Reader`) from enabled module assemblies, scoped | `API:/Core/Setup/InfrastructureLayerExtensions.cs:482-560` (patterns at `:533-557`); unmatched-type warning at `:562+` | **live** — covers the 10 repositories and 8 `*Service` interfaces |
-| Explicit host registrations | `IPromoCodeUsageRecorder`, `IPromoCodeAuditLogger`, `IPromoDiscountCalculator` (adapter), `IProductCategoryValidator`, `IProductCatalogAuditLogger`, `IBundleSavingsCalculator` — none match the convention | `API:/Core/Setup/InfrastructureLayerExtensions.cs:275-290` | **live** (issues #418/#417/#401 called out in comments) |
+| Module method (`AddProductsModule`) | hosted `PricingSchedulingBackgroundService`; `.Bind(...)` options for `PricingScheduling`/`PromoCodes`/`PromoAbuseDetection`/`PromoRedemptionCaptcha`; `ISubscriptionPromoCoordinator`, `IFraudReviewTicketCoordinator`, `IPromoCustomerStateResolver`, `IPromoRedemptionCaptchaGate`, `IPromoUsageAnomalyEvaluator`; the six non-convention promo/pricing/catalog services formerly inlined at `:275-290` (`IPromoCodeUsageRecorder`, `IPromoCodeAuditLogger`, `IPromoDiscountCalculator` adapter, `IProductCategoryValidator`, `IProductCatalogAuditLogger`, `IBundleSavingsCalculator`) | composed by the host at `API:/Core/Setup/InfrastructureLayerExtensions.cs` block 10c (right after `AddSubscriptionsModule`, issue #1290); method body `Products:/ProductsModule.cs` | **live since #1290** — at `60100459e6` this row was **DEAD** (gap P1): never invoked, options unbound, five services absent |
 | EF model | `ProductsModelConfiguration` (IModelConfiguration) incl. `ProductsModule.ConfigureProductsModel` (`Products:/Configuration/ProductsModelConfiguration.cs:20`) | assembly-scanned in `API:/Database/ApplicationDbContext.cs:866-883` | **live — tables materialized** |
-| `AddProductsModule` | the six above-named registrations PLUS: `AddHostedService<PricingSchedulingBackgroundService>`, `AddOptions` for 4 options classes, `ISubscriptionPromoCoordinator`, `IFraudReviewTicketCoordinator`, `IPromoCustomerStateResolver`, `IPromoRedemptionCaptchaGate`, `IPromoUsageAnomalyEvaluator`, `IPromoDiscountCalculator` (dup) | `Products:/ProductsModule.cs:16-66` — **the only caller in the tree is its own unit test** (`apps/api/tests/GameGuild.Commerce.Products.UnitTests/ModuleAndInfrastructureTests.cs:22`) | **DEAD — never invoked by the host** (gap P1) |
 
-Runtime consequences of the dead method (all traced in `06-gaps.md`):
+Runtime consequences **before** the #1290 fix (all traced in `06-gaps.md`, now resolved):
 
-- `PricingSchedulingBackgroundService` never hosted — scheduled pricing rules/experiments never transition on time (`ProductsModule.cs:54`).
-- `IOptions<PricingSchedulingOptions/PromoEngineOptions/PromoAbuseDetectionOptions/PromoRedemptionCaptchaOptions>` resolve framework defaults only; **no configuration section is bound anywhere** (not even inside `AddProductsModule` — `AddOptions<T>()` without `.Bind` at `:53-60`; sections `PricingScheduling:*`, `PromoCodes:*`, `PromoAbuseDetection:*` are inert).
-- `ISubscriptionPromoCoordinator`, `IFraudReviewTicketCoordinator`, `IPromoCustomerStateResolver`, `IPromoRedemptionCaptchaGate`, `IPromoUsageAnomalyEvaluator` unregistered → P2 (hard failure), P3/P4 (silent null degradation).
+- `PricingSchedulingBackgroundService` never hosted — scheduled pricing rules/experiments never transitioned on time (`ProductsModule.cs:54`). Now hosted by the composed API.
+- `IOptions<PricingSchedulingOptions/PromoEngineOptions/PromoAbuseDetectionOptions/PromoRedemptionCaptchaOptions>` resolved framework defaults only; no configuration section was bound anywhere. Now `.Bind(...)`-wired inside the module method, so `PricingScheduling:*`, `PromoCodes:*`, `PromoAbuseDetection:*` and `PromoRedemptionCaptcha:*` take effect.
+- `ISubscriptionPromoCoordinator`, `IFraudReviewTicketCoordinator`, `IPromoCustomerStateResolver`, `IPromoRedemptionCaptchaGate`, `IPromoUsageAnomalyEvaluator` were unregistered → P2 (hard failure, fixed), P3/P4 (silent null degradation, fixed; CAPTCHA gate registered but opt-in by configuration).
 
 ## 1. Endpoint matrix (11 controllers, ~92 endpoints)
 

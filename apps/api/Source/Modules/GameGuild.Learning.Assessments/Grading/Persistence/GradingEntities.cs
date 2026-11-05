@@ -64,6 +64,10 @@ public enum AcademicOutboxDeliveryStatus
     Processing,
     Confirmed,
     Failed,
+
+    /// <summary>Terminal poison state after the attempt ceiling: never re-picked by the
+    /// dispatcher, only a replay (see <c>ReplayAcademicOutboxEventCommand</c>) requeues it.</summary>
+    DeadLettered,
 }
 
 public enum GradeResultReleaseStatus
@@ -1659,6 +1663,21 @@ public sealed class AcademicOutboxMessage
         Status = AcademicOutboxStatus.Failed;
     }
 
+    /// <summary>
+    ///     Replay transition (issue #1218 G5): a dead-lettered delivery was requeued, so the
+    ///     message is live again and returns to <see cref="AcademicOutboxStatus.Processing"/>
+    ///     until every delivery confirms.
+    /// </summary>
+    public void MarkRequeued()
+    {
+        if (Status == AcademicOutboxStatus.Completed)
+        {
+            return;
+        }
+
+        Status = AcademicOutboxStatus.Processing;
+    }
+
     private static string RequireBoundedText(string value, int maximumLength, string parameterName)
     {
         var normalized = string.IsNullOrWhiteSpace(value)
@@ -1683,6 +1702,7 @@ public sealed class AcademicOutboxDelivery
     public DateTime? ClaimedAt { get; private set; }
     public string? ClaimedBy { get; private set; }
     public DateTime? ConfirmedAt { get; private set; }
+    public DateTime? DeadLetteredAt { get; private set; }
     public string? LastError { get; private set; }
 
     public static AcademicOutboxDelivery Create(Guid messageId, string consumerKey)
@@ -1750,7 +1770,8 @@ public sealed class AcademicOutboxDelivery
 
     public void Fail(string error, DateTime nextAttemptAt)
     {
-        if (Status == AcademicOutboxDeliveryStatus.Confirmed)
+        if (Status == AcademicOutboxDeliveryStatus.Confirmed
+            || Status == AcademicOutboxDeliveryStatus.DeadLettered)
         {
             return;
         }
@@ -1762,6 +1783,49 @@ public sealed class AcademicOutboxDelivery
         NextAttemptAt = nextAttemptAt.ToUniversalTime();
         ClaimedAt = null;
         ClaimedBy = null;
+    }
+
+    /// <summary>
+    ///     Terminal poison transition after the attempt ceiling (issue #1218 G5, mirroring the
+    ///     core inbox's <c>DeadLetteredAtUtc</c>): the delivery is never re-picked by the
+    ///     dispatcher; only an explicit replay can requeue it.
+    /// </summary>
+    public void DeadLetter(string error, DateTime deadLetteredAt)
+    {
+        if (Status == AcademicOutboxDeliveryStatus.Confirmed
+            || Status == AcademicOutboxDeliveryStatus.DeadLettered)
+        {
+            return;
+        }
+
+        Status = AcademicOutboxDeliveryStatus.DeadLettered;
+        LastError = TruncateUtf8(
+            string.IsNullOrWhiteSpace(error) ? "Academic outbox consumer exhausted its attempts." : error,
+            4096);
+        DeadLetteredAt = deadLetteredAt.ToUniversalTime();
+        NextAttemptAt = null;
+        ClaimedAt = null;
+        ClaimedBy = null;
+    }
+
+    /// <summary>
+    ///     Replay transition (issue #1218 G5): requeues a dead-lettered delivery as Pending with
+    ///     a fresh attempt budget. Confirmed deliveries are never replayable.
+    /// </summary>
+    public bool TryRequeue(DateTime nextAttemptAt)
+    {
+        if (Status != AcademicOutboxDeliveryStatus.DeadLettered)
+        {
+            return false;
+        }
+
+        Status = AcademicOutboxDeliveryStatus.Pending;
+        AttemptCount = 0;
+        NextAttemptAt = nextAttemptAt.ToUniversalTime();
+        DeadLetteredAt = null;
+        ClaimedAt = null;
+        ClaimedBy = null;
+        return true;
     }
 
     private static string TruncateUtf8(string value, int maximumBytes)

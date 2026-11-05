@@ -158,7 +158,9 @@ public class CreateSubscriptionPromoTests
 
         var act = () => _handler.Handle(command, CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
+        // Issue #1290: a total promo rejection is a client-input outcome, surfaced as the
+        // domain exception the middleware maps to 422 — never a 500-class InvalidOperationException.
+        await act.Should().ThrowAsync<SubscriptionPromoCodesRejectedException>()
             .WithMessage("*not valid for this subscription plan*");
         _mockRepository.Verify(r => r.AddAsync(It.IsAny<Subscription>(), It.IsAny<CancellationToken>()), Times.Never);
     }

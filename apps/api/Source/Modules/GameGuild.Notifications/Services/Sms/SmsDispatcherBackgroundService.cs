@@ -8,9 +8,9 @@ namespace GameGuild.Notifications.Services.Sms;
 
 /// <summary>
 /// Host wrapper for <see cref="SmsDispatcherService"/>: scope-per-pass loop honoring Interval,
-/// logging exceptions without crashing, first sweep delayed so startup is never blocked. Dormant
-/// (single cheap sweep per interval) while <see cref="SmsDeliveryOptions.Enabled"/> is false
-/// because no SMS rows are queued in that state.
+/// logging exceptions without crashing, first sweep delayed so startup is never blocked. Exits
+/// immediately while <see cref="SmsDeliveryOptions.Enabled"/> is false — a disabled channel
+/// must not poll the database (issue #1218 G6).
 /// </summary>
 public sealed class SmsDispatcherBackgroundService(
     IServiceProvider serviceProvider,
@@ -25,6 +25,7 @@ public sealed class SmsDispatcherBackgroundService(
         if (!deliveryOptions.Value.Enabled)
         {
             logger.LogInformation("SmsDispatcherBackgroundService is dormant because SMS delivery is disabled (no provider configured)");
+            return;
         }
 
         logger.LogInformation("SmsDispatcherBackgroundService started");

@@ -101,9 +101,10 @@ public sealed class CreateSubscriptionCommandHandler(
                 // Fail closed: checkout must not silently drop a supplied promo. The client
                 // previews codes through promo-codes:validate first; a total rejection here
                 // means the code expired or was fully consumed between preview and create.
-                var reasons = string.Join("; ", promoQuote.RejectedCodes.Select(r => $"{r.Code}: {r.Reason}"));
-                throw new InvalidOperationException(
-                    $"None of the supplied promo codes could be applied to plan {request.PlanId}. {reasons}");
+                // Domain exception (issue #1290) so the middleware answers 422, not 500.
+                throw new SubscriptionPromoCodesRejectedException(
+                    request.PlanId,
+                    promoQuote.RejectedCodes.Select(r => $"{r.Code}: {r.Reason}"));
             }
         }
 

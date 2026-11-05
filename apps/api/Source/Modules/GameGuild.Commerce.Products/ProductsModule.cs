@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using GameGuild.Commerce;
 using GameGuild.Commerce.Payments;
@@ -13,8 +14,9 @@ public static class ProductsModule
     /// <summary>
     /// Configure services for the Products module
     /// </summary>
-    public static IServiceCollection AddProductsModule(this IServiceCollection services)
+    public static IServiceCollection AddProductsModule(this IServiceCollection services, IConfiguration configuration)
     {
+        ArgumentNullException.ThrowIfNull(configuration);
         // Register repositories
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductCategoryRepository, ProductCategoryRepository>();
@@ -50,14 +52,22 @@ public static class ProductsModule
         services.AddScoped<IPricingExperimentService, PricingExperimentService>();
 
         // Automated pricing scheduling (issue #395): opt-in per rule/experiment date windows.
-        services.AddOptions<PricingSchedulingOptions>();
+        // Options are bound to their declared sections (issue #1290): without the Bind an
+        // operator's PricingScheduling:* values were silently ignored.
+        services.AddOptions<PricingSchedulingOptions>()
+            .Bind(configuration.GetSection(PricingSchedulingOptions.SectionName));
         services.AddHostedService<PricingSchedulingBackgroundService>();
 
         // Promo engine configuration (issue #418): tenant-default validity timezone,
         // unusual-usage alerting thresholds, and the CAPTCHA gate for untrusted redemptions.
-        services.AddOptions<PromoEngineOptions>();
-        services.AddOptions<PromoAbuseDetectionOptions>();
-        services.AddOptions<PromoRedemptionCaptchaOptions>();
+        // Bound to their declared sections (issue #1290) so PromoCodes:*,
+        // PromoAbuseDetection:* and PromoRedemptionCaptcha:* configuration takes effect.
+        services.AddOptions<PromoEngineOptions>()
+            .Bind(configuration.GetSection(PromoEngineOptions.SectionName));
+        services.AddOptions<PromoAbuseDetectionOptions>()
+            .Bind(configuration.GetSection(PromoAbuseDetectionOptions.SectionName));
+        services.AddOptions<PromoRedemptionCaptchaOptions>()
+            .Bind(configuration.GetSection(PromoRedemptionCaptchaOptions.SectionName));
 
         // Note: Order-related services are now in GameGuild.Commerce.Orders module
         // CQRS handlers are automatically registered by assembly scanning in ApplicationLayerExtensions

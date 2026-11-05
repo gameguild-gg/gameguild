@@ -25,7 +25,7 @@ public sealed class ProcessPaymentCommandHandler(
     INotificationService? notificationService = null,
     Microsoft.Extensions.Options.IOptionsMonitor<FraudAssessmentOptions>? fraudAssessmentOptions = null,
     GameGuild.Commerce.IFraudReviewTicketCoordinator? fraudReviewTicketCoordinator = null,
-    IFraudBackgroundScoringQueue? backgroundScoringQueue = null) : ICommandHandler<ProcessPaymentCommand, PaymentResult>
+    IFraudBackgroundScoringJobStore? backgroundScoringJobStore = null) : ICommandHandler<ProcessPaymentCommand, PaymentResult>
 {
     private const string SubscriptionInvoiceKind = "subscription";
 
@@ -177,14 +177,15 @@ public sealed class ProcessPaymentCommandHandler(
 
         // Issue #409: asynchronous completion. Providers the synchronous budget deferred
         // are re-evaluated by the background worker, which can only tighten this Allow.
+        // Issue #1218 G3: the handoff is a durable job row, so a restart mid-queue no
+        // longer loses the deferred evaluation.
         if (assessment.EffectiveDeferredProviders.Count > 0
-            && backgroundScoringQueue is not null
+            && backgroundScoringJobStore is not null
             && fraudAssessmentOptions?.CurrentValue.ResolveFor(payment.TenantId).BackgroundRescoringEnabled != false)
         {
-            backgroundScoringQueue.TryEnqueue(new FraudBackgroundScoringJob(
-                payment.Id,
-                fraudContext,
-                assessment.EffectiveDeferredProviders));
+            await backgroundScoringJobStore
+                .TryEnqueueAsync(fraudContext, assessment.EffectiveDeferredProviders, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         // Account-credit auto-apply (issue #410): plan the credit tender BEFORE charging the

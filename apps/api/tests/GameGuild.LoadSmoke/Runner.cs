@@ -129,7 +129,19 @@ internal static class Runner
 
             // Warm-up: one full pass outside the measured window so first-hit JIT, connection
             // establishment and plan caching do not masquerade as cliffs.
+            var warmUpPassStartedAt = Stopwatch.GetTimestamp();
             await RunPassAsync(realAuthClient, syntheticClient, accounts, warmUp: true);
+
+            // The production-shaped per-IP authentication limiter is a fixed 60 s window
+            // with a small queue. The warm-up wave consumed its sign-in permits; a measured
+            // wave inside the same window would queue behind it and record window-length
+            // waits that belong to the limiter, not the verify path. Wait the window out
+            // (usually a no-op: the warm-up pass itself spans well beyond a minute).
+            var limiterWindowRemaining = TimeSpan.FromSeconds(65) - Stopwatch.GetElapsedTime(warmUpPassStartedAt);
+            if (limiterWindowRemaining > TimeSpan.Zero)
+            {
+                await Task.Delay(limiterWindowRemaining);
+            }
 
             var (measurements, rateLimitedSignIns) = await RunPassAsync(realAuthClient, syntheticClient, accounts, warmUp: false);
 
@@ -153,16 +165,17 @@ internal static class Runner
 
             var failures = new List<string>();
             // Non-2xx outcomes that are documented path behavior, not cliffs:
-            //  - sign-in: a concurrency-dependent 200/401 alternation on IDENTICAL valid
-            //    credentials (reproduced locally 2026-11-04: N=1 -> 8/8 200s; N=2 -> 6x401 +
-            //    6x200 with a 24 s outlier) — the split is recorded in statusCounts and is
-            //    issue material against the open sign-in TOCTOU/lockout batch (#1197,
-            //    #1082-#1091); the smoke's hard bars stay zero-5xx and the p95 budget.
+            //  - sign-in: every worker signs in with distinct VALID credentials from one
+            //    source address, so any 401 is a regression of the concurrency-admission
+            //    fix (#1309: the per-source-IP advisory lock used to deny overlapping
+            //    valid sign-ins — 10 parallel -> 1x200 + 9x401). 429 from the
+            //    production-shaped per-IP authentication limiter is counted separately
+            //    and excluded from the profile above.
             //  - wallet-read: 404 is the controller's no-wallet-yet answer; the read path
             //    (auth + permission chain + EF lookup) is fully exercised either way.
             var toleratedStatuses = new Dictionary<string, HashSet<HttpStatusCode>>
             {
-                [SignIn] = [HttpStatusCode.OK, HttpStatusCode.Unauthorized],
+                [SignIn] = [HttpStatusCode.OK],
                 [Wallet] = [HttpStatusCode.OK, HttpStatusCode.NotFound],
             };
             foreach (var group in measurements)

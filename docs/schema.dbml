@@ -3129,6 +3129,29 @@ Table "follows" {
   }
 }
 
+Table "FraudBackgroundScoringJob" {
+  "Id" uuid [not null]
+  "TenantId" uuid [not null]
+  "PaymentId" uuid [not null]
+  "ContextJson" text [not null]
+  "DeferredProvidersJson" text [not null]
+  "Status" "character varying(32)" [not null]
+  "AttemptCount" integer [not null]
+  "NextAttemptAt" timestamp
+  "ClaimedAt" timestamp
+  "ClaimedBy" "character varying(200)"
+  "CreatedAt" timestamp [not null]
+  "CompletedAt" timestamp
+  "LastError" text
+
+  Indexes {
+    Id [pk, name: "PK_FraudBackgroundScoringJob"]
+    (Status, NextAttemptAt) [name: "ix_fraud_rescoring_jobs_due"]
+    PaymentId [name: "ix_fraud_rescoring_jobs_payment"]
+    TenantId [name: "ix_fraud_rescoring_jobs_tenant"]
+  }
+}
+
 Table "FraudBlacklistEntries" {
   "Id" uuid [not null]
   "TenantId" uuid [not null]
@@ -6912,13 +6935,14 @@ Table "AcademicOutboxDeliveries" {
   "ClaimedAt" timestamp
   "ClaimedBy" "character varying(200)"
   "ConfirmedAt" timestamp
+  "DeadLetteredAt" timestamp
   "LastError" text
 
   Checks {
     `"AttemptCount" >= 0` [name: 'CK_AcademicOutboxDeliveries_Attempts']
     `"LastError" IS NULL OR octet_length("LastError") <= 4096` [name: 'CK_AcademicOutboxDeliveries_ErrorSize']
-    `("Status" = 'processing') = ("ClaimedAt" IS NOT NULL AND "ClaimedBy" IS NOT NULL) AND ("Status" = 'confirmed') = ("ConfirmedAt" IS NOT NULL) AND ("Status" = 'failed') = ("NextAttemptAt" IS NOT NULL)` [name: 'CK_AcademicOutboxDeliveries_Lifecycle']
-    `"Status" IN ('pending', 'processing', 'confirmed', 'failed')` [name: 'CK_AcademicOutboxDeliveries_Status']
+    `("Status" = 'processing') = ("ClaimedAt" IS NOT NULL AND "ClaimedBy" IS NOT NULL) AND ("Status" = 'confirmed') = ("ConfirmedAt" IS NOT NULL) AND ("Status" = 'failed') = ("NextAttemptAt" IS NOT NULL) AND ("Status" = 'deadlettered') = ("DeadLetteredAt" IS NOT NULL) AND ("DeadLetteredAt" IS NULL OR ("NextAttemptAt" IS NULL AND "ConfirmedAt" IS NULL))` [name: 'CK_AcademicOutboxDeliveries_Lifecycle']
+    `"Status" IN ('pending', 'processing', 'confirmed', 'failed', 'deadlettered')` [name: 'CK_AcademicOutboxDeliveries_Status']
   }
 
   Indexes {

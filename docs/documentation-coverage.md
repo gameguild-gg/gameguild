@@ -26,7 +26,32 @@
 | 16 | Compliance.FinancialCrime | ✅ 5 (ingest FC1 designed-only) | ✅ 5 endpoints + 9 ops reconciled (02 §2) | ✅ evidence kind financial-crime | ✅ 5 máquinas | ✅ 5 | ✅ 6 famílias F1-F6 (examinador AML) | ✅ L0+6 (examinador) | ✅ financialcrime/09 | **8/8** (FC1-FC8 residuais no 06-gaps) |
 | 17 | Finance.Economy (7 subs) | ✅ 11 famílias (01: wallet, payout, settlement, bounty, ad-reward, AI-credit, treasury) | ✅ 71 endpoints / 19 ctrl (02; N9: 19 unthrottled) | ✅ 5 outboxes + 10 streams (04) | ✅ 9 stateDiagrams (03) | ✅ (economy/05) | ✅ 9 famílias E1-E9 | ✅ L0+9 L1 (10) | ✅ economy/09 | **8/8** (N1-N10 residuais no 07-gaps) |
 | 18 | Finance.Ledgers | ✅ 3 | ✅ 24 rotas + 20 dead types reconciliados (02 §3) | ✅ 1 durable + 12 dead | ✅ 4 máquinas (estados inalcançáveis mapeados) | ✅ 4 | ✅ 5 famílias F1-F5 | ✅ L0+4 | ✅ finance-ledgers/09 | **8/8** (L1-L8 residuais no 06-gaps) |
-| 19 | Learning (12 subs) | ✅ 6 | ✅ 31 ctrl | ✅ | ✅ 5 | ✅ | ❌ | ❌ | ❌ | 5/8 |
+| 19 | Learning (12 subs) | ✅ 6 | ✅ 31 ctrl | ✅ | ✅ 5 | ✅ | ✅ 12 famílias SL1-SL12 (07, pós-#1226/#1275) | ✅ L0+4 L1 (08, PII marcado, LTI=TB3) | ✅ learning/09 (gate elegibilidade, ancoragem PII-free fail-closed, guard de cohort #1275, mapa who-can-grade) | **8/8** (N4/N5/N11/N16 + R-1..R-4 residuais no 06-gaps/07) |
+| 20 | Social.Posts | ✅ críticos (01: post lifecycle + moderation) | ✅ 127 endpoints família (02) | ✅ família (04) | ✅ 6 máquinas família (03) | ✅ família (social-platform/10) | ✅ C1-C6 (social-platform/07) | ✅ L0+L1 família (social-platform/08) | ✅ social-platform/09 | **8/8** |
+| 21 | Social.Feed | ✅ críticos (01) | ✅ família (02: 127 endpoints/9 sub) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ C1-C6 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 22 | Social.Profiles | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ C1-C6 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** (SP1: ProfileVisibility ignorado — #1315) |
+| 23 | Social.Groups | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ C1-C6 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 24 | Social.Follows | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ C1-C6 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 25 | Social.Reactions | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ C1-C6 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 26 | Social.Blog | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ C1-C6 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 27 | Social.Announcements | ✅ críticos (01) | ✅ família (02) | ✅ família (04: bridge p/ Notifications) | ✅ família (03) | ✅ família (10) | ✅ C1-C6 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 28 | Social.Assets-social | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ C1-C6 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 29 | Social.Mentorship | ✅ 13 rotas (01) | ✅ 13 rotas / ctrl completo (02) | ✅ mentorship events (04) | ✅ booking/session (03) | ✅ (05) | ✅ (07) | ✅ (08) | ✅ (09) | **8/8** (M1 double-book, M4 self-service — #1319) |
+| 30 | Social.Ratings | ✅ 21 rotas (01) | ✅ 21 rotas / ctrl (02) | ✅ rating events (04) | ✅ rating lifecycle (03) | ✅ (05) | ✅ (07) | ✅ (08) | ✅ (09) | **8/8** (R1: IsDeleted 500s — #1319/#1278) |
+| 31 | Platform.AI | ✅ críticos (01) | ✅ 383 endpoints família (02) | ✅ família (04) | ✅ família (03) | ✅ família (social-platform/10) | ✅ P1-P5 (social-platform/07) | ✅ família (social-platform/08) | ✅ social-platform/09 | **8/8** |
+| 32 | Platform.Analytics | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** (N10 cross-tenant — #1250) |
+| 33 | Platform.Assets | ✅ críticos (01: upload→moderação) | ✅ família (02) | ✅ família (04) | ✅ família (03: asset moderation) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 34 | Platform.Features | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 35 | Platform.GameJams | ✅ críticos (01: jam lifecycle) | ✅ família (02) | ✅ família (04) | ✅ família (03: jam) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 36 | Platform.Projects | ✅ críticos (01: project lifecycle) | ✅ família (02) | ✅ família (04) | ✅ família (03: project+version) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 37 | Platform.ProjectWork | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 38 | Platform.TestingLab | ✅ críticos (01: session) | ✅ família (02) | ✅ família (04) | ✅ família (03: event/session) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 39 | Platform.LaunchPad | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 40 | Platform.Monitoring.SLA | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 41 | Platform.Localization | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 42 | Platform.Teams | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 43 | Platform.Tags | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
+| 44 | Platform.Resources | ✅ críticos (01) | ✅ família (02) | ✅ família (04) | ✅ família (03) | ✅ família (10) | ✅ P1-P5 (07) | ✅ família (08) | ✅ social-platform/09 | **8/8** |
 | 20 | Social.Posts | 🟡 críticos | ✅ 127 endpoints (família) | ✅ | ✅ 6 (família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
 | 21 | Social.Feed | 🟡 críticos (família) | ✅ (02 família: 127 endpoints/9 sub) | ✅ (04 família) | ✅ (03 família: 6 máquinas) | ❌ | ❌ | ❌ | ❌ | 4/8 |
 | 22 | Social.Profiles | 🟡 críticos (família) | ✅ (02 família) | ✅ (04 família) | ✅ (03 família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
@@ -52,12 +77,12 @@
 | 42 | Platform.Teams | 🟡 críticos (família) | ✅ (02 família) | ✅ (04 família) | ✅ (03 família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
 | 43 | Platform.Tags | 🟡 críticos (família) | ✅ (02 família) | ✅ (04 família) | ✅ (03 família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
 | 44 | Platform.Resources | 🟡 críticos (família) | ✅ (02 família) | ✅ (04 família) | ✅ (03 família) | ❌ | ❌ | ❌ | ❌ | 4/8 |
-| 45 | Content.Pages | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
-| 46 | Resources.Contents | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
-| 47 | Gamification.Achievements | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
-| 48 | Notifications | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
-| 49 | TrustSafety | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
-| 50 | SharedKernel + host core | n/a (anatomia) | n/a | ✅ outbox core | n/a | n/a | 🟡 primitives | ❌ | ✅ 6 docs | 3.5/8 |
+| 45 | Content.Pages | ✅ 6 famílias (página, consumo público, seções, recursos, propostas, leads) | ✅ 32 rotas / 5 ctrl (matriz completa × gates C1) | ✅ 17 eventos audit fail-closed + 17 use-case (04) | ✅ 4 máquinas (03) | ✅ (05: audit sink, render público, funil propostas) | ✅ 7 famílias S1-S7 | ✅ L0 + 5 L1 | ✅ content/09 | **8/8** (docs/content/; C1 gates só no PUT, C2 soft-delete invisível — gaps) |
+| 46 | Resources.Contents | ✅ 4 famílias (drafts, review, publish/schedule, contratos) | ✅ 18 rotas / 2 ctrl (+§3: 16 E9-500 reconciliados, 3 métodos sem rota) | ✅ zero-event module + 12 use-case (04) | ✅ ContentVersion 7 estados + atalhos (03) | ✅ (05: happy path, auto-approve, schedule sem worker, fronteira c/ Pages) | ✅ 6 famílias RS1-RS6 | ✅ L0 + 5 L1 | ✅ resources-contents/09 | **8/8** (docs/resources-contents/; R1: 16/18 rotas 500 no runtime — E9/#1278; R2 cancel-schedule sempre 500) |
+| 47 | Gamification.Achievements | ✅ achievement lifecycle (01) | ✅ 5 ctrl / all wired (02; G7: progress+levels zero callers) | ✅ 8 events declared-dead + AchievementUnlocked zero producers (04) | ✅ achievement lifecycle (03) | ✅ (05) | ✅ (07) | ✅ (08) | ✅ (09) | **8/8** (achievements:* nunca semeado — #1319) |
+| 48 | Notifications | ✅ queue→render→dispatch→read (01) | ✅ controllers (02) | ✅ renderer registry 15 renderers / 28 renderer-less (04 §registry) | ✅ notification lifecycle (03) | ✅ (05) | ✅ (07) | ✅ (08) | ✅ (09) | **8/8** (N1: obsolete preference gate; N2: 28 renderer-less = dead-letter — #1319) |
+| 49 | TrustSafety | ✅ ingest/appeal flows (01; T1: both caller-less) | ✅ controllers (02) | ✅ (04) | ✅ appeal lifecycle (03) | ✅ (05) | ✅ (07) | ✅ (08) | ✅ (09) | **8/8** (T1: write surfaces DEAD — #1319) |
+| 50 | SharedKernel + host core | ✅ jornada de requisição (26 mw) + ciclo de evento (01 §3, 09 §2-3) | ✅ admin/events 3 endpoints + AnonymousEndpointRegistry ~150 (05 §6) | ✅ outbox core | ✅ ciclo outbox: pending→claimed→completed/DLQ→retired (03 §1) | ✅ cadeia de posições do pipeline (01 §4) + ordem dos 26 mw (04 §3) | ✅ 08-stride (6 superfícies: pipeline CQRS, outbox, ordem middleware, soft-delete, DataProtection, LogRedaction) | ✅ 09-dfds (L0 substrato + 3×L1: jornada 26 mw, outbox, DataProtection) | ✅ 9 docs (01-09) | **8/8** |
 
 **Footnote**: Finance.Contracts e Announcements.Contracts são projects de contratos sem endpoints/fluxo — cobertura n/a por natureza.
 
@@ -73,15 +98,15 @@
 
 | Métrica | Valor |
 |---|---|
-| Módulos com package completo (8/8) | **17** (Authentication + Authorization + Users + Tenants + Provisioning + Payments + Billing + Orders + Subscriptions + Products + Compliance.Audit/Consent/FERPA/KYC/FinancialCrime + Finance.Economy + Finance.Ledgers) |
+| Módulos com package completo (8/8) | **20** (Authentication + Authorization + Users + Tenants + Provisioning + Payments + Billing + Orders + Subscriptions + Products + Compliance.Audit/Consent/FERPA/KYC/FinancialCrime + Finance.Economy + Finance.Ledgers + SharedKernel+host core + Content.Pages + Resources.Contents) |
 | Módulos ≥4/8 (kit funcional, faltam STRIDE/DFD/arq) | **29** |
-| Módulos 0/8 (sem nada) | **9** (+2 contracts-only n/a) |
-| Endpoints com matriz de wiring | **~1.890** de ~2.115 gerados (base ~1.470 + 177 authz + ~125 users/tenants/provisioning + 92 products + 24 ledgers + 5 financial-crime) |
-| Fluxos de usuário documentados | **~80** (+identity: 2 famílias cada de users/tenants/provisioning; +products 6, +financialcrime 5, +ledgers 3) |
-| Máquinas de estado | **~54** (+3 users, +3 tenants, +2 provisioning; +products 7, +financialcrime 5, +ledgers 4) |
-| STRIDE | auth (12 fluxos) + commerce (23 famílias — payments 8 + billing/orders/subs 9 + products 6) + compliance (14 famílias — F1-F8 + FinancialCrime F1-F6 c/ examinador AML) + economy (E1-E9) + identity (authz 7 famílias + users + tenants + provisioning) + finance-ledgers (5 famílias) |
-| DFDs | 17 (auth) + 23 (commerce — nível 0 + nível 1 por família, +products 6) + compliance (L0 + 14 famílias, +FinancialCrime 6 c/ examinador AML) + economy (L0 + 9) + 10 identity (authz L0+7×L1; users/tenants/provisioning L0+3×L1 cada) + finance-ledgers (L0 + 4) |
-| Sequências cross-module | auth + economy + compliance (audit-sink fan-in, KYC gates, FERPA-Learning) + authz cross-module-sequences (+ sets lite de users/tenants/provisioning) + commerce/products (checkout, promo-coordinator, fraud-ticket, price-truth pós-#1266) + finance-ledgers (outbox, fronteira Economy) + financialcrime (risk gates, 3 ledgers) |
+| Módulos 0/8 (sem nada) | **7** (+2 contracts-only n/a) |
+| Endpoints com matriz de wiring | **~1.940** de ~2.115 gerados (base ~1.470 + 177 authz + ~125 users/tenants/provisioning + 92 products + 24 ledgers + 5 financial-crime + 32 content-pages + 18 resources-contents) |
+| Fluxos de usuário documentados | **~90** (+identity: 2 famílias cada de users/tenants/provisioning; +products 6, +financialcrime 5, +ledgers 3; +content-pages 6, +resources-contents 4) |
+| Máquinas de estado | **~59** (+3 users, +3 tenants, +2 provisioning; +products 7, +financialcrime 5, +ledgers 4; +content 4, +resources-contents 1 máquina de 7 estados) |
+| STRIDE | auth (12 fluxos) + commerce (23 famílias — payments 8 + billing/orders/subs 9 + products 6) + compliance (14 famílias — F1-F8 + FinancialCrime F1-F6 c/ examinador AML) + economy (E1-E9) + identity (authz 7 famílias + users + tenants + provisioning) + finance-ledgers (5 famílias) + sharedkernel (6 superfícies — meta-modelo da fundação) + content (S1-S7) + resources-contents (RS1-RS6) |
+| DFDs | 17 (auth) + 23 (commerce — nível 0 + nível 1 por família, +products 6) + compliance (L0 + 14 famílias, +FinancialCrime 6 c/ examinador AML) + economy (L0 + 9) + 10 identity (authz L0+7×L1; users/tenants/provisioning L0+3×L1 cada) + finance-ledgers (L0 + 4) + sharedkernel (L0 substrato + 3×L1: jornada 26 mw, outbox, DataProtection) + content (L0 + 5 L1) + resources-contents (L0 + 5 L1) |
+| Sequências cross-module | auth + economy + compliance (audit-sink fan-in, KYC gates, FERPA-Learning) + authz cross-module-sequences (+ sets lite de users/tenants/provisioning) + commerce/products (checkout, promo-coordinator, fraud-ticket, price-truth pós-#1266) + finance-ledgers (outbox, fronteira Economy) + financialcrime (risk gates, 3 ledgers) + content (audit fail-closed, render público, funil propostas) + resources-contents (review→publish, auto-approve de contratos, schedule sem worker, fronteira c/ Content.Pages) |
 
 ## Próximas ondas (ordem de risco)
 
@@ -89,4 +114,4 @@
 2. ~~**Authorization completion + Identity.Users/Tenants/Provisioning + auth spot-audit**~~ — **entregue** (docs/authorization/ cross-module-sequences + 07/08/09; docs/identity/{users,tenants,provisioning}/ completos + docs/identity/context.md; spot-audit 29 citações em docs/auth/spot-audit-2026-11.md — 0 afirmações falsas). Achados críticos abertos: takeover de tenants (4 controllers sem política, docs/identity/tenants/gaps.md T1), permissão self nunca semeada (users 403, docs/identity/users/gaps.md U5), eventos AddDomainEvent descartados (tenants T8, repo-wide)
 3. ~~**Compliance (4) + Economy**: STRIDE regulatório + DFDs + arquitetura + sequências do compliance~~ **ENTREGUE** — compliance/08-11 + economy/08-10; K4 economy (mint reversal) confirmado FIXED pós-#1266; N1 compliance re-verificado VIVO (PR #1268 aberto)
 4. **Learning + Social/Platform**: STRIDE + DFDs + arquitetura + sequências (3 famílias)
-5. **Módulos 0/8 — hot-path primeiro**: Notifications + TrustSafety → ~~FinancialCrime (AML)~~ → ~~Products~~ + Content + ~~Ledgers~~/Achievements + Mentorship/Ratings — **FinancialCrime (docs/compliance-financialcrime/), Products (docs/commerce/products/) e Finance.Ledgers (docs/finance-ledgers/) entregues** (rows 16, 11, 18 — 8/8 cada; reconciliação dos 20 dead request types do Ledgers em finance-ledgers/02 §3; FC1 ingestão AML sem caller, P1 AddProductsModule nunca invocado)
+5. **Módulos 0/8 — hot-path primeiro**: Notifications + TrustSafety → ~~FinancialCrime (AML)~~ → ~~Products~~ + ~~Content~~ + ~~Ledgers~~/Achievements + Mentorship/Ratings — **FinancialCrime (docs/compliance-financialcrime/), Products (docs/commerce/products/), Finance.Ledgers (docs/finance-ledgers/) e Content (docs/content/ + docs/resources-contents/) entregues** (rows 16, 11, 18, 45, 46 — 8/8 cada; reconciliação dos 20 dead request types do Ledgers em finance-ledgers/02 §3; FC1 ingestão AML sem caller, P1 AddProductsModule nunca invocado; Content: 16/18 rotas de versioning 500 no runtime reconciliadas contra o baseline E9/#1278 em resources-contents/02 §3, C1 gates só no PUT, R2 cancel-schedule sempre 500)

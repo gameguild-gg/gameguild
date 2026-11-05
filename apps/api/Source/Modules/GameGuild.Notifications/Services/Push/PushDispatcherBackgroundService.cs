@@ -8,9 +8,9 @@ namespace GameGuild.Notifications.Services.Push;
 
 /// <summary>
 /// Host wrapper for <see cref="PushDispatcherService"/>: scope-per-pass loop honoring Interval,
-/// logging exceptions without crashing, first sweep delayed so startup is never blocked. Dormant
-/// (single cheap sweep per interval) while <see cref="PushDeliveryOptions.Enabled"/> is false
-/// because no push rows are queued in that state.
+/// logging exceptions without crashing, first sweep delayed so startup is never blocked. Exits
+/// immediately while <see cref="PushDeliveryOptions.Enabled"/> is false — a disabled channel
+/// must not poll the database (issue #1218 G6).
 /// </summary>
 public sealed class PushDispatcherBackgroundService(
     IServiceProvider serviceProvider,
@@ -25,6 +25,7 @@ public sealed class PushDispatcherBackgroundService(
         if (!deliveryOptions.Value.Enabled)
         {
             logger.LogInformation("PushDispatcherBackgroundService is dormant because push delivery is disabled (no provider configured)");
+            return;
         }
 
         logger.LogInformation("PushDispatcherBackgroundService started");
