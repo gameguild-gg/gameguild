@@ -80,10 +80,11 @@ jobs:
           for (const expected of ['sign-in', 'feed-page', 'wallet-read', 'product-browse', 'checkout-initiation', 'cart-add-item']) {
             assert.ok(paths.has(expected), `missing profile for ${expected}`);
           }
-          // Documented path behavior (see the runner): sign-in tolerates the known
-          // concurrency-dependent 401 race (issue material, split recorded), wallet-read
-          // tolerates the no-wallet-yet 404. Everything else must be pure 2xx.
-          const tolerated = { 'sign-in': [200, 401], 'wallet-read': [200, 404] };
+          // Documented path behavior (see the runner): every worker signs in with distinct
+          // valid credentials, so a sign-in 401 is a regression of the concurrency-admission
+          // fix (#1309: overlapping valid sign-ins from one source address were denied);
+          // wallet-read tolerates the no-wallet-yet 404. Everything else must be pure 2xx.
+          const tolerated = { 'sign-in': [200], 'wallet-read': [200, 404] };
           for (const profile of report.profiles) {
             assert.ok(profile.requests > 0, `${profile.path} recorded no requests`);
             const allowed = tolerated[profile.path] ?? [200];
