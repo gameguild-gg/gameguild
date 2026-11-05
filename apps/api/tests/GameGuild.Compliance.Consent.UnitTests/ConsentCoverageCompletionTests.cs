@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using Moq;
 using Xunit;
 
@@ -45,16 +46,24 @@ public sealed class ConsentCoverageCompletionTests
         var existingGranted = await service.GrantConsentAsync(userId, secondVersion.Id, null, null, null);
         granted.Id.Should().Be(existingGranted.Id);
 
-        consents.Items.Single().IsGranted = false;
+        // Issue #1219 N2: re-granting after a revoke must reactivate the SAME row
+        // (the (UserId, PolicyVersionId) pair is unique in user_consents) instead of
+        // inserting a duplicate that the unique index would reject.
+        await service.RevokeConsentAsync(userId, secondVersion.Id);
+        consents.Items.Single().IsGranted.Should().BeFalse();
+        consents.Items.Single().ConsentRevokedAt.Should().NotBeNull();
         var regranted = await service.GrantConsentAsync(userId, secondVersion.Id, null, null, "settings");
         regranted.ConsentMethod.Should().Be("settings");
+        regranted.Id.Should().Be(granted.Id);
+        regranted.IsGranted.Should().BeTrue();
+        regranted.ConsentRevokedAt.Should().BeNull();
 
         await service.RevokeConsentAsync(Guid.NewGuid(), secondVersion.Id);
         await service.RevokeConsentAsync(userId, secondVersion.Id);
         consents.Items.Last().IsGranted.Should().BeFalse();
 
         var userConsents = await service.GetUserConsentsAsync(userId);
-        userConsents.Should().HaveCount(2);
+        userConsents.Should().HaveCount(1);
 
         var submitted = await service.SubmitDataSubjectRequestAsync(userId, DataSubjectRequestType.Access, "export my data");
         submitted.Status.Should().Be(DataSubjectRequestStatus.Pending);
@@ -65,8 +74,24 @@ public sealed class ConsentCoverageCompletionTests
         processed.ProcessedAt.Should().NotBeNull();
         processed.ProcessingNotes.Should().Be("done");
 
+        // Issue #1220 N4: re-processing a terminal request must not silently overwrite
+        // the original processor's attribution.
+        await service.Invoking(current => current.ProcessDataSubjectRequestAsync(submitted.Id, Guid.NewGuid(), "again"))
+            .Should().ThrowAsync<InvalidOperationException>();
         await service.Invoking(current => current.ProcessDataSubjectRequestAsync(Guid.NewGuid(), processedBy, null))
             .Should().ThrowAsync<KeyNotFoundException>();
+
+        // Issue #1219 N3: overdue data subject requests transition to Expired and the
+        // pending queue no longer returns them.
+        var overdueUserId = Guid.NewGuid();
+        var overdue = await service.SubmitDataSubjectRequestAsync(overdueUserId, DataSubjectRequestType.Erasure, null);
+        var overdueRequest = requests.Items.Single(item => item.Id == overdue.Id);
+        overdueRequest.Deadline = DateTime.UtcNow.AddDays(-1);
+        var expiredCount = await service.ExpireOverdueDataSubjectRequestsAsync(DateTime.UtcNow);
+        expiredCount.Should().Be(1);
+        overdueRequest.Status.Should().Be(DataSubjectRequestStatus.Expired);
+        (await service.GetPendingRequestsAsync()).Should().NotContain(item => item.Id == overdue.Id);
+        (await service.ExpireOverdueDataSubjectRequestsAsync(DateTime.UtcNow)).Should().Be(0);
 
         await service.SubmitDataSubjectRequestAsync(Guid.NewGuid(), DataSubjectRequestType.Erasure, null);
         (await service.GetPendingRequestsAsync()).Should().ContainSingle();
@@ -223,7 +248,7 @@ public sealed class ConsentCoverageCompletionTests
         sender.Setup(s => s.Send(It.IsAny<SubmitDataSubjectRequestCommand>(), It.IsAny<CancellationToken>())).ReturnsAsync(dsr);
         sender.Setup(s => s.Send(It.IsAny<ProcessDataSubjectRequestCommand>(), It.IsAny<CancellationToken>())).ReturnsAsync(dsr);
         sender.Setup(s => s.Send(It.IsAny<GetPendingDataSubjectRequestsQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(new List<DataSubjectRequestDto> { dsr });
-        var controller = new ConsentController(sender.Object);
+        var controller = new ConsentController(sender.Object, new FixedActorContextAccessor(SystemAdminActor(processedBy)));
 
         (await controller.GetActivePolicies(null, CancellationToken.None)).Result.Should().BeOfType<OkObjectResult>();
         (await controller.CreatePolicy(new CreateConsentPolicyCommand("Privacy", PolicyType.PrivacyPolicy, true), CancellationToken.None)).Result.Should().BeOfType<OkObjectResult>();
@@ -232,8 +257,30 @@ public sealed class ConsentCoverageCompletionTests
         (await controller.GrantConsent(new GrantConsentCommand(userId, versionId), CancellationToken.None)).Result.Should().BeOfType<OkObjectResult>();
         (await controller.RevokeConsent(new RevokeConsentCommand(userId, versionId), CancellationToken.None)).Should().BeOfType<NoContentResult>();
         (await controller.SubmitRequest(new SubmitDataSubjectRequestCommand(userId, DataSubjectRequestType.Access), CancellationToken.None)).Result.Should().BeOfType<OkObjectResult>();
-        (await controller.ProcessRequest(requestId, new ProcessRequestBody(processedBy, "done"), CancellationToken.None)).Result.Should().BeOfType<OkObjectResult>();
+        (await controller.ProcessRequest(requestId, new ProcessRequestBody("done"), CancellationToken.None)).Result.Should().BeOfType<OkObjectResult>();
         (await controller.GetPendingRequests(CancellationToken.None)).Result.Should().BeOfType<OkObjectResult>();
+    }
+
+    private static ActorContext SystemAdminActor(Guid subjectId) => new()
+    {
+        ActorKind = ActorKind.User,
+        SubjectId = subjectId.ToString(),
+        Roles = new HashSet<string> { "SystemAdmin" },
+        Permissions = new HashSet<string>(),
+        IsAuthenticated = true
+    };
+
+    private sealed class FixedActorContextAccessor(ActorContext context) : IActorContextAccessor
+    {
+        public ActorContext ActorContext => context;
+        public void SetActorContext(ActorContext value) { }
+        public void ClearActorContext() { }
+        public IActorContextScope BeginActorContextScope(ActorContext context) => new NoopScope();
+
+        private sealed class NoopScope : IActorContextScope
+        {
+            public void Dispose() { }
+        }
     }
 
     [Fact]
@@ -275,7 +322,8 @@ public sealed class ConsentCoverageCompletionTests
 
         new ConsentPolicy { Versions = null! }.Should().NotBeNull();
         new PublishVersionRequest("2.0", "url", ContentType.Url).ContentType.Should().Be(ContentType.Url);
-        new ProcessRequestBody(processedBy).Notes.Should().BeNull();
+        new ProcessRequestBody("notes").Notes.Should().Be("notes");
+        new ProcessRequestBody().Notes.Should().BeNull();
     }
 
     private static ConsentTestDbContext CreateDbContext()
@@ -391,6 +439,9 @@ public sealed class ConsentCoverageCompletionTests
 
         public Task<List<DataSubjectRequest>> GetPendingAsync(CancellationToken ct = default)
             => Task.FromResult(Items.Where(item => item.Status == DataSubjectRequestStatus.Pending && !item.IsDeleted).OrderBy(item => item.Deadline).ToList());
+
+        public Task<List<DataSubjectRequest>> GetOverdueAsync(DateTime utcNow, CancellationToken ct = default)
+            => Task.FromResult(Items.Where(item => (item.Status == DataSubjectRequestStatus.Pending || item.Status == DataSubjectRequestStatus.InProgress) && item.Deadline < utcNow && !item.IsDeleted).OrderBy(item => item.Deadline).ToList());
 
         public Task<DataSubjectRequest> AddAsync(DataSubjectRequest request, CancellationToken ct = default)
         {

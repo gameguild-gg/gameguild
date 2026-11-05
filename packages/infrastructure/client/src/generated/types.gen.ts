@@ -10032,7 +10032,6 @@ export interface ComplianceConsentPolicyVersionDto {
 /** Data model for Compliance Consent Process Request Body. */
 export interface ComplianceConsentProcessRequestBody {
   notes?: string | null;
-  processedByUserId?: string;
 }
 
 /** Data model for Compliance Consent Publish Version Request. */
@@ -10070,7 +10069,6 @@ export interface ComplianceConsentUserConsentDto {
 export interface ComplianceFERPACompleteFerpaInspectionRequestBody {
   approved?: boolean;
   notes?: string | null;
-  processedByUserId?: string;
 }
 
 /** OpenAPI schema for Compliance FERPA Education Record Kind. */
@@ -39150,7 +39148,6 @@ ComplianceConsentPolicyVersionDtoSchema = z.object({
 /** Zod schema for ComplianceConsentProcessRequestBody. Data model for Compliance Consent Process Request Body. */
 ComplianceConsentProcessRequestBodySchema = z.object({
   notes: z.string().nullable().optional(),
-  processedByUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceConsentPublishVersionInput. Data model for Compliance Consent Publish Version Request. */
@@ -39188,7 +39185,6 @@ ComplianceConsentUserConsentDtoSchema = z.object({
 ComplianceFERPACompleteFerpaInspectionRequestBodySchema = z.object({
   approved: z.boolean().optional(),
   notes: z.string().nullable().optional(),
-  processedByUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceFERPAEducationRecordKind. OpenAPI schema for Compliance FERPA Education Record Kind. */

@@ -29,6 +29,7 @@ public interface IDataSubjectRequestRepository
     Task<DataSubjectRequest?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<List<DataSubjectRequest>> GetByUserAsync(Guid userId, CancellationToken ct = default);
     Task<List<DataSubjectRequest>> GetPendingAsync(CancellationToken ct = default);
+    Task<List<DataSubjectRequest>> GetOverdueAsync(DateTime utcNow, CancellationToken ct = default);
     Task<DataSubjectRequest> AddAsync(DataSubjectRequest request, CancellationToken ct = default);
     Task UpdateAsync(DataSubjectRequest request, CancellationToken ct = default);
 }
@@ -116,6 +117,13 @@ public class DataSubjectRequestRepository(IApplicationDbContext context) : IData
     public async Task<List<DataSubjectRequest>> GetPendingAsync(CancellationToken ct = default)
         => await context.Set<DataSubjectRequest>()
             .Where(r => r.Status == DataSubjectRequestStatus.Pending && r.DeletedAt == null)
+            .OrderBy(r => r.Deadline).ToListAsync(ct).ConfigureAwait(false);
+
+    public async Task<List<DataSubjectRequest>> GetOverdueAsync(DateTime utcNow, CancellationToken ct = default)
+        => await context.Set<DataSubjectRequest>()
+            .Where(r => (r.Status == DataSubjectRequestStatus.Pending || r.Status == DataSubjectRequestStatus.InProgress)
+                && r.Deadline < utcNow
+                && r.DeletedAt == null)
             .OrderBy(r => r.Deadline).ToListAsync(ct).ConfigureAwait(false);
 
     public async Task<DataSubjectRequest> AddAsync(DataSubjectRequest request, CancellationToken ct = default)
