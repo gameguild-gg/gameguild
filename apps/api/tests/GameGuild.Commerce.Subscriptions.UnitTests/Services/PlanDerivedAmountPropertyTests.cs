@@ -79,7 +79,9 @@ public sealed class PlanDerivedAmountPropertyTests
         var periodEnd = periodStart.AddDays(totalDays);
 
         var atEnd = Calculator.CalculateProration(oldAmount, newAmount, periodStart, periodEnd, periodEnd);
-        var inside = Calculator.CalculateProration(oldAmount, newAmount, periodStart, periodEnd, periodStart.AddDays(totalDays / 2));
+        // Any strictly interior day exercises the net-adjustment identity (charge − credit
+        // by construction); the day before the period end avoids integer midpoint division.
+        var inside = Calculator.CalculateProration(oldAmount, newAmount, periodStart, periodEnd, periodEnd.AddDays(-1));
 
         return (atEnd.CreditForUnused == 0 && atEnd.ChargeForNew == 0 && atEnd.NetAdjustment == 0)
             .ToProperty()

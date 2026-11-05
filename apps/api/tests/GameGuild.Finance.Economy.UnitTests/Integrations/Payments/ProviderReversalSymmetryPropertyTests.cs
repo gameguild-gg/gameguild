@@ -243,7 +243,8 @@ public sealed class ProviderReversalSymmetryPropertyTests
     /// <summary>
     ///     For any payment and any two cumulative HardCoin levels: the reversal idempotency
     ///     keys are equal iff the levels are equal on the same payment; different payments
-    ///     never share a key; and <see cref="IStripeEconomyFundingAdapter.CreateReversal"/>
+    ///     never share a key; and
+    ///     <see cref="IStripeEconomyFundingAdapter.CreateReversal(EconomyTopUpPaymentFact, decimal, decimal, ProviderReversalDisposition, string, ReserveVersion, PolicyVersion, DateTimeOffset)"/>
     ///     stamps exactly the key that
     ///     <see cref="IStripeEconomyFundingAdapter.ReversalIdempotencyKey"/> derives for
     ///     the same cumulative level — the protected-operation intent and the persisted
