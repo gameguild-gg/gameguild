@@ -1,6 +1,6 @@
-import { createClient } from '../../client.js';
-import { AuthModule } from '../../generated/modules/auth.gen.js';
-import type { JWTPayload } from './types.js';
+import { createClient } from '../../client';
+import { AuthModule } from '../../generated/modules/auth.gen';
+import type { JWTPayload } from './types';
 
 /** Revoke only the refresh credential owned by this decrypted session's actor. */
 export async function revokeSessionRefreshToken(apiUrl: string, session: Pick<JWTPayload, 'accessToken' | 'refreshToken'>): Promise<void> {
