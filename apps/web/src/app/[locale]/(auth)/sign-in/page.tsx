@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { SignInForm } from '@/components/sign-in-form';
 import { GoogleOneTap } from '@/components/google-one-tap';
@@ -9,6 +10,8 @@ import { guestAccessEnabled } from '@/lib/auth/guest-session';
 import { GuestAccessEntry } from '@/components/guest-access-entry';
 import { auth } from '@/auth';
 import { AuthErrorNotice } from '@/components/auth/auth-error-notice';
+
+export const metadata: Metadata = { robots: { index: false } };
 
 export default async function Page({
   params,

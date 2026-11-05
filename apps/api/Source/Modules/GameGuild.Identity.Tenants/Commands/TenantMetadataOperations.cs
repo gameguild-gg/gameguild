@@ -15,11 +15,17 @@ public sealed class GetTenantMetadataQueryHandler(ITenantMetadataRepository repo
     }
 }
 
-public sealed class UpdateTenantMetadataCommandHandler(ITenantMetadataRepository repository)
+public sealed class UpdateTenantMetadataCommandHandler(
+    ITenantMetadataRepository repository,
+    ITenantAdministrationGuard administrationGuard)
     : IRequestHandler<UpdateTenantMetadataCommand>
 {
     public async Task<Unit> Handle(UpdateTenantMetadataCommand request, CancellationToken cancellationToken)
     {
+        // Issue #1287 T1: metadata writes require an active Owner/Admin membership of
+        // the target tenant (or system administration).
+        await administrationGuard.EnsureCanMutateAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
+
         var metadata = await TenantMetadataMapper.GetOrCreateMetadataAsync(repository, request.TenantId, cancellationToken).ConfigureAwait(false);
         TenantMetadataMapper.ApplyPartialUpdate(metadata, request.Request);
         await repository.UpdateAsync(metadata, cancellationToken).ConfigureAwait(false);
@@ -28,11 +34,17 @@ public sealed class UpdateTenantMetadataCommandHandler(ITenantMetadataRepository
     }
 }
 
-public sealed class ReplaceTenantMetadataCommandHandler(ITenantMetadataRepository repository)
+public sealed class ReplaceTenantMetadataCommandHandler(
+    ITenantMetadataRepository repository,
+    ITenantAdministrationGuard administrationGuard)
     : IRequestHandler<ReplaceTenantMetadataCommand>
 {
     public async Task<Unit> Handle(ReplaceTenantMetadataCommand request, CancellationToken cancellationToken)
     {
+        // Issue #1287 T1: metadata writes require an active Owner/Admin membership of
+        // the target tenant (or system administration).
+        await administrationGuard.EnsureCanMutateAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
+
         var metadata = await TenantMetadataMapper.GetOrCreateMetadataAsync(repository, request.TenantId, cancellationToken).ConfigureAwait(false);
         TenantMetadataMapper.ApplyReplacement(metadata, request.Request);
         await repository.UpdateAsync(metadata, cancellationToken).ConfigureAwait(false);
@@ -51,11 +63,17 @@ public sealed class GetTenantCustomFieldsQueryHandler(ITenantMetadataRepository 
     }
 }
 
-public sealed class UpdateTenantCustomFieldsCommandHandler(ITenantMetadataRepository repository)
+public sealed class UpdateTenantCustomFieldsCommandHandler(
+    ITenantMetadataRepository repository,
+    ITenantAdministrationGuard administrationGuard)
     : IRequestHandler<UpdateTenantCustomFieldsCommand>
 {
     public async Task<Unit> Handle(UpdateTenantCustomFieldsCommand request, CancellationToken cancellationToken)
     {
+        // Issue #1287 T1: metadata writes require an active Owner/Admin membership of
+        // the target tenant (or system administration).
+        await administrationGuard.EnsureCanMutateAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
+
         var metadata = await TenantMetadataMapper.GetOrCreateMetadataAsync(repository, request.TenantId, cancellationToken).ConfigureAwait(false);
         metadata.SetCustomFields(TenantMetadataMapper.Merge(metadata.GetCustomFields(), request.Request.CustomFields));
         await repository.UpdateAsync(metadata, cancellationToken).ConfigureAwait(false);
@@ -74,11 +92,17 @@ public sealed class GetTenantTagsQueryHandler(ITenantMetadataRepository reposito
     }
 }
 
-public sealed class UpdateTenantTagsCommandHandler(ITenantMetadataRepository repository)
+public sealed class UpdateTenantTagsCommandHandler(
+    ITenantMetadataRepository repository,
+    ITenantAdministrationGuard administrationGuard)
     : IRequestHandler<UpdateTenantTagsCommand>
 {
     public async Task<Unit> Handle(UpdateTenantTagsCommand request, CancellationToken cancellationToken)
     {
+        // Issue #1287 T1: metadata writes require an active Owner/Admin membership of
+        // the target tenant (or system administration).
+        await administrationGuard.EnsureCanMutateAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
+
         var metadata = await TenantMetadataMapper.GetOrCreateMetadataAsync(repository, request.TenantId, cancellationToken).ConfigureAwait(false);
         metadata.SetTags(TenantMetadataMapper.MergeTags(metadata.GetTags(), request.Request.Tags));
         await repository.UpdateAsync(metadata, cancellationToken).ConfigureAwait(false);
@@ -87,11 +111,17 @@ public sealed class UpdateTenantTagsCommandHandler(ITenantMetadataRepository rep
     }
 }
 
-public sealed class ReplaceTenantTagsCommandHandler(ITenantMetadataRepository repository)
+public sealed class ReplaceTenantTagsCommandHandler(
+    ITenantMetadataRepository repository,
+    ITenantAdministrationGuard administrationGuard)
     : IRequestHandler<ReplaceTenantTagsCommand>
 {
     public async Task<Unit> Handle(ReplaceTenantTagsCommand request, CancellationToken cancellationToken)
     {
+        // Issue #1287 T1: metadata writes require an active Owner/Admin membership of
+        // the target tenant (or system administration).
+        await administrationGuard.EnsureCanMutateAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
+
         var metadata = await TenantMetadataMapper.GetOrCreateMetadataAsync(repository, request.TenantId, cancellationToken).ConfigureAwait(false);
         metadata.SetTags(TenantMetadataMapper.NormalizeTags(request.Request.Tags));
         await repository.UpdateAsync(metadata, cancellationToken).ConfigureAwait(false);

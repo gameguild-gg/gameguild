@@ -8,7 +8,13 @@ namespace GameGuild.Identity.Authorization;
 /// </summary>
 public sealed class PolicyDefinitionSeeder
 {
-    public const long CurrentPolicyVersion = 5;
+    /// <summary>
+    ///     Version 6 (issue #1287 U5): the three Users self policies' SelfOrPermission
+    ///     rules no longer require a granted <c>users:*:self</c> permission for
+    ///     self-actions — the evaluator treats an authenticated caller acting on their
+    ///     own resource as authorized. Descriptions updated to state the actual contract.
+    /// </summary>
+    public const long CurrentPolicyVersion = 6;
 
     private readonly IPolicyDefinitionRepository _repository;
     private readonly ILogger<PolicyDefinitionSeeder> _logger;
@@ -831,7 +837,7 @@ public sealed class PolicyDefinitionSeeder
         {
             Id = Guid.NewGuid(),
             PolicyName = "Users.ReadSelf",
-            Description = "Read own user data OR manage any user",
+            Description = "Read own user data (any authenticated principal) OR manage any user",
             RequireAuthentication = true,
             IsTenantScoped = true,
             UseRuleBasedEvaluation = true,
@@ -847,9 +853,8 @@ public sealed class PolicyDefinitionSeeder
                 },
                 {
                     "Type": "SelfOrPermission",
-                    "Description": "Allow reading self or users with manage permission",
+                    "Description": "Self-actions are authorized by the authenticated identity itself (issue #1287 U5); acting on other users requires users:manage",
                     "Params": {
-                        "selfPermission": "users:read:self",
                         "anyPermission": "users:manage"
                     },
                     "Enabled": true
@@ -864,7 +869,7 @@ public sealed class PolicyDefinitionSeeder
         {
             Id = Guid.NewGuid(),
             PolicyName = "Users.EditSelf",
-            Description = "Edit own profile OR manage other users",
+            Description = "Edit own profile (any authenticated principal) OR manage other users",
             RequireAuthentication = true,
             IsTenantScoped = true,
             UseRuleBasedEvaluation = true,
@@ -877,9 +882,8 @@ public sealed class PolicyDefinitionSeeder
                 },
                 {
                     "Type": "SelfOrPermission",
-                    "Description": "Allow editing self or users with manage permission",
+                    "Description": "Self-actions are authorized by the authenticated identity itself (issue #1287 U5); acting on other users requires users:manage",
                     "Params": {
-                        "selfPermission": "users:edit:self",
                         "anyPermission": "users:manage"
                     },
                     "Enabled": true
@@ -894,7 +898,7 @@ public sealed class PolicyDefinitionSeeder
         {
             Id = Guid.NewGuid(),
             PolicyName = "Users.DeleteSelf",
-            Description = "Delete own account OR manage other users",
+            Description = "Delete own account (any authenticated principal) OR manage other users",
             RequireAuthentication = true,
             IsTenantScoped = true,
             UseRuleBasedEvaluation = true,
@@ -907,9 +911,8 @@ public sealed class PolicyDefinitionSeeder
                 },
                 {
                     "Type": "SelfOrPermission",
-                    "Description": "Allow deleting self or users with manage permission",
+                    "Description": "Self-actions are authorized by the authenticated identity itself (issue #1287 U5); acting on other users requires users:manage",
                     "Params": {
-                        "selfPermission": "users:delete:self",
                         "anyPermission": "users:manage"
                     },
                     "Enabled": true

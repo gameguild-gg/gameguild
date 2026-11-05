@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { getPublicMemberProfile } from '@/lib/community/queries/members';
+import { buildProfilePageJsonLd, JsonLd } from '@/lib/seo/jsonld';
 
 // Dynamic metadata for the public member profile; shares the request-scoped profile
 // lookup with the page body.
@@ -45,6 +46,7 @@ export default async function Page({
 
   return (
     <div className="flex min-h-screen flex-col">
+      <JsonLd data={buildProfilePageJsonLd(profile.displayName, `/members/${member}`)} />
       <ProfileHeader
         username={profile.username}
         displayName={profile.displayName}

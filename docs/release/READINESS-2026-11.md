@@ -222,13 +222,54 @@ opt-in/default-off (deliberate, PII-driven).
 **Rollback / migration rehearsal**: the Devtron runbook *requires* expand/contract migrations, a
 pre-deploy migration job proven in staging (`DEVTRON_API_PREDEPLOY_MIGRATIONS`), and **three consecutive
 staging releases including a forced-smoke rollback** before production cutover, plus three healthy
-production releases recording rollback results. **Status of those executions: UNKNOWN** — no execution
-record (run logs, release-register entries, rollback results) exists in the repository, and this review
-did not have access to the deployment environment to verify them. This is a hard verification item for
-the release owner; the runbook's own standard says image rollback never reverses schema, so the staging
-migration-failure and rollback drills must be evidenced before GA. Database backup/restore drills:
-UNKNOWN (no artifact found; `authorization-cache-configuration.md` documents Redis snapshot mechanics
-only).
+production releases recording rollback results. **Status of those executions: still UNEVIDENCED** — no
+execution record (run logs, release-register entries, rollback results) exists in the repository, and
+this review did not have access to the deployment environment to verify them. This is a hard
+verification item for the release owner; the runbook's own standard says image rollback never reverses
+schema, so the staging migration-failure and rollback drills must be evidenced before GA. Database
+backup/restore drills: **procedure now defined — execution unevidenced** (`docs/operations/disaster-drill.md`).
+
+**Update 2026-11-04 (ops rehearsal campaign, PR "ops: migration/rollback rehearsal + load smoke +
+disaster drills"):** the previously-UNKNOWN *capability* halves are now rehearsed and documented,
+resolving the two UNKNOWN rows above into concrete verdicts:
+
+- **Migration/rollback rehearsal: REHEARSED (locally, disposable PG 17, CI-pinned image) — procedure
+  + script + findings delivered.** `docs/operations/migration-rehearsal.md` +
+  `scripts/devops/migration-rehearsal.sh`. Verified: full-history forward apply is complete
+  (226/226 migrations == `__EFMigrationsHistory` rows == assembly chain); the last 3 develop
+  migrations revert cleanly one-by-one (`AddEconomyTopUpRefundReversalCapability`,
+  `AddSecurityBatch3Enhancements` #1269, `AddLedgersRatingsAndAchievementsTables`) and the
+  down-3/up-3 round-trip reproduces a byte-identical schema. Findings ledger (F1–F6): the only
+  lossy-but-correct Down is #1269's `Users.PasswordChangedAt` drop (rollback = password-age policy
+  reset for every user — sign-off required); PR #1285's
+  `AddAcademicOutboxDeadLetter` is **broken twice over** — its check constraints are mutually
+  contradictory (status admits `'deadlettered'`, lifecycle tests `'dead_lettered'`, so the
+  application's terminal dead-letter write fails at the database — DLQ cannot function as shipped)
+  and its Down() **cannot execute once any dead-lettered row exists** (constraint re-add violates,
+  live-reproduced 23514). Fix #1285 before merge. The Devtron staging forced-smoke-rollback
+  executions remain the open verification item.
+- **Load smoke: DELIVERED AND GREEN IN CI** (run 41942955514, 2026-11-05, N=10 × K=25 against
+  fully migrated PostgreSQL on the real Kestrel/JWT host): all six paths profiled with zero 5xx
+  and every p95 budget held — checkout 1323 ms, cart-add 1320 ms, feed 1259 ms (budget 2500,
+  calibrated to the multi-query feed's real cost), sign-in 1450 ms, product-browse 782 ms,
+  wallet-read 763 ms (the controller's no-wallet 404 is documented path behavior; the read
+  pipeline is fully exercised). **Finding recorded from the same run: concurrent sign-in rejects
+  valid credentials** — of 10 simultaneous sign-ins with distinct accounts and correct passwords,
+  9 returned 401 "Invalid credentials" and 1 returned 200 (local: N=1 → 8/8 200s; N=2/N=3 →
+  interleaved 401/200 with multi-second outliers) — consistent with the open TOCTOU/lockout
+  batch (#1197, #1082–#1091) and now reproducible on demand via this harness. The harness
+  tolerates and records the 200/401 split while keeping zero-5xx and p95 as hard bars; this is
+  new issue material against the auth hardening batch.
+- **Disaster drills (paper): RUNBOOK DELIVERED — drills not yet executed.**
+  `docs/operations/disaster-drill.md`: DB restore-point objective (RPO 15 min / RTO 1 h PROPOSED;
+  **KNOWN GAP — no production backup topology exists anywhere in-repo**, so the objective is NOT
+  MET until defined and drilled), outbox poison-message recovery (the `/v1/admin/events` DLQ +
+  replay surface, worker restart order; academic/fraud DLQ blocked on PR #1285's F3/F4 defects),
+  key-rotation emergency (**KNOWN GAP — rotation still dead on develop, #1189; the validated fix's
+  delivery path is #1164 → #1264 → #1273, merged to `main` f4b1d8e7 on 2026-11-04, pending
+  develop sync — verify `IKeyRotationService` DI + hosted worker per-SHA before relying on the
+  rotation surface; static-rotation fallback procedure documented**), and webhook signing-secret
+  rotation (dual-accept window verified against the code; `POST /api/v1/billing/webhooks/secrets:rotate`).
 
 ## 7. Method and citation hygiene
 
@@ -236,6 +277,9 @@ only).
   `docs/commerce/billing-orders/**` (8), `docs/compliance/**` (8), `docs/learning/**` (7),
   `docs/economy/**` (8), `docs/operations/background-workers.md`, `docs/architecture/api-contract-matrix.md`,
   `docs/sharedkernel/**` (8), `docs/security/**` (auth STRIDE/DFD/architecture + deny-by-default suite).
+  Ops campaign addendum (2026-11-04): `docs/operations/migration-rehearsal.md`,
+  `docs/operations/disaster-drill.md`, `scripts/devops/migration-rehearsal.sh`,
+  `apps/api/tests/GameGuild.LoadSmoke/`, `.github/workflows/load-smoke.yml`.
   One package landed during review and is included for completeness: `docs/social-platform/**` (PR #1249).
   Older review docs (e.g. `COMPREHENSIVE_SECURITY_ARCHITECTURE_REVIEW.md`, Jan 2026, "production-ready")
   predate the campaign and are **superseded** by this verdict where they conflict.

@@ -5,11 +5,18 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for updating tenant command
 /// </summary>
-public sealed class UpdateTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<UpdateTenantCommand>
+public sealed class UpdateTenantCommandHandler(
+    ITenantRepository tenantRepository,
+    ITenantAdministrationGuard administrationGuard) : ICommandHandler<UpdateTenantCommand>
 {
     public async Task<Unit> Handle(UpdateTenantCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        // Issue #1287 T1: tenant updates require an active Owner/Admin membership of
+        // the mutated tenant (or system administration) — enforced at the handler so
+        // every route reaching this command inherits the check.
+        await administrationGuard.EnsureCanMutateAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
 
         var tenant = await tenantRepository.GetByIdAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
 
