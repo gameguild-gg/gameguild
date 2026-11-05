@@ -17,7 +17,8 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 ///     (5xx / timeout / malformed JSON / API-version change), the orchestrating
 ///     <see cref="OAuthAuthService" /> must keep the failure diagnosable and side-effect free:
 ///     no user is provisioned or linked, no session is created and no tokens are minted from
-///     a failed exchange; the failed attempt is recorded for lockout analytics and an
+///     a failed exchange; the failed attempt remains recorded without charging provider
+///     outages to client abuse budgets, and an
 ///     <c>Authentication.ExternalLoginFailed</c> security audit event is emitted. Provider
 ///     unavailability (transport errors, timeouts, 5xx outage pages) surfaces as a typed
 ///     <see cref="OAuthProviderUnavailableException" /> (issue #1116) whose inner exception is
@@ -112,12 +113,16 @@ public sealed class OAuthProviderFailureSurfacingTests
                 expectedFailureReason, It.IsAny<TimeSpan>(), It.IsAny<string>()),
             Times.Once);
 
-    private void AssertExternalLoginFailedAudited() => _auditEventSinkMock.Verify(
+    private void AssertExternalLoginFailedAudited(string failureReason, string originalFailureType) => _auditEventSinkMock.Verify(
         sink => sink.RecordAsync(
             It.Is<AuthenticationAuditEvent>(audit =>
-                audit.ActionType == "Authentication.ExternalLoginFailed" && audit.Success == false),
+                audit.ActionType == "Authentication.ExternalLoginFailed" && audit.Success == false
+                && audit.ErrorMessage == failureReason && HasFailureType(audit, originalFailureType)),
             It.IsAny<CancellationToken>()),
         Times.Once);
+
+    private static bool HasFailureType(AuthenticationAuditEvent audit, string expected) =>
+        audit.Metadata?.GetType().GetProperty("FailureType")?.GetValue(audit.Metadata) as string == expected;
 
     [Fact]
     public async Task HttpClientTimeout_WithInternallyCancelledToken_IsProviderOutage()
@@ -128,9 +133,11 @@ public sealed class OAuthProviderFailureSurfacingTests
 
         var act = () => CreateSut().GitHubCallbackSignInAsync(Callback());
 
-        await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+        var thrown = await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+        thrown.Which.InnerException.Should().BeOfType<TaskCanceledException>();
         AssertNoSignInSideEffects();
-        AssertFailureAccounted("TaskCanceledException");
+        AssertFailureAccounted(nameof(OAuthProviderUnavailableException));
+        AssertExternalLoginFailedAudited(nameof(OAuthProviderUnavailableException), nameof(TaskCanceledException));
     }
 
     [Fact]
@@ -162,8 +169,8 @@ public sealed class OAuthProviderFailureSurfacingTests
         thrown.Which.Provider.Should().Be("GitHub");
         thrown.Which.InnerException.Should().BeOfType<HttpRequestException>();
         AssertNoSignInSideEffects();
-        AssertFailureAccounted("HttpRequestException");
-        AssertExternalLoginFailedAudited();
+        AssertFailureAccounted(nameof(OAuthProviderUnavailableException));
+        AssertExternalLoginFailedAudited(nameof(OAuthProviderUnavailableException), nameof(HttpRequestException));
     }
 
     [Fact]
@@ -181,6 +188,8 @@ public sealed class OAuthProviderFailureSurfacingTests
         thrown.Which.Provider.Should().Be("GitHub");
         thrown.Which.InnerException.Should().BeOfType<TaskCanceledException>();
         AssertNoSignInSideEffects();
+        AssertFailureAccounted(nameof(OAuthProviderUnavailableException));
+        AssertExternalLoginFailedAudited(nameof(OAuthProviderUnavailableException), nameof(TaskCanceledException));
     }
 
     [Fact]
@@ -193,7 +202,7 @@ public sealed class OAuthProviderFailureSurfacingTests
         await act.Should().ThrowAsync<JsonException>();
         AssertNoSignInSideEffects();
         AssertFailureAccounted("JsonException");
-        AssertExternalLoginFailedAudited();
+        AssertExternalLoginFailedAudited(nameof(JsonException), nameof(JsonException));
     }
 
     [Fact]
@@ -209,7 +218,7 @@ public sealed class OAuthProviderFailureSurfacingTests
         await act.Should().ThrowAsync<KeyNotFoundException>();
         AssertNoSignInSideEffects();
         AssertFailureAccounted("KeyNotFoundException");
-        AssertExternalLoginFailedAudited();
+        AssertExternalLoginFailedAudited(nameof(KeyNotFoundException), nameof(KeyNotFoundException));
     }
 
     [Fact]
@@ -232,8 +241,8 @@ public sealed class OAuthProviderFailureSurfacingTests
         thrown.Which.Provider.Should().Be("Microsoft");
         thrown.Which.InnerException.Should().BeOfType<HttpRequestException>();
         AssertNoSignInSideEffects();
-        AssertFailureAccounted("HttpRequestException");
-        AssertExternalLoginFailedAudited();
+        AssertFailureAccounted(nameof(OAuthProviderUnavailableException));
+        AssertExternalLoginFailedAudited(nameof(OAuthProviderUnavailableException), nameof(HttpRequestException));
     }
 
     [Fact]

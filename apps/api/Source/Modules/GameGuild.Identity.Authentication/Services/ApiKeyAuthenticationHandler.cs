@@ -93,8 +93,8 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
             // Validate key
             if (!apiKey.IsValid())
             {
-                // Lazily finalize rotation: once the overlap window closes, record the
-                // revocation so the lifecycle stays observable without a background job.
+                // Preserve lazy finalization as a fallback if scheduled maintenance is delayed.
+                // Expired overlap windows are denied independently of either persistence path.
                 await _apiKeyRepository.FinalizeRotationRevocationAsync(apiKey, Context.RequestAborted).ConfigureAwait(false);
 
                 Logger.LogWarning("Inactive or expired API key used: {KeyId}", apiKey.Id);
