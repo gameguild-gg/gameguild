@@ -13913,32 +13913,6 @@ Table "gameguild.authentication"."genericresourcepermission" {
   }
 }
 
-Table "gameguild.authentication"."identityverification" {
-  "id" uuid [not null]
-  "UserId" uuid [not null]
-  "VerificationType" "character varying(128)" [not null]
-  "Status" "character varying(64)" [not null]
-  "VerifiedValue" "character varying(256)" [not null]
-  "InitiatedAt" timestamp [not null]
-  "CompletedAt" timestamp
-  "ExpiresAt" timestamp
-  "VerificationProvider" "character varying(256)"
-  "ExternalVerificationId" "character varying(256)"
-  "ConfidenceScore" doubleprecision
-  "Notes" "character varying(1000)"
-  "ReviewedBy" uuid
-  "ReviewedAt" timestamp
-  "DocumentIds" "character varying(2000)"
-  "Metadata" "character varying(2000)"
-
-  Indexes {
-    id [pk, name: "PK_identityverification"]
-    Status [name: "ix_identityverification_status"]
-    UserId [name: "ix_identityverification_user_id"]
-    (UserId, VerificationType) [name: "ix_identityverification_user_type"]
-  }
-}
-
 Table "gameguild.authentication"."jwt_signing_keys" {
   "id" uuid [not null]
   "key_id" "character varying(50)" [not null]
