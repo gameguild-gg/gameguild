@@ -227,8 +227,11 @@ public sealed class ApiKeyRotationRevocationRepositoryTests
             SaveCount++;
             return result;
         }
-        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             throw new NotSupportedException();
+        }
         protected override void OnModelCreating(ModelBuilder modelBuilder) => modelBuilder.ApplyConfiguration(new ApiKeyConfiguration());
     }
 

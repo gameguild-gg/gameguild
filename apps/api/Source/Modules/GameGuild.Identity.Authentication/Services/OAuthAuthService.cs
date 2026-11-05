@@ -766,6 +766,9 @@ public class OAuthAuthService(
 
     private async Task RecordFailedOAuthAttemptAsync(string authenticationMethod, Stopwatch stopwatch, Exception exception)
     {
+        var originalFailure = exception is OAuthProviderUnavailableException { InnerException: { } providerFailure }
+            ? providerFailure
+            : exception;
         try
         {
             var httpContext = httpContextAccessor.HttpContext;
@@ -794,7 +797,7 @@ public class OAuthAuthService(
             IpAddress: authAttemptService.GetClientIpAddress(httpContextAccessor.HttpContext),
             UserAgent: httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString(),
             ErrorMessage: exception.GetType().Name,
-            Metadata: new { Provider = authenticationMethod, DurationMs = stopwatch.ElapsedMilliseconds })).ConfigureAwait(false);
+            Metadata: new { Provider = authenticationMethod, DurationMs = stopwatch.ElapsedMilliseconds, FailureType = originalFailure.GetType().Name })).ConfigureAwait(false);
 
         // In-process failure telemetry (issue #1199). The identifier is the same synthetic
         // audit identity recorded above (no real account may exist); the client response stays

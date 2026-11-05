@@ -91,7 +91,10 @@ public class ApiKeyRepository(IApplicationDbContext context) : IApiKeyRepository
         }
     }
 
-    public async Task<int> FinalizeExpiredRotationRevocationsAsync(int batchSize, CancellationToken cancellationToken = default)
+    public Task<int> FinalizeExpiredRotationRevocationsAsync(int batchSize) =>
+        FinalizeExpiredRotationRevocationsAsync(batchSize, CancellationToken.None);
+
+    public async Task<int> FinalizeExpiredRotationRevocationsAsync(int batchSize, CancellationToken cancellationToken)
     {
         if (batchSize is < 1 or > 1000)
         {

@@ -120,7 +120,10 @@ public sealed class ApiKeyRotationRevocationBackgroundServiceTests
     {
         public IServiceProvider ServiceProvider { get; } = new RepositoryProvider(repository);
         public bool AsyncDisposed { get; private set; }
-        public void Dispose() { }
+        public void Dispose()
+        {
+            // This scope owns mock services only; there are no synchronous resources to release.
+        }
         public ValueTask DisposeAsync()
         {
             AsyncDisposed = true;
@@ -142,14 +145,23 @@ public sealed class ApiKeyRotationRevocationBackgroundServiceTests
 
     private sealed class ControlledTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period) : ITimer
     {
-        public TimeSpan DueTime { get; } = dueTime;
-        public TimeSpan Period { get; } = period;
+        public TimeSpan DueTime { get; private set; } = dueTime;
+        public TimeSpan Period { get; private set; } = period;
         public bool Disposed { get; private set; }
         public void Fire()
         {
             if (!Disposed) { callback(state); }
         }
-        public bool Change(TimeSpan nextDueTime, TimeSpan nextPeriod) => !Disposed;
+        public bool Change(TimeSpan nextDueTime, TimeSpan nextPeriod)
+        {
+            if (Disposed)
+            {
+                return false;
+            }
+            DueTime = nextDueTime;
+            Period = nextPeriod;
+            return true;
+        }
         public void Dispose() => Disposed = true;
         public ValueTask DisposeAsync()
         {

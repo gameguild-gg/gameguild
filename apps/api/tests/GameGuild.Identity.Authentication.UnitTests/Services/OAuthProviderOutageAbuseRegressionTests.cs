@@ -53,6 +53,14 @@ public sealed class OAuthProviderOutageAbuseRegressionTests
         });
         Assert.Equal(10, fixture.AuditEvents.Count(value => value.ActionType == "Authentication.Failed" && !value.Success));
         Assert.Equal(10, fixture.AuditEvents.Count(value => value.ActionType == "Authentication.ExternalLoginFailed" && !value.Success));
+        var diagnosticType = failure is OAuthProviderUnavailableException { InnerException: { } providerFailure }
+            ? providerFailure.GetType().Name
+            : failure.GetType().Name;
+        Assert.All(fixture.AuditEvents.Where(value => value.ActionType == "Authentication.ExternalLoginFailed"), audit =>
+        {
+            Assert.Equal(outage ? nameof(OAuthProviderUnavailableException) : failure.GetType().Name, audit.ErrorMessage);
+            Assert.Equal(diagnosticType, audit.Metadata?.GetType().GetProperty("FailureType")?.GetValue(audit.Metadata) as string);
+        });
         Assert.Equal(10, (await fixture.Repository.GetByEmailAsync("oauth-github@audit.invalid")).Count);
         Assert.Empty(fixture.Users.Invocations);
         Assert.Empty(fixture.Tokens.Invocations);
@@ -166,7 +174,11 @@ public sealed class OAuthProviderOutageAbuseRegressionTests
 
     private sealed class AttemptContext(DbContextOptions<AttemptContext> options) : DbContext(options), IApplicationDbContext
     {
-        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new NotSupportedException();
+        }
         protected override void OnModelCreating(ModelBuilder builder) => builder.Entity<AuthenticationAttempt>().HasKey(attempt => attempt.Id);
     }
 }

@@ -67,5 +67,8 @@ public interface IApiKeyRepository
     ///     Finalize a bounded batch of active keys whose rotation overlap has ended.
     ///     This system-maintenance operation runs independently of credential use.
     /// </summary>
-    Task<int> FinalizeExpiredRotationRevocationsAsync(int batchSize, CancellationToken cancellationToken = default);
+    Task<int> FinalizeExpiredRotationRevocationsAsync(int batchSize);
+
+    /// <inheritdoc cref="FinalizeExpiredRotationRevocationsAsync(int)" />
+    Task<int> FinalizeExpiredRotationRevocationsAsync(int batchSize, CancellationToken cancellationToken);
 }

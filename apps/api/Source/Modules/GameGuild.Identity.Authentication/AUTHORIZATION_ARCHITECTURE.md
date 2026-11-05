@@ -2106,6 +2106,8 @@ public async Task Authorization_PerformsUnderLoad()
 The provider boundary classifies availability failures before recording them with
 the reserved `OAuthProviderUnavailableException` failure reason. Failed-attempt
 history, central authentication audit and external-login audit remain recorded.
+External-login audit metadata retains the original exception type for diagnosis;
+exception messages and credentials are not added to that metadata.
 These operational failures do not increment the client enumeration budget or
 enter the failed-credential queries used by brute-force detection and backoff.
 Credential rejections, unknown failures and ambiguous historical HTTP errors
