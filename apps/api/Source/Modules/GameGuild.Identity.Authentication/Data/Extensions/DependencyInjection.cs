@@ -72,6 +72,10 @@ public static class DataDependencyInjection
         }
 
         services.AddSingleton(mfaOptions);
+        // Bind the same section into IOptions<MfaOptions> so consumers that resolve the
+        // options object through IOptions (test hosts re-register the IOptions value as
+        // the DI singleton) observe configuration, not just the class defaults.
+        services.AddOptions<MfaOptions>().Bind(configuration.GetSection(MfaOptions.SectionName));
         services.AddSingleton(sessionOptions);
 
         var apiKeyLifecycleOptions = OptionBuilderUtilities.CreateAndBind(
