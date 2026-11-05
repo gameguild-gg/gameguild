@@ -63,6 +63,7 @@ public static class AuthenticationMappings
             TenantId = domainResponse.TenantId,
             AvailableTenants = domainResponse.AvailableTenants?.ToArray(),
             RequiresMfa = domainResponse.RequiresMfa,
+            MfaCompliancePending = domainResponse.MfaCompliancePending,
             MfaSessionId = domainResponse.MfaSessionId,
             RequiresStepUp = domainResponse.RequiresStepUp,
             StepUpToken = domainResponse.StepUpToken,
