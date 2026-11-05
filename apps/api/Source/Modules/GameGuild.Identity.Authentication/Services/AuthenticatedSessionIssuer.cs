@@ -25,8 +25,15 @@ public sealed class AuthenticatedSessionIssuer(
         User user,
         Guid? requestedTenantId,
         DeviceInfo deviceInfo,
+        CancellationToken cancellationToken)
+        => IssueCoreAsync(user, requestedTenantId, deviceInfo, null, cancellationToken);
+
+    public Task<SignInResponse> IssueAsync(
+        User user,
+        Guid? requestedTenantId,
+        DeviceInfo deviceInfo,
         CancellationToken cancellationToken,
-        bool mfaCompliancePending = false)
+        bool mfaCompliancePending)
         => IssueCoreAsync(user, requestedTenantId, deviceInfo, null, cancellationToken, mfaCompliancePending);
 
     public Task<SignInResponse> IssueMfaAsync(User user, Guid? requestedTenantId, DeviceInfo deviceInfo,
@@ -39,8 +46,7 @@ public sealed class AuthenticatedSessionIssuer(
     private async Task<SignInResponse> IssueCoreAsync(User user, Guid? requestedTenantId, DeviceInfo deviceInfo,
         SignInMfaProof? proof, CancellationToken cancellationToken, bool mfaCompliancePending = false)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        ArgumentNullException.ThrowIfNull(user);
+        cancellationToken.ThrowIfCancellationRequested();        ArgumentNullException.ThrowIfNull(user);
         ArgumentNullException.ThrowIfNull(deviceInfo);
         if (user.Id == Guid.Empty || user.IsDeleted || !user.ValidateForAuthentication(user.TokenVersion).IsSuccess)
         {

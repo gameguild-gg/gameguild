@@ -65,7 +65,7 @@ public static class ClaimNames
     ///     MFA compliance pending claim: the subject's elevated-role MFA requirement is unmet
     ///     (no enrolled factor) but the session was issued anyway per policy.
     /// </summary>
-    public const string MfaCompliancePending = "mfa_compliance_pending";
+    public static string MfaCompliancePending => "mfa_compliance_pending";
 
     /// <summary>
     ///     Guest session id claim. Guests live in their own identity namespace: a guest
