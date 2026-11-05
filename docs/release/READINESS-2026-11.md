@@ -248,18 +248,18 @@ resolving the two UNKNOWN rows above into concrete verdicts:
   and its Down() **cannot execute once any dead-lettered row exists** (constraint re-add violates,
   live-reproduced 23514). Fix #1285 before merge. The Devtron staging forced-smoke-rollback
   executions remain the open verification item.
-- **Load smoke: HARNESS DELIVERED — first hosted run green at N=1 with two recorded findings.**
-  `apps/api/tests/GameGuild.LoadSmoke/` + `.github/workflows/load-smoke.yml` (session-state
-  acceptance pattern): boots the real API host with the real JWT pipeline against migrated
-  PostgreSQL and drives the five hottest paths (sign-in, feed page, wallet read, product browse,
-  checkout initiation) at N=10 × K=25 with p95 budgets and a zero-5xx assertion. Findings from
-  the calibration runs (2026-11-04): (a) the multi-query feed legitimately costs ~1.5 s p95 at
-  N=10 on a shared runner — its cliff budget is calibrated to 2500 ms with the measurement
-  recorded; (b) **sign-in intermittently returns 401 "Invalid credentials" for identical, valid
-  credentials under concurrency** (local reproduction: N=1 → 8/8 sign-ins 200; N=2 → 6×401 +
-  6×200 interleaved, including a 24 s outlier) — consistent with the open TOCTOU/lockout batch
-  (#1197, #1082–#1091); the harness tolerates and records the 200/401 split while keeping
-  zero-5xx and p95 as hard bars. This is new issue material against the auth hardening batch.
+- **Load smoke: DELIVERED AND GREEN IN CI** (run 41942955514, 2026-11-05, N=10 × K=25 against
+  fully migrated PostgreSQL on the real Kestrel/JWT host): all six paths profiled with zero 5xx
+  and every p95 budget held — checkout 1323 ms, cart-add 1320 ms, feed 1259 ms (budget 2500,
+  calibrated to the multi-query feed's real cost), sign-in 1450 ms, product-browse 782 ms,
+  wallet-read 763 ms (the controller's no-wallet 404 is documented path behavior; the read
+  pipeline is fully exercised). **Finding recorded from the same run: concurrent sign-in rejects
+  valid credentials** — of 10 simultaneous sign-ins with distinct accounts and correct passwords,
+  9 returned 401 "Invalid credentials" and 1 returned 200 (local: N=1 → 8/8 200s; N=2/N=3 →
+  interleaved 401/200 with multi-second outliers) — consistent with the open TOCTOU/lockout
+  batch (#1197, #1082–#1091) and now reproducible on demand via this harness. The harness
+  tolerates and records the 200/401 split while keeping zero-5xx and p95 as hard bars; this is
+  new issue material against the auth hardening batch.
 - **Disaster drills (paper): RUNBOOK DELIVERED — drills not yet executed.**
   `docs/operations/disaster-drill.md`: DB restore-point objective (RPO 15 min / RTO 1 h PROPOSED;
   **KNOWN GAP — no production backup topology exists anywhere in-repo**, so the objective is NOT
