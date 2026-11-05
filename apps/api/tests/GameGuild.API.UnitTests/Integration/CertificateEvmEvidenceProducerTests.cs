@@ -130,6 +130,8 @@ public sealed class CertificateEvmEvidenceProducerTests
         var marker = Guid.NewGuid().ToString("N");
         var user = User.Create($"certificate-{marker}@example.test", "Composition recipient"); user.Username = marker;
         var template = CertificateTemplate.Create(Guid.NewGuid(), "Composition fixture", "<div>Fixture</div>");
+        // The issuance eligibility gate (#1226 N1, merged with #1275) requires the
+        // enrollment to exist and be completed before composition may mint a certificate.
         var enrollment = new LearningProgramEnrollment
         {
             Id = Guid.NewGuid(),

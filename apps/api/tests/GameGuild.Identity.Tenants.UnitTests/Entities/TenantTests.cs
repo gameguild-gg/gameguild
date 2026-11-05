@@ -90,82 +90,63 @@ public class TenantTests
     }
 
     [Fact]
-    public void Activate_Should_Add_Domain_Event()
+    public void Activate_Should_Not_Raise_InMemory_Domain_Event()
     {
-        // Arrange
+        // Issue #1287 T8: lifecycle methods no longer raise discarded domain events.
         var tenant = CreateActiveTenant();
-        tenant.ClearDomainEvents();
 
-        // Act
         tenant.Activate();
 
-        // Assert
-        tenant.DomainEvents.Should().ContainSingle(e => e is TenantActivatedEvent);
+        tenant.DomainEvents.Should().BeEmpty();
     }
 
     [Fact]
-    public void Deactivate_Should_Add_Domain_Event()
+    public void Deactivate_Should_Not_Raise_InMemory_Domain_Event()
     {
-        // Arrange
         var tenant = CreateActiveTenant();
-        tenant.ClearDomainEvents();
 
-        // Act
         tenant.Deactivate();
 
-        // Assert
-        tenant.DomainEvents.Should().ContainSingle(e => e is TenantDeactivatedEvent);
+        tenant.DomainEvents.Should().BeEmpty();
     }
 
     [Fact]
-    public void Update_Should_Change_Name_And_Description_And_Add_Event()
+    public void Update_Should_Change_Name_And_Description_Without_Raising_Event()
     {
-        // Arrange
         var tenant = CreateActiveTenant();
-        tenant.ClearDomainEvents();
 
-        // Act
         tenant.Update("Updated Name", "Updated description");
 
-        // Assert
         tenant.Name.Should().Be("Updated Name");
         tenant.Description.Should().Be("Updated description");
-        tenant.DomainEvents.Should().ContainSingle(e => e is TenantUpdatedEvent);
+        tenant.DomainEvents.Should().BeEmpty();
     }
 
     [Fact]
     public void Archive_Should_Mark_As_Archived_And_Inactive()
     {
-        // Arrange
         var tenant = CreateActiveTenant();
-        tenant.ClearDomainEvents();
 
-        // Act
         tenant.Archive("compliance");
 
-        // Assert
         tenant.IsArchived.Should().BeTrue();
         tenant.ArchivedAt.Should().NotBeNull();
         tenant.IsActive.Should().BeFalse();
-        tenant.DomainEvents.Should().ContainSingle(e => e is TenantArchivedEvent);
+        tenant.DomainEvents.Should().BeEmpty();
     }
 
     [Fact]
     public void Unarchive_Should_Restore_Tenant()
     {
-        // Arrange
         var tenant = CreateActiveTenant();
         tenant.Archive("test");
-        tenant.ClearDomainEvents();
 
-        // Act
         tenant.Unarchive();
 
-        // Assert
         tenant.IsArchived.Should().BeFalse();
         tenant.ArchivedAt.Should().BeNull();
         tenant.IsActive.Should().BeTrue();
-        tenant.DomainEvents.Should().ContainSingle(e => e is TenantRestoredEvent);
+        tenant.DomainEvents.Should().BeEmpty();
     }
 
     [Fact]
