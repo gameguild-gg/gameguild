@@ -57,7 +57,7 @@
 | 47 | Gamification.Achievements | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
 | 48 | Notifications | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
 | 49 | TrustSafety | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 0/8 |
-| 50 | SharedKernel + host core | n/a (anatomia) | n/a | ✅ outbox core | n/a | n/a | 🟡 primitives | ❌ | ✅ 6 docs | 3.5/8 |
+| 50 | SharedKernel + host core | ✅ jornada de requisição (26 mw) + ciclo de evento (01 §3, 09 §2-3) | ✅ admin/events 3 endpoints + AnonymousEndpointRegistry ~150 (05 §6) | ✅ outbox core | ✅ ciclo outbox: pending→claimed→completed/DLQ→retired (03 §1) | ✅ cadeia de posições do pipeline (01 §4) + ordem dos 26 mw (04 §3) | ✅ 08-stride (6 superfícies: pipeline CQRS, outbox, ordem middleware, soft-delete, DataProtection, LogRedaction) | ✅ 09-dfds (L0 substrato + 3×L1: jornada 26 mw, outbox, DataProtection) | ✅ 9 docs (01-09) | **8/8** |
 
 **Footnote**: Finance.Contracts e Announcements.Contracts são projects de contratos sem endpoints/fluxo — cobertura n/a por natureza.
 
@@ -73,14 +73,14 @@
 
 | Métrica | Valor |
 |---|---|
-| Módulos com package completo (8/8) | **17** (Authentication + Authorization + Users + Tenants + Provisioning + Payments + Billing + Orders + Subscriptions + Products + Compliance.Audit/Consent/FERPA/KYC/FinancialCrime + Finance.Economy + Finance.Ledgers) |
+| Módulos com package completo (8/8) | **18** (Authentication + Authorization + Users + Tenants + Provisioning + Payments + Billing + Orders + Subscriptions + Products + Compliance.Audit/Consent/FERPA/KYC/FinancialCrime + Finance.Economy + Finance.Ledgers + SharedKernel+host core) |
 | Módulos ≥4/8 (kit funcional, faltam STRIDE/DFD/arq) | **29** |
 | Módulos 0/8 (sem nada) | **9** (+2 contracts-only n/a) |
 | Endpoints com matriz de wiring | **~1.890** de ~2.115 gerados (base ~1.470 + 177 authz + ~125 users/tenants/provisioning + 92 products + 24 ledgers + 5 financial-crime) |
 | Fluxos de usuário documentados | **~80** (+identity: 2 famílias cada de users/tenants/provisioning; +products 6, +financialcrime 5, +ledgers 3) |
 | Máquinas de estado | **~54** (+3 users, +3 tenants, +2 provisioning; +products 7, +financialcrime 5, +ledgers 4) |
-| STRIDE | auth (12 fluxos) + commerce (23 famílias — payments 8 + billing/orders/subs 9 + products 6) + compliance (14 famílias — F1-F8 + FinancialCrime F1-F6 c/ examinador AML) + economy (E1-E9) + identity (authz 7 famílias + users + tenants + provisioning) + finance-ledgers (5 famílias) |
-| DFDs | 17 (auth) + 23 (commerce — nível 0 + nível 1 por família, +products 6) + compliance (L0 + 14 famílias, +FinancialCrime 6 c/ examinador AML) + economy (L0 + 9) + 10 identity (authz L0+7×L1; users/tenants/provisioning L0+3×L1 cada) + finance-ledgers (L0 + 4) |
+| STRIDE | auth (12 fluxos) + commerce (23 famílias — payments 8 + billing/orders/subs 9 + products 6) + compliance (14 famílias — F1-F8 + FinancialCrime F1-F6 c/ examinador AML) + economy (E1-E9) + identity (authz 7 famílias + users + tenants + provisioning) + finance-ledgers (5 famílias) + sharedkernel (6 superfícies — meta-modelo da fundação) |
+| DFDs | 17 (auth) + 23 (commerce — nível 0 + nível 1 por família, +products 6) + compliance (L0 + 14 famílias, +FinancialCrime 6 c/ examinador AML) + economy (L0 + 9) + 10 identity (authz L0+7×L1; users/tenants/provisioning L0+3×L1 cada) + finance-ledgers (L0 + 4) + sharedkernel (L0 substrato + 3×L1: jornada 26 mw, outbox, DataProtection) |
 | Sequências cross-module | auth + economy + compliance (audit-sink fan-in, KYC gates, FERPA-Learning) + authz cross-module-sequences (+ sets lite de users/tenants/provisioning) + commerce/products (checkout, promo-coordinator, fraud-ticket, price-truth pós-#1266) + finance-ledgers (outbox, fronteira Economy) + financialcrime (risk gates, 3 ledgers) |
 
 ## Próximas ondas (ordem de risco)
