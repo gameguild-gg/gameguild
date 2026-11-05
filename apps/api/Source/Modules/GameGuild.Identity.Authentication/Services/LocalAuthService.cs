@@ -317,6 +317,7 @@ public class LocalAuthService(
             {
                 throw new InvalidOperationException("Required MFA cannot be skipped during credential issuance.");
             }
+            var mfaCompliancePending = preparation.MfaCompliancePending;
             var tokenVersion = authenticatedVersion;
 
             var refreshTokenExpiryDays = RefreshTokenLifetimeResolver.ResolveExpirationDays(
@@ -329,14 +330,30 @@ public class LocalAuthService(
                 new DateTimeOffset(DateTime.SpecifyKind(SystemClock.UtcNow, DateTimeKind.Utc)),
                 refreshTokenExpiresAt,
                 cancellationToken).ConfigureAwait(false);
-            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
-                authenticatedUserId,
-                authenticatedUser?.Email ?? request.Email,
-                tenantAccessContext.Roles.ToArray(),
-                tenantAccessContext.TenantId,
-                tokenVersion,
-                sessionId,
-                cancellationToken).ConfigureAwait(false);
+            string accessToken;
+            if (mfaCompliancePending)
+            {
+                accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+                    authenticatedUserId,
+                    authenticatedUser?.Email ?? request.Email,
+                    tenantAccessContext.Roles.ToArray(),
+                    tenantAccessContext.TenantId,
+                    tokenVersion,
+                    sessionId,
+                    mfaCompliancePending: true,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+                    authenticatedUserId,
+                    authenticatedUser?.Email ?? request.Email,
+                    tenantAccessContext.Roles.ToArray(),
+                    tenantAccessContext.TenantId,
+                    tokenVersion,
+                    sessionId,
+                    cancellationToken).ConfigureAwait(false);
+            }
             var refreshTokenHash = refreshTokenHasher.HashToken(refreshToken);
             var session = await sessionManagementService.CreateSessionAsync(
                 sessionId,
@@ -406,7 +423,8 @@ public class LocalAuthService(
                 Email = authenticatedUser?.Email ?? request.Email,
                 SessionId = sessionId,
                 TenantId = tenantAccessContext.TenantId,
-                AvailableTenants = tenantAccessContext.AvailableTenants
+                AvailableTenants = tenantAccessContext.AvailableTenants,
+                MfaCompliancePending = mfaCompliancePending
             };
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -920,9 +938,10 @@ public class LocalAuthService(
 
         var existingSession = await sessionManagementService.GetSessionByRefreshTokenAsync(hashedToken, cancellationToken).ConfigureAwait(false);
         var sessionId = existingSession?.Id ?? Guid.NewGuid();
-        var mfaProof = await signInMfa.ReadSessionProofAsync(userId, tokenVersion,
+        var mfaSession = await signInMfa.ReadSessionProofAsync(userId, tokenVersion,
             tenantAccessContext.TenantId ?? throw new AuthenticationRequiredException("No authorized tenant is available."),
             sessionId, authenticatedAt, cancellationToken).ConfigureAwait(false);
+        var mfaProof = mfaSession?.Proof;
         cancellationToken.ThrowIfCancellationRequested();
         // Rotation classifies the session by its originating policy instead of replaying
         // the stored row's raw span: rotation preserves the originating CreatedAt while
@@ -949,17 +968,37 @@ public class LocalAuthService(
             refreshTokenExpiresAt = storedToken.ExpiresAt;
         }
         var replacementTokenHash = refreshTokenHasher.HashToken(newRefreshToken);
-        var accessToken = mfaProof is null ? await jwtTokenService.GenerateAccessTokenAsync(
-            userId,
-            userEmail,
-            tenantAccessContext.Roles.ToArray(),
-            tenantAccessContext.TenantId,
-            tokenVersion,
-            authenticatedAt,
-            sessionId,
-            cancellationToken).ConfigureAwait(false)
-            : await jwtTokenService.GenerateMfaAccessTokenAsync(userId, userEmail, tenantAccessContext.Roles.ToArray(),
+        string accessToken;
+        if (mfaProof is not null)
+        {
+            accessToken = await jwtTokenService.GenerateMfaAccessTokenAsync(userId, userEmail, tenantAccessContext.Roles.ToArray(),
                 tenantAccessContext.TenantId, tokenVersion, authenticatedAt, sessionId, mfaProof, cancellationToken).ConfigureAwait(false);
+        }
+        else if (mfaSession is { MfaCompliancePending: true })
+        {
+            accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+                userId,
+                userEmail,
+                tenantAccessContext.Roles.ToArray(),
+                tenantAccessContext.TenantId,
+                tokenVersion,
+                authenticatedAt,
+                sessionId,
+                mfaCompliancePending: true,
+                cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+                userId,
+                userEmail,
+                tenantAccessContext.Roles.ToArray(),
+                tenantAccessContext.TenantId,
+                tokenVersion,
+                authenticatedAt,
+                sessionId,
+                cancellationToken).ConfigureAwait(false);
+        }
 
         if (existingSession == null)
         {
@@ -1041,7 +1080,8 @@ public class LocalAuthService(
             Email = userEmail,
             SessionId = sessionId,
             TenantId = tenantAccessContext.TenantId,
-            AvailableTenants = tenantAccessContext.AvailableTenants
+            AvailableTenants = tenantAccessContext.AvailableTenants,
+            MfaCompliancePending = mfaSession is { MfaCompliancePending: true }
         };
     }
 

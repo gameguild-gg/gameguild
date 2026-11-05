@@ -11,6 +11,13 @@ public interface IAuthenticatedSessionIssuer
         DeviceInfo deviceInfo,
         CancellationToken cancellationToken);
 
+    Task<SignInResponse> IssueAsync(
+        User user,
+        Guid? requestedTenantId,
+        DeviceInfo deviceInfo,
+        CancellationToken cancellationToken,
+        bool mfaCompliancePending);
+
     Task<SignInResponse> IssueMfaAsync(User user, Guid? requestedTenantId, DeviceInfo deviceInfo,
         SignInMfaProof proof, CancellationToken cancellationToken);
 }

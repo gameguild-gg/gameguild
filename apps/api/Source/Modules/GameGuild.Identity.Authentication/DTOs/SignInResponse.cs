@@ -112,6 +112,13 @@ public class SignInResponse
     public bool RequiresMfa { get; set; }
 
     /// <summary>
+    ///     True when the subject's MFA requirement comes only from an elevated role and sign-in
+    ///     completed without a second factor because no factor is enrolled. Compliance is
+    ///     enforced via a persistent UI banner instead of blocking sign-in.
+    /// </summary>
+    public bool MfaCompliancePending { get; set; }
+
+    /// <summary>
     ///     MFA session ID if MFA is required
     /// </summary>
     public string? MfaSessionId { get; set; }

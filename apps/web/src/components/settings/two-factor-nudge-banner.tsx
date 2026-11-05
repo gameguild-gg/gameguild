@@ -50,9 +50,23 @@ const subscribeToDismissal = () => () => undefined;
  * - Hidden while `twoFactorEnabled` is true; a stale dismissal is cleared so a
  *   later disable re-arms the nudge.
  * - Dismissal is per-browser (`gg.2fa-nudge`), re-showing after 30 days.
+ * - `enforcement="required"` (MFA compliance, hotfix/login-mfa-turnstile):
+ *   a persistent, non-dismissible variant for elevated users whose session is
+ *   MFA-required-but-missing. Props-driven seam — the layout mounts it from
+ *   `twoFactorEnabled === false` plus an elevated-role check today; when the
+ *   backend exposes an `MfaCompliancePending`-style session/SignInResponse
+ *   flag, pass that flag as this prop instead.
  */
-export function TwoFactorNudgeBanner({ twoFactorEnabled }: { twoFactorEnabled: boolean }) {
+export function TwoFactorNudgeBanner({
+  twoFactorEnabled,
+  enforcement = 'nudge',
+}: {
+  twoFactorEnabled: boolean;
+  /** `required` = persistent compliance banner (no localStorage dismissal). */
+  enforcement?: 'nudge' | 'required';
+}) {
   const t = useTranslations('settings.security');
+  const isRequired = enforcement === 'required';
 
   // Read dismissal state via useSyncExternalStore to avoid setState in useEffect.
   // Server snapshot returns true (hidden) to match the initial client render and prevent hydration mismatch.
@@ -73,7 +87,31 @@ export function TwoFactorNudgeBanner({ twoFactorEnabled }: { twoFactorEnabled: b
     }
   }, [twoFactorEnabled]);
 
-  if (twoFactorEnabled || dismissed || manualDismiss) return null;
+  if (twoFactorEnabled) return null;
+
+  if (isRequired) {
+    return (
+      <div
+        role="alert"
+        data-testid="mfa-compliance-banner"
+        className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200"
+      >
+        <div className="flex items-start gap-3">
+          <ShieldAlert className="mt-0.5 size-5 flex-shrink-0" aria-hidden="true" />
+          <p className="text-sm font-medium">{t('nudge.requiredTitle')}</p>
+        </div>
+        <Link
+          href="/workspace/settings/security"
+          className={cn(buttonVariants({ size: 'sm' }))}
+          data-testid="mfa-compliance-action"
+        >
+          {t('nudge.action')}
+        </Link>
+      </div>
+    );
+  }
+
+  if (dismissed || manualDismiss) return null;
 
   return (
     <div
