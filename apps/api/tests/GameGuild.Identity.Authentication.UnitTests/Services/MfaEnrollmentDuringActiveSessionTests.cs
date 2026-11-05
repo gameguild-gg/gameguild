@@ -61,7 +61,7 @@ public sealed class MfaEnrollmentDuringActiveSessionTests
 
         var proof = await fixture.ReadSessionProofAsync(MfaEnrollmentSessionFixture.SessionA);
 
-        proof.Should().NotBeNull("the enrolling session keeps its verified binding and refreshes normally");
+        proof!.Proof.Should().NotBeNull("the enrolling session keeps its verified binding and refreshes normally");
     }
 
     [Fact]
@@ -113,8 +113,8 @@ public sealed class MfaEnrollmentDuringActiveSessionTests
 
         fixture.Enrolled = true; // MFA enabled from session A; A stores its evidence now.
 
-        (await fixture.ReadSessionProofAsync(MfaEnrollmentSessionFixture.SessionA))
-            .Should().NotBeNull("the enrolling session remains usable after enrollment");
+        (await fixture.ReadSessionProofAsync(MfaEnrollmentSessionFixture.SessionA))!
+            .Proof.Should().NotBeNull("the enrolling session remains usable after enrollment");
         await FluentActions.Awaiting(() => fixture.ReadSessionProofAsync(MfaEnrollmentSessionFixture.SessionB))
             .Should().ThrowAsync<AuthenticationRequiredException>("the pre-enrollment session must re-verify");
     }
@@ -187,7 +187,7 @@ public sealed class MfaEnrollmentSessionFixture
         return SessionMfaEvidence.Create(sessionId, proof);
     }
 
-    public Task<SignInMfaProof?> ReadSessionProofAsync(Guid sessionId) =>
+    public Task<SignInMfaSessionProof?> ReadSessionProofAsync(Guid sessionId) =>
         Service().ReadSessionProofAsync(User.Id, User.TokenVersion, TenantId, sessionId,
             StoredEvidenceA.ToProof().FirstFactorVerifiedAt, CancellationToken.None);
 

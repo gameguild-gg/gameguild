@@ -16,6 +16,6 @@ public interface ISignInMfaService
     Task<SignInResponse> CompleteCodeAsync(string bearer, string code, MfaMethod method,
         DeviceInfo deviceInfo, CancellationToken cancellationToken);
 
-    Task<SignInMfaProof?> ReadSessionProofAsync(Guid subjectId, int tokenVersion, Guid tenantId, Guid sessionId,
+    Task<SignInMfaSessionProof?> ReadSessionProofAsync(Guid subjectId, int tokenVersion, Guid tenantId, Guid sessionId,
         DateTimeOffset authenticatedAt, CancellationToken cancellationToken);
 }

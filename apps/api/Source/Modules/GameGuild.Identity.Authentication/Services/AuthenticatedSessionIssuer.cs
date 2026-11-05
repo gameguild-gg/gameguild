@@ -25,8 +25,9 @@ public sealed class AuthenticatedSessionIssuer(
         User user,
         Guid? requestedTenantId,
         DeviceInfo deviceInfo,
-        CancellationToken cancellationToken)
-        => IssueCoreAsync(user, requestedTenantId, deviceInfo, null, cancellationToken);
+        CancellationToken cancellationToken,
+        bool mfaCompliancePending = false)
+        => IssueCoreAsync(user, requestedTenantId, deviceInfo, null, cancellationToken, mfaCompliancePending);
 
     public Task<SignInResponse> IssueMfaAsync(User user, Guid? requestedTenantId, DeviceInfo deviceInfo,
         SignInMfaProof proof, CancellationToken cancellationToken)
@@ -36,7 +37,7 @@ public sealed class AuthenticatedSessionIssuer(
     }
 
     private async Task<SignInResponse> IssueCoreAsync(User user, Guid? requestedTenantId, DeviceInfo deviceInfo,
-        SignInMfaProof? proof, CancellationToken cancellationToken)
+        SignInMfaProof? proof, CancellationToken cancellationToken, bool mfaCompliancePending = false)
     {
         cancellationToken.ThrowIfCancellationRequested();
         ArgumentNullException.ThrowIfNull(user);
@@ -105,9 +106,13 @@ public sealed class AuthenticatedSessionIssuer(
         }
         else
         {
-            accessToken = await jwtTokenService.GenerateAccessTokenAsync(
-                user.Id, user.Email, context.Roles.ToArray(), context.TenantId, user.TokenVersion,
-                new DateTimeOffset(storedToken.CreatedAt), sessionId, cancellationToken).ConfigureAwait(false);
+            accessToken = mfaCompliancePending
+                ? await jwtTokenService.GenerateAccessTokenAsync(
+                    user.Id, user.Email, context.Roles.ToArray(), context.TenantId, user.TokenVersion,
+                    sessionId, mfaCompliancePending: true, cancellationToken).ConfigureAwait(false)
+                : await jwtTokenService.GenerateAccessTokenAsync(
+                    user.Id, user.Email, context.Roles.ToArray(), context.TenantId, user.TokenVersion,
+                    new DateTimeOffset(storedToken.CreatedAt), sessionId, cancellationToken).ConfigureAwait(false);
         }
         cancellationToken.ThrowIfCancellationRequested();
         var handler = new JwtSecurityTokenHandler();
@@ -185,6 +190,7 @@ public sealed class AuthenticatedSessionIssuer(
             SessionId = sessionId,
             TenantId = context.TenantId,
             AvailableTenants = context.AvailableTenants,
+            MfaCompliancePending = mfaCompliancePending,
             ExpiresAt = storedToken.ExpiresAt,
             RefreshTokenExpiresAt = storedToken.ExpiresAt,
             AccessTokenExpiresAt = accessExpiresAt,

@@ -34,11 +34,14 @@ async function fetchTwoFactorEnabled(): Promise<boolean | null> {
  * `MfaCompliancePending`-style flag on the session/SignInResponse, the
  * persistent compliance banner is keyed off these roles plus
  * `twoFactorEnabled === false`; swap in the backend flag here when it lands.
+ * Mirrors MfaSubjectRequirementPolicy.IsElevatedRole (Admin / TenantAdmin /
+ * Owner / SystemAdmin), compared case-insensitively because claim-cased role
+ * spellings drift between token issuers.
  */
-const MFA_REQUIRED_ROLES = new Set(['SystemAdmin', 'Admin', 'TenantAdmin']);
+const MFA_REQUIRED_ROLES = new Set(['admin', 'tenantadmin', 'owner', 'systemadmin']);
 
 function isMfaComplianceRequired(roles: readonly string[] | undefined): boolean {
-  return (roles ?? []).some((role) => MFA_REQUIRED_ROLES.has(role));
+  return (roles ?? []).some((role) => MFA_REQUIRED_ROLES.has(role.toLowerCase()));
 }
 
 /**

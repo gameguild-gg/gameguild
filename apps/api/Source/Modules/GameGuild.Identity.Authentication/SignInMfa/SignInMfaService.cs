@@ -30,7 +30,8 @@ public sealed class SignInMfaService(
         {
             throw new InvalidOperationException("Current subject policy did not permit ordinary credentials.");
         }
-        return await IssueAsync(subject, decision.TenantId, deviceInfo, cancellationToken).ConfigureAwait(false);
+        return await IssueAsync(subject, decision.TenantId, deviceInfo, cancellationToken,
+            mfaCompliancePending: prepared.MfaCompliancePending).ConfigureAwait(false);
     }
 
     public async Task<SignInMfaPreparation> PrepareAsync(Guid verifiedSubjectId, int verifiedTokenVersion, Guid? requestedTenantId,
@@ -187,7 +188,7 @@ public sealed class SignInMfaService(
         return string.Equals(decision.PolicyFingerprint, challenge.PolicyFingerprint, StringComparison.Ordinal) ? current : null;
     }
 
-    public async Task<SignInMfaProof?> ReadSessionProofAsync(Guid subjectId, int tokenVersion, Guid tenantId, Guid sessionId,
+    public async Task<SignInMfaSessionProof?> ReadSessionProofAsync(Guid subjectId, int tokenVersion, Guid tenantId, Guid sessionId,
         DateTimeOffset authenticatedAt, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -203,7 +204,11 @@ public sealed class SignInMfaService(
             {
                 throw new AuthenticationRequiredException("MFA verification is required before refreshing this session.");
             }
-            return null;
+            // Fail closed unless the surviving requirement is role-only AND the subject still
+            // has no enrolled factor; only that reevaluated grace keeps the marker on refresh.
+            return decision.RequiresMfa && !current.HasEnrolledMfa
+                ? new SignInMfaSessionProof(null, MfaCompliancePending: true)
+                : null;
         }
         if (!current!.HasEnrolledMfa || IsLocked(current) || stored.SessionId != sessionId ||
             !string.Equals(stored.PolicyFingerprint, decision.PolicyFingerprint, StringComparison.Ordinal))
@@ -212,14 +217,14 @@ public sealed class SignInMfaService(
         }
         var proof = stored.ToProof();
         proof.RequireBinding(subjectId, tenantId, tokenVersion, authenticatedAt, _time.GetUtcNow());
-        return proof;
+        return new SignInMfaSessionProof(proof);
     }
 
     private async Task<SignInResponse> IssueAsync(User user, Guid tenantId, DeviceInfo device, CancellationToken cancellationToken,
-        SignInMfaProof? proof = null)
+        SignInMfaProof? proof = null, bool mfaCompliancePending = false)
     {
         var result = proof is null
-            ? await issuer.IssueAsync(user, tenantId, device, cancellationToken).ConfigureAwait(false)
+            ? await issuer.IssueAsync(user, tenantId, device, cancellationToken, mfaCompliancePending).ConfigureAwait(false)
             : await issuer.IssueMfaAsync(user, tenantId, device, proof, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         if (result is null || !result.Success || result.RequiresMfa || result.RequiresStepUp || result.UserId != user.Id ||
@@ -260,6 +265,11 @@ public sealed class SignInMfaService(
 
     private static SignInResponse Denied() => new() { Success = false, Message = "Additional verification failed" };
 }
+
+/// <summary>Refresh-time reevaluation outcome: the stored proof (if any) and the reevaluated compliance marker.</summary>
+/// <param name="Proof">Verified second-factor evidence for the session; null for an ordinary refresh.</param>
+/// <param name="MfaCompliancePending">True when the session refreshes under a role-only MFA requirement with no enrolled factor.</param>
+public sealed record SignInMfaSessionProof(SignInMfaProof? Proof, bool MfaCompliancePending = false);
 
 /// <summary>Server-only transaction outcome; the bearer is not an ordinary access or refresh credential.</summary>
 internal sealed class SignInMfaPendingResponse : SignInResponse, ICommitOnFailureOutcome

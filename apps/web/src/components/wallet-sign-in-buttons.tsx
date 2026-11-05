@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useAuth } from "@game-guild/client/react";
 import { TurnstileWidget } from "@/components/antibot/turnstile-widget";
 import {
@@ -110,8 +110,6 @@ function WalletButtonGroup({
   labels: WalletSignInLabels;
 }) {
   const { signIn } = useAuth();
-  // Keep the anti-bot token with the wallet context and clear it on challenge failure.
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   // Lazy anti-bot (hotfix: duplicate Turnstile on /sign-in): the wallet widget
   // mounts only after the user actually starts the wallet flow, so the initial
   // /sign-in render shows exactly one challenge (the email form's). The token
@@ -122,6 +120,20 @@ function WalletButtonGroup({
   const [flowStarted, setFlowStarted] = useState(false);
   const [pendingWalletId, setPendingWalletId] = useState<string | null>(null);
   const [tokenResolved, setTokenResolved] = useState(false);
+  // Fresh-at-call-time token (review finding b): the transport useMemo
+  // captures state by value, so the first token committed by handleToken
+  // would be invisible to the `transport` instance already captured by the
+  // in-flight handleConnect closure — the first solved challenge would send
+  // `turnstileToken: null` and 403 in prod. Reading through a ref at
+  // challenge-call time fixes that without rebuilding the transport mid-flow.
+  const turnstileTokenRef = useRef<string | null>(null);
+  // Set by onError before the widget's paired onToken(null) arrives, so
+  // handleToken can tell "errored" nulls from the challenge-disabled null.
+  const widgetFailedRef = useRef(false);
+  // Widget mount epoch (review finding c): bumping it remounts the widget so
+  // Cloudflare re-issues a fresh challenge after an error, expiry, or a
+  // failed SIWE attempt.
+  const [widgetEpoch, setWidgetEpoch] = useState(0);
   // Accessed through the context object (not destructured): the linter's
   // unbound-method rule fires on functions separated from their owning
   // object. `useWeb3` (not the `useWallet` snapshot) exposes `authenticate`
@@ -132,6 +144,21 @@ function WalletButtonGroup({
   // The account lives on the full context state, not the wallet snapshot.
   const account = useWalletAddress() ?? null;
 
+  // Reset the anti-bot state so the next wallet click remounts a fresh
+  // widget (findings c.i/c.ii): unmounts the widget, releases any pending
+  // wallet lock, drops the possibly-stale/expired token, and clears the
+  // resolved flag — the user's next click re-arms the lazy widget and waits
+  // for a new token. Without this, an errored widget leaves every wallet
+  // button permanently disabled and a >5-minute-old token is replayed.
+  const resetTurnstile = useCallback(() => {
+    setFlowStarted(false);
+    setPendingWalletId(null);
+    setTokenResolved(false);
+    turnstileTokenRef.current = null;
+    widgetFailedRef.current = false;
+    setWidgetEpoch((epoch) => epoch + 1);
+  }, []);
+
   const transport = useMemo<SiweTransport>(
     () => ({
       getChallenge: async (request) => {
@@ -141,10 +168,10 @@ function WalletButtonGroup({
           body: JSON.stringify({
             walletAddress: request.walletAddress,
             chainId: request.chainId,
-            turnstileToken,
+            turnstileToken: turnstileTokenRef.current,
           }),
         }).catch((error) => {
-          setTurnstileToken(null);
+          resetTurnstile();
           throw error;
         });
         const data = (await response.json().catch(() => null)) as {
@@ -155,7 +182,7 @@ function WalletButtonGroup({
           error?: string;
         } | null;
         if (!response.ok || !data?.challenge || !data.nonce) {
-          setTurnstileToken(null);
+          resetTurnstile();
           throw new Error(data?.message ?? data?.error ?? "challenge_failed");
         }
         return { challenge: data.challenge, nonce: data.nonce, expiresAt: data.expiresAt };
@@ -175,16 +202,15 @@ function WalletButtonGroup({
         });
       },
     }),
-    [signIn, redirectTo, turnstileToken],
+    // The token is read through turnstileTokenRef at challenge-call time
+    // (finding b), so no token dependency here; resetTurnstile is stable.
+    [signIn, redirectTo, resetTurnstile],
   );
 
   async function handleConnect(walletId: string, proceed: boolean) {
     web3.clearError();
     try {
       if (!proceed) {
-        // First click arms the lazy anti-bot widget and waits for its first
-        // token (or its disabled-report null) before the challenge call, so
-        // the SIWE flow never fires without a captured proof.
         setFlowStarted(true);
         setPendingWalletId(walletId);
         return;
@@ -192,16 +218,29 @@ function WalletButtonGroup({
       await web3.connect(walletId);
       await web3.authenticate(transport);
     } catch {
-      // State machine already surfaced the error below the buttons.
+      // Tokens are single-use; a failed attempt must not reuse the old proof.
+      resetTurnstile();
     }
   }
 
   function handleToken(token: string | null) {
-    setTurnstileToken(token);
+    const failed = widgetFailedRef.current;
+    widgetFailedRef.current = false;
+    if (token === null && failed) {
+      // Errored/expired widget (finding c): recover instead of running the
+      // SIWE flow without proof.
+      resetTurnstile();
+      return;
+    }
+    turnstileTokenRef.current = token;
     setTokenResolved(true);
     const walletId = pendingWalletId;
     setPendingWalletId(null);
     if (walletId) void handleConnect(walletId, true);
+  }
+
+  function handleWidgetError() {
+    widgetFailedRef.current = true;
   }
 
   const availableWallets = web3.wallets.filter((wallet) => wallet.available);
@@ -231,7 +270,14 @@ function WalletButtonGroup({
   return (
     <div className="contents" data-testid="wallet-sign-in-buttons">
       {flowStarted ? (
-        <TurnstileWidget onToken={handleToken} id="wallet-sign-in-turnstile" />
+        // key=widgetEpoch: remount forces a fresh Cloudflare challenge after
+        // a reset (stale/expired/failed token).
+        <TurnstileWidget
+          key={widgetEpoch}
+          onToken={handleToken}
+          onError={handleWidgetError}
+          id="wallet-sign-in-turnstile"
+        />
       ) : null}
       {availableWallets.map((wallet) => (
         <button
