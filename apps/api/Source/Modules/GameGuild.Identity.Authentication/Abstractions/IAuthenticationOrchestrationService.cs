@@ -14,6 +14,12 @@ public interface IAuthenticationOrchestrationService
     /// <returns>Authentication flow state with required steps</returns>
     Task<AuthenticationFlowState> InitiateAuthenticationAsync(InitiateAuthenticationRequest request);
 
+    Task<AuthenticationFlowState> InitiateAuthenticationAsync(InitiateAuthenticationRequest request, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return InitiateAuthenticationAsync(request);
+    }
+
     /// <summary>
     ///     Processes a step in the authentication flow.
     /// </summary>
@@ -23,6 +29,12 @@ public interface IAuthenticationOrchestrationService
     /// <returns>Updated flow state</returns>
     Task<AuthenticationFlowState> ProcessAuthenticationStepAsync(Guid flowId, AuthenticationStep step, object stepData);
 
+    Task<AuthenticationFlowState> ProcessAuthenticationStepAsync(Guid flowId, AuthenticationStep step, object stepData, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return ProcessAuthenticationStepAsync(flowId, step, stepData);
+    }
+
     /// <summary>
     ///     Completes an authentication flow and issues tokens.
     /// </summary>
@@ -30,11 +42,23 @@ public interface IAuthenticationOrchestrationService
     /// <returns>Authentication result with tokens</returns>
     Task<AuthenticationResult> CompleteAuthenticationAsync(Guid flowId);
 
+    Task<AuthenticationResult> CompleteAuthenticationAsync(Guid flowId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return CompleteAuthenticationAsync(flowId);
+    }
+
     /// <summary>
     ///     Abandons an incomplete authentication flow.
     /// </summary>
     /// <param name="flowId">The authentication flow ID</param>
     Task AbandonAuthenticationFlowAsync(Guid flowId);
+
+    Task AbandonAuthenticationFlowAsync(Guid flowId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return AbandonAuthenticationFlowAsync(flowId);
+    }
 
     /// <summary>
     ///     Gets the current state of an authentication flow.
@@ -42,6 +66,12 @@ public interface IAuthenticationOrchestrationService
     /// <param name="flowId">The authentication flow ID</param>
     /// <returns>Current flow state</returns>
     Task<AuthenticationFlowState?> GetFlowStateAsync(Guid flowId);
+
+    Task<AuthenticationFlowState?> GetFlowStateAsync(Guid flowId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return GetFlowStateAsync(flowId);
+    }
 
     /// <summary>
     ///     Determines if additional authentication challenges are required based on risk assessment.
@@ -51,4 +81,10 @@ public interface IAuthenticationOrchestrationService
     /// <param name="context">Authentication context</param>
     /// <returns>List of required additional challenges</returns>
     Task<List<AuthenticationStep>> DetermineRequiredChallengesAsync(Guid userId, double riskScore, AuthenticationAttemptContext context);
+
+    Task<List<AuthenticationStep>> DetermineRequiredChallengesAsync(Guid userId, double riskScore, AuthenticationAttemptContext context, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return DetermineRequiredChallengesAsync(userId, riskScore, context);
+    }
 }

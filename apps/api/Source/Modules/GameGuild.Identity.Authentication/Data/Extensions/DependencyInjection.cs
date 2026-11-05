@@ -119,6 +119,7 @@ public static class DataDependencyInjection
         services.AddScoped<IAdaptiveBehaviorBaselineRepository, AdaptiveBehaviorBaselineRepository>();
         services.AddScoped<IAuthenticationFlowStateRepository, AuthenticationFlowStateRepository>();
         services.AddScoped<IAuthenticationOrchestrationService, AuthenticationOrchestrationService>();
+        services.AddScoped<OrchestratedRiskChallengeVerifier>();
         services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
         // Expired/revoked trusted-device pruning (issue #1144); fails soft and retries per interval.
         services.AddHostedService<TrustedDeviceCleanupBackgroundService>();

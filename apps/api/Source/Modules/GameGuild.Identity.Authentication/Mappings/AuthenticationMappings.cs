@@ -100,19 +100,19 @@ public static class AuthenticationMappings
     public static OrchestratedFlowStateResponse ToDto(this AuthenticationFlowState flowState)
     {
         ArgumentNullException.ThrowIfNull(flowState);
-        return new OrchestratedFlowStateResponse
-        {
-            FlowId = flowState.FlowId,
-            UserId = flowState.UserId,
-            CurrentStep = flowState.CurrentStep,
-            RequiredSteps = [.. flowState.RequiredSteps],
-            CompletedSteps = [.. flowState.CompletedSteps],
-            NextStep = flowState.NextStep,
-            IsComplete = flowState.IsComplete,
-            RiskScore = flowState.RiskScore,
-            InitiatedAt = flowState.InitiatedAt,
-            ExpiresAt = flowState.ExpiresAt
-        };
+        OrchestratedFlowStateResponse result = flowState is OrchestrationChallengeDeniedState
+            ? new OrchestratedFlowCommittedDenialResponse() : new OrchestratedFlowStateResponse();
+        result.FlowId = flowState.FlowId;
+        result.UserId = flowState.UserId;
+        result.CurrentStep = flowState.CurrentStep;
+        result.RequiredSteps = [.. flowState.RequiredSteps];
+        result.CompletedSteps = [.. flowState.CompletedSteps];
+        result.NextStep = flowState.NextStep;
+        result.IsComplete = flowState.IsComplete;
+        result.RiskScore = flowState.RiskScore;
+        result.InitiatedAt = flowState.InitiatedAt;
+        result.ExpiresAt = flowState.ExpiresAt;
+        return result;
     }
 
     /// <summary>
@@ -121,6 +121,10 @@ public static class AuthenticationMappings
     public static SignInResponse ToSignInResponse(this AuthenticationResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
+        if (result is OrchestrationAuthenticationResult issued)
+        {
+            return issued.IssuedCredentials ?? throw new InvalidOperationException("Issued credential response is unavailable.");
+        }
         return new SignInResponse
         {
             Success = result.IsSuccess,

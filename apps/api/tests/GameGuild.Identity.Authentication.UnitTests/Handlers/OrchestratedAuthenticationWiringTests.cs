@@ -67,8 +67,8 @@ public class OrchestratedAuthenticationWiringTests
         var state = FlowState();
         InitiateAuthenticationRequest? captured = null;
         _orchestratorMock
-            .Setup(x => x.InitiateAuthenticationAsync(It.IsAny<InitiateAuthenticationRequest>()))
-            .Callback((InitiateAuthenticationRequest request) => captured = request)
+            .Setup(x => x.InitiateAuthenticationAsync(It.IsAny<InitiateAuthenticationRequest>(), It.IsAny<CancellationToken>()))
+            .Callback((InitiateAuthenticationRequest request, CancellationToken _) => captured = request)
             .ReturnsAsync(state);
 
         var result = await CreateInitiateHandler().Handle(
@@ -110,7 +110,7 @@ public class OrchestratedAuthenticationWiringTests
             CancellationToken.None);
 
         await act.Should().ThrowAsync<RequestValidationException>();
-        _orchestratorMock.Verify(x => x.InitiateAuthenticationAsync(It.IsAny<InitiateAuthenticationRequest>()), Times.Never);
+        _orchestratorMock.Verify(x => x.InitiateAuthenticationAsync(It.IsAny<InitiateAuthenticationRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     // ── ProcessStep: forwards exactly one proof to the orchestrator ──────────
@@ -122,8 +122,8 @@ public class OrchestratedAuthenticationWiringTests
         var state = FlowState(flowId, isComplete: true);
         object? capturedPayload = null;
         _orchestratorMock
-            .Setup(x => x.ProcessAuthenticationStepAsync(flowId, AuthenticationStep.MfaVerification, It.IsAny<object>()))
-            .Callback((Guid _, AuthenticationStep _, object payload) => capturedPayload = payload)
+            .Setup(x => x.ProcessAuthenticationStepAsync(flowId, AuthenticationStep.MfaVerification, It.IsAny<object>(), It.IsAny<CancellationToken>()))
+            .Callback((Guid _, AuthenticationStep _, object payload, CancellationToken _) => capturedPayload = payload)
             .ReturnsAsync(state);
 
         var handler = new ProcessOrchestratedAuthenticationStepHandler(
@@ -161,10 +161,27 @@ public class OrchestratedAuthenticationWiringTests
             CancellationToken.None);
         await noProof.Should().ThrowAsync<RequestValidationException>();
 
-        _orchestratorMock.Verify(x => x.ProcessAuthenticationStepAsync(It.IsAny<Guid>(), It.IsAny<AuthenticationStep>(), It.IsAny<object>()), Times.Never);
+        _orchestratorMock.Verify(x => x.ProcessAuthenticationStepAsync(It.IsAny<Guid>(), It.IsAny<AuthenticationStep>(), It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     // ── Complete: maps the orchestration result onto the shared response ─────
+
+    [Theory]
+    [InlineData(AuthenticationStep.RiskChallenge, "123456", null)]
+    [InlineData(AuthenticationStep.MfaVerification, null, "12345678")]
+    [InlineData(AuthenticationStep.RiskChallenge, "123456", "12345678")]
+    [InlineData(AuthenticationStep.RiskChallenge, null, "１２３４５６７８")]
+    [InlineData((AuthenticationStep)999, "123456", null)]
+    public async Task ProcessStepRejectsMixedOrWrongChallengeProofs(AuthenticationStep step, string? totp, string? risk)
+    {
+        var handler = new ProcessOrchestratedAuthenticationStepHandler(_orchestratorMock.Object,
+            NullLogger<ProcessOrchestratedAuthenticationStepHandler>.Instance, new ProcessOrchestratedAuthenticationStepCommandValidator());
+        await Assert.ThrowsAsync<RequestValidationException>(() => handler.Handle(new ProcessOrchestratedAuthenticationStepCommand
+        {
+            FlowId = Guid.NewGuid(), Step = step, TotpCode = totp, RiskCode = risk
+        }, CancellationToken.None));
+        _orchestratorMock.VerifyNoOtherCalls();
+    }
 
     [Fact]
     public async Task Complete_DelegatesToOrchestrator_AndMapsIssuedCredentials()
@@ -173,7 +190,7 @@ public class OrchestratedAuthenticationWiringTests
         var sessionId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         _orchestratorMock
-            .Setup(x => x.CompleteAuthenticationAsync(flowId))
+            .Setup(x => x.CompleteAuthenticationAsync(flowId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new OrchestrationAuthenticationResult
             {
                 IsSuccess = true,
@@ -183,7 +200,15 @@ public class OrchestratedAuthenticationWiringTests
                 TokenExpiresAt = new DateTime(2026, 10, 11, 1, 0, 0, DateTimeKind.Utc),
                 SessionId = sessionId,
                 MfaEnabled = true,
-                DeviceTrusted = true
+                DeviceTrusted = true,
+                IssuedCredentials = new SignInResponse
+                {
+                    Success = true, UserId = userId, SessionId = sessionId,
+                    AccessToken = "orchestrated-access", RefreshToken = "orchestrated-refresh",
+                    AccessTokenExpiresAt = new DateTime(2026, 10, 11, 1, 0, 0, DateTimeKind.Utc),
+                    RefreshTokenExpiresAt = new DateTime(2026, 10, 18, 0, 0, 0, DateTimeKind.Utc),
+                    ExpiresIn = 3600
+                }
             });
 
         var handler = new CompleteOrchestratedAuthenticationHandler(
@@ -210,7 +235,7 @@ public class OrchestratedAuthenticationWiringTests
     {
         var flowId = Guid.NewGuid();
         _orchestratorMock
-            .Setup(x => x.AbandonAuthenticationFlowAsync(flowId))
+            .Setup(x => x.AbandonAuthenticationFlowAsync(flowId, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var handler = new AbandonOrchestratedAuthenticationHandler(
@@ -220,7 +245,7 @@ public class OrchestratedAuthenticationWiringTests
 
         await handler.Handle(new AbandonOrchestratedAuthenticationCommand { FlowId = flowId }, CancellationToken.None);
 
-        _orchestratorMock.Verify(x => x.AbandonAuthenticationFlowAsync(flowId), Times.Once);
+        _orchestratorMock.Verify(x => x.AbandonAuthenticationFlowAsync(flowId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -228,10 +253,10 @@ public class OrchestratedAuthenticationWiringTests
     {
         var flowId = Guid.NewGuid();
         _orchestratorMock
-            .Setup(x => x.GetFlowStateAsync(flowId))
+            .Setup(x => x.GetFlowStateAsync(flowId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(FlowState(flowId));
         _orchestratorMock
-            .Setup(x => x.GetFlowStateAsync(It.Is<Guid>(id => id != flowId)))
+            .Setup(x => x.GetFlowStateAsync(It.Is<Guid>(id => id != flowId), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AuthenticationFlowState?)null);
 
         var handler = new GetOrchestratedAuthenticationFlowStateHandler(_orchestratorMock.Object);
@@ -249,17 +274,18 @@ public class OrchestratedAuthenticationWiringTests
     [Fact]
     public async Task OrchestratedCommands_DispatchToOrchestrator_ViaAddCqrsScan()
     {
+        using var cancellation = new CancellationTokenSource();
         _orchestratorMock
-            .Setup(x => x.InitiateAuthenticationAsync(It.IsAny<InitiateAuthenticationRequest>()))
+            .Setup(x => x.InitiateAuthenticationAsync(It.IsAny<InitiateAuthenticationRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(FlowState());
         _orchestratorMock
-            .Setup(x => x.ProcessAuthenticationStepAsync(It.IsAny<Guid>(), It.IsAny<AuthenticationStep>(), It.IsAny<object>()))
+            .Setup(x => x.ProcessAuthenticationStepAsync(It.IsAny<Guid>(), It.IsAny<AuthenticationStep>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(FlowState());
         _orchestratorMock
-            .Setup(x => x.CompleteAuthenticationAsync(It.IsAny<Guid>()))
-            .ReturnsAsync(new OrchestrationAuthenticationResult { IsSuccess = true, UserId = Guid.NewGuid() });
+            .Setup(x => x.CompleteAuthenticationAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OrchestrationAuthenticationResult { IsSuccess = true, IssuedCredentials = new SignInResponse { Success = true } });
         _orchestratorMock
-            .Setup(x => x.AbandonAuthenticationFlowAsync(It.IsAny<Guid>()))
+            .Setup(x => x.AbandonAuthenticationFlowAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _authAttemptMock
             .Setup(x => x.GetClientIpAddress(It.IsAny<HttpContext>()))
@@ -277,26 +303,27 @@ public class OrchestratedAuthenticationWiringTests
 
         var initiate = await sender.Send(
             new InitiateOrchestratedAuthenticationCommand { Identifier = "user@example.com", Password = "pw" },
-            CancellationToken.None);
+            cancellation.Token);
         initiate.Should().NotBeNull();
 
         var step = await sender.Send(
             new ProcessOrchestratedAuthenticationStepCommand { FlowId = initiate.FlowId, Step = AuthenticationStep.MfaVerification, TotpCode = "123456" },
-            CancellationToken.None);
+            cancellation.Token);
         step.Should().NotBeNull();
 
         var complete = await sender.Send(
             new CompleteOrchestratedAuthenticationCommand { FlowId = initiate.FlowId },
-            CancellationToken.None);
+            cancellation.Token);
         complete.Success.Should().BeTrue();
 
-        await sender.Send(new AbandonOrchestratedAuthenticationCommand { FlowId = Guid.NewGuid() }, CancellationToken.None);
+        await sender.Send(new AbandonOrchestratedAuthenticationCommand { FlowId = Guid.NewGuid() }, cancellation.Token);
 
-        _orchestratorMock.Verify(x => x.InitiateAuthenticationAsync(It.Is<InitiateAuthenticationRequest>(r => r.AuthMethod == "Local")), Times.Once);
-        _orchestratorMock.Verify(x => x.ProcessAuthenticationStepAsync(initiate.FlowId, AuthenticationStep.MfaVerification, It.IsAny<object>()), Times.Once);
-        _orchestratorMock.Verify(x => x.CompleteAuthenticationAsync(initiate.FlowId), Times.Once);
-        _orchestratorMock.Verify(x => x.AbandonAuthenticationFlowAsync(It.IsAny<Guid>()), Times.Once);
+        _orchestratorMock.Verify(x => x.InitiateAuthenticationAsync(It.Is<InitiateAuthenticationRequest>(r => r.AuthMethod == "Local"), cancellation.Token), Times.Once);
+        _orchestratorMock.Verify(x => x.ProcessAuthenticationStepAsync(initiate.FlowId, AuthenticationStep.MfaVerification, It.IsAny<object>(), cancellation.Token), Times.Once);
+        _orchestratorMock.Verify(x => x.CompleteAuthenticationAsync(initiate.FlowId, cancellation.Token), Times.Once);
+        _orchestratorMock.Verify(x => x.AbandonAuthenticationFlowAsync(It.IsAny<Guid>(), cancellation.Token), Times.Once);
     }
+
 
     [Fact]
     public async Task OrchestratedAuthController_RoutesCommandsThroughSender()
