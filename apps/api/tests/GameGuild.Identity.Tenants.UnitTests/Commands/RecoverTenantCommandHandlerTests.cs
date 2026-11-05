@@ -24,7 +24,7 @@ public class RecoverTenantCommandHandlerTests
             .ReturnsAsync(tenant);
         repository.Setup(candidate => candidate.UpdateAsync(tenant, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenant);
-        var handler = new RecoverTenantCommandHandler(repository.Object);
+        var handler = new RecoverTenantCommandHandler(repository.Object, new AllowAllTenantAdministrationGuard());
 
         var result = await handler.Handle(new RecoverTenantCommand(tenantId, "restore fixture"), CancellationToken.None);
 
@@ -42,7 +42,7 @@ public class RecoverTenantCommandHandlerTests
         var repository = new Mock<ITenantRepository>();
         repository.Setup(candidate => candidate.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Tenant?)null);
-        var handler = new RecoverTenantCommandHandler(repository.Object);
+        var handler = new RecoverTenantCommandHandler(repository.Object, new AllowAllTenantAdministrationGuard());
 
         var result = await handler.Handle(new RecoverTenantCommand(tenantId, "restore fixture"), CancellationToken.None);
 
@@ -66,7 +66,7 @@ public class RecoverTenantCommandHandlerTests
         var repository = new Mock<ITenantRepository>();
         repository.Setup(candidate => candidate.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenant);
-        var handler = new RecoverTenantCommandHandler(repository.Object);
+        var handler = new RecoverTenantCommandHandler(repository.Object, new AllowAllTenantAdministrationGuard());
 
         var result = await handler.Handle(new RecoverTenantCommand(tenantId, "restore fixture"), CancellationToken.None);
 

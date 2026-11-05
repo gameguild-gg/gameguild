@@ -38,8 +38,14 @@ namespace GameGuild.Identity.Tenants;
 ///         navigation property for bidirectional traversal, enabling efficient queries in both directions.
 ///     </para>
 ///     <para>
-///         <b>Domain Events:</b> Lifecycle methods (<see cref="Activate"/>, <see cref="Deactivate"/>, <see cref="Update"/>,
-///         <see cref="Archive"/>, <see cref="Unarchive"/>) emit domain events for integration with other modules and audit logging.
+///         <b>Domain Events (issue #1287 T8):</b> lifecycle methods no longer raise in-memory
+///         domain events — the persistence pipeline collected and discarded them without
+///         dispatching or persisting (ApplicationDbContext collects <c>IHasDomainEvents</c>
+///         results and only clears them), so the raises were silent no-ops. This follows the
+///         #1202 precedent (the Payments module's PaymentSucceededEvent removal): reactions
+///         that must reach other modules belong on the durable integration-event outbox
+///         (<c>AddIntegrationEvent</c>), which is the only event mechanism that reaches
+///         consumers.
 ///     </para>
 /// </remarks>
 [Table("Tenants")]
@@ -137,9 +143,6 @@ public class Tenant : EntityBase, ITenant
     {
         IsActive = true;
         Touch();
-
-        // Add domain event
-        AddDomainEvent(new TenantActivatedEvent(Id, Name));
     }
 
     /// <summary>
@@ -149,9 +152,6 @@ public class Tenant : EntityBase, ITenant
     {
         IsActive = false;
         Touch();
-
-        // Add domain event
-        AddDomainEvent(new TenantDeactivatedEvent(Id, Name));
     }
 
     /// <summary>
@@ -162,9 +162,6 @@ public class Tenant : EntityBase, ITenant
         Name = name;
         Description = description;
         Touch();
-
-        // Add domain event
-        AddDomainEvent(new TenantUpdatedEvent(Id, name, description));
     }
 
     /// <summary>
@@ -176,9 +173,6 @@ public class Tenant : EntityBase, ITenant
         ArchivedAt = SystemClock.UtcNow;
         IsActive = false; // Archived tenants are also inactive
         Touch();
-
-        // Add domain event
-        AddDomainEvent(new TenantArchivedEvent(Id, reason));
     }
 
     /// <summary>
@@ -190,9 +184,6 @@ public class Tenant : EntityBase, ITenant
         ArchivedAt = null;
         IsActive = true; // Unarchived tenants become active again
         Touch();
-
-        // Add domain event
-        AddDomainEvent(new TenantRestoredEvent(Id, Name));
     }
 
     // ========================

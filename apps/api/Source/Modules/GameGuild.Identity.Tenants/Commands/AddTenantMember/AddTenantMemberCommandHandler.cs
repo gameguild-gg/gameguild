@@ -78,7 +78,10 @@ public sealed class AddTenantMemberCommandHandler(
 
             await memberRepository.UpdateAsync(existingMember, cancellationToken).ConfigureAwait(false);
 
-            tenant.AddDomainEvent(new TenantMemberAddedEvent(request.TenantId, request.UserId, request.InvitedByEmail ?? "unknown@email.com", request.Role));
+            // Issue #1287 T8: the TenantMemberAddedEvent raise was removed — the
+            // persistence pipeline collected and discarded in-memory domain events
+            // without dispatching (#1202 precedent); the durable invite event above is
+            // the path that actually reaches consumers.
 
             return new AddTenantMemberResponse
             {
@@ -110,7 +113,10 @@ public sealed class AddTenantMemberCommandHandler(
 
         var createdMember = await memberRepository.CreateAsync(member, cancellationToken).ConfigureAwait(false);
 
-        tenant.AddDomainEvent(new TenantMemberAddedEvent(request.TenantId, request.UserId, request.InvitedByEmail ?? "unknown@email.com", request.Role));
+        // Issue #1287 T8: the TenantMemberAddedEvent raise was removed — the
+        // persistence pipeline collected and discarded in-memory domain events
+        // without dispatching (#1202 precedent); the durable invite event above is
+        // the path that actually reaches consumers.
 
         return new AddTenantMemberResponse { Success = true, Message = "Member added successfully", MemberId = createdMember.Id };
     }
