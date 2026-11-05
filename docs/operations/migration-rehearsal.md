@@ -17,10 +17,15 @@
   companion files (role/grant SQL invoked by their parent migration's `Up()`, sharing the
   parent's ID — they are not separate history rows) plus per-migration `*.Designer.cs` files.
   Count them with:
-  `ls …/Database/Migrations | grep -v 'Designer\.cs$' | grep -v 'ModelSnapshot\.cs$' | grep -v '\.Security\.cs$' | grep -c '\.cs$'`
-  (beware: three real migrations legitimately contain the word "Snapshot" in their names —
+  `ls …/Database/Migrations | grep -v 'Designer\.cs$' | grep -v '^ApplicationDbContextModelSnapshot\.cs$' | grep -v '\.Security\.cs$' | grep -c '\.cs$'`
+  (beware: real migrations legitimately contain the word "Snapshot" in their names —
   `ReconcileBountyEscrowModelSnapshot`, `AddMutationValueSnapshotsAndChainOfCustody`,
-  `AddValueSnapshotArchiveAndLegalHoldDelivery` — a naive `grep -v Snapshot` undercounts).
+  `AddValueSnapshotArchiveAndLegalHoldDelivery` — so the current model snapshot must be
+  excluded by its exact file name, never by a `ModelSnapshot.cs` suffix or `Snapshot`
+  substring: `ReconcileBountyEscrowModelSnapshot.cs` itself ends in `ModelSnapshot.cs`,
+  and a suffix filter silently undercounts by that one file; corrected here after the
+  2026-11-04 run's script form tripped on it — the recorded 226 figure was and remains
+  the true count at `630eb8c6d7`).
 - The Identity.Authentication module carries 2 additional migrations in its own folder
   (`Modules/GameGuild.Identity.Authentication/Data/Migrations`) for its own DbContext; they are
   not part of the API chain rehearsed here.
