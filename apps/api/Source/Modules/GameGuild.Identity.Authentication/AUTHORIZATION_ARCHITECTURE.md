@@ -264,8 +264,9 @@ The parent retains provider/UI, linking and complete product journey requirement
 
 ## 2026-10-05 unavailable-account token boundary — #262 / #263
 
-Otherwise active refresh issuance requires a user returned by the existing live-user repository,
-before tenant provisioning, token generation or session mutation. Missing/deleted
+Otherwise active refresh issuance requires a user returned by the existing live-user repository
+and acceptance by the same account authentication policy used at sign-in, before tenant
+provisioning, token generation or session mutation. Missing/deleted, inactive and suspended
 accounts receive generic invalid-refresh denial before issuance; revoked/replaced
 replay still commits containment of extant tokens/sessions without inventing a
 profile or version update. Fallback email/version identities
@@ -2116,6 +2117,16 @@ rejected when the subject has since enrolled or the requirement is
 default-sourced, but a role-only requirement with no enrolled factor refreshes
 without a proof. `MfaRequirementDecision` records `RequiredByDefault` so the
 completion re-checks distinguish the two sources.
+### Email MFA lifecycle (#1271)
+
+Email challenge delivery and verification require an enabled configuration with an
+enrolled address. Verification reads the current configuration before consuming a
+code; a denied sign-in check leaves pending enrollment codes available for setup. Confirmed
+email enrollment records completed setup. Disabling MFA clears the enrolled email
+address and completed-setup flag along with the other factors, and still revokes
+issued tokens. Previously enabled email enrollments remain usable even when their
+legacy completed-setup flag is false; no data migration or forced reenrollment is
+required by this change.
 
 ### Service-account source restrictions (#1190)
 

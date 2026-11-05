@@ -489,7 +489,7 @@ public sealed class OrderCommandHandlerTests
         // The cancel handler loads the order with its line items so pending reservations can
         // be released (issue #401) — the fixture must mock that load path.
         var repository = CreateRepositoryWithOrder(order, includeLineItems: true);
-        var handler = new CancelOrderCommandHandler(repository.Object);
+        var handler = new CancelOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new CancelOrderCommand(order.Id, "customer request"), CancellationToken.None);
 
@@ -505,7 +505,7 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new CancelOrderCommandHandler(repository.Object);
+        var handler = new CancelOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor());
 
         var result = await handler.Handle(new CancelOrderCommand(Guid.NewGuid(), "reason"), CancellationToken.None);
 
@@ -520,7 +520,7 @@ public sealed class OrderCommandHandlerTests
         order.MarkAsPaid("provider-ref", "card", "ext-102");
         // Same line-items load path as the happy-path cancel (issue #401).
         var repository = CreateRepositoryWithOrder(order, includeLineItems: true);
-        var handler = new CancelOrderCommandHandler(repository.Object);
+        var handler = new CancelOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new CancelOrderCommand(order.Id, "reason"), CancellationToken.None);
 
@@ -965,7 +965,7 @@ public sealed class OrderCommandHandlerTests
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new DeleteOrderCommandHandler(repository.Object);
+        var handler = new DeleteOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new DeleteOrderCommand(order.Id), CancellationToken.None);
 
@@ -980,7 +980,7 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new DeleteOrderCommandHandler(repository.Object);
+        var handler = new DeleteOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor());
 
         var result = await handler.Handle(new DeleteOrderCommand(Guid.NewGuid()), CancellationToken.None);
 
@@ -994,7 +994,7 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         order.Cancel("cleanup");
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new DeleteOrderCommandHandler(repository.Object);
+        var handler = new DeleteOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new DeleteOrderCommand(order.Id), CancellationToken.None);
 
@@ -1008,7 +1008,7 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         order.MarkAsPaid("provider-ref", "card", "ext-103");
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new DeleteOrderCommandHandler(repository.Object);
+        var handler = new DeleteOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new DeleteOrderCommand(order.Id), CancellationToken.None);
 
@@ -1021,7 +1021,7 @@ public sealed class OrderCommandHandlerTests
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new HoldOrderCommandHandler(repository.Object);
+        var handler = new HoldOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new HoldOrderCommand(order.Id, "manual review"), CancellationToken.None);
 
@@ -1036,7 +1036,7 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new HoldOrderCommandHandler(repository.Object);
+        var handler = new HoldOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor());
 
         var result = await handler.Handle(new HoldOrderCommand(Guid.NewGuid(), "review"), CancellationToken.None);
 
@@ -1050,7 +1050,7 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         SetOrderStatus(order, OrderStatus.Processing);
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new HoldOrderCommandHandler(repository.Object);
+        var handler = new HoldOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new HoldOrderCommand(order.Id, "risk check"), CancellationToken.None);
 
@@ -1064,7 +1064,7 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         order.MarkAsPaid("provider-ref", "card", "ext-104");
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new HoldOrderCommandHandler(repository.Object);
+        var handler = new HoldOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new HoldOrderCommand(order.Id, "review"), CancellationToken.None);
 
@@ -1349,7 +1349,7 @@ public sealed class OrderCommandHandlerTests
         var order = OrderTestFactory.CreatePendingOrder();
         order.PlaceOnHold("manual review");
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new ReleaseOrderCommandHandler(repository.Object);
+        var handler = new ReleaseOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new ReleaseOrderCommand(order.Id), CancellationToken.None);
 
@@ -1364,7 +1364,7 @@ public sealed class OrderCommandHandlerTests
         repository.Setup(mock => mock.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Order?)null);
 
-        var handler = new ReleaseOrderCommandHandler(repository.Object);
+        var handler = new ReleaseOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor());
 
         var result = await handler.Handle(new ReleaseOrderCommand(Guid.NewGuid()), CancellationToken.None);
 
@@ -1377,7 +1377,7 @@ public sealed class OrderCommandHandlerTests
     {
         var order = OrderTestFactory.CreatePendingOrder();
         var repository = CreateRepositoryWithOrder(order);
-        var handler = new ReleaseOrderCommandHandler(repository.Object);
+        var handler = new ReleaseOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order));
 
         var result = await handler.Handle(new ReleaseOrderCommand(order.Id), CancellationToken.None);
 
