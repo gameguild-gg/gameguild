@@ -596,7 +596,7 @@ public sealed class GradingPersistenceModelConfiguration : IModelConfiguration
                     "(\"Status\" = 'processing') = (\"ClaimedAt\" IS NOT NULL AND \"ClaimedBy\" IS NOT NULL) AND " +
                     "(\"Status\" = 'confirmed') = (\"ConfirmedAt\" IS NOT NULL) AND " +
                     "(\"Status\" = 'failed') = (\"NextAttemptAt\" IS NOT NULL) AND " +
-                    "(\"Status\" = 'dead_lettered') = (\"DeadLetteredAt\" IS NOT NULL) AND " +
+                    "(\"Status\" = 'deadlettered') = (\"DeadLetteredAt\" IS NOT NULL) AND " +
                     "(\"DeadLetteredAt\" IS NULL OR (\"NextAttemptAt\" IS NULL AND \"ConfirmedAt\" IS NULL))");
                 table.HasCheckConstraint(
                     "CK_AcademicOutboxDeliveries_ErrorSize",

@@ -6941,7 +6941,7 @@ Table "AcademicOutboxDeliveries" {
   Checks {
     `"AttemptCount" >= 0` [name: 'CK_AcademicOutboxDeliveries_Attempts']
     `"LastError" IS NULL OR octet_length("LastError") <= 4096` [name: 'CK_AcademicOutboxDeliveries_ErrorSize']
-    `("Status" = 'processing') = ("ClaimedAt" IS NOT NULL AND "ClaimedBy" IS NOT NULL) AND ("Status" = 'confirmed') = ("ConfirmedAt" IS NOT NULL) AND ("Status" = 'failed') = ("NextAttemptAt" IS NOT NULL) AND ("Status" = 'dead_lettered') = ("DeadLetteredAt" IS NOT NULL) AND ("DeadLetteredAt" IS NULL OR ("NextAttemptAt" IS NULL AND "ConfirmedAt" IS NULL))` [name: 'CK_AcademicOutboxDeliveries_Lifecycle']
+    `("Status" = 'processing') = ("ClaimedAt" IS NOT NULL AND "ClaimedBy" IS NOT NULL) AND ("Status" = 'confirmed') = ("ConfirmedAt" IS NOT NULL) AND ("Status" = 'failed') = ("NextAttemptAt" IS NOT NULL) AND ("Status" = 'deadlettered') = ("DeadLetteredAt" IS NOT NULL) AND ("DeadLetteredAt" IS NULL OR ("NextAttemptAt" IS NULL AND "ConfirmedAt" IS NULL))` [name: 'CK_AcademicOutboxDeliveries_Lifecycle']
     `"Status" IN ('pending', 'processing', 'confirmed', 'failed', 'deadlettered')` [name: 'CK_AcademicOutboxDeliveries_Status']
   }
 
