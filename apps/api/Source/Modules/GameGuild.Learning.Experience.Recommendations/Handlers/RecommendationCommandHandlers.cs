@@ -81,7 +81,7 @@ public sealed class RemoveSkillFromProfileCommandHandler(
 
         if (profile == null)
         {
-            throw new InvalidOperationException($"Learning profile not found for user {request.UserId}");
+            throw new EntityNotFoundException("UserLearningProfile", request.UserId, $"Learning profile not found for user {request.UserId}");
         }
 
         profile.RemoveSkill(request.Skill);
