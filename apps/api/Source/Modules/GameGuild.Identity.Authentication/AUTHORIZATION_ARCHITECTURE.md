@@ -2100,6 +2100,92 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Service-account source restrictions (#1190)
+
+When a service account has an IP allowlist configured, both client-secret and
+certificate authentication reject a missing or empty caller IP. The restriction
+is evaluated before accepting either credential and never updates successful-
+authentication metadata on denial. Source denials remain logged but do not consume
+the credential-failure lockout budget, preventing callers outside the allowlist
+from locking the account. Accounts without an
+IP restriction retain their existing behavior. The request-facing token endpoint
+derives the caller IP from the server connection rather than the request body.
+
+The certificate-removal endpoint requires an authenticated user administrator.
+HTTP authentication is enforced by `[Authorize]`; the command enforces the
+administrator role and target-tenant boundary.
+Its command handler checks the server-side actor and the target account's tenant
+before clearing both certificate pins; only a SystemAdmin can remove pins from
+global accounts or another tenant. Removal is idempotent and preserves the client
+secret and account activity state. The durable use-case operation event records
+the mutation without including certificate pins. Failed persistence restores the
+tracked binding and propagates the failure.
+
+Certificate thumbprints support both the documented 40-character SHA-1 and
+64-character SHA-256 forms in persistence, client-ID authentication, and the
+trusted-CA mTLS lookup. Multiple accounts matching different digests of the same
+certificate remain ambiguous and are denied. Normalization uses a fixed-size
+buffer, so the supplied pin length cannot control stack allocation. Malformed
+pins return 400; a unique certificate-binding conflict returns 409 without
+exposing database diagnostics or retaining rejected pins in the tracked entity.
+
+Credential failures lock a service account for the configured
+`AuthenticationSecurity:AccountLockoutDurationMinutes` (30 minutes by default).
+An explicit nullable automatic-lockout deadline distinguishes these locks from
+administrative holds. Expiry permits a new authentication attempt and resets the
+old failure window before counting a new invalid credential. Manual locks and
+legacy locks without a deadline remain locked until explicitly unlocked; placing
+an administrative hold clears any automatic deadline.
+
+### JWT rotation and sensitive MFA mutations (#1141, #1123, #1153)
+
+The scoped `IKeyRotationService` and hosted rotation worker are explicitly registered.
+User and service-account JWTs use the active HS256 store key with its `kid`; the
+configured static key remains a compatibility fallback. Both bearer authentication
+and `JwtTokenService` validation refresh the shared-store snapshot before checking
+signatures, so another process's rotation is visible without restarting. Validation
+reads are untracked to avoid retaining old row values across requests. Refreshes,
+including rotation-triggered refreshes, carry a per-process sequence assigned before
+the store read. Publication ignores superseded results, so a delayed older read cannot
+erase a newly learned key and concurrent requests need not queue their store reads.
+Caller cancellation propagates without publishing late results. Cached keys
+carry their validity bounds and are filtered on every read, including during store
+outages. Refresh failures retain only unexpired cached keys and log exception types
+without connection details or key material. Caller cancellation propagates.
+
+Normal rotation retains the predecessor for at least the configured access-token
+lifetime plus clock skew, covering tokens issued just before a late rotation. The
+cached snapshot is per process; authenticated bearer requests read the shared store
+for cross-process freshness rather than claiming distributed cache invalidation.
+
+Backup-code regeneration and push-device registration require password re-verification
+inside their command handlers. Missing verifiers, passwordless accounts and incorrect
+passwords deny the mutation. The web recovery-code dialog collects the password and
+forwards it through the generated API module. Password sign-in and sign-up forward
+their single-use Turnstile proofs through the SDK to the API; the web layer does not
+consume the same proof first. Sign-in admission applies the existing source-IP failure
+threshold, accepts a fresh proof once and refuses replay. The verifier's configured
+disabled/outage policy remains in force.
+
+
+### External identity provider availability (#1116, #1125)
+
+Provider transport errors, HTTP 5xx responses and HttpClient timeouts are distinct
+from credential rejection. Sign-in and account-linking failures caused by provider
+unavailability return an `oauth_provider_unavailable` 503 response; sign-in also
+advertises the existing magic-link fallback. No tokens, session or external-account
+link may be created from a failed exchange. Invalid signatures, audiences, issuers
+and expired tokens remain credential failures; outages never bypass validation.
+Google signing-key fetch failures retain the typed outage outcome. OIDC discovery,
+token exchange and signing-key fetch failures retain their HTTP status for internal
+diagnosis without exposing upstream exception details in the response.
+
+An HttpClient timeout can contain an internally cancelled token and an inner
+`TimeoutException`. Classification checks the request's own cancellation token
+first, so caller cancellation is propagated rather than reported as an outage.
+The Google library has no cancellation overload: the request stops awaiting its
+validation when cancelled, without permitting the pending validation to sign in.
+
 ### Permission grant deletion and restoration (#352)
 
 `PermissionBase.IsEffective` and `Grants` reject soft-deleted grants even when a

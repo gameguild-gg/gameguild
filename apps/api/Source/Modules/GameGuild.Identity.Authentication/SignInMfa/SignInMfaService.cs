@@ -77,7 +77,6 @@ public sealed class SignInMfaService(
             if (locked!.HasEnrolledMfa)
             {
                 current = locked;
-                completingEnrollment = false;
                 challenge = new SignInMfaChallenge
                 {
                     Id = Guid.NewGuid(), SubjectId = verifiedSubjectId, SubjectTokenVersion = verifiedTokenVersion,

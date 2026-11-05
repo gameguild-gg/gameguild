@@ -165,7 +165,9 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
     {
         var (userId, tenantId) = await SeedHttpActorAsync();
         using var client = fixture.CreateAuthenticatedClient(userId, tenantId);
-        using var regeneratedResponse = await client.PostAsync("/v1/auth/mfa/backup-codes:regenerate", null);
+        // Issue #1153: regeneration requires the account password, re-verified server-side.
+        using var regeneratedResponse = await client.PostAsJsonAsync(
+            "/v1/auth/mfa/backup-codes:regenerate", new { password = ActorPassword });
         using var regenerated = await ReadSuccessAsync(regeneratedResponse);
         var codes = regenerated.RootElement.GetProperty("codes").EnumerateArray().Select(value => value.GetString()!).ToArray();
         Assert.Equal(10, codes.Length);
@@ -220,12 +222,18 @@ public sealed class MfaRecoveryPostgreSqlTests(ApiPostgreSqlFixture fixture)
         Assert.Equal(HttpStatusCode.Unauthorized, regenerate.StatusCode);
     }
 
+    private const string ActorPassword = "Mfa-Recovery-Actor-#1153";
+
     private async Task<(Guid UserId, Guid TenantId)> SeedHttpActorAsync()
     {
         using var scope = fixture.Factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var marker = Guid.NewGuid().ToString("N");
         var user = User.Create($"mfa-recovery-{marker}@example.test", $"MFA actor {marker}");
+        // Issue #1153: the seeded actor needs a password credential so backup-code
+        // regeneration can re-verify it before rotating the recovery codes.
+        user.SetPasswordHash(
+            scope.ServiceProvider.GetRequiredService<IPasswordHasher>().HashPassword(ActorPassword));
         var tenant = new Tenant { Id = Guid.NewGuid(), Name = $"MFA {marker}", Slug = $"mfa-{marker}", IsActive = true,
             AdminEmail = $"admin-{marker}@example.test" };
         context.Set<User>().Add(user);

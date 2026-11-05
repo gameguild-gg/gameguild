@@ -28,16 +28,19 @@ public class SignInResponse
     /// <summary>
     ///     Backward compatible field: originally represented refresh token expiry (or conflated); prefer using AccessTokenExpiresAt / RefreshTokenExpiresAt.
     /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
     public DateTime ExpiresAt { get; set; }
 
     /// <summary>
     ///     When the access token expires (short-lived)
     /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
     public DateTime AccessTokenExpiresAt { get; set; }
 
     /// <summary>
     ///     When the refresh token expires (long-lived)
     /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
     public DateTime RefreshTokenExpiresAt { get; set; }
 
     /// <summary>

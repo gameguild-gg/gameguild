@@ -105,7 +105,15 @@ public sealed class LinkDiscordAccountCommandHandler(
 {
     public async Task<Unit> Handle(LinkDiscordAccountCommand request, CancellationToken cancellationToken)
     {
-        var profile = await oAuthService.HandleCallbackAsync("discord", request.Code, request.State, request.RedirectUri).ConfigureAwait(false);
+        OAuthUserProfile profile;
+        try
+        {
+            profile = await oAuthService.HandleCallbackAsync("discord", request.Code, request.State, request.RedirectUri).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (OAuthProviderUnavailableException.IsProviderUnavailability(exception, cancellationToken))
+        {
+            throw new OAuthProviderUnavailableException("Discord", exception);
+        }
 
         // The authorization request that produced this code asked for exactly the scopes
         // ResolveAuthorizationScopes returns (the same list the authorize step embedded in

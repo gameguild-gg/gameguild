@@ -64,9 +64,8 @@ public class ThreatDetectionService(
         {
             // Issue #1115: the account owner declared this trip through their settings
             // (general preferences "travelWindows"), so the geo transition is expected
-            // travel rather than an anomaly. Only the GeoVelocity signal is suppressed;
-            // every other anomaly signal (IP change, device change, brute force, ...)
-            // still applies, and the suppression itself is logged for audit.
+            // Only impossible-travel detection is suppressed during the declared period.
+            // Independent anomaly checks still apply; the suppression is logged below.
             logger.LogInformation(
                 "Impossible travel signal suppressed by declared travel window - UserId: {UserId}, From: {PreviousCountry} to {CurrentCountry} in {Hours:F2} hours",
                 userId,

@@ -49,6 +49,25 @@ public class ExternalLoginHandlersTests
     // ── List ─────────────────────────────────────────────────────────────
 
     [Fact]
+    public async Task LinkDiscord_ProviderUnavailable_DoesNotWriteLink()
+    {
+        _oauthServiceMock.Setup(x => x.HandleCallbackAsync("discord", "code", "state", "https://app/cb"))
+            .ThrowsAsync(new HttpRequestException("Provider unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object,
+            NullLogger<LinkDiscordAccountCommandHandler>.Instance);
+
+        var act = () => handler.Handle(new LinkDiscordAccountCommand
+        {
+            UserId = Guid.NewGuid(), Code = "code", State = "state", RedirectUri = "https://app/cb"
+        }, CancellationToken.None);
+
+        var thrown = await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+        thrown.Which.Provider.Should().Be("Discord");
+        _externalLoginRepoMock.Verify(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
+        _externalLoginRepoMock.Verify(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task GetExternalLogins_ReturnsDtos_InRepositoryOrder_NewestFirst()
     {
         var userId = Guid.NewGuid();

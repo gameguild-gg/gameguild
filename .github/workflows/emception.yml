@@ -68,7 +68,7 @@ jobs:
               heavy=true
             else
               CHANGED="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
-              if grep -Eq '^(\.changeset/|\.github/workflows/(emception|pr-verify)\.yml|scripts/ci/(acquire-emception-release\.py|tests/(acquire_emception_release_test\.py|emception-web-artifacts\.test\.mjs))|apps/web/(Dockerfile|package\.json|scripts/(sync-emception-cdn|coding-cycle-(browser-e2e|(editor|toolchain)-support(\.test)?))\.mjs|src/lib/emception/)|demos/emception-[^/]+/|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|scripts/devops/(emception-release-policy|publish-emception|version-emception)\.mjs|scripts/sync-emception-cdn\.mjs|tools/emception/)' <<< "$CHANGED"; then
+              if grep -Eq '^(\.changeset/|\.github/workflows/(emception|pr-verify)\.yml|scripts/ci/(acquire-emception-release\.py|tests/(acquire_emception_release_test\.py|emception-web-artifacts\.test\.mjs))|apps/web/(Dockerfile|package\.json|scripts/(sync-emception-cdn|coding-cycle-(browser-e2e|((editor|toolchain)-support|web-runtime|grading-(transport|observer))(\.test)?))\.mjs|src/lib/emception/)|demos/emception-[^/]+/|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|scripts/devops/(emception-release-policy|publish-emception|version-emception)\.mjs|scripts/sync-emception-cdn\.mjs|tools/emception/)' <<< "$CHANGED"; then
                 required=true
               fi
               if grep -Eq '^tools/emception/(toolchain/|scripts/(build-|deploy-|generate-|patch-|populate-|setup-|stage-|toolchain/|warmup-)|package\.json)' <<< "$CHANGED"; then
@@ -234,6 +234,9 @@ jobs:
 
       - name: Install Chromium for browser smoke tests
         run: pnpm --dir tools/emception exec playwright install --with-deps chromium
+
+      - name: Verify grading acknowledgement observation
+        run: node --test apps/web/scripts/coding-cycle-grading-observer.test.mjs apps/web/scripts/coding-cycle-grading-transport.test.mjs
 
       - name: Stage CDN into demos
         run: node scripts/sync-emception-cdn.mjs
@@ -414,14 +417,21 @@ jobs:
       - name: Tag the published Emception release
         if: steps.changesets.outputs.has-changesets == 'false'
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="$(node -p "require('./tools/emception/packages/core/package.json').version")"
-          TAG="emception-v${VERSION}"
+          TAG="v${VERSION}"
           if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-            echo "${TAG} already exists; skipping."
+            echo "${TAG} already exists; skipping tag creation."
+          else
+            git config user.name "gameguild-release-bot"
+            git config user.email "noreply@gameguild.gg"
+            git tag "${TAG}"
+          fi
+          git push origin "${TAG}"
+          if gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "Release ${TAG} already exists; skipping."
             exit 0
           fi
-          git config user.name "gameguild-release-bot"
-          git config user.email "noreply@gameguild.gg"
-          git tag "${TAG}"
-          git push origin "${TAG}"
+          gh release create "${TAG}" --repo "${GITHUB_REPOSITORY}" --title "${TAG}" --latest --notes "Emception toolchain release ${VERSION} — published to npm and verified on jsDelivr. All emception packages share this version; see the merged version PR for the changelog."

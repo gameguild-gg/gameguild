@@ -28,7 +28,7 @@ PRODUCER_STEPS = (
 SOURCE_SCOPE = re.compile(
     r"^(\.changeset/|\.github/workflows/(emception|pr-verify)\.yml|"
     r"scripts/ci/(acquire-emception-release\.py|tests/(acquire_emception_release_test\.py|emception-web-artifacts\.test\.mjs))|"
-    r"apps/web/(Dockerfile|package\.json|scripts/(sync-emception-cdn|coding-cycle-(browser-e2e|(editor|toolchain)-support(\.test)?))\.mjs|src/lib/emception/)|"
+    r"apps/web/(Dockerfile|package\.json|scripts/(sync-emception-cdn|coding-cycle-(browser-e2e|((editor|toolchain)-support|web-runtime|grading-(transport|observer))(\.test)?))\.mjs|src/lib/emception/)|"
     r"demos/emception-[^/]+/|package\.json$|pnpm-lock\.yaml$|pnpm-workspace\.yaml$|"
     r"scripts/devops/(emception-release-policy|publish-emception|version-emception)\.mjs|"
     r"scripts/sync-emception-cdn\.mjs|tools/emception/)"

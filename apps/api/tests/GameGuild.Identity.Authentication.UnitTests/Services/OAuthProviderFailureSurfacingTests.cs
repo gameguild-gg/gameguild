@@ -120,6 +120,36 @@ public sealed class OAuthProviderFailureSurfacingTests
         Times.Once);
 
     [Fact]
+    public async Task HttpClientTimeout_WithInternallyCancelledToken_IsProviderOutage()
+    {
+        using var timeout = new CancellationTokenSource();
+        timeout.Cancel();
+        ProviderThrows(new TaskCanceledException("HTTP timeout", new TimeoutException(), timeout.Token));
+
+        var act = () => CreateSut().GitHubCallbackSignInAsync(Callback());
+
+        await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+        AssertNoSignInSideEffects();
+        AssertFailureAccounted("TaskCanceledException");
+    }
+
+    [Fact]
+    public async Task CallerCancellation_IsNotReportedAsProviderOutage()
+    {
+        using var caller = new CancellationTokenSource();
+        caller.Cancel();
+        ProviderThrows(new TaskCanceledException("Cancelled", new TimeoutException(), caller.Token));
+
+        var act = () => CreateSut().GitHubCallbackSignInAsync(Callback(), caller.Token);
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+        AssertNoSignInSideEffects();
+        _authAttemptServiceMock.Verify(x => x.RecordFailedAttemptAsync(
+            It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public async Task ProviderReturns500_FailurePropagatesWithoutIssuingCredentialsOrSessions()
     {
         ProviderThrows(new HttpRequestException("Response status code does not indicate success: 500"));

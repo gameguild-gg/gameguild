@@ -32,10 +32,9 @@
  */
 
 import { useCallback, useState, useRef, useContext, useEffect } from 'react';
-import { assertSafeServiceUrl } from '../../runtime/security/safe-remote-url';
-import { SessionContext } from './session-provider';
-import { MfaRequiredError, parseMfaEnrollmentOffer } from '../../runtime/auth/errors';
-import type { IdentityAuthenticationSignInMfaEnrollmentOffer } from '../../generated/types.gen';
+import { assertSafeServiceUrl } from '../../runtime/security/safe-remote-url.js';
+import { SessionContext } from './session-provider.js';
+import { MfaRequiredError, parseMfaEnrollmentOffer, type MfaEnrollmentOffer } from '../../runtime/auth/errors.js';
 
 const MFA_CHALLENGE_STORAGE_KEY = 'gg.auth.mfaChallenge';
 
@@ -43,7 +42,7 @@ const MFA_CHALLENGE_STORAGE_KEY = 'gg.auth.mfaChallenge';
 export interface MfaChallenge {
   mfaToken: string;
   availableMethods: string[];
-  mfaEnrollment?: IdentityAuthenticationSignInMfaEnrollmentOffer;
+  mfaEnrollment?: MfaEnrollmentOffer;
 }
 
 function readStoredMfaChallenge(): UseAuthReturn['mfaChallenge'] {
@@ -98,6 +97,7 @@ export interface UseAuthReturn {
     firstName?: string;
     lastName?: string;
     tenantId?: string;
+    turnstileToken?: string;
     /**
      * Guest bearer token presented when registering from a guest session
      * (issue #213). A valid guest session is upgraded into the issued
@@ -262,6 +262,7 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
       firstName?: string;
       lastName?: string;
       tenantId?: string;
+      turnstileToken?: string;
       guestAccessToken?: string;
       redirectTo?: string;
       redirect?: boolean;

@@ -1042,7 +1042,7 @@ export class AuthModule {
   /**
    * Register a new user with email and password
    *
-   * Creates a new user account with email and password credentials, returning authentication tokens on success.
+   * Creates a new user account with email and password credentials, returning authentication tokens on success. When Turnstile is configured (TURNSTILE_SECRET_KEY), turnstileToken is required and verified server-side (issue #1150).
    */
   async postAuthSignUp(body: Types.IdentityAuthenticationLocalSignUpInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = '/v1/auth/sign-up';

@@ -97,6 +97,7 @@ export {
   AccountLockedError,
   MfaRequiredError,
   parseMfaEnrollmentOffer,
+  type MfaEnrollmentOffer,
   SignUpError,
   SessionExpiredError,
   InvalidSessionError,

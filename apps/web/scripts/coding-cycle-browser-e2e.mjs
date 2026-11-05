@@ -44,12 +44,13 @@
  */
 
 import { spawn, spawnSync } from "node:child_process";
-import { resolvePnpmProcess } from "./pnpm-process.mjs";
+import { startCodingCycleWeb } from "./coding-cycle-web-runtime.mjs";
 import { randomUUID } from "node:crypto";
 import { createMfaSignInContinuation, E2E_ADMIN_TOTP_SECRET } from "./sign-in-mfa-support.mjs";
 import { verifyCodingCycleToolchain } from "./coding-cycle-toolchain-support.mjs";
 import { assertRenderedEditorSource } from "./coding-cycle-editor-support.mjs";
 import { evaluateGradingTransport } from "./coding-cycle-grading-transport.mjs";
+import { observeGradingAcknowledgement } from "./coding-cycle-grading-observer.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync, writeFileSync, createWriteStream, rmSync, appendFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -109,6 +110,7 @@ const EVIDENCE = resolve(ARTIFACTS, "evidence");
 const RUNTIME = resolve(ARTIFACTS, "runtime");
 const API_LOG = resolve(RUNTIME, "api.log");
 const WEB_LOG = resolve(RUNTIME, "web.log");
+const WEB_BUILD_LOG = resolve(RUNTIME, "web-build.log");
 const PG_LOG = resolve(RUNTIME, "pg.log");
 
 const HEADLESS = !["0", "false", "no"].includes(
@@ -409,7 +411,13 @@ async function bootStack() {
 
   // --- Next.js web ---
   const webEnv = [
-    `NODE_ENV=development`,
+    `NODE_ENV=production`,
+    // Bound compilation separately from the browser/IDE workload. Development
+    // webpack retention restarted the server even with this heap and cache off.
+    `NODE_OPTIONS=--max-old-space-size=6144`,
+    // Keep the isolated compilation cache bounded; the compiler exits before
+    // either persona loads the IDE (dev mode restarted even with its cache off).
+    `GAMEGUILD_DISABLE_WEBPACK_CACHE=1`,
     `CODING_CYCLE_E2E=1`,
     `API_URL=${API_BASE}`,
     `NEXT_PUBLIC_API_URL=${API_BASE}`,
@@ -423,29 +431,15 @@ async function bootStack() {
     `AUTH_TRUST_HOST=true`,
   ];
   log(`starting web on ${WEB_PORT} (${WEB_BASE})`);
-  // NO --hostname: binding 127.0.0.1 breaks Next 16.3 dev middleware URL
-  // construction — next-intl's default-locale handling then 307-loops
-  // unprefixed routes onto themselves (/sign-in → /sign-in). The default
-  // bind (*:port) serves both localhost and 127.0.0.1 correctly.
-  const webInvocation = await resolvePnpmProcess(
-    ["exec", "next", "dev", "--webpack", "--port", String(WEB_PORT)],
-    { env: process.env },
-  );
-  const web = spawn(
-    webInvocation.command,
-    webInvocation.args,
-    {
-      cwd: WEB_DIR,
-      env: { ...process.env, ...envArrayToObject(webEnv) },
-      detached: process.platform !== "win32",
-      // Execute pnpm's native executable or JavaScript entry point directly.
-      shell: false,
-      windowsHide: true,
-      stdio: ["ignore", "pipe", "pipe"],
+  const web = await startCodingCycleWeb({
+    cwd: WEB_DIR,
+    port: WEB_PORT,
+    env: { ...process.env, ...envArrayToObject(webEnv) },
+    registerChild(proc, label) {
+      children.push({ proc, label });
+      pipeLog(proc, label === "web-build" ? WEB_BUILD_LOG : WEB_LOG);
     },
-  );
-  children.push({ proc: web, label: "web" });
-  pipeLog(web, WEB_LOG);
+  });
   await waitForHttp(`${WEB_BASE}/api/health`, "GameGuild web", WEB_LOG, 240_000, web);
   log("web ready");
 }
@@ -463,7 +457,7 @@ function pipeLog(proc, file) {
   const stream = createWriteStream(file);
   proc.stdout?.on("data", (d) => stream.write(d));
   proc.stderr?.on("data", (d) => stream.write(d));
-  proc.on("exit", () => stream.end());
+  proc.on("close", () => stream.end());
 }
 
 // ---------------------------------------------------------------------------
@@ -1399,19 +1393,14 @@ async function instructorJourney(fixture, browser) {
     page.on("response", onGradeResponse);
     page.on("requestfinished", onGradeFinished);
     page.on("requestfailed", onGradeFailed);
+    let acknowledgementObserver;
     try {
       const submitGrade = gradingPanel.getByTestId("submit-grade");
       await submitGrade.waitFor({ state: "visible", timeout: 10_000 });
+      acknowledgementObserver = await observeGradingAcknowledgement(page);
       const gradeResponsePromise = page.waitForResponse((response) => {
         return isGradeRequest(response.request());
       }, { timeout: 120_000 }).then((response) => ({ response, error: null }), (error) => ({ response: null, error }));
-      // Observe the acknowledgement independently of the remaining RSC stream.
-      void page.getByTestId("needs-grading-badge").filter({ hasText: /0 to grade/ })
-        .waitFor({ state: "visible", timeout: 120_000 })
-        .then(() => traceGradingEvent("ui:zero-badge"), () => traceGradingEvent("ui:zero-badge-not-observed"));
-      void page.getByTestId("result-release-status").filter({ hasText: "Ready to release" })
-        .waitFor({ state: "visible", timeout: 120_000 })
-        .then(() => traceGradingEvent("ui:final-result"), () => traceGradingEvent("ui:final-result-not-observed"));
       traceGradingEvent("click:submit");
       await submitGrade.click();
       traceGradingEvent("click:returned");
@@ -1463,6 +1452,8 @@ async function instructorJourney(fixture, browser) {
       await page.getByTestId("result-release-status").filter({ hasText: "Ready to release" })
         .waitFor({ state: "visible", timeout: 15_000 });
       gradingProof.releaseStatus = await page.getByTestId("result-release-status").textContent({ timeout: 5000 });
+      gradingEvents.push(...await acknowledgementObserver.collect());
+      gradingEvents.sort((left, right) => Date.parse(left.at) - Date.parse(right.at));
       gradingProof.events = gradingEvents;
       const transport = evaluateGradingTransport(gradingProof);
       gradingProof.mutation.transportClassification = transport.mode ?? "unconfirmed";
@@ -1499,6 +1490,14 @@ async function instructorJourney(fixture, browser) {
       page.off("response", onGradeResponse);
       page.off("requestfinished", onGradeFinished);
       page.off("requestfailed", onGradeFailed);
+      if (acknowledgementObserver) {
+        const observations = await acknowledgementObserver.collect().catch(() => []);
+        for (const observation of observations) {
+          if (!gradingEvents.some((entry) => entry.event === observation.event && entry.at === observation.at)) gradingEvents.push(observation);
+        }
+        gradingEvents.sort((left, right) => Date.parse(left.at) - Date.parse(right.at));
+      }
+      await acknowledgementObserver?.dispose().catch(() => {});
       gradingProof.events = gradingEvents;
       writeFileSync(resolve(ARTIFACTS, "grading-refresh-proof.json"), JSON.stringify(gradingProof, null, 2));
       log(`grading-refresh-proof ${JSON.stringify(gradingProof)}`);

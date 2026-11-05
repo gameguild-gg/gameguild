@@ -4,10 +4,12 @@ using System.Threading.RateLimiting;
 using GameGuild.Configuration;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authentication;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 
 namespace GameGuild.API;
 
@@ -583,11 +585,29 @@ public static class RateLimitingServiceCollectionExtensions
     #region Rate Limiting Partition Key Helpers
 
     /// <summary>
-    /// Gets partition key based on IP for anonymous or User ID for authenticated.
-    /// Used for authentication endpoints.
+    /// Gets the authentication partition. Email sign-in requests always share the
+    /// client IP budget; other endpoints use the user ID when authenticated.
     /// </summary>
     internal static string GetAuthenticationPartitionKey(HttpContext httpContext)
     {
+        // Issue #1090: requesting an email can target any recipient even when the
+        // caller is signed in. Switching accounts must not renew the source-IP
+        // budget or bypass it by switching between magic links and email codes.
+        // MVC metadata covers route aliases/version prefixes without path matching.
+        var action = httpContext.GetEndpoint()?.Metadata.GetMetadata<ControllerActionDescriptor>();
+        if (action?.ControllerTypeInfo.AsType() == typeof(AuthController) &&
+            action.MethodInfo.Name is nameof(AuthController.RequestMagicLink) or nameof(AuthController.RequestEmailCode))
+        {
+            // Dual-stack listeners/proxies can represent the same IPv4 peer either
+            // directly or as IPv4-mapped IPv6. Both must consume the same budget.
+            var address = httpContext.Connection.RemoteIpAddress;
+            if (address?.IsIPv4MappedToIPv6 == true)
+            {
+                address = address.MapToIPv4();
+            }
+            return $"ip:{address?.ToString() ?? "unknown"}";
+        }
+
         var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!string.IsNullOrEmpty(userId))
         {

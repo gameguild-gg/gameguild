@@ -91,11 +91,6 @@
       "count": 1
     }
   },
-  "scripts/utils/type-qualify.ts": {
-    "prettier/prettier": {
-      "count": 5
-    }
-  },
   "src/integrations/next/actions.ts": {
     "@typescript-eslint/no-unnecessary-type-assertion": {
       "count": 1
@@ -181,11 +176,6 @@
       "count": 2
     }
   },
-  "src/runtime/auth/providers/credentials.ts": {
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    }
-  },
   "src/runtime/auth/providers/discord.ts": {
     "@typescript-eslint/no-unsafe-assignment": {
       "count": 2
@@ -255,37 +245,6 @@
   "tests/auth/csrf.test.ts": {
     "@typescript-eslint/no-unnecessary-type-assertion": {
       "count": 2
-    }
-  },
-  "tests/auth/extended-operations.test.ts": {
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 5
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 4
-    },
-    "@typescript-eslint/require-await": {
-      "count": 11
-    }
-  },
-  "tests/auth/providers/credentials.test.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 16
-    },
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 6
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 17
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 2
-    },
-    "@typescript-eslint/require-await": {
-      "count": 10
     }
   },
   "tests/auth/providers/discord.test.ts": {
@@ -546,10 +505,7 @@
       "count": 15
     },
     "@typescript-eslint/require-await": {
-      "count": 63
-    },
-    "prettier/prettier": {
-      "count": 6
+      "count": 62
     }
   },
   "tests/gaps/coverage-100-react.test.tsx": {
@@ -568,10 +524,10 @@
   },
   "tests/gaps/coverage-100.test.ts": {
     "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 3
+      "count": 1
     },
     "@typescript-eslint/no-unsafe-argument": {
-      "count": 23
+      "count": 22
     },
     "@typescript-eslint/no-unsafe-assignment": {
       "count": 9
@@ -586,7 +542,7 @@
       "count": 1
     },
     "@typescript-eslint/require-await": {
-      "count": 28
+      "count": 26
     }
   },
   "tests/gaps/final-gaps.test.ts": {
@@ -819,30 +775,6 @@
     "@typescript-eslint/no-base-to-string": {
       "count": 2
     },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 17
-    },
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 5
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 12
-    },
-    "@typescript-eslint/no-unsafe-call": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 15
-    },
-    "@typescript-eslint/no-unsafe-return": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    },
     "@typescript-eslint/require-await": {
       "count": 16
     },
@@ -911,31 +843,16 @@
   },
   "tests/next/handlers-extended.test.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 15
-    },
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 2
+      "count": 7
     },
     "@typescript-eslint/no-unsafe-assignment": {
-      "count": 14
-    },
-    "@typescript-eslint/no-unsafe-call": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 17
-    },
-    "@typescript-eslint/no-unsafe-return": {
       "count": 1
     },
     "@typescript-eslint/no-unused-vars": {
-      "count": 3
+      "count": 2
     },
     "@typescript-eslint/require-await": {
       "count": 28
-    },
-    "prettier/prettier": {
-      "count": 1
     }
   },
   "tests/next/handlers.test.ts": {

@@ -231,12 +231,15 @@ describe('handlers — OAuth callback null result (L609)', () => {
 
     const { GET } = createHandlers(config);
 
-    const stateCookie = await signStatePayload({
-      state: 'xyz',
-      redirectTo: '/',
-      flow: 'signin',
-      exp: Date.now() + 600_000,
-    }, config.secret);
+    const stateCookie = await signStatePayload(
+      {
+        state: 'xyz',
+        redirectTo: '/',
+        flow: 'signin',
+        exp: Date.now() + 600_000,
+      },
+      config.secret,
+    );
     const request = new Request('http://localhost/api/auth/callback/google?code=abc&state=xyz', {
       headers: { cookie: `${stateCookieName('google')}=${stateCookie}` },
     });
@@ -441,16 +444,14 @@ describe('handlers — additional branch paths', () => {
 
     const { createHandlers } = await import('../../src/integrations/next/handlers.js');
 
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      Response.json({
         accessToken: 'at',
         refreshToken: 'rt',
-        userId: 'new-user',
+        userId: '11111111-1111-4111-8111-111111111111',
         email: 'new@test.com',
       }),
-    });
+    );
 
     const config: any = {
       providers: [],
@@ -488,7 +489,7 @@ describe('handlers — additional branch paths', () => {
         password: 'password123',
         firstName: 'Test',
         lastName: 'User',
-        tenantId: 'tenant-1',
+        tenantId: '22222222-2222-4222-8222-222222222222',
       }),
     });
 

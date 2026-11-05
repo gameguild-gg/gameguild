@@ -49,6 +49,7 @@ export function MfaChallengeForm({
   const [enrollError, setEnrollError] = useState<string | null>(null);
   const [backupCodes, setBackupCodes] = useState<string[] | null>(null);
   const [copied, setCopied] = useState<"secret" | "codes" | null>(null);
+  const [copyError, setCopyError] = useState<string | null>(null);
   const isHydrated = useSyncExternalStore(
     subscribeToHydration,
     () => true,
@@ -59,15 +60,18 @@ export function MfaChallengeForm({
   const isEnrollment = enrollment != null;
 
   async function copyText(text: string, kind: "secret" | "codes") {
-    if (!navigator.clipboard?.writeText) return;
+    setCopied(null);
+    setCopyError(null);
+    if (!navigator.clipboard?.writeText) {
+      setCopyError(t("copyFailed"));
+      return;
+    }
     try {
       await navigator.clipboard.writeText(text);
       setCopied(kind);
       window.setTimeout(() => setCopied(null), 1500);
     } catch {
-      // Clipboard permission denied: keep the button in its idle label —
-      // never claim the codes were copied, and never leak an
-      // unhandledrejection into the page.
+      setCopyError(t("copyFailed"));
     }
   }
 
@@ -173,6 +177,7 @@ export function MfaChallengeForm({
                   {copied === "codes" ? t("copied") : t("copyBackupCodes")}
                 </Button>
               </div>
+              {copyError && <FieldError>{copyError}</FieldError>}
             </div>
           </CardContent>
         </Card>
@@ -229,7 +234,7 @@ export function MfaChallengeForm({
                 <Field>
                   <div className="mx-auto w-fit rounded-lg bg-white p-3">
                     <QRCodeSVG
-                      value={enrollment.qrCodeUri ?? ""}
+                      value={enrollment.qrCodeUri}
                       size={168}
                       marginSize={2}
                       title={t("enrollQrLabel")}
@@ -306,6 +311,7 @@ export function MfaChallengeForm({
               {isEnrollment && enrollError && (
                 <FieldError>{enrollError}</FieldError>
               )}
+              {copyError && <FieldError>{copyError}</FieldError>}
               {error &&
                 !isEnrollment &&
                 !("type" in error && error.type === "MfaRequired") && (
