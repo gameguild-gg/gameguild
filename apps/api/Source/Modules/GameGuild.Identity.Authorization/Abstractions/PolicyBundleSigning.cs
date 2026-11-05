@@ -157,8 +157,9 @@ public sealed record PolicyBundleVerificationResult
 /// <summary>
 ///     Thrown when a policy bundle operation must fail closed because a required signature is
 ///     missing or invalid, or because bundle inputs violate the signing contract.
+///     A domain-rule violation: the ExceptionHandlingMiddleware answers it 422, not 500.
 /// </summary>
 public sealed class PolicyBundleSignatureException(
     string message,
     Exception? innerException = null)
-    : Exception(message, innerException);
+    : DomainException(message, innerException);

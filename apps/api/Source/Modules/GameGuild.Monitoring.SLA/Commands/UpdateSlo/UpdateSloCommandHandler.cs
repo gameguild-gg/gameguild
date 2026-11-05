@@ -10,9 +10,9 @@ public sealed class UpdateSloCommandHandler(IServiceLevelObjectiveRepository rep
     {
         var slo = await repository.GetByIdAsync(request.Id, cancellationToken).ConfigureAwait(false);
 
-        if (slo == null) { throw new InvalidOperationException($"SLO with ID '{request.Id}' not found."); }
+        if (slo == null) { throw new EntityNotFoundException("ServiceLevelObjective", request.Id); }
 
-        if (slo.TenantId != request.TenantId) { throw new UnauthorizedAccessException("You do not have permission to update this SLO."); }
+        if (slo.TenantId != request.TenantId) { throw new AccessDeniedException("You do not have permission to update this SLO."); }
 
         // Update properties
         slo.Name = request.Name;
