@@ -58,6 +58,29 @@ public sealed class JwtGenerationValidationPolicyTests
     }
 
     [Fact]
+    public async Task CompliancePendingMarker_MintsTheClaimAndStaysReservedAgainstAdditionalClaims()
+    {
+        var service = CreateService();
+        var user = Guid.NewGuid();
+        var session = Guid.NewGuid();
+        var authenticatedAt = DateTimeOffset.UtcNow.AddMinutes(-5);
+
+        var encoded = await service.GenerateAccessTokenAsync(user, "identity@example.invalid", ["Reader"],
+            Guid.NewGuid(), 7, session, mfaCompliancePending: true);
+        var parsed = new JwtSecurityTokenHandler().ReadJwtToken(encoded);
+        parsed.Claims.Should().Contain(claim =>
+            claim.Type == GameGuild.Identity.Authorization.ClaimNames.MfaCompliancePending && claim.Value == "true");
+
+        var refreshEncoded = await service.GenerateAccessTokenAsync(user, "identity@example.invalid", ["Reader"],
+            Guid.NewGuid(), 7, authenticatedAt, session, mfaCompliancePending: true);
+        new JwtSecurityTokenHandler().ReadJwtToken(refreshEncoded).Claims.Should().Contain(claim =>
+            claim.Type == GameGuild.Identity.Authorization.ClaimNames.MfaCompliancePending && claim.Value == "true");
+
+        Assert.Throws<ArgumentException>(() => service.GenerateAccessToken(user, "identity@example.invalid", ["Reader"],
+            [new Claim(GameGuild.Identity.Authorization.ClaimNames.MfaCompliancePending, "untrusted")]));
+    }
+
+    [Fact]
     public async Task GeneratedAccessToken_PreservesConfiguredIdentityClaimsAndExpiry()
     {
         var options = Settings();
