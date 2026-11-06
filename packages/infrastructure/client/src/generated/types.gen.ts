@@ -13670,6 +13670,13 @@ export interface IdentityAuthenticationMfaMethodsOutput {
   methods: IdentityAuthenticationMfaMethodInfo[] | null;
 }
 
+/** Data model for Identity Authentication Mfa Recovery Cancel Response. */
+export interface IdentityAuthenticationMfaRecoveryCancelOutput {
+  cancelled: boolean;
+  message: string | null;
+  success: boolean;
+}
+
 /** Data model for Identity Authentication Mfa Recovery Confirm Request. */
 export interface IdentityAuthenticationMfaRecoveryConfirmInput {
   /** Confirmation token from the second recovery email. */
@@ -29067,6 +29074,7 @@ export let IdentityAuthenticationMfaErrorOutputSchema: z.ZodType<IdentityAuthent
 export let IdentityAuthenticationMfaMethodSchema: z.ZodType<IdentityAuthenticationMfaMethod>;
 export let IdentityAuthenticationMfaMethodInfoSchema: z.ZodType<IdentityAuthenticationMfaMethodInfo>;
 export let IdentityAuthenticationMfaMethodsOutputSchema: z.ZodType<IdentityAuthenticationMfaMethodsOutput>;
+export let IdentityAuthenticationMfaRecoveryCancelOutputSchema: z.ZodType<IdentityAuthenticationMfaRecoveryCancelOutput>;
 export let IdentityAuthenticationMfaRecoveryConfirmInputSchema: z.ZodType<IdentityAuthenticationMfaRecoveryConfirmInput>;
 export let IdentityAuthenticationMfaRecoveryConfirmOutputSchema: z.ZodType<IdentityAuthenticationMfaRecoveryConfirmOutput>;
 export let IdentityAuthenticationMfaRecoveryContinueInputSchema: z.ZodType<IdentityAuthenticationMfaRecoveryContinueInput>;
@@ -42980,6 +42988,13 @@ IdentityAuthenticationMfaMethodsOutputSchema = z.object({
     .nullable()
     .optional(),
   methods: z.array(z.lazy(() => IdentityAuthenticationMfaMethodInfoSchema)).nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationMfaRecoveryCancelOutput. Data model for Identity Authentication Mfa Recovery Cancel Response. */
+IdentityAuthenticationMfaRecoveryCancelOutputSchema = z.object({
+  cancelled: z.boolean(),
+  message: z.string().nullable(),
+  success: z.boolean(),
 });
 
 /** Zod schema for IdentityAuthenticationMfaRecoveryConfirmInput. Data model for Identity Authentication Mfa Recovery Confirm Request. */
