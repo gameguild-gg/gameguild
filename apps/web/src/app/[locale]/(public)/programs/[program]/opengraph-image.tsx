@@ -22,9 +22,9 @@ export default async function Image({ params }: { params: Promise<{ program: str
   if (image) {
     return new ImageResponse(
       (
-        <div style={{ width: '100%', height: '100%', display: 'flex', backgroundColor: '#070a12' }}>
+        <picture style={{ width: '100%', height: '100%', display: 'flex', backgroundColor: '#070a12' }}>
           <img src={image} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
+        </picture>
       ),
       { ...OG_IMAGE_SIZE },
     );

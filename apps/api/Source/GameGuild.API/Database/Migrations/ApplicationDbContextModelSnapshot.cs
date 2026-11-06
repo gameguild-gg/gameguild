@@ -20912,7 +20912,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.ToTable("session_mfa_evidence", "gameguild.authentication", t =>
                         {
-                            t.HasCheckConstraint("ck_session_mfa_method", "method IN ('Totp', 'BackupCode', 'WebAuthn')");
+                            t.HasCheckConstraint("ck_session_mfa_method", "method IN ('Totp', 'BackupCode', 'WebAuthn', 'Sms')");
 
                             t.HasCheckConstraint("ck_session_mfa_policy", "policy_fingerprint ~ '^[a-f0-9]{64}$'");
 

@@ -14556,7 +14556,7 @@ Table "gameguild.authentication"."session_mfa_evidence" {
   "method" "character varying(32)" [not null]
 
   Checks {
-    `method IN ('Totp', 'BackupCode', 'WebAuthn')` [name: 'ck_session_mfa_method']
+    `method IN ('Totp', 'BackupCode', 'WebAuthn', 'Sms')` [name: 'ck_session_mfa_method']
     `policy_fingerprint ~ '^[a-f0-9]{64}$'` [name: 'ck_session_mfa_policy']
     `verified_at >= first_factor_verified_at AND verified_at <= first_factor_verified_at + INTERVAL '5 minutes'` [name: 'ck_session_mfa_time']
     `token_version > 0` [name: 'ck_session_mfa_version']

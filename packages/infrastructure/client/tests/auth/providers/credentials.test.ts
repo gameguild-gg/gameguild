@@ -279,7 +279,7 @@ describe('CredentialsProvider', () => {
     expect(error.toJSON().mfaEnrollment).toMatchObject({ secretKey: 'SYNTHETIC-SETUP' });
   });
 
-  it('completes MFA with only the limited bearer, method and code', async () => {
+  it.each(['Totp', 'Sms'])('completes %s MFA with only the limited bearer, method and code', async (method) => {
     const mockFetch = vi.fn<typeof fetch>().mockResolvedValue(
       Response.json({
         accessToken: 'verified-access',
@@ -293,7 +293,7 @@ describe('CredentialsProvider', () => {
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
     const result = await provider.authorize({
       mfaToken: 'x'.repeat(43),
-      method: 'Totp',
+      method,
       code: '123456',
       email: 'untrusted@example.com',
       password: 'must-not-be-forwarded',
@@ -301,7 +301,7 @@ describe('CredentialsProvider', () => {
       rememberMe: true,
     });
     expect(mockFetch.mock.calls[0][0]).toBe('http://localhost:8080/v1/auth/mfa/sign-in/complete');
-    expect(JSON.parse(mockFetch.mock.calls[0][1]?.body as string)).toEqual({ mfaToken: 'x'.repeat(43), method: 'Totp', code: '123456' });
+    expect(JSON.parse(mockFetch.mock.calls[0][1]?.body as string)).toEqual({ mfaToken: 'x'.repeat(43), method, code: '123456' });
     expect(result?.user.email).toBe('server@example.com');
     expect(result?.tokens.accessToken).toBe('verified-access');
     expect(result).toHaveProperty('mfaEnrollmentBackupCodes', ['one-time-code']);
@@ -312,6 +312,8 @@ describe('CredentialsProvider', () => {
   it.each([
     { mfaToken: 'bad', method: 'Totp', code: '123456' },
     { mfaToken: 'x'.repeat(43), method: 'WebAuthn', code: '123456' },
+    { mfaToken: 'x'.repeat(43), method: 'Email', code: '123456' },
+    { mfaToken: 'x'.repeat(43), method: 'Push', code: '123456' },
     { mfaToken: 'x'.repeat(43), method: 'Totp', code: '' },
   ])('rejects invalid completion input before contacting the backend: %j', async (credentials) => {
     globalThis.fetch = vi.fn();

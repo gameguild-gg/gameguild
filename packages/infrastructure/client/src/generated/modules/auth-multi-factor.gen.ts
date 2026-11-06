@@ -443,7 +443,7 @@ export class AuthMultiFactorModule {
   /**
    * Send a fresh SMS sign-in code to the enrolled phone
    *
-   * Sends a fresh verification code to the enrolled phone before MFA verification. Generic failure payload; throttled to one code per minute per user.
+   * Sends a code to the server-resolved enrolled phone using an active first-factor MFA continuation. Codes are bound to that continuation and throttled per account.
    */
   async postAuthMfaSmsChallenge(
     body: Types.IdentityAuthenticationSmsMfaChallengeInput,
@@ -475,12 +475,12 @@ export class AuthMultiFactorModule {
    * Completes SMS MFA setup by verifying the code sent to the user's phone, enrolling the verified number as an SMS factor.
    */
   async postAuthMfaSmsComplete(
-    body: Types.IdentityAuthenticationCompleteMfaSetupInput,
+    body: Types.IdentityAuthenticationCompleteSmsMfaSetupInput,
   ): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
     const url = '/v1/auth/mfa/sms:complete';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteMfaSetupInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteSmsMfaSetupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -501,7 +501,7 @@ export class AuthMultiFactorModule {
   /**
    * Initiate SMS-based MFA setup
    *
-   * Initiates SMS-based MFA setup by sending a verification code to the provided phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.
+   * Re-verifies the authenticated account password before sending an SMS enrollment proof to the requested phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.
    */
   async postAuthMfaSmsSetup(body: Types.IdentityAuthenticationSmsMfaSetupInput): Promise<Result<Types.IdentityAuthenticationSmsMfaSetupOutput, ApiError>> {
     const url = '/v1/auth/mfa/sms:setup';

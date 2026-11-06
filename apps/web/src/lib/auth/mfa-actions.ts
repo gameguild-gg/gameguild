@@ -129,8 +129,7 @@ export async function startTotpEnrollmentAction(): Promise<MfaEnrollmentStartRes
 /** Completes authenticator-app (TOTP) enrollment by verifying a code from the app. */
 export async function completeTotpEnrollmentAction(code: string, secretKey: string): Promise<MfaActionResult> {
   const mfaModule = new GeneratedApi.AuthMultiFactorModule(getApiClient());
-  // The generated contract carries the provisioning secret alongside the code; the server
-  // verifies against the stored pending enrollment and ignores the echo for SMS.
+  // Authenticator enrollment verifies the stored pending provisioning secret.
   const result = await mfaModule.postAuthMfaTotpComplete({ code, secretKey });
   revalidatePath(SETTINGS_SECURITY_PATH);
 
@@ -141,10 +140,10 @@ export async function completeTotpEnrollmentAction(code: string, secretKey: stri
   return resultFrom(true);
 }
 
-/** Starts SMS enrollment by sending a verification code to the given phone number. */
-export async function startSmsEnrollmentAction(phoneNumber: string): Promise<MfaEnrollmentStartResult> {
+/** Re-verifies the account password before sending an enrollment code to the phone number. */
+export async function startSmsEnrollmentAction(phoneNumber: string, password: string): Promise<MfaEnrollmentStartResult> {
   const mfaModule = new GeneratedApi.AuthMultiFactorModule(getApiClient());
-  const result = await mfaModule.postAuthMfaSmsSetup({ phoneNumber });
+  const result = await mfaModule.postAuthMfaSmsSetup({ phoneNumber, password });
 
   if (!result.ok) {
     return { ...resultFrom(false, result.error, errorMessage(result.error)), smsSetup: undefined };
@@ -156,8 +155,8 @@ export async function startSmsEnrollmentAction(phoneNumber: string): Promise<Mfa
 /** Completes SMS enrollment by verifying the code sent to the pending phone number. */
 export async function completeSmsEnrollmentAction(code: string): Promise<MfaActionResult> {
   const mfaModule = new GeneratedApi.AuthMultiFactorModule(getApiClient());
-  // SMS enrollment has no provisioning secret; the contract field stays empty.
-  const result = await mfaModule.postAuthMfaSmsComplete({ code, secretKey: '' });
+  // The dedicated SMS contract carries only the delivered code.
+  const result = await mfaModule.postAuthMfaSmsComplete({ code });
   revalidatePath(SETTINGS_SECURITY_PATH);
 
   if (!result.ok) {

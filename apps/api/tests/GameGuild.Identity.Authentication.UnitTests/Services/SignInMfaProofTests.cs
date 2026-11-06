@@ -51,7 +51,7 @@ public sealed class SignInMfaProofTests
             case "invalid-version": stored.TokenVersion = 0; break;
             case "invalid-policy": stored.PolicyFingerprint = "invalid"; break;
             case "invalid-factor": stored.FirstFactor = (SignInFirstFactor)int.MaxValue; break;
-            case "invalid-method": stored.Method = MfaMethod.Sms; break;
+            case "invalid-method": stored.Method = (MfaMethod)int.MaxValue; break;
             case "before-first-factor": stored.VerifiedAt = stored.FirstFactorVerifiedAt.AddSeconds(-1); break;
             case "outside-challenge-window": stored.VerifiedAt = stored.FirstFactorVerifiedAt.AddMinutes(6); break;
             default: throw new ArgumentOutOfRangeException(nameof(fault), fault, "Unknown durable MFA proof fault.");
@@ -62,6 +62,7 @@ public sealed class SignInMfaProofTests
     [Theory]
     [InlineData(MfaMethod.Totp)]
     [InlineData(MfaMethod.BackupCode)]
+    [InlineData(MfaMethod.Sms)]
     public async Task VerifiedProofEmitsMfaClaimsWithOriginalTimes(MfaMethod method)
     {
         var proof = Proof(method: method);

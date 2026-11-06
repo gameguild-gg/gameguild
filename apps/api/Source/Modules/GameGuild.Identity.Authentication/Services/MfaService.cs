@@ -26,6 +26,32 @@ public sealed class MfaService(
     private readonly MfaOptions _mfaOptions = mfaOptions ?? new MfaOptions();
 
     /// <inheritdoc />
+    public Task<SmsMfaChallengeResult> SendSmsSignInChallengeAsync(Guid userId, Guid signInChallengeId, CancellationToken cancellationToken) =>
+        smsMfaService is null
+            ? Task.FromResult(new SmsMfaChallengeResult { Success = false, PhoneNumberMasked = string.Empty, ExpiresInSeconds = 0, Message = "Invalid MFA challenge" })
+            : smsMfaService.SendSignInChallengeAsync(userId, signInChallengeId, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<MfaVerificationResult> VerifySmsSignInCodeAsync(Guid userId, Guid signInChallengeId, string code, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var valid = smsMfaService is not null &&
+            await smsMfaService.VerifySignInCodeAsync(userId, signInChallengeId, code, cancellationToken).ConfigureAwait(false);
+        MfaEnrollmentMetrics.RecordVerification(MfaMethod.Sms, valid);
+        if (valid)
+        {
+            await AuthenticationEventDispatch.PublishAsync(eventPublisher,
+                new MfaVerificationSucceededEvent(userId, MfaMethod.Sms.ToString(), SystemClock.UtcNow), logger, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await AuthenticationEventDispatch.PublishAsync(eventPublisher,
+                new MfaVerificationFailedEvent(userId, MfaMethod.Sms.ToString(), "Invalid MFA proof", SystemClock.UtcNow), logger, cancellationToken).ConfigureAwait(false);
+        }
+        return new MfaVerificationResult { Success = valid, Message = valid ? "MFA verification successful" : "Invalid MFA code" };
+    }
+
+    /// <inheritdoc />
     public Task<MfaConfigurationResponse> GetMfaConfigurationAsync(Guid userId, CancellationToken cancellationToken = default) =>
         attemptTrackingService.GetMfaConfigurationAsync(userId, cancellationToken);
 

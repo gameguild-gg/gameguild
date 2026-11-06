@@ -10,10 +10,11 @@
  * query strings, JWT claims, or cookies.
  */
 
-import { createMfaEnrollmentCompleteAction, type MfaEnrollmentCompleteResult } from '@game-guild/client';
+import { createMfaEnrollmentCompleteAction, createMfaSmsChallengeAction, type MfaEnrollmentCompleteResult, type MfaSmsChallengeResult } from '@game-guild/client';
 import { authConfig } from '@/auth';
 
 const completeMfaEnrollment = createMfaEnrollmentCompleteAction(authConfig);
+const requestSms = createMfaSmsChallengeAction(authConfig);
 
 /** Completes a required-MFA enrollment with the pending challenge's mfaToken and a TOTP code. */
 export async function completeMfaEnrollmentAction(
@@ -21,4 +22,9 @@ export async function completeMfaEnrollmentAction(
   code: string,
 ): Promise<MfaEnrollmentCompleteResult> {
   return completeMfaEnrollment(mfaToken, code);
+}
+
+/** Sends an SMS bound to the pending first-factor continuation. */
+export async function sendMfaSmsChallengeAction(mfaToken: string): Promise<MfaSmsChallengeResult> {
+  return requestSms(mfaToken);
 }
