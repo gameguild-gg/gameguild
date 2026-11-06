@@ -656,10 +656,33 @@ for (const packageRoot of installedConsumers("launch-editor")) {
   });
 }
 
-// The legacy @modelcontextprotocol/sdk OAuth issuer-binding test was retired
-// with the 1.32.1 → 2.4.0 move to the split @modelcontextprotocol/core and
-// @modelcontextprotocol/server packages, which no longer ship the legacy
-// client/auth.js fetchToken surface.
+// The legacy @modelcontextprotocol/sdk 1.32.x OAuth issuer-binding test moved
+// to the split @modelcontextprotocol/server release. Its
+// buildOAuthProtectedResourceMetadata helper must still fail closed on an
+// untrustworthy Authorization Server issuer before the metadata document —
+// which advertises that issuer to every client — is produced.
+for (const packageRoot of installedConsumers("@modelcontextprotocol/server")) {
+  test(`${packageRoot}: protected-resource metadata refuses non-HTTPS authorization server issuers`, async () => {
+    const { buildOAuthProtectedResourceMetadata } = await import(
+      pathToFileURL(join(packageRoot, "dist/index.mjs")).href
+    );
+    assert.equal(require(join(packageRoot, "package.json")).version, "2.4.0");
+    const resourceServerUrl = new URL("https://api.example.test/mcp");
+    const document = buildOAuthProtectedResourceMetadata({
+      resourceServerUrl,
+      oauthMetadata: { issuer: "https://auth.example.test/" },
+    });
+    assert.equal(document.resource, resourceServerUrl.href);
+    assert.deepEqual(document.authorization_servers, ["https://auth.example.test/"]);
+    for (const issuer of ["http://auth.example.test/", "javascript:fixture()", "https://auth.example.test/#fragment"]) {
+      assert.throws(
+        () => buildOAuthProtectedResourceMetadata({ resourceServerUrl, oauthMetadata: { issuer } }),
+        /issuer/i,
+        `Issuer ${issuer} must be rejected before any metadata document is produced`,
+      );
+    }
+  });
+}
 
 
 // Wallet validator upgrade: exercise the installed publisher modules, including
