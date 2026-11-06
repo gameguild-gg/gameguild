@@ -85,7 +85,7 @@ export function GameGuildAuth(userConfig: GameGuildAuthConfig): AuthInstance {
 
   return {
     handlers: { GET, POST },
-    auth: authFn as AuthInstance['auth'],
+    auth: authFn,
     signIn,
     signUp,
     signOut,

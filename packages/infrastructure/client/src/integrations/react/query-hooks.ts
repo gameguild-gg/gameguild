@@ -164,7 +164,7 @@ export function generateQueryKey(module: string, operation: string, params?: Rec
   if (params && Object.keys(params).length > 0) {
     key.push(params);
   }
-  return key as QueryKey;
+  return key;
 }
 
 /**
