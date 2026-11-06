@@ -104,7 +104,7 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
           if (
             typeof mfaToken !== 'string' ||
             !/^[A-Za-z0-9_-]{43}$/.test(mfaToken) ||
-            (method !== 'Totp' && method !== 'BackupCode') ||
+            (method !== 'Totp' && method !== 'BackupCode' && method !== 'Sms') ||
             typeof code !== 'string' ||
             !code.trim()
           ) {

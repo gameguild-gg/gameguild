@@ -20701,7 +20701,7 @@ export const postAuthMfaRecoveryRequestEndpoint = {
 /**
  * Complete a verified first factor with the account's enrolled or newly provisioned MFA method.
  *
- * Consumes the expiring first-factor challenge and verifies TOTP or a backup code. Identity, tenant, policy and token version come from the server-side challenge. A successful response contains MFA-bound credentials.
+ * Consumes the expiring first-factor challenge and verifies an enrolled TOTP, SMS or backup code. Identity, tenant, policy and token version come from the server-side challenge. A successful response contains MFA-bound credentials.
  */
 export interface PostAuthMfaSignInCompleteInput {
   body?: Types.IdentityAuthenticationCompleteMfaSignInInput;
@@ -20718,7 +20718,7 @@ export const postAuthMfaSignInCompleteEndpoint = {
 /**
  * Send a fresh SMS sign-in code to the enrolled phone
  *
- * Sends a fresh verification code to the enrolled phone before MFA verification. Generic failure payload; throttled to one code per minute per user.
+ * Sends a code to the server-resolved enrolled phone using an active first-factor MFA continuation. Codes are bound to that continuation and throttled per account.
  */
 export interface PostAuthMfaSmsChallengeInput {
   body?: Types.IdentityAuthenticationSmsMfaChallengeInput;
@@ -20738,7 +20738,7 @@ export const postAuthMfaSmsChallengeEndpoint = {
  * Completes SMS MFA setup by verifying the code sent to the user's phone, enrolling the verified number as an SMS factor.
  */
 export interface PostAuthMfaSmsCompleteInput {
-  body?: Types.IdentityAuthenticationCompleteMfaSetupInput;
+  body?: Types.IdentityAuthenticationCompleteSmsMfaSetupInput;
 }
 export type PostAuthMfaSmsCompleteOutput = Types.IdentityAuthenticationMfaSuccessOutput;
 export const postAuthMfaSmsCompleteEndpoint = {
@@ -20752,7 +20752,7 @@ export const postAuthMfaSmsCompleteEndpoint = {
 /**
  * Initiate SMS-based MFA setup
  *
- * Initiates SMS-based MFA setup by sending a verification code to the provided phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.
+ * Re-verifies the authenticated account password before sending an SMS enrollment proof to the requested phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.
  */
 export interface PostAuthMfaSmsSetupInput {
   body?: Types.IdentityAuthenticationSmsMfaSetupInput;

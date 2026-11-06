@@ -13122,6 +13122,11 @@ export interface IdentityAuthenticationCompletePasswordResetInput {
   token: string;
 }
 
+/** Completes SMS enrollment with its one-time phone proof, without an authenticator secret. */
+export interface IdentityAuthenticationCompleteSmsMfaSetupInput {
+  code: string;
+}
+
 /** Request to complete WebAuthn authentication. */
 export interface IdentityAuthenticationCompleteWebAuthnAuthenticationInput {
   /** The JSON assertion response from navigator.credentials.get(). */
@@ -14294,12 +14299,14 @@ account (sign out everywhere) instead of only the current token. */
 
 /** Request for an SMS sign-in challenge */
 export interface IdentityAuthenticationSmsMfaChallengeInput {
-  /** User identifier whose enrolled phone receives the code */
-  userId: string;
+  /** Opaque continuation returned after successful first-factor verification */
+  mfaToken?: string | null;
 }
 
 /** Request to setup SMS MFA */
 export interface IdentityAuthenticationSmsMfaSetupInput {
+  /** Current account password re-verification before changing MFA delivery. */
+  password?: string | null;
   /** Phone number to receive SMS codes */
   phoneNumber: string | null;
 }
@@ -29018,6 +29025,7 @@ export let IdentityAuthenticationCompleteMfaSetupInputSchema: z.ZodType<Identity
 export let IdentityAuthenticationCompleteMfaSignInInputSchema: z.ZodType<IdentityAuthenticationCompleteMfaSignInInput>;
 export let IdentityAuthenticationCompletePasskeyApprovalInputSchema: z.ZodType<IdentityAuthenticationCompletePasskeyApprovalInput>;
 export let IdentityAuthenticationCompletePasswordResetInputSchema: z.ZodType<IdentityAuthenticationCompletePasswordResetInput>;
+export let IdentityAuthenticationCompleteSmsMfaSetupInputSchema: z.ZodType<IdentityAuthenticationCompleteSmsMfaSetupInput>;
 export let IdentityAuthenticationCompleteWebAuthnAuthenticationInputSchema: z.ZodType<IdentityAuthenticationCompleteWebAuthnAuthenticationInput>;
 export let IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema: z.ZodType<IdentityAuthenticationCompleteWebAuthnRegistrationInput>;
 export let IdentityAuthenticationConfirmTrustedContactInputSchema: z.ZodType<IdentityAuthenticationConfirmTrustedContactInput>;
@@ -42546,6 +42554,11 @@ IdentityAuthenticationCompletePasswordResetInputSchema = z.object({
   token: z.string().min(1),
 });
 
+/** Zod schema for IdentityAuthenticationCompleteSmsMfaSetupInput. Completes SMS enrollment with its one-time phone proof, without an authenticator secret. */
+IdentityAuthenticationCompleteSmsMfaSetupInputSchema = z.object({
+  code: z.string().min(1).max(64),
+});
+
 /** Zod schema for IdentityAuthenticationCompleteWebAuthnAuthenticationInput. Request to complete WebAuthn authentication. */
 IdentityAuthenticationCompleteWebAuthnAuthenticationInputSchema = z.object({
   assertionResponse: z.string().nullable().optional(),
@@ -43496,11 +43509,12 @@ IdentityAuthenticationSignOutInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationSmsMfaChallengeInput. Request for an SMS sign-in challenge */
 IdentityAuthenticationSmsMfaChallengeInputSchema = z.object({
-  userId: z.string().uuid(),
+  mfaToken: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationSmsMfaSetupInput. Request to setup SMS MFA */
 IdentityAuthenticationSmsMfaSetupInputSchema = z.object({
+  password: z.string().nullable().optional(),
   phoneNumber: z.string().nullable(),
 });
 

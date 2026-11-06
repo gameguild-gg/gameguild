@@ -14,6 +14,12 @@ public interface IMfaService
 
     Task<MfaVerificationResult> VerifyMfaAsync(Guid userId, string code, MfaMethod method = MfaMethod.Totp, CancellationToken cancellationToken = default);
 
+    /// <summary>Issues SMS only for the server-resolved first-factor continuation.</summary>
+    Task<SmsMfaChallengeResult> SendSmsSignInChallengeAsync(Guid userId, Guid signInChallengeId, CancellationToken cancellationToken);
+
+    /// <summary>Verifies an SMS proof bound to the server-resolved first-factor continuation.</summary>
+    Task<MfaVerificationResult> VerifySmsSignInCodeAsync(Guid userId, Guid signInChallengeId, string code, CancellationToken cancellationToken);
+
     /// <summary>
     ///     Disables MFA after re-verifying the account password (issue #244). The confirmation
     ///     parameter is the account password, not an MFA code.

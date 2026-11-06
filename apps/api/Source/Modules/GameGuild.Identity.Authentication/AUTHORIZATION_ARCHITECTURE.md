@@ -3140,6 +3140,56 @@ Contact routing, passwordless primary re-verification and safe alternative-chann
 sign-in remain separate unfinished requirements of #1195. These cancellation and
 audit changes do not establish that the whole recovery issue is complete.
 
+### SMS proof purpose separation (#1195)
+
+SMS enrollment and sign-in challenge entries retain their operation purpose.
+Enrollment completion accepts only enrollment proofs; ordinary SMS verification
+accepts only challenge proofs. A mismatched-purpose submission preserves the
+original proof and its attempt budget, while digest comparison remains constant
+time. Valid proofs remain single-use, and failed delivery removes the issued
+proof.
+
+SMS completion binds its own code-only request; no authenticator SecretKey is
+required or used by the SMS proof. TOTP enrollment keeps its existing contract.
+
+Verified SMS enrollment creates a missing MFA configuration directly; a prior
+unverified authenticator setup is not a prerequisite.
+
+Starting or replacing SMS enrollment requires re-verification of the authenticated
+account's current password before code issuance. Missing/wrong proof, missing
+verifier or verifier failure cannot reach the SMS provider. Diagnostics and durable
+operation payloads exclude that password and the requested phone. Passwordless
+accounts remain fail-closed until a secure alternative primary-proof flow exists.
+
+SMS sign-in delivery accepts only the opaque first-factor continuation. Its
+server-resolved active VerifyFactor challenge binds subject, tenant, token
+version, policy and current verified SMS enrollment; legacy user selectors cannot
+redirect delivery. The issued digest entry also binds the exact challenge ID.
+Enrollment, unbound verification and another continuation cannot consume it.
+Scoped provider instances share atomic cache issuance/consumption and an account
+resend budget. Cancelled or failed dispatch removes only its own issued entry.
+This in-memory budget is local to the shared cache, not a claimed distributed
+quota across separate hosts.
+
+SMS completion rechecks account/policy under the subject transaction lock, applies
+the configured account attempt/lockout policy, then atomically consumes the durable
+continuation before issuing MFA session evidence and credentials. A concurrent
+completion cannot consume the continuation or create another session. Successful SMS
+setup completes the verified enrollment and clears unverified authenticator
+provisioning. Existing verified additional factors and TOTP-only sign-in enrollment
+remain intact. Channel and proof binding are server-owned; memory-cache proof
+consumption is not undone by a later database rollback.
+
+Durable session evidence admits verified SMS alongside TOTP, backup codes and
+WebAuthn at the PostgreSQL method constraint. Email and push remain excluded.
+The schema upgrade preserves existing evidence. A downgrade with SMS evidence
+must fail transactionally, preserving the evidence and the upgraded constraint;
+it cannot silently relabel or delete an already verified factor.
+
+Email/push sign-in completion, protected device approval, contact recovery routing
+and secure passwordless disable remain separate unfinished work in #1195. SDK
+and web consumers must use the first-factor continuation for the SMS challenge.
+
 ## Conclusion
 
 The GameGuild Authorization Architecture provides a **comprehensive, enterprise-grade access control system** that balances:

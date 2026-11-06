@@ -30,7 +30,7 @@ public sealed class PostgreSqlSignInMfaChallengeStore(IApplicationDbContext cont
         RequireDigest(tokenHash);
         ArgumentNullException.ThrowIfNull(binding);
         binding.Validate();
-        if (method is not (MfaMethod.Totp or MfaMethod.BackupCode or MfaMethod.WebAuthn) ||
+        if (method is not (MfaMethod.Totp or MfaMethod.BackupCode or MfaMethod.WebAuthn or MfaMethod.Sms) ||
             binding.Purpose == SignInMfaPurpose.EnrollFactor && method != MfaMethod.Totp)
         {
             throw new ArgumentOutOfRangeException(nameof(method));

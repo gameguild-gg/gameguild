@@ -23,6 +23,22 @@ public sealed class SignInMfaService(
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
     private readonly MfaOptions _mfaOptions = mfaOptions ?? new();
 
+    public async Task<SmsMfaChallengeResult> SendSmsChallengeAsync(string bearer, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!SignInMfaChallengeToken.TryHash(bearer, out var hash)) { return SmsDenied(); }
+        var challenge = await challenges.FindActiveAsync(hash, _time.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+        if (challenge is null || challenge.Purpose != SignInMfaPurpose.VerifyFactor) { return SmsDenied(); }
+        var current = await ReadBoundSubjectAsync(challenge, cancellationToken).ConfigureAwait(false);
+        if (current is null || IsLocked(current) || current.EnrolledMethods?.Contains(MfaMethod.Sms) != true) { return SmsDenied(); }
+        await enrollment.AcquireSubjectLockAsync(challenge.SubjectId, cancellationToken).ConfigureAwait(false);
+        challenge = await challenges.FindActiveAsync(hash, _time.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+        if (challenge is null || challenge.Purpose != SignInMfaPurpose.VerifyFactor) { return SmsDenied(); }
+        current = await ReadBoundSubjectAsync(challenge, cancellationToken).ConfigureAwait(false);
+        if (current is null || IsLocked(current) || current.EnrolledMethods?.Contains(MfaMethod.Sms) != true) { return SmsDenied(); }
+        return await mfa.SendSmsSignInChallengeAsync(challenge.SubjectId, challenge.Id, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<SignInResponse> BeginAsync(Guid verifiedSubjectId, int verifiedTokenVersion, Guid? requestedTenantId,
         DeviceInfo deviceInfo, SignInFirstFactor firstFactor, bool requiresRiskStepUp, CancellationToken cancellationToken)
     {
@@ -111,7 +127,7 @@ public sealed class SignInMfaService(
         cancellationToken.ThrowIfCancellationRequested();
         // This marker is created only after challenge persistence and audit both succeed.
         return SignInMfaPreparation.WithOutcome(new SignInMfaPendingResponse(token, challenge.ExpiresAt, challenge.Purpose,
-            requiresRiskStepUp, current.User, decision.TenantId, setup));
+            requiresRiskStepUp, current.User, decision.TenantId, setup, current.EnrolledMethods));
     }
 
     public async Task<SignInResponse> CompleteCodeAsync(string bearer, string code, MfaMethod method,
@@ -119,7 +135,7 @@ public sealed class SignInMfaService(
     {
         cancellationToken.ThrowIfCancellationRequested();
         ArgumentNullException.ThrowIfNull(deviceInfo);
-        if (method is not (MfaMethod.Totp or MfaMethod.BackupCode) || string.IsNullOrWhiteSpace(code) || code.Length > 64 ||
+        if (method is not (MfaMethod.Totp or MfaMethod.BackupCode or MfaMethod.Sms) || string.IsNullOrWhiteSpace(code) || code.Length > 64 ||
             !SignInMfaChallengeToken.TryHash(bearer, out var hash)) { return Denied(); }
         var challenge = await challenges.FindActiveAsync(hash, _time.GetUtcNow(), cancellationToken).ConfigureAwait(false);
         if (challenge is null) { return Denied(); }
@@ -137,7 +153,19 @@ public sealed class SignInMfaService(
         var current = await ReadBoundSubjectAsync(challenge, cancellationToken, enrolled: !completingEnrollment).ConfigureAwait(false);
         if (current is null || IsLocked(current)) { return Denied(); }
 
-        var verification = await mfa.VerifyMfaAsync(challenge.SubjectId, code, method, cancellationToken).ConfigureAwait(false);
+        if (method == MfaMethod.Sms)
+        {
+            if (current.EnrolledMethods?.Contains(MfaMethod.Sms) != true) { return Denied(); }
+            // Serialize the per-account attempt update with SMS completion and settings enrollment.
+            await enrollment.AcquireSubjectLockAsync(challenge.SubjectId, cancellationToken).ConfigureAwait(false);
+            challenge = await challenges.FindActiveAsync(hash, _time.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+            if (challenge is null || challenge.Purpose != SignInMfaPurpose.VerifyFactor) { return Denied(); }
+            current = await ReadBoundSubjectAsync(challenge, cancellationToken).ConfigureAwait(false);
+            if (current is null || IsLocked(current) || current.EnrolledMethods?.Contains(MfaMethod.Sms) != true) { return Denied(); }
+        }
+        var verification = method == MfaMethod.Sms
+            ? await mfa.VerifySmsSignInCodeAsync(challenge.SubjectId, challenge.Id, code, cancellationToken).ConfigureAwait(false)
+            : await mfa.VerifyMfaAsync(challenge.SubjectId, code, method, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         if (!verification.IsSuccess)
         {
@@ -268,6 +296,11 @@ public sealed class SignInMfaService(
     }
 
     private static SignInResponse Denied() => new() { Success = false, Message = "Additional verification failed" };
+
+    private static SmsMfaChallengeResult SmsDenied() => new()
+    {
+        Success = false, PhoneNumberMasked = string.Empty, ExpiresInSeconds = 0, Message = "Invalid MFA challenge"
+    };
 }
 
 /// <summary>Refresh-time reevaluation outcome: the stored proof (if any) and the reevaluated compliance marker.</summary>
@@ -279,7 +312,7 @@ public sealed record SignInMfaSessionProof(SignInMfaProof? Proof, bool MfaCompli
 internal sealed class SignInMfaPendingResponse : SignInResponse, ICommitOnFailureOutcome
 {
     public SignInMfaPendingResponse(string bearer, DateTimeOffset expiresAt, SignInMfaPurpose purpose, bool requiresRiskStepUp,
-        User verifiedSubject, Guid tenantId, SignInMfaEnrollmentSetup? enrollment = null)
+        User verifiedSubject, Guid tenantId, SignInMfaEnrollmentSetup? enrollment = null, IReadOnlyList<MfaMethod>? enrolledMethods = null)
     {
         ArgumentNullException.ThrowIfNull(verifiedSubject);
         if (verifiedSubject.Id == Guid.Empty || tenantId == Guid.Empty)
@@ -293,7 +326,9 @@ internal sealed class SignInMfaPendingResponse : SignInResponse, ICommitOnFailur
         RequiresStepUp = requiresRiskStepUp;
         StepUpToken = requiresRiskStepUp ? bearer : null;
         StepUpExpiresAt = expiresAt.UtcDateTime;
-        AvailableMethods = purpose == SignInMfaPurpose.VerifyFactor ? ["TOTP", "BackupCode"] : ["TOTP"];
+        AvailableMethods = purpose == SignInMfaPurpose.VerifyFactor
+            ? enrolledMethods is null ? ["TOTP", "BackupCode"] : enrolledMethods.Select(method => method == MfaMethod.Totp ? "TOTP" : method.ToString()).ToList()
+            : ["TOTP"];
         // Only a sign-in-driven enrollment carries the provisioning payload.
         MfaEnrollment = enrollment is null ? null : new SignInMfaEnrollmentOffer(enrollment.SecretKey,
             enrollment.QrCodeUri, enrollment.SetupExpiresAt);

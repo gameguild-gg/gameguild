@@ -397,18 +397,20 @@ public class MfaControllerCovTests
         // Issue #244: the 503 stub is gone; setup goes through the SMS factor service.
         var sms = new Mock<ISmsMfaService>();
         var push = new Mock<IPushMfaService>();
-        var controller = new MfaController(_mfaService.Object, new CommandHandlerSender(_mfaService.Object, sms.Object, push.Object));
+        var controller = new MfaController(_mfaService.Object,
+            new CommandHandlerSender(_mfaService.Object, sms.Object, push.Object, CreateReverification(verified: true)));
         SetControllerUser(controller, _userId);
         sms.Setup(s => s.StartEnrollmentAsync(_userId, "+1234567890", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SmsMfaChallengeResult { Success = true, PhoneNumberMasked = "***-***-7890", ExpiresInSeconds = 600 });
 
         var result = await controller.InitiateSmsSetup(
-            new SmsMfaSetupRequest { PhoneNumber = "+1234567890" }, CancellationToken.None);
+            new SmsMfaSetupRequest { PhoneNumber = "+1234567890", Password = "correct-password" }, CancellationToken.None);
 
         var ok = result.Should().BeOfType<OkObjectResult>().Subject;
         var payload = ok.Value.Should().BeOfType<SmsMfaSetupResponse>().Subject;
         payload.PhoneNumberMasked.Should().Be("***-***-7890");
         payload.ExpiresInSeconds.Should().Be(600);
+        sms.Verify(s => s.StartEnrollmentAsync(_userId, "+1234567890", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -416,16 +418,18 @@ public class MfaControllerCovTests
     {
         var sms = new Mock<ISmsMfaService>();
         var push = new Mock<IPushMfaService>();
-        var controller = new MfaController(_mfaService.Object, new CommandHandlerSender(_mfaService.Object, sms.Object, push.Object));
+        var controller = new MfaController(_mfaService.Object,
+            new CommandHandlerSender(_mfaService.Object, sms.Object, push.Object, CreateReverification(verified: true)));
         SetControllerUser(controller, _userId);
         sms.Setup(s => s.StartEnrollmentAsync(_userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SmsMfaChallengeResult { Success = false, PhoneNumberMasked = string.Empty, ExpiresInSeconds = 0, Message = "A verification code was sent recently." });
 
         var result = await controller.InitiateSmsSetup(
-            new SmsMfaSetupRequest { PhoneNumber = "+1234567890" }, CancellationToken.None);
+            new SmsMfaSetupRequest { PhoneNumber = "+1234567890", Password = "correct-password" }, CancellationToken.None);
 
         var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
         badRequest.Value.Should().BeOfType<MfaErrorResponse>().Which.Error.Should().Contain("sent recently");
+        sms.Verify(s => s.StartEnrollmentAsync(_userId, "+1234567890", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -439,7 +443,7 @@ public class MfaControllerCovTests
             .ReturnsAsync(new MfaVerificationResult { Success = false, Message = "Invalid or expired SMS code" });
 
         var result = await controller.CompleteSmsSetup(
-            new CompleteMfaSetupRequest { Code = "000000", SecretKey = "KEY" },
+            new CompleteSmsMfaSetupRequest { Code = "000000" },
             CancellationToken.None);
 
         var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
