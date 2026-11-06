@@ -44,7 +44,8 @@ public sealed class RequestMfaRecoveryCommandHandler(
     IMfaRecoveryRequestStore recoveryStore,
     INotificationService notificationService,
     IMemoryCache memoryCache,
-    ILogger<RequestMfaRecoveryCommandHandler> logger) : ICommandHandler<RequestMfaRecoveryCommand, MfaRecoveryRequestResult>
+    ILogger<RequestMfaRecoveryCommandHandler> logger,
+    IAuthenticationAuditEventSink auditSink) : ICommandHandler<RequestMfaRecoveryCommand, MfaRecoveryRequestResult>
 {
     private const string RateLimitKeyPrefix = "mfarecovery:ratelimit:";
 
@@ -103,9 +104,11 @@ public sealed class RequestMfaRecoveryCommandHandler(
             catch (Exception ex) when (ex.Message.Contains("duplicate key") || ex.Message.Contains("unique constraint"))
             {
                 logger.LogWarning("MFA recovery request race detected for user {UserId}. Treating as success.", user.Id);
+                return ApplyRateLimit(new MfaRecoveryRequestResult());
             }
 
             await QueueRecoveryStartedEmailAsync(user, requestToken, recovery.CooldownEndsAt, cancellationToken).ConfigureAwait(false);
+            await MfaRecoveryAudit.RecordAsync(auditSink, recovery, MfaRecoveryAudit.Requested, "RecoveryStage", cancellationToken).ConfigureAwait(false);
             logger.LogInformation("MFA recovery request opened for user {UserId}", user.Id);
         }
         else
@@ -158,7 +161,8 @@ public sealed class ContinueMfaRecoveryCommandHandler(
     IMfaRecoveryRequestStore recoveryStore,
     IUserRepository userRepository,
     INotificationService notificationService,
-    ILogger<ContinueMfaRecoveryCommandHandler> logger) : ICommandHandler<ContinueMfaRecoveryCommand, MfaRecoveryContinueResult>
+    ILogger<ContinueMfaRecoveryCommandHandler> logger,
+    IAuthenticationAuditEventSink auditSink) : ICommandHandler<ContinueMfaRecoveryCommand, MfaRecoveryContinueResult>
 {
     private static readonly MfaRecoveryContinueResult Denial = new()
     {
@@ -196,25 +200,19 @@ public sealed class ContinueMfaRecoveryCommandHandler(
             };
         }
 
-        // Re-mints the confirmation token on every eligible continue (covers replays and resends).
-        var confirmationToken = MfaRecoveryTokens.Generate(MfaRecoveryTokens.ConfirmationTokenBytes);
-        recovery.Status = MfaRecoveryRequestStatus.AwaitingConfirmation;
-        recovery.ConfirmationTokenHash = MfaRecoveryTokens.Hash(confirmationToken);
-        recovery.ConfirmationTokenExpiresAt = now.Add(MfaRecoveryTokens.ConfirmationLifetime);
-        await recoveryStore.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
         var user = await userRepository.GetByIdAsync(Guid.Parse(recovery.UserId), cancellationToken).ConfigureAwait(false);
-        if (user is null)
+        if (user is null) { return Denial; }
+
+        // Compare the live state and original bearer again in the database before issuing another bearer.
+        var confirmationToken = MfaRecoveryTokens.Generate(MfaRecoveryTokens.ConfirmationTokenBytes);
+        if (!await recoveryStore.TryIssueConfirmationAsync(recovery.Id, tokenHash, MfaRecoveryTokens.Hash(confirmationToken),
+                now, now.Add(MfaRecoveryTokens.ConfirmationLifetime), cancellationToken).ConfigureAwait(false))
         {
-            logger.LogWarning("MFA recovery confirmation skipped: user {UserId} no longer resolvable", recovery.UserId);
-            return new MfaRecoveryContinueResult
-            {
-                Success = true,
-                Message = "A confirmation link has been sent to the account's email address."
-            };
+            return Denial;
         }
 
         await QueueConfirmationEmailAsync(user, confirmationToken, cancellationToken).ConfigureAwait(false);
+        await MfaRecoveryAudit.RecordAsync(auditSink, recovery, MfaRecoveryAudit.Continued, "RecoveryStage", cancellationToken).ConfigureAwait(false);
         logger.LogInformation("MFA recovery confirmation issued for request {RequestId}", recovery.Id);
 
         return new MfaRecoveryContinueResult
@@ -263,7 +261,8 @@ public sealed class ContinueMfaRecoveryCommandHandler(
 public sealed class ConfirmMfaRecoveryCommandHandler(
     IMfaRecoveryRequestStore recoveryStore,
     IMfaAttemptTrackingService mfaTrackingService,
-    ILogger<ConfirmMfaRecoveryCommandHandler> logger) : ICommandHandler<ConfirmMfaRecoveryCommand, MfaRecoveryConfirmResult>
+    ILogger<ConfirmMfaRecoveryCommandHandler> logger,
+    IAuthenticationAuditEventSink auditSink) : ICommandHandler<ConfirmMfaRecoveryCommand, MfaRecoveryConfirmResult>
 {
     private static readonly MfaRecoveryConfirmResult Denial = new()
     {
@@ -294,14 +293,18 @@ public sealed class ConfirmMfaRecoveryCommandHandler(
             return Denial;
         }
 
-        // Single-use gate: the status transition is what consumes the request; the stored
-        // hashes stay (the table constraint requires request_token_hash to remain set).
-        recovery.Status = MfaRecoveryRequestStatus.Completed;
-        recovery.ConsumedAt = now;
-        await recoveryStore.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        // The conditional update owns the one-time transition until this command commits.
+        // A cancellation that committed first leaves this update at zero rows.
+        if (!await recoveryStore.TryConfirmAsync(recovery.Id, tokenHash, now, cancellationToken).ConfigureAwait(false))
+        {
+            return Denial;
+        }
 
         var userId = Guid.Parse(recovery.UserId);
+        // Required audit persists in this transaction before credentials are reset.
+        await MfaRecoveryAudit.RecordAsync(auditSink, recovery, MfaRecoveryAudit.Confirmed, "RecoveryStage", cancellationToken).ConfigureAwait(false);
         var disabled = await mfaTrackingService.DisableMfaAsync(userId, cancellationToken).ConfigureAwait(false);
+        if (!disabled) { throw new InvalidOperationException("MFA recovery could not complete the required factor reset."); }
         logger.LogInformation("MFA recovery completed for request {RequestId}; MFA disabled: {Disabled}", recovery.Id, disabled);
 
         return new MfaRecoveryConfirmResult

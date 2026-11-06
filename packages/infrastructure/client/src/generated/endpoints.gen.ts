@@ -20570,6 +20570,21 @@ export const postAuthMfaPushRespondEndpoint = {
 } as const;
 
 /**
+ * Cancels the authenticated owner's active lost-device recovery.
+ *
+ * Cancels the authenticated user's active recovery and invalidates its request and confirmation tokens. Client identifiers cannot select another account.
+ */
+export type PostAuthMfaRecoveryCancelInput = void;
+export type PostAuthMfaRecoveryCancelOutput = Types.IdentityAuthenticationMfaRecoveryCancelOutput;
+export const postAuthMfaRecoveryCancelEndpoint = {
+  operationId: 'postAuthMfaRecoveryCancel' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/mfa/recovery:cancel' as const,
+  tags: ['AuthMultiFactor'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Complete a recovery using the confirmation token from the second email; disables MFA.
  *
  * Consumes the single-use confirmation token and disables multi-factor authentication for the recovered account. Denials are generic and never reveal token state.
@@ -36104,6 +36119,7 @@ export const endpoints = {
   postAuthMfaPushChallenge: postAuthMfaPushChallengeEndpoint,
   postAuthMfaPushRegisterDevice: postAuthMfaPushRegisterDeviceEndpoint,
   postAuthMfaPushRespond: postAuthMfaPushRespondEndpoint,
+  postAuthMfaRecoveryCancel: postAuthMfaRecoveryCancelEndpoint,
   postAuthMfaRecoveryConfirm: postAuthMfaRecoveryConfirmEndpoint,
   postAuthMfaRecoveryContinue: postAuthMfaRecoveryContinueEndpoint,
   postAuthMfaRecoveryRequest: postAuthMfaRecoveryRequestEndpoint,
