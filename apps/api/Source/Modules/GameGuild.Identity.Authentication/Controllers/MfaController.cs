@@ -74,7 +74,7 @@ public sealed class MfaController(
             SecretKey = result.SecretKey,
             QrCodeUri = result.QrCodeUrl,
             ExpiresAt = result.ExpiresAt,
-            BackupCodes = []
+            BackupCodes = result.BackupCodes ?? []
         });
     }
 
@@ -181,11 +181,11 @@ public sealed class MfaController(
         var userId = GetCurrentUserId();
         var backupCodes = await sender.Send(new RegenerateMfaBackupCodesCommand(userId, body.Password), ct).ConfigureAwait(false);
 
-        // Empty set = the password re-verification refused the mutation (issued
-        // backup-code sets are never legitimately empty).
+        // Empty set means re-verification or the current MFA configuration
+        // refused generation. Issued backup-code sets are never empty.
         if (backupCodes.Length == 0)
         {
-            return BadRequest(new MfaErrorResponse { Error = "Password verification failed. Backup codes were not regenerated." });
+            return BadRequest(new MfaErrorResponse { Error = "Backup codes were not regenerated. Verify your password and ensure MFA is enabled." });
         }
 
         return Ok(new BackupCodesResponse

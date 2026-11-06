@@ -33,7 +33,17 @@ public sealed class MfaService(
     public async Task<MfaSetupResult> InitiateMfaSetupAsync(Guid userId, string userEmail, CancellationToken cancellationToken = default)
     {
         MfaEnrollmentMetrics.RecordEnrollment(MfaMethod.Totp, "started");
-        (var qrCodeUri, var secretKey, var expiresAt) = await totpMfaService.SetupTotpAsync(userId, userEmail, cancellationToken).ConfigureAwait(false);
+        (string QrCodeUri, string SecretKey, DateTimeOffset ExpiresAt) setup;
+        try
+        {
+            setup = await totpMfaService.SetupTotpAsync(userId, userEmail, cancellationToken).ConfigureAwait(false);
+        }
+        catch (MfaConfigurationDeniedException exception)
+        {
+            return new MfaSetupResult { Success = false, Message = exception.Message };
+        }
+
+        var (qrCodeUri, secretKey, expiresAt) = setup;
 
         // Generate backup codes during setup
         var backupCodes = new List<string>();

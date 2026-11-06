@@ -25,7 +25,7 @@ public sealed class BackupCodeMfaService(
     {
         if (!_mfaOptions.Enabled)
         {
-            throw new InvalidOperationException("Multi-factor authentication is disabled.");
+            throw new MfaConfigurationDeniedException("Multi-factor authentication is disabled.");
         }
 
         logger.LogInformation("Generating backup codes for user: {UserId}", userId);
@@ -38,7 +38,7 @@ public sealed class BackupCodeMfaService(
             {
                 logger.LogWarning("MFA not enabled for user: {UserId}", userId);
 
-                throw new InvalidOperationException("MFA must be enabled to generate backup codes");
+                throw new MfaConfigurationDeniedException("MFA must be enabled to generate backup codes");
             }
 
             var backupCodes = new HashSet<string>(StringComparer.Ordinal);
@@ -69,6 +69,7 @@ public sealed class BackupCodeMfaService(
             // Return plain-text codes to user (only shown once)
             return backupCodes.ToArray();
         }
+        catch (MfaConfigurationDeniedException) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error generating backup codes for user: {UserId}", userId);

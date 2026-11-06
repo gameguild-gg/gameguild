@@ -30,7 +30,7 @@ public sealed class TotpMfaService(
     {
         if (!_mfaOptions.Enabled)
         {
-            throw new InvalidOperationException("Multi-factor authentication is disabled.");
+            throw new MfaConfigurationDeniedException("Multi-factor authentication is disabled.");
         }
 
         logger.LogInformation("Setting up TOTP MFA for user: {UserId}", userId);
@@ -44,7 +44,7 @@ public sealed class TotpMfaService(
             {
                 logger.LogWarning("MFA already enabled for user: {UserId}", userId);
 
-                throw new InvalidOperationException("MFA is already enabled for this user");
+                throw new MfaConfigurationDeniedException("MFA is already enabled for this user");
             }
 
             // Generate secret key (Base32 encoded, 160 bits = 32 characters)
@@ -73,6 +73,7 @@ public sealed class TotpMfaService(
 
             return (qrCodeUri, secretKey, new DateTimeOffset(mfaConfig.SetupExpiresAt.Value, TimeSpan.Zero));
         }
+        catch (MfaConfigurationDeniedException) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error setting up TOTP for user: {UserId}", userId);

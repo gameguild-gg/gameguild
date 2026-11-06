@@ -2674,6 +2674,14 @@ configuration validation.
 
 ### MFA Recovery State
 
+Authenticated TOTP setup returns the generated plaintext recovery-code set to its
+owner, while persistence contains only hashes. These codes cannot verify until
+TOTP enrollment has completed and each successful recovery consumes one code.
+Known MFA configuration denials use an internal typed exception and map to the
+existing unsuccessful setup / empty regeneration result (HTTP 400). Regeneration
+requires password re-verification before generation. Infrastructure, permission,
+cancellation and backup-storage exceptions are not converted into business denials.
+
 New recovery codes use salted, versioned PBKDF2-HMAC-SHA256 (600,000 iterations)
 and default to 12 characters. Legacy SHA-256 codes remain verifiable until used or
 regenerated. Both formats use constant-time hash comparison. Issued-set metadata
