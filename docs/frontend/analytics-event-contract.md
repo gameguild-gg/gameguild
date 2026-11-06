@@ -106,3 +106,31 @@ Sanitized examples of what reaches `window.dataLayer` via the gtag shim
   "event_version": 1
 }]
 ```
+
+## Environment destination matrix
+
+| Environment | GA4 | Firebase | GTM | Notes |
+|---|---|---|---|---|
+| local / dev | unset | unset | unset | All `NEXT_PUBLIC_*` analytics env vars unset — zero tracking footprint, all loaders no-op |
+| staging / test | distinct test GA4 property | test Firebase project (via env) | unset | Set through env only; **never** production property ids (`G-DCKJKN8PPD`) or the production Firebase project |
+| production | GA4 `G-DCKJKN8PPD` | Firebase project `gamedev-guild` | unset | GTM intentionally unset in every environment today (see runbook below) |
+
+## GTM operational runbook
+
+Google Tag Manager is intentionally disabled until ownership for #1221
+activates (`NEXT_PUBLIC_GTM_CONTAINER_ID` is unset in every environment).
+
+- **Preview / debug:** open GTM → Preview, enter the site URL, connect via
+  Google Tag Assistant. Verify the consent-mode signals gate every tag
+  (nothing fires while analytics consent is denied) and that the explicit
+  `page_view` event is the single page-view source (no GTM history-triggered
+  page_view double-firing — see Delivery ownership above).
+- **Publish:** Workspace → Submit → provide a version **name and description**
+  summarizing the change. Never publish without a description; versions are
+  the audit trail.
+- **Rollback:** GTM → Workspace/Versions → select the previous version →
+  restore/publish it. Confirm in Tag Assistant that the rollback removed the
+  offending tags/triggers.
+- **Ownership:** container changes require approval from the infra lead. GTM
+  stays disabled until the #1221 ownership handoff activates it.
+

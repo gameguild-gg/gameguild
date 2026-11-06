@@ -29,9 +29,9 @@ import {
   buildPageLoadTimingPayload,
   buildWebVitalsPayload,
   createDispatcher,
-  registerWebVitalsCallbacks,
   type FirebaseAnalyticsLoader,
 } from '@/lib/analytics/web-vitals';
+import type { Metric } from 'web-vitals';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals';
@@ -91,6 +91,9 @@ export function WebVitalsReporter() {
   // effect re-runs) while still re-firing when the user returns to a path.
   const lastPageViewPathRef = useRef<string | null>(null);
   const pageLoadSentRef = useRef(false);
+  // Previous effective analytics grant, so a same-page grant transition
+  // (denied → granted) can emit the entry page's page_view exactly once.
+  const wasAnalyticsGrantedRef = useRef(false);
 
   useEffect(() => {
     const w = window as ConsentWindow;
@@ -102,15 +105,22 @@ export function WebVitalsReporter() {
       void dispatcher.sendFirebase(eventName, stamped);
     };
 
-    const stopVitals = registerWebVitalsCallbacks(
-      { onLCP, onINP, onCLS, onTTFB, onFCP },
-      (metric) => {
-        const key = `${metric.name}:${metric.navigationId ?? 'page'}`;
-        if (reportedRef.current.has(key)) return;
-        reportedRef.current.add(key);
-        dispatch(WEB_VITALS_EVENT, buildWebVitalsPayload(metric, pathname) as unknown as Record<string, string | number>);
-      },
-    );
+    let vitalsStopped = false;
+    const handleMetric = (metric: Metric) => {
+      if (vitalsStopped) return;
+      const key = `${metric.name}:${metric.id ?? metric.navigationId ?? 'page'}`;
+      if (reportedRef.current.has(key)) return;
+      reportedRef.current.add(key);
+      dispatch(WEB_VITALS_EVENT, buildWebVitalsPayload(metric, pathname) as unknown as Record<string, string | number>);
+    };
+    onLCP(handleMetric);
+    onINP(handleMetric);
+    onCLS(handleMetric);
+    onTTFB(handleMetric);
+    onFCP(handleMetric);
+    const stopVitals = () => {
+      vitalsStopped = true;
+    };
 
     // The document's Navigation Timing entry describes the initial load only;
     // reporting it again on every SPA route change would misattribute the
@@ -147,13 +157,25 @@ export function WebVitalsReporter() {
       lastPageViewPathRef.current = pathname;
       dispatch(PAGE_VIEW_EVENT, { page_path: pathname });
     };
-    sendPageView();
+    const initialGrant = readConsent()?.analytics === true;
+    if (initialGrant) {
+      sendPageView();
+    } else {
+      // Path not yet "seen" while consent is denied, so the first grant
+      // below emits the entry page's page_view instead of skipping it.
+      lastPageViewPathRef.current = null;
+    }
+    wasAnalyticsGrantedRef.current = initialGrant;
 
-    // Consent changes: toggle SDK-managed Firebase collection so withdrawal
-    // stops automatic collection immediately, not just custom events.
     const unsubscribe = subscribeConsent((state) => {
       const analyticsGranted = state?.analytics === true;
       void dispatcher.setFirebaseCollection(analyticsGranted);
+      const wasGranted = wasAnalyticsGrantedRef.current;
+      wasAnalyticsGrantedRef.current = analyticsGranted;
+      if (analyticsGranted && !wasGranted) {
+        lastPageViewPathRef.current = null;
+        sendPageView();
+      }
     });
 
     return () => {

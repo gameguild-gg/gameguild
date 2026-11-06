@@ -150,6 +150,26 @@ describe('WebVitalsReporter (issues #1210, #1221)', () => {
     expect((webVitals[0] as unknown[])[2]).toMatchObject({ metric_value: 2451 });
   });
 
+  it('dispatches both CLS reports for one navigation when ids differ (final value not dropped)', () => {
+    persistConsent(true);
+    render(<WebVitalsReporter />);
+
+    act(() => {
+      metricCallbacks.CLS!(fakeMetric({ name: 'CLS', id: 'cls-1', navigationId: 'nav-1', value: 120 }));
+    });
+    act(() => {
+      metricCallbacks.CLS!(fakeMetric({ name: 'CLS', id: 'cls-1', navigationId: 'nav-1', value: 999 }));
+    });
+    act(() => {
+      metricCallbacks.CLS!(fakeMetric({ name: 'CLS', id: 'cls-2', navigationId: 'nav-1', value: 340 }));
+    });
+
+    const cls = events('web_vitals');
+    expect(cls).toHaveLength(2);
+    expect((cls[0] as unknown[])[2]).toMatchObject({ metric_value: 120000 });
+    expect((cls[1] as unknown[])[2]).toMatchObject({ metric_value: 340000 });
+  });
+
   it('sends nothing without analytics consent (fail closed)', () => {
     render(<WebVitalsReporter />);
 
