@@ -40,7 +40,7 @@ public sealed class MfaRecoveryCommandHandlersTests
         var store = new Mock<IMfaRecoveryRequestStore>();
         store.Setup(value => value.TryIssueConfirmationAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
-            .Returns(async (Guid id, string requestHash, string confirmationHash, DateTimeOffset now, DateTimeOffset expiry, CancellationToken token) =>
+            .Returns(async (Guid id, string requestHash, string confirmationHash, DateTimeOffset _, DateTimeOffset expiry, CancellationToken token) =>
             {
                 var row = await store.Object.FindLiveByRequestTokenHashAsync(requestHash, token);
                 if (row is null || row.Id != id || row.Status is not (MfaRecoveryRequestStatus.Pending or MfaRecoveryRequestStatus.AwaitingConfirmation))

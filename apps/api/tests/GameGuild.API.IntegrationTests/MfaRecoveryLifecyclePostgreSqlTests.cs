@@ -297,13 +297,13 @@ public sealed class MfaRecoveryLifecyclePostgreSqlTests(ApiPostgreSqlFixture fix
                 await Release.Task.WaitAsync(cancellationToken);
             }
         }
-        public override async ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData eventData,
+        public override async ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command, CommandEventData _,
             InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
         {
             await PauseAsync(command, cancellationToken);
             return result;
         }
-        public override async ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command, CommandEventData eventData,
+        public override async ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command, CommandEventData _,
             InterceptionResult<int> result, CancellationToken cancellationToken = default)
         {
             await PauseAsync(command, cancellationToken);
