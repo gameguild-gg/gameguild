@@ -42,13 +42,6 @@ const firebaseConfigured = Boolean(
     process.env.NEXT_PUBLIC_FIREBASE_APP_ID?.trim(),
 );
 
-/**
- * Dedupe key for `page_load_timing`: the Navigation Timing entry's
- * `startTime`. Module-level so it survives effect re-runs across SPA route
- * changes within the same document.
- */
-let reportedPageLoadStartTime: number | null = null;
-
 const loadFirebaseAnalytics: FirebaseAnalyticsLoader = async () => {
   if (!firebaseConfigured || typeof window === 'undefined') return null;
   const [{ initializeApp, getApps }, { getAnalytics, isSupported, logEvent, setAnalyticsCollectionEnabled }] = await Promise.all([
