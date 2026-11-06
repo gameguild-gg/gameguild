@@ -5,7 +5,7 @@
  *
  * Mounted from `AnalyticsConsent`. Collects LCP/INP/CLS/TTFB/FCP via the
  * `web-vitals` library and a Navigation Timing 2 `page_load_timing` event
- * (re-sent on SPA route changes), and forwards both to GA4 (through the
+ * (once per document), and forwards both to GA4 (through the
  * consent-mode gtag shim) and Firebase Analytics (env-gated; no-op without
  * `NEXT_PUBLIC_FIREBASE_*`). Zero beacons while analytics consent is denied.
  */
@@ -28,6 +28,14 @@ const firebaseConfigured = Boolean(
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() &&
     process.env.NEXT_PUBLIC_FIREBASE_APP_ID?.trim(),
 );
+
+/**
+ * Dedupe key for `page_load_timing`: the Navigation Timing entry's
+ * `startTime`. Module-level so it survives effect re-runs across SPA route
+ * changes within the same document.
+ */
+let reportedPageLoadStartTime: number | null = null;
+
 
 const loadFirebaseAnalytics: FirebaseAnalyticsLoader = async () => {
   if (!firebaseConfigured || typeof window === 'undefined') return null;
@@ -84,11 +92,15 @@ export function WebVitalsReporter() {
 
     // The document's Navigation Timing entry describes the initial load only;
     // reporting it again on every SPA route change would misattribute the
-    // same numbers to every page. Fire once per document.
+    // same numbers to every page. Fire once per document, keyed by the
+    // navigation entry's startTime (effect re-runs on route change see the
+    // same entry and must skip).
     const reportPageLoad = () => {
       try {
         const [entry] = performance.getEntriesByType('navigation');
         if (!(entry instanceof PerformanceNavigationTiming)) return;
+        if (entry.startTime === reportedPageLoadStartTime) return;
+        reportedPageLoadStartTime = entry.startTime;
         const payload = buildPageLoadTimingPayload(entry, pathname) as unknown as Record<string, string | number>;
         dispatcher.sendGa4(w, 'page_load_timing', payload);
         void dispatcher.sendFirebase('page_load_timing', payload);

@@ -15,7 +15,9 @@ export default async function Image({ params }: { params: Promise<{ program: str
   const { program: slug } = await params;
   const program = getPublicProgramPackage(slug);
   const title = program?.title ?? 'Program';
-  const image = program?.image ?? null;
+  // Satori only resolves absolute http(s) image sources.
+  const rawImage = typeof program?.image === 'string' ? program.image.trim() : '';
+  const image = /^https?:\/\//i.test(rawImage) ? rawImage : null;
 
   if (image) {
     return new ImageResponse(
