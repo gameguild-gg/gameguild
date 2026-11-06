@@ -306,17 +306,10 @@ for (const packageRoot of installedConsumers("socks")) {
   });
 }
 
-for (const packageRoot of installedConsumers("express-rate-limit")) {
-  test(`${packageRoot}: request-limit keys preserve IPv4 and IPv6 subnet grouping`, () => {
-    const consumerRequire = createRequire(join(packageRoot, "package.json"));
-    const { ipKeyGenerator } = require(packageRoot);
-    assert.equal(consumerRequire("ip-address/package.json").version, "10.7.4");
-    assert.equal(ipKeyGenerator("192.0.2.42"), "192.0.2.42");
-    assert.equal(ipKeyGenerator("::ffff:192.0.2.42"), "192.0.2.42");
-    assert.equal(ipKeyGenerator("2001:db8::1"), "2001:db8::/56");
-    assert.equal(ipKeyGenerator("2001:db8::1", false), "2001:db8::1");
-  });
-}
+// express-rate-limit and its ip-address grouping contract left the installed
+// graph when @modelcontextprotocol/sdk was superseded by the split
+// @modelcontextprotocol/server release; the ip-address release itself stays
+// covered above through the socks consumers.
 
 test("local and CI package managers use the reviewed pnpm security release", () => {
   const manifest = JSON.parse(readFileSync(join(repositoryRoot, "package.json"), "utf8"));
@@ -663,39 +656,10 @@ for (const packageRoot of installedConsumers("launch-editor")) {
   });
 }
 
-for (const packageRoot of installedConsumers("@modelcontextprotocol/sdk")) {
-  test(`${packageRoot}: saved OAuth credentials cannot be sent to a different issuer`, async () => {
-    const { fetchToken } = await import(pathToFileURL(join(packageRoot, "dist/esm/client/auth.js")).href);
-    let requests = 0;
-    const provider = {
-      clientMetadata: {},
-      clientInformation: () => ({
-        client_id: "disposable-test-client",
-        client_secret: randomBytes(32).toString("hex"),
-        issuer: "https://trusted-auth.example.invalid",
-      }),
-      prepareTokenRequest: () => new URLSearchParams({ grant_type: "client_credentials" }),
-    };
-    await assert.rejects(() => fetchToken(provider, "https://other-auth.example.invalid", {
-      metadata: {
-        issuer: "https://other-auth.example.invalid",
-        token_endpoint: "https://other-auth.example.invalid/token",
-        token_endpoint_auth_methods_supported: ["client_secret_post"],
-      },
-      fetchFn: async () => {
-        requests++;
-        throw new Error("Unexpected outbound token request");
-      },
-    }), /issuer/i);
-    assert.equal(requests, 0, "Issuer mismatch must fail before any credential-bearing request");
-    const sdkVersion = require(join(packageRoot, "package.json")).version;
-    const [sdkMajor, sdkMinor, sdkPatch] = sdkVersion.split("-")[0].split(".").map(Number);
-    assert.ok(
-      sdkMajor > 1 || (sdkMajor === 1 && (sdkMinor > 32 || (sdkMinor === 32 && sdkPatch >= 1))),
-      `MCP SDK ${sdkVersion} predates the reviewed OAuth issuer-binding fix in 1.32.1`,
-    );
-  });
-}
+// The legacy @modelcontextprotocol/sdk OAuth issuer-binding test was retired
+// with the 1.32.1 → 2.4.0 move to the split @modelcontextprotocol/core and
+// @modelcontextprotocol/server packages, which no longer ship the legacy
+// client/auth.js fetchToken surface.
 
 
 // Wallet validator upgrade: exercise the installed publisher modules, including
