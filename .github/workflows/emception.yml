@@ -419,16 +419,17 @@ jobs:
         run: |
           VERSION="$(node -p "require('./tools/emception/packages/core/package.json').version")"
           TAG="v${VERSION}"
-          HEAD_SHA="$(git rev-parse HEAD)"
           if git ls-remote --exit-code origin "refs/tags/${TAG}" >/dev/null 2>&1; then
-            REMOTE_SHA="$(git ls-remote origin "refs/tags/${TAG}" | cut -f1)"
-            # Annotated tags report the tag object; dereference to the commit.
-            REMOTE_COMMIT="$(git rev-parse "${REMOTE_SHA}^{commit}")"
-            if [ "${REMOTE_COMMIT}" != "${HEAD_SHA}" ]; then
-              echo "::error::Remote tag ${TAG} already exists at ${REMOTE_COMMIT}, expected ${HEAD_SHA}. Refusing to reuse an unrelated tag."
+            git fetch -q origin "refs/tags/${TAG}:refs/tags/${TAG}"
+            # An existing tag is acceptable only if its commit is this same
+            # Emception version; anything else (e.g. a platform v-tag reuse)
+            # is a collision and must fail closed.
+            TAGGED_VERSION="$(git show "${TAG}:tools/emception/packages/core/package.json" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version")"
+            if [ "${TAGGED_VERSION}" != "${VERSION}" ]; then
+              echo "::error::Remote tag ${TAG} exists but its commit carries Emception ${TAGGED_VERSION}, expected ${VERSION}. Refusing to reuse an unrelated tag."
               exit 1
             fi
-            echo "${TAG} already exists on origin at HEAD; skipping tag creation and push."
+            echo "${TAG} already exists on origin for Emception ${VERSION}; skipping tag creation and push."
           else
             git config user.name "gameguild-release-bot"
             git config user.email "noreply@gameguild.gg"
