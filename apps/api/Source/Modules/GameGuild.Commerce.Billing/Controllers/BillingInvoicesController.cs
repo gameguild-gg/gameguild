@@ -17,9 +17,11 @@ public sealed class BillingInvoicesController(ISender sender) : BaseApiControlle
 {
     [HttpPost("{invoiceId:guid}/retry")]
     [EndpointSummary("Retry invoice payment")]
-    [EndpointDescription("Accepts a local retry scheduling request for open or past-due invoices. External gateway capture requires configured payment-provider credentials.")]
+    [EndpointDescription("Dispatches a real payment retry for one of the caller's open or past-due invoices through the same payment retry path the automated retry queue uses. An overdue open invoice ages to past-due on the retry touch.")]
     [ProducesResponseType<InvoicePaymentRetryResult>(StatusCodes.Status202Accepted)]
     [ProducesResponseType<InvoicePaymentRetryResult>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType<InvoicePaymentRetryResult>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<InvoicePaymentRetryResult>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> RetryPayment(Guid invoiceId, CancellationToken ct)
@@ -31,6 +33,8 @@ public sealed class BillingInvoicesController(ISender sender) : BaseApiControlle
             "NotFound" => NotFound(result),
             "RetryAccepted" => Accepted(result),
             "RetryLimitExceeded" => Conflict(result),
+            "Unauthorized" => Unauthorized(result),
+            "NotOwned" => Forbid(),
             _ => BadRequest(result)
         };
     }

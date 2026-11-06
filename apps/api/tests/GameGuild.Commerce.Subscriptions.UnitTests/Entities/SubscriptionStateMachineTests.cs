@@ -141,7 +141,8 @@ public class SubscriptionStateMachineTests
         subscription.RecordPaymentFailure("Card declined", DateTime.UtcNow);
         subscription.Status.Should().Be(SubscriptionStatus.PastDue);
 
-        // Act - Record payment, then reactivate (two-step process)
+        // Act - the confirmed cycle payment itself heals PastDue → Active (issue #1205
+        // G-11): the separate Reactivate step is no longer needed.
         var paymentResult = subscription.RecordPayment(
             29.99m,
             "USD",
@@ -149,7 +150,6 @@ public class SubscriptionStateMachineTests
             "recovery_payment_key",
             forBillingCycle: 1);
         paymentResult.IsSuccess.Should().BeTrue("payment should be recorded successfully");
-        subscription.Reactivate();
 
         // Assert
         subscription.Status.Should().Be(SubscriptionStatus.Active);

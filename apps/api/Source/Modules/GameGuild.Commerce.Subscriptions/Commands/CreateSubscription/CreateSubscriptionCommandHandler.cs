@@ -20,7 +20,8 @@ public sealed class CreateSubscriptionCommandHandler(
     ISubscriptionPlanRepository planRepository,
     ILogger<CreateSubscriptionCommandHandler> logger,
     GameGuild.Commerce.ISubscriptionPromoCoordinator? promoCoordinator = null,
-    GameGuild.Commerce.Payments.IFraudDetectionService? fraudDetectionService = null) : ICommandHandler<CreateSubscriptionCommand, Guid>
+    GameGuild.Commerce.Payments.IFraudDetectionService? fraudDetectionService = null,
+    ISubscriptionIntervalPricingService? intervalPricingService = null) : ICommandHandler<CreateSubscriptionCommand, Guid>
 {
     private const int MaxFraudMetadataLength = 2000;
 
@@ -35,10 +36,34 @@ public sealed class CreateSubscriptionCommandHandler(
             throw new SubscriptionPlanCustomQuotePendingException(request.PlanId);
         }
 
+        // Issue #1205 G-13: price integrity — the subscription amount is DERIVED from the
+        // plan's authoritative interval price for the requested cycle (explicit interval
+        // price point first, derived monthly-x-months fallback). The client-supplied
+        // Amount is advisory only: a disagreement is logged as a price-integrity signal
+        // but never persisted, so a direct API caller cannot lock in 0.00 or any other
+        // self-chosen renewal amount.
+        var planPrice = intervalPricingService is not null
+            ? await intervalPricingService.ResolvePriceForCycleAsync(plan, request.BillingCycle, cancellationToken).ConfigureAwait(false)
+            : FallbackPlanPrice(plan, request.BillingCycle);
+        var authoritativeAmount = planPrice.Amount;
+
+        if (request.Amount != authoritativeAmount)
+        {
+            logger.LogWarning(
+                "Subscription creation for tenant {TenantId} plan {PlanId} cycle {BillingCycle}: client-supplied amount {ClientAmount} ignored in favor of the plan price {PlanAmount} {Currency}",
+                request.TenantId,
+                request.PlanId,
+                request.BillingCycle,
+                request.Amount,
+                authoritativeAmount,
+                planPrice.Currency);
+        }
+
         // Issue #409: subscription-creation-time risk scoring. The same signal evaluation
         // as the payment gate, evaluated BEFORE anything is created: Block refuses the
         // creation; Review creates the subscription flagged with its bounded evidence.
-        var creationAssessment = await AssessCreationAsync(request, plan.Currency, cancellationToken).ConfigureAwait(false);
+        // The assessed amount is the authoritative plan price, not the client value.
+        var creationAssessment = await AssessCreationAsync(request, plan.Currency, authoritativeAmount, cancellationToken).ConfigureAwait(false);
         if (creationAssessment is { Decision: GameGuild.Commerce.Payments.FraudDecision.Block })
         {
             logger.LogWarning(
@@ -50,7 +75,8 @@ public sealed class CreateSubscriptionCommandHandler(
             throw new SubscriptionFraudBlockedException(request.TenantId, request.PlanId, creationAssessment.Score);
         }
 
-        // Issue #418: quote promo codes against the plan before creating the subscription.
+        // Issue #418: quote promo codes against the plan's authoritative price before
+        // creating the subscription.
         GameGuild.Commerce.SubscriptionPromoQuoteResult? promoQuote = null;
         if (request.PromoCodes is { Count: > 0 })
         {
@@ -63,7 +89,7 @@ public sealed class CreateSubscriptionCommandHandler(
             promoQuote = await promoCoordinator.QuoteForSubscriptionCreationAsync(
                 new GameGuild.Commerce.SubscriptionPromoQuoteRequest(
                     request.PlanId,
-                    request.Amount,
+                    authoritativeAmount,
                     request.PromoCodes,
                     request.CreatedByUserId,
                     request.ProductId,
@@ -81,7 +107,7 @@ public sealed class CreateSubscriptionCommandHandler(
             }
         }
 
-        var effectiveAmount = promoQuote?.FinalAmount ?? request.Amount;
+        var effectiveAmount = promoQuote?.FinalAmount ?? authoritativeAmount;
 
         var startDate = request.StartDate ?? SystemClock.UtcNow;
         var trialEndDate = request.TrialDays.HasValue ? startDate.AddDays(request.TrialDays.Value) : (DateTime?) null;
@@ -183,6 +209,7 @@ public sealed class CreateSubscriptionCommandHandler(
     private async Task<GameGuild.Commerce.Payments.FraudAssessment?> AssessCreationAsync(
         CreateSubscriptionCommand request,
         string planCurrency,
+        decimal authoritativeAmount,
         CancellationToken cancellationToken)
     {
         if (fraudDetectionService is null)
@@ -198,7 +225,7 @@ public sealed class CreateSubscriptionCommandHandler(
                     SubscriptionId: Guid.Empty,
                     ExternalCustomerId: null,
                     PaymentMethodId: null,
-                    Amount: request.Amount,
+                    Amount: authoritativeAmount,
                     Currency: string.IsNullOrWhiteSpace(planCurrency) ? "USD" : planCurrency,
                     BillingCycleNumber: 1,
                     Country: request.FraudCountry,
@@ -209,5 +236,22 @@ public sealed class CreateSubscriptionCommandHandler(
                     ClientTimezone: request.FraudClientTimezone),
                 cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Plan-derived fallback price for compositions without a registered
+    ///     <see cref="ISubscriptionIntervalPricingService" /> (unit hosts): mirrors the
+    ///     resolver's derived fallback so the amount is still plan-authoritative, never
+    ///     client-supplied.
+    /// </summary>
+    private static Money FallbackPlanPrice(SubscriptionPlan plan, BillingCycle cycle)
+    {
+        var cents = SubscriptionIntervalPricingService.DeriveFallbackPriceInCents(plan, cycle);
+        if (cents < 0)
+        {
+            cents = 0;
+        }
+
+        return new Money(cents / 100m, plan.Currency);
     }
 }

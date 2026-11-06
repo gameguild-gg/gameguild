@@ -28,7 +28,7 @@ internal static class SignInMfaPreparationStub
             .Returns((Guid _, int _, Guid _, Guid _, DateTimeOffset _, CancellationToken cancellationToken) =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                return Task.FromResult<SignInMfaProof?>(null);
+                return Task.FromResult<SignInMfaSessionProof?>(null);
             });
         return port;
     }

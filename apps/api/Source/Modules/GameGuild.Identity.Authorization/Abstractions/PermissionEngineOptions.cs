@@ -39,6 +39,34 @@ public sealed class PermissionEngineOptions
     ///     External system permission synchronization limits.
     /// </summary>
     public PermissionSyncOptions ExternalSync { get; set; } = new();
+
+    /// <summary>
+    ///     Conditional-policy enforcement at resolution time (issue #1204): the
+    ///     conditional-policy overlay on effective-permission resolution and its
+    ///     failure semantics for policy-configured tenants.
+    /// </summary>
+    public ConditionalPolicyOptions ConditionalPolicy { get; set; } = new();
+}
+
+/// <summary>
+///     Conditional-policy enforcement settings for effective-permission resolution
+/// (issue #1204). Policies are always consulted once at least one active conditional
+/// policy exists for the tenant; tenants without policies keep the documented
+/// allow-by-no-policy default. When evaluation of existing policies fails, the
+/// fail-closed switch decides between denying every permission of the resolution
+/// (default — the governance posture: an unenforceable policy must not silently
+/// allow) and a logged permissive skip.
+/// </summary>
+public sealed class ConditionalPolicyOptions
+{
+    /// <summary>
+    ///     When <c>true</c> (default), a conditional-policy evaluation failure in a
+    ///     policy-configured tenant denies the whole resolution (fail closed). When
+    ///     <c>false</c>, the failure is logged (error) and the resolution continues
+    ///     without conditional contributions — the pre-#1204 fail-open behavior,
+    ///     kept only as an explicit opt-out.
+    /// </summary>
+    public bool FailClosedOnEvaluationError { get; set; } = true;
 }
 
 /// <summary>

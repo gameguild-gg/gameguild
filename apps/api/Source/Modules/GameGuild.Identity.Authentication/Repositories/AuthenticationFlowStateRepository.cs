@@ -1,3 +1,5 @@
+using System.Data;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -24,6 +26,24 @@ public class AuthenticationFlowStateRepository(IApplicationDbContext context) : 
     public async Task<AuthenticationFlowStateRecord?> GetByFlowIdAsync(Guid flowId, CancellationToken cancellationToken = default)
     {
         return await FlowStates.AsNoTracking().FirstOrDefaultAsync(flow => flow.FlowId == flowId, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<AuthenticationFlowStateRecord?> GetForUpdateAsync(Guid flowId, CancellationToken cancellationToken)
+    {
+        if (context is DbContext db && db.Database.IsRelational())
+        {
+            if (db.Database.ProviderName != "Npgsql.EntityFrameworkCore.PostgreSQL" ||
+                db.Database.CurrentTransaction is not { } transaction ||
+                transaction.GetDbTransaction().IsolationLevel != IsolationLevel.ReadCommitted)
+            {
+                throw new InvalidOperationException("Authentication flow mutation requires a caller-owned read-committed PostgreSQL transaction.");
+            }
+            var rows = await FlowStates.FromSqlInterpolated(
+                $"""SELECT * FROM "gameguild.authentication"."authentication_flow_states" WHERE "flow_id" = {flowId} FOR UPDATE""")
+                .AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
+            return rows.SingleOrDefault();
+        }
+        return await GetByFlowIdAsync(flowId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<AuthenticationFlowStateRecord> UpdateAsync(AuthenticationFlowStateRecord record, CancellationToken cancellationToken = default)

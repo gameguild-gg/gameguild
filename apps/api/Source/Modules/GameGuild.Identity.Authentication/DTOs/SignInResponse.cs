@@ -28,16 +28,19 @@ public class SignInResponse
     /// <summary>
     ///     Backward compatible field: originally represented refresh token expiry (or conflated); prefer using AccessTokenExpiresAt / RefreshTokenExpiresAt.
     /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
     public DateTime ExpiresAt { get; set; }
 
     /// <summary>
     ///     When the access token expires (short-lived)
     /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
     public DateTime AccessTokenExpiresAt { get; set; }
 
     /// <summary>
     ///     When the refresh token expires (long-lived)
     /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault)]
     public DateTime RefreshTokenExpiresAt { get; set; }
 
     /// <summary>
@@ -82,6 +85,13 @@ public class SignInResponse
     public string[]? MfaEnrollmentBackupCodes { get; set; }
 
     /// <summary>
+    ///     One-time TOTP provisioning payload, present only when sign-in requires enrollment because the
+    ///     subject needs MFA but has no enrolled factor (e.g. after an admin reset).
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public SignInMfaEnrollmentOffer? MfaEnrollment { get; set; }
+
+    /// <summary>
     ///     User information
     /// </summary>
     public UserDto User { get; set; } = new UserDto();
@@ -100,6 +110,13 @@ public class SignInResponse
     ///     Whether MFA is required
     /// </summary>
     public bool RequiresMfa { get; set; }
+
+    /// <summary>
+    ///     True when the subject's MFA requirement comes only from an elevated role and sign-in
+    ///     completed without a second factor because no factor is enrolled. Compliance is
+    ///     enforced via a persistent UI banner instead of blocking sign-in.
+    /// </summary>
+    public bool MfaCompliancePending { get; set; }
 
     /// <summary>
     ///     MFA session ID if MFA is required

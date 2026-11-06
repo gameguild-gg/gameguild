@@ -1,12 +1,13 @@
 using FluentAssertions;
-using GameGuild.Email;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
+using NotificationPriority = GameGuild.Notifications.NotificationPriority;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Handlers;
 
@@ -16,41 +17,110 @@ public sealed class MfaRecoveryCommandHandlersTests
         new() { Id = Guid.NewGuid(), Email = email, Username = "recovery-user", TokenVersion = 1 };
 
     private static (Mock<IUserRepository> Users, Mock<IMfaAttemptTrackingService> Tracking,
-        Mock<IMfaRecoveryRequestStore> Store, Mock<IEmailSender> Email, IMemoryCache Cache,
-        IConfiguration Config) CreateMocks()
+        Mock<IMfaRecoveryRequestStore> Store, Mock<INotificationService> Notifications, IMemoryCache Cache)
+        CreateMocks()
     {
-        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>()).Build();
+        var notifications = new Mock<INotificationService>();
+        notifications
+            .Setup(service => service.SendAsync(
+                It.IsAny<Guid?>(),
+                It.IsAny<NotificationType>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<NotificationChannel>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<NotificationPriority>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success<Notification>(null!));
+        var store = new Mock<IMfaRecoveryRequestStore>();
+        store.Setup(value => value.TryIssueConfirmationAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .Returns(async (Guid id, string requestHash, string confirmationHash, DateTimeOffset _, DateTimeOffset expiry, CancellationToken token) =>
+            {
+                var row = await store.Object.FindLiveByRequestTokenHashAsync(requestHash, token);
+                if (row is null || row.Id != id || row.Status is not (MfaRecoveryRequestStatus.Pending or MfaRecoveryRequestStatus.AwaitingConfirmation))
+                {
+                    return false;
+                }
+                row.Status = MfaRecoveryRequestStatus.AwaitingConfirmation;
+                row.ConfirmationTokenHash = confirmationHash;
+                row.ConfirmationTokenExpiresAt = expiry;
+                return true;
+            });
+        store.Setup(value => value.TryConfirmAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .Returns(async (Guid id, string confirmationHash, DateTimeOffset now, CancellationToken token) =>
+            {
+                var row = await store.Object.FindAwaitingByConfirmationTokenHashAsync(confirmationHash, token);
+                if (row is null || row.Id != id || row.Status != MfaRecoveryRequestStatus.AwaitingConfirmation) { return false; }
+                row.Status = MfaRecoveryRequestStatus.Completed;
+                row.ConsumedAt = now;
+                return true;
+            });
         return (new Mock<IUserRepository>(), new Mock<IMfaAttemptTrackingService>(),
-            new Mock<IMfaRecoveryRequestStore>(), new Mock<IEmailSender>(), new MemoryCache(new MemoryCacheOptions()), config);
+            store, notifications, new MemoryCache(new MemoryCacheOptions()));
     }
 
     private static RequestMfaRecoveryCommandHandler CreateRequestHandler(
         Mock<IUserRepository> users, Mock<IMfaAttemptTrackingService> tracking, Mock<IMfaRecoveryRequestStore> store,
-        Mock<IEmailSender> email, IMemoryCache cache, IConfiguration config) =>
-        new(users.Object, tracking.Object, store.Object, email.Object, cache, config,
-            NullLogger<RequestMfaRecoveryCommandHandler>.Instance);
+        Mock<INotificationService> notifications, IMemoryCache cache) =>
+        new(users.Object, tracking.Object, store.Object, notifications.Object, cache,
+            NullLogger<RequestMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
+
+    private static void VerifyQueuedEmail(
+        Mock<INotificationService> notifications,
+        Guid userId,
+        NotificationType type,
+        string email,
+        string metadataFragment,
+        Times times)
+    {
+        notifications.Verify(service => service.SendAsync(
+                userId,
+                type,
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                NotificationChannel.Email,
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<NotificationPriority>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.Is<string?>(metadata => metadata != null && metadata.Contains(metadataFragment, StringComparison.Ordinal)),
+                email,
+                It.IsAny<CancellationToken>()),
+            times);
+    }
 
     [Fact]
     public async Task RequestMfaRecoveryCommandHandler_UnknownEmailReturnsGenericSuccessAndCreatesNothing()
     {
-        var (users, tracking, store, email, cache, config) = CreateMocks();
+        var (users, tracking, store, notifications, cache) = CreateMocks();
         users.Setup(r => r.GetByEmailAsync("ghost@test.com", It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
-        var handler = CreateRequestHandler(users, tracking, store, email, cache, config);
+        var handler = CreateRequestHandler(users, tracking, store, notifications, cache);
         var result = await handler.Handle(new RequestMfaRecoveryCommand { Email = "ghost@test.com" }, CancellationToken.None);
 
         result.Success.Should().BeTrue();
         store.Verify(s => s.AddAsync(It.IsAny<MfaRecoveryRequest>(), It.IsAny<CancellationToken>()), Times.Never);
-        email.Verify(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        notifications.Verify(s => s.SendAsync(
+            It.IsAny<Guid?>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
         tracking.Verify(t => t.GetMfaStatusAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task RequestMfaRecoveryCommandHandler_MfaUserWithNoLiveRequestCreatesPendingRequestAndSendsEmail()
+    public async Task RequestMfaRecoveryCommandHandler_MfaUserWithNoLiveRequestCreatesPendingRequestAndQueuesEmail()
     {
         var user = CreateUser("locked-out@test.com");
-        var (users, tracking, store, email, cache, config) = CreateMocks();
+        var (users, tracking, store, notifications, cache) = CreateMocks();
         users.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         tracking.Setup(t => t.GetMfaStatusAsync(user.Id, It.IsAny<CancellationToken>()))
@@ -63,7 +133,7 @@ public sealed class MfaRecoveryCommandHandlersTests
             .Callback<MfaRecoveryRequest, CancellationToken>((request, _) => persisted = request)
             .Returns(Task.CompletedTask);
 
-        var handler = CreateRequestHandler(users, tracking, store, email, cache, config);
+        var handler = CreateRequestHandler(users, tracking, store, notifications, cache);
         var result = await handler.Handle(new RequestMfaRecoveryCommand { Email = user.Email }, CancellationToken.None);
 
         result.Success.Should().BeTrue();
@@ -72,20 +142,57 @@ public sealed class MfaRecoveryCommandHandlersTests
         persisted.UserId.Should().Be(user.Id.ToString());
         persisted.RequestTokenHash.Should().MatchRegex("^[a-f0-9]{64}$");
         persisted.CooldownEndsAt.Should().BeAfter(persisted.RequestedAt);
-        email.Verify(s => s.SendAsync(
-            It.Is<EmailMessage>(m => m.ToEmail == user.Email && m.PlainTextContent.Contains("token=")),
-            It.IsAny<CancellationToken>()), Times.Once);
+        // The email goes through the durable notification outbox (issue #1155), not IEmailSender.
+        VerifyQueuedEmail(notifications, user.Id, NotificationType.MfaRecovery, user.Email, "token", Times.Once());
+    }
+
+    [Fact]
+    public async Task RequestMfaRecoveryCommandHandler_OutboxFailureAbortsTheCommand()
+    {
+        var user = CreateUser("outbox-down@test.com");
+        var (users, tracking, store, notifications, cache) = CreateMocks();
+        users.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        tracking.Setup(t => t.GetMfaStatusAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        store.Setup(s => s.FindLiveByUserAsync(user.Id.ToString(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MfaRecoveryRequest?)null);
+        store.Setup(s => s.AddAsync(It.IsAny<MfaRecoveryRequest>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        notifications
+            .Setup(service => service.SendAsync(
+                It.IsAny<Guid?>(),
+                It.IsAny<NotificationType>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<NotificationChannel>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<NotificationPriority>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure<Notification>(
+                Error.Failure("Notification.OutboxUnavailable", "The notification outbox is unavailable.")));
+
+        var handler = CreateRequestHandler(users, tracking, store, notifications, cache);
+        var act = () => handler.Handle(new RequestMfaRecoveryCommand { Email = user.Email }, CancellationToken.None);
+
+        // A failed durable enqueue must not be acknowledged as a sent email.
+        await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
     [Fact]
     public async Task RequestMfaRecoveryCommandHandler_SecondCallWithinRateLimitWindowReturnsGenericSuccessWithoutWork()
     {
         var user = CreateUser("throttled@test.com");
-        var (users, tracking, store, email, cache, config) = CreateMocks();
+        var (users, tracking, store, notifications, cache) = CreateMocks();
         users.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        var handler = CreateRequestHandler(users, tracking, store, email, cache, config);
+        var handler = CreateRequestHandler(users, tracking, store, notifications, cache);
         var first = await handler.Handle(new RequestMfaRecoveryCommand { Email = user.Email }, CancellationToken.None);
         var second = await handler.Handle(new RequestMfaRecoveryCommand { Email = user.Email }, CancellationToken.None);
 
@@ -98,7 +205,7 @@ public sealed class MfaRecoveryCommandHandlersTests
     [Fact]
     public async Task ContinueMfaRecoveryCommandHandler_CooldownNotElapsedDeniesWithRemainingTime()
     {
-        var (users, _, store, email, _, config) = CreateMocks();
+        var (users, _, store, notifications, _) = CreateMocks();
         var now = SystemClock.UtcNow;
         var recovery = new MfaRecoveryRequest
         {
@@ -115,40 +222,48 @@ public sealed class MfaRecoveryCommandHandlersTests
         store.Setup(s => s.FindLiveByRequestTokenHashAsync(recovery.RequestTokenHash!, It.IsAny<CancellationToken>()))
             .ReturnsAsync(recovery);
 
-        var handler = new ContinueMfaRecoveryCommandHandler(store.Object, users.Object, email.Object, config,
-            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance);
+        var handler = new ContinueMfaRecoveryCommandHandler(store.Object, users.Object, notifications.Object,
+            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ContinueMfaRecoveryCommand { RequestToken = "request-token" }, CancellationToken.None);
 
         result.Success.Should().BeFalse();
         result.RetryAfterSeconds.Should().HaveValue().And.BeGreaterThan(0);
         recovery.Status.Should().Be(MfaRecoveryRequestStatus.Pending);
-        email.Verify(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        notifications.Verify(s => s.SendAsync(
+            It.IsAny<Guid?>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task ContinueMfaRecoveryCommandHandler_UnknownTokenReturnsGenericDenial()
     {
-        var (users, _, store, email, _, config) = CreateMocks();
+        var (users, _, store, notifications, _) = CreateMocks();
         store.Setup(s => s.ExpireOlderThanAsync(It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
         store.Setup(s => s.FindLiveByRequestTokenHashAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((MfaRecoveryRequest?)null);
 
-        var handler = new ContinueMfaRecoveryCommandHandler(store.Object, users.Object, email.Object, config,
-            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance);
+        var handler = new ContinueMfaRecoveryCommandHandler(store.Object, users.Object, notifications.Object,
+            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ContinueMfaRecoveryCommand { RequestToken = "unknown-token" }, CancellationToken.None);
 
         result.Success.Should().BeFalse();
         result.RetryAfterSeconds.Should().BeNull();
         result.Message.Should().Be("Invalid or expired recovery request.");
-        email.Verify(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        notifications.Verify(s => s.SendAsync(
+            It.IsAny<Guid?>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task ContinueMfaRecoveryCommandHandler_CooldownElapsedMintsConfirmationAndSendsEmail()
+    public async Task ContinueMfaRecoveryCommandHandler_CooldownElapsedMintsConfirmationAndQueuesEmail()
     {
         var user = CreateUser("ready@test.com");
-        var (users, _, store, email, _, config) = CreateMocks();
+        var (users, _, store, notifications, _) = CreateMocks();
         var now = SystemClock.UtcNow;
         var requestTokenHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("request-token"))).ToLowerInvariant();
         var recovery = new MfaRecoveryRequest
@@ -168,8 +283,8 @@ public sealed class MfaRecoveryCommandHandlersTests
         store.Setup(s => s.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         users.Setup(r => r.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
-        var handler = new ContinueMfaRecoveryCommandHandler(store.Object, users.Object, email.Object, config,
-            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance);
+        var handler = new ContinueMfaRecoveryCommandHandler(store.Object, users.Object, notifications.Object,
+            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ContinueMfaRecoveryCommand { RequestToken = "request-token" }, CancellationToken.None);
 
         result.Success.Should().BeTrue();
@@ -177,16 +292,15 @@ public sealed class MfaRecoveryCommandHandlersTests
         recovery.RequestTokenHash.Should().Be(requestTokenHash); // constraint: stays set
         recovery.ConfirmationTokenHash.Should().MatchRegex("^[a-f0-9]{64}$");
         recovery.ConfirmationTokenExpiresAt.Should().BeAfter(now);
-        email.Verify(s => s.SendAsync(
-            It.Is<EmailMessage>(m => m.ToEmail == user.Email && m.PlainTextContent.Contains("confirm=")),
-            It.IsAny<CancellationToken>()), Times.Once);
+        // The confirmation email goes through the durable notification outbox (issue #1155).
+        VerifyQueuedEmail(notifications, user.Id, NotificationType.MfaRecoveryConfirmation, user.Email, "token", Times.Once());
     }
 
     [Fact]
     public async Task RequestMfaRecoveryCommandHandler_UnknownEmailReturnsSamePayloadAsKnownEmail()
     {
         var user = CreateUser("enumeration-safe@test.com");
-        var (users, tracking, store, email, cache, config) = CreateMocks();
+        var (users, tracking, store, notifications, cache) = CreateMocks();
         users.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         users.Setup(r => r.GetByEmailAsync("ghost@test.com", It.IsAny<CancellationToken>()))
@@ -198,7 +312,7 @@ public sealed class MfaRecoveryCommandHandlersTests
         store.Setup(s => s.AddAsync(It.IsAny<MfaRecoveryRequest>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var handler = CreateRequestHandler(users, tracking, store, email, cache, config);
+        var handler = CreateRequestHandler(users, tracking, store, notifications, cache);
         var known = await handler.Handle(new RequestMfaRecoveryCommand { Email = user.Email }, CancellationToken.None);
         var unknown = await handler.Handle(new RequestMfaRecoveryCommand { Email = "ghost@test.com" }, CancellationToken.None);
 
@@ -209,7 +323,7 @@ public sealed class MfaRecoveryCommandHandlersTests
     [Fact]
     public async Task ContinueMfaRecoveryCommandHandler_RequestOlderThanRetentionIsExpiredOnTouchAndDenied()
     {
-        var (users, _, store, email, _, config) = CreateMocks();
+        var (users, _, store, notifications, _) = CreateMocks();
         var now = SystemClock.UtcNow;
         var recovery = new MfaRecoveryRequest
         {
@@ -230,8 +344,8 @@ public sealed class MfaRecoveryCommandHandlersTests
                 ? recovery
                 : null));
 
-        var handler = new ContinueMfaRecoveryCommandHandler(store.Object, users.Object, email.Object, config,
-            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance);
+        var handler = new ContinueMfaRecoveryCommandHandler(store.Object, users.Object, notifications.Object,
+            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ContinueMfaRecoveryCommand { RequestToken = "request-token" }, CancellationToken.None);
 
         result.Success.Should().BeFalse();
@@ -241,13 +355,17 @@ public sealed class MfaRecoveryCommandHandlersTests
         store.Verify(s => s.ExpireOlderThanAsync(
             It.Is<DateTimeOffset>(cutoff => Math.Abs((cutoff - now.AddDays(-30)).TotalSeconds) < 60),
             It.IsAny<CancellationToken>()), Times.Once);
-        email.Verify(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        notifications.Verify(s => s.SendAsync(
+            It.IsAny<Guid?>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(), It.IsAny<Guid?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task ConfirmMfaRecoveryCommandHandler_SecondConfirmWithSameTokenIsDenied()
     {
-        var (_, tracking, store, _, _, _) = CreateMocks();
+        var (_, tracking, store, _, _) = CreateMocks();
         var userId = Guid.NewGuid();
         var confirmationTokenHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("confirmation-token"))).ToLowerInvariant();
         var recovery = new MfaRecoveryRequest
@@ -269,7 +387,7 @@ public sealed class MfaRecoveryCommandHandlersTests
         tracking.Setup(t => t.DisableMfaAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var handler = new ConfirmMfaRecoveryCommandHandler(store.Object, tracking.Object,
-            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance);
+            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var first = await handler.Handle(new ConfirmMfaRecoveryCommand { ConfirmationToken = "confirmation-token" }, CancellationToken.None);
         var second = await handler.Handle(new ConfirmMfaRecoveryCommand { ConfirmationToken = "confirmation-token" }, CancellationToken.None);
 
@@ -282,7 +400,7 @@ public sealed class MfaRecoveryCommandHandlersTests
     [Fact]
     public async Task ConfirmMfaRecoveryCommandHandler_HappyPathMarksCompletedAndDisablesMfa()
     {
-        var (_, tracking, store, _, _, _) = CreateMocks();
+        var (_, tracking, store, _, _) = CreateMocks();
         var userId = Guid.NewGuid();
         var confirmationTokenHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("confirmation-token"))).ToLowerInvariant();
         var recovery = new MfaRecoveryRequest
@@ -303,7 +421,7 @@ public sealed class MfaRecoveryCommandHandlersTests
         tracking.Setup(t => t.DisableMfaAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var handler = new ConfirmMfaRecoveryCommandHandler(store.Object, tracking.Object,
-            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance);
+            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ConfirmMfaRecoveryCommand { ConfirmationToken = "confirmation-token" }, CancellationToken.None);
 
         result.Success.Should().BeTrue();
@@ -315,12 +433,12 @@ public sealed class MfaRecoveryCommandHandlersTests
     [Fact]
     public async Task ConfirmMfaRecoveryCommandHandler_UnknownTokenReturnsGenericDenialWithoutDisabling()
     {
-        var (_, tracking, store, _, _, _) = CreateMocks();
+        var (_, tracking, store, _, _) = CreateMocks();
         store.Setup(s => s.FindAwaitingByConfirmationTokenHashAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((MfaRecoveryRequest?)null);
 
         var handler = new ConfirmMfaRecoveryCommandHandler(store.Object, tracking.Object,
-            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance);
+            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ConfirmMfaRecoveryCommand { ConfirmationToken = "unknown-token" }, CancellationToken.None);
 
         result.Success.Should().BeFalse();
@@ -331,7 +449,7 @@ public sealed class MfaRecoveryCommandHandlersTests
     [Fact]
     public async Task ConfirmMfaRecoveryCommandHandler_ExpiredConfirmationTokenDenies()
     {
-        var (_, tracking, store, _, _, _) = CreateMocks();
+        var (_, tracking, store, _, _) = CreateMocks();
         var confirmationTokenHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("confirmation-token"))).ToLowerInvariant();
         var recovery = new MfaRecoveryRequest
         {
@@ -349,7 +467,7 @@ public sealed class MfaRecoveryCommandHandlersTests
             .ReturnsAsync(recovery);
 
         var handler = new ConfirmMfaRecoveryCommandHandler(store.Object, tracking.Object,
-            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance);
+            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ConfirmMfaRecoveryCommand { ConfirmationToken = "confirmation-token" }, CancellationToken.None);
 
         result.Success.Should().BeFalse();

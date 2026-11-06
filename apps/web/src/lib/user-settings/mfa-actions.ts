@@ -102,14 +102,15 @@ export async function completeTotpSetup(params: {
 }
 
 /**
- * Regenerates the backup-code set, invalidating all previously issued
- * codes. New codes are returned exactly once, here.
+ * Regenerates the backup-code set after re-verifying the account password
+ * (issue #1153), invalidating all previously issued codes. New codes are
+ * returned exactly once, here.
  */
-export async function regenerateBackupCodes(): Promise<
+export async function regenerateBackupCodes(password: string): Promise<
   MfaActionResult<{ codes: string[]; generatedAt: string | null }>
 > {
   const mfa = getMfaModule();
-  const result = await mfa.postAuthMfaBackupCodesRegenerate();
+  const result = await mfa.postAuthMfaBackupCodesRegenerate({ password });
 
   if (!result.ok) {
     return { ok: false, error: toError(result.error.message, 'Unable to regenerate codes.') };

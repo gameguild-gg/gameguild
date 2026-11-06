@@ -14,6 +14,7 @@ interface ProblemDetails {
   title?: string;
   status?: number;
   detail?: string;
+  message?: string;
   instance?: string;
   traceId?: string;
   errors?: Record<string, string[]>;
@@ -33,7 +34,7 @@ export async function createApiError(response: Response): Promise<ApiError> {
   }
 
   const code = statusToErrorCode(status, body);
-  const message = body?.title || body?.detail || response.statusText || 'Unknown error';
+  const message = body?.title || body?.detail || (typeof body?.message === 'string' ? body.message : '') || response.statusText || 'Unknown error';
 
   const error: ApiError = {
     name: 'ApiError',

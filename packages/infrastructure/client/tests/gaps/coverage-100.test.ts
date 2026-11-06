@@ -13,7 +13,7 @@
  *   credentials.ts     — L120 (userId/email fallbacks)
  *   github.ts          — L137-141 (userId/email/name fallbacks)
  *   google.ts          — L107 (userId/email fallbacks)
- *   extended-ops.ts    — L332 (sessions endpoint returns {})
+ *   extended-ops.ts    — rejects malformed session collections
  *   session.ts         — L165 (non-Error throw), L217-224 (debug+refresh fail), L236 (jwt cb same ref)
  *   devtools.ts        — L100 (process undef branch), L116-117 (logRequestComplete branches)
  *   query-hooks.ts     — L98-130 (optimistic w/o invalidateKeys, rollbackOnError=false)
@@ -34,7 +34,7 @@ import { GitHubProvider } from '../../src/runtime/auth/providers/github.js';
 import { GoogleProvider } from '../../src/runtime/auth/providers/google.js';
 import { listSessions } from '../../src/runtime/auth/extended-operations.js';
 import { refreshAccessToken, processSession } from '../../src/runtime/auth/session.js';
-import { TokenRefreshError } from '../../src/runtime/auth/errors.js';
+import { TokenRefreshError, AuthServiceUnavailableError } from '../../src/runtime/auth/errors.js';
 import { encodeJWT } from '../../src/runtime/auth/jwt.js';
 import { DevTools } from '../../src/runtime/devtools/devtools.js';
 
@@ -448,30 +448,28 @@ describe('credentials provider — fallback chains (L120)', () => {
   });
 
   it('uses backendUser fallbacks when direct fields are missing', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
         // No userId, no email at top level — falls to backendUser
         accessToken: 'at',
         refreshToken: 'rt',
         user: {
-          id: 'bu-id',
+          id: '44444444-4444-4444-8444-444444444444',
           email: 'bu@email.com',
           displayName: 'Backend User',
           profilePictureUrl: 'https://img.com/pic.png',
         },
       }),
-    });
+    );
 
     const provider = CredentialsProvider({
       apiUrl: 'http://localhost:8080',
     });
 
-    const result = await provider.authorize!({ email: 'user@test.com', password: 'password' }, undefined as any);
+    const result = await provider.authorize({ email: 'user@test.com', password: 'password' }, undefined);
     expect(result).not.toBeNull();
     const user = result!.user;
-    expect(user.id).toBe('bu-id');
+    expect(user.id).toBe('44444444-4444-4444-8444-444444444444');
     expect(user.email).toBe('bu@email.com');
     expect(user.name).toBe('Backend User');
     expect(user.image).toBe('https://img.com/pic.png');
@@ -558,24 +556,18 @@ describe('google provider — fallback chains (L107)', () => {
   });
 });
 
-// ─── extended-operations.ts  L332 (listSessions returns {}) ────────────────
+// ─── extended-operations.ts — malformed session collections ────────────────
 
-describe('extendedOperations — listSessions fallback (L332)', () => {
+describe('extendedOperations — malformed session collection', () => {
   const originalFetch = globalThis.fetch;
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
   });
 
-  it('returns empty array when response is {} (no .sessions key)', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({}), // No .sessions property
-    });
-
-    const sessions = await listSessions('http://localhost:8080', 'token');
-    expect(sessions).toEqual([]);
+  it('rejects a successful response that is neither an array nor a session envelope', async () => {
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(Response.json({}));
+    await expect(listSessions('http://localhost:8080', 'token')).rejects.toThrow(AuthServiceUnavailableError);
   });
 });
 

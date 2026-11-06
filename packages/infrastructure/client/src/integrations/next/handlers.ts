@@ -21,7 +21,10 @@ import { createJWTPayload, processSession, encodeSession, toSession } from '../.
 import { createCSRFToken, validateCSRFToken } from '../../runtime/auth/csrf.js';
 import { decodeJWT } from '../../runtime/auth/jwt.js';
 import { resolveAuthPermissions, resolveAuthRoles } from '../../runtime/auth/claims.js';
-import { AuthError, CredentialsSignInError, ProviderNotFoundError, CSRFError, SignUpError, AuthServiceUnavailableError } from '../../runtime/auth/errors.js';
+import { AuthError, CredentialsSignInError, ProviderNotFoundError, CSRFError, SignUpError } from '../../runtime/auth/errors.js';
+import { registerAccount } from '../../runtime/auth/sign-up.js';
+import { revokeSessionRefreshToken } from '../../runtime/auth/sign-out.js';
+import type { IdentityAuthenticationLocalSignUpInput } from '../../generated/types.gen.js';
 import { type OAuthProviderWithMethods, getOAuthExchangeToken, getOAuthAuthorizeUrl, getOAuthHandleCallback } from './oauth-helpers.js';
 import {
   STATE_COOKIE_MAX_AGE,
@@ -333,9 +336,6 @@ export function createHandlers(config: ResolvedAuthConfig) {
         }
         case 'signup':
           return await handleSignUp(body, responseCookies);
-        case 'mfa':
-          if (providerId !== 'enrollment') return buildResponse({ error: 'Unknown action' }, 404, responseCookies);
-          return await handleMfaEnrollment(body, responseCookies);
         case 'signout':
           return await handleSignOut(cookies, responseCookies);
         case 'session':
@@ -353,43 +353,6 @@ export function createHandlers(config: ResolvedAuthConfig) {
   }
 
   // ─── Handler Implementations (inside closure — access buildResponse) ───
-
-  async function handleMfaEnrollment(body: Record<string, unknown>, responseCookies: ResponseCookies): Promise<Response> {
-    const { mfaToken } = body;
-    if (typeof mfaToken !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(mfaToken)) {
-      throw new AuthError('A valid MFA challenge is required', { type: 'MfaEnrollment', status: 400 });
-    }
-    let response: Response;
-    try {
-      response = await fetch(`${config.apiUrl}/v1/auth/mfa/sign-in/enrollment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mfaToken }),
-      });
-    } catch {
-      throw new AuthServiceUnavailableError();
-    }
-    if (!response.ok) {
-      if (response.status >= 500) throw new AuthServiceUnavailableError();
-      throw new AuthError('Unable to start authenticator setup. Sign in again if the challenge has expired.', {
-        type: 'MfaEnrollment',
-        status: [400, 401, 403, 409, 423, 429].includes(response.status) ? response.status : 401,
-      });
-    }
-    const data = (await response.json()) as Record<string, unknown>;
-    if (
-      data.success !== true ||
-      typeof data.secretKey !== 'string' ||
-      !data.secretKey ||
-      typeof data.qrCodeUri !== 'string' ||
-      !data.qrCodeUri.startsWith('otpauth://totp/') ||
-      typeof data.expiresAt !== 'string' ||
-      !Number.isFinite(Date.parse(data.expiresAt))
-    ) {
-      throw new AuthServiceUnavailableError();
-    }
-    return buildResponse({ success: true, secretKey: data.secretKey, qrCodeUri: data.qrCodeUri, expiresAt: data.expiresAt }, 200, responseCookies);
-  }
 
   async function handleGetSession(cookies: Map<string, string>, responseCookies: ResponseCookies): Promise<Response> {
     const encryptedToken = sessionStore.read((name) => cookies.get(name));
@@ -499,7 +462,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
   }
 
   async function handleSignUp(body: Record<string, unknown>, responseCookies: ResponseCookies): Promise<Response> {
-    const { username, email, password, firstName, lastName, tenantId, guestAccessToken } = body as {
+    const { username, email, password, firstName, lastName, tenantId, guestAccessToken, turnstileToken } = body as {
       username?: string;
       email?: string;
       password?: string;
@@ -507,6 +470,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
       lastName?: string;
       tenantId?: string;
       guestAccessToken?: string;
+      turnstileToken?: string;
     };
 
     if (!username || !email || !password) {
@@ -521,7 +485,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
       });
     }
 
-    const signUpBody: Record<string, unknown> = { username, email, password };
+    const signUpBody: IdentityAuthenticationLocalSignUpInput = { username, email, password };
     if (firstName) signUpBody.firstName = firstName;
     if (lastName) signUpBody.lastName = lastName;
     if (tenantId) signUpBody.tenantId = tenantId;
@@ -529,23 +493,9 @@ export function createHandlers(config: ResolvedAuthConfig) {
     // link the fresh authenticated session to the guest session; an invalid
     // token never blocks registration.
     if (guestAccessToken) signUpBody.guestAccessToken = guestAccessToken;
+    if (turnstileToken) signUpBody.turnstileToken = turnstileToken;
 
-    const response = await fetch(`${config.apiUrl}/v1/auth/sign-up`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(signUpBody),
-    });
-
-    if (!response.ok) {
-      /* v8 ignore start -- error response parsing */
-      const errorData = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-      throw new SignUpError((errorData.message as string) || (errorData.detail as string) || 'Sign-up failed', {
-        fieldErrors: errorData.errors as Record<string, string[]> | undefined,
-      });
-      /* v8 ignore stop */
-    }
-
-    const data = (await response.json()) as Record<string, unknown>;
+    const data = await registerAccount(config.apiUrl, signUpBody);
     const providerResult = parseBackendAuthResponse(data, email, username);
     const signInAllowed = await config.callbacks.signIn({
       user: providerResult.user,
@@ -571,14 +521,8 @@ export function createHandlers(config: ResolvedAuthConfig) {
     if (encryptedToken) {
       try {
         const token = await decodeJWT({ token: encryptedToken, secret: config.secret });
-        if (token?.refreshToken) {
-          await fetch(`${config.apiUrl}/v1/auth/tokens:revoke`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token.refreshToken }),
-            /* v8 ignore start */
-          }).catch(() => {});
-          /* v8 ignore stop */
+        if (token) {
+          await revokeSessionRefreshToken(config.apiUrl, token);
         }
       } catch {
         // Ignore decode errors

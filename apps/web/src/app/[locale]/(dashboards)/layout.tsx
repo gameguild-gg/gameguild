@@ -29,6 +29,22 @@ async function fetchTwoFactorEnabled(): Promise<boolean | null> {
 }
 
 /**
+ * Elevated roles whose sessions are subject to mandatory MFA compliance
+ * (hotfix/login-mfa-turnstile). Seam: until the backend exposes an
+ * `MfaCompliancePending`-style flag on the session/SignInResponse, the
+ * persistent compliance banner is keyed off these roles plus
+ * `twoFactorEnabled === false`; swap in the backend flag here when it lands.
+ * Mirrors MfaSubjectRequirementPolicy.IsElevatedRole (Admin / TenantAdmin /
+ * Owner / SystemAdmin), compared case-insensitively because claim-cased role
+ * spellings drift between token issuers.
+ */
+const MFA_REQUIRED_ROLES = new Set(['admin', 'tenantadmin', 'owner', 'systemadmin']);
+
+function isMfaComplianceRequired(roles: readonly string[] | undefined): boolean {
+  return (roles ?? []).some((role) => MFA_REQUIRED_ROLES.has(role.toLowerCase()));
+}
+
+/**
  * The browser-visible path the proxy forwarded (issue #864): layouts receive
  * no search params, so a transient unauthenticated render recovers the real
  * target for the sign-in callbackUrl instead of losing it to `/workspace`.
@@ -90,6 +106,9 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
     image: session.user.image ?? null,
   };
 
+  const mfaCompliancePending =
+    twoFactorEnabled === false && isMfaComplianceRequired(session.user.roles);
+  const nudgeEligible = twoFactorEnabled === false && !mfaCompliancePending;
   return (
     <WorkspaceShell
       notifications={notifications}
@@ -100,7 +119,10 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
       <ThemeSyncInitializer />
       <AccessibilitySyncInitializer />
       <EditorPreferencesSyncInitializer />
-      {twoFactorEnabled === false && <TwoFactorNudgeBanner twoFactorEnabled={false} />}
+      {mfaCompliancePending && (
+        <TwoFactorNudgeBanner twoFactorEnabled={false} enforcement="required" />
+      )}
+      {nudgeEligible && <TwoFactorNudgeBanner twoFactorEnabled={false} />}
       <GitHubStarPrompt starCount={repositoryStars} />
       {children}
     </WorkspaceShell>

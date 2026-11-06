@@ -69,6 +69,27 @@ public class OidcFederationServiceTests : IDisposable
 
     // ── Discovery + authorization URL ─────────────────────────────────────────
 
+    [Theory]
+    [InlineData("discovery")]
+    [InlineData("token")]
+    [InlineData("jwks")]
+    public async Task AuthenticateCallbackAsync_Provider503_IsOutageRatherThanCredentialRejection(string endpoint)
+    {
+        using var stub = new StubOidcProvider(_signingKey)
+        {
+            DiscoveryStatus = endpoint == "discovery" ? HttpStatusCode.ServiceUnavailable : HttpStatusCode.OK,
+            TokenEndpointStatus = endpoint == "token" ? HttpStatusCode.ServiceUnavailable : HttpStatusCode.OK,
+            JwksStatus = endpoint == "jwks" ? HttpStatusCode.ServiceUnavailable : HttpStatusCode.OK
+        };
+        var sut = CreateSut(AuthOptionsWith((Slug, ProviderOptions())), stub);
+
+        var act = () => sut.AuthenticateCallbackAsync(Slug, "code", "state", "https://web.example.test/cb");
+
+        var thrown = await act.Should().ThrowAsync<OAuthProviderUnavailableException>();
+        thrown.Which.InnerException.Should().BeOfType<HttpRequestException>()
+            .Which.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+    }
+
     [Fact]
     public async Task BuildAuthorizationUrlAsync_UsesDiscoveredAuthorizationEndpoint()
     {
@@ -450,6 +471,10 @@ public class OidcFederationServiceTests : IDisposable
 
         public HttpStatusCode TokenEndpointStatus { get; set; } = HttpStatusCode.OK;
 
+        public HttpStatusCode DiscoveryStatus { get; set; } = HttpStatusCode.OK;
+
+        public HttpStatusCode JwksStatus { get; set; } = HttpStatusCode.OK;
+
         public Action<List<Claim>>? CustomClaims { get; set; }
 
         public int DiscoveryHits { get; private set; }
@@ -474,6 +499,10 @@ public class OidcFederationServiceTests : IDisposable
             if (request.Method == HttpMethod.Get && url.EndsWith(".well-known/openid-configuration", StringComparison.OrdinalIgnoreCase))
             {
                 DiscoveryHits++;
+                if (DiscoveryStatus != HttpStatusCode.OK)
+                {
+                    return new HttpResponseMessage(DiscoveryStatus);
+                }
                 var payload = new Dictionary<string, object?>
                 {
                     ["issuer"] = Issuer,
@@ -493,6 +522,10 @@ public class OidcFederationServiceTests : IDisposable
             if (request.Method == HttpMethod.Get && url.EndsWith(".well-known/jwks.json", StringComparison.OrdinalIgnoreCase))
             {
                 JwksHits++;
+                if (JwksStatus != HttpStatusCode.OK)
+                {
+                    return new HttpResponseMessage(JwksStatus);
+                }
                 var parameters = _jwksKey.ExportParameters(includePrivateParameters: false);
                 return Json(new Dictionary<string, object?>
                 {

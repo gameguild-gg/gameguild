@@ -8,7 +8,10 @@ public sealed class OrchestrationAuthenticationFlowState : AuthenticationFlowSta
 /// <summary>
 ///     Concrete <see cref="AuthenticationResult"/> returned by the authentication orchestration service.
 /// </summary>
-public sealed class OrchestrationAuthenticationResult : AuthenticationResult;
+public sealed class OrchestrationAuthenticationResult : AuthenticationResult
+{
+    internal SignInResponse IssuedCredentials { get; init; } = null!;
+}
 
 /// <summary>
 ///     Concrete <see cref="InitiateAuthenticationRequest"/> for a local (email + password)

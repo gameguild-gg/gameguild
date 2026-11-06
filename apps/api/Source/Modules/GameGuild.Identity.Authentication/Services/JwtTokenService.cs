@@ -7,6 +7,7 @@ using System.Text;
 using GameGuild;
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Configuration.PresentationLayer.Authorization;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -17,7 +18,11 @@ namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     JWT token service for generating and validating access tokens and refresh tokens.
-///     Issues and accepts HS256 tokens using the configured symmetric key.
+///     Issues and accepts HS256 tokens signed with the ACTIVE key from the key-rotation
+///     store (issue #1141); the JWT 'kid' header identifies which key signed each token.
+///     When the rotation store is absent or unusable it falls back to the statically
+///     configured symmetric key, and that static key always remains accepted so tokens
+///     issued before a rotation keep validating.
 /// </summary>
 public sealed class JwtTokenService(
     ILogger<JwtTokenService> logger,
@@ -27,8 +32,13 @@ public sealed class JwtTokenService(
     IOptions<JwtOptions> jwtOptions,
     IAuthorizationGroupMembershipProvider? groupMembershipProvider = null,
     IOptions<AuthorizationTokenOptions>? authorizationTokenOptions = null,
-    IRefreshTokenLifecycleRecorder? lifecycleRecorder = null) : IJwtTokenService
+    IRefreshTokenLifecycleRecorder? lifecycleRecorder = null,
+    IPublisher? eventPublisher = null,
+    IKeyRotationService? keyRotationService = null,
+    IJwtSigningKeyCache? signingKeyCache = null) : IJwtTokenService
 {
+    private const string StaticSigningKeyId = "GameGuild-jwt-key";
+
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
     private readonly AuthorizationTokenOptions _authorizationTokenOptions = authorizationTokenOptions?.Value ?? new AuthorizationTokenOptions();
 
@@ -43,6 +53,7 @@ public sealed class JwtTokenService(
         "actor_kind", "actor_type", "client_id", "grant_type", "scope",
         ClaimNames.UserId, ClaimNames.TenantId, ClaimNames.Group,
         ClaimNames.MfaVerified, ClaimNames.MfaTime, ClaimNames.MfaTimestamp, ClaimNames.EmailVerified,
+        ClaimNames.MfaCompliancePending,
         JwtClaimTypes.TenantId, JwtClaimTypes.SessionId, JwtClaimTypes.MfaEnabled,
         JwtClaimTypes.TenantPermissionFlags1, JwtClaimTypes.TenantPermissionFlags2
     }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
@@ -85,6 +96,49 @@ public sealed class JwtTokenService(
             null);
     }
 
+    /// <summary>
+    ///     Generates an access token carrying the MFA compliance-pending marker claim. The marker
+    ///     is a trusted builder parameter because the claim type is reserved against the
+    ///     untrusted additional-claims path.
+    /// </summary>
+    public Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        Guid sessionId,
+        bool mfaCompliancePending,
+        CancellationToken cancellationToken = default)
+    {
+        return GenerateAccessTokenCoreAsync(
+            userId,
+            email,
+            roles,
+            tenantId,
+            tokenVersion,
+            new DateTimeOffset(DateTime.SpecifyKind(SystemClock.UtcNow, DateTimeKind.Utc)),
+            sessionId,
+            cancellationToken,
+            additionalClaims: null,
+            mfaCompliancePending);
+    }
+
+    public Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        DateTimeOffset authenticatedAt,
+        Guid sessionId,
+        bool mfaCompliancePending,
+        CancellationToken cancellationToken = default)
+    {
+        return GenerateAccessTokenCoreAsync(userId, email, roles, tenantId, tokenVersion, authenticatedAt,
+            sessionId, cancellationToken, null, mfaCompliancePending);
+    }
+
     public Task<string> GenerateAccessTokenAsync(
         Guid userId,
         string email,
@@ -119,7 +173,7 @@ public sealed class JwtTokenService(
         if (sessionId == Guid.Empty) { throw new AuthenticationRequiredException("An authenticated session is required."); }
         proof.RequireBinding(userId, tenantId, tokenVersion, authenticatedAt, DateTimeOffset.UtcNow);
         return GenerateAccessTokenCoreAsync(userId, email, roles, tenantId, tokenVersion, authenticatedAt,
-            sessionId, cancellationToken, null, proof);
+            sessionId, cancellationToken, null, mfaProof: proof);
     }
 
     private async Task<string> GenerateAccessTokenCoreAsync(
@@ -132,11 +186,12 @@ public sealed class JwtTokenService(
         Guid? sessionId,
         CancellationToken cancellationToken,
         IEnumerable<Claim>? additionalClaims,
+        bool mfaCompliancePending = false,
         SignInMfaProof? mfaProof = null)
     {
         if (roles == null) throw new ArgumentNullException(nameof(roles));
 
-        logger.LogInformation("Generating access token for user: {UserId}", userId);
+        logger.LogInformation("Generating access token for user: {UserId}", LogRedaction.ProtectIdentifier(userId));
 
         try
         {
@@ -166,6 +221,11 @@ public sealed class JwtTokenService(
                 AppendAdditionalClaims(claims, additionalClaims);
             }
 
+            if (mfaCompliancePending)
+            {
+                claims.Add(new Claim(ClaimNames.MfaCompliancePending, "true"));
+            }
+
             if (mfaProof is not null)
             {
                 mfaProof.RequireBinding(userId, tenantId, tokenVersion, authenticatedAt, DateTimeOffset.UtcNow);
@@ -190,20 +250,19 @@ public sealed class JwtTokenService(
 
             if (sessionId.HasValue) { claims.Add(new Claim(JwtClaimTypes.SessionId, sessionId.Value.ToString())); }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)) { KeyId = "GameGuild-jwt-key" };
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var credentials = await ResolveSigningCredentialsAsync(cancellationToken).ConfigureAwait(false);
 
             var token = new JwtSecurityToken(_jwtOptions.Issuer, _jwtOptions.Audience, claims, SystemClock.UtcNow, SystemClock.UtcNow.AddMinutes(_jwtOptions.AccessTokenExpirationMinutes), credentials);
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            logger.LogInformation("Access token generated for user: {UserId}, Expires: {Expires}", userId, token.ValidTo);
+            logger.LogInformation("Access token generated for user: {UserId}, Expires: {Expires}", LogRedaction.ProtectIdentifier(userId), token.ValidTo);
 
             return tokenString;
         }
         catch (Exception ex)
         {
-            logger.LogError("Error generating access token for user: {UserId}: {ErrorType}", userId, ex.GetType().FullName);
+            logger.LogError("Error generating access token for user: {UserId}: {ErrorType}", LogRedaction.ProtectIdentifier(userId), ex.GetType().FullName);
 
             throw;
         }
@@ -241,7 +300,7 @@ public sealed class JwtTokenService(
         cancellationToken.ThrowIfCancellationRequested();
         RefreshTokenLifecycleMetrics.RecordAttempt(RefreshTokenLifecycleOperation.Issued);
 
-        logger.LogInformation("Generating refresh token for user: {UserId}", LogRedaction.RedactId(userId, "uid"));
+        logger.LogInformation("Generating refresh token for user: {UserId}", LogRedaction.ProtectIdentifier(userId));
 
         try
         {
@@ -291,7 +350,15 @@ public sealed class JwtTokenService(
                             userId, refreshToken.Id), cancellationToken).ConfigureAwait(false);
                     }
 
-                    logger.LogInformation("Refresh token generated and stored: {TokenId}, Expires: {ExpiresAt}", refreshToken.Id, refreshToken.ExpiresAt);
+                    // In-process refresh-token lifecycle telemetry (issue #1199): this is the
+                    // module's single issue point, so every family's token generation is covered.
+                    await AuthenticationEventDispatch.PublishAsync(
+                        eventPublisher,
+                        new RefreshTokenGeneratedEvent(refreshToken.Id.ToString(), userId, refreshToken.ExpiresAt),
+                        logger,
+                        cancellationToken).ConfigureAwait(false);
+
+                    logger.LogInformation("Refresh token generated and stored: {TokenId}, Expires: {ExpiresAt}", LogRedaction.ProtectIdentifier(refreshToken.Id), refreshToken.ExpiresAt);
 
                     return tokenString; // Success, return token
                 }
@@ -308,7 +375,7 @@ public sealed class JwtTokenService(
         }
         catch (Exception ex)
         {
-            logger.LogError("Error generating refresh token for user: {UserId}: {ErrorType}", userId, ex.GetType().FullName);
+            logger.LogError("Error generating refresh token for user: {UserId}: {ErrorType}", LogRedaction.ProtectIdentifier(userId), ex.GetType().FullName);
 
             throw;
         }
@@ -317,8 +384,9 @@ public sealed class JwtTokenService(
     /// <summary>
     ///     Validates a JWT access token and returns validation result.
     /// </summary>
-    public Task<bool> ValidateTokenAsync(string token, CancellationToken cancellationToken = default)
+    public async Task<bool> ValidateTokenAsync(string token, CancellationToken cancellationToken = default)
     {
+        await RefreshValidationKeysAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -326,25 +394,25 @@ public sealed class JwtTokenService(
 
             logger.LogInformation("Token validated successfully");
 
-            return Task.FromResult(true);
+            return true;
         }
         catch (SecurityTokenExpiredException ex)
         {
             logger.LogWarning("Token validation failed: Token expired: {ErrorType}", ex.GetType().FullName);
 
-            return Task.FromResult(false);
+            return false;
         }
         catch (SecurityTokenException ex)
         {
             logger.LogWarning("Token validation failed: {ErrorType}", ex.GetType().FullName);
 
-            return Task.FromResult(false);
+            return false;
         }
         catch (Exception ex)
         {
             logger.LogError("Error validating token: {ErrorType}", ex.GetType().FullName);
 
-            return Task.FromResult(false);
+            return false;
         }
     }
 
@@ -426,7 +494,7 @@ public sealed class JwtTokenService(
 
             if (refreshToken.IsRevoked)
             {
-                logger.LogInformation("Refresh token already revoked: {TokenId}", refreshToken.Id);
+                logger.LogInformation("Refresh token already revoked: {TokenId}", LogRedaction.ProtectIdentifier(refreshToken.Id));
 
                 return true;
             }
@@ -441,7 +509,14 @@ public sealed class JwtTokenService(
                     refreshToken.UserId, refreshToken.Id, refreshToken.SessionId), cancellationToken).ConfigureAwait(false);
             }
 
-            logger.LogInformation("Refresh token revoked: {TokenId}", refreshToken.Id);
+            // In-process refresh-token lifecycle telemetry (issue #1199).
+            await AuthenticationEventDispatch.PublishAsync(
+                eventPublisher,
+                new RefreshTokenRevokedEvent(refreshToken.Id.ToString(), refreshToken.UserId, "Revoked", SystemClock.UtcNow),
+                logger,
+                cancellationToken).ConfigureAwait(false);
+
+            logger.LogInformation("Refresh token revoked: {TokenId}", LogRedaction.ProtectIdentifier(refreshToken.Id));
 
             return true;
         }
@@ -456,7 +531,7 @@ public sealed class JwtTokenService(
     /// <summary>
     ///     Generates a JWT access token for a service account (machine-to-machine).
     /// </summary>
-    public Task<(string Token, DateTime ExpiresAt)> GenerateServiceAccountTokenAsync(
+    public async Task<(string Token, DateTime ExpiresAt)> GenerateServiceAccountTokenAsync(
         string serviceAccountId,
         string clientId,
         string serviceName,
@@ -466,7 +541,7 @@ public sealed class JwtTokenService(
     {
         logger.LogInformation(
             "Generating service account token for: {ServiceAccountId}, ClientId: {ClientId}",
-            LogRedaction.RedactId(serviceAccountId, "said"), LogRedaction.RedactId(clientId, "cid"));
+            LogRedaction.ProtectIdentifier(serviceAccountId), LogRedaction.ProtectIdentifier(clientId));
 
         try
         {
@@ -504,11 +579,7 @@ public sealed class JwtTokenService(
                 claims.Add(new Claim("tenant_id", tenantId.Value.ToString()));
             }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey))
-            {
-                KeyId = "GameGuild-jwt-key"
-            };
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var credentials = await ResolveSigningCredentialsAsync(cancellationToken).ConfigureAwait(false);
 
             var token = new JwtSecurityToken(
                 issuer: _jwtOptions.Issuer,
@@ -522,15 +593,15 @@ public sealed class JwtTokenService(
 
             logger.LogInformation(
                 "Service account token generated for: {ServiceAccountId}, Expires: {ExpiresAt}",
-                LogRedaction.RedactId(serviceAccountId, "said"), expiresAt);
+                LogRedaction.ProtectIdentifier(serviceAccountId), expiresAt);
 
-            return Task.FromResult((tokenString, expiresAt));
+            return (tokenString, expiresAt);
         }
         catch (Exception ex)
         {
             logger.LogError(
                 "Error generating service account token for: {ServiceAccountId}: {ErrorType}",
-                LogRedaction.RedactId(serviceAccountId, "said"), ex.GetType().FullName);
+                LogRedaction.ProtectIdentifier(serviceAccountId), ex.GetType().FullName);
 
             throw;
         }
@@ -569,6 +640,7 @@ public sealed class JwtTokenService(
     /// </summary>
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
     {
+        RefreshValidationKeysAsync(CancellationToken.None).GetAwaiter().GetResult();
         var tokenHandler = new JwtSecurityTokenHandler();
         var principal = tokenHandler.ValidateToken(token, CreateValidationParameters(validateLifetime: false), out var securityToken);
         EnsureExpectedSigningAlgorithm(securityToken);
@@ -580,6 +652,7 @@ public sealed class JwtTokenService(
     /// </summary>
     public ClaimsPrincipal ValidateToken(string token)
     {
+        RefreshValidationKeysAsync(CancellationToken.None).GetAwaiter().GetResult();
         var tokenHandler = new JwtSecurityTokenHandler();
         var principal = tokenHandler.ValidateToken(token, CreateValidationParameters(validateLifetime: _jwtOptions.ValidateLifetime), out var securityToken);
         EnsureExpectedSigningAlgorithm(securityToken);
@@ -588,8 +661,16 @@ public sealed class JwtTokenService(
 
     #endregion
 
+    private Task RefreshValidationKeysAsync(CancellationToken cancellationToken)
+        => keyRotationService is not null && signingKeyCache is not null
+            ? signingKeyCache.RefreshAsync(keyRotationService, cancellationToken)
+            : Task.CompletedTask;
+
     private TokenValidationParameters CreateValidationParameters(bool validateLifetime)
-        => new()
+    {
+        var staticKey = CreateStaticSigningKey();
+
+        return new TokenValidationParameters
         {
             ValidateIssuer = _jwtOptions.ValidateIssuer,
             ValidateAudience = _jwtOptions.ValidateAudience,
@@ -598,9 +679,58 @@ public sealed class JwtTokenService(
             ValidIssuer = _jwtOptions.Issuer,
             ValidAudience = _jwtOptions.Audience,
             ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)),
+            IssuerSigningKey = staticKey,
+            // Issue #1141: accept every key currently valid in the rotation store in
+            // addition to the static key, so tokens signed by rotated keys (identified
+            // by their 'kid' header) validate during and after key rollover.
+            IssuerSigningKeys = signingKeyCache?.GetValidationKeys(staticKey),
+            TryAllIssuerSigningKeys = true,
             ClockSkew = TimeSpan.FromSeconds(_jwtOptions.ClockSkewSeconds)
         };
+    }
+
+    /// <summary>
+    ///     Builds the fallback key from the statically configured secret. Issued with the
+    ///     well-known key id and always accepted by validation, so deployments without a
+    ///     rotation store (and tokens issued before rotation was wired) keep working.
+    /// </summary>
+    private SymmetricSecurityKey CreateStaticSigningKey()
+        => new(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)) { KeyId = StaticSigningKeyId };
+
+    /// <summary>
+    ///     Resolves the credentials used to sign new tokens (issue #1141): the ACTIVE key
+    ///     from the rotation store, surfaced through the JWT 'kid' header so validators
+    ///     can pick the matching key. Falls back to the static secret when the store is
+    ///     unavailable or holds no usable key — issuance never hard-fails on a
+    ///     rotation-store outage.
+    /// </summary>
+    private async Task<SigningCredentials> ResolveSigningCredentialsAsync(CancellationToken cancellationToken)
+    {
+        if (keyRotationService is not null)
+        {
+            try
+            {
+                var activeKey = await keyRotationService.GetActiveSigningKeyAsync(cancellationToken).ConfigureAwait(false);
+                var securityKey = JwtSigningKeyMapper.ToSecurityKey(activeKey);
+                if (securityKey is not null)
+                {
+                    return new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+                }
+
+                logger.LogWarning("No usable active signing key in the rotation store; signing with the static Jwt secret");
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Signing-key rotation store unavailable; signing with the static Jwt secret: {ErrorType}", ex.GetType().FullName);
+            }
+        }
+
+        return new SigningCredentials(CreateStaticSigningKey(), SecurityAlgorithms.HmacSha256);
+    }
 
     private void AppendAdditionalClaims(List<Claim> destination, IEnumerable<Claim> additionalClaims)
     {

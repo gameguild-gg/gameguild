@@ -339,7 +339,7 @@ async function getUserMemberships(
     return { memberships: [], error: result.error.message };
   }
 
-  return { memberships: (result.data?.memberships ?? []) as MemberAccessMembership[], error: null };
+  return { memberships: result.data?.memberships ?? [], error: null };
 }
 
 export async function getPendingMemberInvitations(userId: string): Promise<{
@@ -557,7 +557,7 @@ function leadUsername(lead: GeneratedApi.ContentPagesMarketingLead) {
 function mapLeadToSupportTicket(lead: GeneratedApi.ContentPagesMarketingLead): SupportTicket {
   const createdAt = lead.createdAt ?? new Date(0).toISOString();
   const subject = lead.message?.trim()
-    ? lead.message.trim().split(/\r?\n/)[0]!.slice(0, 120)
+    ? lead.message.trim().split(/\r?\n/)[0].slice(0, 120)
     : `${lead.topic ?? 'Support'} request from ${lead.email ?? 'unknown contact'}`;
 
   return {

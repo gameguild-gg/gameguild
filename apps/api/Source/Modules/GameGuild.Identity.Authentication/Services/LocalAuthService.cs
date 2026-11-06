@@ -43,7 +43,8 @@ public class LocalAuthService(
     ISuspiciousLoginAlertPublisher? suspiciousLoginAlerts = null,
     IOptions<LocalSignInPolicyOptions>? localSignInPolicyOptions = null,
     IAuthenticationAttemptRepository? attemptRepository = null,
-    AuthenticationSecurityOptions? authenticationSecurityOptions = null
+    AuthenticationSecurityOptions? authenticationSecurityOptions = null,
+    IPublisher? eventPublisher = null
 ) : ILocalAuthService
 {
     private const string ComplianceDeniedAuditAction = "Authentication.ComplianceDenied";
@@ -155,6 +156,15 @@ public class LocalAuthService(
                     // Risk analysis and central audit must still run when the local attempt service is unavailable.
                     logger.LogError("Could not record failed authentication attempt for user {UserId}: {ErrorType}", userId, exception.GetType().FullName);
                 }
+
+                // In-process failure telemetry (issue #1199): the event carries the failure
+                // reason and request context; the caller still receives only the generic
+                // enumeration-protected message thrown below.
+                await AuthenticationEventDispatch.PublishAsync(
+                    eventPublisher,
+                    new AuthenticationFailedEvent(request.Email, failureReason ?? "InvalidCredentials", ipAddress, userAgent, SystemClock.UtcNow),
+                    logger,
+                    cancellationToken).ConfigureAwait(false);
 
                 var failedAttemptContext = CreateAttemptContext(
                     request.Email, userId, ipAddress, userAgent, request.TenantId, deviceFingerprint, candidatePasswordSha256Hex);
@@ -307,6 +317,7 @@ public class LocalAuthService(
             {
                 throw new InvalidOperationException("Required MFA cannot be skipped during credential issuance.");
             }
+            var mfaCompliancePending = preparation.MfaCompliancePending;
             var tokenVersion = authenticatedVersion;
 
             var refreshTokenExpiryDays = RefreshTokenLifetimeResolver.ResolveExpirationDays(
@@ -319,14 +330,30 @@ public class LocalAuthService(
                 new DateTimeOffset(DateTime.SpecifyKind(SystemClock.UtcNow, DateTimeKind.Utc)),
                 refreshTokenExpiresAt,
                 cancellationToken).ConfigureAwait(false);
-            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
-                authenticatedUserId,
-                authenticatedUser?.Email ?? request.Email,
-                tenantAccessContext.Roles.ToArray(),
-                tenantAccessContext.TenantId,
-                tokenVersion,
-                sessionId,
-                cancellationToken).ConfigureAwait(false);
+            string accessToken;
+            if (mfaCompliancePending)
+            {
+                accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+                    authenticatedUserId,
+                    authenticatedUser?.Email ?? request.Email,
+                    tenantAccessContext.Roles.ToArray(),
+                    tenantAccessContext.TenantId,
+                    tokenVersion,
+                    sessionId,
+                    mfaCompliancePending: true,
+                    cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+                    authenticatedUserId,
+                    authenticatedUser?.Email ?? request.Email,
+                    tenantAccessContext.Roles.ToArray(),
+                    tenantAccessContext.TenantId,
+                    tokenVersion,
+                    sessionId,
+                    cancellationToken).ConfigureAwait(false);
+            }
             var refreshTokenHash = refreshTokenHasher.HashToken(refreshToken);
             var session = await sessionManagementService.CreateSessionAsync(
                 sessionId,
@@ -371,6 +398,14 @@ public class LocalAuthService(
             // Record successful login attempt
             await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, authenticatedUserId, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
 
+            // In-process sign-in telemetry (issue #1199): fired at the single point where the
+            // local password sign-in is finalized — ordinary credentials issued, session persisted.
+            await AuthenticationEventDispatch.PublishAsync(
+                eventPublisher,
+                new UserSignedInEvent(authenticatedUserId, authenticatedUser?.Email ?? request.Email, "Password", ipAddress, userAgent, SystemClock.UtcNow),
+                logger,
+                cancellationToken).ConfigureAwait(false);
+
             var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
                                                ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
@@ -388,7 +423,8 @@ public class LocalAuthService(
                 Email = authenticatedUser?.Email ?? request.Email,
                 SessionId = sessionId,
                 TenantId = tenantAccessContext.TenantId,
-                AvailableTenants = tenantAccessContext.AvailableTenants
+                AvailableTenants = tenantAccessContext.AvailableTenants,
+                MfaCompliancePending = mfaCompliancePending
             };
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -419,6 +455,11 @@ public class LocalAuthService(
             {
                 logger.LogError("Could not record failed authentication attempt after a system error: {ErrorType}", exception.GetType().FullName);
             }
+            await AuthenticationEventDispatch.PublishAsync(
+                eventPublisher,
+                new AuthenticationFailedEvent(request.Email, "SystemError", ipAddress, userAgent, SystemClock.UtcNow),
+                logger,
+                cancellationToken).ConfigureAwait(false);
             await CompleteTimingOnceAsync().ConfigureAwait(false);
 
             throw new UnauthorizedAccessException(enumerationProtection.GetGenericErrorMessage("login"));
@@ -870,7 +911,7 @@ public class LocalAuthService(
 
         var userId = storedToken.UserId;
         var user = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
-        if (user is null)
+        if (user is null || user.IsDeleted || !user.ValidateForAuthentication(user.TokenVersion).IsSuccess)
         {
             await RecordRefreshRejectionAsync(storedToken, RefreshTokenLifecycleReason.UserUnavailable, cancellationToken).ConfigureAwait(false);
             logger.LogWarning("Rejected refresh token for an unavailable user {UserId}", userId);
@@ -897,9 +938,10 @@ public class LocalAuthService(
 
         var existingSession = await sessionManagementService.GetSessionByRefreshTokenAsync(hashedToken, cancellationToken).ConfigureAwait(false);
         var sessionId = existingSession?.Id ?? Guid.NewGuid();
-        var mfaProof = await signInMfa.ReadSessionProofAsync(userId, tokenVersion,
+        var mfaSession = await signInMfa.ReadSessionProofAsync(userId, tokenVersion,
             tenantAccessContext.TenantId ?? throw new AuthenticationRequiredException("No authorized tenant is available."),
             sessionId, authenticatedAt, cancellationToken).ConfigureAwait(false);
+        var mfaProof = mfaSession?.Proof;
         cancellationToken.ThrowIfCancellationRequested();
         // Rotation classifies the session by its originating policy instead of replaying
         // the stored row's raw span: rotation preserves the originating CreatedAt while
@@ -926,17 +968,37 @@ public class LocalAuthService(
             refreshTokenExpiresAt = storedToken.ExpiresAt;
         }
         var replacementTokenHash = refreshTokenHasher.HashToken(newRefreshToken);
-        var accessToken = mfaProof is null ? await jwtTokenService.GenerateAccessTokenAsync(
-            userId,
-            userEmail,
-            tenantAccessContext.Roles.ToArray(),
-            tenantAccessContext.TenantId,
-            tokenVersion,
-            authenticatedAt,
-            sessionId,
-            cancellationToken).ConfigureAwait(false)
-            : await jwtTokenService.GenerateMfaAccessTokenAsync(userId, userEmail, tenantAccessContext.Roles.ToArray(),
+        string accessToken;
+        if (mfaProof is not null)
+        {
+            accessToken = await jwtTokenService.GenerateMfaAccessTokenAsync(userId, userEmail, tenantAccessContext.Roles.ToArray(),
                 tenantAccessContext.TenantId, tokenVersion, authenticatedAt, sessionId, mfaProof, cancellationToken).ConfigureAwait(false);
+        }
+        else if (mfaSession is { MfaCompliancePending: true })
+        {
+            accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+                userId,
+                userEmail,
+                tenantAccessContext.Roles.ToArray(),
+                tenantAccessContext.TenantId,
+                tokenVersion,
+                authenticatedAt,
+                sessionId,
+                mfaCompliancePending: true,
+                cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+                userId,
+                userEmail,
+                tenantAccessContext.Roles.ToArray(),
+                tenantAccessContext.TenantId,
+                tokenVersion,
+                authenticatedAt,
+                sessionId,
+                cancellationToken).ConfigureAwait(false);
+        }
 
         if (existingSession == null)
         {
@@ -992,6 +1054,15 @@ public class LocalAuthService(
 
         logger.LogInformation("Refresh token rotated for user {UserId}", userId);
 
+        // In-process rotation telemetry (issue #1199): the presented token was consumed and
+        // replaced, i.e. it was used. Replay and rotation-loss denials return above without
+        // reaching this point, so the event only fires for a claimed rotation.
+        await AuthenticationEventDispatch.PublishAsync(
+            eventPublisher,
+            new RefreshTokenUsedEvent(storedToken.Id.ToString(), userId, now),
+            logger,
+            cancellationToken).ConfigureAwait(false);
+
         var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
                                           ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
@@ -1009,7 +1080,8 @@ public class LocalAuthService(
             Email = userEmail,
             SessionId = sessionId,
             TenantId = tenantAccessContext.TenantId,
-            AvailableTenants = tenantAccessContext.AvailableTenants
+            AvailableTenants = tenantAccessContext.AvailableTenants,
+            MfaCompliancePending = mfaSession is { MfaCompliancePending: true }
         };
     }
 
@@ -1028,6 +1100,11 @@ public class LocalAuthService(
             {
                 await sessionManagementService.TerminateSessionAsync(familySessionId.Value, SessionTerminationReason.SecurityViolation, cancellationToken)
                     .ConfigureAwait(false);
+                await AuthenticationEventDispatch.PublishAsync(
+                    eventPublisher,
+                    new RefreshTokenRevokedEvent(token.Id.ToString(), userId, "ReplayContained", SystemClock.UtcNow),
+                    logger,
+                    cancellationToken).ConfigureAwait(false);
                 return;
             }
         }
@@ -1041,6 +1118,14 @@ public class LocalAuthService(
             userId,
             SessionTerminationReason.SecurityViolation,
             cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        // In-process revocation telemetry (issue #1199): replay containment revokes the
+        // compromised token's lineage (family or account scope, per configuration).
+        await AuthenticationEventDispatch.PublishAsync(
+            eventPublisher,
+            new RefreshTokenRevokedEvent(token.Id.ToString(), userId, "ReplayContained", SystemClock.UtcNow),
+            logger,
+            cancellationToken).ConfigureAwait(false);
 
         var compromisedUser = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         if (compromisedUser is null)
@@ -1181,6 +1266,13 @@ public class LocalAuthService(
         }
         await RecordRefreshMutationAsync(new RefreshTokenLifecycleEvent(RefreshTokenLifecycleOperation.Revoked,
             refreshToken.UserId, refreshToken.Id, session?.Id ?? refreshToken.SessionId), cancellationToken).ConfigureAwait(false);
+
+        // In-process revocation telemetry (issue #1199): explicit single-token revocation.
+        await AuthenticationEventDispatch.PublishAsync(
+            eventPublisher,
+            new RefreshTokenRevokedEvent(refreshToken.Id.ToString(), refreshToken.UserId, "Revoked", SystemClock.UtcNow),
+            logger,
+            cancellationToken).ConfigureAwait(false);
     }
 
     private Task RecordRefreshMutationAsync(RefreshTokenLifecycleEvent lifecycleEvent, CancellationToken cancellationToken) =>

@@ -256,6 +256,23 @@ export class AuthServiceAccountsModule {
   }
 
   /**
+   * Removes both certificate pins; client-secret authentication remains available.
+   *
+   * Removes the certificate thumbprint and SPKI pin. Requires an administrator in the account's tenant, or a system administrator for a global or cross-tenant account.
+   */
+  async deleteAuthServiceAccountsClientCertificate(serviceAccountId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/service-accounts/${serviceAccountId}/client-certificate`;
+
+    const result = await this.client.request({
+      method: 'DELETE',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * Binds an X.509 client certificate to a service account so the certificate can
    * authenticate in lieu of the client secret (issue #1146).
    *

@@ -80,6 +80,8 @@ apps/web/test-results/
 *.docstates
 [Dd]ebug/
 [Rr]elease/
+# documentation lives under docs/release (e.g. READINESS-2026-11.md) — keep it tracked
+!docs/release/
 [Bb]in/
 [Oo]bj/
 x64/

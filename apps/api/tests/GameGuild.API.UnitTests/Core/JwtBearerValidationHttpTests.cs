@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Identity.Authentication;
@@ -78,7 +79,41 @@ public sealed class JwtBearerValidationHttpTests
         Assert.Equal($"{user}:Reader:dark", await response.Content.ReadAsStringAsync());
     }
 
-    private static async Task<WebApplication> CreateApp()
+    [Fact]
+    public async Task BearerValidation_LearnsOtherNodeRotationAndRetainsUnexpiredSnapshotDuringStoreOutage()
+    {
+        var first = JwtSigningKey.CreateNew(1, DateTime.UtcNow.AddMinutes(-1), TimeSpan.FromDays(1));
+        var second = JwtSigningKey.CreateNew(2, DateTime.UtcNow.AddMinutes(-1), TimeSpan.FromDays(1));
+        var rows = new List<JwtSigningKey> { first };
+        var rotation = new Mock<IKeyRotationService>();
+        rotation.Setup(service => service.GetValidationKeysAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => rows);
+        await using var app = await CreateApp(services => services.AddScoped(_ => rotation.Object));
+        using var client = app.GetTestClient();
+
+        async Task AssertAccepted(JwtSigningKey key)
+        {
+            var token = new JwtSecurityToken("http-issuer", "http-audience",
+                [new Claim("sub", Guid.NewGuid().ToString()), new Claim("jti", Guid.NewGuid().ToString())],
+                DateTime.UtcNow.AddSeconds(-1), DateTime.UtcNow.AddMinutes(5),
+                new SigningCredentials(JwtSigningKeyMapper.ToSecurityKey(key)!, SecurityAlgorithms.HmacSha256));
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", new JwtSecurityTokenHandler().WriteToken(token));
+            using var response = await client.GetAsync("/protected");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        await AssertAccepted(first);
+        rows = [first, second];
+        await AssertAccepted(second);
+        await AssertAccepted(first);
+        rotation.Setup(service => service.GetValidationKeysAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException(Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))));
+        await AssertAccepted(second);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token("wrong-key"));
+        using var rejected = await client.GetAsync("/protected");
+        Assert.Equal(HttpStatusCode.Unauthorized, rejected.StatusCode);
+    }
+
+    private static async Task<WebApplication> CreateApp(Action<IServiceCollection>? configure = null)
     {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
@@ -99,6 +134,7 @@ public sealed class JwtBearerValidationHttpTests
             JwtExpiration = TimeSpan.FromMinutes(17)
         });
         builder.Services.AddAuthorization();
+        configure?.Invoke(builder.Services);
         var app = builder.Build();
         app.UseAuthentication();
         app.UseAuthorization();

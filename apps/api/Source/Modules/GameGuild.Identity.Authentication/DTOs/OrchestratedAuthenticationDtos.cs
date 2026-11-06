@@ -33,7 +33,7 @@ public class InitiateOrchestratedAuthenticationRequestDto
 
 /// <summary>
 ///     Request body to satisfy one challenge step of an orchestrated authentication flow.
-///     Exactly one proof field (TOTP code, backup code or WebAuthn assertion) is required.
+///     Exactly one proof is required: TOTP, backup code or WebAuthn for MFA/device steps, or the dedicated risk code for RiskChallenge.
 /// </summary>
 public class ProcessOrchestratedAuthenticationStepRequestDto
 {
@@ -57,6 +57,9 @@ public class ProcessOrchestratedAuthenticationStepRequestDto
     ///     Serialized WebAuthn assertion, when satisfying the step with a passkey/security key.
     /// </summary>
     public string? WebAuthnAssertion { get; set; }
+
+    /// <summary>Eight-digit out-of-band risk code; accepted only for the risk challenge.</summary>
+    public string? RiskCode { get; init; }
 }
 
 /// <summary>
@@ -64,6 +67,12 @@ public class ProcessOrchestratedAuthenticationStepRequestDto
 /// </summary>
 public class OrchestratedFlowStateResponse
 {
+    /// <summary>Whether this step verification was accepted.</summary>
+    public bool Success { get; set; } = true;
+
+    /// <summary>Stable denial code without private challenge details.</summary>
+    public string? ErrorCode { get; set; }
+
     /// <summary>
     ///     Unique identifier of the flow; carried by the client across step processing and completion.
     /// </summary>

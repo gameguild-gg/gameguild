@@ -117,7 +117,8 @@ public class LocalAuthServiceTests
             _sessionManagementServiceMock.Object,
             _signInMfaMock.Object,
             auditEventSink: _authenticationAuditEventSinkMock.Object,
-            suspiciousLoginAlerts: _suspiciousLoginAlertsMock.Object
+            suspiciousLoginAlerts: _suspiciousLoginAlertsMock.Object,
+            eventPublisher: _publisherMock.Object
         );
     }
 
@@ -1487,6 +1488,47 @@ public class LocalAuthServiceTests
     }
 
     [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    [InlineData(false, true)]
+    public async Task RefreshTokenAsync_DisallowedAccount_DeniesBeforeProvisioningIssuanceOrSessionMutation(
+        bool isActive, bool isSuspended)
+    {
+        using var cancellation = new CancellationTokenSource();
+        var user = User.Create("refresh-status@example.test", "Refresh status user");
+        user.IsActive = isActive;
+        user.IsSuspended = isSuspended;
+        var storedToken = new RefreshToken
+        {
+            Id = Guid.NewGuid(), UserId = user.Id, Token = "status-hash",
+            ExpiresAt = SystemClock.UtcNow.AddDays(1), CreatedAt = SystemClock.UtcNow.AddHours(-1)
+        };
+        _refreshTokenHasherMock.Setup(x => x.HashToken("previously-issued")).Returns("status-hash");
+        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("status-hash", cancellation.Token)).ReturnsAsync(storedToken);
+        _userRepoMock.Setup(x => x.GetByIdAsync(user.Id, cancellation.Token)).ReturnsAsync(user);
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(user.Id, It.IsAny<string>(), It.IsAny<string[]>(),
+                It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("new-access-token");
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(user.Id, It.IsAny<DeviceInfo>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("new-refresh-token");
+
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "previously-issued" }, cancellation.Token));
+
+        Assert.Equal("Invalid refresh token", exception.Message);
+        Assert.False(storedToken.IsRevoked);
+        Assert.Null(storedToken.ReplacedByToken);
+        _refreshTokenRepoMock.Verify(x => x.GetByTokenAsync("status-hash", cancellation.Token), Times.Once);
+        _refreshTokenRepoMock.VerifyNoOtherCalls();
+        _userRepoMock.Verify(x => x.GetByIdAsync(user.Id, cancellation.Token), Times.Once);
+        _userRepoMock.VerifyNoOtherCalls();
+        _senderMock.VerifyNoOtherCalls();
+        _sessionManagementServiceMock.VerifyNoOtherCalls();
+        _jwtTokenServiceMock.VerifyNoOtherCalls();
+    }
+
+    [Theory]
     [InlineData("revoked")]
     [InlineData("replaced")]
     public async Task RefreshTokenAsync_ReplayedTokenForUnavailableUser_StillCommitsContainmentWithoutIssuance(string kind)
@@ -1576,5 +1618,132 @@ public class LocalAuthServiceTests
         token.IsRevoked.Should().BeTrue();
         token.RevokedByIp.Should().Be("1.2.3.4");
         _refreshTokenRepoMock.Verify(x => x.UpdateAsync(token, default), Times.Once);
+    }
+
+    // ── In-process event emission (issue #1199: the dead event layer) ──────
+
+    [Fact]
+    public async Task LocalSignInAsync_ValidCredentials_PublishesUserSignedInEvent()
+    {
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword("Password1!");
+        var user = User.CreateWithPassword("signed-in@example.com", "testuser", passwordHash);
+        var userId = user.Id;
+
+        _userRepoMock.Setup(x => x.GetByEmailAsync("signed-in@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _userRepoMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        _anomalyDetectionMock.Setup(x => x.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
+            .ReturnsAsync(new AuthenticationAnomalyResult { RiskLevel = RiskLevel.Low, RiskScore = 0, DetectedAnomalies = new List<string>() });
+        _anomalyDetectionMock.Setup(x => x.AnalyzeBehavioralPatternsAsync(userId, It.IsAny<AuthenticationAttemptContext>()))
+            .ReturnsAsync(new BehavioralAnalysisResult { MatchesTypicalBehavior = true });
+
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(userId, It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("access-token");
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(userId, It.IsAny<DeviceInfo>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("refresh-token");
+
+        var result = await _sut.LocalSignInAsync(new LocalSignInRequest { Email = "signed-in@example.com", Password = "Password1!" });
+
+        result.Success.Should().BeTrue();
+        _publisherMock.Verify(
+            x => x.Publish(It.Is<UserSignedInEvent>(e =>
+                e.UserId == userId &&
+                e.Email == "signed-in@example.com" &&
+                e.AuthMethod == "Password"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task LocalSignInAsync_InvalidPassword_PublishesAuthenticationFailedEventAndKeepsGenericResponse()
+    {
+        var user = User.CreateWithPassword("failed@example.com", "testuser", BCrypt.Net.BCrypt.HashPassword("CorrectPassword1!"));
+        _userRepoMock.Setup(x => x.GetByEmailAsync("failed@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _anomalyDetectionMock.Setup(x => x.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
+            .ReturnsAsync(new AuthenticationAnomalyResult { RiskLevel = RiskLevel.Low, RiskScore = 5, DetectedAnomalies = new List<string>() });
+
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => _sut.LocalSignInAsync(new LocalSignInRequest { Email = "failed@example.com", Password = "WrongPassword!" }));
+
+        // The client response stays the generic enumeration-protected message...
+        exception.Message.Should().Be("Authentication failed");
+
+        // ...while the in-process failure event carries the reason and request context.
+        _publisherMock.Verify(
+            x => x.Publish(It.Is<AuthenticationFailedEvent>(e =>
+                e.Identifier == "failed@example.com" &&
+                e.Reason == "InvalidCredentials"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_ClaimedRotation_PublishesRefreshTokenUsedEvent()
+    {
+        var user = User.Create("rotation@example.test", "Rotation user");
+        var userId = user.Id;
+        _userRepoMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var storedToken = new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Token = "hashed",
+            ExpiresAt = DateTime.UtcNow.AddDays(5),
+            IsRevoked = false,
+            CreatedByIp = "127.0.0.1",
+            CreatedAt = DateTime.UtcNow.AddHours(-3)
+        };
+
+        _refreshTokenHasherMock.Setup(x => x.HashToken("valid-token")).Returns("hashed");
+        _refreshTokenHasherMock.Setup(x => x.HashToken("new-refresh-token")).Returns("hash-new-refresh-token");
+        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("hashed", default)).ReturnsAsync(storedToken);
+        _refreshTokenRepoMock.Setup(x => x.UpdateAsync(It.IsAny<RefreshToken>(), default))
+            .ReturnsAsync(storedToken);
+
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(userId, It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("new-access-token");
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(userId, It.IsAny<DeviceInfo>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("new-refresh-token");
+
+        var result = await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "valid-token" });
+
+        result.Success.Should().BeTrue();
+        _publisherMock.Verify(
+            x => x.Publish(It.Is<RefreshTokenUsedEvent>(e =>
+                e.TokenId == storedToken.Id.ToString() &&
+                e.UserId == userId),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RevokeRefreshTokenAsync_Revocation_PublishesRefreshTokenRevokedEvent()
+    {
+        var token = new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            Token = "hashed",
+            UserId = Guid.NewGuid(),
+            ExpiresAt = DateTime.UtcNow.AddDays(1),
+            IsRevoked = false,
+            CreatedByIp = "127.0.0.1"
+        };
+
+        _refreshTokenHasherMock.Setup(x => x.HashToken("the-token")).Returns("hashed");
+        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("hashed", default)).ReturnsAsync(token);
+        _refreshTokenRepoMock.Setup(x => x.UpdateAsync(It.IsAny<RefreshToken>(), default)).ReturnsAsync(token);
+
+        await _sut.RevokeRefreshTokenAsync("the-token", "1.2.3.4");
+
+        _publisherMock.Verify(
+            x => x.Publish(It.Is<RefreshTokenRevokedEvent>(e =>
+                e.TokenId == token.Id.ToString() &&
+                e.UserId == token.UserId &&
+                e.Reason == "Revoked"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

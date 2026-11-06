@@ -6,6 +6,13 @@ namespace GameGuild.Identity.Authentication;
 public class TrustDeviceRequest
 {
     public string DeviceName { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     Fresh step-up receipt proving the caller just re-verified with an MFA factor for the
+    ///     <c>trust-device</c> operation (issue #1144). Obtain it from the step-up challenge
+    ///     flow bound to this device name.
+    /// </summary>
+    public string? StepUpReceipt { get; set; }
 }
 
 /// <summary>

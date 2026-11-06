@@ -1,6 +1,8 @@
 using GameGuild;
 using GameGuild.Identity.Authentication;
 
+[assembly: UseCaseEventContract(typeof(UnbindServiceAccountCertificateCommand), "identity.authentication.unbind-service-account-certificate", NoDomainEventReason = "Certificate removal is observed through the durable operation event without copying certificate pins into event payloads.")]
+
 [assembly: UseCaseEventContract(typeof(LocalSignUpCommand), "identity.authentication.local-sign-up", NoDomainEventReason = "Account creation is observed through the durable operation event without copying credentials or tokens into event payloads.")]
 [assembly: UseCaseEventContract(typeof(LocalSignInCommand), "identity.authentication.local-sign-in", NoDomainEventReason = "Sign-in state changes are observed through the durable operation event without copying credentials or tokens into event payloads.")]
 [assembly: UseCaseEventContract(typeof(CompleteMfaSignInCommand), "identity.authentication.complete-mfa-sign-in", NoDomainEventReason = "MFA completion is observed through the durable operation event without copying challenge bearers, factor proofs or issued credentials into event payloads.")]
@@ -37,6 +39,7 @@ using GameGuild.Identity.Authentication;
 [assembly: UseCaseEventContract(typeof(RequestMfaRecoveryCommand), "identity.authentication.request-mfa-recovery", NoDomainEventReason = "Recovery requests are observed through the durable operation event without copying the account email or the one-time token into event payloads.")]
 [assembly: UseCaseEventContract(typeof(ContinueMfaRecoveryCommand), "identity.authentication.continue-mfa-recovery", NoDomainEventReason = "Recovery continuation is observed through the durable operation event without copying the one-time request token into event payloads.")]
 [assembly: UseCaseEventContract(typeof(ConfirmMfaRecoveryCommand), "identity.authentication.confirm-mfa-recovery", NoDomainEventReason = "Recovery confirmation is observed through the durable operation event without copying the one-time confirmation token into event payloads.")]
+[assembly: UseCaseEventContract(typeof(CancelMfaRecoveryCommand), "identity.authentication.cancel-mfa-recovery", NoDomainEventReason = "Owner recovery cancellation is observed through the durable operation event and the required security audit without copying recovery tokens into event payloads.")]
 [assembly: UseCaseEventContract(typeof(AdminResetUserMfaCommand), "identity.authentication.admin-reset-user-mfa", NoDomainEventReason = "Admin-assisted MFA resets are observed through the durable operation event and the permission audit log without copying MFA secrets into event payloads.")]
 [assembly: UseCaseEventContract(typeof(StartSmsMfaEnrollmentCommand), "identity.authentication.start-sms-mfa-enrollment", NoDomainEventReason = "SMS enrollment is observed through the durable operation event without copying the one-time code or the phone number into event payloads.")]
 [assembly: UseCaseEventContract(typeof(CompleteSmsMfaEnrollmentCommand), "identity.authentication.complete-sms-mfa-enrollment", NoDomainEventReason = "SMS enrollment completion is observed through the durable operation event without copying the one-time code into event payloads.")]

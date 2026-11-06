@@ -23,4 +23,9 @@ declare module 'next/headers' {
   }
 
   export function cookies(): CookieStore | Promise<CookieStore>;
+
+  // Next 14 returns synchronously; Next 15/16 return a promise. Incoming
+  // request headers are read-only in every supported version.
+  type RequestHeaders = Omit<Headers, 'append' | 'set' | 'delete'>;
+  export function headers(): RequestHeaders | Promise<RequestHeaders>;
 }

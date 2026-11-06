@@ -88,10 +88,27 @@ public sealed class AuditQueryDslEvaluatorTests
     [InlineData("lt", "2026-06-15T12:00:01Z", true)]
     [InlineData("lte", "2026-06-15T12:00:00Z", true)]
     [InlineData("eq", "2026-06-15T12:00:00Z", true)]
+    [InlineData("eq", "2026-06-15T09:00:00-03:00", true)]
+    [InlineData("eq", "2026-06-15T14:00:00+02:00", true)]
+    [InlineData("eq", "2026-06-15T12:00:00", true)]
+    [InlineData("lt", "2026-06-15T09:00:01-03:00", true)]
+    [InlineData("gt", "2026-06-15T09:00:00-03:00", false)]
+    [InlineData("lte", "2026-06-15T14:00:00+02:00", true)]
+    [InlineData("gte", "2026-06-15T09:00:00-03:00", true)]
+    [InlineData("ne", "2026-06-15T14:00:00+02:00", false)]
     public void Timestamp_OrderedComparisons(string op, string value, bool expected)
     {
         var filter = ParseFilter($"{{\"filter\":{{\"field\":\"timestamp\",\"op\":\"{op}\",\"value\":\"{value}\"}}}}");
         AuditQueryDslEvaluator.Matches(filter, Entry()).Should().Be(expected);
+    }
+
+    [Fact]
+    public void Timestamp_InComparesInstantsAcrossUtcOffsets()
+    {
+        var equivalent = ParseFilter("""{"filter":{"field":"timestamp","op":"in","value":["2026-06-15T14:00:00+02:00","2026-06-15T12:00:01Z"]}}""");
+        var different = ParseFilter("""{"filter":{"field":"timestamp","op":"in","value":["2026-06-15T14:00:01+02:00","2026-06-15T12:00:01Z"]}}""");
+        AuditQueryDslEvaluator.Matches(equivalent, Entry()).Should().BeTrue();
+        AuditQueryDslEvaluator.Matches(different, Entry()).Should().BeFalse();
     }
 
     [Fact]

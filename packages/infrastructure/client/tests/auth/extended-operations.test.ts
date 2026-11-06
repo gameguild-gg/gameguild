@@ -26,7 +26,7 @@ const API_URL = 'https://api.test.com';
 const TOKEN = 'test-access-token';
 
 // Mock fetch globally
-const mockFetch = vi.fn();
+const mockFetch = vi.fn<(url: string, options: RequestInit) => Promise<unknown>>();
 
 beforeEach(() => {
   vi.stubGlobal('fetch', mockFetch);
@@ -40,123 +40,97 @@ afterEach(() => {
 describe('Extended Auth Operations', () => {
   describe('MFA', () => {
     it('verifyMfa sends correct request and returns ProviderResult on success', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
+      mockFetch.mockResolvedValueOnce(
+        Response.json({
           accessToken: 'new-at',
           refreshToken: 'new-rt',
           expiresIn: 3600,
-          userId: 'u1',
-          user: { id: 'u1', email: 'test@test.com', displayName: 'Tester' },
-        }),
-      });
-
-      const result = await verifyMfa(API_URL, {
-        mfaSessionId: 'mfa-123',
-        code: '123456',
-        method: 'totp',
-      });
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        `${API_URL}/v1/auth/mfa/verify`,
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({
-            mfaSessionId: 'mfa-123',
-            code: '123456',
-            method: 'totp',
-          }),
+          userId: '11111111-1111-4111-8111-111111111111',
+          user: { id: '11111111-1111-4111-8111-111111111111', email: 'test@test.com', displayName: 'Tester' },
         }),
       );
+      const result = await verifyMfa(API_URL, { mfaSessionId: 'x'.repeat(43), code: '123456', method: 'totp' });
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe(`${API_URL}/v1/auth/mfa/sign-in/complete`);
+      expect(options.method).toBe('POST');
+      expect(JSON.parse(options.body as string)).toEqual({ mfaToken: 'x'.repeat(43), code: '123456', method: 'Totp' });
       expect(result.tokens.accessToken).toBe('new-at');
-      expect(result.user.id).toBe('u1');
+      expect(result.user.id).toBe('11111111-1111-4111-8111-111111111111');
     });
 
     it('verifyMfa throws MfaVerificationError on failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ message: 'Invalid code', attemptsRemaining: 2 }),
-      });
-
-      await expect(verifyMfa(API_URL, { mfaSessionId: 'mfa-1', code: '000000', method: 'totp' })).rejects.toThrow(MfaVerificationError);
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Invalid code' }, { status: 401 }));
+      await expect(verifyMfa(API_URL, { mfaToken: 'x'.repeat(43), code: '000000', method: 'totp' })).rejects.toThrow(MfaVerificationError);
     });
 
-    it('verifyMfa sends auth header when accessToken provided', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
+    it('verifyMfa never sends the deprecated ordinary accessToken argument', async () => {
+      mockFetch.mockResolvedValueOnce(
+        Response.json({
           accessToken: 'at',
           refreshToken: 'rt',
-          userId: 'u1',
+          userId: '11111111-1111-4111-8111-111111111111',
         }),
-      });
-
-      await verifyMfa(API_URL, { mfaSessionId: 'm1', code: '1', method: 'totp' }, TOKEN);
-
+      );
+      await verifyMfa(API_URL, { mfaToken: 'x'.repeat(43), code: '123456', method: 'totp' }, TOKEN);
       const [, opts] = mockFetch.mock.calls[0];
-      expect(opts.headers.Authorization).toBe(`Bearer ${TOKEN}`);
+      expect(new Headers(opts.headers).has('Authorization')).toBe(false);
     });
   });
 
   describe('Password Reset', () => {
-    it('requestPasswordReset always succeeds (prevents email enumeration)', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: false }); // Even on failure
+    it('requestPasswordReset always acknowledges HTTP failures (prevents email enumeration)', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({}, { status: 404 }));
       await expect(requestPasswordReset(API_URL, { email: 'x@y.com' })).resolves.toBeUndefined();
     });
 
-    it('confirmPasswordReset calls correct endpoint', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
-      await confirmPasswordReset(API_URL, { token: 'reset-token', newPassword: 'newpass' });
-
-      expect(mockFetch).toHaveBeenCalledWith(`${API_URL}/v1/auth/password:reset`, expect.objectContaining({ method: 'POST' }));
+    it('confirmPasswordReset calls correct endpoint with mandatory confirmation', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({ success: true }));
+      await confirmPasswordReset(API_URL, { token: 'reset-token', newPassword: 'new-password' });
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe(`${API_URL}/v1/auth/password:reset`);
+      expect(options.method).toBe('POST');
+      expect(JSON.parse(options.body as string)).toEqual({ token: 'reset-token', newPassword: 'new-password', confirmPassword: 'new-password' });
     });
 
     it('confirmPasswordReset throws PasswordResetError on failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ message: 'Token expired' }),
-      });
-
-      await expect(confirmPasswordReset(API_URL, { token: 'bad', newPassword: 'x' })).rejects.toThrow(PasswordResetError);
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Token expired' }, { status: 400 }));
+      await expect(confirmPasswordReset(API_URL, { token: 'bad', newPassword: 'new-password' })).rejects.toThrow(PasswordResetError);
     });
 
-    it('changePassword sends auth header', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
-      await changePassword(API_URL, { currentPassword: 'old', newPassword: 'new' }, TOKEN);
-
+    it('changePassword sends auth header and mandatory confirmation', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({ success: true }));
+      await changePassword(API_URL, { currentPassword: 'old', newPassword: 'new-password' }, TOKEN);
       const [url, opts] = mockFetch.mock.calls[0];
       expect(url).toBe(`${API_URL}/v1/auth/password:change`);
-      expect(opts.headers.Authorization).toBe(`Bearer ${TOKEN}`);
+      expect(new Headers(opts.headers).get('Authorization')).toBe(`Bearer ${TOKEN}`);
+      expect(JSON.parse(opts.body as string)).toEqual({ currentPassword: 'old', newPassword: 'new-password', confirmPassword: 'new-password' });
     });
   });
 
   describe('Email Verification', () => {
-    it('sendVerificationEmail calls correct endpoint with auth', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
+    it('sendVerificationEmail resolves the actor email before sending the required body with auth', async () => {
+      const userId = '11111111-1111-4111-8111-111111111111';
+      mockFetch
+        .mockResolvedValueOnce(Response.json({ userId }))
+        .mockResolvedValueOnce(Response.json({ id: userId, email: 'actor@example.com' }))
+        .mockResolvedValueOnce(Response.json({ message: 'Acknowledged' }));
       await sendVerificationEmail(API_URL, TOKEN);
-
-      const [url, opts] = mockFetch.mock.calls[0];
+      const [url, opts] = mockFetch.mock.calls[2];
       expect(url).toBe(`${API_URL}/v1/auth/email:send-verification`);
-      expect(opts.headers.Authorization).toBe(`Bearer ${TOKEN}`);
+      expect(new Headers(opts.headers).get('Authorization')).toBe(`Bearer ${TOKEN}`);
+      expect(JSON.parse(opts.body as string)).toEqual({ email: 'actor@example.com' });
+      expect(mockFetch.mock.calls[0][0]).toBe(`${API_URL}/v1/auth/session-state`);
+      expect(mockFetch.mock.calls[1][0]).toBe(`${API_URL}/v1/users/${userId}`);
     });
 
     it('sendVerificationEmail throws on failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ message: 'Rate limited' }),
-      });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Unauthorized' }, { status: 401 }));
       await expect(sendVerificationEmail(API_URL, TOKEN)).rejects.toThrow(EmailVerificationError);
     });
 
     it('resendVerificationEmail calls anonymous endpoint with email body', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Acknowledged' }));
       await resendVerificationEmail(API_URL, { email: 'user@example.com' });
-
       expect(mockFetch).toHaveBeenCalledWith(
         `${API_URL}/v1/auth/email:send-verification`,
         expect.objectContaining({
@@ -167,146 +141,118 @@ describe('Extended Auth Operations', () => {
     });
 
     it('verifyEmail calls correct endpoint', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ success: true }));
       await verifyEmail(API_URL, { token: 'verify-token' });
-
       expect(mockFetch).toHaveBeenCalledWith(`${API_URL}/v1/auth/email:verify`, expect.objectContaining({ method: 'POST' }));
     });
   });
 
   describe('Session Management', () => {
-    it('listSessions returns session array', async () => {
+    it('listSessions returns the mapped session array', async () => {
       const sessions = [
-        { id: 's1', createdAt: '2024-01-01', lastActiveAt: '2024-01-02', isCurrent: true },
-        { id: 's2', createdAt: '2024-01-01', lastActiveAt: '2024-01-01', isCurrent: false },
+        { id: '11111111-1111-4111-8111-111111111111', createdAt: '2024-01-01T00:00:00Z', lastUsedAt: '2024-01-02T00:00:00Z', isCurrent: true },
+        { id: '22222222-2222-4222-8222-222222222222', createdAt: '2024-01-01T00:00:00Z', lastUsedAt: '2024-01-01T00:00:00Z', isCurrent: false },
       ];
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => sessions,
-      });
-
+      mockFetch.mockResolvedValueOnce(Response.json(sessions));
       const result = await listSessions(API_URL, TOKEN);
       expect(result).toHaveLength(2);
       expect(result[0].isCurrent).toBe(true);
+      expect(result[0].lastActiveAt).toBe('2024-01-02T00:00:00Z');
     });
 
-    it('listSessions returns empty array on failure', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: false });
-      const result = await listSessions(API_URL, TOKEN);
-      expect(result).toEqual([]);
+    it('listSessions returns empty array on HTTP failure', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({}, { status: 401 }));
+      await expect(listSessions(API_URL, TOKEN)).resolves.toEqual([]);
     });
 
-    it('terminateSession calls DELETE with session ID', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
-      await terminateSession(API_URL, 'session-123', TOKEN);
-
+    it('terminateSession calls DELETE with a session UUID', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Terminated' }));
+      await terminateSession(API_URL, '11111111-1111-4111-8111-111111111111', TOKEN);
       const [url, opts] = mockFetch.mock.calls[0];
-      expect(url).toBe(`${API_URL}/v1/auth/sessions/session-123`);
+      expect(url).toBe(`${API_URL}/v1/auth/sessions/11111111-1111-4111-8111-111111111111`);
       expect(opts.method).toBe('DELETE');
+      expect(new Headers(opts.headers).get('Authorization')).toBe(`Bearer ${TOKEN}`);
     });
 
-    it('terminateSession throws SessionTerminationError on failure', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: false });
-
-      await expect(terminateSession(API_URL, 'session-bad', TOKEN)).rejects.toThrow(SessionTerminationError);
+    it('terminateSession throws SessionTerminationError on HTTP failure', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({}, { status: 404 }));
+      await expect(terminateSession(API_URL, '11111111-1111-4111-8111-111111111111', TOKEN)).rejects.toThrow(SessionTerminationError);
     });
 
     it('terminateOtherSessions calls correct endpoint', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Terminated', terminatedCount: 1 }));
       await terminateOtherSessions(API_URL, TOKEN);
-
       expect(mockFetch).toHaveBeenCalledWith(`${API_URL}/v1/auth/sessions:terminate-others`, expect.objectContaining({ method: 'POST' }));
     });
 
     it('terminateOtherSessions throws SessionTerminationError on failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ message: 'Failed' }),
-      });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ detail: 'Failed' }, { status: 403 }));
       await expect(terminateOtherSessions(API_URL, TOKEN)).rejects.toThrow(SessionTerminationError);
     });
 
     it('terminateAllSessions calls correct endpoint', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'Terminated', terminatedCount: 2 }));
       await terminateAllSessions(API_URL, TOKEN);
-
       expect(mockFetch).toHaveBeenCalledWith(`${API_URL}/v1/auth/sessions:terminate-all`, expect.objectContaining({ method: 'POST' }));
     });
 
     it('setupTotpMfa returns MfaSetupResult on success', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          secret: 'JBSWY3DPEHPK3PXP',
+      mockFetch.mockResolvedValueOnce(
+        Response.json({
+          secretKey: 'JBSWY3DPEHPK3PXP',
           qrCodeUri: 'otpauth://totp/GameGuild?secret=JBSWY3DPEHPK3PXP',
-          recoveryCodes: ['abc123', 'def456'],
-        }),
-      });
-
-      const result = await setupTotpMfa(API_URL, TOKEN);
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        `${API_URL}/v1/auth/mfa/totp/setup`,
-        expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({
-            Authorization: `Bearer ${TOKEN}`,
-          }),
+          backupCodes: ['abc123', 'def456'],
         }),
       );
+
+      const result = await setupTotpMfa(API_URL, TOKEN);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe(`${API_URL}/v1/auth/mfa/totp:setup`);
+      expect(options.method).toBe('POST');
+      expect(new Headers(options.headers).get('Authorization')).toBe(`Bearer ${TOKEN}`);
       expect(result).toEqual({
         secret: 'JBSWY3DPEHPK3PXP',
         qrCodeUri: 'otpauth://totp/GameGuild?secret=JBSWY3DPEHPK3PXP',
-        recoveryCodes: ['abc123', 'def456'],
+        backupCodes: ['abc123', 'def456'],
+        requiresVerification: true,
       });
     });
 
     it('setupTotpMfa throws MfaVerificationError on failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ message: 'MFA already configured' }),
-      });
-
+      mockFetch.mockResolvedValueOnce(Response.json({ message: 'MFA already configured' }, { status: 400 }));
       await expect(setupTotpMfa(API_URL, TOKEN)).rejects.toThrow(MfaVerificationError);
     });
 
     it('getMfaMethods returns methods array on success', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ methods: ['totp', 'sms'] }),
-      });
-
-      const result = await getMfaMethods(API_URL, TOKEN);
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        `${API_URL}/v1/auth/mfa/methods`,
-        expect.objectContaining({
-          headers: { Authorization: `Bearer ${TOKEN}` },
+      mockFetch.mockResolvedValueOnce(
+        Response.json({
+          methods: ['Totp', 'Sms'].map((method) => ({
+            method,
+            name: null,
+            description: null,
+            isAvailable: true,
+            isEnabled: true,
+            priority: 1,
+          })),
         }),
       );
+
+      const result = await getMfaMethods(API_URL, TOKEN);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe(`${API_URL}/v1/auth/mfa/methods`);
+      expect(new Headers(options.headers).get('Authorization')).toBe(`Bearer ${TOKEN}`);
       expect(result).toEqual(['totp', 'sms']);
     });
 
     it('getMfaMethods returns empty array on failure', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: false });
-
+      mockFetch.mockResolvedValueOnce(Response.json({}, { status: 401 }));
       const result = await getMfaMethods(API_URL, TOKEN);
       expect(result).toEqual([]);
     });
 
-    it('getMfaMethods returns empty array when methods field missing', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({}),
-      });
-
-      const result = await getMfaMethods(API_URL, TOKEN);
-      expect(result).toEqual([]);
+    it('getMfaMethods rejects malformed responses when methods field is missing', async () => {
+      mockFetch.mockResolvedValueOnce(Response.json({}));
+      await expect(getMfaMethods(API_URL, TOKEN)).rejects.toThrow(MfaVerificationError);
     });
   });
 

@@ -93,6 +93,9 @@ public sealed class FieldAccessAuditPostgreSqlIntegrationTests(ApiPostgreSqlFixt
         var tenantId = Guid.NewGuid();
         var actorId = Guid.NewGuid();
         var userId = Guid.NewGuid();
+        var otherTenantId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+        Guid memberId;
 
         using var factory = fixture.CreateFactory(_ => { });
 
@@ -100,6 +103,13 @@ public sealed class FieldAccessAuditPostgreSqlIntegrationTests(ApiPostgreSqlFixt
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             await SeedAsync(dbContext, tenantId, userId);
+            // Shared collection state can contain the same field transition in another tenant.
+            // Seed that collision explicitly so an unscoped assertion cannot pass in isolation.
+            await SeedAsync(dbContext, otherTenantId, otherUserId);
+            var otherMember = await dbContext.Set<TenantMember>().IgnoreQueryFilters()
+                .SingleAsync(candidate => candidate.TenantId == otherTenantId && candidate.UserId == otherUserId);
+            otherMember.Role = "Admin";
+            await dbContext.SaveChangesAsync();
         }
 
         await using (var scope = factory.Services.CreateAsyncScope())
@@ -108,6 +118,7 @@ public sealed class FieldAccessAuditPostgreSqlIntegrationTests(ApiPostgreSqlFixt
             var user = await dbContext.Set<User>().IgnoreQueryFilters().SingleAsync(candidate => candidate.Id == userId);
             var member = await dbContext.Set<TenantMember>().IgnoreQueryFilters()
                 .SingleAsync(candidate => candidate.TenantId == tenantId && candidate.UserId == userId);
+            memberId = member.Id;
 
             // The ambient operation context is the trusted source for actor and tenant on writes.
             var accessor = new UseCaseOperationContextAccessor();
@@ -129,7 +140,7 @@ public sealed class FieldAccessAuditPostgreSqlIntegrationTests(ApiPostgreSqlFixt
             var emailWrite = await dbContext.Set<FieldAccessAudit>()
                 .IgnoreQueryFilters()
                 .SingleAsync(row => row.EntityType == "User" && row.FieldName == "Email"
-                    && row.AccessType == FieldAccessType.Write && row.TenantId == tenantId);
+                    && row.AccessType == FieldAccessType.Write && row.TenantId == tenantId && row.EntityId == userId);
             // Sensitive write observations persist only masked renderings.
             Assert.True(emailWrite.IsSensitiveField);
             Assert.Null(emailWrite.OldValue);
@@ -141,6 +152,7 @@ public sealed class FieldAccessAuditPostgreSqlIntegrationTests(ApiPostgreSqlFixt
             var roleWrite = await dbContext.Set<FieldAccessAudit>()
                 .IgnoreQueryFilters()
                 .SingleAsync(row => row.EntityType == "TenantMember" && row.FieldName == "Role"
+                    && row.TenantId == tenantId && row.EntityId == memberId
                     && row.AccessType == FieldAccessType.Write
                     && row.OldValue == "Member" && row.NewValue == "Admin");
             Assert.Equal(tenantId, roleWrite.TenantId);
