@@ -69,8 +69,7 @@ public sealed class BackupCodeMfaService(
             // Return plain-text codes to user (only shown once)
             return backupCodes.ToArray();
         }
-        catch (MfaConfigurationDeniedException) { throw; }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not MfaConfigurationDeniedException)
         {
             logger.LogError(ex, "Error generating backup codes for user: {UserId}", userId);
 

@@ -73,8 +73,7 @@ public sealed class TotpMfaService(
 
             return (qrCodeUri, secretKey, new DateTimeOffset(mfaConfig.SetupExpiresAt.Value, TimeSpan.Zero));
         }
-        catch (MfaConfigurationDeniedException) { throw; }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not MfaConfigurationDeniedException)
         {
             logger.LogError(ex, "Error setting up TOTP for user: {UserId}", userId);
 
