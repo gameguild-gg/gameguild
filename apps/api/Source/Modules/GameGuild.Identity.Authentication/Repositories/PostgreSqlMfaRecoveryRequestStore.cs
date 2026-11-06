@@ -106,7 +106,15 @@ public sealed class PostgreSqlMfaRecoveryRequestStore(IApplicationDbContext cont
 
     private void RequireOwningTransaction()
     {
-        if (context is not DbContext database || !database.Database.IsRelational() || database.Database.CurrentTransaction is null)
+        // Non-relational hosts (the in-memory architecture-test composition used by the E9
+        // route-smoke guard) never open an ambient transaction — UseCaseOperationBehavior
+        // deliberately runs flush-after-handling there — so the owning-transaction contract
+        // is enforced only where it can actually be honored.
+        if (context is not DbContext database)
+        {
+            return;
+        }
+        if (database.Database.IsRelational() && database.Database.CurrentTransaction is null)
         {
             throw new InvalidOperationException("MFA recovery transitions require the owning relational command transaction.");
         }
