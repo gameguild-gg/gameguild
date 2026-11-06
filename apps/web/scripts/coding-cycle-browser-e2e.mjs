@@ -414,7 +414,7 @@ async function bootStack() {
     `NODE_ENV=production`,
     // Bound compilation separately from the browser/IDE workload. Development
     // webpack retention restarted the server even with this heap and cache off.
-    `NODE_OPTIONS=--max-old-space-size=6144`,
+    `NODE_OPTIONS=${process.env.NODE_OPTIONS ?? ""} --max-old-space-size=6144`,
     // Keep the isolated compilation cache bounded; the compiler exits before
     // either persona loads the IDE (dev mode restarted even with its cache off).
     `GAMEGUILD_DISABLE_WEBPACK_CACHE=1`,
