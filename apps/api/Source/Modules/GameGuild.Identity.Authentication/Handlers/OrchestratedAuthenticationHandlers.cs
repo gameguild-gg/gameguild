@@ -40,7 +40,7 @@ public sealed class InitiateOrchestratedAuthenticationHandler(
             Context = new Dictionary<string, object> { ["password"] = command.Password }
         };
 
-        var flowState = await orchestrationService.InitiateAuthenticationAsync(request).ConfigureAwait(false);
+        var flowState = await orchestrationService.InitiateAuthenticationAsync(request, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation(
             "Orchestrated authentication flow {FlowId} initiated for identifier {Identifier} with {StepCount} required steps",
@@ -49,13 +49,13 @@ public sealed class InitiateOrchestratedAuthenticationHandler(
             LogRedaction.MaskEmail(command.Identifier),
             flowState.RequiredSteps.Count);
 
-        return flowState.ToDto();
+        return AuthenticationMappings.ToDto(flowState);
     }
 }
 
 /// <summary>
 ///     Satisfies one challenge step of an orchestrated authentication flow by delegating
-///     verification (TOTP / backup code / WebAuthn) and state transition to the orchestrator.
+///     verification (TOTP / backup code / WebAuthn / dedicated risk code) and state transition to the orchestrator.
 /// </summary>
 public sealed class ProcessOrchestratedAuthenticationStepHandler(
     IAuthenticationOrchestrationService orchestrationService,
@@ -75,16 +75,17 @@ public sealed class ProcessOrchestratedAuthenticationStepHandler(
         if (!string.IsNullOrWhiteSpace(command.TotpCode)) { payload["totpCode"] = command.TotpCode.Trim(); }
         if (!string.IsNullOrWhiteSpace(command.BackupCode)) { payload["backupCode"] = command.BackupCode.Trim(); }
         if (!string.IsNullOrWhiteSpace(command.WebAuthnAssertion)) { payload["webAuthnAssertion"] = command.WebAuthnAssertion.Trim(); }
+        if (!string.IsNullOrWhiteSpace(command.RiskCode)) { payload["riskCode"] = command.RiskCode.Trim(); }
 
         var flowState = await orchestrationService
-            .ProcessAuthenticationStepAsync(command.FlowId, command.Step, payload)
+            .ProcessAuthenticationStepAsync(command.FlowId, command.Step, payload, cancellationToken)
             .ConfigureAwait(false);
 
         logger.LogInformation(
             "Orchestrated authentication flow {FlowId} step {Step} processed; complete: {IsComplete}",
             flowState.FlowId, command.Step, flowState.IsComplete);
 
-        return flowState.ToDto();
+        return AuthenticationMappings.ToDto(flowState);
     }
 }
 
@@ -106,13 +107,13 @@ public sealed class CompleteOrchestratedAuthenticationHandler(
             throw new RequestValidationException(validationResult.Errors.Select(e => new ValidationError(e.PropertyName, e.ErrorMessage)));
         }
 
-        var result = await orchestrationService.CompleteAuthenticationAsync(command.FlowId).ConfigureAwait(false);
+        var result = await orchestrationService.CompleteAuthenticationAsync(command.FlowId, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation(
             "Orchestrated authentication flow {FlowId} completed for user {UserId}",
             command.FlowId, result.UserId);
 
-        return result.ToSignInResponse();
+        return AuthenticationMappings.ToSignInResponse(result);
     }
 }
 
@@ -134,7 +135,7 @@ public sealed class AbandonOrchestratedAuthenticationHandler(
             throw new RequestValidationException(validationResult.Errors.Select(e => new ValidationError(e.PropertyName, e.ErrorMessage)));
         }
 
-        await orchestrationService.AbandonAuthenticationFlowAsync(command.FlowId).ConfigureAwait(false);
+        await orchestrationService.AbandonAuthenticationFlowAsync(command.FlowId, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Orchestrated authentication flow {FlowId} abandoned", command.FlowId);
 
@@ -152,7 +153,7 @@ public sealed class GetOrchestratedAuthenticationFlowStateHandler(
 {
     public async Task<OrchestratedFlowStateResponse?> Handle(GetOrchestratedAuthenticationFlowStateQuery query, CancellationToken cancellationToken)
     {
-        var flowState = await orchestrationService.GetFlowStateAsync(query.FlowId).ConfigureAwait(false);
-        return flowState?.ToDto();
+        var flowState = await orchestrationService.GetFlowStateAsync(query.FlowId, cancellationToken).ConfigureAwait(false);
+        return flowState is null ? null : AuthenticationMappings.ToDto(flowState);
     }
 }

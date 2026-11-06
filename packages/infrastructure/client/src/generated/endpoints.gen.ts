@@ -20917,7 +20917,7 @@ export const postAuthOrchestratedAbandonEndpoint = {
 /**
  * Complete an orchestrated authentication flow and issue tokens
  *
- * Issues access and refresh tokens once every required step of the flow is satisfied. Pending steps, abandoned, expired or already-unknown flows fail closed.
+ * Creates a persisted session and bound refresh root, then issues a tenant-bound JWT once every required step is satisfied and current account/MFA/tenant policy is still valid. Flow finalization and credential persistence commit together; replay cannot issue twice. Pending, abandoned, expired and unknown flows fail closed.
  */
 export interface PostAuthOrchestratedCompleteInput {
   flowId: string;
@@ -20934,7 +20934,7 @@ export const postAuthOrchestratedCompleteEndpoint = {
 /**
  * Satisfy one challenge step of an orchestrated authentication flow
  *
- * Verifies one challenge step (TOTP code, backup code or WebAuthn assertion) against the persisted flow and returns the updated state. Out-of-order, repeated, abandoned, expired or locked-out steps fail closed.
+ * Verifies the next required challenge against the persisted server-bound flow. MFA/device steps accept exactly one TOTP, backup code or WebAuthn assertion; RiskChallenge accepts only its eight-digit riskCode sent to the verified email address. Wrong risk codes return 401 and retain a bounded attempt count in the Problem Details legacy extension. Repeated, abandoned, expired or locked-out steps fail closed.
  */
 export interface PostAuthOrchestratedProcessStepInput {
   flowId: string;

@@ -15,6 +15,8 @@ public interface IAuthenticationFlowStateRepository
     /// </summary>
     Task<AuthenticationFlowStateRecord?> GetByFlowIdAsync(Guid flowId, CancellationToken cancellationToken = default);
 
+    Task<AuthenticationFlowStateRecord?> GetForUpdateAsync(Guid flowId, CancellationToken cancellationToken);
+
     /// <summary>
     ///     Updates an existing flow state.
     /// </summary>
