@@ -7,11 +7,11 @@
  * They read/write cookies directly via next/headers and can trigger redirects.
  */
 
-import type { ResolvedAuthConfig, Session, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types';
+import type { ResolvedAuthConfig, Session, ProviderResult } from '../../runtime/auth/types';
 import { decodeJWT } from '../../runtime/auth/jwt';
 import { SessionStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies';
 import { createJWTPayload, processSession, encodeSession, refreshAccessToken, toSession } from '../../runtime/auth/session';
-import { CredentialsSignInError, ProviderNotFoundError, SignUpError } from '../../runtime/auth/errors';
+import { CredentialsSignInError, ProviderNotFoundError } from '../../runtime/auth/errors';
 import { registerAccount } from '../../runtime/auth/sign-up';
 import { revokeSessionRefreshToken } from '../../runtime/auth/sign-out';
 import type { IdentityAuthenticationLocalSignUpInput } from '../../generated/types.gen';
@@ -176,7 +176,7 @@ export function createSignInAction(config: ResolvedAuthConfig) {
     let result: ProviderResult | null = null;
 
     if (providerConfig.type === 'credentials') {
-      const credProvider = providerConfig as CredentialsProviderConfig;
+      const credProvider = providerConfig;
       result = await credProvider.authorize({ ...credentials, __apiUrl: config.apiUrl }, undefined);
     } else {
       const oauthProvider = providerConfig as OAuthProviderWithMethods;

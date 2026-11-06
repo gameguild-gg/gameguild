@@ -16,7 +16,7 @@
  *   GET  /api/auth/callback/:provider — OAuth callback
  */
 
-import type { ResolvedAuthConfig, Session, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types';
+import type { ResolvedAuthConfig, Session, ProviderResult } from '../../runtime/auth/types';
 import { SessionStore, CsrfStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies';
 import { createJWTPayload, processSession, encodeSession, toSession } from '../../runtime/auth/session';
 import { createCSRFToken, validateCSRFToken } from '../../runtime/auth/csrf';
@@ -328,7 +328,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
         /* v8 ignore start */
         const csrfToken = (body.csrfToken as string) || request.headers.get('x-csrf-token');
         /* v8 ignore stop */
-        const isValid = await validateCSRFToken(csrfCookie, csrfToken as string, config.secret);
+        const isValid = await validateCSRFToken(csrfCookie, csrfToken, config.secret);
         if (!isValid) throw new CSRFError();
       }
 
@@ -409,7 +409,6 @@ export function createHandlers(config: ResolvedAuthConfig) {
     return buildResponse({ success: true, secretKey: data.secretKey, qrCodeUri: data.qrCodeUri, expiresAt: data.expiresAt }, 200, responseCookies);
   }
 
-
   async function handleGetSession(cookies: Map<string, string>, responseCookies: ResponseCookies): Promise<Response> {
     const encryptedToken = sessionStore.read((name) => cookies.get(name));
 
@@ -457,7 +456,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     let result: ProviderResult | null = null;
 
     if (provider.type === 'credentials') {
-      const credProvider = provider as CredentialsProviderConfig;
+      const credProvider = provider;
       const credentials = { ...body, __apiUrl: config.apiUrl };
       result = await credProvider.authorize(credentials, request);
     } else {
@@ -610,7 +609,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     token = await config.callbacks.jwt({
       token,
       trigger: 'update',
-      session: body as Partial<Session>,
+      session: body,
     });
 
     const encrypted = await encodeSession(token, config);

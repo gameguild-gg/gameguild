@@ -44,7 +44,10 @@ export function GoogleAnalytics({ measurementId: rawMeasurementId }: GoogleAnaly
       if (effective.analytics && !configured) {
         configured = true;
         w.gtag!('js', new Date());
-        w.gtag!('config', measurementId);
+        // send_page_view:false — the explicit consent-gated page_view in
+        // web-vitals-reporter owns SPA page views (issue #1221); gtag.js's
+        // built-in would double-fire.
+        w.gtag!('config', measurementId, { send_page_view: false });
         setTransportReady(true);
       }
       if (!effective.analytics) {

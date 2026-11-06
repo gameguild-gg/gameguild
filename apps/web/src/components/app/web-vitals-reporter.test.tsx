@@ -1,110 +1,183 @@
-import { cleanup, render } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import type { ConsentState } from '@/lib/consent/store';
-import type { Metric } from 'web-vitals';
+import '@testing-library/jest-dom/vitest';
+import { act, render } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const readConsentMock = vi.fn<() => ConsentState | null>();
-const subscribeConsentMock = vi.fn(() => vi.fn());
+import { CONSENT_STATE_VERSION, CONSENT_STORAGE_KEY } from '@/lib/consent/state';
+import { ANALYTICS_EVENT_CONTRACT_VERSION, EVENT_VERSION_PARAM } from '@/lib/analytics/events';
+
+const metricCallbacks = {} as Record<string, (m: unknown) => void>;
+
+vi.mock('web-vitals', () => ({
+  onLCP: (cb: (m: unknown) => void) => { metricCallbacks.LCP = cb; },
+  onINP: (cb: (m: unknown) => void) => { metricCallbacks.INP = cb; },
+  onCLS: (cb: (m: unknown) => void) => { metricCallbacks.CLS = cb; },
+  onTTFB: (cb: (m: unknown) => void) => { metricCallbacks.TTFB = cb; },
+  onFCP: (cb: (m: unknown) => void) => { metricCallbacks.FCP = cb; },
+}));
 
 vi.mock('next/navigation', () => ({
-  usePathname: vi.fn(() => '/'),
+  usePathname: () => mocks.pathname,
 }));
 
-vi.mock('@/lib/consent/store', () => ({
-  readConsent: (...args: unknown[]) => readConsentMock(...(args as [])),
-  subscribeConsent: (...args: unknown[]) => subscribeConsentMock(...(args as [])),
+const mocks = vi.hoisted(() => ({
+  pathname: '/',
 }));
 
-const metricCallbacks = {} as Record<string, (m: Metric) => void>;
-const vitalsMocks = {
-  onLCP: (cb: (m: Metric) => void) => { metricCallbacks.LCP = cb; },
-  onINP: (cb: (m: Metric) => void) => { metricCallbacks.INP = cb; },
-  onCLS: (cb: (m: Metric) => void) => { metricCallbacks.CLS = cb; },
-  onTTFB: (cb: (m: Metric) => void) => { metricCallbacks.TTFB = cb; },
-  onFCP: (cb: (m: Metric) => void) => { metricCallbacks.FCP = cb; },
+import { WebVitalsReporter } from './web-vitals-reporter';
+
+type AnalyticsWindow = Window & {
+  dataLayer?: unknown[];
+  gtag?: (...args: unknown[]) => void;
 };
-vi.mock('web-vitals', () => vitalsMocks);
 
-if (typeof PerformanceNavigationTiming === 'undefined') {
-  (globalThis as any).PerformanceNavigationTiming = class PerformanceNavigationTiming {};
+function w(): AnalyticsWindow {
+  return window as AnalyticsWindow;
 }
 
-let WebVitalsReporter: React.ComponentType;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let usePathname: any;
-
-function fakeMetric(overrides: Partial<Metric> = {}): Metric {
-  return {
-    name: 'LCP',
-    value: 1200,
-    rating: 'good',
-    id: 'v3-1',
-    delta: 1200,
-    navigationType: 'navigate',
-    entries: [],
-    ...overrides,
-  } as unknown as Metric;
-}
-
-function fakeNavigationEntry(startTime = 0): PerformanceNavigationTiming {
-  return Object.assign(
-    Object.create(PerformanceNavigationTiming.prototype),
-    { startTime, responseStart: 100, domContentLoadedEventEnd: 500, loadEventEnd: 900, transferSize: 2048 },
+function events(name: string): Array<Record<string, unknown>> {
+  return (w().dataLayer ?? []).filter(
+    (e): e is Record<string, unknown> => Array.isArray(e) && e[0] === 'event' && e[1] === name,
   );
 }
 
-function dataLayerEvents(w: Window, name: string) {
-  const layer = (w as { dataLayer?: unknown[][] }).dataLayer ?? [];
-  return layer.filter((args) => args[0] === 'event' && args[1] === name);
+function allEvents(): Array<Record<string, unknown>> {
+  return (w().dataLayer ?? []).filter((e): e is Record<string, unknown> => Array.isArray(e) && e[0] === 'event');
 }
 
-beforeEach(async () => {
-  vi.resetModules();
-  metricCallbacks.LCP = undefined as unknown as (m: Metric) => void;
-  ({ WebVitalsReporter } = await import('./web-vitals-reporter'));
-  ({ usePathname } = await import('next/navigation'));
-  vi.clearAllMocks();
-  vi.mocked(usePathname).mockReturnValue('/');
-  readConsentMock.mockReturnValue({ analytics: true } as ConsentState);
-  Object.defineProperty(document, 'readyState', { configurable: true, value: 'complete' });
-  vi.spyOn(performance, 'getEntriesByType').mockReturnValue([fakeNavigationEntry(0)]);
-  subscribeConsentMock.mockReturnValue(vi.fn());
-  delete (window as { dataLayer?: unknown[][] }).dataLayer;
-});
+function fakeMetric(overrides: Record<string, unknown> = {}): unknown {
+  return {
+    name: 'LCP',
+    value: 2450.7,
+    rating: 'good',
+    id: 'v3-abc123',
+    delta: 2450.7,
+    navigationType: 'navigate',
+    navigationId: 'nav-1',
+    entries: [],
+    ...overrides,
+  };
+}
 
-afterEach(() => {
-  cleanup();
-  vi.restoreAllMocks();
-});
+function persistConsent(analytics: boolean): void {
+  window.localStorage.setItem(
+    CONSENT_STORAGE_KEY,
+    JSON.stringify({ version: CONSENT_STATE_VERSION, analytics, marketing: false, updatedAt: '2026-01-01T00:00:00.000Z' }),
+  );
+}
 
-describe('WebVitalsReporter page_load_timing dedupe', () => {
-  it('sends page_load_timing once on initial load', () => {
+describe('WebVitalsReporter (issues #1210, #1221)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    for (const key of Object.keys(metricCallbacks)) delete metricCallbacks[key];
+    window.localStorage.clear();
+    delete w().dataLayer;
+    delete w().gtag;
+    Object.defineProperty(navigator, 'doNotTrack', { value: undefined, configurable: true });
+    mocks.pathname = '/';
+    vi.stubGlobal('performance', {
+      getEntriesByType: () => [],
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('dispatches page_view once on mount (not double on first effect run)', () => {
+    persistConsent(true);
     render(<WebVitalsReporter />);
-    expect(dataLayerEvents(window, 'page_load_timing')).toHaveLength(1);
-    expect(dataLayerEvents(window, 'page_load_timing')[0]![2]).toMatchObject({ page_path: '/' });
+
+    expect(events('page_view')).toEqual([
+      ['event', 'page_view', { page_path: '/', event_version: ANALYTICS_EVENT_CONTRACT_VERSION }],
+    ]);
   });
 
-  it('does not re-send page_load_timing on SPA route change', () => {
+  it('dispatches one page_view per pathname change and re-fires on return', () => {
+    persistConsent(true);
     const { rerender } = render(<WebVitalsReporter />);
-    vi.mocked(usePathname).mockReturnValue('/courses');
-    rerender(<WebVitalsReporter />);
+    expect(events('page_view')).toHaveLength(1);
 
-    const events = dataLayerEvents(window, 'page_load_timing');
-    expect(events).toHaveLength(1);
-    expect(events[0]![2]).toMatchObject({ page_path: '/' });
+    act(() => {
+      mocks.pathname = '/courses';
+      rerender(<WebVitalsReporter />);
+    });
+    expect(events('page_view')).toHaveLength(2);
+    expect(events('page_view')[1]).toEqual(
+      ['event', 'page_view', { page_path: '/courses', event_version: ANALYTICS_EVENT_CONTRACT_VERSION }],
+    );
+
+    act(() => {
+      mocks.pathname = '/';
+      rerender(<WebVitalsReporter />);
+    });
+    expect(events('page_view')).toHaveLength(3);
   });
 
-  it('still sends web_vitals per route change', () => {
+  it('stamps event_version on web_vitals payloads', () => {
+    persistConsent(true);
+    render(<WebVitalsReporter />);
+
+    act(() => {
+      metricCallbacks.LCP!(fakeMetric());
+    });
+
+    const webVitals = events('web_vitals');
+    expect(webVitals).toHaveLength(1);
+    expect((webVitals[0] as unknown[])[2]).toMatchObject({
+      metric_name: 'LCP',
+      [EVENT_VERSION_PARAM]: ANALYTICS_EVENT_CONTRACT_VERSION,
+    });
+  });
+
+  it('never re-fires a metric for the same navigationId across effect re-runs', () => {
+    persistConsent(true);
     const { rerender } = render(<WebVitalsReporter />);
-    metricCallbacks.LCP?.(fakeMetric({ id: 'lcp-1', navigationId: 1 }));
+    act(() => {
+      metricCallbacks.LCP!(fakeMetric({ id: 'lcp-1', navigationId: 'nav-1' }));
+    });
+    expect(events('web_vitals')).toHaveLength(1);
 
-    vi.mocked(usePathname).mockReturnValue('/courses');
+    // Simulate a pathname-effect re-run (same component instance) and the
+    // library re-delivering the same metric for the old navigation.
+    mocks.pathname = '/courses';
     rerender(<WebVitalsReporter />);
-    metricCallbacks.LCP?.(fakeMetric({ id: 'lcp-1', navigationId: 2 }));
+    act(() => {
+      metricCallbacks.LCP!(fakeMetric({ id: 'lcp-1', navigationId: 'nav-1', value: 9999 }));
+    });
 
-    const events = dataLayerEvents(window, 'web_vitals');
-    expect(events).toHaveLength(2);
-    expect(events[0]![2]).toMatchObject({ page_path: '/' });
-    expect(events[1]![2]).toMatchObject({ page_path: '/courses' });
+    const webVitals = events('web_vitals');
+    expect(webVitals).toHaveLength(1);
+    expect((webVitals[0] as unknown[])[2]).toMatchObject({ metric_value: 2451 });
+  });
+
+  it('dispatches both CLS reports for one navigation when ids differ (final value not dropped)', () => {
+    persistConsent(true);
+    render(<WebVitalsReporter />);
+
+    act(() => {
+      metricCallbacks.CLS!(fakeMetric({ name: 'CLS', id: 'cls-1', navigationId: 'nav-1', value: 120 }));
+    });
+    act(() => {
+      metricCallbacks.CLS!(fakeMetric({ name: 'CLS', id: 'cls-1', navigationId: 'nav-1', value: 999 }));
+    });
+    act(() => {
+      metricCallbacks.CLS!(fakeMetric({ name: 'CLS', id: 'cls-2', navigationId: 'nav-1', value: 340 }));
+    });
+
+    const cls = events('web_vitals');
+    expect(cls).toHaveLength(2);
+    expect((cls[0] as unknown[])[2]).toMatchObject({ metric_value: 120000 });
+    expect((cls[1] as unknown[])[2]).toMatchObject({ metric_value: 340000 });
+  });
+
+  it('sends nothing without analytics consent (fail closed)', () => {
+    render(<WebVitalsReporter />);
+
+    act(() => {
+      metricCallbacks.LCP!(fakeMetric());
+    });
+
+    expect(w().dataLayer ?? []).toHaveLength(0);
+    expect(allEvents()).toHaveLength(0);
   });
 });
