@@ -1,6 +1,7 @@
 'use client';
 
 import { CONSENT_REOPEN_EVENT, isDoNotTrackEnabled, readConsent, saveConsent } from '@/lib/consent/store';
+import { saveConsentWithAudit } from '@/lib/consent/sync';
 import type { ConsentState } from '@/lib/consent/state';
 import { useEffect, useState } from 'react';
 
@@ -63,7 +64,7 @@ export function ConsentBanner({ serverAnalyticsConsent }: ConsentBannerProps) {
   if (!visible) return null;
 
   function confirm(next: ConsentChoice) {
-    saveConsent(next);
+    saveConsentWithAudit(next.analytics, next.marketing, 'banner');
     setDismissed(true);
   }
 

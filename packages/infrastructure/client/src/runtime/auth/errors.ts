@@ -5,7 +5,12 @@
  * Inspired by next-auth's error system but tailored for our use case.
  */
 
-import type { IdentityAuthenticationSignInMfaEnrollmentOffer } from '../../generated/types.gen';
+/** Validated provisioning data carried by a pending sign-in, independent of generated API schemas. */
+export interface MfaEnrollmentOffer {
+  secretKey: string;
+  qrCodeUri: string;
+  expiresAt: string;
+}
 
 /**
  * Validate and normalize the one-time TOTP enrollment offer that may ride a
@@ -13,7 +18,7 @@ import type { IdentityAuthenticationSignInMfaEnrollmentOffer } from '../../gener
  * subjects with no enrolled factor). Returns undefined for absent, partial,
  * or malformed payloads so callers can treat the offer as all-or-nothing.
  */
-export function parseMfaEnrollmentOffer(value: unknown): IdentityAuthenticationSignInMfaEnrollmentOffer | undefined {
+export function parseMfaEnrollmentOffer(value: unknown): MfaEnrollmentOffer | undefined {
   if (typeof value !== 'object' || value === null) return undefined;
   const candidate = value as Record<string, unknown>;
   if (
@@ -103,7 +108,7 @@ export class MfaRequiredError extends AuthError {
   /** Available MFA methods */
   readonly availableMethods?: string[];
   /** One-time TOTP provisioning offer; present only when the subject must enroll at sign-in. */
-  readonly mfaEnrollment?: IdentityAuthenticationSignInMfaEnrollmentOffer;
+  readonly mfaEnrollment?: MfaEnrollmentOffer;
 
   constructor(
     message = 'Multi-factor authentication required',
@@ -111,7 +116,7 @@ export class MfaRequiredError extends AuthError {
       mfaSessionId?: string;
       mfaToken?: string;
       availableMethods?: string[];
-      mfaEnrollment?: IdentityAuthenticationSignInMfaEnrollmentOffer;
+      mfaEnrollment?: MfaEnrollmentOffer;
     },
   ) {
     super(message, { type: 'MfaRequired', status: 403 });
@@ -125,7 +130,7 @@ export class MfaRequiredError extends AuthError {
   override toJSON(): ReturnType<AuthError['toJSON']> & {
     mfaToken?: string;
     availableMethods?: string[];
-    mfaEnrollment?: IdentityAuthenticationSignInMfaEnrollmentOffer;
+    mfaEnrollment?: MfaEnrollmentOffer;
   } {
     return { ...super.toJSON(), mfaToken: this.mfaToken, availableMethods: this.availableMethods, mfaEnrollment: this.mfaEnrollment };
   }

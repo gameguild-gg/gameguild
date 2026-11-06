@@ -360,7 +360,7 @@ public sealed class EnrollmentServiceTests
 
         public Result NextReservation { get; init; } = Result.Success();
 
-        public Task<Result> ReserveCapacityAsync(Guid cohortId, CancellationToken cancellationToken = default)
+        public Task<Result> ReserveCapacityAsync(Guid cohortId, Guid courseId, CancellationToken cancellationToken = default)
         {
             ReservedCohortIds.Add(cohortId);
             return Task.FromResult(NextReservation);

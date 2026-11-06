@@ -51,6 +51,7 @@
       "backupCodesTitle": "Save your recovery codes",
       "backupCodesDescription": "These recovery codes are shown only once. Store them somewhere safe before continuing — each one can sign you in without your authenticator app.",
       "copyBackupCodes": "Copy all codes",
+      "copyFailed": "Copy failed. Select the key or codes and copy them manually.",
       "backupCodesContinue": "I've stored my codes — continue"
     }
   },
@@ -329,7 +330,12 @@
           "regenerate": "Regenerate codes",
           "regenerated": "New recovery codes generated. Previous codes are now invalid.",
           "freshWarning": "These codes are shown only once. Store them somewhere safe now.",
-          "hide": "I saved my codes"
+          "hide": "I saved my codes",
+          "confirmTitle": "Regenerate recovery codes",
+          "confirmDescription": "Enter your account password to re-verify before new recovery codes are issued. Previously issued codes become invalid.",
+          "passwordLabel": "Account password",
+          "cancel": "Cancel",
+          "wrongPassword": "Password verification failed. Recovery codes were not changed."
         },
         "disable": {
           "title": "Disable MFA",
@@ -382,6 +388,7 @@
       "backupCodesNone": "No backup codes remaining.",
       "regenerateConfirm": "Generate a new set of backup codes? Your current codes will stop working.",
       "nudge": {
+        "requiredTitle": "Two-factor authentication is required for administrator accounts. Enable it to keep your access.",
         "title": "Protect your account — enable two-factor authentication",
         "action": "Set up 2FA",
         "dismiss": "Dismiss two-factor reminder"

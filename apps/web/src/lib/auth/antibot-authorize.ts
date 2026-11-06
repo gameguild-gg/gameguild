@@ -8,35 +8,15 @@ import { verifyTurnstileToken } from "@/lib/antibot/turnstile";
 type CredentialsAuthorize = CredentialsProviderConfig["authorize"];
 
 /**
- * Gate a credentials `authorize` behind Cloudflare Turnstile verification.
+ * Gate a standalone credentials boundary that owns Turnstile verification.
  *
- * Wire this around the innermost password authorize ONLY (see auth.ts):
- * the wrapper is applied at the password layer, so token-less flows that
- * bypass it (magic-link, MFA, web3) stay untouched — the exemption comes from
- * placement, plus an explicit `mfaToken` guard at the wrapped layer. The
- * default credentials provider also handles MFA completion (`mfaToken` +
- * `method`/`code` — never a password), which has no Turnstile widget by design
- * (post-auth); the `mfaToken` is a short-lived server-issued first-factor
- * bearer, so possession is already proven — same trust class as magic-link.
- * The exemption therefore requires BOTH a non-empty `mfaToken` AND the
- * ABSENCE of a `password` field; mixed payloads (password + mfaToken) fall
- * through to Turnstile verification so a bogus appended `mfaToken` cannot
- * bypass the challenge on password attempts. A bogus password-less
- * `mfaToken` delegates and fails server-side against the MFA-verification
- * endpoint (rate-limited).
+ * Password sign-in and sign-up in auth.ts do not use this wrapper: their API
+ * consumes the single-use proof, forwarded by the SDK. Pre-verifying it here
+ * would make the API reject a legitimate token as already used.
  *
- * - `TURNSTILE_SECRET_KEY` unset/empty → delegate immediately, no verification
- *   call (dev/e2e fail-open; verifyTurnstileToken would fail open too, but this
- *   skips even the lookup).
- * - Otherwise the `credentials.turnstileToken` string is verified; failure
- *   throws `CredentialsSignInError` so the sign-in form shows a generic error.
- * - On success the ORIGINAL credentials object is delegated unchanged. The
- *   `turnstileToken` field must never reach a fetch body: the downstream
- *   authorize implementations build request bodies from fixed fields only —
- *   the default provider (packages/infrastructure/client/src/runtime/auth/
- *   providers/credentials.ts: `email/password/tenantId/rememberMe` or the MFA
- *   triple), magic-link (`token`/`tenantId`) and web3 — and unknown fields are
- *   ignored. Keep that true when touching those files.
+ * For a boundary that owns verification, an unset secret delegates immediately.
+ * Passwordless MFA completion also delegates; mixed password/MFA payloads still
+ * require verification. Success passes the original credentials object unchanged.
  */
 export function withAntibotVerification(authorize: CredentialsAuthorize): CredentialsAuthorize {
   return async (credentials, request) => {

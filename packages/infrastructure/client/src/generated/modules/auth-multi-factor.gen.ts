@@ -115,14 +115,20 @@ export class AuthMultiFactorModule {
   /**
    * Generate new backup codes (invalidates existing ones)
    *
-   * Generates a new set of backup codes, invalidating any previously generated codes.
+   * Generates a new set of backup codes after password re-verification (issue #1153), invalidating any previously generated codes.
    */
-  async postAuthMfaBackupCodesRegenerate(): Promise<Result<Types.IdentityAuthenticationBackupCodesOutput, ApiError>> {
+  async postAuthMfaBackupCodesRegenerate(
+    body: Types.IdentityAuthenticationRegenerateBackupCodesInput,
+  ): Promise<Result<Types.IdentityAuthenticationBackupCodesOutput, ApiError>> {
     const url = '/v1/auth/mfa/backup-codes:regenerate';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationRegenerateBackupCodesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
       path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 
@@ -271,7 +277,7 @@ export class AuthMultiFactorModule {
   /**
    * Register the mobile device for push MFA
    *
-   * Registers (or replaces) the mobile device registration token used to deliver push MFA approval challenges.
+   * Registers (or replaces) the mobile device registration token used to deliver push MFA approval challenges, after password re-verification (issue #1153).
    */
   async postAuthMfaPushRegisterDevice(
     body: Types.IdentityAuthenticationPushMfaDeviceInput,

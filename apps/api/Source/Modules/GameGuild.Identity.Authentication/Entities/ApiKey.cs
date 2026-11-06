@@ -229,7 +229,8 @@ public class ApiKey : EntityBase
     }
 
     /// <summary>
-    ///     Lazily record the revocation of a rotated key once its overlap window has closed.
+    ///     Record the revocation of a rotated key once its overlap window has closed.
+    ///     Used by scheduled maintenance and the lazy authentication fallback.
     ///     Returns true when the entity transitioned (caller must persist), false when
     ///     there is nothing to finalize.
     /// </summary>

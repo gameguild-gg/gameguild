@@ -24,10 +24,8 @@ const isolatedDistDir =
         : undefined;
 
 const nextConfig: NextConfig = {
-  // ponytail: isolated E2E boots a second `next dev` on a dedicated port
-  // alongside the user's running dev server; without a separate distDir the
-  // two fight over the .next/ dev-server lock. Gated by env so production
-  // builds are unaffected.
+  // Isolated E2E builds/servers use their own output alongside the user's dev
+  // server. Normal application builds keep their default output directory.
   ...(isolatedDistDir ? { distDir: isolatedDistDir } : {}),
   allowedDevOrigins: configuredDevOrigins ?? [
     "gameguild.localhost",
@@ -38,7 +36,8 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   // Locale routing must see RSC headers to preserve internal navigation.
   skipProxyUrlNormalize: true,
-  output: "standalone",
+  // The isolated browser runner serves its compiled output with `next start`.
+  output: process.env.CODING_CYCLE_E2E === "1" ? undefined : "standalone",
   outputFileTracingRoot: path.resolve(__dirname, "../.."),
   transpilePackages: [
     "@game-guild/ui",
@@ -94,9 +93,6 @@ const nextConfig: NextConfig = {
       ...(!walletConnectEnabled
         ? { "@walletconnect/ethereum-provider": walletConnectDisabledModule }
         : {}),
-      // Runtime resolves the built client regardless of tsconfig "paths"
-      // (which point at package source so tsc/typed-lint avoid the
-      // rollup-plugin-dts mangling in the bundled d.ts).
       ...(fastDev
         ? {
             "@game-guild/client/react":
@@ -107,6 +103,9 @@ const nextConfig: NextConfig = {
               "../../packages/infrastructure/client/dist-fast/index.js",
           }
         : {
+            // Runtime resolves the built client regardless of tsconfig
+            // "paths" (which point at package source so tsc/typed-lint
+            // avoid the rollup-plugin-dts mangling in the bundled d.ts).
             "@game-guild/client/react": path.resolve(
               __dirname,
               "../../packages/infrastructure/client/dist/react.js",

@@ -146,16 +146,21 @@ public sealed class EmailMfaServiceTests : IDisposable
     {
         var userId = Guid.NewGuid();
         SetupUser(userId, "member@example.com");
+        string? capturedCode = null;
+        publisher
+            .Setup(p => p.Publish(It.IsAny<EmailMfaCodeRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Callback<EmailMfaCodeRequestedNotification, CancellationToken>((n, _) => capturedCode = n.Code);
         var service = CreateService();
         await service.StartEnrollmentAsync(userId);
+        var wrongCode = capturedCode == "000000" ? "111111" : "000000";
 
         for (var attempt = 0; attempt < EmailMfaService.MaxVerificationAttempts; attempt++)
         {
-            (await service.VerifyCodeAsync(userId, "000000")).Should().BeFalse();
+            (await service.CompleteEnrollmentAsync(userId, wrongCode)).Success.Should().BeFalse();
         }
 
-        // Exhausted: even a subsequent correct-looking code is invalid.
-        (await service.VerifyCodeAsync(userId, "000000")).Should().BeFalse();
+        // Exhausted: even the actual delivered code is now invalid.
+        (await service.CompleteEnrollmentAsync(userId, capturedCode!)).Success.Should().BeFalse();
     }
 
     [Fact]
@@ -163,13 +168,16 @@ public sealed class EmailMfaServiceTests : IDisposable
     {
         var userId = Guid.NewGuid();
         SetupUser(userId, "member@example.com");
+        mfaConfigRepository
+            .Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserMfaConfiguration { UserId = userId, IsEnabled = true, EmailMfaAddress = "member@example.com" });
         string? capturedCode = null;
         publisher
             .Setup(p => p.Publish(It.IsAny<EmailMfaCodeRequestedNotification>(), It.IsAny<CancellationToken>()))
             .Callback<EmailMfaCodeRequestedNotification, CancellationToken>((n, _) => capturedCode = n.Code);
         var service = CreateService();
 
-        await service.StartEnrollmentAsync(userId);
+        await service.SendChallengeAsync(userId);
 
         (await service.VerifyCodeAsync(userId, capturedCode!)).Should().BeTrue();
         (await service.VerifyCodeAsync(userId, capturedCode!)).Should().BeFalse();
@@ -204,7 +212,7 @@ public sealed class EmailMfaServiceTests : IDisposable
         var userId = Guid.NewGuid();
         mfaConfigRepository
             .Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserMfaConfiguration { UserId = userId, EmailMfaAddress = "member@example.com" });
+            .ReturnsAsync(new UserMfaConfiguration { UserId = userId, IsEnabled = true, EmailMfaAddress = "member@example.com" });
         var service = CreateService();
 
         var result = await service.SendChallengeAsync(userId);
@@ -231,6 +239,7 @@ public sealed class EmailMfaServiceTests : IDisposable
         await act.Should().ThrowAsync<InvalidOperationException>();
 
         // No live code remains for a user who never received it.
+        memoryCache.TryGetValue("emailmfa:entry:" + userId.ToString("N"), out object? _).Should().BeFalse();
         (await service.VerifyCodeAsync(userId, "123456")).Should().BeFalse();
     }
 }

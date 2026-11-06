@@ -45,6 +45,7 @@ public class OAuthAuthService(
         var githubUser = await RunProviderAuthenticationAsync(
             "GitHub",
             stopwatch,
+            cancellationToken,
             () => oauthService.GetUserProfileAsync("github", request.AccessToken)).ConfigureAwait(false);
 
         var email = githubUser.Email ?? throw new UnauthorizedAccessException("Email not available from GitHub profile");
@@ -72,6 +73,7 @@ public class OAuthAuthService(
         var googleUser = await RunProviderAuthenticationAsync(
             "Google",
             stopwatch,
+            cancellationToken,
             () => oauthService.GetUserProfileAsync("google", request.AccessToken)).ConfigureAwait(false);
 
         var email = googleUser.Email ?? throw new UnauthorizedAccessException("Email not available from Google profile");
@@ -99,6 +101,7 @@ public class OAuthAuthService(
         var microsoftUser = await RunProviderAuthenticationAsync(
             "Microsoft",
             stopwatch,
+            cancellationToken,
             () => oauthService.GetUserProfileAsync("microsoft", request.AccessToken)).ConfigureAwait(false);
         var email = microsoftUser.Email ?? throw new UnauthorizedAccessException("Email not available from Microsoft profile");
         var grantedScopes = oauthService.ResolveAuthorizationScopes("microsoft");
@@ -138,10 +141,11 @@ public class OAuthAuthService(
         }
 
         // Cryptographically verify the Google ID token (signature, iss, aud, exp).
-        // Verifier throws UnauthorizedAccessException on any failure → caller surfaces 401.
+        // Invalid credentials surface as 401; provider availability failures surface as 503.
         var googleUser = await RunProviderAuthenticationAsync(
             "GoogleIdToken",
             stopwatch,
+            cancellationToken,
             () => googleIdTokenVerifier.VerifyAsync(request.IdToken, cancellationToken)).ConfigureAwait(false);
 
         var email = googleUser.Email;
@@ -175,6 +179,7 @@ public class OAuthAuthService(
         var discordUser = await RunProviderAuthenticationAsync(
             "Discord",
             stopwatch,
+            cancellationToken,
             () => oauthService.HandleCallbackAsync("discord", request.Code, request.State, request.RedirectUri))
             .ConfigureAwait(false);
 
@@ -215,6 +220,7 @@ public class OAuthAuthService(
         var githubUser = await RunProviderAuthenticationAsync(
             "GitHub",
             stopwatch,
+            cancellationToken,
             () => oauthService.HandleCallbackAsync("github", request.Code, request.State, request.RedirectUri))
             .ConfigureAwait(false);
 
@@ -298,6 +304,7 @@ public class OAuthAuthService(
         var profile = await RunProviderAuthenticationAsync(
             displayName,
             stopwatch,
+            cancellationToken,
             () => oauthService.HandleCallbackAsync(providerKey, code, state, redirectUri))
             .ConfigureAwait(false);
 
@@ -340,6 +347,7 @@ public class OAuthAuthService(
         var (user, identity) = await RunProviderAuthenticationAsync(
             authenticationMethod,
             stopwatch,
+            cancellationToken,
             async () =>
             {
                 var federatedIdentity = await oidcFederationService
@@ -413,6 +421,7 @@ public class OAuthAuthService(
         var (user, identity) = await RunProviderAuthenticationAsync(
             authenticationMethod,
             stopwatch,
+            cancellationToken,
             async () =>
             {
                 var federatedIdentity = await federationService
@@ -726,22 +735,27 @@ public class OAuthAuthService(
     private async Task<T> RunProviderAuthenticationAsync<T>(
         string authenticationMethod,
         Stopwatch stopwatch,
+        CancellationToken cancellationToken,
         Func<Task<T>> authenticate)
     {
         try
         {
             return await authenticate().ConfigureAwait(false);
         }
-        catch (Exception exception) when (OAuthProviderUnavailableException.IsProviderUnavailability(exception))
+        catch (Exception exception) when (OAuthProviderUnavailableException.IsProviderUnavailability(exception, cancellationToken))
         {
-            // Issue #1116: distinguish "the provider is down" (connection errors, timeouts,
-            // 5xx) from "the provider rejected this credential". The failed-attempt audit
-            // still records the outage; the typed exception lets the API layer answer with
-            // a 503 that advertises the magic-link fallback for OAuth-only accounts.
-            // Genuine caller cancellations carry a requested token, are not classified as
-            // outages, and keep flowing untouched.
-            await RecordFailedOAuthAttemptAsync(authenticationMethod, stopwatch, exception).ConfigureAwait(false);
-            throw new OAuthProviderUnavailableException(authenticationMethod, exception);
+            // Record the provider outage and preserve its typed outcome for the API's
+            // fallback response. Request cancellation remains cancellation.
+            var unavailable = exception as OAuthProviderUnavailableException
+                ?? new OAuthProviderUnavailableException(authenticationMethod, exception);
+            // Persist a stable, typed outage reason so operational failures remain audited
+            // without becoming credential-abuse evidence. Do not infer this from HTTP errors alone.
+            await RecordFailedOAuthAttemptAsync(authenticationMethod, stopwatch, unavailable).ConfigureAwait(false);
+            if (exception is OAuthProviderUnavailableException)
+            {
+                throw;
+            }
+            throw unavailable;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -752,6 +766,9 @@ public class OAuthAuthService(
 
     private async Task RecordFailedOAuthAttemptAsync(string authenticationMethod, Stopwatch stopwatch, Exception exception)
     {
+        var originalFailure = exception is OAuthProviderUnavailableException { InnerException: { } providerFailure }
+            ? providerFailure
+            : exception;
         try
         {
             var httpContext = httpContextAccessor.HttpContext;
@@ -780,7 +797,7 @@ public class OAuthAuthService(
             IpAddress: authAttemptService.GetClientIpAddress(httpContextAccessor.HttpContext),
             UserAgent: httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString(),
             ErrorMessage: exception.GetType().Name,
-            Metadata: new { Provider = authenticationMethod, DurationMs = stopwatch.ElapsedMilliseconds })).ConfigureAwait(false);
+            Metadata: new { Provider = authenticationMethod, DurationMs = stopwatch.ElapsedMilliseconds, FailureType = originalFailure.GetType().Name })).ConfigureAwait(false);
 
         // In-process failure telemetry (issue #1199). The identifier is the same synthetic
         // audit identity recorded above (no real account may exist); the client response stays

@@ -8,7 +8,7 @@ import type { ResolvedAuthConfig } from '../../src/runtime/auth/types.js';
 
 vi.mock('../../src/runtime/auth/csrf.js', () => ({
   createCSRFToken: vi.fn(),
-  validateCSRFToken: vi.fn(async (cookie, token) => cookie === 'csrf-cookie' && token === 'csrf-token'),
+  validateCSRFToken: vi.fn((cookie, token) => Promise.resolve(cookie === 'csrf-cookie' && token === 'csrf-token')),
 }));
 
 const mfaToken = 'x'.repeat(43);
@@ -16,11 +16,11 @@ const config: ResolvedAuthConfig = {
   providers: [CredentialsProvider()],
   apiUrl: 'http://api.example',
   callbacks: {
-    jwt: async ({ token }) => token,
-    session: async ({ session }) => session,
-    signIn: async () => true,
-    authorized: async ({ auth }) => !!auth,
-    redirect: async ({ url, baseUrl }) => new URL(url, baseUrl).href,
+    jwt: ({ token }) => Promise.resolve(token),
+    session: ({ session }) => Promise.resolve(session),
+    signIn: () => Promise.resolve(true),
+    authorized: ({ auth }) => Promise.resolve(!!auth),
+    redirect: ({ url, baseUrl }) => Promise.resolve(new URL(url, baseUrl).href),
   },
   secret: 'a-synthetic-local-test-secret-with-32-characters',
   pages: {},
@@ -77,6 +77,30 @@ describe('native limited MFA through Next handlers', () => {
     expect(response.headers.get('set-cookie')).toBeNull();
   });
 
+  it('uses the enrollment offer from first-factor sign-in without a second provisioning request or a session', async () => {
+    const backend = vi.fn().mockResolvedValue(
+      Response.json({
+        requiresMfa: true,
+        mfaToken,
+        availableMethods: ['Totp'],
+        mfaEnrollment: setup,
+      }),
+    );
+    globalThis.fetch = backend;
+    const response = await createHandlers(config).POST(request('signin/credentials', { email: 'a@example.com', password: 'pw', redirect: false }));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({
+      error: 'MfaRequired',
+      mfaToken,
+      availableMethods: ['Totp'],
+      mfaEnrollment: { secretKey: setup.secretKey, qrCodeUri: setup.qrCodeUri, expiresAt: setup.expiresAt },
+    });
+    expect(backend).toHaveBeenCalledOnce();
+    expect(backend.mock.calls[0][0]).toBe('http://api.example/v1/auth/sign-in');
+    expect(response.headers.get('set-cookie')).toBeNull();
+    expect(response.headers.get('cache-control')).toContain('no-store');
+  });
+
   it('starts enrollment on the real totp:setup endpoint through the generated client and sets no session', async () => {
     const backend = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ isSuccess: true, ...setup, accessToken: 'must-not-forward', userId: 'must-not-forward' }), {
@@ -118,12 +142,7 @@ describe('native limited MFA through Next handlers', () => {
   });
 
   it('returns the first-factor challenge without a session cookie or logging the bearer', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ requiresMfa: true, mfaToken, availableMethods: ['TOTP'] }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
+    globalThis.fetch = vi.fn().mockResolvedValue(Response.json({ requiresMfa: true, mfaToken, availableMethods: ['TOTP'] }));
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     const response = await createHandlers(config).POST(request('signin/credentials', { email: 'a@example.com', password: 'pw', redirect: false }));
     expect(response.status).toBe(403);
@@ -134,21 +153,18 @@ describe('native limited MFA through Next handlers', () => {
 
   it('persists the verified session but never its one-time recovery codes or limited bearer', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          accessToken: 'verified-access',
-          refreshToken: 'verified-refresh',
-          expiresIn: 3600,
-          userId: '33333333-3333-4333-8333-333333333333',
-          email: 'server@example.com',
-          mfaEnrollmentBackupCodes: ['one-time-code'],
-        }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
+      Response.json({
+        accessToken: 'verified-access',
+        refreshToken: 'verified-refresh',
+        expiresIn: 3600,
+        userId: '33333333-3333-4333-8333-333333333333',
+        email: 'server@example.com',
+        mfaEnrollmentBackupCodes: ['one-time-code'],
+      }),
     );
     const response = await createHandlers(config).POST(request('signin/credentials', { mfaToken, method: 'Totp', code: '123456', redirect: false }));
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body: unknown = await response.json();
     expect(body).not.toHaveProperty('mfaEnrollmentBackupCodes');
     expect(body).not.toHaveProperty('mfaToken');
     const cookie = response.headers.get('set-cookie')!;
@@ -160,12 +176,7 @@ describe('native limited MFA through Next handlers', () => {
   });
 
   it('sets no session on denied verification', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ message: 'Invalid authentication code' }), {
-        status: 401,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
+    globalThis.fetch = vi.fn().mockResolvedValue(Response.json({ message: 'Invalid authentication code' }, { status: 401 }));
     const response = await createHandlers(config).POST(request('signin/credentials', { mfaToken, method: 'Totp', code: '123456', redirect: false }));
     expect(response.status).toBe(401);
     expect(response.headers.get('set-cookie')).toBeNull();

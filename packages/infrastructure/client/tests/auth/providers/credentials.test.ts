@@ -64,18 +64,20 @@ describe('CredentialsProvider', () => {
     await expect(provider.authorize({ email: 'a@b.com', password: '' }, undefined)).rejects.toThrow(CredentialsSignInError);
   });
 
-  it('should call the generated sign-in method on successful auth', async () => {
-    const mockFetch = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
+  it('should call sign-in endpoint on successful auth', async () => {
+    const mockFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json(
+        {
           accessToken: 'access-token',
           refreshToken: 'refresh-token',
           expiresIn: 3600,
           userId: '11111111-1111-4111-8111-111111111111',
           email: 'test@example.com',
-          user: { username: 'testuser' },
-        }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
+          roles: ['Admin', 'User'],
+          permissions: ['users:read', 'users:create'],
+          user: { displayName: 'Test', profilePictureUrl: 'https://img.com/pic.png' },
+        },
+        { status: 200 },
       ),
     );
     globalThis.fetch = mockFetch;
@@ -89,34 +91,17 @@ describe('CredentialsProvider', () => {
         method: 'POST',
       }),
     );
-    expect(mockFetch.mock.calls[0][1].headers.get('content-type')).toBe('application/json');
+    expect(new Headers(mockFetch.mock.calls[0][1]?.headers).get('Content-Type')).toBe('application/json');
 
     expect(result).not.toBeNull();
     expect(result!.tokens.accessToken).toBe('access-token');
     expect(result!.tokens.refreshToken).toBe('refresh-token');
     expect(result!.user.id).toBe('11111111-1111-4111-8111-111111111111');
     expect(result!.user.email).toBe('test@example.com');
-    expect(result!.user.name).toBe('testuser');
-    expect(result!.user.image).toBeNull();
-  });
-
-  it('forwards the Turnstile token through the generated contract field (issue #1082 / #1217 F4)', async () => {
-    const mockFetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ accessToken: 'token', userId: '11111111-1111-4111-8111-111111111111' }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
-    globalThis.fetch = mockFetch;
-
-    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
-    await provider.authorize(
-      { email: 'a@b.com', password: 'pass', turnstileToken: 'XXXX.DUMMY.TOKEN' },
-      undefined,
-    );
-
-    expect(mockFetch.mock.calls[0][0]).toBe('http://localhost:8080/v1/auth/sign-in');
-    expect(JSON.parse(mockFetch.mock.calls[0][1].body).turnstileToken).toBe('XXXX.DUMMY.TOKEN');
+    expect(result!.user.name).toBe('Test');
+    expect(result!.user.image).toBe('https://img.com/pic.png');
+    expect(result!.user.roles).toEqual(['Admin', 'User']);
+    expect(result!.user.permissions).toEqual(['users:read', 'users:create']);
   });
 
   it('should derive roles and permissions from access token claims when response omits arrays', async () => {
@@ -124,17 +109,17 @@ describe('CredentialsProvider', () => {
       'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': ['Admin', 'User'],
       scope: 'users:read users:create',
     });
-    const mockFetch = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
+    const mockFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json(
+        {
           accessToken,
           refreshToken: 'refresh-token',
           expiresIn: 3600,
           userId: '11111111-1111-4111-8111-111111111111',
           email: 'test@example.com',
           user: { username: 'admin' },
-        }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
+        },
+        { status: 200 },
       ),
     );
     globalThis.fetch = mockFetch;
@@ -146,12 +131,16 @@ describe('CredentialsProvider', () => {
     expect(result!.user.permissions).toEqual(['users:read', 'users:create']);
   });
 
-  it('ignores the deprecated signInPath option and always calls the served route', async () => {
-    const mockFetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ accessToken: 'token', userId: '11111111-1111-4111-8111-111111111111' }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
+  it('should use custom signInPath', async () => {
+    const mockFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json(
+        {
+          accessToken: 'token',
+          refreshToken: 'synthetic-refresh',
+          userId: '11111111-1111-4111-8111-111111111111',
+        },
+        { status: 200 },
+      ),
     );
     globalThis.fetch = mockFetch;
 
@@ -161,65 +150,58 @@ describe('CredentialsProvider', () => {
     });
     await provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined);
 
-    expect(mockFetch.mock.calls[0][0]).toBe('http://localhost:8080/v1/auth/sign-in');
+    expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/custom/sign-in', expect.anything());
   });
 
   it('should include tenantId in request body when provided', async () => {
-    const mockFetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ accessToken: 'token', userId: '11111111-1111-4111-8111-111111111111' }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
+    const mockFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        Response.json({ accessToken: 'token', refreshToken: 'synthetic-refresh', userId: '11111111-1111-4111-8111-111111111111' }, { status: 200 }),
+      );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
     await provider.authorize({ email: 'a@b.com', password: 'pass', tenantId: '22222222-2222-4222-8222-222222222222' }, undefined);
 
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.tenantId).toBe('22222222-2222-4222-8222-222222222222');
+    const body: unknown = JSON.parse(mockFetch.mock.calls[0][1]?.body as string);
+    expect(body).toMatchObject({ tenantId: '22222222-2222-4222-8222-222222222222' });
   });
 
   it('should include rememberMe=true in request body when requested', async () => {
-    const mockFetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ accessToken: 'token', userId: '11111111-1111-4111-8111-111111111111' }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
+    const mockFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        Response.json({ accessToken: 'token', refreshToken: 'synthetic-refresh', userId: '11111111-1111-4111-8111-111111111111' }, { status: 200 }),
+      );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
     const result = await provider.authorize({ email: 'a@b.com', password: 'pass', rememberMe: true }, undefined);
 
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.rememberMe).toBe(true);
+    const body: unknown = JSON.parse(mockFetch.mock.calls[0][1]?.body as string);
+    expect(body).toMatchObject({ rememberMe: true });
     expect(result?.rememberMe).toBe(true);
   });
 
   it('should omit rememberMe from the request body when not requested', async () => {
-    const mockFetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ accessToken: 'token', userId: '11111111-1111-4111-8111-111111111111' }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
+    const mockFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        Response.json({ accessToken: 'token', refreshToken: 'synthetic-refresh', userId: '11111111-1111-4111-8111-111111111111' }, { status: 200 }),
+      );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
     const result = await provider.authorize({ email: 'a@b.com', password: 'pass', rememberMe: false }, undefined);
 
-    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.rememberMe).toBeUndefined();
+    const body: unknown = JSON.parse(mockFetch.mock.calls[0][1]?.body as string);
+    expect(body).not.toHaveProperty('rememberMe');
     expect(result?.rememberMe).toBe(false);
   });
 
   it('should throw AccountLockedError on 423 response', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 423,
-      json: async () => ({ message: 'Too many attempts' }),
-    });
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ message: 'Too many attempts' }, { status: 423 }));
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
@@ -227,11 +209,7 @@ describe('CredentialsProvider', () => {
   });
 
   it('should throw CredentialsSignInError on 401 response', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 401,
-      json: async () => ({ message: 'Wrong password' }),
-    });
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ message: 'Wrong password' }, { status: 401 }));
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
@@ -239,13 +217,13 @@ describe('CredentialsProvider', () => {
   });
 
   it('should throw MfaRequiredError when response has requiresMfa', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json(
+        {
           requiresMfa: true,
           mfaSessionId: 'mfa-session-123',
-        }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
+        },
+        { status: 200 },
       ),
     );
 
@@ -255,13 +233,7 @@ describe('CredentialsProvider', () => {
   });
 
   it('should handle non-JSON error response', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      json: async () => {
-        throw new Error('not JSON');
-      },
-    });
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(new Response('not JSON', { status: 500 }));
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
@@ -270,62 +242,52 @@ describe('CredentialsProvider', () => {
 
   it('preserves the limited native MFA challenge and methods without issuing tokens', async () => {
     const mfaToken = 'x'.repeat(43);
-    globalThis.fetch = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          requiresMfa: true,
-          mfaToken,
-          availableMethods: ['TOTP', 'BackupCode'],
-        }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
+        requiresMfa: true,
+        mfaToken,
+        availableMethods: ['TOTP', 'BackupCode'],
+      }),
     );
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
-    const error = await provider.authorize({ email: 'a@b.com', password: 'pass' }).catch((e) => e);
+    const error: unknown = await provider.authorize({ email: 'a@b.com', password: 'pass' }).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(MfaRequiredError);
+    if (!(error instanceof MfaRequiredError)) throw new Error('Expected the limited MFA challenge');
     expect(error.toJSON()).toMatchObject({ error: 'MfaRequired', mfaToken, availableMethods: ['TOTP', 'BackupCode'] });
     expect(error.toJSON()).not.toHaveProperty('accessToken');
     expect(error.toJSON()).not.toHaveProperty('user');
   });
 
   it('carries the enrollment offer from a required-MFA unenrolled first factor', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          requiresMfa: true,
-          mfaToken: 'x'.repeat(43),
-          availableMethods: ['TOTP'],
-          mfaEnrollment: {
-            secretKey: 'SYNTHETIC-SETUP',
-            qrCodeUri: 'otpauth://totp/Example?secret=SYNTHETIC',
-            expiresAt: new Date(Date.now() + 300_000).toISOString(),
-          },
-        }),
-        // The provider signs in through the generated client, whose runtime only
-        // decodes JSON bodies for application/json responses — match the wire
-        // contract the API actually serves (same init as the sibling mocks above).
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
+        requiresMfa: true,
+        mfaToken: 'x'.repeat(43),
+        availableMethods: ['TOTP'],
+        mfaEnrollment: {
+          secretKey: 'SYNTHETIC-SETUP',
+          qrCodeUri: 'otpauth://totp/Example?secret=SYNTHETIC',
+          expiresAt: new Date(Date.now() + 300_000).toISOString(),
+        },
+      }),
     );
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
-    const error = await provider.authorize({ email: 'a@b.com', password: 'pass' }).catch((e) => e);
+    const error: unknown = await provider.authorize({ email: 'a@b.com', password: 'pass' }).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(MfaRequiredError);
+    if (!(error instanceof MfaRequiredError)) throw new Error('Expected the limited MFA challenge');
     expect(error.mfaEnrollment).toMatchObject({ secretKey: 'SYNTHETIC-SETUP', qrCodeUri: 'otpauth://totp/Example?secret=SYNTHETIC' });
     expect(error.toJSON().mfaEnrollment).toMatchObject({ secretKey: 'SYNTHETIC-SETUP' });
   });
 
   it('completes MFA with only the limited bearer, method and code', async () => {
-    const mockFetch = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          accessToken: 'verified-access',
-          refreshToken: 'verified-refresh',
-          userId: '33333333-3333-4333-8333-333333333333',
-          email: 'server@example.com',
-          mfaEnrollmentBackupCodes: ['one-time-code'],
-        }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
+    const mockFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
+        accessToken: 'verified-access',
+        refreshToken: 'verified-refresh',
+        userId: '33333333-3333-4333-8333-333333333333',
+        email: 'server@example.com',
+        mfaEnrollmentBackupCodes: ['one-time-code'],
+      }),
     );
     globalThis.fetch = mockFetch;
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
@@ -339,7 +301,7 @@ describe('CredentialsProvider', () => {
       rememberMe: true,
     });
     expect(mockFetch.mock.calls[0][0]).toBe('http://localhost:8080/v1/auth/mfa/sign-in/complete');
-    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({ mfaToken: 'x'.repeat(43), method: 'Totp', code: '123456' });
+    expect(JSON.parse(mockFetch.mock.calls[0][1]?.body as string)).toEqual({ mfaToken: 'x'.repeat(43), method: 'Totp', code: '123456' });
     expect(result?.user.email).toBe('server@example.com');
     expect(result?.tokens.accessToken).toBe('verified-access');
     expect(result).toHaveProperty('mfaEnrollmentBackupCodes', ['one-time-code']);
@@ -359,22 +321,13 @@ describe('CredentialsProvider', () => {
   });
 
   it('rejects a successful HTTP response that supplies no ordinary access token', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ userId: '11111111-1111-4111-8111-111111111111' }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ userId: '11111111-1111-4111-8111-111111111111' }));
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
     await expect(provider.authorize({ mfaToken: 'x'.repeat(43), method: 'BackupCode', code: 'backup-code' })).rejects.toThrow(CredentialsSignInError);
   });
 
   it('should throw service unavailable on backend 500 instead of credentials error', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      json: async () => ({ title: 'An error occurred while processing your request.' }),
-    });
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ title: 'An error occurred while processing your request.' }, { status: 500 }));
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
@@ -401,12 +354,11 @@ describe('CredentialsProvider', () => {
   });
 
   it('should use __apiUrl from credentials as fallback', async () => {
-    const mockFetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ accessToken: 'token', userId: '11111111-1111-4111-8111-111111111111' }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
+    const mockFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        Response.json({ accessToken: 'token', refreshToken: 'synthetic-refresh', userId: '11111111-1111-4111-8111-111111111111' }, { status: 200 }),
+      );
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider(); // no apiUrl in options

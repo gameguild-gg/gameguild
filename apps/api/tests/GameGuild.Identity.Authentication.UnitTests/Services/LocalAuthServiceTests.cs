@@ -1488,6 +1488,47 @@ public class LocalAuthServiceTests
     }
 
     [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    [InlineData(false, true)]
+    public async Task RefreshTokenAsync_DisallowedAccount_DeniesBeforeProvisioningIssuanceOrSessionMutation(
+        bool isActive, bool isSuspended)
+    {
+        using var cancellation = new CancellationTokenSource();
+        var user = User.Create("refresh-status@example.test", "Refresh status user");
+        user.IsActive = isActive;
+        user.IsSuspended = isSuspended;
+        var storedToken = new RefreshToken
+        {
+            Id = Guid.NewGuid(), UserId = user.Id, Token = "status-hash",
+            ExpiresAt = SystemClock.UtcNow.AddDays(1), CreatedAt = SystemClock.UtcNow.AddHours(-1)
+        };
+        _refreshTokenHasherMock.Setup(x => x.HashToken("previously-issued")).Returns("status-hash");
+        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("status-hash", cancellation.Token)).ReturnsAsync(storedToken);
+        _userRepoMock.Setup(x => x.GetByIdAsync(user.Id, cancellation.Token)).ReturnsAsync(user);
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(user.Id, It.IsAny<string>(), It.IsAny<string[]>(),
+                It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("new-access-token");
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(user.Id, It.IsAny<DeviceInfo>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("new-refresh-token");
+
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "previously-issued" }, cancellation.Token));
+
+        Assert.Equal("Invalid refresh token", exception.Message);
+        Assert.False(storedToken.IsRevoked);
+        Assert.Null(storedToken.ReplacedByToken);
+        _refreshTokenRepoMock.Verify(x => x.GetByTokenAsync("status-hash", cancellation.Token), Times.Once);
+        _refreshTokenRepoMock.VerifyNoOtherCalls();
+        _userRepoMock.Verify(x => x.GetByIdAsync(user.Id, cancellation.Token), Times.Once);
+        _userRepoMock.VerifyNoOtherCalls();
+        _senderMock.VerifyNoOtherCalls();
+        _sessionManagementServiceMock.VerifyNoOtherCalls();
+        _jwtTokenServiceMock.VerifyNoOtherCalls();
+    }
+
+    [Theory]
     [InlineData("revoked")]
     [InlineData("replaced")]
     public async Task RefreshTokenAsync_ReplayedTokenForUnavailableUser_StillCommitsContainmentWithoutIssuance(string kind)

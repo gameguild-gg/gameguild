@@ -43,7 +43,7 @@ export class ZodStringMapper implements ZodSchemaMapper {
     uuid: '.uuid()',
     uri: '.url()',
     url: '.url()',
-    'date-time': '.datetime()',
+    'date-time': '.datetime({ offset: true })',
     date: '.date()',
   };
 

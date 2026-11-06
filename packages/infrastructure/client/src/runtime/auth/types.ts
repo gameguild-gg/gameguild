@@ -176,6 +176,11 @@ export interface ProviderConfig {
 export interface ProviderResult {
   /** One-time enrollment recovery codes. Never copy these into JWT or session storage. */
   mfaEnrollmentBackupCodes?: string[];
+  /**
+   * True when the subject's elevated-role MFA requirement is unmet (no enrolled factor)
+   * but the backend issued a session anyway. Drives a persistent compliance banner.
+   */
+  mfaCompliancePending?: boolean;
   /** The tokens from the .NET backend */
   tokens: TokenPair;
   /** User info extracted from the response */
@@ -454,6 +459,7 @@ export interface AuthInstance {
       firstName?: string;
       lastName?: string;
       tenantId?: string;
+      turnstileToken?: string;
     },
     options?: { redirectTo?: string; redirect?: boolean },
   ) => Promise<Response | ProviderResult | void>;

@@ -159,9 +159,11 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
     [Fact]
     public async Task Handle_Should_Break_Down_By_Country_Provider_And_Day()
     {
-        var now = SystemClock.UtcNow;
+        // Use completed UTC days: subtracting hours from now crosses midnight when
+        // CI runs early in the day and can collapse all three seeds into one bucket.
+        var day = SystemClock.UtcNow.Date.AddDays(-1);
 
-        // Blocked attempt from a high-risk country through stripe, yesterday.
+        // Blocked attempt from a high-risk country through stripe, on the earlier day.
         await AddPaymentAsync(
             _tenantId,
             payment =>
@@ -170,12 +172,9 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
                 payment.MarkAsProcessing();
                 payment.RecordFraudAssessment(FraudDecision.Block, 95, "blocked", null);
             },
-            createdAt: now.AddDays(-1));
+            createdAt: day.AddDays(-1).AddHours(12));
 
-        // Held attempt from Portugal through paypal, today. Seeded at `now` (the window end is
-        // inclusive) rather than now-minus-hours: an hour-offset seed crosses the UTC midnight
-        // boundary when the suite runs shortly after 00:00 UTC and lands the "today" payment in
-        // the yesterday bucket, flipping the per-day trend this test pins.
+        // Held attempt from Portugal through paypal, on the later day.
         await AddPaymentAsync(
             _tenantId,
             payment =>
@@ -184,11 +183,11 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
                 payment.MarkAsProcessing();
                 payment.RecordFraudAssessment(FraudDecision.Review, 55, "held", null);
             },
-            createdAt: now,
+            createdAt: day.AddHours(11),
             provider: "paypal");
 
-        // Attempt without a recorded country through stripe, today.
-        await AddPaymentAsync(_tenantId, payment => payment.MarkAsProcessing(), createdAt: now);
+        // Attempt without a recorded country through stripe, on the later day.
+        await AddPaymentAsync(_tenantId, payment => payment.MarkAsProcessing(), createdAt: day.AddHours(10));
 
         var handler = new GetFraudStatisticsQueryHandler(_context);
         var report = await handler.Handle(new GetFraudStatisticsQuery(), CancellationToken.None);
@@ -206,9 +205,30 @@ public class GetFraudStatisticsQueryHandlerTests : IAsyncDisposable
 
         report.Trend.Should().HaveCount(2);
         report.Trend.Should().BeInAscendingOrder(point => point.Day);
+        report.Trend.Select(point => point.Day).Should().Equal(day.AddDays(-1), day);
         report.Trend.Should().Contain(point => point.Created == 1 && point.Blocked == 1);
         report.Trend.Should().Contain(point => point.Created == 2 && point.ReviewHeld == 1);
         report.TrendGranularity.Should().Be(FraudTrendGranularity.Daily);
+    }
+
+    [Fact]
+    public async Task Handle_Should_Split_Daily_Trend_At_Utc_Midnight()
+    {
+        var midnight = new DateTime(2026, 10, 31, 0, 0, 0, DateTimeKind.Utc);
+        await AddPaymentAsync(_tenantId, payment => payment.MarkAsProcessing(), createdAt: midnight.AddTicks(-1));
+        await AddPaymentAsync(_tenantId, payment => payment.MarkAsProcessing(), createdAt: midnight);
+        await AddPaymentAsync(_tenantId, payment => payment.MarkAsProcessing(), createdAt: midnight.AddHours(1));
+
+        var handler = new GetFraudStatisticsQueryHandler(_context);
+        var report = await handler.Handle(
+            new GetFraudStatisticsQuery(FromUtc: midnight.AddDays(-1), ToUtc: midnight.AddDays(1)),
+            CancellationToken.None);
+
+        report.Trend.Should().BeEquivalentTo(new[]
+        {
+            new FraudStatisticsTrendPoint { Day = midnight.AddDays(-1), Created = 1, ReviewHeld = 0, Blocked = 0 },
+            new FraudStatisticsTrendPoint { Day = midnight, Created = 2, ReviewHeld = 0, Blocked = 0 }
+        }, options => options.WithStrictOrdering());
     }
 
     [Fact]

@@ -16,7 +16,7 @@ namespace GameGuild.Identity.Authentication;
 public static class DeclaredTravelWindow
 {
     /// <summary>Preferences key holding the declared window array.</summary>
-    public const string PreferencesKey = "travelWindows";
+    public static string PreferencesKey => "travelWindows";
 
     /// <summary>
     ///     Maximum length of a single declared window. A longer range is ignored rather

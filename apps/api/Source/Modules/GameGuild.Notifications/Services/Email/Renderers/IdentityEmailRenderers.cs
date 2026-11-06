@@ -285,6 +285,18 @@ public sealed class EmailCodeRenderer(
             throw new InvalidOperationException("Notification credential metadata is invalid or unavailable.");
         }
 
+        if (!string.IsNullOrWhiteSpace(meta.Purpose))
+        {
+            if (meta.Purpose != "orchestrated-risk" || meta.ExpiresAt is not { } expiry || expiry.Offset != TimeSpan.Zero)
+            {
+                throw new InvalidOperationException("Notification credential metadata is invalid or unavailable.");
+            }
+            var until = expiry.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
+            var riskPlain = $"Use this one-time code to verify your sign-in: {meta.Code}. It expires at {until}. Never share this code.";
+            var riskHtml = $"<p>Use this one-time code to verify your sign-in:</p><p><code>{WebUtility.HtmlEncode(meta.Code)}</code></p><p>It expires at {until}. Never share this code.</p>";
+            return Task.FromResult<EmailMessage?>(new EmailMessage(string.Empty, "Verify your sign-in", riskPlain, riskHtml, meta.Email));
+        }
+
         var recipientName = string.IsNullOrWhiteSpace(meta.UserName) ? meta.Email : meta.UserName;
         var encodedName = WebUtility.HtmlEncode(recipientName);
         var encodedCode = WebUtility.HtmlEncode(meta.Code);
@@ -316,12 +328,11 @@ public sealed class EmailCodeRenderer(
         }
     }
 
-    private sealed record EmailCodeMetadata(string? Code, string? Email, string? UserName)
+    private sealed record EmailCodeMetadata(string? Code, string? Email, string? UserName, string? Purpose, DateTimeOffset? ExpiresAt)
     {
-        public static EmailCodeMetadata Empty { get; } = new(null, null, null);
+        public static EmailCodeMetadata Empty { get; } = new(null, null, null, null, null);
     }
 }
-
 /// <summary>
 /// Renders the lost-MFA-device recovery-started email. TRANSACTIONAL: never unsubscribable, no footer.
 /// Metadata JSON: <c>{ "token": string, "email": string, "userName": string, "cooldownEndsAt": string }</c>.

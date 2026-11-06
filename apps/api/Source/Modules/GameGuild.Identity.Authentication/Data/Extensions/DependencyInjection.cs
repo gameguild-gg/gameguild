@@ -72,6 +72,10 @@ public static class DataDependencyInjection
         }
 
         services.AddSingleton(mfaOptions);
+        // Bind the same section into IOptions<MfaOptions> so consumers that resolve the
+        // options object through IOptions (test hosts re-register the IOptions value as
+        // the DI singleton) observe configuration, not just the class defaults.
+        services.AddOptions<MfaOptions>().Bind(configuration.GetSection(MfaOptions.SectionName));
         services.AddSingleton(sessionOptions);
 
         var apiKeyLifecycleOptions = OptionBuilderUtilities.CreateAndBind(
@@ -158,6 +162,7 @@ public static class DataDependencyInjection
         services.AddScoped<IAdaptiveBehaviorBaselineRepository, AdaptiveBehaviorBaselineRepository>();
         services.AddScoped<IAuthenticationFlowStateRepository, AuthenticationFlowStateRepository>();
         services.AddScoped<IAuthenticationOrchestrationService, AuthenticationOrchestrationService>();
+        services.AddScoped<OrchestratedRiskChallengeVerifier>();
         services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
         // Expired/revoked trusted-device pruning (issue #1144); fails soft and retries per interval.
         services.AddHostedService<TrustedDeviceCleanupBackgroundService>();
@@ -169,6 +174,7 @@ public static class DataDependencyInjection
         services.AddScoped<IServiceAccountRepository, ServiceAccountRepository>();
         services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>();
         services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
+        services.AddHostedService<ApiKeyRotationRevocationBackgroundService>();
 
         // Core authentication services - focused sub-services
         services.AddScoped<IAuthAttemptService, AuthAttemptService>();
@@ -208,6 +214,22 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthService, AuthService>();
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        // Issue #1150 reuses the #1082 registration above: sign-up Turnstile enforcement
+        // shares the same ITurnstileVerificationService (secret unset disables the gate).
+        // Issue #1153: password step-up shared by backup-code regeneration and push-device
+        // registration (same hardening the MFA disable flow applies).
+        services.AddScoped<IMfaReverificationService, MfaReverificationService>();
+        // Issue #1141: process-wide validation-key snapshot shared by JwtTokenService and
+        // the bearer middleware; refreshed by the key-rotation store on every key change.
+        // TryAdd: the API's security setup registers the same singleton; exactly one
+        // instance must exist so rotation refreshes are visible to every reader.
+        services.TryAddSingleton<IJwtSigningKeyCache, JwtSigningKeyCache>();
+        services.AddScoped<IKeyRotationService, KeyRotationService>();
+        services.Configure<KeyRotationOptions>(configuration.GetSection("KeyRotation"));
+        // Issue #1141: run the scheduled JWT key rotation (initializes the store with the
+        // first signing key and rotates before expiry). Previously the background service
+        // existed but was never registered, so the rotation store stayed empty.
+        services.AddHostedService<KeyRotationBackgroundService>();
         services.AddScoped<IAuthenticatedSessionIssuer, AuthenticatedSessionIssuer>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IOAuthService, OAuthService>();

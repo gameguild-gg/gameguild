@@ -68,6 +68,16 @@ public sealed class MfaOptions : BaseOptions
     /// </summary>
     public bool Enabled { get; set; } = true;
 
+    /// <summary>
+    ///     When true, an elevated-role (Owner/Admin/TenantAdmin/SystemAdmin) membership with
+    ///     no enrolled factor must complete sign-in enrollment (EnrollFactor challenge)
+    ///     before any ordinary credential is issued — the sign-in dead-ends in the challenge
+    ///     instead of being honored as a dropped-MFA compliance-pending login (issue #1303).
+    ///     Defaults to false so #1303's grace behavior stays the platform default; deployments
+    ///     and tests that need the strict contract enable it explicitly.
+    /// </summary>
+    public bool RequireEnrollmentForElevatedRoles { get; set; } = false;
+
     public bool IsValid { get => Validate().IsValid; }
 
     public new (bool IsValid, string[ ] Errors) Validate()
