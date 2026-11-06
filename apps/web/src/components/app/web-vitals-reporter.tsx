@@ -6,7 +6,7 @@
  *
  * Mounted from `AnalyticsConsent`. Collects LCP/INP/CLS/TTFB/FCP via the
  * `web-vitals` library and a Navigation Timing 2 `page_load_timing` event
- * (re-sent on SPA route changes), dispatches an explicit consent-gated
+ * (once per document), dispatches an explicit consent-gated
  * `page_view` on every SPA route change (GA4 gtag.js transport is
  * configured with `send_page_view: false`, so this is the single source —
  * issue #1221), and forwards everything to GA4 (through the consent-mode
@@ -41,6 +41,13 @@ const firebaseConfigured = Boolean(
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim() &&
     process.env.NEXT_PUBLIC_FIREBASE_APP_ID?.trim(),
 );
+
+/**
+ * Dedupe key for `page_load_timing`: the Navigation Timing entry's
+ * `startTime`. Module-level so it survives effect re-runs across SPA route
+ * changes within the same document.
+ */
+let reportedPageLoadStartTime: number | null = null;
 
 const loadFirebaseAnalytics: FirebaseAnalyticsLoader = async () => {
   if (!firebaseConfigured || typeof window === 'undefined') return null;

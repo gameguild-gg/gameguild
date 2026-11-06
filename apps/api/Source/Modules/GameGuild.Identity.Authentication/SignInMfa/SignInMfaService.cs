@@ -161,11 +161,11 @@ public sealed class SignInMfaService(
         var proof = SignInMfaProof.FromVerifiedChallenge(challenge, method, _time.GetUtcNow());
         // A successful second factor proves the user still controls their MFA; any live
         // lost-device recovery request is obsolete and is cancelled before issuance.
-        var liveRecovery = await recoveryRequests.FindLiveByUserAsync(current.User.Id.ToString(), cancellationToken).ConfigureAwait(false);
-        if (liveRecovery is not null)
+        var cancelledRecovery = await recoveryRequests.CancelLiveByUserAsync(current.User.Id.ToString(), cancellationToken).ConfigureAwait(false);
+        if (cancelledRecovery is not null)
         {
-            liveRecovery.Status = MfaRecoveryRequestStatus.Cancelled;
-            await recoveryRequests.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await MfaRecoveryAudit.RecordAsync(audit, cancelledRecovery, MfaRecoveryAudit.Cancelled,
+                "VerifiedMfa", cancellationToken).ConfigureAwait(false);
         }
         var result = await IssueAsync(current.User, challenge.TenantId, deviceInfo, cancellationToken, proof).ConfigureAwait(false);
         if (completingEnrollment)
