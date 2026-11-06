@@ -52,7 +52,7 @@ export class RequestDeduplicator {
 
     // Execute request and cache promise
     const promise = executor();
-    this.pendingRequests.set(key, promise as Promise<Result<unknown, ApiError>>);
+    this.pendingRequests.set(key, promise);
 
     // Clean up after completion
     promise.finally(() => {
