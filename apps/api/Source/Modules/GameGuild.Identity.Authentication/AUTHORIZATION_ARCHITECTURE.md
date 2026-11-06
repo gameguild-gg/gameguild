@@ -3112,6 +3112,34 @@ binding or challenge material. No new anonymous endpoint is introduced.
 [Flow and recovery contract](../../../../../docs/auth/flows/orchestrated-auth-flow.md).
 
 
+### Lost-device MFA recovery cancellation and audit (#1195)
+
+The authenticated `POST /v1/auth/mfa/recovery:cancel` operation accepts no account
+identifier. Its handler independently requires an authenticated `ActorKind.User`
+with a nonempty trusted subject GUID; service, system and anonymous identities
+cannot cancel an owner's request. Repeated cancellation with no live request is
+an idempotent acknowledgement and does not invent a state-transition audit.
+
+Continuation, confirmation and cancellation use conditional database updates over
+the expected live status and server-owned request/bearer binding. They require the
+owning relational command transaction. A cancellation committed before a competing
+confirmation update prevents that update from consuming the request or disabling
+the factor. Successful MFA sign-in uses the same atomic cancellation primitive.
+There is no read-then-unconditional-tracked-write path for these transitions.
+
+`Authentication.MfaRecoveryRequested`, `.MfaRecoveryContinued`,
+`.MfaRecoveryConfirmed` and `.MfaRecoveryCancelled` are required transactional
+security events. Recovery state, durable notifications, factor/token changes and
+the corresponding success audit share the command's transaction. Audit failures
+propagate and roll back that operation; a local spool acknowledgement cannot
+substitute for a persisted required audit. Metadata contains the request ID and
+transition reason, never the recovery or confirmation bearer. Confirmation is
+high risk; request, continuation and cancellation are medium risk.
+
+Contact routing, passwordless primary re-verification and safe alternative-channel
+sign-in remain separate unfinished requirements of #1195. These cancellation and
+audit changes do not establish that the whole recovery issue is complete.
+
 ## Conclusion
 
 The GameGuild Authorization Architecture provides a **comprehensive, enterprise-grade access control system** that balances:

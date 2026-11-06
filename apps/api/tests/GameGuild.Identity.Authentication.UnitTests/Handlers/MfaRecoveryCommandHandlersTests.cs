@@ -37,15 +37,39 @@ public sealed class MfaRecoveryCommandHandlersTests
                 It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success<Notification>(null!));
+        var store = new Mock<IMfaRecoveryRequestStore>();
+        store.Setup(value => value.TryIssueConfirmationAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .Returns(async (Guid id, string requestHash, string confirmationHash, DateTimeOffset now, DateTimeOffset expiry, CancellationToken token) =>
+            {
+                var row = await store.Object.FindLiveByRequestTokenHashAsync(requestHash, token);
+                if (row is null || row.Id != id || row.Status is not (MfaRecoveryRequestStatus.Pending or MfaRecoveryRequestStatus.AwaitingConfirmation))
+                {
+                    return false;
+                }
+                row.Status = MfaRecoveryRequestStatus.AwaitingConfirmation;
+                row.ConfirmationTokenHash = confirmationHash;
+                row.ConfirmationTokenExpiresAt = expiry;
+                return true;
+            });
+        store.Setup(value => value.TryConfirmAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .Returns(async (Guid id, string confirmationHash, DateTimeOffset now, CancellationToken token) =>
+            {
+                var row = await store.Object.FindAwaitingByConfirmationTokenHashAsync(confirmationHash, token);
+                if (row is null || row.Id != id || row.Status != MfaRecoveryRequestStatus.AwaitingConfirmation) { return false; }
+                row.Status = MfaRecoveryRequestStatus.Completed;
+                row.ConsumedAt = now;
+                return true;
+            });
         return (new Mock<IUserRepository>(), new Mock<IMfaAttemptTrackingService>(),
-            new Mock<IMfaRecoveryRequestStore>(), notifications, new MemoryCache(new MemoryCacheOptions()));
+            store, notifications, new MemoryCache(new MemoryCacheOptions()));
     }
 
     private static RequestMfaRecoveryCommandHandler CreateRequestHandler(
         Mock<IUserRepository> users, Mock<IMfaAttemptTrackingService> tracking, Mock<IMfaRecoveryRequestStore> store,
         Mock<INotificationService> notifications, IMemoryCache cache) =>
         new(users.Object, tracking.Object, store.Object, notifications.Object, cache,
-            NullLogger<RequestMfaRecoveryCommandHandler>.Instance);
+            NullLogger<RequestMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
 
     private static void VerifyQueuedEmail(
         Mock<INotificationService> notifications,
@@ -199,7 +223,7 @@ public sealed class MfaRecoveryCommandHandlersTests
             .ReturnsAsync(recovery);
 
         var handler = new ContinueMfaRecoveryCommandHandler(store.Object, users.Object, notifications.Object,
-            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance);
+            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ContinueMfaRecoveryCommand { RequestToken = "request-token" }, CancellationToken.None);
 
         result.Success.Should().BeFalse();
@@ -222,7 +246,7 @@ public sealed class MfaRecoveryCommandHandlersTests
             .ReturnsAsync((MfaRecoveryRequest?)null);
 
         var handler = new ContinueMfaRecoveryCommandHandler(store.Object, users.Object, notifications.Object,
-            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance);
+            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ContinueMfaRecoveryCommand { RequestToken = "unknown-token" }, CancellationToken.None);
 
         result.Success.Should().BeFalse();
@@ -260,7 +284,7 @@ public sealed class MfaRecoveryCommandHandlersTests
         users.Setup(r => r.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
 
         var handler = new ContinueMfaRecoveryCommandHandler(store.Object, users.Object, notifications.Object,
-            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance);
+            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ContinueMfaRecoveryCommand { RequestToken = "request-token" }, CancellationToken.None);
 
         result.Success.Should().BeTrue();
@@ -321,7 +345,7 @@ public sealed class MfaRecoveryCommandHandlersTests
                 : null));
 
         var handler = new ContinueMfaRecoveryCommandHandler(store.Object, users.Object, notifications.Object,
-            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance);
+            NullLogger<ContinueMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ContinueMfaRecoveryCommand { RequestToken = "request-token" }, CancellationToken.None);
 
         result.Success.Should().BeFalse();
@@ -363,7 +387,7 @@ public sealed class MfaRecoveryCommandHandlersTests
         tracking.Setup(t => t.DisableMfaAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var handler = new ConfirmMfaRecoveryCommandHandler(store.Object, tracking.Object,
-            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance);
+            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var first = await handler.Handle(new ConfirmMfaRecoveryCommand { ConfirmationToken = "confirmation-token" }, CancellationToken.None);
         var second = await handler.Handle(new ConfirmMfaRecoveryCommand { ConfirmationToken = "confirmation-token" }, CancellationToken.None);
 
@@ -397,7 +421,7 @@ public sealed class MfaRecoveryCommandHandlersTests
         tracking.Setup(t => t.DisableMfaAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var handler = new ConfirmMfaRecoveryCommandHandler(store.Object, tracking.Object,
-            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance);
+            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ConfirmMfaRecoveryCommand { ConfirmationToken = "confirmation-token" }, CancellationToken.None);
 
         result.Success.Should().BeTrue();
@@ -414,7 +438,7 @@ public sealed class MfaRecoveryCommandHandlersTests
             .ReturnsAsync((MfaRecoveryRequest?)null);
 
         var handler = new ConfirmMfaRecoveryCommandHandler(store.Object, tracking.Object,
-            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance);
+            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ConfirmMfaRecoveryCommand { ConfirmationToken = "unknown-token" }, CancellationToken.None);
 
         result.Success.Should().BeFalse();
@@ -443,7 +467,7 @@ public sealed class MfaRecoveryCommandHandlersTests
             .ReturnsAsync(recovery);
 
         var handler = new ConfirmMfaRecoveryCommandHandler(store.Object, tracking.Object,
-            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance);
+            NullLogger<ConfirmMfaRecoveryCommandHandler>.Instance, Mock.Of<IAuthenticationAuditEventSink>());
         var result = await handler.Handle(new ConfirmMfaRecoveryCommand { ConfirmationToken = "confirmation-token" }, CancellationToken.None);
 
         result.Success.Should().BeFalse();
