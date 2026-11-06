@@ -130,7 +130,7 @@ public class ScheduledPublishTests
     public async Task ScheduleThenWithdraw_ThenSweepKeepsProgramPrivate()
     {
         await using var context = CreateContext();
-        var program = await ScheduleFuture(context, SystemClock.UtcNow.AddMinutes(5));
+        var program = await ScheduleFuture(context, SystemClock.UtcNow.AddMinutes(-5));
         var service = CreateLifecycleService(context);
         var worker = new PublishDueProgramsWorker(context, NullLogger<PublishDueProgramsWorker>.Instance);
 
@@ -147,13 +147,12 @@ public class ScheduledPublishTests
     public async Task ScheduleThenUnpublish_ThenSweepKeepsProgramPrivate()
     {
         await using var context = CreateContext();
-        var program = await ScheduleFuture(context, SystemClock.UtcNow.AddMinutes(5));
+        var program = await ScheduleFuture(context, SystemClock.UtcNow.AddMinutes(-5));
         var service = CreateLifecycleService(context);
         var worker = new PublishDueProgramsWorker(context, NullLogger<PublishDueProgramsWorker>.Instance);
 
         await service.UnpublishProgramAsync(program.Id);
         program.ScheduledPublishAt.Should().BeNull("unpublish consumes the schedule");
-        await context.SaveChangesAsync();
         await worker.PublishDueAsync();
 
         var reloaded = context.Set<LearningProgram>().Single(p => p.Id == program.Id);
