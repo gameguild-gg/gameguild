@@ -419,16 +419,24 @@ jobs:
         run: |
           VERSION="$(node -p "require('./tools/emception/packages/core/package.json').version")"
           TAG="v${VERSION}"
-          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-            echo "${TAG} already exists; skipping tag creation."
+          HEAD_SHA="$(git rev-parse HEAD)"
+          if git ls-remote --exit-code origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            REMOTE_SHA="$(git ls-remote origin "refs/tags/${TAG}" | cut -f1)"
+            # Annotated tags report the tag object; dereference to the commit.
+            REMOTE_COMMIT="$(git rev-parse "${REMOTE_SHA}^{commit}")"
+            if [ "${REMOTE_COMMIT}" != "${HEAD_SHA}" ]; then
+              echo "::error::Remote tag ${TAG} already exists at ${REMOTE_COMMIT}, expected ${HEAD_SHA}. Refusing to reuse an unrelated tag."
+              exit 1
+            fi
+            echo "${TAG} already exists on origin at HEAD; skipping tag creation and push."
           else
             git config user.name "gameguild-release-bot"
             git config user.email "noreply@gameguild.gg"
             git tag "${TAG}"
+            git push origin "${TAG}"
           fi
-          git push origin "${TAG}"
           if gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
             echo "Release ${TAG} already exists; skipping."
             exit 0
           fi
-          gh release create "${TAG}" --repo "${GITHUB_REPOSITORY}" --title "${TAG}" --latest --notes "Emception toolchain release ${VERSION} — published to npm and verified on jsDelivr. All emception packages share this version; see the merged version PR for the changelog."
+          gh release create "${TAG}" --repo "${GITHUB_REPOSITORY}" --title "${TAG}" --notes "Emception toolchain release ${VERSION} — published to npm and verified on jsDelivr. All emception packages share this version; see the merged version PR for the changelog."
