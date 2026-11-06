@@ -1,4 +1,5 @@
 using GameGuild.API.Database;
+using GameGuild.Identity.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -29,6 +30,10 @@ public sealed class AuthenticationApiFactory : WebApplicationFactory<GameGuild.A
 
             services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(_databaseName));
             services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+            // The PostgreSQL enrollment port requires the owning Npgsql transaction; the
+            // in-memory factory has none. Substitute a provider-agnostic port with the same
+            // provisioning semantics so required-MFA sign-ins exercise real enrollment.
+            services.AddScoped<ISignInMfaEnrollmentPort, InMemorySignInMfaEnrollmentPort>();
             services.AddMemoryCache();
             services.AddHttpLogging(_ => { });
         });

@@ -55,8 +55,31 @@ public sealed class PasswordSignInAdmissionService(
             context.Response.Headers.CacheControl = "no-store";
         }
 
+        // Issue #1309: the shared per-source-IP advisory lock used to be acquired for
+        // EVERY password sign-in. Because acquisition is a non-blocking
+        // pg_try_advisory_lock, any overlapping sign-in from the same address (NAT,
+        // corporate egress, several devices, or simply one client firing parallel
+        // requests) failed the try and was denied with the generic invalid-credentials
+        // response — valid credentials rejected purely for overlapping in time
+        // (load-smoke: 10 parallel valid sign-ins from one address -> 1x200 + 9x401).
+        // The IP lock now engages only when the address already has failed attempts in
+        // the admission window: a clean address serializes per account only, while an
+        // address that is actually attacking keeps the full IP-level serialization.
+        // Bounded residual: the first concurrent batch from a previously clean address
+        // can overshoot the per-IP failure ceiling by (batch size - 1); every later
+        // attempt is serialized and stopped by the ceiling, the Turnstile threshold or
+        // the account lockout exactly as before. The authoritative in-lock checks below
+        // are unchanged and still re-read the failure windows.
+        var turnstileThreshold = options.TurnstileRequiredAfterFailedAttempts;
+        var requireSourceIpLock = false;
+        if ((options.EnableIpThrottling || turnstileThreshold > 0) && IPAddress.TryParse(normalizedIpAddress, out _))
+        {
+            requireSourceIpLock = await HasRecentSourceIpFailureAsync(database, normalizedIpAddress!, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         var lease = await TryAcquireLockAsync(database, normalizedEmail,
-            options.EnableIpThrottling ? normalizedIpAddress : null, cancellationToken).ConfigureAwait(false);
+            requireSourceIpLock ? normalizedIpAddress : null, cancellationToken).ConfigureAwait(false);
         if (lease is null)
         {
             throw await CreateDenialAsync(timingOrigin, cancellationToken).ConfigureAwait(false);
@@ -65,7 +88,6 @@ public sealed class PasswordSignInAdmissionService(
         try
         {
             var now = DateTime.UtcNow;
-            var turnstileThreshold = options.TurnstileRequiredAfterFailedAttempts;
             if ((options.EnableIpThrottling || turnstileThreshold > 0) && IPAddress.TryParse(normalizedIpAddress, out _))
             {
                 // One query serves both the hourly throttle ceiling and the (lower)
@@ -118,6 +140,37 @@ public sealed class PasswordSignInAdmissionService(
         {
             await lease.DisposeAsync().ConfigureAwait(false);
             throw;
+        }
+    }
+
+    /// <summary>
+    ///     Cheap pre-lock probe deciding whether the shared per-source-IP admission lock
+    ///     must be engaged for this request (issue #1309). The lock serializes
+    ///     count-then-act admission for an address that is producing failures; an address
+    ///     with no failed attempt in the window has nothing to serialize and must not
+    ///     have its valid concurrent sign-ins denied by lock contention. Fails safe: when
+    ///     the probe cannot run, the lock is engaged so the stricter behavior is kept.
+    /// </summary>
+    private async Task<bool> HasRecentSourceIpFailureAsync(
+        ApplicationDbContext database, string normalizedIpAddress, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var since = DateTime.UtcNow.Subtract(FailedAttemptWindow);
+            return await database.Set<AuthenticationAttempt>()
+                .AnyAsync(attempt => attempt.IpAddress == normalizedIpAddress &&
+                    !attempt.IsSuccessful && attempt.AttemptedAt >= since, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception,
+                "Could not probe recent source-IP sign-in failures; engaging the shared IP admission lock");
+            return true;
         }
     }
 

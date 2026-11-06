@@ -188,7 +188,10 @@ describe('MfaChallengeForm', () => {
   it('does not claim the recovery codes were copied when the clipboard write fails', async () => {
     mockAuth.mfaChallenge = enrollmentChallenge;
     mockCompleteMfaEnrollment.mockResolvedValue({ success: true, backupCodes: ['first-once-code', 'second-once-code'] });
-    const writeText = vi.fn().mockRejectedValue(new DOMException('Permission denied', 'NotAllowedError'));
+    // Lazy rejection: an eagerly rejected promise would itself be an
+    // unhandled rejection before the component attaches its catch.
+    const rejection = new DOMException('Permission denied', 'NotAllowedError');
+    const writeText = vi.fn().mockImplementation(() => Promise.reject(rejection));
     const { user } = renderWithUser(<MfaChallengeForm redirectTo="/workspace" />);
     // user-event installs its own clipboard stub on setup; override it after render.
     Object.defineProperty(globalThis.navigator, 'clipboard', { configurable: true, writable: true, value: { writeText } });

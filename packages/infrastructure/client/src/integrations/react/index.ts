@@ -4,22 +4,22 @@
  * Hooks and context for using the API client in React components.
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
+import type { ApiClient } from '../../runtime/client';
+import type { Result } from '../../runtime/result/types';
+import type { ApiError } from '../../runtime/errors/types';
 import { useMutation as useReactMutation, useQuery as useReactQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, createElement, useContext, useEffect, useRef, type ReactNode } from 'react';
 
-export * from './query-hooks.js';
+export * from './query-hooks';
 
-export { SessionProvider } from './session-provider.js';
-export { SessionContext } from './session-provider.js';
-export type { SessionContextValue } from './session-provider.js';
-export { useSession } from './use-session.js';
-export { useAuth } from './use-auth.js';
-export type { UseAuthReturn } from './use-auth.js';
-export { createAuthBroadcast } from './broadcast.js';
-export type { AuthBroadcastMessage } from './broadcast.js';
+export { SessionProvider } from './session-provider';
+export { SessionContext } from './session-provider';
+export type { SessionContextValue } from './session-provider';
+export { useSession } from './use-session';
+export { useAuth } from './use-auth';
+export type { UseAuthReturn } from './use-auth';
+export { createAuthBroadcast } from './broadcast';
+export type { AuthBroadcastMessage } from './broadcast';
 
 export interface QueryState<T> {
   data: T | undefined;

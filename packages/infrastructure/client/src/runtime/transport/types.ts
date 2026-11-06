@@ -4,8 +4,8 @@
  * Type definitions for the HTTP transport layer.
  */
 
-import type { Result } from '../result/types.js';
-import type { ApiError } from '../errors/types.js';
+import type { Result } from '../result/types';
+import type { ApiError } from '../errors/types';
 
 /**
  * HTTP methods supported by the client

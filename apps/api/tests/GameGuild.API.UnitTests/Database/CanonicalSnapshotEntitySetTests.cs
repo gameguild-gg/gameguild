@@ -44,8 +44,18 @@ public sealed class CanonicalSnapshotEntitySetTests
                     $"the current snapshot must preserve the migration-era constraint {constraint.Name} on {entityName}");
 
             foreach (var index in designerContract.Indexes)
+            {
+                if (index.Properties.Count == 1 && IntentionallyEvolvedIndexes.Contains((entityName, index.Properties[0])))
+                {
+                    snapshotContract.Indexes.Should().Contain(current =>
+                        current.Properties.SequenceEqual(index.Properties) && current.IsUnique == index.IsUnique,
+                        $"the current snapshot must retain the intentionally evolved index {index.Name} on {entityName}");
+                    continue;
+                }
+
                 snapshotContract.Indexes.Should().ContainEquivalentOf(index,
                     $"the current snapshot must preserve the migration-era index {index.Name} on {entityName}");
+            }
 
             foreach (var foreignKey in designerContract.ForeignKeys)
             {
@@ -152,6 +162,13 @@ public sealed class CanonicalSnapshotEntitySetTests
         ("GameGuild.Learning.Assessments.Assessment", "MaxAttempts"),
         ("GameGuild.Learning.Assessments.AssessmentSubmission", "EnrollmentId"),
         ("GameGuild.Learning.Assessments.AssessmentSubmission", "UserId")
+    ];
+
+    private static readonly HashSet<(string Entity, string Property)> IntentionallyEvolvedIndexes =
+    [
+        // Issue #1157: the hot course-assessment listing index became partial
+        // (WHERE "DeletedAt" IS NULL); the columns and uniqueness are unchanged.
+        ("GameGuild.Learning.Assessments.Assessment", "CourseId")
     ];
 
     private static readonly HashSet<(string Entity, string Property)> IntentionallyOptionalRelationships =

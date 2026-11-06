@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { getLocale } from 'next-intl/server';
 import { DevelopmentReactDiagnostics } from '@/components/app/development-react-diagnostics';
 import { AnalyticsConsent } from '@/components/app/analytics-consent';
+import { buildOrganizationJsonLd, buildWebSiteJsonLd, JsonLd } from '@/lib/seo/jsonld';
 import '@/styles/globals.css';
 
 /**
@@ -35,6 +36,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
+        <JsonLd data={buildOrganizationJsonLd(`${SITE_BASE_URL}/favicon.svg`)} />
+        <JsonLd data={buildWebSiteJsonLd()} />
         {process.env.NODE_ENV === 'development' &&
           process.env.NEXT_PUBLIC_DISABLE_REACT_DEVTOOLS !== '1' && (
           <Script

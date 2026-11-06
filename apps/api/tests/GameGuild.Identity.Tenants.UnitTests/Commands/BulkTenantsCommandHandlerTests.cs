@@ -19,7 +19,7 @@ public class BulkTenantsCommandHandlerTests
             .ReturnsAsync(activeTenant)
             .ReturnsAsync(inactiveTenant);
 
-        var handler = new BulkActivateTenantsCommandHandler(repo.Object);
+        var handler = new BulkActivateTenantsCommandHandler(repo.Object, new AllowAllTenantAdministrationGuard());
         var result = await handler.Handle(new TestBulkActivateTenantsCommand(ids), CancellationToken.None);
 
         result.TotalRequested.Should().Be(3);
@@ -41,7 +41,7 @@ public class BulkTenantsCommandHandlerTests
             .ReturnsAsync(inactiveTenant)
             .ReturnsAsync(activeTenant);
 
-        var handler = new BulkDeactivateTenantsCommandHandler(repo.Object);
+        var handler = new BulkDeactivateTenantsCommandHandler(repo.Object, new AllowAllTenantAdministrationGuard());
         var result = await handler.Handle(new TestBulkDeactivateTenantsCommand(ids), CancellationToken.None);
 
         result.TotalRequested.Should().Be(3);
@@ -63,7 +63,7 @@ public class BulkTenantsCommandHandlerTests
             .ReturnsAsync(archivedTenant)
             .ReturnsAsync(activeTenant);
 
-        var handler = new BulkArchiveTenantsCommandHandler(repo.Object);
+        var handler = new BulkArchiveTenantsCommandHandler(repo.Object, new AllowAllTenantAdministrationGuard());
         var result = await handler.Handle(new TestBulkArchiveTenantsCommand(ids), CancellationToken.None);
 
         result.TotalRequested.Should().Be(3);
@@ -83,7 +83,7 @@ public class BulkTenantsCommandHandlerTests
         repo.Setup(r => r.GetByIdAsync(ids[0], It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenant);
 
-        var handler = new BulkDeleteTenantsCommandHandler(repo.Object);
+        var handler = new BulkDeleteTenantsCommandHandler(repo.Object, new AllowAllTenantAdministrationGuard());
         var result = await handler.Handle(new TestBulkDeleteTenantsCommand(ids, HardDelete: false), CancellationToken.None);
 
         result.SuccessfulOperations.Should().Be(1);
@@ -100,7 +100,7 @@ public class BulkTenantsCommandHandlerTests
         repo.Setup(r => r.GetByIdAsync(ids[0], It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenant);
 
-        var handler = new BulkDeleteTenantsCommandHandler(repo.Object);
+        var handler = new BulkDeleteTenantsCommandHandler(repo.Object, new AllowAllTenantAdministrationGuard());
         var result = await handler.Handle(new TestBulkDeleteTenantsCommand(ids, HardDelete: true), CancellationToken.None);
 
         result.SuccessfulOperations.Should().Be(1);
@@ -163,7 +163,7 @@ public class BulkTenantsCommandHandlerTests
         repo.Setup(r => r.DeleteAsync(brokenTenant, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("boom"));
 
-        var handler = new BulkPurgeTenantsCommandHandler(repo.Object);
+        var handler = new BulkPurgeTenantsCommandHandler(repo.Object, new AllowAllTenantAdministrationGuard());
         var result = await handler.Handle(new BulkPurgeTenantsCommand(ids), CancellationToken.None);
 
         result.TotalRequested.Should().Be(3);
@@ -197,7 +197,7 @@ public class BulkTenantsCommandHandlerTests
         repo.Setup(r => r.UpdateAsync(brokenTenant, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("boom"));
 
-        var handler = new BulkUndeleteTenantsCommandHandler(repo.Object);
+        var handler = new BulkUndeleteTenantsCommandHandler(repo.Object, new AllowAllTenantAdministrationGuard());
         var result = await handler.Handle(new BulkUndeleteTenantsCommand(ids), CancellationToken.None);
 
         result.TotalRequested.Should().Be(4);
@@ -231,7 +231,7 @@ public class BulkTenantsCommandHandlerTests
         repo.Setup(r => r.UpdateAsync(brokenTenant, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("boom"));
 
-        var handler = new BulkUpdateTenantsCommandHandler(repo.Object);
+        var handler = new BulkUpdateTenantsCommandHandler(repo.Object, new AllowAllTenantAdministrationGuard());
         var result = await handler.Handle(new BulkUpdateTenantsCommand(updates), CancellationToken.None);
 
         result.TotalRequested.Should().Be(3);

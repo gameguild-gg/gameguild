@@ -19,6 +19,9 @@ Subscription purchase → billing period → invoice generation → payment retr
 | [event-flow-inventory.md](./event-flow-inventory.md) | Billing/order events → outbox → consumers (Payments wallet credit, Notifications dunning, Compliance-visible inbox), retry / DLQ per consumer. |
 | [cross-module-sequences.md](./cross-module-sequences.md) | Billing ↔ Payments, Billing ↔ Notifications, Orders ↔ Economy sequence diagrams with timeouts and fail-open/closed verdicts. |
 | [gaps.md](./gaps.md) | Consolidated gap register — known vs NEW, each with file:line. |
+| [07-stride-threat-model.md](./07-stride-threat-model.md) | STRIDE per flow family (subscription create post-#1229 plan-derived amounts, billing cycle/invoice, dunning, cancellation/pause, plan-change saga, order lifecycle, order refund post-#1229, webhook ingress, FSM integrity) — every threat mitigated by file:line or registered as residual; includes the post-#1229 verification notes (G-1/2/4/5/8/9/10/11/13 fixed; residuals registered). |
+| [08-dfds.md](./08-dfds.md) | Level-0 context + level-1 DFDs per flow family with explicit trust boundaries (client → API → provider → webhook ingress → Payments port → Economy → outbox/notifications). |
+| [../09-security-architecture.md](../09-security-architecture.md) | Cross-module money-path architecture — component diagram, trust boundaries, who-can-move-money permission map, plan→economy-reversal integrity chain, fail-open/closed verdicts per external dependency. |
 
 ## Reading conventions
 

@@ -27,6 +27,12 @@ public class Program : EntityBase {
     private const string SkillsProvidedMetadataKey = "skillsProvided";
 
     /// <summary>
+    /// Metadata key carrying the scheduled publish instant (issue #1226 N10). Written by
+    /// the schedule lifecycle operations and honored by the scheduled-publish worker.
+    /// </summary>
+    public const string ScheduledPublishAtMetadataKey = "scheduledPublishAt";
+
+    /// <summary>
     /// The user ID of the program creator/owner
     /// </summary>
     public Guid? CreatorId { get; set; }
@@ -133,6 +139,40 @@ public class Program : EntityBase {
     {
         get => GetMetadataString(SkillsProvidedMetadataKey);
         set => SetMetadataString(SkillsProvidedMetadataKey, value);
+    }
+
+    /// <summary>
+    /// The instant at which the scheduled-publish worker publishes this program
+    /// (issue #1226 N10). Stored in Metadata (same key the legacy schedule path
+    /// already wrote) because the production EF model ignores this convenience
+    /// property; null when no publish is scheduled. Round-trip ("O") format so the
+    /// value survives a JSON metadata write/read without kind or precision loss.
+    /// </summary>
+    [NotMapped]
+    public DateTime? ScheduledPublishAt
+    {
+        get
+        {
+            var raw = GetMetadataString(ScheduledPublishAtMetadataKey);
+            return DateTime.TryParse(
+                raw,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.RoundtripKind,
+                out var parsed)
+                ? parsed
+                : null;
+        }
+        set
+        {
+            if (value is null)
+            {
+                SetMetadataString(ScheduledPublishAtMetadataKey, null);
+            }
+            else
+            {
+                SetMetadata(ScheduledPublishAtMetadataKey, value.Value.ToUniversalTime().ToString("O"));
+            }
+        }
     }
 
     // Navigation Properties

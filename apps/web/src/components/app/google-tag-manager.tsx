@@ -1,7 +1,9 @@
 'use client';
 
+import { ensureConsentDefaults, pushConsentUpdate, type ConsentWindow } from '@/lib/consent/consent-mode';
+import { DENIED_CONSENT, subscribeConsent } from '@/lib/consent/store';
 import Script from 'next/script';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Window shape expected by the standard Google Tag Manager container snippet.
@@ -17,44 +19,87 @@ export interface GoogleTagManagerProps {
    * GTM container id (for example `GTM-XXXXXXX`). When missing or blank the
    * component is a complete no-op: it renders nothing, never touches
    * `window.dataLayer`, and injects no scripts. This keeps development and
-   * undeployed environments free of any GTM/GA signature.
+   * undeployed environments free of any GTM signature.
    */
   readonly containerId?: string;
-  /**
-   * Analytics-cookie consent read from the user's privacy settings (the
-   * `#privacy-analytics-cookies` switch). The loader stays dormant until
-   * consent is granted.
-   */
-  readonly consent?: boolean;
+}
+
+const LOADER_SCRIPT_ID = 'gg-gtm-loader';
+
+/**
+ * True when the dataLayer already carries a `gtm.start` entry for the given
+ * container, so a re-grant must not double-inject it.
+ */
+function hasContainerStarted(w: Window, containerId: string): boolean {
+  const layer = (w as ConsentWindow).dataLayer;
+  if (!layer) return false;
+  return layer.some(
+    (entry) =>
+      typeof entry === 'object' &&
+      entry !== null &&
+      entry['event'] === 'gtm.js' &&
+      typeof entry['gtm.start'] === 'number' &&
+      entry['gtm.id'] === containerId,
+  );
 }
 
 /**
- * Consent-gated Google Tag Manager container loader.
- *
- * Renders the standard GTM pair — a `gtm.js` script loader plus the
- * `<noscript>` iframe fallback — and initializes `window.dataLayer` with the
- * `gtm.start` event, matching Google's documented embed. The component only
- * mounts when both a container id is configured and the user granted
- * analytics-cookie consent; consent is evaluated per server render, so
- * turning the switch off removes the container from the next page load.
+ * Hard-stop equivalent of GA's `ga-disable-<id>` cookie: physically remove the
+ * injected gtm.js loader element (Next `<Script>` does not remove it on
+ * unmount) and the `<noscript>` iframe fallback.
  */
-export function GoogleTagManager({ containerId: rawContainerId, consent = false }: GoogleTagManagerProps) {
+function removeTransportElements(): void {
+  document.getElementById(LOADER_SCRIPT_ID)?.remove();
+  document
+    .querySelectorAll('noscript')
+    .forEach((el) => el.querySelector(`iframe[src*="googletagmanager.com/ns.html"]`) && el.remove());
+}
+
+/**
+ * Google Consent Mode v2 gated Google Tag Manager container loader.
+ *
+ * Installs the denied-by-default consent command before any GTM code runs.
+ * The container transport (`gtm.js` + `<noscript>` iframe) only mounts while a
+ * granted consent purpose exists; a revocation pushes a `denied` consent
+ * update, unmounts the transport, and removes the injected loader/iframe
+ * elements so nothing GTM-attributable keeps running after consent is
+ * withdrawn (store.ts already clears the `_ga*`/`_gid`/`_gcl*` cookies).
+ */
+export function GoogleTagManager({ containerId: rawContainerId }: GoogleTagManagerProps) {
   const containerId = rawContainerId?.trim() || undefined;
-  const enabled = Boolean(containerId) && consent;
+  const [transportReady, setTransportReady] = useState(false);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!containerId) return;
 
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-  }, [enabled]);
+    const w = window as ConsentWindow;
+    ensureConsentDefaults(w);
 
-  if (!enabled) return null;
+    return subscribeConsent((state) => {
+      // null (missing/invalid/cleared record) is a denial — fail closed so a
+      // started container never keeps its previous grant.
+      const effective = state ?? DENIED_CONSENT;
+      pushConsentUpdate(w, effective);
+      if (effective.analytics || effective.marketing) {
+        if (!hasContainerStarted(w, containerId)) {
+          w.dataLayer!.push({ 'gtm.start': new Date().getTime(), 'gtm.id': containerId, event: 'gtm.js' });
+        }
+        setTransportReady(true);
+      } else {
+        // Revocation: unmount the transport and hard-remove the injected
+        // script/iframe elements so GTM stops entirely.
+        setTransportReady(false);
+        removeTransportElements();
+      }
+    });
+  }, [containerId]);
+
+  if (!containerId || !transportReady) return null;
 
   return (
     <>
       <Script
-        id="gg-gtm-loader"
+        id={LOADER_SCRIPT_ID}
         src={`https://www.googletagmanager.com/gtm.js?id=${containerId}`}
         strategy="afterInteractive"
       />

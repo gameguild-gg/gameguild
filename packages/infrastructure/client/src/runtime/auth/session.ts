@@ -8,10 +8,10 @@
  * JWT encryption, cookies, and callbacks.
  */
 
-import type { JWTPayload, Session, ProviderResult, ResolvedAuthConfig } from './types.js';
-import { encodeJWT, decodeJWT } from './jwt.js';
-import { TokenRefreshError } from './errors.js';
-import { resolveAuthPermissions, resolveAuthRoles } from './claims.js';
+import type { JWTPayload, Session, ProviderResult, ResolvedAuthConfig } from './types';
+import { encodeJWT, decodeJWT } from './jwt';
+import { TokenRefreshError } from './errors';
+import { resolveAuthPermissions, resolveAuthRoles } from './claims';
 
 /** Threshold before access token expiry to trigger refresh (30 seconds) */
 const REFRESH_THRESHOLD_MS = 30_000;
@@ -219,11 +219,13 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
 export async function processSession(
   encryptedToken: string,
   config: ResolvedAuthConfig,
+  options?: { allowRefresh?: boolean | (() => boolean) },
 ): Promise<{
   session: Session | null;
   token: JWTPayload | null;
   updated: boolean;
 }> {
+  const allowRefreshOption = options?.allowRefresh;
   // 1. Decrypt the JWT
   const token = await decodeJWT({
     token: encryptedToken,
@@ -242,8 +244,25 @@ export async function processSession(
   let currentToken = token;
   let tokenUpdated = false;
 
-  // 3. Check if access token needs refresh
+  // 3. Check if access token needs refresh. Rotation is skipped when the
+  // caller cannot persist the rotated cookie: the backend revokes the
+  // presented refresh token on every successful refresh, so rotating in a
+  // read-only context (e.g. a Server Component render) would strand the
+  // browser on a revoked token and trigger server-side replay containment.
+  // `allowRefresh` may be lazy so persistence is probed only when a refresh
+  // is actually due.
   if (shouldRefreshToken(currentToken)) {
+    const rotationAllowed =
+      typeof allowRefreshOption === 'function' ? allowRefreshOption() : allowRefreshOption !== false;
+    if (!rotationAllowed) {
+      // Fail closed: an already-expired access token must not surface as an
+      // authenticated session whose bearer is rejected downstream.
+      const accessExpired =
+        currentToken.accessTokenExpires != null && Date.now() >= currentToken.accessTokenExpires;
+      if (accessExpired) {
+        return { session: null, token: null, updated: false };
+      }
+    } else {
     try {
       currentToken = await refreshAccessToken(currentToken, config);
       tokenUpdated = true;
@@ -267,6 +286,7 @@ export async function processSession(
         console.warn('[auth] Token refresh failed, session may become stale soon');
       }
       /* v8 ignore stop */
+    }
     }
   }
 

@@ -32,9 +32,9 @@
  */
 
 import { useCallback, useState, useRef, useContext, useEffect } from 'react';
-import { assertSafeServiceUrl } from '../../runtime/security/safe-remote-url.js';
-import { SessionContext } from './session-provider.js';
-import { MfaRequiredError, parseMfaEnrollmentOffer, type MfaEnrollmentOffer } from '../../runtime/auth/errors.js';
+import { assertSafeServiceUrl } from '../../runtime/security/safe-remote-url';
+import { SessionContext } from './session-provider';
+import { MfaRequiredError, parseMfaEnrollmentOffer, type MfaEnrollmentOffer } from '../../runtime/auth/errors';
 
 const MFA_CHALLENGE_STORAGE_KEY = 'gg.auth.mfaChallenge';
 

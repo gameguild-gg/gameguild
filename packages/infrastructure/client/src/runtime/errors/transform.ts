@@ -4,7 +4,7 @@
  * Transform HTTP responses into typed ApiError instances.
  */
 
-import type { ApiError, ApiErrorCode } from './types.js';
+import type { ApiError, ApiErrorCode } from './types';
 
 /**
  * ProblemDetails response from ASP.NET

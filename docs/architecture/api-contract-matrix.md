@@ -36,8 +36,8 @@ Sources of truth:
 | Called only via hand-rolled `fetch` (raw transport) | 17 |
 | Referenced only by tests | 8 |
 | **Never called by any transport (ENDPOINT-NO-CALLER candidates)** | **1,669** |
-| Controller endpoints with no client method (live HTTP, absent from contract) | 171 (95 hidden by design, 56 unversioned, 20 see F5/F6) |
-| Raw-fetch URLs with no API route (CLIENT-CALL-NO-ENDPOINT) | 2 (F1, F2) |
+| Controller endpoints with no client method (live HTTP, absent from contract) | 171 (102 hidden by design — 95 `IgnoreApi` + 7 Orders safety-allowlist, 56 unversioned, 13 see F6) |
+| Raw-fetch URLs with no API route (CLIENT-CALL-NO-ENDPOINT) | 2 (F1, F2) — both fixed by the #1217 PR |
 
 ### Finding classes
 
@@ -616,6 +616,7 @@ Evidence rechecked on 2026-11-04:
 Do not expose unreviewed actions or hand-edit generated files to satisfy a source
 method count. Future reviewed route additions must still use the real OpenAPI
 capture and generation pipeline described below.
+
 
 ### F6 — live controller surface outside the versioned contract (171 actions)
 

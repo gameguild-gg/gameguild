@@ -110,6 +110,13 @@ public class User : EntityBase, IUser
     public string? PasswordHistoryHashes { get; private set; }
 
     /// <summary>
+    ///     When the current password was set (UTC). Null for legacy passwords created
+    ///     before the timestamp existed and for OAuth-only accounts without a password;
+    ///     the optional password-age policy (issue #1088) treats null as not expirable.
+    /// </summary>
+    public DateTime? PasswordChangedAt { get; private set; }
+
+    /// <summary>
     ///     Whether the user's email has been verified
     /// </summary>
     public bool IsEmailVerified { get; set; }
@@ -217,6 +224,7 @@ public class User : EntityBase, IUser
         PasswordHistoryHashes = recentHashes.Count == 0 ? null : string.Join('\n', recentHashes);
 
         PasswordHash = passwordHash;
+        PasswordChangedAt = SystemClock.UtcNow;
         // Invalidate all existing tokens when password changes
         IncrementTokenVersion();
         Touch();
@@ -571,6 +579,7 @@ public class User : EntityBase, IUser
             Email = email.ToLowerInvariant(),
             Name = name,
             PasswordHash = passwordHash,
+            PasswordChangedAt = SystemClock.UtcNow,
             IsActive = true
         };
         if (username is null)

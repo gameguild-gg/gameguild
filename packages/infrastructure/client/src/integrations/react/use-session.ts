@@ -27,8 +27,8 @@
  */
 
 import { useContext, useEffect } from 'react';
-import { SessionContext } from './session-provider.js';
-import type { UseSessionReturn } from '../../runtime/auth/types.js';
+import { SessionContext } from './session-provider';
+import type { UseSessionReturn } from '../../runtime/auth/types';
 
 /**
  * Options for useSession

@@ -2682,6 +2682,68 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("dispute_evidence");
                 });
 
+            modelBuilder.Entity("GameGuild.Commerce.Payments.FraudBackgroundScoringJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ClaimedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ClaimedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ContextJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeferredProvidersJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentId")
+                        .HasDatabaseName("ix_fraud_rescoring_jobs_payment");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_fraud_rescoring_jobs_tenant");
+
+                    b.HasIndex("Status", "NextAttemptAt")
+                        .HasDatabaseName("ix_fraud_rescoring_jobs_due");
+
+                    b.ToTable("FraudBackgroundScoringJob");
+                });
+
             modelBuilder.Entity("GameGuild.Commerce.Payments.FraudBlacklistEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -11597,7 +11659,8 @@ namespace GameGuild.API.Database.Migrations
                         .HasDatabaseName("idx_feature_flags_type");
 
                     b.HasIndex("Key", "Environment")
-                        .HasDatabaseName("idx_feature_flags_key_environment");
+                        .HasDatabaseName("idx_feature_flags_key_environment")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("feature_flags", (string)null);
                 });
@@ -24137,7 +24200,12 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("ParentMemberId");
 
-                    b.HasIndex("TenantId", "IsActive");
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_tenant_members_user_id_active")
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
+                    b.HasIndex("TenantId", "IsActive")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex("UserId", "TenantId")
                         .IsUnique();
@@ -24462,6 +24530,9 @@ namespace GameGuild.API.Database.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("PasswordChangedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PasswordHash")
                         .IsConcurrencyToken()
@@ -25339,7 +25410,8 @@ namespace GameGuild.API.Database.Migrations
                         .IsUnique()
                         .HasFilter("\"ContentId\" IS NOT NULL AND \"DeletedAt\" IS NULL");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("CourseId")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex("Slug");
 
@@ -25808,6 +25880,9 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(160)
                         .HasColumnType("character varying(160)");
 
+                    b.Property<DateTime?>("DeadLetteredAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("LastError")
                         .HasColumnType("text");
 
@@ -25838,9 +25913,9 @@ namespace GameGuild.API.Database.Migrations
 
                             t.HasCheckConstraint("CK_AcademicOutboxDeliveries_ErrorSize", "\"LastError\" IS NULL OR octet_length(\"LastError\") <= 4096");
 
-                            t.HasCheckConstraint("CK_AcademicOutboxDeliveries_Lifecycle", "(\"Status\" = 'processing') = (\"ClaimedAt\" IS NOT NULL AND \"ClaimedBy\" IS NOT NULL) AND (\"Status\" = 'confirmed') = (\"ConfirmedAt\" IS NOT NULL) AND (\"Status\" = 'failed') = (\"NextAttemptAt\" IS NOT NULL)");
+                            t.HasCheckConstraint("CK_AcademicOutboxDeliveries_Lifecycle", "(\"Status\" = 'processing') = (\"ClaimedAt\" IS NOT NULL AND \"ClaimedBy\" IS NOT NULL) AND (\"Status\" = 'confirmed') = (\"ConfirmedAt\" IS NOT NULL) AND (\"Status\" = 'failed') = (\"NextAttemptAt\" IS NOT NULL) AND (\"Status\" = 'deadlettered') = (\"DeadLetteredAt\" IS NOT NULL) AND (\"DeadLetteredAt\" IS NULL OR (\"NextAttemptAt\" IS NULL AND \"ConfirmedAt\" IS NULL))");
 
-                            t.HasCheckConstraint("CK_AcademicOutboxDeliveries_Status", "\"Status\" IN ('pending', 'processing', 'confirmed', 'failed')");
+                            t.HasCheckConstraint("CK_AcademicOutboxDeliveries_Status", "\"Status\" IN ('pending', 'processing', 'confirmed', 'failed', 'deadlettered')");
                         });
                 });
 
@@ -27982,7 +28057,8 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("CompletedAt");
 
-                    b.HasIndex("ContentId");
+                    b.HasIndex("ContentId")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex("IsCompleted");
 
@@ -27994,7 +28070,8 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex("UserId", "ContentId")
                         .IsUnique()
@@ -31583,11 +31660,13 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("Visibility");
 
-                    b.HasIndex("CategoryId", "Status");
+                    b.HasIndex("CategoryId", "Status")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.HasIndex("Status", "Visibility");
 
-                    b.HasIndex("TenantId", "Status");
+                    b.HasIndex("TenantId", "Status")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("projects", (string)null);
                 });
@@ -37164,7 +37243,8 @@ namespace GameGuild.API.Database.Migrations
                         .HasDatabaseName("ix_testing_events_tenant_starts_live")
                         .HasFilter("\"DeletedAt\" IS NULL");
 
-                    b.HasIndex("TenantId", "Status", "StartsAt");
+                    b.HasIndex("TenantId", "Status", "StartsAt")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("testing_events", (string)null);
                 });
@@ -40193,6 +40273,51 @@ namespace GameGuild.API.Database.Migrations
                     b.Navigation("Achievement");
                 });
 
+            modelBuilder.Entity("GameGuild.Identity.Authentication.ApiKey", b =>
+                {
+                    b.HasOne("GameGuild.Identity.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Identity.Authentication.BlockchainCertificateAnchor", b =>
+                {
+                    b.HasOne("GameGuild.Identity.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Identity.Authentication.ExternalLogin", b =>
+                {
+                    b.HasOne("GameGuild.Identity.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Identity.Authentication.IdentityVerification", b =>
+                {
+                    b.HasOne("GameGuild.Identity.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Identity.Authentication.MfaAttempt", b =>
+                {
+                    b.HasOne("GameGuild.Identity.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GameGuild.Identity.Authentication.RefreshToken", b =>
                 {
                     b.HasOne("GameGuild.Identity.Authentication.RefreshToken", null)
@@ -40204,6 +40329,12 @@ namespace GameGuild.API.Database.Migrations
                         .WithMany()
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GameGuild.Identity.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authentication.SessionMfaEvidence", b =>
@@ -40224,6 +40355,24 @@ namespace GameGuild.API.Database.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GameGuild.Identity.Authentication.TrustedDevice", b =>
+                {
+                    b.HasOne("GameGuild.Identity.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Identity.Authentication.UserMfaConfiguration", b =>
+                {
+                    b.HasOne("GameGuild.Identity.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GameGuild.Identity.Authentication.UserRole", b =>
                 {
                     b.HasOne("GameGuild.Identity.Authentication.Role", "Role")
@@ -40232,7 +40381,31 @@ namespace GameGuild.API.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("GameGuild.Identity.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("GameGuild.Identity.Authentication.UserSession", b =>
+                {
+                    b.HasOne("GameGuild.Identity.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Identity.Authentication.UserWebAuthnCredential", b =>
+                {
+                    b.HasOne("GameGuild.Identity.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.AccessReviewItem", b =>

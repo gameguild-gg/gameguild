@@ -4,6 +4,15 @@ import { Badge } from '@game-guild/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { getTranslations } from 'next-intl/server';
 
+import { buildPageMetadata } from '@/lib/seo';
+
+export const metadata = buildPageMetadata({
+  path: '/marketplace',
+  title: 'Marketplace — GameGuild',
+  description: 'Browse GameGuild marketplace products — digital tools, assets, and course packs for game creators.',
+  twitterLargeCard: true,
+});
+
 export default async function MarketplacePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const [query, t] = await Promise.all([searchParams, getTranslations('marketplace')]);
   const search = typeof query.search === 'string' ? query.search : undefined;

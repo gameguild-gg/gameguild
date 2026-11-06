@@ -51,7 +51,7 @@ describe('Type Generator', () => {
 
     const output = generateTypes(spec);
 
-    expect(output).toContain('export type User = UserDto;');
+    expect(output).toContain('export interface User extends UserDto {}');
     expect(output).toContain('export { UserDtoSchema as UserSchema };');
   });
 
@@ -78,8 +78,49 @@ describe('Type Generator', () => {
 
     const output = generateTypes(spec);
 
-    expect(output).not.toContain('export type User = UserDto;');
+    expect(output).not.toContain('export interface User extends UserDto {}');
     expect(output).not.toContain('export { UserDtoSchema as UserSchema };');
+  });
+
+  it('should alias enum-DTO via type alias, not interface extends', () => {
+    const spec: OpenApiSpec = {
+      ...simpleSpec,
+      components: {
+        schemas: {
+          StatusDto: {
+            type: 'string',
+            enum: ['Active', 'Inactive'],
+          },
+        },
+      },
+    } as OpenApiSpec;
+
+    const output = generateTypes(spec);
+
+    expect(output).toContain('export type Status = StatusDto;');
+    expect(output).not.toContain('export interface Status extends StatusDto');
+    expect(output).toContain('export { StatusDtoSchema as StatusSchema };');
+  });
+
+  it('should alias union-DTO via type alias, not interface extends', () => {
+    const spec: OpenApiSpec = {
+      ...simpleSpec,
+      components: {
+        schemas: {
+          SuccessDto: { type: 'object', properties: { value: { type: 'string' } } },
+          ErrorDto: { type: 'object', properties: { message: { type: 'string' } } },
+          ResultDto: {
+            oneOf: [{ $ref: '#/components/schemas/SuccessDto' }, { $ref: '#/components/schemas/ErrorDto' }],
+          },
+        },
+      },
+    } as OpenApiSpec;
+
+    const output = generateTypes(spec);
+
+    expect(output).toContain('export type Result = ResultDto;');
+    expect(output).not.toContain('export interface Result extends ResultDto');
+    expect(output).toContain('export { ResultDtoSchema as ResultSchema };');
   });
 
   it('should generate enum for string enum schema', () => {

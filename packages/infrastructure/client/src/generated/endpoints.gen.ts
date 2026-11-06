@@ -6,7 +6,7 @@
  * Generated from: GameGuild API
  * API Version: 4.4.0
  */
-import type * as Types from './types.gen.js';
+import type * as Types from './types.gen';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Endpoint Definitions
@@ -2529,6 +2529,18 @@ export const postApiComplianceConsentRevokeEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostApiComplianceConsentUserConsentInput {
+  body?: Types.APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput;
+}
+export type PostApiComplianceConsentUserConsentOutput = Types.APICoreComplianceRecordUserConsentEndpointCommandResult;
+export const postApiComplianceConsentUserConsentEndpoint = {
+  operationId: 'postApiComplianceConsentUserConsent' as const,
+  method: 'POST' as const,
+  path: '/api/compliance/consent/user-consent' as const,
+  tags: ['ComplianceConsent'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiComplianceConsentUsersInput {
   userId: string;
 }
@@ -3465,7 +3477,7 @@ export const getApiHealthDependenciesEndpoint = {
 export interface PostApiLearningEnrollmentsInput {
   body?: Types.LearningEnrollmentsEnrollUserInput;
 }
-export type PostApiLearningEnrollmentsOutput = Types.LearningEnrollmentsEnrollmentDto;
+export type PostApiLearningEnrollmentsOutput = void;
 export const postApiLearningEnrollmentsEndpoint = {
   operationId: 'postApiLearningEnrollments' as const,
   method: 'POST' as const,
@@ -3518,7 +3530,7 @@ export interface GetApiLearningEnrollmentsCoursesInput {
     status?: Types.LearningEnrollmentsEnrollmentStatus;
   };
 }
-export type GetApiLearningEnrollmentsCoursesOutput = Types.LearningEnrollmentsEnrollmentDto[];
+export type GetApiLearningEnrollmentsCoursesOutput = void;
 export const getApiLearningEnrollmentsCoursesEndpoint = {
   operationId: 'getApiLearningEnrollmentsCourses' as const,
   method: 'GET' as const,
@@ -3533,7 +3545,7 @@ export interface GetApiLearningEnrollmentsUsersInput {
     status?: Types.LearningEnrollmentsEnrollmentStatus;
   };
 }
-export type GetApiLearningEnrollmentsUsersOutput = Types.LearningEnrollmentsEnrollmentDto[];
+export type GetApiLearningEnrollmentsUsersOutput = void;
 export const getApiLearningEnrollmentsUsersEndpoint = {
   operationId: 'getApiLearningEnrollmentsUsers' as const,
   method: 'GET' as const,
@@ -20357,6 +20369,57 @@ export const postAuthGuestSessionEndpoint = {
 } as const;
 
 /**
+ * Lists every active blocklist entry, expired entries filtered out.
+ *
+ * Lists the active known-attacker IP blocklist entries stored in the distributed cache.
+ */
+export type GetAuthIpBlocklistInput = void;
+export type GetAuthIpBlocklistOutput = Types.IdentityAuthenticationIpBlocklistEntry[];
+export const getAuthIpBlocklistEndpoint = {
+  operationId: 'getAuthIpBlocklist' as const,
+  method: 'GET' as const,
+  path: '/v1/auth/ip-blocklist' as const,
+  tags: ['AuthIpBlocklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Adds or replaces a blocklist entry.
+ *
+ * Stores a known-attacker IP address in the shared blocklist. Omit expiresAt to apply the configured default entry lifetime.
+ */
+export interface PutAuthIpBlocklistInput {
+  body?: Types.IdentityAuthenticationIpBlocklistEntryInput;
+}
+export type PutAuthIpBlocklistOutput = void;
+export const putAuthIpBlocklistEndpoint = {
+  operationId: 'putAuthIpBlocklist' as const,
+  method: 'PUT' as const,
+  path: '/v1/auth/ip-blocklist' as const,
+  tags: ['AuthIpBlocklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Removes a blocklist entry.
+ *
+ * Removes the blocklist entry for the given IP address. Returns 404 when no entry exists.
+ */
+export interface DeleteAuthIpBlocklistInput {
+  query?: {
+    ipAddress?: string;
+  };
+}
+export type DeleteAuthIpBlocklistOutput = void;
+export const deleteAuthIpBlocklistEndpoint = {
+  operationId: 'deleteAuthIpBlocklist' as const,
+  method: 'DELETE' as const,
+  path: '/v1/auth/ip-blocklist' as const,
+  tags: ['AuthIpBlocklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Consume a passwordless magic sign-in link.
  *
  * Consumes a short-lived one-time magic-link token and returns access and refresh tokens.
@@ -34989,6 +35052,7 @@ export const endpoints = {
   postApiComplianceConsentPolicies: postApiComplianceConsentPoliciesEndpoint,
   postApiComplianceConsentPoliciesVersions: postApiComplianceConsentPoliciesVersionsEndpoint,
   postApiComplianceConsentRevoke: postApiComplianceConsentRevokeEndpoint,
+  postApiComplianceConsentUserConsent: postApiComplianceConsentUserConsentEndpoint,
   getApiComplianceConsentUsers: getApiComplianceConsentUsersEndpoint,
   postApiComplianceFerpaConsents: postApiComplianceFerpaConsentsEndpoint,
   postApiComplianceFerpaConsentsRevoke: postApiComplianceFerpaConsentsRevokeEndpoint,
@@ -36106,6 +36170,9 @@ export const endpoints = {
   postAuthGoogleSignIn: postAuthGoogleSignInEndpoint,
   getAuthGuestSession: getAuthGuestSessionEndpoint,
   postAuthGuestSession: postAuthGuestSessionEndpoint,
+  getAuthIpBlocklist: getAuthIpBlocklistEndpoint,
+  putAuthIpBlocklist: putAuthIpBlocklistEndpoint,
+  deleteAuthIpBlocklist: deleteAuthIpBlocklistEndpoint,
   postAuthMagicLinkConsume: postAuthMagicLinkConsumeEndpoint,
   postAuthMagicLinkRequest: postAuthMagicLinkRequestEndpoint,
   getAuthMfa: getAuthMfaEndpoint,

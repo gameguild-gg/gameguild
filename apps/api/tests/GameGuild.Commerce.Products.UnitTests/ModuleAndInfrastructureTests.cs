@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -19,8 +20,107 @@ public class ModuleAndInfrastructureTests
     public void AddProductsModule_RegistersAllServices()
     {
         var services = new ServiceCollection();
-        services.AddProductsModule();
+        services.AddProductsModule(new ConfigurationBuilder().Build());
         services.Count.Should().BeGreaterThan(0);
+    }
+
+    /// <summary>
+    ///     Issue #1290 P1: the host must compose AddProductsModule for the promo coordinator,
+    ///     the fraud-review ticket coordinator, the promo defenses and the pricing scheduling
+    ///     worker to exist. This pins the module's own half of that contract by descriptor —
+    ///     the implementations' constructors need the full host graph, so end-to-end
+    ///     resolution over the composed API host is covered separately by
+    ///     SubscriptionPromoWiringIntegrationTests.
+    /// </summary>
+    [Fact]
+    public void AddProductsModule_RegistersPromoAndDefenseSeams_OptionsAndSchedulerWorker()
+    {
+        var services = new ServiceCollection();
+        services.AddProductsModule(new ConfigurationBuilder().Build());
+
+        void Registered(Type service, Type implementation) => services.Should().Contain(d =>
+            d.ServiceType == service && d.ImplementationType == implementation,
+            $"{service.Name} must be registered by the module method (issue #1290)");
+
+        // P2 seam: subscription creation with promo codes requires this coordinator.
+        Registered(typeof(GameGuild.Commerce.ISubscriptionPromoCoordinator), typeof(SubscriptionPromoCoordinator));
+        // P3 seam: fraud Review outcomes open a support ticket through this coordinator.
+        Registered(typeof(GameGuild.Commerce.IFraudReviewTicketCoordinator), typeof(FraudReviewSupportTicketCoordinator));
+        // P4 seams: CAPTCHA gate, usage-anomaly evaluator and customer-state resolver.
+        Registered(typeof(IPromoRedemptionCaptchaGate), typeof(PromoRedemptionCaptchaGate));
+        Registered(typeof(IPromoUsageAnomalyEvaluator), typeof(PromoUsageAnomalyEvaluator));
+        Registered(typeof(IPromoCustomerStateResolver), typeof(PromoCustomerStateResolver));
+
+        // The pricing scheduling worker is hosted (P1: it was registered but never running
+        // because the module method itself was never invoked by the host).
+        services.Should().Contain(d =>
+            d.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService) &&
+            d.ImplementationType == typeof(PricingSchedulingBackgroundService));
+    }
+
+    /// <summary>Issue #1290 P1: the four options classes bind their declared sections.</summary>
+    [Fact]
+    public void AddProductsModule_BindsTheFourOptionsClassesToTheirSections()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["PricingScheduling:WorkerEnabled"] = "false",
+                ["PricingScheduling:WorkerIntervalMinutes"] = "42",
+                ["PromoCodes:DefaultTimeZoneId"] = "America/Sao_Paulo",
+                ["PromoAbuseDetection:ValidationBurstThreshold"] = "7",
+                ["PromoAbuseDetection:RedemptionWindowMinutes"] = "3",
+                ["PromoRedemptionCaptcha:Enabled"] = "true",
+                ["PromoRedemptionCaptcha:VerificationSecret"] = "test-secret",
+            })
+            .Build();
+
+        var services = new ServiceCollection();
+        services.AddProductsModule(configuration);
+
+        using var provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PricingSchedulingOptions>>()
+            .Value.Should().BeEquivalentTo(new PricingSchedulingOptions
+            {
+                WorkerEnabled = false,
+                WorkerIntervalMinutes = 42
+            });
+        provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PromoEngineOptions>>()
+            .Value.DefaultTimeZoneId.Should().Be("America/Sao_Paulo");
+        provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PromoAbuseDetectionOptions>>()
+            .Value.Should().BeEquivalentTo(new PromoAbuseDetectionOptions
+            {
+                ValidationBurstThreshold = 7,
+                RedemptionWindowMinutes = 3
+            });
+        provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PromoRedemptionCaptchaOptions>>()
+            .Value.Should().BeEquivalentTo(new PromoRedemptionCaptchaOptions
+            {
+                Enabled = true,
+                VerificationSecret = "test-secret"
+            });
+    }
+
+    /// <summary>Safe defaults: an empty configuration keeps every option at its documented default.</summary>
+    [Fact]
+    public void AddProductsModule_WithEmptyConfiguration_KeepsSafeDefaults()
+    {
+        var services = new ServiceCollection();
+        services.AddProductsModule(new ConfigurationBuilder().Build());
+
+        using var provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PricingSchedulingOptions>>()
+            .Value.Should().BeEquivalentTo(new PricingSchedulingOptions());
+        provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PromoEngineOptions>>()
+            .Value.Should().BeEquivalentTo(new PromoEngineOptions());
+        provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PromoAbuseDetectionOptions>>()
+            .Value.Should().BeEquivalentTo(new PromoAbuseDetectionOptions());
+        // CAPTCHA gate stays OFF by default (issue #418: existing integrations keep working);
+        // it fails closed once enabled without a verification secret.
+        provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PromoRedemptionCaptchaOptions>>()
+            .Value.Should().BeEquivalentTo(new PromoRedemptionCaptchaOptions());
     }
 
     // ── Inline EF config via ConfigureProductsModel ────────────

@@ -99,6 +99,10 @@ public static class AssessmentsModule
         services.AddScoped<IAcademicOutboxConsumer, GradeReleasePassbackConsumer>();
         services.AddScoped<IAcademicOutboxWriter, AcademicOutboxWriter>();
         services.AddSingleton<IAcademicOutboxDispatcher, AcademicOutboxDispatcher>();
+        // Dead-letter replay (issue #1218 G5): requeues dead-lettered deliveries after an
+        // operator fixes the failing frozen consumer — the academic twin of the core
+        // event transport's ReplayOutboxEventCommand.
+        services.AddScoped<IAcademicOutboxReplayService, AcademicOutboxReplayService>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IAssessmentExecutableVersionPreflight, AssessmentExecutableVersionPreflight>();
         services.AddHostedService<AssessmentExecutableVersionPreflightHostedService>();

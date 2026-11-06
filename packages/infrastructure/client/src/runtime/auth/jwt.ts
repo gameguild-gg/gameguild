@@ -10,7 +10,7 @@
  */
 
 import { EncryptJWT, jwtDecrypt, type JWTPayload as JoseJWTPayload } from 'jose';
-import type { JWTPayload } from './types.js';
+import type { JWTPayload } from './types';
 
 /** Default max age for the JWT (30 days) */
 const DEFAULT_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds

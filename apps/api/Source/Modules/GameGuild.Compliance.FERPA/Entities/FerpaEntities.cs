@@ -242,6 +242,23 @@ public class FerpaInspectionRequest : EntityBase
         Touch();
     }
 
+    /// <summary>
+    ///     Marks the inspection request as expired by the statutory deadline sweeper
+    ///     (issue #1219 N3): FERPA inspection requests must be fulfilled within 45 days.
+    ///     Idempotent for terminal states so the periodic worker can re-run safely.
+    /// </summary>
+    public void Expire()
+    {
+        if (Status is not (FerpaRequestStatus.Pending or FerpaRequestStatus.InReview))
+        {
+            return;
+        }
+
+        Status = FerpaRequestStatus.Expired;
+        ProcessedAt = SystemClock.UtcNow;
+        Touch();
+    }
+
     private void EnsureCanBeProcessed()
     {
         if (Status is not (FerpaRequestStatus.Pending or FerpaRequestStatus.InReview))

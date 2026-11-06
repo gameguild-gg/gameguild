@@ -1,6 +1,9 @@
-using Microsoft.AspNetCore.Authorization;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.Learning;
+using GameGuild.Learning.Abstractions;
+using GameGuild.Learning.Courses;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +29,7 @@ public sealed record EnrollUserRequest(Guid CourseId, Guid UserId, Guid? CohortI
 
 public sealed record UpdateEnrollmentProgressRequest(int Progress);
 
-public sealed record EnrollUserCommand(Guid CourseId, Guid UserId, Guid? CohortId) : ICommand<EnrollmentDto>;
+public sealed record EnrollUserCommand(Guid CourseId, Guid UserId, Guid? CohortId) : ICommand<Result<EnrollmentDto>>;
 
 public sealed record UpdateEnrollmentProgressCommand(Guid EnrollmentId, int Progress) : ICommand<EnrollmentDto?>;
 
@@ -106,7 +109,7 @@ public sealed class EnrollmentRepository(IApplicationDbContext context) : IEnrol
 
 public interface IEnrollmentService
 {
-    Task<EnrollmentDto> EnrollAsync(EnrollUserCommand command, CancellationToken cancellationToken = default);
+    Task<Result<EnrollmentDto>> EnrollAsync(EnrollUserCommand command, CancellationToken cancellationToken = default);
 
     Task<EnrollmentDto?> UpdateProgressAsync(Guid id, int progress, CancellationToken cancellationToken = default);
 
@@ -123,42 +126,76 @@ public sealed class EnrollmentService(
     IEnrollmentRepository repository,
     IApplicationDbContext context,
     ILearningAuditEventSink auditSink,
-    IRequestContextAccessor? requestContextAccessor = null) : IEnrollmentService
+    IRequestContextAccessor? requestContextAccessor = null,
+    ICohortEnrollmentGuard? cohortEnrollmentGuard = null) : IEnrollmentService
 {
     private Guid? ActingUserId => requestContextAccessor?.CurrentUserId;
 
-    public async Task<EnrollmentDto> EnrollAsync(EnrollUserCommand command, CancellationToken cancellationToken = default)
+    public async Task<Result<EnrollmentDto>> EnrollAsync(EnrollUserCommand command, CancellationToken cancellationToken = default)
     {
         var existing = await repository.GetActiveAsync(command.CourseId, command.UserId, cancellationToken)
             .ConfigureAwait(false);
         if (existing is not null)
         {
-            return ToDto(existing);
+            return Result.Success(ToDto(existing));
         }
 
-        var enrollment = Enrollment.Create(command.CourseId, command.UserId, command.CohortId);
-        // The enrollment row and its audit event share one transaction: an audit failure rolls
-        // the enrollment back instead of committing an unaudited mutation.
-        var transaction = await context.BeginAuditedMutationTransactionAsync(cancellationToken).ConfigureAwait(false);
-        try
+        // Cohort gate (issue #1226 N17): a cohort-tagged enrollment must pass
+        // Cohort.CanEnroll() and reserve one seat before the enrollment row exists.
+        // The reservation is staged on the shared scoped DbContext so the same save
+        // (and transaction) persists both; without a configured guard the path fails
+        // closed rather than storing an ungated CohortId.
+        if (command.CohortId is Guid cohortId)
         {
-            await repository.AddAsync(enrollment, cancellationToken).ConfigureAwait(false);
-            await auditSink.RecordAsync(new LearningAuditEvent(
-                "Learning.Enrollments.UserEnrolled", "Enrollment", enrollment.Id.ToString(),
-                ActingUserId ?? command.UserId, enrollment.TenantId,
-                $"User enrolled in course {command.CourseId}",
-                Metadata: new { command.CourseId, command.UserId, command.CohortId, Status = enrollment.Status.ToString() }), cancellationToken).ConfigureAwait(false);
-            await transaction.CommitAuditedMutationAsync(cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            if (transaction is not null)
+            if (cohortEnrollmentGuard is null)
             {
-                await transaction.DisposeAsync().ConfigureAwait(false);
+                return Result.Failure<EnrollmentDto>(
+                    Error.Failure("Cohort", "Cohort enrollment is not available"));
+            }
+
+            var reservation = await cohortEnrollmentGuard
+                .ReserveCapacityAsync(cohortId, command.CourseId, cancellationToken).ConfigureAwait(false);
+            if (!reservation.IsSuccess)
+            {
+                return Result.Failure<EnrollmentDto>(reservation.Error);
             }
         }
 
-        return ToDto(enrollment);
+        var enrollment = Enrollment.Create(command.CourseId, command.UserId, command.CohortId);
+        try
+        {
+            // The enrollment row, the cohort seat reservation and the audit event share
+            // one transaction: an audit failure (or a failed save) rolls everything back
+            // instead of committing an unaudited mutation or a leaked seat.
+            var transaction = await context.BeginAuditedMutationTransactionAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await repository.AddAsync(enrollment, cancellationToken).ConfigureAwait(false);
+                await auditSink.RecordAsync(new LearningAuditEvent(
+                    "Learning.Enrollments.UserEnrolled", "Enrollment", enrollment.Id.ToString(),
+                    ActingUserId ?? command.UserId, enrollment.TenantId,
+                    $"User enrolled in course {command.CourseId}",
+                    Metadata: new { command.CourseId, command.UserId, command.CohortId, Status = enrollment.Status.ToString() }), cancellationToken).ConfigureAwait(false);
+                await transaction.CommitAuditedMutationAsync(cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                if (transaction is not null)
+                {
+                    await transaction.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Another enrollee won the race for the last seat (the cohort's optimistic
+            // concurrency version changed between load and save): report a capacity
+            // conflict instead of an overshoot.
+            return Result.Failure<EnrollmentDto>(
+                Error.Conflict("Cohort", "Cohort capacity changed concurrently; retry the enrollment"));
+        }
+
+        return Result.Success(ToDto(enrollment));
     }
 
     public async Task<EnrollmentDto?> UpdateProgressAsync(Guid id, int progress, CancellationToken cancellationToken = default)
@@ -183,6 +220,8 @@ public sealed class EnrollmentService(
             return null;
         }
 
+        var previousStatus = enrollment.Status;
+
         switch (status)
         {
             case EnrollmentStatus.Active:
@@ -202,6 +241,19 @@ public sealed class EnrollmentService(
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(status), status, null);
+        }
+
+        // Capacity accounting (issue #1226 N17): leaving via drop/expire frees the
+        // reserved seat. The decrement is staged on the shared context so the same
+        // transaction persists it with the status change; it is deliberately
+        // compensating-best-effort — a vanished cohort row must not block a drop.
+        if (status is EnrollmentStatus.Dropped or EnrollmentStatus.Expired
+            && previousStatus is EnrollmentStatus.Active or EnrollmentStatus.Paused
+            && enrollment.CohortId is Guid releasedCohortId
+            && cohortEnrollmentGuard is not null)
+        {
+            await cohortEnrollmentGuard
+                .ReleaseCapacityAsync(releasedCohortId, cancellationToken).ConfigureAwait(false);
         }
 
         await SaveWithAuditAsync(
@@ -279,9 +331,9 @@ public sealed class EnrollmentService(
             enrollment.LastActivityAt);
 }
 
-public sealed class EnrollUserCommandHandler(IEnrollmentService service) : ICommandHandler<EnrollUserCommand, EnrollmentDto>
+public sealed class EnrollUserCommandHandler(IEnrollmentService service) : ICommandHandler<EnrollUserCommand, Result<EnrollmentDto>>
 {
-    public Task<EnrollmentDto> Handle(EnrollUserCommand request, CancellationToken cancellationToken)
+    public Task<Result<EnrollmentDto>> Handle(EnrollUserCommand request, CancellationToken cancellationToken)
         => service.EnrollAsync(request, cancellationToken);
 }
 
@@ -318,30 +370,120 @@ public sealed class GetCourseEnrollmentsQueryHandler(IEnrollmentService service)
 [ApiController]
 [Route("api/learning/enrollments")]
 [Authorize]
-public sealed class EnrollmentsController(ISender sender) : ControllerBase
+public sealed class EnrollmentsController(
+    ISender sender,
+    IActorContextAccessor actorContextAccessor,
+    ICourseAccessEvaluator courseAccessEvaluator) : ControllerBase
 {
+    /// <summary>
+    ///     Actor gate for user-scoped data (issue #1226 N6): a learner may only touch
+    ///     their own enrollments; system admins keep cross-user access for support.
+    ///     Mirrors the module's sibling ownership checks (AssessmentsController).
+    /// </summary>
+    private bool CanAccessUserData(Guid userId)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        return actor.IsSystemAdmin || actor.SubjectIdAsGuid == userId;
+    }
+
+    private async Task<bool> CanReadRosterAsync(Guid courseId, CancellationToken cancellationToken)
+    {
+        // Course rosters are staff data: reading every learner's enrollment for a
+        // course requires the course Edit capability (the evaluator grants system
+        // admins everything).
+        return await courseAccessEvaluator
+            .HasCapabilityAsync(courseId, CourseCapability.Edit, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
     {
         var enrollment = await sender.Send(new GetEnrollmentQuery(id), cancellationToken).ConfigureAwait(false);
-        return enrollment is null ? NotFound() : Ok(enrollment);
+        if (enrollment is null)
+        {
+            return NotFound();
+        }
+
+        if (!CanAccessUserData(enrollment.UserId))
+        {
+            return Forbid();
+        }
+
+        return Ok(enrollment);
     }
 
     [HttpGet("users/{userId:guid}")]
-    public Task<IReadOnlyList<EnrollmentDto>> GetByUser(Guid userId, [FromQuery] EnrollmentStatus? status, CancellationToken cancellationToken)
-        => sender.Send(new GetUserEnrollmentsQuery(userId, status), cancellationToken);
+    public async Task<IActionResult> GetByUser(Guid userId, [FromQuery] EnrollmentStatus? status, CancellationToken cancellationToken)
+    {
+        if (!CanAccessUserData(userId))
+        {
+            return Forbid();
+        }
+
+        var enrollments = await sender.Send(new GetUserEnrollmentsQuery(userId, status), cancellationToken)
+            .ConfigureAwait(false);
+        return Ok(enrollments);
+    }
 
     [HttpGet("courses/{courseId:guid}")]
-    public Task<IReadOnlyList<EnrollmentDto>> GetByCourse(Guid courseId, [FromQuery] EnrollmentStatus? status, CancellationToken cancellationToken)
-        => sender.Send(new GetCourseEnrollmentsQuery(courseId, status), cancellationToken);
+    public async Task<IActionResult> GetByCourse(Guid courseId, [FromQuery] EnrollmentStatus? status, CancellationToken cancellationToken)
+    {
+        if (!await CanReadRosterAsync(courseId, cancellationToken).ConfigureAwait(false))
+        {
+            return Forbid();
+        }
+
+        var enrollments = await sender.Send(new GetCourseEnrollmentsQuery(courseId, status), cancellationToken)
+            .ConfigureAwait(false);
+        return Ok(enrollments);
+    }
 
     [HttpPost]
-    public Task<EnrollmentDto> Enroll(EnrollUserRequest request, CancellationToken cancellationToken)
-        => sender.Send(new EnrollUserCommand(request.CourseId, request.UserId, request.CohortId), cancellationToken);
+    public async Task<IActionResult> Enroll(EnrollUserRequest request, CancellationToken cancellationToken)
+    {
+        // Ownership gate (issue #1226 N6): enroll the acting user, or anybody only
+        // when the actor is a system admin — a body-supplied UserId may no longer
+        // target an arbitrary learner.
+        if (!CanAccessUserData(request.UserId))
+        {
+            return Forbid();
+        }
+
+        var result = await sender.Send(
+            new EnrollUserCommand(request.CourseId, request.UserId, request.CohortId), cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type switch
+            {
+                ErrorType.NotFound => NotFound(result.Error),
+                ErrorType.Conflict => Conflict(result.Error),
+                ErrorType.Forbidden => Forbid(),
+                _ => BadRequest(result.Error)
+            };
+        }
+
+        return Ok(result.Value);
+    }
 
     [HttpPatch("{id:guid}/progress")]
     public async Task<IActionResult> UpdateProgress(Guid id, UpdateEnrollmentProgressRequest request, CancellationToken cancellationToken)
     {
+        // Ownership gate (issue #1226 N6): progress may only be mutated for the acting
+        // user's own enrollment (or by a system admin).
+        var owned = await sender.Send(new GetEnrollmentQuery(id), cancellationToken).ConfigureAwait(false);
+        if (owned is null)
+        {
+            return NotFound();
+        }
+
+        if (!CanAccessUserData(owned.UserId))
+        {
+            return Forbid();
+        }
+
         var enrollment = await sender.Send(new UpdateEnrollmentProgressCommand(id, request.Progress), cancellationToken)
             .ConfigureAwait(false);
         return enrollment is null ? NotFound() : Ok(enrollment);
@@ -350,6 +492,19 @@ public sealed class EnrollmentsController(ISender sender) : ControllerBase
     [HttpPost("{id:guid}/status/{status}")]
     public async Task<IActionResult> SetStatus(Guid id, EnrollmentStatus status, CancellationToken cancellationToken)
     {
+        // Ownership gate (issue #1226 N6): status may only be mutated for the acting
+        // user's own enrollment (or by a system admin).
+        var owned = await sender.Send(new GetEnrollmentQuery(id), cancellationToken).ConfigureAwait(false);
+        if (owned is null)
+        {
+            return NotFound();
+        }
+
+        if (!CanAccessUserData(owned.UserId))
+        {
+            return Forbid();
+        }
+
         var enrollment = await sender.Send(new SetEnrollmentStatusCommand(id, status), cancellationToken)
             .ConfigureAwait(false);
         return enrollment is null ? NotFound() : Ok(enrollment);
@@ -385,8 +540,8 @@ public static class EnrollmentsDependencyInjection
         services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
         services.AddScoped<IEnrollmentService, EnrollmentService>();
         services.AddScoped<GameGuild.Learning.Courses.ICourseEnrollmentAccessReader, CourseEnrollmentAccessReader>();
-        services.AddScoped<ICommandHandler<EnrollUserCommand, EnrollmentDto>, EnrollUserCommandHandler>();
-        services.AddScoped<IRequestHandler<EnrollUserCommand, EnrollmentDto>>(sp => sp.GetRequiredService<ICommandHandler<EnrollUserCommand, EnrollmentDto>>());
+        services.AddScoped<ICommandHandler<EnrollUserCommand, Result<EnrollmentDto>>, EnrollUserCommandHandler>();
+        services.AddScoped<IRequestHandler<EnrollUserCommand, Result<EnrollmentDto>>>(sp => sp.GetRequiredService<ICommandHandler<EnrollUserCommand, Result<EnrollmentDto>>>());
         services.AddScoped<ICommandHandler<UpdateEnrollmentProgressCommand, EnrollmentDto?>, UpdateEnrollmentProgressCommandHandler>();
         services.AddScoped<IRequestHandler<UpdateEnrollmentProgressCommand, EnrollmentDto?>>(sp => sp.GetRequiredService<ICommandHandler<UpdateEnrollmentProgressCommand, EnrollmentDto?>>());
         services.AddScoped<ICommandHandler<SetEnrollmentStatusCommand, EnrollmentDto?>, SetEnrollmentStatusCommandHandler>();

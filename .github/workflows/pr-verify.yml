@@ -242,6 +242,10 @@ jobs:
       - name: Lint suppression budget ratchet
         run: node scripts/lint-budget.mjs
       - name: Typecheck Web
+        env:
+          # tsc resolves the generated client from package source (tsconfig
+          # paths); the 100k-line types.gen needs more than the default heap.
+          NODE_OPTIONS: --max-old-space-size=12288
         run: pnpm --filter @game-guild/web exec tsc --noEmit
       - name: Validate quiz grading audit contracts
         run: |
@@ -249,6 +253,10 @@ jobs:
           pnpm --filter @game-guild/grading test
           pnpm --filter @game-guild/grading-adapter-quiz test
       - name: Test Web
+        env:
+          # Same source-resolution cost as Typecheck Web: workers type-process
+          # the generated client from source.
+          NODE_OPTIONS: --max-old-space-size=12288
         run: pnpm --filter @game-guild/web exec vitest run --maxWorkers=4
       - name: Build Web
         env:

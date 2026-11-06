@@ -246,3 +246,57 @@ second ASP.NET Core Identity persistence stack is superseded by that platform ar
   When present, resolved addresses additionally carry VPN/proxy/Tor/hosting traits; the
   session security analysis raises the risk score for sessions observed on anonymous
   networks. Absent leaves those traits unknown (never blocks the city enrichment).
+
+### Passwordless delivery per-IP rate limit (issue #1090)
+
+Magic-link and email-code requests share one fixed-window budget per client IP
+(`Authentication:PasswordlessRequests:IpRateLimit`), stored in the distributed cache so
+the budget spans API instances. The existing per-email throttles cannot stop one address
+flooding many different mailboxes, so both request endpoints consume the same per-IP
+budget before any token or code is generated. Defaults: enabled, 20 requests per hour.
+Over-budget requests return the same generic payload (enumeration-safe) and are logged.
+The limiter fails open when the cache is unavailable.
+
+### Sign-in geo-fencing (issue #1087, default off)
+
+`Authentication:GeoFencing` optionally restricts local password sign-in by country for
+GDPR and sanctions compliance. `BlockedCountries` is the platform-wide ISO 3166-1
+alpha-2 list; `TenantBlockedCountries` adds per-tenant lists keyed by tenant ID
+(enterprise tenants keep their own sanctions posture on top of the platform list).
+`Mode` selects enforcement: `Block` (default) rejects the sign-in outright;
+`RequireStepUp` routes it through the additional-verification flow. The client IP's
+country is resolved through the shared `IGeolocationProvider`; addresses whose country
+cannot be resolved are allowed unless `TreatUnknownCountryAsBlocked` is set (strict
+jurisdictions fail closed). Every decision point is audited through the authentication
+security-event pipeline.
+
+### Password age / rotation policy (issue #1088, default off)
+
+`Authentication:PasswordAge` optionally expires passwords by age: `MaxAgeDays`
+(defaults to the 90-day enterprise baseline) applies platform-wide, and
+`TenantMaxAgeDays` replaces the maximum for a specific tenant. A sign-in with an
+expired password is rejected after credential verification with `PasswordExpired` and
+the owner rotates through the existing password-reset flow. `Users.PasswordChangedAt`
+records every password set (sign-up, change, reset); passwords created before the
+timestamp existed are treated as not expirable so enabling the policy never mass-locks
+existing accounts. Password reuse remains blocked by the existing password-history
+check on every change and reset (last 5 passwords).
+
+### Proactive IP blocklist (issue #1089)
+
+`Authentication:IpBlocklist` maintains a proactive blocklist of known-attacker IPs in
+the distributed cache (Redis in production, shared by every API instance), managed via
+the admin endpoint `GET/PUT/DELETE /v1/auth/ip-blocklist` (platform
+`SystemConfiguration.Manage` policy; entries carry a reason, the acting admin and an
+expiry, defaulting to `DefaultEntryLifetime` = 30 days). `Mode` selects enforcement on
+local password sign-in: `Block` (default) rejects before any credential work runs;
+`RequireStepUp` forces additional verification for matching IPs. Every match is audited;
+lookups fail open so an unavailable cache can never take sign-in down with it.
+
+### Sessions-terminated owner notification (issue #1091)
+
+When a password change or reset terminates the account's other sessions, the
+`OtherSessionsTerminatedV1` durable event is recorded and the host-side bridge queues
+the owner confirmation — InApp always, Email per the user's delivery preferences —
+gated by `Authentication:SecurityNotifications:Enabled` (default on). Publisher
+failures never fail the password operation itself.

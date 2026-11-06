@@ -1,6 +1,8 @@
 import '@testing-library/jest-dom/vitest';
-import { render } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, render } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { CONSENT_STATE_VERSION, CONSENT_STORAGE_KEY } from '@/lib/consent/state';
 
 const scriptRenders: Array<Record<string, unknown>> = [];
 
@@ -22,69 +24,122 @@ function analyticsWindow(): AnalyticsWindow {
   return window as AnalyticsWindow;
 }
 
-describe('GoogleAnalytics', () => {
+function persistConsent(analytics: boolean, marketing = false): void {
+  window.localStorage.setItem(
+    CONSENT_STORAGE_KEY,
+    JSON.stringify({ version: CONSENT_STATE_VERSION, analytics, marketing, updatedAt: '2026-01-01T00:00:00.000Z' }),
+  );
+}
+
+describe('GoogleAnalytics (consent mode v2)', () => {
   beforeEach(() => {
     scriptRenders.length = 0;
+    window.localStorage.clear();
     delete analyticsWindow().dataLayer;
     delete analyticsWindow().gtag;
+    Object.defineProperty(navigator, 'doNotTrack', { value: undefined, configurable: true });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('is a no-op without a measurement id', () => {
-    const { container } = render(<GoogleAnalytics consent />);
+    const { container } = render(<GoogleAnalytics />);
 
     expect(container).toBeEmptyDOMElement();
     expect(scriptRenders).toHaveLength(0);
     expect(analyticsWindow().dataLayer).toBeUndefined();
-    expect(analyticsWindow().gtag).toBeUndefined();
   });
 
   it('treats a blank measurement id as unset', () => {
-    const { container } = render(<GoogleAnalytics measurementId="   " consent />);
+    const { container } = render(<GoogleAnalytics measurementId="   " />);
 
     expect(container).toBeEmptyDOMElement();
     expect(scriptRenders).toHaveLength(0);
-    expect(analyticsWindow().dataLayer).toBeUndefined();
   });
 
-  it('stays dormant while analytics-cookie consent is off', () => {
-    const { container } = render(<GoogleAnalytics measurementId="G-TESTID" />);
+  it('injects no script and issues no events while consent is denied or absent', () => {
+    render(<GoogleAnalytics measurementId="G-TESTID" />);
 
-    expect(container).toBeEmptyDOMElement();
+    // Consent default is installed before anything loads…
+    const w = analyticsWindow();
+    expect(typeof w.gtag).toBe('function');
+    expect(w.dataLayer).toEqual([
+      { 'gg:consent-default': true },
+      ['consent', 'default', expect.anything()],
+      // Absent consent is pushed as an explicit denial (fail closed)…
+      ['consent', 'update', expect.anything()],
+    ]);
+    // …which also sets the ga-disable cookie so an already-loaded tag stops collecting.
+    expect(document.cookie).toContain('ga-disable-G-TESTID=true');
+    // …but no transport script, no js/config calls.
     expect(scriptRenders).toHaveLength(0);
-    expect(analyticsWindow().dataLayer).toBeUndefined();
-    expect(analyticsWindow().gtag).toBeUndefined();
   });
 
-  it('loads gtag.js and issues the standard js/config calls once consent is granted', () => {
-    render(<GoogleAnalytics measurementId="G-TESTID" consent />);
+  it('sets the denied consent default before any tag loads', () => {
+    render(<GoogleAnalytics measurementId="G-TESTID" />);
 
+    const w = analyticsWindow();
+    expect(w.dataLayer![1]).toEqual([
+      'consent',
+      'default',
+      {
+        ad_storage: 'denied',
+        analytics_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        wait_for_update: 500,
+      },
+    ]);
+  });
+
+  it('loads gtag.js only after analytics consent is granted, with a granted update first', () => {
+    persistConsent(true);
+    render(<GoogleAnalytics measurementId="G-TESTID" />);
+
+    const layer = analyticsWindow().dataLayer!;
     expect(scriptRenders).toHaveLength(1);
     expect(scriptRenders[0]).toMatchObject({
       id: 'gg-ga4-loader',
       strategy: 'afterInteractive',
       src: 'https://www.googletagmanager.com/gtag/js?id=G-TESTID',
     });
-
-    const w = analyticsWindow();
-    expect(typeof w.gtag).toBe('function');
-
-    const layer = w.dataLayer;
-    expect(layer).toHaveLength(2);
-    expect(layer![0]).toEqual(['js', expect.any(Date)]);
-    expect(layer![1]).toEqual(['config', 'G-TESTID']);
+    expect(layer).toEqual([
+      { 'gg:consent-default': true },
+      ['consent', 'default', expect.anything()],
+      ['consent', 'update', { analytics_storage: 'granted', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' }],
+      ['js', expect.any(Date)],
+      ['config', 'G-TESTID'],
+    ]);
   });
 
-  it('keeps an existing dataLayer and preserves an existing gtag shim', () => {
-    const w = analyticsWindow();
-    w.dataLayer = [{ event: 'existing' }];
-    const existingGtag = vi.fn();
-    w.gtag = existingGtag;
+  it('marketing-only consent does not enable analytics storage', () => {
+    persistConsent(false, true);
+    render(<GoogleAnalytics measurementId="G-TESTID" />);
 
-    render(<GoogleAnalytics measurementId="G-TESTID" consent />);
+    const layer = analyticsWindow().dataLayer!;
+    expect(scriptRenders).toHaveLength(0); // GA transport needs analytics purpose
+    expect(layer.some((e) => Array.isArray(e) && e[0] === 'config')).toBe(false);
+  });
 
-    expect(w.gtag).toBe(existingGtag);
-    expect(existingGtag).toHaveBeenCalledWith('js', expect.any(Date));
-    expect(existingGtag).toHaveBeenCalledWith('config', 'G-TESTID');
-    expect(w.dataLayer).toHaveLength(1);
+  it('pushes a denied update on revocation and does not re-issue the consent default', async () => {
+    persistConsent(true);
+    render(<GoogleAnalytics measurementId="G-TESTID" />);
+    expect(scriptRenders).toHaveLength(1);
+
+    await act(async () => {
+      persistConsent(false);
+      window.dispatchEvent(new StorageEvent('storage', { key: CONSENT_STORAGE_KEY, newValue: window.localStorage.getItem(CONSENT_STORAGE_KEY) }));
+    });
+
+    const layer = analyticsWindow().dataLayer!;
+    expect(layer.filter((e) => Array.isArray(e) && e[1] === 'default')).toHaveLength(1);
+    const lastUpdate = [...layer].reverse().find((e) => Array.isArray(e) && e[1] === 'update');
+    expect(lastUpdate).toEqual([
+      'consent',
+      'update',
+      { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' },
+    ]);
   });
 });

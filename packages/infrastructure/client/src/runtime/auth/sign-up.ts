@@ -1,10 +1,10 @@
-import { createClient } from '../../client.js';
-import { AuthModule } from '../../generated/modules/auth.gen.js';
-import type { IdentityAuthenticationLocalSignUpInput, IdentityAuthenticationSignInOutput } from '../../generated/types.gen.js';
-import { isApiError, isValidationError } from '../errors/guards.js';
-import type { ApiError } from '../errors/types.js';
-import type { Result } from '../result/types.js';
-import { AuthServiceUnavailableError, MfaRequiredError, parseMfaEnrollmentOffer, SignUpError } from './errors.js';
+import { createClient } from '../../client';
+import { AuthModule } from '../../generated/modules/auth.gen';
+import type { IdentityAuthenticationLocalSignUpInput, IdentityAuthenticationSignInOutput } from '../../generated/types.gen';
+import { isApiError, isValidationError } from '../errors/guards';
+import type { ApiError } from '../errors/types';
+import type { Result } from '../result/types';
+import { AuthServiceUnavailableError, MfaRequiredError, parseMfaEnrollmentOffer, SignUpError } from './errors';
 
 /** Shared registration transport for the Next route and server action. */
 export async function registerAccount(apiUrl: string, input: IdentityAuthenticationLocalSignUpInput): Promise<Record<string, unknown>> {

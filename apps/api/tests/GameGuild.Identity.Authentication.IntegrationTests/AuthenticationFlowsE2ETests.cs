@@ -1111,6 +1111,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
 
                 services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(_databaseName));
                 services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+                services.AddScoped<ISignInMfaEnrollmentPort, InMemorySignInMfaEnrollmentPort>();
                 services.AddMemoryCache();
                 services.AddHttpLogging(_ => { });
 

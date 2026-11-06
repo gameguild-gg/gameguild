@@ -69,7 +69,17 @@ public class CertificatesModuleAndServiceTests
         var userId = Guid.NewGuid();
         var programId = Guid.NewGuid();
         var template = CertificateTemplate.Create(programId, "Default completion", "<html />");
+        // Issue #1226 N1: issuance verifies the enrollment exists and is completed, so
+        // the seed carries the completed ProgramEnrollment the certificate certifies.
+        var enrollment = new GameGuild.Learning.Courses.ProgramEnrollment
+        {
+            Id = enrollmentId,
+            UserId = userId,
+            ProgramId = programId,
+            CompletionStatus = GameGuild.Learning.Courses.CompletionStatus.Completed
+        };
         context.Set<CertificateTemplate>().Add(template);
+        context.Set<GameGuild.Learning.Courses.ProgramEnrollment>().Add(enrollment);
         await context.SaveChangesAsync();
 
         var result = await service.IssueCertificateForEnrollmentAsync(enrollmentId, userId, programId);
@@ -135,6 +145,17 @@ public class CertificatesModuleAndServiceTests
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             new CertificatesModelConfiguration().Configure(modelBuilder);
+            // ProgramEnrollment (the eligibility gate's aggregate, issue #1226 N1) carries
+            // PercentValue properties that need the production model configuration's
+            // value converters; the Program relationships pull in the Commerce Product,
+            // whose navigations must be ignored for the isolated test.
+            new GameGuild.Learning.Courses.CoursesModelConfiguration().Configure(modelBuilder);
+            modelBuilder.Entity<GameGuild.Commerce.Products.Product>(product =>
+            {
+                product.HasKey(entity => entity.Id);
+                product.Ignore(entity => entity.BundleItems);
+                product.Ignore(entity => entity.IncludedInBundles);
+            });
             modelBuilder.Entity<User>(user =>
             {
                 user.HasKey(entity => entity.Id);

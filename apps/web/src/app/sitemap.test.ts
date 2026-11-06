@@ -33,7 +33,7 @@ function urlsOf(entries: Awaited<ReturnType<typeof sitemap>>): string[] {
 }
 
 function mockHealthySources(): void {
-  getPublishedProjectsPage.mockResolvedValue([{ slug: 'proj-one' }]);
+  getPublishedProjectsPage.mockResolvedValue([{ slug: 'proj-one' }, { slug: 'proj-two' }]);
   getPublicCourseCatalog.mockResolvedValue({
     success: true,
     data: [{ slug: 'course-one' }, { slug: '' }, {}],
@@ -58,9 +58,12 @@ describe('app sitemap', () => {
 
     // static routes
     expect(urls).toContain(BASE_URL);
-    expect(urls).toContain(`${BASE_URL}/sign-in`);
     expect(urls).toContain(`${BASE_URL}/courses`);
     expect(urls).toContain(`${BASE_URL}/legal/licenses`);
+
+    // auth routes are never advertised
+    expect(urls).not.toContain(`${BASE_URL}/sign-in`);
+    expect(urls).not.toContain(`${BASE_URL}/sign-up`);
 
     // dynamic routes
     expect(urls).toContain(`${BASE_URL}/programs/game-ai-systems`);
@@ -80,9 +83,13 @@ describe('app sitemap', () => {
     ]);
     expect(urls.filter((url) => url.includes('/blogs/'))).toEqual([`${BASE_URL}/blogs/alice/post-one`]);
 
+    // lastmod is content-derived, never generation time
     const home = entries.find((entry) => entry.url === BASE_URL);
-    expect(home?.changeFrequency).toBe('daily');
-    expect(home?.priority).toBe(1);
+    expect(home?.lastModified).toBeUndefined();
+    const courseEntry = entries.find((entry) => entry.url === `${BASE_URL}/courses/course-one`);
+    expect(courseEntry?.lastModified).toBeUndefined();
+    const programEntry = entries.find((entry) => entry.url === `${BASE_URL}/programs/game-ai-systems`);
+    expect(programEntry?.lastModified).toBeUndefined();
 
     const blogPost = entries.find((entry) => entry.url === `${BASE_URL}/blogs/alice/post-one`);
     expect(blogPost?.lastModified).toEqual(new Date('2026-01-15T10:00:00Z'));

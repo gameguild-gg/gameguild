@@ -12,7 +12,7 @@ public class UpdateTenantCommandHandlerTests
     public UpdateTenantCommandHandlerTests()
     {
         _tenantRepositoryMock = new Mock<ITenantRepository>();
-        _handler = new UpdateTenantCommandHandler(_tenantRepositoryMock.Object);
+        _handler = new UpdateTenantCommandHandler(_tenantRepositoryMock.Object, new AllowAllTenantAdministrationGuard());
     }
 
     [Fact]
