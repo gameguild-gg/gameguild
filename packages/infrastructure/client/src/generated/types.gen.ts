@@ -771,6 +771,18 @@ export interface APIControllersStartMyKycInput {
   idempotencyKey?: string | null;
 }
 
+/** Data model for API Core Compliance Record User Consent Endpoint Command+Result. */
+export interface APICoreComplianceRecordUserConsentEndpointCommandResult {
+  changedRecords?: number;
+}
+
+/** Data model for API Core Compliance User Consent Bridge Controller+User Consent Bridge Request. */
+export interface APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput {
+  analyticsGranted?: boolean;
+  marketingGranted?: boolean;
+  method?: string | null;
+}
+
 /** Local validity, durable publication state and fresh chain observation are independent facts. */
 export interface APICoreIntegrationCertificateEvmEvidenceOutput {
   anchor?: APICoreIntegrationCertificateEvmOperationView;
@@ -27950,6 +27962,8 @@ export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDe
 export let APIControllersSettleMyMarketplaceOrderInputSchema: z.ZodType<APIControllersSettleMyMarketplaceOrderInput>;
 export let APIControllersStartMyAdRewardSessionInputSchema: z.ZodType<APIControllersStartMyAdRewardSessionInput>;
 export let APIControllersStartMyKycInputSchema: z.ZodType<APIControllersStartMyKycInput>;
+export let APICoreComplianceRecordUserConsentEndpointCommandResultSchema: z.ZodType<APICoreComplianceRecordUserConsentEndpointCommandResult>;
+export let APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInputSchema: z.ZodType<APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput>;
 export let APICoreIntegrationCertificateEvmEvidenceOutputSchema: z.ZodType<APICoreIntegrationCertificateEvmEvidenceOutput>;
 export let APICoreIntegrationCertificateEvmEvidenceReadStatusSchema: z.ZodType<APICoreIntegrationCertificateEvmEvidenceReadStatus>;
 export let APICoreIntegrationCertificateEvmOperationViewSchema: z.ZodType<APICoreIntegrationCertificateEvmOperationView>;
@@ -31018,6 +31032,18 @@ APIControllersStartMyAdRewardSessionInputSchema = z.object({
 /** Zod schema for APIControllersStartMyKycInput. Data model for API Controllers Start My Kyc Request. */
 APIControllersStartMyKycInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
+});
+
+/** Zod schema for APICoreComplianceRecordUserConsentEndpointCommandResult. Data model for API Core Compliance Record User Consent Endpoint Command+Result. */
+APICoreComplianceRecordUserConsentEndpointCommandResultSchema = z.object({
+  changedRecords: z.number().int().optional(),
+});
+
+/** Zod schema for APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput. Data model for API Core Compliance User Consent Bridge Controller+User Consent Bridge Request. */
+APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInputSchema = z.object({
+  analyticsGranted: z.boolean().optional(),
+  marketingGranted: z.boolean().optional(),
+  method: z.string().nullable().optional(),
 });
 
 /** Zod schema for APICoreIntegrationCertificateEvmEvidenceOutput. Local validity, durable publication state and fresh chain observation are independent facts. */

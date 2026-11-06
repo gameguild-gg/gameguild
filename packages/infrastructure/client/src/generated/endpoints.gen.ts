@@ -2529,6 +2529,18 @@ export const postApiComplianceConsentRevokeEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostApiComplianceConsentUserConsentInput {
+  body?: Types.APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput;
+}
+export type PostApiComplianceConsentUserConsentOutput = Types.APICoreComplianceRecordUserConsentEndpointCommandResult;
+export const postApiComplianceConsentUserConsentEndpoint = {
+  operationId: 'postApiComplianceConsentUserConsent' as const,
+  method: 'POST' as const,
+  path: '/api/compliance/consent/user-consent' as const,
+  tags: ['ComplianceConsent'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiComplianceConsentUsersInput {
   userId: string;
 }
@@ -35025,6 +35037,7 @@ export const endpoints = {
   postApiComplianceConsentPolicies: postApiComplianceConsentPoliciesEndpoint,
   postApiComplianceConsentPoliciesVersions: postApiComplianceConsentPoliciesVersionsEndpoint,
   postApiComplianceConsentRevoke: postApiComplianceConsentRevokeEndpoint,
+  postApiComplianceConsentUserConsent: postApiComplianceConsentUserConsentEndpoint,
   getApiComplianceConsentUsers: getApiComplianceConsentUsersEndpoint,
   postApiComplianceFerpaConsents: postApiComplianceFerpaConsentsEndpoint,
   postApiComplianceFerpaConsentsRevoke: postApiComplianceFerpaConsentsRevokeEndpoint,
