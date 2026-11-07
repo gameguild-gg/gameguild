@@ -32,7 +32,7 @@ public class ControllerAndServiceCtorTests
     [Fact]
     public void TrustedDevicesController_CanBeConstructed()
     {
-        var ctrl = new TrustedDevicesController(Mock.Of<ISessionManagementService>(), new CommandHandlerSender());
+        var ctrl = new TrustedDevicesController(Mock.Of<ISessionManagementService>(), new CommandHandlerSender(), Mock.Of<IStepUpRequirementService>());
         ctrl.Should().NotBeNull();
     }
 

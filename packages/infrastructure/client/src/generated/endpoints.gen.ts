@@ -21816,10 +21816,10 @@ export const getAuthTrustedDevicesEndpoint = {
  * Trust the current device
  *
  * Trusting a device is a security-sensitive grant, so it requires fresh verification
- * (issue #1144): create a step-up challenge (POST /v1/auth/step-up/challenges) with
- * operation type "trust-device", target reference "current-session", and payload hash
- * SHA-256 of the trimmed device name; verify it with any MFA method and pass the
- * returned receipt as `stepUpReceipt`.
+ * (issues #1144 and #1191). A request without a receipt returns HTTP 403 with a persisted
+ * challenge, its server-derived operation binding, expiry, and available supported factors.
+ * Verify the challenge with an enrolled TOTP, backup code, or active WebAuthn credential,
+ * then retry the same device name with the returned receipt as `stepUpReceipt`.
  */
 export interface PostAuthTrustedDevicesInput {
   body?: Types.IdentityAuthenticationTrustDeviceInput;

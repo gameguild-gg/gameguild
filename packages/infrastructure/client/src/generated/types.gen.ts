@@ -14321,10 +14321,43 @@ export interface IdentityAuthenticationSmsMfaSetupOutput {
   phoneNumberMasked: string | null;
 }
 
+/** Response indicating that step-up authentication is required. */
+export interface IdentityAuthenticationStepUpAuthenticationRequiredOutput {
+  /** Enrolled methods supported by operation step-up (TOTP, backup code, WebAuthn). */
+  availableMethods?: string[] | null;
+  /** Persisted operation-bound challenge; this identifier is not an authorization receipt. */
+  challengeId?: string;
+  detail?: string | null;
+  /** Expiration time for the step-up token. */
+  expiresAt?: string;
+  instance?: string | null;
+  operation?: IdentityAuthenticationStepUpOperationBinding;
+  /** Reason for step-up requirement. */
+  reason?: string | null;
+  /** Risk factors that triggered the requirement. */
+  riskFactors?: string[] | null;
+  riskLevel?: IdentityAuthenticationRiskLevel;
+  status?: number | null;
+  /** Indicates step-up auth is required. */
+  stepUpRequired?: boolean;
+  /** Challenge identifier retained for existing clients; verification still requires an enrolled factor. */
+  stepUpToken?: string | null;
+  title?: string | null;
+  type?: string | null;
+  [key: string]: any;
+}
+
 /** Data model for Identity Authentication Step Up Challenge Response. */
 export interface IdentityAuthenticationStepUpChallengeOutput {
   challengeId?: string;
   expiresAt?: string;
+}
+
+/** Data model for Identity Authentication Step Up Operation Binding. */
+export interface IdentityAuthenticationStepUpOperationBinding {
+  operationType?: string | null;
+  payloadHash?: string | null;
+  targetReference?: string | null;
 }
 
 /** Data model for Identity Authentication Step Up Receipt Response. */
@@ -29148,7 +29181,9 @@ export let IdentityAuthenticationSignOutInputSchema: z.ZodType<IdentityAuthentic
 export let IdentityAuthenticationSmsMfaChallengeInputSchema: z.ZodType<IdentityAuthenticationSmsMfaChallengeInput>;
 export let IdentityAuthenticationSmsMfaSetupInputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupInput>;
 export let IdentityAuthenticationSmsMfaSetupOutputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupOutput>;
+export let IdentityAuthenticationStepUpAuthenticationRequiredOutputSchema: z.ZodType<IdentityAuthenticationStepUpAuthenticationRequiredOutput>;
 export let IdentityAuthenticationStepUpChallengeOutputSchema: z.ZodType<IdentityAuthenticationStepUpChallengeOutput>;
+export let IdentityAuthenticationStepUpOperationBindingSchema: z.ZodType<IdentityAuthenticationStepUpOperationBinding>;
 export let IdentityAuthenticationStepUpReceiptOutputSchema: z.ZodType<IdentityAuthenticationStepUpReceiptOutput>;
 export let IdentityAuthenticationTrustDeviceInputSchema: z.ZodType<IdentityAuthenticationTrustDeviceInput>;
 export let IdentityAuthenticationTrustedContactActionResultSchema: z.ZodType<IdentityAuthenticationTrustedContactActionResult>;
@@ -43525,10 +43560,37 @@ IdentityAuthenticationSmsMfaSetupOutputSchema = z.object({
   phoneNumberMasked: z.string().nullable(),
 });
 
+/** Zod schema for IdentityAuthenticationStepUpAuthenticationRequiredOutput. Response indicating that step-up authentication is required. */
+IdentityAuthenticationStepUpAuthenticationRequiredOutputSchema = z
+  .object({
+    availableMethods: z.array(z.string()).nullable().optional(),
+    challengeId: z.string().uuid().optional(),
+    detail: z.string().nullable().optional(),
+    expiresAt: z.string().datetime({ offset: true }).optional(),
+    instance: z.string().nullable().optional(),
+    operation: z.lazy(() => IdentityAuthenticationStepUpOperationBindingSchema).optional(),
+    reason: z.string().nullable().optional(),
+    riskFactors: z.array(z.string()).nullable().optional(),
+    riskLevel: z.lazy(() => IdentityAuthenticationRiskLevelSchema).optional(),
+    status: z.number().int().nullable().optional(),
+    stepUpRequired: z.boolean().optional(),
+    stepUpToken: z.string().nullable().optional(),
+    title: z.string().nullable().optional(),
+    type: z.string().nullable().optional(),
+  })
+  .catchall(z.unknown());
+
 /** Zod schema for IdentityAuthenticationStepUpChallengeOutput. Data model for Identity Authentication Step Up Challenge Response. */
 IdentityAuthenticationStepUpChallengeOutputSchema = z.object({
   challengeId: z.string().uuid().optional(),
   expiresAt: z.string().datetime({ offset: true }).optional(),
+});
+
+/** Zod schema for IdentityAuthenticationStepUpOperationBinding. Data model for Identity Authentication Step Up Operation Binding. */
+IdentityAuthenticationStepUpOperationBindingSchema = z.object({
+  operationType: z.string().nullable().optional(),
+  payloadHash: z.string().nullable().optional(),
+  targetReference: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationStepUpReceiptOutput. Data model for Identity Authentication Step Up Receipt Response. */
@@ -50897,7 +50959,7 @@ MvcProblemDetailsSchema = z
     title: z.string().nullable().optional(),
     type: z.string().nullable().optional(),
   })
-  .catchall(z.record(z.string(), z.unknown()));
+  .catchall(z.unknown());
 
 /** Zod schema for MvcValidationProblemDetails. Data model for Mvc Validation Problem Details. */
 MvcValidationProblemDetailsSchema = z
@@ -50909,7 +50971,7 @@ MvcValidationProblemDetailsSchema = z
     title: z.string().nullable().optional(),
     type: z.string().nullable().optional(),
   })
-  .catchall(z.record(z.string(), z.unknown()));
+  .catchall(z.unknown());
 
 /** Zod schema for NodesJsonNode. Data model for Nodes Json Node. */
 NodesJsonNodeSchema = z.object({
