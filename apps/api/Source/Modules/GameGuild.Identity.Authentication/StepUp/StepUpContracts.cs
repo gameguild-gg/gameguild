@@ -71,6 +71,10 @@ public sealed class StepUpChallenge
 
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
+
+    [MaxLength(64)]
+    public string? WebAuthnChallengeHash { get; set; }
+
     public DateTimeOffset? VerifiedAt { get; set; }
     public MfaMethod? VerificationMethod { get; set; }
 
@@ -95,6 +99,21 @@ public interface IStepUpChallengeStore
         StepUpSubject subject,
         string receiptHash,
         MfaMethod method,
+        DateTimeOffset verifiedAt,
+        CancellationToken cancellationToken);
+
+    Task<bool> BindWebAuthnChallengeAsync(
+        Guid challengeId,
+        StepUpSubject subject,
+        string challengeHash,
+        DateTimeOffset now,
+        CancellationToken cancellationToken);
+
+    Task<bool> MarkWebAuthnVerifiedAsync(
+        Guid challengeId,
+        StepUpSubject subject,
+        string challengeHash,
+        string receiptHash,
         DateTimeOffset verifiedAt,
         CancellationToken cancellationToken);
 

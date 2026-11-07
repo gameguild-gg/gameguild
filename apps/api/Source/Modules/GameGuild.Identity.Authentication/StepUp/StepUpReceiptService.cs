@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Identity.Authentication;
@@ -47,9 +48,15 @@ public sealed class StepUpReceiptService(
             userId: subject.ActorId,
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
-        if (!result.Success)
+        if (!result.Success || result.Options?.Challenge is not { Length: >= 16 and <= 1024 } nonce)
         {
             throw new StepUpVerificationFailedException(result.Error ?? "WebAuthn challenge could not be created.");
+        }
+
+        if (!await challengeStore.BindWebAuthnChallengeAsync(
+                challengeId, subject, HashBytes(nonce), timeProvider.GetUtcNow(), cancellationToken).ConfigureAwait(false))
+        {
+            throw new StepUpChallengeUnavailableException("Step-up challenge is expired or already verified.");
         }
 
         return result;
@@ -63,6 +70,7 @@ public sealed class StepUpReceiptService(
         ArgumentNullException.ThrowIfNull(verification);
         var subject = RequireSubject();
         var challenge = await RequireActiveChallengeAsync(challengeId, subject, cancellationToken).ConfigureAwait(false);
+        var webAuthnChallengeHash = challenge.WebAuthnChallengeHash;
 
         var verified = verification.Method switch
         {
@@ -72,6 +80,7 @@ public sealed class StepUpReceiptService(
                 cancellationToken).ConfigureAwait(false),
             MfaMethod.WebAuthn => await VerifyWebAuthnAsync(
                 subject.ActorId,
+                webAuthnChallengeHash,
                 verification.Evidence,
                 cancellationToken).ConfigureAwait(false),
             _ => throw new StepUpVerificationFailedException("The requested MFA method cannot authorize step-up operations.")
@@ -84,13 +93,11 @@ public sealed class StepUpReceiptService(
 
         var receipt = CreateOpaqueReceipt();
         var now = timeProvider.GetUtcNow();
-        var persisted = await challengeStore.MarkVerifiedAsync(
-            challengeId,
-            subject,
-            Hash(receipt),
-            verification.Method,
-            now,
-            cancellationToken).ConfigureAwait(false);
+        var persisted = verification.Method == MfaMethod.WebAuthn
+            ? await challengeStore.MarkWebAuthnVerifiedAsync(
+                challengeId, subject, webAuthnChallengeHash!, Hash(receipt), now, cancellationToken).ConfigureAwait(false)
+            : await challengeStore.MarkVerifiedAsync(
+                challengeId, subject, Hash(receipt), verification.Method, now, cancellationToken).ConfigureAwait(false);
         if (!persisted)
         {
             throw new StepUpChallengeUnavailableException("Step-up challenge is expired or already verified.");
@@ -165,14 +172,73 @@ public sealed class StepUpReceiptService(
 
     private async Task<bool> VerifyWebAuthnAsync(
         Guid actorId,
+        string? challengeHash,
         string assertion,
         CancellationToken cancellationToken)
     {
+        if (!MatchesWebAuthnChallenge(challengeHash, assertion))
+        {
+            return false;
+        }
+
         var result = await webAuthnService.CompleteAuthenticationAsync(
             assertion,
             cancellationToken: cancellationToken).ConfigureAwait(false);
         return result.Success && result.UserId == actorId;
     }
+
+    private static bool MatchesWebAuthnChallenge(string? challengeHash, string assertion)
+    {
+        if (challengeHash is not { Length: 64 } || assertion.Length > 65_536)
+        {
+            return false;
+        }
+
+        try
+        {
+            using var envelope = JsonDocument.Parse(assertion);
+            if (envelope.RootElement.ValueKind != JsonValueKind.Object ||
+                !envelope.RootElement.TryGetProperty("response", out var response) ||
+                response.ValueKind != JsonValueKind.Object ||
+                !response.TryGetProperty("clientDataJSON", out var clientData) ||
+                clientData.ValueKind != JsonValueKind.String ||
+                clientData.GetString() is not { Length: > 0 and <= 16_384 } encodedClientData)
+            {
+                return false;
+            }
+
+            using var client = JsonDocument.Parse(DecodeBase64Url(encodedClientData));
+            if (client.RootElement.ValueKind != JsonValueKind.Object ||
+                !client.RootElement.TryGetProperty("type", out var type) ||
+                type.ValueKind != JsonValueKind.String || type.GetString() != "webauthn.get" ||
+                !client.RootElement.TryGetProperty("challenge", out var challenge) ||
+                challenge.ValueKind != JsonValueKind.String ||
+                challenge.GetString() is not { Length: > 0 and <= 1366 } encodedNonce)
+            {
+                return false;
+            }
+
+            var nonce = DecodeBase64Url(encodedNonce);
+            return nonce.Length is >= 16 and <= 1024 && CryptographicOperations.FixedTimeEquals(
+                Convert.FromHexString(challengeHash), SHA256.HashData(nonce));
+        }
+        catch (Exception exception) when (exception is JsonException or FormatException)
+        {
+            return false;
+        }
+    }
+
+    private static byte[] DecodeBase64Url(string value)
+    {
+        if (value.Any(character => !char.IsAsciiLetterOrDigit(character) && character is not ('-' or '_')))
+        {
+            throw new FormatException("Invalid base64url encoding.");
+        }
+        var normalized = value.Replace('-', '+').Replace('_', '/');
+        return Convert.FromBase64String(normalized.PadRight((normalized.Length + 3) / 4 * 4, '='));
+    }
+
+    private static string HashBytes(byte[] value) => Convert.ToHexString(SHA256.HashData(value)).ToLowerInvariant();
 
     private static string CreateOpaqueReceipt()
     {

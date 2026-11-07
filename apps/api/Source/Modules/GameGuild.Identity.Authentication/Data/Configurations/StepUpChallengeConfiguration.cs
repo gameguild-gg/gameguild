@@ -19,6 +19,9 @@ public sealed class StepUpChallengeConfiguration : IEntityTypeConfiguration<Step
                     "ck_step_up_challenges_payload_hash",
                     "payload_hash ~ '^[0-9a-f]{64}$'");
                 table.HasCheckConstraint(
+                    "ck_step_up_challenges_webauthn_hash",
+                    "webauthn_challenge_hash IS NULL OR webauthn_challenge_hash ~ '^[0-9a-f]{64}$'");
+                table.HasCheckConstraint(
                     "ck_step_up_challenges_verification",
                     "(verified_at IS NULL AND verification_method IS NULL AND receipt_hash IS NULL) OR " +
                     "(verified_at IS NOT NULL AND verification_method IS NOT NULL AND receipt_hash ~ '^[0-9a-f]{64}$')");
@@ -36,6 +39,8 @@ public sealed class StepUpChallengeConfiguration : IEntityTypeConfiguration<Step
         builder.Property(challenge => challenge.PayloadHash).HasColumnName("payload_hash").HasMaxLength(64).IsFixedLength().IsRequired();
         builder.Property(challenge => challenge.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(challenge => challenge.ExpiresAt).HasColumnName("expires_at").IsRequired();
+        builder.Property(challenge => challenge.WebAuthnChallengeHash)
+            .HasColumnName("webauthn_challenge_hash").HasMaxLength(64).IsFixedLength();
         builder.Property(challenge => challenge.VerifiedAt).HasColumnName("verified_at");
         builder.Property(challenge => challenge.VerificationMethod)
             .HasColumnName("verification_method")

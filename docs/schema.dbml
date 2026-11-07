@@ -14217,6 +14217,7 @@ Table "gameguild.authentication"."step_up_challenges" {
   "payload_hash" character(64) [not null]
   "created_at" timestamp [not null]
   "expires_at" timestamp [not null]
+  "webauthn_challenge_hash" character(64)
   "verified_at" timestamp
   "verification_method" "character varying(32)"
   "receipt_hash" character(64)
@@ -14227,6 +14228,7 @@ Table "gameguild.authentication"."step_up_challenges" {
     `expires_at > created_at` [name: 'ck_step_up_challenges_expiry']
     `payload_hash ~ '^[0-9a-f]{64}$'` [name: 'ck_step_up_challenges_payload_hash']
     `(verified_at IS NULL AND verification_method IS NULL AND receipt_hash IS NULL) OR (verified_at IS NOT NULL AND verification_method IS NOT NULL AND receipt_hash ~ '^[0-9a-f]{64}$')` [name: 'ck_step_up_challenges_verification']
+    `webauthn_challenge_hash IS NULL OR webauthn_challenge_hash ~ '^[0-9a-f]{64}$'` [name: 'ck_step_up_challenges_webauthn_hash']
   }
 
   Indexes {
