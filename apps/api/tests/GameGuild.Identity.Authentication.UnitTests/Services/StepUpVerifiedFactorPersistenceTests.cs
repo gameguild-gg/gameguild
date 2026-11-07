@@ -60,7 +60,7 @@ public sealed class StepUpVerifiedFactorPersistenceTests
         var actor = Guid.NewGuid();
         var store = new RecordingStepUpChallengeStore();
         var mfa = new Mock<IMfaService>();
-        mfa.Setup(value => value.VerifyMfaAsync(actor, "invalid-proof", method, It.IsAny<CancellationToken>()))
+        mfa.Setup(value => value.VerifyMfaForStepUpAsync(actor, "invalid-proof", method, It.IsAny<CancellationToken>()))
             .ReturnsAsync(MfaVerificationResult.Failure("Invalid proof"));
         var webAuthn = new Mock<IWebAuthnAuthenticationService>(MockBehavior.Strict);
         var service = CreateService(Guid.NewGuid(), actor, Guid.NewGuid(), store, mfa.Object, webAuthn.Object);
@@ -72,7 +72,7 @@ public sealed class StepUpVerifiedFactorPersistenceTests
 
         Assert.Null(store.Challenges.Single().VerifiedAt);
         Assert.Null(store.Challenges.Single().ReceiptHash);
-        mfa.Verify(value => value.VerifyMfaAsync(actor, "invalid-proof", method, It.IsAny<CancellationToken>()), Times.Once);
+        mfa.Verify(value => value.VerifyMfaForStepUpAsync(actor, "invalid-proof", method, It.IsAny<CancellationToken>()), Times.Once);
         webAuthn.VerifyNoOtherCalls();
     }
 
@@ -81,7 +81,7 @@ public sealed class StepUpVerifiedFactorPersistenceTests
         var actor = Guid.NewGuid();
         var store = new RecordingStepUpChallengeStore();
         var mfa = new Mock<IMfaService>();
-        mfa.Setup(value => value.VerifyMfaAsync(actor, "valid-proof", method, It.IsAny<CancellationToken>()))
+        mfa.Setup(value => value.VerifyMfaForStepUpAsync(actor, "valid-proof", method, It.IsAny<CancellationToken>()))
             .ReturnsAsync(MfaVerificationResult.Successful("Verified"));
         var webAuthn = new Mock<IWebAuthnAuthenticationService>(MockBehavior.Strict);
         var service = CreateService(Guid.NewGuid(), actor, Guid.NewGuid(), store, mfa.Object, webAuthn.Object);

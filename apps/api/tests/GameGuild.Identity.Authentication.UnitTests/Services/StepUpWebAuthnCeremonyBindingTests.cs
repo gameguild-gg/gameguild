@@ -62,7 +62,7 @@ public sealed class StepUpWebAuthnCeremonyBindingTests
         await service.ConsumeAsync(Binding, receipt.Receipt);
 
         await Assert.ThrowsAsync<StepUpReceiptInvalidException>(() => service.ConsumeAsync(Binding, receipt.Receipt));
-        provider.Verify(value => value.CompleteAuthenticationAsync(
+        provider.Verify(value => value.CompleteAuthenticationForStepUpAsync(
             It.IsAny<string>(), null, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -124,7 +124,7 @@ public sealed class StepUpWebAuthnCeremonyBindingTests
         var actor = Guid.NewGuid();
         var nonce = RandomNumberGenerator.GetBytes(32);
         var provider = Provider(actor, nonce);
-        provider.Setup(value => value.CompleteAuthenticationAsync(
+        provider.Setup(value => value.CompleteAuthenticationForStepUpAsync(
                 It.IsAny<string>(), null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new WebAuthnAuthenticationResult { Success = true, UserId = Guid.NewGuid() });
         var store = new RecordingStepUpChallengeStore();
@@ -150,7 +150,7 @@ public sealed class StepUpWebAuthnCeremonyBindingTests
         var service = CreateService(Guid.NewGuid(), actor, Guid.NewGuid(), store, webAuthn: provider.Object);
         var challenge = await service.CreateChallengeAsync(Binding);
         await service.BeginWebAuthnAsync(challenge.ChallengeId);
-        provider.Setup(value => value.CompleteAuthenticationAsync(
+        provider.Setup(value => value.CompleteAuthenticationForStepUpAsync(
                 It.IsAny<string>(), null, null, It.IsAny<CancellationToken>()))
             .Returns(async () =>
             {
@@ -184,7 +184,7 @@ public sealed class StepUpWebAuthnCeremonyBindingTests
         var provider = new Mock<IWebAuthnAuthenticationService>();
         provider.Setup(value => value.BeginAuthenticationAsync(null, actor, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Options(nonce));
-        provider.Setup(value => value.CompleteAuthenticationAsync(
+        provider.Setup(value => value.CompleteAuthenticationForStepUpAsync(
                 It.IsAny<string>(), null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new WebAuthnAuthenticationResult { Success = true, UserId = actor });
         return provider;
@@ -213,6 +213,6 @@ public sealed class StepUpWebAuthnCeremonyBindingTests
     private static string Base64Url(byte[] bytes) => Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
     private static void VerifyNoCryptographicVerification(Mock<IWebAuthnAuthenticationService> provider) =>
-        provider.Verify(value => value.CompleteAuthenticationAsync(
+        provider.Verify(value => value.CompleteAuthenticationForStepUpAsync(
             It.IsAny<string>(), null, null, It.IsAny<CancellationToken>()), Times.Never);
 }

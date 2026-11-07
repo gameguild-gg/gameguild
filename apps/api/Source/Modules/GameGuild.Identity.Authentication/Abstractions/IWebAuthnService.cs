@@ -119,6 +119,16 @@ public interface IWebAuthnService
         Guid userId,
         Guid credentialId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Verify operation-scoped evidence without masking operational failures.
+    ///     Ordinary rejected proofs return failure; callers must preserve transaction rollback.
+    /// </summary>
+    Task<WebAuthnAuthenticationResult> CompleteAuthenticationForStepUpAsync(
+        string assertionResponse,
+        string? ipAddress = null,
+        string? userAgent = null,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>

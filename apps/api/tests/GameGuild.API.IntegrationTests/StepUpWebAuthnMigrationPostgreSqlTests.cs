@@ -41,7 +41,7 @@ public sealed class StepUpWebAuthnMigrationPostgreSqlTests(ApiPostgreSqlFixture 
         await migrator.MigrateAsync(migration);
         Assert.False(context.Database.HasPendingModelChanges());
         Assert.Equal(original, await ReadBaseRowsAsync(context));
-        Assert.All(await context.Set<StepUpChallenge>().AsNoTracking().ToListAsync(), row => Assert.Null(row.WebAuthnChallengeHash));
+        Assert.All(await context.Set<StepUpChallenge>().AsNoTracking().Select(row => row.WebAuthnChallengeHash).ToListAsync(), nonce => Assert.Null(nonce));
         var store = new PostgreSqlStepUpChallengeStore(context);
         // The upgrade preserves the historical row, but an old unbound receipt
         // cannot become an authorized WebAuthn operation after the security fix.
@@ -51,17 +51,15 @@ public sealed class StepUpWebAuthnMigrationPostgreSqlTests(ApiPostgreSqlFixture 
             web.ReceiptHash!, DateTimeOffset.UtcNow, CancellationToken.None));
         Assert.Equal(original, await ReadBaseRowsAsync(context));
 
-        var bound = new StepUpChallenge
-        {
-            Id = Guid.NewGuid(), TenantId = Guid.NewGuid(), ActorId = Guid.NewGuid(), SessionId = Guid.NewGuid(),
-            OperationType = "identity.credentials.rotate", TargetReference = "credential/current", PayloadHash = Digest(),
-            CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-1), ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(5)
-        };
-        await store.AddAsync(bound, CancellationToken.None);
-        var subject = new StepUpSubject(bound.TenantId, bound.ActorId, bound.SessionId);
+        // This test targets the historical nonce migration, before the later counter
+        // column exists. Seed the released column set explicitly; current-schema
+        // runtime nonce binding is exercised by StepUpWebAuthnBindingPostgreSqlTests.
+        var bound = await InsertLegacyAsync(context, MfaMethod.WebAuthn);
         var nonce = Digest();
-        Assert.True(await store.BindWebAuthnChallengeAsync(bound.Id, subject, nonce, DateTimeOffset.UtcNow, CancellationToken.None));
-        Assert.True(await store.MarkWebAuthnVerifiedAsync(bound.Id, subject, nonce, Digest(), DateTimeOffset.UtcNow, CancellationToken.None));
+        Assert.Equal(1, await context.Database.ExecuteSqlInterpolatedAsync($"""
+            UPDATE "gameguild.authentication"."step_up_challenges"
+            SET webauthn_challenge_hash = {nonce} WHERE id = {bound.Id}
+            """));
         var upgraded = await ReadBaseRowsAsync(context);
         var applied = (await context.Database.GetAppliedMigrationsAsync()).ToArray();
 
@@ -70,7 +68,9 @@ public sealed class StepUpWebAuthnMigrationPostgreSqlTests(ApiPostgreSqlFixture 
         Assert.Equal("ck_step_up_challenges_webauthn_downgrade", rejected.ConstraintName);
         Assert.Equal(applied, (await context.Database.GetAppliedMigrationsAsync()).ToArray());
         Assert.Equal(upgraded, await ReadBaseRowsAsync(context));
-        var retained = await context.Set<StepUpChallenge>().AsNoTracking().SingleAsync(row => row.Id == bound.Id);
+        var retained = await context.Set<StepUpChallenge>().AsNoTracking()
+            .Where(row => row.Id == bound.Id)
+            .Select(row => new { row.WebAuthnChallengeHash, row.ReceiptHash, row.VerificationMethod }).SingleAsync();
         Assert.Equal(nonce, retained.WebAuthnChallengeHash);
         Assert.NotNull(retained.ReceiptHash);
         Assert.Equal(MfaMethod.WebAuthn, retained.VerificationMethod);
@@ -84,7 +84,7 @@ public sealed class StepUpWebAuthnMigrationPostgreSqlTests(ApiPostgreSqlFixture 
         await migrator.MigrateAsync(migration);
         Assert.False(context.Database.HasPendingModelChanges());
         Assert.Equal(original, await ReadBaseRowsAsync(context));
-        Assert.All(await context.Set<StepUpChallenge>().AsNoTracking().ToListAsync(), row => Assert.Null(row.WebAuthnChallengeHash));
+        Assert.All(await context.Set<StepUpChallenge>().AsNoTracking().Select(row => row.WebAuthnChallengeHash).ToListAsync(), nonce => Assert.Null(nonce));
     }
 
     private static async Task<StepUpChallenge> InsertLegacyAsync(ApplicationDbContext context, MfaMethod method)

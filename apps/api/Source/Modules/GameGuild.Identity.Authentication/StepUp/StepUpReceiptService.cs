@@ -70,6 +70,19 @@ public sealed class StepUpReceiptService(
         ArgumentNullException.ThrowIfNull(verification);
         var subject = RequireSubject();
         var challenge = await RequireActiveChallengeAsync(challengeId, subject, cancellationToken).ConfigureAwait(false);
+        if (verification.Method is not (MfaMethod.Totp or MfaMethod.BackupCode or MfaMethod.WebAuthn))
+        {
+            throw new StepUpVerificationFailedException("The requested MFA method cannot authorize step-up operations.");
+        }
+
+        // Reserve a durable slot before calling any factor, including when another
+        // host is already verifying this challenge. A reissued nonce never resets it.
+        if (!await challengeStore.TryReserveVerificationAttemptAsync(
+                challengeId, subject, timeProvider.GetUtcNow(), cancellationToken).ConfigureAwait(false))
+        {
+            throw new StepUpChallengeUnavailableException("Step-up challenge is unavailable.");
+        }
+
         var webAuthnChallengeHash = challenge.WebAuthnChallengeHash;
 
         var verifiedFactor = verification.Method switch
@@ -171,7 +184,7 @@ public sealed class StepUpReceiptService(
         MfaMethod method,
         CancellationToken cancellationToken)
     {
-        var result = await mfaService.VerifyMfaAsync(
+        var result = await mfaService.VerifyMfaForStepUpAsync(
             actorId,
             evidence,
             method,
@@ -190,7 +203,7 @@ public sealed class StepUpReceiptService(
             return null;
         }
 
-        var result = await webAuthnService.CompleteAuthenticationAsync(
+        var result = await webAuthnService.CompleteAuthenticationForStepUpAsync(
             assertion,
             cancellationToken: cancellationToken).ConfigureAwait(false);
         return result.Success && result.UserId == actorId

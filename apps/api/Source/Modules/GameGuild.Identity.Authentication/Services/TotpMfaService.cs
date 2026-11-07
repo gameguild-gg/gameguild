@@ -84,7 +84,17 @@ public sealed class TotpMfaService(
     /// <summary>
     ///     Verifies TOTP code and enables MFA if first-time setup.
     /// </summary>
-    public async Task<bool> VerifyTotpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default)
+    public Task<bool> VerifyTotpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default)
+        => VerifyTotpCoreAsync(userId, totpCode, deviceId, false, cancellationToken);
+
+    public Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return VerifyTotpCoreAsync(userId, totpCode, deviceId, true, cancellationToken);
+    }
+
+    private async Task<bool> VerifyTotpCoreAsync(Guid userId, string totpCode, string? deviceId,
+        bool propagateOperationalFailures, CancellationToken cancellationToken)
     {
         if (!_mfaOptions.Enabled)
         {
@@ -177,7 +187,7 @@ public sealed class TotpMfaService(
             return false;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch (Exception ex)
+        catch (Exception ex) when (!propagateOperationalFailures)
         {
             logger.LogError(ex, "Error verifying TOTP for user: {UserId}", userId);
             await attemptTrackingService.RecordMfaAttemptAsync(userId, MfaMethod.Totp, false, "System error", deviceId, cancellationToken).ConfigureAwait(false);

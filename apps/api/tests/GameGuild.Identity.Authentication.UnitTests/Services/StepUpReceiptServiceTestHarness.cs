@@ -56,6 +56,9 @@ internal sealed class RecordingStepUpChallengeStore : IStepUpChallengeStore
 {
     public List<StepUpChallenge> Challenges { get; } = [];
 
+    public Task<int> PruneExpiredAsync(DateTimeOffset now, int batchSize, CancellationToken cancellationToken)
+        => throw new NotSupportedException("Receipt-service tests do not implement SQL pruning.");
+
     public Task AddAsync(StepUpChallenge challenge, CancellationToken cancellationToken)
     {
         Challenges.Add(challenge);
@@ -74,7 +77,29 @@ internal sealed class RecordingStepUpChallengeStore : IStepUpChallengeStore
             challenge.ActorId == subject.ActorId &&
             challenge.SessionId == subject.SessionId &&
             challenge.ExpiresAt > now &&
+            challenge.VerifiedAt is null &&
+            challenge.VerificationAttempts < StepUpChallenge.MaximumVerificationAttempts &&
             challenge.ConsumedAt is null));
+    }
+
+    public Task<bool> TryReserveVerificationAttemptAsync(
+        Guid challengeId, StepUpSubject subject, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        lock (Challenges)
+        {
+            var challenge = Challenges.SingleOrDefault(candidate => candidate.Id == challengeId &&
+                candidate.TenantId == subject.TenantId && candidate.ActorId == subject.ActorId &&
+                candidate.SessionId == subject.SessionId && candidate.VerifiedAt is null &&
+                candidate.ConsumedAt is null && candidate.ExpiresAt > now &&
+                candidate.VerificationAttempts < StepUpChallenge.MaximumVerificationAttempts);
+            if (challenge is null)
+            {
+                return Task.FromResult(false);
+            }
+            challenge.VerificationAttempts++;
+            return Task.FromResult(true);
+        }
     }
 
     public Task<bool> MarkVerifiedAsync(

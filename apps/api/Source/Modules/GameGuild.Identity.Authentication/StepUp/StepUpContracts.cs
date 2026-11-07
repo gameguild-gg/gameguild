@@ -55,6 +55,10 @@ public sealed record StepUpReceiptResponse(string Receipt, DateTimeOffset Expire
 
 public sealed class StepUpChallenge
 {
+    public const int MaximumVerificationAttempts = 5;
+
+    public int VerificationAttempts { get; set; }
+
     public Guid Id { get; set; }
     public Guid TenantId { get; set; }
     public Guid ActorId { get; set; }
@@ -88,7 +92,15 @@ public interface IStepUpChallengeStore
 {
     Task AddAsync(StepUpChallenge challenge, CancellationToken cancellationToken);
 
+    Task<int> PruneExpiredAsync(DateTimeOffset now, int batchSize, CancellationToken cancellationToken);
+
     Task<StepUpChallenge?> FindActiveAsync(
+        Guid challengeId,
+        StepUpSubject subject,
+        DateTimeOffset now,
+        CancellationToken cancellationToken);
+
+    Task<bool> TryReserveVerificationAttemptAsync(
         Guid challengeId,
         StepUpSubject subject,
         DateTimeOffset now,

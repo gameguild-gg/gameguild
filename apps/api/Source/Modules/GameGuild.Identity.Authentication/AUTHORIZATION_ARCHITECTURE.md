@@ -3213,9 +3213,31 @@ and single-use behavior. Only digests are persisted, never assertions or raw non
 A schema downgrade refuses existing bound challenge evidence instead of silently
 dropping the nonce digests.
 
-Platform-wide triggering, per-challenge verification budgets and expired-row
-cleanup remain separate unfinished requirements of #1191. This binding change
-does not authorize passwordless MFA disable by itself.
+Platform-wide triggering remains a separate unfinished requirement of #1191.
+This binding change does not authorize passwordless MFA disable by itself.
+
+### Step-up verification budget and expired challenge retention (#1191)
+
+Each challenge permits at most five factor evaluations. An atomic, subject-scoped
+database update reserves a slot before a supported factor is called; concurrent
+requests cannot each spend the same remaining slot. Reissuing WebAuthn options
+does not reset the budget, and the fifth valid proof can still issue a receipt.
+The database constrains the counter to the inclusive range zero through five.
+
+Ordinary invalid evidence returns a private recorded-denial command outcome so
+the reserved attempt commits even though the HTTP response is a denial. Provider
+or storage failures, request cancellation, and receipt compare-and-set failures
+escape that outcome and roll back the enclosing command transaction. Strict
+step-up factor ports preserve this distinction while existing authentication
+entry points retain their legacy result contracts. WebAuthn's existing
+best-effort telemetry remains best effort; required backup-code consumption and
+audit writes still participate in the command's failure handling.
+
+A scoped cleanup worker runs once per minute and removes at most 128 challenges
+per sweep, oldest expiry first. Only rows expired for at least 24 hours qualify;
+live challenges and recently expired evidence remain intact. A dedicated expiry
+index supports the sweep. Cleanup retries a failed sweep on the next interval,
+honors host cancellation, and does not replace durable audit/event retention.
 
 ## Conclusion
 

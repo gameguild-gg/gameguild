@@ -123,7 +123,21 @@ public sealed class MfaService(
     }
 
     /// <inheritdoc />
-    public async Task<MfaVerificationResult> VerifyMfaAsync(Guid userId, string code, MfaMethod method = MfaMethod.Totp, CancellationToken cancellationToken = default)
+    public Task<MfaVerificationResult> VerifyMfaAsync(Guid userId, string code, MfaMethod method = MfaMethod.Totp, CancellationToken cancellationToken = default)
+        => VerifyMfaCoreAsync(userId, code, method, false, cancellationToken);
+
+    public Task<MfaVerificationResult> VerifyMfaForStepUpAsync(Guid userId, string code, MfaMethod method, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (method is not (MfaMethod.Totp or MfaMethod.BackupCode))
+        {
+            throw new ArgumentOutOfRangeException(nameof(method));
+        }
+        return VerifyMfaCoreAsync(userId, code, method, true, cancellationToken);
+    }
+
+    private async Task<MfaVerificationResult> VerifyMfaCoreAsync(Guid userId, string code, MfaMethod method,
+        bool propagateOperationalFailures, CancellationToken cancellationToken)
     {
         try
         {
@@ -141,8 +155,18 @@ public sealed class MfaService(
             {
                 bool isValid;
 
-                if (method == MfaMethod.Totp) { isValid = await totpMfaService.VerifyTotpAsync(userId, code, null, cancellationToken).ConfigureAwait(false); }
-                else if (method == MfaMethod.BackupCode) { isValid = await backupCodeMfaService.VerifyBackupCodeAsync(userId, code, null, cancellationToken).ConfigureAwait(false); }
+                if (method == MfaMethod.Totp)
+                {
+                    isValid = propagateOperationalFailures
+                        ? await totpMfaService.VerifyTotpForStepUpAsync(userId, code, null, cancellationToken).ConfigureAwait(false)
+                        : await totpMfaService.VerifyTotpAsync(userId, code, null, cancellationToken).ConfigureAwait(false);
+                }
+                else if (method == MfaMethod.BackupCode)
+                {
+                    isValid = propagateOperationalFailures
+                        ? await backupCodeMfaService.VerifyBackupCodeForStepUpAsync(userId, code, null, cancellationToken).ConfigureAwait(false)
+                        : await backupCodeMfaService.VerifyBackupCodeAsync(userId, code, null, cancellationToken).ConfigureAwait(false);
+                }
                 else if (method == MfaMethod.Sms)
                 {
                     if (smsMfaService is null) { isValid = false; }
@@ -185,7 +209,7 @@ public sealed class MfaService(
             return result;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch (Exception ex)
+        catch (Exception ex) when (!propagateOperationalFailures)
         {
             logger.LogError(ex, "Failed to verify MFA for user: {UserId}", userId);
 
