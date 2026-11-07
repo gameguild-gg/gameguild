@@ -207,7 +207,7 @@ export function CollapsiblePlugin() {
       editor.registerNodeTransform(CollapsibleContentNode, (node) => {
         const parent = node.getParent();
         if (!$isCollapsibleContainerNode(parent)) {
-          for (const child of node.getChildren<LexicalNode>()) {
+          for (const child of node.getChildren()) {
             node.insertBefore(child);
           }
           node.remove();
@@ -221,7 +221,7 @@ export function CollapsiblePlugin() {
         const parent = node.getParent();
         if (!$isCollapsibleContainerNode(parent)) {
           node.replace(
-            $createParagraphNode().append(...node.getChildren<LexicalNode>()),
+            $createParagraphNode().append(...node.getChildren()),
           );
           return;
         }
@@ -233,14 +233,14 @@ export function CollapsiblePlugin() {
         const firstChild = node.getFirstChild();
         if (!$isElementNode(firstChild)) {
           const paragraph = $createParagraphNode();
-          for (const child of node.getChildren<LexicalNode>()) {
+          for (const child of node.getChildren()) {
             paragraph.append(child);
           }
           node.append(paragraph);
         }
       }),
       editor.registerNodeTransform(CollapsibleContainerNode, (node) => {
-        const children = node.getChildren<LexicalNode>();
+        const children = node.getChildren();
         if (
           children.length !== 2 ||
           !$isCollapsibleTitleNode(children[0]) ||
