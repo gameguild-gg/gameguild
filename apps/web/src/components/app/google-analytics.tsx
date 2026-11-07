@@ -66,15 +66,19 @@ export function GoogleAnalytics({ measurementId: rawMeasurementId, __firebaseMea
 
   if (!measurementId || !transportReady) return null;
 
-  // Firebase Analytics with the SAME measurement id injects gtag.js itself on
-  // getAnalytics() (post-consent). A second gtag.js for the same id races two
-  // processors over one dataLayer — the survivor never registers our consent
-  // default/update (implicit-only consent, zero /g/collect hits; observed
-  // live 2026-11-07). Firebase's script is then the single transport; this
-  // component still owns consent commands, js/config bootstrap, and the
-  // ga-disable hard stop via the shared dataLayer.
+  // Shared-id deployments (GA id === NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID) need
+  // exactly ONE gtag.js whose queue is the default `dataLayer`:
+  // - Without `l=dataLayer`, Firebase's findGtagScriptOnPage() misses our tag
+  //   and injects a SECOND instance — two processors race, the survivor never
+  //   registers our consent default/update (implicit-only consent, zero
+  //   /g/collect hits; observed live 2026-11-07).
+  // - With `l=dataLayer`, Firebase finds this tag and skips its own injection:
+  //   single instance, created here, replays the full consent-gated queue.
   const firebaseMeasurementId = __firebaseMeasurementIdForTest?.trim() || process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID?.trim();
-  if (firebaseMeasurementId && firebaseMeasurementId === measurementId) return null;
+  const sharedWithFirebase = Boolean(firebaseMeasurementId && firebaseMeasurementId === measurementId);
+  const src = sharedWithFirebase
+    ? `https://www.googletagmanager.com/gtag/js?l=dataLayer&id=${measurementId}`
+    : `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
 
-  return <Script id="gg-ga4-loader" src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`} strategy="afterInteractive" />;
+  return <Script id="gg-ga4-loader" src={src} strategy="afterInteractive" />;
 }
