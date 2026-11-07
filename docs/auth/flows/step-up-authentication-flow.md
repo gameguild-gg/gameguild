@@ -93,6 +93,16 @@ sequenceDiagram
     RS->>ST: AddAsync - 5 minute row
     RS-->>U: 201 ChallengeId plus ExpiresAt
 
+    opt WebAuthn verification
+        U->>SC: POST challenges id webauthn-options
+        SC->>S: BeginStepUpWebAuthnCommand
+        SH->>RS: BeginWebAuthnAsync
+        RS->>MF: BeginAuthenticationAsync for current actor
+        MF-->>RS: Cryptographic challenge options
+        RS->>ST: BindWebAuthnChallengeAsync - nonce digest
+        RS-->>U: Options for this step-up challenge
+    end
+
     U->>SC: POST challenges id verify - Totp code
     SC->>S: VerifyStepUpChallengeCommand
     SH->>RS: VerifyAsync - L58
@@ -118,7 +128,7 @@ sequenceDiagram
 flowchart TD
     DF1["Client intent - operation plus exact payload"] -->|"operationType targetReference payloadHash"| DF2["StepUpController"]
     DF2 -->|"commands"| DF3["StepUpReceiptService"]
-    DF3 -->|"challenge rows"| DF4["step_up_challenges table<br/>tenant_id actor_id session_id operation_type<br/>target_reference payload_hash verified_at<br/>receipt_hash consumed_at"]
+    DF3 -->|"challenge rows"| DF4["step_up_challenges table<br/>tenant_id actor_id session_id operation_type<br/>target_reference payload_hash webauthn_challenge_hash<br/>verified_at receipt_hash consumed_at"]
     DF3 -->|"MFA evidence"| DF5["IMfaService or IWebAuthnAuthenticationService"]
     DF3 -->|"opaque receipt - returned once never stored plaintext"| DF1
     DF1 -->|"receipt inside operation request"| DF6["Economy protected endpoint"]
@@ -154,6 +164,9 @@ flowchart TD
 | 20 | Challenge-store outage during consume | exception inside serializable transaction | transaction aborts, protected action never runs (fail closed) |
 | 21 | Client reuses the *challenge id* for a new operation | challenge binding fixed at creation (`StepUp/StepUpReceiptService.cs:29-31`) | new operation needs a new challenge; old id 409s once consumed |
 | 22 | Actor token revoked between verify and consume | no token-state check in `ConsumeAsync` | receipt still consumed if within 5 min — step-up does not re-check authentication freshness mid-window (jti deny-list gap #1179) |
+| 23 | Assertion from login or another step-up challenge | nonce digest comparison before cryptographic verification | Denied without issuing a receipt |
+| 24 | New options issued while an earlier assertion is being verified | receipt write requires the original nonce digest | Earlier verification cannot commit a receipt |
+| 25 | Legacy WebAuthn receipt has no bound nonce | consumption requires a nonce digest for WebAuthn receipts | Denied; TOTP/backup-code receipt behavior is unchanged |
 
 ## 6. Endpoint Inventory
 
@@ -181,7 +194,7 @@ flowchart TD
 ## 9. Gaps — realistic scenarios the code does not handle
 
 1. **No platform-level trigger or signal.** Nothing decides "this action needs step-up" centrally: protection exists only where an endpoint threads a receipt through `EconomyStepUpExecutor`; the `StepUpAuthenticationRequiredResponse` DTO with risk levels and available methods (`DTOs/StepUpAuthenticationRequiredResponse.cs:7-35`) has **zero producers** — clients get no structured "step-up required" response, only a 409 string when a receipt is missing/invalid. Sensitive endpoints outside the economy family (e.g., API-key creation, service-account secret rotation) have no step-up gate at all.
-2. **The WebAuthn ceremony is not bound to the step-up challenge.** `BeginWebAuthnAsync` calls `BeginAuthenticationAsync(userId)` without passing the challenge id or its binding (`StepUp/StepUpReceiptService.cs:46-48`); any valid assertion for the user verifies (`:171-174`) — a assertion replayed/obtained from an unrelated WebAuthn ceremony satisfies step-up. Related hardening (attestation conveyance, user-verification) is in flight via PR #1172 for #1143.
+2. **WebAuthn ceremony binding is enforced server-side (#1191).** `BeginWebAuthnAsync` stores the SHA-256 digest of the provider-issued nonce on the tenant/actor/session/operation-bound challenge row. Verification compares the signed client-data challenge before calling the existing cryptographic verifier, then conditionally commits the receipt only if that same nonce remains current. Another operation, a sign-in ceremony, missing options, or options reissued during verification cannot authorize this challenge. Legacy WebAuthn receipts without this binding fail closed on consumption. The provider still verifies the signature, origin, relying party and credential owner; nonce equality is insufficient by itself. The remaining trigger, attempt-budget and cleanup gaps below keep #1191 open.
 3. **Unlimited verification attempts per challenge.** `VerifyAsync` never counts failures (`StepUp/StepUpReceiptService.cs:58-100`); within the 5-minute window a TOTP brute-forcer gets unbounded guesses (rate limiting exists only on token endpoints, not on `auth/step-up/*`).
 4. **Expired/abandoned challenge rows are never pruned.** No cleanup worker touches `step_up_challenges` (contrast `RefreshTokenCleanupOperation` for refresh tokens); the table grows unbounded with expired rows — only queried rows are filtered by `ExpiresAt`.
 5. **Step-up relies solely on claims for the session.** `RequireSubject` trusts the `session_id` claim without consulting the `UserSession` table (`:139-151`), so the orchestrated-auth gap where tokens carry `sid` without a session row (issue #1178) also weakens step-up's session scoping; likewise a mid-window token revocation (unpopulated jti deny-list, issue #1179) does not invalidate an in-flight 5-minute receipt window.

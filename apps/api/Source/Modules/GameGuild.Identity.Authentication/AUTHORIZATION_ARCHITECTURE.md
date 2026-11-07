@@ -3190,6 +3190,33 @@ Email/push sign-in completion, protected device approval, contact recovery routi
 and secure passwordless disable remain separate unfinished work in #1195. SDK
 and web consumers must use the first-factor continuation for the SMS challenge.
 
+### WebAuthn ceremony binding for step-up (#1191)
+
+Step-up options issuance binds the SHA-256 digest of the provider's random WebAuthn
+challenge to the existing tenant, actor, session, operation and payload challenge
+row. A successful provider response without usable challenge options fails closed.
+Verification checks the assertion's signed client-data challenge against that
+binding before invoking the existing cryptographic verifier. Signature, origin,
+relying-party and credential-ownership checks remain the provider's responsibility;
+matching a nonce alone never authorizes an operation.
+
+Receipt persistence is selected from a private proof produced only by a successful
+factor verifier, rather than re-reading the request's method discriminator. The
+WebAuthn proof carries the server-bound nonce digest; TOTP and backup-code proofs
+carry their explicitly verified method and cannot substitute for a WebAuthn proof.
+The conditional receipt write also requires the same nonce digest. Reissuing
+options while cryptographic verification is pending invalidates the earlier
+ceremony, and an unrelated sign-in or another step-up challenge cannot produce a
+receipt for this operation. Existing WebAuthn receipts without a bound nonce are
+rejected on consumption; TOTP and backup-code receipts retain their existing scope
+and single-use behavior. Only digests are persisted, never assertions or raw nonces.
+A schema downgrade refuses existing bound challenge evidence instead of silently
+dropping the nonce digests.
+
+Platform-wide triggering, per-challenge verification budgets and expired-row
+cleanup remain separate unfinished requirements of #1191. This binding change
+does not authorize passwordless MFA disable by itself.
+
 ## Conclusion
 
 The GameGuild Authorization Architecture provides a **comprehensive, enterprise-grade access control system** that balances:

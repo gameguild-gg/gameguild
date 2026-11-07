@@ -84,6 +84,45 @@ internal sealed class RecordingStepUpChallengeStore : IStepUpChallengeStore
         MfaMethod method,
         DateTimeOffset verifiedAt,
         CancellationToken cancellationToken)
+        => method == MfaMethod.WebAuthn
+            ? Task.FromResult(false)
+            : MarkVerified(challengeId, subject, receiptHash, method, null, verifiedAt);
+
+    public Task<bool> BindWebAuthnChallengeAsync(
+        Guid challengeId,
+        StepUpSubject subject,
+        string challengeHash,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var challenge = Challenges.SingleOrDefault(candidate => candidate.Id == challengeId &&
+            candidate.TenantId == subject.TenantId && candidate.ActorId == subject.ActorId &&
+            candidate.SessionId == subject.SessionId && candidate.VerifiedAt is null &&
+            candidate.ConsumedAt is null && candidate.ExpiresAt > now);
+        if (challenge is null)
+        {
+            return Task.FromResult(false);
+        }
+        challenge.WebAuthnChallengeHash = challengeHash;
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> MarkWebAuthnVerifiedAsync(
+        Guid challengeId,
+        StepUpSubject subject,
+        string challengeHash,
+        string receiptHash,
+        DateTimeOffset verifiedAt,
+        CancellationToken cancellationToken)
+        => MarkVerified(challengeId, subject, receiptHash, MfaMethod.WebAuthn, challengeHash, verifiedAt);
+
+    private Task<bool> MarkVerified(
+        Guid challengeId,
+        StepUpSubject subject,
+        string receiptHash,
+        MfaMethod method,
+        string? webAuthnChallengeHash,
+        DateTimeOffset verifiedAt)
     {
         var challenge = Challenges.SingleOrDefault(candidate =>
             candidate.Id == challengeId &&
@@ -91,6 +130,8 @@ internal sealed class RecordingStepUpChallengeStore : IStepUpChallengeStore
             candidate.ActorId == subject.ActorId &&
             candidate.SessionId == subject.SessionId &&
             candidate.VerifiedAt is null &&
+            candidate.ConsumedAt is null &&
+            (webAuthnChallengeHash is null || candidate.WebAuthnChallengeHash == webAuthnChallengeHash) &&
             candidate.ExpiresAt > verifiedAt);
         if (challenge is null)
             return Task.FromResult(false);
@@ -118,6 +159,7 @@ internal sealed class RecordingStepUpChallengeStore : IStepUpChallengeStore
             candidate.ReceiptHash == receiptHash &&
             candidate.VerifiedAt is not null &&
             candidate.ConsumedAt is null &&
+            (candidate.VerificationMethod != MfaMethod.WebAuthn || candidate.WebAuthnChallengeHash is not null) &&
             candidate.ExpiresAt > consumedAt);
         if (challenge is null)
             return Task.FromResult(false);

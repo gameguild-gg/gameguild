@@ -21086,6 +21086,12 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("verified_at");
 
+                    b.Property<string>("WebAuthnChallengeHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("webauthn_challenge_hash")
+                        .IsFixedLength();
+
                     b.HasKey("Id");
 
                     b.HasIndex("ReceiptHash")
@@ -21105,6 +21111,8 @@ namespace GameGuild.API.Database.Migrations
                             t.HasCheckConstraint("ck_step_up_challenges_payload_hash", "payload_hash ~ '^[0-9a-f]{64}$'");
 
                             t.HasCheckConstraint("ck_step_up_challenges_verification", "(verified_at IS NULL AND verification_method IS NULL AND receipt_hash IS NULL) OR (verified_at IS NOT NULL AND verification_method IS NOT NULL AND receipt_hash ~ '^[0-9a-f]{64}$')");
+
+                            t.HasCheckConstraint("ck_step_up_challenges_webauthn_hash", "webauthn_challenge_hash IS NULL OR webauthn_challenge_hash ~ '^[0-9a-f]{64}$'");
                         });
                 });
 
