@@ -6,9 +6,11 @@ namespace GameGuild.Identity.Authentication;
 
 public interface IStepUpRequirementService
 {
+    Task<StepUpAuthenticationRequiredResponse> CreateAsync(StepUpOperationBinding operation);
+
     Task<StepUpAuthenticationRequiredResponse> CreateAsync(
         StepUpOperationBinding operation,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 }
 
 /// <summary>Creates the operation-bound verification demand for a protected action.</summary>
@@ -19,9 +21,12 @@ public sealed class StepUpRequirementService(
     IWebAuthnCredentialRepository webAuthnCredentials,
     MfaOptions mfaOptions) : IStepUpRequirementService
 {
+    public Task<StepUpAuthenticationRequiredResponse> CreateAsync(StepUpOperationBinding operation) =>
+        CreateAsync(operation, CancellationToken.None);
+
     public async Task<StepUpAuthenticationRequiredResponse> CreateAsync(
         StepUpOperationBinding operation,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(operation);
         cancellationToken.ThrowIfCancellationRequested();
