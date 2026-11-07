@@ -13,6 +13,9 @@ public sealed class StepUpChallengeConfiguration : IEntityTypeConfiguration<Step
             table =>
             {
                 table.HasCheckConstraint(
+                    "ck_step_up_challenges_verification_attempts",
+                    "verification_attempts >= 0 AND verification_attempts <= 5");
+                table.HasCheckConstraint(
                     "ck_step_up_challenges_expiry",
                     "expires_at > created_at");
                 table.HasCheckConstraint(
@@ -31,6 +34,8 @@ public sealed class StepUpChallengeConfiguration : IEntityTypeConfiguration<Step
             });
         builder.HasKey(challenge => challenge.Id);
         builder.Property(challenge => challenge.Id).HasColumnName("id");
+        builder.Property(challenge => challenge.VerificationAttempts)
+            .HasColumnName("verification_attempts").HasDefaultValue(0).IsRequired();
         builder.Property(challenge => challenge.TenantId).HasColumnName("tenant_id").IsRequired();
         builder.Property(challenge => challenge.ActorId).HasColumnName("actor_id").IsRequired();
         builder.Property(challenge => challenge.SessionId).HasColumnName("session_id").IsRequired();
@@ -48,6 +53,8 @@ public sealed class StepUpChallengeConfiguration : IEntityTypeConfiguration<Step
             .HasMaxLength(32);
         builder.Property(challenge => challenge.ReceiptHash).HasColumnName("receipt_hash").HasMaxLength(64).IsFixedLength();
         builder.Property(challenge => challenge.ConsumedAt).HasColumnName("consumed_at");
+        builder.HasIndex(challenge => challenge.ExpiresAt)
+            .HasDatabaseName("ix_step_up_challenges_expiry_cleanup");
         builder.HasIndex(challenge => challenge.ReceiptHash)
             .IsUnique()
             .HasFilter("receipt_hash IS NOT NULL")
