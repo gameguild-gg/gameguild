@@ -5,7 +5,10 @@
 
 ## 1. Overview
 
-Step-up protects sensitive operations by requiring MFA evidence *within the current session* before the operation executes. The flow is three-phase. **Challenge:** the client calls `POST v{v}/auth/step-up/challenges` with a `StepUpOperationBinding` — `operationType` (≤128), `targetReference` (≤256) and a 64-hex-char SHA-256 `payloadHash` of the exact intended payload, all validated in the binding constructor (`StepUp/StepUpContracts.cs:9-37`). `StepUpReceiptService.CreateChallengeAsync` (`StepUp/StepUpReceiptService.cs:16-38`) requires an authenticated tenant + session actor (`RequireSubject`, `:139-151` — reads the `session_id` from actor typed attributes) and persists a `StepUpChallenge` row with a **5-minute lifetime** (`:14`) scoped to (tenant, actor, session). **Verify:** `POST challenges/{id}:verify` (`Controllers/StepUpController.cs:73-102`) presents `MfaMethod` + evidence; `VerifyAsync` (`StepUp/StepUpReceiptService.cs:58-100`) accepts only `Totp`/`BackupCode` (via `IMfaService.VerifyMfaAsync`, `:153-164`) or `WebAuthn` (via `IWebAuthnAuthenticationService.CompleteAuthenticationAsync` + user match, `:166-175`); on success it mints an opaque 256-bit receipt (`:177-183`), returns it **once**, and persists only its SHA-256 hash through a conditional `ExecuteUpdate` that requires the row to be live and unverified (`StepUp/PostgreSqlStepUpChallengeStore.cs:34-60`). WebAuthn needs an options round-trip first (`POST challenges/{id}:webauthn-options`, `:40-56`). **Consume:** the protected endpoint receives the receipt in its request body and runs the real action through `EconomyStepUpExecutor.ExecuteAsync` (`GameGuild.API/Core/Authorization/EconomyStepUpExecutor.cs:49-81`): inside a `Serializable` PostgreSQL transaction it calls `ConsumeAsync`, which conditionally stamps `ConsumedAt` only when subject, all three binding fields, the receipt hash, verification and expiry line up (`StepUp/PostgreSqlStepUpChallengeStore.cs:62-89`) — any mismatch, replay or expiry throws `StepUpReceiptInvalidException` (`StepUp/StepUpReceiptService.cs:115-118`), which the economy controllers map to **409 Conflict** (`GameGuild.API/Core/Controllers/EconomyPayoutExecutionController.cs:300-306`). There is no platform-wide "step-up required" signal — the unused `StepUpAuthenticationRequiredResponse` DTO (`DTOs/StepUpAuthenticationRequiredResponse.cs:7-35`) has no producers; callers learn of the requirement from the endpoint contract itself (receipt field + 409 message).
+Step-up protects sensitive operations by requiring MFA evidence *within the current session* before the operation executes. The flow is three-phase. **Challenge:** the client calls `POST v{v}/auth/step-up/challenges` with a `StepUpOperationBinding` — `operationType` (≤128), `targetReference` (≤256) and a 64-hex-char SHA-256 `payloadHash` of the exact intended payload, all validated in the binding constructor (`StepUp/StepUpContracts.cs:9-37`). `StepUpReceiptService.CreateChallengeAsync` (`StepUp/StepUpReceiptService.cs:16-38`) requires an authenticated tenant + session actor (`RequireSubject`, `:139-151` — reads the `session_id` from actor typed attributes) and persists a `StepUpChallenge` row with a **5-minute lifetime** (`:14`) scoped to (tenant, actor, session). **Verify:** `POST challenges/{id}:verify` (`Controllers/StepUpController.cs:73-102`) presents `MfaMethod` + evidence; `VerifyAsync` (`StepUp/StepUpReceiptService.cs:58-100`) accepts only `Totp`/`BackupCode` (via `IMfaService.VerifyMfaForStepUpAsync`, `:153-164`) or `WebAuthn` (via `IWebAuthnAuthenticationService.CompleteAuthenticationForStepUpAsync` + user match, `:166-175`); on success it mints an opaque 256-bit receipt (`:177-183`), returns it **once**, and persists only its SHA-256 hash through a conditional `ExecuteUpdate` that requires the row to be live and unverified (`StepUp/PostgreSqlStepUpChallengeStore.cs:34-60`). WebAuthn needs an options round-trip first (`POST challenges/{id}:webauthn-options`, `:40-56`). **Consume:** the protected endpoint receives the receipt in its request body and runs the real action through `EconomyStepUpExecutor.ExecuteAsync` (`GameGuild.API/Core/Authorization/EconomyStepUpExecutor.cs:49-81`): inside a `Serializable` PostgreSQL transaction it calls `ConsumeAsync`, which conditionally stamps `ConsumedAt` only when subject, all three binding fields, the receipt hash, verification and expiry line up (`StepUp/PostgreSqlStepUpChallengeStore.cs:62-89`) — any mismatch, replay or expiry throws `StepUpReceiptInvalidException` (`StepUp/StepUpReceiptService.cs:115-118`), which the economy controllers map to **409 Conflict** (`GameGuild.API/Core/Controllers/EconomyPayoutExecutionController.cs:300-306`). There is no platform-wide "step-up required" signal — the unused `StepUpAuthenticationRequiredResponse` DTO (`DTOs/StepUpAuthenticationRequiredResponse.cs:7-35`) has no producers; callers learn of the requirement from the endpoint contract itself (receipt field + 409 message).
+
+
+Current verification also reserves one of five durable attempt slots before evaluating a supported factor. Invalid proofs retain their slot; storage/provider failures, cancellation and failed conditional receipt writes roll back the command transaction. An expired-row worker keeps one additional day of evidence and deletes at most 128 rows per minute. The platform-level trigger remains unfinished.
 
 ## 2. End-to-End Flowchart — happy path and every edge case
 
@@ -41,8 +44,8 @@ flowchart TD
         V1["Client POST challenges id verify<br/>with method plus evidence<br/>StepUpController.cs L73"] --> V2{"Subject and active challenge<br/>StepUpReceiptService.cs L64"}
         V2 -- "unavailable" --> C409a
         V2 -- "active" --> V3{"Method switch<br/>L67"}
-        V3 -- "Totp or BackupCode" --> V4["IMfaService VerifyMfaAsync<br/>L153"]
-        V3 -- "WebAuthn" --> V5["CompleteAuthenticationAsync plus<br/>result UserId equals actor L166"]
+        V3 -- "Totp or BackupCode" --> V4["IMfaService VerifyMfaForStepUpAsync<br/>L153"]
+        V3 -- "WebAuthn" --> V5["CompleteAuthenticationForStepUpAsync plus<br/>result UserId equals actor L166"]
         V3 -- "any other method" --> V400b["StepUpVerificationFailedException - 400<br/>method cannot authorize step-up L77"]
         V4 -- "invalid code" --> V400c["StepUpVerificationFailedException - 400 MFA evidence invalid L82"]
         V5 -- "assertion fails or wrong user" --> V400c
@@ -93,10 +96,20 @@ sequenceDiagram
     RS->>ST: AddAsync - 5 minute row
     RS-->>U: 201 ChallengeId plus ExpiresAt
 
+    opt WebAuthn verification
+        U->>SC: POST challenges id webauthn-options
+        SC->>S: BeginStepUpWebAuthnCommand
+        SH->>RS: BeginWebAuthnAsync
+        RS->>MF: BeginAuthenticationAsync for current actor
+        MF-->>RS: Cryptographic challenge options
+        RS->>ST: BindWebAuthnChallengeAsync - nonce digest
+        RS-->>U: Options for this step-up challenge
+    end
+
     U->>SC: POST challenges id verify - Totp code
     SC->>S: VerifyStepUpChallengeCommand
     SH->>RS: VerifyAsync - L58
-    RS->>MF: VerifyMfaAsync or CompleteAuthenticationAsync
+    RS->>MF: VerifyMfaForStepUpAsync or CompleteAuthenticationForStepUpAsync
     MF-->>RS: success
     RS->>ST: MarkVerifiedAsync receipt hash - conditional
     ST-->>RS: true
@@ -118,7 +131,7 @@ sequenceDiagram
 flowchart TD
     DF1["Client intent - operation plus exact payload"] -->|"operationType targetReference payloadHash"| DF2["StepUpController"]
     DF2 -->|"commands"| DF3["StepUpReceiptService"]
-    DF3 -->|"challenge rows"| DF4["step_up_challenges table<br/>tenant_id actor_id session_id operation_type<br/>target_reference payload_hash verified_at<br/>receipt_hash consumed_at"]
+    DF3 -->|"challenge rows"| DF4["step_up_challenges table<br/>tenant_id actor_id session_id operation_type<br/>target_reference payload_hash webauthn_challenge_hash<br/>verified_at receipt_hash consumed_at"]
     DF3 -->|"MFA evidence"| DF5["IMfaService or IWebAuthnAuthenticationService"]
     DF3 -->|"opaque receipt - returned once never stored plaintext"| DF1
     DF1 -->|"receipt inside operation request"| DF6["Economy protected endpoint"]
@@ -139,10 +152,10 @@ flowchart TD
 | 5 | Verify a challenge that is already verified | `VerifiedAt == null` predicate (`:29`, `:51`) | 409 "expired or already verified" (`StepUp/StepUpReceiptService.cs:94-97`) |
 | 6 | Two tabs verify the same challenge concurrently | conditional `MarkVerifiedAsync` — exactly one `ExecuteUpdate` wins (`:44-59`) | loser gets 409; one receipt exists |
 | 7 | Unsupported method (EmailCode, Sms, None) | method switch default arm (`StepUp/StepUpReceiptService.cs:77`) | 400 — only Totp, BackupCode, WebAuthn authorize step-up |
-| 8 | Wrong TOTP / exhausted backup code | `VerifyMfaAsync` false (`:153-164`) | 400 "MFA evidence is invalid"; **no per-challenge attempt counter** |
+| 8 | Wrong TOTP / exhausted backup code | `VerifyMfaAsync` false (`:153-164`) | 400 "MFA evidence is invalid"; a durable slot is reserved before factor verification. At most five evaluations are allowed; the next request receives 409 before invoking the factor |
 | 9 | WebAuthn assertion from a different user | `result.UserId == actorId` check (`:174`) | 400 |
 | 10 | WebAuthn options requested for expired challenge | `RequireActiveChallengeAsync` (`:45`, `:121-137`) | 409 |
-| 11 | WebAuthn begin succeeds but assertion never completes | challenge row stays unverified until expiry (`StepUp/StepUpContracts.cs:80-81`) | row ages out after 5 min; no cleanup job exists |
+| 11 | WebAuthn begin succeeds but assertion never completes | challenge row stays unverified until expiry (`StepUp/StepUpContracts.cs:80-81`) | row becomes unusable after 5 min; the cleanup worker removes it only after another 24 hours |
 | 12 | Receipt replayed (second consume) | `ConsumedAt == null` predicate (`StepUp/PostgreSqlStepUpChallengeStore.cs:83`) | 409 invalid (`StepUp/StepUpReceiptService.cs:115-118`) |
 | 13 | Receipt used with a mutated payload | binding `PayloadHash` compare (`PostgreSqlStepUpChallengeStore.cs:79`) | 409 — hash binds receipt to the exact bytes |
 | 14 | Receipt used on a different operation/target | `OperationType`/`TargetReference` compare (`:77-78`) | 409 |
@@ -154,6 +167,9 @@ flowchart TD
 | 20 | Challenge-store outage during consume | exception inside serializable transaction | transaction aborts, protected action never runs (fail closed) |
 | 21 | Client reuses the *challenge id* for a new operation | challenge binding fixed at creation (`StepUp/StepUpReceiptService.cs:29-31`) | new operation needs a new challenge; old id 409s once consumed |
 | 22 | Actor token revoked between verify and consume | no token-state check in `ConsumeAsync` | receipt still consumed if within 5 min — step-up does not re-check authentication freshness mid-window (jti deny-list gap #1179) |
+| 23 | Assertion from login or another step-up challenge | nonce digest comparison before cryptographic verification | Denied without issuing a receipt |
+| 24 | New options issued while an earlier assertion is being verified | receipt write requires the original nonce digest | Earlier verification cannot commit a receipt |
+| 25 | Legacy WebAuthn receipt has no bound nonce | consumption requires a nonce digest for WebAuthn receipts | Denied; TOTP/backup-code receipt behavior is unchanged |
 
 ## 6. Endpoint Inventory
 
@@ -173,7 +189,7 @@ flowchart TD
 
 | Entity / store | Fields that matter | Ref |
 |----------------|--------------------|-----|
-| `StepUpChallenge` → `gameguild.authentication.step_up_challenges` | `TenantId`, `ActorId`, `SessionId`, `OperationType` (128), `TargetReference` (256), `PayloadHash` (64 fixed hex), `CreatedAt`, `ExpiresAt`, `VerifiedAt`, `VerificationMethod`, `ReceiptHash` (64 fixed hex, indexed), `ConsumedAt` | `StepUp/StepUpContracts.cs:56-81`, `Data/Configurations/StepUpChallengeConfiguration.cs:10-50` (check constraints enforce state machine) |
+| `StepUpChallenge` → `gameguild.authentication.step_up_challenges` | `TenantId`, `ActorId`, `SessionId`, `OperationType` (128), `TargetReference` (256), `PayloadHash` (64 fixed hex), `CreatedAt`, `ExpiresAt`, `VerificationAttempts` (0–5), `VerifiedAt`, `VerificationMethod`, `ReceiptHash` (64 fixed hex, indexed), `ConsumedAt` | `StepUp/StepUpContracts.cs:56-81`, `Data/Configurations/StepUpChallengeConfiguration.cs:10-50` (check constraints enforce state machine) |
 | Receipt (client-held) | 256-bit base64url opaque string; only its SHA-256 hash is persisted | `StepUp/StepUpReceiptService.cs:177-186` |
 | Operation event stream | the three command events above | `Architecture/StepUpEventContracts.cs:4-6` |
 | Consuming command evidence | receipt evidence hash persisted by protected actions | `GameGuild.API/Core/Authorization/EconomyStepUpExecutor.cs:75-77` |
@@ -181,8 +197,8 @@ flowchart TD
 ## 9. Gaps — realistic scenarios the code does not handle
 
 1. **No platform-level trigger or signal.** Nothing decides "this action needs step-up" centrally: protection exists only where an endpoint threads a receipt through `EconomyStepUpExecutor`; the `StepUpAuthenticationRequiredResponse` DTO with risk levels and available methods (`DTOs/StepUpAuthenticationRequiredResponse.cs:7-35`) has **zero producers** — clients get no structured "step-up required" response, only a 409 string when a receipt is missing/invalid. Sensitive endpoints outside the economy family (e.g., API-key creation, service-account secret rotation) have no step-up gate at all.
-2. **The WebAuthn ceremony is not bound to the step-up challenge.** `BeginWebAuthnAsync` calls `BeginAuthenticationAsync(userId)` without passing the challenge id or its binding (`StepUp/StepUpReceiptService.cs:46-48`); any valid assertion for the user verifies (`:171-174`) — a assertion replayed/obtained from an unrelated WebAuthn ceremony satisfies step-up. Related hardening (attestation conveyance, user-verification) is in flight via PR #1172 for #1143.
-3. **Unlimited verification attempts per challenge.** `VerifyAsync` never counts failures (`StepUp/StepUpReceiptService.cs:58-100`); within the 5-minute window a TOTP brute-forcer gets unbounded guesses (rate limiting exists only on token endpoints, not on `auth/step-up/*`).
-4. **Expired/abandoned challenge rows are never pruned.** No cleanup worker touches `step_up_challenges` (contrast `RefreshTokenCleanupOperation` for refresh tokens); the table grows unbounded with expired rows — only queried rows are filtered by `ExpiresAt`.
+2. **WebAuthn ceremony binding is enforced server-side (#1191).** `BeginWebAuthnAsync` stores the SHA-256 digest of the provider-issued nonce on the tenant/actor/session/operation-bound challenge row. Verification compares the signed client-data challenge before calling the existing cryptographic verifier, then conditionally commits the receipt only if that same nonce remains current. Another operation, a sign-in ceremony, missing options, or options reissued during verification cannot authorize this challenge. Legacy WebAuthn receipts without this binding fail closed on consumption. The provider still verifies the signature, origin, relying party and credential owner; nonce equality is insufficient by itself. The remaining trigger, attempt-budget and cleanup gaps below keep #1191 open.
+3. **Verification attempts are bounded (#1191).** Each supported factor evaluation first reserves one of five durable slots using an atomic tenant/actor/session-scoped update. Ordinary invalid proofs commit the slot through an internal recorded-denial outcome; operational failures and cancellation escape and roll back the command transaction. Reissuing options preserves the count, and a valid fifth proof can still issue a receipt. Strict factor ports preserve existing non-step-up authentication contracts.
+4. **Expired challenge cleanup is bounded (#1191).** A scoped worker removes up to 128 rows per minute, oldest expiry first, only after they have been expired for at least 24 hours. The store enforces the batch range and the schema includes an expiry index. Live or recently expired rows remain intact; durable event/audit retention is separate. The platform-trigger gap above keeps this issue open.
 5. **Step-up relies solely on claims for the session.** `RequireSubject` trusts the `session_id` claim without consulting the `UserSession` table (`:139-151`), so the orchestrated-auth gap where tokens carry `sid` without a session row (issue #1178) also weakens step-up's session scoping; likewise a mid-window token revocation (unpopulated jti deny-list, issue #1179) does not invalidate an in-flight 5-minute receipt window.
 6. **Receipt lifetime == challenge lifetime is tight for human flows.** The receipt dies at the challenge's `ExpiresAt` (`StepUp/PostgreSqlStepUpChallengeStore.cs:81`) — 5 minutes total for challenge + MFA + user confirmation of the sensitive dialog; a user verifying immediately then hesitating loses the receipt and must redo MFA.

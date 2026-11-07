@@ -3140,6 +3140,105 @@ Contact routing, passwordless primary re-verification and safe alternative-chann
 sign-in remain separate unfinished requirements of #1195. These cancellation and
 audit changes do not establish that the whole recovery issue is complete.
 
+### SMS proof purpose separation (#1195)
+
+SMS enrollment and sign-in challenge entries retain their operation purpose.
+Enrollment completion accepts only enrollment proofs; ordinary SMS verification
+accepts only challenge proofs. A mismatched-purpose submission preserves the
+original proof and its attempt budget, while digest comparison remains constant
+time. Valid proofs remain single-use, and failed delivery removes the issued
+proof.
+
+SMS completion binds its own code-only request; no authenticator SecretKey is
+required or used by the SMS proof. TOTP enrollment keeps its existing contract.
+
+Verified SMS enrollment creates a missing MFA configuration directly; a prior
+unverified authenticator setup is not a prerequisite.
+
+Starting or replacing SMS enrollment requires re-verification of the authenticated
+account's current password before code issuance. Missing/wrong proof, missing
+verifier or verifier failure cannot reach the SMS provider. Diagnostics and durable
+operation payloads exclude that password and the requested phone. Passwordless
+accounts remain fail-closed until a secure alternative primary-proof flow exists.
+
+SMS sign-in delivery accepts only the opaque first-factor continuation. Its
+server-resolved active VerifyFactor challenge binds subject, tenant, token
+version, policy and current verified SMS enrollment; legacy user selectors cannot
+redirect delivery. The issued digest entry also binds the exact challenge ID.
+Enrollment, unbound verification and another continuation cannot consume it.
+Scoped provider instances share atomic cache issuance/consumption and an account
+resend budget. Cancelled or failed dispatch removes only its own issued entry.
+This in-memory budget is local to the shared cache, not a claimed distributed
+quota across separate hosts.
+
+SMS completion rechecks account/policy under the subject transaction lock, applies
+the configured account attempt/lockout policy, then atomically consumes the durable
+continuation before issuing MFA session evidence and credentials. A concurrent
+completion cannot consume the continuation or create another session. Successful SMS
+setup completes the verified enrollment and clears unverified authenticator
+provisioning. Existing verified additional factors and TOTP-only sign-in enrollment
+remain intact. Channel and proof binding are server-owned; memory-cache proof
+consumption is not undone by a later database rollback.
+
+Durable session evidence admits verified SMS alongside TOTP, backup codes and
+WebAuthn at the PostgreSQL method constraint. Email and push remain excluded.
+The schema upgrade preserves existing evidence. A downgrade with SMS evidence
+must fail transactionally, preserving the evidence and the upgraded constraint;
+it cannot silently relabel or delete an already verified factor.
+
+Email/push sign-in completion, protected device approval, contact recovery routing
+and secure passwordless disable remain separate unfinished work in #1195. SDK
+and web consumers must use the first-factor continuation for the SMS challenge.
+
+### WebAuthn ceremony binding for step-up (#1191)
+
+Step-up options issuance binds the SHA-256 digest of the provider's random WebAuthn
+challenge to the existing tenant, actor, session, operation and payload challenge
+row. A successful provider response without usable challenge options fails closed.
+Verification checks the assertion's signed client-data challenge against that
+binding before invoking the existing cryptographic verifier. Signature, origin,
+relying-party and credential-ownership checks remain the provider's responsibility;
+matching a nonce alone never authorizes an operation.
+
+Receipt persistence is selected from a private proof produced only by a successful
+factor verifier, rather than re-reading the request's method discriminator. The
+WebAuthn proof carries the server-bound nonce digest; TOTP and backup-code proofs
+carry their explicitly verified method and cannot substitute for a WebAuthn proof.
+The conditional receipt write also requires the same nonce digest. Reissuing
+options while cryptographic verification is pending invalidates the earlier
+ceremony, and an unrelated sign-in or another step-up challenge cannot produce a
+receipt for this operation. Existing WebAuthn receipts without a bound nonce are
+rejected on consumption; TOTP and backup-code receipts retain their existing scope
+and single-use behavior. Only digests are persisted, never assertions or raw nonces.
+A schema downgrade refuses existing bound challenge evidence instead of silently
+dropping the nonce digests.
+
+Platform-wide triggering remains a separate unfinished requirement of #1191.
+This binding change does not authorize passwordless MFA disable by itself.
+
+### Step-up verification budget and expired challenge retention (#1191)
+
+Each challenge permits at most five factor evaluations. An atomic, subject-scoped
+database update reserves a slot before a supported factor is called; concurrent
+requests cannot each spend the same remaining slot. Reissuing WebAuthn options
+does not reset the budget, and the fifth valid proof can still issue a receipt.
+The database constrains the counter to the inclusive range zero through five.
+
+Ordinary invalid evidence returns a private recorded-denial command outcome so
+the reserved attempt commits even though the HTTP response is a denial. Provider
+or storage failures, request cancellation, and receipt compare-and-set failures
+escape that outcome and roll back the enclosing command transaction. Strict
+step-up factor ports preserve this distinction while existing authentication
+entry points retain their legacy result contracts. WebAuthn's existing
+best-effort telemetry remains best effort; required backup-code consumption and
+audit writes still participate in the command's failure handling.
+
+A scoped cleanup worker runs once per minute and removes at most 128 challenges
+per sweep, oldest expiry first. Only rows expired for at least 24 hours qualify;
+live challenges and recently expired evidence remain intact. A dedicated expiry
+index supports the sweep. Cleanup retries a failed sweep on the next interval,
+honors host cancellation, and does not replace durable audit/event retention.
+
 ## Conclusion
 
 The GameGuild Authorization Architecture provides a **comprehensive, enterprise-grade access control system** that balances:

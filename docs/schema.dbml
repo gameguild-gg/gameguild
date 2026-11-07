@@ -14209,6 +14209,7 @@ OR (purpose = 'EnrollFactor' AND enrollment_configuration_id IS NOT NULL
 
 Table "gameguild.authentication"."step_up_challenges" {
   "id" uuid [not null]
+  "verification_attempts" integer [not null, default: 0]
   "tenant_id" uuid [not null]
   "actor_id" uuid [not null]
   "session_id" uuid [not null]
@@ -14217,6 +14218,7 @@ Table "gameguild.authentication"."step_up_challenges" {
   "payload_hash" character(64) [not null]
   "created_at" timestamp [not null]
   "expires_at" timestamp [not null]
+  "webauthn_challenge_hash" character(64)
   "verified_at" timestamp
   "verification_method" "character varying(32)"
   "receipt_hash" character(64)
@@ -14227,10 +14229,13 @@ Table "gameguild.authentication"."step_up_challenges" {
     `expires_at > created_at` [name: 'ck_step_up_challenges_expiry']
     `payload_hash ~ '^[0-9a-f]{64}$'` [name: 'ck_step_up_challenges_payload_hash']
     `(verified_at IS NULL AND verification_method IS NULL AND receipt_hash IS NULL) OR (verified_at IS NOT NULL AND verification_method IS NOT NULL AND receipt_hash ~ '^[0-9a-f]{64}$')` [name: 'ck_step_up_challenges_verification']
+    `verification_attempts >= 0 AND verification_attempts <= 5` [name: 'ck_step_up_challenges_verification_attempts']
+    `webauthn_challenge_hash IS NULL OR webauthn_challenge_hash ~ '^[0-9a-f]{64}$'` [name: 'ck_step_up_challenges_webauthn_hash']
   }
 
   Indexes {
     id [pk, name: "PK_step_up_challenges"]
+    expires_at [name: "ix_step_up_challenges_expiry_cleanup"]
     (tenant_id, actor_id, session_id, expires_at) [name: "ix_step_up_challenges_subject_expiry"]
     receipt_hash [unique, name: "ux_step_up_challenges_receipt_hash"]
   }
@@ -14556,7 +14561,7 @@ Table "gameguild.authentication"."session_mfa_evidence" {
   "method" "character varying(32)" [not null]
 
   Checks {
-    `method IN ('Totp', 'BackupCode', 'WebAuthn')` [name: 'ck_session_mfa_method']
+    `method IN ('Totp', 'BackupCode', 'WebAuthn', 'Sms')` [name: 'ck_session_mfa_method']
     `policy_fingerprint ~ '^[a-f0-9]{64}$'` [name: 'ck_session_mfa_policy']
     `verified_at >= first_factor_verified_at AND verified_at <= first_factor_verified_at + INTERVAL '5 minutes'` [name: 'ck_session_mfa_time']
     `token_version > 0` [name: 'ck_session_mfa_version']

@@ -9,7 +9,9 @@ All enrollment endpoints live in `MfaController` (`Controllers/MfaController.cs:
 
 TOTP (`POST auth/mfa/totp:setup`, `Controllers/MfaController.cs:54-78`) generates a 160-bit Base32 secret (`Services/TotpMfaService.cs:209-217`), stores it **encrypted** (`:54`), and returns an `otpauth://` QR URI (`:222-228`) with a 10-minute setup window (`MfaOptions.SetupSessionDurationMinutes`, `SharedKernel/Configuration/ApplicationLayer/MfaOptions.cs:52`). Setup also pre-generates 10 backup codes of 12 chars (`MfaService.cs:37-44`, `MfaOptions.cs:28-34`) stored as PBKDF2-SHA256-600k hashes (`Services/BackupCodeMfaService.cs:205-213`) and returned in the authenticated setup response. The user can save these codes before confirming TOTP; they become usable only after successful confirmation. `totp:complete` (`:86-104`) verifies the code (±1 step clock skew, fixed-time compare, `TotpMfaService.cs:233-248`) and flips `IsEnabled` atomically through the `PostgreSqlTotpReplayStore` watermark (`Repositories/PostgreSqlTotpReplayStore.cs:51-69`, `INSERT … ON CONFLICT … WHERE last_accepted_step < new`), preventing same-step replay across nodes. Failed attempts accumulate (`MfaAttemptTrackingService.cs:312-334`): 5 failures → 15-minute lockout (`MfaOptions.cs:16-22`, checked `:372-379`).
 
-SMS/email OTP mirror `EmailCodeService` semantics (`Services/SmsMfaService.cs:11-17`, `Services/EmailMfaService.cs`): crypto-random 6-digit codes, SHA-256-digest-only storage in `IMemoryCache`, constant-time comparison with a dummy-digest miss path, single-use, 5-attempt ceiling, 10-minute lifetime, 60-second resend throttle (`SmsMfaService.cs:25-36`); delivery failure drops the live code (`:162-168`). Completing either enrollment sets `SmsPhoneNumber`/`EmailMfaAddress` and `IsEnabled = true` (`SmsMfaService.cs:76-79`, `EmailMfaService.cs:79-84`). Push registration stores a device token (16–512 chars) on the MFA row (`Services/PushMfaService.cs:31-60`); challenges are 120-second Pending/Approved/Denied state machines in `IDistributedCache` (`:63-168`), verified via `VerifyAsync` with explicit TOTP fallback on timeout (`:171-224`). Disable requires the account password (`Services/MfaService.cs:113-131`, issue #244 hardening), wipes all factor data, revokes every user token unconditionally and terminates sessions per option (`Services/MfaAttemptTrackingService.cs:144-196`).
+SMS/email OTP mirror `EmailCodeService` semantics (`Services/SmsMfaService.cs:11-17`, `Services/EmailMfaService.cs`): crypto-random 6-digit codes, SHA-256-digest-only storage in `IMemoryCache`, constant-time comparison with a dummy-digest miss path, single-use, 5-attempt ceiling, 10-minute lifetime, 60-second resend throttle (`SmsMfaService.cs:25-36`); delivery failure drops the live code (`:162-168`). SMS setup re-verifies the authenticated account password in `SmsPushMfaCommandHandler` before requesting delivery. `SmsMfaService.CompleteEnrollmentAsync` consumes an enrollment-purpose proof, creates the configuration when absent, and records the verified phone with `IsEnabled` and `IsSetupComplete`. First enrollment selects `Sms` and clears an unconfirmed TOTP setup; already verified factor configuration is retained. Email enrollment records `EmailMfaAddress` and enables its configuration through `EmailMfaService`. Push registration stores a device token (16–512 chars) on the MFA row (`Services/PushMfaService.cs:31-60`); challenges are 120-second Pending/Approved/Denied state machines in `IDistributedCache` (`:63-168`), verified via `VerifyAsync` with explicit TOTP fallback on timeout (`:171-224`). Disable requires the account password (`Services/MfaService.cs:113-131`, issue #244 hardening), wipes all factor data, revokes every user token unconditionally and terminates sessions per option (`Services/MfaAttemptTrackingService.cs:144-196`).
+
+The anonymous `sms:challenge` route accepts an opaque `mfaToken` from successful first-factor authentication. `SendSmsMfaChallengeHandler` delegates to `SignInMfaService.SendSmsChallengeAsync`, which checks the active `VerifyFactor` continuation, current subject/version/tenant/policy and enrolled SMS factor before resolving the recipient server-side. A user id alone cannot request delivery. Enrollment codes and sign-in codes have separate purposes; a sign-in code also belongs to its exact continuation. Code issuance remains subject to the atomic per-cache, per-user resend budget and ten-minute code lifetime, and completion still requires an active continuation. Email/push continuation support and distributed OTP storage remain gaps below.
 
 ## 2. End-to-End Flowchart — happy path and every edge case
 
@@ -52,22 +54,23 @@ flowchart TD
         B6 --> B7["200 plaintext codes shown once - L70<br/>invalidates all previous codes"]
     end
 
-    subgraph SMS["SMS OTP factor - issue 244"]
-        S1["POST auth mfa sms setup with phone<br/>MfaController.cs L197"] --> S2{"E.164 normalize 8 to 15 digits<br/>SmsMfaService.cs L225"}
-        S2 -- "invalid" --> S400a["400 Phone number must be E.164 - L45"]
-        S2 -- "valid" --> S3{"60s resend throttle per user<br/>IMemoryCache - L116"}
-        S3 -- "throttled" --> S400b["400 code was sent recently - L50"]
-        S3 -- "ok" --> S4["6 digit crypto random code<br/>SHA256 digest cached 10 min - L127"]
-        S4 --> S5["publish SmsMfaCodeRequestedNotification - L150"]
-        S5 -- "publish fails" --> S410a["code removed then rethrow - L165"]
-        S5 -- "queued" --> S6["200 masked phone plus 600s expiry"]
-        S6 --> S7["POST sms complete with code<br/>MfaController.cs L228"]
-        S7 --> S8{"ConsumeCode - L176<br/>constant time compare incl dummy digest"}
-        S8 -- "no entry or expired or 5 wrong attempts or reused" --> S400c["400 Invalid or expired SMS code - L66"]
-        S8 -- "match" --> S9{"user_mfa_configuration row exists - L69"}
-        S9 -- "missing" --> S400d["400 No MFA configuration - L73"]
-        S9 -- "exists" --> S10["SmsPhoneNumber saved IsEnabled true - L76"]
-        S10 --> S11["200 SMS MFA enrolled - L83"]
+    subgraph SMS["SMS OTP enrollment"]
+        S0["Authenticated POST sms setup<br/>phoneNumber plus password"] --> SP{"Password re-verification<br/>SmsPushMfaCommandHandler"}
+        SP -- "denied or verifier absent" --> S400p["400 - no SMS dispatched"]
+        SP -- "verified" --> S2{"Normalize E.164 phone<br/>SmsMfaService.StartEnrollmentAsync"}
+        S2 -- "invalid" --> S400a["400 Phone number must be E.164"]
+        S2 -- "valid" --> S3{"Atomic 60s resend budget per user<br/>shared IMemoryCache gate"}
+        S3 -- "throttled" --> S400b["400 code was sent recently"]
+        S3 -- "ok" --> S4["Six-digit random enrollment code<br/>digest cached for ten minutes"]
+        S4 --> S5["Publish SmsMfaCodeRequestedNotification"]
+        S5 -- "dispatch throws" --> S410a["Issued entry removed; exception propagates"]
+        S5 -- "queued" --> S6["200 masked phone plus expiry"]
+        S6 --> S7["Authenticated POST sms complete<br/>code only; actor from request context"]
+        S7 --> S8{"Consume enrollment-purpose proof<br/>fixed-time digest comparison"}
+        S8 -- "wrong purpose, expired, exhausted or reused" --> S400c["400 Invalid or expired SMS code"]
+        S8 -- "matched" --> S9["Create or update MFA configuration<br/>SmsPhoneNumber verified; setup complete"]
+        S9 --> S10["First enrollment selects Sms<br/>unconfirmed TOTP setup cleared"]
+        S10 --> S11["200 SMS MFA enrolled"]
     end
 
     subgraph EMAILF["Email OTP factor - issue 1152"]
@@ -211,7 +214,7 @@ flowchart TD
 | 15 | SMS/email code requested twice within 60 s | per-user throttle (`SmsMfaService.cs:115-124`, `EmailMfaService.cs`) | 400 "code was sent recently" |
 | 16 | SMS/email OTP delivery pipeline failure | code removed from cache then rethrow (`SmsMfaService.cs:162-168`) | no orphan live code; request errors out |
 | 17 | 5 wrong SMS/email code guesses | `FailedAttempts >= 5` invalidates the code (`SmsMfaService.cs:204-212`) | code dead; must wait throttle and request new |
-| 18 | SMS/email complete with no MFA config row | `configuration is null` (`SmsMfaService.cs:69-74`) | 400 "No MFA configuration found" |
+| 18 | SMS completion with no MFA configuration | `SmsMfaService.CompleteEnrollmentAsync` creates the row only after consuming a valid enrollment-purpose proof | SMS becomes the first verified factor; unverified or failed delivery does not enroll a phone |
 | 19 | Push device token malformed (<16 or >512 chars) | shape check (`PushMfaService.cs:41-44`) | 400 invalid token |
 | 20 | Push challenge expires (120 s) before response | `RespondAsync` expiry branch (`PushMfaService.cs:141-145`) | 400 "Challenge expired"; `VerifyAsync` signals TOTP fallback (`:197-208`) |
 | 21 | Push challenge answered twice | `Status != Pending` (`PushMfaService.cs:147-151`) | 400 "Challenge was already answered" — no decision flip-flop |
@@ -232,7 +235,7 @@ flowchart TD
 | POST `v{v}/auth/mfa/backup-codes:regenerate` | `RegenerateMfaBackupCodesCommand` → `BackupCodeMfaService.GenerateBackupCodesAsync` | `Controllers/MfaController.cs:170-185` |
 | POST `v{v}/auth/mfa/sms:setup` | `StartSmsMfaEnrollmentCommand` → `SmsMfaService.StartEnrollmentAsync` | `Controllers/MfaController.cs:197-220` |
 | POST `v{v}/auth/mfa/sms:complete` | `CompleteSmsMfaEnrollmentCommand` → `SmsMfaService.CompleteEnrollmentAsync` | `Controllers/MfaController.cs:228-246` |
-| POST `v{v}/auth/mfa/sms:challenge` (anonymous) | `SendSmsMfaChallengeCommand` → `SmsMfaService.SendChallengeAsync` | `Controllers/MfaController.cs:255-276` |
+| POST `v{v}/auth/mfa/sms:challenge` (anonymous) | `SendSmsMfaChallengeCommand` → `SendSmsMfaChallengeHandler` → `SignInMfaService.SendSmsChallengeAsync` | `Controllers/MfaController.cs:255-276` |
 | POST `v{v}/auth/mfa/email:setup` | `StartEmailMfaEnrollmentCommand` → `EmailMfaService.StartEnrollmentAsync` | `Controllers/MfaController.cs:287-309` |
 | POST `v{v}/auth/mfa/email:complete` | `CompleteEmailMfaEnrollmentCommand` → `EmailMfaService.CompleteEnrollmentAsync` | `Controllers/MfaController.cs:317-335` |
 | POST `v{v}/auth/mfa/email:challenge` (anonymous) | `SendEmailMfaChallengeCommand` → `EmailMfaService.SendChallengeAsync` | `Controllers/MfaController.cs:344-365` |
@@ -269,8 +272,8 @@ Setup/complete/regenerate/register routes are `[Authorize]`; `verify`, `sms:chal
 1. **Resolved in #1195: setup-time backup-code response.** The authenticated setup response now includes the exact generated backup-code set. PostgreSQL HTTP regressions cover the response, hashed storage, TOTP confirmation and single-use code verification.
 2. **Resolved in #1195: expected configuration denials.** MFA disabled / already enabled during TOTP setup and MFA disabled / not enabled during backup-code regeneration use an internal typed denial and the existing HTTP 400 result contract. Regeneration still requires successful password re-verification. Other exceptions, permission failures and cancellation propagate; an infrastructure failure still returns HTTP 500.
 3. **SMS and email OTP state is per-node `IMemoryCache`.** Code digests and throttle stamps (`SmsMfaService.cs:135-146`) live in process memory: on multi-node deployments the code can be issued by node A and verified against node B (fail), and the 60-second resend throttle is trivially bypassed by round-robin nodes. Push challenges got `IDistributedCache` (`PushMfaService.cs:18`); SMS/email did not.
-4. **No per-user authorization on the enrollment endpoints beyond authentication.** Any authenticated session (including a stolen one) can call `totp:setup` (overwriting a pending setup), `push:register-device` (replacing the push token with the attacker's device, `PushMfaService.cs:53`), or `sms:setup` (rebinding the phone). Only `mfa:disable` re-verifies the password. Enrollment changes are not step-up-gated.
+4. **Enrollment gates vary by operation.** SMS setup, push-device registration, backup-code regeneration and MFA disable require password re-verification. TOTP setup still relies on the authenticated session and can replace a pending setup. A common passwordless step-up policy for all enrollment mutations is not implemented by this SMS change.
 5. **Passwordless (OAuth-only) accounts can never disable MFA self-service.** `DisableMfaAsync` requires a stored `PasswordHash` (`Services/MfaService.cs:119-124`); an OAuth-created account (`User.CreateOAuthUser`) has none, so once MFA is on, disable is impossible without support — there is no alternative second-factor confirmation path.
 6. **Lockout only counts the shared `FailedAttempts` counter.** TOTP, backup-code, and (partially) other factor failures all increment one counter on the same row (`MfaAttemptTrackingService.cs:312-334`); there is no per-method lockout, so SMS-code spraying also locks TOTP, and the lockout is not surfaced distinctly to the user (all failures read "Invalid MFA code"/"Account locked" with identical 400s).
-7. **`sms:challenge`, `email:challenge`, `push:challenge` are `[AllowAnonymous]` with user-id-only payloads.** Anyone knowing a user's id can trigger SMS/email codes (60 s throttle per user is the only brake, `SmsMfaService.cs:115-124`) — an SMS-bombing / enumeration vector; the responses leak whether the factor is enrolled via distinct failure messages ("SMS MFA is not enrolled for this account.", `SmsMfaService.cs:92`).
+7. **Email/push challenge authorization remains incomplete.** Their anonymous user-id-based challenge surfaces still need protection against enumeration and unsolicited delivery. SMS now requires a valid first-factor continuation and resolves the enrolled recipient server-side; raw user ids, stale continuations and a proof from another purpose cannot authorize an SMS sign-in. SMS resend state remains per-node, as described above.
 8. **Push approval has no out-of-band binding to the requesting session.** The challenge state carries only `UserId` (`PushMfaService.cs:79-85`); `RespondAsync` accepts approve/deny from anyone presenting the challenge id with no device-attestation or proof-of-possession beyond the notification itself, and a denied challenge is removable only on `VerifyAsync` (`:214`) — a pending challenge left unanswered blocks nothing but is replayable as a fallback signal indefinitely within TTL+5min cache retention.

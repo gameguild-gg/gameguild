@@ -110,7 +110,7 @@ describe('GoogleAnalytics (consent mode v2)', () => {
       ['consent', 'default', expect.anything()],
       ['consent', 'update', { analytics_storage: 'granted', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' }],
       ['js', expect.any(Date)],
-      ['config', 'G-TESTID'],
+      ['config', 'G-TESTID', { send_page_view: false }],
     ]);
   });
 

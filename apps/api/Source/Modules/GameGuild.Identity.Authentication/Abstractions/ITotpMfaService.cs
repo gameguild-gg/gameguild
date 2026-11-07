@@ -16,6 +16,9 @@ public interface ITotpMfaService
     /// </summary>
     Task<bool> VerifyTotpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default);
 
+    /// <summary>Propagates operational failures so step-up transactions can roll back factor side effects.</summary>
+    Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default);
+
     /// <summary>
     ///     Generates a QR code image from QR code data.
     /// </summary>

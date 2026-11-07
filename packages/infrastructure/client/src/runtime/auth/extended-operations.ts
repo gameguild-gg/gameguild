@@ -57,7 +57,7 @@ export interface MfaVerifyInput {
   mfaSessionId?: string;
   /** The TOTP code or backup code. */
   code: string;
-  /** SMS is retained for source compatibility, but is unsupported by native sign-in completion. */
+  /** The code method used for this first-factor-bound sign-in continuation. */
   method: 'totp' | 'sms' | 'backup_code';
   /** Optional binding of this proof to the device used for the first factor. */
   deviceFingerprint?: string;
@@ -127,6 +127,37 @@ export interface SessionInfo {
 
 // ─── MFA Operations ─────────────────────────────────────────────
 
+export interface MfaSmsChallengeResult {
+  success: boolean;
+  phoneNumberMasked?: string;
+  expiresInSeconds?: number;
+  message?: string;
+}
+
+/** Request SMS delivery with only the first-factor continuation; no ordinary session bearer. */
+export async function requestSmsMfaChallenge(apiUrl: string, mfaToken: string): Promise<MfaSmsChallengeResult> {
+  if (typeof mfaToken !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(mfaToken)) {
+    throw new MfaVerificationError('A valid MFA challenge is required');
+  }
+  const mfa = new AuthMultiFactorModule(
+    createClient({
+      baseUrl: apiUrl,
+      autoRefresh: false,
+      timeout: 5_000,
+      devtools: { enabled: false },
+    }),
+  );
+  try {
+    const result = await mfa.postAuthMfaSmsChallenge({ mfaToken });
+    if (!result.ok || !result.data.phoneNumberMasked || result.data.expiresInSeconds <= 0) {
+      throw new MfaVerificationError('Unable to send a verification code. Try again later.');
+    }
+    return { success: true, phoneNumberMasked: result.data.phoneNumberMasked, expiresInSeconds: result.data.expiresInSeconds };
+  } catch {
+    throw new MfaVerificationError('Unable to send a verification code. Try again later.');
+  }
+}
+
 /** Settings use the current actor's bearer, never a sign-in challenge or a refresh flow. */
 function mfaSettingsClient(apiUrl: string, accessToken: string): AuthMultiFactorModule {
   return new AuthMultiFactorModule(
@@ -164,11 +195,11 @@ export async function verifyMfa(apiUrl: string, input: MfaVerifyInput): Promise<
   if (
     typeof mfaToken !== 'string' ||
     !/^[A-Za-z0-9_-]{43}$/.test(mfaToken) ||
-    (input.method !== 'totp' && input.method !== 'backup_code') ||
+    (input.method !== 'totp' && input.method !== 'backup_code' && input.method !== 'sms') ||
     typeof input.code !== 'string' ||
     !input.code.trim()
   ) {
-    throw new MfaVerificationError('A valid MFA challenge, TOTP or backup code is required');
+    throw new MfaVerificationError('A valid MFA challenge, method and code are required');
   }
 
   // Preserve older profile/claim extensions, while generated fields always win.
@@ -198,7 +229,7 @@ export async function verifyMfa(apiUrl: string, input: MfaVerifyInput): Promise<
   try {
     const response = await auth.postAuthMfaSignInComplete({
       mfaToken,
-      method: input.method === 'totp' ? 'Totp' : 'BackupCode',
+      method: input.method === 'sms' ? 'Sms' : input.method === 'totp' ? 'Totp' : 'BackupCode',
       code: input.code,
       ...(input.deviceFingerprint !== undefined ? { deviceFingerprint: input.deviceFingerprint } : {}),
     });
