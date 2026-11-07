@@ -3200,6 +3200,10 @@ binding before invoking the existing cryptographic verifier. Signature, origin,
 relying-party and credential-ownership checks remain the provider's responsibility;
 matching a nonce alone never authorizes an operation.
 
+Receipt persistence is selected from a private proof produced only by a successful
+factor verifier, rather than re-reading the request's method discriminator. The
+WebAuthn proof carries the server-bound nonce digest; TOTP and backup-code proofs
+carry their explicitly verified method and cannot substitute for a WebAuthn proof.
 The conditional receipt write also requires the same nonce digest. Reissuing
 options while cryptographic verification is pending invalidates the earlier
 ceremony, and an unrelated sign-in or another step-up challenge cannot produce a

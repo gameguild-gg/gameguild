@@ -72,11 +72,17 @@ public sealed class StepUpReceiptService(
         var challenge = await RequireActiveChallengeAsync(challengeId, subject, cancellationToken).ConfigureAwait(false);
         var webAuthnChallengeHash = challenge.WebAuthnChallengeHash;
 
-        var verified = verification.Method switch
+        var verifiedFactor = verification.Method switch
         {
-            MfaMethod.Totp or MfaMethod.BackupCode => await VerifyMfaAsync(
+            MfaMethod.Totp => await VerifyMfaAsync(
                 subject.ActorId,
-                verification,
+                verification.Evidence,
+                MfaMethod.Totp,
+                cancellationToken).ConfigureAwait(false),
+            MfaMethod.BackupCode => await VerifyMfaAsync(
+                subject.ActorId,
+                verification.Evidence,
+                MfaMethod.BackupCode,
                 cancellationToken).ConfigureAwait(false),
             MfaMethod.WebAuthn => await VerifyWebAuthnAsync(
                 subject.ActorId,
@@ -86,18 +92,20 @@ public sealed class StepUpReceiptService(
             _ => throw new StepUpVerificationFailedException("The requested MFA method cannot authorize step-up operations.")
         };
 
-        if (!verified)
+        if (verifiedFactor is null)
         {
             throw new StepUpVerificationFailedException("MFA evidence is invalid.");
         }
 
         var receipt = CreateOpaqueReceipt();
         var now = timeProvider.GetUtcNow();
-        var persisted = verification.Method == MfaMethod.WebAuthn
+        // The successful verifier supplies the persistence proof. The request's
+        // method discriminator cannot independently select a weaker write path.
+        var persisted = verifiedFactor.WebAuthnChallengeHash is { } verifiedChallengeHash
             ? await challengeStore.MarkWebAuthnVerifiedAsync(
-                challengeId, subject, webAuthnChallengeHash!, Hash(receipt), now, cancellationToken).ConfigureAwait(false)
+                challengeId, subject, verifiedChallengeHash, Hash(receipt), now, cancellationToken).ConfigureAwait(false)
             : await challengeStore.MarkVerifiedAsync(
-                challengeId, subject, Hash(receipt), verification.Method, now, cancellationToken).ConfigureAwait(false);
+                challengeId, subject, Hash(receipt), verifiedFactor.Method, now, cancellationToken).ConfigureAwait(false);
         if (!persisted)
         {
             throw new StepUpChallengeUnavailableException("Step-up challenge is expired or already verified.");
@@ -157,35 +165,40 @@ public sealed class StepUpReceiptService(
         return new StepUpSubject(tenantId, actorId, sessionId);
     }
 
-    private async Task<bool> VerifyMfaAsync(
+    private async Task<VerifiedStepUpFactor?> VerifyMfaAsync(
         Guid actorId,
-        StepUpVerification verification,
+        string evidence,
+        MfaMethod method,
         CancellationToken cancellationToken)
     {
         var result = await mfaService.VerifyMfaAsync(
             actorId,
-            verification.Evidence,
-            verification.Method,
+            evidence,
+            method,
             cancellationToken).ConfigureAwait(false);
-        return result.Success;
+        return result.Success ? new VerifiedStepUpFactor(method, null) : null;
     }
 
-    private async Task<bool> VerifyWebAuthnAsync(
+    private async Task<VerifiedStepUpFactor?> VerifyWebAuthnAsync(
         Guid actorId,
         string? challengeHash,
         string assertion,
         CancellationToken cancellationToken)
     {
-        if (!MatchesWebAuthnChallenge(challengeHash, assertion))
+        if (challengeHash is null || !MatchesWebAuthnChallenge(challengeHash, assertion))
         {
-            return false;
+            return null;
         }
 
         var result = await webAuthnService.CompleteAuthenticationAsync(
             assertion,
             cancellationToken: cancellationToken).ConfigureAwait(false);
-        return result.Success && result.UserId == actorId;
+        return result.Success && result.UserId == actorId
+            ? new VerifiedStepUpFactor(MfaMethod.WebAuthn, challengeHash)
+            : null;
     }
+
+    private sealed record VerifiedStepUpFactor(MfaMethod Method, string? WebAuthnChallengeHash);
 
     private static bool MatchesWebAuthnChallenge(string? challengeHash, string assertion)
     {
