@@ -114,6 +114,15 @@ describe('GoogleAnalytics (consent mode v2)', () => {
     ]);
   });
 
+  it('does not inject gtag.js when Firebase owns the same measurement id (double-load race)', () => {
+    persistConsent(true);
+    render(<GoogleAnalytics measurementId="G-FB-SHARED" __firebaseMeasurementIdForTest="G-FB-SHARED" />);
+
+    const layer = analyticsWindow().dataLayer!;
+    expect(scriptRenders).toHaveLength(0);
+    expect(layer.some((e) => Array.isArray(e) && e[0] === 'config')).toBe(true);
+  });
+
   it('marketing-only consent does not enable analytics storage', () => {
     persistConsent(false, true);
     render(<GoogleAnalytics measurementId="G-TESTID" />);
