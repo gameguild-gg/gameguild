@@ -114,12 +114,16 @@ describe('GoogleAnalytics (consent mode v2)', () => {
     ]);
   });
 
-  it('does not inject gtag.js when Firebase owns the same measurement id (double-load race)', () => {
+  it('injects the shared-queue gtag.js (l=dataLayer) when Firebase owns the same measurement id', () => {
     persistConsent(true);
     render(<GoogleAnalytics measurementId="G-FB-SHARED" __firebaseMeasurementIdForTest="G-FB-SHARED" />);
 
     const layer = analyticsWindow().dataLayer!;
-    expect(scriptRenders).toHaveLength(0);
+    expect(scriptRenders).toHaveLength(1);
+    expect(scriptRenders[0]).toMatchObject({
+      id: 'gg-ga4-loader',
+      src: 'https://www.googletagmanager.com/gtag/js?l=dataLayer&id=G-FB-SHARED',
+    });
     expect(layer.some((e) => Array.isArray(e) && e[0] === 'config')).toBe(true);
   });
 
