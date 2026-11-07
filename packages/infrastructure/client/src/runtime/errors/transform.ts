@@ -18,6 +18,7 @@ interface ProblemDetails {
   instance?: string;
   traceId?: string;
   errors?: Record<string, string[]>;
+  stepUpRequired?: boolean;
 }
 
 /**
@@ -44,6 +45,11 @@ export async function createApiError(response: Response): Promise<ApiError> {
     detail: body?.detail,
     traceId: body?.traceId,
   };
+
+  // Preserve the verification demand for callers; HTTP 403 remains an authorization error.
+  if (status === 403 && body?.stepUpRequired === true) {
+    return { ...error, metadata: { stepUp: body } };
+  }
 
   // Add field errors for validation errors
   if (code === 'VALIDATION_ERROR' && body?.errors) {

@@ -198,6 +198,38 @@ if (!result.ok) {
 }
 ```
 
+### Trusted-device verification
+
+A trusted-device request can return HTTP 403 with a verification demand in
+`error.metadata.stepUp`. Validate it with the generated schema, verify a listed
+factor, then retry the same device name with the returned receipt.
+
+```typescript
+import {
+  createClient,
+  AuthTrustedDevicesModule,
+  AuthStepUpModule,
+  IdentityAuthenticationStepUpAuthenticationRequiredOutputSchema,
+} from '@game-guild/client';
+
+async function trustDevice(client: ReturnType<typeof createClient>, deviceName: string, backupCode: string) {
+  const devices = new AuthTrustedDevicesModule(client);
+  const attempt = await devices.postAuthTrustedDevices({ deviceName });
+  if (attempt.ok || attempt.error.status !== 403) return attempt;
+
+  const demand = IdentityAuthenticationStepUpAuthenticationRequiredOutputSchema.safeParse(attempt.error.metadata?.stepUp);
+  if (!demand.success || !demand.data.stepUpRequired || !demand.data.challengeId ||
+      !demand.data.availableMethods?.includes('BackupCode')) return attempt;
+
+  const proof = await new AuthStepUpModule(client).postAuthStepUpChallengesVerify(demand.data.challengeId, {
+    method: 'BackupCode', evidence: backupCode,
+  });
+  if (!proof.ok) return proof;
+  if (!proof.data.receipt) return attempt;
+  return devices.postAuthTrustedDevices({ deviceName, stepUpReceipt: proof.data.receipt });
+}
+```
+
 ## Multi-Tenancy
 
 Configure tenant context for all requests:
