@@ -76,7 +76,12 @@ describe('sendToGa4', () => {
     const w = {} as ConsentWindow;
     sendToGa4(w, 'web_vitals', { metric_name: 'LCP' });
     expect(w.dataLayer).toBeDefined();
-    expect(w.dataLayer).toContainEqual(['event', 'web_vitals', { metric_name: 'LCP' }]);
+    // arguments object, not array (gtag.js requirement) — 'callee' presence marks it,
+    // but reading .callee in strict mode throws, so check with `in`.
+    const entry = w.dataLayer?.[0] as object;
+    expect(entry).toMatchObject({ 0: 'event', 1: 'web_vitals', 2: { metric_name: 'LCP' } });
+    expect(Array.isArray(entry)).toBe(false);
+    expect('callee' in entry).toBe(true);
   });
 
   it('fails closed on shim errors', () => {
