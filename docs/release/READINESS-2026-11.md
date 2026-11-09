@@ -200,7 +200,17 @@ Estimated aggregate to flip the overall verdict: items 1–8 are the launch gate
 including review); item 9 gates only the payout/treasury switch, not the API launch; item 10 is
 bookkeeping.
 
-## 6. Operational readiness
+## 6. Application verification and deployment scope
+
+**Scope correction (maintainer review on #1310 / #1300):** this section concerns
+application behavior and reproducible application-test evidence. Production backup
+and restore topology, RPO/RTO, retention, rollout gates and drill schedules are
+operator-owned deployment decisions. The public application repository provides
+local Docker Compose and environment setup; it does not impose a production
+platform or require private operational evidence to be published here. Missing
+infrastructure documentation in this repository is not an application defect or
+an operational-readiness finding. See `docs/operations/disaster-drill.md` for this
+boundary. The dated findings below retain their original revision/test scope.
 
 **Workers and DLQ posture** (`docs/operations/background-workers.md`, audited 2026-11-02): 47
 implementations, 45+1 registered. Reference implementations with full DLQ semantics exist
@@ -219,19 +229,16 @@ compliance N3); Economy core/compliance outboxes grow unbounded (N1/N2); no part
 audit family (hot/archive split + batch cap is the only size lever); webhook raw-payload retention
 opt-in/default-off (deliberate, PII-driven).
 
-**Rollback / migration rehearsal**: the Devtron runbook *requires* expand/contract migrations, a
-pre-deploy migration job proven in staging (`DEVTRON_API_PREDEPLOY_MIGRATIONS`), and **three consecutive
-staging releases including a forced-smoke rollback** before production cutover, plus three healthy
-production releases recording rollback results. **Status of those executions: still UNEVIDENCED** — no
-execution record (run logs, release-register entries, rollback results) exists in the repository, and
-this review did not have access to the deployment environment to verify them. This is a hard
-verification item for the release owner; the runbook's own standard says image rollback never reverses
-schema, so the staging migration-failure and rollback drills must be evidenced before GA. Database
-backup/restore drills: **procedure now defined — execution unevidenced** (`docs/operations/disaster-drill.md`).
+**Migration and recovery scope:** migration correctness and data-loss behavior
+can be tested using disposable databases. Operators select their own deployment
+pipeline, staging validation and production recovery procedures. This application
+review does not require a particular release system, release count, backup
+mechanism or restore-point objective, and does not infer missing backups from the
+absence of a public infrastructure runbook.
 
-**Update 2026-11-04 (ops rehearsal campaign, PR "ops: migration/rollback rehearsal + load smoke +
-disaster drills"):** the previously-UNKNOWN *capability* halves are now rehearsed and documented,
-resolving the two UNKNOWN rows above into concrete verdicts:
+**Historical application-test evidence (2026-11-04/05, PR #1300):** the following
+results describe the recorded disposable environment and application revision.
+They do not certify a production deployment or create operational release gates.
 
 - **Migration/rollback rehearsal: REHEARSED (locally, disposable PG 17, CI-pinned image) — procedure
   + script + findings delivered.** `docs/operations/migration-rehearsal.md` +
@@ -246,8 +253,8 @@ resolving the two UNKNOWN rows above into concrete verdicts:
   contradictory (status admits `'deadlettered'`, lifecycle tests `'dead_lettered'`, so the
   application's terminal dead-letter write fails at the database — DLQ cannot function as shipped)
   and its Down() **cannot execute once any dead-lettered row exists** (constraint re-add violates,
-  live-reproduced 23514). Fix #1285 before merge. The Devtron staging forced-smoke-rollback
-  executions remain the open verification item.
+  live-reproduced 23514). This is the historical application-migration finding;
+  its current disposition must be checked against the relevant fix and revision.
 - **Load smoke: DELIVERED AND GREEN IN CI** (run 41942955514, 2026-11-05, N=10 × K=25 against
   fully migrated PostgreSQL on the real Kestrel/JWT host): all six paths profiled with zero 5xx
   and every p95 budget held — checkout 1323 ms, cart-add 1320 ms, feed 1259 ms (budget 2500,
@@ -260,16 +267,14 @@ resolving the two UNKNOWN rows above into concrete verdicts:
   batch (#1197, #1082–#1091) and now reproducible on demand via this harness. The harness
   tolerates and records the 200/401 split while keeping zero-5xx and p95 as hard bars; this is
   new issue material against the auth hardening batch.
-- **Disaster drills (paper): RUNBOOK DELIVERED — drills not yet executed.**
-  `docs/operations/disaster-drill.md`: DB restore-point objective (RPO 15 min / RTO 1 h PROPOSED;
-  **KNOWN GAP — no production backup topology exists anywhere in-repo**, so the objective is NOT
-  MET until defined and drilled), outbox poison-message recovery (the `/v1/admin/events` DLQ +
-  replay surface, worker restart order; academic/fraud DLQ blocked on PR #1285's F3/F4 defects),
-  key-rotation emergency (**KNOWN GAP — rotation still dead on develop, #1189; the validated fix's
-  delivery path is #1164 → #1264 → #1273, merged to `main` f4b1d8e7 on 2026-11-04, pending
-  develop sync — verify `IKeyRotationService` DI + hosted worker per-SHA before relying on the
-  rotation surface; static-rotation fallback procedure documented**), and webhook signing-secret
-  rotation (dual-accept window verified against the code; `POST /api/v1/billing/webhooks/secrets:rotate`).
+- **Production recovery and disaster drills: OPERATOR-OWNED / OUTSIDE THIS REVIEW.**
+  The earlier proposed recovery objectives and the claim that missing in-repo
+  topology was a backup implementation gap are withdrawn. Production backup and
+  recovery designs, implementation, verification and incident evidence belong to
+  the deployment operator's private operational sources. Application authorization,
+  key-handling, migration and replay defects continue to be assessed on their own
+  reproducible evidence. `docs/operations/disaster-drill.md` now records this scope
+  boundary rather than prescribing production recovery procedures.
 
 ## 7. Method and citation hygiene
 
