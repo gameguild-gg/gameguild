@@ -236,6 +236,34 @@ describe("social feed actions", () => {
     );
   });
 
+  it("throws a typed AUTHENTICATION_ERROR when the session is already gone", async () => {
+    mocks.getToken.mockResolvedValue(null);
+
+    await expect(setPostReaction("post-1", "Like")).rejects.toEqual(
+      expect.objectContaining<Partial<FeedMutationError>>({
+        name: "FeedMutationError",
+        status: 401,
+        code: "AUTHENTICATION_ERROR",
+      }),
+    );
+    expect(mocks.request).not.toHaveBeenCalled();
+  });
+
+  it("normalizes API 401 responses to the typed AUTHENTICATION_ERROR", async () => {
+    mocks.request.mockResolvedValue({
+      ok: false,
+      error: { status: 401, code: "UNAUTHORIZED", message: "raw api payload" },
+    });
+
+    await expect(sharePost("post-1")).rejects.toEqual(
+      expect.objectContaining<Partial<FeedMutationError>>({
+        name: "FeedMutationError",
+        status: 401,
+        code: "AUTHENTICATION_ERROR",
+      }),
+    );
+  });
+
   it("returns concrete states for reaction removal, unsaving, and following", async () => {
     mocks.request
       .mockResolvedValueOnce({ ok: true, data: undefined })

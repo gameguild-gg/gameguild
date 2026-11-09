@@ -5,16 +5,35 @@ import { AccessibilitySyncInitializer } from '@/components/settings/accessibilit
 import { EditorPreferencesSyncInitializer } from '@/components/settings/editor-preferences-sync-initializer';
 import { ThemeSyncInitializer } from '@/components/settings/theme-sync-initializer';
 import { redirect } from '@/i18n/navigation';
+import { headers } from 'next/headers';
 import React, { Suspense } from 'react';
 import { NotificationsSlot } from './notifications-slot';
+
+/**
+ * The browser-visible path the proxy forwarded (issue #864): layouts receive
+ * no search params, so the fallback guard recovers the real target for the
+ * sign-in callbackUrl instead of losing it. Same pattern as the
+ * (dashboards) layout; non-slash-relative values are rejected.
+ */
+async function currentPublicPath(): Promise<string | null> {
+  try {
+    const forwarded = (await headers()).get('x-gameguild-path');
+    return forwarded?.startsWith('/') && !forwarded.startsWith('//') ? forwarded : null;
+  } catch {
+    return null;
+  }
+}
 
 export default async function Layout({ children, params }: LayoutProps<'/[locale]'>): Promise<React.JSX.Element> {
   const { locale } = await params;
   const session = await auth();
 
   if (!session || typeof session === 'function') {
-    // Home is the default post-sign-in destination — no callbackUrl needed.
-    redirect({ href: { pathname: '/sign-in' }, locale });
+    // Fallback guard for when the proxy-level authorized callback misses:
+    // bounce to /sign-in with the original target as callbackUrl so the
+    // post-sign-in flow returns where the visitor was.
+    const callbackUrl = (await currentPublicPath()) ?? '/feed';
+    redirect({ href: { pathname: '/sign-in', query: { callbackUrl } }, locale });
     throw new Error('Unauthenticated social access');
   }
 

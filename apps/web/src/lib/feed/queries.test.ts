@@ -108,6 +108,36 @@ describe("social feed queries", () => {
     );
   });
 
+  it("throws a non-retryable AUTHENTICATION_ERROR when the session is already gone", async () => {
+    mocks.getToken.mockResolvedValue(null);
+
+    await expect(loadSocialFeed({ scope: "for-you" })).rejects.toEqual(
+      expect.objectContaining<Partial<SocialFeedRequestError>>({
+        name: "SocialFeedRequestError",
+        status: 401,
+        code: "AUTHENTICATION_ERROR",
+        retryable: false,
+      }),
+    );
+    expect(mocks.request).not.toHaveBeenCalled();
+  });
+
+  it("normalizes API 401 responses to the typed AUTHENTICATION_ERROR", async () => {
+    mocks.request.mockResolvedValue({
+      ok: false,
+      error: { status: 401, code: "UNAUTHORIZED", message: "raw api payload" },
+    });
+
+    await expect(loadSocialFeed({ scope: "for-you" })).rejects.toEqual(
+      expect.objectContaining<Partial<SocialFeedRequestError>>({
+        name: "SocialFeedRequestError",
+        status: 401,
+        code: "AUTHENTICATION_ERROR",
+        retryable: false,
+      }),
+    );
+  });
+
   it("loads a permalink through the viewer-aware feed projection", async () => {
     mocks.request.mockResolvedValue({
       ok: true,

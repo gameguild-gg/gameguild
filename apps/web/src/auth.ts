@@ -13,6 +13,7 @@ import {
 } from "@game-guild/client";
 import { cookies } from "next/headers";
 import { createSharedAuthCookieConfig } from "@/lib/auth/cross-domain-auth";
+import { isProtectedPath } from "@/lib/auth/protected-routes";
 import { createMagicLinkCredentialsAuthorize } from "@/lib/auth/magic-link-credentials";
 import { createEmailCodeCredentialsAuthorize } from "@/lib/auth/email-code-credentials";
 import { createWeb3CredentialsAuthorize } from "@/lib/auth/web3-credentials";
@@ -67,6 +68,17 @@ const result = GameGuildAuth({
   pages: {
     // Callback failures redirect here with ?error=; the page renders it inline.
     error: "/sign-in",
+  },
+  callbacks: {
+    // Proxy-level route gate (auth expiry UX): anonymous access to protected
+    // roots bounces to /sign-in with a callbackUrl before the first render.
+    // Public, auth, legal and api surfaces pass through — they own their own
+    // finer-grained guards, and the (social)/(dashboards) layouts remain as
+    // the fallback when this proxy check misses.
+    authorized: ({ auth, request }) => {
+      if (!isProtectedPath(new URL(request.url).pathname)) return true;
+      return !!auth;
+    },
   },
   apiUrl,
   secret:
