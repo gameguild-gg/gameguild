@@ -74,7 +74,7 @@ public class Web3AuthService(
             IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Wallet Device", DeviceType = "Web"
         };
         var refreshDays = RefreshTokenLifetimeResolver.ResolveExpirationDays(
-            jwtOptions, configuration, request.RememberMe == true);
+            jwtOptions, configuration, request.RememberMe != false);
         var refreshExpires = SystemClock.UtcNow.AddDays(refreshDays);
         var sessionId = Guid.NewGuid();
         var refresh = await jwtTokenService.GenerateRefreshTokenAsync(
