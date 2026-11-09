@@ -14,10 +14,11 @@ public sealed record RefreshUserSessionCommand(Guid SessionId) : ICommand<bool>;
 /// <summary>
 ///     Trusts the device of the acting session. Trusting a long-lived session's device is a
 ///     security-sensitive grant (it satisfies the trusted-device policy for future sensitive
-///     operations), so the command requires a fresh step-up receipt (issue #1144): the client
-///     creates a step-up challenge bound to operation type <c>trust-device</c>, target reference
-///     <c>current-session</c>, payload hash SHA-256 of the trimmed device name, verifies it with
-///     any MFA method, and passes the returned receipt.
+///     operations), so the command requires a fresh step-up receipt (issues #1144 and #1191).
+///     Without a receipt, the endpoint returns a persisted challenge bound to operation type
+///     <c>trust-device</c>, target reference <c>current-session</c>, and the SHA-256 hash of the
+///     trimmed device name. The client verifies an enrolled supported factor and retries with
+///     the returned receipt.
 /// </summary>
 public sealed record TrustDeviceCommand(
     Guid UserId,
@@ -113,7 +114,8 @@ public sealed class SessionMutationCommandHandler(
     /// <summary>
     ///     The step-up operation binding for device trust: operation <c>trust-device</c> on
     ///     <c>current-session</c>, bound to the trimmed device name the client asked to trust.
-    ///     The client must create its challenge with the identical binding.
+    ///     The endpoint derives this binding when it issues a challenge; manually created
+    ///     challenges must use the identical binding.
     /// </summary>
     public static StepUpOperationBinding TrustDeviceStepUpBinding(string deviceName) => new(
         "trust-device",
