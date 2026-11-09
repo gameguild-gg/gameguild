@@ -38,6 +38,23 @@ particular deployment's backups.
   Retry, dead-letter and replay defects should be established against the actual
   application revision and its tests.
 
+### Public application contract references
+
+- Signing-key rotation is a protected application operation. Its current
+  [controller](../../apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/KeyRotationController.cs)
+  and [service/worker registration](../../apps/api/Source/Modules/GameGuild.Identity.Authentication/Data/Extensions/DependencyInjection.cs)
+  define the implemented lifecycle. The earlier wiring finding [#1189](https://github.com/gameguild-gg/gameguild/issues/1189)
+  is closed; do not carry its historical unwired-state claim into a current review.
+- Dead-letter inspection and explicit replay are exposed by the protected
+  [event administration controller](../../apps/api/Source/GameGuild.API/Core/Controllers/EventTransportAdminController.cs).
+  The [outbox transport reference](../sharedkernel/03-outbox-core.md) records its
+  application model; [#1313](https://github.com/gameguild-gg/gameguild/issues/1313) tracks
+  event-transport findings. Replay correctness remains an application concern.
+- Webhook secret rotation and overlap validation are implemented by the
+  [billing webhook controller](../../apps/api/Source/Modules/GameGuild.Commerce.Billing/Controllers/BillingWebhooksController.cs)
+  and [signing-secret provider](../../apps/api/Source/Modules/GameGuild.Commerce.Billing/Services/WebhookSigningSecretProvider.cs).
+  Operators choose how to provision and protect their deployment's secrets.
+
 Historical rehearsal results describe their recorded test environment and commit.
 They do not certify a production deployment or establish its operational readiness.
 

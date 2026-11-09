@@ -253,8 +253,11 @@ They do not certify a production deployment or create operational release gates.
   contradictory (status admits `'deadlettered'`, lifecycle tests `'dead_lettered'`, so the
   application's terminal dead-letter write fails at the database — DLQ cannot function as shipped)
   and its Down() **cannot execute once any dead-lettered row exists** (constraint re-add violates,
-  live-reproduced 23514). This is the historical application-migration finding;
-  its current disposition must be checked against the relevant fix and revision.
+  live-reproduced 23514). This is the historical application-migration finding.
+  The corrective [PR #1285](https://github.com/gameguild-gg/gameguild/pull/1285) was
+  merged on 2026-11-05 and is present in `main`. The historical rehearsal result
+  remains recorded here; assess the current application revision and its tests
+  rather than treating that already-merged PR as an outstanding merge gate.
 - **Load smoke: DELIVERED AND GREEN IN CI** (run 41942955514, 2026-11-05, N=10 × K=25 against
   fully migrated PostgreSQL on the real Kestrel/JWT host): all six paths profiled with zero 5xx
   and every p95 budget held — checkout 1323 ms, cart-add 1320 ms, feed 1259 ms (budget 2500,
