@@ -498,6 +498,9 @@ public class MfaControllerCovTests
 
 public class TrustedDevicesControllerCovTests
 {
+    private readonly Mock<IStepUpRequirementService> _stepUpRequirements = new();
+    private readonly Guid _stepUpChallengeId = Guid.NewGuid();
+    private readonly DateTime _stepUpChallengeExpiry = DateTime.UtcNow.AddMinutes(5);
     private readonly Mock<ISessionManagementService> _sessionService = new();
     private readonly TrustedDevicesController _controller;
     private readonly Guid _userId = Guid.NewGuid();
@@ -505,8 +508,17 @@ public class TrustedDevicesControllerCovTests
 
     public TrustedDevicesControllerCovTests()
     {
+        _stepUpRequirements.Setup(service => service.CreateAsync(It.IsAny<StepUpOperationBinding>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((StepUpOperationBinding binding, CancellationToken _) => new StepUpAuthenticationRequiredResponse
+            {
+                ChallengeId = _stepUpChallengeId,
+                StepUpToken = _stepUpChallengeId.ToString("D"),
+                Operation = binding,
+                AvailableMethods = ["Totp"],
+                ExpiresAt = _stepUpChallengeExpiry
+            });
         _controller = new TrustedDevicesController(_sessionService.Object, new CommandHandlerSender(
-            _sessionService.Object, Mock.Of<IStepUpReceiptService>()));
+            _sessionService.Object, Mock.Of<IStepUpReceiptService>()), _stepUpRequirements.Object);
         _controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext
@@ -583,6 +595,15 @@ public class TrustedDevicesControllerCovTests
             new TrustDeviceRequest { DeviceName = "My Phone" }, CancellationToken.None);
         var forbidden = result.Should().BeOfType<ObjectResult>().Subject;
         forbidden.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        var requirement = forbidden.Value.Should().BeOfType<StepUpAuthenticationRequiredResponse>().Subject;
+        requirement.ChallengeId.Should().Be(_stepUpChallengeId);
+        requirement.StepUpToken.Should().Be(_stepUpChallengeId.ToString("D"));
+        requirement.Operation.Should().Be(SessionMutationCommandHandler.TrustDeviceStepUpBinding("My Phone"));
+        requirement.ExpiresAt.Should().Be(_stepUpChallengeExpiry);
+        requirement.AvailableMethods.Should().Equal("Totp");
+        _stepUpRequirements.Verify(service => service.CreateAsync(
+            It.Is<StepUpOperationBinding>(binding => binding == SessionMutationCommandHandler.TrustDeviceStepUpBinding("My Phone")),
+            CancellationToken.None), Times.Once);
         _sessionService.Verify(s => s.TrustDeviceAsync(
             It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(),
             It.IsAny<CancellationToken>()), Times.Never);

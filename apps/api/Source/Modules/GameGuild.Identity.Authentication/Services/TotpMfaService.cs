@@ -94,7 +94,7 @@ public sealed class TotpMfaService(
     }
 
     private async Task<bool> VerifyTotpCoreAsync(Guid userId, string totpCode, string? deviceId,
-        bool propagateOperationalFailures, CancellationToken cancellationToken)
+        bool strictStepUp, CancellationToken cancellationToken)
     {
         if (!_mfaOptions.Enabled)
         {
@@ -107,6 +107,14 @@ public sealed class TotpMfaService(
         {
             // Get MFA configuration
             var mfaConfig = await mfaConfigRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+
+            // Step-up proves an existing factor; enrollment confirmation belongs to the legacy setup flow.
+            if (strictStepUp && mfaConfig is not { IsEnabled: true, IsSetupComplete: true })
+            {
+                await attemptTrackingService.RecordMfaAttemptAsync(userId, MfaMethod.Totp, false, "Confirmed TOTP enrollment required", deviceId, cancellationToken).ConfigureAwait(false);
+
+                return false;
+            }
 
             if (mfaConfig == null || string.IsNullOrEmpty(mfaConfig.TotpSecretKey))
             {
@@ -187,7 +195,7 @@ public sealed class TotpMfaService(
             return false;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch (Exception ex) when (!propagateOperationalFailures)
+        catch (Exception ex) when (!strictStepUp)
         {
             logger.LogError(ex, "Error verifying TOTP for user: {UserId}", userId);
             await attemptTrackingService.RecordMfaAttemptAsync(userId, MfaMethod.Totp, false, "System error", deviceId, cancellationToken).ConfigureAwait(false);

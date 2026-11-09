@@ -3216,6 +3216,32 @@ dropping the nonce digests.
 Platform-wide triggering remains a separate unfinished requirement of #1191.
 This binding change does not authorize passwordless MFA disable by itself.
 
+### Confirmed factors and trusted-device step-up requirements (#1191)
+
+Strict step-up TOTP and backup-code verification requires the persisted MFA
+configuration to be both enabled and setup-complete. It cannot confirm a pending
+enrollment, reactivate a disabled factor, or consume a recovery code from an
+incomplete setup. The check uses the same configuration read as verification and
+is repeated for each backup-code compare-and-swap retry. Legacy enrollment
+confirmation retains its separate activation behavior; strict operational failures
+continue to propagate to the enclosing transaction.
+
+The trusted-device grant returns a structured HTTP 403 when no receipt is supplied.
+Its typed response derives from ProblemDetails so the host's RFC 7807 result filter
+preserves the challenge fields at the document root and still applies problem
+customization. It is not a legacy error body nested under an untyped extension.
+Challenge creation normalizes the clock to the store's microsecond precision
+before deriving its expiry, so the response matches the persisted deadline exactly.
+The platform requirement service derives the operation from the requested device
+name and creates a persisted challenge bound to the authenticated actor, tenant,
+and session. The response exposes the challenge identifier, expiry, operation, and
+available supported factors. Availability reads the persisted enabled and
+setup-complete enrollment directly, respects global MFA enablement for TOTP and
+backup codes, and lists WebAuthn only when an active credential exists. It does
+not change the legacy MFA status used during sign-in. The identifier is not an authorization receipt.
+Clients verify the challenge and retry the same operation with its single-use
+receipt; the existing guarded command performs the trust mutation.
+
 ### Step-up verification budget and expired challenge retention (#1191)
 
 Each challenge permits at most five factor evaluations. An atomic, subject-scoped

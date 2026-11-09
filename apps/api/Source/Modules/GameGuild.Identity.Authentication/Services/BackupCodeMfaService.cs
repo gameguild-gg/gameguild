@@ -90,7 +90,7 @@ public sealed class BackupCodeMfaService(
     }
 
     private async Task<bool> VerifyBackupCodeCoreAsync(Guid userId, string backupCode, string? deviceId,
-        bool propagateOperationalFailures, CancellationToken cancellationToken)
+        bool strictStepUp, CancellationToken cancellationToken)
     {
         if (!_mfaOptions.Enabled)
         {
@@ -105,6 +105,14 @@ public sealed class BackupCodeMfaService(
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var mfaConfig = await mfaConfigRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+
+                // Recheck the same persisted factor on every compare-and-swap retry.
+                if (strictStepUp && mfaConfig is not { IsEnabled: true, IsSetupComplete: true })
+                {
+                    await attemptTrackingService.RecordMfaAttemptAsync(userId, MfaMethod.BackupCode, false, "Confirmed MFA enrollment required", deviceId, cancellationToken).ConfigureAwait(false);
+
+                    return false;
+                }
 
                 if (mfaConfig is not { IsEnabled: true } || string.IsNullOrEmpty(mfaConfig.BackupCodes))
                 {
@@ -187,7 +195,7 @@ public sealed class BackupCodeMfaService(
             return false;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch (Exception ex) when (!propagateOperationalFailures)
+        catch (Exception ex) when (!strictStepUp)
         {
             logger.LogError(ex, "Error verifying backup code for user: {UserId}", userId);
             await attemptTrackingService.RecordMfaAttemptAsync(userId, MfaMethod.BackupCode, false, "System error", deviceId, cancellationToken).ConfigureAwait(false);

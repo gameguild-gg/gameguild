@@ -304,6 +304,7 @@ public static class DataDependencyInjection
         services.AddScoped<ISignInMfaService, SignInMfaService>();
         services.AddScoped<IStepUpChallengeStore, PostgreSqlStepUpChallengeStore>();
         services.AddScoped<IStepUpReceiptService, StepUpReceiptService>();
+        services.AddScoped<IStepUpRequirementService, StepUpRequirementService>();
         services.AddHostedService<StepUpChallengeCleanupBackgroundService>();
         services.AddScoped<IMfaRecoveryRequestStore, PostgreSqlMfaRecoveryRequestStore>();
         // Delegated account recovery with trusted contacts / passkeys (issue #209)
