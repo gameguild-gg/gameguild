@@ -23,8 +23,12 @@ export type ConsentWindow = Window & {
  */
 export function ensureConsentDefaults(w: ConsentWindow): void {
   w.dataLayer = w.dataLayer || [];
-  w.gtag ??= (...args: unknown[]) => {
-    w.dataLayer!.push(args);
+  // gtag.js only processes queue entries that are the gtag() ARGUMENTS object —
+  // array-form entries are silently dropped (observed live: usedDefault stayed
+  // false and zero /g/collect fired while array pushes accumulated).
+  w.gtag ??= function (this: unknown) {
+    // eslint-disable-next-line prefer-rest-params -- arguments object is gtag.js's wire format
+    w.dataLayer!.push(arguments as unknown as unknown[]);
   };
 
   const alreadySet = w.dataLayer.some(
