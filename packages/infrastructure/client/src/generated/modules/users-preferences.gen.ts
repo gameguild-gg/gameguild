@@ -39,11 +39,11 @@ export class UsersPreferencesModule {
   /**
    * Replace user preferences by user ID
    */
-  async putUsersPreferences(userId: string, body?: Types.IdentityUsersReplaceUserPreferencesInput): Promise<Result<void, ApiError>> {
+  async putUsersPreferences(userId: string, body: Types.IdentityUsersReplaceUserPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersReplaceUserPreferencesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityUsersReplaceUserPreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -58,11 +58,11 @@ export class UsersPreferencesModule {
   /**
    * Partially update user preferences by user ID
    */
-  async patchUsersPreferences(userId: string, body?: Types.IdentityUsersUpdateUserPreferencesInput): Promise<Result<void, ApiError>> {
+  async patchUsersPreferences(userId: string, body: Types.IdentityUsersUpdateUserPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersUpdateUserPreferencesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserPreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -113,11 +113,11 @@ export class UsersPreferencesModule {
   /**
    * Replace accessibility preferences for user (full update)
    */
-  async putUsersPreferencesAccessibility(userId: string, body?: Types.IdentityUsersReplaceUserAccessibilityPreferencesInput): Promise<Result<void, ApiError>> {
+  async putUsersPreferencesAccessibility(userId: string, body: Types.IdentityUsersReplaceUserAccessibilityPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/accessibility`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersReplaceUserAccessibilityPreferencesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityUsersReplaceUserAccessibilityPreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -132,11 +132,11 @@ export class UsersPreferencesModule {
   /**
    * Partially update accessibility preferences for user
    */
-  async patchUsersPreferencesAccessibility(userId: string, body?: Types.IdentityUsersUpdateUserAccessibilityPreferencesInput): Promise<Result<void, ApiError>> {
+  async patchUsersPreferencesAccessibility(userId: string, body: Types.IdentityUsersUpdateUserAccessibilityPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/accessibility`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersUpdateUserAccessibilityPreferencesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserAccessibilityPreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -202,11 +202,11 @@ export class UsersPreferencesModule {
   /**
    * Replace localization preferences for user (full update)
    */
-  async putUsersPreferencesLocalization(userId: string, body?: Types.IdentityUsersReplaceUserLocalizationPreferencesInput): Promise<Result<void, ApiError>> {
+  async putUsersPreferencesLocalization(userId: string, body: Types.IdentityUsersReplaceUserLocalizationPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/localization`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersReplaceUserLocalizationPreferencesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityUsersReplaceUserLocalizationPreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -221,11 +221,11 @@ export class UsersPreferencesModule {
   /**
    * Partially update localization preferences for user
    */
-  async patchUsersPreferencesLocalization(userId: string, body?: Types.IdentityUsersUpdateUserLocalizationPreferencesInput): Promise<Result<void, ApiError>> {
+  async patchUsersPreferencesLocalization(userId: string, body: Types.IdentityUsersUpdateUserLocalizationPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/localization`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersUpdateUserLocalizationPreferencesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserLocalizationPreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -291,11 +291,11 @@ export class UsersPreferencesModule {
   /**
    * Replace notification preferences for user (full update) (deprecated: use /api/notifications/preferences)
    */
-  async putUsersPreferencesNotifications(userId: string, body?: Types.IdentityUsersReplaceUserNotificationPreferencesInput): Promise<Result<void, ApiError>> {
+  async putUsersPreferencesNotifications(userId: string, body: Types.IdentityUsersReplaceUserNotificationPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/notifications`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersReplaceUserNotificationPreferencesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityUsersReplaceUserNotificationPreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -310,11 +310,11 @@ export class UsersPreferencesModule {
   /**
    * Partially update notification preferences for user (deprecated: use /api/notifications/preferences)
    */
-  async patchUsersPreferencesNotifications(userId: string, body?: Types.IdentityUsersUpdateUserNotificationPreferencesInput): Promise<Result<void, ApiError>> {
+  async patchUsersPreferencesNotifications(userId: string, body: Types.IdentityUsersUpdateUserNotificationPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/notifications`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersUpdateUserNotificationPreferencesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserNotificationPreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -380,11 +380,11 @@ export class UsersPreferencesModule {
   /**
    * Replace privacy preferences for user (full update)
    */
-  async putUsersPreferencesPrivacy(userId: string, body?: Types.IdentityUsersReplaceUserPrivacyPreferencesInput): Promise<Result<void, ApiError>> {
+  async putUsersPreferencesPrivacy(userId: string, body: Types.IdentityUsersReplaceUserPrivacyPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/privacy`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersReplaceUserPrivacyPreferencesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityUsersReplaceUserPrivacyPreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -399,11 +399,11 @@ export class UsersPreferencesModule {
   /**
    * Partially update privacy preferences for user
    */
-  async patchUsersPreferencesPrivacy(userId: string, body?: Types.IdentityUsersUpdateUserPrivacyPreferencesInput): Promise<Result<void, ApiError>> {
+  async patchUsersPreferencesPrivacy(userId: string, body: Types.IdentityUsersUpdateUserPrivacyPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/privacy`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersUpdateUserPrivacyPreferencesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserPrivacyPreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

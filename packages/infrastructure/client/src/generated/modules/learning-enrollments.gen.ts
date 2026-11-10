@@ -17,11 +17,11 @@ export class LearningEnrollmentsModule {
 
   /**
    */
-  async postApiLearningEnrollments(body?: Types.LearningEnrollmentsEnrollUserInput): Promise<Result<void, ApiError>> {
+  async postApiLearningEnrollments(body: Types.LearningEnrollmentsEnrollUserInput): Promise<Result<void, ApiError>> {
     const url = '/api/learning/enrollments';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningEnrollmentsEnrollUserInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningEnrollmentsEnrollUserInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -49,11 +49,11 @@ export class LearningEnrollmentsModule {
 
   /**
    */
-  async patchApiLearningEnrollmentsProgress(id: string, body?: Types.LearningEnrollmentsUpdateEnrollmentProgressInput): Promise<Result<void, ApiError>> {
+  async patchApiLearningEnrollmentsProgress(id: string, body: Types.LearningEnrollmentsUpdateEnrollmentProgressInput): Promise<Result<void, ApiError>> {
     const url = `/api/learning/enrollments/${id}/progress`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningEnrollmentsUpdateEnrollmentProgressInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningEnrollmentsUpdateEnrollmentProgressInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

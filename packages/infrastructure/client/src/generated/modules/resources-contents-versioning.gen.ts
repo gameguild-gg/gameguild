@@ -139,12 +139,12 @@ export class ResourcesContentsVersioningModule {
    */
   async postApiContentsVersioningReviews(
     versionId: string,
-    body?: Types.ResourcesContentsAddReviewInput,
+    body: Types.ResourcesContentsAddReviewInput,
   ): Promise<Result<Types.ResourcesContentsContentVersionReviewDto, ApiError>> {
     const url = `/api/contents/versioning/${versionId}/reviews`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesContentsAddReviewInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ResourcesContentsAddReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -167,12 +167,12 @@ export class ResourcesContentsVersioningModule {
    */
   async postApiContentsVersioningSchedule(
     versionId: string,
-    body?: Types.ResourcesContentsScheduleInput,
+    body: Types.ResourcesContentsScheduleInput,
   ): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
     const url = `/api/contents/versioning/${versionId}/schedule`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesContentsScheduleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ResourcesContentsScheduleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -239,11 +239,11 @@ export class ResourcesContentsVersioningModule {
   /**
    * Create a new draft version
    */
-  async postApiContentsVersioningDrafts(body?: Types.ResourcesContentsCreateDraftInput): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
+  async postApiContentsVersioningDrafts(body: Types.ResourcesContentsCreateDraftInput): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
     const url = '/api/contents/versioning/drafts';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesContentsCreateDraftInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ResourcesContentsCreateDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -266,12 +266,12 @@ export class ResourcesContentsVersioningModule {
    */
   async putApiContentsVersioningDrafts(
     versionId: string,
-    body?: Types.ResourcesContentsUpdateDraftInput,
+    body: Types.ResourcesContentsUpdateDraftInput,
   ): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
     const url = `/api/contents/versioning/drafts/${versionId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesContentsUpdateDraftInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ResourcesContentsUpdateDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -331,12 +331,12 @@ export class ResourcesContentsVersioningModule {
   async postApiContentsVersioningEntityRollback(
     entityType: string,
     entityId: string,
-    body?: Types.ResourcesContentsRollbackInput,
+    body: Types.ResourcesContentsRollbackInput,
   ): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
     const url = `/api/contents/versioning/entity/${entityType}/${entityId}/rollback`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesContentsRollbackInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ResourcesContentsRollbackInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

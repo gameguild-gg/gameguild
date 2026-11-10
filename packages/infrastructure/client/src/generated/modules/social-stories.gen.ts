@@ -31,11 +31,11 @@ export class SocialStoriesModule {
 
   /**
    */
-  async postApiSocialStories(body?: Types.SocialFeedCreateStoryInput): Promise<Result<Types.SocialFeedStoryDto, ApiError>> {
+  async postApiSocialStories(body: Types.SocialFeedCreateStoryInput): Promise<Result<Types.SocialFeedStoryDto, ApiError>> {
     const url = '/api/social/stories';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialFeedCreateStoryInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialFeedCreateStoryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

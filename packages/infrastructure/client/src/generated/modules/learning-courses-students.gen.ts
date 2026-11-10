@@ -19,12 +19,12 @@ export class LearningCoursesStudentsModule {
    */
   async postCoursesStudentsMessage(
     courseId: string,
-    body?: Types.LearningCoursesSendCourseStudentMessageInput,
+    body: Types.LearningCoursesSendCourseStudentMessageInput,
   ): Promise<Result<Types.LearningCoursesSendCourseStudentMessageOutput, ApiError>> {
     const url = `/v1/courses/${courseId}/students/message`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesSendCourseStudentMessageInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCoursesSendCourseStudentMessageInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

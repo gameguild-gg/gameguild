@@ -20,11 +20,11 @@ export class ResourcesModule {
    *
    * Archives resource usage records older than the specified date for storage optimization.
    */
-  async postResourcesArchive(body?: Types.ResourcesArchiveResourceUsageRecordsInput): Promise<Result<void, ApiError>> {
+  async postResourcesArchive(body: Types.ResourcesArchiveResourceUsageRecordsInput): Promise<Result<void, ApiError>> {
     const url = '/v1/resources:archive';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesArchiveResourceUsageRecordsInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ResourcesArchiveResourceUsageRecordsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -41,11 +41,11 @@ export class ResourcesModule {
    *
    * Identifies and removes orphaned resources that are no longer associated with any tenant or user.
    */
-  async postResourcesCleanup(body?: Types.ResourcesCleanupOrphanedResourcesInput): Promise<Result<void, ApiError>> {
+  async postResourcesCleanup(body: Types.ResourcesCleanupOrphanedResourcesInput): Promise<Result<void, ApiError>> {
     const url = '/v1/resources:cleanup';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesCleanupOrphanedResourcesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ResourcesCleanupOrphanedResourcesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

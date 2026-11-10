@@ -36,12 +36,12 @@ export class SocialBlogCommentsModule {
    */
   async postApiSocialBlogPostsComments(
     id: string,
-    body?: Types.SocialBlogControllersAddBlogCommentInput,
+    body: Types.SocialBlogControllersAddBlogCommentInput,
   ): Promise<Result<Types.SocialBlogBlogComment, ApiError>> {
     const url = `/api/social/blog/posts/${id}/comments`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialBlogControllersAddBlogCommentInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialBlogControllersAddBlogCommentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

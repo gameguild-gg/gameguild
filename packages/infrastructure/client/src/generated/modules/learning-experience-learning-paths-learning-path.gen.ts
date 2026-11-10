@@ -40,13 +40,13 @@ export class LearningExperienceLearningPathsLearningPathModule {
    * Create a new learning path
    */
   async postLearningPaths(
-    body?: Types.LearningExperienceLearningPathsCreateLearningPathDto,
+    body: Types.LearningExperienceLearningPathsCreateLearningPathDto,
     query?: { creatorId?: string; tenantId?: string },
   ): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDto, ApiError>> {
     const url = '/v1/learning-paths';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceLearningPathsCreateLearningPathDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningExperienceLearningPathsCreateLearningPathDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -91,12 +91,12 @@ export class LearningExperienceLearningPathsLearningPathModule {
    */
   async putLearningPaths(
     id: string,
-    body?: Types.LearningExperienceLearningPathsUpdateLearningPathDto,
+    body: Types.LearningExperienceLearningPathsUpdateLearningPathDto,
   ): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDto, ApiError>> {
     const url = `/v1/learning-paths/${id}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceLearningPathsUpdateLearningPathDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningExperienceLearningPathsUpdateLearningPathDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -175,12 +175,12 @@ export class LearningExperienceLearningPathsLearningPathModule {
    */
   async postLearningPathsCourses(
     id: string,
-    body?: Types.LearningExperienceLearningPathsAddCourseToPathDto,
+    body: Types.LearningExperienceLearningPathsAddCourseToPathDto,
   ): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDetailDto, ApiError>> {
     const url = `/v1/learning-paths/${id}/courses`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceLearningPathsAddCourseToPathDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningExperienceLearningPathsAddCourseToPathDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -218,12 +218,12 @@ export class LearningExperienceLearningPathsLearningPathModule {
    */
   async putLearningPathsCoursesOrder(
     id: string,
-    body?: Types.LearningExperienceLearningPathsReorderCoursesDto,
+    body: Types.LearningExperienceLearningPathsReorderCoursesDto,
   ): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDetailDto, ApiError>> {
     const url = `/v1/learning-paths/${id}/courses/order`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceLearningPathsReorderCoursesDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningExperienceLearningPathsReorderCoursesDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -326,13 +326,13 @@ export class LearningExperienceLearningPathsLearningPathModule {
    */
   async putLearningPathsProgress(
     id: string,
-    body?: Types.LearningExperienceLearningPathsUpdatePathProgressDto,
+    body: Types.LearningExperienceLearningPathsUpdatePathProgressDto,
     query?: { userId?: string },
   ): Promise<Result<Types.LearningExperienceLearningPathsLearningPathEnrollmentDto, ApiError>> {
     const url = `/v1/learning-paths/${id}/progress`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceLearningPathsUpdatePathProgressDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningExperienceLearningPathsUpdatePathProgressDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

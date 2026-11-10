@@ -37,12 +37,12 @@ export class TestingLabTestingEventTemplatesModule {
    */
   async postVTestingTemplates(
     version: string,
-    body?: Types.TestingLabUpsertTestingEventTemplateInput,
+    body: Types.TestingLabUpsertTestingEventTemplateInput,
   ): Promise<Result<Types.TestingLabTestingEventTemplateProjection, ApiError>> {
     const url = `/v${version}/testing/templates`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabUpsertTestingEventTemplateInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabUpsertTestingEventTemplateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -65,12 +65,12 @@ export class TestingLabTestingEventTemplatesModule {
   async putVTestingTemplates(
     templateId: string,
     version: string,
-    body?: Types.TestingLabUpsertTestingEventTemplateInput,
+    body: Types.TestingLabUpsertTestingEventTemplateInput,
   ): Promise<Result<Types.TestingLabTestingEventTemplateProjection, ApiError>> {
     const url = `/v${version}/testing/templates/${templateId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabUpsertTestingEventTemplateInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabUpsertTestingEventTemplateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

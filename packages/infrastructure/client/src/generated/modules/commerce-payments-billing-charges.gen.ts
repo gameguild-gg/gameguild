@@ -46,13 +46,12 @@ export class CommercePaymentsBillingChargesModule {
    * Processes a subscription charge through the configured payment command path.
    */
   async postBillingCharges(
-    body?: Types.CommercePaymentsBillingChargesControllerCreateBillingChargeInput,
+    body: Types.CommercePaymentsBillingChargesControllerCreateBillingChargeInput,
   ): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
     const url = '/api/v1/billing/charges';
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -96,13 +95,12 @@ export class CommercePaymentsBillingChargesModule {
    */
   async postBillingChargesCancel(
     chargeId: string,
-    body?: Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInput,
+    body: Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInput,
   ): Promise<Result<Types.CommercePaymentsPaymentCancellationResult, ApiError>> {
     const url = `/api/v1/billing/charges/${chargeId}:cancel`;
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -125,13 +123,12 @@ export class CommercePaymentsBillingChargesModule {
    */
   async postBillingChargesRefund(
     chargeId: string,
-    body?: Types.CommercePaymentsBillingChargesControllerRefundBillingChargeInput,
+    body: Types.CommercePaymentsBillingChargesControllerRefundBillingChargeInput,
   ): Promise<Result<Types.CommercePaymentsProcessRefundResult, ApiError>> {
     const url = `/api/v1/billing/charges/${chargeId}:refund`;
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

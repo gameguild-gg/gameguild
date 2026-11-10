@@ -32,11 +32,11 @@ export class LaunchPadModule {
 
   /**
    */
-  async postLaunchPad(body?: Types.LaunchPadCreateLaunchPlanInput): Promise<Result<void, ApiError>> {
+  async postLaunchPad(body: Types.LaunchPadCreateLaunchPlanInput): Promise<Result<void, ApiError>> {
     const url = '/v1/launch-pad';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LaunchPadCreateLaunchPlanInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LaunchPadCreateLaunchPlanInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

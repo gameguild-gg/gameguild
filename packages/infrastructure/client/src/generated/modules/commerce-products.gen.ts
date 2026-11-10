@@ -52,11 +52,11 @@ export class CommerceProductsModule {
   /**
    * Create a new product
    */
-  async postProducts(body?: Types.CommerceProductsCreateProductInput): Promise<Result<Types.CommerceProductsProductDto, ApiError>> {
+  async postProducts(body: Types.CommerceProductsCreateProductInput): Promise<Result<Types.CommerceProductsProductDto, ApiError>> {
     const url = '/v1/products';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsCreateProductInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsCreateProductInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -77,11 +77,11 @@ export class CommerceProductsModule {
   /**
    * Batch create multiple products
    */
-  async postProductsBatchCreate(body?: Types.CommerceProductsBatchCreateProductsInput): Promise<Result<Types.CommerceProductsProductDto[], ApiError>> {
+  async postProductsBatchCreate(body: Types.CommerceProductsBatchCreateProductsInput): Promise<Result<Types.CommerceProductsProductDto[], ApiError>> {
     const url = '/v1/products/:batch-create';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsBatchCreateProductsInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsBatchCreateProductsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -121,11 +121,11 @@ export class CommerceProductsModule {
   /**
    * Update an existing product (full update)
    */
-  async putProducts(productId: string, body?: Types.CommerceProductsUpdateProductInput): Promise<Result<Types.CommerceProductsProductDto, ApiError>> {
+  async putProducts(productId: string, body: Types.CommerceProductsUpdateProductInput): Promise<Result<Types.CommerceProductsProductDto, ApiError>> {
     const url = `/v1/products/${productId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsUpdateProductInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsUpdateProductInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -162,11 +162,11 @@ export class CommerceProductsModule {
   /**
    * Partially update a product (PATCH)
    */
-  async patchProducts(productId: string, body?: Types.CommerceProductsPatchProductInput): Promise<Result<Types.CommerceProductsProductDto, ApiError>> {
+  async patchProducts(productId: string, body: Types.CommerceProductsPatchProductInput): Promise<Result<Types.CommerceProductsProductDto, ApiError>> {
     const url = `/v1/products/${productId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsPatchProductInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsPatchProductInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -289,12 +289,12 @@ export class CommerceProductsModule {
    */
   async putProductsInventory(
     productId: string,
-    body?: Types.CommerceProductsSetProductInventoryInput,
+    body: Types.CommerceProductsSetProductInventoryInput,
   ): Promise<Result<Types.CommerceProductsProductInventoryDto, ApiError>> {
     const url = `/v1/products/${productId}/inventory`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsSetProductInventoryInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsSetProductInventoryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -332,12 +332,12 @@ export class CommerceProductsModule {
    */
   async putProductsPricing(
     productId: string,
-    body?: Types.CommerceProductsSetProductPricingInput,
+    body: Types.CommerceProductsSetProductPricingInput,
   ): Promise<Result<Types.CommerceProductsProductPricingDto, ApiError>> {
     const url = `/v1/products/${productId}/pricing`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsSetProductPricingInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsSetProductPricingInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

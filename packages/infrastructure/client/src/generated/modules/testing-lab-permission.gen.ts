@@ -34,12 +34,12 @@ export class TestingLabPermissionModule {
    * Create a new TestingLab role template
    */
   async postApiTestingLabPermissionsRoleTemplates(
-    body?: Types.TestingLabCreateTestingLabRoleInput,
+    body: Types.TestingLabCreateTestingLabRoleInput,
   ): Promise<Result<Types.TestingLabTestingLabRoleTemplate, ApiError>> {
     const url = '/api/testing-lab/permissions/role-templates';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabCreateTestingLabRoleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabCreateTestingLabRoleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -62,12 +62,12 @@ export class TestingLabPermissionModule {
    */
   async putApiTestingLabPermissionsRoleTemplates(
     idOrName: string,
-    body?: Types.TestingLabUpdateTestingLabRoleInput,
+    body: Types.TestingLabUpdateTestingLabRoleInput,
   ): Promise<Result<Types.TestingLabTestingLabRoleTemplate, ApiError>> {
     const url = `/api/testing-lab/permissions/role-templates/${idOrName}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabUpdateTestingLabRoleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabUpdateTestingLabRoleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -164,12 +164,12 @@ export class TestingLabPermissionModule {
     userId: string,
     resourceType: string,
     resourceId: string,
-    body?: Types.TestingLabGrantResourcePermissionInput,
+    body: Types.TestingLabGrantResourcePermissionInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/testing-lab/permissions/users/${userId}/resources/${resourceType}/${resourceId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabGrantResourcePermissionInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabGrantResourcePermissionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -205,11 +205,11 @@ export class TestingLabPermissionModule {
   /**
    * Assign a TestingLab role to a user
    */
-  async postApiTestingLabPermissionsUsersRoles(userId: string, body?: Types.TestingLabAssignTestingLabRoleInput): Promise<Result<void, ApiError>> {
+  async postApiTestingLabPermissionsUsersRoles(userId: string, body: Types.TestingLabAssignTestingLabRoleInput): Promise<Result<void, ApiError>> {
     const url = `/api/testing-lab/permissions/users/${userId}/roles`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabAssignTestingLabRoleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabAssignTestingLabRoleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

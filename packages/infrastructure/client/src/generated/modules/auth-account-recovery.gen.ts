@@ -21,12 +21,12 @@ export class AuthAccountRecoveryModule {
    * Redeems a trusted contact's single-use recovery code after the cooling-off window. Denials are generic and never reveal code or request state.
    */
   async postAuthAccountRecoveryApprove(
-    body?: Types.IdentityAuthenticationApproveAccountRecoveryInput,
+    body: Types.IdentityAuthenticationApproveAccountRecoveryInput,
   ): Promise<Result<Types.IdentityAuthenticationAccountRecoveryApprovalResult, ApiError>> {
     const url = '/v1/auth/account-recovery/approve';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationApproveAccountRecoveryInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthenticationApproveAccountRecoveryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -81,12 +81,12 @@ export class AuthAccountRecoveryModule {
    * Verifies the WebAuthn assertion against an enrolled credential and records one approval for the live recovery request. Denials are generic and never reveal request state.
    */
   async postAuthAccountRecoveryApprovePasskeyComplete(
-    body?: Types.IdentityAuthenticationCompletePasskeyApprovalInput,
+    body: Types.IdentityAuthenticationCompletePasskeyApprovalInput,
   ): Promise<Result<Types.IdentityAuthenticationAccountRecoveryApprovalOutput, ApiError>> {
     const url = '/v1/auth/account-recovery/approve-passkey:complete';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCompletePasskeyApprovalInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthenticationCompletePasskeyApprovalInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -134,12 +134,12 @@ export class AuthAccountRecoveryModule {
    * Opens a delegated account recovery for an email address. Confirmed trusted contacts receive single-use recovery codes after a cooling-off window. Always returns a generic success response to prevent user enumeration.
    */
   async postAuthAccountRecoveryRequest(
-    body?: Types.IdentityAuthenticationAccountRecoveryRequestInput,
+    body: Types.IdentityAuthenticationAccountRecoveryRequestInput,
   ): Promise<Result<Types.IdentityAuthenticationAccountRecoveryRequestResult, ApiError>> {
     const url = '/v1/auth/account-recovery/request';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationAccountRecoveryRequestInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthenticationAccountRecoveryRequestInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -165,12 +165,12 @@ export class AuthAccountRecoveryModule {
    * Consumes the single-use reset token, sets the new password, terminates all sessions, revokes all refresh tokens and revokes every passkey. Denials are generic and never reveal token state.
    */
   async postAuthAccountRecoveryReset(
-    body?: Types.IdentityAuthenticationCompleteAccountRecoveryResetInput,
+    body: Types.IdentityAuthenticationCompleteAccountRecoveryResetInput,
   ): Promise<Result<Types.IdentityAuthenticationAccountRecoveryResetResult, ApiError>> {
     const url = '/v1/auth/account-recovery/reset';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCompleteAccountRecoveryResetInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteAccountRecoveryResetInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

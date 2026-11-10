@@ -56,15 +56,12 @@ export class CommerceSubscriptionsPlansModule {
    */
   async postSubscriptionPlansClone(
     planId: string,
-    body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput,
+    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscription-plans/${planId}:clone`;
 
     // Validate request body
-    const validatedBody =
-      body === undefined
-        ? undefined
-        : safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -100,13 +97,12 @@ export class CommerceSubscriptionsPlansModule {
    */
   async postSubscriptionPlansExternalId(
     planId: string,
-    body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput,
+    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscription-plans/${planId}:external-id`;
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -125,13 +121,12 @@ export class CommerceSubscriptionsPlansModule {
    */
   async postSubscriptionPlansFeatured(
     planId: string,
-    body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInput,
+    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscription-plans/${planId}:featured`;
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -150,13 +145,12 @@ export class CommerceSubscriptionsPlansModule {
    */
   async postSubscriptionPlansValidateLimits(
     planId: string,
-    body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput,
+    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscription-plans/${planId}:validate-limits`;
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -175,13 +169,12 @@ export class CommerceSubscriptionsPlansModule {
    */
   async patchSubscriptionPlansDetails(
     planId: string,
-    body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput,
+    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscription-plans/${planId}/details`;
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -200,13 +193,12 @@ export class CommerceSubscriptionsPlansModule {
    */
   async patchSubscriptionPlansFeatures(
     planId: string,
-    body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput,
+    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscription-plans/${planId}/features`;
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -225,13 +217,12 @@ export class CommerceSubscriptionsPlansModule {
    */
   async patchSubscriptionPlansLimits(
     planId: string,
-    body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput,
+    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscription-plans/${planId}/limits`;
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -268,13 +259,12 @@ export class CommerceSubscriptionsPlansModule {
    */
   async patchSubscriptionPlansPricing(
     planId: string,
-    body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput,
+    body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscription-plans/${planId}/pricing`;
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -357,12 +347,11 @@ export class CommerceSubscriptionsPlansModule {
    *
    * Creates a new subscription plan with the provided information.
    */
-  async postSubscriptionPlans(body?: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput): Promise<Result<void, ApiError>> {
+  async postSubscriptionPlans(body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput): Promise<Result<void, ApiError>> {
     const url = '/v1/subscription-plans';
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -379,12 +368,11 @@ export class CommerceSubscriptionsPlansModule {
    *
    * Compares multiple subscription plans side by side. Custom action per Google API guidelines.
    */
-  async postSubscriptionPlansCompare(body?: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput): Promise<Result<void, ApiError>> {
+  async postSubscriptionPlansCompare(body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput): Promise<Result<void, ApiError>> {
     const url = '/v1/subscription-plans:compare';
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -420,13 +408,12 @@ export class CommerceSubscriptionsPlansModule {
    */
   async putSubscriptionPlans(
     planId: string,
-    body?: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput,
+    body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/subscription-plans/${planId}`;
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

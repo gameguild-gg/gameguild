@@ -95,12 +95,12 @@ export class TestingLabTestingParticipantsModule {
    */
   async postTestingSessionsRegister(
     sessionId: string,
-    body?: Types.TestingLabSessionRegistrationInput,
+    body: Types.TestingLabSessionRegistrationInput,
   ): Promise<Result<Types.TestingLabSessionRegistration, ApiError>> {
     const url = `/v1/testing/sessions/${sessionId}/register`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabSessionRegistrationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabSessionRegistrationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -164,12 +164,12 @@ export class TestingLabTestingParticipantsModule {
    */
   async postTestingSessionsWaitlist(
     sessionId: string,
-    body?: Types.TestingLabSessionRegistrationInput,
+    body: Types.TestingLabSessionRegistrationInput,
   ): Promise<Result<Types.TestingLabSessionWaitlist, ApiError>> {
     const url = `/v1/testing/sessions/${sessionId}/waitlist`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabSessionRegistrationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabSessionRegistrationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

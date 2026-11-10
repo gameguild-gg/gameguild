@@ -18,11 +18,11 @@ export class SocialRatingsModule {
   /**
    * Rate an entity (create or update)
    */
-  async postApiRatings(body?: Types.SocialRatingsCreateRatingInput): Promise<Result<Types.SocialRatingsRatingDto, ApiError>> {
+  async postApiRatings(body: Types.SocialRatingsCreateRatingInput): Promise<Result<Types.SocialRatingsRatingDto, ApiError>> {
     const url = '/api/ratings';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialRatingsCreateRatingInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialRatingsCreateRatingInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -79,11 +79,11 @@ export class SocialRatingsModule {
   /**
    * Mark a review as helpful or not helpful
    */
-  async postApiRatingsHelpful(ratingId: string, body?: Types.SocialRatingsVoteHelpfulInput): Promise<Result<void, ApiError>> {
+  async postApiRatingsHelpful(ratingId: string, body: Types.SocialRatingsVoteHelpfulInput): Promise<Result<void, ApiError>> {
     const url = `/api/ratings/${ratingId}/helpful`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialRatingsVoteHelpfulInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialRatingsVoteHelpfulInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -113,11 +113,11 @@ export class SocialRatingsModule {
   /**
    * Report a review
    */
-  async postApiRatingsReport(ratingId: string, body?: Types.SocialRatingsReportInput): Promise<Result<void, ApiError>> {
+  async postApiRatingsReport(ratingId: string, body: Types.SocialRatingsReportInput): Promise<Result<void, ApiError>> {
     const url = `/api/ratings/${ratingId}/report`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialRatingsReportInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialRatingsReportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -287,11 +287,11 @@ export class SocialRatingsModule {
   /**
    * Get current user's ratings for multiple entities (batch)
    */
-  async postApiRatingsMyBatch(body?: Types.SocialRatingsBatchSummaryInput): Promise<Result<Record<string, Types.SocialRatingsRatingDto>, ApiError>> {
+  async postApiRatingsMyBatch(body: Types.SocialRatingsBatchSummaryInput): Promise<Result<Record<string, Types.SocialRatingsRatingDto>, ApiError>> {
     const url = '/api/ratings/my/batch';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialRatingsBatchSummaryInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialRatingsBatchSummaryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -323,12 +323,12 @@ export class SocialRatingsModule {
    * Get summaries for multiple entities (batch)
    */
   async postApiRatingsSummariesBatch(
-    body?: Types.SocialRatingsBatchSummaryInput,
+    body: Types.SocialRatingsBatchSummaryInput,
   ): Promise<Result<Record<string, Types.SocialRatingsRatingSummaryDto>, ApiError>> {
     const url = '/api/ratings/summaries/batch';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialRatingsBatchSummaryInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialRatingsBatchSummaryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -39,11 +39,11 @@ export class ContentMarketingLeadsModule {
 
   /**
    */
-  async postMarketingLeads(body?: Types.ContentPagesCreateMarketingLeadDto): Promise<Result<Types.ContentPagesMarketingLeadDto, ApiError>> {
+  async postMarketingLeads(body: Types.ContentPagesCreateMarketingLeadDto): Promise<Result<Types.ContentPagesMarketingLeadDto, ApiError>> {
     const url = '/v1/marketing/leads';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ContentPagesCreateMarketingLeadDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.ContentPagesCreateMarketingLeadDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

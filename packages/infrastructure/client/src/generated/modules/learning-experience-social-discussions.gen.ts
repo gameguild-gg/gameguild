@@ -58,12 +58,12 @@ export class LearningExperienceSocialDiscussionsModule {
    * Creates a new discussion thread
    */
   async postApiSocialDiscussions(
-    body?: Types.LearningExperienceSocialServicesCreateDiscussionInput,
+    body: Types.LearningExperienceSocialServicesCreateDiscussionInput,
   ): Promise<Result<Types.LearningExperienceSocialServicesCourseDiscussionDto, ApiError>> {
     const url = '/api/social/discussions';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceSocialServicesCreateDiscussionInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningExperienceSocialServicesCreateDiscussionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

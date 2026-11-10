@@ -43,11 +43,11 @@ export class ContentPagesResourcesModule {
   /**
    * Create a new content resource.
    */
-  async postContentResources(body?: Types.ContentPagesCreateContentResourceDto): Promise<Result<Types.ContentPagesContentResourceDto, ApiError>> {
+  async postContentResources(body: Types.ContentPagesCreateContentResourceDto): Promise<Result<Types.ContentPagesContentResourceDto, ApiError>> {
     const url = '/v1/content-resources';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ContentPagesCreateContentResourceDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.ContentPagesCreateContentResourceDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -89,11 +89,11 @@ export class ContentPagesResourcesModule {
   /**
    * Update a content resource.
    */
-  async putContentResources(id: string, body?: Types.ContentPagesUpdateContentResourceDto): Promise<Result<Types.ContentPagesContentResourceDto, ApiError>> {
+  async putContentResources(id: string, body: Types.ContentPagesUpdateContentResourceDto): Promise<Result<Types.ContentPagesContentResourceDto, ApiError>> {
     const url = `/v1/content-resources/${id}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ContentPagesUpdateContentResourceDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.ContentPagesUpdateContentResourceDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

@@ -81,11 +81,11 @@ export class LearningCoursesProgramLifecycleModule {
   /**
    * Reject a program (resource-level reject permission)
    */
-  async postCoursesReject(id: string, body?: Types.LearningCoursesRejectProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
+  async postCoursesReject(id: string, body: Types.LearningCoursesRejectProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:reject`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesRejectProgramDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCoursesRejectProgramDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -127,11 +127,11 @@ export class LearningCoursesProgramLifecycleModule {
   /**
    * Schedule a program for publishing (resource-level schedule permission)
    */
-  async postCoursesSchedule(id: string, body?: Types.LearningCoursesScheduleProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
+  async postCoursesSchedule(id: string, body: Types.LearningCoursesScheduleProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:schedule`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesScheduleProgramDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCoursesScheduleProgramDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

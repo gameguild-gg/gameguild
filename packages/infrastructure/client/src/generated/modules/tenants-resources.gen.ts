@@ -20,11 +20,11 @@ export class TenantsResourcesModule {
    *
    * Records a new resource usage entry for the specified tenant.
    */
-  async postTenantsResourcesRecord(tenantId: string, body?: Types.ResourcesRecordTenantResourceUsageInput): Promise<Result<void, ApiError>> {
+  async postTenantsResourcesRecord(tenantId: string, body: Types.ResourcesRecordTenantResourceUsageInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/resources:record`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesRecordTenantResourceUsageInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ResourcesRecordTenantResourceUsageInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -41,11 +41,11 @@ export class TenantsResourcesModule {
    *
    * Records a new resource usage entry after verifying it doesn't exceed configured quotas. Returns 429 if quota would be exceeded.
    */
-  async postTenantsResourcesRecordWithQuotaCheck(tenantId: string, body?: Types.ResourcesRecordTenantResourceUsageInput): Promise<Result<void, ApiError>> {
+  async postTenantsResourcesRecordWithQuotaCheck(tenantId: string, body: Types.ResourcesRecordTenantResourceUsageInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/resources:record-with-quota-check`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesRecordTenantResourceUsageInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ResourcesRecordTenantResourceUsageInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

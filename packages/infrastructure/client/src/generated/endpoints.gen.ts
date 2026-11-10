@@ -43,7 +43,7 @@ export const getApiAchievementsForGetApiAchievementsEndpoint = {
  * Create a new achievement (admin only).
  */
 export interface PostApiAchievementsInput {
-  body?: Types.GamificationAchievementsCreateAchievementInput;
+  body: Types.GamificationAchievementsCreateAchievementInput;
 }
 export type PostApiAchievementsOutput = Types.GamificationAchievementsAchievementDto;
 export const postApiAchievementsEndpoint = {
@@ -74,7 +74,7 @@ export const getApiAchievementsForGetApiAchievementsByAchievementIdEndpoint = {
  */
 export interface PutApiAchievementsInput {
   achievementId: string;
-  body?: Types.GamificationAchievementsUpdateAchievementInput;
+  body: Types.GamificationAchievementsUpdateAchievementInput;
 }
 export type PutApiAchievementsOutput = Types.GamificationAchievementsAchievementDto;
 export const putApiAchievementsEndpoint = {
@@ -105,7 +105,7 @@ export const deleteApiAchievementsEndpoint = {
  */
 export interface PostApiAchievementsAwardInput {
   achievementId: string;
-  body?: Types.GamificationAchievementsAwardAchievementInput;
+  body: Types.GamificationAchievementsAwardAchievementInput;
 }
 export type PostApiAchievementsAwardOutput = Types.GamificationAchievementsUserAchievementDto;
 export const postApiAchievementsAwardEndpoint = {
@@ -202,7 +202,7 @@ export const getApiAnalyticsDashboardsEndpoint = {
 } as const;
 
 export interface PostApiAnalyticsDashboardsInput {
-  body?: Types.AnalyticsCreateDashboardInput;
+  body: Types.AnalyticsCreateDashboardInput;
 }
 export type PostApiAnalyticsDashboardsOutput = Types.AnalyticsDashboardDto;
 export const postApiAnalyticsDashboardsEndpoint = {
@@ -227,7 +227,7 @@ export const getAnalyticsDashboardByIdEndpoint = {
 
 export interface PutApiAnalyticsDashboardsInput {
   id: string;
-  body?: Types.AnalyticsUpdateDashboardInput;
+  body: Types.AnalyticsUpdateDashboardInput;
 }
 export type PutApiAnalyticsDashboardsOutput = Types.AnalyticsDashboardDto;
 export const putApiAnalyticsDashboardsEndpoint = {
@@ -239,7 +239,7 @@ export const putApiAnalyticsDashboardsEndpoint = {
 } as const;
 
 export interface PostApiAnalyticsEventsInput {
-  body?: Types.AnalyticsTrackAnalyticsEventCommand;
+  body: Types.AnalyticsTrackAnalyticsEventCommand;
 }
 export type PostApiAnalyticsEventsOutput = void;
 export const postApiAnalyticsEventsEndpoint = {
@@ -251,7 +251,7 @@ export const postApiAnalyticsEventsEndpoint = {
 } as const;
 
 export interface PostApiAnalyticsFunnelInput {
-  body?: Types.AnalyticsAnalyzeFunnelQuery;
+  body: Types.AnalyticsAnalyzeFunnelQuery;
 }
 export type PostApiAnalyticsFunnelOutput = void;
 export const postApiAnalyticsFunnelEndpoint = {
@@ -347,7 +347,7 @@ export const getApiAnalyticsWarehouseFactsEndpoint = {
 } as const;
 
 export interface PostApiAnalyticsWarehouseRunInput {
-  body?: Types.AnalyticsAnalyticsWarehouseRunInput;
+  body: Types.AnalyticsAnalyticsWarehouseRunInput;
 }
 export type PostApiAnalyticsWarehouseRunOutput = Types.AnalyticsAnalyticsWarehouseRunOutput;
 export const postApiAnalyticsWarehouseRunEndpoint = {
@@ -420,7 +420,7 @@ export const getApiAuditChainOfCustodyCustodiansEndpoint = {
  * Registers a custodian with authorization scopes. Fail-closed: only registered active custodians may act on evidence.
  */
 export interface PostApiAuditChainOfCustodyCustodiansInput {
-  body?: Types.ComplianceAuditRegisterCustodianInput;
+  body: Types.ComplianceAuditRegisterCustodianInput;
 }
 export type PostApiAuditChainOfCustodyCustodiansOutput = Types.ComplianceAuditEvidenceCustodianOutput;
 export const postApiAuditChainOfCustodyCustodiansEndpoint = {
@@ -436,7 +436,7 @@ export const postApiAuditChainOfCustodyCustodiansEndpoint = {
  */
 export interface PostApiAuditChainOfCustodyCustodiansRevokeInput {
   custodianId: string;
-  body?: Types.ComplianceAuditRevokeCustodianInput;
+  body: Types.ComplianceAuditRevokeCustodianInput;
 }
 export type PostApiAuditChainOfCustodyCustodiansRevokeOutput = Types.ComplianceAuditEvidenceCustodianOutput;
 export const postApiAuditChainOfCustodyCustodiansRevokeEndpoint = {
@@ -469,7 +469,7 @@ export const getApiAuditChainOfCustodyEvidenceForGetApiAuditChainOfCustodyEviden
  * Preserves evidence under chain of custody with content hashing (audit logs, security events, value snapshots, sealed packages, or raw content).
  */
 export interface PostApiAuditChainOfCustodyEvidenceInput {
-  body?: Types.ComplianceAuditPreserveEvidenceInput;
+  body: Types.ComplianceAuditPreserveEvidenceInput;
 }
 export type PostApiAuditChainOfCustodyEvidenceOutput = Types.ComplianceAuditCustodyEvidenceOutput;
 export const postApiAuditChainOfCustodyEvidenceEndpoint = {
@@ -503,7 +503,7 @@ export const getApiAuditChainOfCustodyEvidenceForGetApiAuditChainOfCustodyEviden
  */
 export interface PostApiAuditChainOfCustodyEvidenceBreakSealInput {
   evidenceId: string;
-  body?: Types.ComplianceAuditBreakSealInput;
+  body: Types.ComplianceAuditBreakSealInput;
 }
 export type PostApiAuditChainOfCustodyEvidenceBreakSealOutput = Types.ComplianceAuditCustodyEvidenceOutput;
 export const postApiAuditChainOfCustodyEvidenceBreakSealEndpoint = {
@@ -519,7 +519,7 @@ export const postApiAuditChainOfCustodyEvidenceBreakSealEndpoint = {
  */
 export interface PostApiAuditChainOfCustodyEvidenceReleaseInput {
   evidenceId: string;
-  body?: Types.ComplianceAuditReleaseEvidenceInput;
+  body: Types.ComplianceAuditReleaseEvidenceInput;
 }
 export type PostApiAuditChainOfCustodyEvidenceReleaseOutput = Types.ComplianceAuditCustodyEvidenceOutput;
 export const postApiAuditChainOfCustodyEvidenceReleaseEndpoint = {
@@ -567,7 +567,7 @@ export const getApiAuditChainOfCustodyLegalHoldsForGetApiAuditChainOfCustodyLega
  * Creates a legal hold: immediately preserves every in-scope target under custody and records stakeholder notifications.
  */
 export interface PostApiAuditChainOfCustodyLegalHoldsInput {
-  body?: Types.ComplianceAuditCreateLegalHoldInput;
+  body: Types.ComplianceAuditCreateLegalHoldInput;
 }
 export type PostApiAuditChainOfCustodyLegalHoldsOutput = Types.ComplianceAuditLegalHoldOutput;
 export const postApiAuditChainOfCustodyLegalHoldsEndpoint = {
@@ -613,7 +613,7 @@ export const postApiAuditChainOfCustodyLegalHoldsNotifyEndpoint = {
  */
 export interface PostApiAuditChainOfCustodyLegalHoldsReleaseInput {
   holdId: string;
-  body?: Types.ComplianceAuditReleaseHoldInput;
+  body: Types.ComplianceAuditReleaseHoldInput;
 }
 export type PostApiAuditChainOfCustodyLegalHoldsReleaseOutput = Types.ComplianceAuditLegalHoldOutput;
 export const postApiAuditChainOfCustodyLegalHoldsReleaseEndpoint = {
@@ -628,7 +628,7 @@ export const postApiAuditChainOfCustodyLegalHoldsReleaseEndpoint = {
  * Builds a court-admissible custody package: full documentation, verification summary, and signed expert certification.
  */
 export interface PostApiAuditChainOfCustodyPackagesInput {
-  body?: Types.ComplianceAuditBuildCustodyPackageInput;
+  body: Types.ComplianceAuditBuildCustodyPackageInput;
 }
 export type PostApiAuditChainOfCustodyPackagesOutput = Types.ComplianceAuditCourtAdmissiblePackageOutput;
 export const postApiAuditChainOfCustodyPackagesEndpoint = {
@@ -662,7 +662,7 @@ export const getApiAuditChainOfCustodyTransfersEndpoint = {
  * Initiates a custody transfer: challenge nonce + ECDSA-signed proof binding evidence hash and both custodians.
  */
 export interface PostApiAuditChainOfCustodyTransfersInput {
-  body?: Types.ComplianceAuditInitiateTransferInput;
+  body: Types.ComplianceAuditInitiateTransferInput;
 }
 export type PostApiAuditChainOfCustodyTransfersOutput = Types.ComplianceAuditEvidenceTransferOutput;
 export const postApiAuditChainOfCustodyTransfersEndpoint = {
@@ -705,7 +705,7 @@ export const getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingEndp
 } as const;
 
 export interface PostApiAuditCompliancePackagingInput {
-  body?: Types.ComplianceAuditCreateCompliancePackageInput;
+  body: Types.ComplianceAuditCreateCompliancePackageInput;
 }
 export type PostApiAuditCompliancePackagingOutput = Types.ComplianceAuditCompliancePackageOutput;
 export const postApiAuditCompliancePackagingEndpoint = {
@@ -768,7 +768,7 @@ export const getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePack
 } as const;
 
 export interface PostApiAuditCompliancePackagingDocumentsInput {
-  body?: Types.ComplianceAuditUploadComplianceDocumentInput;
+  body: Types.ComplianceAuditUploadComplianceDocumentInput;
 }
 export type PostApiAuditCompliancePackagingDocumentsOutput = Types.ComplianceAuditComplianceDocumentOutput;
 export const postApiAuditCompliancePackagingDocumentsEndpoint = {
@@ -793,7 +793,7 @@ export const getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePack
 
 export interface PostApiAuditCompliancePackagingDocumentsReviewInput {
   id: string;
-  body?: Types.ComplianceAuditReviewComplianceDocumentInput;
+  body: Types.ComplianceAuditReviewComplianceDocumentInput;
 }
 export type PostApiAuditCompliancePackagingDocumentsReviewOutput = Types.ComplianceAuditComplianceDocumentOutput;
 export const postApiAuditCompliancePackagingDocumentsReviewEndpoint = {
@@ -866,7 +866,7 @@ export const getApiAuditEventsComprehensiveEndpoint = {
  * Export audit logs (admin only)
  */
 export interface PostApiAuditExportCsvInput {
-  body?: Types.ComplianceAuditAuditExportInput;
+  body: Types.ComplianceAuditAuditExportInput;
 }
 export type PostApiAuditExportCsvOutput = Blob;
 export const postApiAuditExportCsvEndpoint = {
@@ -881,7 +881,7 @@ export const postApiAuditExportCsvEndpoint = {
  * Streams a versioned JSON audit export with pagination metadata.
  */
 export interface PostApiAuditExportJsonInput {
-  body?: Types.ComplianceAuditAuditExportInput;
+  body: Types.ComplianceAuditAuditExportInput;
 }
 export type PostApiAuditExportJsonOutput = Types.ComplianceAuditAuditJsonExportDocument;
 export const postApiAuditExportJsonEndpoint = {
@@ -896,7 +896,7 @@ export const postApiAuditExportJsonEndpoint = {
  * Streams a versioned XML audit export with pagination metadata.
  */
 export interface PostApiAuditExportXmlInput {
-  body?: Types.ComplianceAuditAuditExportInput;
+  body: Types.ComplianceAuditAuditExportInput;
 }
 export type PostApiAuditExportXmlOutput = Blob;
 export const postApiAuditExportXmlEndpoint = {
@@ -911,7 +911,7 @@ export const postApiAuditExportXmlEndpoint = {
  * Records a field-level access observation (read or write) with automatic classification and masking.
  */
 export interface PostApiAuditFieldLevelAccessInput {
-  body?: Types.ComplianceAuditRecordFieldAccessInput;
+  body: Types.ComplianceAuditRecordFieldAccessInput;
 }
 export type PostApiAuditFieldLevelAccessOutput = Types.ComplianceAuditFieldAccessAuditOutput;
 export const postApiAuditFieldLevelAccessEndpoint = {
@@ -979,7 +979,7 @@ export const postApiAuditFieldLevelAnomaliesAcknowledgeEndpoint = {
  */
 export interface PostApiAuditFieldLevelAnomaliesResolveInput {
   id: string;
-  body?: Types.ComplianceAuditResolveFieldAccessAnomalyInput;
+  body: Types.ComplianceAuditResolveFieldAccessAnomalyInput;
 }
 export type PostApiAuditFieldLevelAnomaliesResolveOutput = Types.ComplianceAuditFieldAccessAnomalyOutput;
 export const postApiAuditFieldLevelAnomaliesResolveEndpoint = {
@@ -1028,7 +1028,7 @@ export const getApiAuditFieldLevelBulkExportsEndpoint = {
  * Evaluates an export attempt against the bulk-export thresholds, records it and alerts when exceeded.
  */
 export interface PostApiAuditFieldLevelBulkExportsEvaluateInput {
-  body?: Types.ComplianceAuditEvaluateBulkExportInput;
+  body: Types.ComplianceAuditEvaluateBulkExportInput;
 }
 export type PostApiAuditFieldLevelBulkExportsEvaluateOutput = Types.ComplianceAuditBulkExportEvaluationOutput;
 export const postApiAuditFieldLevelBulkExportsEvaluateEndpoint = {
@@ -1088,7 +1088,7 @@ export const getApiAuditFieldLevelCrossBorderTransfersEndpoint = {
  * Validates a prospective cross-border transfer against the jurisdiction policy and logs the outcome.
  */
 export interface PostApiAuditFieldLevelCrossBorderTransfersValidateInput {
-  body?: Types.ComplianceAuditValidateCrossBorderTransferInput;
+  body: Types.ComplianceAuditValidateCrossBorderTransferInput;
 }
 export type PostApiAuditFieldLevelCrossBorderTransfersValidateOutput = Types.ComplianceAuditCrossBorderTransferOutput;
 export const postApiAuditFieldLevelCrossBorderTransfersValidateEndpoint = {
@@ -1163,7 +1163,7 @@ export const getApiAuditFieldLevelGdprArticle30Endpoint = {
  * Creates or updates a processing activity record.
  */
 export interface PutApiAuditFieldLevelGdprArticle30Input {
-  body?: Types.ComplianceAuditSaveGdprActivityInput;
+  body: Types.ComplianceAuditSaveGdprActivityInput;
 }
 export type PutApiAuditFieldLevelGdprArticle30Output = Types.ComplianceAuditGdprProcessingActivityOutput;
 export const putApiAuditFieldLevelGdprArticle30Endpoint = {
@@ -1234,7 +1234,7 @@ export const getApiAuditFieldLevelRetentionEndpoint = {
  * Configures the retention rule for one sensitive data category.
  */
 export interface PutApiAuditFieldLevelRetentionInput {
-  body?: Types.ComplianceAuditConfigureSensitiveDataRetentionInput;
+  body: Types.ComplianceAuditConfigureSensitiveDataRetentionInput;
 }
 export type PutApiAuditFieldLevelRetentionOutput = Types.ComplianceAuditSensitiveDataRetentionPolicyOutput;
 export const putApiAuditFieldLevelRetentionEndpoint = {
@@ -1293,7 +1293,7 @@ export const getApiAuditRedactionPipelineRulesForGetApiAuditRedactionPipelineRul
  * Creates a redaction rule. Guarded to tenant administrators; audited; invalidates the rule cache.
  */
 export interface PostApiAuditRedactionPipelineRulesInput {
-  body?: Types.ComplianceAuditUpsertPiiRedactionRuleInput;
+  body: Types.ComplianceAuditUpsertPiiRedactionRuleInput;
 }
 export type PostApiAuditRedactionPipelineRulesOutput = Types.ComplianceAuditPiiRedactionRuleOutput;
 export const postApiAuditRedactionPipelineRulesEndpoint = {
@@ -1328,7 +1328,7 @@ export interface PutApiAuditRedactionPipelineRulesInput {
   query?: {
     expectedRevision?: number;
   };
-  body?: Types.ComplianceAuditUpsertPiiRedactionRuleInput;
+  body: Types.ComplianceAuditUpsertPiiRedactionRuleInput;
 }
 export type PutApiAuditRedactionPipelineRulesOutput = Types.ComplianceAuditPiiRedactionRuleOutput;
 export const putApiAuditRedactionPipelineRulesEndpoint = {
@@ -1362,7 +1362,7 @@ export const deleteApiAuditRedactionPipelineRulesEndpoint = {
  * pattern-recognition verification surface for administrators.
  */
 export interface PostApiAuditRedactionPipelineTestInput {
-  body?: Types.ComplianceAuditPiiRedactionTestRunInput;
+  body: Types.ComplianceAuditPiiRedactionTestRunInput;
 }
 export type PostApiAuditRedactionPipelineTestOutput = Types.ComplianceAuditPiiRedactionTestRunOutput;
 export const postApiAuditRedactionPipelineTestEndpoint = {
@@ -1419,7 +1419,7 @@ export const getApiAuditReplaySnapshotsEndpoint = {
  *             an independently protected expected digest; it does not certify event provenance or synchronize source clocks.
  */
 export interface PostApiAuditReplaySnapshotsInput {
-  body?: Types.ComplianceAuditCaptureAuditReplayInput;
+  body: Types.ComplianceAuditCaptureAuditReplayInput;
 }
 export type PostApiAuditReplaySnapshotsOutput = Types.ComplianceAuditAuditReplaySnapshotOutput;
 export const postApiAuditReplaySnapshotsEndpoint = {
@@ -1440,7 +1440,7 @@ export const postApiAuditReplaySnapshotsEndpoint = {
  *             source clock synchronization.
  */
 export interface PostApiAuditReplaySnapshotsReconstructInput {
-  body?: Types.ComplianceAuditReconstructAuditReplayInput;
+  body: Types.ComplianceAuditReconstructAuditReplayInput;
 }
 export type PostApiAuditReplaySnapshotsReconstructOutput = Types.ComplianceAuditAuditReplayReconstructionOutput;
 export const postApiAuditReplaySnapshotsReconstructEndpoint = {
@@ -1467,7 +1467,7 @@ export const getApiAuditRetentionPoliciesForGetApiAuditRetentionPoliciesEndpoint
 } as const;
 
 export interface PostApiAuditRetentionPoliciesInput {
-  body?: Types.ComplianceAuditRunAuditRetentionSimulationInput;
+  body: Types.ComplianceAuditRunAuditRetentionSimulationInput;
 }
 export type PostApiAuditRetentionPoliciesOutput = Types.ComplianceAuditAuditRetentionSimulationOutput;
 export const postApiAuditRetentionPoliciesEndpoint = {
@@ -1509,7 +1509,7 @@ export const getApiAuditRetentionPoliciesConfigurationEndpoint = {
 } as const;
 
 export interface PutApiAuditRetentionPoliciesConfigurationInput {
-  body?: Types.ComplianceAuditConfigureAuditRetentionInput;
+  body: Types.ComplianceAuditConfigureAuditRetentionInput;
 }
 export type PutApiAuditRetentionPoliciesConfigurationOutput = Types.ComplianceAuditAuditRetentionConfigurationOutput;
 export const putApiAuditRetentionPoliciesConfigurationEndpoint = {
@@ -1550,7 +1550,7 @@ export const getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationEndp
 } as const;
 
 export interface PostApiAuditRetentionSimulationInput {
-  body?: Types.ComplianceAuditRunAuditRetentionSimulationInput;
+  body: Types.ComplianceAuditRunAuditRetentionSimulationInput;
 }
 export type PostApiAuditRetentionSimulationOutput = Types.ComplianceAuditAuditRetentionSimulationOutput;
 export const postApiAuditRetentionSimulationEndpoint = {
@@ -1592,7 +1592,7 @@ export const getApiAuditRetentionSimulationConfigurationEndpoint = {
 } as const;
 
 export interface PutApiAuditRetentionSimulationConfigurationInput {
-  body?: Types.ComplianceAuditConfigureAuditRetentionInput;
+  body: Types.ComplianceAuditConfigureAuditRetentionInput;
 }
 export type PutApiAuditRetentionSimulationConfigurationOutput = Types.ComplianceAuditAuditRetentionConfigurationOutput;
 export const putApiAuditRetentionSimulationConfigurationEndpoint = {
@@ -1621,7 +1621,7 @@ export const getApiAuditRetentionSimulationTemplatesEndpoint = {
  * Searches audit events using a nested condition tree with boolean logic.
  */
 export interface PostApiAuditSearchFilterInput {
-  body?: Types.ComplianceAuditAuditConditionSearchInput;
+  body: Types.ComplianceAuditAuditConditionSearchInput;
 }
 export type PostApiAuditSearchFilterOutput = Types.ComplianceAuditAuditLogOutput;
 export const postApiAuditSearchFilterEndpoint = {
@@ -1777,7 +1777,7 @@ export const getApiAuditSecurityEventsRetentionPolicyEndpoint = {
  * Creates or updates the security log retention policy for the current tenant.
  */
 export interface PutApiAuditSecurityEventsRetentionPolicyInput {
-  body?: Types.ComplianceAuditConfigureSecurityLogRetentionInput;
+  body: Types.ComplianceAuditConfigureSecurityLogRetentionInput;
 }
 export type PutApiAuditSecurityEventsRetentionPolicyOutput = Types.ComplianceAuditSecurityLogRetentionPolicyOutput;
 export const putApiAuditSecurityEventsRetentionPolicyEndpoint = {
@@ -1925,7 +1925,7 @@ export const getApiAuditValueSnapshotsRetentionPolicyEndpoint = {
  * Creates or updates the value snapshot retention policy (retention days, archive tier, entity overrides, legal hold).
  */
 export interface PutApiAuditValueSnapshotsRetentionPolicyInput {
-  body?: Types.ComplianceAuditConfigureValueSnapshotRetentionInput;
+  body: Types.ComplianceAuditConfigureValueSnapshotRetentionInput;
 }
 export type PutApiAuditValueSnapshotsRetentionPolicyOutput = Types.ComplianceAuditValueSnapshotRetentionPolicyOutput;
 export const putApiAuditValueSnapshotsRetentionPolicyEndpoint = {
@@ -1940,7 +1940,7 @@ export const putApiAuditValueSnapshotsRetentionPolicyEndpoint = {
  * Builds a rollback plan restoring one entity to its recorded state at a point in time.
  */
 export interface PostApiAuditValueSnapshotsRollbackPlansInput {
-  body?: Types.ComplianceAuditCreateValueSnapshotRollbackPlanInput;
+  body: Types.ComplianceAuditCreateValueSnapshotRollbackPlanInput;
 }
 export type PostApiAuditValueSnapshotsRollbackPlansOutput = Types.ComplianceAuditValueSnapshotRollbackPlanOutput;
 export const postApiAuditValueSnapshotsRollbackPlansEndpoint = {
@@ -2066,7 +2066,7 @@ export const getApiCertificatesEvmProofEndpoint = {
  */
 export interface PostApiCertificatesRenewInput {
   id: string;
-  body?: Types.LearningCertificatesRenewCertificateInput;
+  body: Types.LearningCertificatesRenewCertificateInput;
 }
 export type PostApiCertificatesRenewOutput = Types.LearningCertificatesCertificateDto;
 export const postApiCertificatesRenewEndpoint = {
@@ -2082,7 +2082,7 @@ export const postApiCertificatesRenewEndpoint = {
  */
 export interface PostApiCertificatesRevokeInput {
   id: string;
-  body?: Types.LearningCertificatesRevokeCertificateInput;
+  body: Types.LearningCertificatesRevokeCertificateInput;
 }
 export type PostApiCertificatesRevokeOutput = void;
 export const postApiCertificatesRevokeEndpoint = {
@@ -2129,7 +2129,7 @@ export const getApiCertificatesExpiringEndpoint = {
  * Issue a certificate for an enrollment
  */
 export interface PostApiCertificatesIssueInput {
-  body?: Types.LearningCertificatesIssueCertificateInput;
+  body: Types.LearningCertificatesIssueCertificateInput;
 }
 export type PostApiCertificatesIssueOutput = Types.LearningCertificatesCertificateDto;
 export const postApiCertificatesIssueEndpoint = {
@@ -2157,7 +2157,7 @@ export const getApiCertificatesMyEndpoint = {
  * Create a certificate template for a course
  */
 export interface PostApiCertificatesTemplatesInput {
-  body?: Types.LearningCertificatesCreateCertificateTemplateInput;
+  body: Types.LearningCertificatesCreateCertificateTemplateInput;
 }
 export type PostApiCertificatesTemplatesOutput = Types.LearningCertificatesCertificateTemplateDetailDto;
 export const postApiCertificatesTemplatesEndpoint = {
@@ -2188,7 +2188,7 @@ export const getApiCertificatesTemplatesEndpoint = {
  */
 export interface PutApiCertificatesTemplatesInput {
   templateId: string;
-  body?: Types.LearningCertificatesUpdateCertificateTemplateInput;
+  body: Types.LearningCertificatesUpdateCertificateTemplateInput;
 }
 export type PutApiCertificatesTemplatesOutput = Types.LearningCertificatesCertificateTemplateDetailDto;
 export const putApiCertificatesTemplatesEndpoint = {
@@ -2269,7 +2269,7 @@ export const getApiCertificatesVerifyAnchorEndpoint = {
  * Create a new cohort
  */
 export interface PostApiCohortsInput {
-  body?: Types.LearningCohortsCreateCohortInput;
+  body: Types.LearningCohortsCreateCohortInput;
 }
 export type PostApiCohortsOutput = Types.LearningCohortsCohortDto;
 export const postApiCohortsEndpoint = {
@@ -2300,7 +2300,7 @@ export const getApiCohortsEndpoint = {
  */
 export interface PutApiCohortsInput {
   id: string;
-  body?: Types.LearningCohortsUpdateCohortInput;
+  body: Types.LearningCohortsUpdateCohortInput;
 }
 export type PutApiCohortsOutput = Types.LearningCohortsCohortDto;
 export const putApiCohortsEndpoint = {
@@ -2432,7 +2432,7 @@ export const getApiCohortsCourseEnrollableEndpoint = {
 } as const;
 
 export interface PostApiComplianceConsentDataSubjectRequestsInput {
-  body?: Types.ComplianceConsentSubmitDataSubjectRequestCommand;
+  body: Types.ComplianceConsentSubmitDataSubjectRequestCommand;
 }
 export type PostApiComplianceConsentDataSubjectRequestsOutput = Types.ComplianceConsentDataSubjectRequestDto;
 export const postApiComplianceConsentDataSubjectRequestsEndpoint = {
@@ -2445,7 +2445,7 @@ export const postApiComplianceConsentDataSubjectRequestsEndpoint = {
 
 export interface PostApiComplianceConsentDataSubjectRequestsProcessInput {
   requestId: string;
-  body?: Types.ComplianceConsentProcessRequestBody;
+  body: Types.ComplianceConsentProcessRequestBody;
 }
 export type PostApiComplianceConsentDataSubjectRequestsProcessOutput = Types.ComplianceConsentDataSubjectRequestDto;
 export const postApiComplianceConsentDataSubjectRequestsProcessEndpoint = {
@@ -2467,7 +2467,7 @@ export const getApiComplianceConsentDataSubjectRequestsPendingEndpoint = {
 } as const;
 
 export interface PostApiComplianceConsentGrantInput {
-  body?: Types.ComplianceConsentGrantConsentCommand;
+  body: Types.ComplianceConsentGrantConsentCommand;
 }
 export type PostApiComplianceConsentGrantOutput = Types.ComplianceConsentUserConsentDto;
 export const postApiComplianceConsentGrantEndpoint = {
@@ -2493,7 +2493,7 @@ export const getApiComplianceConsentPoliciesEndpoint = {
 } as const;
 
 export interface PostApiComplianceConsentPoliciesInput {
-  body?: Types.ComplianceConsentCreateConsentPolicyCommand;
+  body: Types.ComplianceConsentCreateConsentPolicyCommand;
 }
 export type PostApiComplianceConsentPoliciesOutput = string;
 export const postApiComplianceConsentPoliciesEndpoint = {
@@ -2506,7 +2506,7 @@ export const postApiComplianceConsentPoliciesEndpoint = {
 
 export interface PostApiComplianceConsentPoliciesVersionsInput {
   policyId: string;
-  body?: Types.ComplianceConsentPublishVersionInput;
+  body: Types.ComplianceConsentPublishVersionInput;
 }
 export type PostApiComplianceConsentPoliciesVersionsOutput = Types.ComplianceConsentPolicyVersionDto;
 export const postApiComplianceConsentPoliciesVersionsEndpoint = {
@@ -2518,7 +2518,7 @@ export const postApiComplianceConsentPoliciesVersionsEndpoint = {
 } as const;
 
 export interface PostApiComplianceConsentRevokeInput {
-  body?: Types.ComplianceConsentRevokeConsentCommand;
+  body: Types.ComplianceConsentRevokeConsentCommand;
 }
 export type PostApiComplianceConsentRevokeOutput = void;
 export const postApiComplianceConsentRevokeEndpoint = {
@@ -2530,7 +2530,7 @@ export const postApiComplianceConsentRevokeEndpoint = {
 } as const;
 
 export interface PostApiComplianceConsentUserConsentInput {
-  body?: Types.APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput;
+  body: Types.APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput;
 }
 export type PostApiComplianceConsentUserConsentOutput = Types.APICoreComplianceRecordUserConsentEndpointCommandResult;
 export const postApiComplianceConsentUserConsentEndpoint = {
@@ -2554,7 +2554,7 @@ export const getApiComplianceConsentUsersEndpoint = {
 } as const;
 
 export interface PostApiComplianceFerpaConsentsInput {
-  body?: Types.ComplianceFERPAGrantFerpaDisclosureConsentCommand;
+  body: Types.ComplianceFERPAGrantFerpaDisclosureConsentCommand;
 }
 export type PostApiComplianceFerpaConsentsOutput = Types.ComplianceFERPAFerpaDisclosureConsentDto;
 export const postApiComplianceFerpaConsentsEndpoint = {
@@ -2592,7 +2592,7 @@ export const getApiComplianceFerpaDirectoryPolicyEndpoint = {
 } as const;
 
 export interface PutApiComplianceFerpaDirectoryPolicyInput {
-  body?: Types.ComplianceFERPAUpsertDirectoryInformationPolicyCommand;
+  body: Types.ComplianceFERPAUpsertDirectoryInformationPolicyCommand;
 }
 export type PutApiComplianceFerpaDirectoryPolicyOutput = Types.ComplianceFERPAFerpaDirectoryInformationPolicyDto;
 export const putApiComplianceFerpaDirectoryPolicyEndpoint = {
@@ -2604,7 +2604,7 @@ export const putApiComplianceFerpaDirectoryPolicyEndpoint = {
 } as const;
 
 export interface PostApiComplianceFerpaDisclosuresInput {
-  body?: Types.ComplianceFERPARecordFerpaDisclosureCommand;
+  body: Types.ComplianceFERPARecordFerpaDisclosureCommand;
 }
 export type PostApiComplianceFerpaDisclosuresOutput = Types.ComplianceFERPAFerpaDisclosureLogDto;
 export const postApiComplianceFerpaDisclosuresEndpoint = {
@@ -2616,7 +2616,7 @@ export const postApiComplianceFerpaDisclosuresEndpoint = {
 } as const;
 
 export interface PostApiComplianceFerpaInspectionRequestsInput {
-  body?: Types.ComplianceFERPASubmitFerpaInspectionRequestCommand;
+  body: Types.ComplianceFERPASubmitFerpaInspectionRequestCommand;
 }
 export type PostApiComplianceFerpaInspectionRequestsOutput = Types.ComplianceFERPAFerpaInspectionRequestDto;
 export const postApiComplianceFerpaInspectionRequestsEndpoint = {
@@ -2629,7 +2629,7 @@ export const postApiComplianceFerpaInspectionRequestsEndpoint = {
 
 export interface PostApiComplianceFerpaInspectionRequestsCompleteInput {
   requestId: string;
-  body?: Types.ComplianceFERPACompleteFerpaInspectionRequestBody;
+  body: Types.ComplianceFERPACompleteFerpaInspectionRequestBody;
 }
 export type PostApiComplianceFerpaInspectionRequestsCompleteOutput = Types.ComplianceFERPAFerpaInspectionRequestDto;
 export const postApiComplianceFerpaInspectionRequestsCompleteEndpoint = {
@@ -2651,7 +2651,7 @@ export const getApiComplianceFerpaInspectionRequestsPendingEndpoint = {
 } as const;
 
 export interface PostApiComplianceFerpaRecordsInput {
-  body?: Types.ComplianceFERPARegisterEducationRecordCommand;
+  body: Types.ComplianceFERPARegisterEducationRecordCommand;
 }
 export type PostApiComplianceFerpaRecordsOutput = Types.ComplianceFERPAFerpaEducationRecordDto;
 export const postApiComplianceFerpaRecordsEndpoint = {
@@ -2792,7 +2792,7 @@ export const postApiContentsVersioningRejectEndpoint = {
  */
 export interface PostApiContentsVersioningReviewsInput {
   versionId: string;
-  body?: Types.ResourcesContentsAddReviewInput;
+  body: Types.ResourcesContentsAddReviewInput;
 }
 export type PostApiContentsVersioningReviewsOutput = Types.ResourcesContentsContentVersionReviewDto;
 export const postApiContentsVersioningReviewsEndpoint = {
@@ -2808,7 +2808,7 @@ export const postApiContentsVersioningReviewsEndpoint = {
  */
 export interface PostApiContentsVersioningScheduleInput {
   versionId: string;
-  body?: Types.ResourcesContentsScheduleInput;
+  body: Types.ResourcesContentsScheduleInput;
 }
 export type PostApiContentsVersioningScheduleOutput = Types.ResourcesContentsContentVersionDto;
 export const postApiContentsVersioningScheduleEndpoint = {
@@ -2856,7 +2856,7 @@ export const getApiContentsVersioningCompareEndpoint = {
  * Create a new draft version
  */
 export interface PostApiContentsVersioningDraftsInput {
-  body?: Types.ResourcesContentsCreateDraftInput;
+  body: Types.ResourcesContentsCreateDraftInput;
 }
 export type PostApiContentsVersioningDraftsOutput = Types.ResourcesContentsContentVersionDto;
 export const postApiContentsVersioningDraftsEndpoint = {
@@ -2872,7 +2872,7 @@ export const postApiContentsVersioningDraftsEndpoint = {
  */
 export interface PutApiContentsVersioningDraftsInput {
   versionId: string;
-  body?: Types.ResourcesContentsUpdateDraftInput;
+  body: Types.ResourcesContentsUpdateDraftInput;
 }
 export type PutApiContentsVersioningDraftsOutput = Types.ResourcesContentsContentVersionDto;
 export const putApiContentsVersioningDraftsEndpoint = {
@@ -2921,7 +2921,7 @@ export const getApiContentsVersioningEntityHistoryEndpoint = {
 export interface PostApiContentsVersioningEntityRollbackInput {
   entityType: string;
   entityId: string;
-  body?: Types.ResourcesContentsRollbackInput;
+  body: Types.ResourcesContentsRollbackInput;
 }
 export type PostApiContentsVersioningEntityRollbackOutput = Types.ResourcesContentsContentVersionDto;
 export const postApiContentsVersioningEntityRollbackEndpoint = {
@@ -2972,7 +2972,7 @@ export const getApiContentsVersioningPendingReviewEndpoint = {
  * Batch get follower counts for multiple entities
  */
 export interface PostApiFollowersBatchCountsInput {
-  body?: Types.SocialFollowsControllersBatchCountsInput;
+  body: Types.SocialFollowsControllersBatchCountsInput;
 }
 export type PostApiFollowersBatchCountsOutput = Record<string, number>;
 export const postApiFollowersBatchCountsEndpoint = {
@@ -2987,7 +2987,7 @@ export const postApiFollowersBatchCountsEndpoint = {
  * Batch get follow status for multiple entities
  */
 export interface PostApiFollowersBatchStatusInput {
-  body?: Types.SocialFollowsControllersBatchStatusInput;
+  body: Types.SocialFollowsControllersBatchStatusInput;
 }
 export type PostApiFollowersBatchStatusOutput = Record<string, boolean>;
 export const postApiFollowersBatchStatusEndpoint = {
@@ -3002,7 +3002,7 @@ export const postApiFollowersBatchStatusEndpoint = {
  * Block a user
  */
 export interface PostApiFollowersBlockInput {
-  body?: Types.SocialFollowsControllersBlockInput;
+  body: Types.SocialFollowsControllersBlockInput;
 }
 export type PostApiFollowersBlockOutput = Types.SocialFollowsControllersBlockDto;
 export const postApiFollowersBlockEndpoint = {
@@ -3070,7 +3070,7 @@ export const getApiFollowersCountFollowingEndpoint = {
  * Follow an entity
  */
 export interface PostApiFollowersFollowInput {
-  body?: Types.SocialFollowsControllersFollowInput;
+  body: Types.SocialFollowsControllersFollowInput;
 }
 export type PostApiFollowersFollowOutput = Types.SocialFollowsControllersFollowDto;
 export const postApiFollowersFollowEndpoint = {
@@ -3172,7 +3172,7 @@ export const getApiFollowersIsMutedEndpoint = {
  * Mute a user
  */
 export interface PostApiFollowersMuteInput {
-  body?: Types.SocialFollowsControllersMuteInput;
+  body: Types.SocialFollowsControllersMuteInput;
 }
 export type PostApiFollowersMuteOutput = Types.SocialFollowsControllersMuteDto;
 export const postApiFollowersMuteEndpoint = {
@@ -3223,7 +3223,7 @@ export const getApiFollowersMutualEndpoint = {
  * Update notification settings for a follow relationship
  */
 export interface PutApiFollowersNotificationsInput {
-  body?: Types.SocialFollowsControllersUpdateNotificationsInput;
+  body: Types.SocialFollowsControllersUpdateNotificationsInput;
 }
 export type PutApiFollowersNotificationsOutput = Types.SocialFollowsControllersFollowDto;
 export const putApiFollowersNotificationsEndpoint = {
@@ -3251,7 +3251,7 @@ export const getApiFollowersPrivacySettingsEndpoint = {
  * Update current user's privacy settings
  */
 export interface PutApiFollowersPrivacySettingsInput {
-  body?: Types.SocialFollowsControllersUpdatePrivacySettingsInput;
+  body: Types.SocialFollowsControllersUpdatePrivacySettingsInput;
 }
 export type PutApiFollowersPrivacySettingsOutput = Types.SocialFollowsControllersFollowPrivacySettingsDto;
 export const putApiFollowersPrivacySettingsEndpoint = {
@@ -3327,7 +3327,7 @@ export const getApiGameJamsForGetApiGameJamsEndpoint = {
 } as const;
 
 export interface PostApiGameJamsInput {
-  body?: Types.GameJamsCreateJamInput;
+  body: Types.GameJamsCreateJamInput;
 }
 export type PostApiGameJamsOutput = Types.GameJamsJamDto;
 export const postApiGameJamsEndpoint = {
@@ -3364,7 +3364,7 @@ export const getApiGameJamsCriteriaEndpoint = {
 
 export interface PostApiGameJamsCriteriaInput {
   id: string;
-  body?: Types.GameJamsAddJamCriteriaInput;
+  body: Types.GameJamsAddJamCriteriaInput;
 }
 export type PostApiGameJamsCriteriaOutput = Types.GameJamsJamCriteriaDto;
 export const postApiGameJamsCriteriaEndpoint = {
@@ -3402,7 +3402,7 @@ export const getApiGameJamsSubmissionsEndpoint = {
 
 export interface PostApiGameJamsSubmissionsInput {
   id: string;
-  body?: Types.GameJamsSubmitJamEntryInput;
+  body: Types.GameJamsSubmitJamEntryInput;
 }
 export type PostApiGameJamsSubmissionsOutput = Types.GameJamsJamSubmissionDto;
 export const postApiGameJamsSubmissionsEndpoint = {
@@ -3415,7 +3415,7 @@ export const postApiGameJamsSubmissionsEndpoint = {
 
 export interface PostApiGameJamsSubmissionsScoresInput {
   submissionId: string;
-  body?: Types.GameJamsScoreJamSubmissionInput;
+  body: Types.GameJamsScoreJamSubmissionInput;
 }
 export type PostApiGameJamsSubmissionsScoresOutput = Types.GameJamsJamScoreDto;
 export const postApiGameJamsSubmissionsScoresEndpoint = {
@@ -3475,7 +3475,7 @@ export const getApiHealthDependenciesEndpoint = {
 } as const;
 
 export interface PostApiLearningEnrollmentsInput {
-  body?: Types.LearningEnrollmentsEnrollUserInput;
+  body: Types.LearningEnrollmentsEnrollUserInput;
 }
 export type PostApiLearningEnrollmentsOutput = void;
 export const postApiLearningEnrollmentsEndpoint = {
@@ -3500,7 +3500,7 @@ export const getApiLearningEnrollmentsEndpoint = {
 
 export interface PatchApiLearningEnrollmentsProgressInput {
   id: string;
-  body?: Types.LearningEnrollmentsUpdateEnrollmentProgressInput;
+  body: Types.LearningEnrollmentsUpdateEnrollmentProgressInput;
 }
 export type PatchApiLearningEnrollmentsProgressOutput = void;
 export const patchApiLearningEnrollmentsProgressEndpoint = {
@@ -3717,7 +3717,7 @@ export const getApiNotificationsPreferencesEndpoint = {
  * Updates the current user's notification preferences
  */
 export interface PutApiNotificationsPreferencesInput {
-  body?: Types.NotificationsControllersUpdatePreferencesInput;
+  body: Types.NotificationsControllersUpdatePreferencesInput;
 }
 export type PutApiNotificationsPreferencesOutput = Types.NotificationsControllersNotificationPreferenceDto;
 export const putApiNotificationsPreferencesEndpoint = {
@@ -3732,7 +3732,7 @@ export const putApiNotificationsPreferencesEndpoint = {
  * Sets the current user's email digest frequency (null, Daily, Weekly or BiWeekly)
  */
 export interface PutApiNotificationsPreferencesDigestFrequencyInput {
-  body?: Types.NotificationsControllersUpdateDigestFrequencyInput;
+  body: Types.NotificationsControllersUpdateDigestFrequencyInput;
 }
 export type PutApiNotificationsPreferencesDigestFrequencyOutput = Types.NotificationsControllersDigestFrequencyOutput;
 export const putApiNotificationsPreferencesDigestFrequencyEndpoint = {
@@ -3747,7 +3747,7 @@ export const putApiNotificationsPreferencesDigestFrequencyEndpoint = {
  * Replaces the current user's muted notification types (full replace; empty list clears all mutes)
  */
 export interface PutApiNotificationsPreferencesMutedTypesInput {
-  body?: Types.NotificationsControllersUpdateMutedTypesInput;
+  body: Types.NotificationsControllersUpdateMutedTypesInput;
 }
 export type PutApiNotificationsPreferencesMutedTypesOutput = Types.NotificationsControllersMutedTypesOutput;
 export const putApiNotificationsPreferencesMutedTypesEndpoint = {
@@ -3762,7 +3762,7 @@ export const putApiNotificationsPreferencesMutedTypesEndpoint = {
  * Sets quiet hours for the current user
  */
 export interface PutApiNotificationsPreferencesQuietHoursInput {
-  body?: Types.NotificationsControllersSetQuietHoursInput;
+  body: Types.NotificationsControllersSetQuietHoursInput;
 }
 export type PutApiNotificationsPreferencesQuietHoursOutput = void;
 export const putApiNotificationsPreferencesQuietHoursEndpoint = {
@@ -3829,7 +3829,7 @@ export const getApiNotificationsUnreadCountEndpoint = {
  * Create a new prerequisite for a course
  */
 export interface PostApiPrerequisitesInput {
-  body?: Types.LearningCoursesCreatePrerequisiteApiInput;
+  body: Types.LearningCoursesCreatePrerequisiteApiInput;
 }
 export type PostApiPrerequisitesOutput = Types.LearningCoursesPrerequisiteDto;
 export const postApiPrerequisitesEndpoint = {
@@ -3860,7 +3860,7 @@ export const getApiPrerequisitesEndpoint = {
  */
 export interface PutApiPrerequisitesInput {
   id: string;
-  body?: Types.LearningCoursesUpdatePrerequisiteApiInput;
+  body: Types.LearningCoursesUpdatePrerequisiteApiInput;
 }
 export type PutApiPrerequisitesOutput = Types.LearningCoursesPrerequisiteDto;
 export const putApiPrerequisitesEndpoint = {
@@ -3952,7 +3952,7 @@ export const getApiPrerequisitesCourseCheckForGetApiPrerequisitesCourseByCourseI
  */
 export interface PostApiPrerequisitesCourseReorderInput {
   courseId: string;
-  body?: Types.LearningCoursesReorderPrerequisitesInput;
+  body: Types.LearningCoursesReorderPrerequisitesInput;
 }
 export type PostApiPrerequisitesCourseReorderOutput = void;
 export const postApiPrerequisitesCourseReorderEndpoint = {
@@ -3998,7 +3998,7 @@ export const getApiPrerequisitesDependentsEndpoint = {
  * Rate an entity (create or update)
  */
 export interface PostApiRatingsInput {
-  body?: Types.SocialRatingsCreateRatingInput;
+  body: Types.SocialRatingsCreateRatingInput;
 }
 export type PostApiRatingsOutput = Types.SocialRatingsRatingDto;
 export const postApiRatingsEndpoint = {
@@ -4044,7 +4044,7 @@ export const deleteApiRatingsEndpoint = {
  */
 export interface PostApiRatingsHelpfulInput {
   ratingId: string;
-  body?: Types.SocialRatingsVoteHelpfulInput;
+  body: Types.SocialRatingsVoteHelpfulInput;
 }
 export type PostApiRatingsHelpfulOutput = void;
 export const postApiRatingsHelpfulEndpoint = {
@@ -4075,7 +4075,7 @@ export const deleteApiRatingsHelpfulEndpoint = {
  */
 export interface PostApiRatingsReportInput {
   ratingId: string;
-  body?: Types.SocialRatingsReportInput;
+  body: Types.SocialRatingsReportInput;
 }
 export type PostApiRatingsReportOutput = void;
 export const postApiRatingsReportEndpoint = {
@@ -4242,7 +4242,7 @@ export const getApiRatingsMyEndpoint = {
  * Get current user's ratings for multiple entities (batch)
  */
 export interface PostApiRatingsMyBatchInput {
-  body?: Types.SocialRatingsBatchSummaryInput;
+  body: Types.SocialRatingsBatchSummaryInput;
 }
 export type PostApiRatingsMyBatchOutput = Record<string, Types.SocialRatingsRatingDto>;
 export const postApiRatingsMyBatchEndpoint = {
@@ -4275,7 +4275,7 @@ export const getApiRatingsRecentReviewsEndpoint = {
  * Get summaries for multiple entities (batch)
  */
 export interface PostApiRatingsSummariesBatchInput {
-  body?: Types.SocialRatingsBatchSummaryInput;
+  body: Types.SocialRatingsBatchSummaryInput;
 }
 export type PostApiRatingsSummariesBatchOutput = Record<string, Types.SocialRatingsRatingSummaryDto>;
 export const postApiRatingsSummariesBatchEndpoint = {
@@ -4402,7 +4402,7 @@ export const deleteApiSocialBlogAdminCommentsEndpoint = {
  * `dryRun: true` to plan without persisting.
  */
 export interface PostApiSocialBlogAdminImportGhostInput {
-  body?: Types.SocialBlogControllersGhostImportInput;
+  body: Types.SocialBlogControllersGhostImportInput;
 }
 export type PostApiSocialBlogAdminImportGhostOutput = Types.SocialBlogServicesGhostImportReport;
 export const postApiSocialBlogAdminImportGhostEndpoint = {
@@ -4493,7 +4493,7 @@ export const deleteApiSocialBlogCommentsEndpoint = {
  * Creates a draft post; the actor becomes the primary author.
  */
 export interface PostApiSocialBlogPostsInput {
-  body?: Types.SocialBlogControllersCreateBlogPostInput;
+  body: Types.SocialBlogControllersCreateBlogPostInput;
 }
 export type PostApiSocialBlogPostsOutput = Types.SocialBlogBlogPost;
 export const postApiSocialBlogPostsEndpoint = {
@@ -4524,7 +4524,7 @@ export const getApiSocialBlogPostsEndpoint = {
  */
 export interface PutApiSocialBlogPostsInput {
   id: string;
-  body?: Types.SocialBlogControllersUpdateBlogPostDraftInput;
+  body: Types.SocialBlogControllersUpdateBlogPostDraftInput;
 }
 export type PutApiSocialBlogPostsOutput = Types.SocialBlogBlogPost;
 export const putApiSocialBlogPostsEndpoint = {
@@ -4555,7 +4555,7 @@ export const deleteApiSocialBlogPostsEndpoint = {
  */
 export interface PostApiSocialBlogPostsCoauthorsInput {
   id: string;
-  body?: Types.SocialBlogControllersBlogCoauthorInput;
+  body: Types.SocialBlogControllersBlogCoauthorInput;
 }
 export type PostApiSocialBlogPostsCoauthorsOutput = void;
 export const postApiSocialBlogPostsCoauthorsEndpoint = {
@@ -4588,7 +4588,7 @@ export const deleteApiSocialBlogPostsCoauthorsEndpoint = {
  */
 export interface PostApiSocialBlogPostsCommentsInput {
   id: string;
-  body?: Types.SocialBlogControllersAddBlogCommentInput;
+  body: Types.SocialBlogControllersAddBlogCommentInput;
 }
 export type PostApiSocialBlogPostsCommentsOutput = Types.SocialBlogBlogComment;
 export const postApiSocialBlogPostsCommentsEndpoint = {
@@ -4619,7 +4619,7 @@ export const postApiSocialBlogPostsPublishEndpoint = {
  */
 export interface PostApiSocialBlogPostsSlugInput {
   id: string;
-  body?: Types.SocialBlogControllersChangeBlogPostSlugInput;
+  body: Types.SocialBlogControllersChangeBlogPostSlugInput;
 }
 export type PostApiSocialBlogPostsSlugOutput = Types.SocialBlogBlogPost;
 export const postApiSocialBlogPostsSlugEndpoint = {
@@ -4635,7 +4635,7 @@ export const postApiSocialBlogPostsSlugEndpoint = {
  */
 export interface PostApiSocialBlogPostsTransferPrimaryInput {
   id: string;
-  body?: Types.SocialBlogControllersTransferBlogPrimaryInput;
+  body: Types.SocialBlogControllersTransferBlogPrimaryInput;
 }
 export type PostApiSocialBlogPostsTransferPrimaryOutput = Types.SocialBlogBlogPost;
 export const postApiSocialBlogPostsTransferPrimaryEndpoint = {
@@ -4713,7 +4713,7 @@ export const deleteApiSocialBlogPostsAiProposalsEndpoint = {
 export interface PostApiSocialBlogPostsAiProposalsApplyInput {
   postId: string;
   proposalId: string;
-  body?: Types.SocialBlogAuthoringApplyBlogAiProposalInput;
+  body: Types.SocialBlogAuthoringApplyBlogAiProposalInput;
 }
 export type PostApiSocialBlogPostsAiProposalsApplyOutput = Types.SocialBlogAuthoringBlogPostDto;
 export const postApiSocialBlogPostsAiProposalsApplyEndpoint = {
@@ -4729,7 +4729,7 @@ export const postApiSocialBlogPostsAiProposalsApplyEndpoint = {
  */
 export interface PostApiSocialBlogPostsAiRunsInput {
   postId: string;
-  body?: Types.SocialBlogAuthoringBlogAiRunInput;
+  body: Types.SocialBlogAuthoringBlogAiRunInput;
 }
 export type PostApiSocialBlogPostsAiRunsOutput = Types.SocialBlogAuthoringBlogAiRunDto;
 export const postApiSocialBlogPostsAiRunsEndpoint = {
@@ -5063,7 +5063,7 @@ export const getApiSocialCoursesReviewsEndpoint = {
  * Creates a new discussion thread
  */
 export interface PostApiSocialDiscussionsInput {
-  body?: Types.LearningExperienceSocialServicesCreateDiscussionInput;
+  body: Types.LearningExperienceSocialServicesCreateDiscussionInput;
 }
 export type PostApiSocialDiscussionsOutput = Types.LearningExperienceSocialServicesCourseDiscussionDto;
 export const postApiSocialDiscussionsEndpoint = {
@@ -5098,7 +5098,7 @@ export const getApiSocialDiscussionsRepliesEndpoint = {
  */
 export interface PostApiSocialDiscussionsRepliesInput {
   discussionId: string;
-  body?: Types.LearningExperienceSocialServicesCreateReplyInput;
+  body: Types.LearningExperienceSocialServicesCreateReplyInput;
 }
 export type PostApiSocialDiscussionsRepliesOutput = Types.LearningExperienceSocialServicesDiscussionReplyDto;
 export const postApiSocialDiscussionsRepliesEndpoint = {
@@ -5202,7 +5202,7 @@ export const getApiSocialFeedEndpoint = {
 } as const;
 
 export interface PostApiSocialFeedInput {
-  body?: Types.SocialFeedAddFeedItemInput;
+  body: Types.SocialFeedAddFeedItemInput;
 }
 export type PostApiSocialFeedOutput = Types.SocialFeedFeedItemDto;
 export const postApiSocialFeedEndpoint = {
@@ -5374,7 +5374,7 @@ export const getApiSocialGroupsForGetApiSocialGroupsEndpoint = {
 } as const;
 
 export interface PostApiSocialGroupsInput {
-  body?: Types.SocialGroupsCreateSocialGroupInput;
+  body: Types.SocialGroupsCreateSocialGroupInput;
 }
 export type PostApiSocialGroupsOutput = Types.SocialGroupsSocialGroupDto;
 export const postApiSocialGroupsEndpoint = {
@@ -5399,7 +5399,7 @@ export const getApiSocialGroupsForGetApiSocialGroupsByIdEndpoint = {
 
 export interface PutApiSocialGroupsInput {
   id: string;
-  body?: Types.SocialGroupsUpdateSocialGroupInput;
+  body: Types.SocialGroupsUpdateSocialGroupInput;
 }
 export type PutApiSocialGroupsOutput = Types.SocialGroupsSocialGroupDto;
 export const putApiSocialGroupsEndpoint = {
@@ -5453,7 +5453,7 @@ export const getApiSocialGroupsMembersEndpoint = {
 
 export interface PostApiSocialGroupsMembersInput {
   id: string;
-  body?: Types.SocialGroupsJoinSocialGroupInput;
+  body: Types.SocialGroupsJoinSocialGroupInput;
 }
 export type PostApiSocialGroupsMembersOutput = Types.SocialGroupsSocialGroupMemberDto;
 export const postApiSocialGroupsMembersEndpoint = {
@@ -5480,7 +5480,7 @@ export const deleteApiSocialGroupsMembersEndpoint = {
 export interface PostApiSocialGroupsMembersApproveInput {
   id: string;
   userId: string;
-  body?: Types.SocialGroupsApproveSocialGroupMemberInput;
+  body: Types.SocialGroupsApproveSocialGroupMemberInput;
 }
 export type PostApiSocialGroupsMembersApproveOutput = void;
 export const postApiSocialGroupsMembersApproveEndpoint = {
@@ -5507,7 +5507,7 @@ export const postApiSocialGroupsMembersRejectEndpoint = {
 export interface PutApiSocialGroupsMembersRoleInput {
   id: string;
   userId: string;
-  body?: Types.SocialGroupsChangeSocialGroupMemberRoleInput;
+  body: Types.SocialGroupsChangeSocialGroupMemberRoleInput;
 }
 export type PutApiSocialGroupsMembersRoleOutput = void;
 export const putApiSocialGroupsMembersRoleEndpoint = {
@@ -5550,7 +5550,7 @@ export const getApiSocialLikesMeEndpoint = {
 
 export interface PostApiSocialProfilesPortfolioInput {
   profileId: string;
-  body?: Types.SocialProfilesAddProfilePortfolioItemBody;
+  body: Types.SocialProfilesAddProfilePortfolioItemBody;
 }
 export type PostApiSocialProfilesPortfolioOutput = Types.SocialProfilesProfilePortfolioItemDto;
 export const postApiSocialProfilesPortfolioEndpoint = {
@@ -5563,7 +5563,7 @@ export const postApiSocialProfilesPortfolioEndpoint = {
 
 export interface PostApiSocialProfilesSkillsInput {
   profileId: string;
-  body?: Types.SocialProfilesAddProfileSkillBody;
+  body: Types.SocialProfilesAddProfileSkillBody;
 }
 export type PostApiSocialProfilesSkillsOutput = Types.SocialProfilesProfileSkillDto;
 export const postApiSocialProfilesSkillsEndpoint = {
@@ -5588,7 +5588,7 @@ export const getApiSocialProfilesEndpoint = {
 
 export interface PutApiSocialProfilesPortfolioInput {
   itemId: string;
-  body?: Types.SocialProfilesUpdateProfilePortfolioItemBody;
+  body: Types.SocialProfilesUpdateProfilePortfolioItemBody;
 }
 export type PutApiSocialProfilesPortfolioOutput = Types.SocialProfilesProfilePortfolioItemDto;
 export const putApiSocialProfilesPortfolioEndpoint = {
@@ -5652,7 +5652,7 @@ export const getApiSocialProfilesUsersEndpoint = {
 
 export interface PutApiSocialProfilesUsersInput {
   userId: string;
-  body?: Types.SocialProfilesUpdateSocialProfileBody;
+  body: Types.SocialProfilesUpdateSocialProfileBody;
 }
 export type PutApiSocialProfilesUsersOutput = Types.SocialProfilesSocialProfileDto;
 export const putApiSocialProfilesUsersEndpoint = {
@@ -5677,7 +5677,7 @@ export const getApiSocialProfilesUsersOrCreateEndpoint = {
 
 export interface PutApiSocialProfilesUsersPrivacyInput {
   userId: string;
-  body?: Types.SocialProfilesUpdateProfilePrivacyBody;
+  body: Types.SocialProfilesUpdateProfilePrivacyBody;
 }
 export type PutApiSocialProfilesUsersPrivacyOutput = Types.SocialProfilesSocialProfileDto;
 export const putApiSocialProfilesUsersPrivacyEndpoint = {
@@ -5689,7 +5689,7 @@ export const putApiSocialProfilesUsersPrivacyEndpoint = {
 } as const;
 
 export interface PutApiSocialReactionsInput {
-  body?: Types.SocialReactionsSetReactionInput;
+  body: Types.SocialReactionsSetReactionInput;
 }
 export type PutApiSocialReactionsOutput = Types.SocialReactionsReactionDto;
 export const putApiSocialReactionsEndpoint = {
@@ -5701,7 +5701,7 @@ export const putApiSocialReactionsEndpoint = {
 } as const;
 
 export interface DeleteApiSocialReactionsInput {
-  body?: Types.SocialReactionsRemoveReactionInput;
+  body: Types.SocialReactionsRemoveReactionInput;
 }
 export type DeleteApiSocialReactionsOutput = void;
 export const deleteApiSocialReactionsEndpoint = {
@@ -5787,7 +5787,7 @@ export const postApiSocialRepliesUpvoteEndpoint = {
  * Creates a new course review
  */
 export interface PostApiSocialReviewsInput {
-  body?: Types.LearningExperienceSocialServicesCreateReviewInput;
+  body: Types.LearningExperienceSocialServicesCreateReviewInput;
 }
 export type PostApiSocialReviewsOutput = Types.LearningExperienceSocialServicesCourseReviewDto;
 export const postApiSocialReviewsEndpoint = {
@@ -5878,7 +5878,7 @@ export const postApiSocialReviewsHelpfulEndpoint = {
  */
 export interface PatchApiSocialReviewsModerationInput {
   id: string;
-  body?: Types.LearningExperienceSocialControllersUpdateReviewModerationInput;
+  body: Types.LearningExperienceSocialControllersUpdateReviewModerationInput;
 }
 export type PatchApiSocialReviewsModerationOutput = Types.LearningExperienceSocialServicesCourseReviewDto;
 export const patchApiSocialReviewsModerationEndpoint = {
@@ -5954,7 +5954,7 @@ export const getApiSocialStoriesEndpoint = {
 } as const;
 
 export interface PostApiSocialStoriesInput {
-  body?: Types.SocialFeedCreateStoryInput;
+  body: Types.SocialFeedCreateStoryInput;
 }
 export type PostApiSocialStoriesOutput = Types.SocialFeedStoryDto;
 export const postApiSocialStoriesEndpoint = {
@@ -6043,7 +6043,7 @@ export const getApiSocialWishlistCheckEndpoint = {
  */
 export interface PutApiSocialWishlistPreferencesInput {
   courseId: string;
-  body?: Types.LearningExperienceSocialServicesWishlistPreferencesInput;
+  body: Types.LearningExperienceSocialServicesWishlistPreferencesInput;
 }
 export type PutApiSocialWishlistPreferencesOutput = Types.LearningExperienceSocialServicesCourseWishlistDto;
 export const putApiSocialWishlistPreferencesEndpoint = {
@@ -6089,7 +6089,7 @@ export const getApiTestingLabPermissionsRoleTemplatesEndpoint = {
  * Create a new TestingLab role template
  */
 export interface PostApiTestingLabPermissionsRoleTemplatesInput {
-  body?: Types.TestingLabCreateTestingLabRoleInput;
+  body: Types.TestingLabCreateTestingLabRoleInput;
 }
 export type PostApiTestingLabPermissionsRoleTemplatesOutput = Types.TestingLabTestingLabRoleTemplate;
 export const postApiTestingLabPermissionsRoleTemplatesEndpoint = {
@@ -6105,7 +6105,7 @@ export const postApiTestingLabPermissionsRoleTemplatesEndpoint = {
  */
 export interface PutApiTestingLabPermissionsRoleTemplatesInput {
   idOrName: string;
-  body?: Types.TestingLabUpdateTestingLabRoleInput;
+  body: Types.TestingLabUpdateTestingLabRoleInput;
 }
 export type PutApiTestingLabPermissionsRoleTemplatesOutput = Types.TestingLabTestingLabRoleTemplate;
 export const putApiTestingLabPermissionsRoleTemplatesEndpoint = {
@@ -6192,7 +6192,7 @@ export interface PostApiTestingLabPermissionsUsersResourcesInput {
   userId: string;
   resourceType: string;
   resourceId: string;
-  body?: Types.TestingLabGrantResourcePermissionInput;
+  body: Types.TestingLabGrantResourcePermissionInput;
 }
 export type PostApiTestingLabPermissionsUsersResourcesOutput = void;
 export const postApiTestingLabPermissionsUsersResourcesEndpoint = {
@@ -6229,7 +6229,7 @@ export const deleteApiTestingLabPermissionsUsersResourcesEndpoint = {
  */
 export interface PostApiTestingLabPermissionsUsersRolesInput {
   userId: string;
-  body?: Types.TestingLabAssignTestingLabRoleInput;
+  body: Types.TestingLabAssignTestingLabRoleInput;
 }
 export type PostApiTestingLabPermissionsUsersRolesOutput = void;
 export const postApiTestingLabPermissionsUsersRolesEndpoint = {
@@ -6276,7 +6276,7 @@ export const getApiTestingLabSettingsEndpoint = {
  * Create or update testing lab settings for the current tenant
  */
 export interface PutApiTestingLabSettingsInput {
-  body?: Types.TestingLabCreateTestingLabSettingsDto;
+  body: Types.TestingLabCreateTestingLabSettingsDto;
 }
 export type PutApiTestingLabSettingsOutput = Types.TestingLabTestingLabSettingsDto;
 export const putApiTestingLabSettingsEndpoint = {
@@ -6291,7 +6291,7 @@ export const putApiTestingLabSettingsEndpoint = {
  * Update testing lab settings for the current tenant (partial update)
  */
 export interface PatchApiTestingLabSettingsInput {
-  body?: Types.TestingLabUpdateTestingLabSettingsDto;
+  body: Types.TestingLabUpdateTestingLabSettingsDto;
 }
 export type PatchApiTestingLabSettingsOutput = Types.TestingLabTestingLabSettingsDto;
 export const patchApiTestingLabSettingsEndpoint = {
@@ -6335,7 +6335,7 @@ export const postApiTestingLabSettingsResetEndpoint = {
  */
 export interface PostAccountCreditsRevokeInput {
   grantId: string;
-  body?: Types.CommercePaymentsAccountCreditsControllerRevokeCreditInput;
+  body: Types.CommercePaymentsAccountCreditsControllerRevokeCreditInput;
 }
 export type PostAccountCreditsRevokeOutput = void;
 export const postAccountCreditsRevokeEndpoint = {
@@ -6367,7 +6367,7 @@ export const getAccountCreditsBalanceEndpoint = {
  * Manually grants account credit to a tenant user with an optional expiry. The credit type restricts what the credit may be applied to. Requires the SystemAdmin role; the tenant is derived from the authenticated actor.
  */
 export interface PostAccountCreditsGrantsInput {
-  body?: Types.CommercePaymentsAccountCreditsControllerIssueCreditInput;
+  body: Types.CommercePaymentsAccountCreditsControllerIssueCreditInput;
 }
 export type PostAccountCreditsGrantsOutput = Types.CommercePaymentsAccountCreditGrant;
 export const postAccountCreditsGrantsEndpoint = {
@@ -6461,7 +6461,7 @@ export const getAdminEconomyAdRewardsReportsEndpoint = {
 } as const;
 
 export interface PostAdminEconomyAdRewardsReportsInput {
-  body?: Types.FinanceEconomyAdRewardsAdProviderReport;
+  body: Types.FinanceEconomyAdRewardsAdProviderReport;
 }
 export type PostAdminEconomyAdRewardsReportsOutput = Types.FinanceEconomyAdRewardsDurableAdProviderReportImportResult;
 export const postAdminEconomyAdRewardsReportsEndpoint = {
@@ -6529,7 +6529,7 @@ export const getAdminEconomyCapabilitiesConfigurationEndpoint = {
 } as const;
 
 export interface PostAdminEconomyCapabilitiesReadinessInput {
-  body?: Types.APIControllersInspectEconomyCapabilityReadinessInput;
+  body: Types.APIControllersInspectEconomyCapabilityReadinessInput;
 }
 export type PostAdminEconomyCapabilitiesReadinessOutput = Types.FinanceEconomyRiskEconomyCapabilityEvaluationResult;
 export const postAdminEconomyCapabilitiesReadinessEndpoint = {
@@ -6571,7 +6571,7 @@ export const getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyCompl
 
 export interface PostAdminEconomyComplianceFinancialCrimeCasesAssignmentInput {
   caseId: string;
-  body?: Types.APIControllersAssignFinancialCrimeCaseInput;
+  body: Types.APIControllersAssignFinancialCrimeCaseInput;
 }
 export type PostAdminEconomyComplianceFinancialCrimeCasesAssignmentOutput = Types.ComplianceFinancialCrimeFinancialCrimeCase;
 export const postAdminEconomyComplianceFinancialCrimeCasesAssignmentEndpoint = {
@@ -6584,7 +6584,7 @@ export const postAdminEconomyComplianceFinancialCrimeCasesAssignmentEndpoint = {
 
 export interface PostAdminEconomyComplianceFinancialCrimeCasesDecisionsInput {
   caseId: string;
-  body?: Types.APIControllersDecideFinancialCrimeCaseInput;
+  body: Types.APIControllersDecideFinancialCrimeCaseInput;
 }
 export type PostAdminEconomyComplianceFinancialCrimeCasesDecisionsOutput = Types.ComplianceFinancialCrimeFinancialCrimeCaseDecision;
 export const postAdminEconomyComplianceFinancialCrimeCasesDecisionsEndpoint = {
@@ -6597,7 +6597,7 @@ export const postAdminEconomyComplianceFinancialCrimeCasesDecisionsEndpoint = {
 
 export interface PostAdminEconomyComplianceFinancialCrimeCasesRegulatoryReferencesInput {
   caseId: string;
-  body?: Types.APIControllersRecordRegulatoryReferenceInput;
+  body: Types.APIControllersRecordRegulatoryReferenceInput;
 }
 export type PostAdminEconomyComplianceFinancialCrimeCasesRegulatoryReferencesOutput = void;
 export const postAdminEconomyComplianceFinancialCrimeCasesRegulatoryReferencesEndpoint = {
@@ -6651,7 +6651,7 @@ export const getAdminEconomyComplianceHoldsAuditEndpoint = {
 
 export interface PostAdminEconomyComplianceHoldsReleaseApprovalsInput {
   holdId: string;
-  body?: Types.APIControllersEconomyStepUpInput;
+  body: Types.APIControllersEconomyStepUpInput;
 }
 export type PostAdminEconomyComplianceHoldsReleaseApprovalsOutput = Types.FinanceEconomyRiskComplianceHoldAdministrationState;
 export const postAdminEconomyComplianceHoldsReleaseApprovalsEndpoint = {
@@ -6664,7 +6664,7 @@ export const postAdminEconomyComplianceHoldsReleaseApprovalsEndpoint = {
 
 export interface PostAdminEconomyComplianceHoldsReleaseProposalsInput {
   holdId: string;
-  body?: Types.APIControllersEconomyStepUpInput;
+  body: Types.APIControllersEconomyStepUpInput;
 }
 export type PostAdminEconomyComplianceHoldsReleaseProposalsOutput = Types.FinanceEconomyRiskComplianceHoldAdministrationState;
 export const postAdminEconomyComplianceHoldsReleaseProposalsEndpoint = {
@@ -6692,7 +6692,7 @@ export const getAdminEconomyComplianceTrustSafetyAppealsEndpoint = {
 
 export interface PostAdminEconomyComplianceTrustSafetyAppealsAssignmentInput {
   appealId: string;
-  body?: Types.APIControllersAssignTrustSafetyAppealInput;
+  body: Types.APIControllersAssignTrustSafetyAppealInput;
 }
 export type PostAdminEconomyComplianceTrustSafetyAppealsAssignmentOutput = Types.TrustSafetyTrustSafetyAppeal;
 export const postAdminEconomyComplianceTrustSafetyAppealsAssignmentEndpoint = {
@@ -6705,7 +6705,7 @@ export const postAdminEconomyComplianceTrustSafetyAppealsAssignmentEndpoint = {
 
 export interface PostAdminEconomyComplianceTrustSafetyAppealsDecisionsInput {
   appealId: string;
-  body?: Types.APIControllersDecideTrustSafetyAppealInput;
+  body: Types.APIControllersDecideTrustSafetyAppealInput;
 }
 export type PostAdminEconomyComplianceTrustSafetyAppealsDecisionsOutput = Types.TrustSafetyTrustSafetyAppeal;
 export const postAdminEconomyComplianceTrustSafetyAppealsDecisionsEndpoint = {
@@ -6733,7 +6733,7 @@ export const getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservat
 } as const;
 
 export interface PostAdminEconomyCustodyObservationsInput {
-  body?: Types.FinanceEconomyReservesCustodyObservationCommand;
+  body: Types.FinanceEconomyReservesCustodyObservationCommand;
 }
 export type PostAdminEconomyCustodyObservationsOutput = Types.FinanceEconomyReservesDurableCustodyObservation;
 export const postAdminEconomyCustodyObservationsEndpoint = {
@@ -6758,7 +6758,7 @@ export const getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservat
 } as const;
 
 export interface PostAdminEconomyKillSwitchesInput {
-  body?: Types.APIControllersActivateEconomyKillSwitchInput;
+  body: Types.APIControllersActivateEconomyKillSwitchInput;
 }
 export type PostAdminEconomyKillSwitchesOutput = Types.FinanceEconomyRiskEconomyKillSwitchState;
 export const postAdminEconomyKillSwitchesEndpoint = {
@@ -6783,7 +6783,7 @@ export const postAdminEconomyKillSwitchesReleaseEndpoint = {
 
 export interface PostAdminEconomyKillSwitchesReleaseApprovalsInput {
   killSwitchId: string;
-  body?: Types.APIControllersEconomyStepUpInput;
+  body: Types.APIControllersEconomyStepUpInput;
 }
 export type PostAdminEconomyKillSwitchesReleaseApprovalsOutput = Types.FinanceEconomyRiskEconomyKillSwitchState;
 export const postAdminEconomyKillSwitchesReleaseApprovalsEndpoint = {
@@ -6796,7 +6796,7 @@ export const postAdminEconomyKillSwitchesReleaseApprovalsEndpoint = {
 
 export interface PostAdminEconomyKillSwitchesReleaseProposalsInput {
   killSwitchId: string;
-  body?: Types.APIControllersEconomyStepUpInput;
+  body: Types.APIControllersEconomyStepUpInput;
 }
 export type PostAdminEconomyKillSwitchesReleaseProposalsOutput = Types.FinanceEconomyRiskEconomyKillSwitchState;
 export const postAdminEconomyKillSwitchesReleaseProposalsEndpoint = {
@@ -6824,7 +6824,7 @@ export const getAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsEndpoint
 } as const;
 
 export interface PostAdminEconomyLedgerAnchorsInput {
-  body?: Types.APIControllersPublishEconomyAnchorInput;
+  body: Types.APIControllersPublishEconomyAnchorInput;
 }
 export type PostAdminEconomyLedgerAnchorsOutput = Types.FinanceEconomyLedgerEconomyAnchorPublicationResult;
 export const postAdminEconomyLedgerAnchorsEndpoint = {
@@ -6920,7 +6920,7 @@ export const getAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerP
 
 export interface PostAdminEconomyLedgerProjectionGenerationsApprovalsInput {
   generation: number;
-  body?: Types.APIControllersEconomyStepUpInput;
+  body: Types.APIControllersEconomyStepUpInput;
 }
 export type PostAdminEconomyLedgerProjectionGenerationsApprovalsOutput = Types.FinanceEconomyProjectionsProjectionGenerationState;
 export const postAdminEconomyLedgerProjectionGenerationsApprovalsEndpoint = {
@@ -7000,7 +7000,7 @@ export const getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrat
 } as const;
 
 export interface PostAdminEconomyLegacyMigrationBatchesInput {
-  body?: Types.APIControllersCaptureLegacyEconomyMigrationInput;
+  body: Types.APIControllersCaptureLegacyEconomyMigrationInput;
 }
 export type PostAdminEconomyLegacyMigrationBatchesOutput = Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView;
 export const postAdminEconomyLegacyMigrationBatchesEndpoint = {
@@ -7038,7 +7038,7 @@ export const postAdminEconomyLegacyMigrationBatchesReconcileEndpoint = {
 
 export interface PostAdminEconomyLegacyMigrationBatchesCutoverApproveInput {
   batchId: string;
-  body?: Types.APIControllersApproveLegacyEconomyCutoverInput;
+  body: Types.APIControllersApproveLegacyEconomyCutoverInput;
 }
 export type PostAdminEconomyLegacyMigrationBatchesCutoverApproveOutput = Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView;
 export const postAdminEconomyLegacyMigrationBatchesCutoverApproveEndpoint = {
@@ -7051,7 +7051,7 @@ export const postAdminEconomyLegacyMigrationBatchesCutoverApproveEndpoint = {
 
 export interface PostAdminEconomyLegacyMigrationBatchesCutoverProposeInput {
   batchId: string;
-  body?: Types.APIControllersProposeLegacyEconomyCutoverInput;
+  body: Types.APIControllersProposeLegacyEconomyCutoverInput;
 }
 export type PostAdminEconomyLegacyMigrationBatchesCutoverProposeOutput = Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView;
 export const postAdminEconomyLegacyMigrationBatchesCutoverProposeEndpoint = {
@@ -7064,7 +7064,7 @@ export const postAdminEconomyLegacyMigrationBatchesCutoverProposeEndpoint = {
 
 export interface PostAdminEconomyLegacyMigrationBatchesCutoverRollbackInput {
   batchId: string;
-  body?: Types.APIControllersRollbackLegacyEconomyCutoverInput;
+  body: Types.APIControllersRollbackLegacyEconomyCutoverInput;
 }
 export type PostAdminEconomyLegacyMigrationBatchesCutoverRollbackOutput = Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView;
 export const postAdminEconomyLegacyMigrationBatchesCutoverRollbackEndpoint = {
@@ -7077,7 +7077,7 @@ export const postAdminEconomyLegacyMigrationBatchesCutoverRollbackEndpoint = {
 
 export interface PostAdminEconomyLegacyMigrationBatchesWalletsBackfillInput {
   batchId: string;
-  body?: Types.APIControllersBackfillLegacyEconomyWalletInput;
+  body: Types.APIControllersBackfillLegacyEconomyWalletInput;
 }
 export type PostAdminEconomyLegacyMigrationBatchesWalletsBackfillOutput = Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView;
 export const postAdminEconomyLegacyMigrationBatchesWalletsBackfillEndpoint = {
@@ -7165,7 +7165,7 @@ export const getAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceS
 
 export interface PostAdminEconomyMarketplaceSettlementsRefundInput {
   settlementId: string;
-  body?: Types.APIControllersRefundMarketplaceSettlementInput;
+  body: Types.APIControllersRefundMarketplaceSettlementInput;
 }
 export type PostAdminEconomyMarketplaceSettlementsRefundOutput = Types.FinanceEconomyMarketplaceDurableMarketplaceRefundResult;
 export const postAdminEconomyMarketplaceSettlementsRefundEndpoint = {
@@ -7200,7 +7200,7 @@ export const getAdminEconomyPayoutRequestsEndpoint = {
  */
 export interface PostAdminEconomyPayoutRequestsApproveInput {
   requestId: string;
-  body?: Types.FinanceEconomyPayoutsCommandsReviewPayoutRequestInput;
+  body: Types.FinanceEconomyPayoutsCommandsReviewPayoutRequestInput;
 }
 export type PostAdminEconomyPayoutRequestsApproveOutput = Types.FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto;
 export const postAdminEconomyPayoutRequestsApproveEndpoint = {
@@ -7231,7 +7231,7 @@ export const getAdminEconomyPayoutRequestsAuditEndpoint = {
  */
 export interface PostAdminEconomyPayoutRequestsRejectInput {
   requestId: string;
-  body?: Types.FinanceEconomyPayoutsCommandsReviewPayoutRequestInput;
+  body: Types.FinanceEconomyPayoutsCommandsReviewPayoutRequestInput;
 }
 export type PostAdminEconomyPayoutRequestsRejectOutput = Types.FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto;
 export const postAdminEconomyPayoutRequestsRejectEndpoint = {
@@ -7249,7 +7249,7 @@ export const postAdminEconomyPayoutRequestsRejectEndpoint = {
  */
 export interface PostAdminEconomyPayoutRequestsReserveInput {
   requestId: string;
-  body?: Types.APIControllersReserveApprovedPayoutExecutionInput;
+  body: Types.APIControllersReserveApprovedPayoutExecutionInput;
 }
 export type PostAdminEconomyPayoutRequestsReserveOutput = Types.APIControllersEconomyPayoutExecutionOperationDto;
 export const postAdminEconomyPayoutRequestsReserveEndpoint = {
@@ -7298,7 +7298,7 @@ export const getAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequ
  */
 export interface PostAdminEconomyPayoutRequestsOperationsDispatchInput {
   operationId: string;
-  body?: Types.APIControllersDispatchPayoutExecutionInput;
+  body: Types.APIControllersDispatchPayoutExecutionInput;
 }
 export type PostAdminEconomyPayoutRequestsOperationsDispatchOutput = Types.APIControllersEconomyPayoutExecutionOperationDto;
 export const postAdminEconomyPayoutRequestsOperationsDispatchEndpoint = {
@@ -7342,7 +7342,7 @@ export const getAdminEconomyPoliciesForGetAdminEconomyPoliciesEndpoint = {
 } as const;
 
 export interface PostAdminEconomyPoliciesInput {
-  body?: Types.APIControllersProposeEconomyPolicyInput;
+  body: Types.APIControllersProposeEconomyPolicyInput;
 }
 export type PostAdminEconomyPoliciesOutput = Types.FinanceEconomyRiskEconomyCapabilityPolicy;
 export const postAdminEconomyPoliciesEndpoint = {
@@ -7367,7 +7367,7 @@ export const getAdminEconomyPoliciesForGetAdminEconomyPoliciesByPolicyIdEndpoint
 
 export interface PostAdminEconomyPoliciesApproveInput {
   policyId: string;
-  body?: Types.APIControllersApproveEconomyPolicyInput;
+  body: Types.APIControllersApproveEconomyPolicyInput;
 }
 export type PostAdminEconomyPoliciesApproveOutput = Types.FinanceEconomyRiskEconomyCapabilityPolicy;
 export const postAdminEconomyPoliciesApproveEndpoint = {
@@ -7427,7 +7427,7 @@ export const getAdminEconomyReservesProposalsForGetAdminEconomyReservesProposals
 } as const;
 
 export interface PostAdminEconomyReservesProposalsInput {
-  body?: Types.APIControllersProposeEconomyReserveInput;
+  body: Types.APIControllersProposeEconomyReserveInput;
 }
 export type PostAdminEconomyReservesProposalsOutput = Types.FinanceEconomyReservesDurableReserveProposalState;
 export const postAdminEconomyReservesProposalsEndpoint = {
@@ -7453,7 +7453,7 @@ export const getAdminEconomyReservesProposalsForGetAdminEconomyReservesProposals
 
 export interface PostAdminEconomyReservesProposalsApproveInput {
   proposalId: string;
-  body?: Types.APIControllersEconomyStepUpInput;
+  body: Types.APIControllersEconomyStepUpInput;
 }
 export type PostAdminEconomyReservesProposalsApproveOutput = Types.FinanceEconomyReservesReserveHead;
 export const postAdminEconomyReservesProposalsApproveEndpoint = {
@@ -7494,7 +7494,7 @@ export const getAdminEconomyRiskReviewsForGetAdminEconomyRiskReviewsByReviewIdEn
 
 export interface PostAdminEconomyRiskReviewsApproveInput {
   reviewId: string;
-  body?: Types.APIControllersResolveEconomyRiskReviewInput;
+  body: Types.APIControllersResolveEconomyRiskReviewInput;
 }
 export type PostAdminEconomyRiskReviewsApproveOutput = Types.FinanceEconomyRiskRiskReviewCase;
 export const postAdminEconomyRiskReviewsApproveEndpoint = {
@@ -7507,7 +7507,7 @@ export const postAdminEconomyRiskReviewsApproveEndpoint = {
 
 export interface PostAdminEconomyRiskReviewsRejectInput {
   reviewId: string;
-  body?: Types.APIControllersResolveEconomyRiskReviewInput;
+  body: Types.APIControllersResolveEconomyRiskReviewInput;
 }
 export type PostAdminEconomyRiskReviewsRejectOutput = Types.FinanceEconomyRiskRiskReviewCase;
 export const postAdminEconomyRiskReviewsRejectEndpoint = {
@@ -7545,7 +7545,7 @@ export const getAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdra
 } as const;
 
 export interface PostAdminEconomyTreasuryWithdrawalsInput {
-  body?: Types.APIControllersProposeTreasuryWithdrawalInput;
+  body: Types.APIControllersProposeTreasuryWithdrawalInput;
 }
 export type PostAdminEconomyTreasuryWithdrawalsOutput = Types.FinanceEconomyTreasuryAdminWithdrawalRun;
 export const postAdminEconomyTreasuryWithdrawalsEndpoint = {
@@ -7570,7 +7570,7 @@ export const getAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdra
 
 export interface PostAdminEconomyTreasuryWithdrawalsApproveInput {
   runId: string;
-  body?: Types.APIControllersApproveTreasuryWithdrawalInput;
+  body: Types.APIControllersApproveTreasuryWithdrawalInput;
 }
 export type PostAdminEconomyTreasuryWithdrawalsApproveOutput = Types.FinanceEconomyTreasuryAdminWithdrawalRun;
 export const postAdminEconomyTreasuryWithdrawalsApproveEndpoint = {
@@ -7595,7 +7595,7 @@ export const getAdminEconomyTreasuryWithdrawalsAuditEndpoint = {
 
 export interface PostAdminEconomyTreasuryWithdrawalsDispatchInput {
   runId: string;
-  body?: Types.APIControllersDispatchTreasuryWithdrawalInput;
+  body: Types.APIControllersDispatchTreasuryWithdrawalInput;
 }
 export type PostAdminEconomyTreasuryWithdrawalsDispatchOutput = Types.FinanceEconomyTreasuryAdminWithdrawalRun;
 export const postAdminEconomyTreasuryWithdrawalsDispatchEndpoint = {
@@ -7699,7 +7699,7 @@ export const getAuthorizationContentTypesHasPermissionEndpoint = {
  * Adds explicit DENY-WINS entries to a content-type grant row.
  */
 export interface PostAuthorizationContentTypesDeniesInput {
-  body?: Types.IdentityAuthorizationDenyContentTypePermissionGrantCommand;
+  body: Types.IdentityAuthorizationDenyContentTypePermissionGrantCommand;
 }
 export type PostAuthorizationContentTypesDeniesOutput = Record<string, unknown>;
 export const postAuthorizationContentTypesDeniesEndpoint = {
@@ -7715,7 +7715,7 @@ export const postAuthorizationContentTypesDeniesEndpoint = {
  * default row for the content type).
  */
 export interface PostAuthorizationContentTypesGrantsInput {
-  body?: Types.IdentityAuthorizationGrantContentTypePermissionGrantCommand;
+  body: Types.IdentityAuthorizationGrantContentTypePermissionGrantCommand;
 }
 export type PostAuthorizationContentTypesGrantsOutput = Record<string, unknown>;
 export const postAuthorizationContentTypesGrantsEndpoint = {
@@ -7731,7 +7731,7 @@ export const postAuthorizationContentTypesGrantsEndpoint = {
  * once its payload is empty).
  */
 export interface PostAuthorizationContentTypesGrantsRevokeInput {
-  body?: Types.IdentityAuthorizationRevokeContentTypePermissionGrantCommand;
+  body: Types.IdentityAuthorizationRevokeContentTypePermissionGrantCommand;
 }
 export type PostAuthorizationContentTypesGrantsRevokeOutput = Record<string, unknown>;
 export const postAuthorizationContentTypesGrantsRevokeEndpoint = {
@@ -7746,7 +7746,7 @@ export const postAuthorizationContentTypesGrantsRevokeEndpoint = {
  * Creates a pending multi-stage approval workflow for a tenant permission grant.
  */
 export interface PostAuthorizationPermissionApprovalsInput {
-  body?: Types.IdentityAuthorizationCreatePermissionApprovalCommand;
+  body: Types.IdentityAuthorizationCreatePermissionApprovalCommand;
 }
 export type PostAuthorizationPermissionApprovalsOutput = string;
 export const postAuthorizationPermissionApprovalsEndpoint = {
@@ -7778,7 +7778,7 @@ export const getAuthorizationPermissionApprovalsEndpoint = {
  */
 export interface PostAuthorizationPermissionApprovalsDecisionsInput {
   id: string;
-  body?: Types.IdentityAuthorizationControllersDecidePermissionApprovalInput;
+  body: Types.IdentityAuthorizationControllersDecidePermissionApprovalInput;
 }
 export type PostAuthorizationPermissionApprovalsDecisionsOutput = Types.IdentityAuthorizationPermissionApprovalDecisionResult;
 export const postAuthorizationPermissionApprovalsDecisionsEndpoint = {
@@ -7882,7 +7882,7 @@ export const getAuthorizationPermissionTemplatesEndpoint = {
  * as version 1 and the creation is audited.
  */
 export interface PostAuthorizationPermissionTemplatesInput {
-  body?: Types.IdentityAuthorizationCreatePermissionTemplateCommand;
+  body: Types.IdentityAuthorizationCreatePermissionTemplateCommand;
 }
 export type PostAuthorizationPermissionTemplatesOutput = Types.IdentityAuthorizationPermissionTemplateMutationResult;
 export const postAuthorizationPermissionTemplatesEndpoint = {
@@ -7900,7 +7900,7 @@ export const postAuthorizationPermissionTemplatesEndpoint = {
  */
 export interface PutAuthorizationPermissionTemplatesInput {
   templateId: string;
-  body?: Types.IdentityAuthorizationUpdatePermissionTemplateCommand;
+  body: Types.IdentityAuthorizationUpdatePermissionTemplateCommand;
 }
 export type PutAuthorizationPermissionTemplatesOutput = Types.IdentityAuthorizationPermissionTemplateMutationResult;
 export const putAuthorizationPermissionTemplatesEndpoint = {
@@ -7937,7 +7937,7 @@ export const deleteAuthorizationPermissionTemplatesEndpoint = {
  */
 export interface PostAuthorizationPermissionTemplatesInstantiateInput {
   templateId: string;
-  body?: Types.IdentityAuthorizationInstantiateTemplateInput;
+  body: Types.IdentityAuthorizationInstantiateTemplateInput;
 }
 export type PostAuthorizationPermissionTemplatesInstantiateOutput = Types.IdentityAuthorizationPermissionTemplateInstantiationResult;
 export const postAuthorizationPermissionTemplatesInstantiateEndpoint = {
@@ -7955,7 +7955,7 @@ export const postAuthorizationPermissionTemplatesInstantiateEndpoint = {
  */
 export interface PostAuthorizationPermissionTemplatesInstantiatePreviewInput {
   templateId: string;
-  body?: Types.IdentityAuthorizationPreviewInstantiationInput;
+  body: Types.IdentityAuthorizationPreviewInstantiationInput;
 }
 export type PostAuthorizationPermissionTemplatesInstantiatePreviewOutput = Types.IdentityAuthorizationPermissionTemplateInstantiationResult;
 export const postAuthorizationPermissionTemplatesInstantiatePreviewEndpoint = {
@@ -7973,7 +7973,7 @@ export const postAuthorizationPermissionTemplatesInstantiatePreviewEndpoint = {
  */
 export interface PostAuthorizationPermissionTemplatesMigrationsInput {
   templateId: string;
-  body?: Types.IdentityAuthorizationMigrateTemplateInput;
+  body: Types.IdentityAuthorizationMigrateTemplateInput;
 }
 export type PostAuthorizationPermissionTemplatesMigrationsOutput = Types.IdentityAuthorizationPermissionTemplateMigrationResult;
 export const postAuthorizationPermissionTemplatesMigrationsEndpoint = {
@@ -8007,7 +8007,7 @@ export const getAuthorizationPermissionTemplatesMigrationsEndpoint = {
 export interface PostAuthorizationPermissionTemplatesMigrationsRollbackInput {
   templateId: string;
   migrationId: string;
-  body?: Types.IdentityAuthorizationRollbackMigrationInput;
+  body: Types.IdentityAuthorizationRollbackMigrationInput;
 }
 export type PostAuthorizationPermissionTemplatesMigrationsRollbackOutput = Types.IdentityAuthorizationPermissionTemplateMigrationResult;
 export const postAuthorizationPermissionTemplatesMigrationsRollbackEndpoint = {
@@ -8040,7 +8040,7 @@ export const getAuthorizationPermissionTemplatesVersionsEndpoint = {
  * written, no security version is bumped, no audit entry is recorded.
  */
 export interface PostAuthorizationPermissionsSimulateInput {
-  body?: Types.IdentityAuthorizationSimulatePermissionChangeCommand;
+  body: Types.IdentityAuthorizationSimulatePermissionChangeCommand;
 }
 export type PostAuthorizationPermissionsSimulateOutput = Types.IdentityAuthorizationPermissionSimulationResult;
 export const postAuthorizationPermissionsSimulateEndpoint = {
@@ -8249,7 +8249,7 @@ export const getAuthorizationResourcesInvitationsPendingEndpoint = {
  * Shares a resource with one or more users by granting them permissions.
  */
 export interface PostAuthorizationResourcesShareInput {
-  body?: Types.IdentityAuthorizationShareResourceCommand;
+  body: Types.IdentityAuthorizationShareResourceCommand;
 }
 export type PostAuthorizationResourcesShareOutput = Types.IdentityAuthorizationShareResult;
 export const postAuthorizationResourcesShareEndpoint = {
@@ -8264,7 +8264,7 @@ export const postAuthorizationResourcesShareEndpoint = {
  * Removes all access for a user on a specific resource.
  */
 export interface DeleteAuthorizationResourcesUsersAccessInput {
-  body?: Types.IdentityAuthorizationRemoveUserAccessCommand;
+  body: Types.IdentityAuthorizationRemoveUserAccessCommand;
 }
 export type DeleteAuthorizationResourcesUsersAccessOutput = Types.IdentityAuthorizationPermissionUpdateResult;
 export const deleteAuthorizationResourcesUsersAccessEndpoint = {
@@ -8279,7 +8279,7 @@ export const deleteAuthorizationResourcesUsersAccessEndpoint = {
  * Updates a specific user's permissions on a resource.
  */
 export interface PutAuthorizationResourcesUsersPermissionsInput {
-  body?: Types.IdentityAuthorizationUpdateUserPermissionsCommand;
+  body: Types.IdentityAuthorizationUpdateUserPermissionsCommand;
 }
 export type PutAuthorizationResourcesUsersPermissionsOutput = Types.IdentityAuthorizationPermissionUpdateResult;
 export const putAuthorizationResourcesUsersPermissionsEndpoint = {
@@ -8345,7 +8345,7 @@ export const getAuthorizationSyncExportEndpoint = {
  * partially applied.
  */
 export interface PostAuthorizationSyncImportInput {
-  body?: Types.IdentityAuthorizationImportPermissionSyncInput;
+  body: Types.IdentityAuthorizationImportPermissionSyncInput;
 }
 export type PostAuthorizationSyncImportOutput = Types.IdentityAuthorizationPermissionSyncImportResult;
 export const postAuthorizationSyncImportEndpoint = {
@@ -8406,7 +8406,7 @@ export const getAuthorizationTenantsPermissionsEndpoint = {
  * Sets tenant default permissions applied to all users in a tenant.
  */
 export interface PostAuthorizationTenantsDefaultsInput {
-  body?: Types.IdentityAuthorizationSetTenantDefaultPermissionsCommand;
+  body: Types.IdentityAuthorizationSetTenantDefaultPermissionsCommand;
 }
 export type PostAuthorizationTenantsDefaultsOutput = boolean;
 export const postAuthorizationTenantsDefaultsEndpoint = {
@@ -8421,7 +8421,7 @@ export const postAuthorizationTenantsDefaultsEndpoint = {
  * Denies tenant-level permissions for a user (DENY-WINS).
  */
 export interface PostAuthorizationTenantsDenyInput {
-  body?: Types.IdentityAuthorizationDenyTenantPermissionCommand;
+  body: Types.IdentityAuthorizationDenyTenantPermissionCommand;
 }
 export type PostAuthorizationTenantsDenyOutput = string;
 export const postAuthorizationTenantsDenyEndpoint = {
@@ -8436,7 +8436,7 @@ export const postAuthorizationTenantsDenyEndpoint = {
  * Removes deny entries from a user's permissions.
  */
 export interface PostAuthorizationTenantsDenyRemoveInput {
-  body?: Types.IdentityAuthorizationRemoveDenyPermissionsCommand;
+  body: Types.IdentityAuthorizationRemoveDenyPermissionsCommand;
 }
 export type PostAuthorizationTenantsDenyRemoveOutput = boolean;
 export const postAuthorizationTenantsDenyRemoveEndpoint = {
@@ -8451,7 +8451,7 @@ export const postAuthorizationTenantsDenyRemoveEndpoint = {
  * Sets global default permissions applied to all users.
  */
 export interface PostAuthorizationTenantsGlobalDefaultsInput {
-  body?: Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommand;
+  body: Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommand;
 }
 export type PostAuthorizationTenantsGlobalDefaultsOutput = boolean;
 export const postAuthorizationTenantsGlobalDefaultsEndpoint = {
@@ -8466,7 +8466,7 @@ export const postAuthorizationTenantsGlobalDefaultsEndpoint = {
  * Grants tenant-level permissions to a user.
  */
 export interface PostAuthorizationTenantsGrantInput {
-  body?: Types.IdentityAuthorizationGrantTenantPermissionCommand;
+  body: Types.IdentityAuthorizationGrantTenantPermissionCommand;
 }
 export type PostAuthorizationTenantsGrantOutput = string;
 export const postAuthorizationTenantsGrantEndpoint = {
@@ -8573,7 +8573,7 @@ export const getAuthorizationTenantsPermissionsExpiringEndpoint = {
  * Bulk-extends the expiration of permission grants in a tenant by a time period.
  */
 export interface PostAuthorizationTenantsPermissionsExtendExpirationInput {
-  body?: Types.IdentityAuthorizationExtendTenantPermissionExpirationCommand;
+  body: Types.IdentityAuthorizationExtendTenantPermissionExpirationCommand;
 }
 export type PostAuthorizationTenantsPermissionsExtendExpirationOutput = number;
 export const postAuthorizationTenantsPermissionsExtendExpirationEndpoint = {
@@ -8616,7 +8616,7 @@ export const postAuthorizationTenantsPermissionsSendExpirationRemindersEndpoint 
  * Bulk-sets an absolute expiration for permission grants in a tenant.
  */
 export interface PostAuthorizationTenantsPermissionsSetExpirationInput {
-  body?: Types.IdentityAuthorizationSetTenantPermissionExpirationCommand;
+  body: Types.IdentityAuthorizationSetTenantPermissionExpirationCommand;
 }
 export type PostAuthorizationTenantsPermissionsSetExpirationOutput = number;
 export const postAuthorizationTenantsPermissionsSetExpirationEndpoint = {
@@ -8631,7 +8631,7 @@ export const postAuthorizationTenantsPermissionsSetExpirationEndpoint = {
  * Revokes tenant-level permissions from a user.
  */
 export interface PostAuthorizationTenantsRevokeInput {
-  body?: Types.IdentityAuthorizationRevokeTenantPermissionCommand;
+  body: Types.IdentityAuthorizationRevokeTenantPermissionCommand;
 }
 export type PostAuthorizationTenantsRevokeOutput = boolean;
 export const postAuthorizationTenantsRevokeEndpoint = {
@@ -8672,7 +8672,7 @@ export const getBillingChargesEndpoint = {
  * Processes a subscription charge through the configured payment command path.
  */
 export interface PostBillingChargesInput {
-  body?: Types.CommercePaymentsBillingChargesControllerCreateBillingChargeInput;
+  body: Types.CommercePaymentsBillingChargesControllerCreateBillingChargeInput;
 }
 export type PostBillingChargesOutput = Types.CommercePaymentsPaymentResult;
 export const postBillingChargesEndpoint = {
@@ -8703,7 +8703,7 @@ export const getBillingChargeByIdEndpoint = {
  */
 export interface PostBillingChargesCancelInput {
   chargeId: string;
-  body?: Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInput;
+  body: Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInput;
 }
 export type PostBillingChargesCancelOutput = Types.CommercePaymentsPaymentCancellationResult;
 export const postBillingChargesCancelEndpoint = {
@@ -8719,7 +8719,7 @@ export const postBillingChargesCancelEndpoint = {
  */
 export interface PostBillingChargesRefundInput {
   chargeId: string;
-  body?: Types.CommercePaymentsBillingChargesControllerRefundBillingChargeInput;
+  body: Types.CommercePaymentsBillingChargesControllerRefundBillingChargeInput;
 }
 export type PostBillingChargesRefundOutput = Types.CommercePaymentsProcessRefundResult;
 export const postBillingChargesRefundEndpoint = {
@@ -8929,7 +8929,7 @@ export const postBillingExternalProvidersEnableEndpoint = {
  * tracked in issue #413. Fails closed with 400 for unknown or identical provider keys.
  */
 export interface PostBillingExternalProvidersMigrationDryRunInput {
-  body?: Types.CommerceBillingBillingExternalProvidersControllerMigrationDryRunInput;
+  body: Types.CommerceBillingBillingExternalProvidersControllerMigrationDryRunInput;
 }
 export type PostBillingExternalProvidersMigrationDryRunOutput = Types.CommerceBillingBillingProviderMigrationReport;
 export const postBillingExternalProvidersMigrationDryRunEndpoint = {
@@ -9002,7 +9002,7 @@ export const getBillingPaymentMethodsEndpoint = {
  * Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider, and an optional MethodType hint (card, bank_account, paypal, apple_pay, google_pay, wallet) states the family the token vaults. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.
  */
 export interface PostBillingPaymentMethodsInput {
-  body?: Types.CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody;
+  body: Types.CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody;
 }
 export type PostBillingPaymentMethodsOutput = Types.CommercePaymentsPaymentMethodDto;
 export const postBillingPaymentMethodsEndpoint = {
@@ -9037,7 +9037,7 @@ export const getPaymentMethodByIdEndpoint = {
  */
 export interface PutBillingPaymentMethodsInput {
   paymentMethodId: string;
-  body?: Types.CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBody;
+  body: Types.CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBody;
 }
 export type PutBillingPaymentMethodsOutput = Types.CommercePaymentsPaymentMethodDto;
 export const putBillingPaymentMethodsEndpoint = {
@@ -9125,7 +9125,7 @@ export const postBillingPaymentMethodsBankVerificationInitiateEndpoint = {
  */
 export interface PostBillingPaymentMethodsBankVerificationVerifyInput {
   paymentMethodId: string;
-  body?: Types.CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody;
+  body: Types.CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody;
 }
 export type PostBillingPaymentMethodsBankVerificationVerifyOutput = Types.CommercePaymentsBankAccountVerificationStatusDto;
 export const postBillingPaymentMethodsBankVerificationVerifyEndpoint = {
@@ -9245,7 +9245,7 @@ export const getBillingPricingEngineForGetBillingPricingEngineEndpoint = {
  * Create a new pricing rule
  */
 export interface PostBillingPricingEngineInput {
-  body?: Types.CommerceProductsCreatePricingRuleInput;
+  body: Types.CommerceProductsCreatePricingRuleInput;
 }
 export type PostBillingPricingEngineOutput = Types.CommerceProductsPricingRuleDto;
 export const postBillingPricingEngineEndpoint = {
@@ -9262,7 +9262,7 @@ export const postBillingPricingEngineEndpoint = {
  * the bucket key, and promo codes.
  */
 export interface PostBillingPricingEngineCalculateInput {
-  body?: Types.CommerceProductsCalculatePricingInput;
+  body: Types.CommerceProductsCalculatePricingInput;
 }
 export type PostBillingPricingEngineCalculateOutput = Types.CommerceProductsPricingCalculationResult;
 export const postBillingPricingEngineCalculateEndpoint = {
@@ -9293,7 +9293,7 @@ export const getBillingPricingEngineForGetBillingPricingEngineByRuleIdEndpoint =
  */
 export interface PutBillingPricingEngineInput {
   ruleId: string;
-  body?: Types.CommerceProductsUpdatePricingRuleInput;
+  body: Types.CommerceProductsUpdatePricingRuleInput;
 }
 export type PutBillingPricingEngineOutput = Types.CommerceProductsPricingRuleDto;
 export const putBillingPricingEngineEndpoint = {
@@ -9373,7 +9373,7 @@ export const getBillingPricingEngineExperimentsForGetBillingPricingEngineExperim
  * Create a pricing experiment with its arms (starts in Draft).
  */
 export interface PostBillingPricingEngineExperimentsInput {
-  body?: Types.CommerceProductsCreatePricingExperimentInput;
+  body: Types.CommerceProductsCreatePricingExperimentInput;
 }
 export type PostBillingPricingEngineExperimentsOutput = Types.CommerceProductsPricingExperimentDto;
 export const postBillingPricingEngineExperimentsEndpoint = {
@@ -9425,7 +9425,7 @@ export const getBillingPricingEngineExperimentsAnalyticsEndpoint = {
  */
 export interface PostBillingPricingEngineExperimentsAssignInput {
   experimentId: string;
-  body?: Types.CommerceProductsAssignExperimentInput;
+  body: Types.CommerceProductsAssignExperimentInput;
 }
 export type PostBillingPricingEngineExperimentsAssignOutput = Types.CommerceProductsPricingExperimentAssignmentResult;
 export const postBillingPricingEngineExperimentsAssignEndpoint = {
@@ -9456,7 +9456,7 @@ export const postBillingPricingEngineExperimentsCompleteEndpoint = {
  */
 export interface PostBillingPricingEngineExperimentsConvertInput {
   experimentId: string;
-  body?: Types.CommerceProductsRecordExperimentOutcomeInput;
+  body: Types.CommerceProductsRecordExperimentOutcomeInput;
 }
 export type PostBillingPricingEngineExperimentsConvertOutput = void;
 export const postBillingPricingEngineExperimentsConvertEndpoint = {
@@ -9540,7 +9540,7 @@ export const getBillingRevenueAuditingEndpoint = {
  * Compares external accounting/ERP statement lines against internal revenue events for an inclusive period, records an immutable reconciliation run and persists every discrepancy (missing internal/external references, amount and currency mismatches, duplicate external references). When no inline lines are supplied, lines are read from the configured external statement source.
  */
 export interface PostBillingRevenueAuditingInput {
-  body?: Types.CommercePaymentsRevenueAuditingControllerRunRevenueReconciliationInput;
+  body: Types.CommercePaymentsRevenueAuditingControllerRunRevenueReconciliationInput;
 }
 export type PostBillingRevenueAuditingOutput = Types.CommercePaymentsRevenueReconciliationRun;
 export const postBillingRevenueAuditingEndpoint = {
@@ -9833,7 +9833,7 @@ export const getBillingSubscriptionsEndpoint = {
  * Create billing subscription
  */
 export interface PostBillingSubscriptionsInput {
-  body?: Types.CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput;
+  body: Types.CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput;
 }
 export type PostBillingSubscriptionsOutput = void;
 export const postBillingSubscriptionsEndpoint = {
@@ -9864,7 +9864,7 @@ export const getBillingSubscriptionByIdEndpoint = {
  */
 export interface PostBillingSubscriptionsCancelInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInput;
+  body: Types.CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInput;
 }
 export type PostBillingSubscriptionsCancelOutput = void;
 export const postBillingSubscriptionsCancelEndpoint = {
@@ -9897,7 +9897,7 @@ export const postBillingSubscriptionsRenewEndpoint = {
  */
 export interface PostBillingSubscriptionsPlanChangeOrchestrateInput {
   subscriptionId: string;
-  body?: Types.CommerceBillingOrchestrateSubscriptionPlanChangeInput;
+  body: Types.CommerceBillingOrchestrateSubscriptionPlanChangeInput;
 }
 export type PostBillingSubscriptionsPlanChangeOrchestrateOutput = Types.CommerceBillingSubscriptionChangeSagaResult;
 export const postBillingSubscriptionsPlanChangeOrchestrateEndpoint = {
@@ -10022,7 +10022,7 @@ export const postBillingWebhooksPaypalEndpoint = {
  * authenticated actor, and the decision is audited.
  */
 export interface PostBillingWebhooksSecretsRotateInput {
-  body?: Types.CommerceBillingBillingWebhooksControllerRotateWebhookSecretInput;
+  body: Types.CommerceBillingBillingWebhooksControllerRotateWebhookSecretInput;
 }
 export type PostBillingWebhooksSecretsRotateOutput = Types.CommerceBillingWebhookSecretRotationResult;
 export const postBillingWebhooksSecretsRotateEndpoint = {
@@ -10241,7 +10241,7 @@ export const getCurrenciesSuggestionEndpoint = {
  * Converts one or many amounts into the target currency through the platform FX seam (operator overrides and synced market grids, TTL-cached). Supply asOfUtc to convert with the persisted historical snapshot effective at that date. Both currencies must be enabled for the tenant.
  */
 export interface PostCurrencyConvertInput {
-  body?: Types.CommercePaymentsConvertCurrencyInput;
+  body: Types.CommercePaymentsConvertCurrencyInput;
 }
 export type PostCurrencyConvertOutput = Types.CommercePaymentsCurrencyConversionResult;
 export const postCurrencyConvertEndpoint = {
@@ -10281,7 +10281,7 @@ export const getDisputesEndpoint = {
  * Creates a dispute against a payment. The disputing identity comes from the authenticated actor, never the request body.
  */
 export interface PostDisputesInput {
-  body?: Types.CommercePaymentsDisputesControllerCreateDisputeInput;
+  body: Types.CommercePaymentsDisputesControllerCreateDisputeInput;
 }
 export type PostDisputesOutput = Types.CommercePaymentsPaymentDispute;
 export const postDisputesEndpoint = {
@@ -10335,7 +10335,7 @@ export const postDisputesAcceptEndpoint = {
  */
 export interface PostDisputesCancelInput {
   disputeId: string;
-  body?: Types.CommercePaymentsDisputesControllerCancelDisputeInput;
+  body: Types.CommercePaymentsDisputesControllerCancelDisputeInput;
 }
 export type PostDisputesCancelOutput = void;
 export const postDisputesCancelEndpoint = {
@@ -10372,7 +10372,7 @@ export const postDisputesChallengeEndpoint = {
  */
 export interface PostDisputesResolveInput {
   disputeId: string;
-  body?: Types.CommercePaymentsDisputesControllerResolveDisputeInput;
+  body: Types.CommercePaymentsDisputesControllerResolveDisputeInput;
 }
 export type PostDisputesResolveOutput = void;
 export const postDisputesResolveEndpoint = {
@@ -10390,7 +10390,7 @@ export const postDisputesResolveEndpoint = {
  */
 export interface PostDisputesRespondInput {
   disputeId: string;
-  body?: Types.CommercePaymentsDisputesControllerRespondDisputeInput;
+  body: Types.CommercePaymentsDisputesControllerRespondDisputeInput;
 }
 export type PostDisputesRespondOutput = void;
 export const postDisputesRespondEndpoint = {
@@ -10445,7 +10445,7 @@ export const getDisputesEvidenceEndpoint = {
  */
 export interface PostDisputesEvidenceInput {
   disputeId: string;
-  body?: Types.CommercePaymentsDisputesControllerAddDisputeEvidenceInput;
+  body: Types.CommercePaymentsDisputesControllerAddDisputeEvidenceInput;
 }
 export type PostDisputesEvidenceOutput = Types.CommercePaymentsDisputeEvidence;
 export const postDisputesEvidenceEndpoint = {
@@ -10477,7 +10477,7 @@ export const getDisputesStatisticsEndpoint = {
 } as const;
 
 export interface PostEconomyAdRewardsSessionsInput {
-  body?: Types.APIControllersStartMyAdRewardSessionInput;
+  body: Types.APIControllersStartMyAdRewardSessionInput;
 }
 export type PostEconomyAdRewardsSessionsOutput = Types.FinanceEconomyAdRewardsDurableAdRewardSessionResult;
 export const postEconomyAdRewardsSessionsEndpoint = {
@@ -10502,7 +10502,7 @@ export const getEconomyAdRewardsSessionsEndpoint = {
 
 export interface PostEconomyAdRewardsSessionsCompleteInput {
   sessionId: string;
-  body?: Types.APIControllersCompleteMyAdRewardSessionInput;
+  body: Types.APIControllersCompleteMyAdRewardSessionInput;
 }
 export type PostEconomyAdRewardsSessionsCompleteOutput = Types.FinanceEconomyAdRewardsDurableAdRewardCompletionResult;
 export const postEconomyAdRewardsSessionsCompleteEndpoint = {
@@ -10528,7 +10528,7 @@ export const getEconomyBountiesForGetEconomyBountiesEndpoint = {
 } as const;
 
 export interface PostEconomyBountiesInput {
-  body?: Types.APIControllersCreateMyBountyInput;
+  body: Types.APIControllersCreateMyBountyInput;
 }
 export type PostEconomyBountiesOutput = Types.FinanceEconomyBountiesDurableBountyView;
 export const postEconomyBountiesEndpoint = {
@@ -10553,7 +10553,7 @@ export const getEconomyBountiesForGetEconomyBountiesByBountyIdEndpoint = {
 
 export interface PostEconomyBountiesClaimInput {
   bountyId: string;
-  body?: Types.APIControllersCompleteMyBountyInput;
+  body: Types.APIControllersCompleteMyBountyInput;
 }
 export type PostEconomyBountiesClaimOutput = Types.FinanceEconomyBountiesDurableBountyView;
 export const postEconomyBountiesClaimEndpoint = {
@@ -10566,7 +10566,7 @@ export const postEconomyBountiesClaimEndpoint = {
 
 export interface PostEconomyBountiesReclaimInput {
   bountyId: string;
-  body?: Types.APIControllersCompleteMyBountyInput;
+  body: Types.APIControllersCompleteMyBountyInput;
 }
 export type PostEconomyBountiesReclaimOutput = Types.FinanceEconomyBountiesDurableBountyView;
 export const postEconomyBountiesReclaimEndpoint = {
@@ -10594,7 +10594,7 @@ export const getEconomyCapabilitiesEndpoint = {
  * Convert my confirmed HardCoin balance into SoftCoin
  */
 export interface PostEconomyConversionsHardToSoftInput {
-  body?: Types.FinanceEconomyCommandsConvertMyHardToSoftInput;
+  body: Types.FinanceEconomyCommandsConvertMyHardToSoftInput;
 }
 export type PostEconomyConversionsHardToSoftOutput = Types.FinanceEconomyFundingSelfServiceHardToSoftConversionReceipt;
 export const postEconomyConversionsHardToSoftEndpoint = {
@@ -10606,7 +10606,7 @@ export const postEconomyConversionsHardToSoftEndpoint = {
 } as const;
 
 export interface PostEconomyKycAccessTokenInput {
-  body?: Types.APIControllersCreateMyKycAccessTokenInput;
+  body: Types.APIControllersCreateMyKycAccessTokenInput;
 }
 export type PostEconomyKycAccessTokenOutput = Types.ComplianceKYCKycAmlAccessToken;
 export const postEconomyKycAccessTokenEndpoint = {
@@ -10618,7 +10618,7 @@ export const postEconomyKycAccessTokenEndpoint = {
 } as const;
 
 export interface PostEconomyKycOnboardingInput {
-  body?: Types.APIControllersStartMyKycInput;
+  body: Types.APIControllersStartMyKycInput;
 }
 export type PostEconomyKycOnboardingOutput = Types.ComplianceKYCKycAmlOnboarding;
 export const postEconomyKycOnboardingEndpoint = {
@@ -10641,7 +10641,7 @@ export const getEconomyKycStatusEndpoint = {
 
 export interface PostEconomyMarketplaceOrdersSettleInput {
   orderId: string;
-  body?: Types.APIControllersSettleMyMarketplaceOrderInput;
+  body: Types.APIControllersSettleMyMarketplaceOrderInput;
 }
 export type PostEconomyMarketplaceOrdersSettleOutput = Types.FinanceEconomyMarketplaceDurableMarketplaceSettlementResult;
 export const postEconomyMarketplaceOrdersSettleEndpoint = {
@@ -10654,7 +10654,7 @@ export const postEconomyMarketplaceOrdersSettleEndpoint = {
 
 export interface PostEconomyMarketplaceSettlementsRefundInput {
   settlementId: string;
-  body?: Types.APIControllersRefundMarketplaceSettlementInput;
+  body: Types.APIControllersRefundMarketplaceSettlementInput;
 }
 export type PostEconomyMarketplaceSettlementsRefundOutput = Types.FinanceEconomyMarketplaceDurableMarketplaceRefundResult;
 export const postEconomyMarketplaceSettlementsRefundEndpoint = {
@@ -10688,7 +10688,7 @@ export const getEconomyPayoutRequestsEndpoint = {
  * Records a withdrawal request only. It does not reserve or transfer value until KYC, risk, provider, and FIFO eligibility checks pass.
  */
 export interface PostEconomyPayoutRequestsInput {
-  body?: Types.FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInput;
+  body: Types.FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInput;
 }
 export type PostEconomyPayoutRequestsOutput = Types.FinanceEconomyPayoutsQueriesEconomyPayoutRequestDto;
 export const postEconomyPayoutRequestsEndpoint = {
@@ -10795,7 +10795,7 @@ export const getEconomyTopUpsForGetEconomyTopUpsEndpoint = {
  * The server derives tenant, wallet, jurisdiction, signed quote, amount, provider binding, and idempotency authority.
  */
 export interface PostEconomyTopUpsInput {
-  body?: Types.FinanceEconomyCommandsCreateMyHardCoinTopUpInput;
+  body: Types.FinanceEconomyCommandsCreateMyHardCoinTopUpInput;
 }
 export type PostEconomyTopUpsOutput = Types.FinanceEconomyFundingSelfServiceHardCoinTopUpReceipt;
 export const postEconomyTopUpsEndpoint = {
@@ -10827,7 +10827,7 @@ export const getEconomyTopUpsForGetEconomyTopUpsByTopUpIdEndpoint = {
  * The server resolves wallets, jurisdiction, policy, reserve, risk, and posting authority. The request contains business intent only.
  */
 export interface PostEconomyTransfersInput {
-  body?: Types.FinanceEconomyTransfersSelfServiceEconomyTransferInput;
+  body: Types.FinanceEconomyTransfersSelfServiceEconomyTransferInput;
 }
 export type PostEconomyTransfersOutput = Types.FinanceEconomyTransfersSelfServiceEconomyTransferReceipt;
 export const postEconomyTransfersEndpoint = {
@@ -11001,7 +11001,7 @@ export const getFraudBlacklistEndpoint = {
  * Adds a fraud blacklist entry (or a manual whitelist override) for the caller's tenant. Values support * wildcard patterns (e.g. *.malicious.com, 192.168.*) and optional expiry dates. Idempotent per (type, value, kind). Requires the payments:admin permission.
  */
 export interface PostFraudBlacklistInput {
-  body?: Types.CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInput;
+  body: Types.CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInput;
 }
 export type PostFraudBlacklistOutput = Types.CommercePaymentsFraudBlacklistEntryResult;
 export const postFraudBlacklistEndpoint = {
@@ -11201,7 +11201,7 @@ export const getFraudReviewsDetailEndpoint = {
  * Approves the pending fraud reviews for a batch of held payments (2-100), releasing each fraud hold so the payment can be retried. Items that are not pending reviews are skipped with a reason. Requires the payments:admin permission.
  */
 export interface PostFraudReviewsBulkApproveInput {
-  body?: Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInput;
+  body: Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInput;
 }
 export type PostFraudReviewsBulkApproveOutput = Types.CommercePaymentsFraudReviewsBulkResolutionResult;
 export const postFraudReviewsBulkApproveEndpoint = {
@@ -11218,7 +11218,7 @@ export const postFraudReviewsBulkApproveEndpoint = {
  * Declines the pending fraud reviews for a batch of held payments (2-100); each stays failed and is never retried. Items that are not pending reviews are skipped with a reason. Requires the payments:admin permission.
  */
 export interface PostFraudReviewsBulkDenyInput {
-  body?: Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInput;
+  body: Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInput;
 }
 export type PostFraudReviewsBulkDenyOutput = Types.CommercePaymentsFraudReviewsBulkResolutionResult;
 export const postFraudReviewsBulkDenyEndpoint = {
@@ -11331,7 +11331,7 @@ export const getFxRatesEndpoint = {
  * Persists an audited manual override for one exact currency pair direction; overrides win over synced market rates until replaced or expired.
  */
 export interface PostFxRatesOverridesInput {
-  body?: Types.CommercePaymentsSetManualFxRateOverrideInput;
+  body: Types.CommercePaymentsSetManualFxRateOverrideInput;
 }
 export type PostFxRatesOverridesOutput = void;
 export const postFxRatesOverridesEndpoint = {
@@ -11352,7 +11352,7 @@ export const postFxRatesOverridesEndpoint = {
  */
 export interface PutFxRatesProviderKeysInput {
   provider: string;
-  body?: Types.CommercePaymentsProvisionFxProviderApiKeyInput;
+  body: Types.CommercePaymentsProvisionFxProviderApiKeyInput;
 }
 export type PutFxRatesProviderKeysOutput = Types.CommercePaymentsGatewayCredentialProvisionResult;
 export const putFxRatesProviderKeysEndpoint = {
@@ -11440,7 +11440,7 @@ export const getFxRatesVarianceEndpoint = {
  * Creates a purchased gift for the given recipient with a positive amount in an ISO 4217 currency, a duration of 1-36 months, an optional plan restriction, an optional personal message and an optional scheduled delivery date (redemption is blocked before it). The full redemption code is returned exactly once and only stored as a SHA-256 hash; unredeemed gifts expire one year after purchase.
  */
 export interface PostGiftsInput {
-  body?: Types.CommercePaymentsGiftsControllerPurchaseGiftRequestBody;
+  body: Types.CommercePaymentsGiftsControllerPurchaseGiftRequestBody;
 }
 export type PostGiftsOutput = Types.CommercePaymentsGiftPurchaseResult;
 export const postGiftsEndpoint = {
@@ -11668,7 +11668,7 @@ export const getLedgersEntriesForGetLedgersByLedgerIdEntriesEndpoint = {
  */
 export interface PostLedgersEntriesInput {
   ledgerId: string;
-  body?: Types.FinanceLedgersControllersPostEntryInput;
+  body: Types.FinanceLedgersControllersPostEntryInput;
 }
 export type PostLedgersEntriesOutput = Types.FinanceLedgersModelsLedgerEntryDto;
 export const postLedgersEntriesEndpoint = {
@@ -11781,7 +11781,7 @@ export const getLedgersRollupPeriodsEndpoint = {
  */
 export interface PostLedgersChildrenInput {
   parentLedgerId: string;
-  body?: Types.FinanceLedgersControllersCreateChildLedgerInput;
+  body: Types.FinanceLedgersControllersCreateChildLedgerInput;
 }
 export type PostLedgersChildrenOutput = Types.FinanceLedgersModelsLedgerDto;
 export const postLedgersChildrenEndpoint = {
@@ -11843,7 +11843,7 @@ export const deleteLedgersEntriesEndpoint = {
  */
 export interface PatchLedgersEntriesInput {
   entryId: string;
-  body?: Types.FinanceLedgersControllersUpdateEntryInput;
+  body: Types.FinanceLedgersControllersUpdateEntryInput;
 }
 export type PatchLedgersEntriesOutput = Types.FinanceLedgersModelsLedgerEntryDto;
 export const patchLedgersEntriesEndpoint = {
@@ -11859,7 +11859,7 @@ export const patchLedgersEntriesEndpoint = {
  */
 export interface PostLedgersEntriesReverseInput {
   entryId: string;
-  body?: Types.FinanceLedgersControllersReverseEntryInput;
+  body: Types.FinanceLedgersControllersReverseEntryInput;
 }
 export type PostLedgersEntriesReverseOutput = Types.FinanceLedgersModelsLedgerEntryDto;
 export const postLedgersEntriesReverseEndpoint = {
@@ -11874,7 +11874,7 @@ export const postLedgersEntriesReverseEndpoint = {
  * Creates a new root ledger.
  */
 export interface PostLedgersRootInput {
-  body?: Types.FinanceLedgersControllersCreateRootLedgerInput;
+  body: Types.FinanceLedgersControllersCreateRootLedgerInput;
 }
 export type PostLedgersRootOutput = Types.FinanceLedgersModelsLedgerDto;
 export const postLedgersRootEndpoint = {
@@ -11938,7 +11938,7 @@ export const getLedgersTenantVirtualEndpoint = {
  * Posts a transfer between two ledgers.
  */
 export interface PostLedgersTransfersInput {
-  body?: Types.FinanceLedgersControllersPostTransferInput;
+  body: Types.FinanceLedgersControllersPostTransferInput;
 }
 export type PostLedgersTransfersOutput = Types.FinanceLedgersModelsTransferResult;
 export const postLedgersTransfersEndpoint = {
@@ -11993,7 +11993,7 @@ export const getNotificationsSubscriptionsEndpoint = {
  */
 export interface PostNotificationsSubscriptionsResendInput {
   notificationId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInput;
+  body: Types.CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInput;
 }
 export type PostNotificationsSubscriptionsResendOutput = Types.CommerceSubscriptionsSubscriptionNotificationDto;
 export const postNotificationsSubscriptionsResendEndpoint = {
@@ -12084,7 +12084,7 @@ export const getPaymentsEndpoint = {
  * Returns CreatedAtRoute with payment details for successful transactions.
  */
 export interface PostPaymentsInput {
-  body?: Types.CommercePaymentsPaymentsControllerProcessPaymentInput;
+  body: Types.CommercePaymentsPaymentsControllerProcessPaymentInput;
 }
 export type PostPaymentsOutput = Types.CommercePaymentsPaymentResult;
 export const postPaymentsEndpoint = {
@@ -12152,7 +12152,7 @@ export const getPaymentByIdEndpoint = {
  */
 export interface PostPaymentsCancelInput {
   paymentId: string;
-  body?: Types.CommercePaymentsPaymentsControllerCancelPaymentInput;
+  body: Types.CommercePaymentsPaymentsControllerCancelPaymentInput;
 }
 export type PostPaymentsCancelOutput = Types.CommercePaymentsPaymentCancellationResult;
 export const postPaymentsCancelEndpoint = {
@@ -12186,7 +12186,7 @@ export const postPaymentsCancelEndpoint = {
  */
 export interface PostPaymentsRefundInput {
   paymentId: string;
-  body?: Types.CommercePaymentsPaymentsControllerRefundInput;
+  body: Types.CommercePaymentsPaymentsControllerRefundInput;
 }
 export type PostPaymentsRefundOutput = Types.CommercePaymentsProcessRefundResult;
 export const postPaymentsRefundEndpoint = {
@@ -12263,7 +12263,7 @@ export const getPaymentsRetryAttemptsEndpoint = {
 export interface PutPaymentsGatewaysCredentialsInput {
   providerId: string;
   secretName: string;
-  body?: Types.CommercePaymentsProvisionGatewayCredentialInput;
+  body: Types.CommercePaymentsProvisionGatewayCredentialInput;
 }
 export type PutPaymentsGatewaysCredentialsOutput = Types.CommercePaymentsGatewayCredentialProvisionResult;
 export const putPaymentsGatewaysCredentialsEndpoint = {
@@ -12434,7 +12434,7 @@ export const getPaymentsRetryingCandidatesEndpoint = {
  * Creates or reuses a Stripe customer for the subscription and returns a SetupIntent client secret for PaymentElement-based card collection.
  */
 export interface PostPaymentsSetupIntentsInput {
-  body?: Types.CommercePaymentsPaymentsControllerCreateSetupIntentInput;
+  body: Types.CommercePaymentsPaymentsControllerCreateSetupIntentInput;
 }
 export type PostPaymentsSetupIntentsOutput = Types.CommercePaymentsPaymentsControllerCreateSetupIntentOutput;
 export const postPaymentsSetupIntentsEndpoint = {
@@ -12451,7 +12451,7 @@ export const postPaymentsSetupIntentsEndpoint = {
  * Sets the confirmed Stripe payment method as the customer's default and processes the first subscription charge.
  */
 export interface PostPaymentsSubscriptionCheckoutsCompleteInput {
-  body?: Types.CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput;
+  body: Types.CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput;
 }
 export type PostPaymentsSubscriptionCheckoutsCompleteOutput = Types.CommercePaymentsPaymentResult;
 export const postPaymentsSubscriptionCheckoutsCompleteEndpoint = {
@@ -12466,7 +12466,7 @@ export const postPaymentsSubscriptionCheckoutsCompleteEndpoint = {
  * Calculate tax for a transaction
  */
 export interface PostPaymentsTaxCalculateInput {
-  body?: Types.CommercePaymentsCalculateTaxInput;
+  body: Types.CommercePaymentsCalculateTaxInput;
 }
 export type PostPaymentsTaxCalculateOutput = Types.CommercePaymentsTaxCalculationResult;
 export const postPaymentsTaxCalculateEndpoint = {
@@ -12483,7 +12483,7 @@ export const postPaymentsTaxCalculateEndpoint = {
  * Validates whether a tax exemption certificate or status is valid for a given transaction.
  */
 export interface PostPaymentsTaxValidateExemptionInput {
-  body?: Types.CommercePaymentsValidateTaxExemptionInput;
+  body: Types.CommercePaymentsValidateTaxExemptionInput;
 }
 export type PostPaymentsTaxValidateExemptionOutput = Types.CommercePaymentsTaxExemptionValidationResult;
 export const postPaymentsTaxValidateExemptionEndpoint = {
@@ -12500,7 +12500,7 @@ export const postPaymentsTaxValidateExemptionEndpoint = {
  * Validates whether a tax exemption certificate or status is valid for a given transaction.
  */
 export interface PostPaymentsTaxValidateVatInput {
-  body?: Types.CommercePaymentsValidateTaxExemptionInput;
+  body: Types.CommercePaymentsValidateTaxExemptionInput;
 }
 export type PostPaymentsTaxValidateVatOutput = Types.CommercePaymentsTaxExemptionValidationResult;
 export const postPaymentsTaxValidateVatEndpoint = {
@@ -12533,7 +12533,7 @@ export const getPostsForGetPostsEndpoint = {
  * Create a new post
  */
 export interface PostPostsInput {
-  body?: Types.SocialPostsControllersCreatePostInput;
+  body: Types.SocialPostsControllersCreatePostInput;
 }
 export type PostPostsOutput = void;
 export const postPostsEndpoint = {
@@ -12564,7 +12564,7 @@ export const getPostsForGetPostsByPostIdEndpoint = {
  */
 export interface PutPostsInput {
   postId: string;
-  body?: Types.SocialPostsControllersUpdatePostInput;
+  body: Types.SocialPostsControllersUpdatePostInput;
 }
 export type PutPostsOutput = void;
 export const putPostsEndpoint = {
@@ -12615,7 +12615,7 @@ export const getPostsCommentsEndpoint = {
  */
 export interface PostPostsCommentsInput {
   postId: string;
-  body?: Types.SocialPostsControllersAddCommentInput;
+  body: Types.SocialPostsControllersAddCommentInput;
 }
 export type PostPostsCommentsOutput = void;
 export const postPostsCommentsEndpoint = {
@@ -12632,7 +12632,7 @@ export const postPostsCommentsEndpoint = {
 export interface PutPostsCommentsInput {
   postId: string;
   commentId: string;
-  body?: Types.SocialPostsControllersUpdateCommentInput;
+  body: Types.SocialPostsControllersUpdateCommentInput;
 }
 export type PutPostsCommentsOutput = void;
 export const putPostsCommentsEndpoint = {
@@ -12972,7 +12972,7 @@ export const getPriceLocalizationEndpoint = {
 export interface PostPriceLocalizationPlansCurrenciesInput {
   planId: string;
   currencyCode: string;
-  body?: Types.CommercePaymentsSetLocalizedPriceInput;
+  body: Types.CommercePaymentsSetLocalizedPriceInput;
 }
 export type PostPriceLocalizationPlansCurrenciesOutput = Record<string, unknown>;
 export const postPriceLocalizationPlansCurrenciesEndpoint = {
@@ -13087,7 +13087,7 @@ export const postPriceLocalizationRecalculationsRollbackEndpoint = {
  * Calculates a full price (base, add-ons, usage tiers, discounts, proration, tax, credits) through the single centralized pricing engine and records the decision for audit.
  */
 export interface PostPricingCalculateInput {
-  body?: Types.CommercePaymentsPricingCalculationInput;
+  body: Types.CommercePaymentsPricingCalculationInput;
 }
 export type PostPricingCalculateOutput = Types.CommercePaymentsPricingCalculationResult;
 export const postPricingCalculateEndpoint = {
@@ -13105,7 +13105,7 @@ export const postPricingCalculateEndpoint = {
  * Previews what a plan change costs before it is applied: the immediate prorated charge and the next renewal amount, with discounts, tax, and an itemized breakdown.
  */
 export interface PostPricingPreviewInput {
-  body?: Types.CommercePaymentsPricingPreviewInput;
+  body: Types.CommercePaymentsPricingPreviewInput;
 }
 export type PostPricingPreviewOutput = Types.CommercePaymentsPricingPreviewResult;
 export const postPricingPreviewEndpoint = {
@@ -13206,7 +13206,7 @@ export const getReferralsStatsEndpoint = {
  * Records a click against a referral code (first click time kept on idempotent replays). The caller IP is hashed (SHA-256) for the same-IP fraud block and never persisted in clear.
  */
 export interface PostReferralsTrackClickInput {
-  body?: Types.CommercePaymentsReferralsControllerTrackReferralClickInput;
+  body: Types.CommercePaymentsReferralsControllerTrackReferralClickInput;
 }
 export type PostReferralsTrackClickOutput = Types.CommercePaymentsReferral;
 export const postReferralsTrackClickEndpoint = {
@@ -13223,7 +13223,7 @@ export const postReferralsTrackClickEndpoint = {
  * Attaches the calling user as the referee of the referral code. Fail-closed blocks: self-referral, referral cap (AccountCredits:MaxReferralsPerUser) and same-IP repeats under the same referrer are rejected or recorded as fraudulent without reward eligibility.
  */
 export interface PostReferralsTrackSignupInput {
-  body?: Types.CommercePaymentsReferralsControllerTrackReferralSignupInput;
+  body: Types.CommercePaymentsReferralsControllerTrackReferralSignupInput;
 }
 export type PostReferralsTrackSignupOutput = Types.CommercePaymentsReferralSignupResult;
 export const postReferralsTrackSignupEndpoint = {
@@ -13265,7 +13265,7 @@ export const getRefundsEndpoint = {
  * Records a refund request. Amounts at or above the configured manual-approval threshold enter the pending-approval queue; smaller amounts (or all refunds when no threshold is configured) execute immediately through the gateway. Use kind=prorated to refund the unused time of the subscription billing period (subscription-linked payments only).
  */
 export interface PostRefundsInput {
-  body?: Types.CommercePaymentsRefundsControllerRequestRefundHttpInput;
+  body: Types.CommercePaymentsRefundsControllerRequestRefundHttpInput;
 }
 export type PostRefundsOutput = Types.CommercePaymentsRequestRefundResult;
 export const postRefundsEndpoint = {
@@ -13397,7 +13397,7 @@ export const getReportsChurnEndpoint = {
  * Record a service level indicator metric.
  */
 export interface PostSlaSlisInput {
-  body?: Types.MonitoringSLARecordSliMetricCommand;
+  body: Types.MonitoringSLARecordSliMetricCommand;
 }
 export type PostSlaSlisOutput = void;
 export const postSlaSlisEndpoint = {
@@ -13433,7 +13433,7 @@ export const getSlaSlosForGetSlaSlosEndpoint = {
  * Create a new service level objective.
  */
 export interface PostSlaSlosInput {
-  body?: Types.MonitoringSLACreateSloCommand;
+  body: Types.MonitoringSLACreateSloCommand;
 }
 export type PostSlaSlosOutput = Types.MonitoringSLASloDto;
 export const postSlaSlosEndpoint = {
@@ -13464,7 +13464,7 @@ export const getSlaSlosForGetSlaSlosByIdEndpoint = {
  */
 export interface PutSlaSlosInput {
   id: string;
-  body?: Types.MonitoringSLAUpdateSloCommand;
+  body: Types.MonitoringSLAUpdateSloCommand;
 }
 export type PutSlaSlosOutput = Types.MonitoringSLASloDto;
 export const putSlaSlosEndpoint = {
@@ -13552,7 +13552,7 @@ export const getSlaViolationsEndpoint = {
  */
 export interface PostSlaViolationsResolveInput {
   id: string;
-  body?: Types.MonitoringSLAResolveSloViolationCommand;
+  body: Types.MonitoringSLAResolveSloViolationCommand;
 }
 export type PostSlaViolationsResolveOutput = void;
 export const postSlaViolationsResolveEndpoint = {
@@ -13604,7 +13604,7 @@ export const postSubscriptionPlansArchiveEndpoint = {
  */
 export interface PostSubscriptionPlansCloneInput {
   planId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput;
+  body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput;
 }
 export type PostSubscriptionPlansCloneOutput = void;
 export const postSubscriptionPlansCloneEndpoint = {
@@ -13639,7 +13639,7 @@ export const postSubscriptionPlansDeactivateEndpoint = {
  */
 export interface PostSubscriptionPlansExternalIdInput {
   planId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput;
+  body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput;
 }
 export type PostSubscriptionPlansExternalIdOutput = void;
 export const postSubscriptionPlansExternalIdEndpoint = {
@@ -13657,7 +13657,7 @@ export const postSubscriptionPlansExternalIdEndpoint = {
  */
 export interface PostSubscriptionPlansFeaturedInput {
   planId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInput;
+  body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInput;
 }
 export type PostSubscriptionPlansFeaturedOutput = void;
 export const postSubscriptionPlansFeaturedEndpoint = {
@@ -13675,7 +13675,7 @@ export const postSubscriptionPlansFeaturedEndpoint = {
  */
 export interface PostSubscriptionPlansValidateLimitsInput {
   planId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput;
+  body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput;
 }
 export type PostSubscriptionPlansValidateLimitsOutput = void;
 export const postSubscriptionPlansValidateLimitsEndpoint = {
@@ -13693,7 +13693,7 @@ export const postSubscriptionPlansValidateLimitsEndpoint = {
  */
 export interface PatchSubscriptionPlansDetailsInput {
   planId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput;
+  body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput;
 }
 export type PatchSubscriptionPlansDetailsOutput = void;
 export const patchSubscriptionPlansDetailsEndpoint = {
@@ -13711,7 +13711,7 @@ export const patchSubscriptionPlansDetailsEndpoint = {
  */
 export interface PatchSubscriptionPlansFeaturesInput {
   planId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput;
+  body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput;
 }
 export type PatchSubscriptionPlansFeaturesOutput = void;
 export const patchSubscriptionPlansFeaturesEndpoint = {
@@ -13729,7 +13729,7 @@ export const patchSubscriptionPlansFeaturesEndpoint = {
  */
 export interface PatchSubscriptionPlansLimitsInput {
   planId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput;
+  body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput;
 }
 export type PatchSubscriptionPlansLimitsOutput = void;
 export const patchSubscriptionPlansLimitsEndpoint = {
@@ -13768,7 +13768,7 @@ export const getSubscriptionPlansPricingEndpoint = {
  */
 export interface PatchSubscriptionPlansPricingInput {
   planId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput;
+  body: Types.CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput;
 }
 export type PatchSubscriptionPlansPricingOutput = void;
 export const patchSubscriptionPlansPricingEndpoint = {
@@ -13849,7 +13849,7 @@ export const getSubscriptionsForGetSubscriptionsEndpoint = {
  * Creates a new subscription with the provided information.
  */
 export interface PostSubscriptionsInput {
-  body?: Types.CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput;
+  body: Types.CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput;
 }
 export type PostSubscriptionsOutput = void;
 export const postSubscriptionsEndpoint = {
@@ -13899,7 +13899,7 @@ export const getSubscriptionsForGetSubscriptionsBySubscriptionIdEndpoint = {
  */
 export interface PutSubscriptionsInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput;
+  body: Types.CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput;
 }
 export type PutSubscriptionsOutput = void;
 export const putSubscriptionsEndpoint = {
@@ -13934,7 +13934,7 @@ export const deleteSubscriptionsEndpoint = {
  */
 export interface PatchSubscriptionsInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput;
+  body: Types.CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput;
 }
 export type PatchSubscriptionsOutput = void;
 export const patchSubscriptionsEndpoint = {
@@ -13986,7 +13986,7 @@ export const postSubscriptionsActivateEndpoint = {
  */
 export interface PostSubscriptionsAutoRenewInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInput;
+  body: Types.CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInput;
 }
 export type PostSubscriptionsAutoRenewOutput = void;
 export const postSubscriptionsAutoRenewEndpoint = {
@@ -14004,7 +14004,7 @@ export const postSubscriptionsAutoRenewEndpoint = {
  */
 export interface PostSubscriptionsCancelInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput;
+  body: Types.CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput;
 }
 export type PostSubscriptionsCancelOutput = void;
 export const postSubscriptionsCancelEndpoint = {
@@ -14022,7 +14022,7 @@ export const postSubscriptionsCancelEndpoint = {
  */
 export interface PostSubscriptionsDowngradeInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput;
+  body: Types.CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput;
 }
 export type PostSubscriptionsDowngradeOutput = Types.CommerceSubscriptionsSubscriptionDowngradeResult;
 export const postSubscriptionsDowngradeEndpoint = {
@@ -14040,7 +14040,7 @@ export const postSubscriptionsDowngradeEndpoint = {
  */
 export interface PostSubscriptionsEndTrialInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInput;
+  body: Types.CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInput;
 }
 export type PostSubscriptionsEndTrialOutput = void;
 export const postSubscriptionsEndTrialEndpoint = {
@@ -14058,7 +14058,7 @@ export const postSubscriptionsEndTrialEndpoint = {
  */
 export interface PostSubscriptionsExternalIdsInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInput;
+  body: Types.CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInput;
 }
 export type PostSubscriptionsExternalIdsOutput = void;
 export const postSubscriptionsExternalIdsEndpoint = {
@@ -14076,7 +14076,7 @@ export const postSubscriptionsExternalIdsEndpoint = {
  */
 export interface PostSubscriptionsPauseInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInput;
+  body: Types.CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInput;
 }
 export type PostSubscriptionsPauseOutput = void;
 export const postSubscriptionsPauseEndpoint = {
@@ -14145,7 +14145,7 @@ export const postSubscriptionsResumeEndpoint = {
  */
 export interface PostSubscriptionsStartTrialInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInput;
+  body: Types.CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInput;
 }
 export type PostSubscriptionsStartTrialOutput = void;
 export const postSubscriptionsStartTrialEndpoint = {
@@ -14163,7 +14163,7 @@ export const postSubscriptionsStartTrialEndpoint = {
  */
 export interface PostSubscriptionsSuspendInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInput;
+  body: Types.CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInput;
 }
 export type PostSubscriptionsSuspendOutput = void;
 export const postSubscriptionsSuspendEndpoint = {
@@ -14181,7 +14181,7 @@ export const postSubscriptionsSuspendEndpoint = {
  */
 export interface PostSubscriptionsUpgradeInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput;
+  body: Types.CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput;
 }
 export type PostSubscriptionsUpgradeOutput = Types.CommerceSubscriptionsSubscriptionUpgradeResult;
 export const postSubscriptionsUpgradeEndpoint = {
@@ -14257,7 +14257,7 @@ export const getSubscriptionsInvoicesEndpoint = {
  */
 export interface PostSubscriptionsPricingPreviewInput {
   subscriptionId: string;
-  body?: Types.CommerceSubscriptionsPreviewSubscriptionPlanChangeInput;
+  body: Types.CommerceSubscriptionsPreviewSubscriptionPlanChangeInput;
 }
 export type PostSubscriptionsPricingPreviewOutput = Types.CommercePaymentsPricingPreviewResult;
 export const postSubscriptionsPricingPreviewEndpoint = {
@@ -14304,7 +14304,7 @@ export const getTaxJurisdictionsForGetTaxJurisdictionsEndpoint = {
  * Creates a new tax jurisdiction with the provided information.
  */
 export interface PostTaxJurisdictionsInput {
-  body?: Types.CommercePaymentsCreateTaxJurisdictionInput;
+  body: Types.CommercePaymentsCreateTaxJurisdictionInput;
 }
 export type PostTaxJurisdictionsOutput = void;
 export const postTaxJurisdictionsEndpoint = {
@@ -14356,7 +14356,7 @@ export const deleteTaxJurisdictionsEndpoint = {
  */
 export interface PatchTaxJurisdictionsInput {
   jurisdictionId: string;
-  body?: Types.CommercePaymentsPatchTaxJurisdictionInput;
+  body: Types.CommercePaymentsPatchTaxJurisdictionInput;
 }
 export type PatchTaxJurisdictionsOutput = void;
 export const patchTaxJurisdictionsEndpoint = {
@@ -14392,7 +14392,7 @@ export const getTaxRulesForGetTaxRulesEndpoint = {
  * Creates a new tax rule with the provided information.
  */
 export interface PostTaxRulesInput {
-  body?: Types.CommercePaymentsCreateTaxRuleInput;
+  body: Types.CommercePaymentsCreateTaxRuleInput;
 }
 export type PostTaxRulesOutput = void;
 export const postTaxRulesEndpoint = {
@@ -14444,7 +14444,7 @@ export const deleteTaxRulesEndpoint = {
  */
 export interface PatchTaxRulesInput {
   ruleId: string;
-  body?: Types.CommercePaymentsPatchTaxRuleInput;
+  body: Types.CommercePaymentsPatchTaxRuleInput;
 }
 export type PatchTaxRulesOutput = void;
 export const patchTaxRulesEndpoint = {
@@ -14459,7 +14459,7 @@ export const patchTaxRulesEndpoint = {
  * Calculate tax for a transaction
  */
 export interface PostTaxesCalculateInput {
-  body?: Types.CommercePaymentsCalculateTaxInput;
+  body: Types.CommercePaymentsCalculateTaxInput;
 }
 export type PostTaxesCalculateOutput = Types.CommercePaymentsTaxCalculationResult;
 export const postTaxesCalculateEndpoint = {
@@ -14476,7 +14476,7 @@ export const postTaxesCalculateEndpoint = {
  * Validates whether a tax exemption certificate or status is valid for a given transaction.
  */
 export interface PostTaxesValidateExemptionInput {
-  body?: Types.CommercePaymentsValidateTaxExemptionInput;
+  body: Types.CommercePaymentsValidateTaxExemptionInput;
 }
 export type PostTaxesValidateExemptionOutput = Types.CommercePaymentsTaxExemptionValidationResult;
 export const postTaxesValidateExemptionEndpoint = {
@@ -14493,7 +14493,7 @@ export const postTaxesValidateExemptionEndpoint = {
  * Validates whether a tax exemption certificate or status is valid for a given transaction.
  */
 export interface PostTaxesValidateVatInput {
-  body?: Types.CommercePaymentsValidateTaxExemptionInput;
+  body: Types.CommercePaymentsValidateTaxExemptionInput;
 }
 export type PostTaxesValidateVatOutput = Types.CommercePaymentsTaxExemptionValidationResult;
 export const postTaxesValidateVatEndpoint = {
@@ -14521,7 +14521,7 @@ export const getWalletEndpoint = {
  * Create my wallet
  */
 export interface PostWalletInput {
-  body?: Types.CommercePaymentsCreateWalletInput;
+  body: Types.CommercePaymentsCreateWalletInput;
 }
 export type PostWalletOutput = Types.CommercePaymentsUserWallet;
 export const postWalletEndpoint = {
@@ -14536,7 +14536,7 @@ export const postWalletEndpoint = {
  * Lock my wallet
  */
 export interface PostWalletLockInput {
-  body?: Types.CommercePaymentsLockWalletInput;
+  body: Types.CommercePaymentsLockWalletInput;
 }
 export type PostWalletLockOutput = void;
 export const postWalletLockEndpoint = {
@@ -14599,7 +14599,7 @@ export const getWalletsForGetWalletsEndpoint = {
  * idempotently.
  */
 export interface PostWalletsTransferInput {
-  body?: Types.CommercePaymentsModelsTransferWalletsInput;
+  body: Types.CommercePaymentsModelsTransferWalletsInput;
 }
 export type PostWalletsTransferOutput = Types.CommercePaymentsModelsTransferWalletsOutput;
 export const postWalletsTransferEndpoint = {
@@ -14645,7 +14645,7 @@ export const deleteWalletsEndpoint = {
  */
 export interface PatchWalletsInput {
   walletId: string;
-  body?: Types.CommercePaymentsModelsPatchWalletInput;
+  body: Types.CommercePaymentsModelsPatchWalletInput;
 }
 export type PatchWalletsOutput = void;
 export const patchWalletsEndpoint = {
@@ -14678,7 +14678,7 @@ export const headWalletsEndpoint = {
  */
 export interface PostWalletsAdjustInput {
   walletId: string;
-  body?: Types.CommercePaymentsModelsAdjustWalletInput;
+  body: Types.CommercePaymentsModelsAdjustWalletInput;
 }
 export type PostWalletsAdjustOutput = Types.CommercePaymentsWalletTransaction;
 export const postWalletsAdjustEndpoint = {
@@ -14694,7 +14694,7 @@ export const postWalletsAdjustEndpoint = {
  */
 export interface PostWalletsFreezeInput {
   walletId: string;
-  body?: Types.CommercePaymentsModelsFreezeWalletInput;
+  body: Types.CommercePaymentsModelsFreezeWalletInput;
 }
 export type PostWalletsFreezeOutput = void;
 export const postWalletsFreezeEndpoint = {
@@ -14798,7 +14798,7 @@ export const getWhatsappBroadcastsForGetWhatsappBroadcastsEndpoint = {
  * Creates a draft broadcast campaign. The template must be on the configured allowlist.
  */
 export interface PostWhatsappBroadcastsInput {
-  body?: Types.NotificationsControllersCreateWhatsAppBroadcastInput;
+  body: Types.NotificationsControllersCreateWhatsAppBroadcastInput;
 }
 export type PostWhatsappBroadcastsOutput = Types.NotificationsControllersWhatsAppBroadcastDto;
 export const postWhatsappBroadcastsEndpoint = {
@@ -14832,7 +14832,7 @@ export const getWhatsappBroadcastsForGetWhatsappBroadcastsByIdEndpoint = {
  */
 export interface PostWhatsappBroadcastsCancelInput {
   id: string;
-  body?: Types.NotificationsControllersCancelWhatsAppBroadcastInput;
+  body: Types.NotificationsControllersCancelWhatsAppBroadcastInput;
 }
 export type PostWhatsappBroadcastsCancelOutput = Types.NotificationsControllersWhatsAppBroadcastDto;
 export const postWhatsappBroadcastsCancelEndpoint = {
@@ -14848,7 +14848,7 @@ export const postWhatsappBroadcastsCancelEndpoint = {
  */
 export interface PostWhatsappBroadcastsScheduleInput {
   id: string;
-  body?: Types.NotificationsControllersScheduleWhatsAppBroadcastInput;
+  body: Types.NotificationsControllersScheduleWhatsAppBroadcastInput;
 }
 export type PostWhatsappBroadcastsScheduleOutput = Types.NotificationsControllersWhatsAppBroadcastDto;
 export const postWhatsappBroadcastsScheduleEndpoint = {
@@ -14864,7 +14864,7 @@ export const postWhatsappBroadcastsScheduleEndpoint = {
  */
 export interface PostWhatsappBroadcastsSendInput {
   id: string;
-  body?: Types.NotificationsControllersSendWhatsAppBroadcastInput;
+  body: Types.NotificationsControllersSendWhatsAppBroadcastInput;
 }
 export type PostWhatsappBroadcastsSendOutput = Types.NotificationsControllersWhatsAppBroadcastSendReportDto;
 export const postWhatsappBroadcastsSendEndpoint = {
@@ -15125,7 +15125,7 @@ export const getReadyEndpoint = {
 } as const;
 
 export interface PostScimV2BulkInput {
-  body?: Types.IdentityProvisioningScimScimBulkInput;
+  body: Types.IdentityProvisioningScimScimBulkInput;
 }
 export type PostScimV2BulkOutput = Types.IdentityProvisioningScimScimBulkOutput;
 export const postScimV2BulkEndpoint = {
@@ -15159,7 +15159,7 @@ export const getScimV2GroupsForGetScimV2GroupsEndpoint = {
  * Creates a group. Idempotent on externalId (repeat POST returns 200).
  */
 export interface PostScimV2GroupsInput {
-  body?: Types.IdentityProvisioningScimScimGroupInput;
+  body: Types.IdentityProvisioningScimScimGroupInput;
 }
 export type PostScimV2GroupsOutput = Types.IdentityProvisioningScimScimGroupResource;
 export const postScimV2GroupsEndpoint = {
@@ -15190,7 +15190,7 @@ export const getScimV2GroupsForGetScimV2GroupsByRoleIdEndpoint = {
  */
 export interface PutScimV2GroupsInput {
   roleId: string;
-  body?: Types.IdentityProvisioningScimScimGroupInput;
+  body: Types.IdentityProvisioningScimScimGroupInput;
 }
 export type PutScimV2GroupsOutput = Types.IdentityProvisioningScimScimGroupResource;
 export const putScimV2GroupsEndpoint = {
@@ -15223,7 +15223,7 @@ export const deleteScimV2GroupsEndpoint = {
  */
 export interface PatchScimV2GroupsInput {
   roleId: string;
-  body?: Types.IdentityProvisioningScimScimPatchInput;
+  body: Types.IdentityProvisioningScimScimPatchInput;
 }
 export type PatchScimV2GroupsOutput = Types.IdentityProvisioningScimScimGroupResource;
 export const patchScimV2GroupsEndpoint = {
@@ -15300,7 +15300,7 @@ export const getScimV2UsersForGetScimV2UsersEndpoint = {
  * externalId returns the existing resource with 200 instead of creating a copy.
  */
 export interface PostScimV2UsersInput {
-  body?: Types.IdentityProvisioningScimScimUserInput;
+  body: Types.IdentityProvisioningScimScimUserInput;
 }
 export type PostScimV2UsersOutput = Types.IdentityProvisioningScimScimUserResource;
 export const postScimV2UsersEndpoint = {
@@ -15331,7 +15331,7 @@ export const getScimV2UsersForGetScimV2UsersByUserIdEndpoint = {
  */
 export interface PutScimV2UsersInput {
   userId: string;
-  body?: Types.IdentityProvisioningScimScimUserInput;
+  body: Types.IdentityProvisioningScimScimUserInput;
 }
 export type PutScimV2UsersOutput = Types.IdentityProvisioningScimScimUserResource;
 export const putScimV2UsersEndpoint = {
@@ -15362,7 +15362,7 @@ export const deleteScimV2UsersEndpoint = {
  */
 export interface PatchScimV2UsersInput {
   userId: string;
-  body?: Types.IdentityProvisioningScimScimPatchInput;
+  body: Types.IdentityProvisioningScimScimPatchInput;
 }
 export type PatchScimV2UsersOutput = Types.IdentityProvisioningScimScimUserResource;
 export const patchScimV2UsersEndpoint = {
@@ -15396,7 +15396,7 @@ export const getTEndpoint = {
 export interface PostVCoursesCheckoutCompleteInput {
   courseId: string;
   version: string;
-  body?: Types.LearningCoursesCompleteCourseCheckoutInput;
+  body: Types.LearningCoursesCompleteCourseCheckoutInput;
 }
 export type PostVCoursesCheckoutCompleteOutput = Types.LearningCoursesCompleteCourseCheckoutOutput;
 export const postVCoursesCheckoutCompleteEndpoint = {
@@ -15421,7 +15421,7 @@ export const getVMarketplaceCartEndpoint = {
 
 export interface PostVMarketplaceCartCheckoutInput {
   version: string;
-  body?: Types.CommerceOrdersCheckoutMarketplaceCartInput;
+  body: Types.CommerceOrdersCheckoutMarketplaceCartInput;
 }
 export type PostVMarketplaceCartCheckoutOutput = Types.CommerceOrdersMarketplaceCheckoutDto;
 export const postVMarketplaceCartCheckoutEndpoint = {
@@ -15434,7 +15434,7 @@ export const postVMarketplaceCartCheckoutEndpoint = {
 
 export interface PostVMarketplaceCartItemsInput {
   version: string;
-  body?: Types.CommerceOrdersAddMarketplaceCartItemInput;
+  body: Types.CommerceOrdersAddMarketplaceCartItemInput;
 }
 export type PostVMarketplaceCartItemsOutput = Types.CommerceOrdersMarketplaceCartDto;
 export const postVMarketplaceCartItemsEndpoint = {
@@ -15464,7 +15464,7 @@ export const deleteVMarketplaceCartItemsEndpoint = {
 export interface PatchVMarketplaceCartItemsInput {
   itemId: string;
   version: string;
-  body?: Types.CommerceOrdersSetMarketplaceCartItemQuantityInput;
+  body: Types.CommerceOrdersSetMarketplaceCartItemQuantityInput;
 }
 export type PatchVMarketplaceCartItemsOutput = Types.CommerceOrdersMarketplaceCartDto;
 export const patchVMarketplaceCartItemsEndpoint = {
@@ -15492,7 +15492,7 @@ export const getVTestingTemplatesEndpoint = {
 
 export interface PostVTestingTemplatesInput {
   version: string;
-  body?: Types.TestingLabUpsertTestingEventTemplateInput;
+  body: Types.TestingLabUpsertTestingEventTemplateInput;
 }
 export type PostVTestingTemplatesOutput = Types.TestingLabTestingEventTemplateProjection;
 export const postVTestingTemplatesEndpoint = {
@@ -15506,7 +15506,7 @@ export const postVTestingTemplatesEndpoint = {
 export interface PutVTestingTemplatesInput {
   templateId: string;
   version: string;
-  body?: Types.TestingLabUpsertTestingEventTemplateInput;
+  body: Types.TestingLabUpsertTestingEventTemplateInput;
 }
 export type PutVTestingTemplatesOutput = Types.TestingLabTestingEventTemplateProjection;
 export const putVTestingTemplatesEndpoint = {
@@ -15561,7 +15561,7 @@ export const getVTestingTemplatesRevisionsEndpoint = {
  * Create a new access review campaign
  */
 export interface PostAccessReviewsCampaignsInput {
-  body?: Types.IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand;
+  body: Types.IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand;
 }
 export type PostAccessReviewsCampaignsOutput = Types.IdentityAuthorizationAccessReviewCampaign;
 export const postAccessReviewsCampaignsEndpoint = {
@@ -15620,7 +15620,7 @@ export const postAccessReviewsCampaignsCancelEndpoint = {
  */
 export interface PostAccessReviewsCampaignsCompleteInput {
   id: string;
-  body?: Types.IdentityAuthorizationControllersCompleteCampaignInput;
+  body: Types.IdentityAuthorizationControllersCompleteCampaignInput;
 }
 export type PostAccessReviewsCampaignsCompleteOutput = void;
 export const postAccessReviewsCampaignsCompleteEndpoint = {
@@ -15699,7 +15699,7 @@ export const postAccessReviewsItemsApproveEndpoint = {
  */
 export interface PostAccessReviewsItemsRevokeInput {
   id: string;
-  body?: Types.IdentityAuthorizationControllersRevokeItemInput;
+  body: Types.IdentityAuthorizationControllersRevokeItemInput;
 }
 export type PostAccessReviewsItemsRevokeOutput = Types.IdentityAuthorizationAccessReviewItem;
 export const postAccessReviewsItemsRevokeEndpoint = {
@@ -15806,7 +15806,7 @@ export const postAdminAssetsMarkUndeletableEndpoint = {
  */
 export interface PostAdminAssetsReviewModerationInput {
   contentId: string;
-  body?: Types.AssetsControllersContentModerationInput;
+  body: Types.AssetsControllersContentModerationInput;
 }
 export type PostAdminAssetsReviewModerationOutput = void;
 export const postAdminAssetsReviewModerationEndpoint = {
@@ -15822,7 +15822,7 @@ export const postAdminAssetsReviewModerationEndpoint = {
  */
 export interface PostAdminAssetsRunVirusScanInput {
   contentId: string;
-  body?: Types.AssetsControllersUpdateVirusScanInput;
+  body: Types.AssetsControllersUpdateVirusScanInput;
 }
 export type PostAdminAssetsRunVirusScanOutput = void;
 export const postAdminAssetsRunVirusScanEndpoint = {
@@ -15918,7 +15918,7 @@ export const getAdminAssetsModerationQueueEndpoint = {
  */
 export interface PostAdminAssetsReportsReviewInput {
   reportId: string;
-  body?: Types.AssetsControllersReviewReportInput;
+  body: Types.AssetsControllersReviewReportInput;
 }
 export type PostAdminAssetsReportsReviewOutput = void;
 export const postAdminAssetsReportsReviewEndpoint = {
@@ -16032,7 +16032,7 @@ export const getAdminAuditLogsEndpoint = {
  * Export audit logs (admin only)
  */
 export interface PostAdminAuditLogsExportInput {
-  body?: Types.ComplianceAuditAuditExportInput;
+  body: Types.ComplianceAuditAuditExportInput;
 }
 export type PostAdminAuditLogsExportOutput = Blob;
 export const postAdminAuditLogsExportEndpoint = {
@@ -16062,7 +16062,7 @@ export const getAdminAuditLogsExportProgressEndpoint = {
  * Export audit logs (admin only)
  */
 export interface PostAdminAuditLogsExportCsvInput {
-  body?: Types.ComplianceAuditAuditExportInput;
+  body: Types.ComplianceAuditAuditExportInput;
 }
 export type PostAdminAuditLogsExportCsvOutput = Blob;
 export const postAdminAuditLogsExportCsvEndpoint = {
@@ -16077,7 +16077,7 @@ export const postAdminAuditLogsExportCsvEndpoint = {
  * Streams a versioned JSON audit export with pagination metadata.
  */
 export interface PostAdminAuditLogsExportJsonInput {
-  body?: Types.ComplianceAuditAuditExportInput;
+  body: Types.ComplianceAuditAuditExportInput;
 }
 export type PostAdminAuditLogsExportJsonOutput = Types.ComplianceAuditAuditJsonExportDocument;
 export const postAdminAuditLogsExportJsonEndpoint = {
@@ -16092,7 +16092,7 @@ export const postAdminAuditLogsExportJsonEndpoint = {
  * Streams a versioned XML audit export with pagination metadata.
  */
 export interface PostAdminAuditLogsExportXmlInput {
-  body?: Types.ComplianceAuditAuditExportInput;
+  body: Types.ComplianceAuditAuditExportInput;
 }
 export type PostAdminAuditLogsExportXmlOutput = Blob;
 export const postAdminAuditLogsExportXmlEndpoint = {
@@ -16130,7 +16130,7 @@ export const getAdminAuditLogsReplaySnapshotsEndpoint = {
  *             an independently protected expected digest; it does not certify event provenance or synchronize source clocks.
  */
 export interface PostAdminAuditLogsReplaySnapshotsInput {
-  body?: Types.ComplianceAuditCaptureAuditReplayInput;
+  body: Types.ComplianceAuditCaptureAuditReplayInput;
 }
 export type PostAdminAuditLogsReplaySnapshotsOutput = Types.ComplianceAuditAuditReplaySnapshotOutput;
 export const postAdminAuditLogsReplaySnapshotsEndpoint = {
@@ -16151,7 +16151,7 @@ export const postAdminAuditLogsReplaySnapshotsEndpoint = {
  *             source clock synchronization.
  */
 export interface PostAdminAuditLogsReplaySnapshotsReconstructInput {
-  body?: Types.ComplianceAuditReconstructAuditReplayInput;
+  body: Types.ComplianceAuditReconstructAuditReplayInput;
 }
 export type PostAdminAuditLogsReplaySnapshotsReconstructOutput = Types.ComplianceAuditAuditReplayReconstructionOutput;
 export const postAdminAuditLogsReplaySnapshotsReconstructEndpoint = {
@@ -16205,7 +16205,7 @@ export const getAdminAuditLogsScheduledExportsEndpoint = {
  * execution history remains available.
  */
 export interface PostAdminAuditLogsScheduledExportsInput {
-  body?: Types.ComplianceAuditCreateScheduledAuditExportInput;
+  body: Types.ComplianceAuditCreateScheduledAuditExportInput;
 }
 export type PostAdminAuditLogsScheduledExportsOutput = Types.ComplianceAuditScheduledAuditExportOutput;
 export const postAdminAuditLogsScheduledExportsEndpoint = {
@@ -16256,7 +16256,7 @@ export const getAdminAuditLogsScheduledExportsHistoryEndpoint = {
  * Searches audit events using a nested condition tree with boolean logic.
  */
 export interface PostAdminAuditLogsSearchFilterInput {
-  body?: Types.ComplianceAuditAuditConditionSearchInput;
+  body: Types.ComplianceAuditAuditConditionSearchInput;
 }
 export type PostAdminAuditLogsSearchFilterOutput = Types.ComplianceAuditAuditLogOutput;
 export const postAdminAuditLogsSearchFilterEndpoint = {
@@ -16466,7 +16466,7 @@ export const getAdminSecurityAuditEndpoint = {
  * Export unified security audit logs to CSV.
  */
 export interface PostAdminSecurityAuditExportInput {
-  body?: Types.ComplianceAuditUnifiedSecurityAuditInput;
+  body: Types.ComplianceAuditUnifiedSecurityAuditInput;
 }
 export type PostAdminSecurityAuditExportOutput = Blob;
 export const postAdminSecurityAuditExportEndpoint = {
@@ -16575,7 +16575,7 @@ export const postAdminUsersMfaResetEndpoint = {
  * Execute a conversational completion request.
  */
 export interface PostAiChatInput {
-  body?: Types.AIAiChatInput;
+  body: Types.AIAiChatInput;
 }
 export type PostAiChatOutput = Types.AIAiCompletionOutput;
 export const postAiChatEndpoint = {
@@ -16587,7 +16587,7 @@ export const postAiChatEndpoint = {
 } as const;
 
 export interface PostAiEmailInput {
-  body?: Types.AIAiGeneratedContentDraftInput;
+  body: Types.AIAiGeneratedContentDraftInput;
 }
 export type PostAiEmailOutput = Types.AIAiCompletionOutput;
 export const postAiEmailEndpoint = {
@@ -16602,7 +16602,7 @@ export const postAiEmailEndpoint = {
  * Execute a single-prompt generation request.
  */
 export interface PostAiGenerateInput {
-  body?: Types.AIAiGenerateInput;
+  body: Types.AIAiGenerateInput;
 }
 export type PostAiGenerateOutput = Types.AIAiCompletionOutput;
 export const postAiGenerateEndpoint = {
@@ -16614,7 +16614,7 @@ export const postAiGenerateEndpoint = {
 } as const;
 
 export interface PostAiGenerateContentInput {
-  body?: Types.AIAiGeneratedContentInput;
+  body: Types.AIAiGeneratedContentInput;
 }
 export type PostAiGenerateContentOutput = Types.AIAiCompletionOutput;
 export const postAiGenerateContentEndpoint = {
@@ -16626,7 +16626,7 @@ export const postAiGenerateContentEndpoint = {
 } as const;
 
 export interface PostAiGenerateContentEmailInput {
-  body?: Types.AIAiGeneratedContentDraftInput;
+  body: Types.AIAiGeneratedContentDraftInput;
 }
 export type PostAiGenerateContentEmailOutput = Types.AIAiCompletionOutput;
 export const postAiGenerateContentEmailEndpoint = {
@@ -16638,7 +16638,7 @@ export const postAiGenerateContentEmailEndpoint = {
 } as const;
 
 export interface PostAiGenerateContentListingDescriptionInput {
-  body?: Types.AIAiGeneratedContentDraftInput;
+  body: Types.AIAiGeneratedContentDraftInput;
 }
 export type PostAiGenerateContentListingDescriptionOutput = Types.AIAiCompletionOutput;
 export const postAiGenerateContentListingDescriptionEndpoint = {
@@ -16650,7 +16650,7 @@ export const postAiGenerateContentListingDescriptionEndpoint = {
 } as const;
 
 export interface PostAiGenerateContentReportInput {
-  body?: Types.AIAiGeneratedContentDraftInput;
+  body: Types.AIAiGeneratedContentDraftInput;
 }
 export type PostAiGenerateContentReportOutput = Types.AIAiCompletionOutput;
 export const postAiGenerateContentReportEndpoint = {
@@ -16709,7 +16709,7 @@ export const getAiPromptTemplatesForGetAiPromptTemplatesEndpoint = {
 } as const;
 
 export interface PostAiPromptTemplatesInput {
-  body?: Types.AICreateAiPromptTemplateInput;
+  body: Types.AICreateAiPromptTemplateInput;
 }
 export type PostAiPromptTemplatesOutput = Types.AIAiPromptTemplateDto;
 export const postAiPromptTemplatesEndpoint = {
@@ -16734,7 +16734,7 @@ export const getAiPromptTemplatesForGetAiPromptTemplatesByIdEndpoint = {
 
 export interface PutAiPromptTemplatesInput {
   id: string;
-  body?: Types.AIUpdateAiPromptTemplateInput;
+  body: Types.AIUpdateAiPromptTemplateInput;
 }
 export type PutAiPromptTemplatesOutput = Types.AIAiPromptTemplateDto;
 export const putAiPromptTemplatesEndpoint = {
@@ -16759,7 +16759,7 @@ export const deleteAiPromptTemplatesEndpoint = {
 
 export interface PostAiPromptTemplatesGenerateInput {
   id: string;
-  body?: Types.AIAiPromptTemplateGenerateInput;
+  body: Types.AIAiPromptTemplateGenerateInput;
 }
 export type PostAiPromptTemplatesGenerateOutput = Types.AIAiCompletionOutput;
 export const postAiPromptTemplatesGenerateEndpoint = {
@@ -16772,7 +16772,7 @@ export const postAiPromptTemplatesGenerateEndpoint = {
 
 export interface PostAiPromptTemplatesRenderInput {
   id: string;
-  body?: Types.AIAiPromptTemplateRenderInput;
+  body: Types.AIAiPromptTemplateRenderInput;
 }
 export type PostAiPromptTemplatesRenderOutput = Types.AIAiPromptTemplateRenderOutput;
 export const postAiPromptTemplatesRenderEndpoint = {
@@ -16794,7 +16794,7 @@ export const getAiQuotasEndpoint = {
 } as const;
 
 export interface PostAiReportInput {
-  body?: Types.AIAiGeneratedContentDraftInput;
+  body: Types.AIAiGeneratedContentDraftInput;
 }
 export type PostAiReportOutput = Types.AIAiCompletionOutput;
 export const postAiReportEndpoint = {
@@ -16819,7 +16819,7 @@ export const getAiStatusEndpoint = {
  * Create a new assessment for a course
  */
 export interface PostAssessmentsInput {
-  body?: Types.LearningAssessmentsCreateAssessmentInput;
+  body: Types.LearningAssessmentsCreateAssessmentInput;
 }
 export type PostAssessmentsOutput = Types.LearningAssessmentsAssessmentDto;
 export const postAssessmentsEndpoint = {
@@ -16917,7 +16917,7 @@ export const getAssessmentsRubricEndpoint = {
  */
 export interface PutAssessmentsRubricInput {
   assessmentId: string;
-  body?: Types.LearningAssessmentsSaveRubricInput;
+  body: Types.LearningAssessmentsSaveRubricInput;
 }
 export type PutAssessmentsRubricOutput = Types.LearningAssessmentsRubricDto;
 export const putAssessmentsRubricEndpoint = {
@@ -16963,7 +16963,7 @@ export const getAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissions
  */
 export interface PostAssessmentsSubmissionsStartInput {
   assessmentId: string;
-  body?: Types.LearningAssessmentsStartSubmissionInput;
+  body: Types.LearningAssessmentsStartSubmissionInput;
 }
 export type PostAssessmentsSubmissionsStartOutput = Types.LearningAssessmentsLearnerAssessmentAttemptDto;
 export const postAssessmentsSubmissionsStartEndpoint = {
@@ -16994,7 +16994,7 @@ export const getAssessmentsEndpoint = {
  */
 export interface PutAssessmentsInput {
   id: string;
-  body?: Types.LearningAssessmentsUpdateAssessmentInput;
+  body: Types.LearningAssessmentsUpdateAssessmentInput;
 }
 export type PutAssessmentsOutput = Types.LearningAssessmentsAssessmentDto;
 export const putAssessmentsEndpoint = {
@@ -17040,7 +17040,7 @@ export const getAssessmentsAuthoringStateEndpoint = {
  */
 export interface PutAssessmentsGroupInput {
   id: string;
-  body?: Types.LearningAssessmentsAssignAssessmentGroupInput;
+  body: Types.LearningAssessmentsAssignAssessmentGroupInput;
 }
 export type PutAssessmentsGroupOutput = Types.LearningAssessmentsAssessmentDto;
 export const putAssessmentsGroupEndpoint = {
@@ -17071,7 +17071,7 @@ export const getAssessmentsInteractiveVideoCuesEndpoint = {
  */
 export interface PostAssessmentsInteractiveVideoCuesInput {
   id: string;
-  body?: Types.LearningAssessmentsLinkInteractiveVideoCueInput;
+  body: Types.LearningAssessmentsLinkInteractiveVideoCueInput;
 }
 export type PostAssessmentsInteractiveVideoCuesOutput = Types.LearningAssessmentsInteractiveVideoAssessmentCueDto;
 export const postAssessmentsInteractiveVideoCuesEndpoint = {
@@ -17118,7 +17118,7 @@ export const postAssessmentsRestoreEndpoint = {
  */
 export interface PostAssessmentsRevisionsPrepareInput {
   id: string;
-  body?: Types.LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInput;
+  body: Types.LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInput;
 }
 export type PostAssessmentsRevisionsPrepareOutput = Types.LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult;
 export const postAssessmentsRevisionsPrepareEndpoint = {
@@ -17134,7 +17134,7 @@ export const postAssessmentsRevisionsPrepareEndpoint = {
  */
 export interface PostAssessmentsRevisionsPublishInput {
   id: string;
-  body?: Types.LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInput;
+  body: Types.LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInput;
 }
 export type PostAssessmentsRevisionsPublishOutput = Types.LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult;
 export const postAssessmentsRevisionsPublishEndpoint = {
@@ -17150,7 +17150,7 @@ export const postAssessmentsRevisionsPublishEndpoint = {
  */
 export interface PostAssessmentsRevisionsUnpublishInput {
   id: string;
-  body?: Types.LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInput;
+  body: Types.LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInput;
 }
 export type PostAssessmentsRevisionsUnpublishOutput = void;
 export const postAssessmentsRevisionsUnpublishEndpoint = {
@@ -17163,7 +17163,7 @@ export const postAssessmentsRevisionsUnpublishEndpoint = {
 
 export interface PostAssessmentsRuntimeSubmissionsCollectiveInput {
   id: string;
-  body?: Types.LearningAssessmentsStartCollectiveRuntimeSubmissionInput;
+  body: Types.LearningAssessmentsStartCollectiveRuntimeSubmissionInput;
 }
 export type PostAssessmentsRuntimeSubmissionsCollectiveOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
 export const postAssessmentsRuntimeSubmissionsCollectiveEndpoint = {
@@ -17176,7 +17176,7 @@ export const postAssessmentsRuntimeSubmissionsCollectiveEndpoint = {
 
 export interface PostAssessmentsRuntimeSubmissionsIndividualInput {
   id: string;
-  body?: Types.LearningAssessmentsStartIndividualRuntimeSubmissionInput;
+  body: Types.LearningAssessmentsStartIndividualRuntimeSubmissionInput;
 }
 export type PostAssessmentsRuntimeSubmissionsIndividualOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
 export const postAssessmentsRuntimeSubmissionsIndividualEndpoint = {
@@ -17189,7 +17189,7 @@ export const postAssessmentsRuntimeSubmissionsIndividualEndpoint = {
 
 export interface PostAssessmentsTestRunsInput {
   id: string;
-  body?: Types.LearningAssessmentsStartAssessmentTestRunInput;
+  body: Types.LearningAssessmentsStartAssessmentTestRunInput;
 }
 export type PostAssessmentsTestRunsOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
 export const postAssessmentsTestRunsEndpoint = {
@@ -17206,7 +17206,7 @@ export const postAssessmentsTestRunsEndpoint = {
  */
 export interface PostAssessmentsContentRuntimeSubmissionsIndividualInput {
   contentId: string;
-  body?: Types.LearningAssessmentsStartContentRuntimeSubmissionInput;
+  body: Types.LearningAssessmentsStartContentRuntimeSubmissionInput;
 }
 export type PostAssessmentsContentRuntimeSubmissionsIndividualOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
 export const postAssessmentsContentRuntimeSubmissionsIndividualEndpoint = {
@@ -17253,7 +17253,7 @@ export const getAssessmentsCourseAnalyticsEndpoint = {
 export interface PutAssessmentsCourseContentDraftInput {
   courseId: string;
   contentId: string;
-  body?: Types.LearningAssessmentsGradingAuthoringSaveAssessmentDraftInput;
+  body: Types.LearningAssessmentsGradingAuthoringSaveAssessmentDraftInput;
 }
 export type PutAssessmentsCourseContentDraftOutput = Types.LearningAssessmentsGradingAuthoringAssessmentDraftResult;
 export const putAssessmentsCourseContentDraftEndpoint = {
@@ -17299,7 +17299,7 @@ export const getAssessmentsCourseGroupsEndpoint = {
  * Create a weighted assessment group.
  */
 export interface PostAssessmentsGroupsInput {
-  body?: Types.LearningAssessmentsCreateAssessmentGroupInput;
+  body: Types.LearningAssessmentsCreateAssessmentGroupInput;
 }
 export type PostAssessmentsGroupsOutput = Types.LearningAssessmentsAssessmentGroupDto;
 export const postAssessmentsGroupsEndpoint = {
@@ -17315,7 +17315,7 @@ export const postAssessmentsGroupsEndpoint = {
  */
 export interface PutAssessmentsGroupsInput {
   id: string;
-  body?: Types.LearningAssessmentsUpdateAssessmentGroupInput;
+  body: Types.LearningAssessmentsUpdateAssessmentGroupInput;
 }
 export type PutAssessmentsGroupsOutput = Types.LearningAssessmentsAssessmentGroupDto;
 export const putAssessmentsGroupsEndpoint = {
@@ -17361,7 +17361,7 @@ export const getAssessmentsMySubmissionsEndpoint = {
  */
 export interface PostAssessmentsPeerReviewStagesExtendInput {
   reviewStageId: string;
-  body?: Types.LearningAssessmentsExtendPeerReviewWindowInput;
+  body: Types.LearningAssessmentsExtendPeerReviewWindowInput;
 }
 export type PostAssessmentsPeerReviewStagesExtendOutput = void;
 export const postAssessmentsPeerReviewStagesExtendEndpoint = {
@@ -17377,7 +17377,7 @@ export const postAssessmentsPeerReviewStagesExtendEndpoint = {
  */
 export interface PostAssessmentsPeerReviewStagesResolveInsufficientInput {
   reviewStageId: string;
-  body?: Types.LearningAssessmentsResolvePeerReviewInsufficiencyInput;
+  body: Types.LearningAssessmentsResolvePeerReviewInsufficiencyInput;
 }
 export type PostAssessmentsPeerReviewStagesResolveInsufficientOutput = void;
 export const postAssessmentsPeerReviewStagesResolveInsufficientEndpoint = {
@@ -17408,7 +17408,7 @@ export const getAssessmentsPeerReviewsEndpoint = {
  */
 export interface PostAssessmentsPeerReviewsReassignInput {
   reviewId: string;
-  body?: Types.LearningAssessmentsReassignPeerReviewClaimInput;
+  body: Types.LearningAssessmentsReassignPeerReviewClaimInput;
 }
 export type PostAssessmentsPeerReviewsReassignOutput = void;
 export const postAssessmentsPeerReviewsReassignEndpoint = {
@@ -17424,7 +17424,7 @@ export const postAssessmentsPeerReviewsReassignEndpoint = {
  */
 export interface PostAssessmentsPeerReviewsSubmitInput {
   reviewId: string;
-  body?: Types.LearningAssessmentsPeerReviewSubmitInput;
+  body: Types.LearningAssessmentsPeerReviewSubmitInput;
 }
 export type PostAssessmentsPeerReviewsSubmitOutput = void;
 export const postAssessmentsPeerReviewsSubmitEndpoint = {
@@ -17449,7 +17449,7 @@ export const getAssessmentsRuntimeSubmissionsEndpoint = {
 
 export interface PutAssessmentsRuntimeSubmissionsDraftInput {
   submissionId: string;
-  body?: Types.LearningAssessmentsSaveCollectiveRuntimeDraftInput;
+  body: Types.LearningAssessmentsSaveCollectiveRuntimeDraftInput;
 }
 export type PutAssessmentsRuntimeSubmissionsDraftOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
 export const putAssessmentsRuntimeSubmissionsDraftEndpoint = {
@@ -17462,7 +17462,7 @@ export const putAssessmentsRuntimeSubmissionsDraftEndpoint = {
 
 export interface PostAssessmentsRuntimeSubmissionsInstructorReviewInput {
   submissionId: string;
-  body?: Types.LearningAssessmentsResolveInstructorReviewInput;
+  body: Types.LearningAssessmentsResolveInstructorReviewInput;
 }
 export type PostAssessmentsRuntimeSubmissionsInstructorReviewOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
 export const postAssessmentsRuntimeSubmissionsInstructorReviewEndpoint = {
@@ -17475,7 +17475,7 @@ export const postAssessmentsRuntimeSubmissionsInstructorReviewEndpoint = {
 
 export interface PostAssessmentsRuntimeSubmissionsRegradeInput {
   submissionId: string;
-  body?: Types.LearningAssessmentsGradingRuntimeRegradeExecutionCommand;
+  body: Types.LearningAssessmentsGradingRuntimeRegradeExecutionCommand;
 }
 export type PostAssessmentsRuntimeSubmissionsRegradeOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
 export const postAssessmentsRuntimeSubmissionsRegradeEndpoint = {
@@ -17488,7 +17488,7 @@ export const postAssessmentsRuntimeSubmissionsRegradeEndpoint = {
 
 export interface PostAssessmentsRuntimeSubmissionsReleaseInput {
   submissionId: string;
-  body?: Types.LearningAssessmentsGradingRuntimeReleaseGradeResultCommand;
+  body: Types.LearningAssessmentsGradingRuntimeReleaseGradeResultCommand;
 }
 export type PostAssessmentsRuntimeSubmissionsReleaseOutput = Types.LearningAssessmentsGradeResultReleaseOutput;
 export const postAssessmentsRuntimeSubmissionsReleaseEndpoint = {
@@ -17501,7 +17501,7 @@ export const postAssessmentsRuntimeSubmissionsReleaseEndpoint = {
 
 export interface PostAssessmentsRuntimeSubmissionsReleaseScheduleInput {
   submissionId: string;
-  body?: Types.LearningAssessmentsGradingRuntimeScheduleGradeResultReleaseCommand;
+  body: Types.LearningAssessmentsGradingRuntimeScheduleGradeResultReleaseCommand;
 }
 export type PostAssessmentsRuntimeSubmissionsReleaseScheduleOutput = Types.LearningAssessmentsGradingRuntimeGradeResultReleaseScheduleViewV1;
 export const postAssessmentsRuntimeSubmissionsReleaseScheduleEndpoint = {
@@ -17514,7 +17514,7 @@ export const postAssessmentsRuntimeSubmissionsReleaseScheduleEndpoint = {
 
 export interface PostAssessmentsRuntimeSubmissionsReleaseScheduleCancelInput {
   submissionId: string;
-  body?: Types.LearningAssessmentsGradingRuntimeCancelScheduledGradeResultReleaseCommand;
+  body: Types.LearningAssessmentsGradingRuntimeCancelScheduledGradeResultReleaseCommand;
 }
 export type PostAssessmentsRuntimeSubmissionsReleaseScheduleCancelOutput = Types.LearningAssessmentsGradingRuntimeGradeResultReleaseScheduleViewV1;
 export const postAssessmentsRuntimeSubmissionsReleaseScheduleCancelEndpoint = {
@@ -17527,7 +17527,7 @@ export const postAssessmentsRuntimeSubmissionsReleaseScheduleCancelEndpoint = {
 
 export interface PostAssessmentsRuntimeSubmissionsSelfReviewInput {
   submissionId: string;
-  body?: Types.LearningAssessmentsSubmitSelfReviewInput;
+  body: Types.LearningAssessmentsSubmitSelfReviewInput;
 }
 export type PostAssessmentsRuntimeSubmissionsSelfReviewOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
 export const postAssessmentsRuntimeSubmissionsSelfReviewEndpoint = {
@@ -17540,7 +17540,7 @@ export const postAssessmentsRuntimeSubmissionsSelfReviewEndpoint = {
 
 export interface PutAssessmentsRuntimeSubmissionsSelfReviewDraftInput {
   submissionId: string;
-  body?: Types.LearningAssessmentsSaveCollectiveSelfReviewDraftInput;
+  body: Types.LearningAssessmentsSaveCollectiveSelfReviewDraftInput;
 }
 export type PutAssessmentsRuntimeSubmissionsSelfReviewDraftOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
 export const putAssessmentsRuntimeSubmissionsSelfReviewDraftEndpoint = {
@@ -17553,7 +17553,7 @@ export const putAssessmentsRuntimeSubmissionsSelfReviewDraftEndpoint = {
 
 export interface PostAssessmentsRuntimeSubmissionsSubmitInput {
   submissionId: string;
-  body?: Types.LearningAssessmentsSubmitAssessmentRuntimeInput;
+  body: Types.LearningAssessmentsSubmitAssessmentRuntimeInput;
 }
 export type PostAssessmentsRuntimeSubmissionsSubmitOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
 export const postAssessmentsRuntimeSubmissionsSubmitEndpoint = {
@@ -17640,7 +17640,7 @@ export const getAssessmentsTestRunsEndpoint = {
 
 export interface PostAssessmentsTestRunsInstructorReviewInput {
   testRunId: string;
-  body?: Types.LearningAssessmentsResolveInstructorReviewInput;
+  body: Types.LearningAssessmentsResolveInstructorReviewInput;
 }
 export type PostAssessmentsTestRunsInstructorReviewOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
 export const postAssessmentsTestRunsInstructorReviewEndpoint = {
@@ -17673,7 +17673,7 @@ export const getAssessmentsTestRunsPeerReviewsEndpoint = {
 export interface PostAssessmentsTestRunsPeerReviewsSubmitInput {
   testRunId: string;
   reviewId: string;
-  body?: Types.LearningAssessmentsSubmitAssessmentTestPeerReviewInput;
+  body: Types.LearningAssessmentsSubmitAssessmentTestPeerReviewInput;
 }
 export type PostAssessmentsTestRunsPeerReviewsSubmitOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
 export const postAssessmentsTestRunsPeerReviewsSubmitEndpoint = {
@@ -17689,7 +17689,7 @@ export const postAssessmentsTestRunsPeerReviewsSubmitEndpoint = {
  */
 export interface PostAssessmentsTestRunsPeerReviewsClaimInput {
   testRunId: string;
-  body?: Types.LearningAssessmentsClaimAssessmentTestPeerReviewInput;
+  body: Types.LearningAssessmentsClaimAssessmentTestPeerReviewInput;
 }
 export type PostAssessmentsTestRunsPeerReviewsClaimOutput = Types.LearningAssessmentsPeerReviewClaimResult;
 export const postAssessmentsTestRunsPeerReviewsClaimEndpoint = {
@@ -17702,7 +17702,7 @@ export const postAssessmentsTestRunsPeerReviewsClaimEndpoint = {
 
 export interface PostAssessmentsTestRunsRestartInput {
   testRunId: string;
-  body?: Types.LearningAssessmentsIdempotentRuntimeInput;
+  body: Types.LearningAssessmentsIdempotentRuntimeInput;
 }
 export type PostAssessmentsTestRunsRestartOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
 export const postAssessmentsTestRunsRestartEndpoint = {
@@ -17715,7 +17715,7 @@ export const postAssessmentsTestRunsRestartEndpoint = {
 
 export interface PostAssessmentsTestRunsSelfReviewInput {
   testRunId: string;
-  body?: Types.LearningAssessmentsSubmitSelfReviewInput;
+  body: Types.LearningAssessmentsSubmitSelfReviewInput;
 }
 export type PostAssessmentsTestRunsSelfReviewOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
 export const postAssessmentsTestRunsSelfReviewEndpoint = {
@@ -17728,7 +17728,7 @@ export const postAssessmentsTestRunsSelfReviewEndpoint = {
 
 export interface PostAssessmentsTestRunsSubmitInput {
   testRunId: string;
-  body?: Types.LearningAssessmentsSubmitAssessmentRuntimeInput;
+  body: Types.LearningAssessmentsSubmitAssessmentRuntimeInput;
 }
 export type PostAssessmentsTestRunsSubmitOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
 export const postAssessmentsTestRunsSubmitEndpoint = {
@@ -17755,7 +17755,7 @@ export const getAssetLibrariesEndpoint = {
 export interface PostAssetLibrariesFoldersInput {
   resourceType: string;
   resourceId: string;
-  body?: Types.AssetsControllersCreateAssetFolderInput;
+  body: Types.AssetsControllersCreateAssetFolderInput;
 }
 export type PostAssetLibrariesFoldersOutput = void;
 export const postAssetLibrariesFoldersEndpoint = {
@@ -17768,7 +17768,7 @@ export const postAssetLibrariesFoldersEndpoint = {
 
 export interface PostAssetLibrariesAssetsCopyInput {
   referenceId: string;
-  body?: Types.AssetsControllersCopyAssetReferenceInput;
+  body: Types.AssetsControllersCopyAssetReferenceInput;
 }
 export type PostAssetLibrariesAssetsCopyOutput = void;
 export const postAssetLibrariesAssetsCopyEndpoint = {
@@ -17806,7 +17806,7 @@ export const postAssetLibrariesAssetsRevisionsRestoreEndpoint = {
 
 export interface PutAssetLibrariesFoldersRestrictionInput {
   folderId: string;
-  body?: Types.AssetsControllersRestrictAssetFolderInput;
+  body: Types.AssetsControllersRestrictAssetFolderInput;
 }
 export type PutAssetLibrariesFoldersRestrictionOutput = void;
 export const putAssetLibrariesFoldersRestrictionEndpoint = {
@@ -17901,7 +17901,7 @@ export const deleteAssetsEndpoint = {
  */
 export interface PatchAssetsInput {
   id: string;
-  body?: Types.AssetsControllersUpdateAssetInput;
+  body: Types.AssetsControllersUpdateAssetInput;
 }
 export type PatchAssetsOutput = void;
 export const patchAssetsEndpoint = {
@@ -17958,7 +17958,7 @@ export const postAssetsGenerateAccessUrlEndpoint = {
  */
 export interface PostAssetsRebindParentInput {
   id: string;
-  body?: Types.AssetsControllersRebindAssetParentInput;
+  body: Types.AssetsControllersRebindAssetParentInput;
 }
 export type PostAssetsRebindParentOutput = void;
 export const postAssetsRebindParentEndpoint = {
@@ -17974,7 +17974,7 @@ export const postAssetsRebindParentEndpoint = {
  */
 export interface PostAssetsReportInput {
   id: string;
-  body?: Types.AssetsControllersReportAssetInput;
+  body: Types.AssetsControllersReportAssetInput;
 }
 export type PostAssetsReportOutput = void;
 export const postAssetsReportEndpoint = {
@@ -18043,7 +18043,7 @@ export const getAssetsPreviewEndpoint = {
  * Delete multiple asset references in one request.
  */
 export interface PostAssetsBulkDeleteInput {
-  body?: Types.AssetsControllersBulkDeleteAssetsInput;
+  body: Types.AssetsControllersBulkDeleteAssetsInput;
 }
 export type PostAssetsBulkDeleteOutput = Types.AssetsCommandsBulkDeleteAssetsOutput;
 export const postAssetsBulkDeleteEndpoint = {
@@ -18058,7 +18058,7 @@ export const postAssetsBulkDeleteEndpoint = {
  * Generate secure access URLs for multiple assets.
  */
 export interface PostAssetsBulkDownloadInput {
-  body?: Types.AssetsControllersBulkAssetAccessUrlInput;
+  body: Types.AssetsControllersBulkAssetAccessUrlInput;
 }
 export type PostAssetsBulkDownloadOutput = Types.AssetsQueriesBulkAssetAccessUrlsOutput;
 export const postAssetsBulkDownloadEndpoint = {
@@ -18220,7 +18220,7 @@ export const getAssetsSocialMediaEndpoint = {
  * policy (AND composition, fail-closed).
  */
 export interface PostAuditQueriesExecuteInput {
-  body?: Types.ComplianceAuditAuditQueryExecuteApiInput;
+  body: Types.ComplianceAuditAuditQueryExecuteApiInput;
 }
 export type PostAuditQueriesExecuteOutput = Types.ComplianceAuditAuditQueryDslExecutionResult;
 export const postAuditQueriesExecuteEndpoint = {
@@ -18259,7 +18259,7 @@ export const getAuditQueriesResultsEndpoint = {
  * Query-operations tier (issue #375): requires `queries:query`.
  */
 export interface PostAuditQueriesValidateInput {
-  body?: Types.ComplianceAuditAuditQueryValidateApiInput;
+  body: Types.ComplianceAuditAuditQueryValidateApiInput;
 }
 export type PostAuditQueriesValidateOutput = Types.ComplianceAuditAuditQueryValidationOutput;
 export const postAuditQueriesValidateEndpoint = {
@@ -18292,7 +18292,7 @@ export const getAuditQueriesSavedForGetAuditQueriesSavedEndpoint = {
  * before persistence; a creation revision snapshot is recorded.
  */
 export interface PostAuditQueriesSavedInput {
-  body?: Types.ComplianceAuditSaveSavedAuditQueryApiInput;
+  body: Types.ComplianceAuditSaveSavedAuditQueryApiInput;
 }
 export type PostAuditQueriesSavedOutput = Types.ComplianceAuditSavedAuditQueryViewOutput;
 export const postAuditQueriesSavedEndpoint = {
@@ -18323,7 +18323,7 @@ export const getAuditQueriesSavedForGetAuditQueriesSavedByIdEndpoint = {
  */
 export interface PutAuditQueriesSavedInput {
   id: string;
-  body?: Types.ComplianceAuditSaveSavedAuditQueryApiInput;
+  body: Types.ComplianceAuditSaveSavedAuditQueryApiInput;
 }
 export type PutAuditQueriesSavedOutput = Types.ComplianceAuditSavedAuditQueryViewOutput;
 export const putAuditQueriesSavedEndpoint = {
@@ -18417,7 +18417,7 @@ export const getAuditChainOfCustodyCustodiansEndpoint = {
  * Registers a custodian with authorization scopes. Fail-closed: only registered active custodians may act on evidence.
  */
 export interface PostAuditChainOfCustodyCustodiansInput {
-  body?: Types.ComplianceAuditRegisterCustodianInput;
+  body: Types.ComplianceAuditRegisterCustodianInput;
 }
 export type PostAuditChainOfCustodyCustodiansOutput = Types.ComplianceAuditEvidenceCustodianOutput;
 export const postAuditChainOfCustodyCustodiansEndpoint = {
@@ -18433,7 +18433,7 @@ export const postAuditChainOfCustodyCustodiansEndpoint = {
  */
 export interface PostAuditChainOfCustodyCustodiansRevokeInput {
   custodianId: string;
-  body?: Types.ComplianceAuditRevokeCustodianInput;
+  body: Types.ComplianceAuditRevokeCustodianInput;
 }
 export type PostAuditChainOfCustodyCustodiansRevokeOutput = Types.ComplianceAuditEvidenceCustodianOutput;
 export const postAuditChainOfCustodyCustodiansRevokeEndpoint = {
@@ -18466,7 +18466,7 @@ export const getAuditChainOfCustodyEvidenceForGetAuditChainOfCustodyEvidenceEndp
  * Preserves evidence under chain of custody with content hashing (audit logs, security events, value snapshots, sealed packages, or raw content).
  */
 export interface PostAuditChainOfCustodyEvidenceInput {
-  body?: Types.ComplianceAuditPreserveEvidenceInput;
+  body: Types.ComplianceAuditPreserveEvidenceInput;
 }
 export type PostAuditChainOfCustodyEvidenceOutput = Types.ComplianceAuditCustodyEvidenceOutput;
 export const postAuditChainOfCustodyEvidenceEndpoint = {
@@ -18500,7 +18500,7 @@ export const getAuditChainOfCustodyEvidenceForGetAuditChainOfCustodyEvidenceByEv
  */
 export interface PostAuditChainOfCustodyEvidenceBreakSealInput {
   evidenceId: string;
-  body?: Types.ComplianceAuditBreakSealInput;
+  body: Types.ComplianceAuditBreakSealInput;
 }
 export type PostAuditChainOfCustodyEvidenceBreakSealOutput = Types.ComplianceAuditCustodyEvidenceOutput;
 export const postAuditChainOfCustodyEvidenceBreakSealEndpoint = {
@@ -18516,7 +18516,7 @@ export const postAuditChainOfCustodyEvidenceBreakSealEndpoint = {
  */
 export interface PostAuditChainOfCustodyEvidenceReleaseInput {
   evidenceId: string;
-  body?: Types.ComplianceAuditReleaseEvidenceInput;
+  body: Types.ComplianceAuditReleaseEvidenceInput;
 }
 export type PostAuditChainOfCustodyEvidenceReleaseOutput = Types.ComplianceAuditCustodyEvidenceOutput;
 export const postAuditChainOfCustodyEvidenceReleaseEndpoint = {
@@ -18564,7 +18564,7 @@ export const getAuditChainOfCustodyLegalHoldsForGetAuditChainOfCustodyLegalHolds
  * Creates a legal hold: immediately preserves every in-scope target under custody and records stakeholder notifications.
  */
 export interface PostAuditChainOfCustodyLegalHoldsInput {
-  body?: Types.ComplianceAuditCreateLegalHoldInput;
+  body: Types.ComplianceAuditCreateLegalHoldInput;
 }
 export type PostAuditChainOfCustodyLegalHoldsOutput = Types.ComplianceAuditLegalHoldOutput;
 export const postAuditChainOfCustodyLegalHoldsEndpoint = {
@@ -18610,7 +18610,7 @@ export const postAuditChainOfCustodyLegalHoldsNotifyEndpoint = {
  */
 export interface PostAuditChainOfCustodyLegalHoldsReleaseInput {
   holdId: string;
-  body?: Types.ComplianceAuditReleaseHoldInput;
+  body: Types.ComplianceAuditReleaseHoldInput;
 }
 export type PostAuditChainOfCustodyLegalHoldsReleaseOutput = Types.ComplianceAuditLegalHoldOutput;
 export const postAuditChainOfCustodyLegalHoldsReleaseEndpoint = {
@@ -18625,7 +18625,7 @@ export const postAuditChainOfCustodyLegalHoldsReleaseEndpoint = {
  * Builds a court-admissible custody package: full documentation, verification summary, and signed expert certification.
  */
 export interface PostAuditChainOfCustodyPackagesInput {
-  body?: Types.ComplianceAuditBuildCustodyPackageInput;
+  body: Types.ComplianceAuditBuildCustodyPackageInput;
 }
 export type PostAuditChainOfCustodyPackagesOutput = Types.ComplianceAuditCourtAdmissiblePackageOutput;
 export const postAuditChainOfCustodyPackagesEndpoint = {
@@ -18659,7 +18659,7 @@ export const getAuditChainOfCustodyTransfersEndpoint = {
  * Initiates a custody transfer: challenge nonce + ECDSA-signed proof binding evidence hash and both custodians.
  */
 export interface PostAuditChainOfCustodyTransfersInput {
-  body?: Types.ComplianceAuditInitiateTransferInput;
+  body: Types.ComplianceAuditInitiateTransferInput;
 }
 export type PostAuditChainOfCustodyTransfersOutput = Types.ComplianceAuditEvidenceTransferOutput;
 export const postAuditChainOfCustodyTransfersEndpoint = {
@@ -18702,7 +18702,7 @@ export const getAuditCompliancePackagingForGetAuditCompliancePackagingEndpoint =
 } as const;
 
 export interface PostAuditCompliancePackagingInput {
-  body?: Types.ComplianceAuditCreateCompliancePackageInput;
+  body: Types.ComplianceAuditCreateCompliancePackageInput;
 }
 export type PostAuditCompliancePackagingOutput = Types.ComplianceAuditCompliancePackageOutput;
 export const postAuditCompliancePackagingEndpoint = {
@@ -18765,7 +18765,7 @@ export const getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingD
 } as const;
 
 export interface PostAuditCompliancePackagingDocumentsInput {
-  body?: Types.ComplianceAuditUploadComplianceDocumentInput;
+  body: Types.ComplianceAuditUploadComplianceDocumentInput;
 }
 export type PostAuditCompliancePackagingDocumentsOutput = Types.ComplianceAuditComplianceDocumentOutput;
 export const postAuditCompliancePackagingDocumentsEndpoint = {
@@ -18790,7 +18790,7 @@ export const getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingD
 
 export interface PostAuditCompliancePackagingDocumentsReviewInput {
   id: string;
-  body?: Types.ComplianceAuditReviewComplianceDocumentInput;
+  body: Types.ComplianceAuditReviewComplianceDocumentInput;
 }
 export type PostAuditCompliancePackagingDocumentsReviewOutput = Types.ComplianceAuditComplianceDocumentOutput;
 export const postAuditCompliancePackagingDocumentsReviewEndpoint = {
@@ -18863,7 +18863,7 @@ export const getAuditEventsComprehensiveEndpoint = {
  * Records a field-level access observation (read or write) with automatic classification and masking.
  */
 export interface PostAuditFieldLevelAccessInput {
-  body?: Types.ComplianceAuditRecordFieldAccessInput;
+  body: Types.ComplianceAuditRecordFieldAccessInput;
 }
 export type PostAuditFieldLevelAccessOutput = Types.ComplianceAuditFieldAccessAuditOutput;
 export const postAuditFieldLevelAccessEndpoint = {
@@ -18931,7 +18931,7 @@ export const postAuditFieldLevelAnomaliesAcknowledgeEndpoint = {
  */
 export interface PostAuditFieldLevelAnomaliesResolveInput {
   id: string;
-  body?: Types.ComplianceAuditResolveFieldAccessAnomalyInput;
+  body: Types.ComplianceAuditResolveFieldAccessAnomalyInput;
 }
 export type PostAuditFieldLevelAnomaliesResolveOutput = Types.ComplianceAuditFieldAccessAnomalyOutput;
 export const postAuditFieldLevelAnomaliesResolveEndpoint = {
@@ -18980,7 +18980,7 @@ export const getAuditFieldLevelBulkExportsEndpoint = {
  * Evaluates an export attempt against the bulk-export thresholds, records it and alerts when exceeded.
  */
 export interface PostAuditFieldLevelBulkExportsEvaluateInput {
-  body?: Types.ComplianceAuditEvaluateBulkExportInput;
+  body: Types.ComplianceAuditEvaluateBulkExportInput;
 }
 export type PostAuditFieldLevelBulkExportsEvaluateOutput = Types.ComplianceAuditBulkExportEvaluationOutput;
 export const postAuditFieldLevelBulkExportsEvaluateEndpoint = {
@@ -19040,7 +19040,7 @@ export const getAuditFieldLevelCrossBorderTransfersEndpoint = {
  * Validates a prospective cross-border transfer against the jurisdiction policy and logs the outcome.
  */
 export interface PostAuditFieldLevelCrossBorderTransfersValidateInput {
-  body?: Types.ComplianceAuditValidateCrossBorderTransferInput;
+  body: Types.ComplianceAuditValidateCrossBorderTransferInput;
 }
 export type PostAuditFieldLevelCrossBorderTransfersValidateOutput = Types.ComplianceAuditCrossBorderTransferOutput;
 export const postAuditFieldLevelCrossBorderTransfersValidateEndpoint = {
@@ -19115,7 +19115,7 @@ export const getAuditFieldLevelGdprArticle30Endpoint = {
  * Creates or updates a processing activity record.
  */
 export interface PutAuditFieldLevelGdprArticle30Input {
-  body?: Types.ComplianceAuditSaveGdprActivityInput;
+  body: Types.ComplianceAuditSaveGdprActivityInput;
 }
 export type PutAuditFieldLevelGdprArticle30Output = Types.ComplianceAuditGdprProcessingActivityOutput;
 export const putAuditFieldLevelGdprArticle30Endpoint = {
@@ -19186,7 +19186,7 @@ export const getAuditFieldLevelRetentionEndpoint = {
  * Configures the retention rule for one sensitive data category.
  */
 export interface PutAuditFieldLevelRetentionInput {
-  body?: Types.ComplianceAuditConfigureSensitiveDataRetentionInput;
+  body: Types.ComplianceAuditConfigureSensitiveDataRetentionInput;
 }
 export type PutAuditFieldLevelRetentionOutput = Types.ComplianceAuditSensitiveDataRetentionPolicyOutput;
 export const putAuditFieldLevelRetentionEndpoint = {
@@ -19245,7 +19245,7 @@ export const getAuditRedactionPipelineRulesForGetAuditRedactionPipelineRulesEndp
  * Creates a redaction rule. Guarded to tenant administrators; audited; invalidates the rule cache.
  */
 export interface PostAuditRedactionPipelineRulesInput {
-  body?: Types.ComplianceAuditUpsertPiiRedactionRuleInput;
+  body: Types.ComplianceAuditUpsertPiiRedactionRuleInput;
 }
 export type PostAuditRedactionPipelineRulesOutput = Types.ComplianceAuditPiiRedactionRuleOutput;
 export const postAuditRedactionPipelineRulesEndpoint = {
@@ -19280,7 +19280,7 @@ export interface PutAuditRedactionPipelineRulesInput {
   query?: {
     expectedRevision?: number;
   };
-  body?: Types.ComplianceAuditUpsertPiiRedactionRuleInput;
+  body: Types.ComplianceAuditUpsertPiiRedactionRuleInput;
 }
 export type PutAuditRedactionPipelineRulesOutput = Types.ComplianceAuditPiiRedactionRuleOutput;
 export const putAuditRedactionPipelineRulesEndpoint = {
@@ -19314,7 +19314,7 @@ export const deleteAuditRedactionPipelineRulesEndpoint = {
  * pattern-recognition verification surface for administrators.
  */
 export interface PostAuditRedactionPipelineTestInput {
-  body?: Types.ComplianceAuditPiiRedactionTestRunInput;
+  body: Types.ComplianceAuditPiiRedactionTestRunInput;
 }
 export type PostAuditRedactionPipelineTestOutput = Types.ComplianceAuditPiiRedactionTestRunOutput;
 export const postAuditRedactionPipelineTestEndpoint = {
@@ -19360,7 +19360,7 @@ export const getAuditRetentionPoliciesForGetAuditRetentionPoliciesEndpoint = {
 } as const;
 
 export interface PostAuditRetentionPoliciesInput {
-  body?: Types.ComplianceAuditRunAuditRetentionSimulationInput;
+  body: Types.ComplianceAuditRunAuditRetentionSimulationInput;
 }
 export type PostAuditRetentionPoliciesOutput = Types.ComplianceAuditAuditRetentionSimulationOutput;
 export const postAuditRetentionPoliciesEndpoint = {
@@ -19402,7 +19402,7 @@ export const getAuditRetentionPoliciesConfigurationEndpoint = {
 } as const;
 
 export interface PutAuditRetentionPoliciesConfigurationInput {
-  body?: Types.ComplianceAuditConfigureAuditRetentionInput;
+  body: Types.ComplianceAuditConfigureAuditRetentionInput;
 }
 export type PutAuditRetentionPoliciesConfigurationOutput = Types.ComplianceAuditAuditRetentionConfigurationOutput;
 export const putAuditRetentionPoliciesConfigurationEndpoint = {
@@ -19443,7 +19443,7 @@ export const getAuditRetentionSimulationForGetAuditRetentionSimulationEndpoint =
 } as const;
 
 export interface PostAuditRetentionSimulationInput {
-  body?: Types.ComplianceAuditRunAuditRetentionSimulationInput;
+  body: Types.ComplianceAuditRunAuditRetentionSimulationInput;
 }
 export type PostAuditRetentionSimulationOutput = Types.ComplianceAuditAuditRetentionSimulationOutput;
 export const postAuditRetentionSimulationEndpoint = {
@@ -19485,7 +19485,7 @@ export const getAuditRetentionSimulationConfigurationEndpoint = {
 } as const;
 
 export interface PutAuditRetentionSimulationConfigurationInput {
-  body?: Types.ComplianceAuditConfigureAuditRetentionInput;
+  body: Types.ComplianceAuditConfigureAuditRetentionInput;
 }
 export type PutAuditRetentionSimulationConfigurationOutput = Types.ComplianceAuditAuditRetentionConfigurationOutput;
 export const putAuditRetentionSimulationConfigurationEndpoint = {
@@ -19655,7 +19655,7 @@ export const getAuditSecurityEventsRetentionPolicyEndpoint = {
  * Creates or updates the security log retention policy for the current tenant.
  */
 export interface PutAuditSecurityEventsRetentionPolicyInput {
-  body?: Types.ComplianceAuditConfigureSecurityLogRetentionInput;
+  body: Types.ComplianceAuditConfigureSecurityLogRetentionInput;
 }
 export type PutAuditSecurityEventsRetentionPolicyOutput = Types.ComplianceAuditSecurityLogRetentionPolicyOutput;
 export const putAuditSecurityEventsRetentionPolicyEndpoint = {
@@ -19803,7 +19803,7 @@ export const getAuditValueSnapshotsRetentionPolicyEndpoint = {
  * Creates or updates the value snapshot retention policy (retention days, archive tier, entity overrides, legal hold).
  */
 export interface PutAuditValueSnapshotsRetentionPolicyInput {
-  body?: Types.ComplianceAuditConfigureValueSnapshotRetentionInput;
+  body: Types.ComplianceAuditConfigureValueSnapshotRetentionInput;
 }
 export type PutAuditValueSnapshotsRetentionPolicyOutput = Types.ComplianceAuditValueSnapshotRetentionPolicyOutput;
 export const putAuditValueSnapshotsRetentionPolicyEndpoint = {
@@ -19818,7 +19818,7 @@ export const putAuditValueSnapshotsRetentionPolicyEndpoint = {
  * Builds a rollback plan restoring one entity to its recorded state at a point in time.
  */
 export interface PostAuditValueSnapshotsRollbackPlansInput {
-  body?: Types.ComplianceAuditCreateValueSnapshotRollbackPlanInput;
+  body: Types.ComplianceAuditCreateValueSnapshotRollbackPlanInput;
 }
 export type PostAuditValueSnapshotsRollbackPlansOutput = Types.ComplianceAuditValueSnapshotRollbackPlanOutput;
 export const postAuditValueSnapshotsRollbackPlansEndpoint = {
@@ -19900,7 +19900,7 @@ export const getAuditValueSnapshotsTrendsEndpoint = {
  * Redeems a trusted contact's single-use recovery code after the cooling-off window. Denials are generic and never reveal code or request state.
  */
 export interface PostAuthAccountRecoveryApproveInput {
-  body?: Types.IdentityAuthenticationApproveAccountRecoveryInput;
+  body: Types.IdentityAuthenticationApproveAccountRecoveryInput;
 }
 export type PostAuthAccountRecoveryApproveOutput = Types.IdentityAuthenticationAccountRecoveryApprovalResult;
 export const postAuthAccountRecoveryApproveEndpoint = {
@@ -19936,7 +19936,7 @@ export const postAuthAccountRecoveryApprovePasskeyBeginEndpoint = {
  * Verifies the WebAuthn assertion against an enrolled credential and records one approval for the live recovery request. Denials are generic and never reveal request state.
  */
 export interface PostAuthAccountRecoveryApprovePasskeyCompleteInput {
-  body?: Types.IdentityAuthenticationCompletePasskeyApprovalInput;
+  body: Types.IdentityAuthenticationCompletePasskeyApprovalInput;
 }
 export type PostAuthAccountRecoveryApprovePasskeyCompleteOutput = Types.IdentityAuthenticationAccountRecoveryApprovalOutput;
 export const postAuthAccountRecoveryApprovePasskeyCompleteEndpoint = {
@@ -19969,7 +19969,7 @@ export const postAuthAccountRecoveryCancelEndpoint = {
  * Opens a delegated account recovery for an email address. Confirmed trusted contacts receive single-use recovery codes after a cooling-off window. Always returns a generic success response to prevent user enumeration.
  */
 export interface PostAuthAccountRecoveryRequestInput {
-  body?: Types.IdentityAuthenticationAccountRecoveryRequestInput;
+  body: Types.IdentityAuthenticationAccountRecoveryRequestInput;
 }
 export type PostAuthAccountRecoveryRequestOutput = Types.IdentityAuthenticationAccountRecoveryRequestResult;
 export const postAuthAccountRecoveryRequestEndpoint = {
@@ -19988,7 +19988,7 @@ export const postAuthAccountRecoveryRequestEndpoint = {
  * Consumes the single-use reset token, sets the new password, terminates all sessions, revokes all refresh tokens and revokes every passkey. Denials are generic and never reveal token state.
  */
 export interface PostAuthAccountRecoveryResetInput {
-  body?: Types.IdentityAuthenticationCompleteAccountRecoveryResetInput;
+  body: Types.IdentityAuthenticationCompleteAccountRecoveryResetInput;
 }
 export type PostAuthAccountRecoveryResetOutput = Types.IdentityAuthenticationAccountRecoveryResetResult;
 export const postAuthAccountRecoveryResetEndpoint = {
@@ -20068,7 +20068,7 @@ export const postAuthApiKeysRotateEndpoint = {
  * Initiates the Discord OAuth authorization-code sign-in flow and returns the authorization URL with the CSRF state parameter. Account-linking counterpart: POST /v1/auth/external-logins/discord:link-authorize.
  */
 export interface PostAuthDiscordSignInAuthorizeInput {
-  body?: Types.IdentityAuthenticationDiscordAuthorizeInput;
+  body: Types.IdentityAuthenticationDiscordAuthorizeInput;
 }
 export type PostAuthDiscordSignInAuthorizeOutput = Types.IdentityAuthenticationDiscordSignInOutput;
 export const postAuthDiscordSignInAuthorizeEndpoint = {
@@ -20085,7 +20085,7 @@ export const postAuthDiscordSignInAuthorizeEndpoint = {
  * Exchanges the Discord OAuth authorization code for access and refresh tokens, applying the same account matching and auto-link policy as Google sign-in. Account-linking counterpart: POST /v1/auth/external-logins/discord:link-callback.
  */
 export interface PostAuthDiscordSignInCallbackInput {
-  body?: Types.IdentityAuthenticationDiscordCallbackRequestDto;
+  body: Types.IdentityAuthenticationDiscordCallbackRequestDto;
 }
 export type PostAuthDiscordSignInCallbackOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthDiscordSignInCallbackEndpoint = {
@@ -20102,7 +20102,7 @@ export const postAuthDiscordSignInCallbackEndpoint = {
  * Consumes a short-lived single-use six-digit email code and returns access and refresh tokens using the same session issuance path as the magic link.
  */
 export interface PostAuthEmailCodeConsumeInput {
-  body?: Types.IdentityAuthenticationConsumeEmailCodeInput;
+  body: Types.IdentityAuthenticationConsumeEmailCodeInput;
 }
 export type PostAuthEmailCodeConsumeOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthEmailCodeConsumeEndpoint = {
@@ -20119,7 +20119,7 @@ export const postAuthEmailCodeConsumeEndpoint = {
  * Generates a short-lived six-digit one-time code and dispatches the email-code notification. Always returns a generic success response to prevent user enumeration.
  */
 export interface PostAuthEmailCodeRequestInput {
-  body?: Types.IdentityAuthenticationRequestEmailCodeInput;
+  body: Types.IdentityAuthenticationRequestEmailCodeInput;
 }
 export type PostAuthEmailCodeRequestOutput = Types.IdentityAuthenticationEmailCodeRequestResult;
 export const postAuthEmailCodeRequestEndpoint = {
@@ -20136,7 +20136,7 @@ export const postAuthEmailCodeRequestEndpoint = {
  * Sends a verification email to the specified email address to confirm ownership.
  */
 export interface PostAuthEmailSendVerificationInput {
-  body?: Types.IdentityAuthenticationSendEmailVerificationInput;
+  body: Types.IdentityAuthenticationSendEmailVerificationInput;
 }
 export type PostAuthEmailSendVerificationOutput = Types.IdentityAuthenticationEmailVerificationOutput;
 export const postAuthEmailSendVerificationEndpoint = {
@@ -20153,7 +20153,7 @@ export const postAuthEmailSendVerificationEndpoint = {
  * Verifies the user's email address using a token received via email.
  */
 export interface PostAuthEmailVerifyInput {
-  body?: Types.IdentityAuthenticationVerifyEmailInput;
+  body: Types.IdentityAuthenticationVerifyEmailInput;
 }
 export type PostAuthEmailVerifyOutput = Types.IdentityAuthenticationEmailVerificationResult;
 export const postAuthEmailVerifyEndpoint = {
@@ -20220,7 +20220,7 @@ export const getAuthExternalLoginsLinkPreviewEndpoint = {
  */
 export interface PostAuthExternalLoginsScopesRevokeInput {
   provider: string;
-  body?: Types.IdentityAuthenticationRevokeExternalLoginScopesInput;
+  body: Types.IdentityAuthenticationRevokeExternalLoginScopesInput;
 }
 export type PostAuthExternalLoginsScopesRevokeOutput = Types.IdentityAuthenticationRevokeExternalLoginScopesOutput;
 export const postAuthExternalLoginsScopesRevokeEndpoint = {
@@ -20237,7 +20237,7 @@ export const postAuthExternalLoginsScopesRevokeEndpoint = {
  * Returns the Discord OAuth authorization URL plus the state parameter to validate at the callback.
  */
 export interface PostAuthExternalLoginsDiscordLinkAuthorizeInput {
-  body?: Types.IdentityAuthenticationDiscordLinkAuthorizeInput;
+  body: Types.IdentityAuthenticationDiscordLinkAuthorizeInput;
 }
 export type PostAuthExternalLoginsDiscordLinkAuthorizeOutput = Types.IdentityAuthenticationDiscordLinkAuthorizeOutput;
 export const postAuthExternalLoginsDiscordLinkAuthorizeEndpoint = {
@@ -20254,7 +20254,7 @@ export const postAuthExternalLoginsDiscordLinkAuthorizeEndpoint = {
  * Exchanges the Discord authorization code for the user profile and links the Discord identity to the authenticated user. Idempotent when already linked to the same user.
  */
 export interface PostAuthExternalLoginsDiscordLinkCallbackInput {
-  body?: Types.IdentityAuthenticationDiscordLinkCallbackInput;
+  body: Types.IdentityAuthenticationDiscordLinkCallbackInput;
 }
 export type PostAuthExternalLoginsDiscordLinkCallbackOutput = void;
 export const postAuthExternalLoginsDiscordLinkCallbackEndpoint = {
@@ -20271,7 +20271,7 @@ export const postAuthExternalLoginsDiscordLinkCallbackEndpoint = {
  * Verifies a Google ID token and links the Google identity to the authenticated user. Idempotent when already linked to the same user.
  */
 export interface PostAuthExternalLoginsGoogleInput {
-  body?: Types.IdentityAuthenticationLinkGoogleAccountInput;
+  body: Types.IdentityAuthenticationLinkGoogleAccountInput;
 }
 export type PostAuthExternalLoginsGoogleOutput = void;
 export const postAuthExternalLoginsGoogleEndpoint = {
@@ -20307,7 +20307,7 @@ export const getAuthGithubAuthorizeEndpoint = {
  * Exchanges the GitHub OAuth authorization code for access and refresh tokens, applying the same account matching, scope-grant consent recording and auto-link policy as Google/Discord sign-in.
  */
 export interface PostAuthGithubCallbackInput {
-  body?: Types.IdentityAuthenticationGitHubCallbackRequestDto;
+  body: Types.IdentityAuthenticationGitHubCallbackRequestDto;
 }
 export type PostAuthGithubCallbackOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthGithubCallbackEndpoint = {
@@ -20324,7 +20324,7 @@ export const postAuthGithubCallbackEndpoint = {
  * Authenticates a user using a Google ID Token (for NextAuth.js integration), returning access and refresh tokens. Account-linking counterpart: POST /v1/auth/external-logins/google.
  */
 export interface PostAuthGoogleSignInInput {
-  body?: Types.IdentityAuthenticationGoogleIdTokenRequestDto;
+  body: Types.IdentityAuthenticationGoogleIdTokenRequestDto;
 }
 export type PostAuthGoogleSignInOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthGoogleSignInEndpoint = {
@@ -20391,7 +20391,7 @@ export const getAuthIpBlocklistEndpoint = {
  * Stores a known-attacker IP address in the shared blocklist. Omit expiresAt to apply the configured default entry lifetime.
  */
 export interface PutAuthIpBlocklistInput {
-  body?: Types.IdentityAuthenticationIpBlocklistEntryInput;
+  body: Types.IdentityAuthenticationIpBlocklistEntryInput;
 }
 export type PutAuthIpBlocklistOutput = void;
 export const putAuthIpBlocklistEndpoint = {
@@ -20427,7 +20427,7 @@ export const deleteAuthIpBlocklistEndpoint = {
  * Consumes a short-lived one-time magic-link token and returns access and refresh tokens.
  */
 export interface PostAuthMagicLinkConsumeInput {
-  body?: Types.IdentityAuthenticationConsumeMagicLinkInput;
+  body: Types.IdentityAuthenticationConsumeMagicLinkInput;
 }
 export type PostAuthMagicLinkConsumeOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthMagicLinkConsumeEndpoint = {
@@ -20444,7 +20444,7 @@ export const postAuthMagicLinkConsumeEndpoint = {
  * Generates a short-lived one-time sign-in token and dispatches the magic-link notification. Always returns a generic success response to prevent user enumeration.
  */
 export interface PostAuthMagicLinkRequestInput {
-  body?: Types.IdentityAuthenticationRequestMagicLinkInput;
+  body: Types.IdentityAuthenticationRequestMagicLinkInput;
 }
 export type PostAuthMagicLinkRequestOutput = Types.IdentityAuthenticationMagicLinkRequestResult;
 export const postAuthMagicLinkRequestEndpoint = {
@@ -20476,7 +20476,7 @@ export const getAuthMfaEndpoint = {
  * Disables multi-factor authentication for the current user after password re-verification (issue #244).
  */
 export interface PostAuthMfaDisableInput {
-  body?: Types.IdentityAuthenticationDisableMfaInput;
+  body: Types.IdentityAuthenticationDisableMfaInput;
 }
 export type PostAuthMfaDisableOutput = Types.IdentityAuthenticationMfaSuccessOutput;
 export const postAuthMfaDisableEndpoint = {
@@ -20508,7 +20508,7 @@ export const getAuthMfaBackupCodesEndpoint = {
  * Generates a new set of backup codes after password re-verification (issue #1153), invalidating any previously generated codes.
  */
 export interface PostAuthMfaBackupCodesRegenerateInput {
-  body?: Types.IdentityAuthenticationRegenerateBackupCodesInput;
+  body: Types.IdentityAuthenticationRegenerateBackupCodesInput;
 }
 export type PostAuthMfaBackupCodesRegenerateOutput = Types.IdentityAuthenticationBackupCodesOutput;
 export const postAuthMfaBackupCodesRegenerateEndpoint = {
@@ -20525,7 +20525,7 @@ export const postAuthMfaBackupCodesRegenerateEndpoint = {
  * Sends a fresh verification code to the enrolled email address before MFA verification. Generic failure payload; throttled to one code per minute per user.
  */
 export interface PostAuthMfaEmailChallengeInput {
-  body?: Types.IdentityAuthenticationEmailMfaChallengeInput;
+  body: Types.IdentityAuthenticationEmailMfaChallengeInput;
 }
 export type PostAuthMfaEmailChallengeOutput = Types.IdentityAuthenticationEmailMfaSetupOutput;
 export const postAuthMfaEmailChallengeEndpoint = {
@@ -20542,7 +20542,7 @@ export const postAuthMfaEmailChallengeEndpoint = {
  * Completes email MFA setup by verifying the code sent to the account's address, enrolling the verified address as an email factor.
  */
 export interface PostAuthMfaEmailCompleteInput {
-  body?: Types.IdentityAuthenticationCompleteMfaSetupInput;
+  body: Types.IdentityAuthenticationCompleteMfaSetupInput;
 }
 export type PostAuthMfaEmailCompleteOutput = Types.IdentityAuthenticationMfaSuccessOutput;
 export const postAuthMfaEmailCompleteEndpoint = {
@@ -20589,7 +20589,7 @@ export const getAuthMfaMethodsEndpoint = {
  * Issues a push approval challenge to the enrolled device. The challenge must be approved within the TTL; on timeout the sign-in flow falls back to TOTP.
  */
 export interface PostAuthMfaPushChallengeInput {
-  body?: Types.IdentityAuthenticationPushMfaChallengeInput;
+  body: Types.IdentityAuthenticationPushMfaChallengeInput;
 }
 export type PostAuthMfaPushChallengeOutput = Types.IdentityAuthenticationPushMfaChallengeOutput;
 export const postAuthMfaPushChallengeEndpoint = {
@@ -20606,7 +20606,7 @@ export const postAuthMfaPushChallengeEndpoint = {
  * Registers (or replaces) the mobile device registration token used to deliver push MFA approval challenges, after password re-verification (issue #1153).
  */
 export interface PostAuthMfaPushRegisterDeviceInput {
-  body?: Types.IdentityAuthenticationPushMfaDeviceInput;
+  body: Types.IdentityAuthenticationPushMfaDeviceInput;
 }
 export type PostAuthMfaPushRegisterDeviceOutput = Types.IdentityAuthenticationMfaSuccessOutput;
 export const postAuthMfaPushRegisterDeviceEndpoint = {
@@ -20623,7 +20623,7 @@ export const postAuthMfaPushRegisterDeviceEndpoint = {
  * Records the device's approve/deny decision for a pending, unexpired challenge. Only a pending challenge accepts a response; everything else fails closed.
  */
 export interface PostAuthMfaPushRespondInput {
-  body?: Types.IdentityAuthenticationPushMfaRespondInput;
+  body: Types.IdentityAuthenticationPushMfaRespondInput;
 }
 export type PostAuthMfaPushRespondOutput = Types.IdentityAuthenticationMfaSuccessOutput;
 export const postAuthMfaPushRespondEndpoint = {
@@ -20655,7 +20655,7 @@ export const postAuthMfaRecoveryCancelEndpoint = {
  * Consumes the single-use confirmation token and disables multi-factor authentication for the recovered account. Denials are generic and never reveal token state.
  */
 export interface PostAuthMfaRecoveryConfirmInput {
-  body?: Types.IdentityAuthenticationMfaRecoveryConfirmInput;
+  body: Types.IdentityAuthenticationMfaRecoveryConfirmInput;
 }
 export type PostAuthMfaRecoveryConfirmOutput = Types.IdentityAuthenticationMfaRecoveryConfirmOutput;
 export const postAuthMfaRecoveryConfirmEndpoint = {
@@ -20672,7 +20672,7 @@ export const postAuthMfaRecoveryConfirmEndpoint = {
  * Exchanges the recovery request token (after the cooling-off window) for a confirmation email. Denials are generic and never reveal token state.
  */
 export interface PostAuthMfaRecoveryContinueInput {
-  body?: Types.IdentityAuthenticationMfaRecoveryContinueInput;
+  body: Types.IdentityAuthenticationMfaRecoveryContinueInput;
 }
 export type PostAuthMfaRecoveryContinueOutput = Types.IdentityAuthenticationMfaRecoveryContinueOutput;
 export const postAuthMfaRecoveryContinueEndpoint = {
@@ -20689,7 +20689,7 @@ export const postAuthMfaRecoveryContinueEndpoint = {
  * Opens a lost-MFA-device recovery request for an email address and sends a recovery email with a cooling-off period. Always returns a generic success response to prevent user enumeration.
  */
 export interface PostAuthMfaRecoveryRequestInput {
-  body?: Types.IdentityAuthenticationMfaRecoveryRequestInput;
+  body: Types.IdentityAuthenticationMfaRecoveryRequestInput;
 }
 export type PostAuthMfaRecoveryRequestOutput = Types.IdentityAuthenticationMfaRecoveryRequestOutput;
 export const postAuthMfaRecoveryRequestEndpoint = {
@@ -20706,7 +20706,7 @@ export const postAuthMfaRecoveryRequestEndpoint = {
  * Consumes the expiring first-factor challenge and verifies an enrolled TOTP, SMS or backup code. Identity, tenant, policy and token version come from the server-side challenge. A successful response contains MFA-bound credentials.
  */
 export interface PostAuthMfaSignInCompleteInput {
-  body?: Types.IdentityAuthenticationCompleteMfaSignInInput;
+  body: Types.IdentityAuthenticationCompleteMfaSignInInput;
 }
 export type PostAuthMfaSignInCompleteOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthMfaSignInCompleteEndpoint = {
@@ -20723,7 +20723,7 @@ export const postAuthMfaSignInCompleteEndpoint = {
  * Sends a code to the server-resolved enrolled phone using an active first-factor MFA continuation. Codes are bound to that continuation and throttled per account.
  */
 export interface PostAuthMfaSmsChallengeInput {
-  body?: Types.IdentityAuthenticationSmsMfaChallengeInput;
+  body: Types.IdentityAuthenticationSmsMfaChallengeInput;
 }
 export type PostAuthMfaSmsChallengeOutput = Types.IdentityAuthenticationSmsMfaSetupOutput;
 export const postAuthMfaSmsChallengeEndpoint = {
@@ -20740,7 +20740,7 @@ export const postAuthMfaSmsChallengeEndpoint = {
  * Completes SMS MFA setup by verifying the code sent to the user's phone, enrolling the verified number as an SMS factor.
  */
 export interface PostAuthMfaSmsCompleteInput {
-  body?: Types.IdentityAuthenticationCompleteSmsMfaSetupInput;
+  body: Types.IdentityAuthenticationCompleteSmsMfaSetupInput;
 }
 export type PostAuthMfaSmsCompleteOutput = Types.IdentityAuthenticationMfaSuccessOutput;
 export const postAuthMfaSmsCompleteEndpoint = {
@@ -20757,7 +20757,7 @@ export const postAuthMfaSmsCompleteEndpoint = {
  * Re-verifies the authenticated account password before sending an SMS enrollment proof to the requested phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.
  */
 export interface PostAuthMfaSmsSetupInput {
-  body?: Types.IdentityAuthenticationSmsMfaSetupInput;
+  body: Types.IdentityAuthenticationSmsMfaSetupInput;
 }
 export type PostAuthMfaSmsSetupOutput = Types.IdentityAuthenticationSmsMfaSetupOutput;
 export const postAuthMfaSmsSetupEndpoint = {
@@ -20774,7 +20774,7 @@ export const postAuthMfaSmsSetupEndpoint = {
  * Completes TOTP setup by verifying a code from the user's authenticator app.
  */
 export interface PostAuthMfaTotpCompleteInput {
-  body?: Types.IdentityAuthenticationCompleteMfaSetupInput;
+  body: Types.IdentityAuthenticationCompleteMfaSetupInput;
 }
 export type PostAuthMfaTotpCompleteOutput = Types.IdentityAuthenticationMfaSuccessOutput;
 export const postAuthMfaTotpCompleteEndpoint = {
@@ -20806,7 +20806,7 @@ export const postAuthMfaTotpSetupEndpoint = {
  * Verifies an MFA code during the authentication flow. Used after initial sign-in when MFA is required.
  */
 export interface PostAuthMfaVerifyInput {
-  body?: Types.IdentityAuthenticationVerifyMfaInput;
+  body: Types.IdentityAuthenticationVerifyMfaInput;
 }
 export type PostAuthMfaVerifyOutput = Types.IdentityAuthenticationMfaVerificationOutput;
 export const postAuthMfaVerifyEndpoint = {
@@ -20863,7 +20863,7 @@ export const getAuthOidcEndSessionUrlEndpoint = {
  */
 export interface PostAuthOidcSignInAuthorizeInput {
   slug: string;
-  body?: Types.IdentityAuthenticationOidcAuthorizeRequestDto;
+  body: Types.IdentityAuthenticationOidcAuthorizeRequestDto;
 }
 export type PostAuthOidcSignInAuthorizeOutput = Types.IdentityAuthenticationOidcSignInOutput;
 export const postAuthOidcSignInAuthorizeEndpoint = {
@@ -20881,7 +20881,7 @@ export const postAuthOidcSignInAuthorizeEndpoint = {
  */
 export interface PostAuthOidcSignInCallbackInput {
   slug: string;
-  body?: Types.IdentityAuthenticationOidcCallbackRequestDto;
+  body: Types.IdentityAuthenticationOidcCallbackRequestDto;
 }
 export type PostAuthOidcSignInCallbackOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthOidcSignInCallbackEndpoint = {
@@ -20898,7 +20898,7 @@ export const postAuthOidcSignInCallbackEndpoint = {
  * Validates the local primary credential (identifier + password), assesses sign-in risk and returns the persisted flow state with the required challenge ladder (MFA verification, device trust, risk challenge). Expired, inactive or unknown credentials fail closed.
  */
 export interface PostAuthOrchestratedInitiateInput {
-  body?: Types.IdentityAuthenticationInitiateOrchestratedAuthenticationRequestDto;
+  body: Types.IdentityAuthenticationInitiateOrchestratedAuthenticationRequestDto;
 }
 export type PostAuthOrchestratedInitiateOutput = Types.IdentityAuthenticationOrchestratedFlowStateOutput;
 export const postAuthOrchestratedInitiateEndpoint = {
@@ -20967,7 +20967,7 @@ export const postAuthOrchestratedCompleteEndpoint = {
  */
 export interface PostAuthOrchestratedProcessStepInput {
   flowId: string;
-  body?: Types.IdentityAuthenticationProcessOrchestratedAuthenticationStepRequestDto;
+  body: Types.IdentityAuthenticationProcessOrchestratedAuthenticationStepRequestDto;
 }
 export type PostAuthOrchestratedProcessStepOutput = Types.IdentityAuthenticationOrchestratedFlowStateOutput;
 export const postAuthOrchestratedProcessStepEndpoint = {
@@ -20984,7 +20984,7 @@ export const postAuthOrchestratedProcessStepEndpoint = {
  * Changes the password for the currently authenticated user.
  */
 export interface PostAuthPasswordChangeInput {
-  body?: Types.IdentityAuthenticationPasswordChangeInput;
+  body: Types.IdentityAuthenticationPasswordChangeInput;
 }
 export type PostAuthPasswordChangeOutput = Types.IdentityAuthenticationPasswordChangeResult;
 export const postAuthPasswordChangeEndpoint = {
@@ -21001,7 +21001,7 @@ export const postAuthPasswordChangeEndpoint = {
  * Resets the user's password using a token received via email.
  */
 export interface PostAuthPasswordResetInput {
-  body?: Types.IdentityAuthenticationCompletePasswordResetInput;
+  body: Types.IdentityAuthenticationCompletePasswordResetInput;
 }
 export type PostAuthPasswordResetOutput = Types.IdentityAuthenticationPasswordResetResult;
 export const postAuthPasswordResetEndpoint = {
@@ -21018,7 +21018,7 @@ export const postAuthPasswordResetEndpoint = {
  * Sends a password reset link to the specified email address. Always returns success for security.
  */
 export interface PostAuthPasswordResetRequestInput {
-  body?: Types.IdentityAuthenticationRequestPasswordResetInput;
+  body: Types.IdentityAuthenticationRequestPasswordResetInput;
 }
 export type PostAuthPasswordResetRequestOutput = Types.IdentityAuthenticationPasswordResetRequestResult;
 export const postAuthPasswordResetRequestEndpoint = {
@@ -21035,7 +21035,7 @@ export const postAuthPasswordResetRequestEndpoint = {
  * Resolves one unique account and applies the existing password, risk, tenant and session flow. Phone identifiers use a leading plus and up to 15 digits. Missing, ambiguous or invalid identifiers receive the generic authentication failure.
  */
 export interface PostAuthPolymorphicInput {
-  body?: Types.IdentityAuthenticationPolymorphicSignInInput;
+  body: Types.IdentityAuthenticationPolymorphicSignInInput;
 }
 export type PostAuthPolymorphicOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthPolymorphicEndpoint = {
@@ -21053,7 +21053,7 @@ export const postAuthPolymorphicEndpoint = {
  */
 export interface PostAuthSamlAssertionConsumerInput {
   slug: string;
-  body?: Types.IdentityAuthenticationSamlCallbackRequestDto;
+  body: Types.IdentityAuthenticationSamlCallbackRequestDto;
 }
 export type PostAuthSamlAssertionConsumerOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthSamlAssertionConsumerEndpoint = {
@@ -21136,7 +21136,7 @@ export const getAuthScimProvisioningTokensEndpoint = {
  * Issues a new tenant-scoped provisioning token. The plaintext is returned once.
  */
 export interface PostAuthScimProvisioningTokensInput {
-  body?: Types.IdentityProvisioningCreateScimProvisioningTokenInput;
+  body: Types.IdentityProvisioningCreateScimProvisioningTokenInput;
 }
 export type PostAuthScimProvisioningTokensOutput = Types.IdentityProvisioningCreateScimProvisioningTokenOutput;
 export const postAuthScimProvisioningTokensEndpoint = {
@@ -21202,7 +21202,7 @@ export const getAuthServiceAccountsForGetAuthServiceAccountsEndpoint = {
  * The client secret is only returned once during creation. Store it securely.
  */
 export interface PostAuthServiceAccountsInput {
-  body?: Types.IdentityAuthenticationCreateServiceAccountInput;
+  body: Types.IdentityAuthenticationCreateServiceAccountInput;
 }
 export type PostAuthServiceAccountsOutput = Types.IdentityAuthenticationServiceAccountCreatedOutput;
 export const postAuthServiceAccountsEndpoint = {
@@ -21250,7 +21250,7 @@ export const deleteAuthServiceAccountsEndpoint = {
  */
 export interface PatchAuthServiceAccountsInput {
   serviceAccountId: string;
-  body?: Types.IdentityAuthenticationPatchServiceAccountInput;
+  body: Types.IdentityAuthenticationPatchServiceAccountInput;
 }
 export type PatchAuthServiceAccountsOutput = void;
 export const patchAuthServiceAccountsEndpoint = {
@@ -21300,7 +21300,7 @@ export const postAuthServiceAccountsDeactivateEndpoint = {
  */
 export interface PostAuthServiceAccountsLockInput {
   serviceAccountId: string;
-  body?: Types.IdentityAuthenticationLockServiceAccountInput;
+  body: Types.IdentityAuthenticationLockServiceAccountInput;
 }
 export type PostAuthServiceAccountsLockOutput = void;
 export const postAuthServiceAccountsLockEndpoint = {
@@ -21406,7 +21406,7 @@ export const deleteAuthServiceAccountsClientCertificateEndpoint = {
  */
 export interface PatchAuthServiceAccountsClientCertificateInput {
   serviceAccountId: string;
-  body?: Types.IdentityAuthenticationBindServiceAccountCertificateInput;
+  body: Types.IdentityAuthenticationBindServiceAccountCertificateInput;
 }
 export type PatchAuthServiceAccountsClientCertificateOutput = void;
 export const patchAuthServiceAccountsClientCertificateEndpoint = {
@@ -21422,7 +21422,7 @@ export const patchAuthServiceAccountsClientCertificateEndpoint = {
  */
 export interface PatchAuthServiceAccountsScopesInput {
   serviceAccountId: string;
-  body?: Types.IdentityAuthenticationUpdateScopesInput;
+  body: Types.IdentityAuthenticationUpdateScopesInput;
 }
 export type PatchAuthServiceAccountsScopesOutput = void;
 export const patchAuthServiceAccountsScopesEndpoint = {
@@ -21548,7 +21548,7 @@ export const deleteAuthSessionsEndpoint = {
  */
 export interface PatchAuthSessionsNameInput {
   sessionId: string;
-  body?: Types.IdentityAuthenticationRenameSessionInput;
+  body: Types.IdentityAuthenticationRenameSessionInput;
 }
 export type PatchAuthSessionsNameOutput = Types.IdentityAuthenticationSessionSuccessOutput;
 export const patchAuthSessionsNameEndpoint = {
@@ -21565,7 +21565,7 @@ export const patchAuthSessionsNameEndpoint = {
  * Authenticates a user with email and password credentials, returning access and refresh tokens.
  */
 export interface PostAuthSignInInput {
-  body?: Types.IdentityAuthenticationLocalSignInInput;
+  body: Types.IdentityAuthenticationLocalSignInInput;
 }
 export type PostAuthSignInOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthSignInEndpoint = {
@@ -21599,7 +21599,7 @@ export const postAuthSignOutEndpoint = {
  * Creates a new user account with email and password credentials, returning authentication tokens on success. When Turnstile is configured (TURNSTILE_SECRET_KEY), turnstileToken is required and verified server-side (issue #1150).
  */
 export interface PostAuthSignUpInput {
-  body?: Types.IdentityAuthenticationLocalSignUpInput;
+  body: Types.IdentityAuthenticationLocalSignUpInput;
 }
 export type PostAuthSignUpOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthSignUpEndpoint = {
@@ -21652,7 +21652,7 @@ export const postAuthSigningKeysCleanupEndpoint = {
  * Manually rotates to a new signing key. Previous keys remain valid for token validation during grace period.
  */
 export interface PostAuthSigningKeysRotateInput {
-  body?: Types.IdentityAuthenticationRotateKeyInput;
+  body: Types.IdentityAuthenticationRotateKeyInput;
 }
 export type PostAuthSigningKeysRotateOutput = Types.IdentityAuthenticationJwtKeyInfoDto;
 export const postAuthSigningKeysRotateEndpoint = {
@@ -21664,7 +21664,7 @@ export const postAuthSigningKeysRotateEndpoint = {
 } as const;
 
 export interface PostAuthStepUpChallengesInput {
-  body?: Types.IdentityAuthenticationCreateStepUpChallengeInput;
+  body: Types.IdentityAuthenticationCreateStepUpChallengeInput;
 }
 export type PostAuthStepUpChallengesOutput = Types.IdentityAuthenticationStepUpChallengeOutput;
 export const postAuthStepUpChallengesEndpoint = {
@@ -21677,7 +21677,7 @@ export const postAuthStepUpChallengesEndpoint = {
 
 export interface PostAuthStepUpChallengesVerifyInput {
   challengeId: string;
-  body?: Types.IdentityAuthenticationVerifyStepUpChallengeInput;
+  body: Types.IdentityAuthenticationVerifyStepUpChallengeInput;
 }
 export type PostAuthStepUpChallengesVerifyOutput = Types.IdentityAuthenticationStepUpReceiptOutput;
 export const postAuthStepUpChallengesVerifyEndpoint = {
@@ -21706,7 +21706,7 @@ export const postAuthStepUpChallengesWebauthnOptionsEndpoint = {
  * Exchanges a valid refresh token for a new access token and refresh token pair.
  */
 export interface PostAuthTokensRefreshInput {
-  body?: Types.IdentityAuthenticationRefreshTokenInput;
+  body: Types.IdentityAuthenticationRefreshTokenInput;
 }
 export type PostAuthTokensRefreshOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthTokensRefreshEndpoint = {
@@ -21723,7 +21723,7 @@ export const postAuthTokensRefreshEndpoint = {
  * Invalidates a refresh token, preventing it from being used to obtain new access tokens.
  */
 export interface PostAuthTokensRevokeInput {
-  body?: Types.IdentityAuthenticationRevokeRefreshTokenInput;
+  body: Types.IdentityAuthenticationRevokeRefreshTokenInput;
 }
 export type PostAuthTokensRevokeOutput = void;
 export const postAuthTokensRevokeEndpoint = {
@@ -21755,7 +21755,7 @@ export const getAuthTrustedContactsEndpoint = {
  * Designates a trusted recovery contact for the acting user and sends a single-use confirmation invite. The contact must confirm before receiving recovery codes.
  */
 export interface PostAuthTrustedContactsInput {
-  body?: Types.IdentityAuthenticationAddTrustedContactInput;
+  body: Types.IdentityAuthenticationAddTrustedContactInput;
 }
 export type PostAuthTrustedContactsOutput = Types.IdentityAuthenticationTrustedContactActionResult;
 export const postAuthTrustedContactsEndpoint = {
@@ -21789,7 +21789,7 @@ export const deleteAuthTrustedContactsEndpoint = {
  * Consumes the single-use, expiring invite token emailed to the contact. Denials are generic and never reveal token state. Rate limited per IP against the authentication budget.
  */
 export interface PostAuthTrustedContactsConfirmInput {
-  body?: Types.IdentityAuthenticationConfirmTrustedContactInput;
+  body: Types.IdentityAuthenticationConfirmTrustedContactInput;
 }
 export type PostAuthTrustedContactsConfirmOutput = Types.IdentityAuthenticationTrustedContactConfirmResult;
 export const postAuthTrustedContactsConfirmEndpoint = {
@@ -21825,7 +21825,7 @@ export const getAuthTrustedDevicesEndpoint = {
  * then retry the same device name with the returned receipt as `stepUpReceipt`.
  */
 export interface PostAuthTrustedDevicesInput {
-  body?: Types.IdentityAuthenticationTrustDeviceInput;
+  body: Types.IdentityAuthenticationTrustDeviceInput;
 }
 export type PostAuthTrustedDevicesOutput = Types.IdentityAuthenticationSessionSuccessOutput;
 export const postAuthTrustedDevicesEndpoint = {
@@ -21860,7 +21860,7 @@ export const deleteAuthTrustedDevicesEndpoint = {
  */
 export interface PatchAuthTrustedDevicesNameInput {
   deviceId: string;
-  body?: Types.IdentityAuthenticationRenameTrustedDeviceInput;
+  body: Types.IdentityAuthenticationRenameTrustedDeviceInput;
 }
 export type PatchAuthTrustedDevicesNameOutput = Types.IdentityAuthenticationSessionSuccessOutput;
 export const patchAuthTrustedDevicesNameEndpoint = {
@@ -21877,7 +21877,7 @@ export const patchAuthTrustedDevicesNameEndpoint = {
  * Verifies a Web3 wallet signature against a previously issued challenge and returns authentication tokens.
  */
 export interface PostAuthWeb3VerifyInput {
-  body?: Types.IdentityAuthenticationWeb3VerifyInput;
+  body: Types.IdentityAuthenticationWeb3VerifyInput;
 }
 export type PostAuthWeb3VerifyOutput = Types.IdentityAuthenticationSignInOutput;
 export const postAuthWeb3VerifyEndpoint = {
@@ -21894,7 +21894,7 @@ export const postAuthWeb3VerifyEndpoint = {
  * Generates a cryptographic challenge that must be signed by the user's wallet to prove ownership.
  */
 export interface PostAuthWeb3ChallengeInput {
-  body?: Types.IdentityAuthenticationWeb3ChallengeInput;
+  body: Types.IdentityAuthenticationWeb3ChallengeInput;
 }
 export type PostAuthWeb3ChallengeOutput = Types.IdentityAuthenticationWeb3ChallengeOutput;
 export const postAuthWeb3ChallengeEndpoint = {
@@ -21937,7 +21937,7 @@ export const postAuthWebauthnAuthenticationBeginEndpoint = {
  * Complete WebAuthn authentication (passwordless login).
  */
 export interface PostAuthWebauthnAuthenticationCompleteInput {
-  body?: Types.IdentityAuthenticationCompleteWebAuthnAuthenticationInput;
+  body: Types.IdentityAuthenticationCompleteWebAuthnAuthenticationInput;
 }
 export type PostAuthWebauthnAuthenticationCompleteOutput = Types.IdentityAuthenticationWebAuthnAuthenticationResult;
 export const postAuthWebauthnAuthenticationCompleteEndpoint = {
@@ -21998,7 +21998,7 @@ export const deleteAuthWebauthnCredentialsEndpoint = {
  */
 export interface PatchAuthWebauthnCredentialsInput {
   credentialId: string;
-  body?: Types.IdentityAuthenticationUpdateCredentialNameInput;
+  body: Types.IdentityAuthenticationUpdateCredentialNameInput;
 }
 export type PatchAuthWebauthnCredentialsOutput = void;
 export const patchAuthWebauthnCredentialsEndpoint = {
@@ -22075,7 +22075,7 @@ export const postAuthWebauthnCredentialsVerifyEndpoint = {
  * Begin WebAuthn credential registration.
  */
 export interface PostAuthWebauthnRegistrationBeginInput {
-  body?: Types.IdentityAuthenticationBeginWebAuthnRegistrationInput;
+  body: Types.IdentityAuthenticationBeginWebAuthnRegistrationInput;
 }
 export type PostAuthWebauthnRegistrationBeginOutput = Types.IdentityAuthenticationWebAuthnRegistrationOptionsResult;
 export const postAuthWebauthnRegistrationBeginEndpoint = {
@@ -22090,7 +22090,7 @@ export const postAuthWebauthnRegistrationBeginEndpoint = {
  * Complete WebAuthn credential registration.
  */
 export interface PostAuthWebauthnRegistrationCompleteInput {
-  body?: Types.IdentityAuthenticationCompleteWebAuthnRegistrationInput;
+  body: Types.IdentityAuthenticationCompleteWebAuthnRegistrationInput;
 }
 export type PostAuthWebauthnRegistrationCompleteOutput = Types.IdentityAuthenticationWebAuthnRegistrationResult;
 export const postAuthWebauthnRegistrationCompleteEndpoint = {
@@ -22129,7 +22129,7 @@ export const getClientsEndpoint = {
  * Creates a client account using the canonical tenant creation workflow.
  */
 export interface PostClientsInput {
-  body?: Types.CommerceSubscriptionsCreateClientInput;
+  body: Types.CommerceSubscriptionsCreateClientInput;
 }
 export type PostClientsOutput = void;
 export const postClientsEndpoint = {
@@ -22160,7 +22160,7 @@ export const getClientByIdEndpoint = {
  */
 export interface PutClientsInput {
   clientId: string;
-  body?: Types.IdentityTenantsUpdateTenantInput;
+  body: Types.IdentityTenantsUpdateTenantInput;
 }
 export type PutClientsOutput = void;
 export const putClientsEndpoint = {
@@ -22176,7 +22176,7 @@ export const putClientsEndpoint = {
  */
 export interface DeleteClientsInput {
   clientId: string;
-  body?: Types.IdentityTenantsArchiveInput;
+  body: Types.IdentityTenantsArchiveInput;
 }
 export type DeleteClientsOutput = void;
 export const deleteClientsEndpoint = {
@@ -22214,7 +22214,7 @@ export const getClientsModulesEndpoint = {
  */
 export interface PutClientsModulesInput {
   clientId: string;
-  body?: Types.IdentityTenantsUpdateTenantFeatureFlagsInput;
+  body: Types.IdentityTenantsUpdateTenantFeatureFlagsInput;
 }
 export type PutClientsModulesOutput = void;
 export const putClientsModulesEndpoint = {
@@ -22230,7 +22230,7 @@ export const putClientsModulesEndpoint = {
  */
 export interface PatchClientsModulesInput {
   clientId: string;
-  body?: Types.IdentityTenantsUpdateTenantFeatureFlagsInput;
+  body: Types.IdentityTenantsUpdateTenantFeatureFlagsInput;
 }
 export type PatchClientsModulesOutput = void;
 export const patchClientsModulesEndpoint = {
@@ -22269,7 +22269,7 @@ export const getContentResourcesForGetContentResourcesEndpoint = {
  * Create a new content resource.
  */
 export interface PostContentResourcesInput {
-  body?: Types.ContentPagesCreateContentResourceDto;
+  body: Types.ContentPagesCreateContentResourceDto;
 }
 export type PostContentResourcesOutput = Types.ContentPagesContentResourceDto;
 export const postContentResourcesEndpoint = {
@@ -22300,7 +22300,7 @@ export const getContentResourcesForGetContentResourcesByIdEndpoint = {
  */
 export interface PutContentResourcesInput {
   id: string;
-  body?: Types.ContentPagesUpdateContentResourceDto;
+  body: Types.ContentPagesUpdateContentResourceDto;
 }
 export type PutContentResourcesOutput = Types.ContentPagesContentResourceDto;
 export const putContentResourcesEndpoint = {
@@ -22374,7 +22374,7 @@ export const getContentCourseProposalsEndpoint = {
 } as const;
 
 export interface PostContentCourseProposalsInput {
-  body?: Types.ContentPagesCreateCourseProposalDto;
+  body: Types.ContentPagesCreateCourseProposalDto;
 }
 export type PostContentCourseProposalsOutput = Types.ContentPagesCourseProposalDto;
 export const postContentCourseProposalsEndpoint = {
@@ -22399,7 +22399,7 @@ export const getCourseProposalByIdEndpoint = {
 
 export interface PutContentCourseProposalsInput {
   id: string;
-  body?: Types.ContentPagesUpdateCourseProposalDto;
+  body: Types.ContentPagesUpdateCourseProposalDto;
 }
 export type PutContentCourseProposalsOutput = Types.ContentPagesCourseProposalDto;
 export const putContentCourseProposalsEndpoint = {
@@ -22446,7 +22446,7 @@ export interface PostCourseInteractionsInput {
   query?: {
     programId?: string;
   };
-  body?: Types.LearningCoursesStartContentInput;
+  body: Types.LearningCoursesStartContentInput;
 }
 export type PostCourseInteractionsOutput = Types.LearningCoursesContentInteractionDto;
 export const postCourseInteractionsEndpoint = {
@@ -22466,7 +22466,7 @@ export interface PostCourseInteractionsCompleteInput {
   query?: {
     programId?: string;
   };
-  body?: Types.LearningCoursesCompleteContentInput;
+  body: Types.LearningCoursesCompleteContentInput;
 }
 export type PostCourseInteractionsCompleteOutput = Types.LearningCoursesContentInteractionDto;
 export const postCourseInteractionsCompleteEndpoint = {
@@ -22486,7 +22486,7 @@ export interface PutCourseInteractionsProgressInput {
   query?: {
     programId?: string;
   };
-  body?: Types.LearningCoursesUpdateProgressInput;
+  body: Types.LearningCoursesUpdateProgressInput;
 }
 export type PutCourseInteractionsProgressOutput = Types.LearningCoursesContentInteractionDto;
 export const putCourseInteractionsProgressEndpoint = {
@@ -22506,7 +22506,7 @@ export interface PostCourseInteractionsSubmitInput {
   query?: {
     programId?: string;
   };
-  body?: Types.LearningCoursesSubmitContentInput;
+  body: Types.LearningCoursesSubmitContentInput;
 }
 export type PostCourseInteractionsSubmitOutput = Types.LearningCoursesContentInteractionDto;
 export const postCourseInteractionsSubmitEndpoint = {
@@ -22526,7 +22526,7 @@ export interface PutCourseInteractionsTimeSpentInput {
   query?: {
     programId?: string;
   };
-  body?: Types.LearningCoursesUpdateTimeSpentInput;
+  body: Types.LearningCoursesUpdateTimeSpentInput;
 }
 export type PutCourseInteractionsTimeSpentOutput = Types.LearningCoursesContentInteractionDto;
 export const putCourseInteractionsTimeSpentEndpoint = {
@@ -22667,7 +22667,7 @@ export const getCoursesForGetCoursesEndpoint = {
  * Create a new program (content-type level draft permission)
  */
 export interface PostCoursesInput {
-  body?: Types.LearningCoursesCreateProgramDto;
+  body: Types.LearningCoursesCreateProgramDto;
 }
 export type PostCoursesOutput = Types.LearningCoursesProgramDto;
 export const postCoursesEndpoint = {
@@ -22706,7 +22706,7 @@ export const getCoursesCohortsScheduleEndpoint = {
 export interface PutCoursesCohortsScheduleInput {
   courseId: string;
   cohortId: string;
-  body?: Types.LearningCohortsApplyCohortScheduleInput;
+  body: Types.LearningCohortsApplyCohortScheduleInput;
 }
 export type PutCoursesCohortsScheduleOutput = Types.LearningCohortsCohortScheduleDto;
 export const putCoursesCohortsScheduleEndpoint = {
@@ -22734,7 +22734,7 @@ export interface PatchCoursesCohortsScheduleItemsInput {
   courseId: string;
   cohortId: string;
   itemId: string;
-  body?: Types.LearningCohortsUpdateCohortScheduleInput;
+  body: Types.LearningCohortsUpdateCohortScheduleInput;
 }
 export type PatchCoursesCohortsScheduleItemsOutput = Types.LearningCohortsCohortScheduleDto;
 export const patchCoursesCohortsScheduleItemsEndpoint = {
@@ -22749,7 +22749,7 @@ export interface PostCoursesCohortsScheduleItemsShiftInput {
   courseId: string;
   cohortId: string;
   itemId: string;
-  body?: Types.LearningCohortsShiftCohortScheduleInput;
+  body: Types.LearningCohortsShiftCohortScheduleInput;
 }
 export type PostCoursesCohortsScheduleItemsShiftOutput = Types.LearningCohortsCohortScheduleDto;
 export const postCoursesCohortsScheduleItemsShiftEndpoint = {
@@ -22763,7 +22763,7 @@ export const postCoursesCohortsScheduleItemsShiftEndpoint = {
 export interface PostCoursesCohortsSchedulePreviewInput {
   courseId: string;
   cohortId: string;
-  body?: Types.LearningCohortsPreviewCohortScheduleInput;
+  body: Types.LearningCohortsPreviewCohortScheduleInput;
 }
 export type PostCoursesCohortsSchedulePreviewOutput = Types.LearningCohortsCohortSchedulePreviewDto;
 export const postCoursesCohortsSchedulePreviewEndpoint = {
@@ -22811,7 +22811,7 @@ export const getCoursesGroupSetsEndpoint = {
  */
 export interface PostCoursesGroupSetsInput {
   courseId: string;
-  body?: Types.LearningAssessmentsCreateGroupSetInput;
+  body: Types.LearningAssessmentsCreateGroupSetInput;
 }
 export type PostCoursesGroupSetsOutput = Types.LearningAssessmentsGroupSetDto;
 export const postCoursesGroupSetsEndpoint = {
@@ -22844,7 +22844,7 @@ export const getCoursesGroupSetsGroupsEndpoint = {
 export interface PostCoursesGroupSetsGroupsInput {
   courseId: string;
   setId: string;
-  body?: Types.LearningAssessmentsCreateGroupInput;
+  body: Types.LearningAssessmentsCreateGroupInput;
 }
 export type PostCoursesGroupSetsGroupsOutput = Types.LearningAssessmentsGroupDto;
 export const postCoursesGroupSetsGroupsEndpoint = {
@@ -22923,7 +22923,7 @@ export const deleteCoursesGroupSetsGroupsMembershipEndpoint = {
 
 export interface PostCoursesStudentsMessageInput {
   courseId: string;
-  body?: Types.LearningCoursesSendCourseStudentMessageInput;
+  body: Types.LearningCoursesSendCourseStudentMessageInput;
 }
 export type PostCoursesStudentsMessageOutput = Types.LearningCoursesSendCourseStudentMessageOutput;
 export const postCoursesStudentsMessageEndpoint = {
@@ -22952,7 +22952,7 @@ export const getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsEndpoi
 
 export interface PostCoursesSupportTicketsInput {
   courseId: string;
-  body?: Types.LearningCoursesCreateCourseSupportTicketInput;
+  body: Types.LearningCoursesCreateCourseSupportTicketInput;
 }
 export type PostCoursesSupportTicketsOutput = Types.CommerceProductsSupportTicketDto;
 export const postCoursesSupportTicketsEndpoint = {
@@ -22979,7 +22979,7 @@ export const getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsByTick
 export interface PostCoursesSupportTicketsResolveInput {
   courseId: string;
   ticketId: string;
-  body?: Types.LearningCoursesResolveCourseSupportTicketInput;
+  body: Types.LearningCoursesResolveCourseSupportTicketInput;
 }
 export type PostCoursesSupportTicketsResolveOutput = Types.CommerceProductsSupportTicketDto;
 export const postCoursesSupportTicketsResolveEndpoint = {
@@ -22993,7 +22993,7 @@ export const postCoursesSupportTicketsResolveEndpoint = {
 export interface PostCoursesSupportTicketsMessagesInput {
   courseId: string;
   ticketId: string;
-  body?: Types.LearningCoursesCourseSupportTicketMessageInput;
+  body: Types.LearningCoursesCourseSupportTicketMessageInput;
 }
 export type PostCoursesSupportTicketsMessagesOutput = Types.CommerceProductsSupportTicketDto;
 export const postCoursesSupportTicketsMessagesEndpoint = {
@@ -23024,7 +23024,7 @@ export const getCoursesForGetCoursesByIdEndpoint = {
  */
 export interface PutCoursesInput {
   id: string;
-  body?: Types.LearningCoursesUpdateProgramDto;
+  body: Types.LearningCoursesUpdateProgramDto;
 }
 export type PutCoursesOutput = Types.LearningCoursesProgramDto;
 export const putCoursesEndpoint = {
@@ -23085,7 +23085,7 @@ export const postCoursesArchiveEndpoint = {
  */
 export interface PostCoursesCloneInput {
   id: string;
-  body?: Types.LearningCoursesCloneProgramDto;
+  body: Types.LearningCoursesCloneProgramDto;
 }
 export type PostCoursesCloneOutput = Types.LearningCoursesProgramDto;
 export const postCoursesCloneEndpoint = {
@@ -23101,7 +23101,7 @@ export const postCoursesCloneEndpoint = {
  */
 export interface PostCoursesCreateProductInput {
   id: string;
-  body?: Types.LearningCoursesCreateProductFromProgramDto;
+  body: Types.LearningCoursesCreateProductFromProgramDto;
 }
 export type PostCoursesCreateProductOutput = string;
 export const postCoursesCreateProductEndpoint = {
@@ -23148,7 +23148,7 @@ export const postCoursesLinkProductEndpoint = {
  */
 export interface PostCoursesMonetizeInput {
   id: string;
-  body?: Types.LearningCoursesMonetizationDto;
+  body: Types.LearningCoursesMonetizationDto;
 }
 export type PostCoursesMonetizeOutput = Types.LearningCoursesProgramDto;
 export const postCoursesMonetizeEndpoint = {
@@ -23179,7 +23179,7 @@ export const postCoursesPublishEndpoint = {
  */
 export interface PostCoursesRejectInput {
   id: string;
-  body?: Types.LearningCoursesRejectProgramDto;
+  body: Types.LearningCoursesRejectProgramDto;
 }
 export type PostCoursesRejectOutput = Types.LearningCoursesProgramDto;
 export const postCoursesRejectEndpoint = {
@@ -23210,7 +23210,7 @@ export const postCoursesRestoreEndpoint = {
  */
 export interface PostCoursesScheduleInput {
   id: string;
-  body?: Types.LearningCoursesScheduleProgramDto;
+  body: Types.LearningCoursesScheduleProgramDto;
 }
 export type PostCoursesScheduleOutput = Types.LearningCoursesProgramDto;
 export const postCoursesScheduleEndpoint = {
@@ -23393,7 +23393,7 @@ export const getCoursesMeProgressEndpoint = {
  */
 export interface PutCoursesMeProgressInput {
   id: string;
-  body?: Types.LearningCoursesUpdateProgressDto;
+  body: Types.LearningCoursesUpdateProgressDto;
 }
 export type PutCoursesMeProgressOutput = Types.LearningCoursesUserProgressDto;
 export const putCoursesMeProgressEndpoint = {
@@ -23424,7 +23424,7 @@ export const getCoursesPricingEndpoint = {
  */
 export interface PutCoursesPricingInput {
   id: string;
-  body?: Types.LearningCoursesUpdatePricingDto;
+  body: Types.LearningCoursesUpdatePricingDto;
 }
 export type PutCoursesPricingOutput = Types.LearningCoursesPricingDto;
 export const putCoursesPricingEndpoint = {
@@ -23476,7 +23476,7 @@ export const getCoursesUsersEndpoint = {
  */
 export interface PostCoursesUsersEnrollInput {
   id: string;
-  body?: Types.LearningCoursesEnrollProgramUserInput;
+  body: Types.LearningCoursesEnrollProgramUserInput;
 }
 export type PostCoursesUsersEnrollOutput = Types.LearningCoursesUserProgressDto;
 export const postCoursesUsersEnrollEndpoint = {
@@ -23574,7 +23574,7 @@ export const getCoursesUsersProgressEndpoint = {
 export interface PutCoursesUsersProgressInput {
   id: string;
   userId: string;
-  body?: Types.LearningCoursesUpdateProgressDto;
+  body: Types.LearningCoursesUpdateProgressDto;
 }
 export type PutCoursesUsersProgressOutput = Types.LearningCoursesUserProgressDto;
 export const putCoursesUsersProgressEndpoint = {
@@ -23605,7 +23605,7 @@ export const getCoursesWithContentEndpoint = {
  */
 export interface PostCoursesActivityGradesInput {
   programId: string;
-  body?: Types.LearningCoursesCreateActivityGradeDto;
+  body: Types.LearningCoursesCreateActivityGradeDto;
 }
 export type PostCoursesActivityGradesOutput = Types.LearningCoursesActivityGradeDto;
 export const postCoursesActivityGradesEndpoint = {
@@ -23622,7 +23622,7 @@ export const postCoursesActivityGradesEndpoint = {
 export interface PutCoursesActivityGradesInput {
   programId: string;
   gradeId: string;
-  body?: Types.LearningCoursesUpdateActivityGradeDto;
+  body: Types.LearningCoursesUpdateActivityGradeDto;
 }
 export type PutCoursesActivityGradesOutput = Types.LearningCoursesActivityGradeDto;
 export const putCoursesActivityGradesEndpoint = {
@@ -23769,7 +23769,7 @@ export const getCoursesContentEndpoint = {
  */
 export interface PostCoursesContentInput {
   programId: string;
-  body?: Types.LearningCoursesCreateProgramContentDto;
+  body: Types.LearningCoursesCreateProgramContentDto;
 }
 export type PostCoursesContentOutput = Types.LearningCoursesProgramContentDto;
 export const postCoursesContentEndpoint = {
@@ -23796,7 +23796,7 @@ export const getCoursesContentAuthoringEndpoint = {
 export interface PutCoursesContentAuthoringInput {
   programId: string;
   contentId: string;
-  body?: Types.LearningCoursesSaveAuthoringDraftInput;
+  body: Types.LearningCoursesSaveAuthoringDraftInput;
 }
 export type PutCoursesContentAuthoringOutput = Types.LearningCoursesAuthoringDraftDto;
 export const putCoursesContentAuthoringEndpoint = {
@@ -23851,7 +23851,7 @@ export interface PostCoursesContentAuthoringAiProposalsApplyInput {
   programId: string;
   contentId: string;
   proposalId: string;
-  body?: Types.LearningCoursesApplyAiProposalInput;
+  body: Types.LearningCoursesApplyAiProposalInput;
 }
 export type PostCoursesContentAuthoringAiProposalsApplyOutput = Types.LearningCoursesAuthoringDraftDto;
 export const postCoursesContentAuthoringAiProposalsApplyEndpoint = {
@@ -23865,7 +23865,7 @@ export const postCoursesContentAuthoringAiProposalsApplyEndpoint = {
 export interface PostCoursesContentAuthoringAiRunsInput {
   programId: string;
   contentId: string;
-  body?: Types.LearningCoursesAiAuthoringRunInput;
+  body: Types.LearningCoursesAiAuthoringRunInput;
 }
 export type PostCoursesContentAuthoringAiRunsOutput = Types.LearningCoursesAiAuthoringRunDto;
 export const postCoursesContentAuthoringAiRunsEndpoint = {
@@ -23921,7 +23921,7 @@ export const getCoursesContentAuthoringAiRunsStreamEndpoint = {
 export interface PostCoursesContentAuthoringPublishInput {
   programId: string;
   contentId: string;
-  body?: Types.LearningCoursesPublishAuthoringDraftInput;
+  body: Types.LearningCoursesPublishAuthoringDraftInput;
 }
 export type PostCoursesContentAuthoringPublishOutput = Types.LearningCoursesPublishAuthoringResult;
 export const postCoursesContentAuthoringPublishEndpoint = {
@@ -23954,7 +23954,7 @@ export const getCoursesContentByIdEndpoint = {
 export interface PutCoursesContentInput {
   programId: string;
   id: string;
-  body?: Types.LearningCoursesUpdateProgramContentDto;
+  body: Types.LearningCoursesUpdateProgramContentDto;
 }
 export type PutCoursesContentOutput = Types.LearningCoursesProgramContentDto;
 export const putCoursesContentEndpoint = {
@@ -24003,7 +24003,7 @@ export const getCoursesContentCodingAssignmentEndpoint = {
 export interface PutCoursesContentCodingAssignmentInput {
   programId: string;
   id: string;
-  body?: Types.LearningCoursesCodingAssignmentContent;
+  body: Types.LearningCoursesCodingAssignmentContent;
 }
 export type PutCoursesContentCodingAssignmentOutput = Types.LearningCoursesCodingAssignmentContent;
 export const putCoursesContentCodingAssignmentEndpoint = {
@@ -24036,7 +24036,7 @@ export const getCoursesContentCodingAssignmentFullEndpoint = {
 export interface PostCoursesContentMoveInput {
   programId: string;
   id: string;
-  body?: Types.LearningCoursesMoveContentDto;
+  body: Types.LearningCoursesMoveContentDto;
 }
 export type PostCoursesContentMoveOutput = void;
 export const postCoursesContentMoveEndpoint = {
@@ -24053,7 +24053,7 @@ export const postCoursesContentMoveEndpoint = {
 export interface PostCoursesContentSubmitInput {
   programId: string;
   id: string;
-  body?: Types.LearningCoursesSubmitUserContentDto;
+  body: Types.LearningCoursesSubmitUserContentDto;
 }
 export type PostCoursesContentSubmitOutput = Types.LearningCoursesContentInteractionDto;
 export const postCoursesContentSubmitEndpoint = {
@@ -24117,7 +24117,7 @@ export const getCoursesContentByVisibilityEndpoint = {
  */
 export interface PostCoursesContentReorderInput {
   programId: string;
-  body?: Types.LearningCoursesReorderContentDto;
+  body: Types.LearningCoursesReorderContentDto;
 }
 export type PostCoursesContentReorderOutput = void;
 export const postCoursesContentReorderEndpoint = {
@@ -24148,7 +24148,7 @@ export const getCoursesContentRequiredEndpoint = {
  */
 export interface PostCoursesContentSearchInput {
   programId: string;
-  body?: Types.LearningCoursesSearchContentDto;
+  body: Types.LearningCoursesSearchContentDto;
 }
 export type PostCoursesContentSearchOutput = Types.LearningCoursesProgramContentDto[];
 export const postCoursesContentSearchEndpoint = {
@@ -24190,7 +24190,7 @@ export const getCoursesInteractionsEventsEndpoint = {
 export interface PostCoursesInteractionsEventsInput {
   programId: string;
   interactionId: string;
-  body?: Types.LearningCoursesRecordContentInteractionEventInput;
+  body: Types.LearningCoursesRecordContentInteractionEventInput;
 }
 export type PostCoursesInteractionsEventsOutput = Types.LearningCoursesContentInteractionEventDto;
 export const postCoursesInteractionsEventsEndpoint = {
@@ -24251,7 +24251,7 @@ export const getCoursesSlugEndpoint = {
  * Grant delegated admin scope to a user
  */
 export interface PostDelegatedAdminInput {
-  body?: Types.IdentityAuthorizationCommandsGrantDelegatedAdminCommand;
+  body: Types.IdentityAuthorizationCommandsGrantDelegatedAdminCommand;
 }
 export type PostDelegatedAdminOutput = Types.IdentityAuthorizationDelegatedAdminScope;
 export const postDelegatedAdminEndpoint = {
@@ -24412,7 +24412,7 @@ export interface PostDiscoveryCollectionsInput {
     curatorId?: string;
     tenantId?: string;
   };
-  body?: Types.LearningExperienceDiscoveryCreateCourseCollectionDto;
+  body: Types.LearningExperienceDiscoveryCreateCourseCollectionDto;
 }
 export type PostDiscoveryCollectionsOutput = Types.LearningExperienceDiscoveryCourseCollectionDto;
 export const postDiscoveryCollectionsEndpoint = {
@@ -24443,7 +24443,7 @@ export const getDiscoveryCollectionsForGetDiscoveryCollectionsByIdEndpoint = {
  */
 export interface PutDiscoveryCollectionsInput {
   id: string;
-  body?: Types.LearningExperienceDiscoveryUpdateCourseCollectionDto;
+  body: Types.LearningExperienceDiscoveryUpdateCourseCollectionDto;
 }
 export type PutDiscoveryCollectionsOutput = Types.LearningExperienceDiscoveryCourseCollectionDto;
 export const putDiscoveryCollectionsEndpoint = {
@@ -24581,7 +24581,7 @@ export interface PostDiscoveryFeaturedInput {
   query?: {
     tenantId?: string;
   };
-  body?: Types.LearningExperienceDiscoveryCreateFeaturedContentDto;
+  body: Types.LearningExperienceDiscoveryCreateFeaturedContentDto;
 }
 export type PostDiscoveryFeaturedOutput = Types.LearningExperienceDiscoveryFeaturedContentDto;
 export const postDiscoveryFeaturedEndpoint = {
@@ -24612,7 +24612,7 @@ export const getDiscoveryFeaturedForGetDiscoveryFeaturedByIdEndpoint = {
  */
 export interface PutDiscoveryFeaturedInput {
   id: string;
-  body?: Types.LearningExperienceDiscoveryUpdateFeaturedContentDto;
+  body: Types.LearningExperienceDiscoveryUpdateFeaturedContentDto;
 }
 export type PutDiscoveryFeaturedOutput = Types.LearningExperienceDiscoveryFeaturedContentDto;
 export const putDiscoveryFeaturedEndpoint = {
@@ -24681,7 +24681,7 @@ export const getDiscoveryFeaturedTypeEndpoint = {
  */
 export interface PostDiscoverySearchClickInput {
   searchId: string;
-  body?: Types.LearningExperienceDiscoveryRecordSearchClickDto;
+  body: Types.LearningExperienceDiscoveryRecordSearchClickDto;
 }
 export type PostDiscoverySearchClickOutput = void;
 export const postDiscoverySearchClickEndpoint = {
@@ -24735,7 +24735,7 @@ export interface PostDiscoverySearchRecordInput {
   query?: {
     userId?: string;
   };
-  body?: Types.LearningExperienceDiscoveryRecordSearchDto;
+  body: Types.LearningExperienceDiscoveryRecordSearchDto;
 }
 export type PostDiscoverySearchRecordOutput = Types.LearningExperienceDiscoverySearchHistoryDto;
 export const postDiscoverySearchRecordEndpoint = {
@@ -24747,7 +24747,7 @@ export const postDiscoverySearchRecordEndpoint = {
 } as const;
 
 export interface PostDocumentContractsGenerateInput {
-  body?: Types.ResourcesContentsGenerateContractInput;
+  body: Types.ResourcesContentsGenerateContractInput;
 }
 export type PostDocumentContractsGenerateOutput = Types.ResourcesContentsGeneratedContractOutput;
 export const postDocumentContractsGenerateEndpoint = {
@@ -24759,7 +24759,7 @@ export const postDocumentContractsGenerateEndpoint = {
 } as const;
 
 export interface PostDocumentContractsGenerateBulkInput {
-  body?: Types.ResourcesContentsBulkGenerateContractsInput;
+  body: Types.ResourcesContentsBulkGenerateContractsInput;
 }
 export type PostDocumentContractsGenerateBulkOutput = Types.ResourcesContentsBulkGeneratedContractsOutput;
 export const postDocumentContractsGenerateBulkEndpoint = {
@@ -24792,7 +24792,7 @@ export const getEntitlementsEndpoint = {
  * Grant entitlement to a user (create)
  */
 export interface PostEntitlementsInput {
-  body?: Types.CommerceProductsGrantEntitlementInput;
+  body: Types.CommerceProductsGrantEntitlementInput;
 }
 export type PostEntitlementsOutput = Types.CommerceProductsEntitlementInfoDto;
 export const postEntitlementsEndpoint = {
@@ -24824,7 +24824,7 @@ export const getEntitlementsCheckEndpoint = {
  * Check if current user has access to multiple products
  */
 export interface PostEntitlementsCheckBatchInput {
-  body?: Types.CommerceProductsCheckMultipleAccessInput;
+  body: Types.CommerceProductsCheckMultipleAccessInput;
 }
 export type PostEntitlementsCheckBatchOutput = Record<string, boolean>;
 export const postEntitlementsCheckBatchEndpoint = {
@@ -24840,7 +24840,7 @@ export const postEntitlementsCheckBatchEndpoint = {
  */
 export interface PostEntitlementsRevokeInput {
   entitlementId: string;
-  body?: Types.CommerceProductsRevokeEntitlementInput;
+  body: Types.CommerceProductsRevokeEntitlementInput;
 }
 export type PostEntitlementsRevokeOutput = void;
 export const postEntitlementsRevokeEndpoint = {
@@ -24866,7 +24866,7 @@ export const getFeaturesEndpoint = {
 } as const;
 
 export interface PostFeaturesInput {
-  body?: Types.FeaturesCreateFeatureInput;
+  body: Types.FeaturesCreateFeatureInput;
 }
 export type PostFeaturesOutput = Record<string, unknown>;
 export const postFeaturesEndpoint = {
@@ -24881,7 +24881,7 @@ export const postFeaturesEndpoint = {
  * Evaluate a feature flag for runtime decisions
  */
 export interface PostFeaturesEvaluateInput {
-  body?: Types.FeaturesFeatureEvaluationInput;
+  body: Types.FeaturesFeatureEvaluationInput;
 }
 export type PostFeaturesEvaluateOutput = void;
 export const postFeaturesEvaluateEndpoint = {
@@ -24896,7 +24896,7 @@ export const postFeaturesEvaluateEndpoint = {
  * Bulk evaluate multiple feature flags for runtime decisions
  */
 export interface PostFeaturesEvaluateBulkInput {
-  body?: Types.FeaturesBulkEvaluationInput;
+  body: Types.FeaturesBulkEvaluationInput;
 }
 export type PostFeaturesEvaluateBulkOutput = void;
 export const postFeaturesEvaluateBulkEndpoint = {
@@ -24933,7 +24933,7 @@ export const postFeaturesEnableEndpoint = {
 
 export interface PostFeaturesToggleInput {
   id: string;
-  body?: Types.FeaturesToggleFeatureInput;
+  body: Types.FeaturesToggleFeatureInput;
 }
 export type PostFeaturesToggleOutput = void;
 export const postFeaturesToggleEndpoint = {
@@ -24958,7 +24958,7 @@ export const getFeatureByKeyEndpoint = {
 
 export interface PutFeaturesInput {
   key: string;
-  body?: Types.FeaturesUpdateFeatureInput;
+  body: Types.FeaturesUpdateFeatureInput;
 }
 export type PutFeaturesOutput = void;
 export const putFeaturesEndpoint = {
@@ -25040,7 +25040,7 @@ export const getFeaturesEnabledEndpoint = {
  * Request a JIT elevation for a permission
  */
 export interface PostJitElevationsInput {
-  body?: Types.IdentityAuthorizationCommandsRequestJitElevationCommand;
+  body: Types.IdentityAuthorizationCommandsRequestJitElevationCommand;
 }
 export type PostJitElevationsOutput = Types.IdentityAuthorizationJitElevationInput;
 export const postJitElevationsEndpoint = {
@@ -25084,7 +25084,7 @@ export const getJitElevationsEndpoint = {
  */
 export interface PostJitElevationsApproveInput {
   id: string;
-  body?: Types.IdentityAuthorizationControllersApproveElevationInput;
+  body: Types.IdentityAuthorizationControllersApproveElevationInput;
 }
 export type PostJitElevationsApproveOutput = Types.IdentityAuthorizationJitElevationInput;
 export const postJitElevationsApproveEndpoint = {
@@ -25100,7 +25100,7 @@ export const postJitElevationsApproveEndpoint = {
  */
 export interface PostJitElevationsDenyInput {
   id: string;
-  body?: Types.IdentityAuthorizationControllersDenyElevationInput;
+  body: Types.IdentityAuthorizationControllersDenyElevationInput;
 }
 export type PostJitElevationsDenyOutput = Types.IdentityAuthorizationJitElevationInput;
 export const postJitElevationsDenyEndpoint = {
@@ -25116,7 +25116,7 @@ export const postJitElevationsDenyEndpoint = {
  */
 export interface PostJitElevationsRevokeInput {
   id: string;
-  body?: Types.IdentityAuthorizationControllersRevokeElevationInput;
+  body: Types.IdentityAuthorizationControllersRevokeElevationInput;
 }
 export type PostJitElevationsRevokeOutput = void;
 export const postJitElevationsRevokeEndpoint = {
@@ -25215,7 +25215,7 @@ export const getLaunchPadForGetLaunchPadEndpoint = {
 } as const;
 
 export interface PostLaunchPadInput {
-  body?: Types.LaunchPadCreateLaunchPlanInput;
+  body: Types.LaunchPadCreateLaunchPlanInput;
 }
 export type PostLaunchPadOutput = void;
 export const postLaunchPadEndpoint = {
@@ -25264,7 +25264,7 @@ export const postLaunchPadChecklistCompleteEndpoint = {
 } as const;
 
 export interface PostLaunchPadEventsInput {
-  body?: Types.LaunchPadCreateLaunchPadEventInput;
+  body: Types.LaunchPadCreateLaunchPadEventInput;
 }
 export type PostLaunchPadEventsOutput = Types.LaunchPadLaunchPadEventProjection;
 export const postLaunchPadEventsEndpoint = {
@@ -25277,7 +25277,7 @@ export const postLaunchPadEventsEndpoint = {
 
 export interface PostLaunchPadEventsApplicationsInput {
   eventId: string;
-  body?: Types.LaunchPadSubmitLaunchPadApplicationInput;
+  body: Types.LaunchPadSubmitLaunchPadApplicationInput;
 }
 export type PostLaunchPadEventsApplicationsOutput = Types.LaunchPadLaunchPadApplicationProjection;
 export const postLaunchPadEventsApplicationsEndpoint = {
@@ -25314,7 +25314,7 @@ export const getLaunchPadEventsRegistrationsManagementEndpoint = {
 
 export interface PostLaunchPadEventsSlotsInput {
   eventId: string;
-  body?: Types.LaunchPadCreateLaunchPadSlotInput;
+  body: Types.LaunchPadCreateLaunchPadSlotInput;
 }
 export type PostLaunchPadEventsSlotsOutput = Types.LaunchPadLaunchPadSlotProjection;
 export const postLaunchPadEventsSlotsEndpoint = {
@@ -25327,7 +25327,7 @@ export const postLaunchPadEventsSlotsEndpoint = {
 
 export interface PutLaunchPadEventsInput {
   id: string;
-  body?: Types.LaunchPadUpdateLaunchPadEventInput;
+  body: Types.LaunchPadUpdateLaunchPadEventInput;
 }
 export type PutLaunchPadEventsOutput = Types.LaunchPadLaunchPadEventProjection;
 export const putLaunchPadEventsEndpoint = {
@@ -25340,7 +25340,7 @@ export const putLaunchPadEventsEndpoint = {
 
 export interface PostLaunchPadEventsTransitionInput {
   id: string;
-  body?: Types.LaunchPadTransitionLaunchPadEventInput;
+  body: Types.LaunchPadTransitionLaunchPadEventInput;
 }
 export type PostLaunchPadEventsTransitionOutput = Types.LaunchPadLaunchPadEventProjection;
 export const postLaunchPadEventsTransitionEndpoint = {
@@ -25375,7 +25375,7 @@ export const getLaunchPadEventsAnalyticsEndpoint = {
 
 export interface PutLaunchPadEventsApplicationsInput {
   applicationId: string;
-  body?: Types.LaunchPadUpdateLaunchPadApplicationInput;
+  body: Types.LaunchPadUpdateLaunchPadApplicationInput;
 }
 export type PutLaunchPadEventsApplicationsOutput = Types.LaunchPadLaunchPadApplicationProjection;
 export const putLaunchPadEventsApplicationsEndpoint = {
@@ -25388,7 +25388,7 @@ export const putLaunchPadEventsApplicationsEndpoint = {
 
 export interface PostLaunchPadEventsApplicationsReviewInput {
   applicationId: string;
-  body?: Types.LaunchPadReviewLaunchPadApplicationInput;
+  body: Types.LaunchPadReviewLaunchPadApplicationInput;
 }
 export type PostLaunchPadEventsApplicationsReviewOutput = Types.LaunchPadLaunchPadApplicationProjection;
 export const postLaunchPadEventsApplicationsReviewEndpoint = {
@@ -25467,7 +25467,7 @@ export const postLaunchPadEventsRegistrationsCancelEndpoint = {
 
 export interface PostLaunchPadEventsRegistrationsTransitionInput {
   registrationId: string;
-  body?: Types.LaunchPadTransitionLaunchPadRegistrationInput;
+  body: Types.LaunchPadTransitionLaunchPadRegistrationInput;
 }
 export type PostLaunchPadEventsRegistrationsTransitionOutput = Types.LaunchPadLaunchPadRegistrationProjection;
 export const postLaunchPadEventsRegistrationsTransitionEndpoint = {
@@ -25490,7 +25490,7 @@ export const getLaunchPadEventsRegistrationsMeEndpoint = {
 
 export interface PutLaunchPadEventsSlotsInput {
   slotId: string;
-  body?: Types.LaunchPadCreateLaunchPadSlotInput;
+  body: Types.LaunchPadCreateLaunchPadSlotInput;
 }
 export type PutLaunchPadEventsSlotsOutput = Types.LaunchPadLaunchPadSlotProjection;
 export const putLaunchPadEventsSlotsEndpoint = {
@@ -25548,7 +25548,7 @@ export const getLaunchPadSettingsEndpoint = {
 } as const;
 
 export interface PutLaunchPadSettingsInput {
-  body?: Types.LaunchPadUpdateLaunchPadSettingsInput;
+  body: Types.LaunchPadUpdateLaunchPadSettingsInput;
 }
 export type PutLaunchPadSettingsOutput = Types.LaunchPadLaunchPadSettingsProjection;
 export const putLaunchPadSettingsEndpoint = {
@@ -25587,7 +25587,7 @@ export interface PostLearningPathsInput {
     creatorId?: string;
     tenantId?: string;
   };
-  body?: Types.LearningExperienceLearningPathsCreateLearningPathDto;
+  body: Types.LearningExperienceLearningPathsCreateLearningPathDto;
 }
 export type PostLearningPathsOutput = Types.LearningExperienceLearningPathsLearningPathDto;
 export const postLearningPathsEndpoint = {
@@ -25618,7 +25618,7 @@ export const getLearningPathsForGetLearningPathsByIdEndpoint = {
  */
 export interface PutLearningPathsInput {
   id: string;
-  body?: Types.LearningExperienceLearningPathsUpdateLearningPathDto;
+  body: Types.LearningExperienceLearningPathsUpdateLearningPathDto;
 }
 export type PutLearningPathsOutput = Types.LearningExperienceLearningPathsLearningPathDto;
 export const putLearningPathsEndpoint = {
@@ -25685,7 +25685,7 @@ export const postLearningPathsCompleteEndpoint = {
  */
 export interface PostLearningPathsCoursesInput {
   id: string;
-  body?: Types.LearningExperienceLearningPathsAddCourseToPathDto;
+  body: Types.LearningExperienceLearningPathsAddCourseToPathDto;
 }
 export type PostLearningPathsCoursesOutput = Types.LearningExperienceLearningPathsLearningPathDetailDto;
 export const postLearningPathsCoursesEndpoint = {
@@ -25717,7 +25717,7 @@ export const deleteLearningPathsCoursesEndpoint = {
  */
 export interface PutLearningPathsCoursesOrderInput {
   id: string;
-  body?: Types.LearningExperienceLearningPathsReorderCoursesDto;
+  body: Types.LearningExperienceLearningPathsReorderCoursesDto;
 }
 export type PutLearningPathsCoursesOrderOutput = Types.LearningExperienceLearningPathsLearningPathDetailDto;
 export const putLearningPathsCoursesOrderEndpoint = {
@@ -25806,7 +25806,7 @@ export interface PutLearningPathsProgressInput {
   query?: {
     userId?: string;
   };
-  body?: Types.LearningExperienceLearningPathsUpdatePathProgressDto;
+  body: Types.LearningExperienceLearningPathsUpdatePathProgressDto;
 }
 export type PutLearningPathsProgressOutput = Types.LearningExperienceLearningPathsLearningPathEnrollmentDto;
 export const putLearningPathsProgressEndpoint = {
@@ -26053,7 +26053,7 @@ export const getLearningMeSearchEndpoint = {
 } as const;
 
 export interface PostLtiDeploymentsInput {
-  body?: Types.LearningLtiCreateLtiDeploymentInput;
+  body: Types.LearningLtiCreateLtiDeploymentInput;
 }
 export type PostLtiDeploymentsOutput = void;
 export const postLtiDeploymentsEndpoint = {
@@ -26066,7 +26066,7 @@ export const postLtiDeploymentsEndpoint = {
 
 export interface PostLtiDeploymentsLineItemsInput {
   id: string;
-  body?: Types.LearningLtiCreateLtiLineItemInput;
+  body: Types.LearningLtiCreateLtiLineItemInput;
 }
 export type PostLtiDeploymentsLineItemsOutput = void;
 export const postLtiDeploymentsLineItemsEndpoint = {
@@ -26097,7 +26097,7 @@ export const getMarketingLeadsEndpoint = {
 } as const;
 
 export interface PostMarketingLeadsInput {
-  body?: Types.ContentPagesCreateMarketingLeadDto;
+  body: Types.ContentPagesCreateMarketingLeadDto;
 }
 export type PostMarketingLeadsOutput = Types.ContentPagesMarketingLeadDto;
 export const postMarketingLeadsEndpoint = {
@@ -26188,7 +26188,7 @@ export const getMentorshipProfileEndpoint = {
 } as const;
 
 export interface PutMentorshipProfileInput {
-  body?: Types.SocialMentorshipUpsertMentorProfileInput;
+  body: Types.SocialMentorshipUpsertMentorProfileInput;
 }
 export type PutMentorshipProfileOutput = Types.SocialMentorshipMentorProfileDto;
 export const putMentorshipProfileEndpoint = {
@@ -26200,7 +26200,7 @@ export const putMentorshipProfileEndpoint = {
 } as const;
 
 export interface PostMentorshipProfileAvailabilityInput {
-  body?: Types.SocialMentorshipPublishMentorAvailabilityInput;
+  body: Types.SocialMentorshipPublishMentorAvailabilityInput;
 }
 export type PostMentorshipProfileAvailabilityOutput = Types.SocialMentorshipMentorAvailabilitySlotDto[];
 export const postMentorshipProfileAvailabilityEndpoint = {
@@ -26234,7 +26234,7 @@ export const getMentorshipProfileDashboardEndpoint = {
 } as const;
 
 export interface PostMentorshipProfileStatusInput {
-  body?: Types.SocialMentorshipSetMentorProfileStatusInput;
+  body: Types.SocialMentorshipSetMentorProfileStatusInput;
 }
 export type PostMentorshipProfileStatusOutput = Types.SocialMentorshipMentorProfileDto;
 export const postMentorshipProfileStatusEndpoint = {
@@ -26263,7 +26263,7 @@ export const getMentorshipSessionsEndpoint = {
 } as const;
 
 export interface PostMentorshipSessionsInput {
-  body?: Types.SocialMentorshipBookMentorshipSessionInput;
+  body: Types.SocialMentorshipBookMentorshipSessionInput;
 }
 export type PostMentorshipSessionsOutput = Types.SocialMentorshipMentorshipSessionDto;
 export const postMentorshipSessionsEndpoint = {
@@ -26276,7 +26276,7 @@ export const postMentorshipSessionsEndpoint = {
 
 export interface PostMentorshipSessionsCancelInput {
   sessionId: string;
-  body?: Types.SocialMentorshipCancelMentorshipSessionInput;
+  body: Types.SocialMentorshipCancelMentorshipSessionInput;
 }
 export type PostMentorshipSessionsCancelOutput = Types.SocialMentorshipMentorshipSessionDto;
 export const postMentorshipSessionsCancelEndpoint = {
@@ -26359,7 +26359,7 @@ export const getOrdersForGetOrdersEndpoint = {
  * Create a new order with idempotency protection
  */
 export interface PostOrdersInput {
-  body?: Types.CommerceOrdersCreateOrderInput;
+  body: Types.CommerceOrdersCreateOrderInput;
 }
 export type PostOrdersOutput = Types.CommerceOrdersOrderDto;
 export const postOrdersEndpoint = {
@@ -26434,7 +26434,7 @@ export const postOrdersPaymentIntentEndpoint = {
  */
 export interface PostOrdersItemsInput {
   orderId: string;
-  body?: Types.CommerceOrdersAddOrderItemInput;
+  body: Types.CommerceOrdersAddOrderItemInput;
 }
 export type PostOrdersItemsOutput = Types.CommerceOrdersOrderDto;
 export const postOrdersItemsEndpoint = {
@@ -26471,7 +26471,7 @@ export const getPagesForGetPagesEndpoint = {
  * Create a new page.
  */
 export interface PostPagesInput {
-  body?: Types.ContentPagesCreatePageDto;
+  body: Types.ContentPagesCreatePageDto;
 }
 export type PostPagesOutput = Types.ContentPagesPageDto;
 export const postPagesEndpoint = {
@@ -26502,7 +26502,7 @@ export const getPagesForGetPagesByIdEndpoint = {
  */
 export interface PutPagesInput {
   id: string;
-  body?: Types.ContentPagesUpdatePageDto;
+  body: Types.ContentPagesUpdatePageDto;
 }
 export type PutPagesOutput = Types.ContentPagesPageDto;
 export const putPagesEndpoint = {
@@ -26578,7 +26578,7 @@ export const getPagesSectionsForGetPagesByPageIdSectionsEndpoint = {
  */
 export interface PostPagesSectionsInput {
   pageId: string;
-  body?: Types.ContentPagesCreatePageSectionDto;
+  body: Types.ContentPagesCreatePageSectionDto;
 }
 export type PostPagesSectionsOutput = Types.ContentPagesPageSectionDto;
 export const postPagesSectionsEndpoint = {
@@ -26611,7 +26611,7 @@ export const getPagesSectionsForGetPagesByPageIdSectionsBySectionIdEndpoint = {
 export interface PutPagesSectionsInput {
   pageId: string;
   sectionId: string;
-  body?: Types.ContentPagesUpdatePageSectionDto;
+  body: Types.ContentPagesUpdatePageSectionDto;
 }
 export type PutPagesSectionsOutput = Types.ContentPagesPageSectionDto;
 export const putPagesSectionsEndpoint = {
@@ -26643,7 +26643,7 @@ export const deletePagesSectionsEndpoint = {
  */
 export interface PostPagesSectionsReorderInput {
   pageId: string;
-  body?: string[];
+  body: string[];
 }
 export type PostPagesSectionsReorderOutput = void;
 export const postPagesSectionsReorderEndpoint = {
@@ -26806,7 +26806,7 @@ export const getPermissionAnalyticsUserActivityEndpoint = {
  * Delegate permissions to another user
  */
 export interface PostPermissionDelegationsInput {
-  body?: Types.IdentityAuthorizationCommandsDelegatePermissionsCommand;
+  body: Types.IdentityAuthorizationCommandsDelegatePermissionsCommand;
 }
 export type PostPermissionDelegationsOutput = Types.IdentityAuthorizationPermissionDelegation;
 export const postPermissionDelegationsEndpoint = {
@@ -26939,7 +26939,7 @@ export const getProductCategoriesForGetProductCategoriesEndpoint = {
  * Create a category
  */
 export interface PostProductCategoriesInput {
-  body?: Types.CommerceProductsCreateProductCategoryInput;
+  body: Types.CommerceProductsCreateProductCategoryInput;
 }
 export type PostProductCategoriesOutput = Types.CommerceProductsProductCategoryDto;
 export const postProductCategoriesEndpoint = {
@@ -26970,7 +26970,7 @@ export const getProductCategoriesForGetProductCategoriesByCategoryIdEndpoint = {
  */
 export interface PutProductCategoriesInput {
   categoryId: string;
-  body?: Types.CommerceProductsUpdateProductCategoryInput;
+  body: Types.CommerceProductsUpdateProductCategoryInput;
 }
 export type PutProductCategoriesOutput = Types.CommerceProductsProductCategoryDto;
 export const putProductCategoriesEndpoint = {
@@ -27027,7 +27027,7 @@ export const getProductsForGetProductsEndpoint = {
  * Create a new product
  */
 export interface PostProductsInput {
-  body?: Types.CommerceProductsCreateProductInput;
+  body: Types.CommerceProductsCreateProductInput;
 }
 export type PostProductsOutput = Types.CommerceProductsProductDto;
 export const postProductsEndpoint = {
@@ -27042,7 +27042,7 @@ export const postProductsEndpoint = {
  * Batch create multiple products
  */
 export interface PostProductsBatchCreateInput {
-  body?: Types.CommerceProductsBatchCreateProductsInput;
+  body: Types.CommerceProductsBatchCreateProductsInput;
 }
 export type PostProductsBatchCreateOutput = Types.CommerceProductsProductDto[];
 export const postProductsBatchCreateEndpoint = {
@@ -27077,7 +27077,7 @@ export const getProductsForGetProductsByProductIdEndpoint = {
  */
 export interface PutProductsInput {
   productId: string;
-  body?: Types.CommerceProductsUpdateProductInput;
+  body: Types.CommerceProductsUpdateProductInput;
 }
 export type PutProductsOutput = Types.CommerceProductsProductDto;
 export const putProductsEndpoint = {
@@ -27112,7 +27112,7 @@ export const deleteProductsEndpoint = {
  */
 export interface PatchProductsInput {
   productId: string;
-  body?: Types.CommerceProductsPatchProductInput;
+  body: Types.CommerceProductsPatchProductInput;
 }
 export type PatchProductsOutput = Types.CommerceProductsProductDto;
 export const patchProductsEndpoint = {
@@ -27206,7 +27206,7 @@ export const getProductsAvailabilityEndpoint = {
  */
 export interface PutProductsInventoryInput {
   productId: string;
-  body?: Types.CommerceProductsSetProductInventoryInput;
+  body: Types.CommerceProductsSetProductInventoryInput;
 }
 export type PutProductsInventoryOutput = Types.CommerceProductsProductInventoryDto;
 export const putProductsInventoryEndpoint = {
@@ -27237,7 +27237,7 @@ export const getProductsPricingEndpoint = {
 
 export interface PutProductsPricingInput {
   productId: string;
-  body?: Types.CommerceProductsSetProductPricingInput;
+  body: Types.CommerceProductsSetProductPricingInput;
 }
 export type PutProductsPricingOutput = Types.CommerceProductsProductPricingDto;
 export const putProductsPricingEndpoint = {
@@ -27307,7 +27307,7 @@ export const getProjectsForGetProjectsEndpoint = {
  * Create a new project
  */
 export interface PostProjectsInput {
-  body?: Types.ProjectsCreateProjectInput;
+  body: Types.ProjectsCreateProjectInput;
 }
 export type PostProjectsOutput = Types.ProjectsProjectApiOutput;
 export const postProjectsEndpoint = {
@@ -27344,7 +27344,7 @@ export const getProjectsForGetProjectsByIdEndpoint = {
  */
 export interface PutProjectsInput {
   id: string;
-  body?: Types.ProjectsUpdateProjectInput;
+  body: Types.ProjectsUpdateProjectInput;
 }
 export type PutProjectsOutput = Types.ProjectsProjectApiOutput;
 export const putProjectsEndpoint = {
@@ -27424,7 +27424,7 @@ export const postProjectsRestoreEndpoint = {
  */
 export interface PostProjectsShareInput {
   id: string;
-  body?: Types.ProjectsShareProjectInput;
+  body: Types.ProjectsShareProjectInput;
 }
 export type PostProjectsShareOutput = Types.ProjectsCollaboratorDto;
 export const postProjectsShareEndpoint = {
@@ -27470,7 +27470,7 @@ export const getProjectsCollaboratorsEndpoint = {
  */
 export interface PostProjectsCollaboratorsInput {
   id: string;
-  body?: Types.ProjectsAddProjectCollaboratorInput;
+  body: Types.ProjectsAddProjectCollaboratorInput;
 }
 export type PostProjectsCollaboratorsOutput = Types.ProjectsCollaboratorDto;
 export const postProjectsCollaboratorsEndpoint = {
@@ -27487,7 +27487,7 @@ export const postProjectsCollaboratorsEndpoint = {
 export interface PutProjectsCollaboratorsInput {
   id: string;
   collaboratorId: string;
-  body?: Types.ProjectsUpdateProjectCollaboratorInput;
+  body: Types.ProjectsUpdateProjectCollaboratorInput;
 }
 export type PutProjectsCollaboratorsOutput = Types.ProjectsCollaboratorDto;
 export const putProjectsCollaboratorsEndpoint = {
@@ -27519,7 +27519,7 @@ export const deleteProjectsCollaboratorsEndpoint = {
  */
 export interface PostProjectsInvitationsInput {
   id: string;
-  body?: Types.ProjectsInviteProjectCollaboratorInput;
+  body: Types.ProjectsInviteProjectCollaboratorInput;
 }
 export type PostProjectsInvitationsOutput = Types.ProjectsProjectInvitationDto;
 export const postProjectsInvitationsEndpoint = {
@@ -27563,7 +27563,7 @@ export const getProjectsVersionsEndpoint = {
 
 export interface PostProjectsVersionsInput {
   id: string;
-  body?: Types.ProjectsCreateProjectVersionInput;
+  body: Types.ProjectsCreateProjectVersionInput;
 }
 export type PostProjectsVersionsOutput = Types.ProjectsProjectVersionApiOutput;
 export const postProjectsVersionsEndpoint = {
@@ -27577,7 +27577,7 @@ export const postProjectsVersionsEndpoint = {
 export interface PutProjectsVersionsInput {
   id: string;
   versionId: string;
-  body?: Types.ProjectsUpdateProjectVersionInput;
+  body: Types.ProjectsUpdateProjectVersionInput;
 }
 export type PutProjectsVersionsOutput = Types.ProjectsProjectVersionApiOutput;
 export const putProjectsVersionsEndpoint = {
@@ -27641,7 +27641,7 @@ export const getProjectsOwnershipEndpoint = {
 
 export interface PostProjectsOwnershipAgreementsInput {
   projectId: string;
-  body?: Types.APIProjectsCreateProjectTeamAgreementInput;
+  body: Types.APIProjectsCreateProjectTeamAgreementInput;
 }
 export type PostProjectsOwnershipAgreementsOutput = Types.APIProjectsProjectTeamAgreementDto;
 export const postProjectsOwnershipAgreementsEndpoint = {
@@ -27694,7 +27694,7 @@ export const postProjectsOwnershipAgreementsCompleteEndpoint = {
 export interface PostProjectsOwnershipAgreementsCounterInput {
   projectId: string;
   agreementId: string;
-  body?: Types.APIProjectsCounterProjectTeamAgreementInput;
+  body: Types.APIProjectsCounterProjectTeamAgreementInput;
 }
 export type PostProjectsOwnershipAgreementsCounterOutput = Types.APIProjectsProjectTeamAgreementDto;
 export const postProjectsOwnershipAgreementsCounterEndpoint = {
@@ -27707,7 +27707,7 @@ export const postProjectsOwnershipAgreementsCounterEndpoint = {
 
 export interface PostProjectsOwnershipAllocationsInput {
   projectId: string;
-  body?: Types.APIProjectsCreateProjectAllocationInput;
+  body: Types.APIProjectsCreateProjectAllocationInput;
 }
 export type PostProjectsOwnershipAllocationsOutput = Types.APIProjectsProjectAllocationDto;
 export const postProjectsOwnershipAllocationsEndpoint = {
@@ -27721,7 +27721,7 @@ export const postProjectsOwnershipAllocationsEndpoint = {
 export interface PutProjectsOwnershipAllocationsInput {
   projectId: string;
   allocationId: string;
-  body?: Types.APIProjectsUpdateProjectAllocationInput;
+  body: Types.APIProjectsUpdateProjectAllocationInput;
 }
 export type PutProjectsOwnershipAllocationsOutput = Types.APIProjectsProjectAllocationDto;
 export const putProjectsOwnershipAllocationsEndpoint = {
@@ -27747,7 +27747,7 @@ export const deleteProjectsOwnershipAllocationsEndpoint = {
 
 export interface PostProjectsOwnershipOwnerTeamInput {
   projectId: string;
-  body?: Types.APIProjectsTransferProjectOwnerTeamInput;
+  body: Types.APIProjectsTransferProjectOwnerTeamInput;
 }
 export type PostProjectsOwnershipOwnerTeamOutput = Types.APIProjectsProjectOwnershipDto;
 export const postProjectsOwnershipOwnerTeamEndpoint = {
@@ -27760,7 +27760,7 @@ export const postProjectsOwnershipOwnerTeamEndpoint = {
 
 export interface PostProjectsOwnershipTeamsInput {
   projectId: string;
-  body?: Types.APIProjectsAddProjectTeamInput;
+  body: Types.APIProjectsAddProjectTeamInput;
 }
 export type PostProjectsOwnershipTeamsOutput = Types.APIProjectsProjectTeamOwnershipDto;
 export const postProjectsOwnershipTeamsEndpoint = {
@@ -27774,7 +27774,7 @@ export const postProjectsOwnershipTeamsEndpoint = {
 export interface PutProjectsOwnershipTeamsInput {
   projectId: string;
   projectTeamId: string;
-  body?: Types.APIProjectsUpdateProjectTeamInput;
+  body: Types.APIProjectsUpdateProjectTeamInput;
 }
 export type PutProjectsOwnershipTeamsOutput = Types.APIProjectsProjectTeamOwnershipDto;
 export const putProjectsOwnershipTeamsEndpoint = {
@@ -27803,7 +27803,7 @@ export const deleteProjectsOwnershipTeamsEndpoint = {
  */
 export interface PostProjectsPermissionsShareWithRoleInput {
   projectId: string;
-  body?: Types.ProjectsShareProjectWithRoleInput;
+  body: Types.ProjectsShareProjectWithRoleInput;
 }
 export type PostProjectsPermissionsShareWithRoleOutput = Types.ProjectsShareResult;
 export const postProjectsPermissionsShareWithRoleEndpoint = {
@@ -27834,7 +27834,7 @@ export const getProjectsPermissionsCollaboratorsEndpoint = {
  */
 export interface PostProjectsPermissionsCollaboratorsInput {
   projectId: string;
-  body?: Types.ProjectsAddCollaboratorInput;
+  body: Types.ProjectsAddCollaboratorInput;
 }
 export type PostProjectsPermissionsCollaboratorsOutput = Types.ProjectsInvitationResult;
 export const postProjectsPermissionsCollaboratorsEndpoint = {
@@ -27851,7 +27851,7 @@ export const postProjectsPermissionsCollaboratorsEndpoint = {
 export interface PutProjectsPermissionsCollaboratorsInput {
   projectId: string;
   collaboratorUserId: string;
-  body?: Types.ProjectsUpdateCollaboratorInput;
+  body: Types.ProjectsUpdateCollaboratorInput;
 }
 export type PutProjectsPermissionsCollaboratorsOutput = Types.ProjectsPermissionUpdateResult;
 export const putProjectsPermissionsCollaboratorsEndpoint = {
@@ -27922,7 +27922,7 @@ export const getProjectsStoreProductsEndpoint = {
 
 export interface PostProjectsStoreProductsInput {
   projectId: string;
-  body?: Types.ProjectsLinkProjectStoreProductInput;
+  body: Types.ProjectsLinkProjectStoreProductInput;
 }
 export type PostProjectsStoreProductsOutput = Types.ProjectsProjectStoreProductProjection;
 export const postProjectsStoreProductsEndpoint = {
@@ -27960,7 +27960,7 @@ export const getProjectsWorkEndpoint = {
 
 export interface PostProjectsWorkColumnsInput {
   projectId: string;
-  body?: Types.APIProjectWorkConfigureProjectWorkColumnInput;
+  body: Types.APIProjectWorkConfigureProjectWorkColumnInput;
 }
 export type PostProjectsWorkColumnsOutput = Types.APIProjectWorkProjectWorkColumnDto;
 export const postProjectsWorkColumnsEndpoint = {
@@ -27974,7 +27974,7 @@ export const postProjectsWorkColumnsEndpoint = {
 export interface PutProjectsWorkColumnsInput {
   projectId: string;
   columnId: string;
-  body?: Types.APIProjectWorkConfigureProjectWorkColumnInput;
+  body: Types.APIProjectWorkConfigureProjectWorkColumnInput;
 }
 export type PutProjectsWorkColumnsOutput = Types.APIProjectWorkProjectWorkColumnDto;
 export const putProjectsWorkColumnsEndpoint = {
@@ -28027,7 +28027,7 @@ export const getProjectsWorkLabelsEndpoint = {
 
 export interface PostProjectsWorkLabelsInput {
   projectId: string;
-  body?: Types.APIProjectWorkCreateProjectTaskLabelInput;
+  body: Types.APIProjectWorkCreateProjectTaskLabelInput;
 }
 export type PostProjectsWorkLabelsOutput = Types.APIProjectWorkProjectTaskLabelDto;
 export const postProjectsWorkLabelsEndpoint = {
@@ -28065,7 +28065,7 @@ export const getProjectsWorkMilestonesEndpoint = {
 
 export interface PostProjectsWorkMilestonesInput {
   projectId: string;
-  body?: Types.APIProjectWorkCreateProjectMilestoneInput;
+  body: Types.APIProjectWorkCreateProjectMilestoneInput;
 }
 export type PostProjectsWorkMilestonesOutput = Types.APIProjectWorkProjectMilestoneDto;
 export const postProjectsWorkMilestonesEndpoint = {
@@ -28079,7 +28079,7 @@ export const postProjectsWorkMilestonesEndpoint = {
 export interface PutProjectsWorkMilestonesInput {
   projectId: string;
   milestoneId: string;
-  body?: Types.APIProjectWorkUpdateProjectMilestoneInput;
+  body: Types.APIProjectWorkUpdateProjectMilestoneInput;
 }
 export type PutProjectsWorkMilestonesOutput = Types.APIProjectWorkProjectMilestoneDto;
 export const putProjectsWorkMilestonesEndpoint = {
@@ -28105,7 +28105,7 @@ export const deleteProjectsWorkMilestonesEndpoint = {
 
 export interface PostProjectsWorkTasksInput {
   projectId: string;
-  body?: Types.APIProjectWorkCreateProjectWorkTaskInput;
+  body: Types.APIProjectWorkCreateProjectWorkTaskInput;
 }
 export type PostProjectsWorkTasksOutput = Types.APIProjectWorkProjectWorkTaskDto;
 export const postProjectsWorkTasksEndpoint = {
@@ -28132,7 +28132,7 @@ export const getProjectsWorkTasksEndpoint = {
 export interface PutProjectsWorkTasksInput {
   projectId: string;
   taskId: string;
-  body?: Types.APIProjectWorkUpdateProjectWorkTaskInput;
+  body: Types.APIProjectWorkUpdateProjectWorkTaskInput;
 }
 export type PutProjectsWorkTasksOutput = Types.APIProjectWorkProjectWorkTaskDto;
 export const putProjectsWorkTasksEndpoint = {
@@ -28159,7 +28159,7 @@ export const deleteProjectsWorkTasksEndpoint = {
 export interface PostProjectsWorkTasksChecklistInput {
   projectId: string;
   taskId: string;
-  body?: Types.APIProjectWorkAddProjectTaskChecklistInput;
+  body: Types.APIProjectWorkAddProjectTaskChecklistInput;
 }
 export type PostProjectsWorkTasksChecklistOutput = void;
 export const postProjectsWorkTasksChecklistEndpoint = {
@@ -28174,7 +28174,7 @@ export interface PutProjectsWorkTasksChecklistInput {
   projectId: string;
   taskId: string;
   itemId: string;
-  body?: Types.APIProjectWorkUpdateProjectTaskChecklistInput;
+  body: Types.APIProjectWorkUpdateProjectTaskChecklistInput;
 }
 export type PutProjectsWorkTasksChecklistOutput = Types.APIProjectWorkProjectChecklistItemDto;
 export const putProjectsWorkTasksChecklistEndpoint = {
@@ -28202,7 +28202,7 @@ export const deleteProjectsWorkTasksChecklistEndpoint = {
 export interface PostProjectsWorkTasksCommentsInput {
   projectId: string;
   taskId: string;
-  body?: Types.APIProjectWorkAddProjectTaskCommentInput;
+  body: Types.APIProjectWorkAddProjectTaskCommentInput;
 }
 export type PostProjectsWorkTasksCommentsOutput = void;
 export const postProjectsWorkTasksCommentsEndpoint = {
@@ -28217,7 +28217,7 @@ export interface PutProjectsWorkTasksCommentsInput {
   projectId: string;
   taskId: string;
   commentId: string;
-  body?: Types.APIProjectWorkUpdateProjectTaskCommentInput;
+  body: Types.APIProjectWorkUpdateProjectTaskCommentInput;
 }
 export type PutProjectsWorkTasksCommentsOutput = Types.APIProjectWorkProjectTaskCommentDto;
 export const putProjectsWorkTasksCommentsEndpoint = {
@@ -28245,7 +28245,7 @@ export const deleteProjectsWorkTasksCommentsEndpoint = {
 export interface PostProjectsWorkTasksDependenciesInput {
   projectId: string;
   taskId: string;
-  body?: Types.APIProjectWorkAddProjectTaskDependencyInput;
+  body: Types.APIProjectWorkAddProjectTaskDependencyInput;
 }
 export type PostProjectsWorkTasksDependenciesOutput = void;
 export const postProjectsWorkTasksDependenciesEndpoint = {
@@ -28301,7 +28301,7 @@ export const deleteProjectsWorkTasksLabelsEndpoint = {
 export interface PutProjectsWorkTasksMoveInput {
   projectId: string;
   taskId: string;
-  body?: Types.APIProjectWorkMoveProjectWorkTaskInput;
+  body: Types.APIProjectWorkMoveProjectWorkTaskInput;
 }
 export type PutProjectsWorkTasksMoveOutput = Types.APIProjectWorkProjectWorkTaskDto;
 export const putProjectsWorkTasksMoveEndpoint = {
@@ -28597,7 +28597,7 @@ export const getPromoCampaignsForGetPromoCampaignsEndpoint = {
  * Create a campaign (starts in Draft)
  */
 export interface PostPromoCampaignsInput {
-  body?: Types.CommerceProductsCreatePromoCampaignInput;
+  body: Types.CommerceProductsCreatePromoCampaignInput;
 }
 export type PostPromoCampaignsOutput = Types.CommerceProductsPromoCampaignDto;
 export const postPromoCampaignsEndpoint = {
@@ -28628,7 +28628,7 @@ export const getPromoCampaignsForGetPromoCampaignsByCampaignIdEndpoint = {
  */
 export interface PutPromoCampaignsInput {
   campaignId: string;
-  body?: Types.CommerceProductsUpdatePromoCampaignInput;
+  body: Types.CommerceProductsUpdatePromoCampaignInput;
 }
 export type PutPromoCampaignsOutput = Types.CommerceProductsPromoCampaignDto;
 export const putPromoCampaignsEndpoint = {
@@ -28776,7 +28776,7 @@ export const getPromoCodesForGetPromoCodesEndpoint = {
  * Create a new promo code
  */
 export interface PostPromoCodesInput {
-  body?: Types.CommerceProductsCreatePromoCodeInput;
+  body: Types.CommerceProductsCreatePromoCodeInput;
 }
 export type PostPromoCodesOutput = Types.CommerceProductsPromoCodeDto;
 export const postPromoCodesEndpoint = {
@@ -28792,7 +28792,7 @@ export const postPromoCodesEndpoint = {
  * (idempotent on the supplied key, fail-closed on usage limits).
  */
 export interface PostPromoCodesApplyInput {
-  body?: Types.CommerceProductsApplyPromoCodesInput;
+  body: Types.CommerceProductsApplyPromoCodesInput;
 }
 export type PostPromoCodesApplyOutput = Types.CommerceProductsPromoCodeApplicationResult;
 export const postPromoCodesApplyEndpoint = {
@@ -28807,7 +28807,7 @@ export const postPromoCodesApplyEndpoint = {
  * Bulk-generate promo codes with a shared prefix and random suffixes
  */
 export interface PostPromoCodesGenerateBulkInput {
-  body?: Types.CommerceProductsGenerateBulkPromoCodesInput;
+  body: Types.CommerceProductsGenerateBulkPromoCodesInput;
 }
 export type PostPromoCodesGenerateBulkOutput = Types.CommerceProductsPromoCodeDto[];
 export const postPromoCodesGenerateBulkEndpoint = {
@@ -28824,7 +28824,7 @@ export const postPromoCodesGenerateBulkEndpoint = {
  * unverifiable token is rejected before any code lookup, fail closed.
  */
 export interface PostPromoCodesValidateInput {
-  body?: Types.CommerceProductsValidatePromoCodeInput;
+  body: Types.CommerceProductsValidatePromoCodeInput;
 }
 export type PostPromoCodesValidateOutput = Types.CommerceProductsPromoCodeValidationResult;
 export const postPromoCodesValidateEndpoint = {
@@ -28855,7 +28855,7 @@ export const getPromoCodesForGetPromoCodesByPromoCodeIdEndpoint = {
  */
 export interface PutPromoCodesInput {
   promoCodeId: string;
-  body?: Types.CommerceProductsUpdatePromoCodeInput;
+  body: Types.CommerceProductsUpdatePromoCodeInput;
 }
 export type PutPromoCodesOutput = Types.CommerceProductsPromoCodeDto;
 export const putPromoCodesEndpoint = {
@@ -28886,7 +28886,7 @@ export const deletePromoCodesEndpoint = {
  */
 export interface PatchPromoCodesInput {
   promoCodeId: string;
-  body?: Types.CommerceProductsPatchPromoCodeInput;
+  body: Types.CommerceProductsPatchPromoCodeInput;
 }
 export type PatchPromoCodesOutput = Types.CommerceProductsPromoCodeDto;
 export const patchPromoCodesEndpoint = {
@@ -29012,7 +29012,7 @@ export const getPromoStackingRulesForGetPromoStackingRulesEndpoint = {
  * Create a stacking rule
  */
 export interface PostPromoStackingRulesInput {
-  body?: Types.CommerceProductsCreatePromoStackingRuleInput;
+  body: Types.CommerceProductsCreatePromoStackingRuleInput;
 }
 export type PostPromoStackingRulesOutput = Types.CommerceProductsPromoStackingRuleDto;
 export const postPromoStackingRulesEndpoint = {
@@ -29043,7 +29043,7 @@ export const getPromoStackingRulesForGetPromoStackingRulesByRuleIdEndpoint = {
  */
 export interface PutPromoStackingRulesInput {
   ruleId: string;
-  body?: Types.CommerceProductsUpdatePromoStackingRuleInput;
+  body: Types.CommerceProductsUpdatePromoStackingRuleInput;
 }
 export type PutPromoStackingRulesOutput = Types.CommerceProductsPromoStackingRuleDto;
 export const putPromoStackingRulesEndpoint = {
@@ -29176,7 +29176,7 @@ export const getRecommendationsMeProfileEndpoint = {
  * Update the current user's learning profile
  */
 export interface PutRecommendationsMeProfileInput {
-  body?: Types.LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto;
+  body: Types.LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto;
 }
 export type PutRecommendationsMeProfileOutput = Types.LearningExperienceRecommendationsUserLearningProfileDto;
 export const putRecommendationsMeProfileEndpoint = {
@@ -29191,7 +29191,7 @@ export const putRecommendationsMeProfileEndpoint = {
  * Add a skill to the current user's profile
  */
 export interface PostRecommendationsMeProfileSkillsInput {
-  body?: Types.LearningExperienceRecommendationsAddSkillInput;
+  body: Types.LearningExperienceRecommendationsAddSkillInput;
 }
 export type PostRecommendationsMeProfileSkillsOutput = Types.LearningExperienceRecommendationsUserLearningProfileDto;
 export const postRecommendationsMeProfileSkillsEndpoint = {
@@ -29298,7 +29298,7 @@ export const getRecommendationsTrendingEndpoint = {
  * Archives resource usage records older than the specified date for storage optimization.
  */
 export interface PostResourcesArchiveInput {
-  body?: Types.ResourcesArchiveResourceUsageRecordsInput;
+  body: Types.ResourcesArchiveResourceUsageRecordsInput;
 }
 export type PostResourcesArchiveOutput = void;
 export const postResourcesArchiveEndpoint = {
@@ -29315,7 +29315,7 @@ export const postResourcesArchiveEndpoint = {
  * Identifies and removes orphaned resources that are no longer associated with any tenant or user.
  */
 export interface PostResourcesCleanupInput {
-  body?: Types.ResourcesCleanupOrphanedResourcesInput;
+  body: Types.ResourcesCleanupOrphanedResourcesInput;
 }
 export type PostResourcesCleanupOutput = void;
 export const postResourcesCleanupEndpoint = {
@@ -29391,7 +29391,7 @@ export const getRolesForGetRolesEndpoint = {
  * Create a new role
  */
 export interface PostRolesInput {
-  body?: Types.IdentityAuthenticationCreateRoleInput;
+  body: Types.IdentityAuthenticationCreateRoleInput;
 }
 export type PostRolesOutput = void;
 export const postRolesEndpoint = {
@@ -29406,7 +29406,7 @@ export const postRolesEndpoint = {
  * Assign a role to a user
  */
 export interface PostRolesAssignInput {
-  body?: Types.IdentityAuthenticationAssignRoleToUserInput;
+  body: Types.IdentityAuthenticationAssignRoleToUserInput;
 }
 export type PostRolesAssignOutput = void;
 export const postRolesAssignEndpoint = {
@@ -29421,7 +29421,7 @@ export const postRolesAssignEndpoint = {
  * Assign one active role to multiple users in a single bounded operation.
  */
 export interface PostRolesBulkAssignInput {
-  body?: Types.IdentityAuthenticationBulkAssignRolesCommand;
+  body: Types.IdentityAuthenticationBulkAssignRolesCommand;
 }
 export type PostRolesBulkAssignOutput = Types.IdentityAuthenticationBulkRoleAssignmentResult;
 export const postRolesBulkAssignEndpoint = {
@@ -29436,7 +29436,7 @@ export const postRolesBulkAssignEndpoint = {
  * Remove a role from a user
  */
 export interface PostRolesRemoveInput {
-  body?: Types.IdentityAuthenticationRemoveRoleFromUserInput;
+  body: Types.IdentityAuthenticationRemoveRoleFromUserInput;
 }
 export type PostRolesRemoveOutput = void;
 export const postRolesRemoveEndpoint = {
@@ -29467,7 +29467,7 @@ export const getRolesForGetRolesByRoleIdEndpoint = {
  */
 export interface PutRolesInput {
   roleId: string;
-  body?: Types.IdentityAuthenticationUpdateRoleInput;
+  body: Types.IdentityAuthenticationUpdateRoleInput;
 }
 export type PutRolesOutput = void;
 export const putRolesEndpoint = {
@@ -29533,7 +29533,7 @@ export const getSodRulesForGetSodRulesEndpoint = {
  * Create a new SoD rule
  */
 export interface PostSodRulesInput {
-  body?: Types.IdentityAuthorizationCommandsCreateSoDRuleCommand;
+  body: Types.IdentityAuthorizationCommandsCreateSoDRuleCommand;
 }
 export type PostSodRulesOutput = Types.IdentityAuthorizationSoDRule;
 export const postSodRulesEndpoint = {
@@ -29564,7 +29564,7 @@ export const getSodRulesForGetSodRulesByIdEndpoint = {
  */
 export interface PutSodRulesInput {
   id: string;
-  body?: Types.IdentityAuthorizationControllersUpdateSoDRuleInput;
+  body: Types.IdentityAuthorizationControllersUpdateSoDRuleInput;
 }
 export type PutSodRulesOutput = Types.IdentityAuthorizationSoDRule;
 export const putSodRulesEndpoint = {
@@ -29612,7 +29612,7 @@ export const postSodViolationsScanEndpoint = {
  */
 export interface PostSodViolationsExceptionInput {
   id: string;
-  body?: Types.IdentityAuthorizationControllersGrantExceptionInput;
+  body: Types.IdentityAuthorizationControllersGrantExceptionInput;
 }
 export type PostSodViolationsExceptionOutput = Types.IdentityAuthorizationSoDViolation;
 export const postSodViolationsExceptionEndpoint = {
@@ -29628,7 +29628,7 @@ export const postSodViolationsExceptionEndpoint = {
  */
 export interface PostSodViolationsResolveInput {
   id: string;
-  body?: Types.IdentityAuthorizationControllersResolveViolationInput;
+  body: Types.IdentityAuthorizationControllersResolveViolationInput;
 }
 export type PostSodViolationsResolveOutput = Types.IdentityAuthorizationSoDViolation;
 export const postSodViolationsResolveEndpoint = {
@@ -29737,7 +29737,7 @@ export const getSubscriptionPlansForGetSubscriptionPlansEndpoint = {
  * Creates a new subscription plan with the provided information.
  */
 export interface PostSubscriptionPlansInput {
-  body?: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput;
+  body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput;
 }
 export type PostSubscriptionPlansOutput = void;
 export const postSubscriptionPlansEndpoint = {
@@ -29754,7 +29754,7 @@ export const postSubscriptionPlansEndpoint = {
  * Compares multiple subscription plans side by side. Custom action per Google API guidelines.
  */
 export interface PostSubscriptionPlansCompareInput {
-  body?: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput;
+  body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput;
 }
 export type PostSubscriptionPlansCompareOutput = void;
 export const postSubscriptionPlansCompareEndpoint = {
@@ -29789,7 +29789,7 @@ export const getSubscriptionPlansForGetSubscriptionPlansByPlanIdEndpoint = {
  */
 export interface PutSubscriptionPlansInput {
   planId: string;
-  body?: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput;
+  body: Types.CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput;
 }
 export type PutSubscriptionPlansOutput = void;
 export const putSubscriptionPlansEndpoint = {
@@ -29856,7 +29856,7 @@ export const getSupportTicketsEndpoint = {
 } as const;
 
 export interface PostSupportTicketsInput {
-  body?: Types.CommerceProductsCreateSupportTicketInput;
+  body: Types.CommerceProductsCreateSupportTicketInput;
 }
 export type PostSupportTicketsOutput = Types.CommerceProductsSupportTicketDto;
 export const postSupportTicketsEndpoint = {
@@ -29881,7 +29881,7 @@ export const getSupportTicketByIdEndpoint = {
 
 export interface PostSupportTicketsAssignInput {
   ticketId: string;
-  body?: Types.CommerceProductsAssignSupportTicketInput;
+  body: Types.CommerceProductsAssignSupportTicketInput;
 }
 export type PostSupportTicketsAssignOutput = Types.CommerceProductsSupportTicketDto;
 export const postSupportTicketsAssignEndpoint = {
@@ -29894,7 +29894,7 @@ export const postSupportTicketsAssignEndpoint = {
 
 export interface PostSupportTicketsCloseInput {
   ticketId: string;
-  body?: Types.CommerceProductsCloseSupportTicketInput;
+  body: Types.CommerceProductsCloseSupportTicketInput;
 }
 export type PostSupportTicketsCloseOutput = Types.CommerceProductsSupportTicketDto;
 export const postSupportTicketsCloseEndpoint = {
@@ -29907,7 +29907,7 @@ export const postSupportTicketsCloseEndpoint = {
 
 export interface PostSupportTicketsPriorityInput {
   ticketId: string;
-  body?: Types.CommerceProductsChangeSupportTicketPriorityInput;
+  body: Types.CommerceProductsChangeSupportTicketPriorityInput;
 }
 export type PostSupportTicketsPriorityOutput = Types.CommerceProductsSupportTicketDto;
 export const postSupportTicketsPriorityEndpoint = {
@@ -29932,7 +29932,7 @@ export const postSupportTicketsReopenEndpoint = {
 
 export interface PostSupportTicketsResolveInput {
   ticketId: string;
-  body?: Types.CommerceProductsResolveSupportTicketInput;
+  body: Types.CommerceProductsResolveSupportTicketInput;
 }
 export type PostSupportTicketsResolveOutput = Types.CommerceProductsSupportTicketDto;
 export const postSupportTicketsResolveEndpoint = {
@@ -29957,7 +29957,7 @@ export const postSupportTicketsStartEndpoint = {
 
 export interface PostSupportTicketsMessagesInput {
   ticketId: string;
-  body?: Types.CommerceProductsAddSupportTicketMessageInput;
+  body: Types.CommerceProductsAddSupportTicketMessageInput;
 }
 export type PostSupportTicketsMessagesOutput = Types.CommerceProductsSupportTicketDto;
 export const postSupportTicketsMessagesEndpoint = {
@@ -29995,7 +29995,7 @@ export const getSupportTicketsMineForGetSupportTicketsMineEndpoint = {
 } as const;
 
 export interface PostSupportTicketsMineInput {
-  body?: Types.CommerceProductsCreateMySupportTicketInput;
+  body: Types.CommerceProductsCreateMySupportTicketInput;
 }
 export type PostSupportTicketsMineOutput = Types.CommerceProductsSupportTicketDto;
 export const postSupportTicketsMineEndpoint = {
@@ -30020,7 +30020,7 @@ export const getSupportTicketsMineForGetSupportTicketsMineByTicketIdEndpoint = {
 
 export interface PostSupportTicketsMineMessagesInput {
   ticketId: string;
-  body?: Types.CommerceProductsAddMySupportTicketMessageInput;
+  body: Types.CommerceProductsAddMySupportTicketMessageInput;
 }
 export type PostSupportTicketsMineMessagesOutput = Types.CommerceProductsSupportTicketDto;
 export const postSupportTicketsMineMessagesEndpoint = {
@@ -30061,7 +30061,7 @@ export const getTeamsForGetTeamsEndpoint = {
 } as const;
 
 export interface PostTeamsInput {
-  body?: Types.APITeamsCreateTeamInput;
+  body: Types.APITeamsCreateTeamInput;
 }
 export type PostTeamsOutput = Types.APITeamsTeamDto;
 export const postTeamsEndpoint = {
@@ -30086,7 +30086,7 @@ export const getTeamsForGetTeamsByTeamIdEndpoint = {
 
 export interface PutTeamsInput {
   teamId: string;
-  body?: Types.APITeamsUpdateTeamInput;
+  body: Types.APITeamsUpdateTeamInput;
 }
 export type PutTeamsOutput = Types.APITeamsTeamDto;
 export const putTeamsEndpoint = {
@@ -30135,7 +30135,7 @@ export const getTeamsInvitationsEndpoint = {
 
 export interface PostTeamsInvitationsInput {
   teamId: string;
-  body?: Types.APITeamsCreateTeamInvitationInput;
+  body: Types.APITeamsCreateTeamInvitationInput;
 }
 export type PostTeamsInvitationsOutput = Types.APITeamsTeamInvitationCreatedDto;
 export const postTeamsInvitationsEndpoint = {
@@ -30161,7 +30161,7 @@ export const deleteTeamsInvitationsEndpoint = {
 
 export interface PostTeamsMembersInput {
   teamId: string;
-  body?: Types.APITeamsAddTeamMemberInput;
+  body: Types.APITeamsAddTeamMemberInput;
 }
 export type PostTeamsMembersOutput = Types.APITeamsTeamMemberDto;
 export const postTeamsMembersEndpoint = {
@@ -30175,7 +30175,7 @@ export const postTeamsMembersEndpoint = {
 export interface PutTeamsMembersInput {
   teamId: string;
   userId: string;
-  body?: Types.APITeamsChangeTeamMemberInput;
+  body: Types.APITeamsChangeTeamMemberInput;
 }
 export type PutTeamsMembersOutput = Types.APITeamsTeamMemberDto;
 export const putTeamsMembersEndpoint = {
@@ -30224,7 +30224,7 @@ export const postTeamsInvitationsAcceptForPostTeamsInvitationsByInvitationIdAcce
 } as const;
 
 export interface PostTeamsInvitationsAcceptForPostTeamsInvitationsAcceptInput {
-  body?: Types.APITeamsAcceptTeamInvitationInput;
+  body: Types.APITeamsAcceptTeamInvitationInput;
 }
 export type PostTeamsInvitationsAcceptForPostTeamsInvitationsAcceptOutput = Types.APITeamsTeamDto;
 export const postTeamsInvitationsAcceptForPostTeamsInvitationsAcceptEndpoint = {
@@ -30294,7 +30294,7 @@ export const getTenantsForGetTenantsEndpoint = {
  * Creates a new tenant organization within the GameGuild platform.
  */
 export interface PostTenantsInput {
-  body?: Types.IdentityTenantsCreateTenantInput;
+  body: Types.IdentityTenantsCreateTenantInput;
 }
 export type PostTenantsOutput = void;
 export const postTenantsEndpoint = {
@@ -30311,7 +30311,7 @@ export const postTenantsEndpoint = {
  * Activates multiple tenant accounts at once.
  */
 export interface PostTenantsActivateForPostTenantsActivateInput {
-  body?: Types.IdentityTenantsBulkActivateTenantsCommand;
+  body: Types.IdentityTenantsBulkActivateTenantsCommand;
 }
 export type PostTenantsActivateForPostTenantsActivateOutput = Types.BulkOperationOutput;
 export const postTenantsActivateForPostTenantsActivateEndpoint = {
@@ -30328,7 +30328,7 @@ export const postTenantsActivateForPostTenantsActivateEndpoint = {
  * Archives multiple tenant accounts at once.
  */
 export interface PostTenantsArchiveForPostTenantsArchiveInput {
-  body?: Types.IdentityTenantsBulkArchiveTenantsCommand;
+  body: Types.IdentityTenantsBulkArchiveTenantsCommand;
 }
 export type PostTenantsArchiveForPostTenantsArchiveOutput = Types.BulkOperationOutput;
 export const postTenantsArchiveForPostTenantsArchiveEndpoint = {
@@ -30345,7 +30345,7 @@ export const postTenantsArchiveForPostTenantsArchiveEndpoint = {
  * Creates multiple tenant organizations at once.
  */
 export interface PostTenantsCreateInput {
-  body?: Types.IdentityTenantsBulkCreateTenantsCommand;
+  body: Types.IdentityTenantsBulkCreateTenantsCommand;
 }
 export type PostTenantsCreateOutput = Types.BulkOperationOutput;
 export const postTenantsCreateEndpoint = {
@@ -30362,7 +30362,7 @@ export const postTenantsCreateEndpoint = {
  * Deactivates multiple tenant accounts at once.
  */
 export interface PostTenantsDeactivateForPostTenantsDeactivateInput {
-  body?: Types.IdentityTenantsBulkDeactivateTenantsCommand;
+  body: Types.IdentityTenantsBulkDeactivateTenantsCommand;
 }
 export type PostTenantsDeactivateForPostTenantsDeactivateOutput = Types.BulkOperationOutput;
 export const postTenantsDeactivateForPostTenantsDeactivateEndpoint = {
@@ -30379,7 +30379,7 @@ export const postTenantsDeactivateForPostTenantsDeactivateEndpoint = {
  * Soft deletes multiple tenants at once.
  */
 export interface PostTenantsDeleteInput {
-  body?: Types.IdentityTenantsBulkDeleteTenantsCommand;
+  body: Types.IdentityTenantsBulkDeleteTenantsCommand;
 }
 export type PostTenantsDeleteOutput = Types.BulkOperationOutput;
 export const postTenantsDeleteEndpoint = {
@@ -30396,7 +30396,7 @@ export const postTenantsDeleteEndpoint = {
  * Permanently deletes multiple tenants. Admin operation requiring proper authorization.
  */
 export interface PostTenantsPurgeForPostTenantsPurgeInput {
-  body?: Types.IdentityTenantsBulkPurgeTenantsCommand;
+  body: Types.IdentityTenantsBulkPurgeTenantsCommand;
 }
 export type PostTenantsPurgeForPostTenantsPurgeOutput = Types.BulkOperationOutput;
 export const postTenantsPurgeForPostTenantsPurgeEndpoint = {
@@ -30413,7 +30413,7 @@ export const postTenantsPurgeForPostTenantsPurgeEndpoint = {
  * Updates multiple tenants with complete data.
  */
 export interface PostTenantsReplaceInput {
-  body?: Types.IdentityTenantsBulkUpdateTenantsCommand;
+  body: Types.IdentityTenantsBulkUpdateTenantsCommand;
 }
 export type PostTenantsReplaceOutput = Types.BulkOperationOutput;
 export const postTenantsReplaceEndpoint = {
@@ -30430,7 +30430,7 @@ export const postTenantsReplaceEndpoint = {
  * Restores multiple soft-deleted tenants at once.
  */
 export interface PostTenantsUndeleteForPostTenantsUndeleteInput {
-  body?: Types.IdentityTenantsBulkUndeleteTenantsCommand;
+  body: Types.IdentityTenantsBulkUndeleteTenantsCommand;
 }
 export type PostTenantsUndeleteForPostTenantsUndeleteOutput = Types.BulkOperationOutput;
 export const postTenantsUndeleteForPostTenantsUndeleteEndpoint = {
@@ -30447,7 +30447,7 @@ export const postTenantsUndeleteForPostTenantsUndeleteEndpoint = {
  * Updates multiple tenants with partial data.
  */
 export interface PostTenantsUpdateInput {
-  body?: Types.IdentityTenantsBulkUpdateTenantsCommand;
+  body: Types.IdentityTenantsBulkUpdateTenantsCommand;
 }
 export type PostTenantsUpdateOutput = Types.BulkOperationOutput;
 export const postTenantsUpdateEndpoint = {
@@ -30468,7 +30468,7 @@ export const postTenantsUpdateEndpoint = {
  * - Getting alternative slug suggestions
  */
 export interface PostTenantsValidateInput {
-  body?: Types.IdentityTenantsValidateTenantInput;
+  body: Types.IdentityTenantsValidateTenantInput;
 }
 export type PostTenantsValidateOutput = Types.IdentityTenantsTenantValidationOutput;
 export const postTenantsValidateEndpoint = {
@@ -30503,7 +30503,7 @@ export const getTenantsForGetTenantsByTenantIdEndpoint = {
  */
 export interface PutTenantsInput {
   tenantId: string;
-  body?: Types.IdentityTenantsUpdateTenantInput;
+  body: Types.IdentityTenantsUpdateTenantInput;
 }
 export type PutTenantsOutput = void;
 export const putTenantsEndpoint = {
@@ -30521,7 +30521,7 @@ export const putTenantsEndpoint = {
  */
 export interface DeleteTenantsInput {
   tenantId: string;
-  body?: Types.IdentityTenantsArchiveInput;
+  body: Types.IdentityTenantsArchiveInput;
 }
 export type DeleteTenantsOutput = void;
 export const deleteTenantsEndpoint = {
@@ -30539,7 +30539,7 @@ export const deleteTenantsEndpoint = {
  */
 export interface PatchTenantsInput {
   tenantId: string;
-  body?: Types.IdentityTenantsUpdateTenantInput;
+  body: Types.IdentityTenantsUpdateTenantInput;
 }
 export type PatchTenantsOutput = void;
 export const patchTenantsEndpoint = {
@@ -30591,7 +30591,7 @@ export const postTenantsActivateForPostTenantsByTenantIdActivateEndpoint = {
  */
 export interface PostTenantsArchiveForPostTenantsByTenantIdArchiveInput {
   tenantId: string;
-  body?: Types.IdentityTenantsArchiveInput;
+  body: Types.IdentityTenantsArchiveInput;
 }
 export type PostTenantsArchiveForPostTenantsByTenantIdArchiveOutput = void;
 export const postTenantsArchiveForPostTenantsByTenantIdArchiveEndpoint = {
@@ -30643,7 +30643,7 @@ export const postTenantsPurgeForPostTenantsByTenantIdPurgeEndpoint = {
  */
 export interface PostTenantsUndeleteForPostTenantsByTenantIdUndeleteInput {
   tenantId: string;
-  body?: Types.IdentityTenantsRecoverInput;
+  body: Types.IdentityTenantsRecoverInput;
 }
 export type PostTenantsUndeleteForPostTenantsByTenantIdUndeleteOutput = void;
 export const postTenantsUndeleteForPostTenantsByTenantIdUndeleteEndpoint = {
@@ -30778,7 +30778,7 @@ export const getTenantsCapabilitiesForGetTenantsByTenantIdCapabilitiesEndpoint =
  */
 export interface PostTenantsCapabilitiesInput {
   tenantId: string;
-  body?: Types.FeaturesSetCapabilityOverrideInput;
+  body: Types.FeaturesSetCapabilityOverrideInput;
 }
 export type PostTenantsCapabilitiesOutput = void;
 export const postTenantsCapabilitiesEndpoint = {
@@ -30884,7 +30884,7 @@ export const getTenantsMetadataEndpoint = {
  */
 export interface PutTenantsMetadataInput {
   tenantId: string;
-  body?: Types.IdentityTenantsReplaceTenantMetadataInput;
+  body: Types.IdentityTenantsReplaceTenantMetadataInput;
 }
 export type PutTenantsMetadataOutput = void;
 export const putTenantsMetadataEndpoint = {
@@ -30902,7 +30902,7 @@ export const putTenantsMetadataEndpoint = {
  */
 export interface PatchTenantsMetadataInput {
   tenantId: string;
-  body?: Types.IdentityTenantsUpdateTenantMetadataInput;
+  body: Types.IdentityTenantsUpdateTenantMetadataInput;
 }
 export type PatchTenantsMetadataOutput = void;
 export const patchTenantsMetadataEndpoint = {
@@ -30937,7 +30937,7 @@ export const getTenantsMetadataCustomFieldsEndpoint = {
  */
 export interface PatchTenantsMetadataCustomFieldsInput {
   tenantId: string;
-  body?: Record<string, Record<string, unknown>>;
+  body: Record<string, Record<string, unknown>>;
 }
 export type PatchTenantsMetadataCustomFieldsOutput = void;
 export const patchTenantsMetadataCustomFieldsEndpoint = {
@@ -30972,7 +30972,7 @@ export const getTenantsMetadataTagsEndpoint = {
  */
 export interface PutTenantsMetadataTagsInput {
   tenantId: string;
-  body?: string[];
+  body: string[];
 }
 export type PutTenantsMetadataTagsOutput = void;
 export const putTenantsMetadataTagsEndpoint = {
@@ -30990,7 +30990,7 @@ export const putTenantsMetadataTagsEndpoint = {
  */
 export interface PatchTenantsMetadataTagsInput {
   tenantId: string;
-  body?: Types.IdentityTenantsUpdateTenantTagsInput;
+  body: Types.IdentityTenantsUpdateTenantTagsInput;
 }
 export type PatchTenantsMetadataTagsOutput = void;
 export const patchTenantsMetadataTagsEndpoint = {
@@ -31065,7 +31065,7 @@ export const getTenantsQuotasForGetTenantsByTenantIdQuotasByTypeEndpoint = {
 export interface PutTenantsQuotasInput {
   tenantId: string;
   type: Types.ResourcesResourceUsageType;
-  body?: Types.ResourcesSetQuotaInput;
+  body: Types.ResourcesSetQuotaInput;
 }
 export type PutTenantsQuotasOutput = void;
 export const putTenantsQuotasEndpoint = {
@@ -31102,7 +31102,7 @@ export const deleteTenantsQuotasEndpoint = {
 export interface PostTenantsQuotasCheckInput {
   tenantId: string;
   type: Types.ResourcesResourceUsageType;
-  body?: Types.ResourcesCheckResourceQuotaInput;
+  body: Types.ResourcesCheckResourceQuotaInput;
 }
 export type PostTenantsQuotasCheckOutput = Types.ResourcesResourceQuotaEnforcementResult;
 export const postTenantsQuotasCheckEndpoint = {
@@ -31139,7 +31139,7 @@ export const postTenantsQuotasResetEndpoint = {
 export interface PostTenantsQuotasToggleInput {
   tenantId: string;
   type: Types.ResourcesResourceUsageType;
-  body?: Types.ResourcesToggleResourceQuotaInput;
+  body: Types.ResourcesToggleResourceQuotaInput;
 }
 export type PostTenantsQuotasToggleOutput = void;
 export const postTenantsQuotasToggleEndpoint = {
@@ -31157,7 +31157,7 @@ export const postTenantsQuotasToggleEndpoint = {
  */
 export interface PostTenantsResourcesRecordInput {
   tenantId: string;
-  body?: Types.ResourcesRecordTenantResourceUsageInput;
+  body: Types.ResourcesRecordTenantResourceUsageInput;
 }
 export type PostTenantsResourcesRecordOutput = void;
 export const postTenantsResourcesRecordEndpoint = {
@@ -31175,7 +31175,7 @@ export const postTenantsResourcesRecordEndpoint = {
  */
 export interface PostTenantsResourcesRecordWithQuotaCheckInput {
   tenantId: string;
-  body?: Types.ResourcesRecordTenantResourceUsageInput;
+  body: Types.ResourcesRecordTenantResourceUsageInput;
 }
 export type PostTenantsResourcesRecordWithQuotaCheckOutput = void;
 export const postTenantsResourcesRecordWithQuotaCheckEndpoint = {
@@ -31303,7 +31303,7 @@ export const getTenantsResourcesMetadataForGetTenantsByTenantIdResourcesMetadata
 export interface PutTenantsResourcesMetadataInput {
   tenantId: string;
   key: string;
-  body?: Types.ResourcesSetResourceMetadataInput;
+  body: Types.ResourcesSetResourceMetadataInput;
 }
 export type PutTenantsResourcesMetadataOutput = Types.ResourcesResourceMetadata;
 export const putTenantsResourcesMetadataEndpoint = {
@@ -31378,7 +31378,7 @@ export const getTenantsResourcesSettingsForGetTenantsByTenantIdResourcesSettings
 export interface PutTenantsResourcesSettingsInput {
   tenantId: string;
   key: string;
-  body?: Types.ResourcesSetResourceSettingsInput;
+  body: Types.ResourcesSetResourceSettingsInput;
 }
 export type PutTenantsResourcesSettingsOutput = Types.ResourcesResourceSettings;
 export const putTenantsResourcesSettingsEndpoint = {
@@ -31524,7 +31524,7 @@ export const getTenantsSettingsEndpoint = {
  */
 export interface PutTenantsSettingsInput {
   tenantId: string;
-  body?: Types.IdentityTenantsReplaceTenantSettingsInput;
+  body: Types.IdentityTenantsReplaceTenantSettingsInput;
 }
 export type PutTenantsSettingsOutput = void;
 export const putTenantsSettingsEndpoint = {
@@ -31542,7 +31542,7 @@ export const putTenantsSettingsEndpoint = {
  */
 export interface PatchTenantsSettingsInput {
   tenantId: string;
-  body?: Types.IdentityTenantsUpdateTenantSettingsInput;
+  body: Types.IdentityTenantsUpdateTenantSettingsInput;
 }
 export type PatchTenantsSettingsOutput = void;
 export const patchTenantsSettingsEndpoint = {
@@ -31577,7 +31577,7 @@ export const getTenantsSettingsFeatureFlagsEndpoint = {
  */
 export interface PatchTenantsSettingsFeatureFlagsInput {
   tenantId: string;
-  body?: Record<string, boolean>;
+  body: Record<string, boolean>;
 }
 export type PatchTenantsSettingsFeatureFlagsOutput = void;
 export const patchTenantsSettingsFeatureFlagsEndpoint = {
@@ -31612,7 +31612,7 @@ export const getTenantsSettingsIntegrationSettingsEndpoint = {
  */
 export interface PatchTenantsSettingsIntegrationSettingsInput {
   tenantId: string;
-  body?: Types.IdentityTenantsUpdateTenantIntegrationSettingsInput;
+  body: Types.IdentityTenantsUpdateTenantIntegrationSettingsInput;
 }
 export type PatchTenantsSettingsIntegrationSettingsOutput = void;
 export const patchTenantsSettingsIntegrationSettingsEndpoint = {
@@ -31647,7 +31647,7 @@ export const getTenantsSettingsSystemLimitsEndpoint = {
  */
 export interface PatchTenantsSettingsSystemLimitsInput {
   tenantId: string;
-  body?: Types.IdentityTenantsUpdateTenantSystemLimitsInput;
+  body: Types.IdentityTenantsUpdateTenantSystemLimitsInput;
 }
 export type PatchTenantsSettingsSystemLimitsOutput = void;
 export const patchTenantsSettingsSystemLimitsEndpoint = {
@@ -31736,7 +31736,7 @@ export const getTestingEventsForGetTestingEventsEndpoint = {
 } as const;
 
 export interface PostTestingEventsInput {
-  body?: Types.TestingLabCreateTestingEventInput;
+  body: Types.TestingLabCreateTestingEventInput;
 }
 export type PostTestingEventsOutput = Types.TestingLabTestingEventProjection;
 export const postTestingEventsEndpoint = {
@@ -31761,7 +31761,7 @@ export const getTestingEventsForGetTestingEventsByEventIdEndpoint = {
 
 export interface PutTestingEventsInput {
   eventId: string;
-  body?: Types.TestingLabUpdateTestingEventInput;
+  body: Types.TestingLabUpdateTestingEventInput;
 }
 export type PutTestingEventsOutput = Types.TestingLabTestingEventProjection;
 export const putTestingEventsEndpoint = {
@@ -31810,7 +31810,7 @@ export const postTestingEventsArchiveEndpoint = {
 
 export interface PostTestingEventsCancelInput {
   eventId: string;
-  body?: Types.TestingLabCancelTestingEventInput;
+  body: Types.TestingLabCancelTestingEventInput;
 }
 export type PostTestingEventsCancelOutput = Types.TestingLabTestingEventProjection;
 export const postTestingEventsCancelEndpoint = {
@@ -31900,7 +31900,7 @@ export const getTestingEventsApplicationsForGetTestingEventsByEventIdApplication
 
 export interface PostTestingEventsApplicationsInput {
   eventId: string;
-  body?: Types.TestingLabSubmitTestingProjectApplicationInput;
+  body: Types.TestingLabSubmitTestingProjectApplicationInput;
 }
 export type PostTestingEventsApplicationsOutput = Types.TestingLabTestingProjectApplicationProjection;
 export const postTestingEventsApplicationsEndpoint = {
@@ -31925,7 +31925,7 @@ export const getTestingEventsApplicationsAccessEndpoint = {
 
 export interface PostTestingEventsApplicationsDraftsInput {
   eventId: string;
-  body?: Types.TestingLabCreateTestingProjectApplicationDraftInput;
+  body: Types.TestingLabCreateTestingProjectApplicationDraftInput;
 }
 export type PostTestingEventsApplicationsDraftsOutput = Types.TestingLabTestingProjectApplicationProjection;
 export const postTestingEventsApplicationsDraftsEndpoint = {
@@ -31965,7 +31965,7 @@ export const getTestingEventsCommitteeEndpoint = {
 
 export interface PostTestingEventsCommitteeInput {
   eventId: string;
-  body?: Types.TestingLabAddTestingEventCommitteeMemberInput;
+  body: Types.TestingLabAddTestingEventCommitteeMemberInput;
 }
 export type PostTestingEventsCommitteeOutput = Types.TestingLabTestingEventCommitteeMemberProjection;
 export const postTestingEventsCommitteeEndpoint = {
@@ -31991,7 +31991,7 @@ export const deleteTestingEventsCommitteeEndpoint = {
 
 export interface PutTestingEventsConfigurationInput {
   eventId: string;
-  body?: Types.TestingLabConfigureTestingEventInput;
+  body: Types.TestingLabConfigureTestingEventInput;
 }
 export type PutTestingEventsConfigurationOutput = Types.TestingLabTestingEventProjection;
 export const putTestingEventsConfigurationEndpoint = {
@@ -32016,7 +32016,7 @@ export const getTestingEventsFeedbackEndpoint = {
 
 export interface PutTestingEventsLearningInput {
   eventId: string;
-  body?: Types.TestingLabConfigureTestingEventLearningInput;
+  body: Types.TestingLabConfigureTestingEventLearningInput;
 }
 export type PutTestingEventsLearningOutput = Types.TestingLabTestingEventProjection;
 export const putTestingEventsLearningEndpoint = {
@@ -32041,7 +32041,7 @@ export const getTestingEventsSlotsEndpoint = {
 
 export interface PostTestingEventsSlotsInput {
   eventId: string;
-  body?: Types.TestingLabUpsertTestingEventSlotInput;
+  body: Types.TestingLabUpsertTestingEventSlotInput;
 }
 export type PostTestingEventsSlotsOutput = Types.TestingLabTestingEventSlotProjection;
 export const postTestingEventsSlotsEndpoint = {
@@ -32055,7 +32055,7 @@ export const postTestingEventsSlotsEndpoint = {
 export interface PutTestingEventsSlotsInput {
   eventId: string;
   slotId: string;
-  body?: Types.TestingLabUpsertTestingEventSlotInput;
+  body: Types.TestingLabUpsertTestingEventSlotInput;
 }
 export type PutTestingEventsSlotsOutput = Types.TestingLabTestingEventSlotProjection;
 export const putTestingEventsSlotsEndpoint = {
@@ -32081,7 +32081,7 @@ export const deleteTestingEventsSlotsEndpoint = {
 
 export interface PostTestingEventsSlotsBatchInput {
   eventId: string;
-  body?: Types.TestingLabCreateTestingEventSlotsInput;
+  body: Types.TestingLabCreateTestingEventSlotsInput;
 }
 export type PostTestingEventsSlotsBatchOutput = Types.TestingLabTestingEventSlotProjection[];
 export const postTestingEventsSlotsBatchEndpoint = {
@@ -32106,7 +32106,7 @@ export const getTestingEventsApplicationsForGetTestingEventsApplicationsByApplic
 
 export interface PutTestingEventsApplicationsInput {
   applicationId: string;
-  body?: Types.TestingLabUpdateTestingProjectApplicationInput;
+  body: Types.TestingLabUpdateTestingProjectApplicationInput;
 }
 export type PutTestingEventsApplicationsOutput = Types.TestingLabTestingProjectApplicationProjection;
 export const putTestingEventsApplicationsEndpoint = {
@@ -32119,7 +32119,7 @@ export const putTestingEventsApplicationsEndpoint = {
 
 export interface PostTestingEventsApplicationsApproveInput {
   applicationId: string;
-  body?: Types.TestingLabDecideTestingProjectApplicationInput;
+  body: Types.TestingLabDecideTestingProjectApplicationInput;
 }
 export type PostTestingEventsApplicationsApproveOutput = Types.TestingLabTestingProjectApplicationProjection;
 export const postTestingEventsApplicationsApproveEndpoint = {
@@ -32132,7 +32132,7 @@ export const postTestingEventsApplicationsApproveEndpoint = {
 
 export interface PostTestingEventsApplicationsRejectInput {
   applicationId: string;
-  body?: Types.TestingLabDecideTestingProjectApplicationInput;
+  body: Types.TestingLabDecideTestingProjectApplicationInput;
 }
 export type PostTestingEventsApplicationsRejectOutput = Types.TestingLabTestingProjectApplicationProjection;
 export const postTestingEventsApplicationsRejectEndpoint = {
@@ -32169,7 +32169,7 @@ export const postTestingEventsApplicationsSubmitEndpoint = {
 
 export interface PostTestingEventsApplicationsWaitlistInput {
   applicationId: string;
-  body?: Types.TestingLabDecideTestingProjectApplicationInput;
+  body: Types.TestingLabDecideTestingProjectApplicationInput;
 }
 export type PostTestingEventsApplicationsWaitlistOutput = Types.TestingLabTestingProjectApplicationProjection;
 export const postTestingEventsApplicationsWaitlistEndpoint = {
@@ -32194,7 +32194,7 @@ export const postTestingEventsApplicationsWithdrawEndpoint = {
 
 export interface PutTestingEventsApplicationsDraftInput {
   applicationId: string;
-  body?: Types.TestingLabSaveTestingProjectApplicationDraftInput;
+  body: Types.TestingLabSaveTestingProjectApplicationDraftInput;
 }
 export type PutTestingEventsApplicationsDraftOutput = Types.TestingLabTestingProjectApplicationProjection;
 export const putTestingEventsApplicationsDraftEndpoint = {
@@ -32219,7 +32219,7 @@ export const getTestingEventsApplicationsReviewPackageEndpoint = {
 
 export interface PutTestingEventsApplicationsSlotInput {
   applicationId: string;
-  body?: Types.TestingLabAssignTestingProjectApplicationSlotInput;
+  body: Types.TestingLabAssignTestingProjectApplicationSlotInput;
 }
 export type PutTestingEventsApplicationsSlotOutput = Types.TestingLabTestingProjectApplicationProjection;
 export const putTestingEventsApplicationsSlotEndpoint = {
@@ -32232,7 +32232,7 @@ export const putTestingEventsApplicationsSlotEndpoint = {
 
 export interface PostTestingEventsApplicationsVotesInput {
   applicationId: string;
-  body?: Types.TestingLabCastTestingApplicationVoteInput;
+  body: Types.TestingLabCastTestingApplicationVoteInput;
 }
 export type PostTestingEventsApplicationsVotesOutput = Types.TestingLabTestingApplicationVoteProjection;
 export const postTestingEventsApplicationsVotesEndpoint = {
@@ -32274,7 +32274,7 @@ export const getTestingEventsArchivedEndpoint = {
 
 export interface PostTestingEventsFeedbackObligationsFeedbackInput {
   obligationId: string;
-  body?: Types.TestingLabSubmitTestingEventFeedbackInput;
+  body: Types.TestingLabSubmitTestingEventFeedbackInput;
 }
 export type PostTestingEventsFeedbackObligationsFeedbackOutput = Types.TestingLabTestingEventFeedbackProjection;
 export const postTestingEventsFeedbackObligationsFeedbackEndpoint = {
@@ -32419,7 +32419,7 @@ export const postTestingEventsRegistrationsNoShowEndpoint = {
 
 export interface PostTestingEventsRegistrationsTestedProjectsInput {
   registrationId: string;
-  body?: Types.TestingLabAssignTestingProjectToTesterInput;
+  body: Types.TestingLabAssignTestingProjectToTesterInput;
 }
 export type PostTestingEventsRegistrationsTestedProjectsOutput = Types.TestingLabTestingFeedbackObligationProjection;
 export const postTestingEventsRegistrationsTestedProjectsEndpoint = {
@@ -32461,7 +32461,7 @@ export const getTestingEventsSlotsRegistrationsEndpoint = {
 
 export interface PostTestingEventsSlotsRegistrationsInput {
   slotId: string;
-  body?: Types.TestingLabRegisterTestingEventSlotInput;
+  body: Types.TestingLabRegisterTestingEventSlotInput;
 }
 export type PostTestingEventsSlotsRegistrationsOutput = Types.TestingLabTestingSlotRegistrationProjection;
 export const postTestingEventsSlotsRegistrationsEndpoint = {
@@ -32495,7 +32495,7 @@ export const getTestingFeedbackEndpoint = {
 } as const;
 
 export interface PostTestingFeedbackInput {
-  body?: Types.TestingLabSubmitFeedbackDto;
+  body: Types.TestingLabSubmitFeedbackDto;
 }
 export type PostTestingFeedbackOutput = void;
 export const postTestingFeedbackEndpoint = {
@@ -32508,7 +32508,7 @@ export const postTestingFeedbackEndpoint = {
 
 export interface PostTestingFeedbackQualityInput {
   feedbackId: string;
-  body?: Types.TestingLabRateFeedbackQualityDto;
+  body: Types.TestingLabRateFeedbackQualityDto;
 }
 export type PostTestingFeedbackQualityOutput = void;
 export const postTestingFeedbackQualityEndpoint = {
@@ -32521,7 +32521,7 @@ export const postTestingFeedbackQualityEndpoint = {
 
 export interface PostTestingFeedbackReportInput {
   feedbackId: string;
-  body?: Types.TestingLabReportFeedbackDto;
+  body: Types.TestingLabReportFeedbackDto;
 }
 export type PostTestingFeedbackReportOutput = void;
 export const postTestingFeedbackReportEndpoint = {
@@ -32561,7 +32561,7 @@ export const getTestingLocationsForGetTestingLocationsEndpoint = {
 } as const;
 
 export interface PostTestingLocationsInput {
-  body?: Types.TestingLabCreateTestingLocationDto;
+  body: Types.TestingLabCreateTestingLocationDto;
 }
 export type PostTestingLocationsOutput = Types.TestingLabTestingLocation;
 export const postTestingLocationsEndpoint = {
@@ -32586,7 +32586,7 @@ export const getTestingLocationsForGetTestingLocationsByIdEndpoint = {
 
 export interface PutTestingLocationsInput {
   id: string;
-  body?: Types.TestingLabUpdateTestingLocationDto;
+  body: Types.TestingLabUpdateTestingLocationDto;
 }
 export type PutTestingLocationsOutput = Types.TestingLabTestingLocation;
 export const putTestingLocationsEndpoint = {
@@ -32665,7 +32665,7 @@ export const getTestingRequestsForGetTestingRequestsEndpoint = {
 } as const;
 
 export interface PostTestingRequestsInput {
-  body?: Types.TestingLabCreateTestingRequestDto;
+  body: Types.TestingLabCreateTestingRequestDto;
 }
 export type PostTestingRequestsOutput = Types.TestingLabTestingInput;
 export const postTestingRequestsEndpoint = {
@@ -32690,7 +32690,7 @@ export const getTestingRequestsForGetTestingRequestsByIdEndpoint = {
 
 export interface PutTestingRequestsInput {
   id: string;
-  body?: Types.TestingLabUpdateTestingRequestDto;
+  body: Types.TestingLabUpdateTestingRequestDto;
 }
 export type PutTestingRequestsOutput = Types.TestingLabTestingRequestDetailProjection;
 export const putTestingRequestsEndpoint = {
@@ -32751,7 +32751,7 @@ export const getTestingRequestsFeedbackEndpoint = {
 
 export interface PostTestingRequestsFeedbackInput {
   requestId: string;
-  body?: Types.TestingLabFeedbackInput;
+  body: Types.TestingLabFeedbackInput;
 }
 export type PostTestingRequestsFeedbackOutput = Types.TestingLabTestingFeedback;
 export const postTestingRequestsFeedbackEndpoint = {
@@ -32891,7 +32891,7 @@ export const getTestingSessionsForGetTestingSessionsEndpoint = {
 } as const;
 
 export interface PostTestingSessionsInput {
-  body?: Types.TestingLabCreateTestingSessionDto;
+  body: Types.TestingLabCreateTestingSessionDto;
 }
 export type PostTestingSessionsOutput = Types.TestingLabTestingSession;
 export const postTestingSessionsEndpoint = {
@@ -32916,7 +32916,7 @@ export const getTestingSessionsForGetTestingSessionsByIdEndpoint = {
 
 export interface PutTestingSessionsInput {
   id: string;
-  body?: Types.TestingLabTestingSession;
+  body: Types.TestingLabTestingSession;
 }
 export type PutTestingSessionsOutput = Types.TestingLabTestingSession;
 export const putTestingSessionsEndpoint = {
@@ -32965,7 +32965,7 @@ export const getTestingSessionsDetailsEndpoint = {
 
 export interface PostTestingSessionsAttendanceInput {
   sessionId: string;
-  body?: Types.TestingLabUpdateAttendanceDto;
+  body: Types.TestingLabUpdateAttendanceDto;
 }
 export type PostTestingSessionsAttendanceOutput = void;
 export const postTestingSessionsAttendanceEndpoint = {
@@ -32993,7 +32993,7 @@ export const getTestingSessionsProjectsEndpoint = {
 
 export interface PostTestingSessionsProjectsInput {
   sessionId: string;
-  body?: Types.TestingLabLinkSessionProjectInput;
+  body: Types.TestingLabLinkSessionProjectInput;
 }
 export type PostTestingSessionsProjectsOutput = Types.TestingLabSessionProjectProjection;
 export const postTestingSessionsProjectsEndpoint = {
@@ -33019,7 +33019,7 @@ export const deleteTestingSessionsProjectsEndpoint = {
 
 export interface PostTestingSessionsRegisterInput {
   sessionId: string;
-  body?: Types.TestingLabSessionRegistrationInput;
+  body: Types.TestingLabSessionRegistrationInput;
 }
 export type PostTestingSessionsRegisterOutput = Types.TestingLabSessionRegistration;
 export const postTestingSessionsRegisterEndpoint = {
@@ -33080,7 +33080,7 @@ export const getTestingSessionsWaitlistEndpoint = {
 
 export interface PostTestingSessionsWaitlistInput {
   sessionId: string;
-  body?: Types.TestingLabSessionRegistrationInput;
+  body: Types.TestingLabSessionRegistrationInput;
 }
 export type PostTestingSessionsWaitlistOutput = Types.TestingLabSessionWaitlist;
 export const postTestingSessionsWaitlistEndpoint = {
@@ -33166,7 +33166,7 @@ export const getTestingSessionsSearchEndpoint = {
 } as const;
 
 export interface PostTestingSubmitSimpleInput {
-  body?: Types.TestingLabCreateSimpleTestingRequestDto;
+  body: Types.TestingLabCreateSimpleTestingRequestDto;
 }
 export type PostTestingSubmitSimpleOutput = Types.TestingLabTestingRequestDetailProjection;
 export const postTestingSubmitSimpleEndpoint = {
@@ -33220,7 +33220,7 @@ export const getUsersForGetUsersEndpoint = {
  * Creates a new user account with the provided information.
  */
 export interface PostUsersInput {
-  body?: Types.IdentityUsersCreateUserInput;
+  body: Types.IdentityUsersCreateUserInput;
 }
 export type PostUsersOutput = Types.IdentityUsersUserDto;
 export const postUsersEndpoint = {
@@ -33237,7 +33237,7 @@ export const postUsersEndpoint = {
  * Activates multiple user accounts at once.
  */
 export interface PostUsersActivateForPostUsersActivateInput {
-  body?: Types.IdentityUsersBulkActivateUsersInput;
+  body: Types.IdentityUsersBulkActivateUsersInput;
 }
 export type PostUsersActivateForPostUsersActivateOutput = Types.IdentityUsersBulkActivateUsersOutput;
 export const postUsersActivateForPostUsersActivateEndpoint = {
@@ -33254,7 +33254,7 @@ export const postUsersActivateForPostUsersActivateEndpoint = {
  * Creates multiple user accounts at once.
  */
 export interface PostUsersCreateInput {
-  body?: Types.IdentityUsersBulkCreateUsersInput;
+  body: Types.IdentityUsersBulkCreateUsersInput;
 }
 export type PostUsersCreateOutput = Types.IdentityUsersBulkCreateUsersOutput;
 export const postUsersCreateEndpoint = {
@@ -33271,7 +33271,7 @@ export const postUsersCreateEndpoint = {
  * Deactivates multiple user accounts at once.
  */
 export interface PostUsersDeactivateForPostUsersDeactivateInput {
-  body?: Types.IdentityUsersBulkDeactivateUsersInput;
+  body: Types.IdentityUsersBulkDeactivateUsersInput;
 }
 export type PostUsersDeactivateForPostUsersDeactivateOutput = Types.IdentityUsersBulkDeactivateUsersOutput;
 export const postUsersDeactivateForPostUsersDeactivateEndpoint = {
@@ -33288,7 +33288,7 @@ export const postUsersDeactivateForPostUsersDeactivateEndpoint = {
  * Soft deletes multiple users at once.
  */
 export interface PostUsersDeleteInput {
-  body?: Types.IdentityUsersBulkDeleteUsersInput;
+  body: Types.IdentityUsersBulkDeleteUsersInput;
 }
 export type PostUsersDeleteOutput = void;
 export const postUsersDeleteEndpoint = {
@@ -33305,7 +33305,7 @@ export const postUsersDeleteEndpoint = {
  * Permanently deletes multiple users. Admin operation requiring proper authorization.
  */
 export interface PostUsersPurgeForPostUsersPurgeInput {
-  body?: Types.IdentityUsersBulkPurgeUsersInput;
+  body: Types.IdentityUsersBulkPurgeUsersInput;
 }
 export type PostUsersPurgeForPostUsersPurgeOutput = void;
 export const postUsersPurgeForPostUsersPurgeEndpoint = {
@@ -33322,7 +33322,7 @@ export const postUsersPurgeForPostUsersPurgeEndpoint = {
  * Updates multiple users with complete data.
  */
 export interface PostUsersReplaceInput {
-  body?: Types.IdentityUsersBulkUpdateUsersInput;
+  body: Types.IdentityUsersBulkUpdateUsersInput;
 }
 export type PostUsersReplaceOutput = void;
 export const postUsersReplaceEndpoint = {
@@ -33339,7 +33339,7 @@ export const postUsersReplaceEndpoint = {
  * Suspends multiple user accounts at once.
  */
 export interface PostUsersSuspendForPostUsersSuspendInput {
-  body?: Types.IdentityUsersBulkSuspendUsersInput;
+  body: Types.IdentityUsersBulkSuspendUsersInput;
 }
 export type PostUsersSuspendForPostUsersSuspendOutput = Types.IdentityUsersBulkSuspendUsersOutput;
 export const postUsersSuspendForPostUsersSuspendEndpoint = {
@@ -33356,7 +33356,7 @@ export const postUsersSuspendForPostUsersSuspendEndpoint = {
  * Restores multiple soft-deleted users at once.
  */
 export interface PostUsersUndeleteForPostUsersUndeleteInput {
-  body?: Types.IdentityUsersBulkRestoreUsersInput;
+  body: Types.IdentityUsersBulkRestoreUsersInput;
 }
 export type PostUsersUndeleteForPostUsersUndeleteOutput = Types.IdentityUsersBulkRestoreUsersOutput;
 export const postUsersUndeleteForPostUsersUndeleteEndpoint = {
@@ -33373,7 +33373,7 @@ export const postUsersUndeleteForPostUsersUndeleteEndpoint = {
  * Unsuspends multiple user accounts at once.
  */
 export interface PostUsersUnsuspendForPostUsersUnsuspendInput {
-  body?: Types.IdentityUsersBulkUnsuspendUsersInput;
+  body: Types.IdentityUsersBulkUnsuspendUsersInput;
 }
 export type PostUsersUnsuspendForPostUsersUnsuspendOutput = Types.IdentityUsersBulkUnsuspendUsersOutput;
 export const postUsersUnsuspendForPostUsersUnsuspendEndpoint = {
@@ -33390,7 +33390,7 @@ export const postUsersUnsuspendForPostUsersUnsuspendEndpoint = {
  * Updates multiple users with partial data.
  */
 export interface PostUsersUpdateInput {
-  body?: Types.IdentityUsersBulkUpdateUsersInput;
+  body: Types.IdentityUsersBulkUpdateUsersInput;
 }
 export type PostUsersUpdateOutput = void;
 export const postUsersUpdateEndpoint = {
@@ -33425,7 +33425,7 @@ export const getUsersForGetUsersByUserIdEndpoint = {
  */
 export interface PutUsersInput {
   userId: string;
-  body?: Types.IdentityUsersCreateUserInput;
+  body: Types.IdentityUsersCreateUserInput;
 }
 export type PutUsersOutput = Types.IdentityUsersUserDto;
 export const putUsersEndpoint = {
@@ -33460,7 +33460,7 @@ export const deleteUsersEndpoint = {
  */
 export interface PatchUsersInput {
   userId: string;
-  body?: Types.IdentityUsersUpdateUserInput;
+  body: Types.IdentityUsersUpdateUserInput;
 }
 export type PatchUsersOutput = Types.IdentityUsersUserDto;
 export const patchUsersEndpoint = {
@@ -33635,7 +33635,7 @@ export const getUsersMembershipsEndpoint = {
  */
 export interface PostUsersMembershipsInput {
   userId: string;
-  body?: Types.IdentityTenantsAddUserMembershipInput;
+  body: Types.IdentityTenantsAddUserMembershipInput;
 }
 export type PostUsersMembershipsOutput = Types.IdentityTenantsAddTenantMemberOutput;
 export const postUsersMembershipsEndpoint = {
@@ -33773,7 +33773,7 @@ export const postUsersMembershipsInviteResendEndpoint = {
 export interface PatchUsersMembershipsRoleInput {
   userId: string;
   tenantId: string;
-  body?: Types.IdentityTenantsUpdateUserMembershipRoleInput;
+  body: Types.IdentityTenantsUpdateUserMembershipRoleInput;
 }
 export type PatchUsersMembershipsRoleOutput = Types.IdentityTenantsUpdateTenantMemberRoleOutput;
 export const patchUsersMembershipsRoleEndpoint = {
@@ -33804,7 +33804,7 @@ export const getUsersMetadataEndpoint = {
  */
 export interface PutUsersMetadataInput {
   userId: string;
-  body?: Types.IdentityUsersReplaceUserMetadataInput;
+  body: Types.IdentityUsersReplaceUserMetadataInput;
 }
 export type PutUsersMetadataOutput = void;
 export const putUsersMetadataEndpoint = {
@@ -33820,7 +33820,7 @@ export const putUsersMetadataEndpoint = {
  */
 export interface PatchUsersMetadataInput {
   userId: string;
-  body?: Types.IdentityUsersUpdateUserMetadataInput;
+  body: Types.IdentityUsersUpdateUserMetadataInput;
 }
 export type PatchUsersMetadataOutput = void;
 export const patchUsersMetadataEndpoint = {
@@ -33864,7 +33864,7 @@ export const getUsersNotificationsForGetUsersByUserIdNotificationsEndpoint = {
  */
 export interface PostUsersNotificationsArchiveForPostUsersByUserIdNotificationsArchiveInput {
   userId: string;
-  body?: Types.IdentityUsersBulkNotificationInput;
+  body: Types.IdentityUsersBulkNotificationInput;
 }
 export type PostUsersNotificationsArchiveForPostUsersByUserIdNotificationsArchiveOutput = void;
 export const postUsersNotificationsArchiveForPostUsersByUserIdNotificationsArchiveEndpoint = {
@@ -33880,7 +33880,7 @@ export const postUsersNotificationsArchiveForPostUsersByUserIdNotificationsArchi
  */
 export interface PostUsersNotificationsMarkAsReadForPostUsersByUserIdNotificationsMarkAsReadInput {
   userId: string;
-  body?: Types.IdentityUsersBulkNotificationInput;
+  body: Types.IdentityUsersBulkNotificationInput;
 }
 export type PostUsersNotificationsMarkAsReadForPostUsersByUserIdNotificationsMarkAsReadOutput = void;
 export const postUsersNotificationsMarkAsReadForPostUsersByUserIdNotificationsMarkAsReadEndpoint = {
@@ -33896,7 +33896,7 @@ export const postUsersNotificationsMarkAsReadForPostUsersByUserIdNotificationsMa
  */
 export interface PostUsersNotificationsMarkAsUnreadForPostUsersByUserIdNotificationsMarkAsUnreadInput {
   userId: string;
-  body?: Types.IdentityUsersBulkNotificationInput;
+  body: Types.IdentityUsersBulkNotificationInput;
 }
 export type PostUsersNotificationsMarkAsUnreadForPostUsersByUserIdNotificationsMarkAsUnreadOutput = void;
 export const postUsersNotificationsMarkAsUnreadForPostUsersByUserIdNotificationsMarkAsUnreadEndpoint = {
@@ -33912,7 +33912,7 @@ export const postUsersNotificationsMarkAsUnreadForPostUsersByUserIdNotifications
  */
 export interface PostUsersNotificationsUnarchiveForPostUsersByUserIdNotificationsUnarchiveInput {
   userId: string;
-  body?: Types.IdentityUsersBulkNotificationInput;
+  body: Types.IdentityUsersBulkNotificationInput;
 }
 export type PostUsersNotificationsUnarchiveForPostUsersByUserIdNotificationsUnarchiveOutput = void;
 export const postUsersNotificationsUnarchiveForPostUsersByUserIdNotificationsUnarchiveEndpoint = {
@@ -34039,7 +34039,7 @@ export const getUsersPreferencesEndpoint = {
  */
 export interface PutUsersPreferencesInput {
   userId: string;
-  body?: Types.IdentityUsersReplaceUserPreferencesInput;
+  body: Types.IdentityUsersReplaceUserPreferencesInput;
 }
 export type PutUsersPreferencesOutput = void;
 export const putUsersPreferencesEndpoint = {
@@ -34055,7 +34055,7 @@ export const putUsersPreferencesEndpoint = {
  */
 export interface PatchUsersPreferencesInput {
   userId: string;
-  body?: Types.IdentityUsersUpdateUserPreferencesInput;
+  body: Types.IdentityUsersUpdateUserPreferencesInput;
 }
 export type PatchUsersPreferencesOutput = void;
 export const patchUsersPreferencesEndpoint = {
@@ -34101,7 +34101,7 @@ export const getUsersPreferencesAccessibilityEndpoint = {
  */
 export interface PutUsersPreferencesAccessibilityInput {
   userId: string;
-  body?: Types.IdentityUsersReplaceUserAccessibilityPreferencesInput;
+  body: Types.IdentityUsersReplaceUserAccessibilityPreferencesInput;
 }
 export type PutUsersPreferencesAccessibilityOutput = void;
 export const putUsersPreferencesAccessibilityEndpoint = {
@@ -34117,7 +34117,7 @@ export const putUsersPreferencesAccessibilityEndpoint = {
  */
 export interface PatchUsersPreferencesAccessibilityInput {
   userId: string;
-  body?: Types.IdentityUsersUpdateUserAccessibilityPreferencesInput;
+  body: Types.IdentityUsersUpdateUserAccessibilityPreferencesInput;
 }
 export type PatchUsersPreferencesAccessibilityOutput = void;
 export const patchUsersPreferencesAccessibilityEndpoint = {
@@ -34178,7 +34178,7 @@ export const getUsersPreferencesLocalizationEndpoint = {
  */
 export interface PutUsersPreferencesLocalizationInput {
   userId: string;
-  body?: Types.IdentityUsersReplaceUserLocalizationPreferencesInput;
+  body: Types.IdentityUsersReplaceUserLocalizationPreferencesInput;
 }
 export type PutUsersPreferencesLocalizationOutput = void;
 export const putUsersPreferencesLocalizationEndpoint = {
@@ -34194,7 +34194,7 @@ export const putUsersPreferencesLocalizationEndpoint = {
  */
 export interface PatchUsersPreferencesLocalizationInput {
   userId: string;
-  body?: Types.IdentityUsersUpdateUserLocalizationPreferencesInput;
+  body: Types.IdentityUsersUpdateUserLocalizationPreferencesInput;
 }
 export type PatchUsersPreferencesLocalizationOutput = void;
 export const patchUsersPreferencesLocalizationEndpoint = {
@@ -34255,7 +34255,7 @@ export const getUsersPreferencesNotificationsEndpoint = {
  */
 export interface PutUsersPreferencesNotificationsInput {
   userId: string;
-  body?: Types.IdentityUsersReplaceUserNotificationPreferencesInput;
+  body: Types.IdentityUsersReplaceUserNotificationPreferencesInput;
 }
 export type PutUsersPreferencesNotificationsOutput = void;
 export const putUsersPreferencesNotificationsEndpoint = {
@@ -34271,7 +34271,7 @@ export const putUsersPreferencesNotificationsEndpoint = {
  */
 export interface PatchUsersPreferencesNotificationsInput {
   userId: string;
-  body?: Types.IdentityUsersUpdateUserNotificationPreferencesInput;
+  body: Types.IdentityUsersUpdateUserNotificationPreferencesInput;
 }
 export type PatchUsersPreferencesNotificationsOutput = void;
 export const patchUsersPreferencesNotificationsEndpoint = {
@@ -34332,7 +34332,7 @@ export const getUsersPreferencesPrivacyEndpoint = {
  */
 export interface PutUsersPreferencesPrivacyInput {
   userId: string;
-  body?: Types.IdentityUsersReplaceUserPrivacyPreferencesInput;
+  body: Types.IdentityUsersReplaceUserPrivacyPreferencesInput;
 }
 export type PutUsersPreferencesPrivacyOutput = void;
 export const putUsersPreferencesPrivacyEndpoint = {
@@ -34348,7 +34348,7 @@ export const putUsersPreferencesPrivacyEndpoint = {
  */
 export interface PatchUsersPreferencesPrivacyInput {
   userId: string;
-  body?: Types.IdentityUsersUpdateUserPrivacyPreferencesInput;
+  body: Types.IdentityUsersUpdateUserPrivacyPreferencesInput;
 }
 export type PatchUsersPreferencesPrivacyOutput = void;
 export const patchUsersPreferencesPrivacyEndpoint = {
@@ -34409,7 +34409,7 @@ export const getUsersProfileEndpoint = {
  */
 export interface PutUsersProfileInput {
   userId: string;
-  body?: Types.IdentityUsersReplaceUserProfileInput;
+  body: Types.IdentityUsersReplaceUserProfileInput;
 }
 export type PutUsersProfileOutput = Types.IdentityUsersUserProfileDto;
 export const putUsersProfileEndpoint = {
@@ -34425,7 +34425,7 @@ export const putUsersProfileEndpoint = {
  */
 export interface PatchUsersProfileInput {
   userId: string;
-  body?: Types.IdentityUsersUpdateUserProfileInput;
+  body: Types.IdentityUsersUpdateUserProfileInput;
 }
 export type PatchUsersProfileOutput = Types.IdentityUsersUserProfileDto;
 export const patchUsersProfileEndpoint = {
@@ -34479,7 +34479,7 @@ export const getUsersQuotasForGetUsersByUserIdQuotasByTypeEndpoint = {
 export interface PutUsersQuotasInput {
   userId: string;
   type: Types.ResourcesResourceUsageType;
-  body?: Types.ResourcesSetQuotaInput;
+  body: Types.ResourcesSetQuotaInput;
 }
 export type PutUsersQuotasOutput = void;
 export const putUsersQuotasEndpoint = {
@@ -34516,7 +34516,7 @@ export const deleteUsersQuotasEndpoint = {
 export interface PostUsersQuotasCheckInput {
   userId: string;
   type: Types.ResourcesResourceUsageType;
-  body?: Types.ResourcesCheckResourceQuotaInput;
+  body: Types.ResourcesCheckResourceQuotaInput;
 }
 export type PostUsersQuotasCheckOutput = Types.ResourcesResourceQuotaEnforcementResult;
 export const postUsersQuotasCheckEndpoint = {
@@ -34553,7 +34553,7 @@ export const postUsersQuotasResetEndpoint = {
 export interface PostUsersQuotasToggleInput {
   userId: string;
   type: Types.ResourcesResourceUsageType;
-  body?: Types.ResourcesToggleResourceQuotaInput;
+  body: Types.ResourcesToggleResourceQuotaInput;
 }
 export type PostUsersQuotasToggleOutput = void;
 export const postUsersQuotasToggleEndpoint = {
@@ -34571,7 +34571,7 @@ export const postUsersQuotasToggleEndpoint = {
  */
 export interface PostUsersResourcesRecordInput {
   userId: string;
-  body?: Types.ResourcesRecordUserResourceUsageInput;
+  body: Types.ResourcesRecordUserResourceUsageInput;
 }
 export type PostUsersResourcesRecordOutput = void;
 export const postUsersResourcesRecordEndpoint = {
@@ -34589,7 +34589,7 @@ export const postUsersResourcesRecordEndpoint = {
  */
 export interface PostUsersResourcesRecordWithQuotaCheckInput {
   userId: string;
-  body?: Types.ResourcesRecordUserResourceUsageInput;
+  body: Types.ResourcesRecordUserResourceUsageInput;
 }
 export type PostUsersResourcesRecordWithQuotaCheckOutput = void;
 export const postUsersResourcesRecordWithQuotaCheckEndpoint = {
@@ -34714,7 +34714,7 @@ export const getUsersResourcesMetadataForGetUsersByUserIdResourcesMetadataByKeyE
 export interface PutUsersResourcesMetadataInput {
   userId: string;
   key: string;
-  body?: Types.ResourcesSetResourceMetadataInput;
+  body: Types.ResourcesSetResourceMetadataInput;
 }
 export type PutUsersResourcesMetadataOutput = Types.ResourcesResourceMetadata;
 export const putUsersResourcesMetadataEndpoint = {
@@ -34768,7 +34768,7 @@ export const getUsersResourcesSettingsForGetUsersByUserIdResourcesSettingsByKeyE
 export interface PutUsersResourcesSettingsInput {
   userId: string;
   key: string;
-  body?: Types.ResourcesSetUserResourceSettingsInput;
+  body: Types.ResourcesSetUserResourceSettingsInput;
 }
 export type PutUsersResourcesSettingsOutput = Types.ResourcesResourceSettings;
 export const putUsersResourcesSettingsEndpoint = {

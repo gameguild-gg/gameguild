@@ -18,11 +18,11 @@ export class FeaturesFlagsModule {
   /**
    * Evaluate a feature flag for runtime decisions
    */
-  async postFeaturesEvaluate(body?: Types.FeaturesFeatureEvaluationInput): Promise<Result<void, ApiError>> {
+  async postFeaturesEvaluate(body: Types.FeaturesFeatureEvaluationInput): Promise<Result<void, ApiError>> {
     const url = '/v1/features/:evaluate';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.FeaturesFeatureEvaluationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.FeaturesFeatureEvaluationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -37,11 +37,11 @@ export class FeaturesFlagsModule {
   /**
    * Bulk evaluate multiple feature flags for runtime decisions
    */
-  async postFeaturesEvaluateBulk(body?: Types.FeaturesBulkEvaluationInput): Promise<Result<void, ApiError>> {
+  async postFeaturesEvaluateBulk(body: Types.FeaturesBulkEvaluationInput): Promise<Result<void, ApiError>> {
     const url = '/v1/features/:evaluate-bulk';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.FeaturesBulkEvaluationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.FeaturesBulkEvaluationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

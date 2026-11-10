@@ -39,11 +39,11 @@ export class ApiTeamsModule {
 
   /**
    */
-  async postTeams(body?: Types.APITeamsCreateTeamInput): Promise<Result<Types.APITeamsTeamDto, ApiError>> {
+  async postTeams(body: Types.APITeamsCreateTeamInput): Promise<Result<Types.APITeamsTeamDto, ApiError>> {
     const url = '/v1/teams';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APITeamsCreateTeamInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APITeamsCreateTeamInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -83,11 +83,11 @@ export class ApiTeamsModule {
 
   /**
    */
-  async putTeams(teamId: string, body?: Types.APITeamsUpdateTeamInput): Promise<Result<Types.APITeamsTeamDto, ApiError>> {
+  async putTeams(teamId: string, body: Types.APITeamsUpdateTeamInput): Promise<Result<Types.APITeamsTeamDto, ApiError>> {
     const url = `/v1/teams/${teamId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APITeamsUpdateTeamInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APITeamsUpdateTeamInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -155,14 +155,11 @@ export class ApiTeamsModule {
 
   /**
    */
-  async postTeamsInvitations(
-    teamId: string,
-    body?: Types.APITeamsCreateTeamInvitationInput,
-  ): Promise<Result<Types.APITeamsTeamInvitationCreatedDto, ApiError>> {
+  async postTeamsInvitations(teamId: string, body: Types.APITeamsCreateTeamInvitationInput): Promise<Result<Types.APITeamsTeamInvitationCreatedDto, ApiError>> {
     const url = `/v1/teams/${teamId}/invitations`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APITeamsCreateTeamInvitationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APITeamsCreateTeamInvitationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -196,11 +193,11 @@ export class ApiTeamsModule {
 
   /**
    */
-  async postTeamsMembers(teamId: string, body?: Types.APITeamsAddTeamMemberInput): Promise<Result<Types.APITeamsTeamMemberDto, ApiError>> {
+  async postTeamsMembers(teamId: string, body: Types.APITeamsAddTeamMemberInput): Promise<Result<Types.APITeamsTeamMemberDto, ApiError>> {
     const url = `/v1/teams/${teamId}/members`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APITeamsAddTeamMemberInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APITeamsAddTeamMemberInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -220,11 +217,11 @@ export class ApiTeamsModule {
 
   /**
    */
-  async putTeamsMembers(teamId: string, userId: string, body?: Types.APITeamsChangeTeamMemberInput): Promise<Result<Types.APITeamsTeamMemberDto, ApiError>> {
+  async putTeamsMembers(teamId: string, userId: string, body: Types.APITeamsChangeTeamMemberInput): Promise<Result<Types.APITeamsTeamMemberDto, ApiError>> {
     const url = `/v1/teams/${teamId}/members/${userId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APITeamsChangeTeamMemberInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APITeamsChangeTeamMemberInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -279,12 +276,12 @@ export class ApiTeamsModule {
   /**
    */
   async postTeamsInvitationsAcceptForPostTeamsInvitationsAccept(
-    body?: Types.APITeamsAcceptTeamInvitationInput,
+    body: Types.APITeamsAcceptTeamInvitationInput,
   ): Promise<Result<Types.APITeamsTeamDto, ApiError>> {
     const url = '/v1/teams/invitations/accept';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APITeamsAcceptTeamInvitationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APITeamsAcceptTeamInvitationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

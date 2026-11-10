@@ -39,12 +39,12 @@ export class LearningExperienceSocialRepliesModule {
    */
   async postApiSocialDiscussionsReplies(
     discussionId: string,
-    body?: Types.LearningExperienceSocialServicesCreateReplyInput,
+    body: Types.LearningExperienceSocialServicesCreateReplyInput,
   ): Promise<Result<Types.LearningExperienceSocialServicesDiscussionReplyDto, ApiError>> {
     const url = `/api/social/discussions/${discussionId}/replies`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceSocialServicesCreateReplyInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningExperienceSocialServicesCreateReplyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

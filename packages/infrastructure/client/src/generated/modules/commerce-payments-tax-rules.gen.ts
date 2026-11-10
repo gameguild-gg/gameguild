@@ -40,11 +40,11 @@ export class CommercePaymentsTaxRulesModule {
    *
    * Creates a new tax rule with the provided information.
    */
-  async postTaxRules(body?: Types.CommercePaymentsCreateTaxRuleInput): Promise<Result<void, ApiError>> {
+  async postTaxRules(body: Types.CommercePaymentsCreateTaxRuleInput): Promise<Result<void, ApiError>> {
     const url = '/api/v1/tax-rules';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsCreateTaxRuleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsCreateTaxRuleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -101,11 +101,11 @@ export class CommercePaymentsTaxRulesModule {
    *
    * Updates specific fields of a tax rule.
    */
-  async patchTaxRules(ruleId: string, body?: Types.CommercePaymentsPatchTaxRuleInput): Promise<Result<void, ApiError>> {
+  async patchTaxRules(ruleId: string, body: Types.CommercePaymentsPatchTaxRuleInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/tax-rules/${ruleId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsPatchTaxRuleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsPatchTaxRuleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

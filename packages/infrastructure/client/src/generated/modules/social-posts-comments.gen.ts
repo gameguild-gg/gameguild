@@ -34,11 +34,11 @@ export class SocialPostsCommentsModule {
   /**
    * Add a comment to a post
    */
-  async postPostsComments(postId: string, body?: Types.SocialPostsControllersAddCommentInput): Promise<Result<void, ApiError>> {
+  async postPostsComments(postId: string, body: Types.SocialPostsControllersAddCommentInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/comments`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialPostsControllersAddCommentInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialPostsControllersAddCommentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -53,11 +53,11 @@ export class SocialPostsCommentsModule {
   /**
    * Update a comment
    */
-  async putPostsComments(postId: string, commentId: string, body?: Types.SocialPostsControllersUpdateCommentInput): Promise<Result<void, ApiError>> {
+  async putPostsComments(postId: string, commentId: string, body: Types.SocialPostsControllersUpdateCommentInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/comments/${commentId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialPostsControllersUpdateCommentInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialPostsControllersUpdateCommentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

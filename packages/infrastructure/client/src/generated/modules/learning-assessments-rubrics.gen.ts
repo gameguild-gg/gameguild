@@ -43,12 +43,12 @@ export class LearningAssessmentsRubricsModule {
    */
   async putAssessmentsRubric(
     assessmentId: string,
-    body?: Types.LearningAssessmentsSaveRubricInput,
+    body: Types.LearningAssessmentsSaveRubricInput,
   ): Promise<Result<Types.LearningAssessmentsRubricDto, ApiError>> {
     const url = `/v1/assessments/${assessmentId}/rubric`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsSaveRubricInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningAssessmentsSaveRubricInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

@@ -41,11 +41,11 @@ export class SocialGroupsSocialGroupsModule {
 
   /**
    */
-  async postApiSocialGroups(body?: Types.SocialGroupsCreateSocialGroupInput): Promise<Result<Types.SocialGroupsSocialGroupDto, ApiError>> {
+  async postApiSocialGroups(body: Types.SocialGroupsCreateSocialGroupInput): Promise<Result<Types.SocialGroupsSocialGroupDto, ApiError>> {
     const url = '/api/social/groups';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialGroupsCreateSocialGroupInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialGroupsCreateSocialGroupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -85,11 +85,11 @@ export class SocialGroupsSocialGroupsModule {
 
   /**
    */
-  async putApiSocialGroups(id: string, body?: Types.SocialGroupsUpdateSocialGroupInput): Promise<Result<Types.SocialGroupsSocialGroupDto, ApiError>> {
+  async putApiSocialGroups(id: string, body: Types.SocialGroupsUpdateSocialGroupInput): Promise<Result<Types.SocialGroupsSocialGroupDto, ApiError>> {
     const url = `/api/social/groups/${id}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialGroupsUpdateSocialGroupInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialGroupsUpdateSocialGroupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -157,12 +157,12 @@ export class SocialGroupsSocialGroupsModule {
    */
   async postApiSocialGroupsMembers(
     id: string,
-    body?: Types.SocialGroupsJoinSocialGroupInput,
+    body: Types.SocialGroupsJoinSocialGroupInput,
   ): Promise<Result<Types.SocialGroupsSocialGroupMemberDto, ApiError>> {
     const url = `/api/social/groups/${id}/members`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialGroupsJoinSocialGroupInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialGroupsJoinSocialGroupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -196,11 +196,11 @@ export class SocialGroupsSocialGroupsModule {
 
   /**
    */
-  async postApiSocialGroupsMembersApprove(id: string, userId: string, body?: Types.SocialGroupsApproveSocialGroupMemberInput): Promise<Result<void, ApiError>> {
+  async postApiSocialGroupsMembersApprove(id: string, userId: string, body: Types.SocialGroupsApproveSocialGroupMemberInput): Promise<Result<void, ApiError>> {
     const url = `/api/social/groups/${id}/members/${userId}/approve`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialGroupsApproveSocialGroupMemberInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialGroupsApproveSocialGroupMemberInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -228,11 +228,11 @@ export class SocialGroupsSocialGroupsModule {
 
   /**
    */
-  async putApiSocialGroupsMembersRole(id: string, userId: string, body?: Types.SocialGroupsChangeSocialGroupMemberRoleInput): Promise<Result<void, ApiError>> {
+  async putApiSocialGroupsMembersRole(id: string, userId: string, body: Types.SocialGroupsChangeSocialGroupMemberRoleInput): Promise<Result<void, ApiError>> {
     const url = `/api/social/groups/${id}/members/${userId}/role`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialGroupsChangeSocialGroupMemberRoleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialGroupsChangeSocialGroupMemberRoleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

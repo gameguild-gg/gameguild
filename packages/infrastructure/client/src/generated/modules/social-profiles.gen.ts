@@ -19,12 +19,12 @@ export class SocialProfilesModule {
    */
   async postApiSocialProfilesPortfolio(
     profileId: string,
-    body?: Types.SocialProfilesAddProfilePortfolioItemBody,
+    body: Types.SocialProfilesAddProfilePortfolioItemBody,
   ): Promise<Result<Types.SocialProfilesProfilePortfolioItemDto, ApiError>> {
     const url = `/api/social/profiles/${profileId}/portfolio`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialProfilesAddProfilePortfolioItemBodySchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialProfilesAddProfilePortfolioItemBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -46,12 +46,12 @@ export class SocialProfilesModule {
    */
   async postApiSocialProfilesSkills(
     profileId: string,
-    body?: Types.SocialProfilesAddProfileSkillBody,
+    body: Types.SocialProfilesAddProfileSkillBody,
   ): Promise<Result<Types.SocialProfilesProfileSkillDto, ApiError>> {
     const url = `/api/social/profiles/${profileId}/skills`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialProfilesAddProfileSkillBodySchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialProfilesAddProfileSkillBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -93,12 +93,12 @@ export class SocialProfilesModule {
    */
   async putApiSocialProfilesPortfolio(
     itemId: string,
-    body?: Types.SocialProfilesUpdateProfilePortfolioItemBody,
+    body: Types.SocialProfilesUpdateProfilePortfolioItemBody,
   ): Promise<Result<Types.SocialProfilesProfilePortfolioItemDto, ApiError>> {
     const url = `/api/social/profiles/portfolio/${itemId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialProfilesUpdateProfilePortfolioItemBodySchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialProfilesUpdateProfilePortfolioItemBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -183,12 +183,12 @@ export class SocialProfilesModule {
    */
   async putApiSocialProfilesUsers(
     userId: string,
-    body?: Types.SocialProfilesUpdateSocialProfileBody,
+    body: Types.SocialProfilesUpdateSocialProfileBody,
   ): Promise<Result<Types.SocialProfilesSocialProfileDto, ApiError>> {
     const url = `/api/social/profiles/users/${userId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialProfilesUpdateSocialProfileBodySchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialProfilesUpdateSocialProfileBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -230,12 +230,12 @@ export class SocialProfilesModule {
    */
   async putApiSocialProfilesUsersPrivacy(
     userId: string,
-    body?: Types.SocialProfilesUpdateProfilePrivacyBody,
+    body: Types.SocialProfilesUpdateProfilePrivacyBody,
   ): Promise<Result<Types.SocialProfilesSocialProfileDto, ApiError>> {
     const url = `/api/social/profiles/users/${userId}/privacy`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialProfilesUpdateProfilePrivacyBodySchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialProfilesUpdateProfilePrivacyBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

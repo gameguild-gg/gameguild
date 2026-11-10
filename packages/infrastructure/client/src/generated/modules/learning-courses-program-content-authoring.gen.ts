@@ -40,12 +40,12 @@ export class LearningCoursesProgramContentAuthoringModule {
   async putCoursesContentAuthoring(
     programId: string,
     contentId: string,
-    body?: Types.LearningCoursesSaveAuthoringDraftInput,
+    body: Types.LearningCoursesSaveAuthoringDraftInput,
   ): Promise<Result<Types.LearningCoursesAuthoringDraftDto, ApiError>> {
     const url = `/v1/courses/${programId}/content/${contentId}/authoring`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesSaveAuthoringDraftInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCoursesSaveAuthoringDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -130,12 +130,12 @@ export class LearningCoursesProgramContentAuthoringModule {
     programId: string,
     contentId: string,
     proposalId: string,
-    body?: Types.LearningCoursesApplyAiProposalInput,
+    body: Types.LearningCoursesApplyAiProposalInput,
   ): Promise<Result<Types.LearningCoursesAuthoringDraftDto, ApiError>> {
     const url = `/v1/courses/${programId}/content/${contentId}/authoring/ai/proposals/${proposalId}/apply`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesApplyAiProposalInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCoursesApplyAiProposalInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -158,12 +158,12 @@ export class LearningCoursesProgramContentAuthoringModule {
   async postCoursesContentAuthoringAiRuns(
     programId: string,
     contentId: string,
-    body?: Types.LearningCoursesAiAuthoringRunInput,
+    body: Types.LearningCoursesAiAuthoringRunInput,
   ): Promise<Result<Types.LearningCoursesAiAuthoringRunDto, ApiError>> {
     const url = `/v1/courses/${programId}/content/${contentId}/authoring/ai/runs`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesAiAuthoringRunInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCoursesAiAuthoringRunInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -248,12 +248,12 @@ export class LearningCoursesProgramContentAuthoringModule {
   async postCoursesContentAuthoringPublish(
     programId: string,
     contentId: string,
-    body?: Types.LearningCoursesPublishAuthoringDraftInput,
+    body: Types.LearningCoursesPublishAuthoringDraftInput,
   ): Promise<Result<Types.LearningCoursesPublishAuthoringResult, ApiError>> {
     const url = `/v1/courses/${programId}/content/${contentId}/authoring/publish`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesPublishAuthoringDraftInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCoursesPublishAuthoringDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -150,12 +150,12 @@ export class FinanceLedgersFinanceLedgersModule {
    */
   async postLedgersEntries(
     ledgerId: string,
-    body?: Types.FinanceLedgersControllersPostEntryInput,
+    body: Types.FinanceLedgersControllersPostEntryInput,
   ): Promise<Result<Types.FinanceLedgersModelsLedgerEntryDto, ApiError>> {
     const url = `/api/v1/ledgers/${ledgerId}/entries`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceLedgersControllersPostEntryInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.FinanceLedgersControllersPostEntryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -282,12 +282,12 @@ export class FinanceLedgersFinanceLedgersModule {
    */
   async postLedgersChildren(
     parentLedgerId: string,
-    body?: Types.FinanceLedgersControllersCreateChildLedgerInput,
+    body: Types.FinanceLedgersControllersCreateChildLedgerInput,
   ): Promise<Result<Types.FinanceLedgersModelsLedgerDto, ApiError>> {
     const url = `/api/v1/ledgers/${parentLedgerId}/children`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceLedgersControllersCreateChildLedgerInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.FinanceLedgersControllersCreateChildLedgerInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -367,12 +367,12 @@ export class FinanceLedgersFinanceLedgersModule {
    */
   async patchLedgersEntries(
     entryId: string,
-    body?: Types.FinanceLedgersControllersUpdateEntryInput,
+    body: Types.FinanceLedgersControllersUpdateEntryInput,
   ): Promise<Result<Types.FinanceLedgersModelsLedgerEntryDto, ApiError>> {
     const url = `/api/v1/ledgers/entries/${entryId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceLedgersControllersUpdateEntryInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.FinanceLedgersControllersUpdateEntryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -395,12 +395,12 @@ export class FinanceLedgersFinanceLedgersModule {
    */
   async postLedgersEntriesReverse(
     entryId: string,
-    body?: Types.FinanceLedgersControllersReverseEntryInput,
+    body: Types.FinanceLedgersControllersReverseEntryInput,
   ): Promise<Result<Types.FinanceLedgersModelsLedgerEntryDto, ApiError>> {
     const url = `/api/v1/ledgers/entries/${entryId}/reverse`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceLedgersControllersReverseEntryInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.FinanceLedgersControllersReverseEntryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -421,11 +421,11 @@ export class FinanceLedgersFinanceLedgersModule {
   /**
    * Creates a new root ledger.
    */
-  async postLedgersRoot(body?: Types.FinanceLedgersControllersCreateRootLedgerInput): Promise<Result<Types.FinanceLedgersModelsLedgerDto, ApiError>> {
+  async postLedgersRoot(body: Types.FinanceLedgersControllersCreateRootLedgerInput): Promise<Result<Types.FinanceLedgersModelsLedgerDto, ApiError>> {
     const url = '/api/v1/ledgers/root';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceLedgersControllersCreateRootLedgerInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.FinanceLedgersControllersCreateRootLedgerInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -495,11 +495,11 @@ export class FinanceLedgersFinanceLedgersModule {
   /**
    * Posts a transfer between two ledgers.
    */
-  async postLedgersTransfers(body?: Types.FinanceLedgersControllersPostTransferInput): Promise<Result<Types.FinanceLedgersModelsTransferResult, ApiError>> {
+  async postLedgersTransfers(body: Types.FinanceLedgersControllersPostTransferInput): Promise<Result<Types.FinanceLedgersModelsTransferResult, ApiError>> {
     const url = '/api/v1/ledgers/transfers';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceLedgersControllersPostTransferInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.FinanceLedgersControllersPostTransferInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

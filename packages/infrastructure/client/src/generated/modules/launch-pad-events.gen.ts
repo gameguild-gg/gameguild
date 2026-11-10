@@ -17,11 +17,11 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async postLaunchPadEvents(body?: Types.LaunchPadCreateLaunchPadEventInput): Promise<Result<Types.LaunchPadLaunchPadEventProjection, ApiError>> {
+  async postLaunchPadEvents(body: Types.LaunchPadCreateLaunchPadEventInput): Promise<Result<Types.LaunchPadLaunchPadEventProjection, ApiError>> {
     const url = '/v1/launch-pad/events';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LaunchPadCreateLaunchPadEventInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LaunchPadCreateLaunchPadEventInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -43,12 +43,12 @@ export class LaunchPadEventsModule {
    */
   async postLaunchPadEventsApplications(
     eventId: string,
-    body?: Types.LaunchPadSubmitLaunchPadApplicationInput,
+    body: Types.LaunchPadSubmitLaunchPadApplicationInput,
   ): Promise<Result<Types.LaunchPadLaunchPadApplicationProjection, ApiError>> {
     const url = `/v1/launch-pad/events/${eventId}/applications`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LaunchPadSubmitLaunchPadApplicationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LaunchPadSubmitLaunchPadApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -98,12 +98,12 @@ export class LaunchPadEventsModule {
    */
   async postLaunchPadEventsSlots(
     eventId: string,
-    body?: Types.LaunchPadCreateLaunchPadSlotInput,
+    body: Types.LaunchPadCreateLaunchPadSlotInput,
   ): Promise<Result<Types.LaunchPadLaunchPadSlotProjection, ApiError>> {
     const url = `/v1/launch-pad/events/${eventId}/slots`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LaunchPadCreateLaunchPadSlotInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LaunchPadCreateLaunchPadSlotInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -123,11 +123,11 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async putLaunchPadEvents(id: string, body?: Types.LaunchPadUpdateLaunchPadEventInput): Promise<Result<Types.LaunchPadLaunchPadEventProjection, ApiError>> {
+  async putLaunchPadEvents(id: string, body: Types.LaunchPadUpdateLaunchPadEventInput): Promise<Result<Types.LaunchPadLaunchPadEventProjection, ApiError>> {
     const url = `/v1/launch-pad/events/${id}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LaunchPadUpdateLaunchPadEventInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LaunchPadUpdateLaunchPadEventInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -149,12 +149,12 @@ export class LaunchPadEventsModule {
    */
   async postLaunchPadEventsTransition(
     id: string,
-    body?: Types.LaunchPadTransitionLaunchPadEventInput,
+    body: Types.LaunchPadTransitionLaunchPadEventInput,
   ): Promise<Result<Types.LaunchPadLaunchPadEventProjection, ApiError>> {
     const url = `/v1/launch-pad/events/${id}:transition`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LaunchPadTransitionLaunchPadEventInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LaunchPadTransitionLaunchPadEventInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -216,12 +216,12 @@ export class LaunchPadEventsModule {
    */
   async putLaunchPadEventsApplications(
     applicationId: string,
-    body?: Types.LaunchPadUpdateLaunchPadApplicationInput,
+    body: Types.LaunchPadUpdateLaunchPadApplicationInput,
   ): Promise<Result<Types.LaunchPadLaunchPadApplicationProjection, ApiError>> {
     const url = `/v1/launch-pad/events/applications/${applicationId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LaunchPadUpdateLaunchPadApplicationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LaunchPadUpdateLaunchPadApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -243,12 +243,12 @@ export class LaunchPadEventsModule {
    */
   async postLaunchPadEventsApplicationsReview(
     applicationId: string,
-    body?: Types.LaunchPadReviewLaunchPadApplicationInput,
+    body: Types.LaunchPadReviewLaunchPadApplicationInput,
   ): Promise<Result<Types.LaunchPadLaunchPadApplicationProjection, ApiError>> {
     const url = `/v1/launch-pad/events/applications/${applicationId}:review`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LaunchPadReviewLaunchPadApplicationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LaunchPadReviewLaunchPadApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -372,12 +372,12 @@ export class LaunchPadEventsModule {
    */
   async postLaunchPadEventsRegistrationsTransition(
     registrationId: string,
-    body?: Types.LaunchPadTransitionLaunchPadRegistrationInput,
+    body: Types.LaunchPadTransitionLaunchPadRegistrationInput,
   ): Promise<Result<Types.LaunchPadLaunchPadRegistrationProjection, ApiError>> {
     const url = `/v1/launch-pad/events/registrations/${registrationId}:transition`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LaunchPadTransitionLaunchPadRegistrationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LaunchPadTransitionLaunchPadRegistrationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -413,12 +413,12 @@ export class LaunchPadEventsModule {
    */
   async putLaunchPadEventsSlots(
     slotId: string,
-    body?: Types.LaunchPadCreateLaunchPadSlotInput,
+    body: Types.LaunchPadCreateLaunchPadSlotInput,
   ): Promise<Result<Types.LaunchPadLaunchPadSlotProjection, ApiError>> {
     const url = `/v1/launch-pad/events/slots/${slotId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LaunchPadCreateLaunchPadSlotInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LaunchPadCreateLaunchPadSlotInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

@@ -44,12 +44,12 @@ export class CommercePaymentsPriceLocalizationModule {
   async postPriceLocalizationPlansCurrencies(
     planId: string,
     currencyCode: string,
-    body?: Types.CommercePaymentsSetLocalizedPriceInput,
+    body: Types.CommercePaymentsSetLocalizedPriceInput,
   ): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = `/api/v1/price-localization/plans/${planId}/currencies/${currencyCode}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsSetLocalizedPriceInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsSetLocalizedPriceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

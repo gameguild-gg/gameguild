@@ -35,11 +35,11 @@ export class AiPromptTemplatesModule {
 
   /**
    */
-  async postAiPromptTemplates(body?: Types.AICreateAiPromptTemplateInput): Promise<Result<Types.AIAiPromptTemplateDto, ApiError>> {
+  async postAiPromptTemplates(body: Types.AICreateAiPromptTemplateInput): Promise<Result<Types.AIAiPromptTemplateDto, ApiError>> {
     const url = '/v1/ai/prompt-templates';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.AICreateAiPromptTemplateInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.AICreateAiPromptTemplateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -79,11 +79,11 @@ export class AiPromptTemplatesModule {
 
   /**
    */
-  async putAiPromptTemplates(id: string, body?: Types.AIUpdateAiPromptTemplateInput): Promise<Result<Types.AIAiPromptTemplateDto, ApiError>> {
+  async putAiPromptTemplates(id: string, body: Types.AIUpdateAiPromptTemplateInput): Promise<Result<Types.AIAiPromptTemplateDto, ApiError>> {
     const url = `/v1/ai/prompt-templates/${id}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.AIUpdateAiPromptTemplateInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.AIUpdateAiPromptTemplateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -117,11 +117,11 @@ export class AiPromptTemplatesModule {
 
   /**
    */
-  async postAiPromptTemplatesGenerate(id: string, body?: Types.AIAiPromptTemplateGenerateInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+  async postAiPromptTemplatesGenerate(id: string, body: Types.AIAiPromptTemplateGenerateInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = `/v1/ai/prompt-templates/${id}/generate`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.AIAiPromptTemplateGenerateInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.AIAiPromptTemplateGenerateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -141,11 +141,11 @@ export class AiPromptTemplatesModule {
 
   /**
    */
-  async postAiPromptTemplatesRender(id: string, body?: Types.AIAiPromptTemplateRenderInput): Promise<Result<Types.AIAiPromptTemplateRenderOutput, ApiError>> {
+  async postAiPromptTemplatesRender(id: string, body: Types.AIAiPromptTemplateRenderInput): Promise<Result<Types.AIAiPromptTemplateRenderOutput, ApiError>> {
     const url = `/v1/ai/prompt-templates/${id}/render`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.AIAiPromptTemplateRenderInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.AIAiPromptTemplateRenderInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

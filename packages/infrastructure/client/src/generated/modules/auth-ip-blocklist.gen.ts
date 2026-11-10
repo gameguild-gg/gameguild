@@ -37,11 +37,11 @@ export class AuthIpBlocklistModule {
    *
    * Stores a known-attacker IP address in the shared blocklist. Omit expiresAt to apply the configured default entry lifetime.
    */
-  async putAuthIpBlocklist(body?: Types.IdentityAuthenticationIpBlocklistEntryInput): Promise<Result<void, ApiError>> {
+  async putAuthIpBlocklist(body: Types.IdentityAuthenticationIpBlocklistEntryInput): Promise<Result<void, ApiError>> {
     const url = '/v1/auth/ip-blocklist';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationIpBlocklistEntryInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthenticationIpBlocklistEntryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

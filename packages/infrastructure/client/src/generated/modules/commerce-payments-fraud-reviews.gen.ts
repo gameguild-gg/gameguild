@@ -135,13 +135,12 @@ export class CommercePaymentsFraudReviewsModule {
    * Approves the pending fraud reviews for a batch of held payments (2-100), releasing each fraud hold so the payment can be retried. Items that are not pending reviews are skipped with a reason. Requires the payments:admin permission.
    */
   async postFraudReviewsBulkApprove(
-    body?: Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInput,
+    body: Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInput,
   ): Promise<Result<Types.CommercePaymentsFraudReviewsBulkResolutionResult, ApiError>> {
     const url = '/api/v1/fraud/reviews/bulk-approve';
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -165,13 +164,12 @@ export class CommercePaymentsFraudReviewsModule {
    * Declines the pending fraud reviews for a batch of held payments (2-100); each stays failed and is never retried. Items that are not pending reviews are skipped with a reason. Requires the payments:admin permission.
    */
   async postFraudReviewsBulkDeny(
-    body?: Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInput,
+    body: Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInput,
   ): Promise<Result<Types.CommercePaymentsFraudReviewsBulkResolutionResult, ApiError>> {
     const url = '/api/v1/fraud/reviews/bulk-deny';
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewsBulkInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

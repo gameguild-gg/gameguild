@@ -120,13 +120,12 @@ export class CommerceBillingWebhooksModule {
    * authenticated actor, and the decision is audited.
    */
   async postBillingWebhooksSecretsRotate(
-    body?: Types.CommerceBillingBillingWebhooksControllerRotateWebhookSecretInput,
+    body: Types.CommerceBillingBillingWebhooksControllerRotateWebhookSecretInput,
   ): Promise<Result<Types.CommerceBillingWebhookSecretRotationResult, ApiError>> {
     const url = '/api/v1/billing/webhooks/secrets:rotate';
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommerceBillingBillingWebhooksControllerRotateWebhookSecretInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceBillingBillingWebhooksControllerRotateWebhookSecretInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

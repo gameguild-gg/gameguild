@@ -34,11 +34,11 @@ export class CommerceProductsEntitlementsModule {
   /**
    * Grant entitlement to a user (create)
    */
-  async postEntitlements(body?: Types.CommerceProductsGrantEntitlementInput): Promise<Result<Types.CommerceProductsEntitlementInfoDto, ApiError>> {
+  async postEntitlements(body: Types.CommerceProductsGrantEntitlementInput): Promise<Result<Types.CommerceProductsEntitlementInfoDto, ApiError>> {
     const url = '/v1/entitlements';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsGrantEntitlementInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsGrantEntitlementInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -81,11 +81,11 @@ export class CommerceProductsEntitlementsModule {
   /**
    * Check if current user has access to multiple products
    */
-  async postEntitlementsCheckBatch(body?: Types.CommerceProductsCheckMultipleAccessInput): Promise<Result<Record<string, boolean>, ApiError>> {
+  async postEntitlementsCheckBatch(body: Types.CommerceProductsCheckMultipleAccessInput): Promise<Result<Record<string, boolean>, ApiError>> {
     const url = '/v1/entitlements/:check-batch';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsCheckMultipleAccessInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsCheckMultipleAccessInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -100,11 +100,11 @@ export class CommerceProductsEntitlementsModule {
   /**
    * Revoke an entitlement (admin only)
    */
-  async postEntitlementsRevoke(entitlementId: string, body?: Types.CommerceProductsRevokeEntitlementInput): Promise<Result<void, ApiError>> {
+  async postEntitlementsRevoke(entitlementId: string, body: Types.CommerceProductsRevokeEntitlementInput): Promise<Result<void, ApiError>> {
     const url = `/v1/entitlements/${entitlementId}:revoke`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsRevokeEntitlementInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsRevokeEntitlementInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

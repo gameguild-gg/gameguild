@@ -44,11 +44,11 @@ export class CommerceSubscriptionsClientsModule {
    *
    * Creates a client account using the canonical tenant creation workflow.
    */
-  async postClients(body?: Types.CommerceSubscriptionsCreateClientInput): Promise<Result<void, ApiError>> {
+  async postClients(body: Types.CommerceSubscriptionsCreateClientInput): Promise<Result<void, ApiError>> {
     const url = '/v1/clients';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceSubscriptionsCreateClientInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceSubscriptionsCreateClientInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -84,11 +84,11 @@ export class CommerceSubscriptionsClientsModule {
   /**
    * Update a B2B client account
    */
-  async putClients(clientId: string, body?: Types.IdentityTenantsUpdateTenantInput): Promise<Result<void, ApiError>> {
+  async putClients(clientId: string, body: Types.IdentityTenantsUpdateTenantInput): Promise<Result<void, ApiError>> {
     const url = `/v1/clients/${clientId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateTenantInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -103,11 +103,11 @@ export class CommerceSubscriptionsClientsModule {
   /**
    * Archive a B2B client account
    */
-  async deleteClients(clientId: string, body?: Types.IdentityTenantsArchiveInput): Promise<Result<void, ApiError>> {
+  async deleteClients(clientId: string, body: Types.IdentityTenantsArchiveInput): Promise<Result<void, ApiError>> {
     const url = `/v1/clients/${clientId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsArchiveInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsArchiveInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'DELETE',
@@ -149,11 +149,11 @@ export class CommerceSubscriptionsClientsModule {
   /**
    * Update contracted module toggles for a B2B client
    */
-  async putClientsModules(clientId: string, body?: Types.IdentityTenantsUpdateTenantFeatureFlagsInput): Promise<Result<void, ApiError>> {
+  async putClientsModules(clientId: string, body: Types.IdentityTenantsUpdateTenantFeatureFlagsInput): Promise<Result<void, ApiError>> {
     const url = `/v1/clients/${clientId}/modules`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateTenantFeatureFlagsInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantFeatureFlagsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -168,11 +168,11 @@ export class CommerceSubscriptionsClientsModule {
   /**
    * Update contracted module toggles for a B2B client
    */
-  async patchClientsModules(clientId: string, body?: Types.IdentityTenantsUpdateTenantFeatureFlagsInput): Promise<Result<void, ApiError>> {
+  async patchClientsModules(clientId: string, body: Types.IdentityTenantsUpdateTenantFeatureFlagsInput): Promise<Result<void, ApiError>> {
     const url = `/v1/clients/${clientId}/modules`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateTenantFeatureFlagsInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantFeatureFlagsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

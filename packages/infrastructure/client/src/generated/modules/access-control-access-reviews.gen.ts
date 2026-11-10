@@ -19,13 +19,12 @@ export class AccessControlAccessReviewsModule {
    * Create a new access review campaign
    */
   async postAccessReviewsCampaigns(
-    body?: Types.IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand,
+    body: Types.IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand,
   ): Promise<Result<Types.IdentityAuthorizationAccessReviewCampaign, ApiError>> {
     const url = '/v1/access-reviews/campaigns';
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.IdentityAuthorizationCommandsCreateAccessReviewCampaignCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationCommandsCreateAccessReviewCampaignCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -97,11 +96,11 @@ export class AccessControlAccessReviewsModule {
   /**
    * Complete a campaign
    */
-  async postAccessReviewsCampaignsComplete(id: string, body?: Types.IdentityAuthorizationControllersCompleteCampaignInput): Promise<Result<void, ApiError>> {
+  async postAccessReviewsCampaignsComplete(id: string, body: Types.IdentityAuthorizationControllersCompleteCampaignInput): Promise<Result<void, ApiError>> {
     const url = `/v1/access-reviews/campaigns/${id}:complete`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationControllersCompleteCampaignInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationControllersCompleteCampaignInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -192,12 +191,12 @@ export class AccessControlAccessReviewsModule {
    */
   async postAccessReviewsItemsRevoke(
     id: string,
-    body?: Types.IdentityAuthorizationControllersRevokeItemInput,
+    body: Types.IdentityAuthorizationControllersRevokeItemInput,
   ): Promise<Result<Types.IdentityAuthorizationAccessReviewItem, ApiError>> {
     const url = `/v1/access-reviews/items/${id}:revoke`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationControllersRevokeItemInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationControllersRevokeItemInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

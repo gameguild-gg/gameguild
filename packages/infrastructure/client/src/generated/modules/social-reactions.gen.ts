@@ -17,11 +17,11 @@ export class SocialReactionsModule {
 
   /**
    */
-  async putApiSocialReactions(body?: Types.SocialReactionsSetReactionInput): Promise<Result<Types.SocialReactionsReactionDto, ApiError>> {
+  async putApiSocialReactions(body: Types.SocialReactionsSetReactionInput): Promise<Result<Types.SocialReactionsReactionDto, ApiError>> {
     const url = '/api/social/reactions';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialReactionsSetReactionInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialReactionsSetReactionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -41,11 +41,11 @@ export class SocialReactionsModule {
 
   /**
    */
-  async deleteApiSocialReactions(body?: Types.SocialReactionsRemoveReactionInput): Promise<Result<void, ApiError>> {
+  async deleteApiSocialReactions(body: Types.SocialReactionsRemoveReactionInput): Promise<Result<void, ApiError>> {
     const url = '/api/social/reactions';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialReactionsRemoveReactionInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialReactionsRemoveReactionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'DELETE',

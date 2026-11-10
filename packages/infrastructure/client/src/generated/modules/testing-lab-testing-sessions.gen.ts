@@ -62,11 +62,11 @@ export class TestingLabTestingSessionsModule {
 
   /**
    */
-  async postTestingSessions(body?: Types.TestingLabCreateTestingSessionDto): Promise<Result<Types.TestingLabTestingSession, ApiError>> {
+  async postTestingSessions(body: Types.TestingLabCreateTestingSessionDto): Promise<Result<Types.TestingLabTestingSession, ApiError>> {
     const url = '/v1/testing/sessions';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabCreateTestingSessionDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabCreateTestingSessionDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -106,11 +106,11 @@ export class TestingLabTestingSessionsModule {
 
   /**
    */
-  async putTestingSessions(id: string, body?: Types.TestingLabTestingSession): Promise<Result<Types.TestingLabTestingSession, ApiError>> {
+  async putTestingSessions(id: string, body: Types.TestingLabTestingSession): Promise<Result<Types.TestingLabTestingSession, ApiError>> {
     const url = `/v1/testing/sessions/${id}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabTestingSessionSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabTestingSessionSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -178,11 +178,11 @@ export class TestingLabTestingSessionsModule {
 
   /**
    */
-  async postTestingSessionsAttendance(sessionId: string, body?: Types.TestingLabUpdateAttendanceDto): Promise<Result<void, ApiError>> {
+  async postTestingSessionsAttendance(sessionId: string, body: Types.TestingLabUpdateAttendanceDto): Promise<Result<void, ApiError>> {
     const url = `/v1/testing/sessions/${sessionId}/attendance`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabUpdateAttendanceDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabUpdateAttendanceDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -216,12 +216,12 @@ export class TestingLabTestingSessionsModule {
    */
   async postTestingSessionsProjects(
     sessionId: string,
-    body?: Types.TestingLabLinkSessionProjectInput,
+    body: Types.TestingLabLinkSessionProjectInput,
   ): Promise<Result<Types.TestingLabSessionProjectProjection, ApiError>> {
     const url = `/v1/testing/sessions/${sessionId}/projects`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabLinkSessionProjectInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabLinkSessionProjectInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

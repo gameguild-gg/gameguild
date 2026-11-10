@@ -18,12 +18,12 @@ export class ComplianceConsentModule {
   /**
    */
   async postApiComplianceConsentDataSubjectRequests(
-    body?: Types.ComplianceConsentSubmitDataSubjectRequestCommand,
+    body: Types.ComplianceConsentSubmitDataSubjectRequestCommand,
   ): Promise<Result<Types.ComplianceConsentDataSubjectRequestDto, ApiError>> {
     const url = '/api/compliance/consent/data-subject-requests';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceConsentSubmitDataSubjectRequestCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceConsentSubmitDataSubjectRequestCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -45,12 +45,12 @@ export class ComplianceConsentModule {
    */
   async postApiComplianceConsentDataSubjectRequestsProcess(
     requestId: string,
-    body?: Types.ComplianceConsentProcessRequestBody,
+    body: Types.ComplianceConsentProcessRequestBody,
   ): Promise<Result<Types.ComplianceConsentDataSubjectRequestDto, ApiError>> {
     const url = `/api/compliance/consent/data-subject-requests/${requestId}/process`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceConsentProcessRequestBodySchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceConsentProcessRequestBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -84,11 +84,11 @@ export class ComplianceConsentModule {
 
   /**
    */
-  async postApiComplianceConsentGrant(body?: Types.ComplianceConsentGrantConsentCommand): Promise<Result<Types.ComplianceConsentUserConsentDto, ApiError>> {
+  async postApiComplianceConsentGrant(body: Types.ComplianceConsentGrantConsentCommand): Promise<Result<Types.ComplianceConsentUserConsentDto, ApiError>> {
     const url = '/api/compliance/consent/grant';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceConsentGrantConsentCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceConsentGrantConsentCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -123,11 +123,11 @@ export class ComplianceConsentModule {
 
   /**
    */
-  async postApiComplianceConsentPolicies(body?: Types.ComplianceConsentCreateConsentPolicyCommand): Promise<Result<string, ApiError>> {
+  async postApiComplianceConsentPolicies(body: Types.ComplianceConsentCreateConsentPolicyCommand): Promise<Result<string, ApiError>> {
     const url = '/api/compliance/consent/policies';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceConsentCreateConsentPolicyCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceConsentCreateConsentPolicyCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -143,12 +143,12 @@ export class ComplianceConsentModule {
    */
   async postApiComplianceConsentPoliciesVersions(
     policyId: string,
-    body?: Types.ComplianceConsentPublishVersionInput,
+    body: Types.ComplianceConsentPublishVersionInput,
   ): Promise<Result<Types.ComplianceConsentPolicyVersionDto, ApiError>> {
     const url = `/api/compliance/consent/policies/${policyId}/versions`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceConsentPublishVersionInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceConsentPublishVersionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -168,11 +168,11 @@ export class ComplianceConsentModule {
 
   /**
    */
-  async postApiComplianceConsentRevoke(body?: Types.ComplianceConsentRevokeConsentCommand): Promise<Result<void, ApiError>> {
+  async postApiComplianceConsentRevoke(body: Types.ComplianceConsentRevokeConsentCommand): Promise<Result<void, ApiError>> {
     const url = '/api/compliance/consent/revoke';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceConsentRevokeConsentCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceConsentRevokeConsentCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -187,13 +187,12 @@ export class ComplianceConsentModule {
   /**
    */
   async postApiComplianceConsentUserConsent(
-    body?: Types.APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput,
+    body: Types.APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput,
   ): Promise<Result<Types.APICoreComplianceRecordUserConsentEndpointCommandResult, ApiError>> {
     const url = '/api/compliance/consent/user-consent';
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

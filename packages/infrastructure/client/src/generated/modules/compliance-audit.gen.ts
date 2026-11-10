@@ -18,11 +18,11 @@ export class ComplianceAuditModule {
   /**
    * Export audit logs (admin only)
    */
-  async postApiAuditExportCsv(body?: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
+  async postApiAuditExportCsv(body: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
     const url = '/api/audit/export/csv';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -39,11 +39,11 @@ export class ComplianceAuditModule {
   /**
    * Streams a versioned JSON audit export with pagination metadata.
    */
-  async postApiAuditExportJson(body?: Types.ComplianceAuditAuditExportInput): Promise<Result<Types.ComplianceAuditAuditJsonExportDocument, ApiError>> {
+  async postApiAuditExportJson(body: Types.ComplianceAuditAuditExportInput): Promise<Result<Types.ComplianceAuditAuditJsonExportDocument, ApiError>> {
     const url = '/api/audit/export/json';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -64,11 +64,11 @@ export class ComplianceAuditModule {
   /**
    * Streams a versioned XML audit export with pagination metadata.
    */
-  async postApiAuditExportXml(body?: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
+  async postApiAuditExportXml(body: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
     const url = '/api/audit/export/xml';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -85,11 +85,11 @@ export class ComplianceAuditModule {
   /**
    * Searches audit events using a nested condition tree with boolean logic.
    */
-  async postApiAuditSearchFilter(body?: Types.ComplianceAuditAuditConditionSearchInput): Promise<Result<Types.ComplianceAuditAuditLogOutput, ApiError>> {
+  async postApiAuditSearchFilter(body: Types.ComplianceAuditAuditConditionSearchInput): Promise<Result<Types.ComplianceAuditAuditLogOutput, ApiError>> {
     const url = '/api/audit/search-filter';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditConditionSearchInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditAuditConditionSearchInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -146,11 +146,11 @@ export class ComplianceAuditModule {
   /**
    * Export audit logs (admin only)
    */
-  async postAdminAuditLogsExport(body?: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
+  async postAdminAuditLogsExport(body: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
     const url = '/v1/admin/audit-logs/:export';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -188,11 +188,11 @@ export class ComplianceAuditModule {
   /**
    * Export audit logs (admin only)
    */
-  async postAdminAuditLogsExportCsv(body?: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
+  async postAdminAuditLogsExportCsv(body: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
     const url = '/v1/admin/audit-logs/export/csv';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -209,11 +209,11 @@ export class ComplianceAuditModule {
   /**
    * Streams a versioned JSON audit export with pagination metadata.
    */
-  async postAdminAuditLogsExportJson(body?: Types.ComplianceAuditAuditExportInput): Promise<Result<Types.ComplianceAuditAuditJsonExportDocument, ApiError>> {
+  async postAdminAuditLogsExportJson(body: Types.ComplianceAuditAuditExportInput): Promise<Result<Types.ComplianceAuditAuditJsonExportDocument, ApiError>> {
     const url = '/v1/admin/audit-logs/export/json';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -234,11 +234,11 @@ export class ComplianceAuditModule {
   /**
    * Streams a versioned XML audit export with pagination metadata.
    */
-  async postAdminAuditLogsExportXml(body?: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
+  async postAdminAuditLogsExportXml(body: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
     const url = '/v1/admin/audit-logs/export/xml';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -292,12 +292,12 @@ export class ComplianceAuditModule {
    * execution history remains available.
    */
   async postAdminAuditLogsScheduledExports(
-    body?: Types.ComplianceAuditCreateScheduledAuditExportInput,
+    body: Types.ComplianceAuditCreateScheduledAuditExportInput,
   ): Promise<Result<Types.ComplianceAuditScheduledAuditExportOutput, ApiError>> {
     const url = '/v1/admin/audit-logs/scheduled-exports';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditCreateScheduledAuditExportInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditCreateScheduledAuditExportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -353,11 +353,11 @@ export class ComplianceAuditModule {
   /**
    * Searches audit events using a nested condition tree with boolean logic.
    */
-  async postAdminAuditLogsSearchFilter(body?: Types.ComplianceAuditAuditConditionSearchInput): Promise<Result<Types.ComplianceAuditAuditLogOutput, ApiError>> {
+  async postAdminAuditLogsSearchFilter(body: Types.ComplianceAuditAuditConditionSearchInput): Promise<Result<Types.ComplianceAuditAuditLogOutput, ApiError>> {
     const url = '/v1/admin/audit-logs/search-filter';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditConditionSearchInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditAuditConditionSearchInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

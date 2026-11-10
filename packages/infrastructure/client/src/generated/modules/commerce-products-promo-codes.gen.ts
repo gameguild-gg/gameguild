@@ -49,11 +49,11 @@ export class CommerceProductsPromoCodesModule {
   /**
    * Create a new promo code
    */
-  async postPromoCodes(body?: Types.CommerceProductsCreatePromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
+  async postPromoCodes(body: Types.CommerceProductsCreatePromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
     const url = '/v1/promo-codes';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsCreatePromoCodeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsCreatePromoCodeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -75,11 +75,11 @@ export class CommerceProductsPromoCodesModule {
    * Apply promo codes to an order. Usage is recorded atomically per applied code
    * (idempotent on the supplied key, fail-closed on usage limits).
    */
-  async postPromoCodesApply(body?: Types.CommerceProductsApplyPromoCodesInput): Promise<Result<Types.CommerceProductsPromoCodeApplicationResult, ApiError>> {
+  async postPromoCodesApply(body: Types.CommerceProductsApplyPromoCodesInput): Promise<Result<Types.CommerceProductsPromoCodeApplicationResult, ApiError>> {
     const url = '/v1/promo-codes/:apply';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsApplyPromoCodesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsApplyPromoCodesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -100,11 +100,11 @@ export class CommerceProductsPromoCodesModule {
   /**
    * Bulk-generate promo codes with a shared prefix and random suffixes
    */
-  async postPromoCodesGenerateBulk(body?: Types.CommerceProductsGenerateBulkPromoCodesInput): Promise<Result<Types.CommerceProductsPromoCodeDto[], ApiError>> {
+  async postPromoCodesGenerateBulk(body: Types.CommerceProductsGenerateBulkPromoCodesInput): Promise<Result<Types.CommerceProductsPromoCodeDto[], ApiError>> {
     const url = '/v1/promo-codes/:generate-bulk';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsGenerateBulkPromoCodesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsGenerateBulkPromoCodesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -121,13 +121,11 @@ export class CommerceProductsPromoCodesModule {
    * promo redemption CAPTCHA gate is enabled (issue #418 anti-farming): a missing or
    * unverifiable token is rejected before any code lookup, fail closed.
    */
-  async postPromoCodesValidate(
-    body?: Types.CommerceProductsValidatePromoCodeInput,
-  ): Promise<Result<Types.CommerceProductsPromoCodeValidationResult, ApiError>> {
+  async postPromoCodesValidate(body: Types.CommerceProductsValidatePromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeValidationResult, ApiError>> {
     const url = '/v1/promo-codes/:validate';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsValidatePromoCodeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsValidatePromoCodeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -169,11 +167,11 @@ export class CommerceProductsPromoCodesModule {
   /**
    * Update an existing promo code (full update)
    */
-  async putPromoCodes(promoCodeId: string, body?: Types.CommerceProductsUpdatePromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
+  async putPromoCodes(promoCodeId: string, body: Types.CommerceProductsUpdatePromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsUpdatePromoCodeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsUpdatePromoCodeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -209,11 +207,11 @@ export class CommerceProductsPromoCodesModule {
   /**
    * Partially update a promo code (PATCH)
    */
-  async patchPromoCodes(promoCodeId: string, body?: Types.CommerceProductsPatchPromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
+  async patchPromoCodes(promoCodeId: string, body: Types.CommerceProductsPatchPromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsPatchPromoCodeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsPatchPromoCodeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

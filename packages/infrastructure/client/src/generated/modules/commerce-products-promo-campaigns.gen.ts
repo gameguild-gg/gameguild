@@ -45,11 +45,11 @@ export class CommerceProductsPromoCampaignsModule {
   /**
    * Create a campaign (starts in Draft)
    */
-  async postPromoCampaigns(body?: Types.CommerceProductsCreatePromoCampaignInput): Promise<Result<Types.CommerceProductsPromoCampaignDto, ApiError>> {
+  async postPromoCampaigns(body: Types.CommerceProductsCreatePromoCampaignInput): Promise<Result<Types.CommerceProductsPromoCampaignDto, ApiError>> {
     const url = '/v1/promo-campaigns';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsCreatePromoCampaignInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsCreatePromoCampaignInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -93,12 +93,12 @@ export class CommerceProductsPromoCampaignsModule {
    */
   async putPromoCampaigns(
     campaignId: string,
-    body?: Types.CommerceProductsUpdatePromoCampaignInput,
+    body: Types.CommerceProductsUpdatePromoCampaignInput,
   ): Promise<Result<Types.CommerceProductsPromoCampaignDto, ApiError>> {
     const url = `/v1/promo-campaigns/${campaignId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsUpdatePromoCampaignInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsUpdatePromoCampaignInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

@@ -33,12 +33,12 @@ export class TestingLabTestingEventParticipationModule {
    */
   async postTestingEventsFeedbackObligationsFeedback(
     obligationId: string,
-    body?: Types.TestingLabSubmitTestingEventFeedbackInput,
+    body: Types.TestingLabSubmitTestingEventFeedbackInput,
   ): Promise<Result<Types.TestingLabTestingEventFeedbackProjection, ApiError>> {
     const url = `/v1/testing/events/feedback-obligations/${obligationId}/feedback`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabSubmitTestingEventFeedbackInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabSubmitTestingEventFeedbackInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -216,12 +216,12 @@ export class TestingLabTestingEventParticipationModule {
    */
   async postTestingEventsRegistrationsTestedProjects(
     registrationId: string,
-    body?: Types.TestingLabAssignTestingProjectToTesterInput,
+    body: Types.TestingLabAssignTestingProjectToTesterInput,
   ): Promise<Result<Types.TestingLabTestingFeedbackObligationProjection, ApiError>> {
     const url = `/v1/testing/events/registrations/${registrationId}/tested-projects`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabAssignTestingProjectToTesterInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabAssignTestingProjectToTesterInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -276,12 +276,12 @@ export class TestingLabTestingEventParticipationModule {
    */
   async postTestingEventsSlotsRegistrations(
     slotId: string,
-    body?: Types.TestingLabRegisterTestingEventSlotInput,
+    body: Types.TestingLabRegisterTestingEventSlotInput,
   ): Promise<Result<Types.TestingLabTestingSlotRegistrationProjection, ApiError>> {
     const url = `/v1/testing/events/slots/${slotId}/registrations`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabRegisterTestingEventSlotInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabRegisterTestingEventSlotInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

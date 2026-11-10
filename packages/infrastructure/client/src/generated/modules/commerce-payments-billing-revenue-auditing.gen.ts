@@ -50,13 +50,12 @@ export class CommercePaymentsBillingRevenueAuditingModule {
    * Compares external accounting/ERP statement lines against internal revenue events for an inclusive period, records an immutable reconciliation run and persists every discrepancy (missing internal/external references, amount and currency mismatches, duplicate external references). When no inline lines are supplied, lines are read from the configured external statement source.
    */
   async postBillingRevenueAuditing(
-    body?: Types.CommercePaymentsRevenueAuditingControllerRunRevenueReconciliationInput,
+    body: Types.CommercePaymentsRevenueAuditingControllerRunRevenueReconciliationInput,
   ): Promise<Result<Types.CommercePaymentsRevenueReconciliationRun, ApiError>> {
     const url = '/api/v1/billing/revenue/auditing';
 
     // Validate request body
-    const validatedBody =
-      body === undefined ? undefined : safeParse(Types.CommercePaymentsRevenueAuditingControllerRunRevenueReconciliationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsRevenueAuditingControllerRunRevenueReconciliationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

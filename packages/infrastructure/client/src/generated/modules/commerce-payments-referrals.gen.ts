@@ -91,12 +91,12 @@ export class CommercePaymentsReferralsModule {
    * Records a click against a referral code (first click time kept on idempotent replays). The caller IP is hashed (SHA-256) for the same-IP fraud block and never persisted in clear.
    */
   async postReferralsTrackClick(
-    body?: Types.CommercePaymentsReferralsControllerTrackReferralClickInput,
+    body: Types.CommercePaymentsReferralsControllerTrackReferralClickInput,
   ): Promise<Result<Types.CommercePaymentsReferral, ApiError>> {
     const url = '/api/v1/referrals/track-click';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsReferralsControllerTrackReferralClickInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsReferralsControllerTrackReferralClickInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -120,12 +120,12 @@ export class CommercePaymentsReferralsModule {
    * Attaches the calling user as the referee of the referral code. Fail-closed blocks: self-referral, referral cap (AccountCredits:MaxReferralsPerUser) and same-IP repeats under the same referrer are rejected or recorded as fraudulent without reward eligibility.
    */
   async postReferralsTrackSignup(
-    body?: Types.CommercePaymentsReferralsControllerTrackReferralSignupInput,
+    body: Types.CommercePaymentsReferralsControllerTrackReferralSignupInput,
   ): Promise<Result<Types.CommercePaymentsReferralSignupResult, ApiError>> {
     const url = '/api/v1/referrals/track-signup';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsReferralsControllerTrackReferralSignupInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsReferralsControllerTrackReferralSignupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

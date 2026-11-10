@@ -41,12 +41,12 @@ export class LearningCertificatesModule {
    */
   async postApiCertificatesRenew(
     id: string,
-    body?: Types.LearningCertificatesRenewCertificateInput,
+    body: Types.LearningCertificatesRenewCertificateInput,
   ): Promise<Result<Types.LearningCertificatesCertificateDto, ApiError>> {
     const url = `/api/certificates/${id}/renew`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCertificatesRenewCertificateInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCertificatesRenewCertificateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -67,11 +67,11 @@ export class LearningCertificatesModule {
   /**
    * Revoke a certificate
    */
-  async postApiCertificatesRevoke(id: string, body?: Types.LearningCertificatesRevokeCertificateInput): Promise<Result<void, ApiError>> {
+  async postApiCertificatesRevoke(id: string, body: Types.LearningCertificatesRevokeCertificateInput): Promise<Result<void, ApiError>> {
     const url = `/api/certificates/${id}/revoke`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCertificatesRevokeCertificateInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCertificatesRevokeCertificateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -117,11 +117,11 @@ export class LearningCertificatesModule {
   /**
    * Issue a certificate for an enrollment
    */
-  async postApiCertificatesIssue(body?: Types.LearningCertificatesIssueCertificateInput): Promise<Result<Types.LearningCertificatesCertificateDto, ApiError>> {
+  async postApiCertificatesIssue(body: Types.LearningCertificatesIssueCertificateInput): Promise<Result<Types.LearningCertificatesCertificateDto, ApiError>> {
     const url = '/api/certificates/issue';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCertificatesIssueCertificateInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCertificatesIssueCertificateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -158,12 +158,12 @@ export class LearningCertificatesModule {
    * Create a certificate template for a course
    */
   async postApiCertificatesTemplates(
-    body?: Types.LearningCertificatesCreateCertificateTemplateInput,
+    body: Types.LearningCertificatesCreateCertificateTemplateInput,
   ): Promise<Result<Types.LearningCertificatesCertificateTemplateDetailDto, ApiError>> {
     const url = '/api/certificates/templates';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCertificatesCreateCertificateTemplateInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCertificatesCreateCertificateTemplateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -207,12 +207,12 @@ export class LearningCertificatesModule {
    */
   async putApiCertificatesTemplates(
     templateId: string,
-    body?: Types.LearningCertificatesUpdateCertificateTemplateInput,
+    body: Types.LearningCertificatesUpdateCertificateTemplateInput,
   ): Promise<Result<Types.LearningCertificatesCertificateTemplateDetailDto, ApiError>> {
     const url = `/api/certificates/templates/${templateId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCertificatesUpdateCertificateTemplateInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCertificatesUpdateCertificateTemplateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

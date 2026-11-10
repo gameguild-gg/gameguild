@@ -126,12 +126,12 @@ export class NotificationsModule {
    * Updates the current user's notification preferences
    */
   async putApiNotificationsPreferences(
-    body?: Types.NotificationsControllersUpdatePreferencesInput,
+    body: Types.NotificationsControllersUpdatePreferencesInput,
   ): Promise<Result<Types.NotificationsControllersNotificationPreferenceDto, ApiError>> {
     const url = '/api/notifications/preferences';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.NotificationsControllersUpdatePreferencesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.NotificationsControllersUpdatePreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -153,12 +153,12 @@ export class NotificationsModule {
    * Sets the current user's email digest frequency (null, Daily, Weekly or BiWeekly)
    */
   async putApiNotificationsPreferencesDigestFrequency(
-    body?: Types.NotificationsControllersUpdateDigestFrequencyInput,
+    body: Types.NotificationsControllersUpdateDigestFrequencyInput,
   ): Promise<Result<Types.NotificationsControllersDigestFrequencyOutput, ApiError>> {
     const url = '/api/notifications/preferences/digest-frequency';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.NotificationsControllersUpdateDigestFrequencyInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.NotificationsControllersUpdateDigestFrequencyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -180,12 +180,12 @@ export class NotificationsModule {
    * Replaces the current user's muted notification types (full replace; empty list clears all mutes)
    */
   async putApiNotificationsPreferencesMutedTypes(
-    body?: Types.NotificationsControllersUpdateMutedTypesInput,
+    body: Types.NotificationsControllersUpdateMutedTypesInput,
   ): Promise<Result<Types.NotificationsControllersMutedTypesOutput, ApiError>> {
     const url = '/api/notifications/preferences/muted-types';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.NotificationsControllersUpdateMutedTypesInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.NotificationsControllersUpdateMutedTypesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -206,11 +206,11 @@ export class NotificationsModule {
   /**
    * Sets quiet hours for the current user
    */
-  async putApiNotificationsPreferencesQuietHours(body?: Types.NotificationsControllersSetQuietHoursInput): Promise<Result<void, ApiError>> {
+  async putApiNotificationsPreferencesQuietHours(body: Types.NotificationsControllersSetQuietHoursInput): Promise<Result<void, ApiError>> {
     const url = '/api/notifications/preferences/quiet-hours';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.NotificationsControllersSetQuietHoursInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.NotificationsControllersSetQuietHoursInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -505,12 +505,12 @@ export class NotificationsModule {
    * Creates a draft broadcast campaign. The template must be on the configured allowlist.
    */
   async postWhatsappBroadcasts(
-    body?: Types.NotificationsControllersCreateWhatsAppBroadcastInput,
+    body: Types.NotificationsControllersCreateWhatsAppBroadcastInput,
   ): Promise<Result<Types.NotificationsControllersWhatsAppBroadcastDto, ApiError>> {
     const url = '/api/v1/whatsapp/broadcasts';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.NotificationsControllersCreateWhatsAppBroadcastInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.NotificationsControllersCreateWhatsAppBroadcastInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -558,12 +558,12 @@ export class NotificationsModule {
    */
   async postWhatsappBroadcastsCancel(
     id: string,
-    body?: Types.NotificationsControllersCancelWhatsAppBroadcastInput,
+    body: Types.NotificationsControllersCancelWhatsAppBroadcastInput,
   ): Promise<Result<Types.NotificationsControllersWhatsAppBroadcastDto, ApiError>> {
     const url = `/api/v1/whatsapp/broadcasts/${id}:cancel`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.NotificationsControllersCancelWhatsAppBroadcastInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.NotificationsControllersCancelWhatsAppBroadcastInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -586,12 +586,12 @@ export class NotificationsModule {
    */
   async postWhatsappBroadcastsSchedule(
     id: string,
-    body?: Types.NotificationsControllersScheduleWhatsAppBroadcastInput,
+    body: Types.NotificationsControllersScheduleWhatsAppBroadcastInput,
   ): Promise<Result<Types.NotificationsControllersWhatsAppBroadcastDto, ApiError>> {
     const url = `/api/v1/whatsapp/broadcasts/${id}:schedule`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.NotificationsControllersScheduleWhatsAppBroadcastInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.NotificationsControllersScheduleWhatsAppBroadcastInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -614,12 +614,12 @@ export class NotificationsModule {
    */
   async postWhatsappBroadcastsSend(
     id: string,
-    body?: Types.NotificationsControllersSendWhatsAppBroadcastInput,
+    body: Types.NotificationsControllersSendWhatsAppBroadcastInput,
   ): Promise<Result<Types.NotificationsControllersWhatsAppBroadcastSendReportDto, ApiError>> {
     const url = `/api/v1/whatsapp/broadcasts/${id}:send`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.NotificationsControllersSendWhatsAppBroadcastInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.NotificationsControllersSendWhatsAppBroadcastInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -22,11 +22,11 @@ export class CommercePricingModule {
    *
    * Calculates a full price (base, add-ons, usage tiers, discounts, proration, tax, credits) through the single centralized pricing engine and records the decision for audit.
    */
-  async postPricingCalculate(body?: Types.CommercePaymentsPricingCalculationInput): Promise<Result<Types.CommercePaymentsPricingCalculationResult, ApiError>> {
+  async postPricingCalculate(body: Types.CommercePaymentsPricingCalculationInput): Promise<Result<Types.CommercePaymentsPricingCalculationResult, ApiError>> {
     const url = '/api/v1/pricing/:calculate';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsPricingCalculationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsPricingCalculationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -50,11 +50,11 @@ export class CommercePricingModule {
    *
    * Previews what a plan change costs before it is applied: the immediate prorated charge and the next renewal amount, with discounts, tax, and an itemized breakdown.
    */
-  async postPricingPreview(body?: Types.CommercePaymentsPricingPreviewInput): Promise<Result<Types.CommercePaymentsPricingPreviewResult, ApiError>> {
+  async postPricingPreview(body: Types.CommercePaymentsPricingPreviewInput): Promise<Result<Types.CommercePaymentsPricingPreviewResult, ApiError>> {
     const url = '/api/v1/pricing/:preview';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsPricingPreviewInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsPricingPreviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

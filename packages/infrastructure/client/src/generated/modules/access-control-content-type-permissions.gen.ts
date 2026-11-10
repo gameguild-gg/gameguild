@@ -81,12 +81,12 @@ export class AccessControlContentTypePermissionsModule {
    * Adds explicit DENY-WINS entries to a content-type grant row.
    */
   async postAuthorizationContentTypesDenies(
-    body?: Types.IdentityAuthorizationDenyContentTypePermissionGrantCommand,
+    body: Types.IdentityAuthorizationDenyContentTypePermissionGrantCommand,
   ): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = '/api/v1/authorization/content-types/denies';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationDenyContentTypePermissionGrantCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationDenyContentTypePermissionGrantCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -103,12 +103,12 @@ export class AccessControlContentTypePermissionsModule {
    * default row for the content type).
    */
   async postAuthorizationContentTypesGrants(
-    body?: Types.IdentityAuthorizationGrantContentTypePermissionGrantCommand,
+    body: Types.IdentityAuthorizationGrantContentTypePermissionGrantCommand,
   ): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = '/api/v1/authorization/content-types/grants';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationGrantContentTypePermissionGrantCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationGrantContentTypePermissionGrantCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -125,12 +125,12 @@ export class AccessControlContentTypePermissionsModule {
    * once its payload is empty).
    */
   async postAuthorizationContentTypesGrantsRevoke(
-    body?: Types.IdentityAuthorizationRevokeContentTypePermissionGrantCommand,
+    body: Types.IdentityAuthorizationRevokeContentTypePermissionGrantCommand,
   ): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = '/api/v1/authorization/content-types/grants:revoke';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationRevokeContentTypePermissionGrantCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationRevokeContentTypePermissionGrantCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

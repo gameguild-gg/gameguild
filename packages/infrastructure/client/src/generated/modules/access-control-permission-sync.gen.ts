@@ -45,12 +45,12 @@ export class AccessControlPermissionSyncModule {
    * partially applied.
    */
   async postAuthorizationSyncImport(
-    body?: Types.IdentityAuthorizationImportPermissionSyncInput,
+    body: Types.IdentityAuthorizationImportPermissionSyncInput,
   ): Promise<Result<Types.IdentityAuthorizationPermissionSyncImportResult, ApiError>> {
     const url = '/api/v1/authorization/sync/import';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationImportPermissionSyncInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationImportPermissionSyncInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

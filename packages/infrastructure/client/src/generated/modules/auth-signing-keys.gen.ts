@@ -65,11 +65,11 @@ export class AuthSigningKeysModule {
    *
    * Manually rotates to a new signing key. Previous keys remain valid for token validation during grace period.
    */
-  async postAuthSigningKeysRotate(body?: Types.IdentityAuthenticationRotateKeyInput): Promise<Result<Types.IdentityAuthenticationJwtKeyInfoDto, ApiError>> {
+  async postAuthSigningKeysRotate(body: Types.IdentityAuthenticationRotateKeyInput): Promise<Result<Types.IdentityAuthenticationJwtKeyInfoDto, ApiError>> {
     const url = '/v1/auth/signing-keys:rotate';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRotateKeyInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthenticationRotateKeyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

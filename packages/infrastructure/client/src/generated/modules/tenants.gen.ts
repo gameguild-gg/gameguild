@@ -49,11 +49,11 @@ export class TenantsModule {
    *
    * Creates a new tenant organization within the GameGuild platform.
    */
-  async postTenants(body?: Types.IdentityTenantsCreateTenantInput): Promise<Result<void, ApiError>> {
+  async postTenants(body: Types.IdentityTenantsCreateTenantInput): Promise<Result<void, ApiError>> {
     const url = '/v1/tenants';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsCreateTenantInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsCreateTenantInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -70,13 +70,11 @@ export class TenantsModule {
    *
    * Activates multiple tenant accounts at once.
    */
-  async postTenantsActivateForPostTenantsActivate(
-    body?: Types.IdentityTenantsBulkActivateTenantsCommand,
-  ): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+  async postTenantsActivateForPostTenantsActivate(body: Types.IdentityTenantsBulkActivateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
     const url = '/v1/tenants:activate';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsBulkActivateTenantsCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsBulkActivateTenantsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -99,11 +97,11 @@ export class TenantsModule {
    *
    * Archives multiple tenant accounts at once.
    */
-  async postTenantsArchiveForPostTenantsArchive(body?: Types.IdentityTenantsBulkArchiveTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+  async postTenantsArchiveForPostTenantsArchive(body: Types.IdentityTenantsBulkArchiveTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
     const url = '/v1/tenants:archive';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsBulkArchiveTenantsCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsBulkArchiveTenantsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -126,11 +124,11 @@ export class TenantsModule {
    *
    * Creates multiple tenant organizations at once.
    */
-  async postTenantsCreate(body?: Types.IdentityTenantsBulkCreateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+  async postTenantsCreate(body: Types.IdentityTenantsBulkCreateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
     const url = '/v1/tenants:create';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsBulkCreateTenantsCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsBulkCreateTenantsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -154,12 +152,12 @@ export class TenantsModule {
    * Deactivates multiple tenant accounts at once.
    */
   async postTenantsDeactivateForPostTenantsDeactivate(
-    body?: Types.IdentityTenantsBulkDeactivateTenantsCommand,
+    body: Types.IdentityTenantsBulkDeactivateTenantsCommand,
   ): Promise<Result<Types.BulkOperationOutput, ApiError>> {
     const url = '/v1/tenants:deactivate';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsBulkDeactivateTenantsCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsBulkDeactivateTenantsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -182,11 +180,11 @@ export class TenantsModule {
    *
    * Soft deletes multiple tenants at once.
    */
-  async postTenantsDelete(body?: Types.IdentityTenantsBulkDeleteTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+  async postTenantsDelete(body: Types.IdentityTenantsBulkDeleteTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
     const url = '/v1/tenants:delete';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsBulkDeleteTenantsCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsBulkDeleteTenantsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -209,11 +207,11 @@ export class TenantsModule {
    *
    * Permanently deletes multiple tenants. Admin operation requiring proper authorization.
    */
-  async postTenantsPurgeForPostTenantsPurge(body?: Types.IdentityTenantsBulkPurgeTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+  async postTenantsPurgeForPostTenantsPurge(body: Types.IdentityTenantsBulkPurgeTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
     const url = '/v1/tenants:purge';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsBulkPurgeTenantsCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsBulkPurgeTenantsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -236,11 +234,11 @@ export class TenantsModule {
    *
    * Updates multiple tenants with complete data.
    */
-  async postTenantsReplace(body?: Types.IdentityTenantsBulkUpdateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+  async postTenantsReplace(body: Types.IdentityTenantsBulkUpdateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
     const url = '/v1/tenants:replace';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsBulkUpdateTenantsCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsBulkUpdateTenantsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -263,13 +261,11 @@ export class TenantsModule {
    *
    * Restores multiple soft-deleted tenants at once.
    */
-  async postTenantsUndeleteForPostTenantsUndelete(
-    body?: Types.IdentityTenantsBulkUndeleteTenantsCommand,
-  ): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+  async postTenantsUndeleteForPostTenantsUndelete(body: Types.IdentityTenantsBulkUndeleteTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
     const url = '/v1/tenants:undelete';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsBulkUndeleteTenantsCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsBulkUndeleteTenantsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -292,11 +288,11 @@ export class TenantsModule {
    *
    * Updates multiple tenants with partial data.
    */
-  async postTenantsUpdate(body?: Types.IdentityTenantsBulkUpdateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
+  async postTenantsUpdate(body: Types.IdentityTenantsBulkUpdateTenantsCommand): Promise<Result<Types.BulkOperationOutput, ApiError>> {
     const url = '/v1/tenants:update';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsBulkUpdateTenantsCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsBulkUpdateTenantsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -323,11 +319,11 @@ export class TenantsModule {
    * - Checking for naming conflicts
    * - Getting alternative slug suggestions
    */
-  async postTenantsValidate(body?: Types.IdentityTenantsValidateTenantInput): Promise<Result<Types.IdentityTenantsTenantValidationOutput, ApiError>> {
+  async postTenantsValidate(body: Types.IdentityTenantsValidateTenantInput): Promise<Result<Types.IdentityTenantsTenantValidationOutput, ApiError>> {
     const url = '/v1/tenants:validate';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsValidateTenantInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsValidateTenantInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -373,11 +369,11 @@ export class TenantsModule {
    *
    * Fully updates a tenant by ID with complete tenant data.
    */
-  async putTenants(tenantId: string, body?: Types.IdentityTenantsUpdateTenantInput): Promise<Result<void, ApiError>> {
+  async putTenants(tenantId: string, body: Types.IdentityTenantsUpdateTenantInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateTenantInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -394,11 +390,11 @@ export class TenantsModule {
    *
    * Soft deletes a tenant by ID (can be restored).
    */
-  async deleteTenants(tenantId: string, body?: Types.IdentityTenantsArchiveInput): Promise<Result<void, ApiError>> {
+  async deleteTenants(tenantId: string, body: Types.IdentityTenantsArchiveInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsArchiveInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsArchiveInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'DELETE',
@@ -415,11 +411,11 @@ export class TenantsModule {
    *
    * Updates specific fields of a tenant by ID.
    */
-  async patchTenants(tenantId: string, body?: Types.IdentityTenantsUpdateTenantInput): Promise<Result<void, ApiError>> {
+  async patchTenants(tenantId: string, body: Types.IdentityTenantsUpdateTenantInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateTenantInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -470,11 +466,11 @@ export class TenantsModule {
    *
    * Archives a tenant organization by ID.
    */
-  async postTenantsArchiveForPostTenantsByTenantIdArchive(tenantId: string, body?: Types.IdentityTenantsArchiveInput): Promise<Result<void, ApiError>> {
+  async postTenantsArchiveForPostTenantsByTenantIdArchive(tenantId: string, body: Types.IdentityTenantsArchiveInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}:archive`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsArchiveInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsArchiveInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -525,11 +521,11 @@ export class TenantsModule {
    *
    * Undeletes a previously soft-deleted (archived) tenant organization.
    */
-  async postTenantsUndeleteForPostTenantsByTenantIdUndelete(tenantId: string, body?: Types.IdentityTenantsRecoverInput): Promise<Result<void, ApiError>> {
+  async postTenantsUndeleteForPostTenantsByTenantIdUndelete(tenantId: string, body: Types.IdentityTenantsRecoverInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}:undelete`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsRecoverInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityTenantsRecoverInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

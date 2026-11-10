@@ -17,11 +17,11 @@ export class IdentityProvisioningScimModule {
 
   /**
    */
-  async postScimV2Bulk(body?: Types.IdentityProvisioningScimScimBulkInput): Promise<Result<Types.IdentityProvisioningScimScimBulkOutput, ApiError>> {
+  async postScimV2Bulk(body: Types.IdentityProvisioningScimScimBulkInput): Promise<Result<Types.IdentityProvisioningScimScimBulkOutput, ApiError>> {
     const url = '/scim/v2/Bulk';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityProvisioningScimScimBulkInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityProvisioningScimScimBulkInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -68,11 +68,11 @@ export class IdentityProvisioningScimModule {
   /**
    * Creates a group. Idempotent on externalId (repeat POST returns 200).
    */
-  async postScimV2Groups(body?: Types.IdentityProvisioningScimScimGroupInput): Promise<Result<Types.IdentityProvisioningScimScimGroupResource, ApiError>> {
+  async postScimV2Groups(body: Types.IdentityProvisioningScimScimGroupInput): Promise<Result<Types.IdentityProvisioningScimScimGroupResource, ApiError>> {
     const url = '/scim/v2/Groups';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityProvisioningScimScimGroupInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityProvisioningScimScimGroupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -116,12 +116,12 @@ export class IdentityProvisioningScimModule {
    */
   async putScimV2Groups(
     roleId: string,
-    body?: Types.IdentityProvisioningScimScimGroupInput,
+    body: Types.IdentityProvisioningScimScimGroupInput,
   ): Promise<Result<Types.IdentityProvisioningScimScimGroupResource, ApiError>> {
     const url = `/scim/v2/Groups/${roleId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityProvisioningScimScimGroupInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityProvisioningScimScimGroupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -161,12 +161,12 @@ export class IdentityProvisioningScimModule {
    */
   async patchScimV2Groups(
     roleId: string,
-    body?: Types.IdentityProvisioningScimScimPatchInput,
+    body: Types.IdentityProvisioningScimScimPatchInput,
   ): Promise<Result<Types.IdentityProvisioningScimScimGroupResource, ApiError>> {
     const url = `/scim/v2/Groups/${roleId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityProvisioningScimScimPatchInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityProvisioningScimScimPatchInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -270,11 +270,11 @@ export class IdentityProvisioningScimModule {
    * Creates a user. Idempotent on externalId: a repeated POST with the same
    * externalId returns the existing resource with 200 instead of creating a copy.
    */
-  async postScimV2Users(body?: Types.IdentityProvisioningScimScimUserInput): Promise<Result<Types.IdentityProvisioningScimScimUserResource, ApiError>> {
+  async postScimV2Users(body: Types.IdentityProvisioningScimScimUserInput): Promise<Result<Types.IdentityProvisioningScimScimUserResource, ApiError>> {
     const url = '/scim/v2/Users';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityProvisioningScimScimUserInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityProvisioningScimScimUserInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -318,12 +318,12 @@ export class IdentityProvisioningScimModule {
    */
   async putScimV2Users(
     userId: string,
-    body?: Types.IdentityProvisioningScimScimUserInput,
+    body: Types.IdentityProvisioningScimScimUserInput,
   ): Promise<Result<Types.IdentityProvisioningScimScimUserResource, ApiError>> {
     const url = `/scim/v2/Users/${userId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityProvisioningScimScimUserInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityProvisioningScimScimUserInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -361,12 +361,12 @@ export class IdentityProvisioningScimModule {
    */
   async patchScimV2Users(
     userId: string,
-    body?: Types.IdentityProvisioningScimScimPatchInput,
+    body: Types.IdentityProvisioningScimScimPatchInput,
   ): Promise<Result<Types.IdentityProvisioningScimScimUserResource, ApiError>> {
     const url = `/scim/v2/Users/${userId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityProvisioningScimScimPatchInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityProvisioningScimScimPatchInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

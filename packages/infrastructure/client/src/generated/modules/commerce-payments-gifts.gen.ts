@@ -20,11 +20,11 @@ export class CommercePaymentsGiftsModule {
    *
    * Creates a purchased gift for the given recipient with a positive amount in an ISO 4217 currency, a duration of 1-36 months, an optional plan restriction, an optional personal message and an optional scheduled delivery date (redemption is blocked before it). The full redemption code is returned exactly once and only stored as a SHA-256 hash; unredeemed gifts expire one year after purchase.
    */
-  async postGifts(body?: Types.CommercePaymentsGiftsControllerPurchaseGiftRequestBody): Promise<Result<Types.CommercePaymentsGiftPurchaseResult, ApiError>> {
+  async postGifts(body: Types.CommercePaymentsGiftsControllerPurchaseGiftRequestBody): Promise<Result<Types.CommercePaymentsGiftPurchaseResult, ApiError>> {
     const url = '/api/v1/gifts';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsGiftsControllerPurchaseGiftRequestBodySchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsGiftsControllerPurchaseGiftRequestBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

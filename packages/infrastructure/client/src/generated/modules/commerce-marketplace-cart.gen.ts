@@ -39,12 +39,12 @@ export class CommerceMarketplaceCartModule {
    */
   async postVMarketplaceCartCheckout(
     version: string,
-    body?: Types.CommerceOrdersCheckoutMarketplaceCartInput,
+    body: Types.CommerceOrdersCheckoutMarketplaceCartInput,
   ): Promise<Result<Types.CommerceOrdersMarketplaceCheckoutDto, ApiError>> {
     const url = `/v${version}/marketplace/cart/checkout`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceOrdersCheckoutMarketplaceCartInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceOrdersCheckoutMarketplaceCartInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -66,12 +66,12 @@ export class CommerceMarketplaceCartModule {
    */
   async postVMarketplaceCartItems(
     version: string,
-    body?: Types.CommerceOrdersAddMarketplaceCartItemInput,
+    body: Types.CommerceOrdersAddMarketplaceCartItemInput,
   ): Promise<Result<Types.CommerceOrdersMarketplaceCartDto, ApiError>> {
     const url = `/v${version}/marketplace/cart/items`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceOrdersAddMarketplaceCartItemInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceOrdersAddMarketplaceCartItemInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -119,12 +119,12 @@ export class CommerceMarketplaceCartModule {
   async patchVMarketplaceCartItems(
     itemId: string,
     version: string,
-    body?: Types.CommerceOrdersSetMarketplaceCartItemQuantityInput,
+    body: Types.CommerceOrdersSetMarketplaceCartItemQuantityInput,
   ): Promise<Result<Types.CommerceOrdersMarketplaceCartDto, ApiError>> {
     const url = `/v${version}/marketplace/cart/items/${itemId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceOrdersSetMarketplaceCartItemQuantityInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceOrdersSetMarketplaceCartItemQuantityInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

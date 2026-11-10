@@ -79,11 +79,11 @@ export class AssetsAdminModule {
    * Unlike report review which handles user reports, this endpoint allows
    * direct moderation of content by admins for proactive moderation workflows.
    */
-  async postAdminAssetsReviewModeration(contentId: string, body?: Types.AssetsControllersContentModerationInput): Promise<Result<void, ApiError>> {
+  async postAdminAssetsReviewModeration(contentId: string, body: Types.AssetsControllersContentModerationInput): Promise<Result<void, ApiError>> {
     const url = `/v1/admin/assets/${contentId}:review-moderation`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsControllersContentModerationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.AssetsControllersContentModerationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -98,11 +98,11 @@ export class AssetsAdminModule {
   /**
    * Run virus scan on an asset.
    */
-  async postAdminAssetsRunVirusScan(contentId: string, body?: Types.AssetsControllersUpdateVirusScanInput): Promise<Result<void, ApiError>> {
+  async postAdminAssetsRunVirusScan(contentId: string, body: Types.AssetsControllersUpdateVirusScanInput): Promise<Result<void, ApiError>> {
     const url = `/v1/admin/assets/${contentId}:run-virus-scan`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsControllersUpdateVirusScanInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.AssetsControllersUpdateVirusScanInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -194,11 +194,11 @@ export class AssetsAdminModule {
   /**
    * Review a moderation report.
    */
-  async postAdminAssetsReportsReview(reportId: string, body?: Types.AssetsControllersReviewReportInput): Promise<Result<void, ApiError>> {
+  async postAdminAssetsReportsReview(reportId: string, body: Types.AssetsControllersReviewReportInput): Promise<Result<void, ApiError>> {
     const url = `/v1/admin/assets/reports/${reportId}:review`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsControllersReviewReportInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.AssetsControllersReviewReportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -39,11 +39,11 @@ export class UsersProfilesModule {
   /**
    * Replace user profile (full update)
    */
-  async putUsersProfile(userId: string, body?: Types.IdentityUsersReplaceUserProfileInput): Promise<Result<Types.IdentityUsersUserProfileDto, ApiError>> {
+  async putUsersProfile(userId: string, body: Types.IdentityUsersReplaceUserProfileInput): Promise<Result<Types.IdentityUsersUserProfileDto, ApiError>> {
     const url = `/v1/users/${userId}/profile`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersReplaceUserProfileInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityUsersReplaceUserProfileInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -64,11 +64,11 @@ export class UsersProfilesModule {
   /**
    * Update user profile (partial update)
    */
-  async patchUsersProfile(userId: string, body?: Types.IdentityUsersUpdateUserProfileInput): Promise<Result<Types.IdentityUsersUserProfileDto, ApiError>> {
+  async patchUsersProfile(userId: string, body: Types.IdentityUsersUpdateUserProfileInput): Promise<Result<Types.IdentityUsersUserProfileDto, ApiError>> {
     const url = `/v1/users/${userId}/profile`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersUpdateUserProfileInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserProfileInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

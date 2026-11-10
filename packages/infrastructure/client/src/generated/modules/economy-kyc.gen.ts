@@ -17,11 +17,11 @@ export class EconomyKycModule {
 
   /**
    */
-  async postEconomyKycAccessToken(body?: Types.APIControllersCreateMyKycAccessTokenInput): Promise<Result<Types.ComplianceKYCKycAmlAccessToken, ApiError>> {
+  async postEconomyKycAccessToken(body: Types.APIControllersCreateMyKycAccessTokenInput): Promise<Result<Types.ComplianceKYCKycAmlAccessToken, ApiError>> {
     const url = '/api/v1/economy/kyc/access-token';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersCreateMyKycAccessTokenInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIControllersCreateMyKycAccessTokenInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -41,11 +41,11 @@ export class EconomyKycModule {
 
   /**
    */
-  async postEconomyKycOnboarding(body?: Types.APIControllersStartMyKycInput): Promise<Result<Types.ComplianceKYCKycAmlOnboarding, ApiError>> {
+  async postEconomyKycOnboarding(body: Types.APIControllersStartMyKycInput): Promise<Result<Types.ComplianceKYCKycAmlOnboarding, ApiError>> {
     const url = '/api/v1/economy/kyc/onboarding';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersStartMyKycInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIControllersStartMyKycInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

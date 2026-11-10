@@ -134,7 +134,7 @@ public sealed class OpenApiBodySampleController : ControllerBase
     public IActionResult InferredBody(OpenApiBodySampleInput body) => Ok(new { body });
 
     [HttpPost("nullable")]
-    public IActionResult NullableBody([FromBody] OpenApiBodySampleInput? body = null) => Ok(new { body });
+    public IActionResult NullableBody([FromBody] OpenApiBodySampleInput? body) => Ok(new { body });
 
     [HttpGet("query")]
     public IActionResult QueryOnly([FromQuery] string? value) => Ok(new { value });

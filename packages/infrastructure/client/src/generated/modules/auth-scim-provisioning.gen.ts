@@ -34,12 +34,12 @@ export class AuthScimProvisioningModule {
    * Issues a new tenant-scoped provisioning token. The plaintext is returned once.
    */
   async postAuthScimProvisioningTokens(
-    body?: Types.IdentityProvisioningCreateScimProvisioningTokenInput,
+    body: Types.IdentityProvisioningCreateScimProvisioningTokenInput,
   ): Promise<Result<Types.IdentityProvisioningCreateScimProvisioningTokenOutput, ApiError>> {
     const url = '/v1/auth/scim-provisioning-tokens';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityProvisioningCreateScimProvisioningTokenInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityProvisioningCreateScimProvisioningTokenInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

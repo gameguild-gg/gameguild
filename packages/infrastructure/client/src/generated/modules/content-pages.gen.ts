@@ -41,11 +41,11 @@ export class ContentPagesModule {
   /**
    * Create a new page.
    */
-  async postPages(body?: Types.ContentPagesCreatePageDto): Promise<Result<Types.ContentPagesPageDto, ApiError>> {
+  async postPages(body: Types.ContentPagesCreatePageDto): Promise<Result<Types.ContentPagesPageDto, ApiError>> {
     const url = '/v1/pages';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ContentPagesCreatePageDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.ContentPagesCreatePageDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -87,11 +87,11 @@ export class ContentPagesModule {
   /**
    * Update an existing page.
    */
-  async putPages(id: string, body?: Types.ContentPagesUpdatePageDto): Promise<Result<Types.ContentPagesPageDto, ApiError>> {
+  async putPages(id: string, body: Types.ContentPagesUpdatePageDto): Promise<Result<Types.ContentPagesPageDto, ApiError>> {
     const url = `/v1/pages/${id}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ContentPagesUpdatePageDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.ContentPagesUpdatePageDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -184,11 +184,11 @@ export class ContentPagesModule {
   /**
    * Create a section within a page.
    */
-  async postPagesSections(pageId: string, body?: Types.ContentPagesCreatePageSectionDto): Promise<Result<Types.ContentPagesPageSectionDto, ApiError>> {
+  async postPagesSections(pageId: string, body: Types.ContentPagesCreatePageSectionDto): Promise<Result<Types.ContentPagesPageSectionDto, ApiError>> {
     const url = `/v1/pages/${pageId}/sections`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ContentPagesCreatePageSectionDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.ContentPagesCreatePageSectionDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -233,12 +233,12 @@ export class ContentPagesModule {
   async putPagesSections(
     pageId: string,
     sectionId: string,
-    body?: Types.ContentPagesUpdatePageSectionDto,
+    body: Types.ContentPagesUpdatePageSectionDto,
   ): Promise<Result<Types.ContentPagesPageSectionDto, ApiError>> {
     const url = `/v1/pages/${pageId}/sections/${sectionId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ContentPagesUpdatePageSectionDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.ContentPagesUpdatePageSectionDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -274,7 +274,7 @@ export class ContentPagesModule {
   /**
    * Reorder sections within a page.
    */
-  async postPagesSectionsReorder(pageId: string, body?: string[]): Promise<Result<void, ApiError>> {
+  async postPagesSectionsReorder(pageId: string, body: string[]): Promise<Result<void, ApiError>> {
     const url = `/v1/pages/${pageId}/sections/reorder`;
 
     const result = await this.client.request({

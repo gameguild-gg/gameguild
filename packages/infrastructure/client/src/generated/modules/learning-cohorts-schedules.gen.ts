@@ -40,12 +40,12 @@ export class LearningCohortsSchedulesModule {
   async putCoursesCohortsSchedule(
     courseId: string,
     cohortId: string,
-    body?: Types.LearningCohortsApplyCohortScheduleInput,
+    body: Types.LearningCohortsApplyCohortScheduleInput,
   ): Promise<Result<Types.LearningCohortsCohortScheduleDto, ApiError>> {
     const url = `/v1/courses/${courseId}/cohorts/${cohortId}/schedule`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCohortsApplyCohortScheduleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCohortsApplyCohortScheduleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -86,12 +86,12 @@ export class LearningCohortsSchedulesModule {
     courseId: string,
     cohortId: string,
     itemId: string,
-    body?: Types.LearningCohortsUpdateCohortScheduleInput,
+    body: Types.LearningCohortsUpdateCohortScheduleInput,
   ): Promise<Result<Types.LearningCohortsCohortScheduleDto, ApiError>> {
     const url = `/v1/courses/${courseId}/cohorts/${cohortId}/schedule/items/${itemId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCohortsUpdateCohortScheduleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCohortsUpdateCohortScheduleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -115,12 +115,12 @@ export class LearningCohortsSchedulesModule {
     courseId: string,
     cohortId: string,
     itemId: string,
-    body?: Types.LearningCohortsShiftCohortScheduleInput,
+    body: Types.LearningCohortsShiftCohortScheduleInput,
   ): Promise<Result<Types.LearningCohortsCohortScheduleDto, ApiError>> {
     const url = `/v1/courses/${courseId}/cohorts/${cohortId}/schedule/items/${itemId}/shift`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCohortsShiftCohortScheduleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCohortsShiftCohortScheduleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -143,12 +143,12 @@ export class LearningCohortsSchedulesModule {
   async postCoursesCohortsSchedulePreview(
     courseId: string,
     cohortId: string,
-    body?: Types.LearningCohortsPreviewCohortScheduleInput,
+    body: Types.LearningCohortsPreviewCohortScheduleInput,
   ): Promise<Result<Types.LearningCohortsCohortSchedulePreviewDto, ApiError>> {
     const url = `/v1/courses/${courseId}/cohorts/${cohortId}/schedule/preview`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCohortsPreviewCohortScheduleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningCohortsPreviewCohortScheduleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

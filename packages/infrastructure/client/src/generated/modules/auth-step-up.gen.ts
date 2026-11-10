@@ -18,12 +18,12 @@ export class AuthStepUpModule {
   /**
    */
   async postAuthStepUpChallenges(
-    body?: Types.IdentityAuthenticationCreateStepUpChallengeInput,
+    body: Types.IdentityAuthenticationCreateStepUpChallengeInput,
   ): Promise<Result<Types.IdentityAuthenticationStepUpChallengeOutput, ApiError>> {
     const url = '/v1/auth/step-up/challenges';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCreateStepUpChallengeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthenticationCreateStepUpChallengeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -45,12 +45,12 @@ export class AuthStepUpModule {
    */
   async postAuthStepUpChallengesVerify(
     challengeId: string,
-    body?: Types.IdentityAuthenticationVerifyStepUpChallengeInput,
+    body: Types.IdentityAuthenticationVerifyStepUpChallengeInput,
   ): Promise<Result<Types.IdentityAuthenticationStepUpReceiptOutput, ApiError>> {
     const url = `/v1/auth/step-up/challenges/${challengeId}:verify`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationVerifyStepUpChallengeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthenticationVerifyStepUpChallengeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

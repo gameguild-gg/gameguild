@@ -39,11 +39,11 @@ export class TestingLabSettingsModule {
   /**
    * Create or update testing lab settings for the current tenant
    */
-  async putApiTestingLabSettings(body?: Types.TestingLabCreateTestingLabSettingsDto): Promise<Result<Types.TestingLabTestingLabSettingsDto, ApiError>> {
+  async putApiTestingLabSettings(body: Types.TestingLabCreateTestingLabSettingsDto): Promise<Result<Types.TestingLabTestingLabSettingsDto, ApiError>> {
     const url = '/api/testing-lab/settings';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabCreateTestingLabSettingsDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabCreateTestingLabSettingsDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -64,11 +64,11 @@ export class TestingLabSettingsModule {
   /**
    * Update testing lab settings for the current tenant (partial update)
    */
-  async patchApiTestingLabSettings(body?: Types.TestingLabUpdateTestingLabSettingsDto): Promise<Result<Types.TestingLabTestingLabSettingsDto, ApiError>> {
+  async patchApiTestingLabSettings(body: Types.TestingLabUpdateTestingLabSettingsDto): Promise<Result<Types.TestingLabTestingLabSettingsDto, ApiError>> {
     const url = '/api/testing-lab/settings';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabUpdateTestingLabSettingsDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.TestingLabUpdateTestingLabSettingsDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

@@ -19,12 +19,12 @@ export class AccessControlJitElevationsModule {
    * Request a JIT elevation for a permission
    */
   async postJitElevations(
-    body?: Types.IdentityAuthorizationCommandsRequestJitElevationCommand,
+    body: Types.IdentityAuthorizationCommandsRequestJitElevationCommand,
   ): Promise<Result<Types.IdentityAuthorizationJitElevationInput, ApiError>> {
     const url = '/v1/jit-elevations';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationCommandsRequestJitElevationCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationCommandsRequestJitElevationCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -83,12 +83,12 @@ export class AccessControlJitElevationsModule {
    */
   async postJitElevationsApprove(
     id: string,
-    body?: Types.IdentityAuthorizationControllersApproveElevationInput,
+    body: Types.IdentityAuthorizationControllersApproveElevationInput,
   ): Promise<Result<Types.IdentityAuthorizationJitElevationInput, ApiError>> {
     const url = `/v1/jit-elevations/${id}:approve`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationControllersApproveElevationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationControllersApproveElevationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -111,12 +111,12 @@ export class AccessControlJitElevationsModule {
    */
   async postJitElevationsDeny(
     id: string,
-    body?: Types.IdentityAuthorizationControllersDenyElevationInput,
+    body: Types.IdentityAuthorizationControllersDenyElevationInput,
   ): Promise<Result<Types.IdentityAuthorizationJitElevationInput, ApiError>> {
     const url = `/v1/jit-elevations/${id}:deny`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationControllersDenyElevationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationControllersDenyElevationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -137,11 +137,11 @@ export class AccessControlJitElevationsModule {
   /**
    * Revoke an active JIT elevation
    */
-  async postJitElevationsRevoke(id: string, body?: Types.IdentityAuthorizationControllersRevokeElevationInput): Promise<Result<void, ApiError>> {
+  async postJitElevationsRevoke(id: string, body: Types.IdentityAuthorizationControllersRevokeElevationInput): Promise<Result<void, ApiError>> {
     const url = `/v1/jit-elevations/${id}:revoke`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationControllersRevokeElevationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationControllersRevokeElevationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

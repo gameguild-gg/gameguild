@@ -36,12 +36,12 @@ export class ComplianceAuditCompliancePackagingModule {
   /**
    */
   async postApiAuditCompliancePackaging(
-    body?: Types.ComplianceAuditCreateCompliancePackageInput,
+    body: Types.ComplianceAuditCreateCompliancePackageInput,
   ): Promise<Result<Types.ComplianceAuditCompliancePackageOutput, ApiError>> {
     const url = '/api/audit/compliance-packaging';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditCreateCompliancePackageInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditCreateCompliancePackageInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -138,12 +138,12 @@ export class ComplianceAuditCompliancePackagingModule {
   /**
    */
   async postApiAuditCompliancePackagingDocuments(
-    body?: Types.ComplianceAuditUploadComplianceDocumentInput,
+    body: Types.ComplianceAuditUploadComplianceDocumentInput,
   ): Promise<Result<Types.ComplianceAuditComplianceDocumentOutput, ApiError>> {
     const url = '/api/audit/compliance-packaging/documents';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditUploadComplianceDocumentInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditUploadComplianceDocumentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -187,12 +187,12 @@ export class ComplianceAuditCompliancePackagingModule {
    */
   async postApiAuditCompliancePackagingDocumentsReview(
     id: string,
-    body?: Types.ComplianceAuditReviewComplianceDocumentInput,
+    body: Types.ComplianceAuditReviewComplianceDocumentInput,
   ): Promise<Result<Types.ComplianceAuditComplianceDocumentOutput, ApiError>> {
     const url = `/api/audit/compliance-packaging/documents/${id}/review`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditReviewComplianceDocumentInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditReviewComplianceDocumentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -245,12 +245,12 @@ export class ComplianceAuditCompliancePackagingModule {
   /**
    */
   async postAuditCompliancePackaging(
-    body?: Types.ComplianceAuditCreateCompliancePackageInput,
+    body: Types.ComplianceAuditCreateCompliancePackageInput,
   ): Promise<Result<Types.ComplianceAuditCompliancePackageOutput, ApiError>> {
     const url = '/v1/audit/compliance-packaging';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditCreateCompliancePackageInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditCreateCompliancePackageInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -345,12 +345,12 @@ export class ComplianceAuditCompliancePackagingModule {
   /**
    */
   async postAuditCompliancePackagingDocuments(
-    body?: Types.ComplianceAuditUploadComplianceDocumentInput,
+    body: Types.ComplianceAuditUploadComplianceDocumentInput,
   ): Promise<Result<Types.ComplianceAuditComplianceDocumentOutput, ApiError>> {
     const url = '/v1/audit/compliance-packaging/documents';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditUploadComplianceDocumentInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditUploadComplianceDocumentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -394,12 +394,12 @@ export class ComplianceAuditCompliancePackagingModule {
    */
   async postAuditCompliancePackagingDocumentsReview(
     id: string,
-    body?: Types.ComplianceAuditReviewComplianceDocumentInput,
+    body: Types.ComplianceAuditReviewComplianceDocumentInput,
   ): Promise<Result<Types.ComplianceAuditComplianceDocumentOutput, ApiError>> {
     const url = `/v1/audit/compliance-packaging/documents/${id}/review`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditReviewComplianceDocumentInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditReviewComplianceDocumentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

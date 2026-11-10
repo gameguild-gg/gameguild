@@ -18,11 +18,11 @@ export class CommercePaymentsTaxesModule {
   /**
    * Calculate tax for a transaction
    */
-  async postPaymentsTaxCalculate(body?: Types.CommercePaymentsCalculateTaxInput): Promise<Result<Types.CommercePaymentsTaxCalculationResult, ApiError>> {
+  async postPaymentsTaxCalculate(body: Types.CommercePaymentsCalculateTaxInput): Promise<Result<Types.CommercePaymentsTaxCalculationResult, ApiError>> {
     const url = '/api/v1/payments/tax/calculate';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsCalculateTaxInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsCalculateTaxInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -46,12 +46,12 @@ export class CommercePaymentsTaxesModule {
    * Validates whether a tax exemption certificate or status is valid for a given transaction.
    */
   async postPaymentsTaxValidateExemption(
-    body?: Types.CommercePaymentsValidateTaxExemptionInput,
+    body: Types.CommercePaymentsValidateTaxExemptionInput,
   ): Promise<Result<Types.CommercePaymentsTaxExemptionValidationResult, ApiError>> {
     const url = '/api/v1/payments/tax/validate-exemption';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsValidateTaxExemptionInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsValidateTaxExemptionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -75,12 +75,12 @@ export class CommercePaymentsTaxesModule {
    * Validates whether a tax exemption certificate or status is valid for a given transaction.
    */
   async postPaymentsTaxValidateVat(
-    body?: Types.CommercePaymentsValidateTaxExemptionInput,
+    body: Types.CommercePaymentsValidateTaxExemptionInput,
   ): Promise<Result<Types.CommercePaymentsTaxExemptionValidationResult, ApiError>> {
     const url = '/api/v1/payments/tax/validate-vat';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsValidateTaxExemptionInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsValidateTaxExemptionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -101,11 +101,11 @@ export class CommercePaymentsTaxesModule {
   /**
    * Calculate tax for a transaction
    */
-  async postTaxesCalculate(body?: Types.CommercePaymentsCalculateTaxInput): Promise<Result<Types.CommercePaymentsTaxCalculationResult, ApiError>> {
+  async postTaxesCalculate(body: Types.CommercePaymentsCalculateTaxInput): Promise<Result<Types.CommercePaymentsTaxCalculationResult, ApiError>> {
     const url = '/api/v1/taxes/calculate';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsCalculateTaxInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsCalculateTaxInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -129,12 +129,12 @@ export class CommercePaymentsTaxesModule {
    * Validates whether a tax exemption certificate or status is valid for a given transaction.
    */
   async postTaxesValidateExemption(
-    body?: Types.CommercePaymentsValidateTaxExemptionInput,
+    body: Types.CommercePaymentsValidateTaxExemptionInput,
   ): Promise<Result<Types.CommercePaymentsTaxExemptionValidationResult, ApiError>> {
     const url = '/api/v1/taxes/validate-exemption';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsValidateTaxExemptionInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsValidateTaxExemptionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -158,12 +158,12 @@ export class CommercePaymentsTaxesModule {
    * Validates whether a tax exemption certificate or status is valid for a given transaction.
    */
   async postTaxesValidateVat(
-    body?: Types.CommercePaymentsValidateTaxExemptionInput,
+    body: Types.CommercePaymentsValidateTaxExemptionInput,
   ): Promise<Result<Types.CommercePaymentsTaxExemptionValidationResult, ApiError>> {
     const url = '/api/v1/taxes/validate-vat';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsValidateTaxExemptionInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsValidateTaxExemptionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

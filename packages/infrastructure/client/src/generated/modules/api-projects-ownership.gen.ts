@@ -39,12 +39,12 @@ export class ApiProjectsOwnershipModule {
    */
   async postProjectsOwnershipAgreements(
     projectId: string,
-    body?: Types.APIProjectsCreateProjectTeamAgreementInput,
+    body: Types.APIProjectsCreateProjectTeamAgreementInput,
   ): Promise<Result<Types.APIProjectsProjectTeamAgreementDto, ApiError>> {
     const url = `/v1/projects/${projectId}/ownership/agreements`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIProjectsCreateProjectTeamAgreementInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIProjectsCreateProjectTeamAgreementInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -127,12 +127,12 @@ export class ApiProjectsOwnershipModule {
   async postProjectsOwnershipAgreementsCounter(
     projectId: string,
     agreementId: string,
-    body?: Types.APIProjectsCounterProjectTeamAgreementInput,
+    body: Types.APIProjectsCounterProjectTeamAgreementInput,
   ): Promise<Result<Types.APIProjectsProjectTeamAgreementDto, ApiError>> {
     const url = `/v1/projects/${projectId}/ownership/agreements/${agreementId}/counter`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIProjectsCounterProjectTeamAgreementInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIProjectsCounterProjectTeamAgreementInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -154,12 +154,12 @@ export class ApiProjectsOwnershipModule {
    */
   async postProjectsOwnershipAllocations(
     projectId: string,
-    body?: Types.APIProjectsCreateProjectAllocationInput,
+    body: Types.APIProjectsCreateProjectAllocationInput,
   ): Promise<Result<Types.APIProjectsProjectAllocationDto, ApiError>> {
     const url = `/v1/projects/${projectId}/ownership/allocations`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIProjectsCreateProjectAllocationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIProjectsCreateProjectAllocationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -182,12 +182,12 @@ export class ApiProjectsOwnershipModule {
   async putProjectsOwnershipAllocations(
     projectId: string,
     allocationId: string,
-    body?: Types.APIProjectsUpdateProjectAllocationInput,
+    body: Types.APIProjectsUpdateProjectAllocationInput,
   ): Promise<Result<Types.APIProjectsProjectAllocationDto, ApiError>> {
     const url = `/v1/projects/${projectId}/ownership/allocations/${allocationId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIProjectsUpdateProjectAllocationInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIProjectsUpdateProjectAllocationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -223,12 +223,12 @@ export class ApiProjectsOwnershipModule {
    */
   async postProjectsOwnershipOwnerTeam(
     projectId: string,
-    body?: Types.APIProjectsTransferProjectOwnerTeamInput,
+    body: Types.APIProjectsTransferProjectOwnerTeamInput,
   ): Promise<Result<Types.APIProjectsProjectOwnershipDto, ApiError>> {
     const url = `/v1/projects/${projectId}/ownership/owner-team`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIProjectsTransferProjectOwnerTeamInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIProjectsTransferProjectOwnerTeamInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -250,12 +250,12 @@ export class ApiProjectsOwnershipModule {
    */
   async postProjectsOwnershipTeams(
     projectId: string,
-    body?: Types.APIProjectsAddProjectTeamInput,
+    body: Types.APIProjectsAddProjectTeamInput,
   ): Promise<Result<Types.APIProjectsProjectTeamOwnershipDto, ApiError>> {
     const url = `/v1/projects/${projectId}/ownership/teams`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIProjectsAddProjectTeamInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIProjectsAddProjectTeamInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -278,12 +278,12 @@ export class ApiProjectsOwnershipModule {
   async putProjectsOwnershipTeams(
     projectId: string,
     projectTeamId: string,
-    body?: Types.APIProjectsUpdateProjectTeamInput,
+    body: Types.APIProjectsUpdateProjectTeamInput,
   ): Promise<Result<Types.APIProjectsProjectTeamOwnershipDto, ApiError>> {
     const url = `/v1/projects/${projectId}/ownership/teams/${projectTeamId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIProjectsUpdateProjectTeamInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIProjectsUpdateProjectTeamInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

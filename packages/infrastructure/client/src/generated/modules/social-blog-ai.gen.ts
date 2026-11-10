@@ -78,12 +78,12 @@ export class SocialBlogAiModule {
   async postApiSocialBlogPostsAiProposalsApply(
     postId: string,
     proposalId: string,
-    body?: Types.SocialBlogAuthoringApplyBlogAiProposalInput,
+    body: Types.SocialBlogAuthoringApplyBlogAiProposalInput,
   ): Promise<Result<Types.SocialBlogAuthoringBlogPostDto, ApiError>> {
     const url = `/api/social/blog/posts/${postId}/ai/proposals/${proposalId}/apply`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialBlogAuthoringApplyBlogAiProposalInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialBlogAuthoringApplyBlogAiProposalInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -106,12 +106,12 @@ export class SocialBlogAiModule {
    */
   async postApiSocialBlogPostsAiRuns(
     postId: string,
-    body?: Types.SocialBlogAuthoringBlogAiRunInput,
+    body: Types.SocialBlogAuthoringBlogAiRunInput,
   ): Promise<Result<Types.SocialBlogAuthoringBlogAiRunDto, ApiError>> {
     const url = `/api/social/blog/posts/${postId}/ai/runs`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialBlogAuthoringBlogAiRunInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.SocialBlogAuthoringBlogAiRunInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

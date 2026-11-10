@@ -50,11 +50,11 @@ export class CommercePaymentsDisputesModule {
    *
    * Creates a dispute against a payment. The disputing identity comes from the authenticated actor, never the request body.
    */
-  async postDisputes(body?: Types.CommercePaymentsDisputesControllerCreateDisputeInput): Promise<Result<Types.CommercePaymentsPaymentDispute, ApiError>> {
+  async postDisputes(body: Types.CommercePaymentsDisputesControllerCreateDisputeInput): Promise<Result<Types.CommercePaymentsPaymentDispute, ApiError>> {
     const url = '/api/v1/disputes';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsDisputesControllerCreateDisputeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsDisputesControllerCreateDisputeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -131,11 +131,11 @@ export class CommercePaymentsDisputesModule {
    *
    * Cancels an open dispute with a reason. Custom action per Google API guidelines.
    */
-  async postDisputesCancel(disputeId: string, body?: Types.CommercePaymentsDisputesControllerCancelDisputeInput): Promise<Result<void, ApiError>> {
+  async postDisputesCancel(disputeId: string, body: Types.CommercePaymentsDisputesControllerCancelDisputeInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/disputes/${disputeId}:cancel`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsDisputesControllerCancelDisputeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsDisputesControllerCancelDisputeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -183,11 +183,11 @@ export class CommercePaymentsDisputesModule {
    *
    * Resolves a dispute with an explicit outcome (won, lost, partial refund, ...). Custom action per Google API guidelines.
    */
-  async postDisputesResolve(disputeId: string, body?: Types.CommercePaymentsDisputesControllerResolveDisputeInput): Promise<Result<void, ApiError>> {
+  async postDisputesResolve(disputeId: string, body: Types.CommercePaymentsDisputesControllerResolveDisputeInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/disputes/${disputeId}:resolve`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsDisputesControllerResolveDisputeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsDisputesControllerResolveDisputeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -204,11 +204,11 @@ export class CommercePaymentsDisputesModule {
    *
    * Advances a dispute's status (under review, pending customer or merchant response). Custom action per Google API guidelines.
    */
-  async postDisputesRespond(disputeId: string, body?: Types.CommercePaymentsDisputesControllerRespondDisputeInput): Promise<Result<void, ApiError>> {
+  async postDisputesRespond(disputeId: string, body: Types.CommercePaymentsDisputesControllerRespondDisputeInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/disputes/${disputeId}:respond`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsDisputesControllerRespondDisputeInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsDisputesControllerRespondDisputeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -276,12 +276,12 @@ export class CommercePaymentsDisputesModule {
    */
   async postDisputesEvidence(
     disputeId: string,
-    body?: Types.CommercePaymentsDisputesControllerAddDisputeEvidenceInput,
+    body: Types.CommercePaymentsDisputesControllerAddDisputeEvidenceInput,
   ): Promise<Result<Types.CommercePaymentsDisputeEvidence, ApiError>> {
     const url = `/api/v1/disputes/${disputeId}/evidence`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsDisputesControllerAddDisputeEvidenceInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommercePaymentsDisputesControllerAddDisputeEvidenceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

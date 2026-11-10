@@ -81,12 +81,12 @@ export class EconomyComplianceHoldAdministrationModule {
    */
   async postAdminEconomyComplianceHoldsReleaseApprovals(
     holdId: string,
-    body?: Types.APIControllersEconomyStepUpInput,
+    body: Types.APIControllersEconomyStepUpInput,
   ): Promise<Result<Types.FinanceEconomyRiskComplianceHoldAdministrationState, ApiError>> {
     const url = `/api/v1/admin/economy/compliance/holds/${holdId}/release-approvals`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersEconomyStepUpInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIControllersEconomyStepUpInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -108,12 +108,12 @@ export class EconomyComplianceHoldAdministrationModule {
    */
   async postAdminEconomyComplianceHoldsReleaseProposals(
     holdId: string,
-    body?: Types.APIControllersEconomyStepUpInput,
+    body: Types.APIControllersEconomyStepUpInput,
   ): Promise<Result<Types.FinanceEconomyRiskComplianceHoldAdministrationState, ApiError>> {
     const url = `/api/v1/admin/economy/compliance/holds/${holdId}/release-proposals`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersEconomyStepUpInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIControllersEconomyStepUpInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

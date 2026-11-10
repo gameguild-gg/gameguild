@@ -56,12 +56,12 @@ export class ComplianceAuditRedactionPipelineModule {
    * Creates a redaction rule. Guarded to tenant administrators; audited; invalidates the rule cache.
    */
   async postApiAuditRedactionPipelineRules(
-    body?: Types.ComplianceAuditUpsertPiiRedactionRuleInput,
+    body: Types.ComplianceAuditUpsertPiiRedactionRuleInput,
   ): Promise<Result<Types.ComplianceAuditPiiRedactionRuleOutput, ApiError>> {
     const url = '/api/audit/redaction-pipeline/rules';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditUpsertPiiRedactionRuleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditUpsertPiiRedactionRuleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -108,13 +108,13 @@ export class ComplianceAuditRedactionPipelineModule {
    */
   async putApiAuditRedactionPipelineRules(
     ruleId: string,
-    body?: Types.ComplianceAuditUpsertPiiRedactionRuleInput,
+    body: Types.ComplianceAuditUpsertPiiRedactionRuleInput,
     query?: { expectedRevision?: number },
   ): Promise<Result<Types.ComplianceAuditPiiRedactionRuleOutput, ApiError>> {
     const url = `/api/audit/redaction-pipeline/rules/${ruleId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditUpsertPiiRedactionRuleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditUpsertPiiRedactionRuleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -154,12 +154,12 @@ export class ComplianceAuditRedactionPipelineModule {
    * pattern-recognition verification surface for administrators.
    */
   async postApiAuditRedactionPipelineTest(
-    body?: Types.ComplianceAuditPiiRedactionTestRunInput,
+    body: Types.ComplianceAuditPiiRedactionTestRunInput,
   ): Promise<Result<Types.ComplianceAuditPiiRedactionTestRunOutput, ApiError>> {
     const url = '/api/audit/redaction-pipeline/test';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditPiiRedactionTestRunInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditPiiRedactionTestRunInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -244,12 +244,12 @@ export class ComplianceAuditRedactionPipelineModule {
    * Creates a redaction rule. Guarded to tenant administrators; audited; invalidates the rule cache.
    */
   async postAuditRedactionPipelineRules(
-    body?: Types.ComplianceAuditUpsertPiiRedactionRuleInput,
+    body: Types.ComplianceAuditUpsertPiiRedactionRuleInput,
   ): Promise<Result<Types.ComplianceAuditPiiRedactionRuleOutput, ApiError>> {
     const url = '/v1/audit/redaction-pipeline/rules';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditUpsertPiiRedactionRuleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditUpsertPiiRedactionRuleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -296,13 +296,13 @@ export class ComplianceAuditRedactionPipelineModule {
    */
   async putAuditRedactionPipelineRules(
     ruleId: string,
-    body?: Types.ComplianceAuditUpsertPiiRedactionRuleInput,
+    body: Types.ComplianceAuditUpsertPiiRedactionRuleInput,
     query?: { expectedRevision?: number },
   ): Promise<Result<Types.ComplianceAuditPiiRedactionRuleOutput, ApiError>> {
     const url = `/v1/audit/redaction-pipeline/rules/${ruleId}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditUpsertPiiRedactionRuleInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditUpsertPiiRedactionRuleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -342,12 +342,12 @@ export class ComplianceAuditRedactionPipelineModule {
    * pattern-recognition verification surface for administrators.
    */
   async postAuditRedactionPipelineTest(
-    body?: Types.ComplianceAuditPiiRedactionTestRunInput,
+    body: Types.ComplianceAuditPiiRedactionTestRunInput,
   ): Promise<Result<Types.ComplianceAuditPiiRedactionTestRunOutput, ApiError>> {
     const url = '/v1/audit/redaction-pipeline/test';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditPiiRedactionTestRunInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditPiiRedactionTestRunInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

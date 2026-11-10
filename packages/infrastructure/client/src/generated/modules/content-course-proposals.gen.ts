@@ -37,11 +37,11 @@ export class ContentCourseProposalsModule {
 
   /**
    */
-  async postContentCourseProposals(body?: Types.ContentPagesCreateCourseProposalDto): Promise<Result<Types.ContentPagesCourseProposalDto, ApiError>> {
+  async postContentCourseProposals(body: Types.ContentPagesCreateCourseProposalDto): Promise<Result<Types.ContentPagesCourseProposalDto, ApiError>> {
     const url = '/v1/content/course-proposals';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ContentPagesCreateCourseProposalDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.ContentPagesCreateCourseProposalDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -81,14 +81,11 @@ export class ContentCourseProposalsModule {
 
   /**
    */
-  async putContentCourseProposals(
-    id: string,
-    body?: Types.ContentPagesUpdateCourseProposalDto,
-  ): Promise<Result<Types.ContentPagesCourseProposalDto, ApiError>> {
+  async putContentCourseProposals(id: string, body: Types.ContentPagesUpdateCourseProposalDto): Promise<Result<Types.ContentPagesCourseProposalDto, ApiError>> {
     const url = `/v1/content/course-proposals/${id}`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ContentPagesUpdateCourseProposalDtoSchema, body, 'request');
+    const validatedBody = safeParse(Types.ContentPagesUpdateCourseProposalDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

@@ -46,12 +46,12 @@ export class ComplianceAuditReplayModule {
    *             an independently protected expected digest; it does not certify event provenance or synchronize source clocks.
    */
   async postApiAuditReplaySnapshots(
-    body?: Types.ComplianceAuditCaptureAuditReplayInput,
+    body: Types.ComplianceAuditCaptureAuditReplayInput,
   ): Promise<Result<Types.ComplianceAuditAuditReplaySnapshotOutput, ApiError>> {
     const url = '/api/audit/replay/snapshots';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditCaptureAuditReplayInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditCaptureAuditReplayInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -79,12 +79,12 @@ export class ComplianceAuditReplayModule {
    *             source clock synchronization.
    */
   async postApiAuditReplaySnapshotsReconstruct(
-    body?: Types.ComplianceAuditReconstructAuditReplayInput,
+    body: Types.ComplianceAuditReconstructAuditReplayInput,
   ): Promise<Result<Types.ComplianceAuditAuditReplayReconstructionOutput, ApiError>> {
     const url = '/api/audit/replay/snapshots:reconstruct';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditReconstructAuditReplayInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditReconstructAuditReplayInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -133,12 +133,12 @@ export class ComplianceAuditReplayModule {
    *             an independently protected expected digest; it does not certify event provenance or synchronize source clocks.
    */
   async postAdminAuditLogsReplaySnapshots(
-    body?: Types.ComplianceAuditCaptureAuditReplayInput,
+    body: Types.ComplianceAuditCaptureAuditReplayInput,
   ): Promise<Result<Types.ComplianceAuditAuditReplaySnapshotOutput, ApiError>> {
     const url = '/v1/admin/audit-logs/replay/snapshots';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditCaptureAuditReplayInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditCaptureAuditReplayInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -166,12 +166,12 @@ export class ComplianceAuditReplayModule {
    *             source clock synchronization.
    */
   async postAdminAuditLogsReplaySnapshotsReconstruct(
-    body?: Types.ComplianceAuditReconstructAuditReplayInput,
+    body: Types.ComplianceAuditReconstructAuditReplayInput,
   ): Promise<Result<Types.ComplianceAuditAuditReplayReconstructionOutput, ApiError>> {
     const url = '/v1/admin/audit-logs/replay/snapshots:reconstruct';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditReconstructAuditReplayInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.ComplianceAuditReconstructAuditReplayInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

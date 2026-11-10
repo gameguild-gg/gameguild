@@ -42,11 +42,11 @@ export class CommerceProductsSupportTicketsSelfServiceModule {
 
   /**
    */
-  async postSupportTicketsMine(body?: Types.CommerceProductsCreateMySupportTicketInput): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
+  async postSupportTicketsMine(body: Types.CommerceProductsCreateMySupportTicketInput): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
     const url = '/v1/support/tickets/mine';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsCreateMySupportTicketInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsCreateMySupportTicketInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -88,12 +88,12 @@ export class CommerceProductsSupportTicketsSelfServiceModule {
    */
   async postSupportTicketsMineMessages(
     ticketId: string,
-    body?: Types.CommerceProductsAddMySupportTicketMessageInput,
+    body: Types.CommerceProductsAddMySupportTicketMessageInput,
   ): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
     const url = `/v1/support/tickets/mine/${ticketId}/messages`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsAddMySupportTicketMessageInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.CommerceProductsAddMySupportTicketMessageInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

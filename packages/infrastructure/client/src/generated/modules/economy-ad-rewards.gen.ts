@@ -18,12 +18,12 @@ export class EconomyAdRewardsModule {
   /**
    */
   async postEconomyAdRewardsSessions(
-    body?: Types.APIControllersStartMyAdRewardSessionInput,
+    body: Types.APIControllersStartMyAdRewardSessionInput,
   ): Promise<Result<Types.FinanceEconomyAdRewardsDurableAdRewardSessionResult, ApiError>> {
     const url = '/api/v1/economy/ad-rewards/sessions';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersStartMyAdRewardSessionInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIControllersStartMyAdRewardSessionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -65,12 +65,12 @@ export class EconomyAdRewardsModule {
    */
   async postEconomyAdRewardsSessionsComplete(
     sessionId: string,
-    body?: Types.APIControllersCompleteMyAdRewardSessionInput,
+    body: Types.APIControllersCompleteMyAdRewardSessionInput,
   ): Promise<Result<Types.FinanceEconomyAdRewardsDurableAdRewardCompletionResult, ApiError>> {
     const url = `/api/v1/economy/ad-rewards/sessions/${sessionId}/complete`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersCompleteMyAdRewardSessionInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.APIControllersCompleteMyAdRewardSessionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

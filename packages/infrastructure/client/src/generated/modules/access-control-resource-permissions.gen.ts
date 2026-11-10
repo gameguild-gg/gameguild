@@ -209,12 +209,12 @@ export class AccessControlResourcePermissionsModule {
    * Shares a resource with one or more users by granting them permissions.
    */
   async postAuthorizationResourcesShare(
-    body?: Types.IdentityAuthorizationShareResourceCommand,
+    body: Types.IdentityAuthorizationShareResourceCommand,
   ): Promise<Result<Types.IdentityAuthorizationShareResult, ApiError>> {
     const url = '/api/v1/authorization/resources/share';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationShareResourceCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationShareResourceCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -236,12 +236,12 @@ export class AccessControlResourcePermissionsModule {
    * Removes all access for a user on a specific resource.
    */
   async deleteAuthorizationResourcesUsersAccess(
-    body?: Types.IdentityAuthorizationRemoveUserAccessCommand,
+    body: Types.IdentityAuthorizationRemoveUserAccessCommand,
   ): Promise<Result<Types.IdentityAuthorizationPermissionUpdateResult, ApiError>> {
     const url = '/api/v1/authorization/resources/users/access';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationRemoveUserAccessCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationRemoveUserAccessCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'DELETE',
@@ -263,12 +263,12 @@ export class AccessControlResourcePermissionsModule {
    * Updates a specific user's permissions on a resource.
    */
   async putAuthorizationResourcesUsersPermissions(
-    body?: Types.IdentityAuthorizationUpdateUserPermissionsCommand,
+    body: Types.IdentityAuthorizationUpdateUserPermissionsCommand,
   ): Promise<Result<Types.IdentityAuthorizationPermissionUpdateResult, ApiError>> {
     const url = '/api/v1/authorization/resources/users/permissions';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationUpdateUserPermissionsCommandSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthorizationUpdateUserPermissionsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

@@ -65,11 +65,11 @@ export class LearningLtiModule {
 
   /**
    */
-  async postLtiDeployments(body?: Types.LearningLtiCreateLtiDeploymentInput): Promise<Result<void, ApiError>> {
+  async postLtiDeployments(body: Types.LearningLtiCreateLtiDeploymentInput): Promise<Result<void, ApiError>> {
     const url = '/v1/lti/deployments';
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningLtiCreateLtiDeploymentInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningLtiCreateLtiDeploymentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -83,11 +83,11 @@ export class LearningLtiModule {
 
   /**
    */
-  async postLtiDeploymentsLineItems(id: string, body?: Types.LearningLtiCreateLtiLineItemInput): Promise<Result<void, ApiError>> {
+  async postLtiDeploymentsLineItems(id: string, body: Types.LearningLtiCreateLtiLineItemInput): Promise<Result<void, ApiError>> {
     const url = `/v1/lti/deployments/${id}/line-items`;
 
     // Validate request body
-    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningLtiCreateLtiLineItemInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningLtiCreateLtiLineItemInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
