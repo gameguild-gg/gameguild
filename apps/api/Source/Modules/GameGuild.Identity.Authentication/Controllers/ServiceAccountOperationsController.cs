@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Authentication;
@@ -17,7 +18,8 @@ namespace GameGuild.Identity.Authentication;
 [Produces("application/json")]
 public class ServiceAccountOperationsController(
     IServiceAccountService serviceAccountService,
-    ISender sender) : AuthControllerBase
+    ISender sender,
+    IStepUpRequirementService stepUpRequirements) : AuthControllerBase
 {
     /// <summary>
     ///     Rotates the client secret for a service account.
@@ -28,24 +30,47 @@ public class ServiceAccountOperationsController(
     /// </remarks>
     [HttpPost("{serviceAccountId:guid}:rotate-secret")]
     [Authorize(Policy = "RequireAdminRole")]
+    [EndpointDescription("Rotates a service-account secret after fresh verification by an administrator. An authorized request without a stepUpReceipt returns HTTP 403 with a persisted challenge bound to that service account. Verify an enrolled supported factor and retry the same account with the receipt. Actor and tenant are taken from the authenticated request context.")]
     [ProducesResponseType(typeof(SecretRotationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(StepUpAuthenticationRequiredResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> RotateSecret(Guid serviceAccountId, CancellationToken cancellationToken)
+    public async Task<IActionResult> RotateSecret(
+        Guid serviceAccountId,
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] RotateServiceAccountSecretRequest? request,
+        CancellationToken cancellationToken)
     {
-        try
+        var result = await sender.Send(new RotateServiceAccountSecretCommand(serviceAccountId, request?.StepUpReceipt),
+            cancellationToken).ConfigureAwait(false);
+        if (result.IsSuccess)
         {
-            var newSecret = await sender.Send(
-                new RotateServiceAccountSecretCommand(serviceAccountId), cancellationToken).ConfigureAwait(false);
             return Ok(new SecretRotationResponse
             {
-                ClientSecret = newSecret,
+                ClientSecret = result.Value,
                 Warning = "Store the new client_secret securely. It will not be shown again."
             });
         }
-        catch (InvalidOperationException)
+        if (result.Error.Code == "StepUp.Required")
         {
-            return NotFound();
+            try
+            {
+                var requirement = await stepUpRequirements.CreateAsync(
+                    RotateServiceAccountSecretHandler.RotateSecretStepUpBinding(serviceAccountId), cancellationToken).ConfigureAwait(false);
+                return StatusCode(StatusCodes.Status403Forbidden, requirement);
+            }
+            catch (StepUpContextUnavailableException)
+            {
+                return Unauthorized();
+            }
         }
+        return result.Error.Code switch
+        {
+            "Auth.Required" => Unauthorized(),
+            "Auth.Forbidden" => Forbid(),
+            "ServiceAccount.NotFound" => NotFound(),
+            _ => BadRequest(new { error = result.Error })
+        };
     }
 
     /// <summary>
@@ -276,3 +301,6 @@ public class ServiceAccountOperationsController(
         }
     }
 }
+
+/// <summary>Fresh verification receipt for the account selected by the route.</summary>
+public sealed record RotateServiceAccountSecretRequest([property: AuditSensitive] string? StepUpReceipt = null);

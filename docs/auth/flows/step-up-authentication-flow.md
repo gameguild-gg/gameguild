@@ -10,7 +10,18 @@ Step-up protects sensitive operations by requiring MFA evidence *within the curr
 
 Current verification also reserves one of five durable attempt slots before evaluating a supported factor. Invalid proofs retain their slot; storage/provider failures, cancellation and failed conditional receipt writes roll back the command transaction. An expired-row worker keeps one additional day of evidence and deletes at most 128 rows per minute. For `POST /v1/auth/trusted-devices`, a missing receipt calls `IStepUpRequirementService` through the authenticated controller. The service derives the exact device-name binding on the server and persists a challenge through the existing command transaction. It returns HTTP 403 as a `StepUpAuthenticationRequiredResponse` derived from `ProblemDetails`, with the challenge identifier, operation, expiry and supported enrolled methods at the response root. Creation uses the store's microsecond precision so the returned expiry equals the persisted deadline. Storage failures and cancellation roll back the creation; they never grant trust or fabricate a challenge.
 
-The client verifies a listed factor and retries the same device name with the returned single-use receipt. TOTP and backup codes require enabled, setup-complete enrollment and global MFA enablement; active WebAuthn credentials remain available independently. A challenge identifier is not a receipt. The generated SDK keeps this 403 demand in `error.metadata.stepUp` for schema validation and explicit verification/retry; it does not retry or grant trust automatically. API-key creation and service-account secret rotation still need adoption of the platform gate.
+The client verifies a listed factor and retries the same device name with the returned single-use receipt. TOTP and backup codes require enabled, setup-complete enrollment and global MFA enablement; active WebAuthn credentials remain available independently. A challenge identifier is not a receipt. The generated SDK keeps this 403 demand in `error.metadata.stepUp` for schema validation and explicit verification/retry; it does not retry or grant trust automatically. API-key creation and service-account secret rotation also use the platform gate. These endpoint families opt in explicitly; no global risk middleware is introduced.
+
+### Credential creation and rotation (#1191)
+
+- `POST /v1/auth/api-keys` validates the name, scopes, expiry and IP whitelist before issuing a challenge. A valid request without `stepUpReceipt` returns the structured HTTP 403 demand. Its operation is `create-api-key`, its target is `current-user`, and its payload hash binds all four creation fields. The command snapshots the scopes before awaiting receipt consumption and derives ownership from the authenticated actor and tenant.
+- `POST /v1/auth/service-accounts/{serviceAccountId}:rotate-secret` requires an authenticated human administrator with a tenant and session. The account must belong to that tenant; SystemAdmin may explicitly target a global or cross-tenant account. A request with an empty body or no receipt returns the structured demand only after the target and authority checks pass. The operation is `rotate-service-account-secret`, the target is `service-account/{accountId:D}`, and the payload is the SHA-256 digest of the UTF-8 `accountId:D` string.
+
+For both operations, verify a supported enrolled factor and retry the same intent with the returned receipt. Invalid or reused receipts return HTTP 400 and cannot mutate credentials. Missing authentication context returns HTTP 401; service-account authorization failures return HTTP 403 and a missing target returns HTTP 404. Receipt consumption and credential persistence use the same command transaction. Storage failures and request cancellation roll back both writes and propagate to the host.
+
+The exact API-key hash serialization is documented in `AUTHORIZATION_ARCHITECTURE.md` under "API-key creation requires operation-bound verification". The operation binding in the automatic demand lets clients verify and retry without implementing their own hashing convention.
+
+The diagrams and source-line references below retain the original recorded `develop` snapshot. Historical references to #1178 describe the original finding; that issue is closed, and the current host session behavior is covered by the orchestrated-authentication PostgreSQL HTTP tests.
 
 ## 2. End-to-End Flowchart — happy path and every edge case
 
@@ -20,7 +31,7 @@ flowchart TD
         TR1["Sensitive economy operations declare a receipt field<br/>economy payout reserve and dispatch and control-plane ops<br/>EconomyPayoutExecutionController.cs L15 L168"]
         TR2["Client without a valid receipt"] --> TR3["ConsumeAsync fails - StepUpReceiptInvalidException<br/>mapped to 409 Conflict with message<br/>EconomyPayoutExecutionController.cs L300"]
         TR4["No global risk middleware - protected endpoint families opt in"]
-        TR5["Trusted-device request without a receipt"] --> TR6["Requirement service derives binding and persists challenge<br/>403 RFC problem with challenge id, expiry and enrolled methods"]
+        TR5["Trusted-device, API-key creation, or service-secret rotation request without a receipt"] --> TR6["Requirement service derives binding and persists challenge<br/>403 RFC problem with challenge id, expiry and enrolled methods"]
         TR6 --> V1
     end
 

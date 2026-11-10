@@ -1,3 +1,4 @@
+using GameGuild.Identity.Context.Actors;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -17,9 +18,9 @@ public sealed class ServiceAccountOperationsControllerTests
             .Setup(x => x.RotateSecretAsync(serviceAccountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync("new-secret");
 
-        var controller = CreateController(service);
+        var controller = CreateController(service, serviceAccountId);
 
-        var result = await controller.RotateSecret(serviceAccountId, CancellationToken.None);
+        var result = await controller.RotateSecret(serviceAccountId, new RotateServiceAccountSecretRequest("verified-test-receipt"), CancellationToken.None);
 
         var ok = result.Should().BeOfType<OkObjectResult>().Subject;
         var payload = ok.Value.Should().BeOfType<SecretRotationResponse>().Subject;
@@ -27,18 +28,14 @@ public sealed class ServiceAccountOperationsControllerTests
     }
 
     [Fact]
-    public async Task RotateSecret_ShouldReturnNotFound_WhenServiceThrowsInvalidOperation()
+    public async Task RotateSecret_ShouldReturnNotFound_WhenAccountDoesNotExist()
     {
         var service = new Mock<IServiceAccountService>();
         var serviceAccountId = Guid.NewGuid();
 
-        service
-            .Setup(x => x.RotateSecretAsync(serviceAccountId, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException());
+        var controller = CreateController(service, serviceAccountId, accountExists: false);
 
-        var controller = CreateController(service);
-
-        var result = await controller.RotateSecret(serviceAccountId, CancellationToken.None);
+        var result = await controller.RotateSecret(serviceAccountId, null, CancellationToken.None);
 
         result.Should().BeOfType<NotFoundResult>();
     }
@@ -266,9 +263,23 @@ public sealed class ServiceAccountOperationsControllerTests
         result.Should().BeOfType<NotFoundResult>();
     }
 
-    private static ServiceAccountOperationsController CreateController(Mock<IServiceAccountService> service)
+    private static ServiceAccountOperationsController CreateController(
+        Mock<IServiceAccountService> service, Guid? accountId = null, bool accountExists = true)
     {
-        return new ServiceAccountOperationsController(service.Object, new CommandHandlerSender(service.Object, Mock.Of<IJwtTokenService>()));
+        var tenant = Guid.NewGuid();
+        var actor = ActorContextBuilder.ForUser(Guid.NewGuid()).WithTenantId(tenant)
+            .WithAttribute("session_id", Guid.NewGuid().ToString()).Build() with
+        { Roles = new HashSet<string> { "Admin" } };
+        var accessor = new ActorContextAccessor();
+        accessor.SetActorContext(actor);
+        if (accountId.HasValue)
+        {
+            service.Setup(x => x.GetByIdAsync(accountId.Value, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(accountExists ? new ServiceAccount { Id = accountId.Value, TenantId = tenant } : null);
+        }
+        return new ServiceAccountOperationsController(service.Object,
+            new CommandHandlerSender(service.Object, Mock.Of<IJwtTokenService>(), accessor, Mock.Of<IStepUpReceiptService>()),
+            Mock.Of<IStepUpRequirementService>());
     }
 
     [Fact]

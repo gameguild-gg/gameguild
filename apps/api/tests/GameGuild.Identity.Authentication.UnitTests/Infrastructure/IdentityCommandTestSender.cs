@@ -1,3 +1,4 @@
+using GameGuild.Identity.Context.Actors;
 using GameGuild.CQRS;
 using Moq;
 using Microsoft.Extensions.Configuration;
@@ -10,6 +11,7 @@ internal sealed class IdentityCommandTestSender : ISender
     private readonly KeyRotationCommandHandler? _keyRotationHandler;
     private readonly MfaMutationCommandHandler? _mfaHandler;
     private readonly ServiceAccountMutationCommandHandler? _serviceAccountHandler;
+    private readonly RotateServiceAccountSecretHandler? _secretRotationHandler;
     private readonly SessionMutationCommandHandler? _sessionHandler;
     private readonly StepUpCommandHandler? _stepUpHandler;
     private readonly WebAuthnMutationCommandHandler? _webAuthnHandler;
@@ -18,6 +20,7 @@ internal sealed class IdentityCommandTestSender : ISender
         KeyRotationCommandHandler? keyRotationHandler = null,
         MfaMutationCommandHandler? mfaHandler = null,
         ServiceAccountMutationCommandHandler? serviceAccountHandler = null,
+        RotateServiceAccountSecretHandler? secretRotationHandler = null,
         SessionMutationCommandHandler? sessionHandler = null,
         StepUpCommandHandler? stepUpHandler = null,
         WebAuthnMutationCommandHandler? webAuthnHandler = null)
@@ -25,6 +28,7 @@ internal sealed class IdentityCommandTestSender : ISender
         _keyRotationHandler = keyRotationHandler;
         _mfaHandler = mfaHandler;
         _serviceAccountHandler = serviceAccountHandler;
+        _secretRotationHandler = secretRotationHandler;
         _sessionHandler = sessionHandler;
         _stepUpHandler = stepUpHandler;
         _webAuthnHandler = webAuthnHandler;
@@ -38,10 +42,15 @@ internal sealed class IdentityCommandTestSender : ISender
 
     public static IdentityCommandTestSender ForServiceAccounts(
         IServiceAccountService service,
-        IJwtTokenService? jwtTokenService = null) =>
+        IJwtTokenService? jwtTokenService = null,
+        IActorContextAccessor? actor = null,
+        IStepUpReceiptService? receipts = null) =>
         new(serviceAccountHandler: new ServiceAccountMutationCommandHandler(
             service,
-            jwtTokenService ?? Mock.Of<IJwtTokenService>()));
+            jwtTokenService ?? Mock.Of<IJwtTokenService>()),
+            secretRotationHandler: new RotateServiceAccountSecretHandler(service,
+                actor ?? Mock.Of<IActorContextAccessor>(x => x.ActorContext == ActorContext.Anonymous),
+                receipts ?? Mock.Of<IStepUpReceiptService>()));
 
     public static IdentityCommandTestSender ForSessions(ISessionManagementService service) =>
         new(sessionHandler: new SessionMutationCommandHandler(service, Mock.Of<IStepUpReceiptService>()));
@@ -73,7 +82,7 @@ internal sealed class IdentityCommandTestSender : ISender
             DisableMfaCommand command when _mfaHandler is not null => await _mfaHandler.Handle(command, cancellationToken),
             CreateServiceAccountCommand command when _serviceAccountHandler is not null => await _serviceAccountHandler.Handle(command, cancellationToken),
             PatchServiceAccountCommand command when _serviceAccountHandler is not null => await _serviceAccountHandler.Handle(command, cancellationToken),
-            RotateServiceAccountSecretCommand command when _serviceAccountHandler is not null => await _serviceAccountHandler.Handle(command, cancellationToken),
+            RotateServiceAccountSecretCommand command when _secretRotationHandler is not null => await _secretRotationHandler.Handle(command, cancellationToken),
             UnlockServiceAccountCommand command when _serviceAccountHandler is not null => await _serviceAccountHandler.Handle(command, cancellationToken),
             LockServiceAccountCommand command when _serviceAccountHandler is not null => await _serviceAccountHandler.Handle(command, cancellationToken),
             DeactivateServiceAccountCommand command when _serviceAccountHandler is not null => await _serviceAccountHandler.Handle(command, cancellationToken),

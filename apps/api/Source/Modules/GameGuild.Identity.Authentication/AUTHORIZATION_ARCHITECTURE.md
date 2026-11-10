@@ -3333,3 +3333,29 @@ The GameGuild Authorization Architecture provides a **comprehensive, enterprise-
 │                    Authorization Decision                    │
 │                    ✅ Allow  or  ❌ Deny                     │
 └─────────────────────────────────────────────────────────────┘
+
+### API-key creation requires operation-bound verification (#1191)
+
+API-key creation requires an authenticated human actor with a tenant and session.
+The command validates the creation fields before consuming a receipt. A valid
+request without a receipt returns HTTP 403 with a persisted challenge and the
+supported enrolled factors. The operation is `create-api-key`, the target is
+`current-user`, and the payload is the lowercase SHA-256 digest of the UTF-8 JSON
+object with `Name`, `Scopes`, `ExpiresAt` and `IpWhitelist`, in that order, using
+System.Text.Json's default serialization. The receipt itself is excluded.
+
+Clients verify an enrolled factor and retry the identical creation fields with
+`stepUpReceipt`. The handler snapshots the scopes before awaiting verification,
+uses the authenticated actor and tenant for ownership, and consumes the receipt
+inside the same command transaction as key persistence. Expired, mismatched or
+reused receipts cannot issue a key. Receipt-store and persistence failures
+propagate to the transaction owner; they cannot become a successful key response.
+Service-account secret rotation uses a dedicated guarded command handler. It
+requires a human administrator, an authenticated tenant/session, and ownership of
+the account's tenant; only SystemAdmin may explicitly target another tenant or a
+global account. The receipt binds `rotate-service-account-secret` to
+`service-account/{accountId:D}` and the lowercase SHA-256 digest of the UTF-8
+`accountId:D` string. A request without a receipt returns its structured demand
+only after the account and caller pass these checks. Receipt consumption and
+secret persistence share the command transaction. Storage failures propagate to
+the transaction owner; they are not translated into an account-not-found result.

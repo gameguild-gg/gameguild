@@ -149,7 +149,7 @@ public sealed class ServiceAccountCertificateUnbindingTests
         var accessor = new Mock<IActorContextAccessor>();
         accessor.SetupGet(x => x.ActorContext).Returns(actor);
         var sender = new CommandHandlerSender(service, Mock.Of<IJwtTokenService>(), accessor.Object);
-        return new Fixture(account, repository, service, new ServiceAccountOperationsController(service, sender));
+        return new Fixture(account, repository, service, new ServiceAccountOperationsController(service, sender, Mock.Of<IStepUpRequirementService>()));
     }
 
     private sealed record Fixture(ServiceAccount Account, Mock<IServiceAccountRepository> Repository,
