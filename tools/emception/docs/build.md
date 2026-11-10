@@ -209,7 +209,7 @@ PR carries an explicit changeset; after it is merged, the Linux workflow opens
 a version PR. That PR is rebuilt using the final version. Once merged, the
 workflow packs every package, publishes `@gameguild/emception-toolchain`, waits
 for the registry, publishes consumers in dependency order, and creates
-`emception-vX.Y.Z`.
+`vX.Y.Z`.
 
 The release gate requires package versions, `manifest.artifactVersion`, and the
 version embedded in the Browser default manifest URL to be identical.

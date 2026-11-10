@@ -186,6 +186,32 @@ export class ComplianceConsentModule {
 
   /**
    */
+  async postApiComplianceConsentUserConsent(
+    body: Types.APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput,
+  ): Promise<Result<Types.APICoreComplianceRecordUserConsentEndpointCommandResult, ApiError>> {
+    const url = '/api/compliance/consent/user-consent';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.APICoreComplianceRecordUserConsentEndpointCommandResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getApiComplianceConsentUsers(userId: string): Promise<Result<Types.ComplianceConsentUserConsentDto[], ApiError>> {
     const url = `/api/compliance/consent/users/${userId}`;
 

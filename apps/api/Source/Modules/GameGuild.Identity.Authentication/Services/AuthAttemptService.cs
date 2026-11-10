@@ -91,6 +91,14 @@ public class AuthAttemptService(
         LogLoginAuditEvent(attempt);
         await ForwardAuditEventAsync(attempt, authenticationMethod).ConfigureAwait(false);
 
+        // This reserved reason is written only after the provider boundary classifies
+        // unavailability. Keep the failed audit record, but do not charge the client
+        // for an identity provider's outage. Unknown and credential failures still count.
+        if (failureReason == nameof(OAuthProviderUnavailableException))
+        {
+            return;
+        }
+
         try
         {
             await enumerationProtection.RecordEnumerationAttemptAsync(ipAddress, "login").ConfigureAwait(false);

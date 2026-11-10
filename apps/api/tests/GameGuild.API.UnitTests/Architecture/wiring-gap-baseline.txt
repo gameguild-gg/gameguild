@@ -84,29 +84,11 @@ G5|GameGuild.Features.FeatureFlagOptions # issue #1184: SectionName declared but
 # G7 request-handler resolution | G8 planned-422 surface leaks | E9 route smoke
 
 # -- G7: requests (queries/commands) with NO registered handler ----------------
-G7|GameGuild.Commerce.Subscriptions.GetAllSubscriptionPlansQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead query type - no handler, no dispatch site.
-G7|GameGuild.Commerce.Subscriptions.GetSubscriptionByExternalIdQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead query type - no handler, no dispatch site.
-G7|GameGuild.Commerce.Subscriptions.GetSubscriptionsByPlanQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead query type - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.ChangeEntryStatusCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.ChangeLedgerStatusCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.CreateVirtualLedgerCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.DeleteLedgerCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.DeleteVirtualLedgerCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.MoveLedgerCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.PostBatchEntriesCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.ReconcileEntryCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.RefreshLedgerStatsCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.RefreshSubtreeStatsCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.SetLedgerBudgetCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.UpdateLedgerCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Commands.UpdateVirtualLedgerFilterCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger command - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Queries.GetChildLedgersQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger query - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Queries.GetEntryByReferenceQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger query - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Queries.GetLedgerEntriesQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger query - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Queries.GetLedgerEntriesWithDescendantsQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger query - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Queries.GetVirtualLedgerBalanceQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger query - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Queries.SearchEntriesQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger query - no handler, no dispatch site.
-G7|GameGuild.Finance.Ledgers.Queries.SearchLedgersQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead ledger query - no handler, no dispatch site.
+# (2026-11-05, #1277 batch 1) The 44 no-handler entries for Finance.Ledgers (20,
+# of which 3 planned-redundant twins were deleted outright), Identity.Users (11,
+# deleted), TestingLab (7, deleted) and Commerce.Subscriptions (3, handlers
+# added) were fixed and removed from this baseline. The remaining no-handler
+# entries are the #1203 planned read surface:
 G7|GameGuild.Identity.Authentication.GetAccessReviewAnalyticsQuery # issue #1203 (planned read surface): query dispatched by OpenAPI-hidden planned controllers has no handler yet - 500s if the planned surface is reactivated before handlers land.
 G7|GameGuild.Identity.Authentication.GetAccessReviewCampaignQuery # issue #1203 (planned read surface): query dispatched by OpenAPI-hidden planned controllers has no handler yet - 500s if the planned surface is reactivated before handlers land.
 G7|GameGuild.Identity.Authentication.GetAccessReviewCampaignsQuery # issue #1203 (planned read surface): query dispatched by OpenAPI-hidden planned controllers has no handler yet - 500s if the planned surface is reactivated before handlers land.
@@ -119,33 +101,12 @@ G7|GameGuild.Identity.Authentication.GetPeriodicAccessReviewQuery # issue #1203 
 G7|GameGuild.Identity.Authentication.GetPeriodicAccessReviewsQuery # issue #1203 (planned read surface): query dispatched by OpenAPI-hidden planned controllers has no handler yet - 500s if the planned surface is reactivated before handlers land.
 G7|GameGuild.Identity.Authentication.GetPermissionAnalyticsQuery # issue #1203 (planned read surface): query dispatched by OpenAPI-hidden planned controllers has no handler yet - 500s if the planned surface is reactivated before handlers land.
 G7|GameGuild.Identity.Authentication.GetPermissionAuditTrailQuery # issue #1203 (planned read surface): query dispatched by OpenAPI-hidden planned controllers has no handler yet - 500s if the planned surface is reactivated before handlers land.
-G7|GameGuild.Identity.Users.GetUserAccessibilityPreferencesQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead user-profile query - no handler, no dispatch site.
-G7|GameGuild.Identity.Users.GetUserAvatarQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead user-profile query - no handler, no dispatch site.
-G7|GameGuild.Identity.Users.GetUserBannerQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead user-profile query - no handler, no dispatch site.
-G7|GameGuild.Identity.Users.GetUserCustomFieldsQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead user-profile query - no handler, no dispatch site.
-G7|GameGuild.Identity.Users.GetUserNotificationCountQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead user-profile query - no handler, no dispatch site.
-G7|GameGuild.Identity.Users.GetUserNotificationDeliverySettingsQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead user-profile query - no handler, no dispatch site.
-G7|GameGuild.Identity.Users.GetUserNotificationPreferencesQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead user-profile query - no handler, no dispatch site.
-G7|GameGuild.Identity.Users.GetUserNotificationsPageQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead user-profile query - no handler, no dispatch site.
-G7|GameGuild.Identity.Users.GetUserPrivacyPreferencesQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead user-profile query - no handler, no dispatch site.
-G7|GameGuild.Identity.Users.GetUserTagsQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead user-profile query - no handler, no dispatch site.
-G7|GameGuild.Identity.Users.GetUsersMetadataQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead user-profile query - no handler, no dispatch site.
-G7|GameGuild.TestingLab.DeleteTestingRequestCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead TestingLab request - no handler, no dispatch site.
-G7|GameGuild.TestingLab.GetParticipantsQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead TestingLab request - no handler, no dispatch site.
-G7|GameGuild.TestingLab.GetTestingFeedbackQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead TestingLab request - no handler, no dispatch site.
-G7|GameGuild.TestingLab.GetTestingSessionQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead TestingLab request - no handler, no dispatch site.
-G7|GameGuild.TestingLab.GetTestingSessionsQuery # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead TestingLab request - no handler, no dispatch site.
-G7|GameGuild.TestingLab.SubmitFeedbackCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead TestingLab request - no handler, no dispatch site.
-G7|GameGuild.TestingLab.UpdateTestingRequestCommand # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: dead TestingLab request - no handler, no dispatch site.
 
 # -- G7: requests with TWO distinct registered handlers (silent last-wins) -----
-G7|GameGuild.Learning.Courses.GetCreatorProgramStatisticsQuery->GameGuild.Learning.Courses.CreatorProgramStatistics|ambiguous:2 # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: ProgramStatisticsAndDiscoveryQueryHandlers and a per-query handler both register IRequestHandler<T,R> - duplicate dispatch.
-G7|GameGuild.Learning.Courses.GetGlobalProgramStatisticsQuery->GameGuild.Learning.Courses.GlobalProgramStatistics|ambiguous:2 # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: ProgramStatisticsAndDiscoveryQueryHandlers and a per-query handler both register IRequestHandler<T,R> - duplicate dispatch.
-G7|GameGuild.Learning.Courses.GetProgramByIdQuery->GameGuild.Learning.Courses.Program|ambiguous:2 # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: ProgramBasicQueryHandlers and GetProgramByIdQueryHandler both register IRequestHandler<T,R> - duplicate dispatch.
-G7|GameGuild.Learning.Courses.GetProgramBySlugQuery->GameGuild.Learning.Courses.Program|ambiguous:2 # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: ProgramBasicQueryHandlers and GetProgramBySlugQueryHandler both register IRequestHandler<T,R> - duplicate dispatch.
-G7|GameGuild.Learning.Courses.GetProgramStatisticsQuery->GameGuild.Learning.Courses.ProgramStatistics|ambiguous:2 # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: ProgramStatisticsAndDiscoveryQueryHandlers and a per-query handler both register IRequestHandler<T,R> - duplicate dispatch.
-G7|GameGuild.Learning.Courses.GetPublishedProgramBySlugQuery->GameGuild.Learning.Courses.Program|ambiguous:2 # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: ProgramBasicQueryHandlers and GetPublishedProgramBySlugQueryHandler both register IRequestHandler<T,R> - duplicate dispatch.
-G7|GameGuild.Learning.Courses.GetUserProgramProgressQuery->GameGuild.Learning.Courses.ProgramUserProgress|ambiguous:2 # NEW gap found by G7 round 2 (2026-11-04), issue #1184-family inventory: ProgramEnrollmentAndProgressQueryHandlers and a per-query handler both register IRequestHandler<T,R> - duplicate dispatch.
+# (2026-11-05, #1277 batch 1) The seven Learning.Courses 'ambiguous:2' entries
+# were fixed by removing the composite handlers' duplicate IRequestHandler
+# registrations (the per-query handlers in Queries/<Name>/ are authoritative)
+# and removed from this baseline.
 
 # -- G8: generated client advertises planned-422 routes as callable ------------
 G8|client-advertises:/v1/access-reviews/campaigns # NEW gap found by G8 round 2 (2026-11-04), issue #1203 follow-up: Identity.Authorization AccessReviewsController (NOT IgnoreApi) dispatches the planned-unavailable CreateAccessReviewCampaignCommand - advertised route always 422s.
@@ -258,7 +219,6 @@ E9|POST /v1/auth/account-recovery/approve-passkey:begin|anon # NEW gap found by 
 E9|POST /v1/auth/account-recovery/approve-passkey:begin|authed # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: auth flows 500 on empty smoke payload (missing required context not mapped to 4xx)
 E9|POST /v1/auth/guest-session|anon # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: auth flows 500 on empty smoke payload (missing required context not mapped to 4xx)
 E9|POST /v1/auth/guest-session|authed # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: auth flows 500 on empty smoke payload (missing required context not mapped to 4xx)
-E9|POST /v1/auth/mfa/backup-codes:regenerate|authed # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: auth flows 500 on empty smoke payload (missing required context not mapped to 4xx)
 E9|POST /v1/auth/mfa/totp:setup|authed # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: auth flows 500 on empty smoke payload (missing required context not mapped to 4xx)
 E9|POST /v1/auth/saml/1:sign-in-authorize|anon # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: external IdP (SAML/OIDC) endpoints answer 503 with no provider configured - designed degradation, not a wiring gap
 E9|POST /v1/auth/saml/1:sign-in-authorize|authed # NEW gap found by E9 round 2 (2026-11-04), issue #1184-family inventory: external IdP (SAML/OIDC) endpoints answer 503 with no provider configured - designed degradation, not a wiring gap

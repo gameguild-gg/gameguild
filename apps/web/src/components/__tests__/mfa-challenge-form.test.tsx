@@ -204,5 +204,24 @@ describe('MfaChallengeForm', () => {
     await user.click(screen.getByTestId('mfa-backup-codes-copy'));
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('first-once-code\nsecond-once-code'));
     expect(screen.queryByText('signIn.mfa.copied')).not.toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('signIn.mfa.copyFailed');
+    expect(codes).toHaveTextContent('first-once-code');
+
+    writeText.mockResolvedValue(undefined);
+    await user.click(screen.getByTestId('mfa-backup-codes-copy'));
+    expect(await screen.findByText('signIn.mfa.copied')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('keeps the setup key available for manual copying when the clipboard is unavailable', async () => {
+    mockAuth.mfaChallenge = enrollmentChallenge;
+    const { user } = renderWithUser(<MfaChallengeForm redirectTo="/workspace" />);
+    Object.defineProperty(globalThis.navigator, 'clipboard', { configurable: true, writable: true, value: undefined });
+
+    await user.click(screen.getByRole('button', { name: 'signIn.mfa.copySecret' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('signIn.mfa.copyFailed');
+    expect(screen.getByTestId('mfa-enrollment-secret')).toHaveTextContent(enrollmentChallenge.mfaEnrollment.secretKey);
+    expect(screen.queryByText('signIn.mfa.copied')).not.toBeInTheDocument();
   });
 });

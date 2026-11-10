@@ -54,13 +54,13 @@ public sealed class OrchestratedAuthController(ISender sender) : BaseApiControll
     ///     Satisfy one challenge step of an orchestrated authentication flow
     /// </summary>
     /// <param name="flowId">The flow whose step is being satisfied</param>
-    /// <param name="body">The step and exactly one verification proof (TOTP code, backup code or WebAuthn assertion)</param>
+    /// <param name="body">The next step and exactly one proof: TOTP, backup code, WebAuthn assertion, or the dedicated risk code</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Updated flow state</returns>
     [AllowAnonymous]
     [HttpPost("v{version:apiVersion}/auth/orchestrated/{flowId}:process-step")]
     [EndpointSummary("Satisfy an orchestrated authentication challenge step")]
-    [EndpointDescription("Verifies one challenge step (TOTP code, backup code or WebAuthn assertion) against the persisted flow and returns the updated state. Out-of-order, repeated, abandoned, expired or locked-out steps fail closed.")]
+    [EndpointDescription("Verifies the next required challenge against the persisted server-bound flow. MFA/device steps accept exactly one TOTP, backup code or WebAuthn assertion; RiskChallenge accepts only its eight-digit riskCode sent to the verified email address. Wrong risk codes return 401 and retain a bounded attempt count in the Problem Details legacy extension. Repeated, abandoned, expired or locked-out steps fail closed.")]
     [ProducesResponseType<OrchestratedFlowStateResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -73,10 +73,12 @@ public sealed class OrchestratedAuthController(ISender sender) : BaseApiControll
             Step = body.Step,
             TotpCode = body.TotpCode,
             BackupCode = body.BackupCode,
-            WebAuthnAssertion = body.WebAuthnAssertion
+            WebAuthnAssertion = body.WebAuthnAssertion,
+            RiskCode = body.RiskCode
         };
 
-        return Ok(await sender.Send(command, ct).ConfigureAwait(false));
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+        return result.Success ? Ok(result) : Unauthorized(result);
     }
 
     /// <summary>
@@ -88,7 +90,7 @@ public sealed class OrchestratedAuthController(ISender sender) : BaseApiControll
     [AllowAnonymous]
     [HttpPost("v{version:apiVersion}/auth/orchestrated/{flowId}:complete")]
     [EndpointSummary("Complete an orchestrated authentication flow")]
-    [EndpointDescription("Issues access and refresh tokens once every required step of the flow is satisfied. Pending steps, abandoned, expired or already-unknown flows fail closed.")]
+    [EndpointDescription("Creates a persisted session and bound refresh root, then issues a tenant-bound JWT once every required step is satisfied and current account/MFA/tenant policy is still valid. Flow finalization and credential persistence commit together; replay cannot issue twice. Pending, abandoned, expired and unknown flows fail closed.")]
     [ProducesResponseType<SignInResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

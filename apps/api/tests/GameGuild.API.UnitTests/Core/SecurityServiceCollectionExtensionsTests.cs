@@ -319,6 +319,35 @@ public sealed class SecurityServiceCollectionExtensionsTests
         result.Should().BeTrue();
     }
 
+    [Theory]
+    [InlineData("Admin", true)]
+    [InlineData("SystemAdmin", true)]
+    [InlineData("Owner", true)]
+    [InlineData("TenantAdmin", true)]
+    [InlineData("Anonymous", false)]
+    public async Task UnbindEndpoint_AllowsTenantAdministratorsToReachItsGuardedHandler(string role, bool expected)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.SetupAuthorization(new ConfigurationBuilder().Build(), new AuthorizationOptions());
+        services.AddSingleton(Mock.Of<IPolicyCache>());
+        services.AddSingleton(Mock.Of<IPolicyMerger>());
+        using var provider = services.BuildServiceProvider();
+        var metadata = typeof(ServiceAccountOperationsController)
+            .GetMethod(nameof(ServiceAccountOperationsController.UnbindClientCertificate))!
+            .GetCustomAttributes(inherit: true).Concat(typeof(ServiceAccountOperationsController).GetCustomAttributes(inherit: true))
+            .OfType<IAuthorizeData>().ToArray();
+        metadata.Should().NotBeEmpty();
+        var policy = await AuthorizationPolicy.CombineAsync(provider.GetRequiredService<IAuthorizationPolicyProvider>(), metadata);
+        policy.Should().NotBeNull();
+        var principal = new ClaimsPrincipal(new ClaimsIdentity([new Claim("role", role)],
+            role == "Anonymous" ? null : "test", "sub", "role"));
+        var context = new AuthorizationHandlerContext(policy!.Requirements, principal, resource: null);
+        foreach (var handler in policy.Requirements.OfType<IAuthorizationHandler>()) await handler.HandleAsync(context);
+
+        context.HasSucceeded.Should().Be(expected);
+    }
+
     [Fact]
     public void SetupAuthorization_TenantMemberIsDatabaseBacked()
     {

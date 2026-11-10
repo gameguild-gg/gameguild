@@ -164,20 +164,20 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
       ? {
           ...token.user,
           id: typeof refreshedUser.id === 'string' ? refreshedUser.id : token.user.id,
-          email: typeof refreshedUser.email === 'string' || refreshedUser.email === null ? (refreshedUser.email as string | null) : token.user.email,
+          email: typeof refreshedUser.email === 'string' || refreshedUser.email === null ? refreshedUser.email : token.user.email,
           name:
             typeof refreshedUser.displayName === 'string'
               ? refreshedUser.displayName
               : typeof refreshedUser.username === 'string'
                 ? refreshedUser.username
                 : typeof refreshedUser.name === 'string' || refreshedUser.name === null
-                  ? (refreshedUser.name as string | null)
+                  ? refreshedUser.name
                   : token.user.name,
           image:
             typeof refreshedUser.profilePictureUrl === 'string'
               ? refreshedUser.profilePictureUrl
               : typeof refreshedUser.image === 'string' || refreshedUser.image === null
-                ? (refreshedUser.image as string | null)
+                ? refreshedUser.image
                 : token.user.image,
           roles: resolveAuthRoles(data, refreshedUser),
           permissions: resolveAuthPermissions(data, refreshedUser),
@@ -195,7 +195,7 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
       refreshToken: (data.refreshToken as string) || token.refreshToken,
       accessTokenExpires,
       refreshTokenExpires: refreshTokenExpires ?? token.refreshTokenExpires,
-      tenantId: typeof data.tenantId === 'string' || data.tenantId === null ? (data.tenantId as string | null) : token.tenantId,
+      tenantId: typeof data.tenantId === 'string' || data.tenantId === null ? data.tenantId : token.tenantId,
       availableTenants: Array.isArray(data.availableTenants) ? (data.availableTenants as Array<{ id: string; name: string }>) : token.availableTenants,
     };
   } catch (error) {
@@ -252,41 +252,39 @@ export async function processSession(
   // `allowRefresh` may be lazy so persistence is probed only when a refresh
   // is actually due.
   if (shouldRefreshToken(currentToken)) {
-    const rotationAllowed =
-      typeof allowRefreshOption === 'function' ? allowRefreshOption() : allowRefreshOption !== false;
+    const rotationAllowed = typeof allowRefreshOption === 'function' ? allowRefreshOption() : allowRefreshOption !== false;
     if (!rotationAllowed) {
       // Fail closed: an already-expired access token must not surface as an
       // authenticated session whose bearer is rejected downstream.
-      const accessExpired =
-        currentToken.accessTokenExpires != null && Date.now() >= currentToken.accessTokenExpires;
+      const accessExpired = currentToken.accessTokenExpires != null && Date.now() >= currentToken.accessTokenExpires;
       if (accessExpired) {
         return { session: null, token: null, updated: false };
       }
     } else {
-    try {
-      currentToken = await refreshAccessToken(currentToken, config);
-      tokenUpdated = true;
-    } catch (error) {
-      // A denied refresh cannot keep an authenticated session. A transient
-      // failure may retain a still-valid access token until its deadline.
-      const refreshDenied = error instanceof TokenRefreshError && (error.responseStatus === 401 || error.responseStatus === 403);
-      const accessExpired = currentToken.accessTokenExpires != null && Date.now() >= currentToken.accessTokenExpires;
-      if (refreshDenied || accessExpired) {
+      try {
+        currentToken = await refreshAccessToken(currentToken, config);
+        tokenUpdated = true;
+      } catch (error) {
+        // A denied refresh cannot keep an authenticated session. A transient
+        // failure may retain a still-valid access token until its deadline.
+        const refreshDenied = error instanceof TokenRefreshError && (error.responseStatus === 401 || error.responseStatus === 403);
+        const accessExpired = currentToken.accessTokenExpires != null && Date.now() >= currentToken.accessTokenExpires;
+        if (refreshDenied || accessExpired) {
+          /* v8 ignore start */
+          if (config.debug) {
+            console.warn('[auth] Session cannot be refreshed, requiring authentication');
+          }
+          /* v8 ignore stop */
+          return { session: null, token: null, updated: false };
+        }
+        // Access token is near-expiry but not yet expired — keep the session
+        // alive so the current request can still succeed.
         /* v8 ignore start */
         if (config.debug) {
-          console.warn('[auth] Session cannot be refreshed, requiring authentication');
+          console.warn('[auth] Token refresh failed, session may become stale soon');
         }
         /* v8 ignore stop */
-        return { session: null, token: null, updated: false };
       }
-      // Access token is near-expiry but not yet expired — keep the session
-      // alive so the current request can still succeed.
-      /* v8 ignore start */
-      if (config.debug) {
-        console.warn('[auth] Token refresh failed, session may become stale soon');
-      }
-      /* v8 ignore stop */
-    }
     }
   }
 

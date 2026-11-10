@@ -34,16 +34,25 @@
 import { useCallback, useState, useRef, useContext, useEffect } from 'react';
 import { assertSafeServiceUrl } from '../../runtime/security/safe-remote-url';
 import { SessionContext } from './session-provider';
-import { MfaRequiredError, parseMfaEnrollmentOffer } from '../../runtime/auth/errors';
-import type { IdentityAuthenticationSignInMfaEnrollmentOffer } from '../../generated/types.gen';
+import { MfaRequiredError, parseMfaEnrollmentOffer, type MfaEnrollmentOffer } from '../../runtime/auth/errors';
 
 const MFA_CHALLENGE_STORAGE_KEY = 'gg.auth.mfaChallenge';
+
+/** Payload shape returned by auth endpoints on error responses. */
+interface AuthErrorResponse {
+  error?: string;
+  message?: string;
+  detail?: string;
+  mfaToken?: string;
+  availableMethods?: string[];
+  mfaEnrollment?: unknown;
+}
 
 /** A pending first-factor challenge plus, for required-MFA subjects with no enrolled factor, the one-time enrollment offer. */
 export interface MfaChallenge {
   mfaToken: string;
   availableMethods: string[];
-  mfaEnrollment?: IdentityAuthenticationSignInMfaEnrollmentOffer;
+  mfaEnrollment?: MfaEnrollmentOffer;
 }
 
 function readStoredMfaChallenge(): UseAuthReturn['mfaChallenge'] {
@@ -98,6 +107,7 @@ export interface UseAuthReturn {
     firstName?: string;
     lastName?: string;
     tenantId?: string;
+    turnstileToken?: string;
     /**
      * Guest bearer token presented when registering from a guest session
      * (issue #213). A valid guest session is upgraded into the issued
@@ -156,7 +166,10 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
       throw new Error('Failed to fetch CSRF token');
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { csrfToken?: unknown };
+    if (typeof data.csrfToken !== 'string') {
+      throw new Error('Failed to fetch CSRF token');
+    }
     csrfTokenRef.current = data.csrfToken;
     return data.csrfToken;
   }, []);
@@ -199,7 +212,7 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
         csrfTokenRef.current = null;
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+          const errorData = (await response.json().catch(() => ({}))) as AuthErrorResponse;
           if (errorData.error === 'MfaRequired' && typeof errorData.mfaToken === 'string' && /^[A-Za-z0-9_-]{43}$/.test(errorData.mfaToken)) {
             const availableMethods = Array.isArray(errorData.availableMethods)
               ? errorData.availableMethods.filter((m: unknown): m is string => typeof m === 'string')
@@ -207,21 +220,30 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
             const enrollment = parseMfaEnrollmentOffer(errorData.mfaEnrollment);
             const challenge: MfaChallenge = { mfaToken: errorData.mfaToken, availableMethods, ...(enrollment ? { mfaEnrollment: enrollment } : {}) };
             /* v8 ignore start */
-            try { window.sessionStorage.setItem(MFA_CHALLENGE_STORAGE_KEY, JSON.stringify(challenge)); } catch { /* storage unavailable */ }
+            try {
+              window.sessionStorage.setItem(MFA_CHALLENGE_STORAGE_KEY, JSON.stringify(challenge));
+            } catch {
+              /* storage unavailable */
+            }
             /* v8 ignore stop */
             setMfaChallenge(challenge);
             throw new MfaRequiredError(undefined, { mfaToken: errorData.mfaToken, availableMethods, mfaEnrollment: enrollment });
           }
-          throw new Error((errorData as Record<string, string>).message || (errorData as Record<string, string>).detail || 'Sign-in failed');
+          throw new Error(errorData.message || errorData.detail || 'Sign-in failed');
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as { url?: unknown };
+
         /* v8 ignore start */
-        try { window.sessionStorage.removeItem(MFA_CHALLENGE_STORAGE_KEY); } catch { /* storage unavailable */ }
+        try {
+          window.sessionStorage.removeItem(MFA_CHALLENGE_STORAGE_KEY);
+        } catch {
+          /* storage unavailable */
+        }
         /* v8 ignore stop */
 
         // If the response has a URL (OAuth redirect)
-        if (data.url) {
+        if (typeof data.url === 'string' && data.url) {
           window.location.href = data.url;
           return;
         }
@@ -262,6 +284,7 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
       firstName?: string;
       lastName?: string;
       tenantId?: string;
+      turnstileToken?: string;
       guestAccessToken?: string;
       redirectTo?: string;
       redirect?: boolean;
@@ -286,8 +309,8 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
         csrfTokenRef.current = null;
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error((errorData as Record<string, string>).message || (errorData as Record<string, string>).detail || 'Sign-up failed');
+          const errorData = (await response.json().catch(() => ({}))) as AuthErrorResponse;
+          throw new Error(errorData.message || errorData.detail || 'Sign-up failed');
         }
 
         // Update session context
@@ -360,7 +383,11 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
 
   const clearMfa = useCallback(() => {
     /* v8 ignore start */
-    try { window.sessionStorage.removeItem(MFA_CHALLENGE_STORAGE_KEY); } catch { /* storage unavailable */ }
+    try {
+      window.sessionStorage.removeItem(MFA_CHALLENGE_STORAGE_KEY);
+    } catch {
+      /* storage unavailable */
+    }
     /* v8 ignore stop */
     setMfaChallenge(null);
     setError(null);

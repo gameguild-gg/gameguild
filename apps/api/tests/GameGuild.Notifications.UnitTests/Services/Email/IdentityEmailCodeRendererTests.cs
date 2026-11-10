@@ -80,6 +80,36 @@ public sealed class IdentityEmailCodeRendererTests
         await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
+    [Fact]
+    public async Task RiskCodeUsesTheProtectedAbsoluteExpiryInsteadOfTheLegacyTenMinuteLifetime()
+    {
+        var expiry = new DateTimeOffset(2026, 11, 5, 12, 5, 0, TimeSpan.Zero);
+        var notification = MetadataProtectorRoundTrip(Metadata(new
+        {
+            code = "87654321", email = "synthetic@example.invalid", purpose = "orchestrated-risk", expiresAt = expiry
+        }));
+        var message = await new EmailCodeRenderer(CreateFooterService(), MetadataProtector).RenderAsync(notification);
+        message.Should().NotBeNull();
+        message!.Subject.Should().Be("Verify your sign-in");
+        message.PlainTextContent.Should().Contain("87654321").And.Contain("2026-11-05 12:05:00 UTC").And.NotContain("10 minutes");
+        message.HtmlContent.Should().Contain("87654321").And.Contain("2026-11-05 12:05:00 UTC");
+        message.PlainTextContent.Should().NotContain("/unsubscribe");
+    }
+
+    [Theory]
+    [InlineData("orchestrated-risk", null)]
+    [InlineData("unknown-purpose", "2026-11-05T12:05:00Z")]
+    [InlineData("orchestrated-risk", "2026-11-05T12:05:00+01:00")]
+    public async Task RiskPurposeRequiresAnExplicitUtcExpiry(string purpose, string? expiresAt)
+    {
+        var notification = MetadataProtectorRoundTrip(Metadata(new
+        {
+            code = "87654321", email = "synthetic@example.invalid", purpose, expiresAt
+        }));
+        var renderer = new EmailCodeRenderer(CreateFooterService(), MetadataProtector);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => renderer.RenderAsync(notification));
+    }
+
     private static Notification MetadataProtectorRoundTrip(string metadata)
     {
         var notification = CreateNotification(metadata);

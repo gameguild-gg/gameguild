@@ -154,7 +154,7 @@ public sealed class EnrollmentService(
             }
 
             var reservation = await cohortEnrollmentGuard
-                .ReserveCapacityAsync(cohortId, cancellationToken).ConfigureAwait(false);
+                .ReserveCapacityAsync(cohortId, command.CourseId, cancellationToken).ConfigureAwait(false);
             if (!reservation.IsSuccess)
             {
                 return Result.Failure<EnrollmentDto>(reservation.Error);

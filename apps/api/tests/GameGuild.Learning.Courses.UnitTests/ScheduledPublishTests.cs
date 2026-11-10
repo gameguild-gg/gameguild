@@ -127,6 +127,66 @@ public class ScheduledPublishTests
     }
 
     [Fact]
+    public async Task ScheduleThenWithdraw_ThenSweepKeepsProgramPrivate()
+    {
+        await using var context = CreateContext();
+        var program = await ScheduleFuture(context, SystemClock.UtcNow.AddMinutes(-5));
+        var service = CreateLifecycleService(context);
+        var worker = new PublishDueProgramsWorker(context, NullLogger<PublishDueProgramsWorker>.Instance);
+
+        await service.WithdrawProgramAsync(program.Id);
+
+        await worker.PublishDueAsync();
+
+        var reloaded = context.Set<LearningProgram>().Single(p => p.Id == program.Id);
+        reloaded.Status.Should().Be(ContentStatus.Draft, "a withdrawn program must stay private even after a stale due sweep");
+        reloaded.Visibility.Should().NotBe(ContentVisibility.Public);
+    }
+
+    [Fact]
+    public async Task ScheduleThenUnpublish_ThenSweepKeepsProgramPrivate()
+    {
+        await using var context = CreateContext();
+        var program = await ScheduleFuture(context, SystemClock.UtcNow.AddMinutes(-5));
+        var service = CreateLifecycleService(context);
+        var worker = new PublishDueProgramsWorker(context, NullLogger<PublishDueProgramsWorker>.Instance);
+
+        await service.UnpublishProgramAsync(program.Id);
+        program.ScheduledPublishAt.Should().BeNull("unpublish consumes the schedule");
+        await worker.PublishDueAsync();
+
+        var reloaded = context.Set<LearningProgram>().Single(p => p.Id == program.Id);
+        reloaded.Status.Should().Be(ContentStatus.Draft, "an unpublished program must stay private even after a stale due sweep");
+        reloaded.Visibility.Should().NotBe(ContentVisibility.Public);
+    }
+
+    [Fact]
+    public async Task WithdrawProgramAsync_ClearsPendingSchedule()
+    {
+        await using var context = CreateContext();
+        var program = await ScheduleFuture(context, SystemClock.UtcNow.AddHours(1));
+        var service = CreateLifecycleService(context);
+
+        await service.WithdrawProgramAsync(program.Id);
+
+        context.Set<LearningProgram>().Single(p => p.Id == program.Id).ScheduledPublishAt
+            .Should().BeNull("withdraw consumes the pending schedule");
+    }
+
+    [Fact]
+    public async Task UnpublishProgramAsync_ClearsPendingSchedule()
+    {
+        await using var context = CreateContext();
+        var program = await ScheduleFuture(context, SystemClock.UtcNow.AddHours(1));
+        var service = CreateLifecycleService(context);
+
+        await service.UnpublishProgramAsync(program.Id);
+
+        context.Set<LearningProgram>().Single(p => p.Id == program.Id).ScheduledPublishAt
+            .Should().BeNull("unpublish consumes the pending schedule");
+    }
+
+    [Fact]
     public void AddCoursesModule_RegistersTheScheduledPublishWorkerAndHost()
     {
         var services = new ServiceCollection();

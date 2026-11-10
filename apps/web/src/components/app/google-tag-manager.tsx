@@ -24,13 +24,46 @@ export interface GoogleTagManagerProps {
   readonly containerId?: string;
 }
 
+const LOADER_SCRIPT_ID = 'gg-gtm-loader';
+
+/**
+ * True when the dataLayer already carries a `gtm.start` entry for the given
+ * container, so a re-grant must not double-inject it.
+ */
+function hasContainerStarted(w: Window, containerId: string): boolean {
+  const layer = (w as ConsentWindow).dataLayer;
+  if (!layer) return false;
+  return layer.some(
+    (entry) =>
+      typeof entry === 'object' &&
+      entry !== null &&
+      entry['event'] === 'gtm.js' &&
+      typeof entry['gtm.start'] === 'number' &&
+      entry['gtm.id'] === containerId,
+  );
+}
+
+/**
+ * Hard-stop equivalent of GA's `ga-disable-<id>` cookie: physically remove the
+ * injected gtm.js loader element (Next `<Script>` does not remove it on
+ * unmount) and the `<noscript>` iframe fallback.
+ */
+function removeTransportElements(): void {
+  document.getElementById(LOADER_SCRIPT_ID)?.remove();
+  document
+    .querySelectorAll('noscript')
+    .forEach((el) => el.querySelector(`iframe[src*="googletagmanager.com/ns.html"]`) && el.remove());
+}
+
 /**
  * Google Consent Mode v2 gated Google Tag Manager container loader.
  *
  * Installs the denied-by-default consent command before any GTM code runs.
- * The container transport (`gtm.js` + `<noscript>` iframe) only mounts once
- * a granted consent purpose exists (analytics or marketing); a revocation
- * pushes a `denied` consent update so the container stops processing.
+ * The container transport (`gtm.js` + `<noscript>` iframe) only mounts while a
+ * granted consent purpose exists; a revocation pushes a `denied` consent
+ * update, unmounts the transport, and removes the injected loader/iframe
+ * elements so nothing GTM-attributable keeps running after consent is
+ * withdrawn (store.ts already clears the `_ga*`/`_gid`/`_gcl*` cookies).
  */
 export function GoogleTagManager({ containerId: rawContainerId }: GoogleTagManagerProps) {
   const containerId = rawContainerId?.trim() || undefined;
@@ -42,16 +75,21 @@ export function GoogleTagManager({ containerId: rawContainerId }: GoogleTagManag
     const w = window as ConsentWindow;
     ensureConsentDefaults(w);
 
-    let started = false;
     return subscribeConsent((state) => {
       // null (missing/invalid/cleared record) is a denial — fail closed so a
       // started container never keeps its previous grant.
       const effective = state ?? DENIED_CONSENT;
       pushConsentUpdate(w, effective);
-      if ((effective.analytics || effective.marketing) && !started) {
-        started = true;
-        w.dataLayer!.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+      if (effective.analytics || effective.marketing) {
+        if (!hasContainerStarted(w, containerId)) {
+          w.dataLayer!.push({ 'gtm.start': new Date().getTime(), 'gtm.id': containerId, event: 'gtm.js' });
+        }
         setTransportReady(true);
+      } else {
+        // Revocation: unmount the transport and hard-remove the injected
+        // script/iframe elements so GTM stops entirely.
+        setTransportReady(false);
+        removeTransportElements();
       }
     });
   }, [containerId]);
@@ -61,7 +99,7 @@ export function GoogleTagManager({ containerId: rawContainerId }: GoogleTagManag
   return (
     <>
       <Script
-        id="gg-gtm-loader"
+        id={LOADER_SCRIPT_ID}
         src={`https://www.googletagmanager.com/gtm.js?id=${containerId}`}
         strategy="afterInteractive"
       />

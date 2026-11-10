@@ -76,7 +76,7 @@ public sealed class ProductCatalogIntegrationTests
             .ReturnsAsync(order);
 
         var inventory = new Mock<IProductInventoryService>();
-        var handler = new CancelOrderCommandHandler(repository.Object, inventory.Object);
+        var handler = new CancelOrderCommandHandler(repository.Object, OrderTestFactory.CreateActor(order), inventory.Object);
 
         var result = await handler.Handle(new CancelOrderCommand(order.Id, "changed mind"), CancellationToken.None);
 

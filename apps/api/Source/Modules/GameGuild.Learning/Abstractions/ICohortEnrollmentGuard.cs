@@ -18,8 +18,13 @@ public interface ICohortEnrollmentGuard
     ///     the enrollment row, and the entity's optimistic-concurrency version turns two
     ///     concurrent racers for the last seat into a <c>DbUpdateConcurrencyException</c>
     ///     for exactly one of them (the caller maps that to a capacity conflict).
+    ///     <para>
+    ///         The caller also passes the course ID of the enrollment being created; a
+    ///         cohort whose own course differs refuses the reservation, so an enrollment
+    ///         can never consume another course's seats.
+    ///     </para>
     /// </summary>
-    Task<Result> ReserveCapacityAsync(Guid cohortId, CancellationToken cancellationToken = default);
+    Task<Result> ReserveCapacityAsync(Guid cohortId, Guid courseId, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Releases a previously reserved seat (drop/expire path) by decrementing the

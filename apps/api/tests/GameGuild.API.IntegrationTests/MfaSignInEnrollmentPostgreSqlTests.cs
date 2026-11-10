@@ -1,17 +1,23 @@
 using System.Buffers.Binary;
 using System.Collections;
 using System.Globalization;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using GameGuild.API.Database;
 using GameGuild.API.IntegrationTests.Infrastructure;
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -93,7 +99,7 @@ public sealed class MfaSignInEnrollmentPostgreSqlTests(ApiPostgreSqlFixture fixt
         var marker = Guid.NewGuid().ToString("N");
         var password = SyntheticPassword();
         var seededConfigurationId = Guid.NewGuid();
-        const string seededSecret = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
+        var seededSecret = SyntheticSecret();
         var (userId, tenantId, email) = await SeedAsync(factory, marker, password, encryption => new UserMfaConfiguration
         {
             Id = seededConfigurationId, IsEnabled = false, IsSetupComplete = false, PreferredMethod = MfaMethod.Totp,
@@ -221,28 +227,186 @@ public sealed class MfaSignInEnrollmentPostgreSqlTests(ApiPostgreSqlFixture fixt
         Assert.Equal(0, await database.Set<UserMfaConfiguration>().CountAsync(row => row.UserId == userId));
     }
 
-    private WebApplicationFactory<Program> CreateFactory(bool requireMfaByDefault) =>
-        fixture.CreateFactory(builder => builder.ConfigureTestServices(services =>
+    // Migrated from the InMemory authentication suite: enrollment needs the
+    // real request transaction, advisory locks and PostgreSQL constraints.
+    [Theory]
+    [InlineData("Owner", false)]
+    [InlineData("Admin", false)]
+    [InlineData("Owner", true)]
+    [InlineData("Admin", true)]
+    public async Task ElevatedMembershipSignInRetainsRequestedTenantAndAppliesDefaultMfaPolicy(
+        string membershipRole, bool requireMfaByDefault)
+    {
+        using var factory = CreateFactory(requireMfaByDefault: requireMfaByDefault,
+            configure: builder => builder.ConfigureTestServices(services =>
+                services.PostConfigure<AuthenticationOptions>(options =>
+                {
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })));
+        var marker = Guid.NewGuid().ToString("N");
+        var password = SyntheticPassword();
+        var (userId, firstTenantId, email) = await SeedAsync(factory, marker, password, membershipRole: membershipRole);
+        var tenantId = Guid.NewGuid();
+        Assert.NotEqual(firstTenantId, tenantId);
+        using (var arrange = factory.Services.CreateScope())
         {
-            var risk = new Mock<IAuthenticationAnomalyDetectionService>(MockBehavior.Strict);
-            risk.Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
-                .ReturnsAsync(new AuthenticationAnomalyResult { RiskLevel = RiskLevel.Low });
-            risk.Setup(service => service.AnalyzeBehavioralPatternsAsync(It.IsAny<Guid>(), It.IsAny<AuthenticationAttemptContext>()))
-                .ReturnsAsync(new BehavioralAnalysisResult { MatchesTypicalPattern = true, RiskLevel = RiskLevel.Low });
-            services.PostConfigure<MfaOptions>(options => { options.Enabled = true; options.RequireMfaByDefault = requireMfaByDefault; });
-            services.RemoveAll<MfaOptions>();
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<MfaOptions>>().Value);
-            services.RemoveAll<IMfaAttemptTrackingService>();
-            services.AddScoped<IMfaAttemptTrackingService>(provider => ActivatorUtilities.CreateInstance<MfaAttemptTrackingService>(provider,
-                provider.GetRequiredService<IOptions<MfaOptions>>().Value));
-            services.RemoveAll<IMfaService>();
-            services.AddScoped<IMfaService, MfaService>();
-            services.RemoveAll<IAuthenticationAnomalyDetectionService>();
-            services.AddSingleton(risk.Object);
-        }));
+            var database = arrange.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            database.Set<Tenant>().Add(new Tenant { Id = tenantId, Name = "Other " + marker,
+                Slug = "other-" + marker, AdminEmail = email, IsActive = true });
+            database.Set<TenantMember>().Add(new TenantMember { Id = Guid.NewGuid(), UserId = userId,
+                TenantId = tenantId, Role = membershipRole, IsActive = true });
+            await database.SaveChangesAsync();
+            Assert.Equal(0, await database.Set<UserSession>().CountAsync(row => row.UserId == userId));
+        }
+
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        using var response = await client.PostAsJsonAsync("/v1/auth/sign-in", new { email, password, tenantId });
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.True(response.StatusCode == HttpStatusCode.OK, $"Expected OK, got {response.StatusCode}: {body}");
+        using var json = JsonDocument.Parse(body);
+        var signIn = json.RootElement;
+        Assert.Equal(userId, signIn.GetProperty("userId").GetGuid());
+        Assert.Equal(tenantId, signIn.GetProperty("tenantId").GetGuid());
+        if (!requireMfaByDefault)
+        {
+            // Role-only policy permits Main's compliance grace when no factor is enrolled.
+            Assert.True(signIn.GetProperty("success").GetBoolean());
+            Assert.False(signIn.GetProperty("requiresMfa").GetBoolean());
+            Assert.True(signIn.GetProperty("mfaCompliancePending").GetBoolean());
+            var accessToken = signIn.GetProperty("accessToken").GetString()!;
+            var refreshToken = signIn.GetProperty("refreshToken").GetString()!;
+            Assert.False(string.IsNullOrEmpty(accessToken));
+            Assert.False(string.IsNullOrEmpty(refreshToken));
+            var claims = new JwtSecurityTokenHandler().ReadJwtToken(accessToken).Claims.ToList();
+            Assert.Equal(tenantId.ToString(), Assert.Single(claims, claim => claim.Type == "tenant_id").Value);
+            Assert.Equal("true", Assert.Single(claims, claim => claim.Type == "mfa_compliance_pending").Value);
+            var sessionId = signIn.GetProperty("sessionId").GetGuid();
+            Assert.NotEqual(Guid.Empty, sessionId);
+            using (var scope = factory.Services.CreateScope())
+            {
+                var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var session = await database.Set<UserSession>().SingleAsync(row => row.Id == sessionId);
+                Assert.Equal(userId, session.UserId);
+                var root = await database.Set<RefreshToken>().SingleAsync(row => row.SessionId == sessionId);
+                Assert.Equal(userId, root.UserId);
+                Assert.Null(root.ParentTokenId);
+                Assert.False(root.IsRevoked);
+                Assert.Equal(0, await database.Set<SignInMfaChallenge>().CountAsync(row => row.SubjectId == userId));
+                Assert.Equal(0, await database.Set<UserMfaConfiguration>().CountAsync(row => row.UserId == userId));
+            }
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+            using var state = await client.GetAsync("/v1/auth/session-state");
+            Assert.Equal(HttpStatusCode.OK, state.StatusCode);
+            using var stateJson = JsonDocument.Parse(await state.Content.ReadAsStringAsync());
+            Assert.False(stateJson.RootElement.GetProperty("mfaVerifiedInCurrentToken").GetBoolean());
+            return;
+        }
+        Assert.False(signIn.GetProperty("success").GetBoolean());
+        Assert.True(signIn.GetProperty("requiresMfa").GetBoolean());
+        Assert.True(SignInMfaChallengeToken.TryHash(signIn.GetProperty("mfaToken").GetString()!, out _));
+        Assert.True(!signIn.TryGetProperty("availableTenants", out var tenants) || tenants.ValueKind == JsonValueKind.Null);
+        Assert.True(string.IsNullOrEmpty(signIn.GetProperty("accessToken").GetString()));
+        Assert.True(string.IsNullOrEmpty(signIn.GetProperty("refreshToken").GetString()));
+        Assert.Equal(Guid.Empty, signIn.GetProperty("sessionId").GetGuid());
+        using var verify = factory.Services.CreateScope();
+        var stored = verify.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(0, await stored.Set<UserSession>().CountAsync(row => row.UserId == userId));
+        var challenge = await stored.Set<SignInMfaChallenge>().SingleAsync(row => row.SubjectId == userId);
+        Assert.Equal(tenantId, challenge.TenantId);
+        Assert.Equal(SignInMfaPurpose.EnrollFactor, challenge.Purpose);
+        Assert.NotNull(challenge.EnrollmentConfigurationId);
+    }
+
+    [Fact]
+    public async Task FedMaliciousClientIpInEnforceModeRaisesSignInToStepUpBeforeCredentials()
+    {
+        var feedPath = Path.Combine(Path.GetTempPath(), $"gg-pg-threat-feed-{Guid.NewGuid():N}.json");
+        await File.WriteAllTextAsync(feedPath,
+            """{"maliciousIpCidrs":["203.0.113.0/24"],"breachedPasswordSha256":[]}""");
+        try
+        {
+            using var factory = CreateFactory(requireMfaByDefault: false, useRealRiskAnalysis: true, configure: builder =>
+            {
+                builder.UseSetting("ThreatIntelligence:Provider", "LocalFile");
+                builder.UseSetting("ThreatIntelligence:EnforcementMode", "Enforce");
+                builder.UseSetting("ThreatIntelligence:MaliciousIpRiskScore", "60");
+                builder.UseSetting("ThreatIntelligence:LocalFile:FilePath", feedPath);
+                builder.ConfigureTestServices(services => services.AddSingleton<IStartupFilter>(new MaliciousClientIpStartupFilter()));
+            });
+            var password = SyntheticPassword();
+            var (userId, tenantId, email) = await SeedAsync(factory, Guid.NewGuid().ToString("N"), password);
+            using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            using var response = await client.PostAsJsonAsync("/v1/auth/sign-in", new { email, password, tenantId });
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.True(response.StatusCode == HttpStatusCode.OK, $"Expected OK, got {response.StatusCode}: {body}");
+            using var json = JsonDocument.Parse(body);
+            var signIn = json.RootElement;
+            Assert.True(signIn.GetProperty("requiresStepUp").GetBoolean());
+            Assert.False(signIn.GetProperty("success").GetBoolean());
+            Assert.True(string.IsNullOrEmpty(signIn.GetProperty("accessToken").GetString()));
+            Assert.True(Enum.TryParse<RiskLevel>(signIn.GetProperty("riskLevel").ToString(), out var riskLevel));
+            Assert.True(riskLevel >= RiskLevel.High);
+            Assert.Contains(signIn.GetProperty("riskFactors").EnumerateArray(),
+                factor => factor.GetString()!.Contains("ThreatIntel:MaliciousIp", StringComparison.Ordinal));
+            using var verify = factory.Services.CreateScope();
+            var database = verify.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            Assert.Equal(0, await database.Set<UserSession>().CountAsync(row => row.UserId == userId));
+            var challenge = await database.Set<SignInMfaChallenge>().SingleAsync(row => row.SubjectId == userId);
+            Assert.Equal(tenantId, challenge.TenantId);
+            Assert.Equal(SignInMfaPurpose.EnrollFactor, challenge.Purpose);
+        }
+        finally
+        {
+            File.Delete(feedPath);
+        }
+    }
+
+    private sealed class MaliciousClientIpStartupFilter : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
+        {
+            app.Use(async (context, proceed) =>
+            {
+                context.Connection.RemoteIpAddress = IPAddress.Parse("203.0.113.77");
+                await proceed();
+            });
+            next(app);
+        };
+    }
+
+    private WebApplicationFactory<Program> CreateFactory(bool requireMfaByDefault,
+        bool useRealRiskAnalysis = false, Action<IWebHostBuilder>? configure = null) =>
+        fixture.CreateFactory(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.PostConfigure<MfaOptions>(options => { options.Enabled = true; options.RequireMfaByDefault = requireMfaByDefault; });
+                services.RemoveAll<MfaOptions>();
+                services.AddSingleton(provider => provider.GetRequiredService<IOptions<MfaOptions>>().Value);
+                services.RemoveAll<IMfaAttemptTrackingService>();
+                services.AddScoped<IMfaAttemptTrackingService>(provider => ActivatorUtilities.CreateInstance<MfaAttemptTrackingService>(provider,
+                    provider.GetRequiredService<IOptions<MfaOptions>>().Value));
+                services.RemoveAll<IMfaService>();
+                services.AddScoped<IMfaService, MfaService>();
+                if (!useRealRiskAnalysis)
+                {
+                    var risk = new Mock<IAuthenticationAnomalyDetectionService>(MockBehavior.Strict);
+                    risk.Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
+                        .ReturnsAsync(new AuthenticationAnomalyResult { RiskLevel = RiskLevel.Low });
+                    risk.Setup(service => service.AnalyzeBehavioralPatternsAsync(It.IsAny<Guid>(), It.IsAny<AuthenticationAttemptContext>()))
+                        .ReturnsAsync(new BehavioralAnalysisResult { MatchesTypicalPattern = true, RiskLevel = RiskLevel.Low });
+                    services.RemoveAll<IAuthenticationAnomalyDetectionService>();
+                    services.AddSingleton(risk.Object);
+                }
+            });
+            configure?.Invoke(builder);
+        });
 
     private static async Task<(Guid UserId, Guid TenantId, string Email)> SeedAsync(WebApplicationFactory<Program> factory,
-        string marker, string password, Func<IEncryptionService, UserMfaConfiguration?>? configurationFactory = null)
+        string marker, string password, Func<IEncryptionService, UserMfaConfiguration?>? configurationFactory = null,
+        string membershipRole = "Member")
     {
         using var scope = factory.Services.CreateScope();
         var services = scope.ServiceProvider;
@@ -256,7 +420,7 @@ public sealed class MfaSignInEnrollmentPostgreSqlTests(ApiPostgreSqlFixture fixt
         database.Set<Tenant>().Add(new Tenant { Id = tenantId, Name = "MFA " + marker, Slug = "mfa-enroll-" + marker,
             AdminEmail = "admin-" + marker + "@example.test", IsActive = true });
         database.Set<TenantMember>().Add(new TenantMember { Id = Guid.NewGuid(), TenantId = tenantId, UserId = user.Id,
-            Role = "Member", IsActive = true });
+            Role = membershipRole, IsActive = true });
         if (configurationFactory?.Invoke(services.GetRequiredService<IEncryptionService>()) is { } configuration)
         {
             configuration.UserId = user.Id;
@@ -296,15 +460,15 @@ public sealed class MfaSignInEnrollmentPostgreSqlTests(ApiPostgreSqlFixture fixt
     }
 
     private static Task<long> CountBoundEnrollFactorChallengesAsync(ApplicationDbContext database, Guid subjectId) =>
-        database.Database.SqlQuery<long>($$"""
-            SELECT COUNT(*) AS "Value" FROM "gameguild.authentication"."sign_in_mfa_challenges"
-            WHERE subject_id = {{subjectId}} AND purpose = 'EnrollFactor'
-            AND enrollment_configuration_id IS NOT NULL
-            AND enrollment_configuration_id <> '00000000-0000-0000-0000-000000000000'::uuid
-            AND enrollment_secret_fingerprint IS NOT NULL AND enrollment_secret_fingerprint ~ '^[a-f0-9]{64}$'
-            AND enrollment_initialized_at IS NOT NULL AND enrollment_initialized_at >= created_at
-            AND enrollment_initialized_at < expires_at
-            """).SingleAsync();
+        database.Set<SignInMfaChallenge>().LongCountAsync(row =>
+            row.SubjectId == subjectId && row.Purpose == SignInMfaPurpose.EnrollFactor &&
+            row.EnrollmentConfigurationId != null && row.EnrollmentConfigurationId != Guid.Empty &&
+            row.EnrollmentSecretFingerprint != null && Regex.IsMatch(row.EnrollmentSecretFingerprint, "^[a-f0-9]{64}$") &&
+            row.EnrollmentInitializedAt != null && row.EnrollmentInitializedAt >= row.CreatedAt &&
+            row.EnrollmentInitializedAt < row.ExpiresAt);
+
+    private static string SyntheticSecret() => new(Enumerable.Range(0, 32)
+        .Select(_ => "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"[RandomNumberGenerator.GetInt32(32)]).ToArray());
 
     private static SignInMfaChallenge ValidChallenge(Guid subjectId, SignInMfaPurpose purpose)
     {

@@ -2529,6 +2529,18 @@ export const postApiComplianceConsentRevokeEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostApiComplianceConsentUserConsentInput {
+  body?: Types.APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput;
+}
+export type PostApiComplianceConsentUserConsentOutput = Types.APICoreComplianceRecordUserConsentEndpointCommandResult;
+export const postApiComplianceConsentUserConsentEndpoint = {
+  operationId: 'postApiComplianceConsentUserConsent' as const,
+  method: 'POST' as const,
+  path: '/api/compliance/consent/user-consent' as const,
+  tags: ['ComplianceConsent'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiComplianceConsentUsersInput {
   userId: string;
 }
@@ -20491,9 +20503,11 @@ export const getAuthMfaBackupCodesEndpoint = {
 /**
  * Generate new backup codes (invalidates existing ones)
  *
- * Generates a new set of backup codes, invalidating any previously generated codes.
+ * Generates a new set of backup codes after password re-verification (issue #1153), invalidating any previously generated codes.
  */
-export type PostAuthMfaBackupCodesRegenerateInput = void;
+export interface PostAuthMfaBackupCodesRegenerateInput {
+  body?: Types.IdentityAuthenticationRegenerateBackupCodesInput;
+}
 export type PostAuthMfaBackupCodesRegenerateOutput = Types.IdentityAuthenticationBackupCodesOutput;
 export const postAuthMfaBackupCodesRegenerateEndpoint = {
   operationId: 'postAuthMfaBackupCodesRegenerate' as const,
@@ -20587,7 +20601,7 @@ export const postAuthMfaPushChallengeEndpoint = {
 /**
  * Register the mobile device for push MFA
  *
- * Registers (or replaces) the mobile device registration token used to deliver push MFA approval challenges.
+ * Registers (or replaces) the mobile device registration token used to deliver push MFA approval challenges, after password re-verification (issue #1153).
  */
 export interface PostAuthMfaPushRegisterDeviceInput {
   body?: Types.IdentityAuthenticationPushMfaDeviceInput;
@@ -20915,7 +20929,7 @@ export const postAuthOrchestratedAbandonEndpoint = {
 /**
  * Complete an orchestrated authentication flow and issue tokens
  *
- * Issues access and refresh tokens once every required step of the flow is satisfied. Pending steps, abandoned, expired or already-unknown flows fail closed.
+ * Creates a persisted session and bound refresh root, then issues a tenant-bound JWT once every required step is satisfied and current account/MFA/tenant policy is still valid. Flow finalization and credential persistence commit together; replay cannot issue twice. Pending, abandoned, expired and unknown flows fail closed.
  */
 export interface PostAuthOrchestratedCompleteInput {
   flowId: string;
@@ -20932,7 +20946,7 @@ export const postAuthOrchestratedCompleteEndpoint = {
 /**
  * Satisfy one challenge step of an orchestrated authentication flow
  *
- * Verifies one challenge step (TOTP code, backup code or WebAuthn assertion) against the persisted flow and returns the updated state. Out-of-order, repeated, abandoned, expired or locked-out steps fail closed.
+ * Verifies the next required challenge against the persisted server-bound flow. MFA/device steps accept exactly one TOTP, backup code or WebAuthn assertion; RiskChallenge accepts only its eight-digit riskCode sent to the verified email address. Wrong risk codes return 401 and retain a bounded attempt count in the Problem Details legacy extension. Repeated, abandoned, expired or locked-out steps fail closed.
  */
 export interface PostAuthOrchestratedProcessStepInput {
   flowId: string;
@@ -21350,6 +21364,23 @@ export const getAuthServiceAccountsAuditLogEndpoint = {
 } as const;
 
 /**
+ * Removes both certificate pins; client-secret authentication remains available.
+ *
+ * Removes the certificate thumbprint and SPKI pin. Requires an administrator in the account's tenant, or a system administrator for a global or cross-tenant account.
+ */
+export interface DeleteAuthServiceAccountsClientCertificateInput {
+  serviceAccountId: string;
+}
+export type DeleteAuthServiceAccountsClientCertificateOutput = void;
+export const deleteAuthServiceAccountsClientCertificateEndpoint = {
+  operationId: 'deleteAuthServiceAccountsClientCertificate' as const,
+  method: 'DELETE' as const,
+  path: '/v1/auth/service-accounts/{serviceAccountId}/client-certificate' as const,
+  tags: ['AuthServiceAccounts'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Binds an X.509 client certificate to a service account so the certificate can
  * authenticate in lieu of the client secret (issue #1146).
  *
@@ -21547,7 +21578,7 @@ export const postAuthSignOutEndpoint = {
 /**
  * Register a new user with email and password
  *
- * Creates a new user account with email and password credentials, returning authentication tokens on success.
+ * Creates a new user account with email and password credentials, returning authentication tokens on success. When Turnstile is configured (TURNSTILE_SECRET_KEY), turnstileToken is required and verified server-side (issue #1150).
  */
 export interface PostAuthSignUpInput {
   body?: Types.IdentityAuthenticationLocalSignUpInput;
@@ -35006,6 +35037,7 @@ export const endpoints = {
   postApiComplianceConsentPolicies: postApiComplianceConsentPoliciesEndpoint,
   postApiComplianceConsentPoliciesVersions: postApiComplianceConsentPoliciesVersionsEndpoint,
   postApiComplianceConsentRevoke: postApiComplianceConsentRevokeEndpoint,
+  postApiComplianceConsentUserConsent: postApiComplianceConsentUserConsentEndpoint,
   getApiComplianceConsentUsers: getApiComplianceConsentUsersEndpoint,
   postApiComplianceFerpaConsents: postApiComplianceFerpaConsentsEndpoint,
   postApiComplianceFerpaConsentsRevoke: postApiComplianceFerpaConsentsRevokeEndpoint,
@@ -36182,6 +36214,7 @@ export const endpoints = {
   postAuthServiceAccountsRotateSecret: postAuthServiceAccountsRotateSecretEndpoint,
   postAuthServiceAccountsUnlock: postAuthServiceAccountsUnlockEndpoint,
   getAuthServiceAccountsAuditLog: getAuthServiceAccountsAuditLogEndpoint,
+  deleteAuthServiceAccountsClientCertificate: deleteAuthServiceAccountsClientCertificateEndpoint,
   patchAuthServiceAccountsClientCertificate: patchAuthServiceAccountsClientCertificateEndpoint,
   patchAuthServiceAccountsScopes: patchAuthServiceAccountsScopesEndpoint,
   getAuthSessionState: getAuthSessionStateEndpoint,

@@ -16,13 +16,16 @@
  *   GET  /api/auth/callback/:provider — OAuth callback
  */
 
-import type { ResolvedAuthConfig, Session, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types';
+import type { ResolvedAuthConfig, Session, ProviderResult } from '../../runtime/auth/types';
 import { SessionStore, CsrfStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies';
 import { createJWTPayload, processSession, encodeSession, toSession } from '../../runtime/auth/session';
 import { createCSRFToken, validateCSRFToken } from '../../runtime/auth/csrf';
 import { decodeJWT } from '../../runtime/auth/jwt';
 import { resolveAuthPermissions, resolveAuthRoles } from '../../runtime/auth/claims';
 import { AuthError, CredentialsSignInError, ProviderNotFoundError, CSRFError, SignUpError, AuthServiceUnavailableError } from '../../runtime/auth/errors';
+import { registerAccount } from '../../runtime/auth/sign-up';
+import { revokeSessionRefreshToken } from '../../runtime/auth/sign-out';
+import type { IdentityAuthenticationLocalSignUpInput } from '../../generated/types.gen';
 import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen';
 import { createServerClient } from '../../server';
 import { type OAuthProviderWithMethods, getOAuthExchangeToken, getOAuthAuthorizeUrl, getOAuthHandleCallback } from './oauth-helpers';
@@ -325,7 +328,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
         /* v8 ignore start */
         const csrfToken = (body.csrfToken as string) || request.headers.get('x-csrf-token');
         /* v8 ignore stop */
-        const isValid = await validateCSRFToken(csrfCookie, csrfToken as string, config.secret);
+        const isValid = await validateCSRFToken(csrfCookie, csrfToken, config.secret);
         if (!isValid) throw new CSRFError();
       }
 
@@ -453,7 +456,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     let result: ProviderResult | null = null;
 
     if (provider.type === 'credentials') {
-      const credProvider = provider as CredentialsProviderConfig;
+      const credProvider = provider;
       const credentials = { ...body, __apiUrl: config.apiUrl };
       result = await credProvider.authorize(credentials, request);
     } else {
@@ -514,7 +517,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
   }
 
   async function handleSignUp(body: Record<string, unknown>, responseCookies: ResponseCookies): Promise<Response> {
-    const { username, email, password, firstName, lastName, tenantId, guestAccessToken } = body as {
+    const { username, email, password, firstName, lastName, tenantId, guestAccessToken, turnstileToken } = body as {
       username?: string;
       email?: string;
       password?: string;
@@ -522,6 +525,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
       lastName?: string;
       tenantId?: string;
       guestAccessToken?: string;
+      turnstileToken?: string;
     };
 
     if (!username || !email || !password) {
@@ -536,7 +540,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
       });
     }
 
-    const signUpBody: Record<string, unknown> = { username, email, password };
+    const signUpBody: IdentityAuthenticationLocalSignUpInput = { username, email, password };
     if (firstName) signUpBody.firstName = firstName;
     if (lastName) signUpBody.lastName = lastName;
     if (tenantId) signUpBody.tenantId = tenantId;
@@ -544,23 +548,9 @@ export function createHandlers(config: ResolvedAuthConfig) {
     // link the fresh authenticated session to the guest session; an invalid
     // token never blocks registration.
     if (guestAccessToken) signUpBody.guestAccessToken = guestAccessToken;
+    if (turnstileToken) signUpBody.turnstileToken = turnstileToken;
 
-    const response = await fetch(`${config.apiUrl}/v1/auth/sign-up`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(signUpBody),
-    });
-
-    if (!response.ok) {
-      /* v8 ignore start -- error response parsing */
-      const errorData = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-      throw new SignUpError((errorData.message as string) || (errorData.detail as string) || 'Sign-up failed', {
-        fieldErrors: errorData.errors as Record<string, string[]> | undefined,
-      });
-      /* v8 ignore stop */
-    }
-
-    const data = (await response.json()) as Record<string, unknown>;
+    const data = await registerAccount(config.apiUrl, signUpBody);
     const providerResult = parseBackendAuthResponse(data, email, username);
     const signInAllowed = await config.callbacks.signIn({
       user: providerResult.user,
@@ -586,14 +576,8 @@ export function createHandlers(config: ResolvedAuthConfig) {
     if (encryptedToken) {
       try {
         const token = await decodeJWT({ token: encryptedToken, secret: config.secret });
-        if (token?.refreshToken) {
-          await fetch(`${config.apiUrl}/v1/auth/tokens:revoke`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: token.refreshToken }),
-            /* v8 ignore start */
-          }).catch(() => {});
-          /* v8 ignore stop */
+        if (token) {
+          await revokeSessionRefreshToken(config.apiUrl, token);
         }
       } catch {
         // Ignore decode errors
@@ -625,7 +609,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     token = await config.callbacks.jwt({
       token,
       trigger: 'update',
-      session: body as Partial<Session>,
+      session: body,
     });
 
     const encrypted = await encodeSession(token, config);

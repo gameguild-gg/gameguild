@@ -90,4 +90,38 @@ public class ApiKeyRepository(IApplicationDbContext context) : IApiKeyRepository
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
+
+    public Task<int> FinalizeExpiredRotationRevocationsAsync(int batchSize) =>
+        FinalizeExpiredRotationRevocationsAsync(batchSize, CancellationToken.None);
+
+    public async Task<int> FinalizeExpiredRotationRevocationsAsync(int batchSize, CancellationToken cancellationToken)
+    {
+        if (batchSize is < 1 or > 1000)
+        {
+            throw new ArgumentOutOfRangeException(nameof(batchSize), "Rotation revocation batches must contain between 1 and 1000 keys.");
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        var now = SystemClock.UtcNow;
+        var keys = await ApiKeys
+            .Where(key => key.IsActive && key.RevokedAt == null &&
+                          key.RotationGraceEndsAt.HasValue && key.RotationGraceEndsAt.Value <= now)
+            .OrderBy(key => key.RotationGraceEndsAt)
+            .ThenBy(key => key.Id)
+            .Take(batchSize)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+
+        var finalized = 0;
+        foreach (var key in keys)
+        {
+            if (key.FinalizeRotationRevocation()) { finalized++; }
+        }
+
+        if (finalized > 0)
+        {
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return finalized;
+    }
 }

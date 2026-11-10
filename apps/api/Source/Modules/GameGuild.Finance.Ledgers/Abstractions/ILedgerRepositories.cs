@@ -93,6 +93,30 @@ public interface ILedgerEntryRepository
 
     Task<LedgerEntry?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<LedgerEntry?> GetByExternalIdAsync(string externalId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets an entry by its human-readable reference number (TXN-…) within a tenant.
+    /// </summary>
+    Task<LedgerEntry?> GetByReferenceAsync(Guid tenantId, string referenceNumber, CancellationToken ct = default);
+
+    /// <summary>
+    /// Searches entries across a tenant with optional ledger/type/category/status/amount/date filters.
+    /// When <paramref name="ledgerIds" /> is non-empty only entries of those ledgers are returned.
+    /// Tag filtering is intentionally left to the caller (list translation varies by provider).
+    /// </summary>
+    Task<IReadOnlyList<LedgerEntry>> SearchAsync(
+        Guid tenantId,
+        IReadOnlyList<Guid> ledgerIds,
+        string? searchTerm = null,
+        EntryType? type = null,
+        EntryCategory? category = null,
+        EntryStatus? status = null,
+        decimal? minAmount = null,
+        decimal? maxAmount = null,
+        DateOnly? fromDate = null,
+        DateOnly? toDate = null,
+        CancellationToken ct = default);
+
     Task AddAsync(LedgerEntry entry, CancellationToken ct = default);
     Task AddRangeAsync(IEnumerable<LedgerEntry> entries, CancellationToken ct = default);
     Task UpdateAsync(LedgerEntry entry, CancellationToken ct = default);

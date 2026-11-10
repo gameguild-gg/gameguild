@@ -113,6 +113,10 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
 
     program.Status = ContentStatus.Draft;
     program.Visibility = ContentVisibility.Private;
+    // An explicit unpublish cancels any pending schedule so the due sweep can never
+    // republish content the owner took down (AGENTS.md invariant: unpublished content
+    // is not public).
+    program.ScheduledPublishAt = null;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -186,6 +190,10 @@ public class ProgramLifecycleService(IApplicationDbContext context) : IProgramLi
 
         program.Status = ContentStatus.Draft;
     program.Visibility = ContentVisibility.Private;
+    // An explicit withdraw cancels any pending schedule so the due sweep can never
+    // republish withdrawn content (AGENTS.md invariant: unpublished content is not
+    // public).
+    program.ScheduledPublishAt = null;
     program.Touch();
     await context.SaveChangesAsync().ConfigureAwait(false);
 

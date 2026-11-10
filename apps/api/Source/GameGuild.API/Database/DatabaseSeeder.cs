@@ -31,6 +31,23 @@ public static class DatabaseSeeder
         var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();
         var configuration = serviceProvider.GetService<IConfiguration>();
 
+        // Issue #1206: seed the audited analytics/marketing consent policies the
+        // web client's consent surfaces record against (host-side: product policy
+        // names may not live in the platform Consent module).
+        var consentService = serviceProvider.GetService<GameGuild.Compliance.Consent.IConsentService>();
+        if (consentService != null)
+        {
+            await Core.Compliance.ConsentPolicySeeder.SeedAsync(
+                consentService,
+                serviceProvider.GetRequiredService<GameGuild.Compliance.Consent.IConsentPolicyRepository>(),
+                serviceProvider.GetRequiredService<GameGuild.Compliance.Consent.IPolicyVersionRepository>(),
+                logger).ConfigureAwait(false);
+        }
+        else
+        {
+            logger?.LogInformation("Consent module not registered - skipping consent policy seeding");
+        }
+
         // Seed roles if RoleManager is available
         if (roleManager != null)
         {

@@ -226,6 +226,7 @@ public class ServiceAccountOperationsController(
     [EndpointDescription("Binds an X.509 client certificate (thumbprint plus optional SPKI key pin) to a service account, allowing certificate authentication in lieu of the client secret. Pins are normalized to the authentication-time form; a later certificate presentation matches on either the thumbprint or the SPKI pin.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> BindClientCertificate(Guid serviceAccountId, [FromBody] BindServiceAccountCertificateRequest request, CancellationToken cancellationToken)
     {
@@ -237,9 +238,41 @@ public class ServiceAccountOperationsController(
                 cancellationToken).ConfigureAwait(false);
             return NoContent();
         }
+        catch (ArgumentException exception) when (exception.ParamName is "thumbprint" or "spkiSha256")
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid certificate pin", detail: "Provide a valid certificate thumbprint and optional SHA-256 SPKI pin.");
+        }
+        catch (ServiceAccountCertificateBindingConflictException)
+        {
+            return Problem(statusCode: StatusCodes.Status409Conflict,
+                title: "Certificate binding conflict", detail: "The certificate is already bound to a service account.");
+        }
         catch (InvalidOperationException)
         {
             return NotFound();
+        }
+    }
+
+    /// <summary>Removes both certificate pins; client-secret authentication remains available.</summary>
+    [HttpDelete("{serviceAccountId:guid}/client-certificate")]
+    [Authorize]
+    [EndpointSummary("Unbind client certificate")]
+    [EndpointDescription("Removes the certificate thumbprint and SPKI pin. Requires an administrator in the account's tenant, or a system administrator for a global or cross-tenant account.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UnbindClientCertificate(Guid serviceAccountId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await sender.Send(new UnbindServiceAccountCertificateCommand(serviceAccountId), cancellationToken).ConfigureAwait(false)
+                ? NoContent()
+                : NotFound();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
         }
     }
 }

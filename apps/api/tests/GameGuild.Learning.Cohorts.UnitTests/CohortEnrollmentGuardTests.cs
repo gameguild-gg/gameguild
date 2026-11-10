@@ -22,7 +22,7 @@ public class CohortEnrollmentGuardTests
         await using var context = CreateContext();
         var guard = new CohortEnrollmentGuard(context);
 
-        var result = await guard.ReserveCapacityAsync(Guid.NewGuid());
+        var result = await guard.ReserveCapacityAsync(Guid.NewGuid(), Guid.NewGuid());
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.NotFound);
@@ -35,7 +35,8 @@ public class CohortEnrollmentGuardTests
         await using var context = CreateContext(cohort, out var cohortId);
         var guard = new CohortEnrollmentGuard(context);
 
-        var result = await guard.ReserveCapacityAsync(cohortId);
+
+        var result = await guard.ReserveCapacityAsync(cohortId, cohort.CourseId);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Conflict);
@@ -51,7 +52,8 @@ public class CohortEnrollmentGuardTests
         await using var context = CreateContext(cohort, out var cohortId);
         var guard = new CohortEnrollmentGuard(context);
 
-        var result = await guard.ReserveCapacityAsync(cohortId);
+
+        var result = await guard.ReserveCapacityAsync(cohortId, cohort.CourseId);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Description.Should().Be("Cohort is not open for enrollment");
@@ -66,7 +68,8 @@ public class CohortEnrollmentGuardTests
         await using var context = CreateContext(cohort, out var cohortId);
         var guard = new CohortEnrollmentGuard(context);
 
-        var result = await guard.ReserveCapacityAsync(cohortId);
+
+        var result = await guard.ReserveCapacityAsync(cohortId, cohort.CourseId);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Conflict);
@@ -84,7 +87,8 @@ public class CohortEnrollmentGuardTests
         await using var context = CreateContext(cohort, out var cohortId);
         var guard = new CohortEnrollmentGuard(context);
 
-        var result = await guard.ReserveCapacityAsync(cohortId);
+
+        var result = await guard.ReserveCapacityAsync(cohortId, cohort.CourseId);
 
         result.IsSuccess.Should().BeTrue();
         cohort.CurrentEnrollmentCount.Should().Be(1);
@@ -100,12 +104,43 @@ public class CohortEnrollmentGuardTests
         await using var context = CreateContext(cohort, out var cohortId);
         var guard = new CohortEnrollmentGuard(context);
 
-        var first = await guard.ReserveCapacityAsync(cohortId);
-        var second = await guard.ReserveCapacityAsync(cohortId);
+
+        var first = await guard.ReserveCapacityAsync(cohortId, cohort.CourseId);
+        var second = await guard.ReserveCapacityAsync(cohortId, cohort.CourseId);
 
         first.IsSuccess.Should().BeTrue();
         second.IsFailure.Should().BeTrue();
         second.Error.Description.Should().Be("Cohort is at capacity");
+        cohort.CurrentEnrollmentCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Reserve_FailsWhenCohortBelongsToAnotherCourse()
+    {
+        var cohort = Cohort.Create(Guid.NewGuid(), "Open", DateTime.UtcNow, DateTime.UtcNow.AddDays(30), 2);
+        cohort.Open();
+        await using var context = CreateContext(cohort, out var cohortId);
+        var guard = new CohortEnrollmentGuard(context);
+
+        var result = await guard.ReserveCapacityAsync(cohortId, Guid.NewGuid());
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Conflict);
+        result.Error.Description.Should().Be("Cohort does not belong to the requested course");
+        cohort.CurrentEnrollmentCount.Should().Be(0, "no seat is consumed on a course mismatch");
+    }
+
+    [Fact]
+    public async Task Reserve_SucceedsWhenCourseMatchesTheCohortCourse()
+    {
+        var cohort = Cohort.Create(Guid.NewGuid(), "Open", DateTime.UtcNow, DateTime.UtcNow.AddDays(30), 2);
+        cohort.Open();
+        await using var context = CreateContext(cohort, out var cohortId);
+        var guard = new CohortEnrollmentGuard(context);
+
+        var result = await guard.ReserveCapacityAsync(cohortId, cohort.CourseId);
+
+        result.IsSuccess.Should().BeTrue();
         cohort.CurrentEnrollmentCount.Should().Be(1);
     }
 
@@ -117,6 +152,7 @@ public class CohortEnrollmentGuardTests
         cohort.IncrementEnrollment();
         await using var context = CreateContext(cohort, out var cohortId);
         var guard = new CohortEnrollmentGuard(context);
+
 
         var result = await guard.ReleaseCapacityAsync(cohortId);
 

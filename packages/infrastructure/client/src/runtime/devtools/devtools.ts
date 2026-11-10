@@ -47,6 +47,7 @@ class ConsoleLogger implements DevToolsLogger {
   constructor(private logLevel: DevToolsConfig['logLevel'] = 'info') {}
 
   group(label: string, collapsed = false): void {
+    if (this.logLevel === 'silent') return;
     if (collapsed) {
       console.groupCollapsed(label);
     } else {
@@ -55,6 +56,7 @@ class ConsoleLogger implements DevToolsLogger {
   }
 
   groupEnd(): void {
+    if (this.logLevel === 'silent') return;
     console.groupEnd();
   }
 

@@ -30,6 +30,39 @@ public interface IJwtTokenService
         Guid sessionId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Generates an access token that carries the MFA compliance-pending marker
+    ///     (<see cref="GameGuild.Identity.Authorization.ClaimNames.MfaCompliancePending"/>). The
+    ///     marker is a trusted builder parameter, not an additional claim: the claim type is
+    ///     reserved so untrusted callers cannot inject it through the additional-claims path.
+    /// </summary>
+    Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        Guid sessionId,
+        bool mfaCompliancePending,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Generates an access token that carries the MFA compliance-pending marker
+    ///     (<see cref="GameGuild.Identity.Authorization.ClaimNames.MfaCompliancePending"/>). The
+    ///     marker is a trusted builder parameter, not an additional claim: the claim type is
+    ///     reserved so untrusted callers cannot inject it through the additional-claims path.
+    /// </summary>
+    Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        DateTimeOffset authenticatedAt,
+        Guid sessionId,
+        bool mfaCompliancePending,
+        CancellationToken cancellationToken = default);
+
     Task<string> GenerateAccessTokenAsync(
         Guid userId,
         string email,

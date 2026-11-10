@@ -147,8 +147,10 @@ public class JwtTokenServiceTests
         AssertPrivateLogs(failure.GetType().FullName!, serviceId, clientId, privateDetail);
         var information = _loggerMock.Invocations.Should().ContainSingle(call =>
             call.Method.Name == nameof(ILogger.Log) && Equals(call.Arguments[0], LogLevel.Information)).Subject;
-        information.Arguments[2].ToString().Should().Contain(LogRedaction.RedactId(serviceId, "said"))
-            .And.Contain(LogRedaction.RedactId(clientId, "cid"));
+        information.Arguments[2].ToString().Should().Contain(LogRedaction.ProtectIdentifier(serviceId))
+            .And.Contain(LogRedaction.ProtectIdentifier(clientId))
+            .And.NotContain(LogRedaction.RedactId(serviceId, "said"))
+            .And.NotContain(LogRedaction.RedactId(clientId, "cid"));
     }
 
     [Fact]
@@ -466,7 +468,9 @@ public class JwtTokenServiceTests
         log.Arguments[0].Should().Be(LogLevel.Information);
         log.Arguments[3].Should().BeNull();
         var loggedUserId = loggedProperties.Single(property => property.Key == "UserId").Value.Should().BeOfType<string>().Subject;
-        loggedUserId.Should().MatchRegex("^uid:[0-9a-f]{8}$");
+        loggedUserId.Should().MatchRegex("^id:[0-9a-f]{64}$");
+        loggedUserId.Should().Be(LogRedaction.ProtectIdentifier(userId));
+        loggedUserId.Should().NotBe(LogRedaction.RedactId(userId, "uid"));
         loggedProperties.Should().NotContain(property => property.Key == "DeviceId");
         log.Arguments[2].ToString().Should().Be($"Generating refresh token for user: {loggedUserId}");
         foreach (var entry in _loggerMock.Invocations.Where(invocation => invocation.Method.Name == nameof(ILogger.Log)))

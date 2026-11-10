@@ -36,7 +36,15 @@ public sealed class OidcFederationService(
     public async Task<OidcSignInChallenge> BuildAuthorizationUrlAsync(string slug, string redirectUri, string state, CancellationToken cancellationToken = default)
     {
         var options = RequireEnabledProvider(slug);
-        var metadata = await DiscoverAsync(options, cancellationToken).ConfigureAwait(false);
+        OidcProviderMetadata metadata;
+        try
+        {
+            metadata = await DiscoverAsync(options, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OAuthProviderUnavailableException && OAuthProviderUnavailableException.IsProviderUnavailability(ex, cancellationToken))
+        {
+            throw new OAuthProviderUnavailableException($"Oidc:{slug}", ex);
+        }
 
         var scope = string.Join(" ", options.Scopes);
         var authUrl = $"{metadata.AuthorizationEndpoint}" +
@@ -174,6 +182,10 @@ public sealed class OidcFederationService(
         using var response = await client.GetAsync(discoveryUrl, cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {
+            if ((int)response.StatusCode >= 500)
+            {
+                throw new OAuthProviderUnavailableException("OIDC", new HttpRequestException("OIDC discovery is unavailable.", null, response.StatusCode));
+            }
             throw new InvalidOperationException($"OIDC discovery failed for authority '{authority}' with HTTP {(int)response.StatusCode}.");
         }
 
@@ -205,6 +217,10 @@ public sealed class OidcFederationService(
         using var response = await client.PostAsync(metadata.TokenEndpoint, content, cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {
+            if ((int)response.StatusCode >= 500)
+            {
+                throw new OAuthProviderUnavailableException("OIDC", new HttpRequestException("OIDC token exchange is unavailable.", null, response.StatusCode));
+            }
             throw new InvalidOperationException($"OIDC token exchange failed for provider '{options.Authority}' with HTTP {(int)response.StatusCode}.");
         }
 
@@ -244,6 +260,10 @@ public sealed class OidcFederationService(
         try
         {
             keys = await GetSigningKeysAsync(metadata.JwksUri, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (OAuthProviderUnavailableException.IsProviderUnavailability(ex, cancellationToken))
+        {
+            throw new OAuthProviderUnavailableException($"Oidc:{slug}", ex);
         }
         catch (OperationCanceledException)
         {
