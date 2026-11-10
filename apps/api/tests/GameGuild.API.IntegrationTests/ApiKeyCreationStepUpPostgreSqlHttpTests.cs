@@ -132,15 +132,21 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
         Assert.Empty(await db.Set<ApiKey>().Where(x => x.UserId == account.UserId).ToListAsync());
     }
 
-    [Fact]
-    public async Task MissingIntentBodyCreatesNeitherChallengeNorCredential()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MissingIntentBodyCreatesNeitherChallengeNorCredential(bool jsonContentType)
     {
         using var factory = CreateFactory();
         var account = await SeedAsync(factory, true, true);
         using var client = await ClientAsync(factory, account, account.SessionId);
         using var request = new HttpRequestMessage(HttpMethod.Post, Route);
+        if (jsonContentType)
+        {
+            request.Content = new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
+        }
         using var response = await client.SendAsync(request);
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(jsonContentType ? HttpStatusCode.BadRequest : HttpStatusCode.UnsupportedMediaType, response.StatusCode);
         await using var read = factory.Services.CreateAsyncScope();
         var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Assert.Empty(await db.Set<StepUpChallenge>().Where(x => x.ActorId == account.UserId).ToListAsync());
