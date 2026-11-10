@@ -3350,6 +3350,11 @@ uses the authenticated actor and tenant for ownership, and consumes the receipt
 inside the same command transaction as key persistence. Expired, mismatched or
 reused receipts cannot issue a key. Receipt-store and persistence failures
 propagate to the transaction owner; they cannot become a successful key response.
+
+The creation body is required, and successful creation returns HTTP 200. OpenAPI
+preserves MVC body-binding and model-validation requirements so generated clients
+retain mandatory mutation payloads. Explicitly optional bodies, including the
+service-secret challenge request below, remain optional.
 Service-account secret rotation uses a dedicated guarded command handler. It
 requires a human administrator, an authenticated tenant/session, and ownership of
 the account's tenant; only SystemAdmin may explicitly target another tenant or a

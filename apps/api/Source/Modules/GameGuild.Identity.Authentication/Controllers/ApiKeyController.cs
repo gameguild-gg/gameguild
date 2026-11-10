@@ -32,7 +32,7 @@ public class ApiKeyController : BaseApiController
     [Authorize(Policy = TrustedDevicePolicy.Name)]
     [EndpointSummary("Create a new API key")]
     [EndpointDescription("Creates an API key after fresh verification. Without a stepUpReceipt, a valid request returns HTTP 403 with a persisted challenge bound to the name, scopes, expiry and IP whitelist. Verify an enrolled supported factor and retry the identical creation fields with the returned receipt. Invalid or reused receipts cannot create a key.")]
-    [ProducesResponseType(typeof(CreateApiKeyResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(CreateApiKeyResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(StepUpAuthenticationRequiredResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

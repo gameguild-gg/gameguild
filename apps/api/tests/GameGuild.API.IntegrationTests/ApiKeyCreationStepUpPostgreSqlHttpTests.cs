@@ -228,6 +228,12 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
         using var document = JsonDocument.Parse(raw);
         var post = document.RootElement.GetProperty("paths").GetProperty(Route).GetProperty("post");
         Assert.True(post.GetProperty("requestBody").GetProperty("required").GetBoolean());
+        Assert.True(post.GetProperty("responses").TryGetProperty("200", out _));
+        foreach (var requiredRoute in new[] { "/api/v1/payments", "/api/v1/wallets:transfer", "/v1/users", "/v1/auth/trusted-devices" })
+        {
+            var requiredPost = document.RootElement.GetProperty("paths").GetProperty(requiredRoute).GetProperty("post");
+            Assert.True(requiredPost.GetProperty("requestBody").GetProperty("required").GetBoolean(), requiredRoute);
+        }
         var schemas = document.RootElement.GetProperty("components").GetProperty("schemas");
         var bodyRef = post.GetProperty("requestBody").GetProperty("content").GetProperty("application/json").GetProperty("schema").GetProperty("$ref").GetString()!;
         Assert.True(schemas.GetProperty(bodyRef.Split('/')[^1]).GetProperty("properties").TryGetProperty("stepUpReceipt", out _));

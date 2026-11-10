@@ -27,7 +27,8 @@ function spec(required?: boolean): OpenApiSpec {
 function method(required?: boolean) {
   const code = generateModules(spec(required))['credential-proof'];
   const source = ts.createSourceFile('generated.ts', code, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TS);
-  const declaration = source.statements.find(ts.isClassDeclaration)!;
+  const declaration = source.statements.find(ts.isClassDeclaration);
+  if (!declaration) throw new Error('Missing generated module');
   const member = declaration.members.find(value => ts.isMethodDeclaration(value) && value.name.getText(source) === 'postCredentialProof');
   if (!member || !ts.isMethodDeclaration(member)) throw new Error('Missing generated operation');
   return { source, code, member };
