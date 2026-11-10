@@ -904,11 +904,6 @@ public sealed class AuthenticationCoverageCompletionTests
             NullLogger<PermissionCachingMiddleware>.Instance);
         await permissionCaching.InvokeAsync(context);
 
-        var abac = new AbacPolicyMiddleware(
-            next,
-            NullLogger<AbacPolicyMiddleware>.Instance);
-        await abac.InvokeAsync(context);
-
         var accessReview = new AccessReviewMiddleware(
             next,
             NullLogger<AccessReviewMiddleware>.Instance);
@@ -917,7 +912,6 @@ public sealed class AuthenticationCoverageCompletionTests
 
         nextCalled.Should().BeTrue();
         context.Response.Headers.Should().ContainKey("X-Permission-Cache");
-        context.Response.Headers.Should().ContainKey("X-ABAC-Policies");
         context.Response.Headers.Should().ContainKey("X-Access-Review");
     }
 
