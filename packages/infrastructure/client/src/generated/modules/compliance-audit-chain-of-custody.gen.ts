@@ -34,12 +34,12 @@ export class ComplianceAuditChainOfCustodyModule {
    * Registers a custodian with authorization scopes. Fail-closed: only registered active custodians may act on evidence.
    */
   async postApiAuditChainOfCustodyCustodians(
-    body: Types.ComplianceAuditRegisterCustodianInput,
+    body?: Types.ComplianceAuditRegisterCustodianInput,
   ): Promise<Result<Types.ComplianceAuditEvidenceCustodianOutput, ApiError>> {
     const url = '/api/audit/chain-of-custody/custodians';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditRegisterCustodianInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditRegisterCustodianInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -62,12 +62,12 @@ export class ComplianceAuditChainOfCustodyModule {
    */
   async postApiAuditChainOfCustodyCustodiansRevoke(
     custodianId: string,
-    body: Types.ComplianceAuditRevokeCustodianInput,
+    body?: Types.ComplianceAuditRevokeCustodianInput,
   ): Promise<Result<Types.ComplianceAuditEvidenceCustodianOutput, ApiError>> {
     const url = `/api/audit/chain-of-custody/custodians/${custodianId}:revoke`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditRevokeCustodianInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditRevokeCustodianInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -108,12 +108,12 @@ export class ComplianceAuditChainOfCustodyModule {
    * Preserves evidence under chain of custody with content hashing (audit logs, security events, value snapshots, sealed packages, or raw content).
    */
   async postApiAuditChainOfCustodyEvidence(
-    body: Types.ComplianceAuditPreserveEvidenceInput,
+    body?: Types.ComplianceAuditPreserveEvidenceInput,
   ): Promise<Result<Types.ComplianceAuditCustodyEvidenceOutput, ApiError>> {
     const url = '/api/audit/chain-of-custody/evidence';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditPreserveEvidenceInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditPreserveEvidenceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -161,12 +161,12 @@ export class ComplianceAuditChainOfCustodyModule {
    */
   async postApiAuditChainOfCustodyEvidenceBreakSeal(
     evidenceId: string,
-    body: Types.ComplianceAuditBreakSealInput,
+    body?: Types.ComplianceAuditBreakSealInput,
   ): Promise<Result<Types.ComplianceAuditCustodyEvidenceOutput, ApiError>> {
     const url = `/api/audit/chain-of-custody/evidence/${evidenceId}:break-seal`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditBreakSealInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditBreakSealInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -189,12 +189,12 @@ export class ComplianceAuditChainOfCustodyModule {
    */
   async postApiAuditChainOfCustodyEvidenceRelease(
     evidenceId: string,
-    body: Types.ComplianceAuditReleaseEvidenceInput,
+    body?: Types.ComplianceAuditReleaseEvidenceInput,
   ): Promise<Result<Types.ComplianceAuditCustodyEvidenceOutput, ApiError>> {
     const url = `/api/audit/chain-of-custody/evidence/${evidenceId}:release`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditReleaseEvidenceInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditReleaseEvidenceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -255,11 +255,13 @@ export class ComplianceAuditChainOfCustodyModule {
   /**
    * Creates a legal hold: immediately preserves every in-scope target under custody and records stakeholder notifications.
    */
-  async postApiAuditChainOfCustodyLegalHolds(body: Types.ComplianceAuditCreateLegalHoldInput): Promise<Result<Types.ComplianceAuditLegalHoldOutput, ApiError>> {
+  async postApiAuditChainOfCustodyLegalHolds(
+    body?: Types.ComplianceAuditCreateLegalHoldInput,
+  ): Promise<Result<Types.ComplianceAuditLegalHoldOutput, ApiError>> {
     const url = '/api/audit/chain-of-custody/legal-holds';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditCreateLegalHoldInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditCreateLegalHoldInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -326,12 +328,12 @@ export class ComplianceAuditChainOfCustodyModule {
    */
   async postApiAuditChainOfCustodyLegalHoldsRelease(
     holdId: string,
-    body: Types.ComplianceAuditReleaseHoldInput,
+    body?: Types.ComplianceAuditReleaseHoldInput,
   ): Promise<Result<Types.ComplianceAuditLegalHoldOutput, ApiError>> {
     const url = `/api/audit/chain-of-custody/legal-holds/${holdId}:release`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditReleaseHoldInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditReleaseHoldInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -353,12 +355,12 @@ export class ComplianceAuditChainOfCustodyModule {
    * Builds a court-admissible custody package: full documentation, verification summary, and signed expert certification.
    */
   async postApiAuditChainOfCustodyPackages(
-    body: Types.ComplianceAuditBuildCustodyPackageInput,
+    body?: Types.ComplianceAuditBuildCustodyPackageInput,
   ): Promise<Result<Types.ComplianceAuditCourtAdmissiblePackageOutput, ApiError>> {
     const url = '/api/audit/chain-of-custody/packages';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditBuildCustodyPackageInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditBuildCustodyPackageInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -400,12 +402,12 @@ export class ComplianceAuditChainOfCustodyModule {
    * Initiates a custody transfer: challenge nonce + ECDSA-signed proof binding evidence hash and both custodians.
    */
   async postApiAuditChainOfCustodyTransfers(
-    body: Types.ComplianceAuditInitiateTransferInput,
+    body?: Types.ComplianceAuditInitiateTransferInput,
   ): Promise<Result<Types.ComplianceAuditEvidenceTransferOutput, ApiError>> {
     const url = '/api/audit/chain-of-custody/transfers';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditInitiateTransferInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditInitiateTransferInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -428,12 +430,12 @@ export class ComplianceAuditChainOfCustodyModule {
    */
   async postApiAuditChainOfCustodyTransfersAcknowledge(
     transferId: string,
-    body: Types.ComplianceAuditAcknowledgeTransferInput,
+    body?: Types.ComplianceAuditAcknowledgeTransferInput,
   ): Promise<Result<Types.ComplianceAuditEvidenceTransferOutput, ApiError>> {
     const url = `/api/audit/chain-of-custody/transfers/${transferId}:acknowledge`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAcknowledgeTransferInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAcknowledgeTransferInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -470,12 +472,12 @@ export class ComplianceAuditChainOfCustodyModule {
    * Registers a custodian with authorization scopes. Fail-closed: only registered active custodians may act on evidence.
    */
   async postAuditChainOfCustodyCustodians(
-    body: Types.ComplianceAuditRegisterCustodianInput,
+    body?: Types.ComplianceAuditRegisterCustodianInput,
   ): Promise<Result<Types.ComplianceAuditEvidenceCustodianOutput, ApiError>> {
     const url = '/v1/audit/chain-of-custody/custodians';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditRegisterCustodianInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditRegisterCustodianInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -498,12 +500,12 @@ export class ComplianceAuditChainOfCustodyModule {
    */
   async postAuditChainOfCustodyCustodiansRevoke(
     custodianId: string,
-    body: Types.ComplianceAuditRevokeCustodianInput,
+    body?: Types.ComplianceAuditRevokeCustodianInput,
   ): Promise<Result<Types.ComplianceAuditEvidenceCustodianOutput, ApiError>> {
     const url = `/v1/audit/chain-of-custody/custodians/${custodianId}:revoke`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditRevokeCustodianInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditRevokeCustodianInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -544,12 +546,12 @@ export class ComplianceAuditChainOfCustodyModule {
    * Preserves evidence under chain of custody with content hashing (audit logs, security events, value snapshots, sealed packages, or raw content).
    */
   async postAuditChainOfCustodyEvidence(
-    body: Types.ComplianceAuditPreserveEvidenceInput,
+    body?: Types.ComplianceAuditPreserveEvidenceInput,
   ): Promise<Result<Types.ComplianceAuditCustodyEvidenceOutput, ApiError>> {
     const url = '/v1/audit/chain-of-custody/evidence';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditPreserveEvidenceInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditPreserveEvidenceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -597,12 +599,12 @@ export class ComplianceAuditChainOfCustodyModule {
    */
   async postAuditChainOfCustodyEvidenceBreakSeal(
     evidenceId: string,
-    body: Types.ComplianceAuditBreakSealInput,
+    body?: Types.ComplianceAuditBreakSealInput,
   ): Promise<Result<Types.ComplianceAuditCustodyEvidenceOutput, ApiError>> {
     const url = `/v1/audit/chain-of-custody/evidence/${evidenceId}:break-seal`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditBreakSealInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditBreakSealInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -625,12 +627,12 @@ export class ComplianceAuditChainOfCustodyModule {
    */
   async postAuditChainOfCustodyEvidenceRelease(
     evidenceId: string,
-    body: Types.ComplianceAuditReleaseEvidenceInput,
+    body?: Types.ComplianceAuditReleaseEvidenceInput,
   ): Promise<Result<Types.ComplianceAuditCustodyEvidenceOutput, ApiError>> {
     const url = `/v1/audit/chain-of-custody/evidence/${evidenceId}:release`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditReleaseEvidenceInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditReleaseEvidenceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -691,11 +693,11 @@ export class ComplianceAuditChainOfCustodyModule {
   /**
    * Creates a legal hold: immediately preserves every in-scope target under custody and records stakeholder notifications.
    */
-  async postAuditChainOfCustodyLegalHolds(body: Types.ComplianceAuditCreateLegalHoldInput): Promise<Result<Types.ComplianceAuditLegalHoldOutput, ApiError>> {
+  async postAuditChainOfCustodyLegalHolds(body?: Types.ComplianceAuditCreateLegalHoldInput): Promise<Result<Types.ComplianceAuditLegalHoldOutput, ApiError>> {
     const url = '/v1/audit/chain-of-custody/legal-holds';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditCreateLegalHoldInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditCreateLegalHoldInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -762,12 +764,12 @@ export class ComplianceAuditChainOfCustodyModule {
    */
   async postAuditChainOfCustodyLegalHoldsRelease(
     holdId: string,
-    body: Types.ComplianceAuditReleaseHoldInput,
+    body?: Types.ComplianceAuditReleaseHoldInput,
   ): Promise<Result<Types.ComplianceAuditLegalHoldOutput, ApiError>> {
     const url = `/v1/audit/chain-of-custody/legal-holds/${holdId}:release`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditReleaseHoldInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditReleaseHoldInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -789,12 +791,12 @@ export class ComplianceAuditChainOfCustodyModule {
    * Builds a court-admissible custody package: full documentation, verification summary, and signed expert certification.
    */
   async postAuditChainOfCustodyPackages(
-    body: Types.ComplianceAuditBuildCustodyPackageInput,
+    body?: Types.ComplianceAuditBuildCustodyPackageInput,
   ): Promise<Result<Types.ComplianceAuditCourtAdmissiblePackageOutput, ApiError>> {
     const url = '/v1/audit/chain-of-custody/packages';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditBuildCustodyPackageInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditBuildCustodyPackageInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -836,12 +838,12 @@ export class ComplianceAuditChainOfCustodyModule {
    * Initiates a custody transfer: challenge nonce + ECDSA-signed proof binding evidence hash and both custodians.
    */
   async postAuditChainOfCustodyTransfers(
-    body: Types.ComplianceAuditInitiateTransferInput,
+    body?: Types.ComplianceAuditInitiateTransferInput,
   ): Promise<Result<Types.ComplianceAuditEvidenceTransferOutput, ApiError>> {
     const url = '/v1/audit/chain-of-custody/transfers';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditInitiateTransferInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditInitiateTransferInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -864,12 +866,12 @@ export class ComplianceAuditChainOfCustodyModule {
    */
   async postAuditChainOfCustodyTransfersAcknowledge(
     transferId: string,
-    body: Types.ComplianceAuditAcknowledgeTransferInput,
+    body?: Types.ComplianceAuditAcknowledgeTransferInput,
   ): Promise<Result<Types.ComplianceAuditEvidenceTransferOutput, ApiError>> {
     const url = `/v1/audit/chain-of-custody/transfers/${transferId}:acknowledge`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAcknowledgeTransferInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAcknowledgeTransferInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -41,12 +41,12 @@ export class LearningAssessmentsPeerReviewsModule {
    */
   async postAssessmentsPeerReviewStagesExtend(
     reviewStageId: string,
-    body: Types.LearningAssessmentsExtendPeerReviewWindowInput,
+    body?: Types.LearningAssessmentsExtendPeerReviewWindowInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/peer-review-stages/${reviewStageId}/extend`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsExtendPeerReviewWindowInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsExtendPeerReviewWindowInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -63,12 +63,12 @@ export class LearningAssessmentsPeerReviewsModule {
    */
   async postAssessmentsPeerReviewStagesResolveInsufficient(
     reviewStageId: string,
-    body: Types.LearningAssessmentsResolvePeerReviewInsufficiencyInput,
+    body?: Types.LearningAssessmentsResolvePeerReviewInsufficiencyInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/peer-review-stages/${reviewStageId}/resolve-insufficient`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsResolvePeerReviewInsufficiencyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsResolvePeerReviewInsufficiencyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -104,11 +104,11 @@ export class LearningAssessmentsPeerReviewsModule {
   /**
    * Cancel an active claim so another eligible reviewer can claim the stage.
    */
-  async postAssessmentsPeerReviewsReassign(reviewId: string, body: Types.LearningAssessmentsReassignPeerReviewClaimInput): Promise<Result<void, ApiError>> {
+  async postAssessmentsPeerReviewsReassign(reviewId: string, body?: Types.LearningAssessmentsReassignPeerReviewClaimInput): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/peer-reviews/${reviewId}/reassign`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsReassignPeerReviewClaimInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsReassignPeerReviewClaimInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -123,11 +123,11 @@ export class LearningAssessmentsPeerReviewsModule {
   /**
    * Submit evidence for the canonical peer-review stage assigned to the learner.
    */
-  async postAssessmentsPeerReviewsSubmit(reviewId: string, body: Types.LearningAssessmentsPeerReviewSubmitInput): Promise<Result<void, ApiError>> {
+  async postAssessmentsPeerReviewsSubmit(reviewId: string, body?: Types.LearningAssessmentsPeerReviewSubmitInput): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/peer-reviews/${reviewId}/submit`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsPeerReviewSubmitInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsPeerReviewSubmitInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

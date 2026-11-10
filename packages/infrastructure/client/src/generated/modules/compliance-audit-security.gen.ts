@@ -55,11 +55,11 @@ export class ComplianceAuditSecurityModule {
   /**
    * Export unified security audit logs to CSV.
    */
-  async postAdminSecurityAuditExport(body: Types.ComplianceAuditUnifiedSecurityAuditInput): Promise<Result<Blob, ApiError>> {
+  async postAdminSecurityAuditExport(body?: Types.ComplianceAuditUnifiedSecurityAuditInput): Promise<Result<Blob, ApiError>> {
     const url = '/v1/admin/security-audit/:export';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditUnifiedSecurityAuditInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditUnifiedSecurityAuditInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

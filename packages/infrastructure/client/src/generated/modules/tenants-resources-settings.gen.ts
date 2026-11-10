@@ -70,12 +70,12 @@ export class TenantsResourcesSettingsModule {
   async putTenantsResourcesSettings(
     tenantId: string,
     key: string,
-    body: Types.ResourcesSetResourceSettingsInput,
+    body?: Types.ResourcesSetResourceSettingsInput,
   ): Promise<Result<Types.ResourcesResourceSettings, ApiError>> {
     const url = `/v1/tenants/${tenantId}/resources/settings/${key}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesSetResourceSettingsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesSetResourceSettingsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

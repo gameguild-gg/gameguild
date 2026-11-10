@@ -19,12 +19,12 @@ export class EconomyMarketplaceModule {
    */
   async postEconomyMarketplaceOrdersSettle(
     orderId: string,
-    body: Types.APIControllersSettleMyMarketplaceOrderInput,
+    body?: Types.APIControllersSettleMyMarketplaceOrderInput,
   ): Promise<Result<Types.FinanceEconomyMarketplaceDurableMarketplaceSettlementResult, ApiError>> {
     const url = `/api/v1/economy/marketplace/orders/${orderId}:settle`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersSettleMyMarketplaceOrderInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersSettleMyMarketplaceOrderInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -46,12 +46,12 @@ export class EconomyMarketplaceModule {
    */
   async postEconomyMarketplaceSettlementsRefund(
     settlementId: string,
-    body: Types.APIControllersRefundMarketplaceSettlementInput,
+    body?: Types.APIControllersRefundMarketplaceSettlementInput,
   ): Promise<Result<Types.FinanceEconomyMarketplaceDurableMarketplaceRefundResult, ApiError>> {
     const url = `/api/v1/economy/marketplace/settlements/${settlementId}:refund`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersRefundMarketplaceSettlementInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersRefundMarketplaceSettlementInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

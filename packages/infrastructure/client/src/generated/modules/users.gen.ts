@@ -52,11 +52,11 @@ export class UsersModule {
    *
    * Creates a new user account with the provided information.
    */
-  async postUsers(body: Types.IdentityUsersCreateUserInput): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async postUsers(body?: Types.IdentityUsersCreateUserInput): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = '/v1/users';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersCreateUserInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersCreateUserInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -80,12 +80,12 @@ export class UsersModule {
    * Activates multiple user accounts at once.
    */
   async postUsersActivateForPostUsersActivate(
-    body: Types.IdentityUsersBulkActivateUsersInput,
+    body?: Types.IdentityUsersBulkActivateUsersInput,
   ): Promise<Result<Types.IdentityUsersBulkActivateUsersOutput, ApiError>> {
     const url = '/v1/users:activate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkActivateUsersInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkActivateUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -108,11 +108,11 @@ export class UsersModule {
    *
    * Creates multiple user accounts at once.
    */
-  async postUsersCreate(body: Types.IdentityUsersBulkCreateUsersInput): Promise<Result<Types.IdentityUsersBulkCreateUsersOutput, ApiError>> {
+  async postUsersCreate(body?: Types.IdentityUsersBulkCreateUsersInput): Promise<Result<Types.IdentityUsersBulkCreateUsersOutput, ApiError>> {
     const url = '/v1/users:create';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkCreateUsersInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkCreateUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -136,12 +136,12 @@ export class UsersModule {
    * Deactivates multiple user accounts at once.
    */
   async postUsersDeactivateForPostUsersDeactivate(
-    body: Types.IdentityUsersBulkDeactivateUsersInput,
+    body?: Types.IdentityUsersBulkDeactivateUsersInput,
   ): Promise<Result<Types.IdentityUsersBulkDeactivateUsersOutput, ApiError>> {
     const url = '/v1/users:deactivate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkDeactivateUsersInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkDeactivateUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -164,11 +164,11 @@ export class UsersModule {
    *
    * Soft deletes multiple users at once.
    */
-  async postUsersDelete(body: Types.IdentityUsersBulkDeleteUsersInput): Promise<Result<void, ApiError>> {
+  async postUsersDelete(body?: Types.IdentityUsersBulkDeleteUsersInput): Promise<Result<void, ApiError>> {
     const url = '/v1/users:delete';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkDeleteUsersInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkDeleteUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -185,11 +185,11 @@ export class UsersModule {
    *
    * Permanently deletes multiple users. Admin operation requiring proper authorization.
    */
-  async postUsersPurgeForPostUsersPurge(body: Types.IdentityUsersBulkPurgeUsersInput): Promise<Result<void, ApiError>> {
+  async postUsersPurgeForPostUsersPurge(body?: Types.IdentityUsersBulkPurgeUsersInput): Promise<Result<void, ApiError>> {
     const url = '/v1/users:purge';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkPurgeUsersInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkPurgeUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -206,11 +206,11 @@ export class UsersModule {
    *
    * Updates multiple users with complete data.
    */
-  async postUsersReplace(body: Types.IdentityUsersBulkUpdateUsersInput): Promise<Result<void, ApiError>> {
+  async postUsersReplace(body?: Types.IdentityUsersBulkUpdateUsersInput): Promise<Result<void, ApiError>> {
     const url = '/v1/users:replace';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkUpdateUsersInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkUpdateUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -228,12 +228,12 @@ export class UsersModule {
    * Suspends multiple user accounts at once.
    */
   async postUsersSuspendForPostUsersSuspend(
-    body: Types.IdentityUsersBulkSuspendUsersInput,
+    body?: Types.IdentityUsersBulkSuspendUsersInput,
   ): Promise<Result<Types.IdentityUsersBulkSuspendUsersOutput, ApiError>> {
     const url = '/v1/users:suspend';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkSuspendUsersInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkSuspendUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -257,12 +257,12 @@ export class UsersModule {
    * Restores multiple soft-deleted users at once.
    */
   async postUsersUndeleteForPostUsersUndelete(
-    body: Types.IdentityUsersBulkRestoreUsersInput,
+    body?: Types.IdentityUsersBulkRestoreUsersInput,
   ): Promise<Result<Types.IdentityUsersBulkRestoreUsersOutput, ApiError>> {
     const url = '/v1/users:undelete';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkRestoreUsersInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkRestoreUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -286,12 +286,12 @@ export class UsersModule {
    * Unsuspends multiple user accounts at once.
    */
   async postUsersUnsuspendForPostUsersUnsuspend(
-    body: Types.IdentityUsersBulkUnsuspendUsersInput,
+    body?: Types.IdentityUsersBulkUnsuspendUsersInput,
   ): Promise<Result<Types.IdentityUsersBulkUnsuspendUsersOutput, ApiError>> {
     const url = '/v1/users:unsuspend';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkUnsuspendUsersInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkUnsuspendUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -314,11 +314,11 @@ export class UsersModule {
    *
    * Updates multiple users with partial data.
    */
-  async postUsersUpdate(body: Types.IdentityUsersBulkUpdateUsersInput): Promise<Result<void, ApiError>> {
+  async postUsersUpdate(body?: Types.IdentityUsersBulkUpdateUsersInput): Promise<Result<void, ApiError>> {
     const url = '/v1/users:update';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkUpdateUsersInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkUpdateUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -358,11 +358,11 @@ export class UsersModule {
    *
    * Fully updates a user by ID with complete user data.
    */
-  async putUsers(userId: string, body: Types.IdentityUsersCreateUserInput): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async putUsers(userId: string, body?: Types.IdentityUsersCreateUserInput): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersCreateUserInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersCreateUserInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -402,11 +402,11 @@ export class UsersModule {
    *
    * Updates specific fields of a user by ID.
    */
-  async patchUsers(userId: string, body: Types.IdentityUsersUpdateUserInput): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async patchUsers(userId: string, body?: Types.IdentityUsersUpdateUserInput): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersUpdateUserInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersUpdateUserInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

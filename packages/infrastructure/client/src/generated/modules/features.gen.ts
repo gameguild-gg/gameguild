@@ -32,11 +32,11 @@ export class FeaturesModule {
 
   /**
    */
-  async postFeatures(body: Types.FeaturesCreateFeatureInput): Promise<Result<Record<string, unknown>, ApiError>> {
+  async postFeatures(body?: Types.FeaturesCreateFeatureInput): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = '/v1/features';
 
     // Validate request body
-    const validatedBody = safeParse(Types.FeaturesCreateFeatureInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.FeaturesCreateFeatureInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -78,11 +78,11 @@ export class FeaturesModule {
 
   /**
    */
-  async postFeaturesToggle(id: string, body: Types.FeaturesToggleFeatureInput): Promise<Result<void, ApiError>> {
+  async postFeaturesToggle(id: string, body?: Types.FeaturesToggleFeatureInput): Promise<Result<void, ApiError>> {
     const url = `/v1/features/${id}:toggle`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.FeaturesToggleFeatureInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.FeaturesToggleFeatureInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -110,11 +110,11 @@ export class FeaturesModule {
 
   /**
    */
-  async putFeatures(key: string, body: Types.FeaturesUpdateFeatureInput): Promise<Result<void, ApiError>> {
+  async putFeatures(key: string, body?: Types.FeaturesUpdateFeatureInput): Promise<Result<void, ApiError>> {
     const url = `/v1/features/${key}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.FeaturesUpdateFeatureInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.FeaturesUpdateFeatureInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

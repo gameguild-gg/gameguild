@@ -36,11 +36,11 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async postTestingEvents(body: Types.TestingLabCreateTestingEventInput): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
+  async postTestingEvents(body?: Types.TestingLabCreateTestingEventInput): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = '/v1/testing/events';
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabCreateTestingEventInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabCreateTestingEventInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -80,11 +80,11 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async putTestingEvents(eventId: string, body: Types.TestingLabUpdateTestingEventInput): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
+  async putTestingEvents(eventId: string, body?: Types.TestingLabUpdateTestingEventInput): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabUpdateTestingEventInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabUpdateTestingEventInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -154,12 +154,12 @@ export class TestingLabTestingEventsModule {
    */
   async postTestingEventsCancel(
     eventId: string,
-    body: Types.TestingLabCancelTestingEventInput,
+    body?: Types.TestingLabCancelTestingEventInput,
   ): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}:cancel`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabCancelTestingEventInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabCancelTestingEventInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -293,12 +293,12 @@ export class TestingLabTestingEventsModule {
    */
   async postTestingEventsApplications(
     eventId: string,
-    body: Types.TestingLabSubmitTestingProjectApplicationInput,
+    body?: Types.TestingLabSubmitTestingProjectApplicationInput,
   ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}/applications`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabSubmitTestingProjectApplicationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabSubmitTestingProjectApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -340,12 +340,12 @@ export class TestingLabTestingEventsModule {
    */
   async postTestingEventsApplicationsDrafts(
     eventId: string,
-    body: Types.TestingLabCreateTestingProjectApplicationDraftInput,
+    body?: Types.TestingLabCreateTestingProjectApplicationDraftInput,
   ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}/applications/drafts`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabCreateTestingProjectApplicationDraftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabCreateTestingProjectApplicationDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -399,12 +399,12 @@ export class TestingLabTestingEventsModule {
    */
   async postTestingEventsCommittee(
     eventId: string,
-    body: Types.TestingLabAddTestingEventCommitteeMemberInput,
+    body?: Types.TestingLabAddTestingEventCommitteeMemberInput,
   ): Promise<Result<Types.TestingLabTestingEventCommitteeMemberProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}/committee`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabAddTestingEventCommitteeMemberInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabAddTestingEventCommitteeMemberInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -440,12 +440,12 @@ export class TestingLabTestingEventsModule {
    */
   async putTestingEventsConfiguration(
     eventId: string,
-    body: Types.TestingLabConfigureTestingEventInput,
+    body?: Types.TestingLabConfigureTestingEventInput,
   ): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}/configuration`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabConfigureTestingEventInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabConfigureTestingEventInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -467,12 +467,12 @@ export class TestingLabTestingEventsModule {
    */
   async putTestingEventsLearning(
     eventId: string,
-    body: Types.TestingLabConfigureTestingEventLearningInput,
+    body?: Types.TestingLabConfigureTestingEventLearningInput,
   ): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}/learning`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabConfigureTestingEventLearningInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabConfigureTestingEventLearningInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -508,12 +508,12 @@ export class TestingLabTestingEventsModule {
    */
   async postTestingEventsSlots(
     eventId: string,
-    body: Types.TestingLabUpsertTestingEventSlotInput,
+    body?: Types.TestingLabUpsertTestingEventSlotInput,
   ): Promise<Result<Types.TestingLabTestingEventSlotProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}/slots`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabUpsertTestingEventSlotInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabUpsertTestingEventSlotInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -536,12 +536,12 @@ export class TestingLabTestingEventsModule {
   async putTestingEventsSlots(
     eventId: string,
     slotId: string,
-    body: Types.TestingLabUpsertTestingEventSlotInput,
+    body?: Types.TestingLabUpsertTestingEventSlotInput,
   ): Promise<Result<Types.TestingLabTestingEventSlotProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}/slots/${slotId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabUpsertTestingEventSlotInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabUpsertTestingEventSlotInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -577,12 +577,12 @@ export class TestingLabTestingEventsModule {
    */
   async postTestingEventsSlotsBatch(
     eventId: string,
-    body: Types.TestingLabCreateTestingEventSlotsInput,
+    body?: Types.TestingLabCreateTestingEventSlotsInput,
   ): Promise<Result<Types.TestingLabTestingEventSlotProjection[], ApiError>> {
     const url = `/v1/testing/events/${eventId}/slots/batch`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabCreateTestingEventSlotsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabCreateTestingEventSlotsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -620,12 +620,12 @@ export class TestingLabTestingEventsModule {
    */
   async putTestingEventsApplications(
     applicationId: string,
-    body: Types.TestingLabUpdateTestingProjectApplicationInput,
+    body?: Types.TestingLabUpdateTestingProjectApplicationInput,
   ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabUpdateTestingProjectApplicationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabUpdateTestingProjectApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -647,12 +647,12 @@ export class TestingLabTestingEventsModule {
    */
   async postTestingEventsApplicationsApprove(
     applicationId: string,
-    body: Types.TestingLabDecideTestingProjectApplicationInput,
+    body?: Types.TestingLabDecideTestingProjectApplicationInput,
   ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}:approve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabDecideTestingProjectApplicationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabDecideTestingProjectApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -674,12 +674,12 @@ export class TestingLabTestingEventsModule {
    */
   async postTestingEventsApplicationsReject(
     applicationId: string,
-    body: Types.TestingLabDecideTestingProjectApplicationInput,
+    body?: Types.TestingLabDecideTestingProjectApplicationInput,
   ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}:reject`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabDecideTestingProjectApplicationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabDecideTestingProjectApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -741,12 +741,12 @@ export class TestingLabTestingEventsModule {
    */
   async postTestingEventsApplicationsWaitlist(
     applicationId: string,
-    body: Types.TestingLabDecideTestingProjectApplicationInput,
+    body?: Types.TestingLabDecideTestingProjectApplicationInput,
   ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}:waitlist`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabDecideTestingProjectApplicationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabDecideTestingProjectApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -788,12 +788,12 @@ export class TestingLabTestingEventsModule {
    */
   async putTestingEventsApplicationsDraft(
     applicationId: string,
-    body: Types.TestingLabSaveTestingProjectApplicationDraftInput,
+    body?: Types.TestingLabSaveTestingProjectApplicationDraftInput,
   ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}/draft`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabSaveTestingProjectApplicationDraftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabSaveTestingProjectApplicationDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -835,12 +835,12 @@ export class TestingLabTestingEventsModule {
    */
   async putTestingEventsApplicationsSlot(
     applicationId: string,
-    body: Types.TestingLabAssignTestingProjectApplicationSlotInput,
+    body?: Types.TestingLabAssignTestingProjectApplicationSlotInput,
   ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}/slot`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabAssignTestingProjectApplicationSlotInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabAssignTestingProjectApplicationSlotInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -862,12 +862,12 @@ export class TestingLabTestingEventsModule {
    */
   async postTestingEventsApplicationsVotes(
     applicationId: string,
-    body: Types.TestingLabCastTestingApplicationVoteInput,
+    body?: Types.TestingLabCastTestingApplicationVoteInput,
   ): Promise<Result<Types.TestingLabTestingApplicationVoteProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}/votes`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabCastTestingApplicationVoteInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabCastTestingApplicationVoteInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

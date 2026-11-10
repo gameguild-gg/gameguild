@@ -18,11 +18,11 @@ export class LearningAssessmentsModule {
   /**
    * Create a new assessment for a course
    */
-  async postAssessments(body: Types.LearningAssessmentsCreateAssessmentInput): Promise<Result<Types.LearningAssessmentsAssessmentDto, ApiError>> {
+  async postAssessments(body?: Types.LearningAssessmentsCreateAssessmentInput): Promise<Result<Types.LearningAssessmentsAssessmentDto, ApiError>> {
     const url = '/v1/assessments';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsCreateAssessmentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsCreateAssessmentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -125,12 +125,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsSubmissionsStart(
     assessmentId: string,
-    body: Types.LearningAssessmentsStartSubmissionInput,
+    body?: Types.LearningAssessmentsStartSubmissionInput,
   ): Promise<Result<Types.LearningAssessmentsLearnerAssessmentAttemptDto, ApiError>> {
     const url = `/v1/assessments/${assessmentId}/submissions/start`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsStartSubmissionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsStartSubmissionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -172,11 +172,11 @@ export class LearningAssessmentsModule {
   /**
    * Update an assessment
    */
-  async putAssessments(id: string, body: Types.LearningAssessmentsUpdateAssessmentInput): Promise<Result<Types.LearningAssessmentsAssessmentDto, ApiError>> {
+  async putAssessments(id: string, body?: Types.LearningAssessmentsUpdateAssessmentInput): Promise<Result<Types.LearningAssessmentsAssessmentDto, ApiError>> {
     const url = `/v1/assessments/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsUpdateAssessmentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsUpdateAssessmentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -235,12 +235,12 @@ export class LearningAssessmentsModule {
    */
   async putAssessmentsGroup(
     id: string,
-    body: Types.LearningAssessmentsAssignAssessmentGroupInput,
+    body?: Types.LearningAssessmentsAssignAssessmentGroupInput,
   ): Promise<Result<Types.LearningAssessmentsAssessmentDto, ApiError>> {
     const url = `/v1/assessments/${id}/group`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsAssignAssessmentGroupInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsAssignAssessmentGroupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -278,12 +278,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsInteractiveVideoCues(
     id: string,
-    body: Types.LearningAssessmentsLinkInteractiveVideoCueInput,
+    body?: Types.LearningAssessmentsLinkInteractiveVideoCueInput,
   ): Promise<Result<Types.LearningAssessmentsInteractiveVideoAssessmentCueDto, ApiError>> {
     const url = `/v1/assessments/${id}/interactive-video-cues`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsLinkInteractiveVideoCueInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsLinkInteractiveVideoCueInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -336,12 +336,13 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsRevisionsPrepare(
     id: string,
-    body: Types.LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInput,
+    body?: Types.LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInput,
   ): Promise<Result<Types.LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult, ApiError>> {
     const url = `/v1/assessments/${id}/revisions/prepare`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -364,12 +365,13 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsRevisionsPublish(
     id: string,
-    body: Types.LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInput,
+    body?: Types.LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInput,
   ): Promise<Result<Types.LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult, ApiError>> {
     const url = `/v1/assessments/${id}/revisions/publish`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -392,12 +394,13 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsRevisionsUnpublish(
     id: string,
-    body: Types.LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInput,
+    body?: Types.LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/${id}/revisions/unpublish`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -413,12 +416,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsRuntimeSubmissionsCollective(
     id: string,
-    body: Types.LearningAssessmentsStartCollectiveRuntimeSubmissionInput,
+    body?: Types.LearningAssessmentsStartCollectiveRuntimeSubmissionInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
     const url = `/v1/assessments/${id}/runtime-submissions/collective`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsStartCollectiveRuntimeSubmissionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsStartCollectiveRuntimeSubmissionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -440,12 +443,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsRuntimeSubmissionsIndividual(
     id: string,
-    body: Types.LearningAssessmentsStartIndividualRuntimeSubmissionInput,
+    body?: Types.LearningAssessmentsStartIndividualRuntimeSubmissionInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
     const url = `/v1/assessments/${id}/runtime-submissions/individual`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsStartIndividualRuntimeSubmissionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsStartIndividualRuntimeSubmissionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -467,12 +470,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsTestRuns(
     id: string,
-    body: Types.LearningAssessmentsStartAssessmentTestRunInput,
+    body?: Types.LearningAssessmentsStartAssessmentTestRunInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1, ApiError>> {
     const url = `/v1/assessments/${id}/test-runs`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsStartAssessmentTestRunInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsStartAssessmentTestRunInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -496,12 +499,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsContentRuntimeSubmissionsIndividual(
     contentId: string,
-    body: Types.LearningAssessmentsStartContentRuntimeSubmissionInput,
+    body?: Types.LearningAssessmentsStartContentRuntimeSubmissionInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
     const url = `/v1/assessments/content/${contentId}/runtime-submissions/individual`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsStartContentRuntimeSubmissionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsStartContentRuntimeSubmissionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -561,12 +564,12 @@ export class LearningAssessmentsModule {
   async putAssessmentsCourseContentDraft(
     courseId: string,
     contentId: string,
-    body: Types.LearningAssessmentsGradingAuthoringSaveAssessmentDraftInput,
+    body?: Types.LearningAssessmentsGradingAuthoringSaveAssessmentDraftInput,
   ): Promise<Result<Types.LearningAssessmentsGradingAuthoringAssessmentDraftResult, ApiError>> {
     const url = `/v1/assessments/course/${courseId}/content/${contentId}/draft`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsGradingAuthoringSaveAssessmentDraftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsGradingAuthoringSaveAssessmentDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -627,12 +630,12 @@ export class LearningAssessmentsModule {
    * Create a weighted assessment group.
    */
   async postAssessmentsGroups(
-    body: Types.LearningAssessmentsCreateAssessmentGroupInput,
+    body?: Types.LearningAssessmentsCreateAssessmentGroupInput,
   ): Promise<Result<Types.LearningAssessmentsAssessmentGroupDto, ApiError>> {
     const url = '/v1/assessments/groups';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsCreateAssessmentGroupInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsCreateAssessmentGroupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -655,12 +658,12 @@ export class LearningAssessmentsModule {
    */
   async putAssessmentsGroups(
     id: string,
-    body: Types.LearningAssessmentsUpdateAssessmentGroupInput,
+    body?: Types.LearningAssessmentsUpdateAssessmentGroupInput,
   ): Promise<Result<Types.LearningAssessmentsAssessmentGroupDto, ApiError>> {
     const url = `/v1/assessments/groups/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsUpdateAssessmentGroupInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsUpdateAssessmentGroupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -732,12 +735,12 @@ export class LearningAssessmentsModule {
    */
   async putAssessmentsRuntimeSubmissionsDraft(
     submissionId: string,
-    body: Types.LearningAssessmentsSaveCollectiveRuntimeDraftInput,
+    body?: Types.LearningAssessmentsSaveCollectiveRuntimeDraftInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
     const url = `/v1/assessments/runtime-submissions/${submissionId}/draft`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsSaveCollectiveRuntimeDraftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsSaveCollectiveRuntimeDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -759,12 +762,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsRuntimeSubmissionsInstructorReview(
     submissionId: string,
-    body: Types.LearningAssessmentsResolveInstructorReviewInput,
+    body?: Types.LearningAssessmentsResolveInstructorReviewInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
     const url = `/v1/assessments/runtime-submissions/${submissionId}/instructor-review`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsResolveInstructorReviewInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsResolveInstructorReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -786,12 +789,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsRuntimeSubmissionsRegrade(
     submissionId: string,
-    body: Types.LearningAssessmentsGradingRuntimeRegradeExecutionCommand,
+    body?: Types.LearningAssessmentsGradingRuntimeRegradeExecutionCommand,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
     const url = `/v1/assessments/runtime-submissions/${submissionId}/regrade`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsGradingRuntimeRegradeExecutionCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsGradingRuntimeRegradeExecutionCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -813,12 +816,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsRuntimeSubmissionsRelease(
     submissionId: string,
-    body: Types.LearningAssessmentsGradingRuntimeReleaseGradeResultCommand,
+    body?: Types.LearningAssessmentsGradingRuntimeReleaseGradeResultCommand,
   ): Promise<Result<Types.LearningAssessmentsGradeResultReleaseOutput, ApiError>> {
     const url = `/v1/assessments/runtime-submissions/${submissionId}/release`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsGradingRuntimeReleaseGradeResultCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsGradingRuntimeReleaseGradeResultCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -840,12 +843,13 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsRuntimeSubmissionsReleaseSchedule(
     submissionId: string,
-    body: Types.LearningAssessmentsGradingRuntimeScheduleGradeResultReleaseCommand,
+    body?: Types.LearningAssessmentsGradingRuntimeScheduleGradeResultReleaseCommand,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeGradeResultReleaseScheduleViewV1, ApiError>> {
     const url = `/v1/assessments/runtime-submissions/${submissionId}/release-schedule`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsGradingRuntimeScheduleGradeResultReleaseCommandSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.LearningAssessmentsGradingRuntimeScheduleGradeResultReleaseCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -867,12 +871,13 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsRuntimeSubmissionsReleaseScheduleCancel(
     submissionId: string,
-    body: Types.LearningAssessmentsGradingRuntimeCancelScheduledGradeResultReleaseCommand,
+    body?: Types.LearningAssessmentsGradingRuntimeCancelScheduledGradeResultReleaseCommand,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeGradeResultReleaseScheduleViewV1, ApiError>> {
     const url = `/v1/assessments/runtime-submissions/${submissionId}/release-schedule/cancel`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsGradingRuntimeCancelScheduledGradeResultReleaseCommandSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.LearningAssessmentsGradingRuntimeCancelScheduledGradeResultReleaseCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -894,12 +899,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsRuntimeSubmissionsSelfReview(
     submissionId: string,
-    body: Types.LearningAssessmentsSubmitSelfReviewInput,
+    body?: Types.LearningAssessmentsSubmitSelfReviewInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
     const url = `/v1/assessments/runtime-submissions/${submissionId}/self-review`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsSubmitSelfReviewInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsSubmitSelfReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -921,12 +926,12 @@ export class LearningAssessmentsModule {
    */
   async putAssessmentsRuntimeSubmissionsSelfReviewDraft(
     submissionId: string,
-    body: Types.LearningAssessmentsSaveCollectiveSelfReviewDraftInput,
+    body?: Types.LearningAssessmentsSaveCollectiveSelfReviewDraftInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
     const url = `/v1/assessments/runtime-submissions/${submissionId}/self-review/draft`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsSaveCollectiveSelfReviewDraftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsSaveCollectiveSelfReviewDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -948,12 +953,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsRuntimeSubmissionsSubmit(
     submissionId: string,
-    body: Types.LearningAssessmentsSubmitAssessmentRuntimeInput,
+    body?: Types.LearningAssessmentsSubmitAssessmentRuntimeInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
     const url = `/v1/assessments/runtime-submissions/${submissionId}/submit`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsSubmitAssessmentRuntimeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsSubmitAssessmentRuntimeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -991,12 +996,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsSubmissionsSubmit(
     submissionId: string,
-    body: Types.LearningAssessmentsSubmitAssessmentInput,
+    body?: Types.LearningAssessmentsSubmitAssessmentInput,
   ): Promise<Result<Types.LearningAssessmentsLearnerAssessmentSubmissionDto, ApiError>> {
     const url = `/v1/assessments/submissions/${submissionId}/submit`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsSubmitAssessmentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsSubmitAssessmentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1038,12 +1043,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsTestRunsInstructorReview(
     testRunId: string,
-    body: Types.LearningAssessmentsResolveInstructorReviewInput,
+    body?: Types.LearningAssessmentsResolveInstructorReviewInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1, ApiError>> {
     const url = `/v1/assessments/test-runs/${testRunId}/instructor-review`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsResolveInstructorReviewInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsResolveInstructorReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1088,12 +1093,12 @@ export class LearningAssessmentsModule {
   async postAssessmentsTestRunsPeerReviewsSubmit(
     testRunId: string,
     reviewId: string,
-    body: Types.LearningAssessmentsSubmitAssessmentTestPeerReviewInput,
+    body?: Types.LearningAssessmentsSubmitAssessmentTestPeerReviewInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1, ApiError>> {
     const url = `/v1/assessments/test-runs/${testRunId}/peer-reviews/${reviewId}/submit`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsSubmitAssessmentTestPeerReviewInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsSubmitAssessmentTestPeerReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1116,12 +1121,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsTestRunsPeerReviewsClaim(
     testRunId: string,
-    body: Types.LearningAssessmentsClaimAssessmentTestPeerReviewInput,
+    body?: Types.LearningAssessmentsClaimAssessmentTestPeerReviewInput,
   ): Promise<Result<Types.LearningAssessmentsPeerReviewClaimResult, ApiError>> {
     const url = `/v1/assessments/test-runs/${testRunId}/peer-reviews/claim`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsClaimAssessmentTestPeerReviewInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsClaimAssessmentTestPeerReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1143,12 +1148,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsTestRunsRestart(
     testRunId: string,
-    body: Types.LearningAssessmentsIdempotentRuntimeInput,
+    body?: Types.LearningAssessmentsIdempotentRuntimeInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1, ApiError>> {
     const url = `/v1/assessments/test-runs/${testRunId}/restart`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsIdempotentRuntimeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsIdempotentRuntimeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1170,12 +1175,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsTestRunsSelfReview(
     testRunId: string,
-    body: Types.LearningAssessmentsSubmitSelfReviewInput,
+    body?: Types.LearningAssessmentsSubmitSelfReviewInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1, ApiError>> {
     const url = `/v1/assessments/test-runs/${testRunId}/self-review`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsSubmitSelfReviewInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsSubmitSelfReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1197,12 +1202,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsTestRunsSubmit(
     testRunId: string,
-    body: Types.LearningAssessmentsSubmitAssessmentRuntimeInput,
+    body?: Types.LearningAssessmentsSubmitAssessmentRuntimeInput,
   ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1, ApiError>> {
     const url = `/v1/assessments/test-runs/${testRunId}/submit`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsSubmitAssessmentRuntimeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsSubmitAssessmentRuntimeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

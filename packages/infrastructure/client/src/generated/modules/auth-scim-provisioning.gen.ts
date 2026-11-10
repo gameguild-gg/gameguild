@@ -34,12 +34,12 @@ export class AuthScimProvisioningModule {
    * Issues a new tenant-scoped provisioning token. The plaintext is returned once.
    */
   async postAuthScimProvisioningTokens(
-    body: Types.IdentityProvisioningCreateScimProvisioningTokenInput,
+    body?: Types.IdentityProvisioningCreateScimProvisioningTokenInput,
   ): Promise<Result<Types.IdentityProvisioningCreateScimProvisioningTokenOutput, ApiError>> {
     const url = '/v1/auth/scim-provisioning-tokens';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityProvisioningCreateScimProvisioningTokenInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityProvisioningCreateScimProvisioningTokenInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -62,12 +62,12 @@ export class AuthScimProvisioningModule {
    */
   async postAuthScimProvisioningTokensRevoke(
     tokenId: string,
-    body: Types.IdentityProvisioningRevokeScimProvisioningTokenInput,
+    body?: Types.IdentityProvisioningRevokeScimProvisioningTokenInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/scim-provisioning-tokens/${tokenId}:revoke`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityProvisioningRevokeScimProvisioningTokenInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityProvisioningRevokeScimProvisioningTokenInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -84,12 +84,12 @@ export class AuthScimProvisioningModule {
    */
   async postAuthScimProvisioningTokensRotate(
     tokenId: string,
-    body: Types.IdentityProvisioningRotateScimProvisioningTokenInput,
+    body?: Types.IdentityProvisioningRotateScimProvisioningTokenInput,
   ): Promise<Result<Types.IdentityProvisioningRotateScimProvisioningTokenOutput, ApiError>> {
     const url = `/v1/auth/scim-provisioning-tokens/${tokenId}:rotate`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityProvisioningRotateScimProvisioningTokenInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityProvisioningRotateScimProvisioningTokenInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

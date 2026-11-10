@@ -18,11 +18,11 @@ export class MonitoringSlaModule {
   /**
    * Record a service level indicator metric.
    */
-  async postSlaSlis(body: Types.MonitoringSLARecordSliMetricCommand): Promise<Result<void, ApiError>> {
+  async postSlaSlis(body?: Types.MonitoringSLARecordSliMetricCommand): Promise<Result<void, ApiError>> {
     const url = '/api/v1/sla/slis';
 
     // Validate request body
-    const validatedBody = safeParse(Types.MonitoringSLARecordSliMetricCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.MonitoringSLARecordSliMetricCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -59,11 +59,11 @@ export class MonitoringSlaModule {
   /**
    * Create a new service level objective.
    */
-  async postSlaSlos(body: Types.MonitoringSLACreateSloCommand): Promise<Result<Types.MonitoringSLASloDto, ApiError>> {
+  async postSlaSlos(body?: Types.MonitoringSLACreateSloCommand): Promise<Result<Types.MonitoringSLASloDto, ApiError>> {
     const url = '/api/v1/sla/slos';
 
     // Validate request body
-    const validatedBody = safeParse(Types.MonitoringSLACreateSloCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.MonitoringSLACreateSloCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -105,11 +105,11 @@ export class MonitoringSlaModule {
   /**
    * Update an existing service level objective.
    */
-  async putSlaSlos(id: string, body: Types.MonitoringSLAUpdateSloCommand): Promise<Result<Types.MonitoringSLASloDto, ApiError>> {
+  async putSlaSlos(id: string, body?: Types.MonitoringSLAUpdateSloCommand): Promise<Result<Types.MonitoringSLASloDto, ApiError>> {
     const url = `/api/v1/sla/slos/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.MonitoringSLAUpdateSloCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.MonitoringSLAUpdateSloCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -212,11 +212,11 @@ export class MonitoringSlaModule {
   /**
    * Resolve an SLO violation.
    */
-  async postSlaViolationsResolve(id: string, body: Types.MonitoringSLAResolveSloViolationCommand): Promise<Result<void, ApiError>> {
+  async postSlaViolationsResolve(id: string, body?: Types.MonitoringSLAResolveSloViolationCommand): Promise<Result<void, ApiError>> {
     const url = `/api/v1/sla/violations/${id}/resolve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.MonitoringSLAResolveSloViolationCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.MonitoringSLAResolveSloViolationCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

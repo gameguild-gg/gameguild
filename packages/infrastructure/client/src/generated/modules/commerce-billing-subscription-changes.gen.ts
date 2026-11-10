@@ -22,12 +22,12 @@ export class CommerceBillingSubscriptionChangesModule {
    */
   async postBillingSubscriptionsPlanChangeOrchestrate(
     subscriptionId: string,
-    body: Types.CommerceBillingOrchestrateSubscriptionPlanChangeInput,
+    body?: Types.CommerceBillingOrchestrateSubscriptionPlanChangeInput,
   ): Promise<Result<Types.CommerceBillingSubscriptionChangeSagaResult, ApiError>> {
     const url = `/api/v1/billing/subscriptions/${subscriptionId}/plan-change:orchestrate`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceBillingOrchestrateSubscriptionPlanChangeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceBillingOrchestrateSubscriptionPlanChangeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

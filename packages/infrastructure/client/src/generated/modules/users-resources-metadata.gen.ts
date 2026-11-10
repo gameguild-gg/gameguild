@@ -66,12 +66,12 @@ export class UsersResourcesMetadataModule {
   async putUsersResourcesMetadata(
     userId: string,
     key: string,
-    body: Types.ResourcesSetResourceMetadataInput,
+    body?: Types.ResourcesSetResourceMetadataInput,
   ): Promise<Result<Types.ResourcesResourceMetadata, ApiError>> {
     const url = `/v1/users/${userId}/resources/metadata/${key}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesSetResourceMetadataInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesSetResourceMetadataInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

@@ -57,12 +57,12 @@ export class UsersNotificationsModule {
    */
   async postUsersNotificationsArchiveForPostUsersByUserIdNotificationsArchive(
     userId: string,
-    body: Types.IdentityUsersBulkNotificationInput,
+    body?: Types.IdentityUsersBulkNotificationInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications:archive`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -79,12 +79,12 @@ export class UsersNotificationsModule {
    */
   async postUsersNotificationsMarkAsReadForPostUsersByUserIdNotificationsMarkAsRead(
     userId: string,
-    body: Types.IdentityUsersBulkNotificationInput,
+    body?: Types.IdentityUsersBulkNotificationInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications:mark-as-read`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -101,12 +101,12 @@ export class UsersNotificationsModule {
    */
   async postUsersNotificationsMarkAsUnreadForPostUsersByUserIdNotificationsMarkAsUnread(
     userId: string,
-    body: Types.IdentityUsersBulkNotificationInput,
+    body?: Types.IdentityUsersBulkNotificationInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications:mark-as-unread`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -123,12 +123,12 @@ export class UsersNotificationsModule {
    */
   async postUsersNotificationsUnarchiveForPostUsersByUserIdNotificationsUnarchive(
     userId: string,
-    body: Types.IdentityUsersBulkNotificationInput,
+    body?: Types.IdentityUsersBulkNotificationInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications:unarchive`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

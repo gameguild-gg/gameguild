@@ -24,12 +24,12 @@ export class ComplianceAuditQueriesModule {
    * policy (AND composition, fail-closed).
    */
   async postAuditQueriesExecute(
-    body: Types.ComplianceAuditAuditQueryExecuteApiInput,
+    body?: Types.ComplianceAuditAuditQueryExecuteApiInput,
   ): Promise<Result<Types.ComplianceAuditAuditQueryDslExecutionResult, ApiError>> {
     const url = '/v1/audit-queries/:execute';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAuditQueryExecuteApiInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditQueryExecuteApiInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -82,12 +82,12 @@ export class ComplianceAuditQueriesModule {
    * Query-operations tier (issue #375): requires `queries:query`.
    */
   async postAuditQueriesValidate(
-    body: Types.ComplianceAuditAuditQueryValidateApiInput,
+    body?: Types.ComplianceAuditAuditQueryValidateApiInput,
   ): Promise<Result<Types.ComplianceAuditAuditQueryValidationOutput, ApiError>> {
     const url = '/v1/audit-queries/:validate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAuditQueryValidateApiInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditQueryValidateApiInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -129,12 +129,12 @@ export class ComplianceAuditQueriesModule {
    * before persistence; a creation revision snapshot is recorded.
    */
   async postAuditQueriesSaved(
-    body: Types.ComplianceAuditSaveSavedAuditQueryApiInput,
+    body?: Types.ComplianceAuditSaveSavedAuditQueryApiInput,
   ): Promise<Result<Types.ComplianceAuditSavedAuditQueryViewOutput, ApiError>> {
     const url = '/v1/audit-queries/saved';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditSaveSavedAuditQueryApiInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditSaveSavedAuditQueryApiInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -178,12 +178,12 @@ export class ComplianceAuditQueriesModule {
    */
   async putAuditQueriesSaved(
     id: string,
-    body: Types.ComplianceAuditSaveSavedAuditQueryApiInput,
+    body?: Types.ComplianceAuditSaveSavedAuditQueryApiInput,
   ): Promise<Result<Types.ComplianceAuditSavedAuditQueryViewOutput, ApiError>> {
     const url = `/v1/audit-queries/saved/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditSaveSavedAuditQueryApiInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditSaveSavedAuditQueryApiInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -225,12 +225,12 @@ export class ComplianceAuditQueriesModule {
    */
   async postAuditQueriesSavedExecute(
     id: string,
-    body: Types.ComplianceAuditAuditQueryPagingApiInput,
+    body?: Types.ComplianceAuditAuditQueryPagingApiInput,
   ): Promise<Result<Types.ComplianceAuditAuditQueryDslExecutionResult, ApiError>> {
     const url = `/v1/audit-queries/saved/${id}:execute`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAuditQueryPagingApiInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditQueryPagingApiInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

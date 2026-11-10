@@ -37,11 +37,11 @@ export class LaunchPadSettingsModule {
 
   /**
    */
-  async putLaunchPadSettings(body: Types.LaunchPadUpdateLaunchPadSettingsInput): Promise<Result<Types.LaunchPadLaunchPadSettingsProjection, ApiError>> {
+  async putLaunchPadSettings(body?: Types.LaunchPadUpdateLaunchPadSettingsInput): Promise<Result<Types.LaunchPadLaunchPadSettingsProjection, ApiError>> {
     const url = '/v1/launch-pad/settings';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LaunchPadUpdateLaunchPadSettingsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LaunchPadUpdateLaunchPadSettingsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

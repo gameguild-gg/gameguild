@@ -21,12 +21,12 @@ export class AuthModule {
    * Initiates the Discord OAuth authorization-code sign-in flow and returns the authorization URL with the CSRF state parameter. Account-linking counterpart: POST /v1/auth/external-logins/discord:link-authorize.
    */
   async postAuthDiscordSignInAuthorize(
-    body: Types.IdentityAuthenticationDiscordAuthorizeInput,
+    body?: Types.IdentityAuthenticationDiscordAuthorizeInput,
   ): Promise<Result<Types.IdentityAuthenticationDiscordSignInOutput, ApiError>> {
     const url = '/v1/auth/discord:sign-in-authorize';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordAuthorizeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationDiscordAuthorizeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -50,12 +50,12 @@ export class AuthModule {
    * Exchanges the Discord OAuth authorization code for access and refresh tokens, applying the same account matching and auto-link policy as Google sign-in. Account-linking counterpart: POST /v1/auth/external-logins/discord:link-callback.
    */
   async postAuthDiscordSignInCallback(
-    body: Types.IdentityAuthenticationDiscordCallbackRequestDto,
+    body?: Types.IdentityAuthenticationDiscordCallbackRequestDto,
   ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = '/v1/auth/discord:sign-in-callback';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordCallbackRequestDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationDiscordCallbackRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -78,11 +78,13 @@ export class AuthModule {
    *
    * Consumes a short-lived single-use six-digit email code and returns access and refresh tokens using the same session issuance path as the magic link.
    */
-  async postAuthEmailCodeConsume(body: Types.IdentityAuthenticationConsumeEmailCodeInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+  async postAuthEmailCodeConsume(
+    body?: Types.IdentityAuthenticationConsumeEmailCodeInput,
+  ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = '/v1/auth/email-code:consume';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationConsumeEmailCodeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationConsumeEmailCodeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -106,12 +108,12 @@ export class AuthModule {
    * Generates a short-lived six-digit one-time code and dispatches the email-code notification. Always returns a generic success response to prevent user enumeration.
    */
   async postAuthEmailCodeRequest(
-    body: Types.IdentityAuthenticationRequestEmailCodeInput,
+    body?: Types.IdentityAuthenticationRequestEmailCodeInput,
   ): Promise<Result<Types.IdentityAuthenticationEmailCodeRequestResult, ApiError>> {
     const url = '/v1/auth/email-code:request';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRequestEmailCodeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRequestEmailCodeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -135,12 +137,12 @@ export class AuthModule {
    * Sends a verification email to the specified email address to confirm ownership.
    */
   async postAuthEmailSendVerification(
-    body: Types.IdentityAuthenticationSendEmailVerificationInput,
+    body?: Types.IdentityAuthenticationSendEmailVerificationInput,
   ): Promise<Result<Types.IdentityAuthenticationEmailVerificationOutput, ApiError>> {
     const url = '/v1/auth/email:send-verification';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationSendEmailVerificationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationSendEmailVerificationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -164,12 +166,12 @@ export class AuthModule {
    * Verifies the user's email address using a token received via email.
    */
   async postAuthEmailVerify(
-    body: Types.IdentityAuthenticationVerifyEmailInput,
+    body?: Types.IdentityAuthenticationVerifyEmailInput,
   ): Promise<Result<Types.IdentityAuthenticationEmailVerificationResult, ApiError>> {
     const url = '/v1/auth/email:verify';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationVerifyEmailInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationVerifyEmailInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -251,12 +253,12 @@ export class AuthModule {
    */
   async postAuthExternalLoginsScopesRevoke(
     provider: string,
-    body: Types.IdentityAuthenticationRevokeExternalLoginScopesInput,
+    body?: Types.IdentityAuthenticationRevokeExternalLoginScopesInput,
   ): Promise<Result<Types.IdentityAuthenticationRevokeExternalLoginScopesOutput, ApiError>> {
     const url = `/v1/auth/external-logins/${provider}/scopes:revoke`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRevokeExternalLoginScopesInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRevokeExternalLoginScopesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -280,12 +282,12 @@ export class AuthModule {
    * Returns the Discord OAuth authorization URL plus the state parameter to validate at the callback.
    */
   async postAuthExternalLoginsDiscordLinkAuthorize(
-    body: Types.IdentityAuthenticationDiscordLinkAuthorizeInput,
+    body?: Types.IdentityAuthenticationDiscordLinkAuthorizeInput,
   ): Promise<Result<Types.IdentityAuthenticationDiscordLinkAuthorizeOutput, ApiError>> {
     const url = '/v1/auth/external-logins/discord:link-authorize';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordLinkAuthorizeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationDiscordLinkAuthorizeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -308,11 +310,11 @@ export class AuthModule {
    *
    * Exchanges the Discord authorization code for the user profile and links the Discord identity to the authenticated user. Idempotent when already linked to the same user.
    */
-  async postAuthExternalLoginsDiscordLinkCallback(body: Types.IdentityAuthenticationDiscordLinkCallbackInput): Promise<Result<void, ApiError>> {
+  async postAuthExternalLoginsDiscordLinkCallback(body?: Types.IdentityAuthenticationDiscordLinkCallbackInput): Promise<Result<void, ApiError>> {
     const url = '/v1/auth/external-logins/discord:link-callback';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordLinkCallbackInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationDiscordLinkCallbackInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -329,11 +331,11 @@ export class AuthModule {
    *
    * Verifies a Google ID token and links the Google identity to the authenticated user. Idempotent when already linked to the same user.
    */
-  async postAuthExternalLoginsGoogle(body: Types.IdentityAuthenticationLinkGoogleAccountInput): Promise<Result<void, ApiError>> {
+  async postAuthExternalLoginsGoogle(body?: Types.IdentityAuthenticationLinkGoogleAccountInput): Promise<Result<void, ApiError>> {
     const url = '/v1/auth/external-logins/google';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationLinkGoogleAccountInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationLinkGoogleAccountInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -375,12 +377,12 @@ export class AuthModule {
    * Exchanges the GitHub OAuth authorization code for access and refresh tokens, applying the same account matching, scope-grant consent recording and auto-link policy as Google/Discord sign-in.
    */
   async postAuthGithubCallback(
-    body: Types.IdentityAuthenticationGitHubCallbackRequestDto,
+    body?: Types.IdentityAuthenticationGitHubCallbackRequestDto,
   ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = '/v1/auth/github:callback';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationGitHubCallbackRequestDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationGitHubCallbackRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -403,11 +405,11 @@ export class AuthModule {
    *
    * Authenticates a user using a Google ID Token (for NextAuth.js integration), returning access and refresh tokens. Account-linking counterpart: POST /v1/auth/external-logins/google.
    */
-  async postAuthGoogleSignIn(body: Types.IdentityAuthenticationGoogleIdTokenRequestDto): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+  async postAuthGoogleSignIn(body?: Types.IdentityAuthenticationGoogleIdTokenRequestDto): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = '/v1/auth/google:sign-in';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationGoogleIdTokenRequestDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationGoogleIdTokenRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -430,11 +432,13 @@ export class AuthModule {
    *
    * Consumes a short-lived one-time magic-link token and returns access and refresh tokens.
    */
-  async postAuthMagicLinkConsume(body: Types.IdentityAuthenticationConsumeMagicLinkInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+  async postAuthMagicLinkConsume(
+    body?: Types.IdentityAuthenticationConsumeMagicLinkInput,
+  ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = '/v1/auth/magic-link:consume';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationConsumeMagicLinkInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationConsumeMagicLinkInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -458,12 +462,12 @@ export class AuthModule {
    * Generates a short-lived one-time sign-in token and dispatches the magic-link notification. Always returns a generic success response to prevent user enumeration.
    */
   async postAuthMagicLinkRequest(
-    body: Types.IdentityAuthenticationRequestMagicLinkInput,
+    body?: Types.IdentityAuthenticationRequestMagicLinkInput,
   ): Promise<Result<Types.IdentityAuthenticationMagicLinkRequestResult, ApiError>> {
     const url = '/v1/auth/magic-link:request';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRequestMagicLinkInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRequestMagicLinkInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -487,12 +491,12 @@ export class AuthModule {
    * Consumes the expiring first-factor challenge and verifies an enrolled TOTP, SMS or backup code. Identity, tenant, policy and token version come from the server-side challenge. A successful response contains MFA-bound credentials.
    */
   async postAuthMfaSignInComplete(
-    body: Types.IdentityAuthenticationCompleteMfaSignInInput,
+    body?: Types.IdentityAuthenticationCompleteMfaSignInInput,
   ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = '/v1/auth/mfa/sign-in/complete';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteMfaSignInInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCompleteMfaSignInInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -568,12 +572,12 @@ export class AuthModule {
    */
   async postAuthOidcSignInAuthorize(
     slug: string,
-    body: Types.IdentityAuthenticationOidcAuthorizeRequestDto,
+    body?: Types.IdentityAuthenticationOidcAuthorizeRequestDto,
   ): Promise<Result<Types.IdentityAuthenticationOidcSignInOutput, ApiError>> {
     const url = `/v1/auth/oidc/${slug}:sign-in-authorize`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationOidcAuthorizeRequestDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationOidcAuthorizeRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -598,12 +602,12 @@ export class AuthModule {
    */
   async postAuthOidcSignInCallback(
     slug: string,
-    body: Types.IdentityAuthenticationOidcCallbackRequestDto,
+    body?: Types.IdentityAuthenticationOidcCallbackRequestDto,
   ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = `/v1/auth/oidc/${slug}:sign-in-callback`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationOidcCallbackRequestDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationOidcCallbackRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -627,12 +631,13 @@ export class AuthModule {
    * Validates the local primary credential (identifier + password), assesses sign-in risk and returns the persisted flow state with the required challenge ladder (MFA verification, device trust, risk challenge). Expired, inactive or unknown credentials fail closed.
    */
   async postAuthOrchestratedInitiate(
-    body: Types.IdentityAuthenticationInitiateOrchestratedAuthenticationRequestDto,
+    body?: Types.IdentityAuthenticationInitiateOrchestratedAuthenticationRequestDto,
   ): Promise<Result<Types.IdentityAuthenticationOrchestratedFlowStateOutput, ApiError>> {
     const url = '/v1/auth/orchestrated:initiate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationInitiateOrchestratedAuthenticationRequestDtoSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.IdentityAuthenticationInitiateOrchestratedAuthenticationRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -720,12 +725,13 @@ export class AuthModule {
    */
   async postAuthOrchestratedProcessStep(
     flowId: string,
-    body: Types.IdentityAuthenticationProcessOrchestratedAuthenticationStepRequestDto,
+    body?: Types.IdentityAuthenticationProcessOrchestratedAuthenticationStepRequestDto,
   ): Promise<Result<Types.IdentityAuthenticationOrchestratedFlowStateOutput, ApiError>> {
     const url = `/v1/auth/orchestrated/${flowId}:process-step`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationProcessOrchestratedAuthenticationStepRequestDtoSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.IdentityAuthenticationProcessOrchestratedAuthenticationStepRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -749,12 +755,12 @@ export class AuthModule {
    * Changes the password for the currently authenticated user.
    */
   async postAuthPasswordChange(
-    body: Types.IdentityAuthenticationPasswordChangeInput,
+    body?: Types.IdentityAuthenticationPasswordChangeInput,
   ): Promise<Result<Types.IdentityAuthenticationPasswordChangeResult, ApiError>> {
     const url = '/v1/auth/password:change';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationPasswordChangeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationPasswordChangeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -778,12 +784,12 @@ export class AuthModule {
    * Resets the user's password using a token received via email.
    */
   async postAuthPasswordReset(
-    body: Types.IdentityAuthenticationCompletePasswordResetInput,
+    body?: Types.IdentityAuthenticationCompletePasswordResetInput,
   ): Promise<Result<Types.IdentityAuthenticationPasswordResetResult, ApiError>> {
     const url = '/v1/auth/password:reset';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCompletePasswordResetInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCompletePasswordResetInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -807,12 +813,12 @@ export class AuthModule {
    * Sends a password reset link to the specified email address. Always returns success for security.
    */
   async postAuthPasswordResetRequest(
-    body: Types.IdentityAuthenticationRequestPasswordResetInput,
+    body?: Types.IdentityAuthenticationRequestPasswordResetInput,
   ): Promise<Result<Types.IdentityAuthenticationPasswordResetRequestResult, ApiError>> {
     const url = '/v1/auth/password:reset-request';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRequestPasswordResetInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRequestPasswordResetInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -835,11 +841,11 @@ export class AuthModule {
    *
    * Resolves one unique account and applies the existing password, risk, tenant and session flow. Phone identifiers use a leading plus and up to 15 digits. Missing, ambiguous or invalid identifiers receive the generic authentication failure.
    */
-  async postAuthPolymorphic(body: Types.IdentityAuthenticationPolymorphicSignInInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+  async postAuthPolymorphic(body?: Types.IdentityAuthenticationPolymorphicSignInInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = '/v1/auth/polymorphic';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationPolymorphicSignInInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationPolymorphicSignInInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -864,12 +870,12 @@ export class AuthModule {
    */
   async postAuthSamlAssertionConsumer(
     slug: string,
-    body: Types.IdentityAuthenticationSamlCallbackRequestDto,
+    body?: Types.IdentityAuthenticationSamlCallbackRequestDto,
   ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = `/v1/auth/saml/${slug}:assertion-consumer`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationSamlCallbackRequestDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationSamlCallbackRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -938,12 +944,12 @@ export class AuthModule {
    */
   async postAuthSamlSignInAuthorize(
     slug: string,
-    body: Types.IdentityAuthenticationSamlAuthorizeRequestDto,
+    body?: Types.IdentityAuthenticationSamlAuthorizeRequestDto,
   ): Promise<Result<Types.IdentityAuthenticationSamlSignInOutput, ApiError>> {
     const url = `/v1/auth/saml/${slug}:sign-in-authorize`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationSamlAuthorizeRequestDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationSamlAuthorizeRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -990,11 +996,11 @@ export class AuthModule {
    *
    * Authenticates a user with email and password credentials, returning access and refresh tokens.
    */
-  async postAuthSignIn(body: Types.IdentityAuthenticationLocalSignInInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+  async postAuthSignIn(body?: Types.IdentityAuthenticationLocalSignInInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = '/v1/auth/sign-in';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationLocalSignInInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationLocalSignInInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1017,11 +1023,11 @@ export class AuthModule {
    *
    * Signs out the authenticated caller by revoking the current access token; with logoutEverywhere it also revokes every refresh token and terminates every session for the account (issue #1154).
    */
-  async postAuthSignOut(body: Types.IdentityAuthenticationSignOutInput): Promise<Result<Types.IdentityAuthenticationLogoutOutput, ApiError>> {
+  async postAuthSignOut(body?: Types.IdentityAuthenticationSignOutInput): Promise<Result<Types.IdentityAuthenticationLogoutOutput, ApiError>> {
     const url = '/v1/auth/sign-out';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationSignOutInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationSignOutInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1044,11 +1050,11 @@ export class AuthModule {
    *
    * Creates a new user account with email and password credentials, returning authentication tokens on success. When Turnstile is configured (TURNSTILE_SECRET_KEY), turnstileToken is required and verified server-side (issue #1150).
    */
-  async postAuthSignUp(body: Types.IdentityAuthenticationLocalSignUpInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+  async postAuthSignUp(body?: Types.IdentityAuthenticationLocalSignUpInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = '/v1/auth/sign-up';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationLocalSignUpInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationLocalSignUpInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1071,11 +1077,11 @@ export class AuthModule {
    *
    * Exchanges a valid refresh token for a new access token and refresh token pair.
    */
-  async postAuthTokensRefresh(body: Types.IdentityAuthenticationRefreshTokenInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+  async postAuthTokensRefresh(body?: Types.IdentityAuthenticationRefreshTokenInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = '/v1/auth/tokens:refresh';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRefreshTokenInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRefreshTokenInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1098,11 +1104,11 @@ export class AuthModule {
    *
    * Invalidates a refresh token, preventing it from being used to obtain new access tokens.
    */
-  async postAuthTokensRevoke(body: Types.IdentityAuthenticationRevokeRefreshTokenInput): Promise<Result<void, ApiError>> {
+  async postAuthTokensRevoke(body?: Types.IdentityAuthenticationRevokeRefreshTokenInput): Promise<Result<void, ApiError>> {
     const url = '/v1/auth/tokens:revoke';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRevokeRefreshTokenInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRevokeRefreshTokenInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1119,11 +1125,11 @@ export class AuthModule {
    *
    * Verifies a Web3 wallet signature against a previously issued challenge and returns authentication tokens.
    */
-  async postAuthWeb3Verify(body: Types.IdentityAuthenticationWeb3VerifyInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+  async postAuthWeb3Verify(body?: Types.IdentityAuthenticationWeb3VerifyInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = '/v1/auth/web3:verify';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationWeb3VerifyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationWeb3VerifyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1147,12 +1153,12 @@ export class AuthModule {
    * Generates a cryptographic challenge that must be signed by the user's wallet to prove ownership.
    */
   async postAuthWeb3Challenge(
-    body: Types.IdentityAuthenticationWeb3ChallengeInput,
+    body?: Types.IdentityAuthenticationWeb3ChallengeInput,
   ): Promise<Result<Types.IdentityAuthenticationWeb3ChallengeOutput, ApiError>> {
     const url = '/v1/auth/web3/challenge';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationWeb3ChallengeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationWeb3ChallengeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

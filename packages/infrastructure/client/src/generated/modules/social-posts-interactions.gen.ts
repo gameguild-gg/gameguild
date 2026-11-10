@@ -33,11 +33,11 @@ export class SocialPostsInteractionsModule {
   /**
    * Follow a post for notifications
    */
-  async postPostsFollow(postId: string, body: Types.SocialPostsControllersFollowPostInput): Promise<Result<void, ApiError>> {
+  async postPostsFollow(postId: string, body?: Types.SocialPostsControllersFollowPostInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/follow`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialPostsControllersFollowPostInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialPostsControllersFollowPostInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -98,11 +98,11 @@ export class SocialPostsInteractionsModule {
   /**
    * Repost a public post once for the current user
    */
-  async postPostsReposts(postId: string, body: Types.SocialPostsControllersCreateRepostInput): Promise<Result<void, ApiError>> {
+  async postPostsReposts(postId: string, body?: Types.SocialPostsControllersCreateRepostInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/reposts`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialPostsControllersCreateRepostInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialPostsControllersCreateRepostInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

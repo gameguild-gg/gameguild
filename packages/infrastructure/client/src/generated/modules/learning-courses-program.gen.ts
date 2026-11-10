@@ -43,11 +43,11 @@ export class LearningCoursesProgramModule {
   /**
    * Create a new program (content-type level draft permission)
    */
-  async postCourses(body: Types.LearningCoursesCreateProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
+  async postCourses(body?: Types.LearningCoursesCreateProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = '/v1/courses';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCreateProgramDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesCreateProgramDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -89,11 +89,11 @@ export class LearningCoursesProgramModule {
   /**
    * Update a program (resource-level edit permission)
    */
-  async putCourses(id: string, body: Types.LearningCoursesUpdateProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
+  async putCourses(id: string, body?: Types.LearningCoursesUpdateProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdateProgramDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesUpdateProgramDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -129,11 +129,11 @@ export class LearningCoursesProgramModule {
   /**
    * Clone/duplicate a program (resource-level clone permission)
    */
-  async postCoursesClone(id: string, body: Types.LearningCoursesCloneProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
+  async postCoursesClone(id: string, body?: Types.LearningCoursesCloneProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:clone`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCloneProgramDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesCloneProgramDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -154,11 +154,11 @@ export class LearningCoursesProgramModule {
   /**
    * Create a product from a program (resource-level edit permission for program, content-type level draft permission for product)
    */
-  async postCoursesCreateProduct(id: string, body: Types.LearningCoursesCreateProductFromProgramDto): Promise<Result<string, ApiError>> {
+  async postCoursesCreateProduct(id: string, body?: Types.LearningCoursesCreateProductFromProgramDto): Promise<Result<string, ApiError>> {
     const url = `/v1/courses/${id}:create-product`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCreateProductFromProgramDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesCreateProductFromProgramDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -209,11 +209,11 @@ export class LearningCoursesProgramModule {
   /**
    * Enable monetization for a program (resource-level monetize permission)
    */
-  async postCoursesMonetize(id: string, body: Types.LearningCoursesMonetizationDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
+  async postCoursesMonetize(id: string, body?: Types.LearningCoursesMonetizationDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:monetize`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesMonetizationDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesMonetizationDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -390,11 +390,11 @@ export class LearningCoursesProgramModule {
   /**
    * Update the current learner's progress in a program.
    */
-  async putCoursesMeProgress(id: string, body: Types.LearningCoursesUpdateProgressDto): Promise<Result<Types.LearningCoursesUserProgressDto, ApiError>> {
+  async putCoursesMeProgress(id: string, body?: Types.LearningCoursesUpdateProgressDto): Promise<Result<Types.LearningCoursesUserProgressDto, ApiError>> {
     const url = `/v1/courses/${id}/me/progress`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdateProgressDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesUpdateProgressDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -436,11 +436,11 @@ export class LearningCoursesProgramModule {
   /**
    * Update program pricing (resource-level pricing permission)
    */
-  async putCoursesPricing(id: string, body: Types.LearningCoursesUpdatePricingDto): Promise<Result<Types.LearningCoursesPricingDto, ApiError>> {
+  async putCoursesPricing(id: string, body?: Types.LearningCoursesUpdatePricingDto): Promise<Result<Types.LearningCoursesPricingDto, ApiError>> {
     const url = `/v1/courses/${id}/pricing`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdatePricingDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesUpdatePricingDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -494,11 +494,14 @@ export class LearningCoursesProgramModule {
    * This keeps user discovery behind the program's resource-level edit permission,
    * so course owners do not need tenant-wide user administration privileges.
    */
-  async postCoursesUsersEnroll(id: string, body: Types.LearningCoursesEnrollProgramUserInput): Promise<Result<Types.LearningCoursesUserProgressDto, ApiError>> {
+  async postCoursesUsersEnroll(
+    id: string,
+    body?: Types.LearningCoursesEnrollProgramUserInput,
+  ): Promise<Result<Types.LearningCoursesUserProgressDto, ApiError>> {
     const url = `/v1/courses/${id}/users:enroll`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesEnrollProgramUserInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesEnrollProgramUserInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -609,12 +612,12 @@ export class LearningCoursesProgramModule {
   async putCoursesUsersProgress(
     id: string,
     userId: string,
-    body: Types.LearningCoursesUpdateProgressDto,
+    body?: Types.LearningCoursesUpdateProgressDto,
   ): Promise<Result<Types.LearningCoursesUserProgressDto, ApiError>> {
     const url = `/v1/courses/${id}/users/${userId}/progress`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdateProgressDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesUpdateProgressDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

@@ -34,11 +34,11 @@ export class AuthRolesModule {
   /**
    * Create a new role
    */
-  async postRoles(body: Types.IdentityAuthenticationCreateRoleInput): Promise<Result<void, ApiError>> {
+  async postRoles(body?: Types.IdentityAuthenticationCreateRoleInput): Promise<Result<void, ApiError>> {
     const url = '/v1/roles';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCreateRoleInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCreateRoleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -53,11 +53,11 @@ export class AuthRolesModule {
   /**
    * Assign a role to a user
    */
-  async postRolesAssign(body: Types.IdentityAuthenticationAssignRoleToUserInput): Promise<Result<void, ApiError>> {
+  async postRolesAssign(body?: Types.IdentityAuthenticationAssignRoleToUserInput): Promise<Result<void, ApiError>> {
     const url = '/v1/roles/:assign';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationAssignRoleToUserInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationAssignRoleToUserInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -73,12 +73,12 @@ export class AuthRolesModule {
    * Assign one active role to multiple users in a single bounded operation.
    */
   async postRolesBulkAssign(
-    body: Types.IdentityAuthenticationBulkAssignRolesCommand,
+    body?: Types.IdentityAuthenticationBulkAssignRolesCommand,
   ): Promise<Result<Types.IdentityAuthenticationBulkRoleAssignmentResult, ApiError>> {
     const url = '/v1/roles/:bulk-assign';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationBulkAssignRolesCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationBulkAssignRolesCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -99,11 +99,11 @@ export class AuthRolesModule {
   /**
    * Remove a role from a user
    */
-  async postRolesRemove(body: Types.IdentityAuthenticationRemoveRoleFromUserInput): Promise<Result<void, ApiError>> {
+  async postRolesRemove(body?: Types.IdentityAuthenticationRemoveRoleFromUserInput): Promise<Result<void, ApiError>> {
     const url = '/v1/roles/:remove';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRemoveRoleFromUserInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRemoveRoleFromUserInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -133,11 +133,11 @@ export class AuthRolesModule {
   /**
    * Update an existing role
    */
-  async putRoles(roleId: string, body: Types.IdentityAuthenticationUpdateRoleInput): Promise<Result<void, ApiError>> {
+  async putRoles(roleId: string, body?: Types.IdentityAuthenticationUpdateRoleInput): Promise<Result<void, ApiError>> {
     const url = `/v1/roles/${roleId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationUpdateRoleInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationUpdateRoleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

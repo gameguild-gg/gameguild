@@ -33,12 +33,12 @@ export class ProjectsStoreProductsModule {
    */
   async postProjectsStoreProducts(
     projectId: string,
-    body: Types.ProjectsLinkProjectStoreProductInput,
+    body?: Types.ProjectsLinkProjectStoreProductInput,
   ): Promise<Result<Types.ProjectsProjectStoreProductProjection, ApiError>> {
     const url = `/v1/projects/${projectId}/store-products`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsLinkProjectStoreProductInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsLinkProjectStoreProductInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -23,11 +23,11 @@ export class CommercePaymentsCurrencyModule {
    *
    * Converts one or many amounts into the target currency through the platform FX seam (operator overrides and synced market grids, TTL-cached). Supply asOfUtc to convert with the persisted historical snapshot effective at that date. Both currencies must be enabled for the tenant.
    */
-  async postCurrencyConvert(body: Types.CommercePaymentsConvertCurrencyInput): Promise<Result<Types.CommercePaymentsCurrencyConversionResult, ApiError>> {
+  async postCurrencyConvert(body?: Types.CommercePaymentsConvertCurrencyInput): Promise<Result<Types.CommercePaymentsCurrencyConversionResult, ApiError>> {
     const url = '/api/v1/currency/convert';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsConvertCurrencyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsConvertCurrencyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

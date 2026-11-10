@@ -59,12 +59,12 @@ export class EconomyComplianceAdministrationModule {
    */
   async postAdminEconomyComplianceFinancialCrimeCasesAssignment(
     caseId: string,
-    body: Types.APIControllersAssignFinancialCrimeCaseInput,
+    body?: Types.APIControllersAssignFinancialCrimeCaseInput,
   ): Promise<Result<Types.ComplianceFinancialCrimeFinancialCrimeCase, ApiError>> {
     const url = `/api/v1/admin/economy/compliance/financial-crime/cases/${caseId}/assignment`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersAssignFinancialCrimeCaseInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersAssignFinancialCrimeCaseInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -86,12 +86,12 @@ export class EconomyComplianceAdministrationModule {
    */
   async postAdminEconomyComplianceFinancialCrimeCasesDecisions(
     caseId: string,
-    body: Types.APIControllersDecideFinancialCrimeCaseInput,
+    body?: Types.APIControllersDecideFinancialCrimeCaseInput,
   ): Promise<Result<Types.ComplianceFinancialCrimeFinancialCrimeCaseDecision, ApiError>> {
     const url = `/api/v1/admin/economy/compliance/financial-crime/cases/${caseId}/decisions`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersDecideFinancialCrimeCaseInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersDecideFinancialCrimeCaseInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -113,12 +113,12 @@ export class EconomyComplianceAdministrationModule {
    */
   async postAdminEconomyComplianceFinancialCrimeCasesRegulatoryReferences(
     caseId: string,
-    body: Types.APIControllersRecordRegulatoryReferenceInput,
+    body?: Types.APIControllersRecordRegulatoryReferenceInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/admin/economy/compliance/financial-crime/cases/${caseId}/regulatory-references`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersRecordRegulatoryReferenceInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersRecordRegulatoryReferenceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -152,12 +152,12 @@ export class EconomyComplianceAdministrationModule {
    */
   async postAdminEconomyComplianceTrustSafetyAppealsAssignment(
     appealId: string,
-    body: Types.APIControllersAssignTrustSafetyAppealInput,
+    body?: Types.APIControllersAssignTrustSafetyAppealInput,
   ): Promise<Result<Types.TrustSafetyTrustSafetyAppeal, ApiError>> {
     const url = `/api/v1/admin/economy/compliance/trust-safety/appeals/${appealId}/assignment`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersAssignTrustSafetyAppealInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersAssignTrustSafetyAppealInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -179,12 +179,12 @@ export class EconomyComplianceAdministrationModule {
    */
   async postAdminEconomyComplianceTrustSafetyAppealsDecisions(
     appealId: string,
-    body: Types.APIControllersDecideTrustSafetyAppealInput,
+    body?: Types.APIControllersDecideTrustSafetyAppealInput,
   ): Promise<Result<Types.TrustSafetyTrustSafetyAppeal, ApiError>> {
     const url = `/api/v1/admin/economy/compliance/trust-safety/appeals/${appealId}/decisions`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersDecideTrustSafetyAppealInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersDecideTrustSafetyAppealInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

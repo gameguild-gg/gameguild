@@ -20,13 +20,13 @@ export class LearningCoursesContentInteractionModule {
    * Requires an active enrollment in the parent Program.
    */
   async postCourseInteractions(
-    body: Types.LearningCoursesStartContentInput,
+    body?: Types.LearningCoursesStartContentInput,
     query?: { programId?: string },
   ): Promise<Result<Types.LearningCoursesContentInteractionDto, ApiError>> {
     const url = '/v1/course-interactions';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesStartContentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesStartContentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -51,13 +51,13 @@ export class LearningCoursesContentInteractionModule {
    */
   async postCourseInteractionsComplete(
     interactionId: string,
-    body: Types.LearningCoursesCompleteContentInput,
+    body?: Types.LearningCoursesCompleteContentInput,
     query?: { programId?: string },
   ): Promise<Result<Types.LearningCoursesContentInteractionDto, ApiError>> {
     const url = `/v1/course-interactions/${interactionId}/complete`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCompleteContentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesCompleteContentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -82,13 +82,13 @@ export class LearningCoursesContentInteractionModule {
    */
   async putCourseInteractionsProgress(
     interactionId: string,
-    body: Types.LearningCoursesUpdateProgressInput,
+    body?: Types.LearningCoursesUpdateProgressInput,
     query?: { programId?: string },
   ): Promise<Result<Types.LearningCoursesContentInteractionDto, ApiError>> {
     const url = `/v1/course-interactions/${interactionId}/progress`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdateProgressInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesUpdateProgressInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -113,13 +113,13 @@ export class LearningCoursesContentInteractionModule {
    */
   async postCourseInteractionsSubmit(
     interactionId: string,
-    body: Types.LearningCoursesSubmitContentInput,
+    body?: Types.LearningCoursesSubmitContentInput,
     query?: { programId?: string },
   ): Promise<Result<Types.LearningCoursesContentInteractionDto, ApiError>> {
     const url = `/v1/course-interactions/${interactionId}/submit`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesSubmitContentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesSubmitContentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -144,13 +144,13 @@ export class LearningCoursesContentInteractionModule {
    */
   async putCourseInteractionsTimeSpent(
     interactionId: string,
-    body: Types.LearningCoursesUpdateTimeSpentInput,
+    body?: Types.LearningCoursesUpdateTimeSpentInput,
     query?: { programId?: string },
   ): Promise<Result<Types.LearningCoursesContentInteractionDto, ApiError>> {
     const url = `/v1/course-interactions/${interactionId}/time-spent`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdateTimeSpentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesUpdateTimeSpentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

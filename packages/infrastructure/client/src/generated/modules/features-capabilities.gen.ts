@@ -51,11 +51,11 @@ export class FeaturesCapabilitiesModule {
    * Sets or updates a capability override for a tenant.
    * Only accessible by tenant admins or platform administrators.
    */
-  async postTenantsCapabilities(tenantId: string, body: Types.FeaturesSetCapabilityOverrideInput): Promise<Result<void, ApiError>> {
+  async postTenantsCapabilities(tenantId: string, body?: Types.FeaturesSetCapabilityOverrideInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/capabilities`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.FeaturesSetCapabilityOverrideInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.FeaturesSetCapabilityOverrideInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

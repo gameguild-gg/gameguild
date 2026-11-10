@@ -67,11 +67,11 @@ export class AuthMultiFactorModule {
    *
    * Disables multi-factor authentication for the current user after password re-verification (issue #244).
    */
-  async postAuthMfaDisable(body: Types.IdentityAuthenticationDisableMfaInput): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
+  async postAuthMfaDisable(body?: Types.IdentityAuthenticationDisableMfaInput): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
     const url = '/v1/auth/mfa:disable';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationDisableMfaInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationDisableMfaInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -118,12 +118,12 @@ export class AuthMultiFactorModule {
    * Generates a new set of backup codes after password re-verification (issue #1153), invalidating any previously generated codes.
    */
   async postAuthMfaBackupCodesRegenerate(
-    body: Types.IdentityAuthenticationRegenerateBackupCodesInput,
+    body?: Types.IdentityAuthenticationRegenerateBackupCodesInput,
   ): Promise<Result<Types.IdentityAuthenticationBackupCodesOutput, ApiError>> {
     const url = '/v1/auth/mfa/backup-codes:regenerate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRegenerateBackupCodesInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRegenerateBackupCodesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -147,12 +147,12 @@ export class AuthMultiFactorModule {
    * Sends a fresh verification code to the enrolled email address before MFA verification. Generic failure payload; throttled to one code per minute per user.
    */
   async postAuthMfaEmailChallenge(
-    body: Types.IdentityAuthenticationEmailMfaChallengeInput,
+    body?: Types.IdentityAuthenticationEmailMfaChallengeInput,
   ): Promise<Result<Types.IdentityAuthenticationEmailMfaSetupOutput, ApiError>> {
     const url = '/v1/auth/mfa/email:challenge';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationEmailMfaChallengeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationEmailMfaChallengeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -176,12 +176,12 @@ export class AuthMultiFactorModule {
    * Completes email MFA setup by verifying the code sent to the account's address, enrolling the verified address as an email factor.
    */
   async postAuthMfaEmailComplete(
-    body: Types.IdentityAuthenticationCompleteMfaSetupInput,
+    body?: Types.IdentityAuthenticationCompleteMfaSetupInput,
   ): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
     const url = '/v1/auth/mfa/email:complete';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteMfaSetupInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCompleteMfaSetupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -251,12 +251,12 @@ export class AuthMultiFactorModule {
    * Issues a push approval challenge to the enrolled device. The challenge must be approved within the TTL; on timeout the sign-in flow falls back to TOTP.
    */
   async postAuthMfaPushChallenge(
-    body: Types.IdentityAuthenticationPushMfaChallengeInput,
+    body?: Types.IdentityAuthenticationPushMfaChallengeInput,
   ): Promise<Result<Types.IdentityAuthenticationPushMfaChallengeOutput, ApiError>> {
     const url = '/v1/auth/mfa/push:challenge';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationPushMfaChallengeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationPushMfaChallengeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -280,12 +280,12 @@ export class AuthMultiFactorModule {
    * Registers (or replaces) the mobile device registration token used to deliver push MFA approval challenges, after password re-verification (issue #1153).
    */
   async postAuthMfaPushRegisterDevice(
-    body: Types.IdentityAuthenticationPushMfaDeviceInput,
+    body?: Types.IdentityAuthenticationPushMfaDeviceInput,
   ): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
     const url = '/v1/auth/mfa/push:register-device';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationPushMfaDeviceInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationPushMfaDeviceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -308,11 +308,13 @@ export class AuthMultiFactorModule {
    *
    * Records the device's approve/deny decision for a pending, unexpired challenge. Only a pending challenge accepts a response; everything else fails closed.
    */
-  async postAuthMfaPushRespond(body: Types.IdentityAuthenticationPushMfaRespondInput): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
+  async postAuthMfaPushRespond(
+    body?: Types.IdentityAuthenticationPushMfaRespondInput,
+  ): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
     const url = '/v1/auth/mfa/push:respond';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationPushMfaRespondInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationPushMfaRespondInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -359,12 +361,12 @@ export class AuthMultiFactorModule {
    * Consumes the single-use confirmation token and disables multi-factor authentication for the recovered account. Denials are generic and never reveal token state.
    */
   async postAuthMfaRecoveryConfirm(
-    body: Types.IdentityAuthenticationMfaRecoveryConfirmInput,
+    body?: Types.IdentityAuthenticationMfaRecoveryConfirmInput,
   ): Promise<Result<Types.IdentityAuthenticationMfaRecoveryConfirmOutput, ApiError>> {
     const url = '/v1/auth/mfa/recovery:confirm';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationMfaRecoveryConfirmInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationMfaRecoveryConfirmInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -388,12 +390,12 @@ export class AuthMultiFactorModule {
    * Exchanges the recovery request token (after the cooling-off window) for a confirmation email. Denials are generic and never reveal token state.
    */
   async postAuthMfaRecoveryContinue(
-    body: Types.IdentityAuthenticationMfaRecoveryContinueInput,
+    body?: Types.IdentityAuthenticationMfaRecoveryContinueInput,
   ): Promise<Result<Types.IdentityAuthenticationMfaRecoveryContinueOutput, ApiError>> {
     const url = '/v1/auth/mfa/recovery:continue';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationMfaRecoveryContinueInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationMfaRecoveryContinueInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -417,12 +419,12 @@ export class AuthMultiFactorModule {
    * Opens a lost-MFA-device recovery request for an email address and sends a recovery email with a cooling-off period. Always returns a generic success response to prevent user enumeration.
    */
   async postAuthMfaRecoveryRequest(
-    body: Types.IdentityAuthenticationMfaRecoveryRequestInput,
+    body?: Types.IdentityAuthenticationMfaRecoveryRequestInput,
   ): Promise<Result<Types.IdentityAuthenticationMfaRecoveryRequestOutput, ApiError>> {
     const url = '/v1/auth/mfa/recovery:request';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationMfaRecoveryRequestInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationMfaRecoveryRequestInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -446,12 +448,12 @@ export class AuthMultiFactorModule {
    * Sends a code to the server-resolved enrolled phone using an active first-factor MFA continuation. Codes are bound to that continuation and throttled per account.
    */
   async postAuthMfaSmsChallenge(
-    body: Types.IdentityAuthenticationSmsMfaChallengeInput,
+    body?: Types.IdentityAuthenticationSmsMfaChallengeInput,
   ): Promise<Result<Types.IdentityAuthenticationSmsMfaSetupOutput, ApiError>> {
     const url = '/v1/auth/mfa/sms:challenge';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationSmsMfaChallengeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationSmsMfaChallengeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -475,12 +477,12 @@ export class AuthMultiFactorModule {
    * Completes SMS MFA setup by verifying the code sent to the user's phone, enrolling the verified number as an SMS factor.
    */
   async postAuthMfaSmsComplete(
-    body: Types.IdentityAuthenticationCompleteSmsMfaSetupInput,
+    body?: Types.IdentityAuthenticationCompleteSmsMfaSetupInput,
   ): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
     const url = '/v1/auth/mfa/sms:complete';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteSmsMfaSetupInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCompleteSmsMfaSetupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -503,11 +505,11 @@ export class AuthMultiFactorModule {
    *
    * Re-verifies the authenticated account password before sending an SMS enrollment proof to the requested phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.
    */
-  async postAuthMfaSmsSetup(body: Types.IdentityAuthenticationSmsMfaSetupInput): Promise<Result<Types.IdentityAuthenticationSmsMfaSetupOutput, ApiError>> {
+  async postAuthMfaSmsSetup(body?: Types.IdentityAuthenticationSmsMfaSetupInput): Promise<Result<Types.IdentityAuthenticationSmsMfaSetupOutput, ApiError>> {
     const url = '/v1/auth/mfa/sms:setup';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationSmsMfaSetupInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationSmsMfaSetupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -531,12 +533,12 @@ export class AuthMultiFactorModule {
    * Completes TOTP setup by verifying a code from the user's authenticator app.
    */
   async postAuthMfaTotpComplete(
-    body: Types.IdentityAuthenticationCompleteMfaSetupInput,
+    body?: Types.IdentityAuthenticationCompleteMfaSetupInput,
   ): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
     const url = '/v1/auth/mfa/totp:complete';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteMfaSetupInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCompleteMfaSetupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -582,11 +584,11 @@ export class AuthMultiFactorModule {
    *
    * Verifies an MFA code during the authentication flow. Used after initial sign-in when MFA is required.
    */
-  async postAuthMfaVerify(body: Types.IdentityAuthenticationVerifyMfaInput): Promise<Result<Types.IdentityAuthenticationMfaVerificationOutput, ApiError>> {
+  async postAuthMfaVerify(body?: Types.IdentityAuthenticationVerifyMfaInput): Promise<Result<Types.IdentityAuthenticationMfaVerificationOutput, ApiError>> {
     const url = '/v1/auth/mfa/verify';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationVerifyMfaInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationVerifyMfaInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

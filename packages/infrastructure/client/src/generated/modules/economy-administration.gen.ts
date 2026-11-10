@@ -90,12 +90,12 @@ export class EconomyAdministrationModule {
   /**
    */
   async postAdminEconomyAdRewardsReports(
-    body: Types.FinanceEconomyAdRewardsAdProviderReport,
+    body?: Types.FinanceEconomyAdRewardsAdProviderReport,
   ): Promise<Result<Types.FinanceEconomyAdRewardsDurableAdProviderReportImportResult, ApiError>> {
     const url = '/api/v1/admin/economy/ad-rewards/reports';
 
     // Validate request body
-    const validatedBody = safeParse(Types.FinanceEconomyAdRewardsAdProviderReportSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceEconomyAdRewardsAdProviderReportSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -202,12 +202,12 @@ export class EconomyAdministrationModule {
   /**
    */
   async postAdminEconomyCapabilitiesReadiness(
-    body: Types.APIControllersInspectEconomyCapabilityReadinessInput,
+    body?: Types.APIControllersInspectEconomyCapabilityReadinessInput,
   ): Promise<Result<Types.FinanceEconomyRiskEconomyCapabilityEvaluationResult, ApiError>> {
     const url = '/api/v1/admin/economy/capabilities/readiness';
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersInspectEconomyCapabilityReadinessInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersInspectEconomyCapabilityReadinessInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -256,12 +256,12 @@ export class EconomyAdministrationModule {
   /**
    */
   async postAdminEconomyCustodyObservations(
-    body: Types.FinanceEconomyReservesCustodyObservationCommand,
+    body?: Types.FinanceEconomyReservesCustodyObservationCommand,
   ): Promise<Result<Types.FinanceEconomyReservesDurableCustodyObservation, ApiError>> {
     const url = '/api/v1/admin/economy/custody/observations';
 
     // Validate request body
-    const validatedBody = safeParse(Types.FinanceEconomyReservesCustodyObservationCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceEconomyReservesCustodyObservationCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -304,12 +304,12 @@ export class EconomyAdministrationModule {
   /**
    */
   async postAdminEconomyKillSwitches(
-    body: Types.APIControllersActivateEconomyKillSwitchInput,
+    body?: Types.APIControllersActivateEconomyKillSwitchInput,
   ): Promise<Result<Types.FinanceEconomyRiskEconomyKillSwitchState, ApiError>> {
     const url = '/api/v1/admin/economy/kill-switches';
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersActivateEconomyKillSwitchInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersActivateEconomyKillSwitchInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -351,12 +351,12 @@ export class EconomyAdministrationModule {
    */
   async postAdminEconomyKillSwitchesReleaseApprovals(
     killSwitchId: string,
-    body: Types.APIControllersEconomyStepUpInput,
+    body?: Types.APIControllersEconomyStepUpInput,
   ): Promise<Result<Types.FinanceEconomyRiskEconomyKillSwitchState, ApiError>> {
     const url = `/api/v1/admin/economy/kill-switches/${killSwitchId}/release-approvals`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersEconomyStepUpInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersEconomyStepUpInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -378,12 +378,12 @@ export class EconomyAdministrationModule {
    */
   async postAdminEconomyKillSwitchesReleaseProposals(
     killSwitchId: string,
-    body: Types.APIControllersEconomyStepUpInput,
+    body?: Types.APIControllersEconomyStepUpInput,
   ): Promise<Result<Types.FinanceEconomyRiskEconomyKillSwitchState, ApiError>> {
     const url = `/api/v1/admin/economy/kill-switches/${killSwitchId}/release-proposals`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersEconomyStepUpInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersEconomyStepUpInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -428,12 +428,12 @@ export class EconomyAdministrationModule {
   /**
    */
   async postAdminEconomyLedgerAnchors(
-    body: Types.APIControllersPublishEconomyAnchorInput,
+    body?: Types.APIControllersPublishEconomyAnchorInput,
   ): Promise<Result<Types.FinanceEconomyLedgerEconomyAnchorPublicationResult, ApiError>> {
     const url = '/api/v1/admin/economy/ledger/anchors';
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersPublishEconomyAnchorInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersPublishEconomyAnchorInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -603,12 +603,12 @@ export class EconomyAdministrationModule {
    */
   async postAdminEconomyLedgerProjectionGenerationsApprovals(
     generation: number,
-    body: Types.APIControllersEconomyStepUpInput,
+    body?: Types.APIControllersEconomyStepUpInput,
   ): Promise<Result<Types.FinanceEconomyProjectionsProjectionGenerationState, ApiError>> {
     const url = `/api/v1/admin/economy/ledger/projection-generations/${generation}/approvals`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersEconomyStepUpInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersEconomyStepUpInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -834,12 +834,12 @@ export class EconomyAdministrationModule {
    */
   async postAdminEconomyMarketplaceSettlementsRefund(
     settlementId: string,
-    body: Types.APIControllersRefundMarketplaceSettlementInput,
+    body?: Types.APIControllersRefundMarketplaceSettlementInput,
   ): Promise<Result<Types.FinanceEconomyMarketplaceDurableMarketplaceRefundResult, ApiError>> {
     const url = `/api/v1/admin/economy/marketplace/settlements/${settlementId}:refund`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersRefundMarketplaceSettlementInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersRefundMarketplaceSettlementInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -864,12 +864,12 @@ export class EconomyAdministrationModule {
    */
   async postAdminEconomyPayoutRequestsReserve(
     requestId: string,
-    body: Types.APIControllersReserveApprovedPayoutExecutionInput,
+    body?: Types.APIControllersReserveApprovedPayoutExecutionInput,
   ): Promise<Result<Types.APIControllersEconomyPayoutExecutionOperationDto, ApiError>> {
     const url = `/api/v1/admin/economy/payout-requests/${requestId}/reserve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersReserveApprovedPayoutExecutionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersReserveApprovedPayoutExecutionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -933,12 +933,12 @@ export class EconomyAdministrationModule {
    */
   async postAdminEconomyPayoutRequestsOperationsDispatch(
     operationId: string,
-    body: Types.APIControllersDispatchPayoutExecutionInput,
+    body?: Types.APIControllersDispatchPayoutExecutionInput,
   ): Promise<Result<Types.APIControllersEconomyPayoutExecutionOperationDto, ApiError>> {
     const url = `/api/v1/admin/economy/payout-requests/operations/${operationId}/dispatch`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersDispatchPayoutExecutionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersDispatchPayoutExecutionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1011,12 +1011,12 @@ export class EconomyAdministrationModule {
   /**
    */
   async postAdminEconomyPolicies(
-    body: Types.APIControllersProposeEconomyPolicyInput,
+    body?: Types.APIControllersProposeEconomyPolicyInput,
   ): Promise<Result<Types.FinanceEconomyRiskEconomyCapabilityPolicy, ApiError>> {
     const url = '/api/v1/admin/economy/policies';
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersProposeEconomyPolicyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersProposeEconomyPolicyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1060,12 +1060,12 @@ export class EconomyAdministrationModule {
    */
   async postAdminEconomyPoliciesApprove(
     policyId: string,
-    body: Types.APIControllersApproveEconomyPolicyInput,
+    body?: Types.APIControllersApproveEconomyPolicyInput,
   ): Promise<Result<Types.FinanceEconomyRiskEconomyCapabilityPolicy, ApiError>> {
     const url = `/api/v1/admin/economy/policies/${policyId}/approve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersApproveEconomyPolicyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersApproveEconomyPolicyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1168,12 +1168,12 @@ export class EconomyAdministrationModule {
   /**
    */
   async postAdminEconomyReservesProposals(
-    body: Types.APIControllersProposeEconomyReserveInput,
+    body?: Types.APIControllersProposeEconomyReserveInput,
   ): Promise<Result<Types.FinanceEconomyReservesDurableReserveProposalState, ApiError>> {
     const url = '/api/v1/admin/economy/reserves/proposals';
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersProposeEconomyReserveInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersProposeEconomyReserveInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1217,12 +1217,12 @@ export class EconomyAdministrationModule {
    */
   async postAdminEconomyReservesProposalsApprove(
     proposalId: string,
-    body: Types.APIControllersEconomyStepUpInput,
+    body?: Types.APIControllersEconomyStepUpInput,
   ): Promise<Result<Types.FinanceEconomyReservesReserveHead, ApiError>> {
     const url = `/api/v1/admin/economy/reserves/proposals/${proposalId}/approve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersEconomyStepUpInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersEconomyStepUpInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -42,12 +42,12 @@ export class AuthTrustedDevicesModule {
    * then retry the same device name with the returned receipt as `stepUpReceipt`.
    */
   async postAuthTrustedDevices(
-    body: Types.IdentityAuthenticationTrustDeviceInput,
+    body?: Types.IdentityAuthenticationTrustDeviceInput,
   ): Promise<Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>> {
     const url = '/v1/auth/trusted-devices';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationTrustDeviceInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationTrustDeviceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -95,12 +95,12 @@ export class AuthTrustedDevicesModule {
    */
   async patchAuthTrustedDevicesName(
     deviceId: string,
-    body: Types.IdentityAuthenticationRenameTrustedDeviceInput,
+    body?: Types.IdentityAuthenticationRenameTrustedDeviceInput,
   ): Promise<Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>> {
     const url = `/v1/auth/trusted-devices/${deviceId}/name`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRenameTrustedDeviceInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRenameTrustedDeviceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

@@ -59,12 +59,12 @@ export class LearningExperienceSocialReviewsModule {
    * Creates a new course review
    */
   async postApiSocialReviews(
-    body: Types.LearningExperienceSocialServicesCreateReviewInput,
+    body?: Types.LearningExperienceSocialServicesCreateReviewInput,
   ): Promise<Result<Types.LearningExperienceSocialServicesCourseReviewDto, ApiError>> {
     const url = '/api/social/reviews';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceSocialServicesCreateReviewInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceSocialServicesCreateReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -186,12 +186,13 @@ export class LearningExperienceSocialReviewsModule {
    */
   async patchApiSocialReviewsModeration(
     id: string,
-    body: Types.LearningExperienceSocialControllersUpdateReviewModerationInput,
+    body?: Types.LearningExperienceSocialControllersUpdateReviewModerationInput,
   ): Promise<Result<Types.LearningExperienceSocialServicesCourseReviewDto, ApiError>> {
     const url = `/api/social/reviews/${id}/moderation`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceSocialControllersUpdateReviewModerationInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.LearningExperienceSocialControllersUpdateReviewModerationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

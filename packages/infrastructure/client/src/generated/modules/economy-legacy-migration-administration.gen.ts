@@ -43,12 +43,12 @@ export class EconomyLegacyMigrationAdministrationModule {
   /**
    */
   async postAdminEconomyLegacyMigrationBatches(
-    body: Types.APIControllersCaptureLegacyEconomyMigrationInput,
+    body?: Types.APIControllersCaptureLegacyEconomyMigrationInput,
   ): Promise<Result<Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = '/api/v1/admin/economy/legacy-migration/batches';
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersCaptureLegacyEconomyMigrationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersCaptureLegacyEconomyMigrationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -114,12 +114,12 @@ export class EconomyLegacyMigrationAdministrationModule {
    */
   async postAdminEconomyLegacyMigrationBatchesCutoverApprove(
     batchId: string,
-    body: Types.APIControllersApproveLegacyEconomyCutoverInput,
+    body?: Types.APIControllersApproveLegacyEconomyCutoverInput,
   ): Promise<Result<Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}/cutover:approve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersApproveLegacyEconomyCutoverInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersApproveLegacyEconomyCutoverInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -141,12 +141,12 @@ export class EconomyLegacyMigrationAdministrationModule {
    */
   async postAdminEconomyLegacyMigrationBatchesCutoverPropose(
     batchId: string,
-    body: Types.APIControllersProposeLegacyEconomyCutoverInput,
+    body?: Types.APIControllersProposeLegacyEconomyCutoverInput,
   ): Promise<Result<Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}/cutover:propose`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersProposeLegacyEconomyCutoverInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersProposeLegacyEconomyCutoverInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -168,12 +168,12 @@ export class EconomyLegacyMigrationAdministrationModule {
    */
   async postAdminEconomyLegacyMigrationBatchesCutoverRollback(
     batchId: string,
-    body: Types.APIControllersRollbackLegacyEconomyCutoverInput,
+    body?: Types.APIControllersRollbackLegacyEconomyCutoverInput,
   ): Promise<Result<Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}/cutover:rollback`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersRollbackLegacyEconomyCutoverInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersRollbackLegacyEconomyCutoverInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -195,12 +195,12 @@ export class EconomyLegacyMigrationAdministrationModule {
    */
   async postAdminEconomyLegacyMigrationBatchesWalletsBackfill(
     batchId: string,
-    body: Types.APIControllersBackfillLegacyEconomyWalletInput,
+    body?: Types.APIControllersBackfillLegacyEconomyWalletInput,
   ): Promise<Result<Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}/wallets:backfill`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersBackfillLegacyEconomyWalletInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersBackfillLegacyEconomyWalletInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

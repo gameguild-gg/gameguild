@@ -39,11 +39,11 @@ export class CommercePaymentsWalletsModule {
   /**
    * Create my wallet
    */
-  async postWallet(body: Types.CommercePaymentsCreateWalletInput): Promise<Result<Types.CommercePaymentsUserWallet, ApiError>> {
+  async postWallet(body?: Types.CommercePaymentsCreateWalletInput): Promise<Result<Types.CommercePaymentsUserWallet, ApiError>> {
     const url = '/api/v1/wallet';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsCreateWalletInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsCreateWalletInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -64,11 +64,11 @@ export class CommercePaymentsWalletsModule {
   /**
    * Lock my wallet
    */
-  async postWalletLock(body: Types.CommercePaymentsLockWalletInput): Promise<Result<void, ApiError>> {
+  async postWalletLock(body?: Types.CommercePaymentsLockWalletInput): Promise<Result<void, ApiError>> {
     const url = '/api/v1/wallet:lock';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsLockWalletInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsLockWalletInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -132,12 +132,12 @@ export class CommercePaymentsWalletsModule {
    * idempotently.
    */
   async postWalletsTransfer(
-    body: Types.CommercePaymentsModelsTransferWalletsInput,
+    body?: Types.CommercePaymentsModelsTransferWalletsInput,
   ): Promise<Result<Types.CommercePaymentsModelsTransferWalletsOutput, ApiError>> {
     const url = '/api/v1/wallets:transfer';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsModelsTransferWalletsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsModelsTransferWalletsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -188,11 +188,11 @@ export class CommercePaymentsWalletsModule {
   /**
    * Update wallet settings
    */
-  async patchWallets(walletId: string, body: Types.CommercePaymentsModelsPatchWalletInput): Promise<Result<void, ApiError>> {
+  async patchWallets(walletId: string, body?: Types.CommercePaymentsModelsPatchWalletInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/wallets/${walletId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsModelsPatchWalletInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsModelsPatchWalletInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -226,12 +226,12 @@ export class CommercePaymentsWalletsModule {
    */
   async postWalletsAdjust(
     walletId: string,
-    body: Types.CommercePaymentsModelsAdjustWalletInput,
+    body?: Types.CommercePaymentsModelsAdjustWalletInput,
   ): Promise<Result<Types.CommercePaymentsWalletTransaction, ApiError>> {
     const url = `/api/v1/wallets/${walletId}:adjust`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsModelsAdjustWalletInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsModelsAdjustWalletInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -252,11 +252,11 @@ export class CommercePaymentsWalletsModule {
   /**
    * Freeze wallet
    */
-  async postWalletsFreeze(walletId: string, body: Types.CommercePaymentsModelsFreezeWalletInput): Promise<Result<void, ApiError>> {
+  async postWalletsFreeze(walletId: string, body?: Types.CommercePaymentsModelsFreezeWalletInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/wallets/${walletId}:freeze`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsModelsFreezeWalletInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsModelsFreezeWalletInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

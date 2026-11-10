@@ -20,12 +20,12 @@ export class LearningCoursesActivityGradeModule {
    */
   async postCoursesActivityGrades(
     programId: string,
-    body: Types.LearningCoursesCreateActivityGradeDto,
+    body?: Types.LearningCoursesCreateActivityGradeDto,
   ): Promise<Result<Types.LearningCoursesActivityGradeDto, ApiError>> {
     const url = `/v1/courses/${programId}/activity-grades`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCreateActivityGradeDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesCreateActivityGradeDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -49,12 +49,12 @@ export class LearningCoursesActivityGradeModule {
   async putCoursesActivityGrades(
     programId: string,
     gradeId: string,
-    body: Types.LearningCoursesUpdateActivityGradeDto,
+    body?: Types.LearningCoursesUpdateActivityGradeDto,
   ): Promise<Result<Types.LearningCoursesActivityGradeDto, ApiError>> {
     const url = `/v1/courses/${programId}/activity-grades/${gradeId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdateActivityGradeDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesUpdateActivityGradeDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

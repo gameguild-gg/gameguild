@@ -36,12 +36,12 @@ export class ComplianceAuditRetentionSimulationModule {
   /**
    */
   async postApiAuditRetentionPolicies(
-    body: Types.ComplianceAuditRunAuditRetentionSimulationInput,
+    body?: Types.ComplianceAuditRunAuditRetentionSimulationInput,
   ): Promise<Result<Types.ComplianceAuditAuditRetentionSimulationOutput, ApiError>> {
     const url = '/api/audit/retention-policies';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditRunAuditRetentionSimulationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditRunAuditRetentionSimulationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -109,12 +109,12 @@ export class ComplianceAuditRetentionSimulationModule {
   /**
    */
   async putApiAuditRetentionPoliciesConfiguration(
-    body: Types.ComplianceAuditConfigureAuditRetentionInput,
+    body?: Types.ComplianceAuditConfigureAuditRetentionInput,
   ): Promise<Result<Types.ComplianceAuditAuditRetentionConfigurationOutput, ApiError>> {
     const url = '/api/audit/retention-policies/configuration';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditConfigureAuditRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditConfigureAuditRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -169,12 +169,12 @@ export class ComplianceAuditRetentionSimulationModule {
   /**
    */
   async postApiAuditRetentionSimulation(
-    body: Types.ComplianceAuditRunAuditRetentionSimulationInput,
+    body?: Types.ComplianceAuditRunAuditRetentionSimulationInput,
   ): Promise<Result<Types.ComplianceAuditAuditRetentionSimulationOutput, ApiError>> {
     const url = '/api/audit/retention-simulation';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditRunAuditRetentionSimulationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditRunAuditRetentionSimulationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -242,12 +242,12 @@ export class ComplianceAuditRetentionSimulationModule {
   /**
    */
   async putApiAuditRetentionSimulationConfiguration(
-    body: Types.ComplianceAuditConfigureAuditRetentionInput,
+    body?: Types.ComplianceAuditConfigureAuditRetentionInput,
   ): Promise<Result<Types.ComplianceAuditAuditRetentionConfigurationOutput, ApiError>> {
     const url = '/api/audit/retention-simulation/configuration';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditConfigureAuditRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditConfigureAuditRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -302,12 +302,12 @@ export class ComplianceAuditRetentionSimulationModule {
   /**
    */
   async postAuditRetentionPolicies(
-    body: Types.ComplianceAuditRunAuditRetentionSimulationInput,
+    body?: Types.ComplianceAuditRunAuditRetentionSimulationInput,
   ): Promise<Result<Types.ComplianceAuditAuditRetentionSimulationOutput, ApiError>> {
     const url = '/v1/audit/retention-policies';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditRunAuditRetentionSimulationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditRunAuditRetentionSimulationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -373,12 +373,12 @@ export class ComplianceAuditRetentionSimulationModule {
   /**
    */
   async putAuditRetentionPoliciesConfiguration(
-    body: Types.ComplianceAuditConfigureAuditRetentionInput,
+    body?: Types.ComplianceAuditConfigureAuditRetentionInput,
   ): Promise<Result<Types.ComplianceAuditAuditRetentionConfigurationOutput, ApiError>> {
     const url = '/v1/audit/retention-policies/configuration';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditConfigureAuditRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditConfigureAuditRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -433,12 +433,12 @@ export class ComplianceAuditRetentionSimulationModule {
   /**
    */
   async postAuditRetentionSimulation(
-    body: Types.ComplianceAuditRunAuditRetentionSimulationInput,
+    body?: Types.ComplianceAuditRunAuditRetentionSimulationInput,
   ): Promise<Result<Types.ComplianceAuditAuditRetentionSimulationOutput, ApiError>> {
     const url = '/v1/audit/retention-simulation';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditRunAuditRetentionSimulationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditRunAuditRetentionSimulationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -506,12 +506,12 @@ export class ComplianceAuditRetentionSimulationModule {
   /**
    */
   async putAuditRetentionSimulationConfiguration(
-    body: Types.ComplianceAuditConfigureAuditRetentionInput,
+    body?: Types.ComplianceAuditConfigureAuditRetentionInput,
   ): Promise<Result<Types.ComplianceAuditAuditRetentionConfigurationOutput, ApiError>> {
     const url = '/v1/audit/retention-simulation/configuration';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditConfigureAuditRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditConfigureAuditRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

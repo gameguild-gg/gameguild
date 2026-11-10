@@ -39,12 +39,12 @@ export class AccessControlPermissionTemplatesModule {
    * as version 1 and the creation is audited.
    */
   async postAuthorizationPermissionTemplates(
-    body: Types.IdentityAuthorizationCreatePermissionTemplateCommand,
+    body?: Types.IdentityAuthorizationCreatePermissionTemplateCommand,
   ): Promise<Result<Types.IdentityAuthorizationPermissionTemplateMutationResult, ApiError>> {
     const url = '/api/v1/authorization/permission-templates';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationCreatePermissionTemplateCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationCreatePermissionTemplateCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -69,12 +69,12 @@ export class AccessControlPermissionTemplatesModule {
    */
   async putAuthorizationPermissionTemplates(
     templateId: string,
-    body: Types.IdentityAuthorizationUpdatePermissionTemplateCommand,
+    body?: Types.IdentityAuthorizationUpdatePermissionTemplateCommand,
   ): Promise<Result<Types.IdentityAuthorizationPermissionTemplateMutationResult, ApiError>> {
     const url = `/api/v1/authorization/permission-templates/${templateId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationUpdatePermissionTemplateCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationUpdatePermissionTemplateCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -116,12 +116,12 @@ export class AccessControlPermissionTemplatesModule {
    */
   async postAuthorizationPermissionTemplatesInstantiate(
     templateId: string,
-    body: Types.IdentityAuthorizationInstantiateTemplateInput,
+    body?: Types.IdentityAuthorizationInstantiateTemplateInput,
   ): Promise<Result<Types.IdentityAuthorizationPermissionTemplateInstantiationResult, ApiError>> {
     const url = `/api/v1/authorization/permission-templates/${templateId}:instantiate`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationInstantiateTemplateInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationInstantiateTemplateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -146,12 +146,12 @@ export class AccessControlPermissionTemplatesModule {
    */
   async postAuthorizationPermissionTemplatesInstantiatePreview(
     templateId: string,
-    body: Types.IdentityAuthorizationPreviewInstantiationInput,
+    body?: Types.IdentityAuthorizationPreviewInstantiationInput,
   ): Promise<Result<Types.IdentityAuthorizationPermissionTemplateInstantiationResult, ApiError>> {
     const url = `/api/v1/authorization/permission-templates/${templateId}:instantiate-preview`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationPreviewInstantiationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationPreviewInstantiationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -176,12 +176,12 @@ export class AccessControlPermissionTemplatesModule {
    */
   async postAuthorizationPermissionTemplatesMigrations(
     templateId: string,
-    body: Types.IdentityAuthorizationMigrateTemplateInput,
+    body?: Types.IdentityAuthorizationMigrateTemplateInput,
   ): Promise<Result<Types.IdentityAuthorizationPermissionTemplateMigrationResult, ApiError>> {
     const url = `/api/v1/authorization/permission-templates/${templateId}/migrations`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationMigrateTemplateInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationMigrateTemplateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -230,12 +230,12 @@ export class AccessControlPermissionTemplatesModule {
   async postAuthorizationPermissionTemplatesMigrationsRollback(
     templateId: string,
     migrationId: string,
-    body: Types.IdentityAuthorizationRollbackMigrationInput,
+    body?: Types.IdentityAuthorizationRollbackMigrationInput,
   ): Promise<Result<Types.IdentityAuthorizationPermissionTemplateMigrationResult, ApiError>> {
     const url = `/api/v1/authorization/permission-templates/${templateId}/migrations/${migrationId}:rollback`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationRollbackMigrationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationRollbackMigrationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

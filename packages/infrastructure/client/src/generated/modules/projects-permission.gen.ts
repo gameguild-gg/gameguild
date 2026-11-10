@@ -20,12 +20,12 @@ export class ProjectsPermissionModule {
    */
   async postProjectsPermissionsShareWithRole(
     projectId: string,
-    body: Types.ProjectsShareProjectWithRoleInput,
+    body?: Types.ProjectsShareProjectWithRoleInput,
   ): Promise<Result<Types.ProjectsShareResult, ApiError>> {
     const url = `/v1/projects/${projectId}/permissions/:share-with-role`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsShareProjectWithRoleInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsShareProjectWithRoleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -63,12 +63,12 @@ export class ProjectsPermissionModule {
    */
   async postProjectsPermissionsCollaborators(
     projectId: string,
-    body: Types.ProjectsAddCollaboratorInput,
+    body?: Types.ProjectsAddCollaboratorInput,
   ): Promise<Result<Types.ProjectsInvitationResult, ApiError>> {
     const url = `/v1/projects/${projectId}/permissions/collaborators`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsAddCollaboratorInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsAddCollaboratorInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -92,12 +92,12 @@ export class ProjectsPermissionModule {
   async putProjectsPermissionsCollaborators(
     projectId: string,
     collaboratorUserId: string,
-    body: Types.ProjectsUpdateCollaboratorInput,
+    body?: Types.ProjectsUpdateCollaboratorInput,
   ): Promise<Result<Types.ProjectsPermissionUpdateResult, ApiError>> {
     const url = `/v1/projects/${projectId}/permissions/collaborators/${collaboratorUserId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsUpdateCollaboratorInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsUpdateCollaboratorInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

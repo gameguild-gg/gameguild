@@ -121,12 +121,13 @@ export class CommerceBillingExternalProvidersModule {
    * tracked in issue #413. Fails closed with 400 for unknown or identical provider keys.
    */
   async postBillingExternalProvidersMigrationDryRun(
-    body: Types.CommerceBillingBillingExternalProvidersControllerMigrationDryRunInput,
+    body?: Types.CommerceBillingBillingExternalProvidersControllerMigrationDryRunInput,
   ): Promise<Result<Types.CommerceBillingBillingProviderMigrationReport, ApiError>> {
     const url = '/api/v1/billing/external-providers/migration:dry-run';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceBillingBillingExternalProvidersControllerMigrationDryRunInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommerceBillingBillingExternalProvidersControllerMigrationDryRunInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

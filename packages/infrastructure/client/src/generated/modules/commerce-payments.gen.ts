@@ -78,11 +78,11 @@ export class CommercePaymentsModule {
    * - PaymentMethodId: Stripe payment method identifier starting with pm_
    * Returns CreatedAtRoute with payment details for successful transactions.
    */
-  async postPayments(body: Types.CommercePaymentsPaymentsControllerProcessPaymentInput): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
+  async postPayments(body?: Types.CommercePaymentsPaymentsControllerProcessPaymentInput): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
     const url = '/api/v1/payments';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentsControllerProcessPaymentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsPaymentsControllerProcessPaymentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -163,12 +163,12 @@ export class CommercePaymentsModule {
    */
   async postPaymentsCancel(
     paymentId: string,
-    body: Types.CommercePaymentsPaymentsControllerCancelPaymentInput,
+    body?: Types.CommercePaymentsPaymentsControllerCancelPaymentInput,
   ): Promise<Result<Types.CommercePaymentsPaymentCancellationResult, ApiError>> {
     const url = `/api/v1/payments/${paymentId}:cancel`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentsControllerCancelPaymentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsPaymentsControllerCancelPaymentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -209,12 +209,12 @@ export class CommercePaymentsModule {
    */
   async postPaymentsRefund(
     paymentId: string,
-    body: Types.CommercePaymentsPaymentsControllerRefundInput,
+    body?: Types.CommercePaymentsPaymentsControllerRefundInput,
   ): Promise<Result<Types.CommercePaymentsProcessRefundResult, ApiError>> {
     const url = `/api/v1/payments/${paymentId}:refund`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentsControllerRefundInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsPaymentsControllerRefundInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -304,12 +304,12 @@ export class CommercePaymentsModule {
   async putPaymentsGatewaysCredentials(
     providerId: string,
     secretName: string,
-    body: Types.CommercePaymentsProvisionGatewayCredentialInput,
+    body?: Types.CommercePaymentsProvisionGatewayCredentialInput,
   ): Promise<Result<Types.CommercePaymentsGatewayCredentialProvisionResult, ApiError>> {
     const url = `/api/v1/payments/gateways/${providerId}/credentials/${secretName}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsProvisionGatewayCredentialInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsProvisionGatewayCredentialInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -526,12 +526,12 @@ export class CommercePaymentsModule {
    * Creates or reuses a Stripe customer for the subscription and returns a SetupIntent client secret for PaymentElement-based card collection.
    */
   async postPaymentsSetupIntents(
-    body: Types.CommercePaymentsPaymentsControllerCreateSetupIntentInput,
+    body?: Types.CommercePaymentsPaymentsControllerCreateSetupIntentInput,
   ): Promise<Result<Types.CommercePaymentsPaymentsControllerCreateSetupIntentOutput, ApiError>> {
     const url = '/api/v1/payments/setup-intents';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentsControllerCreateSetupIntentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsPaymentsControllerCreateSetupIntentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -555,12 +555,13 @@ export class CommercePaymentsModule {
    * Sets the confirmed Stripe payment method as the customer's default and processes the first subscription charge.
    */
   async postPaymentsSubscriptionCheckoutsComplete(
-    body: Types.CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput,
+    body?: Types.CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput,
   ): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
     const url = '/api/v1/payments/subscription-checkouts:complete';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

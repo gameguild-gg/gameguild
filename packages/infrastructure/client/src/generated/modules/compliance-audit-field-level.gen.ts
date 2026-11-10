@@ -19,12 +19,12 @@ export class ComplianceAuditFieldLevelModule {
    * Records a field-level access observation (read or write) with automatic classification and masking.
    */
   async postApiAuditFieldLevelAccess(
-    body: Types.ComplianceAuditRecordFieldAccessInput,
+    body?: Types.ComplianceAuditRecordFieldAccessInput,
   ): Promise<Result<Types.ComplianceAuditFieldAccessAuditOutput, ApiError>> {
     const url = '/api/audit/field-level/access';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditRecordFieldAccessInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditRecordFieldAccessInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -107,12 +107,12 @@ export class ComplianceAuditFieldLevelModule {
    */
   async postApiAuditFieldLevelAnomaliesResolve(
     id: string,
-    body: Types.ComplianceAuditResolveFieldAccessAnomalyInput,
+    body?: Types.ComplianceAuditResolveFieldAccessAnomalyInput,
   ): Promise<Result<Types.ComplianceAuditFieldAccessAnomalyOutput, ApiError>> {
     const url = `/api/audit/field-level/anomalies/${id}/resolve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditResolveFieldAccessAnomalyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditResolveFieldAccessAnomalyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -134,12 +134,12 @@ export class ComplianceAuditFieldLevelModule {
    * Runs access-pattern analysis over the recent window and persists detected anomalies.
    */
   async postApiAuditFieldLevelAnomaliesAnalyze(
-    body: Types.ComplianceAuditAnalyzeFieldAccessPatternsInput,
+    body?: Types.ComplianceAuditAnalyzeFieldAccessPatternsInput,
   ): Promise<Result<Types.ComplianceAuditFieldAccessPatternAnalysisResult[], ApiError>> {
     const url = '/api/audit/field-level/anomalies/analyze';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAnalyzeFieldAccessPatternsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAnalyzeFieldAccessPatternsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -175,12 +175,12 @@ export class ComplianceAuditFieldLevelModule {
    * Evaluates an export attempt against the bulk-export thresholds, records it and alerts when exceeded.
    */
   async postApiAuditFieldLevelBulkExportsEvaluate(
-    body: Types.ComplianceAuditEvaluateBulkExportInput,
+    body?: Types.ComplianceAuditEvaluateBulkExportInput,
   ): Promise<Result<Types.ComplianceAuditBulkExportEvaluationOutput, ApiError>> {
     const url = '/api/audit/field-level/bulk-exports/evaluate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditEvaluateBulkExportInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditEvaluateBulkExportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -258,12 +258,12 @@ export class ComplianceAuditFieldLevelModule {
    * Validates a prospective cross-border transfer against the jurisdiction policy and logs the outcome.
    */
   async postApiAuditFieldLevelCrossBorderTransfersValidate(
-    body: Types.ComplianceAuditValidateCrossBorderTransferInput,
+    body?: Types.ComplianceAuditValidateCrossBorderTransferInput,
   ): Promise<Result<Types.ComplianceAuditCrossBorderTransferOutput, ApiError>> {
     const url = '/api/audit/field-level/cross-border-transfers/validate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditValidateCrossBorderTransferInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditValidateCrossBorderTransferInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -368,12 +368,12 @@ export class ComplianceAuditFieldLevelModule {
    * Creates or updates a processing activity record.
    */
   async putApiAuditFieldLevelGdprArticle30(
-    body: Types.ComplianceAuditSaveGdprActivityInput,
+    body?: Types.ComplianceAuditSaveGdprActivityInput,
   ): Promise<Result<Types.ComplianceAuditGdprProcessingActivityOutput, ApiError>> {
     const url = '/api/audit/field-level/gdpr/article-30';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditSaveGdprActivityInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditSaveGdprActivityInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -461,12 +461,12 @@ export class ComplianceAuditFieldLevelModule {
    * Configures the retention rule for one sensitive data category.
    */
   async putApiAuditFieldLevelRetention(
-    body: Types.ComplianceAuditConfigureSensitiveDataRetentionInput,
+    body?: Types.ComplianceAuditConfigureSensitiveDataRetentionInput,
   ): Promise<Result<Types.ComplianceAuditSensitiveDataRetentionPolicyOutput, ApiError>> {
     const url = '/api/audit/field-level/retention';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditConfigureSensitiveDataRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditConfigureSensitiveDataRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -511,11 +511,11 @@ export class ComplianceAuditFieldLevelModule {
   /**
    * Records a field-level access observation (read or write) with automatic classification and masking.
    */
-  async postAuditFieldLevelAccess(body: Types.ComplianceAuditRecordFieldAccessInput): Promise<Result<Types.ComplianceAuditFieldAccessAuditOutput, ApiError>> {
+  async postAuditFieldLevelAccess(body?: Types.ComplianceAuditRecordFieldAccessInput): Promise<Result<Types.ComplianceAuditFieldAccessAuditOutput, ApiError>> {
     const url = '/v1/audit/field-level/access';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditRecordFieldAccessInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditRecordFieldAccessInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -598,12 +598,12 @@ export class ComplianceAuditFieldLevelModule {
    */
   async postAuditFieldLevelAnomaliesResolve(
     id: string,
-    body: Types.ComplianceAuditResolveFieldAccessAnomalyInput,
+    body?: Types.ComplianceAuditResolveFieldAccessAnomalyInput,
   ): Promise<Result<Types.ComplianceAuditFieldAccessAnomalyOutput, ApiError>> {
     const url = `/v1/audit/field-level/anomalies/${id}/resolve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditResolveFieldAccessAnomalyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditResolveFieldAccessAnomalyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -625,12 +625,12 @@ export class ComplianceAuditFieldLevelModule {
    * Runs access-pattern analysis over the recent window and persists detected anomalies.
    */
   async postAuditFieldLevelAnomaliesAnalyze(
-    body: Types.ComplianceAuditAnalyzeFieldAccessPatternsInput,
+    body?: Types.ComplianceAuditAnalyzeFieldAccessPatternsInput,
   ): Promise<Result<Types.ComplianceAuditFieldAccessPatternAnalysisResult[], ApiError>> {
     const url = '/v1/audit/field-level/anomalies/analyze';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAnalyzeFieldAccessPatternsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAnalyzeFieldAccessPatternsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -666,12 +666,12 @@ export class ComplianceAuditFieldLevelModule {
    * Evaluates an export attempt against the bulk-export thresholds, records it and alerts when exceeded.
    */
   async postAuditFieldLevelBulkExportsEvaluate(
-    body: Types.ComplianceAuditEvaluateBulkExportInput,
+    body?: Types.ComplianceAuditEvaluateBulkExportInput,
   ): Promise<Result<Types.ComplianceAuditBulkExportEvaluationOutput, ApiError>> {
     const url = '/v1/audit/field-level/bulk-exports/evaluate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditEvaluateBulkExportInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditEvaluateBulkExportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -749,12 +749,12 @@ export class ComplianceAuditFieldLevelModule {
    * Validates a prospective cross-border transfer against the jurisdiction policy and logs the outcome.
    */
   async postAuditFieldLevelCrossBorderTransfersValidate(
-    body: Types.ComplianceAuditValidateCrossBorderTransferInput,
+    body?: Types.ComplianceAuditValidateCrossBorderTransferInput,
   ): Promise<Result<Types.ComplianceAuditCrossBorderTransferOutput, ApiError>> {
     const url = '/v1/audit/field-level/cross-border-transfers/validate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditValidateCrossBorderTransferInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditValidateCrossBorderTransferInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -859,12 +859,12 @@ export class ComplianceAuditFieldLevelModule {
    * Creates or updates a processing activity record.
    */
   async putAuditFieldLevelGdprArticle30(
-    body: Types.ComplianceAuditSaveGdprActivityInput,
+    body?: Types.ComplianceAuditSaveGdprActivityInput,
   ): Promise<Result<Types.ComplianceAuditGdprProcessingActivityOutput, ApiError>> {
     const url = '/v1/audit/field-level/gdpr/article-30';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditSaveGdprActivityInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditSaveGdprActivityInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -952,12 +952,12 @@ export class ComplianceAuditFieldLevelModule {
    * Configures the retention rule for one sensitive data category.
    */
   async putAuditFieldLevelRetention(
-    body: Types.ComplianceAuditConfigureSensitiveDataRetentionInput,
+    body?: Types.ComplianceAuditConfigureSensitiveDataRetentionInput,
   ): Promise<Result<Types.ComplianceAuditSensitiveDataRetentionPolicyOutput, ApiError>> {
     const url = '/v1/audit/field-level/retention';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditConfigureSensitiveDataRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditConfigureSensitiveDataRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

@@ -49,12 +49,12 @@ export class UsersMembershipsModule {
    */
   async postUsersMemberships(
     userId: string,
-    body: Types.IdentityTenantsAddUserMembershipInput,
+    body?: Types.IdentityTenantsAddUserMembershipInput,
   ): Promise<Result<Types.IdentityTenantsAddTenantMemberOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsAddUserMembershipInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsAddUserMembershipInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -139,12 +139,12 @@ export class UsersMembershipsModule {
   async postUsersMembershipsDeactivate(
     userId: string,
     tenantId: string,
-    body: Types.IdentityTenantsSetTenantMembershipStatusInput,
+    body?: Types.IdentityTenantsSetTenantMembershipStatusInput,
   ): Promise<Result<Types.IdentityTenantsSetTenantMembershipStatusOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships/${tenantId}:deactivate`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsSetTenantMembershipStatusInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsSetTenantMembershipStatusInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -168,12 +168,12 @@ export class UsersMembershipsModule {
   async postUsersMembershipsInviteAccept(
     userId: string,
     tenantId: string,
-    body: Types.IdentityTenantsUpdateUserMembershipInviteInput,
+    body?: Types.IdentityTenantsUpdateUserMembershipInviteInput,
   ): Promise<Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships/${tenantId}/invite:accept`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsUpdateUserMembershipInviteInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateUserMembershipInviteInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -197,12 +197,12 @@ export class UsersMembershipsModule {
   async postUsersMembershipsInviteCancel(
     userId: string,
     tenantId: string,
-    body: Types.IdentityTenantsUpdateUserMembershipInviteInput,
+    body?: Types.IdentityTenantsUpdateUserMembershipInviteInput,
   ): Promise<Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships/${tenantId}/invite:cancel`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsUpdateUserMembershipInviteInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateUserMembershipInviteInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -226,12 +226,12 @@ export class UsersMembershipsModule {
   async postUsersMembershipsInviteResend(
     userId: string,
     tenantId: string,
-    body: Types.IdentityTenantsUpdateUserMembershipInviteInput,
+    body?: Types.IdentityTenantsUpdateUserMembershipInviteInput,
   ): Promise<Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships/${tenantId}/invite:resend`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsUpdateUserMembershipInviteInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateUserMembershipInviteInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -258,12 +258,12 @@ export class UsersMembershipsModule {
   async patchUsersMembershipsRole(
     userId: string,
     tenantId: string,
-    body: Types.IdentityTenantsUpdateUserMembershipRoleInput,
+    body?: Types.IdentityTenantsUpdateUserMembershipRoleInput,
   ): Promise<Result<Types.IdentityTenantsUpdateTenantMemberRoleOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships/${tenantId}/role`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsUpdateUserMembershipRoleInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateUserMembershipRoleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

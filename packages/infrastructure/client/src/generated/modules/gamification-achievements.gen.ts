@@ -38,12 +38,12 @@ export class GamificationAchievementsModule {
    * Create a new achievement (admin only).
    */
   async postApiAchievements(
-    body: Types.GamificationAchievementsCreateAchievementInput,
+    body?: Types.GamificationAchievementsCreateAchievementInput,
   ): Promise<Result<Types.GamificationAchievementsAchievementDto, ApiError>> {
     const url = '/api/achievements';
 
     // Validate request body
-    const validatedBody = safeParse(Types.GamificationAchievementsCreateAchievementInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.GamificationAchievementsCreateAchievementInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -87,12 +87,12 @@ export class GamificationAchievementsModule {
    */
   async putApiAchievements(
     achievementId: string,
-    body: Types.GamificationAchievementsUpdateAchievementInput,
+    body?: Types.GamificationAchievementsUpdateAchievementInput,
   ): Promise<Result<Types.GamificationAchievementsAchievementDto, ApiError>> {
     const url = `/api/achievements/${achievementId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.GamificationAchievementsUpdateAchievementInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.GamificationAchievementsUpdateAchievementInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -130,12 +130,12 @@ export class GamificationAchievementsModule {
    */
   async postApiAchievementsAward(
     achievementId: string,
-    body: Types.GamificationAchievementsAwardAchievementInput,
+    body?: Types.GamificationAchievementsAwardAchievementInput,
   ): Promise<Result<Types.GamificationAchievementsUserAchievementDto, ApiError>> {
     const url = `/api/achievements/${achievementId}/award`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.GamificationAchievementsAwardAchievementInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.GamificationAchievementsAwardAchievementInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

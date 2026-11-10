@@ -18,11 +18,11 @@ export class SocialBlogAuthoringModule {
   /**
    * Creates a draft post; the actor becomes the primary author.
    */
-  async postApiSocialBlogPosts(body: Types.SocialBlogControllersCreateBlogPostInput): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
+  async postApiSocialBlogPosts(body?: Types.SocialBlogControllersCreateBlogPostInput): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
     const url = '/api/social/blog/posts';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialBlogControllersCreateBlogPostInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialBlogControllersCreateBlogPostInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -64,11 +64,11 @@ export class SocialBlogAuthoringModule {
   /**
    * Revision-guarded draft update; any author (primary or co-author). Stale revision → 409.
    */
-  async putApiSocialBlogPosts(id: string, body: Types.SocialBlogControllersUpdateBlogPostDraftInput): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
+  async putApiSocialBlogPosts(id: string, body?: Types.SocialBlogControllersUpdateBlogPostDraftInput): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
     const url = `/api/social/blog/posts/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialBlogControllersUpdateBlogPostDraftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialBlogControllersUpdateBlogPostDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -104,11 +104,11 @@ export class SocialBlogAuthoringModule {
   /**
    * Adds a co-author (primary only).
    */
-  async postApiSocialBlogPostsCoauthors(id: string, body: Types.SocialBlogControllersBlogCoauthorInput): Promise<Result<void, ApiError>> {
+  async postApiSocialBlogPostsCoauthors(id: string, body?: Types.SocialBlogControllersBlogCoauthorInput): Promise<Result<void, ApiError>> {
     const url = `/api/social/blog/posts/${id}/coauthors`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialBlogControllersBlogCoauthorInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialBlogControllersBlogCoauthorInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -159,11 +159,11 @@ export class SocialBlogAuthoringModule {
   /**
    * Changes the post slug (primary only); the old route 301-redirects forever.
    */
-  async postApiSocialBlogPostsSlug(id: string, body: Types.SocialBlogControllersChangeBlogPostSlugInput): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
+  async postApiSocialBlogPostsSlug(id: string, body?: Types.SocialBlogControllersChangeBlogPostSlugInput): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
     const url = `/api/social/blog/posts/${id}/slug`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialBlogControllersChangeBlogPostSlugInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialBlogControllersChangeBlogPostSlugInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -186,12 +186,12 @@ export class SocialBlogAuthoringModule {
    */
   async postApiSocialBlogPostsTransferPrimary(
     id: string,
-    body: Types.SocialBlogControllersTransferBlogPrimaryInput,
+    body?: Types.SocialBlogControllersTransferBlogPrimaryInput,
   ): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
     const url = `/api/social/blog/posts/${id}/transfer-primary`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialBlogControllersTransferBlogPrimaryInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialBlogControllersTransferBlogPrimaryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -36,11 +36,11 @@ export class GameJamsModule {
 
   /**
    */
-  async postApiGameJams(body: Types.GameJamsCreateJamInput): Promise<Result<Types.GameJamsJamDto, ApiError>> {
+  async postApiGameJams(body?: Types.GameJamsCreateJamInput): Promise<Result<Types.GameJamsJamDto, ApiError>> {
     const url = '/api/game-jams';
 
     // Validate request body
-    const validatedBody = safeParse(Types.GameJamsCreateJamInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.GameJamsCreateJamInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -88,11 +88,11 @@ export class GameJamsModule {
 
   /**
    */
-  async postApiGameJamsCriteria(id: string, body: Types.GameJamsAddJamCriteriaInput): Promise<Result<Types.GameJamsJamCriteriaDto, ApiError>> {
+  async postApiGameJamsCriteria(id: string, body?: Types.GameJamsAddJamCriteriaInput): Promise<Result<Types.GameJamsJamCriteriaDto, ApiError>> {
     const url = `/api/game-jams/${id}/criteria`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.GameJamsAddJamCriteriaInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.GameJamsAddJamCriteriaInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -140,11 +140,11 @@ export class GameJamsModule {
 
   /**
    */
-  async postApiGameJamsSubmissions(id: string, body: Types.GameJamsSubmitJamEntryInput): Promise<Result<Types.GameJamsJamSubmissionDto, ApiError>> {
+  async postApiGameJamsSubmissions(id: string, body?: Types.GameJamsSubmitJamEntryInput): Promise<Result<Types.GameJamsJamSubmissionDto, ApiError>> {
     const url = `/api/game-jams/${id}/submissions`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.GameJamsSubmitJamEntryInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.GameJamsSubmitJamEntryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -166,12 +166,12 @@ export class GameJamsModule {
    */
   async postApiGameJamsSubmissionsScores(
     submissionId: string,
-    body: Types.GameJamsScoreJamSubmissionInput,
+    body?: Types.GameJamsScoreJamSubmissionInput,
   ): Promise<Result<Types.GameJamsJamScoreDto, ApiError>> {
     const url = `/api/game-jams/submissions/${submissionId}/scores`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.GameJamsScoreJamSubmissionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.GameJamsScoreJamSubmissionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

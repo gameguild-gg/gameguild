@@ -39,12 +39,12 @@ export class AuthServiceAccountsModule {
    * The client secret is only returned once during creation. Store it securely.
    */
   async postAuthServiceAccounts(
-    body: Types.IdentityAuthenticationCreateServiceAccountInput,
+    body?: Types.IdentityAuthenticationCreateServiceAccountInput,
   ): Promise<Result<Types.IdentityAuthenticationServiceAccountCreatedOutput, ApiError>> {
     const url = '/v1/auth/service-accounts';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCreateServiceAccountInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCreateServiceAccountInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -105,11 +105,11 @@ export class AuthServiceAccountsModule {
    *
    * Updates specific fields of a service account. Only provided fields are updated.
    */
-  async patchAuthServiceAccounts(serviceAccountId: string, body: Types.IdentityAuthenticationPatchServiceAccountInput): Promise<Result<void, ApiError>> {
+  async patchAuthServiceAccounts(serviceAccountId: string, body?: Types.IdentityAuthenticationPatchServiceAccountInput): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationPatchServiceAccountInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationPatchServiceAccountInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -158,11 +158,11 @@ export class AuthServiceAccountsModule {
    *
    * Locks a service account to prevent it from authenticating.
    */
-  async postAuthServiceAccountsLock(serviceAccountId: string, body: Types.IdentityAuthenticationLockServiceAccountInput): Promise<Result<void, ApiError>> {
+  async postAuthServiceAccountsLock(serviceAccountId: string, body?: Types.IdentityAuthenticationLockServiceAccountInput): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}:lock`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationLockServiceAccountInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationLockServiceAccountInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -195,12 +195,19 @@ export class AuthServiceAccountsModule {
    * The new client secret is only returned once. Store it securely.
    * The old secret is immediately invalidated.
    */
-  async postAuthServiceAccountsRotateSecret(serviceAccountId: string): Promise<Result<Types.IdentityAuthenticationSecretRotationOutput, ApiError>> {
+  async postAuthServiceAccountsRotateSecret(
+    serviceAccountId: string,
+    body?: Types.IdentityAuthenticationRotateServiceAccountSecretInput,
+  ): Promise<Result<Types.IdentityAuthenticationSecretRotationOutput, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}:rotate-secret`;
+
+    // Validate request body
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRotateServiceAccountSecretInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
       path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 
@@ -280,12 +287,12 @@ export class AuthServiceAccountsModule {
    */
   async patchAuthServiceAccountsClientCertificate(
     serviceAccountId: string,
-    body: Types.IdentityAuthenticationBindServiceAccountCertificateInput,
+    body?: Types.IdentityAuthenticationBindServiceAccountCertificateInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}/client-certificate`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationBindServiceAccountCertificateInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationBindServiceAccountCertificateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -300,11 +307,11 @@ export class AuthServiceAccountsModule {
   /**
    * Updates the scopes for a service account.
    */
-  async patchAuthServiceAccountsScopes(serviceAccountId: string, body: Types.IdentityAuthenticationUpdateScopesInput): Promise<Result<void, ApiError>> {
+  async patchAuthServiceAccountsScopes(serviceAccountId: string, body?: Types.IdentityAuthenticationUpdateScopesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}/scopes`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationUpdateScopesInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationUpdateScopesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

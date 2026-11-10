@@ -97,11 +97,11 @@ export class SocialMentorshipModule {
 
   /**
    */
-  async putMentorshipProfile(body: Types.SocialMentorshipUpsertMentorProfileInput): Promise<Result<Types.SocialMentorshipMentorProfileDto, ApiError>> {
+  async putMentorshipProfile(body?: Types.SocialMentorshipUpsertMentorProfileInput): Promise<Result<Types.SocialMentorshipMentorProfileDto, ApiError>> {
     const url = '/v1/mentorship/profile';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialMentorshipUpsertMentorProfileInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialMentorshipUpsertMentorProfileInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -122,12 +122,12 @@ export class SocialMentorshipModule {
   /**
    */
   async postMentorshipProfileAvailability(
-    body: Types.SocialMentorshipPublishMentorAvailabilityInput,
+    body?: Types.SocialMentorshipPublishMentorAvailabilityInput,
   ): Promise<Result<Types.SocialMentorshipMentorAvailabilitySlotDto[], ApiError>> {
     const url = '/v1/mentorship/profile/availability';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialMentorshipPublishMentorAvailabilityInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialMentorshipPublishMentorAvailabilityInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -176,12 +176,12 @@ export class SocialMentorshipModule {
   /**
    */
   async postMentorshipProfileStatus(
-    body: Types.SocialMentorshipSetMentorProfileStatusInput,
+    body?: Types.SocialMentorshipSetMentorProfileStatusInput,
   ): Promise<Result<Types.SocialMentorshipMentorProfileDto, ApiError>> {
     const url = '/v1/mentorship/profile/status';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialMentorshipSetMentorProfileStatusInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialMentorshipSetMentorProfileStatusInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -221,11 +221,11 @@ export class SocialMentorshipModule {
 
   /**
    */
-  async postMentorshipSessions(body: Types.SocialMentorshipBookMentorshipSessionInput): Promise<Result<Types.SocialMentorshipMentorshipSessionDto, ApiError>> {
+  async postMentorshipSessions(body?: Types.SocialMentorshipBookMentorshipSessionInput): Promise<Result<Types.SocialMentorshipMentorshipSessionDto, ApiError>> {
     const url = '/v1/mentorship/sessions';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialMentorshipBookMentorshipSessionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialMentorshipBookMentorshipSessionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -247,12 +247,12 @@ export class SocialMentorshipModule {
    */
   async postMentorshipSessionsCancel(
     sessionId: string,
-    body: Types.SocialMentorshipCancelMentorshipSessionInput,
+    body?: Types.SocialMentorshipCancelMentorshipSessionInput,
   ): Promise<Result<Types.SocialMentorshipMentorshipSessionDto, ApiError>> {
     const url = `/v1/mentorship/sessions/${sessionId}/cancel`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialMentorshipCancelMentorshipSessionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialMentorshipCancelMentorshipSessionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -23,11 +23,11 @@ export class AssetsSecureDeliveryModule {
    * policy — public/unlisted assets are reachable, protected policies require an
    * authenticated (and tenant-verified) caller.
    */
-  async postApiAssetsAccessUrl(assetId: string, body: Types.AssetsSecurityAccessUrlInput): Promise<Result<Types.AssetsAssetAccessUrl, ApiError>> {
+  async postApiAssetsAccessUrl(assetId: string, body?: Types.AssetsSecurityAccessUrlInput): Promise<Result<Types.AssetsAssetAccessUrl, ApiError>> {
     const url = `/api/assets/${assetId}/access-url`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.AssetsSecurityAccessUrlInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsSecurityAccessUrlInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

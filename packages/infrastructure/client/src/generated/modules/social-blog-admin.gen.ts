@@ -58,12 +58,12 @@ export class SocialBlogAdminModule {
    * `dryRun: true` to plan without persisting.
    */
   async postApiSocialBlogAdminImportGhost(
-    body: Types.SocialBlogControllersGhostImportInput,
+    body?: Types.SocialBlogControllersGhostImportInput,
   ): Promise<Result<Types.SocialBlogServicesGhostImportReport, ApiError>> {
     const url = '/api/social/blog/admin/import/ghost';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialBlogControllersGhostImportInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialBlogControllersGhostImportInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

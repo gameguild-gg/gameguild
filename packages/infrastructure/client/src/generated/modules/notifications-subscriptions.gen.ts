@@ -53,12 +53,15 @@ export class NotificationsSubscriptionsModule {
    */
   async postNotificationsSubscriptionsResend(
     notificationId: string,
-    body: Types.CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInput,
+    body?: Types.CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInput,
   ): Promise<Result<Types.CommerceSubscriptionsSubscriptionNotificationDto, ApiError>> {
     const url = `/api/v1/notifications/subscriptions/${notificationId}:resend`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined
+        ? undefined
+        : safeParse(Types.CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

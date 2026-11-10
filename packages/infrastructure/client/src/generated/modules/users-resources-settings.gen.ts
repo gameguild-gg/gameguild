@@ -66,12 +66,12 @@ export class UsersResourcesSettingsModule {
   async putUsersResourcesSettings(
     userId: string,
     key: string,
-    body: Types.ResourcesSetUserResourceSettingsInput,
+    body?: Types.ResourcesSetUserResourceSettingsInput,
   ): Promise<Result<Types.ResourcesResourceSettings, ApiError>> {
     const url = `/v1/users/${userId}/resources/settings/${key}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesSetUserResourceSettingsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesSetUserResourceSettingsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

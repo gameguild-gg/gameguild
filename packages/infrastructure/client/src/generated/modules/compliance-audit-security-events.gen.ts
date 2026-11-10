@@ -49,12 +49,12 @@ export class ComplianceAuditSecurityEventsModule {
    */
   async postApiAuditSecurityEventsAlertsResolve(
     alertId: string,
-    body: Types.ComplianceAuditResolveSecurityAlertInput,
+    body?: Types.ComplianceAuditResolveSecurityAlertInput,
   ): Promise<Result<Types.ComplianceAuditSecurityAlertOutput, ApiError>> {
     const url = `/api/audit/security-events/alerts/${alertId}:resolve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditResolveSecurityAlertInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditResolveSecurityAlertInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -77,12 +77,12 @@ export class ComplianceAuditSecurityEventsModule {
    */
   async postApiAuditSecurityEventsAlertsAcknowledge(
     alertId: string,
-    body: Types.ComplianceAuditAcknowledgeSecurityAlertInput,
+    body?: Types.ComplianceAuditAcknowledgeSecurityAlertInput,
   ): Promise<Result<Types.ComplianceAuditSecurityAlertOutput, ApiError>> {
     const url = `/api/audit/security-events/alerts/${alertId}/acknowledge`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAcknowledgeSecurityAlertInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAcknowledgeSecurityAlertInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -154,12 +154,12 @@ export class ComplianceAuditSecurityEventsModule {
    * and are recorded in the execution history; use `DryRun` to preview deletions.
    */
   async postApiAuditSecurityEventsRetentionEnforce(
-    body: Types.ComplianceAuditEnforceSecurityLogRetentionInput,
+    body?: Types.ComplianceAuditEnforceSecurityLogRetentionInput,
   ): Promise<Result<Types.ComplianceAuditSecurityLogRetentionExecutionOutput, ApiError>> {
     const url = '/api/audit/security-events/retention/enforce';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditEnforceSecurityLogRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditEnforceSecurityLogRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -221,12 +221,12 @@ export class ComplianceAuditSecurityEventsModule {
    * Creates or updates the security log retention policy for the current tenant.
    */
   async putApiAuditSecurityEventsRetentionPolicy(
-    body: Types.ComplianceAuditConfigureSecurityLogRetentionInput,
+    body?: Types.ComplianceAuditConfigureSecurityLogRetentionInput,
   ): Promise<Result<Types.ComplianceAuditSecurityLogRetentionPolicyOutput, ApiError>> {
     const url = '/api/audit/security-events/retention/policy';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditConfigureSecurityLogRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditConfigureSecurityLogRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -324,12 +324,12 @@ export class ComplianceAuditSecurityEventsModule {
    */
   async postAuditSecurityEventsAlertsResolve(
     alertId: string,
-    body: Types.ComplianceAuditResolveSecurityAlertInput,
+    body?: Types.ComplianceAuditResolveSecurityAlertInput,
   ): Promise<Result<Types.ComplianceAuditSecurityAlertOutput, ApiError>> {
     const url = `/v1/audit/security-events/alerts/${alertId}:resolve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditResolveSecurityAlertInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditResolveSecurityAlertInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -352,12 +352,12 @@ export class ComplianceAuditSecurityEventsModule {
    */
   async postAuditSecurityEventsAlertsAcknowledge(
     alertId: string,
-    body: Types.ComplianceAuditAcknowledgeSecurityAlertInput,
+    body?: Types.ComplianceAuditAcknowledgeSecurityAlertInput,
   ): Promise<Result<Types.ComplianceAuditSecurityAlertOutput, ApiError>> {
     const url = `/v1/audit/security-events/alerts/${alertId}/acknowledge`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAcknowledgeSecurityAlertInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAcknowledgeSecurityAlertInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -429,12 +429,12 @@ export class ComplianceAuditSecurityEventsModule {
    * and are recorded in the execution history; use `DryRun` to preview deletions.
    */
   async postAuditSecurityEventsRetentionEnforce(
-    body: Types.ComplianceAuditEnforceSecurityLogRetentionInput,
+    body?: Types.ComplianceAuditEnforceSecurityLogRetentionInput,
   ): Promise<Result<Types.ComplianceAuditSecurityLogRetentionExecutionOutput, ApiError>> {
     const url = '/v1/audit/security-events/retention/enforce';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditEnforceSecurityLogRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditEnforceSecurityLogRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -496,12 +496,12 @@ export class ComplianceAuditSecurityEventsModule {
    * Creates or updates the security log retention policy for the current tenant.
    */
   async putAuditSecurityEventsRetentionPolicy(
-    body: Types.ComplianceAuditConfigureSecurityLogRetentionInput,
+    body?: Types.ComplianceAuditConfigureSecurityLogRetentionInput,
   ): Promise<Result<Types.ComplianceAuditSecurityLogRetentionPolicyOutput, ApiError>> {
     const url = '/v1/audit/security-events/retention/policy';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditConfigureSecurityLogRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditConfigureSecurityLogRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

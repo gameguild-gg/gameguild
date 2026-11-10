@@ -17,11 +17,11 @@ export class SocialFeedModule {
 
   /**
    */
-  async postApiSocialFeed(body: Types.SocialFeedAddFeedItemInput): Promise<Result<Types.SocialFeedFeedItemDto, ApiError>> {
+  async postApiSocialFeed(body?: Types.SocialFeedAddFeedItemInput): Promise<Result<Types.SocialFeedFeedItemDto, ApiError>> {
     const url = '/api/social/feed';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialFeedAddFeedItemInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialFeedAddFeedItemInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

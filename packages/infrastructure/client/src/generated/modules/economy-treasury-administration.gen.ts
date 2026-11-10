@@ -35,12 +35,12 @@ export class EconomyTreasuryAdministrationModule {
   /**
    */
   async postAdminEconomyTreasuryWithdrawals(
-    body: Types.APIControllersProposeTreasuryWithdrawalInput,
+    body?: Types.APIControllersProposeTreasuryWithdrawalInput,
   ): Promise<Result<Types.FinanceEconomyTreasuryAdminWithdrawalRun, ApiError>> {
     const url = '/api/v1/admin/economy/treasury/withdrawals';
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersProposeTreasuryWithdrawalInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersProposeTreasuryWithdrawalInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -84,12 +84,12 @@ export class EconomyTreasuryAdministrationModule {
    */
   async postAdminEconomyTreasuryWithdrawalsApprove(
     runId: string,
-    body: Types.APIControllersApproveTreasuryWithdrawalInput,
+    body?: Types.APIControllersApproveTreasuryWithdrawalInput,
   ): Promise<Result<Types.FinanceEconomyTreasuryAdminWithdrawalRun, ApiError>> {
     const url = `/api/v1/admin/economy/treasury/withdrawals/${runId}/approve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersApproveTreasuryWithdrawalInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersApproveTreasuryWithdrawalInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -131,12 +131,12 @@ export class EconomyTreasuryAdministrationModule {
    */
   async postAdminEconomyTreasuryWithdrawalsDispatch(
     runId: string,
-    body: Types.APIControllersDispatchTreasuryWithdrawalInput,
+    body?: Types.APIControllersDispatchTreasuryWithdrawalInput,
   ): Promise<Result<Types.FinanceEconomyTreasuryAdminWithdrawalRun, ApiError>> {
     const url = `/api/v1/admin/economy/treasury/withdrawals/${runId}/dispatch`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersDispatchTreasuryWithdrawalInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersDispatchTreasuryWithdrawalInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -35,11 +35,11 @@ export class CommercePaymentsTaxJurisdictionsModule {
    *
    * Creates a new tax jurisdiction with the provided information.
    */
-  async postTaxJurisdictions(body: Types.CommercePaymentsCreateTaxJurisdictionInput): Promise<Result<void, ApiError>> {
+  async postTaxJurisdictions(body?: Types.CommercePaymentsCreateTaxJurisdictionInput): Promise<Result<void, ApiError>> {
     const url = '/api/v1/tax-jurisdictions';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsCreateTaxJurisdictionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsCreateTaxJurisdictionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -96,11 +96,11 @@ export class CommercePaymentsTaxJurisdictionsModule {
    *
    * Updates specific fields of a tax jurisdiction.
    */
-  async patchTaxJurisdictions(jurisdictionId: string, body: Types.CommercePaymentsPatchTaxJurisdictionInput): Promise<Result<void, ApiError>> {
+  async patchTaxJurisdictions(jurisdictionId: string, body?: Types.CommercePaymentsPatchTaxJurisdictionInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/tax-jurisdictions/${jurisdictionId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPatchTaxJurisdictionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsPatchTaxJurisdictionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

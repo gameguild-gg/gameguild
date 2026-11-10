@@ -38,11 +38,11 @@ export class CommerceProductsCategoriesModule {
   /**
    * Create a category
    */
-  async postProductCategories(body: Types.CommerceProductsCreateProductCategoryInput): Promise<Result<Types.CommerceProductsProductCategoryDto, ApiError>> {
+  async postProductCategories(body?: Types.CommerceProductsCreateProductCategoryInput): Promise<Result<Types.CommerceProductsProductCategoryDto, ApiError>> {
     const url = '/v1/product-categories';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsCreateProductCategoryInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsCreateProductCategoryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -86,12 +86,12 @@ export class CommerceProductsCategoriesModule {
    */
   async putProductCategories(
     categoryId: string,
-    body: Types.CommerceProductsUpdateProductCategoryInput,
+    body?: Types.CommerceProductsUpdateProductCategoryInput,
   ): Promise<Result<Types.CommerceProductsProductCategoryDto, ApiError>> {
     const url = `/v1/product-categories/${categoryId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsUpdateProductCategoryInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsUpdateProductCategoryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

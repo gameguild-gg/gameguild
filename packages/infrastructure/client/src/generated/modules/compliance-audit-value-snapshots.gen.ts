@@ -120,12 +120,12 @@ export class ComplianceAuditValueSnapshotsModule {
    * Runs one retention pass now: deletion (respecting legal holds), archive-tier stripping, and deduplication compaction. Use `DryRun` to preview.
    */
   async postApiAuditValueSnapshotsRetentionEnforce(
-    body: Types.ComplianceAuditEnforceValueSnapshotRetentionInput,
+    body?: Types.ComplianceAuditEnforceValueSnapshotRetentionInput,
   ): Promise<Result<Types.ComplianceAuditValueSnapshotRetentionExecutionOutput, ApiError>> {
     const url = '/api/audit/value-snapshots/retention/enforce';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditEnforceValueSnapshotRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditEnforceValueSnapshotRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -168,12 +168,12 @@ export class ComplianceAuditValueSnapshotsModule {
    * Creates or updates the value snapshot retention policy (retention days, archive tier, entity overrides, legal hold).
    */
   async putApiAuditValueSnapshotsRetentionPolicy(
-    body: Types.ComplianceAuditConfigureValueSnapshotRetentionInput,
+    body?: Types.ComplianceAuditConfigureValueSnapshotRetentionInput,
   ): Promise<Result<Types.ComplianceAuditValueSnapshotRetentionPolicyOutput, ApiError>> {
     const url = '/api/audit/value-snapshots/retention/policy';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditConfigureValueSnapshotRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditConfigureValueSnapshotRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -195,12 +195,12 @@ export class ComplianceAuditValueSnapshotsModule {
    * Builds a rollback plan restoring one entity to its recorded state at a point in time.
    */
   async postApiAuditValueSnapshotsRollbackPlans(
-    body: Types.ComplianceAuditCreateValueSnapshotRollbackPlanInput,
+    body?: Types.ComplianceAuditCreateValueSnapshotRollbackPlanInput,
   ): Promise<Result<Types.ComplianceAuditValueSnapshotRollbackPlanOutput, ApiError>> {
     const url = '/api/audit/value-snapshots/rollback-plans';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditCreateValueSnapshotRollbackPlanInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditCreateValueSnapshotRollbackPlanInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -244,12 +244,12 @@ export class ComplianceAuditValueSnapshotsModule {
    */
   async postApiAuditValueSnapshotsRollbackPlansExecute(
     planId: string,
-    body: Types.ComplianceAuditExecuteValueSnapshotRollbackInput,
+    body?: Types.ComplianceAuditExecuteValueSnapshotRollbackInput,
   ): Promise<Result<Types.ComplianceAuditValueSnapshotRollbackPlanOutput, ApiError>> {
     const url = `/api/audit/value-snapshots/rollback-plans/${planId}:execute`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditExecuteValueSnapshotRollbackInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditExecuteValueSnapshotRollbackInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -421,12 +421,12 @@ export class ComplianceAuditValueSnapshotsModule {
    * Runs one retention pass now: deletion (respecting legal holds), archive-tier stripping, and deduplication compaction. Use `DryRun` to preview.
    */
   async postAuditValueSnapshotsRetentionEnforce(
-    body: Types.ComplianceAuditEnforceValueSnapshotRetentionInput,
+    body?: Types.ComplianceAuditEnforceValueSnapshotRetentionInput,
   ): Promise<Result<Types.ComplianceAuditValueSnapshotRetentionExecutionOutput, ApiError>> {
     const url = '/v1/audit/value-snapshots/retention/enforce';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditEnforceValueSnapshotRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditEnforceValueSnapshotRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -469,12 +469,12 @@ export class ComplianceAuditValueSnapshotsModule {
    * Creates or updates the value snapshot retention policy (retention days, archive tier, entity overrides, legal hold).
    */
   async putAuditValueSnapshotsRetentionPolicy(
-    body: Types.ComplianceAuditConfigureValueSnapshotRetentionInput,
+    body?: Types.ComplianceAuditConfigureValueSnapshotRetentionInput,
   ): Promise<Result<Types.ComplianceAuditValueSnapshotRetentionPolicyOutput, ApiError>> {
     const url = '/v1/audit/value-snapshots/retention/policy';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditConfigureValueSnapshotRetentionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditConfigureValueSnapshotRetentionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -496,12 +496,12 @@ export class ComplianceAuditValueSnapshotsModule {
    * Builds a rollback plan restoring one entity to its recorded state at a point in time.
    */
   async postAuditValueSnapshotsRollbackPlans(
-    body: Types.ComplianceAuditCreateValueSnapshotRollbackPlanInput,
+    body?: Types.ComplianceAuditCreateValueSnapshotRollbackPlanInput,
   ): Promise<Result<Types.ComplianceAuditValueSnapshotRollbackPlanOutput, ApiError>> {
     const url = '/v1/audit/value-snapshots/rollback-plans';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditCreateValueSnapshotRollbackPlanInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditCreateValueSnapshotRollbackPlanInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -545,12 +545,12 @@ export class ComplianceAuditValueSnapshotsModule {
    */
   async postAuditValueSnapshotsRollbackPlansExecute(
     planId: string,
-    body: Types.ComplianceAuditExecuteValueSnapshotRollbackInput,
+    body?: Types.ComplianceAuditExecuteValueSnapshotRollbackInput,
   ): Promise<Result<Types.ComplianceAuditValueSnapshotRollbackPlanOutput, ApiError>> {
     const url = `/v1/audit/value-snapshots/rollback-plans/${planId}:execute`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditExecuteValueSnapshotRollbackInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditExecuteValueSnapshotRollbackInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

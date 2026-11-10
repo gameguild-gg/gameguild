@@ -47,11 +47,11 @@ export class CommerceProductsBillingPricingEngineModule {
   /**
    * Create a new pricing rule
    */
-  async postBillingPricingEngine(body: Types.CommerceProductsCreatePricingRuleInput): Promise<Result<Types.CommerceProductsPricingRuleDto, ApiError>> {
+  async postBillingPricingEngine(body?: Types.CommerceProductsCreatePricingRuleInput): Promise<Result<Types.CommerceProductsPricingRuleDto, ApiError>> {
     const url = '/api/v1/billing/pricing-engine';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsCreatePricingRuleInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsCreatePricingRuleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -75,12 +75,12 @@ export class CommerceProductsBillingPricingEngineModule {
    * the bucket key, and promo codes.
    */
   async postBillingPricingEngineCalculate(
-    body: Types.CommerceProductsCalculatePricingInput,
+    body?: Types.CommerceProductsCalculatePricingInput,
   ): Promise<Result<Types.CommerceProductsPricingCalculationResult, ApiError>> {
     const url = '/api/v1/billing/pricing-engine/:calculate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsCalculatePricingInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsCalculatePricingInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -124,12 +124,12 @@ export class CommerceProductsBillingPricingEngineModule {
    */
   async putBillingPricingEngine(
     ruleId: string,
-    body: Types.CommerceProductsUpdatePricingRuleInput,
+    body?: Types.CommerceProductsUpdatePricingRuleInput,
   ): Promise<Result<Types.CommerceProductsPricingRuleDto, ApiError>> {
     const url = `/api/v1/billing/pricing-engine/${ruleId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsUpdatePricingRuleInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsUpdatePricingRuleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -235,12 +235,12 @@ export class CommerceProductsBillingPricingEngineModule {
    * Create a pricing experiment with its arms (starts in Draft).
    */
   async postBillingPricingEngineExperiments(
-    body: Types.CommerceProductsCreatePricingExperimentInput,
+    body?: Types.CommerceProductsCreatePricingExperimentInput,
   ): Promise<Result<Types.CommerceProductsPricingExperimentDto, ApiError>> {
     const url = '/api/v1/billing/pricing-engine/experiments';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsCreatePricingExperimentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsCreatePricingExperimentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -313,12 +313,12 @@ export class CommerceProductsBillingPricingEngineModule {
    */
   async postBillingPricingEngineExperimentsAssign(
     experimentId: string,
-    body: Types.CommerceProductsAssignExperimentInput,
+    body?: Types.CommerceProductsAssignExperimentInput,
   ): Promise<Result<Types.CommerceProductsPricingExperimentAssignmentResult, ApiError>> {
     const url = `/api/v1/billing/pricing-engine/experiments/${experimentId}:assign`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsAssignExperimentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsAssignExperimentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -362,12 +362,12 @@ export class CommerceProductsBillingPricingEngineModule {
    */
   async postBillingPricingEngineExperimentsConvert(
     experimentId: string,
-    body: Types.CommerceProductsRecordExperimentOutcomeInput,
+    body?: Types.CommerceProductsRecordExperimentOutcomeInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/billing/pricing-engine/experiments/${experimentId}:convert`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsRecordExperimentOutcomeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsRecordExperimentOutcomeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

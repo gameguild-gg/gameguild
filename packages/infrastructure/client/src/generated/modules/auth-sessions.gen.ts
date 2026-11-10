@@ -154,12 +154,12 @@ export class AuthSessionsModule {
    */
   async patchAuthSessionsName(
     sessionId: string,
-    body: Types.IdentityAuthenticationRenameSessionInput,
+    body?: Types.IdentityAuthenticationRenameSessionInput,
   ): Promise<Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>> {
     const url = `/v1/auth/sessions/${sessionId}/name`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRenameSessionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRenameSessionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

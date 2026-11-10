@@ -52,11 +52,13 @@ export class CommercePaymentsRefundsModule {
    *
    * Records a refund request. Amounts at or above the configured manual-approval threshold enter the pending-approval queue; smaller amounts (or all refunds when no threshold is configured) execute immediately through the gateway. Use kind=prorated to refund the unused time of the subscription billing period (subscription-linked payments only).
    */
-  async postRefunds(body: Types.CommercePaymentsRefundsControllerRequestRefundHttpInput): Promise<Result<Types.CommercePaymentsRequestRefundResult, ApiError>> {
+  async postRefunds(
+    body?: Types.CommercePaymentsRefundsControllerRequestRefundHttpInput,
+  ): Promise<Result<Types.CommercePaymentsRequestRefundResult, ApiError>> {
     const url = '/api/v1/refunds';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsRefundsControllerRequestRefundHttpInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsRefundsControllerRequestRefundHttpInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -105,12 +107,12 @@ export class CommercePaymentsRefundsModule {
    */
   async postRefundsApprove(
     refundId: string,
-    body: Types.CommercePaymentsRefundsControllerRefundDecisionInput,
+    body?: Types.CommercePaymentsRefundsControllerRefundDecisionInput,
   ): Promise<Result<Types.CommercePaymentsRefundDecisionResult, ApiError>> {
     const url = `/api/v1/refunds/${refundId}:approve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsRefundsControllerRefundDecisionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsRefundsControllerRefundDecisionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -136,12 +138,12 @@ export class CommercePaymentsRefundsModule {
    */
   async postRefundsReject(
     refundId: string,
-    body: Types.CommercePaymentsRefundsControllerRefundDecisionInput,
+    body?: Types.CommercePaymentsRefundsControllerRefundDecisionInput,
   ): Promise<Result<Types.CommercePaymentsRefundDecisionResult, ApiError>> {
     const url = `/api/v1/refunds/${refundId}:reject`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsRefundsControllerRefundDecisionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsRefundsControllerRefundDecisionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

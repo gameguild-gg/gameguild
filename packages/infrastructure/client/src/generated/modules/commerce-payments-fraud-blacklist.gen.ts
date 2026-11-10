@@ -50,12 +50,13 @@ export class CommercePaymentsFraudBlacklistModule {
    * Adds a fraud blacklist entry (or a manual whitelist override) for the caller's tenant. Values support * wildcard patterns (e.g. *.malicious.com, 192.168.*) and optional expiry dates. Idempotent per (type, value, kind). Requires the payments:admin permission.
    */
   async postFraudBlacklist(
-    body: Types.CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInput,
+    body?: Types.CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInput,
   ): Promise<Result<Types.CommercePaymentsFraudBlacklistEntryResult, ApiError>> {
     const url = '/api/v1/fraud/blacklist';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommercePaymentsFraudBlacklistControllerAddFraudBlacklistEntryInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

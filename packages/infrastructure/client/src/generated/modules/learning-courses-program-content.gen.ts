@@ -39,12 +39,12 @@ export class LearningCoursesProgramContentModule {
    */
   async postCoursesContent(
     programId: string,
-    body: Types.LearningCoursesCreateProgramContentDto,
+    body?: Types.LearningCoursesCreateProgramContentDto,
   ): Promise<Result<Types.LearningCoursesProgramContentDto, ApiError>> {
     const url = `/v1/courses/${programId}/content`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCreateProgramContentDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesCreateProgramContentDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -89,12 +89,12 @@ export class LearningCoursesProgramContentModule {
   async putCoursesContent(
     programId: string,
     id: string,
-    body: Types.LearningCoursesUpdateProgramContentDto,
+    body?: Types.LearningCoursesUpdateProgramContentDto,
   ): Promise<Result<Types.LearningCoursesProgramContentDto, ApiError>> {
     const url = `/v1/courses/${programId}/content/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdateProgramContentDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesUpdateProgramContentDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -154,12 +154,12 @@ export class LearningCoursesProgramContentModule {
   async putCoursesContentCodingAssignment(
     programId: string,
     id: string,
-    body: Types.LearningCoursesCodingAssignmentContent,
+    body?: Types.LearningCoursesCodingAssignmentContent,
   ): Promise<Result<Types.LearningCoursesCodingAssignmentContent, ApiError>> {
     const url = `/v1/courses/${programId}/content/${id}/coding-assignment`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCodingAssignmentContentSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesCodingAssignmentContentSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -201,11 +201,11 @@ export class LearningCoursesProgramContentModule {
   /**
    * Move content to a new parent/position (resource-level Edit permission required on parent Program)
    */
-  async postCoursesContentMove(programId: string, id: string, body: Types.LearningCoursesMoveContentDto): Promise<Result<void, ApiError>> {
+  async postCoursesContentMove(programId: string, id: string, body?: Types.LearningCoursesMoveContentDto): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${programId}/content/${id}/move`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesMoveContentDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesMoveContentDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -223,12 +223,12 @@ export class LearningCoursesProgramContentModule {
   async postCoursesContentSubmit(
     programId: string,
     id: string,
-    body: Types.LearningCoursesSubmitUserContentDto,
+    body?: Types.LearningCoursesSubmitUserContentDto,
   ): Promise<Result<Types.LearningCoursesContentInteractionDto, ApiError>> {
     const url = `/v1/courses/${programId}/content/${id}/submit`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesSubmitUserContentDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesSubmitUserContentDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -300,11 +300,11 @@ export class LearningCoursesProgramContentModule {
   /**
    * Reorder content within a program (resource-level Edit permission required on parent Program)
    */
-  async postCoursesContentReorder(programId: string, body: Types.LearningCoursesReorderContentDto): Promise<Result<void, ApiError>> {
+  async postCoursesContentReorder(programId: string, body?: Types.LearningCoursesReorderContentDto): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${programId}/content/reorder`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesReorderContentDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesReorderContentDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -336,12 +336,12 @@ export class LearningCoursesProgramContentModule {
    */
   async postCoursesContentSearch(
     programId: string,
-    body: Types.LearningCoursesSearchContentDto,
+    body?: Types.LearningCoursesSearchContentDto,
   ): Promise<Result<Types.LearningCoursesProgramContentDto[], ApiError>> {
     const url = `/v1/courses/${programId}/content/search`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesSearchContentDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesSearchContentDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -75,12 +75,12 @@ export class LearningExperienceSocialWishlistsModule {
    */
   async putApiSocialWishlistPreferences(
     courseId: string,
-    body: Types.LearningExperienceSocialServicesWishlistPreferencesInput,
+    body?: Types.LearningExperienceSocialServicesWishlistPreferencesInput,
   ): Promise<Result<Types.LearningExperienceSocialServicesCourseWishlistDto, ApiError>> {
     const url = `/api/social/wishlist/${courseId}/preferences`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceSocialServicesWishlistPreferencesInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceSocialServicesWishlistPreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

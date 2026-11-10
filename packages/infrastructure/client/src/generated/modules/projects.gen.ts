@@ -56,11 +56,11 @@ export class ProjectsModule {
   /**
    * Create a new project
    */
-  async postProjects(body: Types.ProjectsCreateProjectInput): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
+  async postProjects(body?: Types.ProjectsCreateProjectInput): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
     const url = '/v1/projects';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsCreateProjectInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsCreateProjectInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -106,11 +106,11 @@ export class ProjectsModule {
   /**
    * Update an existing project
    */
-  async putProjects(id: string, body: Types.ProjectsUpdateProjectInput): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
+  async putProjects(id: string, body?: Types.ProjectsUpdateProjectInput): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
     const url = `/v1/projects/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsUpdateProjectInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsUpdateProjectInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -210,11 +210,11 @@ export class ProjectsModule {
   /**
    * Share project with a user by assigning a role
    */
-  async postProjectsShare(id: string, body: Types.ProjectsShareProjectInput): Promise<Result<Types.ProjectsCollaboratorDto, ApiError>> {
+  async postProjectsShare(id: string, body?: Types.ProjectsShareProjectInput): Promise<Result<Types.ProjectsCollaboratorDto, ApiError>> {
     const url = `/v1/projects/${id}:share`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsShareProjectInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsShareProjectInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -271,11 +271,11 @@ export class ProjectsModule {
   /**
    * Add project collaborator
    */
-  async postProjectsCollaborators(id: string, body: Types.ProjectsAddProjectCollaboratorInput): Promise<Result<Types.ProjectsCollaboratorDto, ApiError>> {
+  async postProjectsCollaborators(id: string, body?: Types.ProjectsAddProjectCollaboratorInput): Promise<Result<Types.ProjectsCollaboratorDto, ApiError>> {
     const url = `/v1/projects/${id}/collaborators`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsAddProjectCollaboratorInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsAddProjectCollaboratorInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -299,12 +299,12 @@ export class ProjectsModule {
   async putProjectsCollaborators(
     id: string,
     collaboratorId: string,
-    body: Types.ProjectsUpdateProjectCollaboratorInput,
+    body?: Types.ProjectsUpdateProjectCollaboratorInput,
   ): Promise<Result<Types.ProjectsCollaboratorDto, ApiError>> {
     const url = `/v1/projects/${id}/collaborators/${collaboratorId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsUpdateProjectCollaboratorInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsUpdateProjectCollaboratorInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -340,11 +340,14 @@ export class ProjectsModule {
   /**
    * Invite a user to collaborate on a project without granting access until acceptance
    */
-  async postProjectsInvitations(id: string, body: Types.ProjectsInviteProjectCollaboratorInput): Promise<Result<Types.ProjectsProjectInvitationDto, ApiError>> {
+  async postProjectsInvitations(
+    id: string,
+    body?: Types.ProjectsInviteProjectCollaboratorInput,
+  ): Promise<Result<Types.ProjectsProjectInvitationDto, ApiError>> {
     const url = `/v1/projects/${id}/invitations`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsInviteProjectCollaboratorInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsInviteProjectCollaboratorInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -400,11 +403,11 @@ export class ProjectsModule {
 
   /**
    */
-  async postProjectsVersions(id: string, body: Types.ProjectsCreateProjectVersionInput): Promise<Result<Types.ProjectsProjectVersionApiOutput, ApiError>> {
+  async postProjectsVersions(id: string, body?: Types.ProjectsCreateProjectVersionInput): Promise<Result<Types.ProjectsProjectVersionApiOutput, ApiError>> {
     const url = `/v1/projects/${id}/versions`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsCreateProjectVersionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsCreateProjectVersionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -427,12 +430,12 @@ export class ProjectsModule {
   async putProjectsVersions(
     id: string,
     versionId: string,
-    body: Types.ProjectsUpdateProjectVersionInput,
+    body?: Types.ProjectsUpdateProjectVersionInput,
   ): Promise<Result<Types.ProjectsProjectVersionApiOutput, ApiError>> {
     const url = `/v1/projects/${id}/versions/${versionId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsUpdateProjectVersionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsUpdateProjectVersionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -625,11 +628,11 @@ export class ProjectsModule {
    * Create (or return) the caller's workspace project for a game jam. The acting user is
    * taken from the authenticated context; the optional body only carries a title override.
    */
-  async postProjectsJam(jamId: string, body: Types.ProjectsCreateJamProjectInput): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
+  async postProjectsJam(jamId: string, body?: Types.ProjectsCreateJamProjectInput): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
     const url = `/v1/projects/jam/${jamId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsCreateJamProjectInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsCreateJamProjectInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

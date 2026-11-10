@@ -43,11 +43,11 @@ export class TenantsSettingsModule {
    *
    * Replaces all tenant settings with new values. All existing settings are replaced with the provided data.
    */
-  async putTenantsSettings(tenantId: string, body: Types.IdentityTenantsReplaceTenantSettingsInput): Promise<Result<void, ApiError>> {
+  async putTenantsSettings(tenantId: string, body?: Types.IdentityTenantsReplaceTenantSettingsInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/settings`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsReplaceTenantSettingsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsReplaceTenantSettingsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -64,11 +64,11 @@ export class TenantsSettingsModule {
    *
    * Updates specific tenant settings fields without affecting other settings. Only the provided settings are modified.
    */
-  async patchTenantsSettings(tenantId: string, body: Types.IdentityTenantsUpdateTenantSettingsInput): Promise<Result<void, ApiError>> {
+  async patchTenantsSettings(tenantId: string, body?: Types.IdentityTenantsUpdateTenantSettingsInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/settings`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantSettingsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateTenantSettingsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -102,7 +102,7 @@ export class TenantsSettingsModule {
    *
    * Updates specific feature flags for the tenant. Existing flags not specified are preserved.
    */
-  async patchTenantsSettingsFeatureFlags(tenantId: string, body: Record<string, boolean>): Promise<Result<void, ApiError>> {
+  async patchTenantsSettingsFeatureFlags(tenantId: string, body?: Record<string, boolean>): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/settings/feature-flags`;
 
     const result = await this.client.request({
@@ -145,12 +145,12 @@ export class TenantsSettingsModule {
    */
   async patchTenantsSettingsIntegrationSettings(
     tenantId: string,
-    body: Types.IdentityTenantsUpdateTenantIntegrationSettingsInput,
+    body?: Types.IdentityTenantsUpdateTenantIntegrationSettingsInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/settings/integration-settings`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantIntegrationSettingsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateTenantIntegrationSettingsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -190,11 +190,11 @@ export class TenantsSettingsModule {
    *
    * Updates system limits and resource constraints for the tenant.
    */
-  async patchTenantsSettingsSystemLimits(tenantId: string, body: Types.IdentityTenantsUpdateTenantSystemLimitsInput): Promise<Result<void, ApiError>> {
+  async patchTenantsSettingsSystemLimits(tenantId: string, body?: Types.IdentityTenantsUpdateTenantSystemLimitsInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/settings/system-limits`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantSystemLimitsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateTenantSystemLimitsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

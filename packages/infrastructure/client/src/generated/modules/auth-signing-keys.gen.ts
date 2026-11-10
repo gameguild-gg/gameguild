@@ -38,11 +38,11 @@ export class AuthSigningKeysModule {
    *
    * Removes signing keys that have been expired beyond the retention period.
    */
-  async postAuthSigningKeysCleanup(body: Types.IdentityAuthenticationCleanupKeysInput): Promise<Result<Types.IdentityAuthenticationCleanupResult, ApiError>> {
+  async postAuthSigningKeysCleanup(body?: Types.IdentityAuthenticationCleanupKeysInput): Promise<Result<Types.IdentityAuthenticationCleanupResult, ApiError>> {
     const url = '/v1/auth/signing-keys:cleanup';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCleanupKeysInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCleanupKeysInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -65,11 +65,11 @@ export class AuthSigningKeysModule {
    *
    * Manually rotates to a new signing key. Previous keys remain valid for token validation during grace period.
    */
-  async postAuthSigningKeysRotate(body: Types.IdentityAuthenticationRotateKeyInput): Promise<Result<Types.IdentityAuthenticationJwtKeyInfoDto, ApiError>> {
+  async postAuthSigningKeysRotate(body?: Types.IdentityAuthenticationRotateKeyInput): Promise<Result<Types.IdentityAuthenticationJwtKeyInfoDto, ApiError>> {
     const url = '/v1/auth/signing-keys:rotate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRotateKeyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRotateKeyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

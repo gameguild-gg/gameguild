@@ -34,11 +34,11 @@ export class SocialPostsModule {
   /**
    * Create a new post
    */
-  async postPosts(body: Types.SocialPostsControllersCreatePostInput): Promise<Result<void, ApiError>> {
+  async postPosts(body?: Types.SocialPostsControllersCreatePostInput): Promise<Result<void, ApiError>> {
     const url = '/api/v1/posts';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialPostsControllersCreatePostInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialPostsControllersCreatePostInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -68,11 +68,11 @@ export class SocialPostsModule {
   /**
    * Update a post
    */
-  async putPosts(postId: string, body: Types.SocialPostsControllersUpdatePostInput): Promise<Result<void, ApiError>> {
+  async putPosts(postId: string, body?: Types.SocialPostsControllersUpdatePostInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialPostsControllersUpdatePostInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialPostsControllersUpdatePostInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

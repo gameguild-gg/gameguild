@@ -40,13 +40,13 @@ export class LearningExperienceDiscoveryModule {
    * Create a new course collection
    */
   async postDiscoveryCollections(
-    body: Types.LearningExperienceDiscoveryCreateCourseCollectionDto,
+    body?: Types.LearningExperienceDiscoveryCreateCourseCollectionDto,
     query?: { curatorId?: string; tenantId?: string },
   ): Promise<Result<Types.LearningExperienceDiscoveryCourseCollectionDto, ApiError>> {
     const url = '/v1/discovery/collections';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryCreateCourseCollectionDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceDiscoveryCreateCourseCollectionDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -91,12 +91,12 @@ export class LearningExperienceDiscoveryModule {
    */
   async putDiscoveryCollections(
     id: string,
-    body: Types.LearningExperienceDiscoveryUpdateCourseCollectionDto,
+    body?: Types.LearningExperienceDiscoveryUpdateCourseCollectionDto,
   ): Promise<Result<Types.LearningExperienceDiscoveryCourseCollectionDto, ApiError>> {
     const url = `/v1/discovery/collections/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryUpdateCourseCollectionDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceDiscoveryUpdateCourseCollectionDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -258,13 +258,13 @@ export class LearningExperienceDiscoveryModule {
    * Create new featured content (admin)
    */
   async postDiscoveryFeatured(
-    body: Types.LearningExperienceDiscoveryCreateFeaturedContentDto,
+    body?: Types.LearningExperienceDiscoveryCreateFeaturedContentDto,
     query?: { tenantId?: string },
   ): Promise<Result<Types.LearningExperienceDiscoveryFeaturedContentDto, ApiError>> {
     const url = '/v1/discovery/featured';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryCreateFeaturedContentDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceDiscoveryCreateFeaturedContentDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -309,12 +309,12 @@ export class LearningExperienceDiscoveryModule {
    */
   async putDiscoveryFeatured(
     id: string,
-    body: Types.LearningExperienceDiscoveryUpdateFeaturedContentDto,
+    body?: Types.LearningExperienceDiscoveryUpdateFeaturedContentDto,
   ): Promise<Result<Types.LearningExperienceDiscoveryFeaturedContentDto, ApiError>> {
     const url = `/v1/discovery/featured/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryUpdateFeaturedContentDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceDiscoveryUpdateFeaturedContentDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -394,11 +394,11 @@ export class LearningExperienceDiscoveryModule {
   /**
    * Record a click from search results
    */
-  async postDiscoverySearchClick(searchId: string, body: Types.LearningExperienceDiscoveryRecordSearchClickDto): Promise<Result<void, ApiError>> {
+  async postDiscoverySearchClick(searchId: string, body?: Types.LearningExperienceDiscoveryRecordSearchClickDto): Promise<Result<void, ApiError>> {
     const url = `/v1/discovery/search/${searchId}/click`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryRecordSearchClickDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceDiscoveryRecordSearchClickDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -449,13 +449,13 @@ export class LearningExperienceDiscoveryModule {
    * Record a search query (for analytics)
    */
   async postDiscoverySearchRecord(
-    body: Types.LearningExperienceDiscoveryRecordSearchDto,
+    body?: Types.LearningExperienceDiscoveryRecordSearchDto,
     query?: { userId?: string },
   ): Promise<Result<Types.LearningExperienceDiscoverySearchHistoryDto, ApiError>> {
     const url = '/v1/discovery/search/record';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryRecordSearchDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceDiscoveryRecordSearchDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

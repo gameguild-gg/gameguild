@@ -96,11 +96,11 @@ export class AssetsModule {
   /**
    * Update asset metadata.
    */
-  async patchAssets(id: string, body: Types.AssetsControllersUpdateAssetInput): Promise<Result<void, ApiError>> {
+  async patchAssets(id: string, body?: Types.AssetsControllersUpdateAssetInput): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.AssetsControllersUpdateAssetInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsControllersUpdateAssetInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -150,11 +150,11 @@ export class AssetsModule {
   /**
    * Attach an asset reference to a parent resource, or detach it (null body fields).
    */
-  async postAssetsRebindParent(id: string, body: Types.AssetsControllersRebindAssetParentInput): Promise<Result<void, ApiError>> {
+  async postAssetsRebindParent(id: string, body?: Types.AssetsControllersRebindAssetParentInput): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}:rebind-parent`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.AssetsControllersRebindAssetParentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsControllersRebindAssetParentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -169,11 +169,11 @@ export class AssetsModule {
   /**
    * Report an asset for moderation.
    */
-  async postAssetsReport(id: string, body: Types.AssetsControllersReportAssetInput): Promise<Result<void, ApiError>> {
+  async postAssetsReport(id: string, body?: Types.AssetsControllersReportAssetInput): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}:report`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.AssetsControllersReportAssetInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsControllersReportAssetInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -250,11 +250,11 @@ export class AssetsModule {
   /**
    * Delete multiple asset references in one request.
    */
-  async postAssetsBulkDelete(body: Types.AssetsControllersBulkDeleteAssetsInput): Promise<Result<Types.AssetsCommandsBulkDeleteAssetsOutput, ApiError>> {
+  async postAssetsBulkDelete(body?: Types.AssetsControllersBulkDeleteAssetsInput): Promise<Result<Types.AssetsCommandsBulkDeleteAssetsOutput, ApiError>> {
     const url = '/v1/assets/bulk-delete';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AssetsControllersBulkDeleteAssetsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsControllersBulkDeleteAssetsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -275,11 +275,11 @@ export class AssetsModule {
   /**
    * Generate secure access URLs for multiple assets.
    */
-  async postAssetsBulkDownload(body: Types.AssetsControllersBulkAssetAccessUrlInput): Promise<Result<Types.AssetsQueriesBulkAssetAccessUrlsOutput, ApiError>> {
+  async postAssetsBulkDownload(body?: Types.AssetsControllersBulkAssetAccessUrlInput): Promise<Result<Types.AssetsQueriesBulkAssetAccessUrlsOutput, ApiError>> {
     const url = '/v1/assets/bulk-download';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AssetsControllersBulkAssetAccessUrlInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsControllersBulkAssetAccessUrlInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

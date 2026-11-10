@@ -37,12 +37,12 @@ export class CommerceProductsPromoStackingRulesModule {
    * Create a stacking rule
    */
   async postPromoStackingRules(
-    body: Types.CommerceProductsCreatePromoStackingRuleInput,
+    body?: Types.CommerceProductsCreatePromoStackingRuleInput,
   ): Promise<Result<Types.CommerceProductsPromoStackingRuleDto, ApiError>> {
     const url = '/v1/promo-stacking-rules';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsCreatePromoStackingRuleInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsCreatePromoStackingRuleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -86,12 +86,12 @@ export class CommerceProductsPromoStackingRulesModule {
    */
   async putPromoStackingRules(
     ruleId: string,
-    body: Types.CommerceProductsUpdatePromoStackingRuleInput,
+    body?: Types.CommerceProductsUpdatePromoStackingRuleInput,
   ): Promise<Result<Types.CommerceProductsPromoStackingRuleDto, ApiError>> {
     const url = `/v1/promo-stacking-rules/${ruleId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsUpdatePromoStackingRuleInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceProductsUpdatePromoStackingRuleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

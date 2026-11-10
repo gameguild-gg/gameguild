@@ -35,12 +35,12 @@ export class LearningAssessmentsGroupSetsModule {
    */
   async postCoursesGroupSets(
     courseId: string,
-    body: Types.LearningAssessmentsCreateGroupSetInput,
+    body?: Types.LearningAssessmentsCreateGroupSetInput,
   ): Promise<Result<Types.LearningAssessmentsGroupSetDto, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsCreateGroupSetInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsCreateGroupSetInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -79,12 +79,12 @@ export class LearningAssessmentsGroupSetsModule {
   async postCoursesGroupSetsGroups(
     courseId: string,
     setId: string,
-    body: Types.LearningAssessmentsCreateGroupInput,
+    body?: Types.LearningAssessmentsCreateGroupInput,
   ): Promise<Result<Types.LearningAssessmentsGroupDto, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets/${setId}/groups`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsCreateGroupInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsCreateGroupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

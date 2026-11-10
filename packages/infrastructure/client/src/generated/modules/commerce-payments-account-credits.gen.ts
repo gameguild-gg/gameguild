@@ -20,11 +20,11 @@ export class CommercePaymentsAccountCreditsModule {
    *
    * Revokes the remaining balance of an account credit grant; the reason is captured on the grant and in the credit ledger. Requires the SystemAdmin role.
    */
-  async postAccountCreditsRevoke(grantId: string, body: Types.CommercePaymentsAccountCreditsControllerRevokeCreditInput): Promise<Result<void, ApiError>> {
+  async postAccountCreditsRevoke(grantId: string, body?: Types.CommercePaymentsAccountCreditsControllerRevokeCreditInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/account-credits/${grantId}:revoke`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsAccountCreditsControllerRevokeCreditInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsAccountCreditsControllerRevokeCreditInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -59,12 +59,12 @@ export class CommercePaymentsAccountCreditsModule {
    * Manually grants account credit to a tenant user with an optional expiry. The credit type restricts what the credit may be applied to. Requires the SystemAdmin role; the tenant is derived from the authenticated actor.
    */
   async postAccountCreditsGrants(
-    body: Types.CommercePaymentsAccountCreditsControllerIssueCreditInput,
+    body?: Types.CommercePaymentsAccountCreditsControllerIssueCreditInput,
   ): Promise<Result<Types.CommercePaymentsAccountCreditGrant, ApiError>> {
     const url = '/api/v1/account-credits/grants';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsAccountCreditsControllerIssueCreditInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsAccountCreditsControllerIssueCreditInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -22,12 +22,12 @@ export class AccessControlPermissionSimulationModule {
    * written, no security version is bumped, no audit entry is recorded.
    */
   async postAuthorizationPermissionsSimulate(
-    body: Types.IdentityAuthorizationSimulatePermissionChangeCommand,
+    body?: Types.IdentityAuthorizationSimulatePermissionChangeCommand,
   ): Promise<Result<Types.IdentityAuthorizationPermissionSimulationResult, ApiError>> {
     const url = '/api/v1/authorization/permissions:simulate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationSimulatePermissionChangeCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationSimulatePermissionChangeCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

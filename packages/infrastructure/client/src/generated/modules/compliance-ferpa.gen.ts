@@ -18,12 +18,12 @@ export class ComplianceFerpaModule {
   /**
    */
   async postApiComplianceFerpaConsents(
-    body: Types.ComplianceFERPAGrantFerpaDisclosureConsentCommand,
+    body?: Types.ComplianceFERPAGrantFerpaDisclosureConsentCommand,
   ): Promise<Result<Types.ComplianceFERPAFerpaDisclosureConsentDto, ApiError>> {
     const url = '/api/compliance/ferpa/consents';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceFERPAGrantFerpaDisclosureConsentCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceFERPAGrantFerpaDisclosureConsentCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -81,12 +81,12 @@ export class ComplianceFerpaModule {
   /**
    */
   async putApiComplianceFerpaDirectoryPolicy(
-    body: Types.ComplianceFERPAUpsertDirectoryInformationPolicyCommand,
+    body?: Types.ComplianceFERPAUpsertDirectoryInformationPolicyCommand,
   ): Promise<Result<Types.ComplianceFERPAFerpaDirectoryInformationPolicyDto, ApiError>> {
     const url = '/api/compliance/ferpa/directory-policy';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceFERPAUpsertDirectoryInformationPolicyCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceFERPAUpsertDirectoryInformationPolicyCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -107,12 +107,12 @@ export class ComplianceFerpaModule {
   /**
    */
   async postApiComplianceFerpaDisclosures(
-    body: Types.ComplianceFERPARecordFerpaDisclosureCommand,
+    body?: Types.ComplianceFERPARecordFerpaDisclosureCommand,
   ): Promise<Result<Types.ComplianceFERPAFerpaDisclosureLogDto, ApiError>> {
     const url = '/api/compliance/ferpa/disclosures';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceFERPARecordFerpaDisclosureCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceFERPARecordFerpaDisclosureCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -133,12 +133,12 @@ export class ComplianceFerpaModule {
   /**
    */
   async postApiComplianceFerpaInspectionRequests(
-    body: Types.ComplianceFERPASubmitFerpaInspectionRequestCommand,
+    body?: Types.ComplianceFERPASubmitFerpaInspectionRequestCommand,
   ): Promise<Result<Types.ComplianceFERPAFerpaInspectionRequestDto, ApiError>> {
     const url = '/api/compliance/ferpa/inspection-requests';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceFERPASubmitFerpaInspectionRequestCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceFERPASubmitFerpaInspectionRequestCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -160,12 +160,12 @@ export class ComplianceFerpaModule {
    */
   async postApiComplianceFerpaInspectionRequestsComplete(
     requestId: string,
-    body: Types.ComplianceFERPACompleteFerpaInspectionRequestBody,
+    body?: Types.ComplianceFERPACompleteFerpaInspectionRequestBody,
   ): Promise<Result<Types.ComplianceFERPAFerpaInspectionRequestDto, ApiError>> {
     const url = `/api/compliance/ferpa/inspection-requests/${requestId}/complete`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceFERPACompleteFerpaInspectionRequestBodySchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceFERPACompleteFerpaInspectionRequestBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -200,12 +200,12 @@ export class ComplianceFerpaModule {
   /**
    */
   async postApiComplianceFerpaRecords(
-    body: Types.ComplianceFERPARegisterEducationRecordCommand,
+    body?: Types.ComplianceFERPARegisterEducationRecordCommand,
   ): Promise<Result<Types.ComplianceFERPAFerpaEducationRecordDto, ApiError>> {
     const url = '/api/compliance/ferpa/records';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceFERPARegisterEducationRecordCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceFERPARegisterEducationRecordCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

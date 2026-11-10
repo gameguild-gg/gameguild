@@ -18,12 +18,12 @@ export class ResourcesContentsContractsModule {
   /**
    */
   async postDocumentContractsGenerate(
-    body: Types.ResourcesContentsGenerateContractInput,
+    body?: Types.ResourcesContentsGenerateContractInput,
   ): Promise<Result<Types.ResourcesContentsGeneratedContractOutput, ApiError>> {
     const url = '/v1/document-contracts/generate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesContentsGenerateContractInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesContentsGenerateContractInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -44,12 +44,12 @@ export class ResourcesContentsContractsModule {
   /**
    */
   async postDocumentContractsGenerateBulk(
-    body: Types.ResourcesContentsBulkGenerateContractsInput,
+    body?: Types.ResourcesContentsBulkGenerateContractsInput,
   ): Promise<Result<Types.ResourcesContentsBulkGeneratedContractsOutput, ApiError>> {
     const url = '/v1/document-contracts/generate:bulk';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesContentsBulkGenerateContractsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesContentsBulkGenerateContractsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

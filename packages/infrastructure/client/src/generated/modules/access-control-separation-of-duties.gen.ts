@@ -34,11 +34,11 @@ export class AccessControlSeparationOfDutiesModule {
   /**
    * Create a new SoD rule
    */
-  async postSodRules(body: Types.IdentityAuthorizationCommandsCreateSoDRuleCommand): Promise<Result<Types.IdentityAuthorizationSoDRule, ApiError>> {
+  async postSodRules(body?: Types.IdentityAuthorizationCommandsCreateSoDRuleCommand): Promise<Result<Types.IdentityAuthorizationSoDRule, ApiError>> {
     const url = '/v1/sod/rules';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationCommandsCreateSoDRuleCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationCommandsCreateSoDRuleCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -80,11 +80,14 @@ export class AccessControlSeparationOfDutiesModule {
   /**
    * Update an existing SoD rule
    */
-  async putSodRules(id: string, body: Types.IdentityAuthorizationControllersUpdateSoDRuleInput): Promise<Result<Types.IdentityAuthorizationSoDRule, ApiError>> {
+  async putSodRules(
+    id: string,
+    body?: Types.IdentityAuthorizationControllersUpdateSoDRuleInput,
+  ): Promise<Result<Types.IdentityAuthorizationSoDRule, ApiError>> {
     const url = `/v1/sod/rules/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationControllersUpdateSoDRuleInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationControllersUpdateSoDRuleInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -138,12 +141,12 @@ export class AccessControlSeparationOfDutiesModule {
    */
   async postSodViolationsException(
     id: string,
-    body: Types.IdentityAuthorizationControllersGrantExceptionInput,
+    body?: Types.IdentityAuthorizationControllersGrantExceptionInput,
   ): Promise<Result<Types.IdentityAuthorizationSoDViolation, ApiError>> {
     const url = `/v1/sod/violations/${id}:exception`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationControllersGrantExceptionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationControllersGrantExceptionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -166,12 +169,12 @@ export class AccessControlSeparationOfDutiesModule {
    */
   async postSodViolationsResolve(
     id: string,
-    body: Types.IdentityAuthorizationControllersResolveViolationInput,
+    body?: Types.IdentityAuthorizationControllersResolveViolationInput,
   ): Promise<Result<Types.IdentityAuthorizationSoDViolation, ApiError>> {
     const url = `/v1/sod/violations/${id}:resolve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationControllersResolveViolationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationControllersResolveViolationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

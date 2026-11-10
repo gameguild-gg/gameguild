@@ -52,7 +52,7 @@ jobs:
           # set sat idle forever. ARC autoscales 0..9 on demand, so the
           # self-hosted pool is the default and GitHub queues jobs until a
           # runner registers.
-          echo 'pool=["self-hosted","gameguild"]' >> "$GITHUB_OUTPUT"
+          echo 'pool=["gameguild"]' >> "$GITHUB_OUTPUT"
 
   classify:
     name: Classify release surfaces

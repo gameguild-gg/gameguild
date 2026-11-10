@@ -18,11 +18,11 @@ export class LearningCoursesPrerequisitesModule {
   /**
    * Create a new prerequisite for a course
    */
-  async postApiPrerequisites(body: Types.LearningCoursesCreatePrerequisiteApiInput): Promise<Result<Types.LearningCoursesPrerequisiteDto, ApiError>> {
+  async postApiPrerequisites(body?: Types.LearningCoursesCreatePrerequisiteApiInput): Promise<Result<Types.LearningCoursesPrerequisiteDto, ApiError>> {
     const url = '/api/prerequisites';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCreatePrerequisiteApiInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesCreatePrerequisiteApiInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -66,12 +66,12 @@ export class LearningCoursesPrerequisitesModule {
    */
   async putApiPrerequisites(
     id: string,
-    body: Types.LearningCoursesUpdatePrerequisiteApiInput,
+    body?: Types.LearningCoursesUpdatePrerequisiteApiInput,
   ): Promise<Result<Types.LearningCoursesPrerequisiteDto, ApiError>> {
     const url = `/api/prerequisites/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesUpdatePrerequisiteApiInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesUpdatePrerequisiteApiInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -184,11 +184,11 @@ export class LearningCoursesPrerequisitesModule {
   /**
    * Reorder prerequisites for a course
    */
-  async postApiPrerequisitesCourseReorder(courseId: string, body: Types.LearningCoursesReorderPrerequisitesInput): Promise<Result<void, ApiError>> {
+  async postApiPrerequisitesCourseReorder(courseId: string, body?: Types.LearningCoursesReorderPrerequisitesInput): Promise<Result<void, ApiError>> {
     const url = `/api/prerequisites/course/${courseId}/reorder`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesReorderPrerequisitesInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesReorderPrerequisitesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

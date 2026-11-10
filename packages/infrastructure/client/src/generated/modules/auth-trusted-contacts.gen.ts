@@ -38,12 +38,12 @@ export class AuthTrustedContactsModule {
    * Designates a trusted recovery contact for the acting user and sends a single-use confirmation invite. The contact must confirm before receiving recovery codes.
    */
   async postAuthTrustedContacts(
-    body: Types.IdentityAuthenticationAddTrustedContactInput,
+    body?: Types.IdentityAuthenticationAddTrustedContactInput,
   ): Promise<Result<Types.IdentityAuthenticationTrustedContactActionResult, ApiError>> {
     const url = '/v1/auth/trusted-contacts';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationAddTrustedContactInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationAddTrustedContactInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -90,12 +90,12 @@ export class AuthTrustedContactsModule {
    * Consumes the single-use, expiring invite token emailed to the contact. Denials are generic and never reveal token state. Rate limited per IP against the authentication budget.
    */
   async postAuthTrustedContactsConfirm(
-    body: Types.IdentityAuthenticationConfirmTrustedContactInput,
+    body?: Types.IdentityAuthenticationConfirmTrustedContactInput,
   ): Promise<Result<Types.IdentityAuthenticationTrustedContactConfirmResult, ApiError>> {
     const url = '/v1/auth/trusted-contacts/confirm';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationConfirmTrustedContactInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationConfirmTrustedContactInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

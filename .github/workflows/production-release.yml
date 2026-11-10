@@ -49,7 +49,7 @@ jobs:
           # The runner-count probe against /actions/runners was removed: that
           # endpoint is admin-only and GITHUB_TOKEN always gets HTTP 403.
           # ARC autoscales 0..9 on demand; self-hosted is the default.
-          echo 'pool=["self-hosted","gameguild"]' >> "$GITHUB_OUTPUT"
+          echo 'pool=["gameguild"]' >> "$GITHUB_OUTPUT"
 
   prepare:
     name: Resolve tested release candidate

@@ -18,11 +18,11 @@ export class LearningCohortsModule {
   /**
    * Create a new cohort
    */
-  async postApiCohorts(body: Types.LearningCohortsCreateCohortInput): Promise<Result<Types.LearningCohortsCohortDto, ApiError>> {
+  async postApiCohorts(body?: Types.LearningCohortsCreateCohortInput): Promise<Result<Types.LearningCohortsCohortDto, ApiError>> {
     const url = '/api/cohorts';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCohortsCreateCohortInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCohortsCreateCohortInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -64,11 +64,11 @@ export class LearningCohortsModule {
   /**
    * Update a cohort
    */
-  async putApiCohorts(id: string, body: Types.LearningCohortsUpdateCohortInput): Promise<Result<Types.LearningCohortsCohortDto, ApiError>> {
+  async putApiCohorts(id: string, body?: Types.LearningCohortsUpdateCohortInput): Promise<Result<Types.LearningCohortsCohortDto, ApiError>> {
     const url = `/api/cohorts/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCohortsUpdateCohortInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCohortsUpdateCohortInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

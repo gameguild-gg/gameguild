@@ -18,11 +18,11 @@ export class AccessControlPermissionApprovalsModule {
   /**
    * Creates a pending multi-stage approval workflow for a tenant permission grant.
    */
-  async postAuthorizationPermissionApprovals(body: Types.IdentityAuthorizationCreatePermissionApprovalCommand): Promise<Result<string, ApiError>> {
+  async postAuthorizationPermissionApprovals(body?: Types.IdentityAuthorizationCreatePermissionApprovalCommand): Promise<Result<string, ApiError>> {
     const url = '/api/v1/authorization/permission-approvals';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationCreatePermissionApprovalCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationCreatePermissionApprovalCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -61,12 +61,13 @@ export class AccessControlPermissionApprovalsModule {
    */
   async postAuthorizationPermissionApprovalsDecisions(
     id: string,
-    body: Types.IdentityAuthorizationControllersDecidePermissionApprovalInput,
+    body?: Types.IdentityAuthorizationControllersDecidePermissionApprovalInput,
   ): Promise<Result<Types.IdentityAuthorizationPermissionApprovalDecisionResult, ApiError>> {
     const url = `/api/v1/authorization/permission-approvals/${id}/decisions`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationControllersDecidePermissionApprovalInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.IdentityAuthorizationControllersDecidePermissionApprovalInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

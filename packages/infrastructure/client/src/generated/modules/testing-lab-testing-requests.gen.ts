@@ -64,11 +64,11 @@ export class TestingLabTestingRequestsModule {
 
   /**
    */
-  async postTestingRequests(body: Types.TestingLabCreateTestingRequestDto): Promise<Result<Types.TestingLabTestingInput, ApiError>> {
+  async postTestingRequests(body?: Types.TestingLabCreateTestingRequestDto): Promise<Result<Types.TestingLabTestingInput, ApiError>> {
     const url = '/v1/testing/requests';
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabCreateTestingRequestDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabCreateTestingRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -110,12 +110,12 @@ export class TestingLabTestingRequestsModule {
    */
   async putTestingRequests(
     id: string,
-    body: Types.TestingLabUpdateTestingRequestDto,
+    body?: Types.TestingLabUpdateTestingRequestDto,
   ): Promise<Result<Types.TestingLabTestingRequestDetailProjection, ApiError>> {
     const url = `/v1/testing/requests/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabUpdateTestingRequestDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabUpdateTestingRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -255,12 +255,12 @@ export class TestingLabTestingRequestsModule {
   /**
    */
   async postTestingSubmitSimple(
-    body: Types.TestingLabCreateSimpleTestingRequestDto,
+    body?: Types.TestingLabCreateSimpleTestingRequestDto,
   ): Promise<Result<Types.TestingLabTestingRequestDetailProjection, ApiError>> {
     const url = '/v1/testing/submit-simple';
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabCreateSimpleTestingRequestDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabCreateSimpleTestingRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

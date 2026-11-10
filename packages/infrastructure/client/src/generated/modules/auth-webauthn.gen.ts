@@ -40,12 +40,12 @@ export class AuthWebauthnModule {
    * Begin WebAuthn authentication (passwordless login).
    */
   async postAuthWebauthnAuthenticationBegin(
-    body: Types.IdentityAuthenticationBeginWebAuthnAuthenticationInput,
+    body?: Types.IdentityAuthenticationBeginWebAuthnAuthenticationInput,
   ): Promise<Result<Types.IdentityAuthenticationWebAuthnAuthenticationOptionsResult, ApiError>> {
     const url = '/v1/auth/webauthn/authentication:begin';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationBeginWebAuthnAuthenticationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationBeginWebAuthnAuthenticationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -67,12 +67,12 @@ export class AuthWebauthnModule {
    * Complete WebAuthn authentication (passwordless login).
    */
   async postAuthWebauthnAuthenticationComplete(
-    body: Types.IdentityAuthenticationCompleteWebAuthnAuthenticationInput,
+    body?: Types.IdentityAuthenticationCompleteWebAuthnAuthenticationInput,
   ): Promise<Result<Types.IdentityAuthenticationWebAuthnAuthenticationResult, ApiError>> {
     const url = '/v1/auth/webauthn/authentication:complete';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteWebAuthnAuthenticationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCompleteWebAuthnAuthenticationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -148,11 +148,11 @@ export class AuthWebauthnModule {
   /**
    * Update a WebAuthn credential's friendly name.
    */
-  async patchAuthWebauthnCredentials(credentialId: string, body: Types.IdentityAuthenticationUpdateCredentialNameInput): Promise<Result<void, ApiError>> {
+  async patchAuthWebauthnCredentials(credentialId: string, body?: Types.IdentityAuthenticationUpdateCredentialNameInput): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/webauthn/credentials/${credentialId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationUpdateCredentialNameInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationUpdateCredentialNameInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -236,12 +236,12 @@ export class AuthWebauthnModule {
    * Begin WebAuthn credential registration.
    */
   async postAuthWebauthnRegistrationBegin(
-    body: Types.IdentityAuthenticationBeginWebAuthnRegistrationInput,
+    body?: Types.IdentityAuthenticationBeginWebAuthnRegistrationInput,
   ): Promise<Result<Types.IdentityAuthenticationWebAuthnRegistrationOptionsResult, ApiError>> {
     const url = '/v1/auth/webauthn/registration:begin';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationBeginWebAuthnRegistrationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationBeginWebAuthnRegistrationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -263,12 +263,12 @@ export class AuthWebauthnModule {
    * Complete WebAuthn credential registration.
    */
   async postAuthWebauthnRegistrationComplete(
-    body: Types.IdentityAuthenticationCompleteWebAuthnRegistrationInput,
+    body?: Types.IdentityAuthenticationCompleteWebAuthnRegistrationInput,
   ): Promise<Result<Types.IdentityAuthenticationWebAuthnRegistrationResult, ApiError>> {
     const url = '/v1/auth/webauthn/registration:complete';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

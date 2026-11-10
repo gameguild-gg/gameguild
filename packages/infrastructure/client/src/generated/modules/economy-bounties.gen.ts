@@ -34,11 +34,11 @@ export class EconomyBountiesModule {
 
   /**
    */
-  async postEconomyBounties(body: Types.APIControllersCreateMyBountyInput): Promise<Result<Types.FinanceEconomyBountiesDurableBountyView, ApiError>> {
+  async postEconomyBounties(body?: Types.APIControllersCreateMyBountyInput): Promise<Result<Types.FinanceEconomyBountiesDurableBountyView, ApiError>> {
     const url = '/api/v1/economy/bounties';
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersCreateMyBountyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersCreateMyBountyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -80,12 +80,12 @@ export class EconomyBountiesModule {
    */
   async postEconomyBountiesClaim(
     bountyId: string,
-    body: Types.APIControllersCompleteMyBountyInput,
+    body?: Types.APIControllersCompleteMyBountyInput,
   ): Promise<Result<Types.FinanceEconomyBountiesDurableBountyView, ApiError>> {
     const url = `/api/v1/economy/bounties/${bountyId}:claim`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersCompleteMyBountyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersCompleteMyBountyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -107,12 +107,12 @@ export class EconomyBountiesModule {
    */
   async postEconomyBountiesReclaim(
     bountyId: string,
-    body: Types.APIControllersCompleteMyBountyInput,
+    body?: Types.APIControllersCompleteMyBountyInput,
   ): Promise<Result<Types.FinanceEconomyBountiesDurableBountyView, ApiError>> {
     const url = `/api/v1/economy/bounties/${bountyId}:reclaim`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersCompleteMyBountyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersCompleteMyBountyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

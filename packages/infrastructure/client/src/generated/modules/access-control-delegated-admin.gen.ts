@@ -19,12 +19,12 @@ export class AccessControlDelegatedAdminModule {
    * Grant delegated admin scope to a user
    */
   async postDelegatedAdmin(
-    body: Types.IdentityAuthorizationCommandsGrantDelegatedAdminCommand,
+    body?: Types.IdentityAuthorizationCommandsGrantDelegatedAdminCommand,
   ): Promise<Result<Types.IdentityAuthorizationDelegatedAdminScope, ApiError>> {
     const url = '/v1/delegated-admin';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationCommandsGrantDelegatedAdminCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationCommandsGrantDelegatedAdminCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

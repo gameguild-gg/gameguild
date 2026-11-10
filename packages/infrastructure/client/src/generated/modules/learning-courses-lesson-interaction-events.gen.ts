@@ -34,12 +34,12 @@ export class LearningCoursesLessonInteractionEventsModule {
   async postCoursesInteractionsEvents(
     programId: string,
     interactionId: string,
-    body: Types.LearningCoursesRecordContentInteractionEventInput,
+    body?: Types.LearningCoursesRecordContentInteractionEventInput,
   ): Promise<Result<Types.LearningCoursesContentInteractionEventDto, ApiError>> {
     const url = `/v1/courses/${programId}/interactions/${interactionId}/events`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesRecordContentInteractionEventInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesRecordContentInteractionEventInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

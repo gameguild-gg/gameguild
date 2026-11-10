@@ -63,11 +63,11 @@ export class TenantsQuotasModule {
    *
    * Creates or updates the quota configuration for a specific resource type for a tenant.
    */
-  async putTenantsQuotas(tenantId: string, type: Types.ResourcesResourceUsageType, body: Types.ResourcesSetQuotaInput): Promise<Result<void, ApiError>> {
+  async putTenantsQuotas(tenantId: string, type: Types.ResourcesResourceUsageType, body?: Types.ResourcesSetQuotaInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/quotas/${type}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesSetQuotaInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesSetQuotaInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -104,12 +104,12 @@ export class TenantsQuotasModule {
   async postTenantsQuotasCheck(
     tenantId: string,
     type: Types.ResourcesResourceUsageType,
-    body: Types.ResourcesCheckResourceQuotaInput,
+    body?: Types.ResourcesCheckResourceQuotaInput,
   ): Promise<Result<Types.ResourcesResourceQuotaEnforcementResult, ApiError>> {
     const url = `/v1/tenants/${tenantId}/quotas/${type}:check`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesCheckResourceQuotaInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesCheckResourceQuotaInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -152,12 +152,12 @@ export class TenantsQuotasModule {
   async postTenantsQuotasToggle(
     tenantId: string,
     type: Types.ResourcesResourceUsageType,
-    body: Types.ResourcesToggleResourceQuotaInput,
+    body?: Types.ResourcesToggleResourceQuotaInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/quotas/${type}:toggle`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesToggleResourceQuotaInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesToggleResourceQuotaInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

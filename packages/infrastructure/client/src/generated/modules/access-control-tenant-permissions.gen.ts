@@ -90,11 +90,11 @@ export class AccessControlTenantPermissionsModule {
   /**
    * Sets tenant default permissions applied to all users in a tenant.
    */
-  async postAuthorizationTenantsDefaults(body: Types.IdentityAuthorizationSetTenantDefaultPermissionsCommand): Promise<Result<boolean, ApiError>> {
+  async postAuthorizationTenantsDefaults(body?: Types.IdentityAuthorizationSetTenantDefaultPermissionsCommand): Promise<Result<boolean, ApiError>> {
     const url = '/api/v1/authorization/tenants/defaults';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationSetTenantDefaultPermissionsCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationSetTenantDefaultPermissionsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -109,11 +109,11 @@ export class AccessControlTenantPermissionsModule {
   /**
    * Denies tenant-level permissions for a user (DENY-WINS).
    */
-  async postAuthorizationTenantsDeny(body: Types.IdentityAuthorizationDenyTenantPermissionCommand): Promise<Result<string, ApiError>> {
+  async postAuthorizationTenantsDeny(body?: Types.IdentityAuthorizationDenyTenantPermissionCommand): Promise<Result<string, ApiError>> {
     const url = '/api/v1/authorization/tenants/deny';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationDenyTenantPermissionCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationDenyTenantPermissionCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -128,11 +128,11 @@ export class AccessControlTenantPermissionsModule {
   /**
    * Removes deny entries from a user's permissions.
    */
-  async postAuthorizationTenantsDenyRemove(body: Types.IdentityAuthorizationRemoveDenyPermissionsCommand): Promise<Result<boolean, ApiError>> {
+  async postAuthorizationTenantsDenyRemove(body?: Types.IdentityAuthorizationRemoveDenyPermissionsCommand): Promise<Result<boolean, ApiError>> {
     const url = '/api/v1/authorization/tenants/deny/remove';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationRemoveDenyPermissionsCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationRemoveDenyPermissionsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -147,11 +147,11 @@ export class AccessControlTenantPermissionsModule {
   /**
    * Sets global default permissions applied to all users.
    */
-  async postAuthorizationTenantsGlobalDefaults(body: Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommand): Promise<Result<boolean, ApiError>> {
+  async postAuthorizationTenantsGlobalDefaults(body?: Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommand): Promise<Result<boolean, ApiError>> {
     const url = '/api/v1/authorization/tenants/global/defaults';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -166,11 +166,11 @@ export class AccessControlTenantPermissionsModule {
   /**
    * Grants tenant-level permissions to a user.
    */
-  async postAuthorizationTenantsGrant(body: Types.IdentityAuthorizationGrantTenantPermissionCommand): Promise<Result<string, ApiError>> {
+  async postAuthorizationTenantsGrant(body?: Types.IdentityAuthorizationGrantTenantPermissionCommand): Promise<Result<string, ApiError>> {
     const url = '/api/v1/authorization/tenants/grant';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationGrantTenantPermissionCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationGrantTenantPermissionCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -308,12 +308,12 @@ export class AccessControlTenantPermissionsModule {
    * Bulk-extends the expiration of permission grants in a tenant by a time period.
    */
   async postAuthorizationTenantsPermissionsExtendExpiration(
-    body: Types.IdentityAuthorizationExtendTenantPermissionExpirationCommand,
+    body?: Types.IdentityAuthorizationExtendTenantPermissionExpirationCommand,
   ): Promise<Result<number, ApiError>> {
     const url = '/api/v1/authorization/tenants/permissions:extend-expiration';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationExtendTenantPermissionExpirationCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationExtendTenantPermissionExpirationCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -361,12 +361,12 @@ export class AccessControlTenantPermissionsModule {
    * Bulk-sets an absolute expiration for permission grants in a tenant.
    */
   async postAuthorizationTenantsPermissionsSetExpiration(
-    body: Types.IdentityAuthorizationSetTenantPermissionExpirationCommand,
+    body?: Types.IdentityAuthorizationSetTenantPermissionExpirationCommand,
   ): Promise<Result<number, ApiError>> {
     const url = '/api/v1/authorization/tenants/permissions:set-expiration';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationSetTenantPermissionExpirationCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationSetTenantPermissionExpirationCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -381,11 +381,11 @@ export class AccessControlTenantPermissionsModule {
   /**
    * Revokes tenant-level permissions from a user.
    */
-  async postAuthorizationTenantsRevoke(body: Types.IdentityAuthorizationRevokeTenantPermissionCommand): Promise<Result<boolean, ApiError>> {
+  async postAuthorizationTenantsRevoke(body?: Types.IdentityAuthorizationRevokeTenantPermissionCommand): Promise<Result<boolean, ApiError>> {
     const url = '/api/v1/authorization/tenants/revoke';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationRevokeTenantPermissionCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationRevokeTenantPermissionCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -13177,6 +13177,7 @@ export interface IdentityAuthenticationCreateApiKeyCommand {
   ipWhitelist?: string | null;
   name: string | null;
   scopes: string[] | null;
+  stepUpReceipt?: string | null;
 }
 
 /** Data model for Identity Authentication Create Api Key Response. */
@@ -14062,6 +14063,11 @@ export interface IdentityAuthenticationRotateApiKeyOutput {
 export interface IdentityAuthenticationRotateKeyInput {
   reason?: string | null;
   validityDays?: number | null;
+}
+
+/** Fresh verification receipt for the account selected by the route. */
+export interface IdentityAuthenticationRotateServiceAccountSecretInput {
+  stepUpReceipt?: string | null;
 }
 
 /** Request to initiate a SAML federation provider sign-in */
@@ -29160,6 +29166,7 @@ export let IdentityAuthenticationRiskLevelSchema: z.ZodType<IdentityAuthenticati
 export let IdentityAuthenticationRotateApiKeyInputSchema: z.ZodType<IdentityAuthenticationRotateApiKeyInput>;
 export let IdentityAuthenticationRotateApiKeyOutputSchema: z.ZodType<IdentityAuthenticationRotateApiKeyOutput>;
 export let IdentityAuthenticationRotateKeyInputSchema: z.ZodType<IdentityAuthenticationRotateKeyInput>;
+export let IdentityAuthenticationRotateServiceAccountSecretInputSchema: z.ZodType<IdentityAuthenticationRotateServiceAccountSecretInput>;
 export let IdentityAuthenticationSamlAuthorizeRequestDtoSchema: z.ZodType<IdentityAuthenticationSamlAuthorizeRequestDto>;
 export let IdentityAuthenticationSamlCallbackRequestDtoSchema: z.ZodType<IdentityAuthenticationSamlCallbackRequestDto>;
 export let IdentityAuthenticationSamlLogoutUrlOutputSchema: z.ZodType<IdentityAuthenticationSamlLogoutUrlOutput>;
@@ -42635,6 +42642,7 @@ IdentityAuthenticationCreateApiKeyCommandSchema = z.object({
   ipWhitelist: z.string().nullable().optional(),
   name: z.string().nullable(),
   scopes: z.array(z.string()).nullable(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationCreateApiKeyOutput. Data model for Identity Authentication Create Api Key Response. */
@@ -43352,6 +43360,11 @@ IdentityAuthenticationRotateApiKeyOutputSchema = z.object({
 IdentityAuthenticationRotateKeyInputSchema = z.object({
   reason: z.string().nullable().optional(),
   validityDays: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationRotateServiceAccountSecretInput. Fresh verification receipt for the account selected by the route. */
+IdentityAuthenticationRotateServiceAccountSecretInputSchema = z.object({
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationSamlAuthorizeRequestDto. Request to initiate a SAML federation provider sign-in */

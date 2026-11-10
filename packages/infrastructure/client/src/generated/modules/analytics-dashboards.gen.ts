@@ -32,11 +32,11 @@ export class AnalyticsDashboardsModule {
 
   /**
    */
-  async postApiAnalyticsDashboards(body: Types.AnalyticsCreateDashboardInput): Promise<Result<Types.AnalyticsDashboardDto, ApiError>> {
+  async postApiAnalyticsDashboards(body?: Types.AnalyticsCreateDashboardInput): Promise<Result<Types.AnalyticsDashboardDto, ApiError>> {
     const url = '/api/analytics/dashboards';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AnalyticsCreateDashboardInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AnalyticsCreateDashboardInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -76,11 +76,11 @@ export class AnalyticsDashboardsModule {
 
   /**
    */
-  async putApiAnalyticsDashboards(id: string, body: Types.AnalyticsUpdateDashboardInput): Promise<Result<Types.AnalyticsDashboardDto, ApiError>> {
+  async putApiAnalyticsDashboards(id: string, body?: Types.AnalyticsUpdateDashboardInput): Promise<Result<Types.AnalyticsDashboardDto, ApiError>> {
     const url = `/api/analytics/dashboards/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.AnalyticsUpdateDashboardInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AnalyticsUpdateDashboardInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

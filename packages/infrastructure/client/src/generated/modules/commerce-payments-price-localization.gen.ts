@@ -44,12 +44,12 @@ export class CommercePaymentsPriceLocalizationModule {
   async postPriceLocalizationPlansCurrencies(
     planId: string,
     currencyCode: string,
-    body: Types.CommercePaymentsSetLocalizedPriceInput,
+    body?: Types.CommercePaymentsSetLocalizedPriceInput,
   ): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = `/api/v1/price-localization/plans/${planId}/currencies/${currencyCode}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsSetLocalizedPriceInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsSetLocalizedPriceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -70,12 +70,12 @@ export class CommercePaymentsPriceLocalizationModule {
   async deletePriceLocalizationPlansCurrencies(
     planId: string,
     currencyCode: string,
-    body: Types.CommercePaymentsClearLocalizedPriceInput,
+    body?: Types.CommercePaymentsClearLocalizedPriceInput,
   ): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = `/api/v1/price-localization/plans/${planId}/currencies/${currencyCode}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsClearLocalizedPriceInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsClearLocalizedPriceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'DELETE',
@@ -94,12 +94,12 @@ export class CommercePaymentsPriceLocalizationModule {
    * Bulk-recalculates auto-calculated localized prices from current FX rates; preserves manual overrides; tracks progress on a run row that can be rolled back.
    */
   async postPriceLocalizationRecalculate(
-    body: Types.CommercePaymentsRecalculateLocalizedPricesInput,
+    body?: Types.CommercePaymentsRecalculateLocalizedPricesInput,
   ): Promise<Result<Types.CommercePaymentsPriceRecalculationOutcome, ApiError>> {
     const url = '/api/v1/price-localization/recalculate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsRecalculateLocalizedPricesInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsRecalculateLocalizedPricesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -162,12 +162,12 @@ export class CommercePaymentsPriceLocalizationModule {
    */
   async postPriceLocalizationRecalculationsRollback(
     runId: string,
-    body: Types.CommercePaymentsRollbackRecalculationInput,
+    body?: Types.CommercePaymentsRollbackRecalculationInput,
   ): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = `/api/v1/price-localization/recalculations/${runId}/rollback`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsRollbackRecalculationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsRollbackRecalculationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

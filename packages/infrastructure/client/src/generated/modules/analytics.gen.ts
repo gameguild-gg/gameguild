@@ -17,11 +17,11 @@ export class AnalyticsModule {
 
   /**
    */
-  async postApiAnalyticsEvents(body: Types.AnalyticsTrackAnalyticsEventCommand): Promise<Result<void, ApiError>> {
+  async postApiAnalyticsEvents(body?: Types.AnalyticsTrackAnalyticsEventCommand): Promise<Result<void, ApiError>> {
     const url = '/api/analytics/events';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AnalyticsTrackAnalyticsEventCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AnalyticsTrackAnalyticsEventCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -35,11 +35,11 @@ export class AnalyticsModule {
 
   /**
    */
-  async postApiAnalyticsFunnel(body: Types.AnalyticsAnalyzeFunnelQuery): Promise<Result<void, ApiError>> {
+  async postApiAnalyticsFunnel(body?: Types.AnalyticsAnalyzeFunnelQuery): Promise<Result<void, ApiError>> {
     const url = '/api/analytics/funnel';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AnalyticsAnalyzeFunnelQuerySchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AnalyticsAnalyzeFunnelQuerySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -152,11 +152,11 @@ export class AnalyticsModule {
 
   /**
    */
-  async postApiAnalyticsWarehouseRun(body: Types.AnalyticsAnalyticsWarehouseRunInput): Promise<Result<Types.AnalyticsAnalyticsWarehouseRunOutput, ApiError>> {
+  async postApiAnalyticsWarehouseRun(body?: Types.AnalyticsAnalyticsWarehouseRunInput): Promise<Result<Types.AnalyticsAnalyticsWarehouseRunOutput, ApiError>> {
     const url = '/api/analytics/warehouse/run';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AnalyticsAnalyticsWarehouseRunInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AnalyticsAnalyticsWarehouseRunInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

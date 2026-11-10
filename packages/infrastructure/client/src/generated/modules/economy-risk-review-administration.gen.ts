@@ -64,12 +64,12 @@ export class EconomyRiskReviewAdministrationModule {
    */
   async postAdminEconomyRiskReviewsApprove(
     reviewId: string,
-    body: Types.APIControllersResolveEconomyRiskReviewInput,
+    body?: Types.APIControllersResolveEconomyRiskReviewInput,
   ): Promise<Result<Types.FinanceEconomyRiskRiskReviewCase, ApiError>> {
     const url = `/api/v1/admin/economy/risk-reviews/${reviewId}:approve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersResolveEconomyRiskReviewInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersResolveEconomyRiskReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -91,12 +91,12 @@ export class EconomyRiskReviewAdministrationModule {
    */
   async postAdminEconomyRiskReviewsReject(
     reviewId: string,
-    body: Types.APIControllersResolveEconomyRiskReviewInput,
+    body?: Types.APIControllersResolveEconomyRiskReviewInput,
   ): Promise<Result<Types.FinanceEconomyRiskRiskReviewCase, ApiError>> {
     const url = `/api/v1/admin/economy/risk-reviews/${reviewId}:reject`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIControllersResolveEconomyRiskReviewInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.APIControllersResolveEconomyRiskReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

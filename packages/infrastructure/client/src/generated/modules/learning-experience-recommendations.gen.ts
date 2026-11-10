@@ -132,12 +132,13 @@ export class LearningExperienceRecommendationsModule {
    * Update the current user's learning profile
    */
   async putRecommendationsMeProfile(
-    body: Types.LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto,
+    body?: Types.LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto,
   ): Promise<Result<Types.LearningExperienceRecommendationsUserLearningProfileDto, ApiError>> {
     const url = '/v1/recommendations/me/profile';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceRecommendationsCreateOrUpdateLearningProfileDtoSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.LearningExperienceRecommendationsCreateOrUpdateLearningProfileDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -159,12 +160,12 @@ export class LearningExperienceRecommendationsModule {
    * Add a skill to the current user's profile
    */
   async postRecommendationsMeProfileSkills(
-    body: Types.LearningExperienceRecommendationsAddSkillInput,
+    body?: Types.LearningExperienceRecommendationsAddSkillInput,
   ): Promise<Result<Types.LearningExperienceRecommendationsUserLearningProfileDto, ApiError>> {
     const url = '/v1/recommendations/me/profile/skills';
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceRecommendationsAddSkillInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningExperienceRecommendationsAddSkillInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

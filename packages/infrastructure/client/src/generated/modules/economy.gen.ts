@@ -38,12 +38,12 @@ export class EconomyModule {
    */
   async postAdminEconomyPayoutRequestsApprove(
     requestId: string,
-    body: Types.FinanceEconomyPayoutsCommandsReviewPayoutRequestInput,
+    body?: Types.FinanceEconomyPayoutsCommandsReviewPayoutRequestInput,
   ): Promise<Result<Types.FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto, ApiError>> {
     const url = `/api/v1/admin/economy/payout-requests/${requestId}/approve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.FinanceEconomyPayoutsCommandsReviewPayoutRequestInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceEconomyPayoutsCommandsReviewPayoutRequestInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -83,12 +83,12 @@ export class EconomyModule {
    */
   async postAdminEconomyPayoutRequestsReject(
     requestId: string,
-    body: Types.FinanceEconomyPayoutsCommandsReviewPayoutRequestInput,
+    body?: Types.FinanceEconomyPayoutsCommandsReviewPayoutRequestInput,
   ): Promise<Result<Types.FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto, ApiError>> {
     const url = `/api/v1/admin/economy/payout-requests/${requestId}/reject`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.FinanceEconomyPayoutsCommandsReviewPayoutRequestInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceEconomyPayoutsCommandsReviewPayoutRequestInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -125,12 +125,12 @@ export class EconomyModule {
    * Convert my confirmed HardCoin balance into SoftCoin
    */
   async postEconomyConversionsHardToSoft(
-    body: Types.FinanceEconomyCommandsConvertMyHardToSoftInput,
+    body?: Types.FinanceEconomyCommandsConvertMyHardToSoftInput,
   ): Promise<Result<Types.FinanceEconomyFundingSelfServiceHardToSoftConversionReceipt, ApiError>> {
     const url = '/api/v1/economy/conversions/hard-to-soft';
 
     // Validate request body
-    const validatedBody = safeParse(Types.FinanceEconomyCommandsConvertMyHardToSoftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceEconomyCommandsConvertMyHardToSoftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -170,12 +170,12 @@ export class EconomyModule {
    * Records a withdrawal request only. It does not reserve or transfer value until KYC, risk, provider, and FIFO eligibility checks pass.
    */
   async postEconomyPayoutRequests(
-    body: Types.FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInput,
+    body?: Types.FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInput,
   ): Promise<Result<Types.FinanceEconomyPayoutsQueriesEconomyPayoutRequestDto, ApiError>> {
     const url = '/api/v1/economy/payout-requests';
 
     // Validate request body
-    const validatedBody = safeParse(Types.FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -319,12 +319,12 @@ export class EconomyModule {
    * The server derives tenant, wallet, jurisdiction, signed quote, amount, provider binding, and idempotency authority.
    */
   async postEconomyTopUps(
-    body: Types.FinanceEconomyCommandsCreateMyHardCoinTopUpInput,
+    body?: Types.FinanceEconomyCommandsCreateMyHardCoinTopUpInput,
   ): Promise<Result<Types.FinanceEconomyFundingSelfServiceHardCoinTopUpReceipt, ApiError>> {
     const url = '/api/v1/economy/top-ups';
 
     // Validate request body
-    const validatedBody = safeParse(Types.FinanceEconomyCommandsCreateMyHardCoinTopUpInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceEconomyCommandsCreateMyHardCoinTopUpInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -369,12 +369,12 @@ export class EconomyModule {
    * The server resolves wallets, jurisdiction, policy, reserve, risk, and posting authority. The request contains business intent only.
    */
   async postEconomyTransfers(
-    body: Types.FinanceEconomyTransfersSelfServiceEconomyTransferInput,
+    body?: Types.FinanceEconomyTransfersSelfServiceEconomyTransferInput,
   ): Promise<Result<Types.FinanceEconomyTransfersSelfServiceEconomyTransferReceipt, ApiError>> {
     const url = '/api/v1/economy/transfers';
 
     // Validate request body
-    const validatedBody = safeParse(Types.FinanceEconomyTransfersSelfServiceEconomyTransferInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.FinanceEconomyTransfersSelfServiceEconomyTransferInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -19,12 +19,12 @@ export class AccessControlPermissionDelegationsModule {
    * Delegate permissions to another user
    */
   async postPermissionDelegations(
-    body: Types.IdentityAuthorizationCommandsDelegatePermissionsCommand,
+    body?: Types.IdentityAuthorizationCommandsDelegatePermissionsCommand,
   ): Promise<Result<Types.IdentityAuthorizationPermissionDelegation, ApiError>> {
     const url = '/v1/permission-delegations';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationCommandsDelegatePermissionsCommandSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationCommandsDelegatePermissionsCommandSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

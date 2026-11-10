@@ -20013,10 +20013,12 @@ export const getAuthApiKeysEndpoint = {
 } as const;
 
 /**
- * Create a new API key
+ * Create a new API key after fresh verification
+ *
+ * Creates an API key after fresh verification. Without a stepUpReceipt, a valid request returns HTTP 403 with a persisted challenge bound to the name, scopes, expiry and IP whitelist. Verify an enrolled supported factor and retry the identical creation fields with the returned receipt. Invalid or reused receipts cannot create a key.
  */
 export interface PostAuthApiKeysInput {
-  body?: Types.IdentityAuthenticationCreateApiKeyCommand;
+  body: Types.IdentityAuthenticationCreateApiKeyCommand;
 }
 export type PostAuthApiKeysOutput = Types.IdentityAuthenticationCreateApiKeyOutput;
 export const postAuthApiKeysEndpoint = {
@@ -21332,6 +21334,7 @@ export const postAuthServiceAccountsReactivateEndpoint = {
  */
 export interface PostAuthServiceAccountsRotateSecretInput {
   serviceAccountId: string;
+  body?: Types.IdentityAuthenticationRotateServiceAccountSecretInput;
 }
 export type PostAuthServiceAccountsRotateSecretOutput = Types.IdentityAuthenticationSecretRotationOutput;
 export const postAuthServiceAccountsRotateSecretEndpoint = {

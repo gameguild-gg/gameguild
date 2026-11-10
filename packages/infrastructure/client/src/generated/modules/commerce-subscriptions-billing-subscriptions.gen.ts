@@ -49,12 +49,15 @@ export class CommerceSubscriptionsBillingSubscriptionsModule {
    * Create billing subscription
    */
   async postBillingSubscriptions(
-    body: Types.CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput,
+    body?: Types.CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput,
   ): Promise<Result<void, ApiError>> {
     const url = '/api/v1/billing/subscriptions';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined
+        ? undefined
+        : safeParse(Types.CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -92,12 +95,15 @@ export class CommerceSubscriptionsBillingSubscriptionsModule {
    */
   async postBillingSubscriptionsCancel(
     subscriptionId: string,
-    body: Types.CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInput,
+    body?: Types.CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/billing/subscriptions/${subscriptionId}:cancel`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined
+        ? undefined
+        : safeParse(Types.CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

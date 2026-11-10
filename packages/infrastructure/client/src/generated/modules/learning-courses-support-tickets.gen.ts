@@ -43,12 +43,12 @@ export class LearningCoursesSupportTicketsModule {
    */
   async postCoursesSupportTickets(
     courseId: string,
-    body: Types.LearningCoursesCreateCourseSupportTicketInput,
+    body?: Types.LearningCoursesCreateCourseSupportTicketInput,
   ): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
     const url = `/v1/courses/${courseId}/support/tickets`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCreateCourseSupportTicketInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesCreateCourseSupportTicketInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -94,12 +94,12 @@ export class LearningCoursesSupportTicketsModule {
   async postCoursesSupportTicketsResolve(
     courseId: string,
     ticketId: string,
-    body: Types.LearningCoursesResolveCourseSupportTicketInput,
+    body?: Types.LearningCoursesResolveCourseSupportTicketInput,
   ): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
     const url = `/v1/courses/${courseId}/support/tickets/${ticketId}:resolve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesResolveCourseSupportTicketInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesResolveCourseSupportTicketInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -122,12 +122,12 @@ export class LearningCoursesSupportTicketsModule {
   async postCoursesSupportTicketsMessages(
     courseId: string,
     ticketId: string,
-    body: Types.LearningCoursesCourseSupportTicketMessageInput,
+    body?: Types.LearningCoursesCourseSupportTicketMessageInput,
   ): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
     const url = `/v1/courses/${courseId}/support/tickets/${ticketId}/messages`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCourseSupportTicketMessageInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesCourseSupportTicketMessageInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

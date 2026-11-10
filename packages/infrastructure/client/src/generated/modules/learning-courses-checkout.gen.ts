@@ -20,12 +20,12 @@ export class LearningCoursesCheckoutModule {
   async postVCoursesCheckoutComplete(
     courseId: string,
     version: string,
-    body: Types.LearningCoursesCompleteCourseCheckoutInput,
+    body?: Types.LearningCoursesCompleteCourseCheckoutInput,
   ): Promise<Result<Types.LearningCoursesCompleteCourseCheckoutOutput, ApiError>> {
     const url = `/v${version}/courses/${courseId}/checkout/complete`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningCoursesCompleteCourseCheckoutInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningCoursesCompleteCourseCheckoutInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

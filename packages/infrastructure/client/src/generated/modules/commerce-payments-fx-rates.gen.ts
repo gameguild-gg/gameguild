@@ -46,11 +46,11 @@ export class CommercePaymentsFxRatesModule {
    *
    * Persists an audited manual override for one exact currency pair direction; overrides win over synced market rates until replaced or expired.
    */
-  async postFxRatesOverrides(body: Types.CommercePaymentsSetManualFxRateOverrideInput): Promise<Result<void, ApiError>> {
+  async postFxRatesOverrides(body?: Types.CommercePaymentsSetManualFxRateOverrideInput): Promise<Result<void, ApiError>> {
     const url = '/api/v1/fx-rates/overrides';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsSetManualFxRateOverrideInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsSetManualFxRateOverrideInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -72,12 +72,12 @@ export class CommercePaymentsFxRatesModule {
    */
   async putFxRatesProviderKeys(
     provider: string,
-    body: Types.CommercePaymentsProvisionFxProviderApiKeyInput,
+    body?: Types.CommercePaymentsProvisionFxProviderApiKeyInput,
   ): Promise<Result<Types.CommercePaymentsGatewayCredentialProvisionResult, ApiError>> {
     const url = `/api/v1/fx-rates/provider-keys/${provider}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsProvisionFxProviderApiKeyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsProvisionFxProviderApiKeyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

@@ -39,12 +39,13 @@ export class CommercePaymentsBillingPaymentMethodsModule {
    * Registers a gateway payment token. Opaque Braintree and Adyen tokens require an explicit GatewayProvider, and an optional MethodType hint (card, bank_account, paypal, apple_pay, google_pay, wallet) states the family the token vaults. Raw card numbers are rejected; Stripe tokens are verified through the gateway before registration.
    */
   async postBillingPaymentMethods(
-    body: Types.CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody,
+    body?: Types.CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBody,
   ): Promise<Result<Types.CommercePaymentsPaymentMethodDto, ApiError>> {
     const url = '/api/v1/billing/payment-methods';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBodySchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommercePaymentsPaymentMethodsControllerCreatePaymentMethodRequestBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -92,12 +93,13 @@ export class CommercePaymentsBillingPaymentMethodsModule {
    */
   async putBillingPaymentMethods(
     paymentMethodId: string,
-    body: Types.CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBody,
+    body?: Types.CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBody,
   ): Promise<Result<Types.CommercePaymentsPaymentMethodDto, ApiError>> {
     const url = `/api/v1/billing/payment-methods/${paymentMethodId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBodySchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommercePaymentsPaymentMethodsControllerUpdatePaymentMethodRequestBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -122,12 +124,13 @@ export class CommercePaymentsBillingPaymentMethodsModule {
    */
   async deleteBillingPaymentMethods(
     paymentMethodId: string,
-    body: Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody,
+    body?: Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/billing/payment-methods/${paymentMethodId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBodySchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'DELETE',
@@ -218,12 +221,13 @@ export class CommercePaymentsBillingPaymentMethodsModule {
    */
   async postBillingPaymentMethodsBankVerificationVerify(
     paymentMethodId: string,
-    body: Types.CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody,
+    body?: Types.CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBody,
   ): Promise<Result<Types.CommercePaymentsBankAccountVerificationStatusDto, ApiError>> {
     const url = `/api/v1/billing/payment-methods/${paymentMethodId}/bank-verification/verify`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBodySchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommercePaymentsPaymentMethodsControllerVerifyBankDepositsRequestBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

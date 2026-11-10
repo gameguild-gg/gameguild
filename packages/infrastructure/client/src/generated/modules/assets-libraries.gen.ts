@@ -34,12 +34,12 @@ export class AssetsLibrariesModule {
   async postAssetLibrariesFolders(
     resourceType: string,
     resourceId: string,
-    body: Types.AssetsControllersCreateAssetFolderInput,
+    body?: Types.AssetsControllersCreateAssetFolderInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/asset-libraries/${resourceType}/${resourceId}/folders`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.AssetsControllersCreateAssetFolderInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsControllersCreateAssetFolderInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -53,11 +53,11 @@ export class AssetsLibrariesModule {
 
   /**
    */
-  async postAssetLibrariesAssetsCopy(referenceId: string, body: Types.AssetsControllersCopyAssetReferenceInput): Promise<Result<void, ApiError>> {
+  async postAssetLibrariesAssetsCopy(referenceId: string, body?: Types.AssetsControllersCopyAssetReferenceInput): Promise<Result<void, ApiError>> {
     const url = `/v1/asset-libraries/assets/${referenceId}/copy`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.AssetsControllersCopyAssetReferenceInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsControllersCopyAssetReferenceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -99,11 +99,11 @@ export class AssetsLibrariesModule {
 
   /**
    */
-  async putAssetLibrariesFoldersRestriction(folderId: string, body: Types.AssetsControllersRestrictAssetFolderInput): Promise<Result<void, ApiError>> {
+  async putAssetLibrariesFoldersRestriction(folderId: string, body?: Types.AssetsControllersRestrictAssetFolderInput): Promise<Result<void, ApiError>> {
     const url = `/v1/asset-libraries/folders/${folderId}/restriction`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.AssetsControllersRestrictAssetFolderInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsControllersRestrictAssetFolderInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

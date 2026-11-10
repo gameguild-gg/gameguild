@@ -39,11 +39,11 @@ export class UsersMetadataModule {
   /**
    * Replace user metadata by user ID
    */
-  async putUsersMetadata(userId: string, body: Types.IdentityUsersReplaceUserMetadataInput): Promise<Result<void, ApiError>> {
+  async putUsersMetadata(userId: string, body?: Types.IdentityUsersReplaceUserMetadataInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/metadata`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersReplaceUserMetadataInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersReplaceUserMetadataInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -58,11 +58,11 @@ export class UsersMetadataModule {
   /**
    * Partially update user metadata by user ID
    */
-  async patchUsersMetadata(userId: string, body: Types.IdentityUsersUpdateUserMetadataInput): Promise<Result<void, ApiError>> {
+  async patchUsersMetadata(userId: string, body?: Types.IdentityUsersUpdateUserMetadataInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/metadata`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersUpdateUserMetadataInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityUsersUpdateUserMetadataInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

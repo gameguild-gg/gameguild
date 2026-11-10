@@ -18,11 +18,11 @@ export class SocialFollowsFollowersModule {
   /**
    * Batch get follower counts for multiple entities
    */
-  async postApiFollowersBatchCounts(body: Types.SocialFollowsControllersBatchCountsInput): Promise<Result<Record<string, number>, ApiError>> {
+  async postApiFollowersBatchCounts(body?: Types.SocialFollowsControllersBatchCountsInput): Promise<Result<Record<string, number>, ApiError>> {
     const url = '/api/followers/batch/counts';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialFollowsControllersBatchCountsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialFollowsControllersBatchCountsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -37,11 +37,11 @@ export class SocialFollowsFollowersModule {
   /**
    * Batch get follow status for multiple entities
    */
-  async postApiFollowersBatchStatus(body: Types.SocialFollowsControllersBatchStatusInput): Promise<Result<Record<string, boolean>, ApiError>> {
+  async postApiFollowersBatchStatus(body?: Types.SocialFollowsControllersBatchStatusInput): Promise<Result<Record<string, boolean>, ApiError>> {
     const url = '/api/followers/batch/status';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialFollowsControllersBatchStatusInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialFollowsControllersBatchStatusInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -56,11 +56,11 @@ export class SocialFollowsFollowersModule {
   /**
    * Block a user
    */
-  async postApiFollowersBlock(body: Types.SocialFollowsControllersBlockInput): Promise<Result<Types.SocialFollowsControllersBlockDto, ApiError>> {
+  async postApiFollowersBlock(body?: Types.SocialFollowsControllersBlockInput): Promise<Result<Types.SocialFollowsControllersBlockDto, ApiError>> {
     const url = '/api/followers/block';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialFollowsControllersBlockInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialFollowsControllersBlockInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -129,11 +129,11 @@ export class SocialFollowsFollowersModule {
   /**
    * Follow an entity
    */
-  async postApiFollowersFollow(body: Types.SocialFollowsControllersFollowInput): Promise<Result<Types.SocialFollowsControllersFollowDto, ApiError>> {
+  async postApiFollowersFollow(body?: Types.SocialFollowsControllersFollowInput): Promise<Result<Types.SocialFollowsControllersFollowDto, ApiError>> {
     const url = '/api/followers/follow';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialFollowsControllersFollowInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialFollowsControllersFollowInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -239,11 +239,11 @@ export class SocialFollowsFollowersModule {
   /**
    * Mute a user
    */
-  async postApiFollowersMute(body: Types.SocialFollowsControllersMuteInput): Promise<Result<Types.SocialFollowsControllersMuteDto, ApiError>> {
+  async postApiFollowersMute(body?: Types.SocialFollowsControllersMuteInput): Promise<Result<Types.SocialFollowsControllersMuteDto, ApiError>> {
     const url = '/api/followers/mute';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialFollowsControllersMuteInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialFollowsControllersMuteInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -297,12 +297,12 @@ export class SocialFollowsFollowersModule {
    * Update notification settings for a follow relationship
    */
   async putApiFollowersNotifications(
-    body: Types.SocialFollowsControllersUpdateNotificationsInput,
+    body?: Types.SocialFollowsControllersUpdateNotificationsInput,
   ): Promise<Result<Types.SocialFollowsControllersFollowDto, ApiError>> {
     const url = '/api/followers/notifications';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialFollowsControllersUpdateNotificationsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialFollowsControllersUpdateNotificationsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -345,12 +345,12 @@ export class SocialFollowsFollowersModule {
    * Update current user's privacy settings
    */
   async putApiFollowersPrivacySettings(
-    body: Types.SocialFollowsControllersUpdatePrivacySettingsInput,
+    body?: Types.SocialFollowsControllersUpdatePrivacySettingsInput,
   ): Promise<Result<Types.SocialFollowsControllersFollowPrivacySettingsDto, ApiError>> {
     const url = '/api/followers/privacy-settings';
 
     // Validate request body
-    const validatedBody = safeParse(Types.SocialFollowsControllersUpdatePrivacySettingsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.SocialFollowsControllersUpdatePrivacySettingsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',

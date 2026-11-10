@@ -43,11 +43,11 @@ export class TenantsMetadataModule {
    *
    * Replaces all tenant metadata with new values. All existing metadata is replaced with the provided data.
    */
-  async putTenantsMetadata(tenantId: string, body: Types.IdentityTenantsReplaceTenantMetadataInput): Promise<Result<void, ApiError>> {
+  async putTenantsMetadata(tenantId: string, body?: Types.IdentityTenantsReplaceTenantMetadataInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/metadata`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsReplaceTenantMetadataInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsReplaceTenantMetadataInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PUT',
@@ -64,11 +64,11 @@ export class TenantsMetadataModule {
    *
    * Updates specific tenant metadata fields without affecting other metadata. Only the provided metadata keys are modified.
    */
-  async patchTenantsMetadata(tenantId: string, body: Types.IdentityTenantsUpdateTenantMetadataInput): Promise<Result<void, ApiError>> {
+  async patchTenantsMetadata(tenantId: string, body?: Types.IdentityTenantsUpdateTenantMetadataInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/metadata`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantMetadataInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateTenantMetadataInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',
@@ -102,7 +102,7 @@ export class TenantsMetadataModule {
    *
    * Updates specific custom fields for the tenant. Existing fields not specified are preserved.
    */
-  async patchTenantsMetadataCustomFields(tenantId: string, body: Record<string, Record<string, unknown>>): Promise<Result<void, ApiError>> {
+  async patchTenantsMetadataCustomFields(tenantId: string, body?: Record<string, Record<string, unknown>>): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/metadata/custom-fields`;
 
     const result = await this.client.request({
@@ -137,7 +137,7 @@ export class TenantsMetadataModule {
    *
    * Replaces all existing tags with the provided list of tags.
    */
-  async putTenantsMetadataTags(tenantId: string, body: string[]): Promise<Result<void, ApiError>> {
+  async putTenantsMetadataTags(tenantId: string, body?: string[]): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/metadata/tags`;
 
     const result = await this.client.request({
@@ -155,11 +155,11 @@ export class TenantsMetadataModule {
    *
    * Updates the tags for the tenant. Existing tags are merged with the new tags.
    */
-  async patchTenantsMetadataTags(tenantId: string, body: Types.IdentityTenantsUpdateTenantTagsInput): Promise<Result<void, ApiError>> {
+  async patchTenantsMetadataTags(tenantId: string, body?: Types.IdentityTenantsUpdateTenantTagsInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/metadata/tags`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityTenantsUpdateTenantTagsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityTenantsUpdateTenantTagsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'PATCH',

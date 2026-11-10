@@ -18,11 +18,11 @@ export class AiModule {
   /**
    * Execute a conversational completion request.
    */
-  async postAiChat(body: Types.AIAiChatInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+  async postAiChat(body?: Types.AIAiChatInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = '/v1/ai/chat';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AIAiChatInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AIAiChatInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -42,11 +42,11 @@ export class AiModule {
 
   /**
    */
-  async postAiEmail(body: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+  async postAiEmail(body?: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = '/v1/ai/email';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -67,11 +67,11 @@ export class AiModule {
   /**
    * Execute a single-prompt generation request.
    */
-  async postAiGenerate(body: Types.AIAiGenerateInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+  async postAiGenerate(body?: Types.AIAiGenerateInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = '/v1/ai/generate';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AIAiGenerateInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AIAiGenerateInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -91,11 +91,11 @@ export class AiModule {
 
   /**
    */
-  async postAiGenerateContent(body: Types.AIAiGeneratedContentInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+  async postAiGenerateContent(body?: Types.AIAiGeneratedContentInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = '/v1/ai/generate-content';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AIAiGeneratedContentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AIAiGeneratedContentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -115,11 +115,11 @@ export class AiModule {
 
   /**
    */
-  async postAiGenerateContentEmail(body: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+  async postAiGenerateContentEmail(body?: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = '/v1/ai/generate-content/email';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -139,11 +139,11 @@ export class AiModule {
 
   /**
    */
-  async postAiGenerateContentListingDescription(body: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+  async postAiGenerateContentListingDescription(body?: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = '/v1/ai/generate-content/listing-description';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -163,11 +163,11 @@ export class AiModule {
 
   /**
    */
-  async postAiGenerateContentReport(body: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+  async postAiGenerateContentReport(body?: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = '/v1/ai/generate-content/report';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -238,11 +238,11 @@ export class AiModule {
 
   /**
    */
-  async postAiReport(body: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+  async postAiReport(body?: Types.AIAiGeneratedContentDraftInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = '/v1/ai/report';
 
     // Validate request body
-    const validatedBody = safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AIAiGeneratedContentDraftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

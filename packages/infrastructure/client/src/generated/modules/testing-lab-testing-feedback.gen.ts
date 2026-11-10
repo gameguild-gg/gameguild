@@ -48,11 +48,11 @@ export class TestingLabTestingFeedbackModule {
 
   /**
    */
-  async postTestingFeedback(body: Types.TestingLabSubmitFeedbackDto): Promise<Result<void, ApiError>> {
+  async postTestingFeedback(body?: Types.TestingLabSubmitFeedbackDto): Promise<Result<void, ApiError>> {
     const url = '/v1/testing/feedback';
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabSubmitFeedbackDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabSubmitFeedbackDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -66,11 +66,11 @@ export class TestingLabTestingFeedbackModule {
 
   /**
    */
-  async postTestingFeedbackQuality(feedbackId: string, body: Types.TestingLabRateFeedbackQualityDto): Promise<Result<void, ApiError>> {
+  async postTestingFeedbackQuality(feedbackId: string, body?: Types.TestingLabRateFeedbackQualityDto): Promise<Result<void, ApiError>> {
     const url = `/v1/testing/feedback/${feedbackId}/quality`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabRateFeedbackQualityDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabRateFeedbackQualityDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -84,11 +84,11 @@ export class TestingLabTestingFeedbackModule {
 
   /**
    */
-  async postTestingFeedbackReport(feedbackId: string, body: Types.TestingLabReportFeedbackDto): Promise<Result<void, ApiError>> {
+  async postTestingFeedbackReport(feedbackId: string, body?: Types.TestingLabReportFeedbackDto): Promise<Result<void, ApiError>> {
     const url = `/v1/testing/feedback/${feedbackId}/report`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabReportFeedbackDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabReportFeedbackDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -130,11 +130,11 @@ export class TestingLabTestingFeedbackModule {
 
   /**
    */
-  async postTestingRequestsFeedback(requestId: string, body: Types.TestingLabFeedbackInput): Promise<Result<Types.TestingLabTestingFeedback, ApiError>> {
+  async postTestingRequestsFeedback(requestId: string, body?: Types.TestingLabFeedbackInput): Promise<Result<Types.TestingLabTestingFeedback, ApiError>> {
     const url = `/v1/testing/requests/${requestId}/feedback`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.TestingLabFeedbackInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.TestingLabFeedbackInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
