@@ -83,6 +83,7 @@ public sealed class ServiceAccountSecretStepUpGuardTests
             case "expired": row.ExpiresAt = StepUpReceiptServiceTestHarness.Now; break;
             case "unverified": row.VerifiedAt = null; break;
             case "receipt": receipt = "another-receipt"; break;
+            default: throw new ArgumentOutOfRangeException(nameof(change), change, "Unknown receipt mismatch test case");
         }
         var result = await f.Handler.Handle(new RotateServiceAccountSecretCommand(target, receipt), default);
         Assert.True(result.IsFailure);
@@ -99,8 +100,14 @@ public sealed class ServiceAccountSecretStepUpGuardTests
         var f = new Fixture();
         var row = f.SeedReceipt();
         var actor = ActorContextBuilder.ForUser(f.ActorId);
-        if (missing != "tenant") actor.WithTenantId(f.TenantId);
-        if (missing != "session") actor.WithAttribute("session_id", missing == "malformed-session" ? "invalid" : f.SessionId.ToString());
+        if (missing != "tenant")
+        {
+            actor.WithTenantId(f.TenantId);
+        }
+        if (missing != "session")
+        {
+            actor.WithAttribute("session_id", missing == "malformed-session" ? "invalid" : f.SessionId.ToString());
+        }
         f.Accessor.SetActorContext(actor.Build() with { Roles = new HashSet<string> { "Admin" } });
         var result = await f.Handler.Handle(new RotateServiceAccountSecretCommand(f.AccountId, Receipt), default);
         Assert.Equal("Auth.Required", result.Error.Code);

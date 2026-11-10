@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
@@ -36,7 +37,7 @@ public class ApiKeyController : BaseApiController
     [ProducesResponseType(typeof(StepUpAuthenticationRequiredResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> CreateApiKey(
-        [FromBody] CreateApiKeyCommand command,
+        [FromBody, Required] CreateApiKeyCommand command,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);

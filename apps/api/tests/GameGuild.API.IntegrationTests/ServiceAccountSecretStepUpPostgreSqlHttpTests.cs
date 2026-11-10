@@ -185,7 +185,10 @@ public sealed class ServiceAccountSecretStepUpPostgreSqlHttpTests(ApiPostgreSqlF
         }
         finally
         {
-            foreach (var response in responses) response.Dispose();
+            foreach (var response in responses)
+            {
+                response.Dispose();
+            }
         }
     }
 

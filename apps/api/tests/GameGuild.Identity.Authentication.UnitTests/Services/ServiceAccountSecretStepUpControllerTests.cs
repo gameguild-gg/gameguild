@@ -30,9 +30,18 @@ public sealed class ServiceAccountSecretStepUpControllerTests
     {
         var f = new Fixture(invalid);
         var result = await f.Controller.RotateSecret(f.Id, null, default);
-        if (invalid == "missing-account") Assert.IsType<NotFoundResult>(result);
-        if (invalid == "non-admin") Assert.IsType<ForbidResult>(result);
-        if (invalid == "missing-session") Assert.IsType<UnauthorizedResult>(result);
+        if (invalid == "missing-account")
+        {
+            Assert.IsType<NotFoundResult>(result);
+        }
+        if (invalid == "non-admin")
+        {
+            Assert.IsType<ForbidResult>(result);
+        }
+        if (invalid == "missing-session")
+        {
+            Assert.IsType<UnauthorizedResult>(result);
+        }
         f.Requirements.Verify(x => x.CreateAsync(It.IsAny<StepUpOperationBinding>(), It.IsAny<CancellationToken>()), Times.Never);
         f.NoRotation();
     }
@@ -80,7 +89,10 @@ public sealed class ServiceAccountSecretStepUpControllerTests
         {
             var tenant = Guid.NewGuid();
             var actor = ActorContextBuilder.ForUser(Guid.NewGuid()).WithTenantId(tenant);
-            if (invalid != "missing-session") actor.WithAttribute("session_id", Guid.NewGuid().ToString());
+            if (invalid != "missing-session")
+            {
+                actor.WithAttribute("session_id", Guid.NewGuid().ToString());
+            }
             var accessor = new ActorContextAccessor();
             accessor.SetActorContext(actor.Build() with { Roles = new HashSet<string> { invalid == "non-admin" ? "Member" : "Admin" } });
             Service.Setup(x => x.GetByIdAsync(Id, It.IsAny<CancellationToken>()))

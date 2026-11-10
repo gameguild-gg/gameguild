@@ -69,6 +69,7 @@ public sealed class ApiKeyCreationStepUpGuardTests
             case "scopes": intent = intent with { Scopes = ["reports:write"] }; break;
             case "expiry": intent = intent with { ExpiresAt = DateTime.UtcNow.AddDays(1) }; break;
             case "ip": intent = intent with { IpWhitelist = "192.0.2.1" }; break;
+            default: throw new ArgumentOutOfRangeException(nameof(change), change, "Unknown receipt mismatch test case");
         }
         var result = await f.Handler.Handle(intent, default);
         Assert.False(result.IsSuccess);

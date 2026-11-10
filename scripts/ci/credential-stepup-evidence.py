@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run credential regressions on the exact PR head, retaining failure evidence."""
+"""Verify exact-head credential evidence; the Bash companion owns native processes."""
 
 import argparse
 from collections import Counter
@@ -7,10 +7,9 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import subprocess
 import sys
 from datetime import datetime, timezone
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree as ET
 
 
 PG_CLASSES = (
@@ -55,7 +54,7 @@ def sha256(path):
 
 
 def read_trx(content):
-    root = ET.fromstring(content)
+    root = ET.fromstring(content, forbid_dtd=True)
     ns = {"t": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}
     rows = root.findall("t:Results/t:UnitTestResult", ns)
     definitions = root.findall("t:TestDefinitions/t:UnitTest", ns)
@@ -98,96 +97,108 @@ def runtime_manifest(directory):
                 path.suffix == ".dll" or path.name.endswith((".deps.json", ".runtimeconfig.json")))}
 
 
-def git(*args):
-    return subprocess.check_output(["git", *args], text=True).strip()
 
-
-def source_manifest():
-    # Enumerate tracked files only: never traverse dependencies or build output.
-    paths = subprocess.check_output(["git", "ls-files", "-z"], text=True).split("\0")
-    return {path: sha256(path) for path in paths if path and (
-        path.startswith(("apps/api/", "packages/infrastructure/client/", "docs/auth/"))
-        or path in ("global.json", ".editorconfig", "Directory.Build.props")
-        or path.startswith(("scripts/ci/", ".github/")))}
+def read_json(path):
+    return json.loads(Path(path).read_text(encoding="utf-8-sig"))
 
 
 def write_json(path, value):
     Path(path).write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
-def run_phase(output, name, command, environment):
-    receipt = {"startedUtc": utc_now(), "command": command}
-    with (output / (name + ".log")).open("w", encoding="utf-8") as log:
-        process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, env=environment)
-        receipt["pid"] = process.pid
-        write_json(output / (name + "-process.json"), receipt)
-        receipt["exitCode"] = process.wait()
-    receipt["completedUtc"] = utc_now()
-    write_json(output / (name + "-exit.json"), receipt)
-    print(f"{name}: exit {receipt['exitCode']}", flush=True)
-    return receipt
+def source_manifest(output):
+    paths = (output / "tracked-files.z").read_bytes().decode("utf-8").split("\0")
+    result = {}
+    root = Path.cwd().resolve()
+    for name in paths:
+        if not name or not (name.startswith(("apps/api/", "packages/infrastructure/client/", "docs/auth/",
+                                             "scripts/ci/", ".github/"))
+                            or name in ("global.json", ".editorconfig", "Directory.Build.props")):
+            continue
+        path = Path(name)
+        if path.is_absolute() or ".." in path.parts or not path.resolve().is_relative_to(root):
+            raise ValueError("Source path escapes the checkout")
+        result[name] = sha256(path)
+    if not result:
+        raise ValueError("Tracked source inventory is empty")
+    return result
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--head", required=True)
-    parser.add_argument("--output", required=True)
-    args = parser.parse_args()
-    output = Path(args.output).resolve()
-    output.mkdir(parents=True, exist_ok=False)
-    report = {"startedUtc": utc_now(), "expectedHead": args.head, "head": git("rev-parse", "HEAD"),
-              "tree": git("rev-parse", "HEAD^{tree}"), "event": os.getenv("GITHUB_EVENT_NAME"),
+def runtime_snapshot():
+    result = {}
+    for name, _ in SUITES:
+        directory = Path("apps/api/tests") / name / "bin/Release/net10.0"
+        if not (directory / (name + ".dll")).is_file():
+            raise ValueError("Missing built test assembly: " + name)
+        result[name] = {"path": str(directory), "before": runtime_manifest(directory)}
+    return result
+
+
+def check_phase(output, name, command):
+    process = read_json(output / (name + "-process.json"))
+    phase = read_json(output / (name + "-exit.json"))
+    if (phase["exitCode"] != 0 or phase["pid"] != process["pid"]
+            or phase["command"] != process["command"] or phase["command"] != command):
+        raise ValueError("Actual phase failed or differs from the declared command: " + name)
+    return phase
+
+
+def check_suite(output, name, test_filter, suite):
+    runtime = Path("apps/api/tests") / name / "bin/Release/net10.0"
+    command = ["dotnet", "test", str(runtime / (name + ".dll")), "--nologo",
+               "--blame-hang-timeout", "5m", "--logger", "trx;LogFileName=tests.trx",
+               "--results-directory", str(output / name)]
+    if test_filter:
+        command.extend(["--filter", test_filter])
+    suite["phase"] = check_phase(output, name, command)
+    trx = output / name / "tests.trx"
+    suite["trxSha256"] = sha256(trx)
+    suite.update(read_trx(trx.read_text(encoding="utf-8-sig")))
+    if name == "GameGuild.API.IntegrationTests":
+        observed = {case["class"].rsplit(".", 1)[-1] for case in suite["cases"]}
+        if observed != set(PG_CLASSES):
+            raise ValueError("PostgreSQL regression classes differ from the declared scope")
+
+
+def check_inputs(output, head, report):
+    before = (output / "checkout-before.txt").read_text(encoding="utf-8").splitlines()
+    after = (output / "checkout-after.txt").read_text(encoding="utf-8").splitlines()
+    if len(before) != 2 or before != after or before[0] != head:
+        raise ValueError("Exact checkout identity changed")
+    report.update(head=before[0], tree=before[1])
+    for label in ("before", "after"):
+        if (output / ("status-" + label + ".txt")).read_text(encoding="utf-8").strip():
+            raise ValueError("Tracked checkout has uncommitted changes")
+    if read_json(output / "source-before.json") != read_json(output / "source-after.json"):
+        raise ValueError("Source changed during native validation")
+    runtime_before = read_json(output / "runtime-before.json")
+    runtime_after = read_json(output / "runtime-after.json")
+    if set(runtime_before) != set(runtime_after) or set(runtime_before) != {name for name, _ in SUITES}:
+        raise ValueError("Incomplete executed runtime inventory")
+    for name, files in runtime_after.items():
+        if not files or files != runtime_before[name]["before"]:
+            raise ValueError("Executed DLL/loader files changed: " + name)
+        if not {name + suffix for suffix in (".dll", ".deps.json", ".runtimeconfig.json")} <= set(files):
+            raise ValueError("Missing test assembly or loader: " + name)
+
+
+def finalize(output, head, wrapper_exit):
+    report = {"startedUtc": (output / "started-utc.txt").read_text(encoding="utf-8").strip(),
+              "expectedHead": head, "event": os.getenv("GITHUB_EVENT_NAME"),
               "runId": os.getenv("GITHUB_RUN_ID"), "runAttempt": os.getenv("GITHUB_RUN_ATTEMPT"),
-              "wholeExit": 1, "suites": {}, "scope": "Native credential regression evidence; SDK and merge gates are separate"}
-    before = None
-    runtimes = {}
-    environment = dict(os.environ)
-    environment.update({"DOTNET_GCConserveMemory": "9", "DOTNET_gcServer": "0"})
-    for key, filename in (("GAMEGUILD_CREDENTIAL_STEPUP_OPENAPI_CAPTURE", "credential-openapi.json"),
-                          ("GAMEGUILD_STEPUP_OPENAPI_CAPTURE", "trusted-openapi.json"),
-                          ("GAMEGUILD_ORCHESTRATED_OPENAPI_CAPTURE", "orchestrated-openapi.json")):
-        environment[key] = str(output / filename)
+              "wrapperExit": wrapper_exit, "wholeExit": 1, "suites": {},
+              "scope": "Native credential regression evidence; SDK and merge gates are separate"}
     try:
-        if report["head"] != args.head or git("status", "--porcelain", "--untracked-files=no"):
-            raise ValueError("Expected an unchanged checkout of the exact PR head")
-        # This lane creates disposable local Testcontainers databases; external DBs are not allowed.
-        if any(environment.get(key) for key in ("ECONOMY_POSTGRES_CONNECTION", "ECONOMY_POSTGRES_TEMPLATE_DATABASE")):
-            raise ValueError("External PostgreSQL configuration is not allowed in this lane")
-        before = source_manifest()
-        write_json(output / "source-before.json", before)
-        # Retain text diagnostics, not an MSBuild binary log containing environment values.
-        report["build"] = run_phase(output, "solution-build", ["dotnet", "build", "apps/api/GameGuild.sln",
-            "-c", "Release", "--nologo", "-p:TreatWarningsAsErrors=true", "-m:2"], environment)
-        if report["build"]["exitCode"]:
-            raise ValueError("Full solution build failed; original log and exit retained")
-        for name, _ in SUITES:
-            runtime = Path("apps/api/tests") / name / "bin/Release/net10.0"
-            if not (runtime / (name + ".dll")).is_file():
-                raise ValueError("Missing built test assembly: " + name)
-            runtimes[name] = {"path": str(runtime), "before": runtime_manifest(runtime)}
-        write_json(output / "runtime-before.json", runtimes)
+        report["build"] = check_phase(output, "solution-build", ["dotnet", "build", "apps/api/GameGuild.sln",
+            "-c", "Release", "--nologo", "-p:TreatWarningsAsErrors=true", "-m:2"])
+        check_inputs(output, head, report)
         failures = []
         for name, test_filter in SUITES:
-            results = output / name
-            results.mkdir()
-            dll = str(Path(runtimes[name]["path"]) / (name + ".dll"))
-            command = ["dotnet", "test", dll, "--nologo", "--blame-hang-timeout", "5m",
-                       "--logger", "trx;LogFileName=tests.trx", "--results-directory", str(results)]
-            if test_filter:
-                command.extend(["--filter", test_filter])
-            suite = {"filter": test_filter, "phase": run_phase(output, name, command, environment)}
+            suite = {"filter": test_filter}
             report["suites"][name] = suite
             try:
-                trx_path = results / "tests.trx"
-                suite["trxSha256"] = sha256(trx_path)
-                suite.update(read_trx(trx_path.read_text(encoding="utf-8-sig")))
-                if suite["phase"]["exitCode"]:
-                    raise ValueError("Actual test process exited nonzero")
-                if name == "GameGuild.API.IntegrationTests":
-                    observed = {case["class"].rsplit(".", 1)[-1] for case in suite["cases"]}
-                    if observed != set(PG_CLASSES):
-                        raise ValueError("PostgreSQL regression classes differ from the declared scope")
-            except (ValueError, OSError, ET.ParseError) as error:
+                check_suite(output, name, test_filter, suite)
+            except Exception as error:
                 suite["error"] = str(error)
                 failures.append(name)
         schema_paths = [output / name for name in (
@@ -195,28 +206,48 @@ def main():
         report["schemas"] = {path.name: sha256(path) for path in schema_paths if path.is_file()}
         if len(report["schemas"]) != 3 or len(set(report["schemas"].values())) != 1:
             failures.append("Three actual full-host Swagger captures must exist and match")
-        if failures:
-            raise ValueError("Failed validation: " + ", ".join(failures))
+        if failures or wrapper_exit:
+            raise ValueError("Failed native execution: " + ", ".join(failures))
         report["wholeExit"] = 0
     except Exception as error:
         report["error"] = str(error)
         print(str(error), file=sys.stderr, flush=True)
-    finally:
-        try:
-            after = source_manifest()
-            write_json(output / "source-after.json", after)
-            runtime_after = {name: runtime_manifest(item["path"]) for name, item in runtimes.items()}
-            write_json(output / "runtime-after.json", runtime_after)
-            if before != after or any(item["before"] != runtime_after[name] for name, item in runtimes.items()):
-                raise ValueError("Source or executed DLL/loader files changed during native validation")
-            if git("rev-parse", "HEAD") != args.head or git("status", "--porcelain", "--untracked-files=no"):
-                raise ValueError("Checkout identity changed during native validation")
-        except Exception as error:
-            report["wholeExit"] = 1
-            report["integrityError"] = str(error)
-        report["completedUtc"] = utc_now()
-        write_json(output / "whole-producer.json", report)
+    report["completedUtc"] = utc_now()
+    write_json(output / "whole-producer.json", report)
     return report["wholeExit"]
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("mode", choices=("source", "runtime", "phase-start", "phase-end", "finalize"))
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--head")
+    parser.add_argument("--label", choices=("before", "after"))
+    parser.add_argument("--name", choices=("solution-build",) + tuple(name for name, _ in SUITES))
+    parser.add_argument("--pid", type=int)
+    parser.add_argument("--started")
+    parser.add_argument("--exit-code", type=int)
+    parser.add_argument("--command", nargs=argparse.REMAINDER)
+    args = parser.parse_args()
+    output = Path(args.output).resolve(strict=True)
+    if args.mode == "source":
+        write_json(output / ("source-" + args.label + ".json"), source_manifest(output))
+    elif args.mode == "runtime":
+        snapshot = runtime_snapshot()
+        value = snapshot if args.label == "before" else {name: item["before"] for name, item in snapshot.items()}
+        write_json(output / ("runtime-" + args.label + ".json"), value)
+    elif args.mode == "phase-start":
+        if not args.pid or not args.started or not args.command:
+            raise ValueError("Incomplete actual process receipt")
+        write_json(output / (args.name + "-process.json"),
+                   {"pid": args.pid, "startedUtc": args.started, "command": args.command})
+    elif args.mode == "phase-end":
+        receipt = read_json(output / (args.name + "-process.json"))
+        receipt.update(exitCode=args.exit_code, completedUtc=utc_now())
+        write_json(output / (args.name + "-exit.json"), receipt)
+    else:
+        return finalize(output, args.head, args.exit_code)
+    return 0
 
 
 if __name__ == "__main__":

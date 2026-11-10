@@ -1,9 +1,13 @@
 """Failure controls for credential CI evidence; these are not API test results."""
 
 import importlib.util
+import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
+
+from defusedxml.common import DefusedXmlException
 
 
 SPEC = importlib.util.spec_from_file_location(
@@ -73,6 +77,35 @@ class EvidenceTests(unittest.TestCase):
             loader.write_text("{}", encoding="utf-8")
             (root / "extra.dll").write_bytes(b"new")
             self.assertNotEqual(evidence.runtime_manifest(root), original)
+
+
+    def test_dtd_and_internal_entities_are_rejected(self):
+        content = '<!DOCTYPE TestRun [<!ENTITY evidence "guard">]>' + trx().replace(
+            'testName="guard"', 'testName="&evidence;"')
+        with self.assertRaises(DefusedXmlException):
+            evidence.read_trx(content)
+
+    def test_external_references_are_rejected_before_file_access(self):
+        content = '<!DOCTYPE TestRun [<!ENTITY evidence SYSTEM "file:///nonexistent-evidence-control">]>' + trx().replace(
+            'testName="guard"', 'testName="&evidence;"')
+        with self.assertRaises(DefusedXmlException):
+            evidence.read_trx(content)
+
+    def test_cli_preserves_and_rejects_nonzero_process_exit(self):
+        # Metadata-only control; this does not launch or approve a native process.
+        with tempfile.TemporaryDirectory() as directory:
+            start = ["evidence", "phase-start", "--output", directory, "--name", "solution-build",
+                     "--pid", "1", "--started", "control-only", "--command", "dotnet", "build"]
+            with patch("sys.argv", start):
+                self.assertEqual(evidence.main(), 0)
+            end = ["evidence", "phase-end", "--output", directory, "--name", "solution-build", "--exit-code", "7"]
+            with patch("sys.argv", end):
+                self.assertEqual(evidence.main(), 0)
+            receipt = json.loads((Path(directory) / "solution-build-exit.json").read_text(encoding="utf-8"))
+            self.assertEqual(receipt["exitCode"], 7)
+            self.assertEqual(receipt["command"], ["dotnet", "build"])
+            with self.assertRaises(ValueError):
+                evidence.check_phase(Path(directory), "solution-build", ["dotnet", "build"])
 
 
 if __name__ == "__main__":

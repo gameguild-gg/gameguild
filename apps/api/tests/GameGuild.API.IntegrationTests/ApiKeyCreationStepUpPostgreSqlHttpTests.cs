@@ -132,6 +132,21 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
         Assert.Empty(await db.Set<ApiKey>().Where(x => x.UserId == account.UserId).ToListAsync());
     }
 
+    [Fact]
+    public async Task MissingIntentBodyCreatesNeitherChallengeNorCredential()
+    {
+        using var factory = CreateFactory();
+        var account = await SeedAsync(factory, true, true);
+        using var client = await ClientAsync(factory, account, account.SessionId);
+        using var request = new HttpRequestMessage(HttpMethod.Post, Route);
+        using var response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await using var read = factory.Services.CreateAsyncScope();
+        var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Empty(await db.Set<StepUpChallenge>().Where(x => x.ActorId == account.UserId).ToListAsync());
+        Assert.Empty(await db.Set<ApiKey>().Where(x => x.UserId == account.UserId).ToListAsync());
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -189,7 +204,10 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
         }
         finally
         {
-            foreach (var response in responses) response.Dispose();
+            foreach (var response in responses)
+            {
+                response.Dispose();
+            }
         }
     }
 
@@ -203,6 +221,7 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
         var raw = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(raw);
         var post = document.RootElement.GetProperty("paths").GetProperty(Route).GetProperty("post");
+        Assert.True(post.GetProperty("requestBody").GetProperty("required").GetBoolean());
         var schemas = document.RootElement.GetProperty("components").GetProperty("schemas");
         var bodyRef = post.GetProperty("requestBody").GetProperty("content").GetProperty("application/json").GetProperty("schema").GetProperty("$ref").GetString()!;
         Assert.True(schemas.GetProperty(bodyRef.Split('/')[^1]).GetProperty("properties").TryGetProperty("stepUpReceipt", out _));
@@ -218,7 +237,10 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
         Assert.Equal(demandRef, secretDemandRef);
 
         var capture = Environment.GetEnvironmentVariable("GAMEGUILD_CREDENTIAL_STEPUP_OPENAPI_CAPTURE");
-        if (!string.IsNullOrWhiteSpace(capture)) await File.WriteAllTextAsync(capture, raw);
+        if (!string.IsNullOrWhiteSpace(capture))
+        {
+            await File.WriteAllTextAsync(capture, raw);
+        }
     }
 
     private static CreateApiKeyCommand Intent(string? receipt = null) => new()

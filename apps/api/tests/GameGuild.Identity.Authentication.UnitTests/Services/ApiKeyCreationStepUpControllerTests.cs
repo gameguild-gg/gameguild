@@ -68,7 +68,10 @@ public sealed class ApiKeyCreationStepUpControllerTests
     private static (ApiKeyController Controller, Mock<IStepUpRequirementService> Requirements, Mock<IApiKeyRepository> Repository) Controller(bool session = true)
     {
         var actor = ActorContextBuilder.ForUser(Guid.NewGuid()).WithTenantId(Guid.NewGuid());
-        if (session) actor.WithAttribute("session_id", Guid.NewGuid().ToString());
+        if (session)
+        {
+            actor.WithAttribute("session_id", Guid.NewGuid().ToString());
+        }
         var accessor = new ActorContextAccessor();
         accessor.SetActorContext(actor.Build());
         var repository = new Mock<IApiKeyRepository>();
