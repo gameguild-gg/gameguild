@@ -28,12 +28,12 @@ public class AchievementService : IAchievementService
             var achievement = await GetAchievementByIdAsync(achievementId).ConfigureAwait(false);
             if (achievement == null)
             {
-                return Result.Failure<UserAchievement>(Error.NotFound("Achievement", "Achievement not found"));
+                return Result.Failure<UserAchievement>(Error.NotFound("NotFound", "Achievement not found"));
             }
 
             if (!achievement.IsActive)
             {
-                return Result.Failure<UserAchievement>(Error.Validation("Achievement", "Achievement is not active"));
+                return Result.Failure<UserAchievement>(Error.Validation("Validation", "Achievement is not active"));
             }
 
             // Check if already earned (for non-repeatable achievements)
@@ -44,7 +44,7 @@ public class AchievementService : IAchievementService
 
                 if (existing != null)
                 {
-                    return Result.Failure<UserAchievement>(Error.Conflict("Achievement", "Achievement already earned"));
+                    return Result.Failure<UserAchievement>(Error.Conflict("Conflict", "Achievement already earned"));
                 }
             }
 
@@ -52,7 +52,7 @@ public class AchievementService : IAchievementService
             var prerequisitesMet = await CheckPrerequisitesInternalAsync(userId, achievement, tenantId).ConfigureAwait(false);
             if (!prerequisitesMet)
             {
-                return Result.Failure<UserAchievement>(Error.Validation("Achievement", "Prerequisites not met"));
+                return Result.Failure<UserAchievement>(Error.Validation("Validation", "Prerequisites not met"));
             }
 
             var userAchievement = UserAchievement.Create(userId, achievementId, achievement.Points, context, tenantId);
@@ -85,7 +85,7 @@ public class AchievementService : IAchievementService
             var achievement = await GetAchievementByIdAsync(achievementId).ConfigureAwait(false);
             if (achievement == null)
             {
-                return Result.Failure<AchievementProgress>(Error.NotFound("Achievement", "Achievement not found"));
+                return Result.Failure<AchievementProgress>(Error.NotFound("NotFound", "Achievement not found"));
             }
 
             // Get or create progress record
@@ -174,7 +174,7 @@ public class AchievementService : IAchievementService
 
             if (achievement == null)
             {
-                return Result.Failure<bool>(Error.NotFound("Achievement", "Achievement not found"));
+                return Result.Failure<bool>(Error.NotFound("NotFound", "Achievement not found"));
             }
 
             var met = await CheckPrerequisitesInternalAsync(userId, achievement, tenantId).ConfigureAwait(false);
@@ -217,7 +217,7 @@ public class AchievementService : IAchievementService
 
             if (userAchievement == null)
             {
-                return Result.Failure(Error.NotFound("UserAchievement", "User achievement not found"));
+                return Result.Failure(Error.NotFound("NotFound", "User achievement not found"));
             }
 
             userAchievement.MarkAsNotified();
@@ -345,7 +345,7 @@ public class AchievementService : IAchievementService
             var achievement = await GetAchievementByIdAsync(achievementId).ConfigureAwait(false);
             if (achievement == null)
             {
-                return Result.Failure(Error.NotFound("Achievement", "Achievement not found"));
+                return Result.Failure(Error.NotFound("NotFound", "Achievement not found"));
             }
 
             _context.Set<Achievement>().Remove(achievement);

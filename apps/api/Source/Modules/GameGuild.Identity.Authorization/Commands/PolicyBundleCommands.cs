@@ -161,17 +161,18 @@ public sealed class SignPolicyBundleCommandHandler(
                 "Actor {ActorId} attempted to sign policy bundle {BundleId} without system administration",
                 Actor.SubjectId, request.BundleId);
 
-            throw new UnauthorizedAccessException("Signing policy bundles requires system administration.");
+            throw new AccessDeniedException("Signing policy bundles requires system administration.");
         }
 
         var actorId = Actor.SubjectIdAsGuid ?? Guid.Empty;
         var bundle = await bundleRepository.GetByIdAsync(request.BundleId, cancellationToken).ConfigureAwait(false)
-            ?? throw new InvalidOperationException($"Policy bundle {request.BundleId} does not exist.");
+            ?? throw new EntityNotFoundException("PolicyBundle", request.BundleId);
 
         if (bundle.Status is PolicyBundleStatus.Deprecated or PolicyBundleStatus.Revoked)
         {
-            throw new InvalidOperationException(
-            $"Policy bundle {request.BundleId} is {bundle.Status} and can no longer be signed.");
+            throw new BusinessRuleViolationException(
+                "PolicyBundle.NotSignable",
+                $"Policy bundle {request.BundleId} is {bundle.Status} and can no longer be signed.");
         }
 
         signatureService.SignBundle(bundle, actorId);
@@ -230,12 +231,12 @@ public sealed class ApprovePolicyBundleCommandHandler(
                 "Actor {ActorId} attempted to approve policy bundle {BundleId} without system administration",
                 Actor.SubjectId, request.BundleId);
 
-            throw new UnauthorizedAccessException("Approving policy bundles requires system administration.");
+            throw new AccessDeniedException("Approving policy bundles requires system administration.");
         }
 
         var actorId = Actor.SubjectIdAsGuid ?? Guid.Empty;
         var bundle = await bundleRepository.GetByIdAsync(request.BundleId, cancellationToken).ConfigureAwait(false)
-            ?? throw new InvalidOperationException($"Policy bundle {request.BundleId} does not exist.");
+            ?? throw new EntityNotFoundException("PolicyBundle", request.BundleId);
 
         // FAIL CLOSED: an approved bundle must carry a valid signature from a trusted key.
         var verification = signatureService.VerifyBundle(bundle);
@@ -307,7 +308,7 @@ public sealed class DeployPolicyBundleCommandHandler(
                 "Actor {ActorId} attempted to deploy policy bundle {BundleId} without system administration",
                 Actor.SubjectId, request.BundleId);
 
-            throw new UnauthorizedAccessException("Deploying policy bundles requires system administration.");
+            throw new AccessDeniedException("Deploying policy bundles requires system administration.");
         }
 
         var actorId = Actor.SubjectIdAsGuid ?? Guid.Empty;
@@ -320,8 +321,9 @@ public sealed class DeployPolicyBundleCommandHandler(
 
         if (bundle.Status != PolicyBundleStatus.Approved)
         {
-            throw new InvalidOperationException(
-            $"Policy bundle {request.BundleId} is {bundle.Status}; only approved bundles can be deployed.");
+            throw new BusinessRuleViolationException(
+                "PolicyBundle.NotApproved",
+                $"Policy bundle {request.BundleId} is {bundle.Status}; only approved bundles can be deployed.");
         }
 
         var deployment = new PolicyBundleDeployment
@@ -417,26 +419,26 @@ public sealed class RollbackPolicyBundleDeploymentCommandHandler(
                 "Actor {ActorId} attempted to roll back policy bundle deployment {DeploymentId} without system administration",
                 Actor.SubjectId, request.DeploymentId);
 
-            throw new UnauthorizedAccessException("Rolling back policy bundles requires system administration.");
+            throw new AccessDeniedException("Rolling back policy bundles requires system administration.");
         }
 
         var actorId = Actor.SubjectIdAsGuid ?? Guid.Empty;
         var deployment = await deploymentRepository
             .GetByIdAsync(request.DeploymentId, cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException($"Policy bundle deployment {request.DeploymentId} does not exist.");
+            ?? throw new EntityNotFoundException("PolicyBundleDeployment", request.DeploymentId);
 
         if (deployment.Status != PolicyDeploymentStatus.Active)
         {
-            throw new InvalidOperationException(
-            $"Deployment {request.DeploymentId} is {deployment.Status}; only active deployments can be rolled back.");
+            throw new BusinessRuleViolationException(
+                "PolicyBundleDeployment.NotActive",
+                $"Deployment {request.DeploymentId} is {deployment.Status}; only active deployments can be rolled back.");
         }
 
         var bundle = await bundleRepository
             .GetByIdAsync(deployment.BundleId, cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException(
-                $"Policy bundle {deployment.BundleId} for deployment {request.DeploymentId} does not exist.");
+            ?? throw new EntityNotFoundException("PolicyBundle", deployment.BundleId);
 
         await materializer.DematerializeAsync(bundle, cancellationToken).ConfigureAwait(false);
 
@@ -571,7 +573,7 @@ internal static class PolicyBundleRegistryGuards
     {
         if (!actor.IsAuthenticated)
         {
-            throw new UnauthorizedAccessException("User is not authenticated.");
+            throw new AuthenticationRequiredException("User is not authenticated.");
         }
 
         if (actor.IsSystemAdmin)
@@ -585,7 +587,7 @@ internal static class PolicyBundleRegistryGuards
                 "Actor {ActorId} attempted to {Operation} a global policy bundle without system administration",
                 actor.SubjectId, operation);
 
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 $"Global policy bundle {operation} requires system administration.");
         }
 
@@ -595,7 +597,7 @@ internal static class PolicyBundleRegistryGuards
                 "Actor {ActorId} attempted to {Operation} a policy bundle in tenant {TenantId} without tenant administration",
                 actor.SubjectId, operation, tenantId.Value);
 
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 $"Policy bundle {operation} requires tenant administration of the target tenant or system administration.");
         }
     }
@@ -604,7 +606,7 @@ internal static class PolicyBundleRegistryGuards
     {
         if (!actor.IsAuthenticated)
         {
-            throw new UnauthorizedAccessException("User is not authenticated.");
+            throw new AuthenticationRequiredException("User is not authenticated.");
         }
 
         if (actor.IsSystemAdmin)
@@ -618,7 +620,7 @@ internal static class PolicyBundleRegistryGuards
                 "Actor {ActorId} attempted to list policy bundles outside tenant {TenantId}",
                 actor.SubjectId, actor.TenantId);
 
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 "Listing policy bundles requires tenant administration of the requested scope or system administration.");
         }
     }

@@ -107,5 +107,11 @@ public class AuthorizationModule : ModuleBase
         modelBuilder.ApplyConfiguration(new PolicyVersionHistoryConfiguration());
         modelBuilder.ApplyConfiguration(new PermissionApprovalWorkflowConfiguration());
         modelBuilder.ApplyConfiguration(new PermissionApprovalStageConfiguration());
+
+        // Central policy registry (issue #1278 G2): bundles, deployments and registry
+        // audit trail — previously dead configuration (entity without an EF model entry).
+        modelBuilder.ApplyConfiguration(new PolicyBundleConfiguration());
+        modelBuilder.ApplyConfiguration(new PolicyBundleDeploymentConfiguration());
+        modelBuilder.ApplyConfiguration(new PolicyRegistryAuditConfiguration());
     }
 }

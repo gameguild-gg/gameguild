@@ -31,7 +31,7 @@ public class RatingEntityConfiguration : IEntityTypeConfiguration<Rating>
             .HasMaxLength(20);
 
         // Global query filter for soft delete
-        builder.HasQueryFilter(e => !e.IsDeleted);
+        builder.HasQueryFilter(e => e.DeletedAt == null);
 
         // Indexes are defined via attributes but can also be configured here
         builder.HasIndex(e => new { e.EntityId, e.EntityType });
@@ -53,7 +53,7 @@ public class RatingHelpfulVoteEntityConfiguration : IEntityTypeConfiguration<Rat
         builder.HasKey(e => e.Id);
 
         // Global query filter for soft delete
-        builder.HasQueryFilter(e => !e.IsDeleted);
+        builder.HasQueryFilter(e => e.DeletedAt == null);
 
         // Indexes
         builder.HasIndex(e => e.RatingId);
@@ -80,7 +80,7 @@ public class RatingSummaryEntityConfiguration : IEntityTypeConfiguration<RatingS
             .HasColumnType("decimal(3,2)");
 
         // Global query filter for soft delete
-        builder.HasQueryFilter(e => !e.IsDeleted);
+        builder.HasQueryFilter(e => e.DeletedAt == null);
 
         // Indexes
         builder.HasIndex(e => new { e.EntityId, e.EntityType }).IsUnique();

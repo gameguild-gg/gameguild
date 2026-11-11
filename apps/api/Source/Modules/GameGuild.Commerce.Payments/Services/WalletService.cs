@@ -122,7 +122,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         // Get both wallets (issue #406: currency-aware resolution keeps a multi-currency user's
         // funds in the intended wallet).
         var fromWallet = await ResolveExistingWalletAsync(fromUserId, currency, cancellationToken).ConfigureAwait(false);
-        if (fromWallet == null) throw new InvalidOperationException($"Source wallet not found for user {fromUserId}");
+        if (fromWallet == null) throw new EntityNotFoundException("Wallet", fromUserId, $"Source wallet not found for user {fromUserId}");
 
         // Issue #406: when the recipient holds no wallet in the transfer currency, fall back to
         // their primary wallet so a cross-currency transfer SURFACES as a mismatch error instead
@@ -204,7 +204,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         {
             logger.LogError("Wallet not found for user {UserId} (currency {Currency})", userId, currency ?? "primary");
 
-            throw new InvalidOperationException($"Wallet not found for user {userId}" + (currency is null ? string.Empty : $" in currency {currency}"));
+            throw new EntityNotFoundException("Wallet", userId, $"Wallet not found for user {userId}" + (currency is null ? string.Empty : $" in currency {currency}"));
         }
 
         return wallet;
@@ -216,7 +216,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
 
         var wallet = await GetWalletByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
-        if (wallet == null) throw new InvalidOperationException($"Wallet not found for user {userId}");
+        if (wallet == null) throw new EntityNotFoundException("Wallet", userId, $"Wallet not found for user {userId}");
 
         wallet.Lock(reason);
         await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -230,7 +230,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
 
         var wallet = await GetWalletByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
-        if (wallet == null) throw new InvalidOperationException($"Wallet not found for user {userId}");
+        if (wallet == null) throw new EntityNotFoundException("Wallet", userId, $"Wallet not found for user {userId}");
 
         wallet.Unlock();
         await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -278,7 +278,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
 
         var wallet = await GetWalletByIdAsync(walletId, cancellationToken).ConfigureAwait(false);
 
-        if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
+        if (wallet == null) throw new EntityNotFoundException("Wallet", walletId, $"Wallet not found: {walletId}");
 
         if (currency != null) wallet.Currency = currency;
         if (dailyLimit.HasValue) wallet.DailyLimit = dailyLimit.Value;
@@ -295,10 +295,10 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
 
         var wallet = await GetWalletByIdAsync(walletId, cancellationToken).ConfigureAwait(false);
 
-        if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
+        if (wallet == null) throw new EntityNotFoundException("Wallet", walletId, $"Wallet not found: {walletId}");
 
         if (wallet.Balance != 0)
-            throw new InvalidOperationException($"Cannot close wallet with non-zero balance: {wallet.Balance}");
+            throw new BusinessRuleViolationException("Wallet.NonZeroBalance", $"Cannot close wallet with non-zero balance: {wallet.Balance}");
 
         wallet.IsActive = false;
         await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -312,7 +312,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
 
         var wallet = await GetWalletByIdAsync(walletId, cancellationToken).ConfigureAwait(false);
 
-        if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
+        if (wallet == null) throw new EntityNotFoundException("Wallet", walletId, $"Wallet not found: {walletId}");
 
         wallet.Lock(reason);
         await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -326,7 +326,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
 
         var wallet = await GetWalletByIdAsync(walletId, cancellationToken).ConfigureAwait(false);
 
-        if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
+        if (wallet == null) throw new EntityNotFoundException("Wallet", walletId, $"Wallet not found: {walletId}");
 
         wallet.Unlock();
         await walletRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -344,7 +344,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
 
         var wallet = await GetWalletByIdAsync(walletId, cancellationToken).ConfigureAwait(false);
 
-        if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
+        if (wallet == null) throw new EntityNotFoundException("Wallet", walletId, $"Wallet not found: {walletId}");
 
         var skip = (page - 1) * pageSize;
         var transactions = await walletRepository.GetTransactionsAsync(walletId, skip, pageSize, null, null, cancellationToken).ConfigureAwait(false);

@@ -12,7 +12,7 @@ public sealed class PatchTaxJurisdictionHandler(IApplicationDbContext context) :
     {
         var jurisdiction = await context.Set<TaxJurisdiction>()
             .FirstOrDefaultAsync(item => item.Id == request.JurisdictionId, cancellationToken)
-            ?? throw new InvalidOperationException($"Tax jurisdiction '{request.JurisdictionId}' not found.");
+            ?? throw new EntityNotFoundException("TaxJurisdiction", request.JurisdictionId);
 
         if (request.Name is not null)
         {

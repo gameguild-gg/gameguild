@@ -229,11 +229,11 @@ public sealed class GameJamService(IGameJamRepository repository) : IGameJamServ
     public async Task<JamSubmissionDto> SubmitAsync(SubmitJamEntryCommand command, CancellationToken cancellationToken = default)
     {
         var jam = await repository.GetJamAsync(command.JamId, cancellationToken).ConfigureAwait(false)
-            ?? throw new InvalidOperationException($"Jam {command.JamId} was not found.");
+            ?? throw new EntityNotFoundException("GameJam", command.JamId);
 
         if (jam.MaxParticipants.HasValue && jam.ParticipantCount >= jam.MaxParticipants.Value)
         {
-            throw new InvalidOperationException("The jam has reached its participant limit.");
+            throw new BusinessRuleViolationException("GameJam.ParticipantLimitReached", "The jam has reached its participant limit.");
         }
 
         var submission = new JamSubmission
@@ -277,11 +277,11 @@ public sealed class GameJamService(IGameJamRepository repository) : IGameJamServ
     public async Task<JamScoreDto> ScoreAsync(ScoreJamSubmissionCommand command, CancellationToken cancellationToken = default)
     {
         var submission = await repository.GetSubmissionAsync(command.SubmissionId, cancellationToken).ConfigureAwait(false)
-            ?? throw new InvalidOperationException($"Submission {command.SubmissionId} was not found.");
+            ?? throw new EntityNotFoundException("JamSubmission", command.SubmissionId);
 
         var criteria = (await repository.GetCriteriaAsync(submission.JamId, cancellationToken).ConfigureAwait(false))
             .FirstOrDefault(item => item.Id == command.CriteriaId)
-            ?? throw new InvalidOperationException($"Criteria {command.CriteriaId} was not found.");
+            ?? throw new EntityNotFoundException("JamJudgingCriteria", command.CriteriaId);
 
         var score = new JamScore
         {
