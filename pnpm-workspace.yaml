@@ -68,6 +68,9 @@ overrides:
   "systeminformation@<5.33.16": "5.33.16"
   "shell-quote@<1.11.0": "1.11.0"
   "zod@<4.6.6": "4.6.7"
+  # GHSA-474x-hrwr-fgx4 (fast-xml-parser entity-expansion DoS via @azure/core-xml):
+  # entity-limit option bypassed when set to zero; pinned to the patched release.
+  "fast-xml-parser@<5.12.0": "5.12.0"
   "@coinbase/cdp-sdk>abitype": "1.2.3"
 
 onlyBuiltDependencies:
