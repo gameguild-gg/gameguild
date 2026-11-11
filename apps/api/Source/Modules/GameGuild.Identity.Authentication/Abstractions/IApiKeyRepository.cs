@@ -43,6 +43,14 @@ public interface IApiKeyRepository
     Task<ApiKey?> RevokeAsync(Guid keyId, Guid userId, string reason, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Issue #1192: revoke every key minted (directly or transitively) by
+    ///     <paramref name="creatorKeyId"/> — the compromised-credential playbook's cascade, so
+    ///     keys minted by a leaked <c>api_keys:manage</c> key die with it. Returns the revoked
+    ///     keys (the creator itself is not included).
+    /// </summary>
+    Task<List<ApiKey>> RevokeCreatedByCascadeAsync(Guid creatorKeyId, string reason, CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Record a use of a key obtained from this repository (updates last-used
     ///     timestamp and usage counter).
     /// </summary>

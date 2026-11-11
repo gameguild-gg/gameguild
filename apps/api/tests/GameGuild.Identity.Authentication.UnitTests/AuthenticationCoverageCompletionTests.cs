@@ -558,7 +558,7 @@ public sealed class AuthenticationCoverageCompletionTests
     [Fact]
     public async Task Web3Service_CoversImplementedSignatureRejectionPath()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = new MemoryDistributedCache(Microsoft.Extensions.Options.Options.Create(new MemoryDistributedCacheOptions()));
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {

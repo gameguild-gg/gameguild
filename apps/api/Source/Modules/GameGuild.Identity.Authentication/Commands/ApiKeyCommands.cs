@@ -1,6 +1,7 @@
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -59,17 +60,20 @@ public sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand, R
     private readonly IActorContextAccessor _actorContext;
     private readonly ILogger<CreateApiKeyHandler> _logger;
     private readonly IApiKeyAuditEventSink? _apiKeyAuditSink;
+    private readonly IHttpContextAccessor? _httpContextAccessor;
 
     public CreateApiKeyHandler(
         IApiKeyRepository apiKeyRepository,
         IActorContextAccessor actorContext,
         ILogger<CreateApiKeyHandler> logger,
-        IApiKeyAuditEventSink? apiKeyAuditSink = null)
+        IApiKeyAuditEventSink? apiKeyAuditSink = null,
+        IHttpContextAccessor? httpContextAccessor = null)
     {
         _apiKeyRepository = apiKeyRepository;
         _actorContext = actorContext;
         _logger = logger;
         _apiKeyAuditSink = apiKeyAuditSink;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<Result<CreateApiKeyResponse>> Handle(CreateApiKeyCommand request, CancellationToken cancellationToken)
@@ -88,6 +92,16 @@ public sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand, R
             request.ExpiresAt,
             request.IpWhitelist);
 
+        // Issue #1192: record when this key was minted by another API-key credential. The
+        // linkage lets revocation cascade to attacker-minted replacements of a leaked
+        // api_keys:manage key. Read from the authenticated principal (the actor context does
+        // not carry the api-key id); interactive sign-ins simply leave it null.
+        var creatorApiKeyId = ResolveCreatorApiKeyId();
+        if (creatorApiKeyId.HasValue)
+        {
+            apiKey.CreatedByApiKeyId = creatorApiKeyId;
+        }
+
         await _apiKeyRepository.AddAsync(apiKey, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("API key created: {KeyId} for user {UserId} with scopes {Scopes}",
@@ -101,11 +115,35 @@ public sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand, R
                 actor.SubjectIdAsGuid.Value,
                 apiKey.TenantId,
                 Description: $"API key '{apiKey.Name}' created",
-                Metadata: new { Scopes = apiKey.GetScopes() }),
+                Metadata: new { Scopes = apiKey.GetScopes(), CreatedByApiKeyId = apiKey.CreatedByApiKeyId }),
             _logger,
             cancellationToken).ConfigureAwait(false);
 
         return Result.Success(CreateApiKeyResponse.FromEntity(apiKey, plaintext));
+    }
+
+    /// <summary>
+    ///     The api-key credential behind the current request, when the actor authenticated with
+    ///     the ApiKey scheme. Only honored on the ApiKey scheme so a forged claim on another
+    ///     scheme cannot fabricate linkage.
+    /// </summary>
+    private Guid? ResolveCreatorApiKeyId()
+    {
+        var principal = _httpContextAccessor?.HttpContext?.User;
+        if (principal is null)
+        {
+            return null;
+        }
+
+        var schemeName = principal.Identity?.AuthenticationType;
+        if (!string.Equals(schemeName, ApiKeyAuthenticationOptions.SchemeName, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        return Guid.TryParse(principal.FindFirst("api_key_id")?.Value, out var creatorId) && creatorId != Guid.Empty
+            ? creatorId
+            : null;
     }
 }
 
@@ -232,6 +270,32 @@ public sealed class RevokeApiKeyHandler : ICommandHandler<RevokeApiKeyCommand, R
         _logger.LogInformation("API key revoked: {KeyId} by user {UserId}. Reason: {Reason}",
             request.KeyId, actor.SubjectIdAsGuid.Value, request.Reason);
 
+        // Issue #1192: cascade to every key this key minted (directly or transitively), so the
+        // "revoke the compromised key" playbook also kills attacker-minted replacements.
+        var cascadeReason = $"Cascade: creator key {apiKey.Id} was revoked ({request.Reason ?? "User revoked"})";
+        var cascaded = await _apiKeyRepository.RevokeCreatedByCascadeAsync(
+            apiKey.Id, cascadeReason, cancellationToken).ConfigureAwait(false);
+        if (cascaded.Count > 0)
+        {
+            _logger.LogWarning(
+                "Revoked {Count} keys minted by API key {KeyId} (creator cascade, issue #1192)",
+                cascaded.Count, apiKey.Id);
+            foreach (var minted in cascaded)
+            {
+                await ApiKeyLifecycleAudit.RecordAsync(
+                    _apiKeyAuditSink,
+                    new ApiKeyAuditEvent(
+                        ApiKeyAuditActions.Revoked,
+                        minted.Id,
+                        actor.SubjectIdAsGuid.Value,
+                        minted.TenantId,
+                        Description: $"API key '{minted.Name}' revoked (minted by key {apiKey.Id})",
+                        Metadata: new { Reason = minted.RevocationReason, CreatorApiKeyId = apiKey.Id }),
+                    _logger,
+                    cancellationToken).ConfigureAwait(false);
+            }
+        }
+
         await ApiKeyLifecycleAudit.RecordAsync(
             _apiKeyAuditSink,
             new ApiKeyAuditEvent(
@@ -240,7 +304,7 @@ public sealed class RevokeApiKeyHandler : ICommandHandler<RevokeApiKeyCommand, R
                 actor.SubjectIdAsGuid.Value,
                 apiKey.TenantId,
                 Description: $"API key '{apiKey.Name}' revoked",
-                Metadata: new { Reason = apiKey.RevocationReason }),
+                Metadata: new { Reason = apiKey.RevocationReason, CascadedRevocations = cascaded.Count }),
             _logger,
             cancellationToken).ConfigureAwait(false);
 
@@ -376,6 +440,10 @@ public sealed class RotateApiKeyHandler : ICommandHandler<RotateApiKeyCommand, R
             scopes,
             request.ExpiresAt ?? oldKey.ExpiresAt,
             oldKey.IpWhitelist);
+
+        // Issue #1192: the replacement inherits the old key's creator linkage — rotating a key
+        // minted by a (later compromised) credential must not launder the lineage.
+        newKey.CreatedByApiKeyId = oldKey.CreatedByApiKeyId;
 
         DateTime? graceEndsAt = null;
         if (gracePeriod > TimeSpan.Zero)
