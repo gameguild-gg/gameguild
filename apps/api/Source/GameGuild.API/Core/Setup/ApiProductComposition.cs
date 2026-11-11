@@ -25,6 +25,7 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using GameGuild.LaunchPad;
+using GameGuild.TrustSafety;
 using GameGuild.Learning.Assessments;
 using GameGuild.Learning.Assessments.Grading.Code;
 using GameGuild.Learning.Assessments.QuizAdapter;
@@ -138,6 +139,11 @@ internal sealed class ApiProductComposition : IApiProductComposition
         builder.Services.AddSingleton<IDatabaseMigrationPrerequisite, EconomyMigrationPrerequisite>();
         builder.Services.AddEconomyCapabilityComposition(builder.Configuration);
         builder.Services.AddEconomyCoreComposition(builder.Configuration);
+        // Trust/Safety first producer (issue #1319 T1): decorate the Economy protected-operation
+        // risk-decision issuer so subject-affecting risk decisions are ingested into the
+        // Trust/Safety control plane (signed, versioned). Must run after the Economy core
+        // composition that registers the issuer.
+        builder.Services.AddEconomyRiskTrustSafetyIngestion();
         builder.Services.AddScoped<global::GameGuild.Compliance.KYC.IKycEvidenceStore, global::GameGuild.API.Core.Integration.EconomyKycEvidenceStore>();
         // Sign-in compliance gate adapter (issue #267): composes the KYC module with the
         // economy compliance hold store behind the platform's ISignInCompliancePolicy

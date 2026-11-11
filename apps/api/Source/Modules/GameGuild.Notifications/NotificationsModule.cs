@@ -35,6 +35,18 @@ public static class NotificationsModule
             .BindConfiguration("Notifications:EmailDispatcher");
         services.AddScoped<IEmailRendererRegistry, EmailRendererRegistry>();
         services.AddScoped<IEmailRenderer, SecurityEmailRenderer>();
+        // Ordinary-type renderer family (issue #1319 N2): one renderer per otherwise
+        // renderer-less ordinary type, so an Email-channel row of those types renders from
+        // its Title/Message payload instead of dead-lettering with "No email renderer
+        // registered". Dedicated renderers registered by producer modules keep precedence
+        // (the registry enforces one renderer per type; these types have none).
+        foreach (var ordinaryType in OrdinaryNotificationEmailRenderer.CoveredTypes)
+        {
+            services.AddScoped<IEmailRenderer>(serviceProvider => new OrdinaryNotificationEmailRenderer(
+                ordinaryType,
+                serviceProvider.GetRequiredService<IEmailFooterService>()));
+        }
+
         services.AddScoped<IRecipientEmailResolver, RecipientEmailResolver>();
         services.AddScoped<EmailDispatcherService>();
         services.AddHostedService<EmailDispatcherBackgroundService>();
