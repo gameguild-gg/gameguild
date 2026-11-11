@@ -28,7 +28,6 @@ overrides:
   "@excalidraw/mermaid-to-excalidraw>nanoid": "5.1.16"
   dompurify: "3.4.17"
   fast-uri: "3.1.9"
-  fast-xml-parser: "5.12.0"
   hono: "4.13.11"
   lodash-es: "4.18.0"
   "minimatch@<11.0.1": "11.0.1"
@@ -70,6 +69,7 @@ overrides:
   "shell-quote@<1.11.0": "1.11.0"
   "zod@<4.6.6": "4.6.7"
   "@coinbase/cdp-sdk>abitype": "1.2.3"
+  "fast-xml-parser@<5.12.0": "5.12.0"
 
 onlyBuiltDependencies:
   - braces
