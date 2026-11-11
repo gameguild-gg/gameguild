@@ -107,7 +107,8 @@ public sealed class EconomyControlPlaneStepUpTests
             Mock.Of<IEconomyOperationsReader>(),
             reserves,
             actor.Object,
-            new FixedTimeProvider());
+            new FixedTimeProvider(),
+            StubStepUpResponder.Instance);
     }
 
     private sealed class FixedTimeProvider : TimeProvider
