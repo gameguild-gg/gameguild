@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Numerics;
 using System.Security.Cryptography;
@@ -18,9 +19,12 @@ namespace GameGuild.Identity.Authentication;
 ///     Issue #1272: challenge state lives in <see cref="IDistributedCache"/> (the Redis path in
 ///     production, mirroring the token revocation store and the push-MFA factor). The previous
 ///     process-local <c>IMemoryCache</c> broke multi-instance deployments (a verify landing on
-///     another node read every pending challenge as unknown) and lost in-flight ceremonies on
+///     another node reads every pending challenge as unknown) and lost in-flight ceremonies on
 ///     restart. The read-back refusal is preserved: a challenge whose nonce or wallet binding
-///     was not actually retained is never returned to the caller.
+///     was not actually retained is never returned to the caller. Single use is enforced by
+///     removal plus a process-wide nonce claim gate: deserialized challenge instances are
+///     per-request, so the entity's own <see cref="Web3Challenge.TryConsume"/> alone can no
+///     longer fence two concurrent verifies on this node (the store has no compare-and-delete).
 /// </remarks>
 public class Web3Service : IWeb3Service
 {
@@ -29,6 +33,13 @@ public class Web3Service : IWeb3Service
     private const string DefaultStatement = "Sign in with your Ethereum wallet.";
     private static readonly TimeSpan s_challengeLifetime = TimeSpan.FromMinutes(5);
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    /// <summary>
+    ///     Process-wide claimed-nonce fence (nonce → challenge expiry). Restores the same-node
+    ///     single-use guarantee the shared cached instance used to provide; entries are swept
+    ///     opportunistically once past their expiry so the map stays bounded.
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, DateTime> s_claimedNonces = new();
 
     private readonly ILogger<Web3Service> _logger;
     private readonly IDistributedCache _cache;
@@ -200,19 +211,40 @@ public class Web3Service : IWeb3Service
             return false;
         }
 
-        // Same-node races are still fenced by the in-memory claim; cross-instance single use is
-        // the remove below (the push-MFA factor's distributed consumption pattern). Removing the
-        // nonce entry first means a racing verify on any node reads an unknown challenge.
-        if (!challenge.TryConsume())
+        // Single-use claim. The process-wide nonce gate fences concurrent verifies on this node
+        // (the deserialized challenge instance is per-request, so its own TryConsume cannot);
+        // cross-instance single use is the remove below (the push-MFA factor's distributed
+        // consumption pattern). Removing the nonce entry first means a racing verify on any
+        // node reads an unknown challenge.
+        if (!s_claimedNonces.TryAdd(challenge.Nonce, challenge.ExpiresAt))
         {
             _logger.LogWarning("SIWE challenge was already consumed for wallet {WalletAddress}", walletAddress);
             return false;
         }
 
+        SweepExpiredClaims();
         await _cache.RemoveAsync(cacheKey).ConfigureAwait(false);
         await _cache.RemoveAsync(walletKey).ConfigureAwait(false);
         _logger.LogInformation("Successfully verified SIWE signature for wallet {WalletAddress}", walletAddress);
         return true;
+    }
+
+    /// <summary>Best-effort sweep of claim-gate entries whose challenge window has long closed.</summary>
+    private static void SweepExpiredClaims()
+    {
+        if (s_claimedNonces.Count < 8192)
+        {
+            return;
+        }
+
+        var cutoff = DateTime.UtcNow - TimeSpan.FromHours(1);
+        foreach (var entry in s_claimedNonces)
+        {
+            if (entry.Value < cutoff)
+            {
+                s_claimedNonces.TryRemove(entry.Key, out _);
+            }
+        }
     }
 
     public bool IsValidWalletAddress(string walletAddress)

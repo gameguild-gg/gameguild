@@ -314,6 +314,9 @@ public static class DataDependencyInjection
 
         // Session management
         services.AddScoped<ISessionManagementService, SessionManagementService>();
+        // Issue #1179: ITokenRevocationPostCommitCoordinator (transaction-aware routing for
+        // session access-token deny-list writes) is implemented by the host composition —
+        // see GameGuild.API.Authorization.TransactionAwareTokenRevocationCoordinator.
         // Password change/reset revocation battery (issue #278): mirrors the
         // terminate-everywhere command — refresh tokens revoked, sessions terminated with an
         // audited PasswordChanged reason, and a versioned cutoff covering legacy access tokens.

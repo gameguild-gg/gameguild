@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using GameGuild.API.Authorization;
 using GameGuild.API.Context;
 using GameGuild.API.Core.Compliance;
 using GameGuild.AI;
@@ -241,6 +242,10 @@ public static class InfrastructureLayerExtensions
         services.AddTransient(typeof(GameGuild.CQRS.IPipelineBehavior<,>), typeof(GameGuild.CQRS.ValidationBehavior<,>));
         services.AddResourceQuotaBehavior();
         services.AddTransient(typeof(GameGuild.CQRS.IPipelineBehavior<,>), typeof(UseCaseOperationBehavior<,>));
+        // Issue #1179: transaction-aware routing for session access-token deny-list writes —
+        // UseCaseOperationBehavior flushes deferred writes after commit and discards them on
+        // rollback, so a failed command never leaves deny-list residue behind.
+        services.AddScoped<GameGuild.Identity.Authentication.ITokenRevocationPostCommitCoordinator, TransactionAwareTokenRevocationCoordinator>();
         services.Configure<QuotaReconciliationOptions>(
             configuration.GetSection(QuotaReconciliationOptions.SectionName));
         services.AddScoped<QuotaReconciliationService>();

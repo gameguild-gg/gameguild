@@ -104,7 +104,7 @@ public sealed class SessionAccessTokenDenyListTests
             sessions.Object,
             Mock.Of<ITrustedDeviceRepository>(),
             Mock.Of<IRefreshTokenLineageRepository>(),
-            tokenRevocationService: store);
+            sessionTokenRevocation: NewImmediateCoordinator(store));
 
         var terminated = await service.TerminateSessionAsync(sessionId, SessionTerminationReason.UserLogout);
 
@@ -136,13 +136,102 @@ public sealed class SessionAccessTokenDenyListTests
             sessions.Object,
             Mock.Of<ITrustedDeviceRepository>(),
             Mock.Of<IRefreshTokenLineageRepository>(),
-            tokenRevocationService: store);
+            sessionTokenRevocation: NewImmediateCoordinator(store));
 
         var terminated = await service.TerminateAllUserSessionsAsync(userId, SessionTerminationReason.SecurityViolation);
 
         terminated.Should().Be(2);
         (await store.IsRevokedAsync(first.Jti)).Should().BeTrue();
         (await store.IsRevokedAsync(second.Jti)).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task TerminationsThroughADeferringCoordinator_DeferUntilFlush_AndDiscardOnRollback()
+    {
+        var store = NewInMemoryStore();
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var jti = Guid.NewGuid().ToString();
+        await store.TrackSessionAccessTokenAsync(sessionId, jti, DateTime.UtcNow.AddMinutes(30));
+
+        var sessions = new Mock<IUserSessionRepository>();
+        sessions.Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<UserSession>
+            {
+                new() { Id = sessionId, UserId = userId, IsActive = true, ExpiresAt = DateTime.UtcNow.AddHours(1) }
+            });
+        sessions.Setup(r => r.UpdateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserSession)null!);
+
+        // The deferring coordinator mirrors the API's transaction-aware implementation: writes
+        // deferred while the command transaction is open, flushed on commit, discarded on
+        // rollback (issue #1179 — no deny-list residue when a command rolls back).
+        var coordinator = new DeferringCoordinator(store);
+
+        var service = new SessionManagementService(
+            NullLogger<SessionManagementService>.Instance,
+            sessions.Object,
+            Mock.Of<ITrustedDeviceRepository>(),
+            Mock.Of<IRefreshTokenLineageRepository>(),
+            sessionTokenRevocation: coordinator);
+
+        await service.TerminateAllUserSessionsAsync(userId, SessionTerminationReason.SecurityViolation);
+        (await store.IsRevokedAsync(jti)).Should().BeFalse("the write is deferred while the transaction is open");
+
+        await coordinator.FlushCommittedAsync();
+        (await store.IsRevokedAsync(jti)).Should().BeTrue("commit flushes the deferred write");
+
+        // A second deferred write that never commits: rollback discards it.
+        var secondSessionId = Guid.NewGuid();
+        var secondJti = Guid.NewGuid().ToString();
+        await store.TrackSessionAccessTokenAsync(secondSessionId, secondJti, DateTime.UtcNow.AddMinutes(30));
+        sessions.Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<UserSession>
+            {
+                new() { Id = secondSessionId, UserId = userId, IsActive = true, ExpiresAt = DateTime.UtcNow.AddHours(1) }
+            });
+        await service.TerminateAllUserSessionsAsync(userId, SessionTerminationReason.SecurityViolation);
+        coordinator.DiscardPending();
+        (await store.IsRevokedAsync(secondJti)).Should().BeFalse("rollback discards the pending write");
+    }
+
+    private static ImmediateCoordinator NewImmediateCoordinator(ITokenRevocationService store) => new(store);
+
+    /// <summary>Immediate pass-through (no ambient transaction).</summary>
+    private sealed class ImmediateCoordinator(ITokenRevocationService store) : ITokenRevocationPostCommitCoordinator
+    {
+        public Task RevokeSessionAccessTokenAsync(Guid sessionId, string reason, CancellationToken cancellationToken = default) =>
+            store.RevokeSessionAccessTokenAsync(sessionId, reason, cancellationToken);
+
+        public Task FlushCommittedAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public void DiscardPending()
+        {
+        }
+    }
+
+    /// <summary>Defers every write until flushed — mirrors the API's transaction-aware behavior.</summary>
+    private sealed class DeferringCoordinator(ITokenRevocationService store) : ITokenRevocationPostCommitCoordinator
+    {
+        private readonly List<(Guid SessionId, string Reason)> _pending = [];
+
+        public Task RevokeSessionAccessTokenAsync(Guid sessionId, string reason, CancellationToken cancellationToken = default)
+        {
+            _pending.Add((sessionId, reason));
+            return Task.CompletedTask;
+        }
+
+        public async Task FlushCommittedAsync(CancellationToken cancellationToken = default)
+        {
+            foreach (var (sessionId, reason) in _pending)
+            {
+                await store.RevokeSessionAccessTokenAsync(sessionId, reason, cancellationToken);
+            }
+
+            _pending.Clear();
+        }
+
+        public void DiscardPending() => _pending.Clear();
     }
 
     /// <summary>
