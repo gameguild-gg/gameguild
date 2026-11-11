@@ -3075,6 +3075,35 @@ downgrade can never silently skip its new (lower) limits.
 
 ---
 
+
+### Orchestrated Session Integrity (#1178)
+
+Orchestrated completion uses `IAuthenticatedSessionIssuer`, including its persisted
+session/root refresh binding, authorized tenant JWT and server-created MFA evidence.
+The complete canonical credential response is preserved, including the compliance
+marker when the current policy permits elevated-role-only MFA grace without an
+enrolled factor. Enrolled factors, default-sourced requirements and risk-required
+MFA still require verification or setup; completion rechecks the current policy.
+Flow finalization and
+credential persistence share the caller-owned Read Committed command transaction;
+a failure after finalization saves rolls back both. PostgreSQL row locks serialize
+step processing, completion and abandonment. A completed flow cannot issue again.
+
+Private flow state binds the current account token version, selected authorized
+tenant, MFA policy fingerprint and enrollment state. These are revalidated before
+and after proof verification and at completion. MFA-bound flows expire in five
+minutes. Legacy unbound flows restart. A dedicated protected, flow/subject/tenant
+bound email code satisfies `RiskChallenge`; generic MFA cannot substitute for it.
+Five wrong codes durably exhaust the challenge and abandon the flow. Only internal
+server-created denial outcomes preserve that accounting through an HTTP 401;
+ordinary failures, exceptions and cancellation retain transaction rollback behavior.
+Raw codes occur only in encrypted email-code metadata, sent to the verified
+recipient snapshot with an exact expiry. Public flow responses expose no private
+binding or challenge material. No new anonymous endpoint is introduced.
+
+[Flow and recovery contract](../../../../../docs/auth/flows/orchestrated-auth-flow.md).
+
+
 ## Conclusion
 
 The GameGuild Authorization Architecture provides a **comprehensive, enterprise-grade access control system** that balances:

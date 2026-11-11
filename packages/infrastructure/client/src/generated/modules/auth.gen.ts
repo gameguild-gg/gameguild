@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from '../../runtime/client';
+import type { Result } from '../../runtime/result/types';
+import type { ApiError } from '../../runtime/errors/types';
+import * as Types from '../types.gen';
+import { safeParse } from '../../runtime/errors/validation';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -215,6 +215,57 @@ export class AuthModule {
     const result = await this.client.request({
       method: 'DELETE',
       path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Start the GitHub or Microsoft link flow for the current user (issue #1181).
+   *
+   * Returns the provider OAuth authorization URL plus the state parameter. The state is also recorded server-side and validated (one-shot) at the link callback. Supported providers: github, microsoft.
+   */
+  async postAuthExternalLoginsLinkAuthorize(
+    provider: string,
+    body: Types.IdentityAuthenticationDiscordLinkAuthorizeInput,
+  ): Promise<Result<Types.IdentityAuthenticationExternalLoginLinkAuthorizeOutput, ApiError>> {
+    const url = `/v1/auth/external-logins/${provider}:link-authorize`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordLinkAuthorizeInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationExternalLoginLinkAuthorizeOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Complete the GitHub or Microsoft link flow for the current user (issue #1181).
+   *
+   * Round-trip validates the echoed state against the server-issued record, exchanges the authorization code for the user profile, and links the provider identity to the authenticated user. Idempotent when already linked to the same user. Supported providers: github, microsoft.
+   */
+  async postAuthExternalLoginsLinkCallback(provider: string, body: Types.IdentityAuthenticationDiscordLinkCallbackInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/external-logins/${provider}:link-callback`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordLinkCallbackInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 
@@ -693,7 +744,7 @@ export class AuthModule {
   /**
    * Complete an orchestrated authentication flow and issue tokens
    *
-   * Issues access and refresh tokens once every required step of the flow is satisfied. Pending steps, abandoned, expired or already-unknown flows fail closed.
+   * Creates a persisted session and bound refresh root, then issues a tenant-bound JWT once every required step is satisfied and current account/MFA/tenant policy is still valid. Flow finalization and credential persistence commit together; replay cannot issue twice. Pending, abandoned, expired and unknown flows fail closed.
    */
   async postAuthOrchestratedComplete(flowId: string): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
     const url = `/v1/auth/orchestrated/${flowId}:complete`;
@@ -716,7 +767,7 @@ export class AuthModule {
   /**
    * Satisfy one challenge step of an orchestrated authentication flow
    *
-   * Verifies one challenge step (TOTP code, backup code or WebAuthn assertion) against the persisted flow and returns the updated state. Out-of-order, repeated, abandoned, expired or locked-out steps fail closed.
+   * Verifies the next required challenge against the persisted server-bound flow. MFA/device steps accept exactly one TOTP, backup code or WebAuthn assertion; RiskChallenge accepts only its eight-digit riskCode sent to the verified email address. Wrong risk codes return 401 and retain a bounded attempt count in the Problem Details legacy extension. Repeated, abandoned, expired or locked-out steps fail closed.
    */
   async postAuthOrchestratedProcessStep(
     flowId: string,

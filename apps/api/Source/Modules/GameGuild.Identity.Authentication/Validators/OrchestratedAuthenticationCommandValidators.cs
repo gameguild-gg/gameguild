@@ -33,14 +33,20 @@ public sealed class ProcessOrchestratedAuthenticationStepCommandValidator : Abst
             .WithMessage("Flow ID is required");
 
         RuleFor(x => x.Step)
+            .IsInEnum()
             .NotEqual(AuthenticationStep.PrimaryCredential)
             .WithMessage("The primary credential step is satisfied by flow initiation and cannot be processed.");
 
         RuleFor(x => x)
-            .Must(command => !string.IsNullOrWhiteSpace(command.TotpCode)
-                             || !string.IsNullOrWhiteSpace(command.BackupCode)
-                             || !string.IsNullOrWhiteSpace(command.WebAuthnAssertion))
-            .WithMessage("Exactly one verification proof (TOTP code, backup code or WebAuthn assertion) is required.");
+            .Must(command => new[] { command.TotpCode, command.BackupCode, command.WebAuthnAssertion, command.RiskCode }
+                .Count(proof => !string.IsNullOrWhiteSpace(proof)) == 1)
+            .WithMessage("Exactly one verification proof is required.");
+        RuleFor(x => x)
+            .Must(command => command.Step == AuthenticationStep.RiskChallenge
+                ? !string.IsNullOrWhiteSpace(command.RiskCode)
+                : string.IsNullOrWhiteSpace(command.RiskCode))
+            .WithMessage("The risk challenge requires its out-of-band risk code.");
+        RuleFor(x => x.RiskCode).Matches("^[0-9]{8}$").When(x => !string.IsNullOrWhiteSpace(x.RiskCode));
     }
 }
 

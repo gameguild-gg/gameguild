@@ -15,7 +15,10 @@ namespace GameGuild.Identity.Authentication;
 [Route("v{version:apiVersion}/auth/trusted-devices")]
 [Microsoft.AspNetCore.Http.Tags("auth/trusted-devices")]
 [Authorize]
-public sealed class TrustedDevicesController(ISessionManagementService sessionService, ISender sender) : AuthControllerBase
+public sealed class TrustedDevicesController(
+    ISessionManagementService sessionService,
+    ISender sender,
+    IStepUpRequiredResponder stepUpRequiredResponder) : AuthControllerBase
 {
     /// <summary>
     ///     Get trusted devices for the current user
@@ -77,14 +80,29 @@ public sealed class TrustedDevicesController(ISessionManagementService sessionSe
 
         if (string.IsNullOrWhiteSpace(body.StepUpReceipt))
         {
-            return Problem(
-                statusCode: StatusCodes.Status403Forbidden,
-                title: "Step-up verification required",
-                detail: "Trusting a device requires fresh verification. Create and verify a step-up challenge for operation 'trust-device' and pass the receipt as stepUpReceipt.");
+            // Issue #1191: the structured step-up trigger instead of a bare 403 — the client
+            // learns the binding to challenge and the MFA methods available to the account.
+            var binding = SessionMutationCommandHandler.TrustDeviceStepUpBinding(body.DeviceName ?? string.Empty);
+            return StatusCode(StatusCodes.Status423Locked, await stepUpRequiredResponder.BuildAsync(
+                userId,
+                binding.OperationType,
+                binding.TargetReference,
+                "Trusting a device requires fresh verification. Create and verify a step-up challenge for operation 'trust-device' and pass the receipt as stepUpReceipt.",
+                ct).ConfigureAwait(false));
         }
 
-        var success = await sender.Send(
-            new TrustDeviceCommand(userId, sessionId, body.DeviceName, body.StepUpReceipt), ct).ConfigureAwait(false);
+        bool success;
+        try
+        {
+            success = await sender.Send(
+                new TrustDeviceCommand(userId, sessionId, body.DeviceName, body.StepUpReceipt), ct).ConfigureAwait(false);
+        }
+        catch (StepUpRequiredException exception)
+        {
+            // The receipt failed consumption (expired, mismatched binding, already used).
+            return StatusCode(StatusCodes.Status423Locked, await stepUpRequiredResponder.BuildAsync(
+                userId, exception, ct).ConfigureAwait(false));
+        }
 
         if (!success)
         {

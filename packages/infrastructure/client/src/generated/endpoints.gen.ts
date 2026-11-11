@@ -6,7 +6,7 @@
  * Generated from: GameGuild API
  * API Version: 4.4.0
  */
-import type * as Types from './types.gen.js';
+import type * as Types from './types.gen';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Endpoint Definitions
@@ -2529,6 +2529,18 @@ export const postApiComplianceConsentRevokeEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostApiComplianceConsentUserConsentInput {
+  body?: Types.APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput;
+}
+export type PostApiComplianceConsentUserConsentOutput = Types.APICoreComplianceRecordUserConsentEndpointCommandResult;
+export const postApiComplianceConsentUserConsentEndpoint = {
+  operationId: 'postApiComplianceConsentUserConsent' as const,
+  method: 'POST' as const,
+  path: '/api/compliance/consent/user-consent' as const,
+  tags: ['ComplianceConsent'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiComplianceConsentUsersInput {
   userId: string;
 }
@@ -3465,7 +3477,7 @@ export const getApiHealthDependenciesEndpoint = {
 export interface PostApiLearningEnrollmentsInput {
   body?: Types.LearningEnrollmentsEnrollUserInput;
 }
-export type PostApiLearningEnrollmentsOutput = Types.LearningEnrollmentsEnrollmentDto;
+export type PostApiLearningEnrollmentsOutput = void;
 export const postApiLearningEnrollmentsEndpoint = {
   operationId: 'postApiLearningEnrollments' as const,
   method: 'POST' as const,
@@ -3518,7 +3530,7 @@ export interface GetApiLearningEnrollmentsCoursesInput {
     status?: Types.LearningEnrollmentsEnrollmentStatus;
   };
 }
-export type GetApiLearningEnrollmentsCoursesOutput = Types.LearningEnrollmentsEnrollmentDto[];
+export type GetApiLearningEnrollmentsCoursesOutput = void;
 export const getApiLearningEnrollmentsCoursesEndpoint = {
   operationId: 'getApiLearningEnrollmentsCourses' as const,
   method: 'GET' as const,
@@ -3533,7 +3545,7 @@ export interface GetApiLearningEnrollmentsUsersInput {
     status?: Types.LearningEnrollmentsEnrollmentStatus;
   };
 }
-export type GetApiLearningEnrollmentsUsersOutput = Types.LearningEnrollmentsEnrollmentDto[];
+export type GetApiLearningEnrollmentsUsersOutput = void;
 export const getApiLearningEnrollmentsUsersEndpoint = {
   operationId: 'getApiLearningEnrollmentsUsers' as const,
   method: 'GET' as const,
@@ -20183,6 +20195,42 @@ export const deleteAuthExternalLoginsEndpoint = {
 } as const;
 
 /**
+ * Start the GitHub or Microsoft link flow for the current user (issue #1181).
+ *
+ * Returns the provider OAuth authorization URL plus the state parameter. The state is also recorded server-side and validated (one-shot) at the link callback. Supported providers: github, microsoft.
+ */
+export interface PostAuthExternalLoginsLinkAuthorizeInput {
+  provider: string;
+  body?: Types.IdentityAuthenticationDiscordLinkAuthorizeInput;
+}
+export type PostAuthExternalLoginsLinkAuthorizeOutput = Types.IdentityAuthenticationExternalLoginLinkAuthorizeOutput;
+export const postAuthExternalLoginsLinkAuthorizeEndpoint = {
+  operationId: 'postAuthExternalLoginsLinkAuthorize' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/external-logins/{provider}:link-authorize' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Complete the GitHub or Microsoft link flow for the current user (issue #1181).
+ *
+ * Round-trip validates the echoed state against the server-issued record, exchanges the authorization code for the user profile, and links the provider identity to the authenticated user. Idempotent when already linked to the same user. Supported providers: github, microsoft.
+ */
+export interface PostAuthExternalLoginsLinkCallbackInput {
+  provider: string;
+  body?: Types.IdentityAuthenticationDiscordLinkCallbackInput;
+}
+export type PostAuthExternalLoginsLinkCallbackOutput = void;
+export const postAuthExternalLoginsLinkCallbackEndpoint = {
+  operationId: 'postAuthExternalLoginsLinkCallback' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/external-logins/{provider}:link-callback' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Preview the scopes a provider link flow will request (authorization-time consent screen data).
  *
  * Returns the exact OAuth scopes the provider link flow will request, resolved the same way the authorize step embeds them in the authorization URL. Powers the authorization-time consent surface shown before linking (issue #250).
@@ -20354,6 +20402,57 @@ export const postAuthGuestSessionEndpoint = {
   path: '/v1/auth/guest-session' as const,
   tags: ['AuthGuest'] as const,
   requiresAuth: false,
+} as const;
+
+/**
+ * Lists every active blocklist entry, expired entries filtered out.
+ *
+ * Lists the active known-attacker IP blocklist entries stored in the distributed cache.
+ */
+export type GetAuthIpBlocklistInput = void;
+export type GetAuthIpBlocklistOutput = Types.IdentityAuthenticationIpBlocklistEntry[];
+export const getAuthIpBlocklistEndpoint = {
+  operationId: 'getAuthIpBlocklist' as const,
+  method: 'GET' as const,
+  path: '/v1/auth/ip-blocklist' as const,
+  tags: ['AuthIpBlocklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Adds or replaces a blocklist entry.
+ *
+ * Stores a known-attacker IP address in the shared blocklist. Omit expiresAt to apply the configured default entry lifetime.
+ */
+export interface PutAuthIpBlocklistInput {
+  body?: Types.IdentityAuthenticationIpBlocklistEntryInput;
+}
+export type PutAuthIpBlocklistOutput = void;
+export const putAuthIpBlocklistEndpoint = {
+  operationId: 'putAuthIpBlocklist' as const,
+  method: 'PUT' as const,
+  path: '/v1/auth/ip-blocklist' as const,
+  tags: ['AuthIpBlocklist'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Removes a blocklist entry.
+ *
+ * Removes the blocklist entry for the given IP address. Returns 404 when no entry exists.
+ */
+export interface DeleteAuthIpBlocklistInput {
+  query?: {
+    ipAddress?: string;
+  };
+}
+export type DeleteAuthIpBlocklistOutput = void;
+export const deleteAuthIpBlocklistEndpoint = {
+  operationId: 'deleteAuthIpBlocklist' as const,
+  method: 'DELETE' as const,
+  path: '/v1/auth/ip-blocklist' as const,
+  tags: ['AuthIpBlocklist'] as const,
+  requiresAuth: true,
 } as const;
 
 /**
@@ -20866,7 +20965,7 @@ export const postAuthOrchestratedAbandonEndpoint = {
 /**
  * Complete an orchestrated authentication flow and issue tokens
  *
- * Issues access and refresh tokens once every required step of the flow is satisfied. Pending steps, abandoned, expired or already-unknown flows fail closed.
+ * Creates a persisted session and bound refresh root, then issues a tenant-bound JWT once every required step is satisfied and current account/MFA/tenant policy is still valid. Flow finalization and credential persistence commit together; replay cannot issue twice. Pending, abandoned, expired and unknown flows fail closed.
  */
 export interface PostAuthOrchestratedCompleteInput {
   flowId: string;
@@ -20883,7 +20982,7 @@ export const postAuthOrchestratedCompleteEndpoint = {
 /**
  * Satisfy one challenge step of an orchestrated authentication flow
  *
- * Verifies one challenge step (TOTP code, backup code or WebAuthn assertion) against the persisted flow and returns the updated state. Out-of-order, repeated, abandoned, expired or locked-out steps fail closed.
+ * Verifies the next required challenge against the persisted server-bound flow. MFA/device steps accept exactly one TOTP, backup code or WebAuthn assertion; RiskChallenge accepts only its eight-digit riskCode sent to the verified email address. Wrong risk codes return 401 and retain a bounded attempt count in the Problem Details legacy extension. Repeated, abandoned, expired or locked-out steps fail closed.
  */
 export interface PostAuthOrchestratedProcessStepInput {
   flowId: string;
@@ -34974,6 +35073,7 @@ export const endpoints = {
   postApiComplianceConsentPolicies: postApiComplianceConsentPoliciesEndpoint,
   postApiComplianceConsentPoliciesVersions: postApiComplianceConsentPoliciesVersionsEndpoint,
   postApiComplianceConsentRevoke: postApiComplianceConsentRevokeEndpoint,
+  postApiComplianceConsentUserConsent: postApiComplianceConsentUserConsentEndpoint,
   getApiComplianceConsentUsers: getApiComplianceConsentUsersEndpoint,
   postApiComplianceFerpaConsents: postApiComplianceFerpaConsentsEndpoint,
   postApiComplianceFerpaConsentsRevoke: postApiComplianceFerpaConsentsRevokeEndpoint,
@@ -36081,6 +36181,8 @@ export const endpoints = {
   postAuthEmailVerify: postAuthEmailVerifyEndpoint,
   headAuthExternalLogins: headAuthExternalLoginsEndpoint,
   deleteAuthExternalLogins: deleteAuthExternalLoginsEndpoint,
+  postAuthExternalLoginsLinkAuthorize: postAuthExternalLoginsLinkAuthorizeEndpoint,
+  postAuthExternalLoginsLinkCallback: postAuthExternalLoginsLinkCallbackEndpoint,
   getAuthExternalLoginsLinkPreview: getAuthExternalLoginsLinkPreviewEndpoint,
   postAuthExternalLoginsScopesRevoke: postAuthExternalLoginsScopesRevokeEndpoint,
   postAuthExternalLoginsDiscordLinkAuthorize: postAuthExternalLoginsDiscordLinkAuthorizeEndpoint,
@@ -36091,6 +36193,9 @@ export const endpoints = {
   postAuthGoogleSignIn: postAuthGoogleSignInEndpoint,
   getAuthGuestSession: getAuthGuestSessionEndpoint,
   postAuthGuestSession: postAuthGuestSessionEndpoint,
+  getAuthIpBlocklist: getAuthIpBlocklistEndpoint,
+  putAuthIpBlocklist: putAuthIpBlocklistEndpoint,
+  deleteAuthIpBlocklist: deleteAuthIpBlocklistEndpoint,
   postAuthMagicLinkConsume: postAuthMagicLinkConsumeEndpoint,
   postAuthMagicLinkRequest: postAuthMagicLinkRequestEndpoint,
   getAuthMfa: getAuthMfaEndpoint,

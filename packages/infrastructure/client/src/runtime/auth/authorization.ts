@@ -18,7 +18,7 @@
  * ```
  */
 
-import type { Session, SessionUser } from './types.js';
+import type { Session, SessionUser } from './types';
 
 // ─── Role Checks ─────────────────────────────────────────────────
 
@@ -101,8 +101,8 @@ function resolveUser(input: Session | SessionUser | null | undefined): SessionUs
   if (!input) return null;
   // If it has a `user` property, it's a Session
   if ('user' in input && 'expires' in input) {
-    return (input as Session).user;
+    return input.user;
   }
   // Otherwise it's a SessionUser directly
-  return input as SessionUser;
+  return input;
 }

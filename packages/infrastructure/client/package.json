@@ -48,7 +48,7 @@
     "generate": "tsx scripts/generate.ts",
     "generate:watch": "tsx scripts/generate.ts --watch",
     "generate:diff": "tsx scripts/diff.ts",
-    "build": "NODE_OPTIONS=--max-old-space-size=8192 tsup",
+    "build": "NODE_OPTIONS=--max-old-space-size=16384 tsup",
     "build:fast": "tsup --out-dir dist-fast",
     "build:watch": "tsup --watch",
     "typecheck:public-api": "tsc -p tests/types/tsconfig.public-api.json",
@@ -58,7 +58,7 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:baseline": "eslint . --suppress-all --prune-suppressions",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "NODE_OPTIONS=--max-old-space-size=16384 tsc --noEmit",
     "clean": "rimraf dist .turbo"
   },
   "peerDependencies": {

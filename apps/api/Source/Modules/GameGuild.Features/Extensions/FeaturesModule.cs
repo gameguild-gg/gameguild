@@ -91,12 +91,12 @@ public static class FeaturesModule
 
         // Register OpenFeature provider (singleton to maintain consistent state)
         services.AddSingleton<DatabaseFeatureFlagProvider>();
-        
-        // Register OpenFeature API (provider initialization is handled by OpenFeatureHostedInitializer)
+
+        // Register OpenFeature API. Provider assignment on startup is owned by the Core
+        // initializer (Core/WebApplication/OpenFeatureHostedInitializer, registered by
+        // SetupFeatureFlags) — the module no longer registers its own no-op hosted service
+        // (issue #1218 G1: dead hosted service in the live pipeline).
         services.AddSingleton(_ => OpenFeature.Api.Instance);
-        
-        // Register OpenFeature hosted service for initialization
-        services.AddHostedService<OpenFeatureHostedInitializer>();
 
         // CQRS handlers are automatically registered by assembly scanning
 

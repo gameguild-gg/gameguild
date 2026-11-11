@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using GameGuild.API.Authorization;
 using GameGuild.API.Context;
 using GameGuild.API.Core.Compliance;
 using GameGuild.AI;
@@ -15,6 +16,7 @@ using GameGuild.Assets.Storage;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Payments;
+using GameGuild.Commerce.Products;
 using GameGuild.Commerce.Subscriptions;
 using GameGuild.Compliance.Audit;
 using GameGuild.Features;
@@ -240,6 +242,10 @@ public static class InfrastructureLayerExtensions
         services.AddTransient(typeof(GameGuild.CQRS.IPipelineBehavior<,>), typeof(GameGuild.CQRS.ValidationBehavior<,>));
         services.AddResourceQuotaBehavior();
         services.AddTransient(typeof(GameGuild.CQRS.IPipelineBehavior<,>), typeof(UseCaseOperationBehavior<,>));
+        // Issue #1179: transaction-aware routing for session access-token deny-list writes —
+        // UseCaseOperationBehavior flushes deferred writes after commit and discards them on
+        // rollback, so a failed command never leaves deny-list residue behind.
+        services.AddScoped<GameGuild.Identity.Authentication.ITokenRevocationPostCommitCoordinator, TransactionAwareTokenRevocationCoordinator>();
         services.Configure<QuotaReconciliationOptions>(
             configuration.GetSection(QuotaReconciliationOptions.SectionName));
         services.AddScoped<QuotaReconciliationService>();
@@ -269,22 +275,9 @@ public static class InfrastructureLayerExtensions
         // 10aa. Assets Module (S3 storage, upload/access services, asset security helpers)
         stepStopwatch.Restart();
         services.AddOrdersModule();
-        // Promo engine (issue #418): the atomic usage recorder and the audit logger do not
-        // match the I{Name}Service/Repository/Reader convention scan, so they need explicit
-        // registration for the promo apply/checkout flows to resolve.
-        services.AddScoped<global::GameGuild.Commerce.Products.IPromoCodeUsageRecorder, global::GameGuild.Commerce.Products.PromoCodeUsageRecorder>();
-        services.AddScoped<global::GameGuild.Commerce.Products.IPromoCodeAuditLogger, global::GameGuild.Commerce.Products.PromoCodeAuditLogger>();
-        // Unified pricing engine seam (issue #417): the Products promo engine backs the
-        // Payments-owned promo-discount abstraction; same explicit-registration reason as above.
-        services.AddScoped<global::GameGuild.Commerce.Payments.IPromoDiscountCalculator, global::GameGuild.Commerce.Products.PromoDiscountCalculatorAdapter>();
-
-        // Product catalog & bundling (issue #401): the hierarchy validator, the catalog
-        // audit logger and the bundle-savings calculator do not match the
-        // I{Name}Service/Repository/Reader convention scan, so they need explicit
-        // registration for the category and recommendation flows to resolve.
-        services.AddScoped<global::GameGuild.Commerce.Products.IProductCategoryValidator, global::GameGuild.Commerce.Products.ProductCategoryValidator>();
-        services.AddScoped<global::GameGuild.Commerce.Products.IProductCatalogAuditLogger, global::GameGuild.Commerce.Products.ProductCatalogAuditLogger>();
-        services.AddScoped<global::GameGuild.Commerce.Products.IBundleSavingsCalculator, global::GameGuild.Commerce.Products.BundleSavingsCalculator>();
+        // The promo-engine, pricing-seam and catalog registrations that used to live here
+        // (issues #401/#417/#418) moved into AddProductsModule, which is now composed by
+        // the host (block 10c below, issue #1290) instead of being duplicated inline.
         logger.LogInformation("Commerce Orders Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10aa. Assets Module (S3 storage, upload/access services, asset security helpers)
@@ -309,6 +302,17 @@ public static class InfrastructureLayerExtensions
         stepStopwatch.Restart();
         services.AddSubscriptionsModule();
         logger.LogInformation("Subscriptions Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10c. Commerce Products Module (catalog, pricing engine, promo engine, fraud-review
+        // tickets, promo defenses, and the automated pricing scheduling worker). Issue #1290:
+        // AddProductsModule was previously never invoked by the host — handlers arrived by
+        // module scan and repositories/services by the convention scanner, masking that the
+        // promo coordinator (promo codes 500ed on subscription creation), the fraud-review
+        // ticket coordinator, the CAPTCHA/anomaly/customer-state defenses, the four options
+        // bindings and the PricingSchedulingBackgroundService were all silently absent.
+        stepStopwatch.Restart();
+        services.AddProductsModule(configuration);
+        logger.LogInformation("Products Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10d. Commerce Billing Module (webhook services for Stripe, PayPal, ApplePay)
         stepStopwatch.Restart();
@@ -346,10 +350,13 @@ public static class InfrastructureLayerExtensions
         services.AddLocalizationServices();
         logger.LogInformation("Localization Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10h. Tenants Module - explicit registrations (ITenantResolver doesn't match
-        // the I*Service / I*Repository convention used by AddRepositories)
+        // 10h. Tenants Module - explicit registrations (ITenantResolver and the
+        // administration guard don't match the I*Service / I*Repository convention
+        // used by AddRepositories)
         stepStopwatch.Restart();
         services.AddScoped<ITenantResolver, TenantResolver>();
+        // Issue #1287 T1: ownership/role gate for tenant lifecycle mutations.
+        services.AddScoped<ITenantAdministrationGuard, TenantAdministrationGuard>();
         logger.LogInformation("Tenants Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 11. Repositories

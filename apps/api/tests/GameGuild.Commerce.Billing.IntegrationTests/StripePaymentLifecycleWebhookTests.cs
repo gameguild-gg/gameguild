@@ -71,6 +71,66 @@ public class StripePaymentLifecycleWebhookTests
     }
 
     [Fact]
+    public async Task TryConsumeAsync_SucceededIntent_RoutesPendingPaymentThroughTheProcessingIntermediate()
+    {
+        // Issue #1202 (gaps N5): the entity's transition table forbids Pending → Succeeded
+        // directly. The webhook consumer used to call MarkAsSucceeded on a Pending payment,
+        // which threw InvalidOperationException and poison-looped the inbox delivery; the
+        // reconciliation now routes through the legal Pending → Processing intermediate.
+        var consumer = CreateConsumer(out var paymentRepository, out _, out _);
+        var payment = PendingPayment();
+        paymentRepository
+            .Setup(repo => repo.GetByProviderMappingAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(payment);
+
+        var handled = await consumer.TryConsumeAsync(
+            VerifiedEvent("payment_intent.succeeded", "pi_pending", status: "succeeded", chargeId: "ch_pending", paymentIntent: "pi_pending"),
+            CancellationToken.None);
+
+        handled.Should().BeTrue();
+        payment.Status.Should().Be(PaymentStatus.Succeeded);
+        payment.ExternalPaymentId.Should().Be("pi_pending");
+        paymentRepository.Verify(repo => repo.UpdateAsync(payment, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TryConsumeAsync_RefundSucceeded_PassesTheVerifiedAmountToTheCompletionCore()
+    {
+        // Issue #1202 (gaps N3): the per-refund events carry the gateway-executed amount; the
+        // consumer forwards it so the completion core can verify it against the local row.
+        var refundCore = new Mock<IRefundProcessingService>();
+        decimal? forwardedAmount = null;
+        refundCore
+            .Setup(core => core.CompleteFromGatewayAsync(
+                It.IsAny<Refund>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<decimal?>()))
+            .Returns((Refund refund, string gatewayRefundId, string gatewayName, CancellationToken _, decimal? amount) =>
+            {
+                forwardedAmount = amount;
+                return Task.FromResult(new RefundExecutionOutcome { Success = true, Refund = refund });
+            });
+        var refund = ProcessingRefund();
+        var refundRepository = new Mock<IRefundRepository>();
+        refundRepository
+            .Setup(repo => repo.GetByGatewayRefundIdAsync("re_amount", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(refund);
+        var consumer = new StripePaymentLifecycleEventConsumer(
+            new Mock<IPaymentRepository>().Object,
+            refundRepository.Object,
+            refundCore.Object,
+            new Mock<IPaymentRetryPolicyResolver>().Object,
+            Options.Create(new PaymentRetryOptions()),
+            NullLogger<StripePaymentLifecycleEventConsumer>.Instance);
+
+        var handled = await consumer.TryConsumeAsync(
+            VerifiedEvent("refund.created", "re_amount", status: "succeeded", objectKind: "refund", paymentIntent: "pi_amount"),
+            CancellationToken.None);
+
+        handled.Should().BeTrue();
+        forwardedAmount.Should().Be(50m,
+            "the refund object's own amount from the verified event reaches the completion core for the gaps-N3 verification");
+    }
+
+    [Fact]
     public async Task TryConsumeAsync_SucceededIntent_IsIdempotentForSettledPayments()
     {
         var consumer = CreateConsumer(out var paymentRepository, out _, out _);
@@ -258,7 +318,7 @@ public class StripePaymentLifecycleWebhookTests
             .ReturnsAsync(refund);
         var refundCore = new Mock<IRefundProcessingService>();
         refundCore
-            .Setup(core => core.CompleteFromGatewayAsync(refund, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(core => core.CompleteFromGatewayAsync(refund, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<decimal?>()))
             .ThrowsAsync(new InvalidOperationException("transient database failure"));
         var consumer = new StripePaymentLifecycleEventConsumer(
             paymentRepository.Object,
@@ -291,8 +351,8 @@ public class StripePaymentLifecycleWebhookTests
         retryPolicy = new Mock<IPaymentRetryPolicyResolver>();
         var refundCore = new Mock<IRefundProcessingService>();
         refundCore
-            .Setup(core => core.CompleteFromGatewayAsync(It.IsAny<Refund>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Refund refund, string gatewayRefundId, string gatewayName, CancellationToken _) =>
+            .Setup(core => core.CompleteFromGatewayAsync(It.IsAny<Refund>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<decimal?>()))
+            .ReturnsAsync((Refund refund, string gatewayRefundId, string gatewayName, CancellationToken _, decimal? _) =>
             {
                 reconciledRefunds?.Add((gatewayRefundId, refund));
                 return new RefundExecutionOutcome { Success = true, Refund = refund };
@@ -316,6 +376,9 @@ public class StripePaymentLifecycleWebhookTests
         payment.MarkAsProcessing();
         return payment;
     }
+
+    private static Payment PendingPayment() =>
+        Payment.Create(Guid.NewGuid(), 50m, "USD", $"idem-{Guid.NewGuid():N}");
 
     private static Payment SucceededPayment()
     {

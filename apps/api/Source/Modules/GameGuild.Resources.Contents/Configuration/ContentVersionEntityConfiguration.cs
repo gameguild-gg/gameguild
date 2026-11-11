@@ -41,7 +41,7 @@ public class ContentVersionEntityConfiguration : IEntityTypeConfiguration<Conten
             .HasMaxLength(20);
 
         // Global query filter for soft delete
-        builder.HasQueryFilter(e => !e.IsDeleted);
+        builder.HasQueryFilter(e => e.DeletedAt == null);
 
         // Indexes
         builder.HasIndex(e => new { e.EntityId, e.EntityType });
@@ -73,7 +73,7 @@ public class ContentVersionReviewEntityConfiguration : IEntityTypeConfiguration<
             .HasMaxLength(20);
 
         // Global query filter for soft delete
-        builder.HasQueryFilter(e => !e.IsDeleted);
+        builder.HasQueryFilter(e => e.DeletedAt == null);
 
         // Indexes
         builder.HasIndex(e => e.ContentVersionId);
@@ -111,7 +111,7 @@ public class DocumentTemplateEntityConfiguration : IEntityTypeConfiguration<Docu
         builder.Property(e => e.PlaceholderSchema)
             .HasColumnType("jsonb");
 
-        builder.HasQueryFilter(e => !e.IsDeleted);
+        builder.HasQueryFilter(e => e.DeletedAt == null);
 
         builder.HasIndex(e => e.TemplateKey)
             .IsUnique();

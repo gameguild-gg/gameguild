@@ -590,12 +590,14 @@ public sealed class GradingPersistenceModelConfiguration : IModelConfiguration
             entity.ToTable("AcademicOutboxDeliveries", table =>
             {
                 table.HasCheckConstraint("CK_AcademicOutboxDeliveries_Attempts", "\"AttemptCount\" >= 0");
-                table.HasCheckConstraint("CK_AcademicOutboxDeliveries_Status", "\"Status\" IN ('pending', 'processing', 'confirmed', 'failed')");
+                table.HasCheckConstraint("CK_AcademicOutboxDeliveries_Status", "\"Status\" IN ('pending', 'processing', 'confirmed', 'failed', 'deadlettered')");
                 table.HasCheckConstraint(
                     "CK_AcademicOutboxDeliveries_Lifecycle",
                     "(\"Status\" = 'processing') = (\"ClaimedAt\" IS NOT NULL AND \"ClaimedBy\" IS NOT NULL) AND " +
                     "(\"Status\" = 'confirmed') = (\"ConfirmedAt\" IS NOT NULL) AND " +
-                    "(\"Status\" = 'failed') = (\"NextAttemptAt\" IS NOT NULL)");
+                    "(\"Status\" = 'failed') = (\"NextAttemptAt\" IS NOT NULL) AND " +
+                    "(\"Status\" = 'deadlettered') = (\"DeadLetteredAt\" IS NOT NULL) AND " +
+                    "(\"DeadLetteredAt\" IS NULL OR (\"NextAttemptAt\" IS NULL AND \"ConfirmedAt\" IS NULL))");
                 table.HasCheckConstraint(
                     "CK_AcademicOutboxDeliveries_ErrorSize",
                     "\"LastError\" IS NULL OR octet_length(\"LastError\") <= 4096");

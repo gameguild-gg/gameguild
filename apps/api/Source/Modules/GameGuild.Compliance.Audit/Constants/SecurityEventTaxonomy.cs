@@ -147,6 +147,7 @@ public static class SecurityEventTaxonomy
         [AuditActionTypes.DataSubjectRequestRecorded] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, false, "Data subject rights request received."),
         [AuditActionTypes.DataSubjectRequestCompleted] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, true, "Data subject rights request fulfilled."),
         [AuditActionTypes.DataSubjectRequestRejected] = new(SecurityEventKind.DataProtection, AuditRiskLevel.High, true, "Data subject rights request rejected."),
+        [AuditActionTypes.DataSubjectRequestExpired] = new(SecurityEventKind.DataProtection, AuditRiskLevel.High, true, "Data subject rights request expired past its statutory deadline."),
         [AuditActionTypes.SensitiveDataRetentionEnforced] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, true, "Sensitive data retention policy enforced."),
         [AuditActionTypes.ConsentGranted] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Low, false, "Consent granted for a processing purpose."),
         [AuditActionTypes.ConsentRevoked] = new(SecurityEventKind.DataProtection, AuditRiskLevel.Medium, true, "Consent revoked for a processing purpose."),

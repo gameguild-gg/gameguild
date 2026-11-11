@@ -33,5 +33,12 @@ public class ExternalLoginConfiguration : IEntityTypeConfiguration<ExternalLogin
             .IsUnique()
             .HasDatabaseName("ix_externallogin_provider_provider_key");
         builder.HasIndex(x => x.UserId).HasDatabaseName("ix_externallogin_user_id");
+
+        // Issue #1156: principal user relationship; Restrict because user removal is
+        // soft-delete and must never cascade credential material away.
+        builder.HasOne<GameGuild.Identity.Users.User>()
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -19,20 +19,20 @@
  * ```
  */
 
-import type { CredentialsProviderConfig, ProviderResult, SessionUser } from '../types.js';
-import { AccountLockedError, AuthServiceUnavailableError, CredentialsSignInError, MfaRequiredError, parseMfaEnrollmentOffer } from '../errors.js';
-import { resolveAuthPermissions, resolveAuthRoles } from '../claims.js';
-import { createClient } from '../../../client.js';
-import { AuthModule } from '../../../generated/modules/auth.gen.js';
-import { postAuthSignInEndpoint } from '../../../generated/endpoints.gen.js';
+import type { CredentialsProviderConfig, ProviderResult, SessionUser } from '../types';
+import { AccountLockedError, AuthServiceUnavailableError, CredentialsSignInError, MfaRequiredError, parseMfaEnrollmentOffer } from '../errors';
+import { resolveAuthPermissions, resolveAuthRoles } from '../claims';
+import { createClient } from '../../../client';
+import { AuthModule } from '../../../generated/modules/auth.gen';
+import { postAuthSignInEndpoint } from '../../../generated/endpoints.gen';
 import type {
   IdentityAuthenticationCompleteMfaSignInInput,
   IdentityAuthenticationLocalSignInInput,
   IdentityAuthenticationSignInOutput,
-} from '../../../generated/types.gen.js';
-import { isApiError } from '../../errors/guards.js';
-import type { ApiError } from '../../errors/types.js';
-import type { Result } from '../../result/types.js';
+} from '../../../generated/types.gen';
+import { isApiError } from '../../errors/guards';
+import type { ApiError } from '../../errors/types';
+import type { Result } from '../../result/types';
 
 /**
  * Options for the credentials provider

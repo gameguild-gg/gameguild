@@ -14,6 +14,7 @@ public class ExternalLoginHandlersTests
     private readonly Mock<IGoogleIdTokenVerifier> _googleVerifierMock = new();
     private readonly Mock<IOAuthService> _oauthServiceMock = new();
     private readonly Mock<IUserRepository> _userRepoMock = new();
+    private readonly Mock<IOAuthLinkStateStore> _linkStateStoreMock = new();
 
     public ExternalLoginHandlersTests()
     {
@@ -37,6 +38,12 @@ public class ExternalLoginHandlersTests
             .Setup(x => x.ResolveAuthorizationScopes(It.Is<string>(p => p.Equals("discord", StringComparison.OrdinalIgnoreCase)), It.IsAny<string[]?>()))
             .Returns(new[] { "identify", "email" });
 
+        // Issue #1181: callbacks round-trip validate the server-issued link state; existing
+        // fixtures exercise the happy path, so the store accepts by default.
+        _linkStateStoreMock
+            .Setup(x => x.ValidateAndConsumeAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         _externalLoginRepoMock
             .Setup(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ExternalLogin dto, CancellationToken _) => dto);
@@ -53,7 +60,7 @@ public class ExternalLoginHandlersTests
     {
         _oauthServiceMock.Setup(x => x.HandleCallbackAsync("discord", "code", "state", "https://app/cb"))
             .ThrowsAsync(new HttpRequestException("Provider unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
-        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object,
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object,
             NullLogger<LinkDiscordAccountCommandHandler>.Instance);
 
         var act = () => handler.Handle(new LinkDiscordAccountCommand
@@ -159,21 +166,48 @@ public class ExternalLoginHandlersTests
     // ── Discord link-authorize ──────────────────────────────────────────
 
     [Fact]
-    public async Task DiscordLinkAuthorize_ReturnsAuthUrl_AndPerRequestState()
+    public async Task DiscordLinkAuthorize_ReturnsAuthUrl_AndRecordsStateServerSide()
     {
+        var userId = Guid.NewGuid();
         string? capturedState = null;
         _oauthServiceMock
             .Setup(x => x.GetAuthorizationUrlAsync("discord", "https://app/callback", It.IsAny<string>(), null))
             .Callback((string _, string _, string state, string[]? _) => capturedState = state)
             .ReturnsAsync("https://discord.com/oauth2/authorize?client_id=abc");
 
-        var handler = new DiscordLinkAuthorizeCommandHandler(_oauthServiceMock.Object, NullLogger<DiscordLinkAuthorizeCommandHandler>.Instance);
+        var handler = new DiscordLinkAuthorizeCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, NullLogger<DiscordLinkAuthorizeCommandHandler>.Instance);
         var result = await handler.Handle(
-            new DiscordLinkAuthorizeCommand { RedirectUri = "https://app/callback" }, CancellationToken.None);
+            new DiscordLinkAuthorizeCommand { UserId = userId, RedirectUri = "https://app/callback" }, CancellationToken.None);
 
         result.AuthUrl.Should().Be("https://discord.com/oauth2/authorize?client_id=abc");
         result.State.Should().MatchRegex("^[0-9a-f]{32}$");
         result.State.Should().Be(capturedState);
+        // Issue #1181: the issued state is recorded server-side, bound to the calling user.
+        _linkStateStoreMock.Verify(x => x.SaveAsync(userId, "discord", result.State, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task LinkDiscord_InvalidState_RejectsBeforeCodeExchange()
+    {
+        var userId = Guid.NewGuid();
+        _linkStateStoreMock
+            .Setup(x => x.ValidateAndConsumeAsync(userId, "discord", "forged-state", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
+        var act = () => handler.Handle(new LinkDiscordAccountCommand
+        {
+            UserId = userId,
+            Code = "auth-code",
+            State = "forged-state",
+            RedirectUri = "https://app/callback"
+        }, CancellationToken.None);
+
+        // Issue #1181: a callback that cannot present the server-issued state is rejected
+        // before the authorization code is exchanged or any row is written.
+        await act.Should().ThrowAsync<InvalidOAuthLinkStateException>();
+        _oauthServiceMock.Verify(x => x.HandleCallbackAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        _externalLoginRepoMock.Verify(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     // ── Discord link-callback ───────────────────────────────────────────
@@ -189,7 +223,7 @@ public class ExternalLoginHandlersTests
             .Setup(x => x.GetByProviderKeyAsync("discord", "2516582401", It.IsAny<CancellationToken>()))
             .ReturnsAsync((ExternalLogin?)null);
 
-        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
         await handler.Handle(new LinkDiscordAccountCommand
         {
             UserId = userId,
@@ -224,7 +258,7 @@ public class ExternalLoginHandlersTests
             .Setup(x => x.GetByProviderKeyAsync("discord", "2516582401", It.IsAny<CancellationToken>()))
             .ReturnsAsync((ExternalLogin?)null);
 
-        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
         await handler.Handle(new LinkDiscordAccountCommand
         {
             UserId = userId,
@@ -256,7 +290,7 @@ public class ExternalLoginHandlersTests
             .Setup(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new DbUpdateException("duplicate key value violates unique constraint"));
 
-        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
         var act = () => handler.Handle(new LinkDiscordAccountCommand
         {
             UserId = userId,
@@ -285,7 +319,7 @@ public class ExternalLoginHandlersTests
             .Setup(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new DbUpdateException("duplicate key value violates unique constraint"));
 
-        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
         var act = () => handler.Handle(new LinkDiscordAccountCommand
         {
             UserId = userId,
@@ -312,7 +346,7 @@ public class ExternalLoginHandlersTests
             .Setup(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new DbUpdateException("duplicate key value violates unique constraint"));
 
-        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
         var act = () => handler.Handle(new LinkDiscordAccountCommand
         {
             UserId = Guid.NewGuid(),
@@ -335,7 +369,7 @@ public class ExternalLoginHandlersTests
             .Setup(x => x.GetByProviderKeyAsync("discord", "2516582401", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ExternalLogin { UserId = Guid.NewGuid(), Provider = "discord", ProviderKey = "2516582401" });
 
-        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
         var act = () => handler.Handle(new LinkDiscordAccountCommand
         {
             UserId = userId,
@@ -457,7 +491,7 @@ public class ExternalLoginHandlersTests
             .Setup(x => x.GetByProviderKeyAsync("discord", "2516582401", It.IsAny<CancellationToken>()))
             .ReturnsAsync((ExternalLogin?)null);
 
-        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
         await handler.Handle(new LinkDiscordAccountCommand
         {
             UserId = userId,
@@ -496,7 +530,7 @@ public class ExternalLoginHandlersTests
                 ConsentVersion = OAuthConsentVersions.Current
             });
 
-        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
         await handler.Handle(new LinkDiscordAccountCommand
         {
             UserId = userId,
@@ -528,7 +562,7 @@ public class ExternalLoginHandlersTests
                 ConsentVersion = OAuthConsentVersions.Current
             });
 
-        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
         await handler.Handle(new LinkDiscordAccountCommand
         {
             UserId = userId,
@@ -553,7 +587,7 @@ public class ExternalLoginHandlersTests
             .Setup(x => x.GetByProviderKeyAsync("discord", "2516582401", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ExternalLogin { UserId = userId, Provider = "discord", ProviderKey = "2516582401" });
 
-        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<LinkDiscordAccountCommandHandler>.Instance);
         await handler.Handle(new LinkDiscordAccountCommand
         {
             UserId = userId,
@@ -750,5 +784,136 @@ public class ExternalLoginHandlersTests
 
         await act.Should().ThrowAsync<InvalidOAuthScopeException>();
         _externalLoginRepoMock.Verify(x => x.GetByUserIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // ── Provider-parameterized link flow, GitHub/Microsoft (issue #1181) ──
+
+    [Theory]
+    [InlineData("github")]
+    [InlineData("microsoft")]
+    [InlineData("GitHub")]
+    [InlineData("Microsoft")]
+    public async Task LinkAuthorize_SupportedProvider_ReturnsUrl_AndRecordsState(string provider)
+    {
+        var userId = Guid.NewGuid();
+        _oauthServiceMock
+            .Setup(x => x.GetAuthorizationUrlAsync(provider.ToLowerInvariant(), "https://app/callback", It.IsAny<string>(), null))
+            .ReturnsAsync($"https://{provider.ToLowerInvariant()}.com/oauth2/authorize");
+
+        var handler = new ExternalLoginLinkAuthorizeCommandHandler(
+            _oauthServiceMock.Object, _linkStateStoreMock.Object, NullLogger<ExternalLoginLinkAuthorizeCommandHandler>.Instance);
+        var result = await handler.Handle(new ExternalLoginLinkAuthorizeCommand
+        {
+            UserId = userId,
+            Provider = provider,
+            RedirectUri = "https://app/callback"
+        }, CancellationToken.None);
+
+        result.AuthUrl.Should().Be($"https://{provider.ToLowerInvariant()}.com/oauth2/authorize");
+        result.State.Should().MatchRegex("^[0-9a-f]{32}$");
+        _linkStateStoreMock.Verify(
+            x => x.SaveAsync(userId, provider.ToLowerInvariant(), result.State, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData("google")]
+    [InlineData("discord")]
+    [InlineData("steam")]
+    public async Task LinkAuthorize_UnsupportedProvider_Throws(string provider)
+    {
+        var handler = new ExternalLoginLinkAuthorizeCommandHandler(
+            _oauthServiceMock.Object, _linkStateStoreMock.Object, NullLogger<ExternalLoginLinkAuthorizeCommandHandler>.Instance);
+        var act = () => handler.Handle(new ExternalLoginLinkAuthorizeCommand
+        {
+            UserId = Guid.NewGuid(),
+            Provider = provider,
+            RedirectUri = "https://app/callback"
+        }, CancellationToken.None);
+
+        await act.Should().ThrowAsync<NotSupportedException>();
+    }
+
+    [Fact]
+    public async Task LinkCallback_Github_ValidState_ExchangesCodeAndWritesRow()
+    {
+        var userId = Guid.NewGuid();
+        _linkStateStoreMock
+            .Setup(x => x.ValidateAndConsumeAsync(userId, "github", "gh-state-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _oauthServiceMock
+            .Setup(x => x.HandleCallbackAsync("github", "gh-code", "gh-state-1", "https://app/callback"))
+            .ReturnsAsync(new OAuthUserProfile { ProviderId = "github-123", Provider = "GitHub", Email = "dev@example.com", EmailVerified = true });
+        _oauthServiceMock
+            .Setup(x => x.ResolveAuthorizationScopes(It.Is<string>(p => p.Equals("github", StringComparison.OrdinalIgnoreCase)), It.IsAny<string[]?>()))
+            .Returns(new[] { "read:user", "user:email" });
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync("github", "github-123", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ExternalLogin?)null);
+
+        var handler = new ExternalLoginLinkCallbackCommandHandler(
+            _oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<ExternalLoginLinkCallbackCommandHandler>.Instance);
+        await handler.Handle(new ExternalLoginLinkCallbackCommand
+        {
+            UserId = userId,
+            Provider = "github",
+            Code = "gh-code",
+            State = "gh-state-1",
+            RedirectUri = "https://app/callback"
+        }, CancellationToken.None);
+
+        _externalLoginRepoMock.Verify(
+            x => x.AddAsync(
+                It.Is<ExternalLogin>(e => e.UserId == userId && e.Provider == "github" && e.ProviderKey == "github-123"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task LinkCallback_Microsoft_InvalidState_RejectsBeforeCodeExchange()
+    {
+        var userId = Guid.NewGuid();
+        _linkStateStoreMock
+            .Setup(x => x.ValidateAndConsumeAsync(userId, "microsoft", It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var handler = new ExternalLoginLinkCallbackCommandHandler(
+            _oauthServiceMock.Object, _linkStateStoreMock.Object, _externalLoginRepoMock.Object, NullLogger<ExternalLoginLinkCallbackCommandHandler>.Instance);
+        var act = () => handler.Handle(new ExternalLoginLinkCallbackCommand
+        {
+            UserId = userId,
+            Provider = "microsoft",
+            Code = "ms-code",
+            State = "forged",
+            RedirectUri = "https://app/callback"
+        }, CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOAuthLinkStateException>();
+        _oauthServiceMock.Verify(x => x.HandleCallbackAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    // ── Unlink case-insensitivity (issue #1181) ─────────────────────────
+
+    [Fact]
+    public async Task Unlink_ProviderCaseMismatch_MatchesAndDeletesCanonicalRow()
+    {
+        var userId = Guid.NewGuid();
+        _externalLoginRepoMock
+            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new ExternalLogin { UserId = userId, Provider = "google", ProviderKey = "sub-1" },
+                new ExternalLogin { UserId = userId, Provider = "discord", ProviderKey = "snow-1" }
+            ]);
+        _externalLoginRepoMock
+            .Setup(x => x.DeleteAsync("google", userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // DELETE /external-logins/GOOGLE used to 404 against a stored `google` row (ordinal
+        // compare) while scopes:revoke on the same casing succeeded.
+        var handler = new UnlinkExternalLoginCommandHandler(_externalLoginRepoMock.Object, _userRepoMock.Object);
+        await handler.Handle(new UnlinkExternalLoginCommand { UserId = userId, Provider = "GOOGLE" }, CancellationToken.None);
+
+        _externalLoginRepoMock.Verify(x => x.DeleteAsync("google", userId, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

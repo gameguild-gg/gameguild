@@ -1,3 +1,4 @@
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Identity.Users;
 
 namespace GameGuild.Identity.Authentication;
@@ -16,9 +17,11 @@ public sealed class SignInMfaService(
     ISessionMfaEvidenceStore sessionEvidence,
     ISignInMfaEnrollmentPort enrollment,
     IMfaRecoveryRequestStore recoveryRequests,
+    MfaOptions? mfaOptions = null,
     TimeProvider? timeProvider = null) : ISignInMfaService
 {
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
+    private readonly MfaOptions _mfaOptions = mfaOptions ?? new();
 
     public async Task<SignInResponse> BeginAsync(Guid verifiedSubjectId, int verifiedTokenVersion, Guid? requestedTenantId,
         DeviceInfo deviceInfo, SignInFirstFactor firstFactor, bool requiresRiskStepUp, CancellationToken cancellationToken)
@@ -52,7 +55,8 @@ public sealed class SignInMfaService(
         {
             return SignInMfaPreparation.PermitWithoutMfa(current.User, decision);
         }
-        if (decision.RequiresMfa && !decision.RequiredByDefault && !current!.HasEnrolledMfa && !requiresRiskStepUp)
+        if (!_mfaOptions.RequireEnrollmentForElevatedRoles &&
+            decision.RequiresMfa && !decision.RequiredByDefault && !current!.HasEnrolledMfa && !requiresRiskStepUp)
         {
             // Elevated-role-only requirement with no enrolled factor: dropping MFA is honored at
             // sign-in. Compliance is reported instead of forcing an enrollment dead-end.

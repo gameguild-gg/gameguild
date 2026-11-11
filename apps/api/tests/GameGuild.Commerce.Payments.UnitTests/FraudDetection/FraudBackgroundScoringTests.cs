@@ -1,52 +1,76 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
 namespace GameGuild.Commerce.Payments.UnitTests.FraudDetection;
 
 /// <summary>
-///     Issue #409 remainder: queue-based asynchronous re-scoring. The bounded queue drops
-///     (never blocks) when full, and the worker escalates a previously-allowed payment
-///     when the deferred background evaluation tightens the decision — leaving already-held
-///     payments and unchanged outcomes untouched.
+///     Issue #409 remainder + issue #1218 G3: durable deferred re-scoring. The volatile
+///     in-memory DropWrite channel (jobs lost on restart, silently dropped when full) is
+///     replaced by a persisted job row with a due-sweep worker: enqueued jobs survive a fresh
+///     context (restart), a failed persist reports a counted best-effort miss instead of
+///     throwing into the payment path, and a persistently failing job dead-letters after the
+///     attempt ceiling. The escalation semantics are unchanged: the background pass can only
+///     tighten a previously-allowed payment.
 /// </summary>
 public class FraudBackgroundScoringTests
 {
     private static readonly Guid TenantId = Guid.NewGuid();
 
-    private readonly PaymentsPersistenceTestDbContext _context = new(
-        new DbContextOptionsBuilder<PaymentsPersistenceTestDbContext>()
-            .UseInMemoryDatabase($"fraud-rescore-{Guid.NewGuid():N}")
-            .Options);
-
+    private readonly PaymentsPersistenceTestDbContext _context = CreateContext();
     private readonly Mock<IPaymentRepository> _paymentRepository = new();
     private readonly Mock<IFraudDetectionService> _fraudDetection = new();
-    private readonly FraudBackgroundScoringQueue _queue = CreateQueue();
 
-    private static FraudBackgroundScoringQueue CreateQueue() =>
-        new(
-            new StubOptionsMonitor(new FraudAssessmentOptions()),
-            NullLogger<FraudBackgroundScoringQueue>.Instance);
+    private static PaymentsPersistenceTestDbContext CreateContext(string? databaseName = null) => new(
+        new DbContextOptionsBuilder<PaymentsPersistenceTestDbContext>()
+            .UseInMemoryDatabase(databaseName ?? $"fraud-rescore-{Guid.NewGuid():N}")
+            .Options);
+
+    private FraudBackgroundScoringJobStore CreateStore(PaymentsPersistenceTestDbContext? context = null) =>
+        new(context ?? _context, NullLogger<FraudBackgroundScoringJobStore>.Instance);
 
     [Fact]
-    public async Task Queue_Should_Dequeue_Enqueued_Jobs_And_Report_PendingCount()
+    public async Task Enqueued_Job_Survives_A_Restart_And_Is_Claimed_By_The_Next_Worker()
     {
-        var job = new FraudBackgroundScoringJob(Guid.NewGuid(), Context(), ["GeoIp"]);
+        using var clock = new FrozenClock();
+        var (payment, _) = NewPayment();
+        var databaseName = $"fraud-rescore-restart-{Guid.NewGuid():N}";
 
-        _queue.TryEnqueue(job).Should().BeTrue();
-        _queue.PendingCount.Should().Be(1);
+        var enqueueContext = CreateContext(databaseName);
+        (await CreateStore(enqueueContext).TryEnqueueAsync(Context(payment.Id), ["GeoIp"])).Should().BeTrue();
 
-        (await _queue.DequeueAsync(CancellationToken.None)).Should().Be(job);
-        _queue.PendingCount.Should().Be(0);
+        // A fresh context over the same database is the restart scenario that used to lose
+        // the job entirely with the in-memory channel.
+        var restartedContext = CreateContext(databaseName);
+        var store = CreateStore(restartedContext);
+        var claimed = await store.ClaimDueAsync(10, "worker-restart");
+
+        claimed.Should().ContainSingle().Which.Should().Match<FraudBackgroundScoringJob>(job =>
+            job.PaymentId == payment.Id
+            && job.Status == FraudBackgroundScoringJobStatus.Processing
+            && job.AttemptCount == 1);
     }
 
     [Fact]
-    public async Task Worker_Should_Escalate_An_Allowed_Payment_When_The_Backend_Pass_Tightens()
+    public async Task TryEnqueue_Returns_False_And_Never_Throws_When_The_Persist_Fails()
     {
-        var payment = NewPayment();
+        using var clock = new FrozenClock();
+        var failing = new ThrowingSaveContext();
+        var store = CreateStore(failing);
+
+        (await store.TryEnqueueAsync(Context(Guid.NewGuid()), ["GeoIp"])).Should()
+            .BeFalse("a failed persist is a counted best-effort miss, never a payment-path error");
+        (await store.TryEnqueueAsync(Context(Guid.NewGuid()), ["GeoIp"])).Should()
+            .BeFalse("the overflow policy must keep swallowing persist failures");
+    }
+
+    [Fact]
+    public async Task Worker_Escalates_An_Allowed_Payment_When_The_Background_Pass_Tightens()
+    {
+        using var clock = new FrozenClock();
+        var (payment, _) = NewPayment();
         payment.RecordFraudAssessment(FraudDecision.Allow, 5, "below review threshold", null);
         _paymentRepository
             .Setup(r => r.GetByIdAsync(payment.Id, It.IsAny<CancellationToken>()))
@@ -58,41 +82,47 @@ public class FraudBackgroundScoringTests
             .Setup(s => s.AssessPaymentForBackgroundAsync(It.IsAny<FraudSignalContext>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Assessment(FraudDecision.Review, 55));
 
-        _queue.TryEnqueue(new FraudBackgroundScoringJob(payment.Id, Context(), ["GeoIp"]));
-        var worker = CreateWorker();
+        var store = CreateStore();
+        await store.TryEnqueueAsync(Context(payment.Id), ["GeoIp"]);
+        var worker = CreateWorker(store);
 
-        var processed = await worker.ProcessOneAsync(CancellationToken.None);
+        var processed = await worker.ProcessDueAsync(CancellationToken.None);
 
-        processed.Should().BeTrue();
+        processed.Should().Be(1);
         payment.FraudDecision.Should().Be(FraudDecision.Review);
         payment.FraudScore.Should().Be(55);
         payment.FraudReviewStatus.Should().Be(FraudReviewStatus.PendingReview);
         payment.Status.Should().Be(PaymentStatus.Failed, "the background escalation held the unsettled payment");
         _paymentRepository.Verify(r => r.UpdateAsync(payment, It.IsAny<CancellationToken>()), Times.Once);
+        (await _context.Set<FraudBackgroundScoringJob>().SingleAsync()).Status
+            .Should().Be(FraudBackgroundScoringJobStatus.Completed);
     }
 
     [Fact]
-    public async Task Worker_Should_Leave_The_Decision_Alone_When_The_Background_Pass_Confirms_Allow()
+    public async Task Worker_Leaves_The_Decision_Alone_When_The_Background_Pass_Confirms_Allow()
     {
-        var payment = NewPayment();
+        using var clock = new FrozenClock();
+        var (payment, _) = NewPayment();
         payment.RecordFraudAssessment(FraudDecision.Allow, 5, "below review threshold", null);
         _fraudDetection
             .Setup(s => s.AssessPaymentForBackgroundAsync(It.IsAny<FraudSignalContext>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Assessment(FraudDecision.Allow, 5));
 
-        _queue.TryEnqueue(new FraudBackgroundScoringJob(payment.Id, Context(), ["GeoIp"]));
-        var worker = CreateWorker();
-
-        await worker.ProcessOneAsync(CancellationToken.None);
+        var store = CreateStore();
+        await store.TryEnqueueAsync(Context(payment.Id), ["GeoIp"]);
+        await CreateWorker(store).ProcessDueAsync(CancellationToken.None);
 
         _paymentRepository.Verify(r => r.UpdateAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()), Times.Never,
             "a confirming re-score never rewrites the payment");
+        (await _context.Set<FraudBackgroundScoringJob>().SingleAsync()).Status
+            .Should().Be(FraudBackgroundScoringJobStatus.Completed);
     }
 
     [Fact]
-    public async Task Worker_Should_Not_Loosen_An_Already_Held_Payment()
+    public async Task Worker_Does_Not_Loosen_An_Already_Held_Payment()
     {
-        var payment = NewPayment();
+        using var clock = new FrozenClock();
+        var (payment, _) = NewPayment();
         payment.RecordFraudAssessment(FraudDecision.Review, 55, "score reached the review threshold", null);
         _paymentRepository
             .Setup(r => r.GetByIdAsync(payment.Id, It.IsAny<CancellationToken>()))
@@ -101,58 +131,95 @@ public class FraudBackgroundScoringTests
             .Setup(s => s.AssessPaymentForBackgroundAsync(It.IsAny<FraudSignalContext>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Assessment(FraudDecision.Review, 90));
 
-        _queue.TryEnqueue(new FraudBackgroundScoringJob(payment.Id, Context(), ["GeoIp"]));
-        var worker = CreateWorker();
-
-        await worker.ProcessOneAsync(CancellationToken.None);
+        var store = CreateStore();
+        await store.TryEnqueueAsync(Context(payment.Id), ["GeoIp"]);
+        await CreateWorker(store).ProcessDueAsync(CancellationToken.None);
 
         payment.FraudScore.Should().Be(55, "escalation is strictly a tightening operation and an existing hold stands");
         _paymentRepository.Verify(r => r.UpdateAsync(It.IsAny<Payment>(), It.IsAny<CancellationToken>()), Times.Never);
+        (await _context.Set<FraudBackgroundScoringJob>().SingleAsync()).Status
+            .Should().Be(FraudBackgroundScoringJobStatus.Completed);
     }
 
     [Fact]
-    public async Task Worker_Should_Isolate_Per_Job_Failures()
+    public async Task Worker_Retries_With_Backoff_Then_DeadLetters_After_The_Attempt_Ceiling()
     {
-        _fraudDetection
-            .Setup(s => s.AssessPaymentForBackgroundAsync(It.IsAny<FraudSignalContext>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("boom"));
-        _queue.TryEnqueue(new FraudBackgroundScoringJob(Guid.NewGuid(), Context(), ["GeoIp"]));
-        var worker = CreateWorker();
+        var clock = new MutableTimeProvider(new DateTimeOffset(2026, 11, 4, 12, 0, 0, TimeSpan.Zero));
+        SystemClock.SetProvider(clock);
+        try
+        {
+            _fraudDetection
+                .Setup(s => s.AssessPaymentForBackgroundAsync(It.IsAny<FraudSignalContext>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("provider unavailable"));
+            var store = CreateStore();
+            await store.TryEnqueueAsync(Context(Guid.NewGuid()), ["GeoIp"]);
+            var worker = CreateWorker(store);
 
-        var processed = await worker.ProcessOneAsync(CancellationToken.None);
+            // Attempts 1 and 2 re-pend with an exponential NextAttemptAt gate...
+            (await worker.ProcessDueAsync(CancellationToken.None)).Should().Be(1);
+            var rePended = await _context.Set<FraudBackgroundScoringJob>().SingleAsync();
+            rePended.Status.Should().Be(FraudBackgroundScoringJobStatus.Pending);
+            rePended.NextAttemptAt.Should().NotBeNull("a failed job is retried with backoff, not dropped");
 
-        processed.Should().BeTrue("the job was consumed even though it failed");
+            // ...the gate holds the job until the clock passes it...
+            (await worker.ProcessDueAsync(CancellationToken.None)).Should().Be(0,
+                "the backoff gate must hold the job before its next attempt");
+            clock.Advance(TimeSpan.FromSeconds(10));
+
+            (await worker.ProcessDueAsync(CancellationToken.None)).Should().Be(1);
+            clock.Advance(TimeSpan.FromSeconds(10));
+
+            // ...and attempt 3 reaches the ceiling: terminal dead-letter, never re-picked.
+            (await worker.ProcessDueAsync(CancellationToken.None)).Should().Be(1);
+            var deadLettered = await _context.Set<FraudBackgroundScoringJob>().SingleAsync();
+            deadLettered.Status.Should().Be(FraudBackgroundScoringJobStatus.DeadLettered,
+                "a persistently failing job must stop retrying after the attempt ceiling (issue #1218 G3)");
+            deadLettered.AttemptCount.Should().Be(FraudBackgroundScoringJobStore.MaxAttempts);
+            deadLettered.NextAttemptAt.Should().BeNull();
+
+            clock.Advance(TimeSpan.FromHours(1));
+            (await store.ClaimDueAsync(10, "worker-after-dlq")).Should().BeEmpty(
+                "a dead-lettered job is terminal");
+        }
+        finally
+        {
+            SystemClock.Reset();
+        }
     }
 
     [Fact]
-    public async Task Worker_Should_Return_False_When_The_Queue_Is_Empty()
+    public async Task Worker_DeadLetters_A_Corrupt_Payload_Immediately()
     {
-        var worker = CreateWorker();
+        using var clock = new FrozenClock();
+        var store = CreateStore();
+        await store.TryEnqueueAsync(Context(Guid.NewGuid()), ["GeoIp"]);
 
-        // An empty queue makes DequeueAsync wait for the next job; a caller token that
-        // fires releases it and the worker reports "nothing processed". (CancellationToken.
-        // None would wait forever by design — the hosted service always passes its
-        // stopping token.)
-        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
-        var processed = await worker.ProcessOneAsync(cts.Token);
+        var job = await _context.Set<FraudBackgroundScoringJob>().SingleAsync();
+        typeof(FraudBackgroundScoringJob).GetProperty("ContextJson")!.SetValue(job, "{\"tenantId\": not-json");
 
-        processed.Should().BeFalse();
+        (await CreateWorker(store).ProcessDueAsync(CancellationToken.None)).Should().Be(1);
+        (await _context.Set<FraudBackgroundScoringJob>().SingleAsync()).Status
+            .Should().Be(FraudBackgroundScoringJobStatus.DeadLettered,
+                "a corrupt payload can never succeed and must not burn the attempt budget");
+        _fraudDetection.Verify(
+            s => s.AssessPaymentForBackgroundAsync(It.IsAny<FraudSignalContext>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
-    private FraudBackgroundScoringWorker CreateWorker() =>
-        new(_queue, _fraudDetection.Object, _paymentRepository.Object);
+    private FraudBackgroundScoringWorker CreateWorker(FraudBackgroundScoringJobStore store) =>
+        new(store, _fraudDetection.Object, _paymentRepository.Object);
 
-    private Payment NewPayment()
+    private (Payment Payment, PaymentsPersistenceTestDbContext Context) NewPayment()
     {
         var payment = Payment.Create(Guid.NewGuid(), 25m, "USD", $"key-{Guid.NewGuid():N}", subscriptionId: Guid.NewGuid());
         _context.Set<Payment>().Add(payment);
         _context.SaveChanges();
-        return payment;
+        return (payment, _context);
     }
 
-    private static FraudSignalContext Context() => new(
-        Guid.NewGuid(),
-        PaymentId: Guid.NewGuid(),
+    private static FraudSignalContext Context(Guid paymentId) => new(
+        TenantId,
+        PaymentId: paymentId,
         SubscriptionId: Guid.NewGuid(),
         ExternalCustomerId: "cus_test",
         PaymentMethodId: "pm_test",
@@ -170,13 +237,34 @@ public class FraudBackgroundScoringTests
             [],
             SystemClock.UtcNow);
 
-    /// <summary>Minimal IOptionsMonitor stand-in for unit tests.</summary>
-    private sealed class StubOptionsMonitor(FraudAssessmentOptions value) : IOptionsMonitor<FraudAssessmentOptions>
+    /// <summary>
+    ///     InMemory database whose SaveChanges always fails — stands in for the persistence
+    ///     outage that the old channel's DropWrite mode used to swallow silently.
+    /// </summary>
+    private sealed class ThrowingSaveContext : PaymentsPersistenceTestDbContext
     {
-        public FraudAssessmentOptions CurrentValue => value;
+        public ThrowingSaveContext() : base(
+            new DbContextOptionsBuilder<PaymentsPersistenceTestDbContext>()
+                .UseInMemoryDatabase($"fraud-rescore-fail-{Guid.NewGuid():N}")
+                .Options)
+        {
+        }
 
-        public FraudAssessmentOptions Get(string? name) => value;
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("database unavailable");
+    }
 
-        public IDisposable? OnChange(Action<FraudAssessmentOptions, string?> listener) => null;
+    /// <summary>Freezes the shared clock for SystemClock.UtcNow reads and restores it on dispose.</summary>
+    private sealed class FrozenClock : IDisposable
+    {
+        public FrozenClock() => SystemClock.SetProvider(new MutableTimeProvider(DateTimeOffset.UtcNow));
+        public void Dispose() => SystemClock.Reset();
+    }
+
+    private sealed class MutableTimeProvider(DateTimeOffset value) : TimeProvider
+    {
+        private DateTimeOffset _value = value;
+        public override DateTimeOffset GetUtcNow() => _value;
+        public void Advance(TimeSpan duration) => _value += duration;
     }
 }

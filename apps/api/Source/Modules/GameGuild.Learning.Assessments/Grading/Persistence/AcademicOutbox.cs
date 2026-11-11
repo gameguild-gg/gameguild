@@ -85,6 +85,14 @@ public sealed class AcademicOutboxDispatcher(
     private const int BatchSize = 25;
     private static readonly TimeSpan ClaimTimeout = TimeSpan.FromMinutes(5);
 
+    /// <summary>
+    ///     Attempt ceiling before a delivery is dead-lettered (issue #1218 G5). Mirrors the
+    ///     core inbox's <c>InboxStore.MaxAttempts</c> house pattern: exponential backoff up to
+    ///     the cap, then the terminal <see cref="AcademicOutboxDeliveryStatus.DeadLettered"/>
+    ///     state — a permanently failing consumer stops being retried forever.
+    /// </summary>
+    public const int MaxAttemptsBeforeDeadLetter = 5;
+
     public async Task<int> DispatchBatchAsync(CancellationToken cancellationToken = default)
     {
         await using var discoveryScope = scopeFactory.CreateAsyncScope();
@@ -122,7 +130,9 @@ public sealed class AcademicOutboxDispatcher(
         var delivery = await context.Set<AcademicOutboxDelivery>()
             .FirstOrDefaultAsync(value => value.Id == deliveryId, cancellationToken)
             .ConfigureAwait(false);
-        if (delivery is null || delivery.Status == AcademicOutboxDeliveryStatus.Confirmed)
+        if (delivery is null
+            || delivery.Status == AcademicOutboxDeliveryStatus.Confirmed
+            || delivery.Status == AcademicOutboxDeliveryStatus.DeadLettered)
         {
             return false;
         }
@@ -189,6 +199,17 @@ public sealed class AcademicOutboxDispatcher(
         string error,
         CancellationToken cancellationToken)
     {
+        if (delivery.AttemptCount >= MaxAttemptsBeforeDeadLetter)
+        {
+            // Attempt ceiling reached (issue #1218 G5): terminal dead-letter instead of an
+            // infinite 5-minute retry loop for a poison message / missing frozen consumer.
+            delivery.DeadLetter(error, SystemClock.UtcNow);
+            message.MarkFailed();
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            GradingOperationalMetrics.RecordOutboxDeadLettered(message.EventType, delivery.ConsumerKey);
+            return;
+        }
+
         var delaySeconds = Math.Min(300, 1 << Math.Min(delivery.AttemptCount, 8));
         delivery.Fail(error, SystemClock.UtcNow.AddSeconds(delaySeconds));
         message.MarkFailed();

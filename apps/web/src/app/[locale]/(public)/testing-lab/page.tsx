@@ -2,6 +2,15 @@ import { TestingEventsBrowser } from "@/components/testing-lab/landing/testing-s
 import { presentTestingEvents } from "@/components/testing-lab/landing/testing-events-presentation";
 import { getPublicTestingEventsDirectory } from "@/lib/testing-lab/events-queries";
 import { getLocalizationPreference } from "@/lib/user-settings/queries";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  path: "/testing-lab",
+  title: "Testing Lab — GameGuild",
+  description:
+    "Join playtesting events and QA workflows on GameGuild — find live sessions, give structured feedback, and help creators ship better games.",
+  twitterLargeCard: true,
+});
 
 function safeTimeZone(timeZone?: string | null) {
   if (!timeZone) return "UTC";

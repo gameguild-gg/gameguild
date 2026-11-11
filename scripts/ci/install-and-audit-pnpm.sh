@@ -50,4 +50,12 @@ lock_hash_after_audit="$(sha256sum "$root_lock" | awk '{print $1}')"
 
 printf '> node scripts/ci/validate-pnpm-audit.mjs\n'
 node "$script_dir/validate-pnpm-audit.mjs" "$audit_report" "$audit_exit_code"
-node --test "$script_dir/tests/dependency-security.test.mjs" "$script_dir/tests/next-dev-origin-security.test.mjs" "$script_dir/tests/glob-minimatch-security.test.mjs"
+# glob-minimatch-security parses the full pnpm lockfile; default V8 heap
+# OOMs on runner hardware. Scope the raised heap to that single invocation
+# only — exporting it via NODE_OPTIONS would propagate into every
+# security-test worker process and override their explicit `resourceLimits`
+# caps (128/256 MB), removing the bounded-memory regression checks.
+printf '> node --test dependency-security next-dev-origin-security (default heap)\n'
+node --test "$script_dir/tests/dependency-security.test.mjs" "$script_dir/tests/next-dev-origin-security.test.mjs"
+printf '> node --max-old-space-size=8192 --test glob-minimatch-security\n'
+node --max-old-space-size=8192 --test "$script_dir/tests/glob-minimatch-security.test.mjs"

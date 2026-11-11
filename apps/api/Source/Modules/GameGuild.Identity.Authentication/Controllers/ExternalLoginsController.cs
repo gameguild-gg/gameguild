@@ -11,7 +11,7 @@ namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     External logins API - list, link, and unlink external identity providers
-///     (Google, Discord) for the authenticated user.
+///     (Google, Discord, GitHub, Microsoft) for the authenticated user.
 /// </summary>
 /// <remarks>
 ///     Rate limited under the Authentication policy like all auth endpoints.
@@ -143,10 +143,85 @@ public sealed class ExternalLoginsController(ISender sender) : BaseApiController
 
         try
         {
-            var command = new DiscordLinkAuthorizeCommand { RedirectUri = body.RedirectUri };
+            var command = new DiscordLinkAuthorizeCommand { UserId = GetUserId(), RedirectUri = body.RedirectUri };
             var result = await sender.Send(command, ct).ConfigureAwait(false);
 
             return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return ProblemFrom(ex);
+        }
+    }
+
+    /// <summary>
+    ///     Start the GitHub or Microsoft link flow for the current user (issue #1181).
+    /// </summary>
+    /// <param name="provider">Provider name (github, microsoft)</param>
+    /// <param name="body">Redirect URI to return to after provider authorization</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Provider authorization URL and the per-request state parameter</returns>
+    [HttpPost("v{version:apiVersion}/auth/external-logins/{provider}:link-authorize")]
+    [EndpointSummary("Start external account link (GitHub, Microsoft)")]
+    [EndpointDescription("Returns the provider OAuth authorization URL plus the state parameter. The state is also recorded server-side and validated (one-shot) at the link callback. Supported providers: github, microsoft.")]
+    [ProducesResponseType<ExternalLoginLinkAuthorizeResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> LinkAuthorize(string provider, [FromBody] DiscordLinkAuthorizeRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        try
+        {
+            var command = new ExternalLoginLinkAuthorizeCommand
+            {
+                UserId = GetUserId(),
+                Provider = provider,
+                RedirectUri = body.RedirectUri
+            };
+            var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return ProblemFrom(ex);
+        }
+    }
+
+    /// <summary>
+    ///     Complete the GitHub or Microsoft link flow for the current user (issue #1181).
+    /// </summary>
+    /// <param name="provider">Provider name (github, microsoft)</param>
+    /// <param name="body">Authorization code, state, and the redirect URI used at authorize time</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPost("v{version:apiVersion}/auth/external-logins/{provider}:link-callback")]
+    [EndpointSummary("Complete external account link (GitHub, Microsoft)")]
+    [EndpointDescription("Round-trip validates the echoed state against the server-issued record, exchanges the authorization code for the user profile, and links the provider identity to the authenticated user. Idempotent when already linked to the same user. Supported providers: github, microsoft.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> LinkCallback(string provider, [FromBody] DiscordLinkCallbackRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        try
+        {
+            var command = new ExternalLoginLinkCallbackCommand
+            {
+                UserId = GetUserId(),
+                Provider = provider,
+                Code = body.Code,
+                State = body.State,
+                RedirectUri = body.RedirectUri
+            };
+            await sender.Send(command, ct).ConfigureAwait(false);
+
+            return NoContent();
         }
         catch (Exception ex)
         {
@@ -313,6 +388,15 @@ public sealed class ExternalLoginsController(ISender sender) : BaseApiController
                 Status = StatusCodes.Status400BadRequest,
                 Title = "Bad request",
                 Detail = e.Message
+            }),
+            // Issue #1181: a state that fails round-trip validation is a tampered/replayed
+            // link callback — 400, not a provider outage.
+            InvalidOAuthLinkStateException e => BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Bad request",
+                Detail = e.Message,
+                Extensions = { ["errorCode"] = "oauth_link_state_invalid" }
             }),
             NotSupportedException e => BadRequest(new ProblemDetails
             {

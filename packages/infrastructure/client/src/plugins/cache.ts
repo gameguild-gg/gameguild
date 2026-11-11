@@ -4,7 +4,7 @@
  * In-memory caching with TTL and tag-based invalidation.
  */
 
-import type { Interceptor, RequestConfig, ApiResponse } from '../runtime/transport/types.js';
+import type { Interceptor, RequestConfig, ApiResponse } from '../runtime/transport/types';
 
 /**
  * Cache entry

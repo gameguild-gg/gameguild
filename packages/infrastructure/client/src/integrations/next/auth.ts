@@ -49,10 +49,10 @@
  * ```
  */
 
-import type { GameGuildAuthConfig, AuthInstance } from '../../runtime/auth/types.js';
-import { resolveConfig } from './config.js';
-import { createHandlers } from './handlers.js';
-import { createAuthFunction, createSignInAction, createSignUpAction, createSignOutAction, createUpdateAction } from './actions.js';
+import type { GameGuildAuthConfig, AuthInstance } from '../../runtime/auth/types';
+import { resolveConfig } from './config';
+import { createHandlers } from './handlers';
+import { createAuthFunction, createSignInAction, createSignUpAction, createSignOutAction, createUpdateAction } from './actions';
 
 /**
  * Initialize the GameGuild authentication system.
@@ -85,7 +85,7 @@ export function GameGuildAuth(userConfig: GameGuildAuthConfig): AuthInstance {
 
   return {
     handlers: { GET, POST },
-    auth: authFn as AuthInstance['auth'],
+    auth: authFn,
     signIn,
     signUp,
     signOut,

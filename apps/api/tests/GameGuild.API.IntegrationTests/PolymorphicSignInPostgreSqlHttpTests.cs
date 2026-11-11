@@ -372,6 +372,18 @@ public sealed class PolymorphicSignInPostgreSqlHttpTests(ApiPostgreSqlFixture fi
             credential = Identifier(account, type), credentialType = type,
             account.Password, account.TenantId
         });
+        if (gate == "held-ip")
+        {
+            // Issue #1309: an externally held IP advisory lock models another valid
+            // sign-in from the same source address still in flight. Admission engages
+            // the shared per-IP lock only once the address has failed attempts in the
+            // window, so a clean address with valid credentials must succeed even while
+            // that lock is held — the account lock (held-account gate) still denies.
+            using var payload = await ReadAsync(response, HttpStatusCode.OK);
+            await AssertCompletedAsync(factory, account, payload.RootElement);
+            return;
+        }
+
         await AssertGenericDenialAsync(factory, response);
         Assert.True(elapsed.Elapsed >= TimeSpan.FromMilliseconds(400));
         Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
@@ -379,6 +391,45 @@ public sealed class PolymorphicSignInPostgreSqlHttpTests(ApiPostgreSqlFixture fi
         var database = verification.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Assert.False(await database.Set<UserSession>().AnyAsync(session => session.UserId == account.User.Id));
         Assert.False(await database.Set<AuthenticationAttempt>().AnyAsync(attempt => attempt.Email == account.User.Email && attempt.IsSuccessful));
+    }
+
+    [Fact]
+    public async Task ParallelValidSignInsFromOneCleanSourceAddressAllSucceed()
+    {
+        // Issue #1309's load-smoke shape, end to end over the real pipeline: several
+        // valid sign-ins for distinct accounts, one shared source address, all requests
+        // in flight at once (each holds real BCrypt credential work). Valid concurrent
+        // sign-ins must not be denied by per-source-IP admission contention, while the
+        // per-IP failure ceiling (set to 3 by the source-address factory) still applies
+        // to attempts from an address that actually produced failures.
+        var bytes = RandomNumberGenerator.GetBytes(16);
+        bytes[0] = 0x20; bytes[1] = 0x01; bytes[2] = 0x0d; bytes[3] = 0xb8;
+        using var factory = CreateFactory(sourceAddress: new IPAddress(bytes));
+        var accounts = new List<Account>();
+        for (var index = 0; index < 4; index++)
+        {
+            accounts.Add(await SeedAsync(factory));
+        }
+
+        using var client = factory.CreateClient();
+        var responses = await Task.WhenAll(accounts.Select(account => client.PostAsJsonAsync(
+            LocalSignInEndpoint(),
+            new { email = account.User.Email, account.Password, account.TenantId })));
+
+        var results = new List<JsonElement>();
+        foreach (var response in responses)
+        {
+            using (response)
+            {
+                using var payload = await ReadAsync(response, HttpStatusCode.OK);
+                results.Add(payload.RootElement.Clone());
+            }
+        }
+
+        for (var index = 0; index < accounts.Count; index++)
+        {
+            await AssertCompletedAsync(factory, accounts[index], results[index]);
+        }
     }
 
     [Theory]

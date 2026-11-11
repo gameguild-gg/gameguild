@@ -480,7 +480,7 @@ describe('createSignOutAction — extended', () => {
     const adapter = createMockAdapter({ '__me.session-token': 'encrypted-session' });
     mockCookieAdapter = adapter;
 
-    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response('{}', { status: 200 }));
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response('{}', { status: 200 }));
 
     const config = makeConfig();
     const signOut = createSignOutAction(config);
@@ -488,6 +488,56 @@ describe('createSignOutAction — extended', () => {
     await expect(signOut({ redirect: false })).resolves.not.toThrow();
     // Cookie should have been set to empty (deletion)
     expect(adapter.set).toHaveBeenCalled();
+    // Issue #1196: sign-out must call the dedicated sign-out endpoint (jti deny-list),
+    // not fire-and-forget tokens:revoke — through the generated client (the bearer
+    // rides the client's auth interceptor).
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/auth/sign-out'),
+      expect.objectContaining({
+        body: JSON.stringify({ logoutEverywhere: false }),
+        method: 'POST',
+      }),
+    );
+    const headers = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
+    expect(headers.get('Content-Type')).toBe('application/json');
+    expect(headers.get('Authorization')).toBe('Bearer access-token');
+    expect(fetchSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('tokens:revoke'),
+      expect.anything(),
+    );
+  });
+
+  it('should forward logoutEverywhere to the sign-out endpoint', async () => {
+    const adapter = createMockAdapter({ '__me.session-token': 'encrypted-session' });
+    mockCookieAdapter = adapter;
+
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response('{}', { status: 200 }));
+
+    const config = makeConfig();
+    const signOut = createSignOutAction(config);
+
+    await expect(signOut({ redirect: false, logoutEverywhere: true })).resolves.not.toThrow();
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/auth/sign-out'),
+      expect.objectContaining({
+        body: JSON.stringify({ logoutEverywhere: true }),
+        method: 'POST',
+      }),
+    );
+  });
+
+  it('should fall back to tokens:revoke when the sign-out endpoint fails', async () => {
+    const adapter = createMockAdapter({ '__me.session-token': 'encrypted-session' });
+    mockCookieAdapter = adapter;
+
+    fetchSpy = vi.spyOn(global, 'fetch')
+      .mockResolvedValueOnce(new Response('unauthorized', { status: 401 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    const config = makeConfig();
+    const signOut = createSignOutAction(config);
+
+    await expect(signOut({ redirect: false })).resolves.not.toThrow();
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringContaining('tokens:revoke'),
       expect.objectContaining({
@@ -521,7 +571,7 @@ describe('createSignOutAction — extended', () => {
 
   it('should continue even if token revocation fails', async () => {
     mockCookieAdapter = createMockAdapter({ '__me.session-token': 'encrypted-session' });
-    fetchSpy = vi.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('network'));
+    fetchSpy = vi.spyOn(global, 'fetch').mockRejectedValue(new Error('network'));
 
     const config = makeConfig();
     const signOut = createSignOutAction(config);

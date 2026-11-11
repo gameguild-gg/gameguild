@@ -1,0 +1,54 @@
+/**
+ * Google Consent Mode v2 helpers (issue #1206).
+ *
+ * The denied-by-default `gtag('consent', 'default', …)` call must run BEFORE
+ * any tag loads — it is what suppresses cookieless pings and cookie writes
+ * while consent is denied. The gtag shim here is only ever created to carry
+ * consent commands; transport scripts (gtag.js / gtm.js) are injected only
+ * once at least one purpose is granted.
+ */
+
+import { toConsentMode } from './state';
+import type { ConsentState } from './state';
+
+export type ConsentWindow = Window & {
+  dataLayer?: unknown[];
+  gtag?: (...args: unknown[]) => void;
+};
+
+/**
+ * Ensures `window.dataLayer` + the `window.gtag` shim exist and pushes the
+ * denied-by-default consent command (idempotent — guarded by a dataLayer
+ * marker so repeated mounts never re-issue a default over a later grant).
+ */
+export function ensureConsentDefaults(w: ConsentWindow): void {
+  w.dataLayer = w.dataLayer || [];
+  // gtag.js only processes queue entries that are the gtag() ARGUMENTS object —
+  // array-form entries are silently dropped (observed live: usedDefault stayed
+  // false and zero /g/collect fired while array pushes accumulated).
+  w.gtag ??= function (this: unknown) {
+    // eslint-disable-next-line prefer-rest-params -- arguments object is gtag.js's wire format
+    w.dataLayer!.push(arguments as unknown as unknown[]);
+  };
+
+  const alreadySet = w.dataLayer.some(
+    (entry): entry is Record<string, unknown> =>
+      typeof entry === 'object' && entry !== null && !Array.isArray(entry) && entry['gg:consent-default'] === true,
+  );
+  if (alreadySet) return;
+
+  w.dataLayer.push({ 'gg:consent-default': true });
+  w.gtag('consent', 'default', {
+    ad_storage: 'denied',
+    analytics_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    wait_for_update: 500,
+  });
+}
+
+/** Pushes a consent update mapped from the granular state. */
+export function pushConsentUpdate(w: ConsentWindow, state: ConsentState): void {
+  ensureConsentDefaults(w);
+  w.gtag!('consent', 'update', toConsentMode(state));
+}

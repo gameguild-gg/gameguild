@@ -25,6 +25,9 @@ public sealed class ApiKeyConfiguration : IEntityTypeConfiguration<ApiKey>
         builder.Property(key => key.RevocationReason).HasColumnName("revocation_reason").HasMaxLength(200);
         builder.Property(key => key.ReplacesKeyId).HasColumnName("replaces_key_id");
         builder.Property(key => key.RotationGraceEndsAt).HasColumnName("rotation_grace_ends_at");
+        // Issue #1192: creator linkage — the API-key credential that minted this key, so
+        // revocation can cascade to attacker-minted siblings.
+        builder.Property(key => key.CreatedByApiKeyId).HasColumnName("created_by_api_key_id");
         builder.Property(key => key.Version).HasColumnName("version").IsConcurrencyToken();
         builder.Property(key => key.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(key => key.UpdatedAt).HasColumnName("updated_at").IsRequired();
@@ -35,6 +38,14 @@ public sealed class ApiKeyConfiguration : IEntityTypeConfiguration<ApiKey>
         builder.HasIndex(key => key.IsActive).HasDatabaseName("ix_api_keys_is_active");
         builder.HasIndex(key => key.ExpiresAt).HasDatabaseName("ix_api_keys_expires_at");
         builder.HasIndex(key => key.ReplacesKeyId).HasDatabaseName("ix_api_keys_replaces_key_id");
+        builder.HasIndex(key => key.CreatedByApiKeyId).HasDatabaseName("ix_api_keys_created_by_api_key_id");
+        // Issue #1156: the users table is the principal for every user-scoped
+        // authentication artifact. Restrict: user removal is soft-delete; a hard delete
+        // must not silently cascade credential material away.
+        builder.HasOne<GameGuild.Identity.Users.User>()
+            .WithMany()
+            .HasForeignKey(key => key.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.Ignore(key => key.DomainEvents);
         builder.Ignore(key => key.IsGlobal);
         builder.Ignore(key => key.IsNew);

@@ -4,8 +4,8 @@
  * Prevents duplicate in-flight requests by caching pending promises
  */
 
-import type { Result } from '../result/types.js';
-import type { ApiError } from '../errors/types.js';
+import type { Result } from '../result/types';
+import type { ApiError } from '../errors/types';
 
 export interface DeduplicationConfig {
   /**
@@ -52,7 +52,7 @@ export class RequestDeduplicator {
 
     // Execute request and cache promise
     const promise = executor();
-    this.pendingRequests.set(key, promise as Promise<Result<unknown, ApiError>>);
+    this.pendingRequests.set(key, promise);
 
     // Clean up after completion
     promise.finally(() => {

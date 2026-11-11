@@ -81,21 +81,34 @@ public sealed class SessionMutationCommandHandler(
         // must not be enough to grant device trust. A step-up receipt proves the user just
         // re-presented an MFA factor for exactly this operation; the consume call enforces the
         // receipt's subject, binding, validity window, and single use.
+        // Issue #1191: a missing/invalid receipt surfaces as a StepUpRequiredException so the
+        // controller answers with the structured step-up challenge instructions (423) instead
+        // of an ambiguous failure.
+        var binding = TrustDeviceStepUpBinding(command.DeviceName ?? string.Empty);
         if (string.IsNullOrWhiteSpace(command.StepUpReceipt))
         {
-            return false;
+            throw new StepUpRequiredException(
+                "Trusting a device requires fresh verification. Create and verify a step-up challenge for operation 'trust-device' and pass the receipt as stepUpReceipt.",
+                binding.OperationType,
+                binding.TargetReference,
+                binding.PayloadHash);
         }
 
         try
         {
             await stepUpReceiptService.ConsumeAsync(
-                TrustDeviceStepUpBinding(command.DeviceName ?? string.Empty),
+                binding,
                 command.StepUpReceipt,
                 cancellationToken).ConfigureAwait(false);
         }
-        catch (StepUpReceiptInvalidException)
+        catch (StepUpReceiptInvalidException exception)
         {
-            return false;
+            throw new StepUpRequiredException(
+                exception.Message,
+                binding.OperationType,
+                binding.TargetReference,
+                binding.PayloadHash,
+                exception);
         }
 
         return await sessionService.TrustDeviceAsync(

@@ -11,6 +11,7 @@ public interface IConsentService
     Task<DataSubjectRequestDto> SubmitDataSubjectRequestAsync(Guid userId, DataSubjectRequestType type, string? description, CancellationToken ct = default);
     Task<DataSubjectRequestDto> ProcessDataSubjectRequestAsync(Guid requestId, Guid processedBy, string? notes, CancellationToken ct = default);
     Task<List<DataSubjectRequestDto>> GetPendingRequestsAsync(CancellationToken ct = default);
+    Task<int> ExpireOverdueDataSubjectRequestsAsync(DateTime? utcNow = null, CancellationToken ct = default);
 }
 
 public record ConsentPolicyDto(Guid Id, string Name, PolicyType PolicyType, bool IsMandatory, bool IsActive, string? CurrentVersion);

@@ -2,4 +2,4 @@
  * Deduplication Module
  */
 
-export { RequestDeduplicator, type DeduplicationConfig } from './deduplicator.js';
+export { RequestDeduplicator, type DeduplicationConfig } from './deduplicator';

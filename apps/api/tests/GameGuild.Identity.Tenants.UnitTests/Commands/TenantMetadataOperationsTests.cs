@@ -31,7 +31,7 @@ public sealed class TenantMetadataOperationsTests
     public async Task CustomFieldHandlers_Should_CreateAndMergeTenantFields()
     {
         var tenantId = Guid.NewGuid();
-        var updateHandler = new UpdateTenantCustomFieldsCommandHandler(_repository.Object);
+        var updateHandler = new UpdateTenantCustomFieldsCommandHandler(_repository.Object, new AllowAllTenantAdministrationGuard());
         var queryHandler = new GetTenantCustomFieldsQueryHandler(_repository.Object);
 
         await updateHandler.Handle(
@@ -52,8 +52,8 @@ public sealed class TenantMetadataOperationsTests
     public async Task TagHandlers_Should_MergeThenReplaceNormalizedTags()
     {
         var tenantId = Guid.NewGuid();
-        var updateHandler = new UpdateTenantTagsCommandHandler(_repository.Object);
-        var replaceHandler = new ReplaceTenantTagsCommandHandler(_repository.Object);
+        var updateHandler = new UpdateTenantTagsCommandHandler(_repository.Object, new AllowAllTenantAdministrationGuard());
+        var replaceHandler = new ReplaceTenantTagsCommandHandler(_repository.Object, new AllowAllTenantAdministrationGuard());
         var queryHandler = new GetTenantTagsQueryHandler(_repository.Object);
 
         await updateHandler.Handle(
@@ -86,8 +86,8 @@ public sealed class TenantMetadataOperationsTests
         _storedMetadata.CreatedAt = new DateTime(2024, 1, 2, 3, 4, 5, DateTimeKind.Unspecified);
         _storedMetadata.UpdatedAt = new DateTime(2024, 2, 3, 4, 5, 6, DateTimeKind.Utc);
 
-        var updateHandler = new UpdateTenantMetadataCommandHandler(_repository.Object);
-        var replaceHandler = new ReplaceTenantMetadataCommandHandler(_repository.Object);
+        var updateHandler = new UpdateTenantMetadataCommandHandler(_repository.Object, new AllowAllTenantAdministrationGuard());
+        var replaceHandler = new ReplaceTenantMetadataCommandHandler(_repository.Object, new AllowAllTenantAdministrationGuard());
         var queryHandler = new GetTenantMetadataQueryHandler(_repository.Object);
 
         await updateHandler.Handle(
@@ -223,7 +223,7 @@ public sealed class TenantMetadataOperationsTests
         fallback.BusinessInfo.ComplianceRequirements.Should().BeEmpty();
         fallback.ContactInfo.Address.Should().BeNull();
 
-        var updateHandler = new UpdateTenantMetadataCommandHandler(_repository.Object);
+        var updateHandler = new UpdateTenantMetadataCommandHandler(_repository.Object, new AllowAllTenantAdministrationGuard());
         await updateHandler.Handle(
             new UpdateTenantMetadataCommand(
                 invalidTenantId,

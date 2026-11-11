@@ -8,10 +8,10 @@
  * JWT encryption, cookies, and callbacks.
  */
 
-import type { JWTPayload, Session, ProviderResult, ResolvedAuthConfig } from './types.js';
-import { encodeJWT, decodeJWT } from './jwt.js';
-import { TokenRefreshError } from './errors.js';
-import { resolveAuthPermissions, resolveAuthRoles } from './claims.js';
+import type { JWTPayload, Session, ProviderResult, ResolvedAuthConfig } from './types';
+import { encodeJWT, decodeJWT } from './jwt';
+import { TokenRefreshError } from './errors';
+import { resolveAuthPermissions, resolveAuthRoles } from './claims';
 
 /** Threshold before access token expiry to trigger refresh (30 seconds) */
 const REFRESH_THRESHOLD_MS = 30_000;
@@ -164,20 +164,20 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
       ? {
           ...token.user,
           id: typeof refreshedUser.id === 'string' ? refreshedUser.id : token.user.id,
-          email: typeof refreshedUser.email === 'string' || refreshedUser.email === null ? (refreshedUser.email as string | null) : token.user.email,
+          email: typeof refreshedUser.email === 'string' || refreshedUser.email === null ? refreshedUser.email : token.user.email,
           name:
             typeof refreshedUser.displayName === 'string'
               ? refreshedUser.displayName
               : typeof refreshedUser.username === 'string'
                 ? refreshedUser.username
                 : typeof refreshedUser.name === 'string' || refreshedUser.name === null
-                  ? (refreshedUser.name as string | null)
+                  ? refreshedUser.name
                   : token.user.name,
           image:
             typeof refreshedUser.profilePictureUrl === 'string'
               ? refreshedUser.profilePictureUrl
               : typeof refreshedUser.image === 'string' || refreshedUser.image === null
-                ? (refreshedUser.image as string | null)
+                ? refreshedUser.image
                 : token.user.image,
           roles: resolveAuthRoles(data, refreshedUser),
           permissions: resolveAuthPermissions(data, refreshedUser),
@@ -195,7 +195,7 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
       refreshToken: (data.refreshToken as string) || token.refreshToken,
       accessTokenExpires,
       refreshTokenExpires: refreshTokenExpires ?? token.refreshTokenExpires,
-      tenantId: typeof data.tenantId === 'string' || data.tenantId === null ? (data.tenantId as string | null) : token.tenantId,
+      tenantId: typeof data.tenantId === 'string' || data.tenantId === null ? data.tenantId : token.tenantId,
       availableTenants: Array.isArray(data.availableTenants) ? (data.availableTenants as Array<{ id: string; name: string }>) : token.availableTenants,
     };
   } catch (error) {
@@ -219,11 +219,13 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
 export async function processSession(
   encryptedToken: string,
   config: ResolvedAuthConfig,
+  options?: { allowRefresh?: boolean | (() => boolean) },
 ): Promise<{
   session: Session | null;
   token: JWTPayload | null;
   updated: boolean;
 }> {
+  const allowRefreshOption = options?.allowRefresh;
   // 1. Decrypt the JWT
   const token = await decodeJWT({
     token: encryptedToken,
@@ -242,31 +244,47 @@ export async function processSession(
   let currentToken = token;
   let tokenUpdated = false;
 
-  // 3. Check if access token needs refresh
+  // 3. Check if access token needs refresh. Rotation is skipped when the
+  // caller cannot persist the rotated cookie: the backend revokes the
+  // presented refresh token on every successful refresh, so rotating in a
+  // read-only context (e.g. a Server Component render) would strand the
+  // browser on a revoked token and trigger server-side replay containment.
+  // `allowRefresh` may be lazy so persistence is probed only when a refresh
+  // is actually due.
   if (shouldRefreshToken(currentToken)) {
-    try {
-      currentToken = await refreshAccessToken(currentToken, config);
-      tokenUpdated = true;
-    } catch (error) {
-      // A denied refresh cannot keep an authenticated session. A transient
-      // failure may retain a still-valid access token until its deadline.
-      const refreshDenied = error instanceof TokenRefreshError && (error.responseStatus === 401 || error.responseStatus === 403);
+    const rotationAllowed = typeof allowRefreshOption === 'function' ? allowRefreshOption() : allowRefreshOption !== false;
+    if (!rotationAllowed) {
+      // Fail closed: an already-expired access token must not surface as an
+      // authenticated session whose bearer is rejected downstream.
       const accessExpired = currentToken.accessTokenExpires != null && Date.now() >= currentToken.accessTokenExpires;
-      if (refreshDenied || accessExpired) {
-        /* v8 ignore start */
-        if (config.debug) {
-          console.warn('[auth] Session cannot be refreshed, requiring authentication');
-        }
-        /* v8 ignore stop */
+      if (accessExpired) {
         return { session: null, token: null, updated: false };
       }
-      // Access token is near-expiry but not yet expired — keep the session
-      // alive so the current request can still succeed.
-      /* v8 ignore start */
-      if (config.debug) {
-        console.warn('[auth] Token refresh failed, session may become stale soon');
+    } else {
+      try {
+        currentToken = await refreshAccessToken(currentToken, config);
+        tokenUpdated = true;
+      } catch (error) {
+        // A denied refresh cannot keep an authenticated session. A transient
+        // failure may retain a still-valid access token until its deadline.
+        const refreshDenied = error instanceof TokenRefreshError && (error.responseStatus === 401 || error.responseStatus === 403);
+        const accessExpired = currentToken.accessTokenExpires != null && Date.now() >= currentToken.accessTokenExpires;
+        if (refreshDenied || accessExpired) {
+          /* v8 ignore start */
+          if (config.debug) {
+            console.warn('[auth] Session cannot be refreshed, requiring authentication');
+          }
+          /* v8 ignore stop */
+          return { session: null, token: null, updated: false };
+        }
+        // Access token is near-expiry but not yet expired — keep the session
+        // alive so the current request can still succeed.
+        /* v8 ignore start */
+        if (config.debug) {
+          console.warn('[auth] Token refresh failed, session may become stale soon');
+        }
+        /* v8 ignore stop */
       }
-      /* v8 ignore stop */
     }
   }
 

@@ -1010,6 +1010,10 @@ public sealed class PasswordCommandHandlersTests
             .ReturnsAsync(true);
         sessionRepository.Setup(r => r.TerminateAllForUserAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+        // The sessions-terminated notification (issue #1091) counts the active sessions
+        // before the legacy repository fallback terminates them.
+        sessionRepository.Setup(r => r.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<UserSession>());
         var options = new SessionOptions { TerminateSessionsOnPasswordChange = true };
 
         var handler = new ResetPasswordCommandHandler(

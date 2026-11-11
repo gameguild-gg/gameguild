@@ -7,6 +7,7 @@ import { getPublicTestingEventExperience } from '@/lib/testing-lab/events-querie
 import { getPublicTestingEvent } from '@/lib/testing-lab/events-public-queries';
 import { getTestingProjectVersionOptions } from '@/lib/testing-lab/queries';
 import { getLocalizationPreference } from '@/lib/user-settings/queries';
+import { buildEventJsonLd, JsonLd } from '@/lib/seo/jsonld';
 import type {
   TestingLabPublicTestingEventSlotProjection,
 } from '@game-guild/client';
@@ -208,6 +209,16 @@ export default async function Page({
 
   return (
     <div className="grid w-full grid-cols-1 lg:grid-cols-[19rem_minmax(0,1fr)]">
+      <JsonLd
+        data={buildEventJsonLd({
+          name: event.name?.trim() || 'Community playtest',
+          description: event.description,
+          url: `/testing-lab/events/${eventId}`,
+          startDate: event.startsAt,
+          endDate: event.endsAt,
+          mode: event.mode,
+        })}
+      />
       <aside
         id="event-info"
         aria-label="Playtest details"

@@ -91,24 +91,9 @@
       "count": 1
     }
   },
-  "src/integrations/next/actions.ts": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 1
-    }
-  },
-  "src/integrations/next/auth.ts": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 1
-    }
-  },
   "src/integrations/next/config.ts": {
     "@typescript-eslint/require-await": {
       "count": 5
-    }
-  },
-  "src/integrations/next/handlers.ts": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 3
     }
   },
   "src/integrations/next/index.ts": {
@@ -122,9 +107,6 @@
     }
   },
   "src/integrations/react/query-hooks.ts": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 1
-    },
     "@typescript-eslint/only-throw-error": {
       "count": 1
     }
@@ -138,17 +120,6 @@
     },
     "@typescript-eslint/no-unsafe-member-access": {
       "count": 2
-    }
-  },
-  "src/integrations/react/use-auth.ts": {
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 6
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 4
-    },
-    "@typescript-eslint/no-unsafe-return": {
-      "count": 1
     }
   },
   "src/plugins/cache.ts": {
@@ -171,11 +142,6 @@
       "count": 1
     }
   },
-  "src/runtime/auth/authorization.ts": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 2
-    }
-  },
   "src/runtime/auth/providers/discord.ts": {
     "@typescript-eslint/no-unsafe-assignment": {
       "count": 2
@@ -189,19 +155,11 @@
       "count": 4
     }
   },
-  "src/runtime/auth/session.ts": {
-    "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 4
-    }
-  },
   "src/runtime/deduplication/deduplicator.ts": {
     "@typescript-eslint/no-floating-promises": {
       "count": 1
     },
     "@typescript-eslint/no-redundant-type-constituents": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-type-assertion": {
       "count": 1
     }
   },

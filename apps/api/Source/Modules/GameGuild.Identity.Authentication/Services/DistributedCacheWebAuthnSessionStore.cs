@@ -12,6 +12,9 @@ namespace GameGuild.Identity.Authentication;
 /// Fido2 options round-trip through their canonical JSON forms. Entries carry a five-minute TTL
 /// mirroring the previous process-local cleanup; logical expiry is re-checked on read against the
 /// domain clock so a cache that lags cannot revive a stale challenge.
+/// Guest (discoverable-credential) assertion sessions are keyed by their challenge token
+/// (issue #1198): each anonymous ceremony gets its own unguessable slot instead of sharing one
+/// overwrite-prone key, so two tabs or devices can run ceremonies concurrently.
 /// </summary>
 public sealed class DistributedCacheWebAuthnSessionStore(
     IDistributedCache cache,
@@ -22,7 +25,7 @@ public sealed class DistributedCacheWebAuthnSessionStore(
 
     private const string RegistrationKeyPrefix = "auth:webauthn:session:reg:";
     private const string AssertionKeyPrefix = "auth:webauthn:session:auth:";
-    private const string GuestKey = "auth:webauthn:session:auth:guest";
+    private const string GuestKeyPrefix = "auth:webauthn:session:auth:guest:";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -32,7 +35,11 @@ public sealed class DistributedCacheWebAuthnSessionStore(
 
     /// <inheritdoc />
     public Task<string> StoreAssertionSessionAsync(WebAuthnSession session, CancellationToken cancellationToken = default) =>
-        StoreAsync(session, session.UserId is null ? GuestKey : AssertionKeyPrefix + OwnerKey(session.UserId), requireUser: false, cancellationToken);
+        StoreAsync(
+            session,
+            session.UserId is null ? GuestKey(GuestToken(session.Challenge)) : AssertionKeyPrefix + OwnerKey(session.UserId),
+            requireUser: false,
+            cancellationToken);
 
     /// <inheritdoc />
     public Task<WebAuthnSession?> FindRegistrationSessionAsync(Guid userId, CancellationToken cancellationToken = default) =>
@@ -43,8 +50,8 @@ public sealed class DistributedCacheWebAuthnSessionStore(
         FindAsync(AssertionKeyPrefix + userId.ToString("N"), cancellationToken);
 
     /// <inheritdoc />
-    public Task<WebAuthnSession?> FindGuestAssertionSessionAsync(CancellationToken cancellationToken = default) =>
-        FindAsync(GuestKey, cancellationToken);
+    public Task<WebAuthnSession?> FindGuestAssertionSessionAsync(string challengeToken, CancellationToken cancellationToken = default) =>
+        FindAsync(GuestKey(challengeToken), cancellationToken);
 
     /// <inheritdoc />
     public Task RemoveRegistrationSessionAsync(Guid userId, CancellationToken cancellationToken = default) =>
@@ -55,8 +62,8 @@ public sealed class DistributedCacheWebAuthnSessionStore(
         cache.RemoveAsync(AssertionKeyPrefix + userId.ToString("N"), cancellationToken);
 
     /// <inheritdoc />
-    public Task RemoveGuestAssertionSessionAsync(CancellationToken cancellationToken = default) =>
-        cache.RemoveAsync(GuestKey, cancellationToken);
+    public Task RemoveGuestAssertionSessionAsync(string challengeToken, CancellationToken cancellationToken = default) =>
+        cache.RemoveAsync(GuestKey(challengeToken), cancellationToken);
 
     private async Task<string> StoreAsync(WebAuthnSession session, string key, bool requireUser, CancellationToken cancellationToken)
     {
@@ -149,6 +156,16 @@ public sealed class DistributedCacheWebAuthnSessionStore(
     }
 
     private static string OwnerKey(Guid? userId) => userId?.ToString("N") ?? "guest";
+
+    /// <summary>
+    ///     Guest ceremony keys are derived from the ceremony's own challenge: the same base64url
+    ///     token the browser echoes inside the assertion's client data, so completion resolves the
+    ///     exact ceremony without any shared, overwrite-prone slot (issue #1198).
+    /// </summary>
+    private static string GuestKey(string challengeToken) => GuestKeyPrefix + challengeToken;
+
+    private static string GuestToken(byte[] challenge) =>
+        Convert.ToBase64String(challenge).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
     /// <summary>
     ///     Extra retention beyond <see cref="SessionLifetime"/> for the cache-level safety-net

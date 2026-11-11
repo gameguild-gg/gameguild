@@ -1,5 +1,6 @@
 'use client';
 
+import { saveConsentWithAudit } from '@/lib/consent/sync';
 import { updatePrivacyPreferenceAction } from '@/lib/user-settings/actions';
 import type {
   PrivacyPreferenceData,
@@ -75,11 +76,21 @@ export function PrivacyForm({ defaultValues }: PrivacyFormProps) {
   const [isPending, startTransition] = React.useTransition();
 
   function persist(next: PrivacyPreferenceData) {
+    const consentKeys: ReadonlyArray<'analyticsCookies' | 'marketingEmails'> = [
+      'analyticsCookies',
+      'marketingEmails',
+    ];
+    const consentChanged = consentKeys.some((key) => next[key] !== values[key]);
+
     setValues(next);
     startTransition(async () => {
       const result = await updatePrivacyPreferenceAction(next);
       if (!result.success) {
         toast.error(t('saveFailed'), { description: result.error });
+        return;
+      }
+      if (consentChanged) {
+        saveConsentWithAudit(next.analyticsCookies, next.marketingEmails, 'settings');
       }
     });
   }

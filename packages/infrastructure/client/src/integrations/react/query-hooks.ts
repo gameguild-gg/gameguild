@@ -5,9 +5,9 @@
  */
 
 import { useQuery, useMutation, useQueryClient, type UseQueryOptions, type UseMutationOptions, type QueryKey } from '@tanstack/react-query';
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
+import type { ApiClient } from '../../runtime/client';
+import type { Result } from '../../runtime/result/types';
+import type { ApiError } from '../../runtime/errors/types';
 
 /**
  * Optimistic update configuration
@@ -164,7 +164,7 @@ export function generateQueryKey(module: string, operation: string, params?: Rec
   if (params && Object.keys(params).length > 0) {
     key.push(params);
   }
-  return key as QueryKey;
+  return key;
 }
 
 /**

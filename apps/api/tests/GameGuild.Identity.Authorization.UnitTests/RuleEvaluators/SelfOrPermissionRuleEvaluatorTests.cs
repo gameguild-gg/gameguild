@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using Xunit;
 
@@ -140,9 +141,9 @@ public class SelfOrPermissionRuleEvaluatorTests
         // Reading source:
         // if (targetUserId == currentUserIdStr) {
         //   if (!string.IsNullOrEmpty(selfPermission)) { return await HasPermission(selfPermission); }
-        //   else { return Success(); } // Implicit self access if no selfPermission defined? 
+        //   else { return Success(); } // Implicit self access if no selfPermission defined?
         // Let's verify source code.
-        
+
         _permissionServiceMock.Setup(x => x.HasPermissionAsync(userId, tenantId, "users:edit:self", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
@@ -150,7 +151,90 @@ public class SelfOrPermissionRuleEvaluatorTests
 
         result.IsSuccess.Should().BeTrue();
     }
-    
+
+    /// <summary>
+    ///     Issue #1287 U5 — the users self-service 403 root cause: an ordinary
+    ///     authenticated user (no users:read:self grant, no administrative role) acting
+    ///     on their own resource must be authorized by the identity itself, with no
+    ///     permission lookup. Before the fix this was the e2e account-page failure
+    ///     signature (ordinary users got 403 on their OWN preferences).
+    /// </summary>
+    [Fact]
+    public async Task EvaluateAsync_IsSelfWithoutGrantedPermission_ReturnsSuccessWithoutPermissionLookup()
+    {
+        var userId = Guid.NewGuid();
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("sub", userId.ToString())], "test"));
+        var resource = new TestUserResource { UserId = userId };
+        var context = new AuthorizationHandlerContext([], user, resource);
+        var parameters = RuleParameters.FromJson("{\"anyPermission\":\"users:manage\"}");
+
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        result.IsSuccess.Should().BeTrue(
+            "a self-action is authorized by the authenticated identity; no granted permission is required");
+        _permissionServiceMock.Verify(
+            x => x.HasPermissionAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never,
+            "self-actions must not consult the (tenant-scoped) permission store");
+        _tenantMembershipCheckerMock.Verify(
+            x => x.IsUserMemberOfTenantAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never,
+            "self-actions must not consult tenant membership");
+    }
+
+    /// <summary>
+    ///     Issue #1287 U5 companion: self-service must not depend on tenancy — a user
+    ///     without any tenant context still reads their own preferences (the ReadSelf
+    ///     policy seeds TenantMatch with allowNoTenant for exactly this reason).
+    /// </summary>
+    [Fact]
+    public async Task EvaluateAsync_IsSelfWithoutTenantContext_ReturnsSuccess()
+    {
+        var userId = Guid.NewGuid();
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("sub", userId.ToString())], "test"));
+        _tenantContextMock.Setup(x => x.HasTenant).Returns(false);
+
+        var httpContext = new DefaultHttpContext { User = user };
+        httpContext.Request.RouteValues["userId"] = userId;
+        var context = new AuthorizationHandlerContext([], user, httpContext);
+        var parameters = RuleParameters.FromJson("{\"anyPermission\":\"users:manage\"}");
+
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_OtherUser_StillRequiresAnyPermission()
+    {
+        var userId = Guid.NewGuid();
+        var targetUserId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim("sub", userId.ToString()),
+            new Claim("tid", tenantId.ToString())
+        ], "test"));
+
+        _tenantContextMock.Setup(x => x.TenantId).Returns(tenantId);
+        _tenantContextMock.Setup(x => x.HasTenant).Returns(true);
+        _tenantMembershipCheckerMock
+            .Setup(x => x.IsUserMemberOfTenantAsync(targetUserId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _permissionServiceMock.Setup(x => x.HasPermissionAsync(userId, tenantId, "users:manage", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var context = new AuthorizationHandlerContext([], user, new TestUserResource { UserId = targetUserId });
+        var parameters = RuleParameters.FromJson("{\"anyPermission\":\"users:manage\"}");
+
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        result.IsSuccess.Should().BeFalse(
+            "acting on another user still requires the management permission after the self fix");
+    }
+
     [Fact]
     public async Task EvaluateAsync_NotSelf_NoAnyPermission_ReturnsFail()
     {

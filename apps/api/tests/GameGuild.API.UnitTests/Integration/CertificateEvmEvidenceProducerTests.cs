@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using LearningProgramEnrollment = GameGuild.Learning.Courses.ProgramEnrollment;
 
 namespace GameGuild.API.UnitTests.Integration;
 
@@ -129,7 +130,18 @@ public sealed class CertificateEvmEvidenceProducerTests
         var marker = Guid.NewGuid().ToString("N");
         var user = User.Create($"certificate-{marker}@example.test", "Composition recipient"); user.Username = marker;
         var template = CertificateTemplate.Create(Guid.NewGuid(), "Composition fixture", "<div>Fixture</div>");
-        context.AddRange(user, template); await context.SaveChangesAsync();
+        // The issuance eligibility gate (#1226 N1, merged with #1275) requires the
+        // enrollment to exist and be completed before composition may mint a certificate.
+        var enrollment = new LearningProgramEnrollment
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = template.CourseId,
+            UserId = user.Id,
+            EnrollmentStatus = GameGuild.Learning.Courses.EnrollmentStatus.Active,
+            CompletionStatus = GameGuild.Learning.Courses.CompletionStatus.Completed,
+            TenantId = null,
+        };
+        context.AddRange(user, template, enrollment); await context.SaveChangesAsync();
         var actors = new Mock<IActorContextAccessor>(); actors.SetupGet(a => a.ActorContext).Returns(ActorContext.Anonymous);
         var audit = new Mock<ILearningAuditEventSink>();
         audit.Setup(a => a.RecordAsync(It.IsAny<LearningAuditEvent>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
@@ -142,7 +154,7 @@ public sealed class CertificateEvmEvidenceProducerTests
         await using var scope = provider.CreateAsyncScope();
         var service = scope.ServiceProvider.GetRequiredService<ICertificateService>();
         Assert.Same(service, scope.ServiceProvider.GetRequiredService<ICertificateIssuanceService>());
-        var result = await service.IssueCertificateAsync(template.Id, Guid.NewGuid(), user.Id, template.CourseId);
+        var result = await service.IssueCertificateAsync(template.Id, enrollment.Id, user.Id, template.CourseId);
         Assert.True(result.IsSuccess);
         Assert.True(await context.Set<OutboxMessage>().AnyAsync(m => m.AggregateId == result.Value.Id.ToString("D") &&
             m.EventName == CertificateEvmAnchorRequestedV1.Name));

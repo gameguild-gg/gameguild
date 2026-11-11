@@ -67,7 +67,7 @@ public sealed partial class ApiKeyPolicyPostgreSqlHttpTests
             userId = Guid.NewGuid(),
             tenantId = Guid.NewGuid()
         });
-        Assert.Equal(HttpStatusCode.OK, creation.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, creation.StatusCode);
         var created = (await creation.Content.ReadFromJsonAsync<CreateApiKeyResponse>())!;
         Assert.NotNull(created);
         using var listing = await client.GetAsync(Route);

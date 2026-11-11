@@ -7,6 +7,7 @@ using GameGuild.CQRS;
 using GameGuild.Email;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -42,6 +43,11 @@ public class LocalAuthService(
     ISignInCompliancePolicy? compliancePolicy = null,
     ISuspiciousLoginAlertPublisher? suspiciousLoginAlerts = null,
     IOptions<LocalSignInPolicyOptions>? localSignInPolicyOptions = null,
+    IGeoFencingService? geoFencingService = null,
+    IOptions<GeoFencingOptions>? geoFencingOptions = null,
+    IOptions<PasswordAgePolicyOptions>? passwordAgeOptions = null,
+    IIpBlocklistService? ipBlocklistService = null,
+    IOptions<IpBlocklistOptions>? ipBlocklistOptions = null,
     IAuthenticationAttemptRepository? attemptRepository = null,
     AuthenticationSecurityOptions? authenticationSecurityOptions = null,
     IPublisher? eventPublisher = null
@@ -49,6 +55,10 @@ public class LocalAuthService(
 {
     private const string ComplianceDeniedAuditAction = "Authentication.ComplianceDenied";
     private const string ComplianceChallengeAuditAction = "Authentication.ComplianceChallengeRequired";
+    private const string GeoFenceDeniedAuditAction = "Authentication.GeoFenceDenied";
+    private const string GeoFenceStepUpAuditAction = "Authentication.GeoFenceStepUpRequired";
+    private const string IpBlocklistDeniedAuditAction = "Authentication.IpBlocklistDenied";
+    private const string IpBlocklistStepUpAuditAction = "Authentication.IpBlocklistStepUpRequired";
 
     /// <summary>
     ///     Window over which failed attempts count toward the progressive sign-in delay
@@ -98,6 +108,34 @@ public class LocalAuthService(
 
         try
         {
+            // Proactive IP blocklist (issue #1089): known-attacker addresses are rejected
+            // (or forced through step-up) before any credential work runs. Lookups fail
+            // open so an unavailable cache can never take sign-in down with it.
+            var ipBlocklistSettings = ipBlocklistOptions?.Value ?? new IpBlocklistOptions();
+            IpBlocklistEntry? ipBlocklistMatch = null;
+            if (ipBlocklistSettings.Enabled && ipBlocklistService is not null && !string.IsNullOrWhiteSpace(ipAddress))
+            {
+                ipBlocklistMatch = await ipBlocklistService
+                    .FindEntryAsync(ipAddress, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            if (ipBlocklistMatch is not null && ipBlocklistSettings.Mode == IpBlocklistEnforcementMode.Block)
+            {
+                await RecordComplianceAuditEventAsync(
+                    IpBlocklistDeniedAuditAction,
+                    userId,
+                    request.TenantId,
+                    ipAddress,
+                    userAgent,
+                    "IpBlocklistMatch",
+                    SignInComplianceGateMode.Enforce).ConfigureAwait(false);
+                logger.LogWarning(
+                    "Sign-in denied by the IP blocklist for IP {IpAddress}",
+                    LogRedaction.MaskIpAddress(ipAddress));
+                throw new AccessDeniedException("Sign-in denied by the IP blocklist.");
+            }
+
             // Progressive delay (issue #1084): throttle attempts against an account with
             // recent failures BEFORE any credential work. Applied per account identifier
             // (not per source IP) so distributed attacks against one account are slowed
@@ -205,7 +243,20 @@ public class LocalAuthService(
             var anomalyResult = await anomalyDetectionService.AnalyzeLoginAttemptAsync(attemptContext).ConfigureAwait(false);
             var behavioralAnalysis = await AnalyzeBehavioralPatternsForAuditAsync(authenticatedUserId, attemptContext).ConfigureAwait(false);
 
-            var requiresStepUp = anomalyResult.RiskLevel >= RiskLevel.High;
+            // A blocklisted IP in step-up mode forces additional verification even when the
+            // anomaly score alone would not (issue #1089).
+            var requiresStepUp = ipBlocklistMatch is not null || anomalyResult.RiskLevel >= RiskLevel.High;
+            if (ipBlocklistMatch is not null)
+            {
+                await RecordComplianceAuditEventAsync(
+                    IpBlocklistStepUpAuditAction,
+                    userId,
+                    request.TenantId,
+                    ipAddress,
+                    userAgent,
+                    "IpBlocklistMatch",
+                    SignInComplianceGateMode.ChallengeOnly).ConfigureAwait(false);
+            }
             if (requiresStepUp)
             {
                 await RecordRiskAuditEventAsync(
@@ -244,6 +295,30 @@ public class LocalAuthService(
             if (localSignInPolicy.RequiresVerifiedEmail(tenantAccessContext.TenantId) && !authenticatedUser.IsEmailVerified)
             {
                 throw new UnauthorizedAccessException(enumerationProtection.GetGenericErrorMessage("login"));
+            }
+
+            // Optional password age / rotation policy (issue #1088): evaluated after the
+            // first factor is verified, so disclosing the expiry never leaks whether an
+            // account exists. Rotation happens through the existing password-reset flow;
+            // password reuse is already blocked by PasswordHistoryPolicy on every change.
+            var passwordAgePolicy = passwordAgeOptions?.Value ?? new PasswordAgePolicyOptions();
+            if (PasswordAgePolicy.IsExpired(authenticatedUser, tenantAccessContext.TenantId, passwordAgePolicy, SystemClock.UtcNow))
+            {
+                try
+                {
+                    await authAttemptService.RecordFailedAttemptAsync(
+                        request.Email, authenticatedUserId, ipAddress, userAgent, "PasswordExpired", stopwatch.Elapsed)
+                        .ConfigureAwait(false);
+                }
+                catch (Exception exception)
+                {
+                    logger.LogError("Could not record password-expired attempt for user {UserId}: {ErrorType}",
+                        authenticatedUserId, exception.GetType().FullName);
+                }
+
+                logger.LogInformation("Sign-in rejected for user {UserId}: password exceeded the maximum age", authenticatedUserId);
+                throw new UnauthorizedAccessException(
+                    "Your password has expired. Use the password reset flow to set a new password.");
             }
             // Sign-in compliance gate (issue #267): after credential validation and tenant
             // access are confirmed, but before any token is generated or any session is
@@ -297,6 +372,50 @@ public class LocalAuthService(
                         Email = authenticatedUser?.Email ?? request.Email,
                         TenantId = tenantAccessContext.TenantId
                     };
+                }
+            }
+
+            // Sign-in geo-fencing (issue #1087): after the active tenant is resolved, the
+            // client IP's country is compared with the effective blocked set (platform-wide
+            // list plus tenant additions). Block rejects the sign-in; RequireStepUp routes
+            // the sign-in through the existing additional-verification flow.
+            var geoFencing = geoFencingOptions?.Value ?? new GeoFencingOptions();
+            if (geoFencing.Enabled && geoFencingService is not null)
+            {
+                var geoDecision = await geoFencingService
+                    .EvaluateAsync(ipAddress, tenantAccessContext.TenantId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (geoDecision.IsBlocked && geoFencing.Mode == GeoFencingEnforcementMode.Block)
+                {
+                    await RecordComplianceAuditEventAsync(
+                        GeoFenceDeniedAuditAction,
+                        authenticatedUserId,
+                        tenantAccessContext.TenantId,
+                        ipAddress,
+                        userAgent,
+                        geoDecision.CountryUnknown ? "GeoFenceUnknownCountry" : $"GeoFenceBlocked:{geoDecision.MatchedCountry}",
+                        SignInComplianceGateMode.Enforce).ConfigureAwait(false);
+                    logger.LogWarning(
+                        "Sign-in denied by the geo-fencing policy for user {UserId}",
+                        authenticatedUserId);
+                    throw new AccessDeniedException("Sign-in denied by the geo-fencing policy.");
+                }
+
+                if (geoDecision.IsBlocked)
+                {
+                    requiresStepUp = true;
+                    await RecordComplianceAuditEventAsync(
+                        GeoFenceStepUpAuditAction,
+                        authenticatedUserId,
+                        tenantAccessContext.TenantId,
+                        ipAddress,
+                        userAgent,
+                        geoDecision.CountryUnknown ? "GeoFenceUnknownCountry" : $"GeoFenceBlocked:{geoDecision.MatchedCountry}",
+                        SignInComplianceGateMode.ChallengeOnly).ConfigureAwait(false);
+                    logger.LogInformation(
+                        "Sign-in requires geo-fencing step-up for user {UserId}",
+                        authenticatedUserId);
                 }
             }
 
@@ -740,21 +859,24 @@ public class LocalAuthService(
             }
 
             // Check for existing user
-            var emailExists = await userRepository.ExistsByEmailAsync(request.Email.ToLowerInvariant(), cancellationToken).ConfigureAwait(false);
+            var normalizedEmail = request.Email.ToLowerInvariant();
+            var emailExists = await userRepository.ExistsByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false);
 
             if (emailExists)
             {
                 await CompleteAuthenticationTimingAsync(timingOrigin, false, cancellationToken).ConfigureAwait(false);
                 logger.LogWarning("Sign-up attempted for an existing account");
 
-                throw new InvalidOperationException("User already exists");
+                // Issue #1197: typed conflict (409 via the exception-handling middleware)
+                // instead of an InvalidOperationException that fell into the 500 bucket.
+                throw new UserAlreadyExistsException(normalizedEmail);
             }
 
             var passwordHash = passwordHasher.HashPassword(request.Password);
 
             // Create new user using the unified User entity
             var newUser = User.CreateWithPassword(
-                request.Email.ToLowerInvariant(),
+                normalizedEmail,
                 request.Username ?? request.Email.Split('@')[0],
                 passwordHash,
                 username);
@@ -768,9 +890,34 @@ public class LocalAuthService(
                 OccurredAt = DateTime.UtcNow
             });
 
-            // Save to database
-            await userRepository.AddAsync(newUser, cancellationToken).ConfigureAwait(false);
-            await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            // Save to database. The pre-check above is advisory only: two concurrent
+            // sign-ups with the same email (or username) race through it and the loser
+            // is rejected by the DB unique indexes as a DbUpdateException (issue #1197
+            // TOCTOU). Re-check the constraints and surface a typed 409 conflict
+            // instead of a raw 500, mirroring the external-login link path.
+            try
+            {
+                await userRepository.AddAsync(newUser, cancellationToken).ConfigureAwait(false);
+                await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateException ex)
+            {
+                await CompleteAuthenticationTimingAsync(timingOrigin, false, cancellationToken).ConfigureAwait(false);
+                logger.LogWarning("Sign-up insert lost a uniqueness race: {ErrorType}", ex.GetType().FullName);
+
+                if (await userRepository.ExistsByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false))
+                {
+                    throw new UserAlreadyExistsException($"User with email {normalizedEmail} already exists.", ex);
+                }
+
+                if (await userRepository.ExistsByUsernameAsync(username, cancellationToken).ConfigureAwait(false))
+                {
+                    throw new UserAlreadyExistsException("Username already exists.", ex);
+                }
+
+                throw;
+            }
+
             var userId = newUser.Id;
 
             logger.LogInformation("Created new user with ID: {UserId}", userId);
@@ -1098,6 +1245,9 @@ public class LocalAuthService(
                 .ConfigureAwait(false);
             if (familySessionId.HasValue)
             {
+                // The session termination also writes the family's in-flight access-token JTI
+                // to the deny-list (issue #1179), so containment kills the paired access token
+                // immediately instead of at its natural expiry.
                 await sessionManagementService.TerminateSessionAsync(familySessionId.Value, SessionTerminationReason.SecurityViolation, cancellationToken)
                     .ConfigureAwait(false);
                 await AuthenticationEventDispatch.PublishAsync(
@@ -1193,7 +1343,7 @@ public class LocalAuthService(
     /// </summary>
     private async Task RecordComplianceAuditEventAsync(
         string actionType,
-        Guid userId,
+        Guid? userId,
         Guid? tenantId,
         string? ipAddress,
         string? userAgent,

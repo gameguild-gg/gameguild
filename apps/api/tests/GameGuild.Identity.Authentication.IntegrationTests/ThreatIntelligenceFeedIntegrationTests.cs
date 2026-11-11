@@ -79,6 +79,7 @@ public sealed class ThreatIntelligenceApiFactory : WebApplicationFactory<GameGui
 
             services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(_databaseName));
             services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+            services.AddScoped<ISignInMfaEnrollmentPort, InMemorySignInMfaEnrollmentPort>();
             services.AddMemoryCache();
             services.AddHttpLogging(_ => { });
             services.AddSingleton<IStartupFilter>(new RemoteIpAddressStartupFilter(IPAddress.Parse(ClientIpAddress)));

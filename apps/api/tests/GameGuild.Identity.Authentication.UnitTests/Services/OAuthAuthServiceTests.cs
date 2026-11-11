@@ -316,6 +316,63 @@ public class OAuthAuthServiceTests
         provisioned!.Email.Should().Be("new.user@gmail.com");
     }
 
+    // ── (2d) JIT provisioning raises UserCreatedEvent (welcome email parity, issue #1182) ──
+
+    [Fact]
+    public async Task GoogleIdTokenSignInAsync_NewAccount_RaisesUserCreatedEvent()
+    {
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ExternalLogin?)null);
+        _userRepoMock.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        _googleVerifierMock
+            .Setup(x => x.VerifyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new VerifiedGoogleUser
+            {
+                Sub = "google-sub-welcome",
+                Email = "welcome@example.com",
+                EmailVerified = true,
+                Name = "Welcome User"
+            });
+
+        User? provisioned = null;
+        _userRepoMock
+            .Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Callback<User, CancellationToken>((user, _) => provisioned = user)
+            .Returns(Task.CompletedTask);
+
+        var result = await CreateSut().GoogleIdTokenSignInAsync(Request());
+
+        result.Success.Should().BeTrue();
+        provisioned.Should().NotBeNull();
+        // The same durable creation event local sign-up raises: it is what dispatches the
+        // welcome email (SendWelcomeEmailHandler), so OAuth-provisioned accounts are onboarded
+        // identically instead of never hearing from the platform.
+        provisioned!.IntegrationEvents.Should().ContainSingle()
+            .Which.Should().BeOfType<GameGuild.UserCreatedEvent>()
+            .Which.UserId.Should().Be(provisioned.Id);
+    }
+
+    [Fact]
+    public async Task GoogleIdTokenSignInAsync_ExistingLinkedAccount_DoesNotRaiseUserCreatedEvent()
+    {
+        var existingUser = User.CreateOAuthUser("linked-welcome@example.com", "Linked Welcome User");
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ExternalLogin { UserId = existingUser.Id, Provider = "google", ProviderKey = "google-sub-returning" });
+        _userRepoMock
+            .Setup(x => x.GetByIdAsync(existingUser.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+
+        var result = await CreateSut().GoogleIdTokenSignInAsync(Request());
+
+        result.Success.Should().BeTrue();
+        _userRepoMock.Verify(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+        existingUser.IntegrationEvents.Should().BeEmpty();
+    }
+
     // ── (3) Unverified email match → reject, no link ────────────────────────
 
     [Fact]

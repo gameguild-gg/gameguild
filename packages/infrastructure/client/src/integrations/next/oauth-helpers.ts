@@ -9,7 +9,7 @@
  * may implement different subsets of methods depending on their flow.
  */
 
-import type { ProviderResult, OAuthProviderConfig } from '../../runtime/auth/types.js';
+import type { ProviderResult, OAuthProviderConfig } from '../../runtime/auth/types';
 
 /**
  * Extended OAuth provider that may have custom bridge methods for

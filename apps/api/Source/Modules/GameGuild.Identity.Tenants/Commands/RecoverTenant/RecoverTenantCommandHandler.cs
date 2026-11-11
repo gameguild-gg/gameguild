@@ -5,11 +5,17 @@ namespace GameGuild.Identity.Tenants;
 /// <summary>
 ///     Handler for recovering an archived tenant.
 /// </summary>
-public sealed class RecoverTenantCommandHandler(ITenantRepository tenantRepository) : ICommandHandler<RecoverTenantCommand, RecoverTenantResponse>
+public sealed class RecoverTenantCommandHandler(
+    ITenantRepository tenantRepository,
+    ITenantAdministrationGuard administrationGuard) : ICommandHandler<RecoverTenantCommand, RecoverTenantResponse>
 {
     public async Task<RecoverTenantResponse> Handle(RecoverTenantCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+
+        // Issue #1287 T1: un-archiving is a lifecycle mutation gated to active
+        // Owner/Admin membership of the target tenant (or system administration).
+        await administrationGuard.EnsureCanMutateAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
 
         var tenant = await tenantRepository.GetByIdAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
 

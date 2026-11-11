@@ -41,6 +41,8 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@excalidraw/excalidraw": "^0.18.1",
+    "@firebase/analytics": "^0.10.25",
+    "@firebase/app": "^0.16.5",
     "@floating-ui/react": "^0.27.19",
     "@game-guild/assets": "workspace:*",
     "@game-guild/auth-components": "workspace:*",
@@ -162,7 +164,8 @@
     "vega-lite": "^6.5.0",
     "vega-themes": "^3.0.0",
     "vscode-uri": "^3.2.0",
-    "wasmoon": "^1.16.0"
+    "wasmoon": "^1.16.0",
+    "web-vitals": "^6.2.3"
   },
   "devDependencies": {
     "@eslint/compat": "^2.1.1",

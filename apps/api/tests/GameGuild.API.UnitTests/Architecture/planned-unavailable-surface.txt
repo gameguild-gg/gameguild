@@ -1,0 +1,60 @@
+# Planned-unavailable use-case surface (guard G8) — COMMITTED allowlist.
+#
+# Format:   <command full name>  # issue reference — the UnavailableReason declared on the contract
+#
+# Rules:
+#   - Every use-case command whose UseCaseEventContractAttribute declares an
+#     UnavailableReason answers HTTP 422 through the throwing
+#     UnavailableCommandHandler (the designed "planned surface" failure mode).
+#     Each such command MUST be listed here with its reason; an UNPLANNED 422
+#     (contract without a line here) fails CI — that is the dead-endpoint class
+#     of issue #1203 (31 of 177 authz endpoints were dead while mocked tests
+#     kept CI green).
+#   - Entries whose contract regains a real handler (or loses the contract) are
+#     STALE and fail CI: the planned 422 surface may only shrink.
+#   - Routes that dispatch these commands must NOT be advertised as callable by
+#     the generated OpenAPI client (tracked separately as G8|client-advertises
+#     baseline entries in wiring-gap-baseline.txt).
+#
+# Guard key: G8 planned-unavailable surface (generalizes the #1228
+# PlannedAuthorizationSurfaceGuardTests pinned surface to all modules).
+#
+# ── Identity.Authentication: planned authorization management API (#1203) ─────
+GameGuild.Identity.Authentication.ActivateAbacPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.ActivateConditionalPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.BulkReviewAccessItemsCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.BulkRevokeAccessCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.CloneAbacPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.CloneConditionalPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.CompleteAccessReviewCampaignCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.ConfigureReminderSettingsCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.CreateAbacPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.CreateAbacPolicyFromTemplateCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.CreateAccessReviewCampaignCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.CreateCampaignFromTemplateCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.CreateConditionalPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.CreateConditionalPolicyFromTemplateCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.CreatePeriodicAccessReviewCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.DeactivateAbacPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.DeactivateConditionalPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.DeleteAbacPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.DeleteAccessReviewCampaignCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.DeleteConditionalPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.DeletePeriodicAccessReviewCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.GenerateAccessReviewReportCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.GrantContentTypePermissionCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.ReviewAccessItemCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.RevokeAccessCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.RevokeContentTypePermissionCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.SendReviewRemindersCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.StartAccessReviewCampaignCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.TriggerPeriodicAccessReviewCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.UpdateAbacPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.UpdateAccessReviewCampaignCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.UpdateConditionalPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.UpdateConditionalPolicyPriorityCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.UpdatePeriodicAccessReviewCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+GameGuild.Identity.Authentication.ValidateAbacPolicyCommand # issue #1203 (planned authorization management API): The planned authorization management API is not available.
+
+# ── Commerce.Billing: provider webhook processor planned but not built ────────
+GameGuild.Commerce.Billing.ProcessBillingWebhookCommand # issue #1203 follow-up (provider webhook processor planned): The provider-specific webhook processor is not implemented.

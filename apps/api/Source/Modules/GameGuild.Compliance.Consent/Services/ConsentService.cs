@@ -54,17 +54,32 @@ public class ConsentService(
         if (existing != null && existing.IsGranted)
             return ToDto(existing);
 
-        var consent = new UserConsent
+        UserConsent consent;
+        if (existing != null)
         {
-            UserId = userId,
-            PolicyVersionId = policyVersionId,
-            IsGranted = true,
-            ConsentGivenAt = DateTime.UtcNow,
-            IpAddress = ipAddress,
-            UserAgent = userAgent,
-            ConsentMethod = method
-        };
-        consent = await consentRepository.AddAsync(consent, ct).ConfigureAwait(false);
+            // Issue #1219 N2: a previously revoked consent for the same (UserId, PolicyVersionId)
+            // already occupies the unique row — re-grant by reactivating it in place instead of
+            // inserting a duplicate (which the unique index would reject with a 500). The
+            // grant/revoke history remains auditable through the consent audit events.
+            existing.Regrant(ipAddress, userAgent, method);
+            await consentRepository.UpdateAsync(existing, ct).ConfigureAwait(false);
+            consent = existing;
+        }
+        else
+        {
+            consent = new UserConsent
+            {
+                UserId = userId,
+                PolicyVersionId = policyVersionId,
+                IsGranted = true,
+                ConsentGivenAt = DateTime.UtcNow,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                ConsentMethod = method
+            };
+            consent = await consentRepository.AddAsync(consent, ct).ConfigureAwait(false);
+        }
+
         await RecordAuditAsync(new ConsentAuditEvent(
             ConsentAuditActionTypes.Granted,
             userId,
@@ -120,6 +135,12 @@ public class ConsentService(
     {
         var request = await dsrRepository.GetByIdAsync(requestId, ct).ConfigureAwait(false)
             ?? throw new KeyNotFoundException($"Data subject request {requestId} not found.");
+        if (request.Status is not (DataSubjectRequestStatus.Pending or DataSubjectRequestStatus.InProgress))
+        {
+            // Issue #1220 N4: silently re-processing a terminal request overwrote the
+            // original processor's attribution. State guard mirrors the FERPA entity.
+            throw new InvalidOperationException($"Data subject request cannot be processed in {request.Status} status.");
+        }
         request.Complete(processedBy, notes);
         await dsrRepository.UpdateAsync(request, ct).ConfigureAwait(false);
         await RecordAuditAsync(new ConsentAuditEvent(
@@ -130,6 +151,30 @@ public class ConsentService(
             $"Data subject {request.RequestType} request fulfilled",
             Metadata: new { RequestId = request.Id, ProcessedBy = processedBy, OnTime = DateTime.UtcNow <= request.Deadline }), ct).ConfigureAwait(false);
         return ToDto(request);
+    }
+
+    /// <summary>
+    ///     Expires every live data subject request whose 30-day statutory deadline has
+    ///     passed (issue #1219 N3). Called by the host's compliance deadline sweeper;
+    ///     safe to run repeatedly (idempotent state transition).
+    /// </summary>
+    public async Task<int> ExpireOverdueDataSubjectRequestsAsync(DateTime? utcNow = null, CancellationToken ct = default)
+    {
+        var now = utcNow ?? DateTime.UtcNow;
+        var overdue = await dsrRepository.GetOverdueAsync(now, ct).ConfigureAwait(false);
+        foreach (var request in overdue)
+        {
+            request.Expire();
+            await dsrRepository.UpdateAsync(request, ct).ConfigureAwait(false);
+            await RecordAuditAsync(new ConsentAuditEvent(
+                ConsentAuditActionTypes.RequestExpired,
+                request.UserId,
+                null,
+                Success: true,
+                $"Data subject {request.RequestType} request expired past its statutory deadline",
+                Metadata: new { RequestId = request.Id, Deadline = request.Deadline, ExpiredAt = now }), ct).ConfigureAwait(false);
+        }
+        return overdue.Count;
     }
 
     public async Task<List<DataSubjectRequestDto>> GetPendingRequestsAsync(CancellationToken ct = default)

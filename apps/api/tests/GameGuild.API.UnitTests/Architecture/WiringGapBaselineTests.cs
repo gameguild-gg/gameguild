@@ -41,6 +41,9 @@ public sealed class WiringGapBaselineTests
             WiringGapBaseline.GuardIds.EventProducer + "|",
             WiringGapBaseline.GuardIds.OptionsBinding + "|",
             WiringGapBaseline.GuardIds.StubMiddleware + "|",
+            WiringGapBaseline.GuardIds.RequestHandlerResolution + "|",
+            WiringGapBaseline.GuardIds.UnavailableUseCaseSurface + "|",
+            WiringGapBaseline.GuardIds.RouteSmoke + "|",
         };
 
         var malformed = File.ReadAllLines(BaselinePath)
@@ -49,7 +52,8 @@ public sealed class WiringGapBaselineTests
             .Where(line => validPrefixes.All(prefix => !line.StartsWith(prefix, StringComparison.Ordinal)))
             .ToList();
 
-        malformed.Should().BeEmpty("baseline entries must start with a known guard id (G1|..G6|). Malformed:");
+        malformed.Should().BeEmpty(
+            "baseline entries must start with a known guard id (G1|..G9|, E9|). Malformed:");
     }
 
     private static string BaselinePath => WiringGapBaseline.BaselinePath;

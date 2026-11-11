@@ -1,9 +1,7 @@
 using System.Text.Json;
-using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -11,7 +9,7 @@ namespace GameGuild.Identity.Authentication;
 ///     Full authentication orchestration over the module's existing authentication services.
 ///     Validates the primary credential, evaluates risk with the existing anomaly analysis,
 ///     persists flow state with a bounded lifetime, delegates every challenge verification to
-///     the existing MFA/WebAuthn services, and issues tokens through <see cref="IJwtTokenService"/>
+///     the existing MFA/WebAuthn services, and issues tokens through <see cref="IAuthenticatedSessionIssuer"/>
 ///     only when every required step is satisfied on an unexpired flow.
 /// </summary>
 public sealed class AuthenticationOrchestrationService(
@@ -27,14 +25,15 @@ public sealed class AuthenticationOrchestrationService(
     IWebAuthnAuthenticationService webAuthnAuthenticationService,
     IMfaAttemptTrackingService mfaAttemptTrackingService,
     IUserMfaConfigurationRepository userMfaConfigurationRepository,
-    IRoleRepository roleRepository,
-    IJwtTokenService jwtTokenService,
-    IOptions<JwtOptions> jwtOptions,
+    IAuthenticatedSessionIssuer sessionIssuer,
+    ISignInMfaSubjectReader currentSubjects,
+    IMfaSubjectRequirementPolicy mfaPolicy,
+    OrchestratedRiskChallengeVerifier riskChallenges,
     ILogger<AuthenticationOrchestrationService> logger,
     ISuspiciousLoginAlertPublisher? suspiciousLoginAlerts = null,
     IPublisher? eventPublisher = null) : IAuthenticationOrchestrationService
 {
-    /// <summary>Flow lifetime: flows expire 15 minutes after initiation.</summary>
+    /// <summary>Ordinary flow lifetime; MFA-bound flows expire after five minutes.</summary>
     public static readonly TimeSpan FlowLifetime = TimeSpan.FromMinutes(15);
 
     /// <summary>Risk score at or above which the strongest challenge set is required.</summary>
@@ -51,8 +50,12 @@ public sealed class AuthenticationOrchestrationService(
 
     private static readonly JsonSerializerOptions SerializationOptions = new(JsonSerializerDefaults.General);
 
-    public async Task<AuthenticationFlowState> InitiateAuthenticationAsync(InitiateAuthenticationRequest request)
+    public Task<AuthenticationFlowState> InitiateAuthenticationAsync(InitiateAuthenticationRequest request) =>
+        InitiateAuthenticationAsync(request, CancellationToken.None);
+
+    public async Task<AuthenticationFlowState> InitiateAuthenticationAsync(InitiateAuthenticationRequest request, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         ArgumentNullException.ThrowIfNull(request);
 
         var identifier = request.Identifier.Trim();
@@ -61,20 +64,41 @@ public sealed class AuthenticationOrchestrationService(
             throw new ArgumentException("An identifier is required to initiate an authentication flow.", nameof(request));
         }
 
-        var user = await ValidatePrimaryCredentialAsync(request, identifier).ConfigureAwait(false);
+        var user = await ValidatePrimaryCredentialAsync(request, identifier, cancellationToken).ConfigureAwait(false);
 
         var attemptContext = BuildAttemptContext(request, user.Id);
-        var riskScore = await AssessRiskScoreAsync(user.Id, attemptContext).ConfigureAwait(false);
+        var riskScore = await AssessRiskScoreAsync(user.Id, attemptContext, cancellationToken).ConfigureAwait(false);
 
         // Sign-in risk coverage (issue #1199): the orchestrated family previously never reached
         // the suspicious-login containment. Confirmed signals on the initiating attempt are
         // forwarded, and a high-risk flow (which forces the strongest challenge set) is reported
         // as a step-up signal — mirroring the local password path. Best-effort: the publisher
         // gates on the configured severity and swallows its own failures.
-        await AlertInitiationRisksAsync(user.Id, request.TenantId, attemptContext, riskScore).ConfigureAwait(false);
+        await AlertInitiationRisksAsync(user.Id, request.TenantId, attemptContext, riskScore, cancellationToken).ConfigureAwait(false);
 
         var requiredSteps = new List<AuthenticationStep> { AuthenticationStep.PrimaryCredential };
-        requiredSteps.AddRange(await DetermineRequiredChallengesAsync(user.Id, riskScore, attemptContext).ConfigureAwait(false));
+        requiredSteps.AddRange(await DetermineRequiredChallengesAsync(user.Id, riskScore, attemptContext, cancellationToken).ConfigureAwait(false));
+
+        var subject = await currentSubjects.ReadCurrentAsync(user.Id, cancellationToken).ConfigureAwait(false);
+        if (subject is null || subject.User.IsDeleted || !subject.User.ValidateForAuthentication(user.TokenVersion).IsSuccess ||
+            subject.LockedOutUntil is { } lockedUntil && lockedUntil > SystemClock.UtcNow)
+        {
+            throw new AuthenticationRequiredException("Verified first-factor evidence is no longer valid.");
+        }
+        var decision = await mfaPolicy.EvaluateAsync(user.Id, request.TenantId, cancellationToken).ConfigureAwait(false);
+        RequireDecision(decision, user.Id, request.TenantId);
+        var requiresMfa = subject.HasEnrolledMfa || decision.RequiredByDefault || requiredSteps.Contains(AuthenticationStep.MfaVerification);
+        if (requiresMfa && !subject.HasEnrolledMfa)
+        {
+            throw new AuthenticationRequiredException("MFA setup is required before this sign-in can continue.");
+        }
+        if (requiresMfa && !requiredSteps.Contains(AuthenticationStep.MfaVerification))
+        {
+            requiredSteps.Add(AuthenticationStep.MfaVerification);
+            requiredSteps = requiredSteps.OrderBy(step => (int)step).ToList();
+        }
+        var binding = new FlowBinding(decision.TenantId, user.TokenVersion, decision.PolicyFingerprint, subject.HasEnrolledMfa);
+        var privateData = new Dictionary<string, object> { [BindingKey] = JsonSerializer.SerializeToElement(binding, SerializationOptions) };
 
         var completedSteps = new List<AuthenticationStep> { AuthenticationStep.PrimaryCredential };
         var now = SystemClock.UtcNow;
@@ -89,12 +113,21 @@ public sealed class AuthenticationOrchestrationService(
             IsComplete = false,
             RiskScore = riskScore,
             InitiatedAt = now,
-            ExpiresAt = now.Add(FlowLifetime),
+            ExpiresAt = now.Add(requiresMfa ? TimeSpan.FromMinutes(5) : FlowLifetime),
+            StepDataJson = JsonSerializer.Serialize(privateData, SerializationOptions),
             IpAddress = request.IpAddress,
             DeviceFingerprint = request.DeviceFingerprint
         };
 
-        await flowStateRepository.CreateAsync(record, CancellationToken.None).ConfigureAwait(false);
+        if (requiredSteps.Contains(AuthenticationStep.RiskChallenge))
+        {
+            var challenge = await riskChallenges.CreateAsync(record.FlowId, user, binding.TenantId,
+                new DateTimeOffset(now), new DateTimeOffset(record.ExpiresAt), cancellationToken).ConfigureAwait(false);
+            privateData[RiskChallengeKey] = JsonSerializer.SerializeToElement(challenge, SerializationOptions);
+            record.StepDataJson = JsonSerializer.Serialize(privateData, SerializationOptions);
+        }
+
+        await flowStateRepository.CreateAsync(record, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation(
             "Authentication flow {FlowId} initiated for user {UserId} with risk score {RiskScore} and steps {RequiredSteps}",
@@ -103,8 +136,12 @@ public sealed class AuthenticationOrchestrationService(
         return ToState(record);
     }
 
-    public async Task<List<AuthenticationStep>> DetermineRequiredChallengesAsync(Guid userId, double riskScore, AuthenticationAttemptContext context)
+    public Task<List<AuthenticationStep>> DetermineRequiredChallengesAsync(Guid userId, double riskScore, AuthenticationAttemptContext context) =>
+        DetermineRequiredChallengesAsync(userId, riskScore, context, CancellationToken.None);
+
+    public async Task<List<AuthenticationStep>> DetermineRequiredChallengesAsync(Guid userId, double riskScore, AuthenticationAttemptContext context, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         ArgumentNullException.ThrowIfNull(context);
 
         var challenges = new List<AuthenticationStep>();
@@ -121,7 +158,7 @@ public sealed class AuthenticationOrchestrationService(
         // An unrecognized device (missing or untrusted fingerprint) requires device trust.
         var fingerprint = context.DeviceFingerprint;
         var deviceRecognized = !string.IsNullOrWhiteSpace(fingerprint)
-            && await trustedDeviceRepository.IsDeviceTrustedAsync(userId, fingerprint, CancellationToken.None).ConfigureAwait(false);
+            && await trustedDeviceRepository.IsDeviceTrustedAsync(userId, fingerprint, cancellationToken).ConfigureAwait(false);
         if (!deviceRecognized)
         {
             challenges.Add(AuthenticationStep.DeviceTrust);
@@ -130,9 +167,13 @@ public sealed class AuthenticationOrchestrationService(
         return [.. challenges.Distinct().OrderBy(step => (int)step)];
     }
 
-    public async Task<AuthenticationFlowState> ProcessAuthenticationStepAsync(Guid flowId, AuthenticationStep step, object stepData)
+    public Task<AuthenticationFlowState> ProcessAuthenticationStepAsync(Guid flowId, AuthenticationStep step, object stepData) =>
+        ProcessAuthenticationStepAsync(flowId, step, stepData, CancellationToken.None);
+
+    public async Task<AuthenticationFlowState> ProcessAuthenticationStepAsync(Guid flowId, AuthenticationStep step, object stepData, CancellationToken cancellationToken)
     {
-        var record = await LoadActiveFlowAsync(flowId).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        var record = await LoadActiveFlowAsync(flowId, cancellationToken).ConfigureAwait(false);
         var state = ToState(record);
 
         if (step == AuthenticationStep.PrimaryCredential)
@@ -143,17 +184,31 @@ public sealed class AuthenticationOrchestrationService(
 
         if (record.UserId is not { } userId)
         {
-            throw new UnauthorizedAccessException($"Authentication flow '{flowId}' has no identified user.");
+            throw new AuthenticationRequiredException($"Authentication flow '{flowId}' has no identified user.");
         }
 
         EnforceStepOrder(state, step);
 
-        if (await mfaAttemptTrackingService.IsUserLockedOutAsync(userId, CancellationToken.None).ConfigureAwait(false))
+        if (await mfaAttemptTrackingService.IsUserLockedOutAsync(userId, cancellationToken).ConfigureAwait(false))
         {
-            throw new UnauthorizedAccessException("MFA verification is temporarily locked out for this account.");
+            throw new AuthenticationRequiredException("MFA verification is temporarily locked out for this account.");
         }
 
-        var method = await VerifyChallengeAsync(record, step, stepData).ConfigureAwait(false);
+        var (_, binding, _) = await ReadBoundSubjectAsync(record, cancellationToken).ConfigureAwait(false);
+        MfaMethod method;
+        if (step == AuthenticationStep.RiskChallenge)
+        {
+            if (!await VerifyRiskChallengeAsync(record, binding, stepData, cancellationToken).ConfigureAwait(false))
+            {
+                return new OrchestrationChallengeDeniedState(ToState(record));
+            }
+            method = MfaMethod.Email;
+        }
+        else
+        {
+            method = await VerifyChallengeAsync(record, step, stepData, cancellationToken).ConfigureAwait(false);
+        }
+        await ReadBoundSubjectAsync(record, cancellationToken).ConfigureAwait(false);
 
         var completedSteps = DeserializeSteps(record.CompletedStepsJson);
         completedSteps.Add(step);
@@ -162,13 +217,17 @@ public sealed class AuthenticationOrchestrationService(
 
         var stepDataMap = DeserializeStepData(record.StepDataJson) ?? [];
         stepDataMap[step.ToString()] = method.ToString();
+        if (step == AuthenticationStep.MfaVerification)
+        {
+            stepDataMap[MfaVerifiedAtKey] = SystemClock.UtcNow;
+        }
 
         record.CompletedStepsJson = SerializeSteps(completedSteps);
         record.CurrentStep = requiredSteps.Except(completedSteps).DefaultIfEmpty(step).First();
         record.IsComplete = isComplete;
         record.StepDataJson = JsonSerializer.Serialize(stepDataMap, SerializationOptions);
 
-        await flowStateRepository.UpdateAsync(record, CancellationToken.None).ConfigureAwait(false);
+        await flowStateRepository.UpdateAsync(record, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation(
             "Authentication flow {FlowId} step {Step} satisfied via {Method}; completed {CompletedCount}/{RequiredCount}",
@@ -177,9 +236,13 @@ public sealed class AuthenticationOrchestrationService(
         return ToState(record);
     }
 
-    public async Task<AuthenticationResult> CompleteAuthenticationAsync(Guid flowId)
+    public Task<AuthenticationResult> CompleteAuthenticationAsync(Guid flowId) =>
+        CompleteAuthenticationAsync(flowId, CancellationToken.None);
+
+    public async Task<AuthenticationResult> CompleteAuthenticationAsync(Guid flowId, CancellationToken cancellationToken)
     {
-        var record = await LoadActiveFlowAsync(flowId).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        var record = await LoadActiveFlowAsync(flowId, cancellationToken).ConfigureAwait(false);
         var state = ToState(record);
 
         var pending = state.RequiredSteps.Where(required => !state.CompletedSteps.Contains(required)).ToList();
@@ -191,53 +254,69 @@ public sealed class AuthenticationOrchestrationService(
 
         if (record.UserId is not { } userId)
         {
-            throw new UnauthorizedAccessException($"Authentication flow '{flowId}' has no identified user.");
+            throw new AuthenticationRequiredException($"Authentication flow '{flowId}' has no identified user.");
         }
 
-        var user = await userRepository.GetByIdAsync(userId, CancellationToken.None).ConfigureAwait(false)
-            ?? throw new UnauthorizedAccessException($"Authentication flow '{flowId}' belongs to a user that no longer exists.");
-        if (!user.IsActive)
+        var (subject, binding, decision) = await ReadBoundSubjectAsync(record, cancellationToken).ConfigureAwait(false);
+        var user = subject.User;
+        var device = new DeviceInfo
         {
-            throw new UnauthorizedAccessException($"Authentication flow '{flowId}' belongs to an inactive user.");
-        }
-
-        var roles = await roleRepository.GetUserRolesAsync(userId, includeExpired: false, cancellationToken: CancellationToken.None).ConfigureAwait(false);
-        var roleNames = roles.Where(role => role.IsActive).Select(role => role.Name).ToArray();
-
-        var sessionId = Guid.NewGuid();
-        var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
-            userId,
-            user.Email,
-            roleNames,
-            tenantId: null,
-            user.TokenVersion,
-            sessionId,
-            CancellationToken.None).ConfigureAwait(false);
-        var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(
-            userId,
-            new DeviceInfo
+            Fingerprint = string.IsNullOrWhiteSpace(record.DeviceFingerprint) ? Guid.NewGuid().ToString() : record.DeviceFingerprint,
+            IpAddress = string.IsNullOrWhiteSpace(record.IpAddress) ? "unknown" : record.IpAddress,
+            UserAgent = "AuthenticationOrchestration"
+        };
+        var requiresMfa = state.RequiredSteps.Contains(AuthenticationStep.MfaVerification) || subject.HasEnrolledMfa;
+        var mfaCompliancePending = !requiresMfa && decision.RequiresMfa && !decision.RequiredByDefault;
+        SignInResponse issued;
+        if (requiresMfa)
+        {
+            var data = DeserializeStepData(record.StepDataJson);
+            if (!state.CompletedSteps.Contains(AuthenticationStep.MfaVerification) || data is null ||
+                !data.TryGetValue(AuthenticationStep.MfaVerification.ToString(), out var methodValue) ||
+                !Enum.TryParse<MfaMethod>(methodValue.ToString(), out var method) ||
+                !data.TryGetValue(MfaVerifiedAtKey, out var timestamp) ||
+                !DateTimeOffset.TryParse(timestamp.ToString(), System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var verifiedAt))
             {
-                Fingerprint = string.IsNullOrWhiteSpace(record.DeviceFingerprint) ? Guid.NewGuid().ToString() : record.DeviceFingerprint,
-                IpAddress = string.IsNullOrWhiteSpace(record.IpAddress) ? "unknown" : record.IpAddress,
-                UserAgent = "AuthenticationOrchestration"
-            },
-            CancellationToken.None).ConfigureAwait(false);
+                throw new AuthenticationRequiredException("Verified MFA evidence is required.");
+            }
+            var proof = new SignInMfaProof(record.FlowId, user.Id, binding.TenantId, binding.TokenVersion,
+                binding.PolicyFingerprint, SignInFirstFactor.Password, new DateTimeOffset(record.InitiatedAt), verifiedAt, method);
+            issued = await sessionIssuer.IssueMfaAsync(user, binding.TenantId, device, proof, cancellationToken).ConfigureAwait(false);
+        }
+        else if (mfaCompliancePending)
+        {
+            issued = await sessionIssuer.IssueAsync(user, binding.TenantId, device, cancellationToken,
+                mfaCompliancePending: true).ConfigureAwait(false);
+        }
+        else
+        {
+            issued = await sessionIssuer.IssueAsync(user, binding.TenantId, device, cancellationToken).ConfigureAwait(false);
+        }
+        if (issued is null || !issued.Success || issued.RequiresMfa || issued.RequiresStepUp || issued.UserId != user.Id ||
+            issued.TenantId != binding.TenantId || issued.MfaCompliancePending != mfaCompliancePending ||
+            issued.SessionId == Guid.Empty || string.IsNullOrWhiteSpace(issued.AccessToken) ||
+            string.IsNullOrWhiteSpace(issued.RefreshToken) || issued.AccessTokenExpiresAt <= SystemClock.UtcNow)
+        {
+            throw new InvalidOperationException("Authenticated credentials could not be issued for the verified binding.");
+        }
 
         record.IsComplete = true;
         record.CompletedAt = SystemClock.UtcNow;
         record.CurrentStep = state.RequiredSteps.DefaultIfEmpty(AuthenticationStep.PrimaryCredential).Last();
-        await flowStateRepository.UpdateAsync(record, CancellationToken.None).ConfigureAwait(false);
+        await flowStateRepository.UpdateAsync(record, cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Authentication flow {FlowId} completed; tokens issued for user {UserId}", flowId, userId);
 
         return new OrchestrationAuthenticationResult
         {
+            IssuedCredentials = issued,
             IsSuccess = true,
             UserId = userId,
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
-            TokenExpiresAt = SystemClock.UtcNow.AddMinutes(jwtOptions.Value.AccessTokenExpirationMinutes),
-            SessionId = sessionId,
+            AccessToken = issued.AccessToken,
+            RefreshToken = issued.RefreshToken,
+            TokenExpiresAt = issued.AccessTokenExpiresAt,
+            SessionId = issued.SessionId,
             MfaEnabled = state.RequiredSteps.Contains(AuthenticationStep.MfaVerification),
             DeviceTrusted = !state.RequiredSteps.Contains(AuthenticationStep.DeviceTrust),
             RiskScore = state.RiskScore,
@@ -249,15 +328,25 @@ public sealed class AuthenticationOrchestrationService(
         };
     }
 
-    public async Task AbandonAuthenticationFlowAsync(Guid flowId)
+    public Task AbandonAuthenticationFlowAsync(Guid flowId) =>
+        AbandonAuthenticationFlowAsync(flowId, CancellationToken.None);
+
+    public async Task AbandonAuthenticationFlowAsync(Guid flowId, CancellationToken cancellationToken)
     {
-        await flowStateRepository.AbandonAsync(flowId, SystemClock.UtcNow, CancellationToken.None).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        var record = await flowStateRepository.GetForUpdateAsync(flowId, cancellationToken).ConfigureAwait(false);
+        if (record is null || record.CompletedAt is not null || record.AbandonedAt is not null) { return; }
+        await flowStateRepository.AbandonAsync(flowId, SystemClock.UtcNow, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Authentication flow {FlowId} abandoned", flowId);
     }
 
-    public async Task<AuthenticationFlowState?> GetFlowStateAsync(Guid flowId)
+    public Task<AuthenticationFlowState?> GetFlowStateAsync(Guid flowId) =>
+        GetFlowStateAsync(flowId, CancellationToken.None);
+
+    public async Task<AuthenticationFlowState?> GetFlowStateAsync(Guid flowId, CancellationToken cancellationToken)
     {
-        var record = await flowStateRepository.GetByFlowIdAsync(flowId, CancellationToken.None).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        var record = await flowStateRepository.GetByFlowIdAsync(flowId, cancellationToken).ConfigureAwait(false);
         if (record is null)
         {
             return null;
@@ -269,17 +358,104 @@ public sealed class AuthenticationOrchestrationService(
             return null;
         }
 
-        if (SystemClock.UtcNow > record.ExpiresAt)
+        if (SystemClock.UtcNow >= record.ExpiresAt)
         {
-            await flowStateRepository.AbandonAsync(flowId, SystemClock.UtcNow, CancellationToken.None).ConfigureAwait(false);
             return null;
         }
 
         return ToState(record);
     }
 
-    private async Task<GameGuild.Identity.Users.User> ValidatePrimaryCredentialAsync(InitiateAuthenticationRequest request, string identifier)
+    private const string BindingKey = "__serverBinding";
+    private const string MfaVerifiedAtKey = "__mfaVerifiedAt";
+    private const string RiskChallengeKey = "__riskChallenge";
+    private const string RiskCodeKey = "riskCode";
+    private sealed record FlowBinding(Guid TenantId, int TokenVersion, string PolicyFingerprint, bool HadMfa);
+
+    private static void RequireDecision(MfaRequirementDecision decision, Guid userId, Guid? tenantId)
     {
+        if (decision is null || decision.SubjectId != userId || decision.TenantId == Guid.Empty ||
+            tenantId.HasValue && decision.TenantId != tenantId || !SignInMfaChallengeToken.IsDigest(decision.PolicyFingerprint))
+        {
+            throw new AuthenticationRequiredException("No authorized tenant is available for authentication.");
+        }
+    }
+
+    private async Task<(SignInMfaSubjectState Subject, FlowBinding Binding, MfaRequirementDecision Decision)>
+        ReadBoundSubjectAsync(AuthenticationFlowStateRecord record, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var data = DeserializeStepData(record.StepDataJson);
+        if (record.UserId is not { } userId || data is null || !data.TryGetValue(BindingKey, out var raw))
+        {
+            throw new AuthenticationRequiredException("This sign-in must be restarted.");
+        }
+        FlowBinding? binding;
+        try { binding = JsonSerializer.Deserialize<FlowBinding>(raw.ToString() ?? string.Empty, SerializationOptions); }
+        catch (JsonException) { throw new AuthenticationRequiredException("This sign-in must be restarted."); }
+        var subject = await currentSubjects.ReadCurrentAsync(userId, cancellationToken).ConfigureAwait(false);
+        if (binding is null || subject is null || subject.User.IsDeleted ||
+            !subject.User.ValidateForAuthentication(binding.TokenVersion).IsSuccess || subject.User.Id != userId ||
+            subject.HasEnrolledMfa != binding.HadMfa || subject.LockedOutUntil is { } lockedUntil && lockedUntil > SystemClock.UtcNow)
+        {
+            throw new AuthenticationRequiredException("Verified first-factor evidence is no longer valid.");
+        }
+        var decision = await mfaPolicy.EvaluateAsync(userId, binding.TenantId, cancellationToken).ConfigureAwait(false);
+        RequireDecision(decision, userId, binding.TenantId);
+        if (!string.Equals(binding.PolicyFingerprint, decision.PolicyFingerprint, StringComparison.Ordinal) ||
+            (subject.HasEnrolledMfa || decision.RequiredByDefault) && !DeserializeSteps(record.RequiredStepsJson).Contains(AuthenticationStep.MfaVerification))
+        {
+            throw new AuthenticationRequiredException("The sign-in policy changed; restart authentication.");
+        }
+        return (subject, binding, decision);
+    }
+
+    private async Task<bool> VerifyRiskChallengeAsync(AuthenticationFlowStateRecord record, FlowBinding binding, object stepData, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var data = DeserializeStepData(record.StepDataJson);
+        if (data is null || !data.TryGetValue(RiskChallengeKey, out var raw))
+        {
+            throw new AuthenticationRequiredException("This sign-in must be restarted.");
+        }
+        OrchestratedRiskChallengeState? challenge;
+        try { challenge = JsonSerializer.Deserialize<OrchestratedRiskChallengeState>(raw.ToString() ?? string.Empty, SerializationOptions); }
+        catch (JsonException) { throw new AuthenticationRequiredException("This sign-in must be restarted."); }
+        if (challenge is null) { throw new AuthenticationRequiredException("This sign-in must be restarted."); }
+        var code = string.Empty;
+        if (stepData is IReadOnlyDictionary<string, object> payload && payload.Count == 1)
+        {
+            TryReadPayload(payload, RiskCodeKey, out code);
+        }
+        var result = riskChallenges.Verify(challenge, record.FlowId, record.UserId!.Value, binding.TenantId,
+            code, new DateTimeOffset(SystemClock.UtcNow));
+        data[RiskChallengeKey] = JsonSerializer.SerializeToElement(result.State, SerializationOptions);
+        record.StepDataJson = JsonSerializer.Serialize(data, SerializationOptions);
+        if (!result.Accepted)
+        {
+            if (result.State.FailedAttempts >= OrchestratedRiskChallengeVerifier.MaximumFailedAttempts ||
+                result.State.ExpiresAt <= new DateTimeOffset(SystemClock.UtcNow))
+            {
+                record.AbandonedAt = SystemClock.UtcNow;
+            }
+            await flowStateRepository.UpdateAsync(record, cancellationToken).ConfigureAwait(false);
+        }
+        return result.Accepted;
+    }
+
+    private static Dictionary<string, object>? PublicStepData(string? json)
+    {
+        var data = DeserializeStepData(json);
+        if (data is null) { return null; }
+        data.Remove(BindingKey);
+        data.Remove(MfaVerifiedAtKey);
+        data.Remove(RiskChallengeKey);
+        return data.Count == 0 ? null : data;
+    }
+
+    private async Task<GameGuild.Identity.Users.User> ValidatePrimaryCredentialAsync(InitiateAuthenticationRequest request, string identifier, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
         if (!string.Equals(request.AuthMethod, LocalAuthMethod, StringComparison.OrdinalIgnoreCase))
         {
             throw new NotSupportedException(
@@ -288,13 +464,13 @@ public sealed class AuthenticationOrchestrationService(
 
         if (!TryReadPayload(request.Context, PasswordContextKey, out var password))
         {
-            throw new UnauthorizedAccessException("A primary credential is required to initiate an authentication flow.");
+            throw new AuthenticationRequiredException("A primary credential is required to initiate an authentication flow.");
         }
 
         // Server-owned monotonic origin: captured BEFORE account resolution so the lookup and
         // credential verification stay inside the compensated window.
         var timingScope = enumerationProtectionService.BeginAuthenticationTiming();
-        var user = await userRepository.GetByEmailAsync(identifier.ToLowerInvariant(), CancellationToken.None).ConfigureAwait(false);
+        var user = await userRepository.GetByEmailAsync(identifier.ToLowerInvariant(), cancellationToken).ConfigureAwait(false);
 
         // Work classification, not account existence: passwordless accounts and credentials the
         // hasher rejects before expensive verification performed no cryptographic work.
@@ -307,6 +483,7 @@ public sealed class AuthenticationOrchestrationService(
             await enumerationProtectionService.AddTimingProtectionDelayAsync(
                 timingScope,
                 verification.PerformedCryptographicWork ? CredentialWorkClassification.Completed : CredentialWorkClassification.None).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
             await authAttemptService.RecordFailedAttemptAsync(
                 identifier,
                 user?.Id,
@@ -324,13 +501,14 @@ public sealed class AuthenticationOrchestrationService(
                 eventPublisher,
                 new AuthenticationFailedEvent(identifier, "InvalidCredentials", request.IpAddress, request.UserAgent, SystemClock.UtcNow),
                 logger,
-                CancellationToken.None).ConfigureAwait(false);
-            await AlertFailedAttemptRisksAsync(user?.Id, request).ConfigureAwait(false);
+                cancellationToken).ConfigureAwait(false);
+            await AlertFailedAttemptRisksAsync(user?.Id, request, cancellationToken).ConfigureAwait(false);
 
             logger.LogWarning("Primary credential validation failed for identifier {Identifier} from {IpAddress}", identifier, request.IpAddress);
-            throw new UnauthorizedAccessException(enumerationProtectionService.GetGenericErrorMessage("login"));
+            throw new AuthenticationRequiredException(enumerationProtectionService.GetGenericErrorMessage("login"));
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         await authAttemptService.RecordSuccessfulAttemptAsync(
             user!.Email,
             user.Id,
@@ -347,8 +525,9 @@ public sealed class AuthenticationOrchestrationService(
     ///     suspicious-login alert publisher (issue #1199). A flow at or above the high-risk
     ///     threshold is forced into the strongest challenge set, which is the step-up signal.
     /// </summary>
-    private async Task AlertInitiationRisksAsync(Guid userId, Guid? tenantId, AuthenticationAttemptContext context, double riskScore)
+    private async Task AlertInitiationRisksAsync(Guid userId, Guid? tenantId, AuthenticationAttemptContext context, double riskScore, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (suspiciousLoginAlerts is null)
         {
             return;
@@ -357,8 +536,13 @@ public sealed class AuthenticationOrchestrationService(
         try
         {
             var analysis = await anomalyDetectionService.AnalyzeLoginAttemptAsync(context).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
             await AuthenticationEventDispatch.AlertConfirmedSignInRisksAsync(
-                suspiciousLoginAlerts, userId, tenantId, analysis, CancellationToken.None).ConfigureAwait(false);
+                suspiciousLoginAlerts, userId, tenantId, analysis, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception exception)
         {
@@ -370,7 +554,7 @@ public sealed class AuthenticationOrchestrationService(
         {
             await suspiciousLoginAlerts.RecordAsync(
                 userId, tenantId, SecurityAlertKinds.LoginStepUpRequired,
-                RiskLevel.High, (int)Math.Round(riskScore * 100), CancellationToken.None).ConfigureAwait(false);
+                RiskLevel.High, (int)Math.Round(riskScore * 100), cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -378,8 +562,9 @@ public sealed class AuthenticationOrchestrationService(
     ///     Evaluates a failed orchestrated credential attempt for the brute-force signal and
     ///     forwards it to the suspicious-login containment (issue #1199). Best-effort.
     /// </summary>
-    private async Task AlertFailedAttemptRisksAsync(Guid? userId, InitiateAuthenticationRequest request)
+    private async Task AlertFailedAttemptRisksAsync(Guid? userId, InitiateAuthenticationRequest request, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (suspiciousLoginAlerts is null || userId is not { } alertUserId)
         {
             return;
@@ -388,8 +573,13 @@ public sealed class AuthenticationOrchestrationService(
         try
         {
             var analysis = await anomalyDetectionService.AnalyzeLoginAttemptAsync(BuildAttemptContext(request, alertUserId)).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
             await AuthenticationEventDispatch.AlertConfirmedSignInRisksAsync(
-                suspiciousLoginAlerts, alertUserId, request.TenantId, analysis, CancellationToken.None).ConfigureAwait(false);
+                suspiciousLoginAlerts, alertUserId, request.TenantId, analysis, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception exception)
         {
@@ -397,12 +587,18 @@ public sealed class AuthenticationOrchestrationService(
         }
     }
 
-    private async Task<double> AssessRiskScoreAsync(Guid userId, AuthenticationAttemptContext context)
+    private async Task<double> AssessRiskScoreAsync(Guid userId, AuthenticationAttemptContext context, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var analysis = await anomalyDetectionService.AnalyzeLoginAttemptAsync(context).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
             return Math.Clamp(analysis.RiskScore / 100.0, 0.0, 1.0);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception exception)
         {
@@ -412,31 +608,37 @@ public sealed class AuthenticationOrchestrationService(
         }
     }
 
-    private async Task<AuthenticationFlowStateRecord> LoadActiveFlowAsync(Guid flowId)
+    private async Task<AuthenticationFlowStateRecord> LoadActiveFlowAsync(Guid flowId, CancellationToken cancellationToken)
     {
-        var record = await flowStateRepository.GetByFlowIdAsync(flowId, CancellationToken.None).ConfigureAwait(false)
-            ?? throw new UnauthorizedAccessException($"Authentication flow '{flowId}' was not found.");
+        cancellationToken.ThrowIfCancellationRequested();
+        var record = await flowStateRepository.GetForUpdateAsync(flowId, cancellationToken).ConfigureAwait(false)
+            ?? throw new AuthenticationRequiredException($"Authentication flow '{flowId}' was not found.");
 
         if (record.AbandonedAt is not null)
         {
-            throw new UnauthorizedAccessException($"Authentication flow '{flowId}' was abandoned.");
+            throw new AuthenticationRequiredException($"Authentication flow '{flowId}' was abandoned.");
         }
 
-        if (SystemClock.UtcNow > record.ExpiresAt)
+        if (record.CompletedAt is not null)
         {
-            await flowStateRepository.AbandonAsync(flowId, SystemClock.UtcNow, CancellationToken.None).ConfigureAwait(false);
-            throw new UnauthorizedAccessException($"Authentication flow '{flowId}' has expired.");
+            throw new AuthenticationRequiredException($"Authentication flow '{flowId}' was already completed.");
+        }
+
+        if (SystemClock.UtcNow >= record.ExpiresAt)
+        {
+            throw new AuthenticationRequiredException($"Authentication flow '{flowId}' has expired.");
         }
 
         return record;
     }
 
-    private async Task<MfaMethod> VerifyChallengeAsync(AuthenticationFlowStateRecord record, AuthenticationStep step, object stepData)
+    private async Task<MfaMethod> VerifyChallengeAsync(AuthenticationFlowStateRecord record, AuthenticationStep step, object stepData, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (stepData is not IReadOnlyDictionary<string, object> payload)
         {
             logger.LogWarning("Step {Step} for flow {FlowId} received no verification payload", step, record.FlowId);
-            throw new UnauthorizedAccessException($"Step '{step}' requires a verification payload.");
+            throw new AuthenticationRequiredException($"Step '{step}' requires a verification payload.");
         }
 
         var userId = record.UserId!.Value;
@@ -444,55 +646,56 @@ public sealed class AuthenticationOrchestrationService(
 
         if (TryReadPayload(payload, TotpCodeKey, out var totpCode))
         {
-            var verified = await totpMfaService.VerifyTotpAsync(userId, totpCode, deviceId, CancellationToken.None).ConfigureAwait(false);
+            var verified = await totpMfaService.VerifyTotpAsync(userId, totpCode, deviceId, cancellationToken).ConfigureAwait(false);
             if (!verified)
             {
-                throw await FailChallengeAsync(record, MfaMethod.Totp, "invalid TOTP code").ConfigureAwait(false);
+                throw await FailChallengeAsync(record, MfaMethod.Totp, "invalid TOTP code", cancellationToken).ConfigureAwait(false);
             }
 
-            await RecordSuccessAttemptAsync(userId, MfaMethod.Totp, deviceId).ConfigureAwait(false);
+            await RecordSuccessAttemptAsync(userId, MfaMethod.Totp, deviceId, cancellationToken).ConfigureAwait(false);
             return MfaMethod.Totp;
         }
 
         if (TryReadPayload(payload, BackupCodeKey, out var backupCode))
         {
-            var verified = await backupCodeMfaService.VerifyBackupCodeAsync(userId, backupCode, deviceId, CancellationToken.None).ConfigureAwait(false);
+            var verified = await backupCodeMfaService.VerifyBackupCodeAsync(userId, backupCode, deviceId, cancellationToken).ConfigureAwait(false);
             if (!verified)
             {
-                throw await FailChallengeAsync(record, MfaMethod.BackupCode, "invalid backup code").ConfigureAwait(false);
+                throw await FailChallengeAsync(record, MfaMethod.BackupCode, "invalid backup code", cancellationToken).ConfigureAwait(false);
             }
 
-            await RecordSuccessAttemptAsync(userId, MfaMethod.BackupCode, deviceId).ConfigureAwait(false);
+            await RecordSuccessAttemptAsync(userId, MfaMethod.BackupCode, deviceId, cancellationToken).ConfigureAwait(false);
             return MfaMethod.BackupCode;
         }
 
         if (TryReadPayload(payload, WebAuthnAssertionKey, out var assertion))
         {
             var result = await webAuthnAuthenticationService
-                .CompleteAuthenticationAsync(assertion, record.IpAddress, userAgent: null, CancellationToken.None)
+                .CompleteAuthenticationAsync(assertion, record.IpAddress, userAgent: null, cancellationToken)
                 .ConfigureAwait(false);
             if (result is not { Success: true } || result.UserId != userId)
             {
-                throw await FailChallengeAsync(record, MfaMethod.WebAuthn, "invalid WebAuthn assertion").ConfigureAwait(false);
+                throw await FailChallengeAsync(record, MfaMethod.WebAuthn, "invalid WebAuthn assertion", cancellationToken).ConfigureAwait(false);
             }
 
-            await RecordSuccessAttemptAsync(userId, MfaMethod.WebAuthn, deviceId).ConfigureAwait(false);
+            await RecordSuccessAttemptAsync(userId, MfaMethod.WebAuthn, deviceId, cancellationToken).ConfigureAwait(false);
             return MfaMethod.WebAuthn;
         }
 
         logger.LogWarning("Step {Step} for flow {FlowId} received no supported verification payload", step, record.FlowId);
-        throw new UnauthorizedAccessException($"Step '{step}' received no supported verification payload.");
+        throw new AuthenticationRequiredException($"Step '{step}' received no supported verification payload.");
     }
 
     /// <summary>
     ///     Records a failed challenge attempt through the existing MFA attempt tracking (which applies
     ///     the existing lockout policy) and returns the exception to throw.
     /// </summary>
-    private async Task<UnauthorizedAccessException> FailChallengeAsync(
+    private async Task<AuthenticationRequiredException> FailChallengeAsync(
         AuthenticationFlowStateRecord record,
         MfaMethod method,
-        string failureReason)
+        string failureReason, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var userId = record.UserId!.Value;
         logger.LogWarning(
             "Challenge {Step} failed for flow {FlowId} via {Method}: {Reason}",
@@ -500,35 +703,44 @@ public sealed class AuthenticationOrchestrationService(
 
         try
         {
-            var configuration = await userMfaConfigurationRepository.GetByUserIdAsync(userId, CancellationToken.None).ConfigureAwait(false);
+            var configuration = await userMfaConfigurationRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
             if (configuration is not null)
             {
                 await mfaAttemptTrackingService
-                    .RecordFailedMfaAttemptAsync(configuration, method, failureReason, record.DeviceFingerprint, CancellationToken.None)
+                    .RecordFailedMfaAttemptAsync(configuration, method, failureReason, record.DeviceFingerprint, cancellationToken)
                     .ConfigureAwait(false);
             }
             else
             {
                 await mfaAttemptTrackingService
-                    .RecordMfaAttemptAsync(userId, method, success: false, failureReason, record.DeviceFingerprint, CancellationToken.None)
+                    .RecordMfaAttemptAsync(userId, method, success: false, failureReason, record.DeviceFingerprint, cancellationToken)
                     .ConfigureAwait(false);
             }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "Could not record failed challenge attempt for flow {FlowId}", record.FlowId);
         }
 
-        return new UnauthorizedAccessException(failureReason);
+        return new AuthenticationRequiredException(failureReason);
     }
 
-    private async Task RecordSuccessAttemptAsync(Guid userId, MfaMethod method, string? deviceId)
+    private async Task RecordSuccessAttemptAsync(Guid userId, MfaMethod method, string? deviceId, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
             await mfaAttemptTrackingService
-                .RecordMfaAttemptAsync(userId, method, success: true, failureReason: null, deviceId, CancellationToken.None)
+                .RecordMfaAttemptAsync(userId, method, success: true, failureReason: null, deviceId, cancellationToken)
                 .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception exception)
         {
@@ -596,7 +808,7 @@ public sealed class AuthenticationOrchestrationService(
         ExpiresAt = record.ExpiresAt,
         IpAddress = record.IpAddress,
         DeviceFingerprint = record.DeviceFingerprint,
-        StepData = DeserializeStepData(record.StepDataJson)
+        StepData = PublicStepData(record.StepDataJson)
     };
 
     private static string SerializeSteps(IEnumerable<AuthenticationStep> steps) =>

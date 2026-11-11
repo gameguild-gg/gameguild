@@ -11,6 +11,7 @@ public static class ConsentAuditActionTypes
     public const string RequestSubmitted = "DataProtection.DataSubjectRequestRecorded";
     public const string RequestCompleted = "DataProtection.DataSubjectRequestCompleted";
     public const string RequestRejected = "DataProtection.DataSubjectRequestRejected";
+    public const string RequestExpired = "DataProtection.DataSubjectRequestExpired";
 }
 
 /// <summary>

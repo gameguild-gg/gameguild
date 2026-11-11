@@ -18,7 +18,7 @@
  * Internal to the client lib for now — not part of the public exports.
  */
 
-import type { CookieSerializeOptions } from '../../runtime/auth/cookies.js';
+import type { CookieSerializeOptions } from '../../runtime/auth/cookies';
 
 /** State cookie lifetime in seconds (10 minutes). */
 export const STATE_COOKIE_MAX_AGE = 600;

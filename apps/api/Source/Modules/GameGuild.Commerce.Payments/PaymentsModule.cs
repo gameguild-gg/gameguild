@@ -138,11 +138,13 @@ public static class PaymentsModule
         // presented on multiple customer accounts, backed by the payments device-lookup
         // partial index.
         services.AddScoped<IFraudSignalProvider, DeviceFingerprintFraudSignalProvider>();
-        // Asynchronous fraud scoring (issue #409 remainder): a bounded queue plus a worker
-        // completing the providers the synchronous <200ms budget deferred. Enqueue happens
-        // after the synchronous decision is persisted, so queue behavior never blocks or
-        // rejects the payment path.
-        services.AddSingleton<IFraudBackgroundScoringQueue, FraudBackgroundScoringQueue>();
+        // Asynchronous fraud scoring (issue #409 remainder, made durable in #1218 G3): a
+        // persisted job table plus a due-sweep worker completing the providers the synchronous
+        // <200ms budget deferred. Enqueue happens after the synchronous decision is persisted
+        // and can never block or reject the payment path — a failed persist is logged, counted
+        // (enqueue_abandoned) and treated as a best-effort miss. Jobs survive restarts and
+        // dead-letter after the attempt ceiling instead of being silently dropped.
+        services.AddScoped<IFraudBackgroundScoringJobStore, FraudBackgroundScoringJobStore>();
         services.AddScoped<IFraudBackgroundScoringWorker, FraudBackgroundScoringWorker>();
         services.AddHostedService<FraudBackgroundScoringHostedService>();
         // NoOp fallback keeps the GeoIP signal provider resolvable (and silent) in hosts
@@ -161,6 +163,17 @@ public static class PaymentsModule
         services.AddScoped<IPaymentRetryMethodChangeService, PaymentRetryMethodChangeService>();
         services.AddScoped<IPaymentRetryQueueWorker, PaymentRetryQueueWorker>();
         services.AddHostedService<PaymentRetryQueueBackgroundService>();
+
+        // Pending-payment aging boundary (issue #1202 gaps N6): automated exit for
+        // outcome-unknown payments stuck Pending (unmapped, never processed) past a bounded
+        // timeout — failed with reason, non-retriable, for operator reconciliation. Opt-in
+        // via Payments:Aging:Enabled; mirrors billing's InvoiceAgingService sweep semantics.
+        services.AddSingleton<IValidateOptions<PaymentAgingOptions>, PaymentAgingOptionsValidator>();
+        services.AddOptions<PaymentAgingOptions>()
+            .Bind(configuration.GetSection(PaymentAgingOptions.SectionName))
+            .ValidateOnStart();
+        services.AddScoped<IPendingPaymentAgingWorker, PendingPaymentAgingWorker>();
+        services.AddHostedService<PendingPaymentAgingBackgroundService>();
 
         // Multi-gateway processing (issue #413): config-driven fail-closed routing,
         // failover policy with per-gateway circuit breaker, and per-gateway metrics.

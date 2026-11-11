@@ -12,7 +12,7 @@ public class ActivateTenantCommandHandlerTests
     public ActivateTenantCommandHandlerTests()
     {
         _tenantRepositoryMock = new Mock<ITenantRepository>();
-        _handler = new ActivateTenantCommandHandler(_tenantRepositoryMock.Object);
+        _handler = new ActivateTenantCommandHandler(_tenantRepositoryMock.Object, new AllowAllTenantAdministrationGuard());
     }
 
     [Fact]

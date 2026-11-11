@@ -4,9 +4,9 @@
  * Development mode logging and debugging utilities
  */
 
-import type { RequestConfig } from '../transport/types.js';
-import type { Result } from '../result/types.js';
-import type { ApiError } from '../errors/types.js';
+import type { RequestConfig } from '../transport/types';
+import type { Result } from '../result/types';
+import type { ApiError } from '../errors/types';
 
 export interface DevToolsConfig {
   /**

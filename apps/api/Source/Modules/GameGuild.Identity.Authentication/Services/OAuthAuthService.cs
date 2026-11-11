@@ -871,6 +871,19 @@ public class OAuthAuthService(
         {
             if (createdNewUser)
             {
+                // Issue #1182: provider-provisioned accounts raise the same creation event as
+                // local sign-up (UserCreatedEvent carries the welcome email), so OAuth-first
+                // users are onboarded identically instead of silently skipping the welcome flow.
+                user.AddIntegrationEvent(new UserCreatedEvent(user.Id)
+                {
+                    TenantId = DurableIntegrationEventTenants.Platform,
+                    ActorId = user.Id,
+                    AggregateType = nameof(User),
+                    AggregateId = user.Id.ToString(),
+                    CorrelationId = Guid.NewGuid(),
+                    OccurredAt = DateTime.UtcNow
+                });
+
                 await userRepository.AddAsync(user, cancellationToken).ConfigureAwait(false);
                 await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }

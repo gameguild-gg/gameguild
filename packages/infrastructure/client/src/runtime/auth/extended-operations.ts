@@ -30,23 +30,23 @@
  */
 
 import { z } from 'zod';
-import type { ProviderResult } from './types.js';
-import { createClient } from '../../client.js';
-import { AuthModule } from '../../generated/modules/auth.gen.js';
-import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen.js';
-import { UsersModule } from '../../generated/modules/users.gen.js';
-import { AuthSessionsModule } from '../../generated/modules/auth-sessions.gen.js';
-import { IdentityAuthenticationSessionOutputSchema } from '../../generated/types.gen.js';
-import type { ApiClient } from '../client.js';
-import type { IdentityAuthenticationMfaMethod } from '../../generated/types.gen.js';
-import type { ApiError } from '../errors/types.js';
-import { isApiError } from '../errors/guards.js';
-import type { Result } from '../result/types.js';
-import { parseBackendAuthResponse } from '../../integrations/next/handlers.js';
-import { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError, AuthServiceUnavailableError } from './errors.js';
+import type { ProviderResult } from './types';
+import { createClient } from '../../client';
+import { AuthModule } from '../../generated/modules/auth.gen';
+import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen';
+import { UsersModule } from '../../generated/modules/users.gen';
+import { AuthSessionsModule } from '../../generated/modules/auth-sessions.gen';
+import { IdentityAuthenticationSessionOutputSchema } from '../../generated/types.gen';
+import type { ApiClient } from '../client';
+import type { IdentityAuthenticationMfaMethod } from '../../generated/types.gen';
+import type { ApiError } from '../errors/types';
+import { isApiError } from '../errors/guards';
+import type { Result } from '../result/types';
+import { parseBackendAuthResponse } from '../../integrations/next/handlers';
+import { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError, AuthServiceUnavailableError } from './errors';
 
 // Re-export error classes so existing consumers don't break
-export { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError } from './errors.js';
+export { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError } from './errors';
 
 // ─── Types ───────────────────────────────────────────────────────
 

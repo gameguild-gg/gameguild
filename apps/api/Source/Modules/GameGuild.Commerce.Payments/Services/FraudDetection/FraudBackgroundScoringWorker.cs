@@ -1,4 +1,3 @@
-using GameGuild.CQRS;
 using GameGuild.Notifications;
 using GameGuild.Notifications.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,53 +8,80 @@ using Microsoft.Extensions.Options;
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Processes one deferred background re-scoring job (issue #409: asynchronous scoring
-///     for background checks). Re-runs the fraud evaluation WITHOUT the synchronous
-///     latency budget — the providers deferred when the payment path hit its budget get
-///     their full evaluation here. When the completed evaluation tightens the outcome
-///     (Allow → Review/Block), the payment is escalated through
-///     <see cref="Payment.EscalateFraudAssessment"/> and the admins are notified through
-///     the same notice the synchronous hold path uses; an unchanged or milder outcome
-///     leaves the recorded decision untouched (escalation is strictly a tightening
-///     operation). Per-job failures are isolated so one job never stops the worker.
+///     Processes one polling pass of durable deferred background re-scoring jobs (issue #409:
+///     asynchronous scoring for background checks; issue #1218 G3: durable handoff). Re-runs the
+///     fraud evaluation WITHOUT the synchronous latency budget — the providers deferred when the
+///     payment path hit its budget get their full evaluation here. When the completed evaluation
+///     tightens the outcome (Allow → Review/Block), the payment is escalated through
+///     <see cref="Payment.EscalateFraudAssessment"/> and the admins are notified through the
+///     same notice the synchronous hold path uses; an unchanged or milder outcome leaves the
+///     recorded decision untouched (escalation is strictly a tightening operation). Per-job
+///     failures are isolated so one job never stops the pass; exhausted jobs dead-letter and the
+///     synchronous decision stands.
 /// </summary>
 public interface IFraudBackgroundScoringWorker
 {
-    /// <summary>Processes one job. Returns true when a job was processed.</summary>
-    Task<bool> ProcessOneAsync(CancellationToken cancellationToken = default);
+    /// <summary>Processes one pass of due jobs. Returns the number of jobs processed.</summary>
+    Task<int> ProcessDueAsync(CancellationToken cancellationToken = default);
 }
 
 /// <inheritdoc />
 public sealed class FraudBackgroundScoringWorker(
-    IFraudBackgroundScoringQueue queue,
+    IFraudBackgroundScoringJobStore jobStore,
     IFraudDetectionService fraudDetectionService,
     IPaymentRepository paymentRepository,
     INotificationService? notificationService = null,
     ILogger<FraudBackgroundScoringWorker>? logger = null) : IFraudBackgroundScoringWorker
 {
+    private const int BatchSize = 25;
+
     /// <inheritdoc />
-    public async Task<bool> ProcessOneAsync(CancellationToken cancellationToken = default)
+    public async Task<int> ProcessDueAsync(CancellationToken cancellationToken = default)
     {
-        var job = await queue.DequeueAsync(cancellationToken).ConfigureAwait(false);
-        if (job is null)
+        var workerId = $"{Environment.MachineName}:{Environment.ProcessId}";
+        var jobs = await jobStore
+            .ClaimDueAsync(BatchSize, workerId, cancellationToken)
+            .ConfigureAwait(false);
+
+        var processed = 0;
+        foreach (var job in jobs)
         {
-            return false;
+            cancellationToken.ThrowIfCancellationRequested();
+            await ProcessOneAsync(job, cancellationToken).ConfigureAwait(false);
+            processed++;
+        }
+
+        return processed;
+    }
+
+    private async Task ProcessOneAsync(FraudBackgroundScoringJob job, CancellationToken cancellationToken)
+    {
+        if (!job.TryRehydrateContext(out var context) || context is null)
+        {
+            // Poison payload: the row can never be processed — dead-letter immediately
+            // instead of burning the attempt budget on it.
+            logger?.LogError(
+                "Background fraud re-scoring job {JobId} for payment {PaymentId} carries a corrupt signal context; dead-lettered",
+                job.Id,
+                job.PaymentId);
+            await jobStore.DeadLetterAsync(job, "Corrupt signal context payload.", cancellationToken).ConfigureAwait(false);
+            return;
         }
 
         try
         {
             var assessment = await fraudDetectionService
-                .AssessPaymentForBackgroundAsync(job.Context, cancellationToken)
+                .AssessPaymentForBackgroundAsync(context, cancellationToken)
                 .ConfigureAwait(false);
 
             if (assessment.Decision == FraudDecision.Allow)
             {
                 logger?.LogInformation(
-                    "Background fraud re-score for payment {PaymentId} confirmed the synchronous Allow (score {Score}); {DeferredCount} deferred provider(s) completed",
+                    "Background fraud re-score for payment {PaymentId} confirmed the synchronous Allow (score {Score})",
                     job.PaymentId,
-                    assessment.Score,
-                    job.DeferredProviders.Count);
-                return true;
+                    assessment.Score);
+                await jobStore.CompleteAsync(job, cancellationToken).ConfigureAwait(false);
+                return;
             }
 
             var payment = await paymentRepository.GetByIdAsync(job.PaymentId, cancellationToken).ConfigureAwait(false);
@@ -65,7 +91,8 @@ public sealed class FraudBackgroundScoringWorker(
                     "Background fraud re-score for payment {PaymentId} raised {Decision} but the payment no longer exists",
                     job.PaymentId,
                     assessment.Decision);
-                return true;
+                await jobStore.CompleteAsync(job, cancellationToken).ConfigureAwait(false);
+                return;
             }
 
             var before = payment.FraudDecision;
@@ -81,7 +108,8 @@ public sealed class FraudBackgroundScoringWorker(
                     "Background fraud re-score for payment {PaymentId} confirmed the recorded {Decision}; nothing to escalate",
                     job.PaymentId,
                     before);
-                return true;
+                await jobStore.CompleteAsync(job, cancellationToken).ConfigureAwait(false);
+                return;
             }
 
             await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
@@ -95,6 +123,7 @@ public sealed class FraudBackgroundScoringWorker(
                 assessment.Reason);
 
             await NotifyEscalationAsync(payment, assessment, cancellationToken).ConfigureAwait(false);
+            await jobStore.CompleteAsync(job, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -102,14 +131,17 @@ public sealed class FraudBackgroundScoringWorker(
         }
         catch (Exception exception)
         {
-            // Isolated per job: a failed re-score leaves the synchronous decision standing.
+            // Isolated per job: a failed re-score re-pends with backoff, dead-letters after the
+            // attempt ceiling, and the synchronous decision stands throughout.
             logger?.LogError(
                 exception,
-                "Background fraud re-score for payment {PaymentId} failed; the synchronous decision stands",
-                job.PaymentId);
+                "Background fraud re-score for payment {PaymentId} failed (attempt {Attempt}); the synchronous decision stands",
+                job.PaymentId,
+                job.AttemptCount);
+            await jobStore
+                .FailAsync(job, exception.Message, cancellationToken)
+                .ConfigureAwait(false);
         }
-
-        return true;
     }
 
     /// <summary>
@@ -168,15 +200,19 @@ public sealed class FraudBackgroundScoringWorker(
 }
 
 /// <summary>
-///     Hosted service draining the fraud background re-scoring queue (issue #409).
-///     Opt-out via <c>Payments:FraudAssessment:BackgroundRescoringEnabled</c> (safe
-///     default: enabled — deferred signals complete out-of-band).
+///     Hosted service draining the durable fraud background re-scoring queue (issues #409 and
+///     #1218 G3). The due sweep replaces the volatile in-memory channel: deferred jobs survive
+///     restarts and are never silently dropped. Opt-out via
+///     <c>Payments:FraudAssessment:BackgroundRescoringEnabled</c> (safe default: enabled —
+///     deferred signals complete out-of-band).
 /// </summary>
 public sealed class FraudBackgroundScoringHostedService(
     IServiceScopeFactory scopeFactory,
     IOptionsMonitor<FraudAssessmentOptions> optionsMonitor,
     ILogger<FraudBackgroundScoringHostedService> logger) : BackgroundService
 {
+    private static readonly TimeSpan InitialDelay = TimeSpan.FromSeconds(15);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (!optionsMonitor.CurrentValue.BackgroundRescoringEnabled)
@@ -186,8 +222,13 @@ public sealed class FraudBackgroundScoringHostedService(
             return;
         }
 
+        var pollInterval = TimeSpan.FromSeconds(Math.Max(
+            1,
+            optionsMonitor.CurrentValue.BackgroundRescoringPollIntervalSeconds));
         logger.LogInformation(
-            "FraudBackgroundScoringHostedService started; completing fraud providers deferred by the synchronous budget.");
+            "FraudBackgroundScoringHostedService started; completing fraud providers deferred by the synchronous budget from the durable queue.");
+
+        await Task.Delay(InitialDelay, stoppingToken).ConfigureAwait(false);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -195,13 +236,14 @@ public sealed class FraudBackgroundScoringHostedService(
             {
                 await using var scope = scopeFactory.CreateAsyncScope();
                 var processed = await scope.ServiceProvider.GetRequiredService<IFraudBackgroundScoringWorker>()
-                    .ProcessOneAsync(stoppingToken)
+                    .ProcessDueAsync(stoppingToken)
                     .ConfigureAwait(false);
 
-                if (!processed)
+                if (processed > 0)
                 {
-                    // Queue drained: back off briefly before polling again.
-                    await Task.Delay(TimeSpan.FromMilliseconds(500), stoppingToken).ConfigureAwait(false);
+                    logger.LogInformation(
+                        "Fraud background re-scoring pass processed {Count} deferred job(s)",
+                        processed);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -219,6 +261,15 @@ public sealed class FraudBackgroundScoringHostedService(
                 {
                     return;
                 }
+            }
+
+            try
+            {
+                await Task.Delay(pollInterval, stoppingToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                return;
             }
         }
     }

@@ -221,14 +221,25 @@ public class CertificateAuditEmissionTests
     {
         var userId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
+        var enrollmentId = Guid.NewGuid();
         var template = CertificateTemplate.Create(courseId, "Default completion", "<html />");
         var user = new User { Id = userId, Email = "recipient@example.com", Username = "recipient", Name = "Recipient" };
         var program = new LearningProgram { Id = courseId, Title = "Audited Course" };
+        // Issue #1226 N1: issuance verifies the enrollment exists and is completed, so
+        // the seed now carries the completed ProgramEnrollment the certificate certifies.
+        var enrollment = new GameGuild.Learning.Courses.ProgramEnrollment
+        {
+            Id = enrollmentId,
+            UserId = userId,
+            ProgramId = courseId,
+            CompletionStatus = GameGuild.Learning.Courses.CompletionStatus.Completed
+        };
         context.Set<CertificateTemplate>().Add(template);
         context.Set<User>().Add(user);
         context.Set<LearningProgram>().Add(program);
+        context.Set<GameGuild.Learning.Courses.ProgramEnrollment>().Add(enrollment);
         await context.SaveChangesAsync();
-        return (template.Id, Guid.NewGuid(), userId, courseId);
+        return (template.Id, enrollmentId, userId, courseId);
     }
 
     private static CertificateAuditSqliteContext CreateSqliteContext()

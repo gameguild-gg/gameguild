@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Collections;
 using System.Globalization;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
@@ -14,6 +15,8 @@ using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -227,11 +230,21 @@ public sealed class MfaSignInEnrollmentPostgreSqlTests(ApiPostgreSqlFixture fixt
     // Migrated from the InMemory authentication suite: enrollment needs the
     // real request transaction, advisory locks and PostgreSQL constraints.
     [Theory]
-    [InlineData("Owner")]
-    [InlineData("Admin")]
-    public async Task ElevatedMembershipSignInRetainsRequestedTenantWithoutIssuingOrdinaryCredentials(string membershipRole)
+    [InlineData("Owner", false)]
+    [InlineData("Admin", false)]
+    [InlineData("Owner", true)]
+    [InlineData("Admin", true)]
+    public async Task ElevatedMembershipSignInRetainsRequestedTenantAndAppliesDefaultMfaPolicy(
+        string membershipRole, bool requireMfaByDefault)
     {
-        using var factory = CreateFactory(requireMfaByDefault: false);
+        using var factory = CreateFactory(requireMfaByDefault: requireMfaByDefault,
+            configure: builder => builder.ConfigureTestServices(services =>
+                services.PostConfigure<AuthenticationOptions>(options =>
+                {
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })));
         var marker = Guid.NewGuid().ToString("N");
         var password = SyntheticPassword();
         var (userId, firstTenantId, email) = await SeedAsync(factory, marker, password, membershipRole: membershipRole);
@@ -256,6 +269,40 @@ public sealed class MfaSignInEnrollmentPostgreSqlTests(ApiPostgreSqlFixture fixt
         var signIn = json.RootElement;
         Assert.Equal(userId, signIn.GetProperty("userId").GetGuid());
         Assert.Equal(tenantId, signIn.GetProperty("tenantId").GetGuid());
+        if (!requireMfaByDefault)
+        {
+            // Role-only policy permits Main's compliance grace when no factor is enrolled.
+            Assert.True(signIn.GetProperty("success").GetBoolean());
+            Assert.False(signIn.GetProperty("requiresMfa").GetBoolean());
+            Assert.True(signIn.GetProperty("mfaCompliancePending").GetBoolean());
+            var accessToken = signIn.GetProperty("accessToken").GetString()!;
+            var refreshToken = signIn.GetProperty("refreshToken").GetString()!;
+            Assert.False(string.IsNullOrEmpty(accessToken));
+            Assert.False(string.IsNullOrEmpty(refreshToken));
+            var claims = new JwtSecurityTokenHandler().ReadJwtToken(accessToken).Claims.ToList();
+            Assert.Equal(tenantId.ToString(), Assert.Single(claims, claim => claim.Type == "tenant_id").Value);
+            Assert.Equal("true", Assert.Single(claims, claim => claim.Type == "mfa_compliance_pending").Value);
+            var sessionId = signIn.GetProperty("sessionId").GetGuid();
+            Assert.NotEqual(Guid.Empty, sessionId);
+            using (var scope = factory.Services.CreateScope())
+            {
+                var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var session = await database.Set<UserSession>().SingleAsync(row => row.Id == sessionId);
+                Assert.Equal(userId, session.UserId);
+                var root = await database.Set<RefreshToken>().SingleAsync(row => row.SessionId == sessionId);
+                Assert.Equal(userId, root.UserId);
+                Assert.Null(root.ParentTokenId);
+                Assert.False(root.IsRevoked);
+                Assert.Equal(0, await database.Set<SignInMfaChallenge>().CountAsync(row => row.SubjectId == userId));
+                Assert.Equal(0, await database.Set<UserMfaConfiguration>().CountAsync(row => row.UserId == userId));
+            }
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+            using var state = await client.GetAsync("/v1/auth/session-state");
+            Assert.Equal(HttpStatusCode.OK, state.StatusCode);
+            using var stateJson = JsonDocument.Parse(await state.Content.ReadAsStringAsync());
+            Assert.False(stateJson.RootElement.GetProperty("mfaVerifiedInCurrentToken").GetBoolean());
+            return;
+        }
         Assert.False(signIn.GetProperty("success").GetBoolean());
         Assert.True(signIn.GetProperty("requiresMfa").GetBoolean());
         Assert.True(SignInMfaChallengeToken.TryHash(signIn.GetProperty("mfaToken").GetString()!, out _));
