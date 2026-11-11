@@ -222,7 +222,7 @@ public class SlaHandlerCoverageGapTests
         repository.Setup(r => r.UpdateAsync(violation, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("save failed"));
 
-        var action = () => sut.Handle(new CoverageResolveViolationCommand(violation.Id, tenantId, "resolved"), CancellationToken.None);
+        var action = () => sut.Handle(new ResolveSloViolationCommand(violation.Id, tenantId, "resolved"), CancellationToken.None);
 
         await action.Should().ThrowAsync<InvalidOperationException>().WithMessage("save failed");
     }
@@ -244,7 +244,7 @@ public class SlaHandlerCoverageGapTests
 
         repository.Setup(r => r.GetByIdAsync(violation.Id, It.IsAny<CancellationToken>())).ReturnsAsync(violation);
 
-        var action = () => sut.Handle(new CoverageResolveViolationCommand(violation.Id, Guid.NewGuid(), "resolved"), CancellationToken.None);
+        var action = () => sut.Handle(new ResolveSloViolationCommand(violation.Id, Guid.NewGuid(), "resolved"), CancellationToken.None);
 
         await action.Should().ThrowAsync<UnauthorizedAccessException>();
     }
@@ -403,9 +403,6 @@ public class SlaHandlerCoverageGapTests
 
         await action.Should().ThrowAsync<UnauthorizedAccessException>();
     }
-
-    private sealed record CoverageResolveViolationCommand(Guid ViolationId, Guid TenantId, string? ResolutionNotes = null)
-        : ResolveSloViolationCommand(ViolationId, TenantId, ResolutionNotes);
 }
 
 public class SlaControllerCoverageGapTests
