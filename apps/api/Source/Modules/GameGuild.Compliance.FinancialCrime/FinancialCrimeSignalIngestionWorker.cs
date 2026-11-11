@@ -157,7 +157,7 @@ public sealed class FinancialCrimeSignalIngestionWorker(
                 signal.SubjectHash,
                 $"kyc:{signal.ProviderEventId}",
                 "kyc-identity-risk",
-                RiskTierScore(signal),
+                AdverseRiskScore(signal),
                 FinancialCrimeSignalHash.Sha256($"kyc-signal|{signal.CanonicalPayload}"),
                 $"kyc:{signal.ProviderEventId}",
                 signal.ObservedAt,
@@ -232,11 +232,15 @@ public sealed class FinancialCrimeSignalIngestionWorker(
         string.Equals(signal.DecisionState, "Rejected", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(signal.ReviewAnswer, "RED", StringComparison.OrdinalIgnoreCase);
 
-    private static int RiskTierScore(FinancialCrimeKycDecisionSignal signal) =>
-        string.Equals(signal.DecisionState, "Rejected", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(signal.ReviewAnswer, "RED", StringComparison.OrdinalIgnoreCase)
+    /// <summary>
+    /// Alert-tier score for an adverse KYC decision (only ever called after
+    /// <see cref="IsAdverse"/> held): a provider-rejected state maxes the tier, a RED review
+    /// answer alone sits just below it.
+    /// </summary>
+    private static int AdverseRiskScore(FinancialCrimeKycDecisionSignal signal) =>
+        string.Equals(signal.DecisionState, "Rejected", StringComparison.OrdinalIgnoreCase)
             ? 900_000
-            : 400_000;
+            : 800_000;
 
     private static DateTimeOffset MaxOf(DateTimeOffset left, DateTimeOffset right) => left > right ? left : right;
 }
