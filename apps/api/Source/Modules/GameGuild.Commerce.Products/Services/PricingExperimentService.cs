@@ -57,7 +57,7 @@ public sealed class PricingExperimentService(
         var experiment = await experimentRepository
             .GetByIdAsync(experimentId, cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException($"Pricing experiment {experimentId} not found.");
+            ?? throw new EntityNotFoundException("PricingExperiment", experimentId);
 
         if (!experiment.IsEnrolling())
         {
@@ -126,7 +126,7 @@ public sealed class PricingExperimentService(
         var experiment = await experimentRepository
             .GetByIdAsync(experimentId, cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException($"Pricing experiment {experimentId} not found.");
+            ?? throw new EntityNotFoundException("PricingExperiment", experimentId);
 
         var outcomes = await experimentRepository
             .GetOutcomesAsync(experimentId, fromUtc, toUtc, cancellationToken)

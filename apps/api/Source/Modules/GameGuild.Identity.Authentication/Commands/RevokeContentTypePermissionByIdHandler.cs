@@ -13,7 +13,7 @@ public sealed class RevokeContentTypePermissionByIdHandler(IApplicationDbContext
     {
         var grant = await context.Set<ContentTypePermission>()
             .FirstOrDefaultAsync(g => g.Id == request.GrantId && g.DeletedAt == null, cancellationToken)
-            ?? throw new InvalidOperationException($"Content type permission grant {request.GrantId} not found");
+            ?? throw new EntityNotFoundException("ContentTypePermissionGrant", request.GrantId);
 
         // Soft delete preserves the permission history for compliance (#360); the
         // grant conveys nothing while deleted (deactivated + DeletedAt) and remains
