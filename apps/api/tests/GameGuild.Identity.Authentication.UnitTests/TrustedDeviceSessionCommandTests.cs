@@ -73,10 +73,12 @@ public sealed class TrustedDeviceSessionCommandTests
     }
 
     [Fact]
-    public async Task TrustWithoutAStepUpReceiptIsRejectedBeforeAnyMutation()
+    public async Task TrustWithoutAStepUpReceiptRaisesTheStructuredStepUpTrigger()
     {
         // Fresh verification gate (issue #1144): an otherwise valid session must not be able to
-        // grant device trust without a just-verified MFA receipt.
+        // grant device trust without a just-verified MFA receipt. Issue #1191: the refusal is a
+        // StepUpRequiredException carrying the exact binding, so the controller can answer 423
+        // with the challenge instructions instead of an ambiguous false.
         var userId = Guid.NewGuid();
         var sessionId = Guid.NewGuid();
         var (service, receipts) = CreateStrictMocks();
@@ -86,17 +88,20 @@ public sealed class TrustedDeviceSessionCommandTests
             ExpiresAt = DateTime.UtcNow.AddHours(1), DeviceFingerprint = "persisted-device"
         });
 
-        var result = await Handle(new SessionMutationCommandHandler(service.Object, receipts.Object),
-            new TrustDeviceCommand(userId, sessionId, "Browser", null));
+        var requirement = await Assert.ThrowsAsync<StepUpRequiredException>(() =>
+            Handle(new SessionMutationCommandHandler(service.Object, receipts.Object),
+                new TrustDeviceCommand(userId, sessionId, "Browser", null)));
 
-        Assert.False(result);
+        Assert.Equal("trust-device", requirement.OperationType);
+        Assert.Equal("current-session", requirement.TargetReference);
+        Assert.Equal(SessionMutationCommandHandler.TrustDeviceStepUpBinding("Browser").PayloadHash, requirement.PayloadHash);
         service.Verify(s => s.GetSessionAsync(sessionId, CancellationToken.None), Times.Once);
         service.VerifyNoOtherCalls();
         receipts.VerifyNoOtherCalls();
     }
 
     [Fact]
-    public async Task TrustWithAnInvalidStepUpReceiptIsRejectedBeforeAnyMutation()
+    public async Task TrustWithAnInvalidStepUpReceiptRaisesTheStructuredStepUpTrigger()
     {
         var userId = Guid.NewGuid();
         var sessionId = Guid.NewGuid();
@@ -112,10 +117,14 @@ public sealed class TrustedDeviceSessionCommandTests
                 CancellationToken.None))
             .ThrowsAsync(new StepUpReceiptInvalidException("receipt is invalid"));
 
-        var result = await Handle(new SessionMutationCommandHandler(service.Object, receipts.Object),
-            new TrustDeviceCommand(userId, sessionId, "Browser", "forged-receipt"));
+        var requirement = await Assert.ThrowsAsync<StepUpRequiredException>(() =>
+            Handle(new SessionMutationCommandHandler(service.Object, receipts.Object),
+                new TrustDeviceCommand(userId, sessionId, "Browser", "forged-receipt")));
 
-        Assert.False(result);
+        Assert.Equal("trust-device", requirement.OperationType);
+        Assert.Equal("current-session", requirement.TargetReference);
+        Assert.NotNull(requirement.InnerException);
+        Assert.IsType<StepUpReceiptInvalidException>(requirement.InnerException);
         service.Verify(s => s.GetSessionAsync(sessionId, CancellationToken.None), Times.Once);
         service.Verify(s => s.TrustDeviceAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
             It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);

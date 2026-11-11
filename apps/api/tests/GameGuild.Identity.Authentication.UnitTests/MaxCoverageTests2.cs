@@ -502,7 +502,7 @@ public class TrustedDevicesControllerCovTests
     public TrustedDevicesControllerCovTests()
     {
         _controller = new TrustedDevicesController(_sessionService.Object, new CommandHandlerSender(
-            _sessionService.Object, Mock.Of<IStepUpReceiptService>()));
+            _sessionService.Object, Mock.Of<IStepUpReceiptService>()), Mock.Of<IStepUpRequiredResponder>());
         _controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext
@@ -572,13 +572,14 @@ public class TrustedDevicesControllerCovTests
     }
 
     [Fact]
-    public async Task TrustCurrentDevice_WithoutStepUpReceipt_ReturnsForbidden()
+    public async Task TrustCurrentDevice_WithoutStepUpReceipt_ReturnsStepUpRequired()
     {
         // Fresh verification gate (issue #1144): trusting a device requires a step-up receipt.
+        // Issue #1191: the refusal is the structured step-up trigger (423) instead of a bare 403.
         var result = await _controller.TrustCurrentDevice(
             new TrustDeviceRequest { DeviceName = "My Phone" }, CancellationToken.None);
-        var forbidden = result.Should().BeOfType<ObjectResult>().Subject;
-        forbidden.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        var stepUpRequired = result.Should().BeOfType<ObjectResult>().Subject;
+        stepUpRequired.StatusCode.Should().Be(StatusCodes.Status423Locked);
         _sessionService.Verify(s => s.TrustDeviceAsync(
             It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(),
             It.IsAny<CancellationToken>()), Times.Never);
