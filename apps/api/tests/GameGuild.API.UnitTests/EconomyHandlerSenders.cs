@@ -40,14 +40,16 @@ internal static class EconomyHandlerSenders
         IComplianceHoldAdministrationStore? holds = null,
         IEconomyStepUpExecutor? stepUp = null,
         IRiskReviewStore? riskReviews = null,
-        IKycAmlOrchestrator? kyc = null) =>
+        IKycAmlOrchestrator? kyc = null,
+        IFinancialCrimeSignalQueue? financialCrimeSignals = null) =>
         new(new EconomyComplianceEndpointCommandHandler(
             financialCrime ?? Mock.Of<IFinancialCrimeControlPlane>(),
             trustSafety ?? Mock.Of<ITrustSafetyControlPlane>(),
             holds ?? Mock.Of<IComplianceHoldAdministrationStore>(),
             stepUp ?? Mock.Of<IEconomyStepUpExecutor>(),
             riskReviews ?? Mock.Of<IRiskReviewStore>(),
-            kyc ?? Mock.Of<IKycAmlOrchestrator>()));
+            kyc ?? Mock.Of<IKycAmlOrchestrator>(),
+            financialCrimeSignals ?? Mock.Of<IFinancialCrimeSignalQueue>()));
 
     public static DirectHandlerSender Funds(
         IDurableAdminWithdrawalApplicationService? withdrawals = null,
