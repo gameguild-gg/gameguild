@@ -6690,6 +6690,22 @@ export const getAdminEconomyComplianceTrustSafetyAppealsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Submit a new Trust/Safety appeal (issue #1319 T1): the entry point that lets the
+ * appeals console actually create rows — assign/decide manage an appeal after it exists.
+ */
+export interface PostAdminEconomyComplianceTrustSafetyAppealsInput {
+  body?: Types.APIControllersSubmitTrustSafetyAppealInput;
+}
+export type PostAdminEconomyComplianceTrustSafetyAppealsOutput = Types.TrustSafetyTrustSafetyAppeal;
+export const postAdminEconomyComplianceTrustSafetyAppealsEndpoint = {
+  operationId: 'postAdminEconomyComplianceTrustSafetyAppeals' as const,
+  method: 'POST' as const,
+  path: '/api/v1/admin/economy/compliance/trust-safety/appeals' as const,
+  tags: ['EconomyComplianceAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostAdminEconomyComplianceTrustSafetyAppealsAssignmentInput {
   appealId: string;
   body?: Types.APIControllersAssignTrustSafetyAppealInput;
@@ -29088,6 +29104,22 @@ export const deletePromoStackingRulesEndpoint = {
 } as const;
 
 /**
+ * Record a click on a recommendation (issue #1184 G4: the click half of the
+ * viewed/clicked/converted recommendation funnel — mirrors the viewed endpoint).
+ */
+export interface PostRecommendationsClickedInput {
+  id: string;
+}
+export type PostRecommendationsClickedOutput = void;
+export const postRecommendationsClickedEndpoint = {
+  operationId: 'postRecommendationsClicked' as const,
+  method: 'POST' as const,
+  path: '/v1/recommendations/{id}/clicked' as const,
+  tags: ['LearningExperienceRecommendations'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Dismiss a recommendation
  */
 export interface PostRecommendationsDismissInput {
@@ -35353,6 +35385,7 @@ export const endpoints = {
   postAdminEconomyComplianceHoldsReleaseApprovals: postAdminEconomyComplianceHoldsReleaseApprovalsEndpoint,
   postAdminEconomyComplianceHoldsReleaseProposals: postAdminEconomyComplianceHoldsReleaseProposalsEndpoint,
   getAdminEconomyComplianceTrustSafetyAppeals: getAdminEconomyComplianceTrustSafetyAppealsEndpoint,
+  postAdminEconomyComplianceTrustSafetyAppeals: postAdminEconomyComplianceTrustSafetyAppealsEndpoint,
   postAdminEconomyComplianceTrustSafetyAppealsAssignment: postAdminEconomyComplianceTrustSafetyAppealsAssignmentEndpoint,
   postAdminEconomyComplianceTrustSafetyAppealsDecisions: postAdminEconomyComplianceTrustSafetyAppealsDecisionsEndpoint,
   getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservations: getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservationsEndpoint,
@@ -36746,6 +36779,7 @@ export const endpoints = {
   getPromoStackingRulesForGetPromoStackingRulesByRuleId: getPromoStackingRulesForGetPromoStackingRulesByRuleIdEndpoint,
   putPromoStackingRules: putPromoStackingRulesEndpoint,
   deletePromoStackingRules: deletePromoStackingRulesEndpoint,
+  postRecommendationsClicked: postRecommendationsClickedEndpoint,
   postRecommendationsDismiss: postRecommendationsDismissEndpoint,
   postRecommendationsViewed: postRecommendationsViewedEndpoint,
   getRecommendationsCoursesSimilar: getRecommendationsCoursesSimilarEndpoint,

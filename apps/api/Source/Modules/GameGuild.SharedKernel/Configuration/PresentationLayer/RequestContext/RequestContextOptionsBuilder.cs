@@ -19,7 +19,7 @@ public static class RequestContextOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Configured request context options</returns>
-    public static RequestContextOptions Create(IConfiguration configuration, string sectionName = "RequestContext")
+    public static RequestContextOptions Create(IConfiguration configuration, string sectionName = RequestContextOptions.SectionName)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -60,7 +60,7 @@ public static class RequestContextOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Validated request context options</returns>
-    public static RequestContextOptions Build(IConfiguration configuration, string sectionName = "RequestContext")
+    public static RequestContextOptions Build(IConfiguration configuration, string sectionName = RequestContextOptions.SectionName)
     {
         var options = Create(configuration, sectionName);
         Validate(options);

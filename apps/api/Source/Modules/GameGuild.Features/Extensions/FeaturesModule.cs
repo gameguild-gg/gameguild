@@ -16,6 +16,14 @@ public static class FeaturesModule
     /// <summary> Registers all Features module services </summary>
     public static IServiceCollection AddFeaturesModule(this IServiceCollection services)
     {
+        // FeatureFlagOptions (issue #1184 G5): bind the declared FeatureFlags section so the
+        // IOptions<FeatureFlagOptions> consumers (evaluation/management/analytics services)
+        // read configured values instead of permanent defaults. Resolved from the container
+        // (same pattern as the encryption service below) so the module stays config-source free.
+        services.AddOptions<FeatureFlagOptions>()
+            .Configure<IConfiguration>((options, configuration) =>
+                configuration.GetSection(FeatureFlagOptions.SectionName).Bind(options));
+
         // Register encryption service with factory to resolve encryption key from configuration
         services.AddScoped<IFeatureFlagEncryptionService>(sp =>
         {

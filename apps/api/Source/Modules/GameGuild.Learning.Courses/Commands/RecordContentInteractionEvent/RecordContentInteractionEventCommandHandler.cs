@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Learning;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
@@ -6,7 +7,8 @@ namespace GameGuild.Learning.Courses;
 
 public sealed class RecordContentInteractionEventCommandHandler(
     IApplicationDbContext context,
-    IRequestContextAccessor requestContextAccessor)
+    IRequestContextAccessor requestContextAccessor,
+    IPublisher? publisher = null)
     : ICommandHandler<RecordContentInteractionEventCommand, ContentInteractionEventDto>
 {
     public async Task<ContentInteractionEventDto> Handle(
@@ -94,7 +96,47 @@ public sealed class RecordContentInteractionEventCommandHandler(
             throw;
         }
 
+        // Issue #1184 G4: ContentStartedEvent/ContentCompletedEvent were declared but never
+        // raised; fine-grained interaction events are their producing sites (Opened starts a
+        // content item, Completed finishes it). Replays returned above never reach this point.
+        // Separate method so the publishes stay outside the persistence method (GGARCH003).
+        await PublishContentLifecycleAsync(currentUserId.Value, request.ProgramId, interaction, item, cancellationToken).ConfigureAwait(false);
+
         return ContentInteractionEventDto.FromEntity(item);
+    }
+
+    private async Task PublishContentLifecycleAsync(
+        Guid userId,
+        Guid programId,
+        ContentInteraction interaction,
+        ContentInteractionEvent item,
+        CancellationToken cancellationToken)
+    {
+        if (publisher is null)
+        {
+            return;
+        }
+
+        var contentType = interaction.Content.Type.ToString();
+        if (item.Type == ContentInteractionEventType.Opened)
+        {
+            await publisher.Publish(
+                new ContentStartedEvent(userId, programId, interaction.ContentId, null, contentType),
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        if (item.Type == ContentInteractionEventType.Completed)
+        {
+            await publisher.Publish(
+                new ContentCompletedEvent(
+                    userId,
+                    programId,
+                    interaction.ContentId,
+                    null,
+                    contentType,
+                    item.DurationSeconds ?? 0),
+                cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private Task<ContentInteractionEvent?> FindExistingEventAsync(

@@ -6,7 +6,7 @@ public static class FeatureFlagsOptionsBuilder
 {
     public static FeatureFlagsOptions Create() { return new FeatureFlagsOptions { EnableOpenFeature = false, Provider = null }; }
 
-    public static FeatureFlagsOptions Create(IConfiguration configuration, string sectionName = "FeatureFlags")
+    public static FeatureFlagsOptions Create(IConfiguration configuration, string sectionName = FeatureFlagsOptions.SectionName)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 

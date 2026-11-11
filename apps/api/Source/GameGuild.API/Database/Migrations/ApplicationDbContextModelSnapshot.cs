@@ -2682,6 +2682,117 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("dispute_evidence");
                 });
 
+            modelBuilder.Entity("GameGuild.Commerce.Payments.FinancialLedgerEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreditAccount")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("CreditLedgerAccount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<string>("DebitAccount")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("DebitLedgerAccount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("EntryType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("FiscalPeriod")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FiscalYear")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsReconciled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("ReconciledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReconciledBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReferenceNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("RevenueEventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("CreditAccount");
+
+                    b.HasIndex("DebitAccount");
+
+                    b.HasIndex("EntryType");
+
+                    b.HasIndex("FiscalPeriod");
+
+                    b.HasIndex("FiscalYear");
+
+                    b.HasIndex("IsReconciled");
+
+                    b.HasIndex("ReferenceNumber");
+
+                    b.HasIndex("RevenueEventId");
+
+                    b.ToTable("financial_ledger_entries", t =>
+                        {
+                            t.HasCheckConstraint("CK_FinancialLedgerEntry_Amount_Positive", "amount > 0");
+
+                            t.HasCheckConstraint("CK_FinancialLedgerEntry_CreditAccount_NotEmpty", "LENGTH(credit_account) > 0");
+
+                            t.HasCheckConstraint("CK_FinancialLedgerEntry_DebitAccount_NotEmpty", "LENGTH(debit_account) > 0");
+                        });
+                });
+
             modelBuilder.Entity("GameGuild.Commerce.Payments.FraudBackgroundScoringJob", b =>
                 {
                     b.Property<Guid>("Id")
@@ -10942,6 +11053,84 @@ namespace GameGuild.API.Database.Migrations
                         {
                             t.HasCheckConstraint("ck_compliance_sumsub_webhook_inbox_time", "\"ReceivedAt\" >= \"IssuedAt\"");
                         });
+                });
+
+            modelBuilder.Entity("GameGuild.Compliance.KYC.UserKycVerification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DocumentCountry")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)");
+
+                    b.Property<string>("DocumentTypes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExternalVerificationId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("Provider")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ProviderData")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VerificationLevel")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExternalVerificationId");
+
+                    b.HasIndex("Provider");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SubmittedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("user_kyc_verifications", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Content.Pages.ContentResource", b =>
@@ -39014,6 +39203,15 @@ namespace GameGuild.API.Database.Migrations
                     b.Navigation("Dispute");
                 });
 
+            modelBuilder.Entity("GameGuild.Commerce.Payments.FinancialLedgerEntry", b =>
+                {
+                    b.HasOne("GameGuild.Commerce.Payments.RevenueEvent", "RevenueEvent")
+                        .WithMany()
+                        .HasForeignKey("RevenueEventId");
+
+                    b.Navigation("RevenueEvent");
+                });
+
             modelBuilder.Entity("GameGuild.Commerce.Payments.PaymentDispute", b =>
                 {
                     b.HasOne("GameGuild.Commerce.Payments.Payment", null)
@@ -39496,6 +39694,17 @@ namespace GameGuild.API.Database.Migrations
                         .HasForeignKey("CaseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Compliance.KYC.UserKycVerification", b =>
+                {
+                    b.HasOne("GameGuild.Identity.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GameGuild.Content.Pages.Page", b =>

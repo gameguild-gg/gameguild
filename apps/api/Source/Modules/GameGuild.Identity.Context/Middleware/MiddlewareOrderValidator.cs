@@ -107,8 +107,10 @@ public static class MiddlewareOrderValidator
 
     private static List<string> GetMiddlewarePipeline(IApplicationBuilder app)
     {
-        // Use reflection to get the middleware pipeline
-        var applicationBuilder = app as ApplicationBuilder;
+        // Use reflection to get the middleware pipeline. WebApplication does not extend
+        // ApplicationBuilder — it wraps one in a private field (its IApplicationBuilder
+        // surface delegates there) — so unwrap first (issue #1248 N3).
+        var applicationBuilder = ResolveApplicationBuilder(app);
         if (applicationBuilder == null)
         {
             throw new InvalidOperationException(
@@ -142,6 +144,32 @@ public static class MiddlewareOrderValidator
         }
 
         return middlewareTypes;
+    }
+
+    /// <summary>
+    ///     Resolves the <see cref="ApplicationBuilder"/> backing an <see cref="IApplicationBuilder"/>.
+    ///     A bare builder casts directly; a <c>WebApplication</c> delegates its builder surface to a
+    ///     privately-held builder instance, found by scanning its instance fields (the field name
+    ///     is an implementation detail that has changed across ASP.NET Core versions).
+    /// </summary>
+    private static ApplicationBuilder? ResolveApplicationBuilder(IApplicationBuilder app)
+    {
+        if (app is ApplicationBuilder direct)
+        {
+            return direct;
+        }
+
+        var fields = app.GetType().GetFields(
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        foreach (var field in fields)
+        {
+            if (field.GetValue(app) is ApplicationBuilder wrapped)
+            {
+                return wrapped;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>

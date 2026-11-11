@@ -771,6 +771,13 @@ export interface APIControllersStartMyKycInput {
   idempotencyKey?: string | null;
 }
 
+/** Data model for API Controllers Submit Trust Safety Appeal Request. */
+export interface APIControllersSubmitTrustSafetyAppealInput {
+  restrictionReferenceHash?: string | null;
+  subjectHash?: string | null;
+  submissionEvidenceHash?: string | null;
+}
+
 /** Data model for API Core Compliance Record User Consent Endpoint Command+Result. */
 export interface APICoreComplianceRecordUserConsentEndpointCommandResult {
   changedRecords?: number;
@@ -27970,6 +27977,7 @@ export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDe
 export let APIControllersSettleMyMarketplaceOrderInputSchema: z.ZodType<APIControllersSettleMyMarketplaceOrderInput>;
 export let APIControllersStartMyAdRewardSessionInputSchema: z.ZodType<APIControllersStartMyAdRewardSessionInput>;
 export let APIControllersStartMyKycInputSchema: z.ZodType<APIControllersStartMyKycInput>;
+export let APIControllersSubmitTrustSafetyAppealInputSchema: z.ZodType<APIControllersSubmitTrustSafetyAppealInput>;
 export let APICoreComplianceRecordUserConsentEndpointCommandResultSchema: z.ZodType<APICoreComplianceRecordUserConsentEndpointCommandResult>;
 export let APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInputSchema: z.ZodType<APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput>;
 export let APICoreIntegrationCertificateEvmEvidenceOutputSchema: z.ZodType<APICoreIntegrationCertificateEvmEvidenceOutput>;
@@ -31041,6 +31049,13 @@ APIControllersStartMyAdRewardSessionInputSchema = z.object({
 /** Zod schema for APIControllersStartMyKycInput. Data model for API Controllers Start My Kyc Request. */
 APIControllersStartMyKycInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersSubmitTrustSafetyAppealInput. Data model for API Controllers Submit Trust Safety Appeal Request. */
+APIControllersSubmitTrustSafetyAppealInputSchema = z.object({
+  restrictionReferenceHash: z.string().nullable().optional(),
+  subjectHash: z.string().nullable().optional(),
+  submissionEvidenceHash: z.string().nullable().optional(),
 });
 
 /** Zod schema for APICoreComplianceRecordUserConsentEndpointCommandResult. Data model for API Core Compliance Record User Consent Endpoint Command+Result. */

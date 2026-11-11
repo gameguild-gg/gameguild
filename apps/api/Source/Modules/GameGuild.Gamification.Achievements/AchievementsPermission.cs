@@ -4,7 +4,8 @@ namespace GameGuild.Gamification.Achievements;
 
 /// <summary>
 ///     Typed permissions for the Achievements admin surface (issue #1319 G2). Previously these
-///     four keys were plain string constants: the <see cref="PermissionRegistry"/> never
+///     four keys were plain string constants: the
+///     <see cref="GameGuild.Identity.Authorization.PermissionRegistry"/> never
 ///     discovered them, no grant could be validated, and the admin mutations returned 403 for
 ///     every caller. As a <see cref="Permission"/> subclass the registry discovers the keys,
 ///     grants validate, and the administrative tenant roles receive them through the

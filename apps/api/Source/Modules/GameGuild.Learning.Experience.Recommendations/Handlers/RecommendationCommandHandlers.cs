@@ -45,7 +45,8 @@ public sealed class CreateOrUpdateLearningProfileCommandHandler(
 
 public sealed class AddSkillToProfileCommandHandler(
     IApplicationDbContext context,
-    ILogger<AddSkillToProfileCommandHandler> logger)
+    ILogger<AddSkillToProfileCommandHandler> logger,
+    GameGuild.CQRS.IPublisher? publisher = null)
     : ICommandHandler<AddSkillToProfileCommand, UserLearningProfile>
 {
     public async Task<UserLearningProfile> Handle(AddSkillToProfileCommand request, CancellationToken cancellationToken)
@@ -63,7 +64,25 @@ public sealed class AddSkillToProfileCommandHandler(
 
         profile.AddSkill(request.Skill);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        // Issue #1184 G4: UserSkillUpdatedEvent was declared but never raised; adding a
+        // skill interest to the learning profile is its producing site (the profile-skill
+        // consumer is idempotent — the skill is already in the set at this point).
+        // Separate method (GGARCH003).
+        await PublishSkillUpdatedAsync(request.UserId, request.Skill, cancellationToken).ConfigureAwait(false);
+
         return profile;
+    }
+
+    private async Task PublishSkillUpdatedAsync(Guid userId, string skill, CancellationToken cancellationToken)
+    {
+        if (publisher is null)
+        {
+            return;
+        }
+
+        await publisher.Publish(new GameGuild.Learning.UserSkillUpdatedEvent(
+            userId, skill, null, null, null), cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -157,7 +176,8 @@ public sealed class GenerateRecommendationsCommandHandler(
 
 public sealed class MarkRecommendationViewedCommandHandler(
     IApplicationDbContext context,
-    ILogger<MarkRecommendationViewedCommandHandler> logger)
+    ILogger<MarkRecommendationViewedCommandHandler> logger,
+    GameGuild.CQRS.IPublisher? publisher = null)
     : ICommandHandler<MarkRecommendationViewedCommand>
 {
     public async Task<Unit> Handle(MarkRecommendationViewedCommand request, CancellationToken cancellationToken)
@@ -174,6 +194,83 @@ public sealed class MarkRecommendationViewedCommandHandler(
         recommendation.MarkViewed();
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Marked recommendation {Id} as viewed", request.RecommendationId);
+
+        // Issue #1184 G4: RecommendationViewedEvent was declared but never raised; the
+        // explicit viewed-tracking command is its producing site. Separate method (GGARCH003).
+        await PublishViewedAsync(request.UserId, recommendation, cancellationToken).ConfigureAwait(false);
+
+        return Unit.Value;
+    }
+
+    private async Task PublishViewedAsync(Guid userId, CourseRecommendation recommendation, CancellationToken cancellationToken)
+    {
+        if (publisher is null)
+        {
+            return;
+        }
+
+        await publisher.Publish(new GameGuild.Learning.RecommendationViewedEvent(
+            userId,
+            recommendation.Id,
+            recommendation.CourseId,
+            recommendation.Type.ToString(),
+            0,
+            null), cancellationToken).ConfigureAwait(false);
+    }
+}
+
+/// <summary>
+///     Records a recommendation click (issue #1184 G4): the user navigated to the recommended
+///     course from the recommendation surface. When the user is already actively enrolled in
+///     that course, the click also publishes <see cref="GameGuild.Learning.RecommendationConvertedEvent"/>
+///     — the demonstrable recommendation-led enrollment signal.
+/// </summary>
+public sealed record RecordRecommendationClickCommand(Guid RecommendationId, Guid UserId) : ICommand;
+
+public sealed class RecordRecommendationClickCommandHandler(
+    IApplicationDbContext context,
+    GameGuild.CQRS.IPublisher publisher,
+    ILogger<RecordRecommendationClickCommandHandler> logger)
+    : ICommandHandler<RecordRecommendationClickCommand>
+{
+    public async Task<Unit> Handle(RecordRecommendationClickCommand request, CancellationToken cancellationToken)
+    {
+        var recommendation = await context.Set<CourseRecommendation>()
+            .FirstOrDefaultAsync(r => r.Id == request.RecommendationId && r.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
+
+        if (recommendation == null)
+        {
+            logger.LogWarning("Recommendation {Id} not found for user {UserId}", request.RecommendationId, request.UserId);
+            return Unit.Value;
+        }
+
+        // Issue #1184 G4: RecommendationClickedEvent was declared but never raised; this
+        // command (mirroring MarkRecommendationViewed) is its producing site.
+        await publisher.Publish(new GameGuild.Learning.RecommendationClickedEvent(
+            request.UserId,
+            recommendation.Id,
+            recommendation.CourseId,
+            recommendation.Type.ToString(),
+            0,
+            null), cancellationToken).ConfigureAwait(false);
+
+        // Conversion signal: the click landed on a course the user is actively enrolled in
+        // (courses enrollment surface — ProgramUser rows), i.e. the recommendation led to
+        // (or already produced) an enrollment.
+        var enrolled = await context.Set<Learning.Courses.ProgramUser>()
+            .AnyAsync(pu => pu.ProgramId == recommendation.CourseId && pu.UserId == request.UserId && pu.IsActive, cancellationToken)
+            .ConfigureAwait(false);
+        if (enrolled)
+        {
+            await publisher.Publish(new GameGuild.Learning.RecommendationConvertedEvent(
+                request.UserId,
+                recommendation.Id,
+                recommendation.CourseId,
+                recommendation.Type.ToString(),
+                null), cancellationToken).ConfigureAwait(false);
+        }
+
+        logger.LogInformation("Recorded click on recommendation {Id}", request.RecommendationId);
         return Unit.Value;
     }
 }

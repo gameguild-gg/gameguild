@@ -17,8 +17,11 @@ namespace GameGuild.Learning.Experience.Recommendations.UnitTests;
 /// enabled module's assembly (ModuleAssemblyCatalog; Learning.Experience.Recommendations
 /// is enabled in the product composition) and <c>AddCqrs</c> scans it for notification
 /// handlers. This test pins that path so the wiring cannot silently regress. The
-/// remaining telemetry gap — no producers raise these events — is K1, tracked separately
-/// in issue #1184 G4.
+/// producer gap (K1 / #1184 G4) was closed: the Learning modules now raise these events
+/// at their natural sites. SearchResultClickedHandler was REMOVED in that pass — the
+/// Discovery module's RecordSearchClickCommandHandler already persists the click on the
+/// search-history row, so the handler double-wrote; the event now flows to any other
+/// listener without a duplicating consumer.
 /// </summary>
 public class LearningEventHandlersRegistrationTests
 {
@@ -30,7 +33,7 @@ public class LearningEventHandlersRegistrationTests
         // AddCqrs only registers the mediator and the scanned handlers — the host is
         // expected to supply their dependencies. Register the minimal stubs so the
         // resolution below proves the REGISTRATION without failing on construction
-        // (IApplicationDbContext for six handlers, IRecommendationEngine for the
+        // (IApplicationDbContext for the handlers, IRecommendationEngine for the
         // progress-milestone refresher, ILogger<T> for all of them).
         services.AddScoped<IApplicationDbContext>(_ => Mock.Of<IApplicationDbContext>());
         services.AddScoped<IRecommendationEngine>(_ => Mock.Of<IRecommendationEngine>());
@@ -47,8 +50,6 @@ public class LearningEventHandlersRegistrationTests
             .Should().BeOfType<RecommendationConvertedHandler>();
         provider.GetRequiredService<INotificationHandler<SearchPerformedEvent>>()
             .Should().BeOfType<SearchPerformedHistoryHandler>();
-        provider.GetRequiredService<INotificationHandler<SearchResultClickedEvent>>()
-            .Should().BeOfType<SearchResultClickedHandler>();
         provider.GetRequiredService<INotificationHandler<LearningProgressUpdatedEvent>>()
             .Should().BeOfType<LearningProgressRecommendationRefreshHandler>();
         provider.GetRequiredService<INotificationHandler<UserSkillUpdatedEvent>>()
@@ -60,14 +61,13 @@ public class LearningEventHandlersRegistrationTests
     {
         // The registration scan keys off INotificationHandler<>; if a handler ever
         // stopped implementing it (e.g. dropped IDomainEventHandler), the central scan
-        // would silently skip it. Pin the interface on all seven.
+        // would silently skip it. Pin the interface on all of them.
         var handlerTypes = new[]
         {
             typeof(CourseCompletedLearningProfileHandler),
             typeof(CourseViewedActivityHandler),
             typeof(RecommendationConvertedHandler),
             typeof(SearchPerformedHistoryHandler),
-            typeof(SearchResultClickedHandler),
             typeof(LearningProgressRecommendationRefreshHandler),
             typeof(UserSkillUpdatedProfileHandler)
         };

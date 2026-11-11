@@ -21,7 +21,7 @@ public static class LocalizationOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Configured localization options</returns>
-    public static LocalizationOptions Create(IConfiguration configuration, string sectionName = "Localization")
+    public static LocalizationOptions Create(IConfiguration configuration, string sectionName = LocalizationOptions.SectionName)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -77,7 +77,7 @@ public static class LocalizationOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Validated localization options</returns>
-    public static LocalizationOptions Build(IConfiguration configuration, string sectionName = "Localization")
+    public static LocalizationOptions Build(IConfiguration configuration, string sectionName = LocalizationOptions.SectionName)
     {
         var options = Create(configuration, sectionName);
         Validate(options);

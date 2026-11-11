@@ -21,7 +21,7 @@ public static class ApiVersioningOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Configured ApiVersioningOptions</returns>
-    public static SharedApiVersioningOptions Create(IConfiguration configuration, string sectionName = "ApiVersioning")
+    public static SharedApiVersioningOptions Create(IConfiguration configuration, string sectionName = SharedApiVersioningOptions.SectionName)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -65,7 +65,7 @@ public static class ApiVersioningOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Validated ApiVersioningOptions</returns>
-    public static SharedApiVersioningOptions Build(IConfiguration configuration, string sectionName = "ApiVersioning")
+    public static SharedApiVersioningOptions Build(IConfiguration configuration, string sectionName = SharedApiVersioningOptions.SectionName)
     {
         var options = Create(configuration, sectionName);
         Validate(options);

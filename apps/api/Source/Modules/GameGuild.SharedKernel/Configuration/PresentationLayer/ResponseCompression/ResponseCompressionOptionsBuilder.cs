@@ -24,7 +24,7 @@ public static class ResponseCompressionOptionsBuilder
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Configured response compression options</returns>
     public static ResponseCompressionOptions Create(IConfiguration configuration,
-        string sectionName = "ResponseCompression")
+        string sectionName = ResponseCompressionOptions.SectionName)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
