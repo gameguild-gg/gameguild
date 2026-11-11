@@ -307,6 +307,9 @@ public static class DataDependencyInjection
         services.AddScoped<ISignInMfaService, SignInMfaService>();
         services.AddScoped<IStepUpChallengeStore, PostgreSqlStepUpChallengeStore>();
         services.AddScoped<IStepUpReceiptService, StepUpReceiptService>();
+        // Issue #1191: builds the structured 423 body sensitive actions return when the caller
+        // has no valid step-up receipt (the platform trigger the response DTO previously lacked).
+        services.AddScoped<IStepUpRequiredResponder, StepUpRequiredResponder>();
         services.AddScoped<IMfaRecoveryRequestStore, PostgreSqlMfaRecoveryRequestStore>();
         // Delegated account recovery with trusted contacts / passkeys (issue #209)
         RegisterAccountRecoveryServices(services, configuration);
@@ -314,6 +317,9 @@ public static class DataDependencyInjection
 
         // Session management
         services.AddScoped<ISessionManagementService, SessionManagementService>();
+        // Issue #1179: ITokenRevocationPostCommitCoordinator (transaction-aware routing for
+        // session access-token deny-list writes) is implemented by the host composition —
+        // see GameGuild.API.Authorization.TransactionAwareTokenRevocationCoordinator.
         // Password change/reset revocation battery (issue #278): mirrors the
         // terminate-everywhere command — refresh tokens revoked, sessions terminated with an
         // audited PasswordChanged reason, and a versioned cutoff covering legacy access tokens.

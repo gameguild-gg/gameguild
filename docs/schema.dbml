@@ -14281,6 +14281,7 @@ Table "gameguild.authentication"."userdevicefingerprint" {
 Table "gameguild.authentication"."api_keys" {
   "id" uuid [not null]
   "user_id" uuid [not null]
+  "created_by_api_key_id" uuid
   "name" "character varying(100)" [not null]
   "key_hash" "character varying(64)" [not null]
   "key_prefix" "character varying(20)" [not null]
@@ -14302,6 +14303,7 @@ Table "gameguild.authentication"."api_keys" {
 
   Indexes {
     id [pk, name: "PK_api_keys"]
+    created_by_api_key_id [name: "ix_api_keys_created_by_api_key_id"]
     expires_at [name: "ix_api_keys_expires_at"]
     is_active [name: "ix_api_keys_is_active"]
     key_hash [unique, name: "ix_api_keys_key_hash"]

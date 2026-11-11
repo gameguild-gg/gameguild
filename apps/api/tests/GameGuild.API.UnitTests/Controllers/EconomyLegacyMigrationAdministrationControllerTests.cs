@@ -201,7 +201,8 @@ public sealed class EconomyLegacyMigrationAdministrationControllerTests
             migration,
             queries ?? Mock.Of<ILegacyEconomyQueryReader>(),
             actorContext.Object,
-            new FixedTimeProvider());
+            new FixedTimeProvider(),
+            StubStepUpResponder.Instance);
     }
 
     private static LegacyEconomyShadowBatchView View(Guid batchId, Guid tenantId) => new(

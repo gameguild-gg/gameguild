@@ -58,7 +58,8 @@ public sealed class EconomyTreasuryStepUpTests
                 withdrawals: withdrawals.Object, stepUp: stepUp, timeProvider: new FixedTimeProvider(Now)),
             withdrawals.Object,
             Accessor(tenantId, actorId),
-            new FixedTimeProvider(Now));
+            new FixedTimeProvider(Now),
+            StubStepUpResponder.Instance);
 
         var result = await controller.Propose(
             new ProposeTreasuryWithdrawalRequest(
@@ -98,7 +99,8 @@ public sealed class EconomyTreasuryStepUpTests
                 withdrawals: withdrawals.Object, stepUp: stepUp, timeProvider: new FixedTimeProvider(Now)),
             withdrawals.Object,
             Accessor(tenantId, actorId),
-            new FixedTimeProvider(Now));
+            new FixedTimeProvider(Now),
+            StubStepUpResponder.Instance);
 
         (await controller.Approve(runId, new(3, "approval-receipt"), default))
             .Should().BeOfType<OkObjectResult>();
@@ -139,7 +141,8 @@ public sealed class EconomyTreasuryStepUpTests
                 withdrawals: withdrawals.Object, stepUp: stepUp, timeProvider: new FixedTimeProvider(Now)),
             withdrawals.Object,
             Accessor(tenantId, actorId),
-            new FixedTimeProvider(Now));
+            new FixedTimeProvider(Now),
+            StubStepUpResponder.Instance);
 
         var result = await controller.Dispatch(
             runId, new DispatchTreasuryWithdrawalRequest(2, "receipt"), default);

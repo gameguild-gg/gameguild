@@ -1,8 +1,9 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Numerics;
 using System.Security.Cryptography;
-using System.Text;
-using Microsoft.Extensions.Caching.Memory;
+using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Nethereum.Signer;
@@ -14,29 +15,48 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Generates and verifies EIP-4361 Sign-In with Ethereum challenges.
 /// </summary>
+/// <remarks>
+///     Issue #1272: challenge state lives in <see cref="IDistributedCache"/> (the Redis path in
+///     production, mirroring the token revocation store and the push-MFA factor). The previous
+///     process-local <c>IMemoryCache</c> broke multi-instance deployments (a verify landing on
+///     another node reads every pending challenge as unknown) and lost in-flight ceremonies on
+///     restart. The read-back refusal is preserved: a challenge whose nonce or wallet binding
+///     was not actually retained is never returned to the caller. Single use is enforced by
+///     removal plus a process-wide nonce claim gate: deserialized challenge instances are
+///     per-request, so the entity's own <see cref="Web3Challenge.TryConsume"/> alone can no
+///     longer fence two concurrent verifies on this node (the store has no compare-and-delete).
+/// </remarks>
 public class Web3Service : IWeb3Service
 {
     private const string ChallengeKeyPrefix = "web3:challenge:";
     private const string SiweConfigurationPrefix = "Authentication:Web3:Siwe";
     private const string DefaultStatement = "Sign in with your Ethereum wallet.";
     private static readonly TimeSpan s_challengeLifetime = TimeSpan.FromMinutes(5);
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    /// <summary>
+    ///     Process-wide claimed-nonce fence (nonce → challenge expiry). Restores the same-node
+    ///     single-use guarantee the shared cached instance used to provide; entries are swept
+    ///     opportunistically once past their expiry so the map stays bounded.
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, DateTime> s_claimedNonces = new();
 
     private readonly ILogger<Web3Service> _logger;
-    private readonly IMemoryCache _memoryCache;
+    private readonly IDistributedCache _cache;
     private readonly TimeProvider _timeProvider;
     private readonly Uri _origin;
     private readonly string _statement;
     private readonly HashSet<string> _allowedChainIds;
 
-    public Web3Service(ILogger<Web3Service> logger, IMemoryCache memoryCache, IConfiguration configuration)
-        : this(logger, memoryCache, configuration, TimeProvider.System)
+    public Web3Service(ILogger<Web3Service> logger, IDistributedCache cache, IConfiguration configuration)
+        : this(logger, cache, configuration, TimeProvider.System)
     {
     }
 
-    public Web3Service(ILogger<Web3Service> logger, IMemoryCache memoryCache, IConfiguration configuration, TimeProvider timeProvider)
+    public Web3Service(ILogger<Web3Service> logger, IDistributedCache cache, IConfiguration configuration, TimeProvider timeProvider)
     {
         _logger = logger;
-        _memoryCache = memoryCache;
+        _cache = cache;
         _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
         var origin = configuration[$"{SiweConfigurationPrefix}:Origin"];
         if (string.IsNullOrWhiteSpace(origin))
@@ -60,7 +80,7 @@ public class Web3Service : IWeb3Service
     public Task<Web3Challenge> GenerateChallengeAsync(string walletAddress, string chainId) =>
         GenerateChallengeAsync(walletAddress, tenantId: null, chainId);
 
-    public Task<Web3Challenge> GenerateChallengeAsync(string walletAddress, Guid? tenantId, string chainId)
+    public async Task<Web3Challenge> GenerateChallengeAsync(string walletAddress, Guid? tenantId, string chainId)
     {
         if (!IsValidWalletAddress(walletAddress))
         {
@@ -99,30 +119,23 @@ public class Web3Service : IWeb3Service
             TenantId = tenantId
         };
 
-        // The host cache is size-bounded. Account for the message and binding entries
-        // explicitly; an unknown or evicted challenge always fails verification.
-        _memoryCache.Set(ChallengeKeyPrefix + nonce, challenge, new MemoryCacheEntryOptions
-        {
-            AbsoluteExpiration = expiresAt, Size = Encoding.UTF8.GetByteCount(challenge.Message) + 512L
-        });
-        _memoryCache.Set(GetWalletKey(walletAddress), nonce, new MemoryCacheEntryOptions
-        {
-            AbsoluteExpiration = expiresAt, Size = nonce.Length * 2L + walletAddress.Length * 2L + 128L
-        });
+        var options = new DistributedCacheEntryOptions { AbsoluteExpiration = new DateTimeOffset(expiresAt) };
+        var payload = JsonSerializer.Serialize(challenge, JsonOptions);
+        await _cache.SetStringAsync(ChallengeKeyPrefix + nonce, payload, options).ConfigureAwait(false);
+        await _cache.SetStringAsync(GetWalletKey(walletAddress), nonce, options).ConfigureAwait(false);
 
-        // MemoryCache may silently decline an entry at capacity. Never return a
-        // challenge whose nonce and wallet binding were not actually retained.
-        if (!_memoryCache.TryGetValue(ChallengeKeyPrefix + nonce, out Web3Challenge? storedChallenge)
-            || !ReferenceEquals(storedChallenge, challenge)
-            || !_memoryCache.TryGetValue(GetWalletKey(walletAddress), out string? storedNonce)
-            || !string.Equals(storedNonce, nonce, StringComparison.Ordinal))
+        // Read-back refusal (carried over from the in-process store): never return a
+        // challenge whose nonce and wallet binding were not actually retained. A store
+        // that silently dropped the entry would otherwise mint an unverifiable ceremony.
+        if (!string.Equals(await _cache.GetStringAsync(ChallengeKeyPrefix + nonce).ConfigureAwait(false), payload, StringComparison.Ordinal)
+            || !string.Equals(await _cache.GetStringAsync(GetWalletKey(walletAddress)).ConfigureAwait(false), nonce, StringComparison.Ordinal))
         {
-            _memoryCache.Remove(ChallengeKeyPrefix + nonce);
+            await _cache.RemoveAsync(ChallengeKeyPrefix + nonce).ConfigureAwait(false);
             throw new InvalidOperationException("SIWE challenge storage is unavailable.");
         }
 
         _logger.LogInformation("Generated SIWE challenge for wallet {WalletAddress} on chain {ChainId}", checksummedAddress, normalizedChainId);
-        return Task.FromResult(challenge);
+        return challenge;
     }
 
     public Task<bool> VerifySignatureAsync(string walletAddress, string signature, string originalMessage) =>
@@ -135,7 +148,7 @@ public class Web3Service : IWeb3Service
         string? expectedChainId) =>
         VerifySignatureAsync(walletAddress, signature, originalMessage, expectedChainId, expectedNonce: null);
 
-    public Task<bool> VerifySignatureAsync(
+    public async Task<bool> VerifySignatureAsync(
         string walletAddress,
         string signature,
         string originalMessage,
@@ -145,21 +158,36 @@ public class Web3Service : IWeb3Service
         if (!IsValidWalletAddress(walletAddress))
         {
             _logger.LogWarning("Invalid wallet address format: {WalletAddress}", walletAddress);
-            return Task.FromResult(false);
+            return false;
         }
 
         var walletKey = GetWalletKey(walletAddress);
-        if (!_memoryCache.TryGetValue(walletKey, out string? nonce) || string.IsNullOrEmpty(nonce))
+        var nonce = await _cache.GetStringAsync(walletKey).ConfigureAwait(false);
+        if (string.IsNullOrEmpty(nonce))
         {
             _logger.LogWarning("SIWE challenge not found for wallet {WalletAddress}", walletAddress);
-            return Task.FromResult(false);
+            return false;
         }
 
         var cacheKey = ChallengeKeyPrefix + nonce;
-        if (!_memoryCache.TryGetValue(cacheKey, out Web3Challenge? challenge) || challenge is null)
+        var storedPayload = await _cache.GetStringAsync(cacheKey).ConfigureAwait(false);
+        Web3Challenge? challenge = null;
+        if (!string.IsNullOrWhiteSpace(storedPayload))
+        {
+            try
+            {
+                challenge = JsonSerializer.Deserialize<Web3Challenge>(storedPayload, JsonOptions);
+            }
+            catch (JsonException)
+            {
+                // A corrupt entry is an unknown challenge: fail closed and clear the binding.
+            }
+        }
+
+        if (challenge is null)
         {
             _logger.LogWarning("SIWE challenge not found for wallet {WalletAddress}", walletAddress);
-            return Task.FromResult(false);
+            return false;
         }
 
         if (!string.Equals(challenge.Message, originalMessage, StringComparison.Ordinal)
@@ -169,32 +197,54 @@ public class Web3Service : IWeb3Service
         {
             if (!challenge.IsValidAt(_timeProvider.GetUtcNow().UtcDateTime))
             {
-                _memoryCache.Remove(cacheKey);
-                _memoryCache.Remove(walletKey);
+                await _cache.RemoveAsync(cacheKey).ConfigureAwait(false);
+                await _cache.RemoveAsync(walletKey).ConfigureAwait(false);
             }
 
             _logger.LogWarning("SIWE message validation failed for wallet {WalletAddress}", walletAddress);
-            return Task.FromResult(false);
+            return false;
         }
 
         if (!VerifyEthereumSignature(originalMessage, signature, challenge.WalletAddress))
         {
             _logger.LogWarning("Invalid EIP-191 signature for wallet {WalletAddress}", walletAddress);
-            return Task.FromResult(false);
+            return false;
         }
 
-        // The cached object is shared by all requests in this process. Claim it atomically so
-        // two concurrent requests cannot both establish a session with the same SIWE nonce.
-        if (!challenge.TryConsume())
+        // Single-use claim. The process-wide nonce gate fences concurrent verifies on this node
+        // (the deserialized challenge instance is per-request, so its own TryConsume cannot);
+        // cross-instance single use is the remove below (the push-MFA factor's distributed
+        // consumption pattern). Removing the nonce entry first means a racing verify on any
+        // node reads an unknown challenge.
+        if (!s_claimedNonces.TryAdd(challenge.Nonce, challenge.ExpiresAt))
         {
             _logger.LogWarning("SIWE challenge was already consumed for wallet {WalletAddress}", walletAddress);
-            return Task.FromResult(false);
+            return false;
         }
 
-        _memoryCache.Remove(cacheKey);
-        _memoryCache.Remove(walletKey);
+        SweepExpiredClaims();
+        await _cache.RemoveAsync(cacheKey).ConfigureAwait(false);
+        await _cache.RemoveAsync(walletKey).ConfigureAwait(false);
         _logger.LogInformation("Successfully verified SIWE signature for wallet {WalletAddress}", walletAddress);
-        return Task.FromResult(true);
+        return true;
+    }
+
+    /// <summary>Best-effort sweep of claim-gate entries whose challenge window has long closed.</summary>
+    private static void SweepExpiredClaims()
+    {
+        if (s_claimedNonces.Count < 8192)
+        {
+            return;
+        }
+
+        var cutoff = DateTime.UtcNow - TimeSpan.FromHours(1);
+        foreach (var entry in s_claimedNonces)
+        {
+            if (entry.Value < cutoff)
+            {
+                s_claimedNonces.TryRemove(entry.Key, out _);
+            }
+        }
     }
 
     public bool IsValidWalletAddress(string walletAddress)

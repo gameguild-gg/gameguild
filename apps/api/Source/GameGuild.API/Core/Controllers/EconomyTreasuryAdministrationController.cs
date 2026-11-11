@@ -39,7 +39,8 @@ public sealed class EconomyTreasuryAdministrationController(
     ISender sender,
     IDurableAdminWithdrawalApplicationService withdrawals,
     IActorContextAccessor actorContextAccessor,
-    TimeProvider timeProvider) : BaseApiController
+    TimeProvider timeProvider,
+    GameGuild.Identity.Authentication.IStepUpRequiredResponder stepUpRequiredResponder) : BaseApiController
 {
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<AdminWithdrawalRun>), StatusCodes.Status200OK)]
@@ -254,8 +255,16 @@ public sealed class EconomyTreasuryAdministrationController(
         catch (AdminWithdrawalEvidenceException exception) { return Conflict(exception.Message); }
         catch (AdminWithdrawalEligibilityException exception) { return Conflict(exception.Message); }
         catch (ReauthenticationEvidenceException exception) { return Conflict(exception.Message); }
+        catch (GameGuild.Identity.Authentication.StepUpRequiredException exception)
+        {
+            // Issue #1191: the structured step-up trigger — 423 with the challenge
+            // instructions (operation binding + available MFA methods) instead of a
+            // generic 409 string.
+            return await stepUpRequiredResponder.StepUpRequiredAsync(actorContextAccessor, exception).ConfigureAwait(false);
+        }
         catch (GameGuild.Identity.Authentication.StepUpReceiptInvalidException exception)
         {
+            // Direct receipt consumers (no EconomyStepUpExecutor binding available).
             return Conflict(exception.Message);
         }
     }
