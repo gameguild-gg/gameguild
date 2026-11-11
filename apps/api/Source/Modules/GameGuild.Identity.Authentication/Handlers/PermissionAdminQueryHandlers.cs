@@ -166,7 +166,7 @@ public sealed class GetPermissionAnalyticsQueryHandler(
 
         var topUsers = rows
             .Where(row => row.UserId.HasValue)
-            .GroupBy(row => row.UserId.Value)
+            .GroupBy(row => row.UserId!.Value)
             .Select(user => new
             {
                 UserId = user.Key,

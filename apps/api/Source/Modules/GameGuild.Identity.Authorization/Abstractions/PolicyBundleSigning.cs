@@ -159,7 +159,22 @@ public sealed record PolicyBundleVerificationResult
 ///     missing or invalid, or because bundle inputs violate the signing contract.
 ///     A domain-rule violation: the ExceptionHandlingMiddleware answers it 422, not 500.
 /// </summary>
-public sealed class PolicyBundleSignatureException(
-    string message,
-    Exception? innerException = null)
-    : DomainException(message, innerException);
+public sealed class PolicyBundleSignatureException : DomainException
+{
+    /// <summary>
+    ///     Initializes the exception with a failure reason.
+    /// </summary>
+    /// <param name="message">The failure reason.</param>
+    public PolicyBundleSignatureException(string message) : base(message)
+    {
+    }
+
+    /// <summary>
+    ///     Initializes the exception with a failure reason and the underlying cause.
+    /// </summary>
+    /// <param name="message">The failure reason.</param>
+    /// <param name="innerException">The underlying cause (never null).</param>
+    public PolicyBundleSignatureException(string message, Exception innerException) : base(message, innerException)
+    {
+    }
+}
