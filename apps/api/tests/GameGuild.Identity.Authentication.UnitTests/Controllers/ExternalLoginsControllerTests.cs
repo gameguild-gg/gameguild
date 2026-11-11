@@ -469,4 +469,91 @@ public class ExternalLoginsControllerTests
         problem.Status.Should().Be(401);
         sender.Verify(s => s.Send(It.IsAny<UnlinkExternalLoginCommand>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    // ── POST {provider}:link-authorize / {provider}:link-callback (issue #1181) ──
+
+    [Fact]
+    public async Task LinkAuthorize_Github_Returns200_WithAuthUrlAndState_BoundToCaller()
+    {
+        var userId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        var response = new ExternalLoginLinkAuthorizeResponse
+        {
+            AuthUrl = "https://github.com/login/oauth/authorize?client_id=abc",
+            State = "b".PadLeft(32, '0')
+        };
+        sender
+            .Setup(s => s.Send(
+                It.Is<ExternalLoginLinkAuthorizeCommand>(c =>
+                    c.UserId == userId && c.Provider == "github" && c.RedirectUri == "https://app/callback"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        var result = await CreateController(sender, userId).LinkAuthorize(
+            "github",
+            new DiscordLinkAuthorizeRequest { RedirectUri = "https://app/callback" },
+            CancellationToken.None);
+
+        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+        ok.Value.Should().Be(response);
+    }
+
+    [Fact]
+    public async Task LinkAuthorize_UnsupportedProvider_Returns400Problem()
+    {
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(It.IsAny<ExternalLoginLinkAuthorizeCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new NotSupportedException("Provider not supported for account linking: steam"));
+
+        var result = await CreateController(sender, Guid.NewGuid()).LinkAuthorize(
+            "steam",
+            new DiscordLinkAuthorizeRequest { RedirectUri = "https://app/callback" },
+            CancellationToken.None);
+
+        var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+        var problem = badRequest.Value.Should().BeOfType<ProblemDetails>().Subject;
+        problem.Status.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task LinkCallback_Microsoft_HandlerSucceeds_Returns204()
+    {
+        var userId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(
+                It.Is<ExternalLoginLinkCallbackCommand>(c =>
+                    c.UserId == userId && c.Provider == "microsoft" && c.Code == "ms-code" && c.State == "ms-state"),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await CreateController(sender, userId).LinkCallback(
+            "microsoft",
+            new DiscordLinkCallbackRequest { Code = "ms-code", State = "ms-state", RedirectUri = "https://app/callback" },
+            CancellationToken.None);
+
+        result.Should().BeOfType<NoContentResult>();
+    }
+
+    [Fact]
+    public async Task LinkCallback_InvalidState_Returns400ProblemWithErrorCode()
+    {
+        var userId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(It.IsAny<ExternalLoginLinkCallbackCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOAuthLinkStateException("Invalid or expired OAuth link state. Restart the link flow and try again."));
+
+        var result = await CreateController(sender, userId).LinkCallback(
+            "github",
+            new DiscordLinkCallbackRequest { Code = "gh-code", State = "forged", RedirectUri = "https://app/callback" },
+            CancellationToken.None);
+
+        var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+        var problem = badRequest.Value.Should().BeOfType<ProblemDetails>().Subject;
+        problem.Status.Should().Be(400);
+        problem.Detail.Should().Contain("state");
+        problem.Extensions["errorCode"].Should().Be("oauth_link_state_invalid");
+    }
 }

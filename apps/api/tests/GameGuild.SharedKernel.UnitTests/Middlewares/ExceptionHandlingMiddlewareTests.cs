@@ -254,6 +254,32 @@ public class ExceptionHandlingMiddlewareTests
     }
 
     [Fact]
+    public async Task InvokeAsync_Should_Return409_For_DuplicateEntityException()
+    {
+        // Issue #1197: uniqueness violations are conflicts, not server faults.
+        // Arrange
+        var exception = new DuplicateEntityForTestException("User with email dup@example.com already exists.");
+        _mockNext.Setup(x => x(It.IsAny<HttpContext>()))
+            .ThrowsAsync(exception);
+
+        // Act
+        await _middleware.InvokeAsync(_httpContext);
+
+        // Assert
+        _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status409Conflict);
+        _httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
+        using var reader = new StreamReader(_httpContext.Response.Body);
+        var responseBody = await reader.ReadToEndAsync();
+
+        var jsonDoc = JsonDocument.Parse(responseBody);
+        jsonDoc.RootElement.GetProperty("title").GetString().Should().Be("Conflict");
+        jsonDoc.RootElement.GetProperty("status").GetInt32().Should().Be(StatusCodes.Status409Conflict);
+        jsonDoc.RootElement.GetProperty("detail").GetString().Should().Be(exception.Message);
+    }
+
+    private sealed class DuplicateEntityForTestException(string message) : DuplicateEntityException(message);
+
+    [Fact]
     public async Task InvokeAsync_Should_Handle_Multiple_Different_Exception_Types()
     {
         // Arrange & Act & Assert - ArgumentException

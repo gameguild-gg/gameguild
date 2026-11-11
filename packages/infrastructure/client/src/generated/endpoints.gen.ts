@@ -20195,6 +20195,42 @@ export const deleteAuthExternalLoginsEndpoint = {
 } as const;
 
 /**
+ * Start the GitHub or Microsoft link flow for the current user (issue #1181).
+ *
+ * Returns the provider OAuth authorization URL plus the state parameter. The state is also recorded server-side and validated (one-shot) at the link callback. Supported providers: github, microsoft.
+ */
+export interface PostAuthExternalLoginsLinkAuthorizeInput {
+  provider: string;
+  body?: Types.IdentityAuthenticationDiscordLinkAuthorizeInput;
+}
+export type PostAuthExternalLoginsLinkAuthorizeOutput = Types.IdentityAuthenticationExternalLoginLinkAuthorizeOutput;
+export const postAuthExternalLoginsLinkAuthorizeEndpoint = {
+  operationId: 'postAuthExternalLoginsLinkAuthorize' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/external-logins/{provider}:link-authorize' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Complete the GitHub or Microsoft link flow for the current user (issue #1181).
+ *
+ * Round-trip validates the echoed state against the server-issued record, exchanges the authorization code for the user profile, and links the provider identity to the authenticated user. Idempotent when already linked to the same user. Supported providers: github, microsoft.
+ */
+export interface PostAuthExternalLoginsLinkCallbackInput {
+  provider: string;
+  body?: Types.IdentityAuthenticationDiscordLinkCallbackInput;
+}
+export type PostAuthExternalLoginsLinkCallbackOutput = void;
+export const postAuthExternalLoginsLinkCallbackEndpoint = {
+  operationId: 'postAuthExternalLoginsLinkCallback' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/external-logins/{provider}:link-callback' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Preview the scopes a provider link flow will request (authorization-time consent screen data).
  *
  * Returns the exact OAuth scopes the provider link flow will request, resolved the same way the authorize step embeds them in the authorization URL. Powers the authorization-time consent surface shown before linking (issue #250).
@@ -36145,6 +36181,8 @@ export const endpoints = {
   postAuthEmailVerify: postAuthEmailVerifyEndpoint,
   headAuthExternalLogins: headAuthExternalLoginsEndpoint,
   deleteAuthExternalLogins: deleteAuthExternalLoginsEndpoint,
+  postAuthExternalLoginsLinkAuthorize: postAuthExternalLoginsLinkAuthorizeEndpoint,
+  postAuthExternalLoginsLinkCallback: postAuthExternalLoginsLinkCallbackEndpoint,
   getAuthExternalLoginsLinkPreview: getAuthExternalLoginsLinkPreviewEndpoint,
   postAuthExternalLoginsScopesRevoke: postAuthExternalLoginsScopesRevokeEndpoint,
   postAuthExternalLoginsDiscordLinkAuthorize: postAuthExternalLoginsDiscordLinkAuthorizeEndpoint,
