@@ -18,15 +18,28 @@ public sealed class TotpMfaService(
     IEncryptionService encryptionService,
     ITotpReplayStore replayStore,
     MfaOptions? mfaOptions = null,
-    TimeProvider? timeProvider = null) : ITotpMfaService
+    TimeProvider? timeProvider = null,
+    IMfaEnrollmentConcurrencyGuard? enrollmentGuard = null) : ITotpMfaService
 {
     private readonly MfaOptions _mfaOptions = mfaOptions ?? new MfaOptions();
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
+    private readonly IMfaEnrollmentConcurrencyGuard? _enrollmentGuard = enrollmentGuard;
+
+    /// <summary>
+    ///     Runs an MFA mutation while holding the subject's enrollment claim (issue #1117).
+    ///     A null guard (legacy constructions) degrades to unguarded execution.
+    /// </summary>
+    private async Task<T> GuardedAsync<T>(Guid userId, Func<Task<T>> operation, CancellationToken cancellationToken)
+    {
+        return _enrollmentGuard is null
+            ? await operation().ConfigureAwait(false)
+            : await _enrollmentGuard.ExecuteEnrollmentOperationAsync(userId, operation, cancellationToken).ConfigureAwait(false);
+    }
 
     /// <summary>
     ///     Sets up TOTP-based MFA for a user. Returns QR code URI, secret key, and setup expiry.
     /// </summary>
-    public async Task<(string QrCodeUri, string SecretKey, DateTimeOffset ExpiresAt)> SetupTotpAsync(Guid userId, string userEmail, CancellationToken cancellationToken = default)
+    public Task<(string QrCodeUri, string SecretKey, DateTimeOffset ExpiresAt)> SetupTotpAsync(Guid userId, string userEmail, CancellationToken cancellationToken = default)
     {
         if (!_mfaOptions.Enabled)
         {
@@ -35,6 +48,11 @@ public sealed class TotpMfaService(
 
         logger.LogInformation("Setting up TOTP MFA for user: {UserId}", userId);
 
+        return GuardedAsync(userId, () => SetupTotpCoreAsync(userId, userEmail, cancellationToken), cancellationToken);
+    }
+
+    private async Task<(string QrCodeUri, string SecretKey, DateTimeOffset ExpiresAt)> SetupTotpCoreAsync(Guid userId, string userEmail, CancellationToken cancellationToken)
+    {
         try
         {
             // Check if MFA already enabled
@@ -84,15 +102,23 @@ public sealed class TotpMfaService(
     /// <summary>
     ///     Verifies TOTP code and enables MFA if first-time setup.
     /// </summary>
-    public async Task<bool> VerifyTotpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default)
+    public Task<bool> VerifyTotpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default)
     {
         if (!_mfaOptions.Enabled)
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         logger.LogInformation("Verifying TOTP code for user: {UserId}", userId);
 
+        // The verify path both reads and (on first success) flips the enrollment flags on
+        // the same row setup writes — it is a settings-path enrollment mutation and runs
+        // under the same per-subject claim (issue #1117).
+        return GuardedAsync(userId, () => VerifyTotpCoreAsync(userId, totpCode, deviceId, cancellationToken), cancellationToken);
+    }
+
+    private async Task<bool> VerifyTotpCoreAsync(Guid userId, string totpCode, string? deviceId, CancellationToken cancellationToken)
+    {
         try
         {
             // Get MFA configuration

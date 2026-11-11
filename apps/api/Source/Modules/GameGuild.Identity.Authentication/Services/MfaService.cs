@@ -21,7 +21,8 @@ public sealed class MfaService(
     IEmailMfaService? emailMfaService = null,
     IPushMfaService? pushMfaService = null,
     MfaOptions? mfaOptions = null,
-    IPublisher? eventPublisher = null) : IMfaService
+    IPublisher? eventPublisher = null,
+    IMfaEnrollmentConcurrencyGuard? enrollmentGuard = null) : IMfaService
 {
     private readonly MfaOptions _mfaOptions = mfaOptions ?? new MfaOptions();
 
@@ -184,6 +185,24 @@ public sealed class MfaService(
             return false;
         }
 
+        // The disable flips the same configuration row enrollment writes (issue #1117):
+        // hold the subject's enrollment claim for the read-modify-write so a concurrent
+        // enrollment (settings setup, sign-in-bound provisioning, first-verify) cannot
+        // interleave with the teardown.
+        var guard = enrollmentGuard;
+        if (guard is null)
+        {
+            return await DisableEnrolledFactorAsync(userId, cancellationToken).ConfigureAwait(false);
+        }
+
+        return await guard.ExecuteEnrollmentOperationAsync(
+            userId,
+            () => DisableEnrolledFactorAsync(userId, cancellationToken),
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<bool> DisableEnrolledFactorAsync(Guid userId, CancellationToken cancellationToken)
+    {
         var disabled = await attemptTrackingService.DisableMfaAsync(userId, cancellationToken).ConfigureAwait(false);
         if (disabled)
         {

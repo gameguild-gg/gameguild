@@ -61,6 +61,19 @@ public class SignInResponse
     public Guid? UpgradedFromGuestSessionId { get; set; }
 
     /// <summary>
+    ///     Issue #1128: the caller presented a guest credential, but the guest session had
+    ///     expired mid-use and its data could not be carried into this authenticated session
+    ///     (the token was unreadable or the session was past the retention grace). The
+    ///     sign-in itself succeeded — this flag only tells clients that guest-held state was
+    ///     NOT migrated, so they can surface a re-issue prompt instead of silently losing the
+    ///     cart/progress. Intentionally excluded from the serialized contract: hosts surface
+    ///     it through the <c>X-Guest-Session-Expired</c> response header so the OpenAPI
+    ///     surface stays unchanged.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool GuestSessionExpired { get; set; }
+
+    /// <summary>
     ///     User email
     /// </summary>
     public string Email { get; set; } = string.Empty;
