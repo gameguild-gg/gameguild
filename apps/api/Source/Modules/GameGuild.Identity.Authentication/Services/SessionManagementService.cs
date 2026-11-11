@@ -21,7 +21,8 @@ public sealed class SessionManagementService(
     IGeolocationProvider? geolocationProvider = null,
     ISessionEvictionAlertPublisher? sessionEvictionAlerts = null,
     IUserDeviceFingerprintRepository? fingerprintRepository = null,
-    INewDeviceSignInAlertPublisher? newDeviceAlerts = null) : ISessionManagementService
+    INewDeviceSignInAlertPublisher? newDeviceAlerts = null,
+    ITokenRevocationService? tokenRevocationService = null) : ISessionManagementService
 {
     private readonly SessionOptions _sessionOptions = sessionOptions ?? new SessionOptions();
     private readonly IUserAgentParser _userAgentParser = userAgentParser ?? UserAgentParser.Shared;
@@ -370,6 +371,13 @@ public sealed class SessionManagementService(
             SessionAnalyticsMetrics.RecordTerminated(reason);
         }
 
+        // Issue #1179: terminate the in-flight access token as well. The session-row check in
+        // TokenRevocationMiddleware covers tokens that carry the session claim, but the deny-list
+        // write also kills session-bound tokens observed by hosts with stale session reads and any
+        // token the caller minted without the claim. Best-effort: a deny-list failure must not
+        // undo the (already persisted) session termination.
+        await RevokeSessionAccessTokenSafeAsync(session.Id, reason.ToString(), cancellationToken).ConfigureAwait(false);
+
         await ForwardSessionAuditEventAsync(session, "Authentication.SessionTerminated", cancellationToken, reason.ToString()).ConfigureAwait(false);
 
         logger.LogInformation("Session {SessionId} terminated. Reason: {Reason}", sessionId, reason);
@@ -396,6 +404,8 @@ public sealed class SessionManagementService(
             session.TerminationReason = reason.ToString();
             session.TerminatedAt = SystemClock.UtcNow;
             await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
+            // Issue #1179: deny-list each terminated session's in-flight access token.
+            await RevokeSessionAccessTokenSafeAsync(session.Id, reason.ToString(), cancellationToken).ConfigureAwait(false);
             await ForwardSessionAuditEventAsync(session, "Authentication.SessionTerminated", cancellationToken, session.TerminationReason).ConfigureAwait(false);
         }
 
@@ -407,6 +417,30 @@ public sealed class SessionManagementService(
         logger.LogInformation("Terminated {Count} sessions for user {UserId}. Reason: {Reason}", activeSessions.Count, userId, reason);
 
         return activeSessions.Count;
+    }
+
+    /// <summary>
+    ///     Writes the terminated session's tracked access-token JTI to the deny-list (issue #1179).
+    ///     Best-effort: failures are logged and never propagate — the session row is already
+    ///     persisted as terminated, which remains the primary revocation signal.
+    /// </summary>
+    private async Task RevokeSessionAccessTokenSafeAsync(Guid sessionId, string reason, CancellationToken cancellationToken)
+    {
+        if (tokenRevocationService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await tokenRevocationService.RevokeSessionAccessTokenAsync(sessionId, reason, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception,
+                "Session access-token deny-list write failed for session {SessionId}: {ErrorType}",
+                sessionId, exception.GetType().FullName);
+        }
     }
 
     private async Task ForwardSessionAuditEventAsync(

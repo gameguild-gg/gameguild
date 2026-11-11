@@ -30,6 +30,9 @@ public sealed class InMemoryTokenRevocationService : ITokenRevocationService, IV
     // UserId -> RevokedAt (for "revoke all user tokens" functionality)
     private readonly ConcurrentDictionary<Guid, UserTokenRevocationBoundary> _userRevocationTimes = new();
 
+    // SessionId -> current access token (issue #1179: feeds the per-JTI deny-list when a session terminates)
+    private readonly ConcurrentDictionary<Guid, SessionAccessToken> _sessionAccessTokens = new();
+
     public InMemoryTokenRevocationService(ILogger<InMemoryTokenRevocationService> logger)
     {
         _logger = logger;
@@ -154,12 +157,51 @@ public sealed class InMemoryTokenRevocationService : ITokenRevocationService, IV
             }
         }
 
+        // Clean up expired session access-token index entries (issue #1179)
+        foreach (var kvp in _sessionAccessTokens)
+        {
+            if (kvp.Value.ExpiresAt < now)
+            {
+                _sessionAccessTokens.TryRemove(kvp.Key, out _);
+            }
+        }
+
         if (cleanedCount > 0)
         {
             _logger.LogInformation("Cleaned up {Count} expired token revocation entries", cleanedCount);
         }
 
         return Task.FromResult(cleanedCount);
+    }
+
+    /// <inheritdoc />
+    public Task TrackSessionAccessTokenAsync(Guid sessionId, string jti, DateTime expiresAt, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(jti);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        _sessionAccessTokens[sessionId] = new SessionAccessToken(jti.Trim(), expiresAt.ToUniversalTime());
+
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task RevokeSessionAccessTokenAsync(Guid sessionId, string? reason = null, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!_sessionAccessTokens.TryGetValue(sessionId, out var tracked))
+        {
+            return Task.CompletedTask;
+        }
+
+        _sessionAccessTokens.TryRemove(sessionId, out _);
+        if (_revokedTokens.ContainsKey(tracked.Jti))
+        {
+            return Task.CompletedTask;
+        }
+
+        return RevokeTokenAsync(tracked.Jti, tracked.ExpiresAt, reason, cancellationToken);
     }
 
     /// <summary>
@@ -172,4 +214,9 @@ public sealed class InMemoryTokenRevocationService : ITokenRevocationService, IV
         public required DateTime RevokedAt { get; init; }
         public string? Reason { get; init; }
     }
+
+    /// <summary>
+    ///     Internal record for the session → current access-token index (issue #1179).
+    /// </summary>
+    private sealed record SessionAccessToken(string Jti, DateTime ExpiresAt);
 }
