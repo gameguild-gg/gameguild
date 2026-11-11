@@ -168,10 +168,20 @@ public class WebAuthnAuthenticationSubService(
 
             resolvedUserId = storedCredential.UserId;
 
+            // Guest ceremonies (issue #1198) are keyed by their challenge token: the same
+            // base64url string the browser echoes inside the assertion's client data, so the
+            // completion resolves exactly the ceremony the browser is answering — concurrent
+            // guest sessions (second tab, second device) no longer overwrite each other.
+            var challengeToken = ReadClientDataChallenge(assertionResponseObj);
+
             // Find matching session: the credential owner's assertion session when present, else
-            // the guest slot issued for discoverable-credential flows.
-            var session = await sessionStore.FindAssertionSessionAsync(storedCredential.UserId, cancellationToken).ConfigureAwait(false)
-                ?? await sessionStore.FindGuestAssertionSessionAsync(cancellationToken).ConfigureAwait(false);
+            // the guest ceremony the presented challenge was issued for.
+            var session = await sessionStore.FindAssertionSessionAsync(storedCredential.UserId, cancellationToken).ConfigureAwait(false);
+            if (session is null && challengeToken is not null)
+            {
+                session = await sessionStore.FindGuestAssertionSessionAsync(challengeToken, cancellationToken).ConfigureAwait(false);
+            }
+
             if (session?.AssertionOptions == null)
             {
                 await RecordAuthenticationEventAsync(
@@ -202,7 +212,10 @@ public class WebAuthnAuthenticationSubService(
 
             // Remove the session
             await sessionStore.RemoveAssertionSessionAsync(storedCredential.UserId, cancellationToken).ConfigureAwait(false);
-            await sessionStore.RemoveGuestAssertionSessionAsync(cancellationToken).ConfigureAwait(false);
+            if (challengeToken is not null)
+            {
+                await sessionStore.RemoveGuestAssertionSessionAsync(challengeToken, cancellationToken).ConfigureAwait(false);
+            }
 
             // Update the credential's signature counter
             await credentialRepository.UpdateSignatureCounterAsync(
@@ -246,6 +259,32 @@ public class WebAuthnAuthenticationSubService(
                 Error = "Failed to complete WebAuthn authentication"
             };
         }
+    }
+
+    /// <summary>
+    ///     Extracts the base64url <c>challenge</c> string from the assertion's client data.
+    ///     This is the ceremony correlation key for guest (discoverable-credential) flows
+    ///     (issue #1198). Returns null for malformed payloads — the session lookup then simply
+    ///     misses, which is the pre-existing failure mode.
+    /// </summary>
+    private static string? ReadClientDataChallenge(AuthenticatorAssertionRawResponse assertionResponse)
+    {
+        try
+        {
+            using var clientData = JsonDocument.Parse(assertionResponse.Response.ClientDataJson);
+            if (clientData.RootElement.ValueKind == JsonValueKind.Object &&
+                clientData.RootElement.TryGetProperty("challenge", out var challenge) &&
+                challenge.ValueKind == JsonValueKind.String)
+            {
+                return challenge.GetString();
+            }
+        }
+        catch (JsonException)
+        {
+            // Malformed client data — the Fido2 verification below is the authoritative rejector.
+        }
+
+        return null;
     }
 
     private async Task RecordAuthenticationEventAsync(
