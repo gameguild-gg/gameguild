@@ -273,8 +273,8 @@ public sealed class RevokeApiKeyHandler : ICommandHandler<RevokeApiKeyCommand, R
         // Issue #1192: cascade to every key this key minted (directly or transitively), so the
         // "revoke the compromised key" playbook also kills attacker-minted replacements.
         var cascadeReason = $"Cascade: creator key {apiKey.Id} was revoked ({request.Reason ?? "User revoked"})";
-        var cascaded = await _apiKeyRepository.RevokeCreatedByCascadeAsync(
-            apiKey.Id, cascadeReason, cancellationToken).ConfigureAwait(false);
+        var cascaded = (await _apiKeyRepository.RevokeCreatedByCascadeAsync(
+            apiKey.Id, cascadeReason, cancellationToken).ConfigureAwait(false)) ?? [];
         if (cascaded.Count > 0)
         {
             _logger.LogWarning(
