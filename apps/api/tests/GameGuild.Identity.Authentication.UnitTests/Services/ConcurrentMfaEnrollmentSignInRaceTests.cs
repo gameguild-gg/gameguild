@@ -222,10 +222,14 @@ public sealed class ConcurrentMfaEnrollmentSignInRaceTests
             });
 
             // "Device B": the sign-in-side reader (PostgreSqlSignInMfaSubjectReader shape)
-            // sampling the same row while enrollment is in flight.
+            // sampling the same row while enrollment is in flight. The loop keeps sampling
+            // until cancelled AND at least one row was observed — a sign-in that arrives
+            // right after enrollment still reads the final state, which is exactly the
+            // "new (MFA-on) state atomically" half of the contract.
             var signIn = Task.Run(async () =>
             {
-                while (!stopObserving.IsCancellationRequested)
+                var safety = 0;
+                while ((!stopObserving.IsCancellationRequested || observedStates.IsEmpty) && safety++ < 100_000)
                 {
                     var configuration = store.Get(userId);
                     if (configuration is { } row)

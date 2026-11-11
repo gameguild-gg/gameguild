@@ -1333,7 +1333,21 @@ public class LocalAuthService(
             return;
         }
 
-        var maintenance = await tenantMaintenanceState.FindAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        TenantMaintenanceState? maintenance;
+        try
+        {
+            maintenance = await tenantMaintenanceState.FindAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            // Fail open (mirrors the IP-blocklist posture): the maintenance gate protects a
+            // tenant from new sessions during a window — an unavailable state store must
+            // never turn into a platform-wide sign-in outage.
+            logger.LogError(exception, "Tenant maintenance lookup failed for tenant {TenantId}: {ErrorType}",
+                tenantId, exception.GetType().FullName);
+            return;
+        }
+
         if (maintenance is null)
         {
             return;
