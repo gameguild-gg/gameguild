@@ -159,7 +159,7 @@ public sealed class PostgreSqlMarketplaceOutboxProcessor : IMarketplaceOutboxPro
         }
 
         return new MarketplaceOutboxDispatchMessage(
-            row.Id, row.TenantId!.Value, row.SettlementId!.Value, row.MessageType,
+            row.Id, row.TenantId!.Value, row.SettlementId!.Value, row.MessageType!,
             payload.Clone(), row.PayloadHash, row.OccurredAt);
     }
 }

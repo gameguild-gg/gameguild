@@ -94,7 +94,7 @@ public sealed class PostgreSqlAdminWithdrawalStoreTests
             .Should().Throw<AdminWithdrawalEvidenceException>();
         FluentActions.Invoking(() => store.Update(dispatching, run.Version))
             .Should().Throw<AdminWithdrawalStaleCommandException>();
-        context.Set<AdminWithdrawalProviderEventRow>().Add(new AdminWithdrawalProviderEventRow
+        context.Set<EconomyProviderEventRow>().Add(new EconomyProviderEventRow
         {
             TenantId = run.TenantId,
             EventId = "invalid-time",

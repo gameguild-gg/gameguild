@@ -11,7 +11,7 @@ public sealed class AdminWithdrawalPersistenceCoverageCompletionTests
         var runId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var view = new AdminWithdrawalAuditView(runId, true, []);
-        var providerRow = new AdminWithdrawalProviderEventRow { TenantId = tenantId };
+        var providerRow = new EconomyProviderEventRow { TenantId = tenantId };
         var auditRow = new AdminWithdrawalAuditEventRow { TenantId = tenantId };
 
         view.RunId.Should().Be(runId);

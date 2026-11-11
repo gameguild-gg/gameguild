@@ -185,7 +185,7 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReader : IMarketplaceOp
         row.FirstJournalSequence, row.RefundedAt);
 
     private static MarketplaceOutboxOperationalStatus MapOutbox(EconomyOutboxRow row) => new(
-        row.Id, row.TenantId!.Value, row.SettlementId!.Value, row.MessageType, row.PayloadHash,
+        row.Id, row.TenantId!.Value, row.SettlementId!.Value, row.MessageType!, row.PayloadHash,
         row.OccurredAt, row.PublishedAt, row.AttemptCount, row.LeaseExpiresAt,
         !string.IsNullOrWhiteSpace(row.LastError));
 

@@ -282,7 +282,7 @@ public sealed class DurableMarketplaceServicesTests
     {
         await using var fixture = await Fixture.CreateAsync();
         var settlement = await fixture.Settlements.SettleAsync(fixture.SettlementRequest());
-        fixture.Context.RemoveRange(fixture.Context.Set<MarketplaceSettlementLegRow>());
+        fixture.Context.RemoveRange(fixture.Context.Set<MarketplaceValueLegRow>());
         await fixture.Context.SaveChangesAsync();
 
         await FluentActions.Awaiting(() => fixture.Refunds.RefundAsync(
@@ -298,7 +298,7 @@ public sealed class DurableMarketplaceServicesTests
     {
         await using var fixture = await Fixture.CreateAsync(bypassDatabaseConstraints: true);
         var settlement = await fixture.Settlements.SettleAsync(fixture.SettlementRequest());
-        var leg = await fixture.Context.Set<MarketplaceSettlementLegRow>().SingleAsync();
+        var leg = await fixture.Context.Set<MarketplaceValueLegRow>().SingleAsync();
         if (invalid == "refunded-over-target")
         {
             leg.RefundedUnits = 101;
@@ -727,8 +727,9 @@ public sealed class DurableMarketplaceServicesTests
             });
             foreach (var leg in request.Legs)
             {
-                context.Add(new MarketplaceSettlementLegRow
+                context.Add(new MarketplaceValueLegRow
                 {
+                    LegKind = MarketplaceValueLegKind.Settlement,
                     SettlementId = request.SettlementId,
                     Currency = leg.Currency,
                     Units = leg.Units,
@@ -807,15 +808,17 @@ public sealed class DurableMarketplaceServicesTests
             });
             foreach (var leg in request.Legs)
             {
-                context.Add(new MarketplaceRefundLegRow
+                context.Add(new MarketplaceValueLegRow
                 {
+                    LegKind = MarketplaceValueLegKind.Refund,
                     RefundId = request.RefundId,
                     SettlementId = request.SettlementId,
                     Currency = leg.Currency,
                     Units = leg.Units
                 });
-                var settlementLeg = context.Set<MarketplaceSettlementLegRow>()
-                    .Single(item => item.SettlementId == request.SettlementId && item.Currency == leg.Currency);
+                var settlementLeg = context.Set<MarketplaceValueLegRow>()
+                    .Single(item => item.LegKind == MarketplaceValueLegKind.Settlement &&
+                                    item.SettlementId == request.SettlementId && item.Currency == leg.Currency);
                 settlementLeg.RefundedUnits += leg.Units;
             }
             if (AddDebt)

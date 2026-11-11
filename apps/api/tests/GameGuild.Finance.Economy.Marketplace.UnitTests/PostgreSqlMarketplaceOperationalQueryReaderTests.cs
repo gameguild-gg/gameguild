@@ -62,8 +62,9 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReaderTests
         var refund = Refund(TenantId, settlement, 1);
         var outbox = Outbox(TenantId, settlement, 1);
         context.Set<MarketplaceSettlementRow>().Add(settlement);
-        context.Set<MarketplaceSettlementLegRow>().Add(new MarketplaceSettlementLegRow
+        context.Set<MarketplaceValueLegRow>().Add(new MarketplaceValueLegRow
         {
+            LegKind = MarketplaceValueLegKind.Settlement,
             SettlementId = settlement.Id,
             Currency = CurrencyCode.HardCoin,
             Units = 100,

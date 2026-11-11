@@ -911,10 +911,10 @@ public sealed class DurableAdminWithdrawalWorkflowTests
 
     private sealed class RecordingDispatchOutbox : IAdminWithdrawalDispatchOutboxWriter
     {
-        public List<AdminWithdrawalDispatchOutboxRow> Rows { get; } = [];
+        public List<EconomyOutboxRow> Rows { get; } = [];
 
         public Task AddAsync(
-            AdminWithdrawalDispatchOutboxRow row,
+            EconomyOutboxRow row,
             CancellationToken cancellationToken = default)
         {
             Rows.Add(row);

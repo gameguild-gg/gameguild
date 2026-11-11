@@ -244,7 +244,7 @@ public sealed class MarketplaceModelConfiguration : IModelConfiguration
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.Id).HasDefaultValueSql("gen_random_uuid()");
-            builder.HasIndex(row => new { row.SettlementId, row.Currency })
+            builder.HasIndex(row => new { row.LegKind, row.SettlementId, row.Currency })
                 .IsUnique()
                 .HasFilter("\"LegKind\" = 1")
                 .HasDatabaseName("ux_economy_marketplace_value_legs_settlement_currency");

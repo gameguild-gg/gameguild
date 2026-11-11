@@ -681,6 +681,12 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.Property(row => row.PayloadHash).HasMaxLength(128);
             builder.Property(row => row.LeaseOwner).HasMaxLength(256);
             builder.Property(row => row.LastError).HasMaxLength(1_000);
+            // The SECURITY DEFINER posting writers enqueue without listing the
+            // discriminator or the lease columns; the column defaults keep
+            // those inserts valid (they are posting-accepted rows by
+            // construction — OutboxKind = 1).
+            builder.Property(row => row.OutboxKind).HasDefaultValue(EconomyOutboxKind.Posting);
+            builder.Property(row => row.AttemptCount).HasDefaultValue(0);
             builder.HasIndex(row => row.PayloadHash)
                 .IsUnique()
                 .HasFilter("\"OutboxKind\" = 1")
@@ -1298,18 +1304,12 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.ToTable("economy_approvals");
             builder.HasKey(row => row.Id);
             builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.SubjectId, row.ActorId })
+            builder.HasIndex(row => new { row.ApprovalKind, row.SubjectId, row.ActorId })
                 .IsUnique()
-                .HasFilter("\"ApprovalKind\" = 1")
-                .HasDatabaseName("ux_economy_approvals_policy_actor");
-            builder.HasIndex(row => new { row.SubjectId, row.ActorId })
+                .HasDatabaseName("ux_economy_approvals_kind_subject_actor");
+            builder.HasIndex(row => new { row.ApprovalKind, row.Generation, row.ActorId })
                 .IsUnique()
-                .HasFilter("\"ApprovalKind\" = 2")
-                .HasDatabaseName("ux_economy_approvals_switch_actor");
-            builder.HasIndex(row => new { row.Generation, row.ActorId })
-                .IsUnique()
-                .HasFilter("\"ApprovalKind\" = 3")
-                .HasDatabaseName("ux_economy_approvals_generation_actor");
+                .HasDatabaseName("ux_economy_approvals_kind_generation_actor");
         });
 
         modelBuilder.Entity<EconomyCapabilityReceiptRow>(builder =>

@@ -47,7 +47,7 @@ public sealed class EconomyOutboxRow
     public Guid? OperationId { get; set; }
     public Guid? RunId { get; set; }
     public Guid? EvidenceId { get; set; }
-    public string MessageType { get; set; } = string.Empty;
+    public string? MessageType { get; set; }
     public string? IdempotencyKey { get; set; }
     public string Payload { get; set; } = string.Empty;
     public string PayloadHash { get; set; } = string.Empty;
