@@ -35,7 +35,8 @@ public sealed class JwtTokenService(
     IRefreshTokenLifecycleRecorder? lifecycleRecorder = null,
     IPublisher? eventPublisher = null,
     IKeyRotationService? keyRotationService = null,
-    IJwtSigningKeyCache? signingKeyCache = null) : IJwtTokenService
+    IJwtSigningKeyCache? signingKeyCache = null,
+    ITokenRevocationService? tokenRevocationService = null) : IJwtTokenService
 {
     private const string StaticSigningKeyId = "GameGuild-jwt-key";
 
@@ -195,11 +196,12 @@ public sealed class JwtTokenService(
 
         try
         {
+            var jti = Guid.NewGuid().ToString();
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, jti),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64),
                 new Claim("auth_time", authenticatedAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64),
                 // Token version for immediate revocation support
@@ -255,6 +257,26 @@ public sealed class JwtTokenService(
             var token = new JwtSecurityToken(_jwtOptions.Issuer, _jwtOptions.Audience, claims, SystemClock.UtcNow, SystemClock.UtcNow.AddMinutes(_jwtOptions.AccessTokenExpirationMinutes), credentials);
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            // Issue #1179: index the session-bound access token so any later revocation of the
+            // session (termination, refresh-token family containment) can write this JTI to the
+            // deny-list and kill the token immediately instead of at natural expiry. Best-effort:
+            // a tracking failure must never fail issuance — the session-row check in
+            // TokenRevocationMiddleware remains the primary guard for session-bound tokens.
+            if (sessionId.HasValue && sessionId.Value != Guid.Empty && tokenRevocationService is not null)
+            {
+                try
+                {
+                    await tokenRevocationService.TrackSessionAccessTokenAsync(
+                        sessionId.Value, jti, token.ValidTo, cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception trackingException)
+                {
+                    logger.LogWarning(trackingException,
+                        "Session access-token index write failed for user {UserId}: {ErrorType}",
+                        LogRedaction.ProtectIdentifier(userId), trackingException.GetType().FullName);
+                }
+            }
 
             logger.LogInformation("Access token generated for user: {UserId}, Expires: {Expires}", LogRedaction.ProtectIdentifier(userId), token.ValidTo);
 

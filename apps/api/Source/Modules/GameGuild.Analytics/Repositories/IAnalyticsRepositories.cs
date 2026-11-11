@@ -20,6 +20,12 @@ public interface IKpiDefinitionRepository
 public interface IDashboardRepository
 {
     Task<Dashboard?> GetByIdAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>
+    ///     Tenant-scoped read (issue #1250 N10): only the tenant's own dashboards and
+    ///     tenant-less (global) dashboards match. Other tenants' dashboards 404 even by id.
+    /// </summary>
+    Task<Dashboard?> GetByIdForTenantAsync(Guid id, Guid? tenantId, CancellationToken ct = default);
     Task<Dashboard?> GetBySlugAsync(string slug, CancellationToken ct = default);
     Task<List<Dashboard>> GetAllAsync(Guid? tenantId, CancellationToken ct = default);
     Task<Dashboard> AddAsync(Dashboard dashboard, CancellationToken ct = default);

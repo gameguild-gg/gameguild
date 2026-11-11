@@ -103,7 +103,12 @@ public sealed class InboxStore(ApplicationDbContext db) : IInboxStore
         }
 
         receipt.AttemptCount++;
-        receipt.LastError = exception.ToString()[..Math.Min(exception.ToString().Length, 4000)];
+
+        // Issue #1313 S2-b: this is the one kernel store that durably persists exception
+        // text (and the admin dead-letter surface serves it back), so redact before
+        // truncating — handler exceptions routinely embed request values and credentials.
+        var redactedFailure = InboxFailureTextRedactor.Redact(exception.ToString());
+        receipt.LastError = redactedFailure[..Math.Min(redactedFailure.Length, 4000)];
         receipt.UpdatedAtUtc = now;
         if (receipt.AttemptCount >= MaxAttempts)
         {

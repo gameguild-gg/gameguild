@@ -34,7 +34,8 @@ public sealed class EconomyLegacyMigrationAdministrationController(
     ILegacyEconomyShadowMigration migration,
     ILegacyEconomyQueryReader queries,
     IActorContextAccessor actorContextAccessor,
-    TimeProvider timeProvider) : BaseApiController
+    TimeProvider timeProvider,
+    GameGuild.Identity.Authentication.IStepUpRequiredResponder stepUpRequiredResponder) : BaseApiController
 {
     [HttpGet]
     [ProducesResponseType(
@@ -179,6 +180,11 @@ public sealed class EconomyLegacyMigrationAdministrationController(
             return created ? StatusCode(StatusCodes.Status201Created, result) : Ok(result);
         }
         catch (KeyNotFoundException) { return NotFound(); }
+        catch (GameGuild.Identity.Authentication.StepUpRequiredException exception)
+        {
+            // Issue #1191: the structured step-up trigger (423 with challenge instructions).
+            return await stepUpRequiredResponder.StepUpRequiredAsync(actorContextAccessor, exception).ConfigureAwait(false);
+        }
         catch (ArgumentException exception) { return BadRequest(exception.Message); }
         catch (LegacyEconomyShadowMigrationException exception) { return Conflict(exception.Message); }
         catch (DbUpdateConcurrencyException exception) { return Conflict(exception.Message); }

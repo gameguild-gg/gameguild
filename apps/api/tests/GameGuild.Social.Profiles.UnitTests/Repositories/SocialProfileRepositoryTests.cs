@@ -81,6 +81,33 @@ public sealed class SocialProfileRepositoryTests
         (await repository.SearchAsync(null, 500)).Should().HaveCount(100);
     }
 
+    /// <summary>
+    ///     Issue #1315 SP1: the visibility-scoped predicates must keep Private/Connections
+    ///     profiles out of the by-handle and by-user reads for everyone except the owner.
+    /// </summary>
+    [Fact]
+    public async Task VisibleLookups_EnforceProfileVisibilityInBothPredicates()
+    {
+        await using var context = SocialProfilesTestDbContext.Create();
+        var publicProfile = CreateProfile("public-creator", "Public", ProfileVisibility.Public, 50);
+        var privateProfile = CreateProfile("private-creator", "Private", ProfileVisibility.Private, 50);
+        var connectionsProfile = CreateProfile("connections-creator", "Connections", ProfileVisibility.Connections, 50);
+        context.AddRange(publicProfile, privateProfile, connectionsProfile);
+        await context.SaveChangesAsync();
+        var repository = new SocialProfileRepository(context);
+
+        (await repository.GetVisibleByHandleAsync("@public-creator", null))!.Id.Should().Be(publicProfile.Id);
+        (await repository.GetVisibleByHandleAsync("@private-creator", null)).Should().BeNull();
+        (await repository.GetVisibleByHandleAsync("@connections-creator", null)).Should().BeNull();
+        (await repository.GetVisibleByHandleAsync("@private-creator", Guid.NewGuid())).Should().BeNull();
+        (await repository.GetVisibleByHandleAsync("@private-creator", privateProfile.UserId))!.Id.Should().Be(privateProfile.Id);
+
+        (await repository.GetVisibleByUserAsync(publicProfile.UserId, null))!.Id.Should().Be(publicProfile.Id);
+        (await repository.GetVisibleByUserAsync(privateProfile.UserId, null)).Should().BeNull();
+        (await repository.GetVisibleByUserAsync(privateProfile.UserId, Guid.NewGuid())).Should().BeNull();
+        (await repository.GetVisibleByUserAsync(connectionsProfile.UserId, connectionsProfile.UserId))!.Id.Should().Be(connectionsProfile.Id);
+    }
+
     [Fact]
     public async Task Update_PersistsChangesAndTouchesProfile()
     {

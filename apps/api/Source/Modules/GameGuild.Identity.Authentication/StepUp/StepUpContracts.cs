@@ -131,3 +131,23 @@ public sealed class StepUpContextUnavailableException(string message) : InvalidO
 public sealed class StepUpChallengeUnavailableException(string message) : InvalidOperationException(message);
 public sealed class StepUpVerificationFailedException(string message) : InvalidOperationException(message);
 public sealed class StepUpReceiptInvalidException(string message) : InvalidOperationException(message);
+
+/// <summary>
+///     A sensitive action refused to run because the caller did not present a valid step-up
+///     receipt (issue #1191). Carries the operation binding the client must re-create a
+///     challenge for. Controllers translate this into a 423 response whose body is a
+///     <see cref="StepUpAuthenticationRequiredResponse"/> built by
+///     <see cref="IStepUpRequiredResponder"/>.
+/// </summary>
+public sealed class StepUpRequiredException(
+    string message,
+    string operationType,
+    string targetReference,
+    string payloadHash,
+    Exception? innerException = null)
+    : InvalidOperationException(message, innerException)
+{
+    public string OperationType { get; } = operationType;
+    public string TargetReference { get; } = targetReference;
+    public string PayloadHash { get; } = payloadHash;
+}

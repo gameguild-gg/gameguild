@@ -145,10 +145,12 @@ public sealed class TrustedDeviceSessionPostgreSqlHttpTests(ApiPostgreSqlFixture
     public async Task TrustWithoutAStepUpReceiptIsForbiddenAndCreatesNothing()
     {
         // Fresh verification gate (issue #1144): a valid session alone must not grant device trust.
+        // Issue #1191: the refusal is the structured step-up trigger (423 with challenge
+        // instructions) instead of a bare 403.
         var account = await SeedAsync();
         using var client = await SignedClientAsync(account, account.CurrentSessionId);
         using var response = await client.PostAsJsonAsync(TrustRoute, new { deviceName = "Unverified request" });
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Locked, response.StatusCode);
         await AssertNoTrustAsync(account);
         await AssertSessionsUnchangedAsync(account);
     }
@@ -170,7 +172,8 @@ public sealed class TrustedDeviceSessionPostgreSqlHttpTests(ApiPostgreSqlFixture
 
         using var client = await SignedClientAsync(account, account.CurrentSessionId);
         using var response = await client.PostAsJsonAsync(TrustRoute, new { deviceName, stepUpReceipt = receipt });
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        // Issue #1191: a spent receipt is also the structured step-up trigger (423), not a 400.
+        Assert.Equal(HttpStatusCode.Locked, response.StatusCode);
         await AssertNoTrustAsync(account);
     }
 

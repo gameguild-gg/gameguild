@@ -89,6 +89,43 @@ public sealed class SocialProfilesControllerTests
         _sender.VerifyAll();
     }
 
+    [Fact]
+    public async Task GetByHandle_WhenVisibilityQueryYieldsNull_ReturnsNotFound()
+    {
+        _sender.Setup(sender => sender.Send(It.IsAny<GetSocialProfileByHandleQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((SocialProfileDto?)null);
+        var controller = CreateController(Guid.NewGuid());
+
+        var result = await controller.GetByHandle("private", default);
+
+        result.Result.Should().BeOfType<NotFoundResult>();
+    }
+
+    [Fact]
+    public async Task GetByHandle_WhenProfileIsServed_ReturnsOk()
+    {
+        var userId = Guid.NewGuid();
+        _sender.Setup(sender => sender.Send(It.IsAny<GetSocialProfileByHandleQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ProfileDto(userId));
+        var controller = CreateController(userId);
+
+        var result = await controller.GetByHandle("creator", default);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task GetByUser_WhenVisibilityQueryYieldsNull_ReturnsNotFound()
+    {
+        _sender.Setup(sender => sender.Send(It.IsAny<GetSocialProfileByUserQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((SocialProfileDto?)null);
+        var controller = CreateController(Guid.NewGuid());
+
+        var result = await controller.GetByUser(Guid.NewGuid(), default);
+
+        result.Result.Should().BeOfType<NotFoundResult>();
+    }
+
     private SocialProfilesController CreateController(Guid userId)
     {
         var actors = new Mock<IActorContextAccessor>();

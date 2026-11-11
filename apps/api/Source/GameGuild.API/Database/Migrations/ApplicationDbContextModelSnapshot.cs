@@ -19525,6 +19525,10 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid?>("CreatedByApiKeyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_api_key_id");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
@@ -19613,6 +19617,9 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnName("version");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByApiKeyId")
+                        .HasDatabaseName("ix_api_keys_created_by_api_key_id");
 
                     b.HasIndex("ExpiresAt")
                         .HasDatabaseName("ix_api_keys_expires_at");

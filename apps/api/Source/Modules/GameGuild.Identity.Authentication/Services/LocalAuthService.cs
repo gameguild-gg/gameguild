@@ -1245,6 +1245,9 @@ public class LocalAuthService(
                 .ConfigureAwait(false);
             if (familySessionId.HasValue)
             {
+                // The session termination also writes the family's in-flight access-token JTI
+                // to the deny-list (issue #1179), so containment kills the paired access token
+                // immediately instead of at its natural expiry.
                 await sessionManagementService.TerminateSessionAsync(familySessionId.Value, SessionTerminationReason.SecurityViolation, cancellationToken)
                     .ConfigureAwait(false);
                 await AuthenticationEventDispatch.PublishAsync(
