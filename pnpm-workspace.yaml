@@ -72,6 +72,7 @@ overrides:
   # entity-limit option bypassed when set to zero; pinned to the patched release.
   "fast-xml-parser@<5.12.0": "5.12.0"
   "@coinbase/cdp-sdk>abitype": "1.2.3"
+  "fast-xml-parser@<5.12.0": "5.12.0"
 
 onlyBuiltDependencies:
   - braces

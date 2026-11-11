@@ -53,6 +53,18 @@ public class EntityNotFoundException : DomainException
 }
 
 /// <summary>
+///     Exception thrown when creating or updating an entity would violate a uniqueness
+///     constraint (duplicate key). Mapped to <c>409 Conflict</c> by the global exception
+///     handling middleware.
+/// </summary>
+public class DuplicateEntityException : DomainException
+{
+    protected DuplicateEntityException(string message) : base(message) { }
+
+    protected DuplicateEntityException(string message, Exception innerException) : base(message, innerException) { }
+}
+
+/// <summary>
 ///     Exception thrown when a subscription is not found.
 /// </summary>
 public class SubscriptionNotFoundException : EntityNotFoundException

@@ -173,6 +173,9 @@ public static class DataDependencyInjection
         services.AddScoped<GameGuild.Identity.Authorization.IAuthorizationRolePermissionProvider, RolePermissionProvider>();
         services.AddScoped<IServiceAccountRepository, ServiceAccountRepository>();
         services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>();
+        // Server-side OAuth link-state store (issue #1181): IDistributedCache-backed (Redis in
+        // production), so a link flow started on one instance completes on another.
+        services.AddScoped<IOAuthLinkStateStore, DistributedCacheOAuthLinkStateStore>();
         services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
         services.AddHostedService<ApiKeyRotationRevocationBackgroundService>();
 

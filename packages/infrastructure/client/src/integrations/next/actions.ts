@@ -13,7 +13,7 @@ import { SessionStore, resolveCookieOptions, type CookieSerializeOptions } from 
 import { createJWTPayload, processSession, encodeSession, refreshAccessToken, toSession } from '../../runtime/auth/session';
 import { CredentialsSignInError, ProviderNotFoundError } from '../../runtime/auth/errors';
 import { registerAccount } from '../../runtime/auth/sign-up';
-import { revokeSessionRefreshToken } from '../../runtime/auth/sign-out';
+import { signOutServerSession } from '../../runtime/auth/sign-out';
 import type { IdentityAuthenticationLocalSignUpInput } from '../../generated/types.gen';
 import { applyResponseCookies, parseBackendAuthResponse } from './handlers';
 import { type OAuthProviderWithMethods, getOAuthExchangeToken } from './oauth-helpers';
@@ -325,12 +325,16 @@ export function createSignUpAction(config: ResolvedAuthConfig) {
 export function createSignOutAction(config: ResolvedAuthConfig) {
   const { sessionStore } = createCookieHelpers(config);
 
-  return async function signOut(options?: { redirectTo?: string; redirect?: boolean }): Promise<void> {
-    const { redirectTo, redirect: shouldRedirect = true } = options ?? {};
+  return async function signOut(options?: {
+    redirectTo?: string;
+    redirect?: boolean;
+    logoutEverywhere?: boolean;
+  }): Promise<void> {
+    const { redirectTo, redirect: shouldRedirect = true, logoutEverywhere = false } = options ?? {};
 
     const adapter = await getNextCookies();
     if (adapter) {
-      // Try to revoke the server-side token
+      // Revoke server-side state before clearing the cookie.
       const encryptedToken = sessionStore.read((name) => {
         const cookie = adapter.get(name);
         return cookie?.value;
@@ -342,11 +346,17 @@ export function createSignOutAction(config: ResolvedAuthConfig) {
             token: encryptedToken,
             secret: config.secret,
           });
+          // Prefer the dedicated sign-out endpoint (issue #1196): it deny-lists the
+          // current access token's jti (so a copied access token dies at once instead
+          // of living to its exp) and, with logoutEverywhere, also revokes every
+          // refresh token and terminates every session for the account — called via
+          // the generated client, falling back to a refresh-token revocation when the
+          // sign-out call cannot be completed.
           if (token) {
-            await revokeSessionRefreshToken(config.apiUrl, token);
+            await signOutServerSession(config.apiUrl, token, logoutEverywhere);
           }
         } catch {
-          // Ignore
+          // Ignore — sign-out must never strand the user in a signed-in UI.
         }
       }
 
