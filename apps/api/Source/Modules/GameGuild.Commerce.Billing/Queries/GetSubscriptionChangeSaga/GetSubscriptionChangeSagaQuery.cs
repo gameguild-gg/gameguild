@@ -1,5 +1,6 @@
 using FluentValidation;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Billing;
@@ -62,9 +63,11 @@ public sealed class GetSubscriptionChangeSagaQueryValidator : AbstractValidator<
 /// <summary>
 ///     Handler for <see cref="GetSubscriptionChangeSagaQuery" />: reads the latest durable
 ///     saga of the subscription together with its step journal. Returns <c>null</c> when the
-///     subscription never went through an orchestrated plan change.
+///     subscription never went through an orchestrated plan change. Scoped to the
+///     authenticated actor's tenant (issue #1281 R-B6): the saga carries proration amounts,
+///     payment references and failure reasons — another tenant's saga is not found.
 /// </summary>
-public sealed class GetSubscriptionChangeSagaQueryHandler(IApplicationDbContext context)
+public sealed class GetSubscriptionChangeSagaQueryHandler(IApplicationDbContext context, IActorContextAccessor actorContextAccessor)
     : IQueryHandler<GetSubscriptionChangeSagaQuery, SubscriptionChangeSagaDto?>
 {
     /// <inheritdoc />
@@ -72,9 +75,23 @@ public sealed class GetSubscriptionChangeSagaQueryHandler(IApplicationDbContext 
         GetSubscriptionChangeSagaQuery request,
         CancellationToken cancellationToken)
     {
-        var saga = await context.Set<SubscriptionChangeSaga>()
+        var actor = actorContextAccessor.ActorContext;
+        var query = context.Set<SubscriptionChangeSaga>()
             .Include(entity => entity.Steps)
-            .Where(entity => entity.SubscriptionId == request.SubscriptionId)
+            .Where(entity => entity.SubscriptionId == request.SubscriptionId);
+        if (!actor.IsSystemAdmin)
+        {
+            // Fail-closed: an actor without a tenant context has no saga surface at all.
+            if (!actor.TenantId.HasValue)
+            {
+                return null;
+            }
+
+            var tenantId = actor.TenantId.Value;
+            query = query.Where(entity => entity.TenantId == tenantId);
+        }
+
+        var saga = await query
             .OrderByDescending(entity => entity.StartedAtUtc)
             .ThenByDescending(entity => entity.Id)
             .FirstOrDefaultAsync(cancellationToken)
