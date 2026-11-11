@@ -107,6 +107,52 @@ public sealed class DistributedCacheGuestSessionStore(
         return true;
     }
 
+    /// <inheritdoc />
+    public async Task<bool> TryMarkUpgradedForContinuityAsync(
+        Guid guestSessionId,
+        Guid userId,
+        Guid authenticatedSessionId,
+        DateTime upgradedAt,
+        CancellationToken cancellationToken = default)
+    {
+        if (userId == Guid.Empty || authenticatedSessionId == Guid.Empty)
+        {
+            return false;
+        }
+
+        // The cache TTL (expiry + eviction slack) is the retention bound: once it lapses the
+        // read returns null and continuity is simply no longer available. Within retention,
+        // an expired-but-unupgraded snapshot may be bound exactly once (issue #1128).
+        var snapshot = await ReadAsync(guestSessionId, cancellationToken).ConfigureAwait(false);
+        if (snapshot is null || snapshot.UpgradedToUserId is not null)
+        {
+            return false;
+        }
+
+        var upgraded = snapshot with
+        {
+            UpgradedToUserId = userId,
+            UpgradedToSessionId = authenticatedSessionId,
+            UpgradedAt = upgradedAt
+        };
+
+        var retentionEnd = upgraded.ExpiresAt + TimeSpan.FromMinutes(Math.Max(0, _options.StoreEvictionSlackMinutes));
+        var remaining = retentionEnd - SystemClock.UtcNow;
+        if (remaining <= TimeSpan.Zero)
+        {
+            // Beyond the caller's grace the store no longer vouches for the record.
+            return false;
+        }
+
+        await cache.SetStringAsync(
+            Key(guestSessionId),
+            JsonSerializer.Serialize(StoredSession.From(upgraded), JsonOptions),
+            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = remaining },
+            cancellationToken).ConfigureAwait(false);
+
+        return true;
+    }
+
     private async Task<GuestSessionSnapshot?> ReadAsync(Guid guestSessionId, CancellationToken cancellationToken)
     {
         if (guestSessionId == Guid.Empty)
