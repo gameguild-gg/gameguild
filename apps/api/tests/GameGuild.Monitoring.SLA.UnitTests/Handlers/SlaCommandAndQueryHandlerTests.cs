@@ -29,7 +29,7 @@ public class CreateSloCommandHandlerTests
 
         var action = () => _sut.Handle(command, CancellationToken.None);
 
-        await action.Should().ThrowAsync<InvalidOperationException>();
+        await action.Should().ThrowAsync<BusinessRuleViolationException>();
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public class UpdateSloCommandHandlerTests
 
         var action = () => _sut.Handle(new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Name", null, "svc", 99.9, 30, 0.1, 50, true), CancellationToken.None);
 
-        await action.Should().ThrowAsync<InvalidOperationException>();
+        await action.Should().ThrowAsync<EntityNotFoundException>();
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class UpdateSloCommandHandlerTests
 
         var action = () => _sut.Handle(command, CancellationToken.None);
 
-        await action.Should().ThrowAsync<UnauthorizedAccessException>();
+        await action.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]
@@ -154,7 +154,7 @@ public class DeleteSloCommandHandlerTests
 
         var action = () => _sut.Handle(new DeleteSloCommand(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None);
 
-        await action.Should().ThrowAsync<InvalidOperationException>();
+        await action.Should().ThrowAsync<EntityNotFoundException>();
     }
 
     [Fact]
@@ -166,7 +166,7 @@ public class DeleteSloCommandHandlerTests
 
         var action = () => _sut.Handle(command, CancellationToken.None);
 
-        await action.Should().ThrowAsync<UnauthorizedAccessException>();
+        await action.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]
@@ -284,7 +284,7 @@ public class ResolveSloViolationCommandHandlerTests
 
         var action = () => _sut.Handle(new ResolveSloViolationCommand(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None);
 
-        await action.Should().ThrowAsync<InvalidOperationException>();
+        await action.Should().ThrowAsync<EntityNotFoundException>();
     }
 
     [Fact]
@@ -296,7 +296,7 @@ public class ResolveSloViolationCommandHandlerTests
 
         var action = () => _sut.Handle(command, CancellationToken.None);
 
-        await action.Should().ThrowAsync<UnauthorizedAccessException>();
+        await action.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]
@@ -309,7 +309,7 @@ public class ResolveSloViolationCommandHandlerTests
 
         var action = () => _sut.Handle(command, CancellationToken.None);
 
-        await action.Should().ThrowAsync<InvalidOperationException>();
+        await action.Should().ThrowAsync<BusinessRuleViolationException>();
     }
 
     [Fact]

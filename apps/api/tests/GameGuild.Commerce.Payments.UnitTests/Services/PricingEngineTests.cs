@@ -99,7 +99,16 @@ public sealed class PricingEngineTests
 
         var act = () => CreateEngine().CalculateAsync(request);
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        // A present-but-unresolvable plan id is a missing-entity lookup (404 mapping);
+        // an absent plan id with no custom amount stays an argument/validation failure.
+        if (planIdEmpty)
+        {
+            await act.Should().ThrowAsync<InvalidOperationException>();
+        }
+        else
+        {
+            await act.Should().ThrowAsync<EntityNotFoundException>();
+        }
     }
 
     [Fact]
@@ -111,7 +120,7 @@ public sealed class PricingEngineTests
 
         var act = () => CreateEngine().CalculateAsync(new PricingCalculationRequest(PlanId: Guid.NewGuid(), IncludeTax: false, RecordDecision: false));
 
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*not found*");
+        await act.Should().ThrowAsync<EntityNotFoundException>().WithMessage("*not found*");
     }
 
     // ---------- Add-ons ----------

@@ -142,7 +142,7 @@ public class SlaHandlerCoverageGapTests
 
         var action = () => sut.Handle(new DeleteSloCommand(slo.Id, Guid.NewGuid()), CancellationToken.None);
 
-        await action.Should().ThrowAsync<UnauthorizedAccessException>();
+        await action.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]
@@ -190,7 +190,7 @@ public class SlaHandlerCoverageGapTests
 
         var action = () => sut.Handle(new UpdateSloCommand(slo.Id, Guid.NewGuid(), "Name", null, "svc", 99.9, 30, 0.1, 50, true), CancellationToken.None);
 
-        await action.Should().ThrowAsync<UnauthorizedAccessException>();
+        await action.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]
@@ -246,7 +246,7 @@ public class SlaHandlerCoverageGapTests
 
         var action = () => sut.Handle(new ResolveSloViolationCommand(violation.Id, Guid.NewGuid(), "resolved"), CancellationToken.None);
 
-        await action.Should().ThrowAsync<UnauthorizedAccessException>();
+        await action.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]

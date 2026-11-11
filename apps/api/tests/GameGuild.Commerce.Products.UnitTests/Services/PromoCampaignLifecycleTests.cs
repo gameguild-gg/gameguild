@@ -189,7 +189,7 @@ public class PromoCampaignLifecycleTests
         var act = async () => await handler.Handle(
             new DeletePromoCampaignCommand(campaign.Id), CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*7 promo code*");
+        await act.Should().ThrowAsync<BusinessRuleViolationException>().WithMessage("*7 promo code*");
         campaignRepository.Verify(r => r.DeleteAsync(It.IsAny<PromoCampaign>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
