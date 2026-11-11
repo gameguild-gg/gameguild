@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Analytics;
 
@@ -10,24 +11,51 @@ public sealed record CreateDashboardCommand(CreateDashboardRequest Request) : IC
 
 public sealed record UpdateDashboardCommand(Guid Id, UpdateDashboardRequest Request) : ICommand<DashboardDto?>;
 
-public sealed class GetDashboardsQueryHandler(IDashboardRepository repository)
+public sealed class GetDashboardsQueryHandler(IDashboardRepository repository, IActorContextAccessor actorContextAccessor)
     : IQueryHandler<GetDashboardsQuery, IReadOnlyList<DashboardDto>>
 {
     public async Task<IReadOnlyList<DashboardDto>> Handle(GetDashboardsQuery request, CancellationToken cancellationToken)
-        => (await repository.GetAllAsync(request.TenantId, cancellationToken).ConfigureAwait(false))
+    {
+        // Issue #1250 N10: the tenant filter comes from the authenticated actor context,
+        // never from the caller-supplied query parameter — a plain authenticated user
+        // cannot enumerate another tenant's dashboards by asserting its id.
+        var actor = actorContextAccessor.ActorContext;
+        if (actor.IsSystemAdmin)
+        {
+            var adminScope = request.TenantId;
+            return (await repository.GetAllAsync(adminScope, cancellationToken).ConfigureAwait(false))
+                .OrderByDescending(dashboard => dashboard.IsDefault)
+                .ThenBy(dashboard => dashboard.Title)
+                .Select(DashboardMapping.ToDto)
+                .ToList();
+        }
+
+        if (!actor.TenantId.HasValue)
+        {
+            // Fail-closed: an actor without a tenant context sees no dashboards at all.
+            return Array.Empty<DashboardDto>();
+        }
+
+        return (await repository.GetAllAsync(actor.TenantId, cancellationToken).ConfigureAwait(false))
             .OrderByDescending(dashboard => dashboard.IsDefault)
             .ThenBy(dashboard => dashboard.Title)
             .Select(DashboardMapping.ToDto)
             .ToList();
+    }
 }
 
-public sealed class GetDashboardByIdQueryHandler(IDashboardRepository repository)
+public sealed class GetDashboardByIdQueryHandler(IDashboardRepository repository, IActorContextAccessor actorContextAccessor)
     : IQueryHandler<GetDashboardByIdQuery, DashboardDto?>
 {
     public async Task<DashboardDto?> Handle(GetDashboardByIdQuery request, CancellationToken cancellationToken)
-        => await repository.GetByIdAsync(request.Id, cancellationToken).ConfigureAwait(false) is { } dashboard
+    {
+        // Issue #1250 N10: the id-addressed read is scoped to the authenticated tenant
+        // (global dashboards stay visible); other tenants' dashboards 404 even by id.
+        var tenantScope = actorContextAccessor.ActorContext.TenantId;
+        return await repository.GetByIdForTenantAsync(request.Id, tenantScope, cancellationToken).ConfigureAwait(false) is { } dashboard
             ? DashboardMapping.ToDto(dashboard)
             : null;
+    }
 }
 
 public sealed class CreateDashboardCommandHandler(IDashboardRepository repository)
@@ -63,14 +91,17 @@ public sealed class CreateDashboardCommandHandler(IDashboardRepository repositor
     }
 }
 
-public sealed class UpdateDashboardCommandHandler(IDashboardRepository repository)
+public sealed class UpdateDashboardCommandHandler(IDashboardRepository repository, IActorContextAccessor actorContextAccessor)
     : ICommandHandler<UpdateDashboardCommand, DashboardDto?>
 {
     public async Task<DashboardDto?> Handle(UpdateDashboardCommand request, CancellationToken cancellationToken)
     {
         DashboardCommandHelpers.Validate(request.Request.Title, request.Request.Slug);
 
-        var dashboard = await repository.GetByIdAsync(request.Id, cancellationToken).ConfigureAwait(false);
+        // Issue #1250 N10: the id-addressed write is scoped to the authenticated tenant —
+        // a dashboard owned by another tenant is not found, not editable.
+        var tenantScope = actorContextAccessor.ActorContext.TenantId;
+        var dashboard = await repository.GetByIdForTenantAsync(request.Id, tenantScope, cancellationToken).ConfigureAwait(false);
         if (dashboard is null)
         {
             return null;

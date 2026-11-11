@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
 using MockQueryable.Moq;
 using Moq;
@@ -19,19 +20,39 @@ public sealed class GetSubscriptionChangeSagaQueryHandlerTests
     }
 
     private static SubscriptionChangeSaga NewSaga(
-        Guid subscriptionId, Guid sagaId, DateTime startedAt, string idempotencyKey)
+        Guid subscriptionId, Guid sagaId, DateTime startedAt, string idempotencyKey, Guid? tenantId = null)
     {
         var saga = new SubscriptionChangeSaga(
-            Guid.NewGuid(), subscriptionId, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), idempotencyKey);
+            tenantId ?? Guid.NewGuid(), subscriptionId, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), idempotencyKey);
         typeof(SubscriptionChangeSaga).GetProperty("Id")!.SetValue(saga, sagaId);
         saga.Start(SubscriptionChangeSagaOrchestrator.ProrationStep, startedAt);
         return saga;
     }
 
+    private static Mock<IActorContextAccessor> ActorAccessor(Guid? tenantId, bool systemAdmin = false)
+    {
+        var accessor = new Mock<IActorContextAccessor>();
+        accessor.SetupGet(value => value.ActorContext).Returns(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = Guid.NewGuid().ToString(),
+            TenantId = tenantId,
+            Roles = new HashSet<string>(systemAdmin ? ["SystemAdmin"] : []),
+            Permissions = new HashSet<string>(),
+            TypedAttributes = ActorAttributes.Empty,
+            AuthScheme = "Bearer",
+            IsAuthenticated = true
+        });
+        return accessor;
+    }
+
+    private GetSubscriptionChangeSagaQueryHandler CreateHandler(Guid? tenantId = null, bool systemAdmin = true)
+        => new(_context.Object, ActorAccessor(tenantId, systemAdmin).Object);
+
     [Fact]
     public async Task Handle_ReturnsNull_WhenSubscriptionNeverChangedPlans()
     {
-        var handler = new GetSubscriptionChangeSagaQueryHandler(_context.Object);
+        var handler = CreateHandler();
 
         var result = await handler.Handle(new GetSubscriptionChangeSagaQuery(Guid.NewGuid()), CancellationToken.None);
 
@@ -52,7 +73,7 @@ public sealed class GetSubscriptionChangeSagaQueryHandlerTests
         latest.AppendStep(new SubscriptionChangeSagaStep(
             latestId, 2, SubscriptionChangeSagaOrchestrator.InvoiceStep, "Completed", "invoice issued", DateTime.UtcNow));
         _sagas.AddRange(earlier, latest);
-        var handler = new GetSubscriptionChangeSagaQueryHandler(_context.Object);
+        var handler = CreateHandler();
 
         var result = await handler.Handle(new GetSubscriptionChangeSagaQuery(subscriptionId), CancellationToken.None);
 
@@ -75,7 +96,7 @@ public sealed class GetSubscriptionChangeSagaQueryHandlerTests
         saga.BeginCompensation(SubscriptionChangeSagaOrchestrator.PaymentStep, "gateway declined", DateTime.UtcNow);
         saga.Fail("Payment:compensated");
         _sagas.Add(saga);
-        var handler = new GetSubscriptionChangeSagaQueryHandler(_context.Object);
+        var handler = CreateHandler();
 
         var result = await handler.Handle(new GetSubscriptionChangeSagaQuery(subscriptionId), CancellationToken.None);
 
@@ -95,11 +116,54 @@ public sealed class GetSubscriptionChangeSagaQueryHandlerTests
         var ownSaga = NewSaga(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, "own");
         var foreignSaga = NewSaga(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow.AddHours(1), "foreign");
         _sagas.AddRange(ownSaga, foreignSaga);
-        var handler = new GetSubscriptionChangeSagaQueryHandler(_context.Object);
+        var handler = CreateHandler();
 
         var result = await handler.Handle(
             new GetSubscriptionChangeSagaQuery(ownSaga.SubscriptionId), CancellationToken.None);
 
         result!.Id.Should().Be(ownSaga.Id);
+    }
+
+    /// <summary>
+    ///     Issue #1281 R-B6: the plan-change saga surface is tenant-scoped — another
+    ///     tenant's saga (proration amounts, payment references, failure reasons) is not
+    ///     found, and a tenant-less actor sees nothing at all.
+    /// </summary>
+    [Fact]
+    public async Task Handle_ForTenantActor_ReturnsNullForForeignTenantSaga()
+    {
+        var saga = NewSaga(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, "foreign-key");
+        _sagas.Add(saga);
+        var handler = CreateHandler(tenantId: Guid.NewGuid(), systemAdmin: false);
+
+        var result = await handler.Handle(new GetSubscriptionChangeSagaQuery(saga.SubscriptionId), CancellationToken.None);
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Handle_ForTenantActor_ReturnsOwnTenantSaga()
+    {
+        var tenantId = Guid.NewGuid();
+        var saga = NewSaga(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, "own-key", tenantId);
+        _sagas.Add(saga);
+        var handler = CreateHandler(tenantId: tenantId, systemAdmin: false);
+
+        var result = await handler.Handle(new GetSubscriptionChangeSagaQuery(saga.SubscriptionId), CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.IdempotencyKey.Should().Be("own-key");
+    }
+
+    [Fact]
+    public async Task Handle_ForTenantlessActor_ReturnsNullFailClosed()
+    {
+        var saga = NewSaga(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, "any");
+        _sagas.Add(saga);
+        var handler = CreateHandler(tenantId: null, systemAdmin: false);
+
+        var result = await handler.Handle(new GetSubscriptionChangeSagaQuery(saga.SubscriptionId), CancellationToken.None);
+
+        result.Should().BeNull();
     }
 }

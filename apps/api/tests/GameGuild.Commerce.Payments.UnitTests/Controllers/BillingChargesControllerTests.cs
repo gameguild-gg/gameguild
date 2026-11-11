@@ -131,6 +131,90 @@ public sealed class BillingChargesControllerTests
         forbidden.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
     }
 
+    /// <summary>
+    ///     Issue #1280 R-P3: an omitted refund amount refunds the full remaining balance —
+    ///     never a 0-amount refund.
+    /// </summary>
+    [Fact]
+    public async Task RefundCharge_WhenAmountOmitted_ShouldRefundFullRemainingAmount()
+    {
+        var tenantId = Guid.NewGuid();
+        var paymentId = Guid.NewGuid();
+        var sender = CreateSenderWithPayment(paymentId, tenantId);
+        sender
+            .Setup(service => service.Send(
+                It.Is<ProcessRefundCommand>(command =>
+                    command.PaymentId == paymentId &&
+                    command.Amount == 25m &&
+                    command.Reason == "No reason provided"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SuccessfulRefund(paymentId, 25m));
+        var controller = CreateController(sender.Object, CreateAuthenticatedActorContext(tenantId));
+
+        var result = await controller.RefundCharge(paymentId, new BillingChargesController.RefundBillingChargeRequest(null, null), CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>();
+        sender.VerifyAll();
+    }
+
+    [Fact]
+    public async Task RefundCharge_WhenNothingRemainsRefundable_ShouldReturnBadRequestWithoutDispatch()
+    {
+        var tenantId = Guid.NewGuid();
+        var paymentId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(service => service.Send(
+                It.Is<GetPaymentByIdQuery>(query => query.PaymentId == paymentId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PaymentResult
+            {
+                PaymentId = paymentId.ToString(),
+                TenantId = tenantId,
+                Amount = new Money(0m, "USD"),
+                Status = PaymentStatus.Succeeded
+            });
+        var controller = CreateController(sender.Object, CreateAuthenticatedActorContext(tenantId));
+
+        var result = await controller.RefundCharge(paymentId, new BillingChargesController.RefundBillingChargeRequest(null, "nothing left"), CancellationToken.None);
+
+        result.Should().BeOfType<BadRequestObjectResult>();
+        sender.Verify(
+            service => service.Send(It.IsAny<ProcessRefundCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task RefundCharge_WithExplicitAmount_ShouldDispatchThatAmount()
+    {
+        var tenantId = Guid.NewGuid();
+        var paymentId = Guid.NewGuid();
+        var sender = CreateSenderWithPayment(paymentId, tenantId);
+        sender
+            .Setup(service => service.Send(
+                It.Is<ProcessRefundCommand>(command => command.Amount == 5m && command.Reason == "partial"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SuccessfulRefund(paymentId, 5m));
+        var controller = CreateController(sender.Object, CreateAuthenticatedActorContext(tenantId));
+
+        var result = await controller.RefundCharge(paymentId, new BillingChargesController.RefundBillingChargeRequest(5m, "partial"), CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>();
+        sender.VerifyAll();
+    }
+
+    private static ProcessRefundResult SuccessfulRefund(Guid paymentId, decimal amount) => new()
+    {
+        RefundId = Guid.NewGuid(),
+        PaymentId = paymentId,
+        RefundedAmount = amount,
+        Currency = "USD",
+        Status = TransactionStatus.Completed,
+        Reason = "test",
+        ProcessedAt = DateTime.UtcNow,
+        IsSuccess = true
+    };
+
     private static BillingChargesController CreateController(ISender sender, ActorContext actorContext)
     {
         var accessor = new Mock<IActorContextAccessor>();

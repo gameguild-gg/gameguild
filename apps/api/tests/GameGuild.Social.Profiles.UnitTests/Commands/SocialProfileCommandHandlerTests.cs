@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Identity.Context.Actors;
 using Moq;
 using Xunit;
 
@@ -81,21 +82,48 @@ public sealed class SocialProfileCommandHandlerTests
     }
 
     [Fact]
-    public async Task LookupHandlers_ForwardUserIdAndUnnormalizedHandle()
+    public async Task LookupHandlers_ForwardViewerResolvedFromActorContext()
     {
         using var cancellation = new CancellationTokenSource();
+        var viewerId = Guid.NewGuid();
         var userQuery = new GetSocialProfileByUserQuery(Guid.NewGuid());
         var handleQuery = new GetSocialProfileByHandleQuery("  @CREATOR ");
         var expected = CreateProfileDto(userQuery.UserId, "creator");
         var service = new Mock<ISocialProfileService>(MockBehavior.Strict);
-        service.Setup(subject => subject.GetByUserAsync(userQuery.UserId, cancellation.Token)).ReturnsAsync(expected);
-        service.Setup(subject => subject.GetByHandleAsync(handleQuery.Handle, cancellation.Token)).ReturnsAsync(expected);
+        var viewer = new ProfileViewer(viewerId, IsSystemAdmin: false);
+        service.Setup(subject => subject.GetByUserForViewerAsync(userQuery.UserId, viewer, cancellation.Token)).ReturnsAsync(expected);
+        service.Setup(subject => subject.GetByHandleForViewerAsync(handleQuery.Handle, viewer, cancellation.Token)).ReturnsAsync(expected);
+        var actors = new Mock<IActorContextAccessor>();
+        actors.SetupGet(value => value.ActorContext).Returns(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = viewerId.ToString(),
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            IsAuthenticated = true
+        });
 
-        var byUser = await new GetSocialProfileByUserQueryHandler(service.Object).Handle(userQuery, cancellation.Token);
-        var byHandle = await new GetSocialProfileByHandleQueryHandler(service.Object).Handle(handleQuery, cancellation.Token);
+        var byUser = await new GetSocialProfileByUserQueryHandler(service.Object, actors.Object).Handle(userQuery, cancellation.Token);
+        var byHandle = await new GetSocialProfileByHandleQueryHandler(service.Object, actors.Object).Handle(handleQuery, cancellation.Token);
 
         byUser.Should().BeSameAs(expected);
         byHandle.Should().BeSameAs(expected);
+        service.VerifyAll();
+    }
+
+    [Fact]
+    public async Task LookupHandlers_AnonymousActorContext_ResolvesAnonymousViewer()
+    {
+        var query = new GetSocialProfileByHandleQuery("creator");
+        var service = new Mock<ISocialProfileService>(MockBehavior.Strict);
+        service.Setup(subject => subject.GetByHandleForViewerAsync(query.Handle, new ProfileViewer(null, false), default))
+            .ReturnsAsync((SocialProfileDto?)null);
+        var actors = new Mock<IActorContextAccessor>();
+        actors.SetupGet(value => value.ActorContext).Returns(ActorContext.Anonymous);
+
+        var result = await new GetSocialProfileByHandleQueryHandler(service.Object, actors.Object).Handle(query, default);
+
+        result.Should().BeNull();
         service.VerifyAll();
     }
 
