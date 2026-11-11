@@ -353,16 +353,6 @@ internal sealed class EconomyDispatchSnapshotRow
     public DateTimeOffset CreatedAt { get; set; }
 }
 
-internal sealed class EconomyOutboxMessageRow
-{
-    public Guid Id { get; set; }
-    public Guid PostingGroupId { get; set; }
-    public string Type { get; set; } = string.Empty;
-    public string Payload { get; set; } = string.Empty;
-    public string PayloadHash { get; set; } = string.Empty;
-    public DateTimeOffset OccurredAt { get; set; }
-}
-
 internal sealed class EconomyIdempotencyRecordRow
 {
     public Guid Id { get; set; }
@@ -614,15 +604,6 @@ internal sealed class EconomyCapabilityPolicyRow
     public bool IsActive { get; set; }
 }
 
-internal sealed class EconomyCapabilityPolicyApprovalRow
-{
-    public Guid Id { get; set; }
-    public Guid PolicyId { get; set; }
-    public Guid ActorId { get; set; }
-    public string ReauthenticationHash { get; set; } = string.Empty;
-    public DateTimeOffset ApprovedAt { get; set; }
-}
-
 internal sealed class EconomyCapabilityReceiptRow
 {
     public Guid Id { get; set; }
@@ -676,15 +657,6 @@ internal sealed class EconomyKillSwitchRow
     public DateTimeOffset? ReleasedAt { get; set; }
 }
 
-internal sealed class EconomyKillSwitchReleaseApprovalRow
-{
-    public Guid Id { get; set; }
-    public Guid KillSwitchId { get; set; }
-    public Guid ActorId { get; set; }
-    public string ReauthenticationHash { get; set; } = string.Empty;
-    public DateTimeOffset ApprovedAt { get; set; }
-}
-
 internal sealed class EconomyEntityGraphNodeRow
 {
     public Guid Id { get; set; }
@@ -732,29 +704,6 @@ internal sealed class EconomyComplianceEvidenceRow
     public DateTimeOffset ReceivedAt { get; set; }
 }
 
-internal sealed class EconomyComplianceInboxRow
-{
-    public Guid Id { get; set; }
-    public string Provider { get; set; } = string.Empty;
-    public string Environment { get; set; } = string.Empty;
-    public string ProviderEventId { get; set; } = string.Empty;
-    public string PayloadHash { get; set; } = string.Empty;
-    public string RawObjectReference { get; set; } = string.Empty;
-    public DateTimeOffset ReceivedAt { get; set; }
-    public DateTimeOffset? ProcessedAt { get; set; }
-    public string? ProcessingError { get; set; }
-}
-
-internal sealed class EconomyComplianceOutboxRow
-{
-    public Guid Id { get; set; }
-    public Guid EvidenceId { get; set; }
-    public string Type { get; set; } = string.Empty;
-    public string Payload { get; set; } = string.Empty;
-    public string PayloadHash { get; set; } = string.Empty;
-    public DateTimeOffset OccurredAt { get; set; }
-    public DateTimeOffset? DispatchedAt { get; set; }
-}
 
 internal sealed class EconomyComplianceHoldRow
 {
@@ -904,15 +853,6 @@ internal sealed class EconomyWalletProjectionGenerationRow
     public string ProjectionHash { get; set; } = string.Empty;
     public bool MatchesLive { get; set; }
     public DateTimeOffset RebuiltAt { get; set; }
-}
-
-internal sealed class EconomyProjectionGenerationApprovalRow
-{
-    public Guid Id { get; set; }
-    public long Generation { get; set; }
-    public Guid ActorId { get; set; }
-    public string ReauthenticationHash { get; set; } = string.Empty;
-    public DateTimeOffset ApprovedAt { get; set; }
 }
 
 internal sealed class EconomyAnchorVerificationRow

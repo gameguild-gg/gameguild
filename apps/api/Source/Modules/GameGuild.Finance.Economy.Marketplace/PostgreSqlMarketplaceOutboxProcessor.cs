@@ -110,7 +110,7 @@ public sealed class PostgreSqlMarketplaceOutboxProcessor : IMarketplaceOutboxPro
         }
     }
 
-    private async ValueTask<MarketplaceOutboxRow?> ClaimAsync(
+    private async ValueTask<EconomyOutboxRow?> ClaimAsync(
         string owner,
         DateTimeOffset now,
         CancellationToken cancellationToken)
@@ -118,16 +118,17 @@ public sealed class PostgreSqlMarketplaceOutboxProcessor : IMarketplaceOutboxPro
         return await PostgreSqlTransactionExecutor.ExecuteAsync(
             _db, IsolationLevel.Serializable, async _ =>
         {
-        var row = await _db.Set<MarketplaceOutboxRow>()
-            .Where(item => item.PublishedAt == null &&
+        var row = await _db.Set<EconomyOutboxRow>()
+            .Where(item => item.OutboxKind == EconomyOutboxKind.Marketplace &&
+                           item.PublishedAt == null &&
                            (item.LeaseExpiresAt == null || item.LeaseExpiresAt <= now))
             .OrderBy(item => item.OccurredAt)
             .ThenBy(item => item.Id)
             .FirstOrDefaultAsync(cancellationToken);
         if (row is null)
-            {
-                return null;
-            }
+        {
+            return null;
+        }
 
             row.LeaseOwner = owner;
         row.LeaseExpiresAt = now.Add(LeaseDuration);
@@ -137,7 +138,7 @@ public sealed class PostgreSqlMarketplaceOutboxProcessor : IMarketplaceOutboxPro
         }, cancellationToken);
     }
 
-    private static MarketplaceOutboxDispatchMessage ValidateAndMap(MarketplaceOutboxRow row)
+    private static MarketplaceOutboxDispatchMessage ValidateAndMap(EconomyOutboxRow row)
     {
         var actualHash = Convert.ToHexStringLower(
             SHA256.HashData(Encoding.UTF8.GetBytes(row.Payload)));
@@ -158,7 +159,7 @@ public sealed class PostgreSqlMarketplaceOutboxProcessor : IMarketplaceOutboxPro
         }
 
         return new MarketplaceOutboxDispatchMessage(
-            row.Id, row.TenantId, row.SettlementId, row.MessageType,
+            row.Id, row.TenantId!.Value, row.SettlementId!.Value, row.MessageType,
             payload.Clone(), row.PayloadHash, row.OccurredAt);
     }
 }

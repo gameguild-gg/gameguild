@@ -64,39 +64,34 @@ internal sealed class AdRewardSessionRow
     public long Version { get; set; }
 }
 
-internal sealed class AdRewardPlaybackMilestoneRow
+/// <summary>
+///     Discriminator for the unified ad-reward session timeline
+///     (#1092 Tier 1.5). Each kind keeps its own sequence stream: the unique
+///     (TimelineKind, SessionId, Sequence) index is what preserves the
+///     continuity that <c>AdPlaybackVerification</c> and the session state
+///     machines rely on.
+/// </summary>
+internal enum AdRewardTimelineKind
 {
-    public Guid Id { get; set; }
-    public Guid SessionId { get; set; }
-    public int Sequence { get; set; }
-    public int Percentage { get; set; }
-    public DateTimeOffset ObservedAt { get; set; }
-    public string EvidenceHash { get; set; } = string.Empty;
+    /// <summary>Session lifecycle events
+    /// (formerly <c>economy_ad_reward_session_events</c>).</summary>
+    SessionEvent = 1,
+
+    /// <summary>Ordered playback milestones
+    /// (formerly <c>economy_ad_reward_playback_milestones</c>).</summary>
+    PlaybackMilestone = 2,
 }
 
-internal sealed class AdRewardSessionEventRow
+internal sealed class AdRewardTimelineRow
 {
     public Guid Id { get; set; }
+    public AdRewardTimelineKind TimelineKind { get; set; }
     public Guid SessionId { get; set; }
     public long Sequence { get; set; }
-    public DurableAdRewardSessionState State { get; set; }
+    public DurableAdRewardSessionState? State { get; set; }
+    public int? Percentage { get; set; }
     public string EvidenceHash { get; set; } = string.Empty;
     public DateTimeOffset OccurredAt { get; set; }
-}
-
-internal sealed class AdRewardProviderProofInboxRow
-{
-    public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
-    public Guid SessionId { get; set; }
-    public string Network { get; set; } = string.Empty;
-    public string ProviderEventId { get; set; } = string.Empty;
-    public string PayloadHash { get; set; } = string.Empty;
-    public string EvidenceHash { get; set; } = string.Empty;
-    public bool SignatureVerified { get; set; }
-    public DateTimeOffset ReceivedAt { get; set; }
-    public DateTimeOffset? ProcessedAt { get; set; }
-    public string? ProcessingError { get; set; }
 }
 
 internal sealed class AdRewardPendingClaimRow
@@ -292,41 +287,35 @@ public sealed class AdRewardsModelConfiguration : IModelConfiguration
             builder.HasIndex(row => new { row.TenantId, row.UserId, row.IssuedAt });
         });
 
-        modelBuilder.Entity<AdRewardPlaybackMilestoneRow>(builder =>
+        // #1092 Tier 1.5 — the session-event and playback-milestone tables
+        // merged behind TimelineKind. Each kind keeps its own sequence
+        // stream: the unique (TimelineKind, SessionId, Sequence) index
+        // preserves the continuity AdPlaybackVerification relies on.
+        modelBuilder.Entity<AdRewardTimelineRow>(builder =>
         {
-            builder.ToTable("economy_ad_reward_playback_milestones", table =>
-                table.HasCheckConstraint("ck_economy_ad_reward_playback_milestones_percentage", "\"Percentage\" BETWEEN 0 AND 100 AND \"Sequence\" > 0"));
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.SessionId, row.Sequence }).IsUnique();
-            builder.HasOne<AdRewardSessionRow>().WithMany().HasForeignKey(row => row.SessionId).OnDelete(DeleteBehavior.Restrict);
-        });
-
-        modelBuilder.Entity<AdRewardSessionEventRow>(builder =>
-        {
-            builder.ToTable("economy_ad_reward_session_events", table =>
+            builder.ToTable("economy_ad_reward_session_timeline", table =>
             {
-                table.HasCheckConstraint("ck_economy_ad_reward_session_events_sequence", "\"Sequence\" > 0");
-                table.HasCheckConstraint("ck_economy_ad_reward_session_events_state", "\"State\" BETWEEN 1 AND 7");
+                table.HasCheckConstraint(
+                    "ck_economy_ad_reward_session_timeline_sequence",
+                    "\"Sequence\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_ad_reward_session_timeline_kind",
+                    "(\"TimelineKind\" = 1 AND \"State\" BETWEEN 1 AND 7 AND \"Percentage\" IS NULL) OR " +
+                    "(\"TimelineKind\" = 2 AND \"Percentage\" BETWEEN 0 AND 100 AND \"State\" IS NULL)");
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.EvidenceHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.SessionId, row.Sequence }).IsUnique();
+            builder.HasIndex(row => new { row.TimelineKind, row.SessionId, row.Sequence })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_ad_reward_session_timeline_kind_session_sequence");
             builder.HasOne<AdRewardSessionRow>().WithMany().HasForeignKey(row => row.SessionId).OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<AdRewardProviderProofInboxRow>(builder =>
-        {
-            builder.ToTable("economy_ad_reward_provider_proof_inbox");
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.Network).HasMaxLength(100);
-            builder.Property(row => row.ProviderEventId).HasMaxLength(256);
-            builder.Property(row => row.PayloadHash).HasMaxLength(128);
-            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
-            builder.Property(row => row.ProcessingError).HasMaxLength(256);
-            builder.HasIndex(row => new { row.TenantId, row.Network, row.ProviderEventId }).IsUnique();
-            builder.HasOne<AdRewardSessionRow>().WithMany().HasForeignKey(row => row.SessionId).OnDelete(DeleteBehavior.Restrict);
-        });
+        // #1092 Tier 1.2: economy_ad_reward_provider_proof_inbox merged into
+        // the shared FK-free economy_inbox table (InboxKind = 2 =
+        // AdRewardProviderProof). The provider column carries the network; the
+        // session link stays as plain data (no FK) so provider events keep
+        // being accepted while sessions are rebuilt (#1092 §3.3).
 
         modelBuilder.Entity<AdRewardPendingClaimRow>(builder =>
         {

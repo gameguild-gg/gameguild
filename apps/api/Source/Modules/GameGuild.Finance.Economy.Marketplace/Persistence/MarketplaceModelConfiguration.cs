@@ -1,4 +1,5 @@
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Finance.Economy.Marketplace.Persistence;
@@ -67,14 +68,32 @@ internal sealed class MarketplaceSettlementRow
     public long Version { get; set; }
 }
 
-internal sealed class MarketplaceSettlementLegRow
+/// <summary>
+///     Discriminator for the unified marketplace value legs
+///     (#1092 Tier 1.6). <c>RefundedUnits</c> is settlement-side and stays
+///     queryable per (SettlementId, Currency) through the kind-1 partial
+///     unique index — the refund math reads those counters.
+/// </summary>
+internal enum MarketplaceValueLegKind
 {
+    /// <summary>Settlement legs (formerly <c>economy_marketplace_settlement_legs</c>).</summary>
+    Settlement = 1,
+
+    /// <summary>Refund legs (formerly <c>economy_marketplace_refund_legs</c>).</summary>
+    Refund = 2,
+}
+
+internal sealed class MarketplaceValueLegRow
+{
+    public Guid Id { get; set; }
+    public MarketplaceValueLegKind LegKind { get; set; }
     public Guid SettlementId { get; set; }
+    public Guid? RefundId { get; set; }
     public CurrencyCode Currency { get; set; }
     public long Units { get; set; }
-    public long SellerUnits { get; set; }
-    public long PlatformFeeUnits { get; set; }
-    public long RefundedUnits { get; set; }
+    public long? SellerUnits { get; set; }
+    public long? PlatformFeeUnits { get; set; }
+    public long? RefundedUnits { get; set; }
 }
 
 internal sealed class MarketplaceFundingFragmentRow
@@ -157,29 +176,6 @@ internal sealed class MarketplaceEventRow
     public DateTimeOffset OccurredAt { get; set; }
 }
 
-internal sealed class MarketplaceOutboxRow
-{
-    public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
-    public Guid SettlementId { get; set; }
-    public string MessageType { get; set; } = string.Empty;
-    public string Payload { get; set; } = string.Empty;
-    public string PayloadHash { get; set; } = string.Empty;
-    public DateTimeOffset OccurredAt { get; set; }
-    public DateTimeOffset? PublishedAt { get; set; }
-    public int AttemptCount { get; set; }
-    public string? LeaseOwner { get; set; }
-    public DateTimeOffset? LeaseExpiresAt { get; set; }
-    public string? LastError { get; set; }
-}
-
-internal sealed class MarketplaceRefundLegRow
-{
-    public Guid RefundId { get; set; }
-    public Guid SettlementId { get; set; }
-    public CurrencyCode Currency { get; set; }
-    public long Units { get; set; }
-}
 
 public sealed class MarketplaceModelConfiguration : IModelConfiguration
 {
@@ -231,15 +227,36 @@ public sealed class MarketplaceModelConfiguration : IModelConfiguration
             builder.HasIndex(row => new { row.TenantId, row.SellerId, row.SettledAt });
         });
 
-        modelBuilder.Entity<MarketplaceSettlementLegRow>(builder =>
+        // #1092 Tier 1.6 — settlement legs and refund legs merged behind
+        // LegKind. RefundedUnits is settlement-side and stays queryable per
+        // (SettlementId, Currency) through the kind-1 partial unique index;
+        // the refund math (DurableMarketplaceRefundService) reads those
+        // counters and the writer function updates them with a LegKind = 1
+        // filter.
+        modelBuilder.Entity<MarketplaceValueLegRow>(builder =>
         {
-            builder.ToTable("economy_marketplace_settlement_legs", table =>
+            builder.ToTable("economy_marketplace_value_legs", table =>
             {
-                table.HasCheckConstraint("ck_economy_marketplace_settlement_legs_conservation", "\"Units\" > 0 AND \"SellerUnits\" >= 0 AND \"PlatformFeeUnits\" >= 0 AND \"SellerUnits\" + \"PlatformFeeUnits\" = \"Units\"");
-                table.HasCheckConstraint("ck_economy_marketplace_settlement_legs_refund", "\"RefundedUnits\" BETWEEN 0 AND \"Units\"");
+                table.HasCheckConstraint(
+                    "ck_economy_marketplace_value_legs_conservation",
+                    "(\"LegKind\" = 1 AND \"Units\" > 0 AND \"SellerUnits\" >= 0 AND \"PlatformFeeUnits\" >= 0 AND \"SellerUnits\" + \"PlatformFeeUnits\" = \"Units\" AND \"RefundedUnits\" BETWEEN 0 AND \"Units\" AND \"RefundId\" IS NULL) OR " +
+                    "(\"LegKind\" = 2 AND \"Units\" > 0 AND \"SellerUnits\" IS NULL AND \"PlatformFeeUnits\" IS NULL AND \"RefundedUnits\" IS NULL AND \"RefundId\" IS NOT NULL)");
             });
-            builder.HasKey(row => new { row.SettlementId, row.Currency });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Id).HasDefaultValueSql("gen_random_uuid()");
+            builder.HasIndex(row => new { row.SettlementId, row.Currency })
+                .IsUnique()
+                .HasFilter("\"LegKind\" = 1")
+                .HasDatabaseName("ux_economy_marketplace_value_legs_settlement_currency");
+            builder.HasIndex(row => new { row.RefundId, row.Currency })
+                .IsUnique()
+                .HasFilter("\"LegKind\" = 2")
+                .HasDatabaseName("ux_economy_marketplace_value_legs_refund_currency");
+            builder.HasIndex(row => new { row.SettlementId, row.Currency })
+                .HasFilter("\"LegKind\" = 2")
+                .HasDatabaseName("ix_economy_marketplace_value_legs_refund_settlement");
             builder.HasOne<MarketplaceSettlementRow>().WithMany().HasForeignKey(row => row.SettlementId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<MarketplaceRefundRow>().WithMany().HasForeignKey(row => row.RefundId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<MarketplaceFundingFragmentRow>(builder =>
@@ -294,15 +311,8 @@ public sealed class MarketplaceModelConfiguration : IModelConfiguration
             builder.HasOne<MarketplaceSettlementRow>().WithMany().HasForeignKey(row => row.SettlementId).OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<MarketplaceRefundLegRow>(builder =>
-        {
-            builder.ToTable("economy_marketplace_refund_legs", table =>
-                table.HasCheckConstraint("ck_economy_marketplace_refund_legs_amount", "\"Units\" > 0"));
-            builder.HasKey(row => new { row.RefundId, row.Currency });
-            builder.HasIndex(row => new { row.SettlementId, row.Currency });
-            builder.HasOne<MarketplaceRefundRow>().WithMany().HasForeignKey(row => row.RefundId).OnDelete(DeleteBehavior.Restrict);
-            builder.HasOne<MarketplaceSettlementRow>().WithMany().HasForeignKey(row => row.SettlementId).OnDelete(DeleteBehavior.Restrict);
-        });
+        // economy_marketplace_refund_legs merged into economy_marketplace_value_legs
+        // (#1092 Tier 1.6) — see the MarketplaceValueLegRow configuration above.
 
         modelBuilder.Entity<MarketplaceRefundDebtRow>(builder =>
         {
@@ -326,19 +336,15 @@ public sealed class MarketplaceModelConfiguration : IModelConfiguration
             builder.HasOne<MarketplaceSettlementRow>().WithMany().HasForeignKey(row => row.SettlementId).OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<MarketplaceOutboxRow>(builder =>
+        // #1092 Tier 1.1: economy_marketplace_outbox merged into the shared
+        // economy_outbox table (OutboxKind = 2). The Marketplace module keeps
+        // contributing the settlement binding of its queue rows.
+        modelBuilder.Entity<EconomyOutboxRow>(builder =>
         {
-            builder.ToTable("economy_marketplace_outbox", table =>
-                table.HasCheckConstraint("ck_economy_marketplace_outbox_attempts", "\"AttemptCount\" >= 0"));
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.MessageType).HasMaxLength(150);
-            builder.Property(row => row.Payload).HasColumnType("jsonb");
-            builder.Property(row => row.PayloadHash).HasMaxLength(128);
-            builder.Property(row => row.LeaseOwner).HasMaxLength(256);
-            builder.Property(row => row.LastError).HasMaxLength(1_000);
-            builder.HasIndex(row => new { row.PublishedAt, row.OccurredAt });
-            builder.HasIndex(row => new { row.PublishedAt, row.LeaseExpiresAt, row.OccurredAt });
-            builder.HasOne<MarketplaceSettlementRow>().WithMany().HasForeignKey(row => row.SettlementId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<MarketplaceSettlementRow>()
+                .WithMany()
+                .HasForeignKey(row => row.SettlementId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

@@ -638,18 +638,85 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<EconomyOutboxMessageRow>(builder =>
+        // #1092 Tier 1.4 — the payout and admin-withdrawal provider-event
+        // replay-dedupe anchors merged behind ProviderEventKind. Every lookup
+        // must carry the kind; per-kind unique indexes preserve the old
+        // primary keys. Cross-module foreign keys (OperationId, RunId) are
+        // contributed by the Payouts and Treasury module configurations.
+        modelBuilder.Entity<EconomyProviderEventRow>(builder =>
         {
-            builder.ToTable("economy_outbox_messages");
+            builder.ToTable("economy_provider_events");
             builder.HasKey(row => row.Id);
-            builder.Property(row => row.Type).HasMaxLength(200);
+            builder.Property(row => row.Id).HasDefaultValueSql("gen_random_uuid()");
+            builder.Property(row => row.EventId).HasMaxLength(256);
+            builder.Property(row => row.EventHash).HasMaxLength(128);
+            builder.HasIndex(row => row.EventId)
+                .IsUnique()
+                .HasFilter("\"ProviderEventKind\" = 1")
+                .HasDatabaseName("ux_economy_provider_events_payout_event");
+            builder.HasIndex(row => new { row.TenantId, row.EventId })
+                .IsUnique()
+                .HasFilter("\"ProviderEventKind\" = 2")
+                .HasDatabaseName("ux_economy_provider_events_admin_tenant_event");
+            builder.HasIndex(row => new { row.OperationId, row.RecordedAt })
+                .HasFilter("\"ProviderEventKind\" = 1")
+                .HasDatabaseName("ix_economy_provider_events_operation_recorded");
+            builder.HasIndex(row => new { row.RunId, row.RecordedAt })
+                .HasFilter("\"ProviderEventKind\" = 2")
+                .HasDatabaseName("ix_economy_provider_events_run_recorded");
+        });
+
+        // #1092 Tier 1.1 — the five former outbox tables merged behind
+        // OutboxKind. Queue-specific unique indexes are partial (per kind);
+        // cross-module foreign keys (SettlementId, OperationId, RunId) are
+        // contributed by the owning module configurations.
+        modelBuilder.Entity<EconomyOutboxRow>(builder =>
+        {
+            builder.ToTable("economy_outbox", table =>
+                table.HasCheckConstraint("ck_economy_outbox_attempts", "\"AttemptCount\" >= 0"));
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Id).ValueGeneratedNever();
+            builder.Property(row => row.MessageType).HasMaxLength(200);
+            builder.Property(row => row.IdempotencyKey).HasMaxLength(256);
             builder.Property(row => row.PayloadHash).HasMaxLength(128);
+            builder.Property(row => row.LeaseOwner).HasMaxLength(256);
+            builder.Property(row => row.LastError).HasMaxLength(1_000);
             builder.HasIndex(row => row.PayloadHash)
                 .IsUnique()
-                .HasDatabaseName("ux_economy_outbox_messages_payload_hash");
+                .HasFilter("\"OutboxKind\" = 1")
+                .HasDatabaseName("ux_economy_outbox_payload_hash");
+            builder.HasIndex(row => new { row.PublishedAt, row.OccurredAt })
+                .HasFilter("\"OutboxKind\" = 2")
+                .HasDatabaseName("ix_economy_outbox_marketplace_dispatch");
+            builder.HasIndex(row => new { row.PublishedAt, row.LeaseExpiresAt, row.OccurredAt })
+                .HasFilter("\"OutboxKind\" = 2")
+                .HasDatabaseName("ix_economy_outbox_marketplace_lease");
+            builder.HasIndex(row => row.OperationId)
+                .IsUnique()
+                .HasFilter("\"OutboxKind\" = 3")
+                .HasDatabaseName("ux_economy_outbox_payout_operation");
+            builder.HasIndex(row => new { row.CompletedAt, row.AvailableAt, row.LeaseExpiresAt })
+                .HasFilter("\"OutboxKind\" IN (3, 4)")
+                .HasDatabaseName("ix_economy_outbox_dispatch_queue");
+            builder.HasIndex(row => row.RunId)
+                .IsUnique()
+                .HasFilter("\"OutboxKind\" = 4")
+                .HasDatabaseName("ux_economy_outbox_admin_run");
+            builder.HasIndex(row => new { row.TenantId, row.RunId })
+                .IsUnique()
+                .HasFilter("\"OutboxKind\" = 4")
+                .HasDatabaseName("ux_economy_outbox_admin_tenant_run");
+            builder.HasIndex(row => row.EvidenceId)
+                .IsUnique()
+                .HasFilter("\"OutboxKind\" = 5")
+                .HasDatabaseName("ux_economy_outbox_evidence");
             builder.HasOne<EconomyPostingGroupRow>()
                 .WithMany()
                 .HasForeignKey(row => row.PostingGroupId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyComplianceEvidenceRow>()
+                .WithMany()
+                .HasForeignKey(row => row.EvidenceId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -1221,18 +1288,28 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .HasDatabaseName("ux_economy_capability_policies_active_scope");
         });
 
-        modelBuilder.Entity<EconomyCapabilityPolicyApprovalRow>(builder =>
+        // #1092 Tier 1.3 — the three dual-control approval tables (capability
+        // policy, kill-switch release, projection generation) merged behind
+        // ApprovalKind. Per-kind unique indexes preserve the dual-control
+        // one-actor-one-vote rule for each subject family. The payout-request
+        // dual control is not part of this family and stays untouched.
+        modelBuilder.Entity<EconomyApprovalRow>(builder =>
         {
-            builder.ToTable("economy_capability_policy_approvals");
+            builder.ToTable("economy_approvals");
             builder.HasKey(row => row.Id);
             builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.PolicyId, row.ActorId })
+            builder.HasIndex(row => new { row.SubjectId, row.ActorId })
                 .IsUnique()
-                .HasDatabaseName("ux_economy_capability_policy_approvals_policy_actor");
-            builder.HasOne<EconomyCapabilityPolicyRow>()
-                .WithMany()
-                .HasForeignKey(row => row.PolicyId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasFilter("\"ApprovalKind\" = 1")
+                .HasDatabaseName("ux_economy_approvals_policy_actor");
+            builder.HasIndex(row => new { row.SubjectId, row.ActorId })
+                .IsUnique()
+                .HasFilter("\"ApprovalKind\" = 2")
+                .HasDatabaseName("ux_economy_approvals_switch_actor");
+            builder.HasIndex(row => new { row.Generation, row.ActorId })
+                .IsUnique()
+                .HasFilter("\"ApprovalKind\" = 3")
+                .HasDatabaseName("ux_economy_approvals_generation_actor");
         });
 
         modelBuilder.Entity<EconomyCapabilityReceiptRow>(builder =>
@@ -1313,19 +1390,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .HasDatabaseName("ux_economy_kill_switches_active_scope");
         });
 
-        modelBuilder.Entity<EconomyKillSwitchReleaseApprovalRow>(builder =>
-        {
-            builder.ToTable("economy_kill_switch_release_approvals");
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.KillSwitchId, row.ActorId })
-                .IsUnique()
-                .HasDatabaseName("ux_economy_kill_switch_release_approvals_switch_actor");
-            builder.HasOne<EconomyKillSwitchRow>()
-                .WithMany()
-                .HasForeignKey(row => row.KillSwitchId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
+        // economy_kill_switch_release_approvals merged into economy_approvals
+        // (#1092 Tier 1.3) — see the EconomyApprovalRow configuration above.
 
         modelBuilder.Entity<EconomyEntityGraphNodeRow>(builder =>
         {
@@ -1395,36 +1461,35 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .HasDatabaseName("ux_economy_compliance_evidence_subject_version");
         });
 
-        modelBuilder.Entity<EconomyComplianceInboxRow>(builder =>
+        // #1092 Tier 1.2 — the compliance inbox and the ad-reward
+        // provider-proof inbox merged behind InboxKind. The table is
+        // deliberately FK-free: it must accept events for aggregates under
+        // rebuild (#1092 §3.3 guardrail).
+        modelBuilder.Entity<EconomyInboxRow>(builder =>
         {
-            builder.ToTable("economy_compliance_inbox");
+            builder.ToTable("economy_inbox");
             builder.HasKey(row => row.Id);
             builder.Property(row => row.Provider).HasMaxLength(100);
             builder.Property(row => row.Environment).HasMaxLength(50);
             builder.Property(row => row.ProviderEventId).HasMaxLength(256);
             builder.Property(row => row.PayloadHash).HasMaxLength(128);
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
             builder.Property(row => row.RawObjectReference).HasMaxLength(1000);
             builder.Property(row => row.ProcessingError).HasMaxLength(2000);
             builder.HasIndex(row => new { row.Provider, row.Environment, row.ProviderEventId })
                 .IsUnique()
-                .HasDatabaseName("ux_economy_compliance_inbox_provider_event");
+                .HasFilter("\"InboxKind\" = 1")
+                .HasDatabaseName("ux_economy_inbox_provider_event");
+            builder.HasIndex(row => new { row.TenantId, row.Provider, row.ProviderEventId })
+                .IsUnique()
+                .HasFilter("\"InboxKind\" = 2")
+                .HasDatabaseName("ux_economy_inbox_tenant_provider_event");
         });
 
-        modelBuilder.Entity<EconomyComplianceOutboxRow>(builder =>
-        {
-            builder.ToTable("economy_compliance_outbox");
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.Type).HasMaxLength(100);
-            builder.Property(row => row.Payload).HasColumnType("jsonb");
-            builder.Property(row => row.PayloadHash).HasMaxLength(128);
-            builder.HasIndex(row => row.EvidenceId)
-                .IsUnique()
-                .HasDatabaseName("ux_economy_compliance_outbox_evidence");
-            builder.HasOne<EconomyComplianceEvidenceRow>()
-                .WithMany()
-                .HasForeignKey(row => row.EvidenceId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
+        // economy_compliance_outbox was retired by the #1092 Tier 1.1 merge:
+        // it never had a reader (evidence is consumed from the evidence
+        // tables directly) and its rows now live in economy_outbox with
+        // OutboxKind = 5 (Compliance).
 
         modelBuilder.Entity<EconomyComplianceHoldRow>(builder =>
         {
@@ -1607,16 +1672,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .WithMany().HasForeignKey(row => row.WalletId).OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<EconomyProjectionGenerationApprovalRow>(builder =>
-        {
-            builder.ToTable("economy_projection_generation_approvals");
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.Generation, row.ActorId }).IsUnique();
-            builder.HasOne<EconomyProjectionGenerationRow>()
-                .WithMany().HasForeignKey(row => row.Generation).HasPrincipalKey(row => row.Generation)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
+        // economy_projection_generation_approvals merged into economy_approvals
+        // (#1092 Tier 1.3) — see the EconomyApprovalRow configuration above.
 
         modelBuilder.Entity<EconomyAnchorVerificationRow>(builder =>
         {

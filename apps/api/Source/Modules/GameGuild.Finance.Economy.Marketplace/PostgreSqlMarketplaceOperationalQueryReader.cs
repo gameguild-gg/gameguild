@@ -1,6 +1,7 @@
 using System.Globalization;
 using GameGuild.Finance.Economy.Marketplace.Persistence;
 using GameGuild.Finance.Economy.Operations;
+using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Finance.Economy.Marketplace;
@@ -65,8 +66,9 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReader : IMarketplaceOp
             return null;
         }
 
-        var legs = await _db.Set<MarketplaceSettlementLegRow>().AsNoTracking()
-            .Where(row => row.SettlementId == settlementId)
+        var legs = await _db.Set<MarketplaceValueLegRow>().AsNoTracking()
+            .Where(row => row.LegKind == MarketplaceValueLegKind.Settlement &&
+                          row.SettlementId == settlementId)
             .OrderBy(row => row.Currency)
             .ToArrayAsync(cancellationToken);
         var events = await _db.Set<MarketplaceEventRow>().AsNoTracking()
@@ -78,15 +80,17 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReader : IMarketplaceOp
             .OrderBy(row => row.RefundedAt)
             .ThenBy(row => row.Id)
             .ToArrayAsync(cancellationToken);
-        var outbox = await _db.Set<MarketplaceOutboxRow>().AsNoTracking()
-            .Where(row => row.SettlementId == settlementId && row.TenantId == tenantId)
+        var outbox = await _db.Set<EconomyOutboxRow>().AsNoTracking()
+            .Where(row => row.OutboxKind == EconomyOutboxKind.Marketplace &&
+                          row.SettlementId == settlementId && row.TenantId == tenantId)
             .OrderBy(row => row.OccurredAt)
             .ThenBy(row => row.Id)
             .ToArrayAsync(cancellationToken);
         return new MarketplaceSettlementOperationalDetails(
             MapSettlement(settlement),
             Array.AsReadOnly(legs.Select(row => new MarketplaceSettlementLegOperationalStatus(
-                row.Currency, row.Units, row.SellerUnits, row.PlatformFeeUnits, row.RefundedUnits)).ToArray()),
+                row.Currency, row.Units, row.SellerUnits!.Value, row.PlatformFeeUnits!.Value,
+                row.RefundedUnits!.Value)).ToArray()),
             Array.AsReadOnly(events.Select(row => new MarketplaceEventOperationalStatus(
                 row.Id, row.Sequence, row.EventKind, row.EvidenceHash, row.OccurredAt)).ToArray()),
             Array.AsReadOnly(refunds.Select(MapRefund).ToArray()),
@@ -141,8 +145,8 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReader : IMarketplaceOp
     {
         ValidateTenantAndLimit(tenantId, limit);
         var position = DecodeCursor(cursor, "Marketplace outbox");
-        var query = _db.Set<MarketplaceOutboxRow>().AsNoTracking()
-            .Where(row => row.TenantId == tenantId);
+        var query = _db.Set<EconomyOutboxRow>().AsNoTracking()
+            .Where(row => row.OutboxKind == EconomyOutboxKind.Marketplace && row.TenantId == tenantId);
         if (published is true)
         {
             query = query.Where(row => row.PublishedAt != null);
@@ -180,9 +184,10 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReader : IMarketplaceOp
         row.EntitlementRevoked, row.ReasonCode, row.Quantity, row.RefundedQuantity,
         row.FirstJournalSequence, row.RefundedAt);
 
-    private static MarketplaceOutboxOperationalStatus MapOutbox(MarketplaceOutboxRow row) => new(
-        row.Id, row.TenantId, row.SettlementId, row.MessageType, row.PayloadHash, row.OccurredAt,
-        row.PublishedAt, row.AttemptCount, row.LeaseExpiresAt, !string.IsNullOrWhiteSpace(row.LastError));
+    private static MarketplaceOutboxOperationalStatus MapOutbox(EconomyOutboxRow row) => new(
+        row.Id, row.TenantId!.Value, row.SettlementId!.Value, row.MessageType, row.PayloadHash,
+        row.OccurredAt, row.PublishedAt, row.AttemptCount, row.LeaseExpiresAt,
+        !string.IsNullOrWhiteSpace(row.LastError));
 
     private static string EncodeCursor(DateTimeOffset at, Guid id) => $"{at.UtcTicks:X16}{id:N}";
 

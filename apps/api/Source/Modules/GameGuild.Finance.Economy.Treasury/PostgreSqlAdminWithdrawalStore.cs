@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Finance.Economy.Treasury;
@@ -32,15 +33,6 @@ internal sealed class AdminWithdrawalRunRow
     public DateTimeOffset UpdatedAt { get; set; }
 }
 
-internal sealed class AdminWithdrawalProviderEventRow
-{
-    public Guid TenantId { get; set; }
-    public string EventId { get; set; } = string.Empty;
-    public string EventHash { get; set; } = string.Empty;
-    public Guid RunId { get; set; }
-    public DateTimeOffset RecordedAt { get; set; }
-}
-
 internal sealed class AdminWithdrawalAuditEventRow
 {
     public Guid TenantId { get; set; }
@@ -52,23 +44,6 @@ internal sealed class AdminWithdrawalAuditEventRow
     public DateTimeOffset OccurredAt { get; set; }
     public string PreviousHash { get; set; } = string.Empty;
     public string Hash { get; set; } = string.Empty;
-}
-
-public sealed class AdminWithdrawalDispatchOutboxRow
-{
-    public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
-    public Guid RunId { get; set; }
-    public string IdempotencyKey { get; set; } = string.Empty;
-    public string Payload { get; set; } = string.Empty;
-    public string PayloadHash { get; set; } = string.Empty;
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset AvailableAt { get; set; }
-    public DateTimeOffset? LeaseExpiresAt { get; set; }
-    public string? LeaseOwner { get; set; }
-    public int AttemptCount { get; set; }
-    public DateTimeOffset? CompletedAt { get; set; }
-    public string? LastErrorCode { get; set; }
 }
 
 public sealed class TreasuryModelConfiguration : IModelConfiguration
@@ -112,14 +87,12 @@ public sealed class TreasuryModelConfiguration : IModelConfiguration
                 .HasDatabaseName("ix_economy_admin_withdrawal_runs_state_updated");
         });
 
-        modelBuilder.Entity<AdminWithdrawalProviderEventRow>(builder =>
+        // #1092 Tier 1.4: economy_admin_withdrawal_provider_events merged into
+        // the shared economy_provider_events table (ProviderEventKind = 2 =
+        // AdminWithdrawal). The Treasury module keeps contributing the run
+        // binding of its replay-dedupe rows.
+        modelBuilder.Entity<EconomyProviderEventRow>(builder =>
         {
-            builder.ToTable("economy_admin_withdrawal_provider_events");
-            builder.HasKey(row => new { row.TenantId, row.EventId });
-            builder.Property(row => row.EventId).HasMaxLength(256);
-            builder.Property(row => row.EventHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.RunId, row.RecordedAt })
-                .HasDatabaseName("ix_economy_admin_withdrawal_provider_events_run_recorded");
             builder.HasOne<AdminWithdrawalRunRow>()
                 .WithMany()
                 .HasForeignKey(row => row.RunId)
@@ -145,21 +118,15 @@ public sealed class TreasuryModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<AdminWithdrawalDispatchOutboxRow>(builder =>
+        // #1092 Tier 1.1: economy_admin_withdrawal_dispatch_outbox merged into
+        // the shared economy_outbox table (OutboxKind = 4 =
+        // AdminWithdrawalDispatch). The Treasury module keeps contributing the
+        // run binding of its queue rows.
+        modelBuilder.Entity<EconomyOutboxRow>(builder =>
         {
-            builder.ToTable("economy_admin_withdrawal_dispatch_outbox", table =>
-                table.HasCheckConstraint("ck_economy_admin_withdrawal_dispatch_outbox_attempts", "\"AttemptCount\" >= 0"));
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.Id).ValueGeneratedNever();
-            builder.Property(row => row.IdempotencyKey).HasMaxLength(256);
-            builder.Property(row => row.Payload).HasColumnType("jsonb");
-            builder.Property(row => row.PayloadHash).HasMaxLength(128);
-            builder.Property(row => row.LeaseOwner).HasMaxLength(200);
-            builder.Property(row => row.LastErrorCode).HasMaxLength(100);
-            builder.HasIndex(row => row.RunId).IsUnique();
-            builder.HasIndex(row => new { row.TenantId, row.RunId }).IsUnique();
-            builder.HasIndex(row => new { row.CompletedAt, row.AvailableAt, row.LeaseExpiresAt });
-            builder.HasOne<AdminWithdrawalRunRow>().WithMany().HasForeignKey(row => row.RunId)
+            builder.HasOne<AdminWithdrawalRunRow>()
+                .WithMany()
+                .HasForeignKey(row => row.RunId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
@@ -363,8 +330,9 @@ public sealed class PostgreSqlAdminWithdrawalStore : IAdminWithdrawalStore
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(eventId);
         ArgumentException.ThrowIfNullOrWhiteSpace(eventHash);
-        var query = _db.Set<AdminWithdrawalProviderEventRow>().AsNoTracking()
-            .Where(row => row.EventId == eventId.Trim());
+        var query = _db.Set<EconomyProviderEventRow>().AsNoTracking()
+            .Where(row => row.ProviderEventKind == EconomyProviderEventKind.AdminWithdrawal &&
+                          row.EventId == eventId.Trim());
         if (tenantId.HasValue)
         {
             query = query.Where(row => row.TenantId == tenantId.Value);
