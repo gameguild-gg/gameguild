@@ -311,10 +311,10 @@ public sealed class BillingSubscriptionsAndNotificationsControllerTests
         var handler = new ResendSubscriptionNotificationCommandHandler(db, notificationService.Object);
 
         await FluentActions.Awaiting(() => handler.Handle(new ResendSubscriptionNotificationCommand(Guid.NewGuid()), CancellationToken.None))
-            .Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("Subscription notification * was not found.");
+            .Should().ThrowAsync<EntityNotFoundException>()
+            .WithMessage("*was not found");
         await FluentActions.Awaiting(() => handler.Handle(new ResendSubscriptionNotificationCommand(source.Id), CancellationToken.None))
-            .Should().ThrowAsync<InvalidOperationException>()
+            .Should().ThrowAsync<BusinessRuleViolationException>()
             .WithMessage("delivery failed");
     }
 
