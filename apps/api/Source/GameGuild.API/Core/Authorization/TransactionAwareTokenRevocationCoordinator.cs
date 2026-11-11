@@ -7,8 +7,8 @@ namespace GameGuild.API.Authorization;
 /// <summary>
 ///     Transaction-aware routing for session access-token deny-list writes (issue #1179).
 ///     Implemented in the API layer because only the host composition knows the ambient EF
-///     transaction: inside the command pipeline's transaction the write is deferred until
-///     <see cref="UseCaseOperationBehavior"/> commits (and discarded on rollback — a failed
+///     transaction: inside the command pipeline's transaction the write is deferred until the
+///     use-case operation behavior commits (and discarded on rollback — a failed
 ///     terminate-everywhere must not leave deny-list residue that kills still-valid tokens);
 ///     outside a transaction the write is immediate.
 /// </summary>
