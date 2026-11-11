@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using FluentAssertions;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Finance.Economy.Contracts;
 using GameGuild.Finance.Economy.Marketplace.Persistence;
 using GameGuild.TestSupport.Finance.Economy;

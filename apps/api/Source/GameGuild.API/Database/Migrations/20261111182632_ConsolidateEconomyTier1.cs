@@ -414,6 +414,7 @@ namespace GameGuild.API.Database.Migrations
                         SELECT pg_get_functiondef(p.oid)
                         FROM pg_proc p
                         JOIN pg_namespace n ON n.oid = p.pronamespace
+                        AND p.prokind = 'f'
                         WHERE n.nspname = 'economy_private'
                           AND pg_get_functiondef(p.oid) LIKE '%public.economy_outbox_messages%'
                     LOOP
@@ -425,12 +426,15 @@ namespace GameGuild.API.Database.Migrations
                         SELECT pg_get_functiondef(p.oid)
                         FROM pg_proc p
                         JOIN pg_namespace n ON n.oid = p.pronamespace
+                        AND p.prokind = 'f'
                         WHERE n.nspname = 'economy_private'
                           AND p.proname IN ('post_marketplace_settlement_v1', 'post_marketplace_refund_v1')
                     LOOP
+                        -- Each writer carries exactly one of the two outbox
+                        -- identities (settlement: grant, refund: revoke).
                         IF strpos(definition, 'INSERT INTO public.economy_marketplace_outbox (') = 0
-                           OR strpos(definition, '''entitlement-grant-outbox''),') = 0
-                           OR strpos(definition, '''entitlement-revoke-outbox''),') = 0 THEN
+                           OR (strpos(definition, '''entitlement-grant-outbox''),') = 0
+                               AND strpos(definition, '''entitlement-revoke-outbox''),') = 0) THEN
                             RAISE EXCEPTION 'marketplace outbox writer shape is not recognized';
                         END IF;
                         definition := replace(definition,
@@ -449,6 +453,7 @@ namespace GameGuild.API.Database.Migrations
                         SELECT 1
                         FROM pg_proc p
                         JOIN pg_namespace n ON n.oid = p.pronamespace
+                        AND p.prokind = 'f'
                         WHERE n.nspname = 'economy_private'
                           AND pg_get_functiondef(p.oid) ~ 'economy_(outbox_messages|marketplace_outbox)')
                     THEN
@@ -558,6 +563,27 @@ namespace GameGuild.API.Database.Migrations
                         'p_tenant_id, pg_catalog.btrim(p_event_id), pg_catalog.btrim(p_event_hash), p_run_id, p_updated_at);',
                         '2, p_tenant_id, pg_catalog.btrim(p_event_id), pg_catalog.btrim(p_event_hash), p_run_id, p_updated_at);');
                     EXECUTE definition;
+
+                    -- complete_admin_withdrawal_provider_event_v1 is superseded
+                    -- by v2 but still installed; retarget its legacy insert too
+                    -- so no SECURITY DEFINER body survives pointing at the
+                    -- retired table.
+                    SELECT pg_get_functiondef(
+                        'economy_private.complete_admin_withdrawal_provider_event_v1(text,text,uuid,bigint,integer,text,timestamptz)'::regprocedure)
+                    INTO definition;
+                    IF definition IS NOT NULL THEN
+                        IF strpos(definition, 'INSERT INTO public.economy_admin_withdrawal_provider_events (') = 0
+                           OR strpos(definition, 'pg_catalog.btrim(p_event_id), pg_catalog.btrim(p_event_hash), p_run_id, p_updated_at);') = 0 THEN
+                            RAISE EXCEPTION 'legacy admin withdrawal provider event writer shape is not recognized';
+                        END IF;
+                        definition := replace(definition,
+                            'INSERT INTO public.economy_admin_withdrawal_provider_events (',
+                            'INSERT INTO public.economy_provider_events ("ProviderEventKind", ');
+                        definition := replace(definition,
+                            'pg_catalog.btrim(p_event_id), pg_catalog.btrim(p_event_hash), p_run_id, p_updated_at);',
+                            '2, pg_catalog.btrim(p_event_id), pg_catalog.btrim(p_event_hash), p_run_id, p_updated_at);');
+                        EXECUTE definition;
+                    END IF;
                 END
                 $t14_writers$;
 
@@ -575,6 +601,22 @@ namespace GameGuild.API.Database.Migrations
                     OWNER TO gameguild_economy_procedure_owner;
                 REVOKE ALL ON FUNCTION economy_private.read_payout_provider_event_v1(text) FROM PUBLIC;
                 GRANT EXECUTE ON FUNCTION economy_private.read_payout_provider_event_v1(text)
+                    TO gameguild_economy_writer;
+
+                DROP FUNCTION IF EXISTS economy_private.read_admin_withdrawal_provider_event_v1(text);
+                CREATE FUNCTION economy_private.read_admin_withdrawal_provider_event_v1(p_event_id text)
+                RETURNS SETOF public.economy_provider_events
+                LANGUAGE sql STABLE SECURITY DEFINER
+                SET search_path = pg_catalog, economy_private
+                AS $function$
+                    SELECT * FROM public.economy_provider_events
+                    WHERE "ProviderEventKind" = 2
+                      AND "EventId" = pg_catalog.btrim(p_event_id)
+                $function$;
+                ALTER FUNCTION economy_private.read_admin_withdrawal_provider_event_v1(text)
+                    OWNER TO gameguild_economy_procedure_owner;
+                REVOKE ALL ON FUNCTION economy_private.read_admin_withdrawal_provider_event_v1(text) FROM PUBLIC;
+                GRANT EXECUTE ON FUNCTION economy_private.read_admin_withdrawal_provider_event_v1(text)
                     TO gameguild_economy_writer;
 
                 DROP TRIGGER IF EXISTS deny_payout_provider_event_mutation
@@ -620,49 +662,89 @@ namespace GameGuild.API.Database.Migrations
                 DECLARE
                     definition text;
                 BEGIN
-                    SELECT pg_get_functiondef(
-                        'economy_private.post_marketplace_settlement_v1'::regprocedure)
-                    INTO definition;
-                    IF definition IS NULL THEN
+                    FOR definition IN
+                        SELECT pg_get_functiondef(p.oid)
+                        FROM pg_proc p
+                        JOIN pg_namespace n ON n.oid = p.pronamespace
+                        AND p.prokind = 'f'
+                        WHERE n.nspname = 'economy_private'
+                          AND p.proname = 'post_marketplace_settlement_v1'
+                          AND pg_get_functiondef(p.oid) LIKE '%public.economy_marketplace_settlement_legs%'
+                    LOOP
+                        IF strpos(definition, 'INSERT INTO public.economy_marketplace_settlement_legs (') = 0
+                           OR strpos(definition, 'SELECT p_settlement_id, leg.currency, leg.units, leg.seller_units, leg.platform_fee_units, 0') = 0 THEN
+                            RAISE EXCEPTION 'marketplace settlement leg writer shape is not recognized';
+                        END IF;
+                        definition := replace(definition,
+                            'INSERT INTO public.economy_marketplace_settlement_legs (',
+                            'INSERT INTO public.economy_marketplace_value_legs ("Id", "LegKind", ');
+                        definition := replace(definition,
+                            'SELECT p_settlement_id, leg.currency, leg.units, leg.seller_units, leg.platform_fee_units, 0',
+                            'SELECT gen_random_uuid(), 1, p_settlement_id, leg.currency, leg.units, leg.seller_units, leg.platform_fee_units, 0');
+                        EXECUTE definition;
+                    END LOOP;
+
+                    IF NOT EXISTS (
+                        SELECT 1 FROM pg_proc p
+                        JOIN pg_namespace n ON n.oid = p.pronamespace
+                        WHERE n.nspname = 'economy_private'
+                          AND p.proname = 'post_marketplace_settlement_v1') THEN
                         RAISE EXCEPTION 'marketplace settlement writer is absent';
                     END IF;
-                    IF strpos(definition, 'INSERT INTO public.economy_marketplace_settlement_legs (') = 0
-                       OR strpos(definition, 'SELECT p_settlement_id, leg.currency, leg.units, leg.seller_units, leg.platform_fee_units, 0') = 0 THEN
-                        RAISE EXCEPTION 'marketplace settlement leg writer shape is not recognized';
-                    END IF;
-                    definition := replace(definition,
-                        'INSERT INTO public.economy_marketplace_settlement_legs (',
-                        'INSERT INTO public.economy_marketplace_value_legs ("Id", "LegKind", ');
-                    definition := replace(definition,
-                        'SELECT p_settlement_id, leg.currency, leg.units, leg.seller_units, leg.platform_fee_units, 0',
-                        'SELECT gen_random_uuid(), 1, p_settlement_id, leg.currency, leg.units, leg.seller_units, leg.platform_fee_units, 0');
-                    EXECUTE definition;
 
-                    SELECT pg_get_functiondef(
-                        'economy_private.post_marketplace_refund_v1'::regprocedure)
-                    INTO definition;
-                    IF definition IS NULL THEN
+                    FOR definition IN
+                        SELECT pg_get_functiondef(p.oid)
+                        FROM pg_proc p
+                        JOIN pg_namespace n ON n.oid = p.pronamespace
+                        AND p.prokind = 'f'
+                        WHERE n.nspname = 'economy_private'
+                          AND p.proname = 'post_marketplace_refund_v1'
+                          AND pg_get_functiondef(p.oid) LIKE '%public.economy_marketplace_refund_legs%'
+                    LOOP
+                        IF strpos(definition, 'INSERT INTO public.economy_marketplace_refund_legs (') = 0
+                           OR strpos(definition, 'SELECT p_refund_id, p_settlement_id, leg.currency, leg.units') = 0
+                           OR strpos(definition, 'UPDATE public.economy_marketplace_settlement_legs leg') = 0
+                           OR strpos(definition, 'WHERE leg."SettlementId" = p_settlement_id') = 0
+                           OR strpos(definition, 'LEFT JOIN public.economy_marketplace_settlement_legs persisted') = 0
+                           OR strpos(definition, 'FROM public.economy_marketplace_settlement_legs persisted') = 0 THEN
+                            RAISE EXCEPTION 'marketplace refund leg writer shape is not recognized';
+                        END IF;
+                        definition := replace(definition,
+                            'INSERT INTO public.economy_marketplace_refund_legs (',
+                            'INSERT INTO public.economy_marketplace_value_legs ("Id", "LegKind", ');
+                        definition := replace(definition,
+                            'SELECT p_refund_id, p_settlement_id, leg.currency, leg.units',
+                            'SELECT gen_random_uuid(), 2, p_refund_id, p_settlement_id, leg.currency, leg.units');
+                        definition := replace(definition,
+                            'UPDATE public.economy_marketplace_settlement_legs leg',
+                            'UPDATE public.economy_marketplace_value_legs leg');
+                        definition := replace(definition,
+                            'WHERE leg."SettlementId" = p_settlement_id',
+                            'WHERE leg."LegKind" = 1 AND leg."SettlementId" = p_settlement_id');
+                        -- The cumulative-refund counter reads (the refund math)
+                        -- keep addressing settlement legs per (SettlementId, Currency).
+                        definition := replace(definition,
+                            'LEFT JOIN public.economy_marketplace_settlement_legs persisted',
+                            'LEFT JOIN public.economy_marketplace_value_legs persisted');
+                        definition := replace(definition,
+                            'FROM public.economy_marketplace_settlement_legs persisted',
+                            'FROM public.economy_marketplace_value_legs persisted');
+                        definition := replace(definition,
+                            'ON persisted."SettlementId" = p_settlement_id',
+                            'ON persisted."LegKind" = 1 AND persisted."SettlementId" = p_settlement_id');
+                        definition := replace(definition,
+                            'WHERE persisted."SettlementId" = p_settlement_id',
+                            'WHERE persisted."LegKind" = 1 AND persisted."SettlementId" = p_settlement_id');
+                        EXECUTE definition;
+                    END LOOP;
+
+                    IF NOT EXISTS (
+                        SELECT 1 FROM pg_proc p
+                        JOIN pg_namespace n ON n.oid = p.pronamespace
+                        WHERE n.nspname = 'economy_private'
+                          AND p.proname = 'post_marketplace_refund_v1') THEN
                         RAISE EXCEPTION 'marketplace refund writer is absent';
                     END IF;
-                    IF strpos(definition, 'INSERT INTO public.economy_marketplace_refund_legs (') = 0
-                       OR strpos(definition, 'SELECT p_refund_id, p_settlement_id, leg.currency, leg.units') = 0
-                       OR strpos(definition, 'UPDATE public.economy_marketplace_settlement_legs leg') = 0
-                       OR strpos(definition, 'WHERE leg."SettlementId" = p_settlement_id') = 0 THEN
-                        RAISE EXCEPTION 'marketplace refund leg writer shape is not recognized';
-                    END IF;
-                    definition := replace(definition,
-                        'INSERT INTO public.economy_marketplace_refund_legs (',
-                        'INSERT INTO public.economy_marketplace_value_legs ("Id", "LegKind", ');
-                    definition := replace(definition,
-                        'SELECT p_refund_id, p_settlement_id, leg.currency, leg.units',
-                        'SELECT gen_random_uuid(), 2, p_refund_id, p_settlement_id, leg.currency, leg.units');
-                    definition := replace(definition,
-                        'UPDATE public.economy_marketplace_settlement_legs leg',
-                        'UPDATE public.economy_marketplace_value_legs leg');
-                    definition := replace(definition,
-                        'WHERE leg."SettlementId" = p_settlement_id',
-                        'WHERE leg."LegKind" = 1 AND leg."SettlementId" = p_settlement_id');
-                    EXECUTE definition;
                 END
                 $t16_writers$;
                 """);
@@ -1358,14 +1440,17 @@ namespace GameGuild.API.Database.Migrations
                         SELECT pg_get_functiondef(p.oid)
                         FROM pg_proc p
                         JOIN pg_namespace n ON n.oid = p.pronamespace
+                        AND p.prokind = 'f'
                         WHERE n.nspname = 'economy_private'
-                          AND pg_get_functiondef(p.oid) LIKE '%public.economy_outbox%'
+                          AND (pg_get_functiondef(p.oid) LIKE '%public.economy_outbox%'
+                               OR pg_get_functiondef(p.oid) LIKE '%public.economy_provider_events%'
+                               OR pg_get_functiondef(p.oid) LIKE '%public.economy_marketplace_value_legs%')
                     LOOP
                         definition := regexp_replace(definition,
                             'INSERT INTO public\.economy_outbox \(\s*"Id", "PostingGroupId"',
                             'INSERT INTO public.economy_outbox_messages ("Id", "PostingGroupId"');
-                        definition := replace(definition,
-                            'INSERT INTO public.economy_outbox ("Id", "OutboxKind", "TenantId", "SettlementId",',
+                        definition := regexp_replace(definition,
+                            'INSERT INTO public\.economy_outbox \(\s*"Id", "TenantId", "SettlementId",',
                             'INSERT INTO public.economy_marketplace_outbox ("Id", "TenantId", "SettlementId",');
                         definition := replace(definition,
                             '''entitlement-grant-outbox''), 2,',
@@ -1373,26 +1458,29 @@ namespace GameGuild.API.Database.Migrations
                         definition := replace(definition,
                             '''entitlement-revoke-outbox''), 2,',
                             '''entitlement-revoke-outbox''),');
-                        definition := replace(definition,
-                            'INSERT INTO public.economy_provider_events ("ProviderEventKind", "EventId", "EventHash", "OperationId",',
+                        definition := regexp_replace(definition,
+                            'INSERT INTO public\.economy_provider_events \("ProviderEventKind",\s*"EventId", "EventHash", "OperationId",',
                             'INSERT INTO public.economy_payout_provider_events ("EventId", "EventHash", "OperationId",');
                         definition := replace(definition,
-                            'VALUES (1, pg_catalog.btrim(p_event_id),',
-                            'VALUES (pg_catalog.btrim(p_event_id),');
-                        definition := replace(definition,
-                            'INSERT INTO public.economy_provider_events ("ProviderEventKind", "TenantId", "EventId", "EventHash", "RunId",',
+                            '1, pg_catalog.btrim(p_event_id), pg_catalog.btrim(p_event_hash), p_operation_id, p_state,',
+                            'pg_catalog.btrim(p_event_id), pg_catalog.btrim(p_event_hash), p_operation_id, p_state,');
+                        definition := regexp_replace(definition,
+                            'INSERT INTO public\.economy_provider_events \("ProviderEventKind",\s*"TenantId", "EventId", "EventHash", "RunId",',
                             'INSERT INTO public.economy_admin_withdrawal_provider_events ("TenantId", "EventId", "EventHash", "RunId",');
+                        definition := regexp_replace(definition,
+                            'INSERT INTO public\.economy_provider_events \("ProviderEventKind",\s*"EventId", "EventHash", "RunId",',
+                            'INSERT INTO public.economy_admin_withdrawal_provider_events ("EventId", "EventHash", "RunId",');
                         definition := replace(definition,
-                            'VALUES (2, p_tenant_id, pg_catalog.btrim(p_event_id),',
-                            'VALUES (p_tenant_id, pg_catalog.btrim(p_event_id),');
-                        definition := replace(definition,
-                            'INSERT INTO public.economy_marketplace_value_legs ("Id", "LegKind", "SettlementId", "Currency",',
+                            '2, p_tenant_id, pg_catalog.btrim(p_event_id), pg_catalog.btrim(p_event_hash), p_run_id, p_updated_at);',
+                            'p_tenant_id, pg_catalog.btrim(p_event_id), pg_catalog.btrim(p_event_hash), p_run_id, p_updated_at);');
+                        definition := regexp_replace(definition,
+                            'INSERT INTO public\.economy_marketplace_value_legs \("Id", "LegKind",\s*"SettlementId", "Currency",',
                             'INSERT INTO public.economy_marketplace_settlement_legs ("SettlementId", "Currency",');
                         definition := replace(definition,
                             'SELECT gen_random_uuid(), 1, p_settlement_id, leg.currency,',
                             'SELECT p_settlement_id, leg.currency,');
-                        definition := replace(definition,
-                            'INSERT INTO public.economy_marketplace_value_legs ("Id", "LegKind", "RefundId",',
+                        definition := regexp_replace(definition,
+                            'INSERT INTO public\.economy_marketplace_value_legs \("Id", "LegKind",\s*"RefundId",',
                             'INSERT INTO public.economy_marketplace_refund_legs ("RefundId",');
                         definition := replace(definition,
                             'SELECT gen_random_uuid(), 2, p_refund_id, p_settlement_id, leg.currency, leg.units',
@@ -1403,6 +1491,21 @@ namespace GameGuild.API.Database.Migrations
                         definition := replace(definition,
                             'WHERE leg."LegKind" = 1 AND leg."SettlementId" = p_settlement_id',
                             'WHERE leg."SettlementId" = p_settlement_id');
+                        definition := replace(definition,
+                            'LEFT JOIN public.economy_marketplace_value_legs persisted',
+                            'LEFT JOIN public.economy_marketplace_settlement_legs persisted');
+                        definition := replace(definition,
+                            'FROM public.economy_marketplace_value_legs persisted',
+                            'FROM public.economy_marketplace_settlement_legs persisted');
+                        definition := replace(definition,
+                            'ON persisted."LegKind" = 1 AND persisted."SettlementId" = p_settlement_id',
+                            'ON persisted."SettlementId" = p_settlement_id');
+                        definition := replace(definition,
+                            'WHERE persisted."LegKind" = 1 AND persisted."SettlementId" = p_settlement_id',
+                            'WHERE persisted."SettlementId" = p_settlement_id');
+                        definition := replace(definition,
+                            '2, pg_catalog.btrim(p_event_id), pg_catalog.btrim(p_event_hash), p_run_id, p_updated_at);',
+                            'pg_catalog.btrim(p_event_id), pg_catalog.btrim(p_event_hash), p_run_id, p_updated_at);');
                         EXECUTE definition;
                     END LOOP;
                 END
@@ -1429,6 +1532,21 @@ namespace GameGuild.API.Database.Migrations
                     OWNER TO gameguild_economy_procedure_owner;
                 REVOKE ALL ON FUNCTION economy_private.read_payout_provider_event_v1(text) FROM PUBLIC;
                 GRANT EXECUTE ON FUNCTION economy_private.read_payout_provider_event_v1(text)
+                    TO gameguild_economy_writer;
+
+                DROP FUNCTION IF EXISTS economy_private.read_admin_withdrawal_provider_event_v1(text);
+                CREATE FUNCTION economy_private.read_admin_withdrawal_provider_event_v1(p_event_id text)
+                RETURNS SETOF public.economy_admin_withdrawal_provider_events
+                LANGUAGE sql STABLE SECURITY DEFINER
+                SET search_path = pg_catalog, economy_private
+                AS $function$
+                    SELECT * FROM public.economy_admin_withdrawal_provider_events
+                    WHERE "EventId" = pg_catalog.btrim(p_event_id)
+                $function$;
+                ALTER FUNCTION economy_private.read_admin_withdrawal_provider_event_v1(text)
+                    OWNER TO gameguild_economy_procedure_owner;
+                REVOKE ALL ON FUNCTION economy_private.read_admin_withdrawal_provider_event_v1(text) FROM PUBLIC;
+                GRANT EXECUTE ON FUNCTION economy_private.read_admin_withdrawal_provider_event_v1(text)
                     TO gameguild_economy_writer;
 
                 DROP TRIGGER IF EXISTS deny_provider_event_mutation

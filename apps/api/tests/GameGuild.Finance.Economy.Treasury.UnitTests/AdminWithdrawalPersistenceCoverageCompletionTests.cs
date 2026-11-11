@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 
 namespace GameGuild.Finance.Economy.Treasury.UnitTests;
 
