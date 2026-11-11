@@ -61,6 +61,15 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
+        // Entry-check contract (issue #1122): this method is the ONLY place a request's API
+        // key is validated. The authentication middleware runs it once per request and the
+        // framework caches the result for the request's lifetime (handlers are scoped per
+        // request), so a key that expires — or is revoked/rotated out — while a long-running
+        // handler is executing can never flip that in-flight request to 401: the principal,
+        // scopes and key id below were frozen at entry. Expiry only blocks NEW requests,
+        // which reach this method with the wall clock already past the key's window. Any
+        // future mid-request authorization (e.g. ApiKeyScopeHandler) must consume the claims
+        // minted here, never re-read the credential store.
         var headerApiKey = Request.Headers[Options.HeaderName].FirstOrDefault();
         var queryApiKey = Options.AllowQueryString
             ? Request.Query[Options.QueryStringParameterName].FirstOrDefault()
