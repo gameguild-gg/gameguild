@@ -69,7 +69,11 @@ public class SocialFollowsProfileFollowerPortTests
         var followerId = Guid.NewGuid();
         var profileUserId = Guid.NewGuid();
         var follow = Follow.Create(followerId, profileUserId, FollowableEntityTypes.User);
-        follow.SoftDelete();
+
+        // SoftDelete() refuses unpersisted entities (Version == 0), and the mock DbSet
+        // never persists — stamp the soft-delete marker directly, as the sibling profile
+        // repository tests do.
+        follow.DeletedAt = DateTime.UtcNow;
         SetupFollowDbSet([follow]);
         var port = new SocialFollowsProfileFollowerPort(_contextMock.Object);
 
