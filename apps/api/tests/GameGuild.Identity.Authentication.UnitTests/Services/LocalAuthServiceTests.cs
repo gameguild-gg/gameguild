@@ -867,15 +867,77 @@ public class LocalAuthServiceTests
     }
 
     [Fact]
-    public async Task LocalSignUpAsync_ExistingEmail_ThrowsInvalidOperationException()
+    public async Task LocalSignUpAsync_ExistingEmail_ThrowsUserAlreadyExistsExceptionMappedToConflict()
     {
         _userRepoMock.Setup(x => x.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var request = new LocalSignUpRequest { Email = "existing@example.com", Password = "Password1!", Username = "user" };
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.LocalSignUpAsync(request));
+        // Issue #1197: the declared contract for a duplicate email is 409 Conflict; the typed
+        // exception (a DuplicateEntityException) is what the middleware maps to 409.
+        var exception = await Assert.ThrowsAsync<UserAlreadyExistsException>(() => _sut.LocalSignUpAsync(request));
+        exception.Should().BeAssignableTo<GameGuild.DuplicateEntityException>();
+        exception.Email.Should().Be("existing@example.com");
+        _userRepoMock.Verify(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact]
+    public async Task LocalSignUpAsync_ConcurrentDuplicateInsert_RaceLostOnEmail_ThrowsUserAlreadyExistsException()
+    {
+        // Issue #1197 TOCTOU: the pre-check passes, the unique index rejects the insert.
+        _userRepoMock.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _userRepoMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(NewUniqueIndexViolation());
+
+        // The post-race refetch resolves the collision: the email now exists.
+        _userRepoMock.SetupSequence(x => x.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false)   // advisory pre-check
+            .ReturnsAsync(true);  // post-race refetch
+
+        var request = new LocalSignUpRequest { Email = "raced@example.com", Password = "Password1!", Username = "racer" };
+
+        var exception = await Assert.ThrowsAsync<UserAlreadyExistsException>(() => _sut.LocalSignUpAsync(request));
+        exception.Message.Should().Contain("raced@example.com");
+        exception.InnerException.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task LocalSignUpAsync_ConcurrentDuplicateInsert_RaceLostOnUsername_ThrowsUserAlreadyExistsException()
+    {
+        _userRepoMock.Setup(x => x.ExistsByUsernameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _userRepoMock.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _userRepoMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(NewUniqueIndexViolation());
+
+        var request = new LocalSignUpRequest { Email = "fresh@example.com", Password = "Password1!", Username = "taken-name" };
+
+        var exception = await Assert.ThrowsAsync<UserAlreadyExistsException>(() => _sut.LocalSignUpAsync(request));
+        exception.Message.Should().Contain("Username");
+    }
+
+    [Fact]
+    public async Task LocalSignUpAsync_ConcurrentInsertFailsWithoutCollision_RethrowsDbUpdateException()
+    {
+        _userRepoMock.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        var unrelated = NewUniqueIndexViolation();
+        _userRepoMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(unrelated);
+
+        var request = new LocalSignUpRequest { Email = "mystery@example.com", Password = "Password1!", Username = "mystery" };
+
+        var exception = await Assert.ThrowsAsync<Microsoft.EntityFrameworkCore.DbUpdateException>(
+            () => _sut.LocalSignUpAsync(request));
+        exception.Should().BeSameAs(unrelated);
+    }
+
+    private static Microsoft.EntityFrameworkCore.DbUpdateException NewUniqueIndexViolation() =>
+        new("An error occurred while saving the entity changes. See the inner exception for details.",
+            new InvalidOperationException("duplicate key value violates unique constraint \"ux_users_email\""));
 
     [Fact]
     public async Task LocalSignUpAsync_WeakPassword_RejectsBeforeCheckingEmailAvailability()

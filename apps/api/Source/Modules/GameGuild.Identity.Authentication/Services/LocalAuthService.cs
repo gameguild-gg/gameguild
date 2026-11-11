@@ -7,6 +7,7 @@ using GameGuild.CQRS;
 using GameGuild.Email;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -858,21 +859,24 @@ public class LocalAuthService(
             }
 
             // Check for existing user
-            var emailExists = await userRepository.ExistsByEmailAsync(request.Email.ToLowerInvariant(), cancellationToken).ConfigureAwait(false);
+            var normalizedEmail = request.Email.ToLowerInvariant();
+            var emailExists = await userRepository.ExistsByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false);
 
             if (emailExists)
             {
                 await CompleteAuthenticationTimingAsync(timingOrigin, false, cancellationToken).ConfigureAwait(false);
                 logger.LogWarning("Sign-up attempted for an existing account");
 
-                throw new InvalidOperationException("User already exists");
+                // Issue #1197: typed conflict (409 via the exception-handling middleware)
+                // instead of an InvalidOperationException that fell into the 500 bucket.
+                throw new UserAlreadyExistsException(normalizedEmail);
             }
 
             var passwordHash = passwordHasher.HashPassword(request.Password);
 
             // Create new user using the unified User entity
             var newUser = User.CreateWithPassword(
-                request.Email.ToLowerInvariant(),
+                normalizedEmail,
                 request.Username ?? request.Email.Split('@')[0],
                 passwordHash,
                 username);
@@ -886,9 +890,34 @@ public class LocalAuthService(
                 OccurredAt = DateTime.UtcNow
             });
 
-            // Save to database
-            await userRepository.AddAsync(newUser, cancellationToken).ConfigureAwait(false);
-            await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            // Save to database. The pre-check above is advisory only: two concurrent
+            // sign-ups with the same email (or username) race through it and the loser
+            // is rejected by the DB unique indexes as a DbUpdateException (issue #1197
+            // TOCTOU). Re-check the constraints and surface a typed 409 conflict
+            // instead of a raw 500, mirroring the external-login link path.
+            try
+            {
+                await userRepository.AddAsync(newUser, cancellationToken).ConfigureAwait(false);
+                await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateException ex)
+            {
+                await CompleteAuthenticationTimingAsync(timingOrigin, false, cancellationToken).ConfigureAwait(false);
+                logger.LogWarning("Sign-up insert lost a uniqueness race: {ErrorType}", ex.GetType().FullName);
+
+                if (await userRepository.ExistsByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false))
+                {
+                    throw new UserAlreadyExistsException($"User with email {normalizedEmail} already exists.", ex);
+                }
+
+                if (await userRepository.ExistsByUsernameAsync(username, cancellationToken).ConfigureAwait(false))
+                {
+                    throw new UserAlreadyExistsException("Username already exists.", ex);
+                }
+
+                throw;
+            }
+
             var userId = newUser.Id;
 
             logger.LogInformation("Created new user with ID: {UserId}", userId);

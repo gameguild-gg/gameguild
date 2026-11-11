@@ -1,9 +1,12 @@
 namespace GameGuild.Identity.Users;
 
+using GameGuild;
+
 /// <summary>
-///     User already exists exception
+///     User already exists exception. Derives from <see cref="DuplicateEntityException"/> so the
+///     global exception-handling middleware maps it to <c>409 Conflict</c> (issue #1197).
 /// </summary>
-public class UserAlreadyExistsException : Exception
+public class UserAlreadyExistsException : DuplicateEntityException
 {
     /// <summary>
     ///     Creates a new instance of UserAlreadyExistsException
