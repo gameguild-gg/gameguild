@@ -125,11 +125,49 @@ public static class MiddlewareOrderValidator
         var middlewareTypes = new List<string>();
         foreach (var component in components)
         {
-            var componentTypeName = component.Target?.GetType().Name ?? "Unknown";
+            var target = component.Target;
+            var componentTypeName = target?.GetType().Name ?? "Unknown";
             middlewareTypes.Add(componentTypeName);
+
+            // Components registered through UseMiddleware<T>() arrive as compiler-generated
+            // closures whose target type name is opaque (e.g. <>c__DisplayClass...). The
+            // middleware identity is recoverable from the closure's captured state: the
+            // middleware System.Type (and for interface middleware, sometimes an instance).
+            // Without this, a real pipeline reports no middleware at all and validation
+            // silently degrades to a no-op (issue #1248 N3).
+            if (target is not null && componentTypeName.StartsWith("<", StringComparison.Ordinal))
+            {
+                middlewareTypes.AddRange(ExtractClosureMiddlewareNames(target));
+            }
         }
 
         return middlewareTypes;
+    }
+
+    /// <summary>
+    ///     Collects middleware-looking names captured by a compiler-generated UseMiddleware
+    ///     closure: captured <see cref="Type"/> values and captured object instances whose
+    ///     type names end with "Middleware".
+    /// </summary>
+    private static IEnumerable<string> ExtractClosureMiddlewareNames(object closure)
+    {
+        const string Suffix = "Middleware";
+        var fields = closure.GetType().GetFields(
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        foreach (var field in fields)
+        {
+            var value = field.GetValue(closure);
+            switch (value)
+            {
+                case Type capturedType when capturedType.Name.EndsWith(Suffix, StringComparison.Ordinal):
+                    yield return capturedType.Name;
+                    break;
+                case { } captured when captured.GetType().Name.EndsWith(Suffix, StringComparison.Ordinal)
+                                      && captured is not Type:
+                    yield return captured.GetType().Name;
+                    break;
+            }
+        }
     }
 
     private static int FindMiddlewareIndex(List<string> pipeline, string middlewareName)
