@@ -37,7 +37,8 @@ public sealed class FinancialCrimeIngestionWiringTests
         await fixture.Queue.EnqueueEconomyOperationAsync(EconomySignal("alert-operation", 1_500_000, observedAt));
 
         // Outbox worker: the signal is ingested asynchronously — an AML case opens and the
-        // subject is held; the financial-crime evidence ledger now carries the review outcome.
+        // subject is held; the signal itself publishes no screening evidence (alerts are
+        // analyst work, not routine screening).
         (await fixture.IngestionWorker.ProcessDueAsync()).Should().Be(1);
         var cases = await fixture.Control.ReadCasesAsync(TenantId, null, 10, CancellationToken.None);
         cases.Should().ContainSingle().Which.State.Should().Be(FinancialCrimeCaseState.Open);
@@ -48,10 +49,12 @@ public sealed class FinancialCrimeIngestionWiringTests
             new ComplianceHoldScope(TenantId, subjectHash, null), DateTimeOffset.UtcNow, CancellationToken.None))
             .Should().BeTrue();
 
-        // Gate before a decision: the evidence read is NeedsReview — the protected operation
-        // risk issuer maps that to a Review verdict (ReviewRequired), not an Allow.
+        // Gate before a decision: an alert-level subject has no screening evidence yet, so the
+        // risk input stays Unavailable — the protected operation risk issuer keeps denying
+        // fail-closed (ComplianceUnavailable) until the case is decided or a routine screening
+        // synthesizes evidence for the subject.
         (await fixture.RiskInput.ReadAsync(TenantId, subjectHash, DateTimeOffset.UtcNow)).Outcome
-            .Should().Be(ExternalRiskOutcome.Review);
+            .Should().Be(ExternalRiskOutcome.Unavailable);
 
         // Analyst decides the case Approved: the hold releases transactionally and the
         // decision publishes Approved evidence for the same subject.
@@ -166,7 +169,7 @@ public sealed class FinancialCrimeIngestionWiringTests
         await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("fc_ingestion_rescreen");
         await using var context = CreateContext(database.ConnectionString);
         await context.Database.EnsureCreatedAsync();
-        var fixture = new Fixture(context, screeningInterval: TimeSpan.FromTicks(1));
+        var fixture = new Fixture(context, screeningInterval: TimeSpan.FromMilliseconds(2));
         var subjectHash = EconomySubjectReference.ForUser(TenantId, ActorId);
 
         await fixture.Queue.EnqueueEconomyOperationAsync(
@@ -296,22 +299,28 @@ public sealed class FinancialCrimeIngestionWiringTests
         /// Builds the adapter slice the host composition wires: the real Economy trusted
         /// authorizer with stubbed authority inputs, decorated by
         /// <see cref="EconomyFinancialCrimeSignalAdapter"/> over the FinancialCrime services.
+        /// The shared context registers as a singleton INSTANCE: the adapter disposes its
+        /// per-operation scopes, and a factory-registered scoped context would be disposed
+        /// with them.
         /// </summary>
         public ServiceProvider BuildAdapterServices()
         {
             var services = new ServiceCollection();
-            services.AddScoped<TestDbContext>(_ => Context);
-            services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<TestDbContext>());
-            services.AddScoped<PostgreSqlComplianceEvidenceStore>(_ =>
-                new PostgreSqlComplianceEvidenceStore(Context));
-            services.AddScoped<IComplianceEvidenceStore>(provider =>
+            services.AddSingleton(Context);
+            services.AddSingleton<IApplicationDbContext>(Context);
+            services.AddSingleton(new PostgreSqlComplianceEvidenceStore(Context));
+            services.AddSingleton<IComplianceEvidenceStore>(provider =>
                 provider.GetRequiredService<PostgreSqlComplianceEvidenceStore>());
-            services.AddScoped<IComplianceEvidenceReader>(provider =>
+            services.AddSingleton<IComplianceEvidenceReader>(provider =>
                 provider.GetRequiredService<PostgreSqlComplianceEvidenceStore>());
-            services.AddScoped<IComplianceHoldStore>(_ => new PostgreSqlComplianceHoldStore(Context));
+            services.AddSingleton<IComplianceHoldStore>(new PostgreSqlComplianceHoldStore(Context));
             services.AddFinancialCrimeComposition();
             services.AddOptions<FinancialCrimeEconomyHookOptions>()
                 .Configure(options => options.ScreeningInterval = TimeSpan.FromHours(24));
+            services.AddOptions<FinancialCrimeIngestionWorkerOptions>();
+            services.AddOptions<FinancialCrimeRescreeningWorkerOptions>();
+            services.AddSingleton<Microsoft.Extensions.Logging.ILogger<EconomyFinancialCrimeSignalAdapter>>(
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<EconomyFinancialCrimeSignalAdapter>.Instance);
             // The Economy authority inputs are stubbed: the adapter test exercises the hook
             // seam, not the risk engine (covered by the Economy module's own suites).
             services.AddScoped<IEconomyJurisdictionResolver, StubJurisdictionResolver>();

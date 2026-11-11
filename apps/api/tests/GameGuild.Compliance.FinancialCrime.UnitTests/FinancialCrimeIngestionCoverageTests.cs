@@ -6,6 +6,8 @@ using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace GameGuild.Compliance.FinancialCrime.UnitTests;
@@ -154,7 +156,8 @@ public sealed class FinancialCrimeIngestionCoverageTests
                            row.PayloadJson.Contains("key-20"));
         var nonRelationalWorker = new FinancialCrimeSignalIngestionWorker(
             fixture.Store, fixture.Control, new NonDbContext(), Options.Create(new FinancialCrimeEconomyHookOptions()),
-            Options.Create(new FinancialCrimeIngestionWorkerOptions()), TimeProvider.System);
+            Options.Create(new FinancialCrimeIngestionWorkerOptions()), TimeProvider.System,
+            NullLogger<FinancialCrimeSignalIngestionWorker>.Instance);
         await nonRelationalWorker.ProcessOneAsync(relationalEntry, CancellationToken.None);
         (await context.Set<FinancialCrimeSignalOutboxRow>().SingleAsync(row => row.Id == relationalEntry.Id))
             .LastError.Should().NotBeNullOrWhiteSpace();
@@ -208,7 +211,8 @@ public sealed class FinancialCrimeIngestionCoverageTests
         // Version race: the stubbed plane reports the due screening, then conflicts on ingest.
         var conflictPlane = new StubControlPlane(Internal("eco-2", 5, Now.AddMinutes(-1)));
         var conflictWorker = new FinancialCrimeRescreeningWorker(
-            conflictPlane, context, hook, workerOptions, TimeProvider.System);
+            conflictPlane, context, hook, workerOptions, TimeProvider.System,
+            NullLogger<FinancialCrimeRescreeningWorker>.Instance);
         (await conflictWorker.RunAsync()).Should().Be(0);
 
         // A relational context is required for the version read.
@@ -308,7 +312,8 @@ public sealed class FinancialCrimeIngestionCoverageTests
         var cancelledAfterStart = new StubScopeFactory(new ThrowingQueue(cancelled: false));
         var contained = new EconomyFinancialCrimeSignalAdapter(
             fixture.Inner, cancelledAfterStart, Options.Create(new FinancialCrimeEconomyHookOptions()),
-            TimeProvider.System);
+            TimeProvider.System,
+            NullLogger<EconomyFinancialCrimeSignalAdapter>.Instance);
         await contained.ExecuteAsync<object>(
             TenantId, ActorId, Intent(EconomyValueMovementCapability.Transfer),
             (_, _) => Task.FromResult(new object()), CancellationToken.None);
@@ -349,13 +354,12 @@ public sealed class FinancialCrimeIngestionCoverageTests
     }
 
     [Fact]
-    public async Task QueueRequiresARelationalContextAndOptionDefaultsHold()
+    public void QueueRequiresARelationalContextAndOptionDefaultsHold()
     {
         Action nullContext = () => new PostgreSqlFinancialCrimeSignalQueue(null!);
         nullContext.Should().Throw<ArgumentNullException>();
-        var queue = new PostgreSqlFinancialCrimeSignalQueue(new NonDbContext());
-        await FluentActions.Awaiting(() => queue.EnqueueEconomyOperationAsync(Economy(TenantId, 1)).AsTask())
-            .Should().ThrowAsync<InvalidOperationException>();
+        Action nonRelational = () => new PostgreSqlFinancialCrimeSignalQueue(new NonDbContext());
+        nonRelational.Should().Throw<InvalidOperationException>();
 
         new FinancialCrimeEconomyHookOptions().Enabled.Should().BeTrue();
         new FinancialCrimeEconomyHookOptions().AlertUnitsThreshold.Should().Be(1_000_000);
@@ -371,10 +375,12 @@ public sealed class FinancialCrimeIngestionCoverageTests
 
     private static Guid ReviewerId() => Guid.Parse("33333333-3333-3333-3333-333333333333");
 
+    private static readonly Guid CounterpartyWallet = Guid.Parse("66666666-6666-6666-6666-666666666666");
+
     private static FinancialCrimeEconomyOperationSignal Economy(Guid tenantId, long units, DateTimeOffset? observedAt = null) => new(
         tenantId, ActorId, EconomySubjectReference.ForUser(tenantId, ActorId),
         EconomyValueMovementCapability.Transfer.ToString(), units, CurrencyCode.HardCoin.ToString(),
-        Guid.NewGuid(), "provider-hash", $"fingerprint-{units}", $"key-{units}-{observedAt?.UtcTicks}", observedAt ?? Now);
+        CounterpartyWallet, "provider-hash", $"fingerprint-{units}", $"key-{units}-{observedAt?.UtcTicks}", observedAt ?? Now);
 
     private static FinancialCrimeKycDecisionSignal Kyc(string subjectHash, string state, string? answer, string eventId) => new(
         TenantId, subjectHash, "applicant-1", state, answer, eventId, "payload-hash", Now);
@@ -426,14 +432,7 @@ public sealed class FinancialCrimeIngestionCoverageTests
             Inner = new EconomyTrustedProtectedOperationAuthorizer(
                 new StubJurisdictionResolver(), new AllowAllRiskIssuer(),
                 new StubCapabilityAuthorization(), new PassthroughTransaction());
-            var hostServices = new ServiceCollection();
-            hostServices.AddScoped<TestDbContext>(_ => context);
-            hostServices.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<TestDbContext>());
-            hostServices.AddScoped<PostgreSqlComplianceEvidenceStore>(_ => new PostgreSqlComplianceEvidenceStore(context));
-            hostServices.AddScoped<IComplianceEvidenceStore>(provider => provider.GetRequiredService<PostgreSqlComplianceEvidenceStore>());
-            hostServices.AddScoped<IComplianceEvidenceReader>(provider => provider.GetRequiredService<PostgreSqlComplianceEvidenceStore>());
-            hostServices.AddScoped<IComplianceHoldStore>(_ => new PostgreSqlComplianceHoldStore(context));
-            hostServices.AddFinancialCrimeComposition();
+            var hostServices = ConfigureSharedServices(new ServiceCollection(), context);
             Provider = hostServices.BuildServiceProvider();
         }
 
@@ -449,14 +448,7 @@ public sealed class FinancialCrimeIngestionCoverageTests
 
         public ServiceProvider BuildAdapterServices()
         {
-            var services = new ServiceCollection();
-            services.AddScoped<TestDbContext>(_ => Context);
-            services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<TestDbContext>());
-            services.AddScoped<PostgreSqlComplianceEvidenceStore>(_ => new PostgreSqlComplianceEvidenceStore(Context));
-            services.AddScoped<IComplianceEvidenceStore>(provider => provider.GetRequiredService<PostgreSqlComplianceEvidenceStore>());
-            services.AddScoped<IComplianceEvidenceReader>(provider => provider.GetRequiredService<PostgreSqlComplianceEvidenceStore>());
-            services.AddScoped<IComplianceHoldStore>(_ => new PostgreSqlComplianceHoldStore(Context));
-            services.AddFinancialCrimeComposition();
+            var services = ConfigureSharedServices(new ServiceCollection(), Context);
             services.AddScoped<IEconomyJurisdictionResolver, StubJurisdictionResolver>();
             services.AddScoped<IEconomyProtectedOperationRiskDecisionIssuer, AllowAllRiskIssuer>();
             services.AddScoped<IEconomyCapabilityAuthorizationService, StubCapabilityAuthorization>();
@@ -464,6 +456,29 @@ public sealed class FinancialCrimeIngestionCoverageTests
             services.AddScoped<EconomyTrustedProtectedOperationAuthorizer>();
             services.AddScoped<IEconomyTrustedProtectedOperationAuthorizer, EconomyFinancialCrimeSignalAdapter>();
             return services.BuildServiceProvider();
+        }
+
+        /// <summary>
+        /// The shared test context registers as a singleton INSTANCE (not a factory): the
+        /// adapter disposes its per-operation scopes, and a factory-registered scoped context
+        /// would be disposed with them, killing the shared context for later assertions.
+        /// Singleton instances are not disposed by the container.
+        /// </summary>
+        private static ServiceCollection ConfigureSharedServices(ServiceCollection services, TestDbContext context)
+        {
+            services.AddSingleton(context);
+            services.AddSingleton<IApplicationDbContext>(context);
+            services.AddSingleton(new PostgreSqlComplianceEvidenceStore(context));
+            services.AddSingleton<IComplianceEvidenceStore>(provider => provider.GetRequiredService<PostgreSqlComplianceEvidenceStore>());
+            services.AddSingleton<IComplianceEvidenceReader>(provider => provider.GetRequiredService<PostgreSqlComplianceEvidenceStore>());
+            services.AddSingleton<IComplianceHoldStore>(new PostgreSqlComplianceHoldStore(context));
+            services.AddFinancialCrimeComposition();
+            services.AddOptions<FinancialCrimeEconomyHookOptions>();
+            services.AddOptions<FinancialCrimeIngestionWorkerOptions>();
+            services.AddOptions<FinancialCrimeRescreeningWorkerOptions>();
+            services.AddSingleton<ILogger<EconomyFinancialCrimeSignalAdapter>>(
+                NullLogger<EconomyFinancialCrimeSignalAdapter>.Instance);
+            return services;
         }
     }
 

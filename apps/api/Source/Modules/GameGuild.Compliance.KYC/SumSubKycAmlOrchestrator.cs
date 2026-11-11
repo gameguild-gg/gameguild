@@ -30,16 +30,23 @@ public sealed record SumSubWebhookIngestionResult(
     /// <summary>
     ///     The tenant of the applicant binding the event resolved to (issue #1291 KYC
     ///     enrichment). Null on the rejected/deferred paths where no binding was found.
+    ///     Internal enrichment metadata: deliberately excluded from the provider-facing
+    ///     webhook response (and therefore from the OpenAPI surface) — the caller is SumSub,
+    ///     not the platform's own consumers.
     /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
     public Guid? TenantId { get; init; }
 
-    /// <summary>The opaque subject hash of the resolved applicant binding, when known.</summary>
+    /// <summary>The opaque subject hash of the resolved applicant binding, when known (internal).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
     public string? SubjectHash { get; init; }
 
-    /// <summary>The digest of the verified raw payload, when stored.</summary>
+    /// <summary>The digest of the verified raw payload, when stored (internal).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
     public string? PayloadHash { get; init; }
 
-    /// <summary>The raw SumSub review answer (GREEN/RED/REVIEW) when the payload carried one.</summary>
+    /// <summary>The raw SumSub review answer (GREEN/RED/REVIEW) when the payload carried one (internal).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
     public string? ReviewAnswer { get; init; }
 }
 

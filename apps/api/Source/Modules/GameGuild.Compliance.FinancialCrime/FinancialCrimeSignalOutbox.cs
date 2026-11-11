@@ -217,15 +217,19 @@ internal enum FinancialCrimeSignalOutboxStatus
 /// own serializable transaction so the producer (money path) and the consumer (worker) never
 /// share a DbContext or a transaction.
 /// </summary>
-public sealed class PostgreSqlFinancialCrimeSignalQueue(IApplicationDbContext context) :
-    IFinancialCrimeSignalQueue, IFinancialCrimeSignalOutboxStore
+public sealed class PostgreSqlFinancialCrimeSignalQueue : IFinancialCrimeSignalQueue, IFinancialCrimeSignalOutboxStore
 {
-    private readonly IApplicationDbContext _context = context ?? throw new ArgumentNullException(nameof(context));
+    private readonly IApplicationDbContext _context;
+    private readonly DbContext _db;
 
-    private DbContext Db =>
-        _context as DbContext ??
-        throw new InvalidOperationException(
+    public PostgreSqlFinancialCrimeSignalQueue(IApplicationDbContext context)
+    {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _db = context as DbContext ?? throw new InvalidOperationException(
             "Financial Crime signal outbox requires the relational application DbContext.");
+    }
+
+    private DbContext Db => _db;
 
     public async ValueTask EnqueueEconomyOperationAsync(
         FinancialCrimeEconomyOperationSignal signal,
