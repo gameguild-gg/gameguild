@@ -56,13 +56,3 @@ public sealed class MfaRecoveryConfirmResult
 
     public string Message { get; init; } = string.Empty;
 }
-
-/// <summary>Cancels only the authenticated owner's active recovery; identity is resolved inside the handler.</summary>
-public sealed class CancelMfaRecoveryCommand : ICommand<MfaRecoveryCancelResult>;
-
-public sealed class MfaRecoveryCancelResult
-{
-    public bool Success { get; init; } = true;
-    public bool Cancelled { get; init; }
-    public string Message { get; init; } = string.Empty;
-}

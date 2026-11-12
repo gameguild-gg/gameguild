@@ -588,7 +588,6 @@ public static class DataDependencyInjection
         services.AddScoped<IRequestHandler<RequestMfaRecoveryCommand, MfaRecoveryRequestResult>, RequestMfaRecoveryCommandHandler>();
         services.AddScoped<IRequestHandler<ContinueMfaRecoveryCommand, MfaRecoveryContinueResult>, ContinueMfaRecoveryCommandHandler>();
         services.AddScoped<IRequestHandler<ConfirmMfaRecoveryCommand, MfaRecoveryConfirmResult>, ConfirmMfaRecoveryCommandHandler>();
-        services.AddScoped<IRequestHandler<CancelMfaRecoveryCommand, MfaRecoveryCancelResult>, CancelMfaRecoveryCommandHandler>();
         services.AddScoped<IRequestHandler<AdminResetUserMfaCommand, AdminResetUserMfaResult>, AdminResetUserMfaCommandHandler>();
         services.AddScoped<IRequestHandler<AddTrustedContactCommand, TrustedContactActionResult>, AddTrustedContactCommandHandler>();
         services.AddScoped<IRequestHandler<RemoveTrustedContactCommand, TrustedContactActionResult>, RemoveTrustedContactCommandHandler>();

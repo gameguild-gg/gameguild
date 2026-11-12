@@ -8,8 +8,8 @@ namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Lost-MFA-device recovery: request (email) → continue (request token, after the
-///     cooling-off window) → confirm (confirmation token). These stages use anonymous,
-///     single-use, expiring, hash-matched tokens; cancellation requires the authenticated owner.
+///     cooling-off window) → confirm (confirmation token). All actions are anonymous;
+///     authorization rests on single-use, expiring, hash-matched tokens.
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
@@ -77,24 +77,6 @@ public sealed class MfaRecoveryController(ISender sender) : AuthControllerBase
         var result = await sender.Send(new ConfirmMfaRecoveryCommand { ConfirmationToken = body.ConfirmationToken }, ct).ConfigureAwait(false);
         return Ok(new MfaRecoveryConfirmResponse { Success = result.Success, Message = result.Message });
     }
-    /// <summary>Cancels the authenticated owner's active lost-device recovery.</summary>
-    [HttpPost("v{version:apiVersion}/auth/mfa/recovery:cancel")]
-    [EndpointSummary("Cancel own MFA recovery")]
-    [EndpointDescription("Cancels the authenticated user's active recovery and invalidates its request and confirmation tokens. Client identifiers cannot select another account.")]
-    [ProducesResponseType<MfaRecoveryCancelResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> CancelMfaRecovery(CancellationToken ct)
-    {
-        var result = await sender.Send(new CancelMfaRecoveryCommand(), ct).ConfigureAwait(false);
-        return Ok(new MfaRecoveryCancelResponse { Success = result.Success, Cancelled = result.Cancelled, Message = result.Message });
-    }
-}
-
-public sealed record MfaRecoveryCancelResponse
-{
-    public required bool Success { get; init; }
-    public required bool Cancelled { get; init; }
-    public required string Message { get; init; }
 }
 
 public sealed record MfaRecoveryRequestRequest
