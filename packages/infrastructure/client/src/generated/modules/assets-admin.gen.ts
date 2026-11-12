@@ -57,11 +57,11 @@ export class AssetsAdminModule {
    * Prevents the asset from being garbage collected, even if all references are deleted.
    * Use for legal holds, compliance requirements, or audit preservation.
    */
-  async postAdminAssetsMarkUndeletable(contentId: string, body: Types.AssetsControllersMarkNonDeletableInput): Promise<Result<void, ApiError>> {
+  async postAdminAssetsMarkUndeletable(contentId: string, body?: Types.AssetsControllersMarkNonDeletableInput): Promise<Result<void, ApiError>> {
     const url = `/v1/admin/assets/${contentId}:mark-undeletable`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.AssetsControllersMarkNonDeletableInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.AssetsControllersMarkNonDeletableInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -51,12 +51,12 @@ export class AuthAccountRecoveryModule {
    * Issues WebAuthn assertion options so an enrolled passkey on a surviving device can approve a live recovery request. Issues no sign-in credentials.
    */
   async postAuthAccountRecoveryApprovePasskeyBegin(
-    body: Types.IdentityAuthenticationBeginPasskeyApprovalInput,
+    body?: Types.IdentityAuthenticationBeginPasskeyApprovalInput,
   ): Promise<Result<Types.IdentityAuthenticationWebAuthnAuthenticationOptionsResult, ApiError>> {
     const url = '/v1/auth/account-recovery/approve-passkey:begin';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationBeginPasskeyApprovalInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationBeginPasskeyApprovalInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

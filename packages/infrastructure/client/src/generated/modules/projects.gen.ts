@@ -625,11 +625,11 @@ export class ProjectsModule {
    * Create (or return) the caller's workspace project for a game jam. The acting user is
    * taken from the authenticated context; the optional body only carries a title override.
    */
-  async postProjectsJam(jamId: string, body: Types.ProjectsCreateJamProjectInput): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
+  async postProjectsJam(jamId: string, body?: Types.ProjectsCreateJamProjectInput): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
     const url = `/v1/projects/jam/${jamId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsCreateJamProjectInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ProjectsCreateJamProjectInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

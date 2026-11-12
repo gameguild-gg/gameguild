@@ -472,6 +472,7 @@ public class ApiKeyHandlersCovTests
         var handler = new CreateApiKeyHandler(
             Mock.Of<IApiKeyRepository>(),
             _actorAccessor.Object,
+            Mock.Of<IStepUpReceiptService>(),
             NullLogger<CreateApiKeyHandler>.Instance);
 
         var command = new CreateApiKeyCommand
@@ -488,7 +489,8 @@ public class ApiKeyHandlersCovTests
     public async Task CreateApiKey_Authenticated_ReturnsSuccess()
     {
         var userId = Guid.NewGuid();
-        _actorAccessor.Setup(a => a.ActorContext).Returns(CreateAuthenticatedActor(userId));
+        _actorAccessor.Setup(a => a.ActorContext).Returns(ActorContextBuilder.ForUser(userId).WithTenantId(Guid.NewGuid())
+            .WithAttribute("session_id", Guid.NewGuid().ToString()).Build());
 
         var repository = new Mock<IApiKeyRepository>();
         repository
@@ -498,11 +500,13 @@ public class ApiKeyHandlersCovTests
         var handler = new CreateApiKeyHandler(
             repository.Object,
             _actorAccessor.Object,
+            Mock.Of<IStepUpReceiptService>(),
             NullLogger<CreateApiKeyHandler>.Instance);
 
         var command = new CreateApiKeyCommand
         {
             Name = "my-key",
+            StepUpReceipt = "verified-test-receipt",
             Scopes = new[] { "read", "write" },
             ExpiresAt = DateTime.UtcNow.AddDays(30)
         };

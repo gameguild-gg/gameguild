@@ -43,7 +43,7 @@ public sealed class TotpMfaService(
     {
         if (!_mfaOptions.Enabled)
         {
-            throw new InvalidOperationException("Multi-factor authentication is disabled.");
+            throw new MfaConfigurationDeniedException("Multi-factor authentication is disabled.");
         }
 
         logger.LogInformation("Setting up TOTP MFA for user: {UserId}", userId);
@@ -62,7 +62,7 @@ public sealed class TotpMfaService(
             {
                 logger.LogWarning("MFA already enabled for user: {UserId}", userId);
 
-                throw new InvalidOperationException("MFA is already enabled for this user");
+                throw new MfaConfigurationDeniedException("MFA is already enabled for this user");
             }
 
             // Generate secret key (Base32 encoded, 160 bits = 32 characters)
@@ -91,7 +91,7 @@ public sealed class TotpMfaService(
 
             return (qrCodeUri, secretKey, new DateTimeOffset(mfaConfig.SetupExpiresAt.Value, TimeSpan.Zero));
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not MfaConfigurationDeniedException)
         {
             logger.LogError(ex, "Error setting up TOTP for user: {UserId}", userId);
 
@@ -103,10 +103,20 @@ public sealed class TotpMfaService(
     ///     Verifies TOTP code and enables MFA if first-time setup.
     /// </summary>
     public Task<bool> VerifyTotpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default)
+        => GuardedAsync(userId, () => VerifyTotpCoreAsync(userId, totpCode, deviceId, false, cancellationToken), cancellationToken);
+
+    public Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return VerifyTotpCoreAsync(userId, totpCode, deviceId, true, cancellationToken);
+    }
+
+    private async Task<bool> VerifyTotpCoreAsync(Guid userId, string totpCode, string? deviceId,
+        bool strictStepUp, CancellationToken cancellationToken)
     {
         if (!_mfaOptions.Enabled)
         {
-            return Task.FromResult(false);
+            return false;
         }
 
         logger.LogInformation("Verifying TOTP code for user: {UserId}", userId);
@@ -114,15 +124,18 @@ public sealed class TotpMfaService(
         // The verify path both reads and (on first success) flips the enrollment flags on
         // the same row setup writes — it is a settings-path enrollment mutation and runs
         // under the same per-subject claim (issue #1117).
-        return GuardedAsync(userId, () => VerifyTotpCoreAsync(userId, totpCode, deviceId, cancellationToken), cancellationToken);
-    }
-
-    private async Task<bool> VerifyTotpCoreAsync(Guid userId, string totpCode, string? deviceId, CancellationToken cancellationToken)
-    {
         try
         {
             // Get MFA configuration
             var mfaConfig = await mfaConfigRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+
+            // Step-up proves an existing factor; enrollment confirmation belongs to the legacy setup flow.
+            if (strictStepUp && mfaConfig is not { IsEnabled: true, IsSetupComplete: true })
+            {
+                await attemptTrackingService.RecordMfaAttemptAsync(userId, MfaMethod.Totp, false, "Confirmed TOTP enrollment required", deviceId, cancellationToken).ConfigureAwait(false);
+
+                return false;
+            }
 
             if (mfaConfig == null || string.IsNullOrEmpty(mfaConfig.TotpSecretKey))
             {
@@ -203,7 +216,7 @@ public sealed class TotpMfaService(
             return false;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch (Exception ex)
+        catch (Exception ex) when (!strictStepUp)
         {
             logger.LogError(ex, "Error verifying TOTP for user: {UserId}", userId);
             await attemptTrackingService.RecordMfaAttemptAsync(userId, MfaMethod.Totp, false, "System error", deviceId, cancellationToken).ConfigureAwait(false);

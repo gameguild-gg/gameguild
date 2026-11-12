@@ -18,7 +18,7 @@ public sealed class ApiKeyControllerTests
     public async Task CreateApiKey_WhenMediatorSucceeds_ReturnsCreated()
     {
         var mediator = new Mock<IMediator>();
-        var command = new CreateApiKeyCommand { Name = "integration-key", Scopes = ["read"] };
+        var command = new CreateApiKeyCommand { Name = "integration-key", Scopes = ["read"], StepUpReceipt = "verified-test-receipt" };
         var response = new CreateApiKeyResponse
         {
             Id = Guid.NewGuid(),
@@ -33,7 +33,7 @@ public sealed class ApiKeyControllerTests
             .Setup(x => x.Send(It.Is<CreateApiKeyCommand>(c => c.Name == command.Name && c.Scopes.SequenceEqual(command.Scopes)), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(response));
 
-        var controller = new ApiKeyController(mediator.Object);
+        var controller = new ApiKeyController(mediator.Object, Mock.Of<IStepUpRequirementService>());
 
         var result = await controller.CreateApiKey(command, CancellationToken.None);
 
@@ -53,7 +53,7 @@ public sealed class ApiKeyControllerTests
             .Setup(x => x.Send(It.IsAny<CreateApiKeyCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<CreateApiKeyResponse>(error));
 
-        var controller = new ApiKeyController(mediator.Object);
+        var controller = new ApiKeyController(mediator.Object, Mock.Of<IStepUpRequirementService>());
 
         var result = await controller.CreateApiKey(new CreateApiKeyCommand { Name = string.Empty, Scopes = ["read"] }, CancellationToken.None);
 
@@ -74,7 +74,7 @@ public sealed class ApiKeyControllerTests
             .Setup(x => x.Send(It.IsAny<ListApiKeysQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(apiKeys));
 
-        var controller = new ApiKeyController(mediator.Object);
+        var controller = new ApiKeyController(mediator.Object, Mock.Of<IStepUpRequirementService>());
 
         var result = await controller.ListApiKeys(CancellationToken.None);
 
@@ -92,7 +92,7 @@ public sealed class ApiKeyControllerTests
             .Setup(x => x.Send(It.IsAny<ListApiKeysQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<List<ApiKeyDto>>(error));
 
-        var controller = new ApiKeyController(mediator.Object);
+        var controller = new ApiKeyController(mediator.Object, Mock.Of<IStepUpRequirementService>());
 
         var result = await controller.ListApiKeys(CancellationToken.None);
 
@@ -111,7 +111,7 @@ public sealed class ApiKeyControllerTests
             .Callback<object, CancellationToken>((request, _) => captured = (RevokeApiKeyCommand)request)
             .ReturnsAsync(Result.Success(true));
 
-        var controller = new ApiKeyController(mediator.Object);
+        var controller = new ApiKeyController(mediator.Object, Mock.Of<IStepUpRequirementService>());
         var keyId = Guid.NewGuid();
 
         var result = await controller.RevokeApiKey(keyId, new RevokeApiKeyRequest { Reason = "rotated" }, CancellationToken.None);
@@ -136,7 +136,7 @@ public sealed class ApiKeyControllerTests
             .Callback<object, CancellationToken>((request, _) => captured = (RevokeApiKeyCommand)request)
             .ReturnsAsync(Result.Failure<bool>(error));
 
-        var controller = new ApiKeyController(mediator.Object);
+        var controller = new ApiKeyController(mediator.Object, Mock.Of<IStepUpRequirementService>());
 
         var result = await controller.RevokeApiKey(Guid.NewGuid(), null, CancellationToken.None);
 

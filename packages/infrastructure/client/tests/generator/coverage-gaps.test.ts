@@ -287,6 +287,7 @@ describe('generator coverage edge cases', () => {
                 { name: 'channel', in: 'query', required: true, schema: { type: 'string' } },
               ],
               requestBody: {
+                required: true,
                 content: {
                   'application/json': {
                     schema: { $ref: '#/components/schemas/PublishListingInput' },
@@ -306,6 +307,7 @@ describe('generator coverage edge cases', () => {
             post: {
               tags: ['RealEstate/Listings'],
               requestBody: {
+                required: true,
                 content: {
                   'application/json': {
                     schema: { type: 'object', properties: { query: { type: 'string' } } },

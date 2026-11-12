@@ -49,12 +49,13 @@ export class CommercePaymentsFraudReviewsModule {
    */
   async postFraudReviewsApprove(
     paymentId: string,
-    body: Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewInput,
+    body?: Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewInput,
   ): Promise<Result<Types.CommercePaymentsFraudReviewResolutionResult, ApiError>> {
     const url = `/api/v1/fraud/reviews/${paymentId}:approve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -79,12 +80,13 @@ export class CommercePaymentsFraudReviewsModule {
    */
   async postFraudReviewsDeny(
     paymentId: string,
-    body: Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewInput,
+    body?: Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewInput,
   ): Promise<Result<Types.CommercePaymentsFraudReviewResolutionResult, ApiError>> {
     const url = `/api/v1/fraud/reviews/${paymentId}:deny`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommercePaymentsFraudReviewsControllerResolveFraudReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

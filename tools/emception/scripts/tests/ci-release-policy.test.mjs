@@ -122,6 +122,8 @@ test('Emception CI is Linux-only, lockfile-driven, receipt-aware, and Changesets
   assert.match(workflow, /tools\/emception\/packages\/toolchain\/cdn/);
   assert.match(workflow, /TAG="v\$\{VERSION\}"/);
   assert.doesNotMatch(workflow, /emception-v/);
+  assert.match(workflow, /TAGGED_VERSION/);
+  assert.doesNotMatch(workflow, /--latest/);
   assert.equal(
     workflow.indexOf('- name: Build all Emception packages')
       < workflow.indexOf('- name: Generate clean release staging and packages'),

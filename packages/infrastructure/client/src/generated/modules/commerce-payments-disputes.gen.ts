@@ -103,12 +103,12 @@ export class CommercePaymentsDisputesModule {
    */
   async postDisputesAccept(
     disputeId: string,
-    body: Types.CommercePaymentsDisputesControllerAcceptDisputeInput,
+    body?: Types.CommercePaymentsDisputesControllerAcceptDisputeInput,
   ): Promise<Result<Types.CommercePaymentsDisputeActionResult, ApiError>> {
     const url = `/api/v1/disputes/${disputeId}:accept`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsDisputesControllerAcceptDisputeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsDisputesControllerAcceptDisputeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -155,12 +155,12 @@ export class CommercePaymentsDisputesModule {
    */
   async postDisputesChallenge(
     disputeId: string,
-    body: Types.CommercePaymentsDisputesControllerChallengeDisputeInput,
+    body?: Types.CommercePaymentsDisputesControllerChallengeDisputeInput,
   ): Promise<Result<Types.CommercePaymentsDisputeActionResult, ApiError>> {
     const url = `/api/v1/disputes/${disputeId}:challenge`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsDisputesControllerChallengeDisputeInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsDisputesControllerChallengeDisputeInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -229,12 +229,12 @@ export class CommercePaymentsDisputesModule {
    */
   async postDisputesSubmitEvidence(
     disputeId: string,
-    body: Types.CommercePaymentsDisputesControllerSubmitDisputeEvidenceInput,
+    body?: Types.CommercePaymentsDisputesControllerSubmitDisputeEvidenceInput,
   ): Promise<Result<Types.CommercePaymentsDisputeActionResult, ApiError>> {
     const url = `/api/v1/disputes/${disputeId}:submit-evidence`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsDisputesControllerSubmitDisputeEvidenceInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsDisputesControllerSubmitDisputeEvidenceInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

@@ -319,6 +319,8 @@ public static class DataDependencyInjection
         services.AddScoped<ISignInMfaService, SignInMfaService>();
         services.AddScoped<IStepUpChallengeStore, PostgreSqlStepUpChallengeStore>();
         services.AddScoped<IStepUpReceiptService, StepUpReceiptService>();
+        services.AddScoped<IStepUpRequirementService, StepUpRequirementService>();
+        services.AddHostedService<StepUpChallengeCleanupBackgroundService>();
         // Issue #1191: builds the structured 423 body sensitive actions return when the caller
         // has no valid step-up receipt (the platform trigger the response DTO previously lacked).
         services.AddScoped<IStepUpRequiredResponder, StepUpRequiredResponder>();

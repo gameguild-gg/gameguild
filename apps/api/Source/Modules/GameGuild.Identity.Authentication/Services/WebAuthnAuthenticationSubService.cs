@@ -124,18 +124,45 @@ public class WebAuthnAuthenticationSubService(
         }
     }
 
-    public async Task<WebAuthnAuthenticationResult> CompleteAuthenticationAsync(
+    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationAsync(
         string assertionResponse,
         string? ipAddress = null,
         string? userAgent = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        CompleteAuthenticationCoreAsync(assertionResponse, ipAddress, userAgent, cancellationToken, false);
+
+    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationForStepUpAsync(
+        string assertionResponse,
+        string? ipAddress = null,
+        string? userAgent = null,
+        CancellationToken cancellationToken = default) =>
+        CompleteAuthenticationCoreAsync(assertionResponse, ipAddress, userAgent, cancellationToken, true);
+
+    private async Task<WebAuthnAuthenticationResult> CompleteAuthenticationCoreAsync(
+        string assertionResponse,
+        string? ipAddress,
+        string? userAgent,
+        CancellationToken cancellationToken,
+        bool strict)
     {
         Guid? resolvedUserId = null;
 
         try
         {
             // Parse the assertion response
-            var assertionResponseObj = JsonSerializer.Deserialize<AuthenticatorAssertionRawResponse>(assertionResponse);
+            AuthenticatorAssertionRawResponse? assertionResponseObj;
+            try
+            {
+                assertionResponseObj = JsonSerializer.Deserialize<AuthenticatorAssertionRawResponse>(assertionResponse);
+            }
+            catch (Exception exception) when (strict && exception is JsonException or FormatException)
+            {
+                return new WebAuthnAuthenticationResult { Success = false, Error = "Invalid assertion response" };
+            }
+            if (strict && (assertionResponseObj?.RawId is not { Length: > 0 } || assertionResponseObj.Response is null))
+            {
+                return new WebAuthnAuthenticationResult { Success = false, Error = "Invalid assertion response" };
+            }
             if (assertionResponseObj == null)
             {
                 await RecordAuthenticationEventAsync(
@@ -195,20 +222,38 @@ public class WebAuthnAuthenticationSubService(
                 return new WebAuthnAuthenticationResult { Success = false, Error = "Authentication session not found or expired" };
             }
 
-            // Verify the assertion
-            var result = await fido2.MakeAssertionAsync(new MakeAssertionParams
+            // Only proof rejection at this pre-mutation cryptographic seam is a
+            // normal denial. Operational errors and all post-proof failures escape
+            // the strict port so the enclosing use-case transaction can roll back.
+            VerifyAssertionResult result;
+            try
             {
-                AssertionResponse = assertionResponseObj,
-                OriginalOptions = session.AssertionOptions,
-                StoredPublicKey = Convert.FromBase64String(storedCredential.PublicKey),
-                StoredSignatureCounter = storedCredential.SignatureCounter,
-                IsUserHandleOwnerOfCredentialIdCallback = async (args, ct) =>
+                result = await fido2.MakeAssertionAsync(new MakeAssertionParams
                 {
-                    var cred = await credentialRepository.GetByCredentialIdAsync(
-                        Convert.ToBase64String(args.CredentialId), ct).ConfigureAwait(false);
-                    return cred?.UserId == new Guid(args.UserHandle);
-                }
-            }, cancellationToken);
+                    AssertionResponse = assertionResponseObj,
+                    OriginalOptions = session.AssertionOptions,
+                    StoredPublicKey = Convert.FromBase64String(storedCredential.PublicKey),
+                    StoredSignatureCounter = storedCredential.SignatureCounter,
+                    IsUserHandleOwnerOfCredentialIdCallback = async (args, ct) =>
+                    {
+                        if (strict && args.UserHandle is not { Length: 16 })
+                        {
+                            return false;
+                        }
+
+                        var cred = await credentialRepository.GetByCredentialIdAsync(
+                            Convert.ToBase64String(args.CredentialId), ct).ConfigureAwait(false);
+                        return cred?.UserId == new Guid(args.UserHandle);
+                    }
+                }, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Fido2VerificationException) when (strict)
+            {
+                await RecordAuthenticationEventAsync(
+                    "Authentication.Failed", false, resolvedUserId,
+                    "AssertionVerificationFailed", ipAddress, userAgent).ConfigureAwait(false);
+                return new WebAuthnAuthenticationResult { Success = false, Error = "Invalid assertion response" };
+            }
 
             // Remove the session
             await sessionStore.RemoveAssertionSessionAsync(storedCredential.UserId, cancellationToken).ConfigureAwait(false);
@@ -242,7 +287,7 @@ public class WebAuthnAuthenticationSubService(
                 IsPasswordless = storedCredential.IsPasswordless
             };
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!strict)
         {
             logger.LogError(ex, "Failed to complete WebAuthn authentication");
             await RecordAuthenticationEventAsync(

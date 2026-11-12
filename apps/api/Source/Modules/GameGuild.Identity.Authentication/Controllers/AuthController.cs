@@ -91,7 +91,7 @@ public sealed class AuthController(ISender sender) : BaseApiController
     [AllowAnonymous]
     [HttpPost("v{version:apiVersion}/auth/mfa/sign-in/complete")]
     [EndpointSummary("Complete MFA sign-in")]
-    [EndpointDescription("Consumes the expiring first-factor challenge and verifies TOTP or a backup code. Identity, tenant, policy and token version come from the server-side challenge. A successful response contains MFA-bound credentials.")]
+    [EndpointDescription("Consumes the expiring first-factor challenge and verifies an enrolled TOTP, SMS or backup code. Identity, tenant, policy and token version come from the server-side challenge. A successful response contains MFA-bound credentials.")]
     [ProducesResponseType<SignInResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]

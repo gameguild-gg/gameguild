@@ -105,12 +105,12 @@ export class CommercePaymentsRefundsModule {
    */
   async postRefundsApprove(
     refundId: string,
-    body: Types.CommercePaymentsRefundsControllerRefundDecisionInput,
+    body?: Types.CommercePaymentsRefundsControllerRefundDecisionInput,
   ): Promise<Result<Types.CommercePaymentsRefundDecisionResult, ApiError>> {
     const url = `/api/v1/refunds/${refundId}:approve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsRefundsControllerRefundDecisionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsRefundsControllerRefundDecisionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -136,12 +136,12 @@ export class CommercePaymentsRefundsModule {
    */
   async postRefundsReject(
     refundId: string,
-    body: Types.CommercePaymentsRefundsControllerRefundDecisionInput,
+    body?: Types.CommercePaymentsRefundsControllerRefundDecisionInput,
   ): Promise<Result<Types.CommercePaymentsRefundDecisionResult, ApiError>> {
     const url = `/api/v1/refunds/${refundId}:reject`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsRefundsControllerRefundDecisionInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsRefundsControllerRefundDecisionInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

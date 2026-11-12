@@ -161,12 +161,12 @@ export class AccessControlResourcePermissionsModule {
    */
   async postAuthorizationResourcesInvitationsDecline(
     invitationId: string,
-    body: Types.IdentityAuthorizationDeclineInvitationInput,
+    body?: Types.IdentityAuthorizationDeclineInvitationInput,
   ): Promise<Result<Types.IdentityAuthorizationInvitationActionResult, ApiError>> {
     const url = `/api/v1/authorization/resources/invitations/${invitationId}/decline`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationDeclineInvitationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationDeclineInvitationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

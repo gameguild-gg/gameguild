@@ -210,6 +210,7 @@ public static class OpenApiExtensions
                 c.OperationFilter<AllowAnonymousOperationFilter>();
                 c.OperationFilter<DacPermissionOperationFilter>();
                 c.OperationFilter<DeclaredResponseContentTypesOperationFilter>();
+                c.OperationFilter<MvcRequestBodyRequiredOperationFilter>();
                 var xmlPaths = Directory.EnumerateFiles(AppContext.BaseDirectory, "GameGuild.*.xml")
                     .OrderBy(path => path, StringComparer.Ordinal)
                     .ToArray();

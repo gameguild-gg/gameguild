@@ -56,12 +56,12 @@ export class CommerceBillingPricingDiscountsLedgerModule {
    * Drift detection over the pricing-decision ledger: samples entries (preferring never-validated ones), recomputes each final amount from its own breakdown document and stamps the entry Verified or Drifted. Drifted entries — where the stored final no longer follows from the recorded arithmetic — are surfaced first for review.
    */
   async postBillingPricingDiscountsLedgerValidateDrift(
-    body: Types.CommerceBillingValidatePricingLedgerDriftInput,
+    body?: Types.CommerceBillingValidatePricingLedgerDriftInput,
   ): Promise<Result<Types.CommerceBillingPricingLedgerDriftValidationResult, ApiError>> {
     const url = '/api/v1/billing/pricing-discounts-ledger/:validate-drift';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceBillingValidatePricingLedgerDriftInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceBillingValidatePricingLedgerDriftInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

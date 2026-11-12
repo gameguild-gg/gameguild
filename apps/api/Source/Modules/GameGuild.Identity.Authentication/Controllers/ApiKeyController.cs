@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
@@ -15,26 +16,52 @@ namespace GameGuild.Identity.Authentication;
 public class ApiKeyController : BaseApiController
 {
     private readonly ISender _dispatcher;
+    private readonly IStepUpRequirementService _stepUpRequirements;
 
-    public ApiKeyController(ISender dispatcher)
+    public ApiKeyController(ISender dispatcher, IStepUpRequirementService stepUpRequirements)
     {
         _dispatcher = dispatcher;
+        _stepUpRequirements = stepUpRequirements;
     }
 
     /// <summary>
-    ///     Create a new API key
+    ///     Create a new API key after fresh verification
     /// </summary>
     [HttpPost("v{version:apiVersion}/auth/api-keys")]
     [Authorize(Policy = ApiKeyScopePolicies.Prefix + ApiKeyScopes.ManageApiKeys)]
     [Authorize(Policy = TrustedDevicePolicy.Name)]
     [EndpointSummary("Create a new API key")]
-    [ProducesResponseType(typeof(CreateApiKeyResponse), StatusCodes.Status201Created)]
+    [EndpointDescription("Creates an API key after fresh verification. Without a stepUpReceipt, a valid request returns HTTP 403 with a persisted challenge bound to the name, scopes, expiry and IP whitelist. Verify an enrolled supported factor and retry the identical creation fields with the returned receipt. Invalid or reused receipts cannot create a key.")]
+    [ProducesResponseType(typeof(CreateApiKeyResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(StepUpAuthenticationRequiredResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> CreateApiKey(
-        [FromBody] CreateApiKeyCommand command,
+        [FromBody, Required] CreateApiKeyCommand command,
         CancellationToken cancellationToken)
     {
-        var result = await _dispatcher.Send(command, cancellationToken).ConfigureAwait(false);
+        ArgumentNullException.ThrowIfNull(command);
+        var intent = command.Snapshot();
+        var result = await _dispatcher.Send(intent, cancellationToken).ConfigureAwait(false);
+        if (result.IsFailure && result.Error.Code == "StepUp.Required")
+        {
+            try
+            {
+                var requirement = await _stepUpRequirements.CreateAsync(
+                    CreateApiKeyHandler.StepUpBinding(intent), cancellationToken).ConfigureAwait(false);
+                return StatusCode(StatusCodes.Status403Forbidden, requirement);
+            }
+            catch (StepUpContextUnavailableException)
+            {
+                return Unauthorized(new { error = "An authenticated tenant and session context is required" });
+            }
+        }
+
+        if (result.IsFailure && result.Error.Code is "Auth.Required" or "Auth.ContextUnavailable")
+        {
+            return Unauthorized(new { error = result.Error });
+        }
+
         return result.IsSuccess
             // Issue #1192: the endpoint declares 201; answer with the declared status (the
             // previous 200 was an undocumented response for clients generated from the schema).
