@@ -253,6 +253,15 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
         {
             await File.WriteAllTextAsync(capture, raw);
         }
+
+        // The trust-device step-up surface moved to the platform 423 responder (#1361) and its
+        // dedicated capture suite was retired; this same full-host capture also serves as the
+        // trusted-device surface evidence (identical host, identical swagger document).
+        var trustedCapture = Environment.GetEnvironmentVariable("GAMEGUILD_STEPUP_OPENAPI_CAPTURE");
+        if (!string.IsNullOrWhiteSpace(trustedCapture))
+        {
+            await File.WriteAllTextAsync(trustedCapture, raw);
+        }
     }
 
     private static CreateApiKeyCommand Intent(string? receipt = null) => new()

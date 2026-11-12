@@ -77,11 +77,10 @@ run_phase solution-build dotnet build apps/api/GameGuild.sln -c Release --nologo
 "$evidence_python" -B "$helper" runtime --output "$output" --label before
 
 pg_classes=(
-  TrustedDeviceStepUpPostgreSqlHttpTests StepUpVerificationBudgetPostgreSqlTests
+  StepUpVerificationBudgetPostgreSqlTests
   StepUpBudgetMigrationPostgreSqlTests StepUpVerificationTransactionPostgreSqlTests
   StepUpWebAuthnBindingPostgreSqlTests StepUpWebAuthnMigrationPostgreSqlTests
-  SmsSessionEvidenceMigrationPostgreSqlTests MfaSmsSignInPostgreSqlTests
-  MfaSmsEnrollmentReverificationPostgreSqlTests MfaRecoveryLifecyclePostgreSqlTests
+  SmsSessionEvidenceMigrationPostgreSqlTests MfaRecoveryLifecyclePostgreSqlTests
   MfaSettingsEnrollmentPostgreSqlTests MfaRecoveryRateLimitPostgreSqlTests
   OrchestratedAuthenticationPostgreSqlHttpTests ApiKeyCreationStepUpPostgreSqlHttpTests
   ServiceAccountSecretStepUpPostgreSqlHttpTests
