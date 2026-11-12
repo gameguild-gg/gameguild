@@ -5,6 +5,7 @@ using FluentAssertions;
 using GameGuild;
 using GameGuild.API.Database;
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -57,7 +58,7 @@ public sealed class PostgreSqlPayoutDispatchOutboxTests
         var item = await fixture.AddAsync(PayoutOperationState.Dispatching);
         var provider = new CallbackProvider(async command =>
         {
-            var row = await fixture.Context.Set<PayoutDispatchOutboxRow>()
+            var row = await fixture.Context.Set<EconomyOutboxRow>()
                 .SingleAsync(value => value.Id == item.Row.Id);
             row.CompletedAt = Now;
             await fixture.Context.SaveChangesAsync();
@@ -80,7 +81,7 @@ public sealed class PostgreSqlPayoutDispatchOutboxTests
         var item = await fixture.AddAsync(PayoutOperationState.Dispatching);
         var provider = new CallbackProvider(async command =>
         {
-            var row = await fixture.Context.Set<PayoutDispatchOutboxRow>()
+            var row = await fixture.Context.Set<EconomyOutboxRow>()
                 .SingleAsync(value => value.Id == item.Row.Id);
             if (stale == "owner")
             {
@@ -157,9 +158,9 @@ public sealed class PostgreSqlPayoutDispatchOutboxTests
             await FluentActions.Awaiting(() => processor.ProcessNextAsync("worker", Now).AsTask())
                 .Should().ThrowAsync<Exception>();
             fixture.Context.ChangeTracker.Clear();
-            var persisted = await fixture.Context.Set<PayoutDispatchOutboxRow>()
+            var persisted = await fixture.Context.Set<EconomyOutboxRow>()
                 .SingleAsync(row => row.Id == item.Row.Id);
-            persisted.LastErrorCode.Should().Be("provider-error");
+            persisted.LastError.Should().Be("provider-error");
             persisted.CompletedAt = Now;
             persisted.LeaseOwner = null;
             persisted.LeaseExpiresAt = null;
@@ -298,11 +299,11 @@ public sealed class PostgreSqlPayoutDispatchOutboxTests
                 operation.DispatchSnapshotHash ?? "dispatch-snapshot",
                 operation.IdempotencyKey.Value + ":dispatch", Now.AddMinutes(-2));
             var payload = JsonSerializer.Serialize(command, JsonOptions);
-            var row = new PayoutDispatchOutboxRow
+            var row = new EconomyOutboxRow
             {
-                Id = Guid.NewGuid(), OperationId = operation.Id,
+                Id = Guid.NewGuid(), OutboxKind = EconomyOutboxKind.PayoutDispatch, OperationId = operation.Id,
                 IdempotencyKey = command.IdempotencyKey, Payload = payload, PayloadHash = Hash(payload),
-                CreatedAt = Now.AddSeconds(_sequence), AvailableAt = Now.AddMinutes(-1)
+                OccurredAt = Now.AddSeconds(_sequence), AvailableAt = Now.AddMinutes(-1)
             };
             await Writer.AddAsync(row);
             return new OutboxItem(operation, command, row);
@@ -328,7 +329,7 @@ public sealed class PostgreSqlPayoutDispatchOutboxTests
     private sealed record OutboxItem(
         PayoutOperation Operation,
         PayoutDispatchCommand Command,
-        PayoutDispatchOutboxRow Row);
+        EconomyOutboxRow Row);
 
     private sealed class CallbackProvider(
         Func<PayoutDispatchCommand, ValueTask<PayoutDispatchReceipt>> dispatch) : IConnectPayoutProvider

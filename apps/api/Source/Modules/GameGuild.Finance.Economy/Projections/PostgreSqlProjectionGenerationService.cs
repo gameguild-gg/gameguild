@@ -135,8 +135,9 @@ public sealed class PostgreSqlProjectionGenerationService : IEconomyProjectionGe
                 throw new ArgumentException("Approval cannot predate the rebuild.", nameof(approvedAt));
             }
 
-            var approvals = await _db.Set<EconomyProjectionGenerationApprovalRow>()
-            .Where(item => item.Generation == generation)
+            var approvals = await _db.Set<EconomyApprovalRow>()
+            .Where(item => item.ApprovalKind == EconomyApprovalKind.ProjectionGeneration &&
+                           item.Generation == generation)
             .OrderBy(item => item.ApprovedAt)
             .ToArrayAsync(cancellationToken);
         if (approvals.Any(item => item.ActorId == actorId))
@@ -149,12 +150,13 @@ public sealed class PostgreSqlProjectionGenerationService : IEconomyProjectionGe
                 throw new ProjectionGenerationException("The projection cutover already has two approvals.");
             }
 
-            var approval = new EconomyProjectionGenerationApprovalRow
+            var approval = new EconomyApprovalRow
         {
-            Id = Guid.NewGuid(), Generation = generation, ActorId = actorId,
+            Id = Guid.NewGuid(), ApprovalKind = EconomyApprovalKind.ProjectionGeneration,
+            Generation = generation, ActorId = actorId,
             ReauthenticationHash = reauthenticationHash.Trim(), ApprovedAt = approvedAt
         };
-        _db.Set<EconomyProjectionGenerationApprovalRow>().Add(approval);
+        _db.Set<EconomyApprovalRow>().Add(approval);
         if (approvals.Length == 0)
         {
             row.ApprovedBy = actorId;

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
 
@@ -94,8 +95,11 @@ public sealed class PostgreSqlAdminWithdrawalStoreTests
             .Should().Throw<AdminWithdrawalEvidenceException>();
         FluentActions.Invoking(() => store.Update(dispatching, run.Version))
             .Should().Throw<AdminWithdrawalStaleCommandException>();
-        context.Set<AdminWithdrawalProviderEventRow>().Add(new AdminWithdrawalProviderEventRow
+        context.Set<EconomyProviderEventRow>().Add(new EconomyProviderEventRow
         {
+            // The unified table is kind-discriminated; the invalid-timestamp
+            // row must carry the AdminWithdrawal kind the store reads.
+            ProviderEventKind = EconomyProviderEventKind.AdminWithdrawal,
             TenantId = run.TenantId,
             EventId = "invalid-time",
             EventHash = "invalid-time-hash",

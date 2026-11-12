@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using FluentAssertions;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Finance.Economy.Contracts;
 using GameGuild.Finance.Economy.Marketplace.Persistence;
 using GameGuild.TestSupport.Finance.Economy;
@@ -35,7 +36,7 @@ public sealed class PostgreSqlMarketplaceOutboxProcessorTests
         published.Status.Should().Be(MarketplaceOutboxProcessStatus.Published);
         noWork.Status.Should().Be(MarketplaceOutboxProcessStatus.NoWork);
         handler.Messages.Should().ContainSingle();
-        var persisted = await context.Set<MarketplaceOutboxRow>().AsNoTracking().SingleAsync();
+        var persisted = await context.Set<EconomyOutboxRow>().AsNoTracking().SingleAsync();
         persisted.PublishedAt.Should().Be(Now);
         persisted.AttemptCount.Should().Be(1);
         persisted.LeaseOwner.Should().BeNull();
@@ -61,7 +62,7 @@ public sealed class PostgreSqlMarketplaceOutboxProcessorTests
         result.Status.Should().Be(MarketplaceOutboxProcessStatus.Failed);
         result.Error.Should().Contain("hash");
         handler.Messages.Should().BeEmpty();
-        var persisted = await context.Set<MarketplaceOutboxRow>().AsNoTracking().SingleAsync();
+        var persisted = await context.Set<EconomyOutboxRow>().AsNoTracking().SingleAsync();
         persisted.PublishedAt.Should().BeNull();
         persisted.AttemptCount.Should().Be(1);
         persisted.LeaseOwner.Should().BeNull();
@@ -76,6 +77,7 @@ public sealed class PostgreSqlMarketplaceOutboxProcessorTests
     [InlineData("missing")]
     [InlineData("format")]
     [InlineData("mismatch")]
+    [InlineData("unbound")]
     public async Task InvalidSettlementBindingFailsClosed(string invalid)
     {
         await using var context = await SqliteOutboxDbContext.CreateAsync();
@@ -86,8 +88,16 @@ public sealed class PostgreSqlMarketplaceOutboxProcessorTests
             "array" => "[]",
             "missing" => "{}",
             "format" => "{\"settlementId\":\"invalid\"}",
+            // The unified queue makes the settlement binding nullable; a
+            // marketplace-kind row without one must fail closed too (the
+            // lifted payload comparison sees a null right-hand side).
+            "unbound" => JsonSerializer.Serialize(new { settlementId = settlement.Id }),
             _ => JsonSerializer.Serialize(new { settlementId = Guid.NewGuid() })
         };
+        if (invalid == "unbound")
+        {
+            outbox.SettlementId = null;
+        }
         outbox.PayloadHash = Hash(outbox.Payload);
         await context.SaveChangesAsync();
         var processor = new PostgreSqlMarketplaceOutboxProcessor(context, new StubHandler());
@@ -126,7 +136,7 @@ public sealed class PostgreSqlMarketplaceOutboxProcessorTests
 
         result.Status.Should().Be(MarketplaceOutboxProcessStatus.Failed);
         result.Error.Should().HaveLength(1_000);
-        var row = await context.Set<MarketplaceOutboxRow>().SingleAsync();
+        var row = await context.Set<EconomyOutboxRow>().SingleAsync();
         row.LeaseOwner.Should().BeNull();
         row.LeaseExpiresAt.Should().BeNull();
         row.LastError.Should().HaveLength(1_000);
@@ -167,7 +177,7 @@ public sealed class PostgreSqlMarketplaceOutboxProcessorTests
         return row;
     }
 
-    private static MarketplaceOutboxRow SeedOutbox(
+    private static EconomyOutboxRow SeedOutbox(
         DbContext context,
         MarketplaceSettlementRow settlement,
         string messageType)
@@ -181,20 +191,20 @@ public sealed class PostgreSqlMarketplaceOutboxProcessorTests
             buyerId = settlement.BuyerId,
             occurredAt = Now
         });
-        var row = new MarketplaceOutboxRow
+        var row = new EconomyOutboxRow
         {
-            Id = Guid.NewGuid(), TenantId = TenantId, SettlementId = settlement.Id,
+            Id = Guid.NewGuid(), OutboxKind = EconomyOutboxKind.Marketplace, TenantId = TenantId, SettlementId = settlement.Id,
             MessageType = messageType, Payload = payload, PayloadHash = Hash(payload),
             OccurredAt = Now, AttemptCount = 0
         };
-        context.Set<MarketplaceOutboxRow>().Add(row);
+        context.Set<EconomyOutboxRow>().Add(row);
         return row;
     }
 
     private static async Task RoundTripPayloadHashAsync(OutboxDbContext context, Guid id)
     {
         context.ChangeTracker.Clear();
-        var row = await context.Set<MarketplaceOutboxRow>().SingleAsync(item => item.Id == id);
+        var row = await context.Set<EconomyOutboxRow>().SingleAsync(item => item.Id == id);
         row.PayloadHash = Hash(row.Payload);
         await context.SaveChangesAsync();
         context.ChangeTracker.Clear();

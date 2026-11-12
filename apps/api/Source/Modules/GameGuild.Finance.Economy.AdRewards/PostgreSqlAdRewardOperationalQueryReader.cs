@@ -71,12 +71,14 @@ public sealed class PostgreSqlAdRewardOperationalQueryReader : IAdRewardOperatio
             return null;
         }
 
-        var milestones = await _db.Set<AdRewardPlaybackMilestoneRow>().AsNoTracking()
-            .Where(row => row.SessionId == sessionId)
+        var milestones = await _db.Set<AdRewardTimelineRow>().AsNoTracking()
+            .Where(row => row.TimelineKind == AdRewardTimelineKind.PlaybackMilestone &&
+                          row.SessionId == sessionId)
             .OrderBy(row => row.Sequence)
             .ToArrayAsync(cancellationToken);
-        var events = await _db.Set<AdRewardSessionEventRow>().AsNoTracking()
-            .Where(row => row.SessionId == sessionId)
+        var events = await _db.Set<AdRewardTimelineRow>().AsNoTracking()
+            .Where(row => row.TimelineKind == AdRewardTimelineKind.SessionEvent &&
+                          row.SessionId == sessionId)
             .OrderBy(row => row.Sequence)
             .ToArrayAsync(cancellationToken);
         var completion = await _db.Set<AdRewardCompletionRow>().AsNoTracking()
@@ -85,9 +87,9 @@ public sealed class PostgreSqlAdRewardOperationalQueryReader : IAdRewardOperatio
         return new AdRewardSessionOperationalDetails(
             MapSession(session),
             Array.AsReadOnly(milestones.Select(row => new AdRewardMilestoneOperationalStatus(
-                row.Id, row.Sequence, row.Percentage, row.ObservedAt, row.EvidenceHash)).ToArray()),
+                row.Id, (int)row.Sequence, row.Percentage!.Value, row.OccurredAt, row.EvidenceHash)).ToArray()),
             Array.AsReadOnly(events.Select(row => new AdRewardSessionEventOperationalStatus(
-                row.Id, row.Sequence, row.State, row.EvidenceHash, row.OccurredAt)).ToArray()),
+                row.Id, row.Sequence, row.State!.Value, row.EvidenceHash, row.OccurredAt)).ToArray()),
             completion is null
                 ? null
                 : new AdRewardCompletionOperationalStatus(

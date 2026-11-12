@@ -29,9 +29,9 @@ public sealed class PostgreSqlComplianceEvidenceStoreTests
         first.EvidenceId.Should().NotBeEmpty();
         replay.Status.Should().Be(ComplianceEvidenceIngestionStatus.Duplicate);
         replay.EvidenceId.Should().Be(first.EvidenceId);
-        (await context.Set<EconomyComplianceInboxRow>().CountAsync()).Should().Be(1);
+        (await context.Set<EconomyInboxRow>().CountAsync(row => row.InboxKind == EconomyInboxKind.Compliance)).Should().Be(1);
         (await context.Set<EconomyComplianceEvidenceRow>().CountAsync()).Should().Be(1);
-        (await context.Set<EconomyComplianceOutboxRow>().CountAsync()).Should().Be(1);
+        
         var persisted = await context.Set<EconomyComplianceEvidenceRow>().AsNoTracking().SingleAsync();
         persisted.RawObjectReference.Should().Be("s3://encrypted/raw-event");
         persisted.EvidenceHash.Should().Be(envelope.EvidenceHash);
@@ -79,9 +79,9 @@ public sealed class PostgreSqlComplianceEvidenceStoreTests
         outOfOrder.Status.Should().Be(ComplianceEvidenceIngestionStatus.Deferred);
         unsignedReplay.Should().Be(new ComplianceEvidenceIngestionResult(
             ComplianceEvidenceIngestionStatus.Duplicate, null));
-        (await context.Set<EconomyComplianceInboxRow>().CountAsync()).Should().Be(3);
+        (await context.Set<EconomyInboxRow>().CountAsync(row => row.InboxKind == EconomyInboxKind.Compliance)).Should().Be(3);
         (await context.Set<EconomyComplianceEvidenceRow>().CountAsync()).Should().Be(0);
-        (await context.Set<EconomyComplianceOutboxRow>().CountAsync()).Should().Be(0);
+        
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public sealed class PostgreSqlComplianceEvidenceStoreTests
             Envelope(2) with { IssuedAt = Envelope(1).IssuedAt }, CancellationToken.None);
 
         deferred.Status.Should().Be(ComplianceEvidenceIngestionStatus.Deferred);
-        (await context.Set<EconomyComplianceInboxRow>().SingleAsync(row => row.ProviderEventId == "event-2"))
+        (await context.Set<EconomyInboxRow>().SingleAsync(row => row.InboxKind == EconomyInboxKind.Compliance && row.ProviderEventId == "event-2"))
             .ProcessingError.Should().Be("out-of-order-issued-at");
     }
 

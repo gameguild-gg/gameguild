@@ -17,9 +17,8 @@ public sealed class AdRewardsPersistenceModelTests
         entities.Select(entity => entity.GetTableName()).Should().BeEquivalentTo(
             "economy_ad_network_policy_versions",
             "economy_ad_reward_sessions",
-            "economy_ad_reward_playback_milestones",
-            "economy_ad_reward_session_events",
-            "economy_ad_reward_provider_proof_inbox",
+            "economy_ad_reward_session_timeline",
+            "economy_inbox",
             "economy_ad_reward_pending_claims",
             "economy_ad_reward_cap_consumptions",
             "economy_ad_reward_completions",
@@ -29,6 +28,13 @@ public sealed class AdRewardsPersistenceModelTests
             "economy_ad_provider_reports",
             "economy_ad_reward_provider_batch_claims",
             "economy_ad_reward_reconciliations");
+
+        // #1092 Tier 1.5: session events and playback milestones merged behind
+        // TimelineKind; each kind keeps its own (SessionId, Sequence) stream.
+        Entity(entities, "economy_ad_reward_session_timeline").GetIndexes()
+            .Should().Contain(index => index.IsUnique &&
+                index.Properties.Select(property => property.Name)
+                    .SequenceEqual(new[] { "TimelineKind", "SessionId", "Sequence" }));
 
         Entity(entities, "economy_ad_reward_completions").GetIndexes()
             .Should().Contain(index => index.IsUnique &&

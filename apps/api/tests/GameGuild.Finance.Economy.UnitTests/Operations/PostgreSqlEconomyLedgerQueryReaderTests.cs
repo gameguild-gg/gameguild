@@ -39,9 +39,10 @@ public sealed class PostgreSqlEconomyLedgerQueryReaderTests
             ObjectMatches = true,
             VerifiedAt = Now
         });
-        context.Set<EconomyProjectionGenerationApprovalRow>().Add(new EconomyProjectionGenerationApprovalRow
+        context.Set<EconomyApprovalRow>().Add(new EconomyApprovalRow
         {
             Id = Guid.NewGuid(),
+            ApprovalKind = EconomyApprovalKind.ProjectionGeneration,
             Generation = 2,
             ActorId = Guid.NewGuid(),
             ReauthenticationHash = "approval-evidence",
@@ -86,9 +87,9 @@ public sealed class PostgreSqlEconomyLedgerQueryReaderTests
             ObjectVersion = "version-1", ETag = "etag", RetainUntil = Now.AddYears(1),
             ObjectHash = "object-hash", SignatureValid = true, ObjectMatches = true, VerifiedAt = Now
         });
-        context.Set<EconomyProjectionGenerationApprovalRow>().Add(new EconomyProjectionGenerationApprovalRow
+        context.Set<EconomyApprovalRow>().Add(new EconomyApprovalRow
         {
-            Id = Guid.NewGuid(), Generation = 1, ActorId = approver,
+            Id = Guid.NewGuid(), ApprovalKind = EconomyApprovalKind.ProjectionGeneration, Generation = 1, ActorId = approver,
             ReauthenticationHash = "approval-evidence", ApprovedAt = Now
         });
         await context.SaveChangesAsync();
