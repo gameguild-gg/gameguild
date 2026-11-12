@@ -39,6 +39,8 @@ jobs:
       - name: Choose self-hosted pool or GitHub-hosted overflow
         id: select
         env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
           FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
         run: |
           set -eu
