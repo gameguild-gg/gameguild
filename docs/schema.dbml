@@ -9046,9 +9046,9 @@ Table "financial_ledger_entries" {
   "TenantId" uuid
 
   Checks {
-    `amount > 0` [name: 'CK_FinancialLedgerEntry_Amount_Positive']
-    `LENGTH(credit_account) > 0` [name: 'CK_FinancialLedgerEntry_CreditAccount_NotEmpty']
-    `LENGTH(debit_account) > 0` [name: 'CK_FinancialLedgerEntry_DebitAccount_NotEmpty']
+    `"Amount" > 0` [name: 'CK_FinancialLedgerEntry_Amount_Positive']
+    `LENGTH("CreditAccount") > 0` [name: 'CK_FinancialLedgerEntry_CreditAccount_NotEmpty']
+    `LENGTH("DebitAccount") > 0` [name: 'CK_FinancialLedgerEntry_DebitAccount_NotEmpty']
   }
 
   Indexes {
