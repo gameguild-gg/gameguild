@@ -70,7 +70,8 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReaderTests
             Currency = CurrencyCode.HardCoin,
             Units = 100,
             SellerUnits = 90,
-            PlatformFeeUnits = 10
+            PlatformFeeUnits = 10,
+            RefundedUnits = 0
         });
         context.Set<MarketplaceEventRow>().Add(new MarketplaceEventRow
         {
