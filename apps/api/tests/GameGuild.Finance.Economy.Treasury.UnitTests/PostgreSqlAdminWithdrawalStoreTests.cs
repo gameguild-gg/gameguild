@@ -97,6 +97,9 @@ public sealed class PostgreSqlAdminWithdrawalStoreTests
             .Should().Throw<AdminWithdrawalStaleCommandException>();
         context.Set<EconomyProviderEventRow>().Add(new EconomyProviderEventRow
         {
+            // The unified table is kind-discriminated; the invalid-timestamp
+            // row must carry the AdminWithdrawal kind the store reads.
+            ProviderEventKind = EconomyProviderEventKind.AdminWithdrawal,
             TenantId = run.TenantId,
             EventId = "invalid-time",
             EventHash = "invalid-time-hash",
