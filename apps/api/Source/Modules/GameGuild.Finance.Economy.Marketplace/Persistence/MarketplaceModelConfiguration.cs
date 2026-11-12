@@ -338,9 +338,14 @@ public sealed class MarketplaceModelConfiguration : IModelConfiguration
 
         // #1092 Tier 1.1: economy_marketplace_outbox merged into the shared
         // economy_outbox table (OutboxKind = 2). The Marketplace module keeps
-        // contributing the settlement binding of its queue rows.
+        // contributing the settlement binding of its queue rows. The table
+        // name is re-asserted so contexts composing only this configuration
+        // (the PostgreSQL fixtures reuse the migrated template schema) address
+        // the unified queue instead of the CLR-name convention table.
         modelBuilder.Entity<EconomyOutboxRow>(builder =>
         {
+            builder.ToTable("economy_outbox");
+            builder.HasKey(row => row.Id);
             builder.HasOne<MarketplaceSettlementRow>()
                 .WithMany()
                 .HasForeignKey(row => row.SettlementId)
