@@ -729,6 +729,10 @@ public sealed class DurableMarketplaceServicesTests
             {
                 context.Add(new MarketplaceValueLegRow
                 {
+                    // The unified table generates Ids server-side on PostgreSQL
+                    // (gen_random_uuid), but these fixtures run on SQLite —
+                    // assign the identity explicitly.
+                    Id = Guid.NewGuid(),
                     LegKind = MarketplaceValueLegKind.Settlement,
                     SettlementId = request.SettlementId,
                     Currency = leg.Currency,
@@ -810,6 +814,9 @@ public sealed class DurableMarketplaceServicesTests
             {
                 context.Add(new MarketplaceValueLegRow
                 {
+                    // SQLite fixtures cannot evaluate the PostgreSQL
+                    // gen_random_uuid() column default; assign the identity.
+                    Id = Guid.NewGuid(),
                     LegKind = MarketplaceValueLegKind.Refund,
                     RefundId = request.RefundId,
                     SettlementId = request.SettlementId,
