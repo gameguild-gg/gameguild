@@ -20669,6 +20669,21 @@ export const postAuthMfaPushRespondEndpoint = {
 } as const;
 
 /**
+ * Cancels the authenticated owner's active lost-device recovery.
+ *
+ * Cancels the authenticated user's active recovery and invalidates its request and confirmation tokens. Client identifiers cannot select another account.
+ */
+export type PostAuthMfaRecoveryCancelInput = void;
+export type PostAuthMfaRecoveryCancelOutput = Types.IdentityAuthenticationMfaRecoveryCancelOutput;
+export const postAuthMfaRecoveryCancelEndpoint = {
+  operationId: 'postAuthMfaRecoveryCancel' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/mfa/recovery:cancel' as const,
+  tags: ['AuthMultiFactor'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Complete a recovery using the confirmation token from the second email; disables MFA.
  *
  * Consumes the single-use confirmation token and disables multi-factor authentication for the recovered account. Denials are generic and never reveal token state.
@@ -20722,7 +20737,7 @@ export const postAuthMfaRecoveryRequestEndpoint = {
 /**
  * Complete a verified first factor with the account's enrolled or newly provisioned MFA method.
  *
- * Consumes the expiring first-factor challenge and verifies TOTP or a backup code. Identity, tenant, policy and token version come from the server-side challenge. A successful response contains MFA-bound credentials.
+ * Consumes the expiring first-factor challenge and verifies an enrolled TOTP, SMS or backup code. Identity, tenant, policy and token version come from the server-side challenge. A successful response contains MFA-bound credentials.
  */
 export interface PostAuthMfaSignInCompleteInput {
   body?: Types.IdentityAuthenticationCompleteMfaSignInInput;
@@ -20739,7 +20754,7 @@ export const postAuthMfaSignInCompleteEndpoint = {
 /**
  * Send a fresh SMS sign-in code to the enrolled phone
  *
- * Sends a fresh verification code to the enrolled phone before MFA verification. Generic failure payload; throttled to one code per minute per user.
+ * Sends a code to the server-resolved enrolled phone using an active first-factor MFA continuation. Codes are bound to that continuation and throttled per account.
  */
 export interface PostAuthMfaSmsChallengeInput {
   body?: Types.IdentityAuthenticationSmsMfaChallengeInput;
@@ -20759,7 +20774,7 @@ export const postAuthMfaSmsChallengeEndpoint = {
  * Completes SMS MFA setup by verifying the code sent to the user's phone, enrolling the verified number as an SMS factor.
  */
 export interface PostAuthMfaSmsCompleteInput {
-  body?: Types.IdentityAuthenticationCompleteMfaSetupInput;
+  body?: Types.IdentityAuthenticationCompleteSmsMfaSetupInput;
 }
 export type PostAuthMfaSmsCompleteOutput = Types.IdentityAuthenticationMfaSuccessOutput;
 export const postAuthMfaSmsCompleteEndpoint = {
@@ -20773,7 +20788,7 @@ export const postAuthMfaSmsCompleteEndpoint = {
 /**
  * Initiate SMS-based MFA setup
  *
- * Initiates SMS-based MFA setup by sending a verification code to the provided phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.
+ * Re-verifies the authenticated account password before sending an SMS enrollment proof to the requested phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.
  */
 export interface PostAuthMfaSmsSetupInput {
   body?: Types.IdentityAuthenticationSmsMfaSetupInput;
@@ -21837,10 +21852,10 @@ export const getAuthTrustedDevicesEndpoint = {
  * Trust the current device
  *
  * Trusting a device is a security-sensitive grant, so it requires fresh verification
- * (issue #1144): create a step-up challenge (POST /v1/auth/step-up/challenges) with
- * operation type "trust-device", target reference "current-session", and payload hash
- * SHA-256 of the trimmed device name; verify it with any MFA method and pass the
- * returned receipt as `stepUpReceipt`.
+ * (issues #1144 and #1191). A request without a receipt returns HTTP 403 with a persisted
+ * challenge, its server-derived operation binding, expiry, and available supported factors.
+ * Verify the challenge with an enrolled TOTP, backup code, or active WebAuthn credential,
+ * then retry the same device name with the returned receipt as `stepUpReceipt`.
  */
 export interface PostAuthTrustedDevicesInput {
   body?: Types.IdentityAuthenticationTrustDeviceInput;
@@ -36209,6 +36224,7 @@ export const endpoints = {
   postAuthMfaPushChallenge: postAuthMfaPushChallengeEndpoint,
   postAuthMfaPushRegisterDevice: postAuthMfaPushRegisterDeviceEndpoint,
   postAuthMfaPushRespond: postAuthMfaPushRespondEndpoint,
+  postAuthMfaRecoveryCancel: postAuthMfaRecoveryCancelEndpoint,
   postAuthMfaRecoveryConfirm: postAuthMfaRecoveryConfirmEndpoint,
   postAuthMfaRecoveryContinue: postAuthMfaRecoveryContinueEndpoint,
   postAuthMfaRecoveryRequest: postAuthMfaRecoveryRequestEndpoint,

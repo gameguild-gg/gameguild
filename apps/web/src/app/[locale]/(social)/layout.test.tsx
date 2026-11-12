@@ -6,10 +6,12 @@ import type { DashboardNotificationSummary } from '@/lib/dashboard-notifications
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   getSummary: vi.fn(),
+  headers: vi.fn(),
   redirect: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
+vi.mock('next/headers', () => ({ headers: mocks.headers }));
 vi.mock('@/i18n/navigation', () => ({ redirect: mocks.redirect }));
 vi.mock('@/lib/dashboard-notifications', () => ({
   getDashboardNotificationSummary: mocks.getSummary,
@@ -91,6 +93,7 @@ describe('social layout notifications streaming', () => {
 
   it('still redirects unauthenticated sessions before any notifications work', async () => {
     mocks.auth.mockResolvedValue(null);
+    mocks.headers.mockResolvedValue(new Headers());
 
     await expect(
       Layout({
@@ -99,7 +102,48 @@ describe('social layout notifications streaming', () => {
       } as never),
     ).rejects.toThrow('Unauthenticated social access');
 
-    expect(mocks.redirect).toHaveBeenCalledWith({ href: { pathname: '/sign-in' }, locale: 'en' });
+    expect(mocks.redirect).toHaveBeenCalledWith({
+      href: { pathname: '/sign-in', query: { callbackUrl: '/feed' } },
+      locale: 'en',
+    });
     expect(mocks.getSummary).not.toHaveBeenCalled();
+  });
+
+  it('uses the proxy-forwarded public path as the sign-in callbackUrl', async () => {
+    mocks.auth.mockResolvedValue(null);
+    mocks.headers.mockResolvedValue(
+      new Headers({ 'x-gameguild-path': '/feed?tab=following' }),
+    );
+
+    await expect(
+      Layout({
+        children: <div />,
+        params: Promise.resolve({ locale: 'en' }),
+      } as never),
+    ).rejects.toThrow('Unauthenticated social access');
+
+    expect(mocks.redirect).toHaveBeenCalledWith({
+      href: { pathname: '/sign-in', query: { callbackUrl: '/feed?tab=following' } },
+      locale: 'en',
+    });
+  });
+
+  it('ignores unsafe forwarded paths and falls back to /feed', async () => {
+    mocks.auth.mockResolvedValue(null);
+    mocks.headers.mockResolvedValue(
+      new Headers({ 'x-gameguild-path': '//evil.example/path' }),
+    );
+
+    await expect(
+      Layout({
+        children: <div />,
+        params: Promise.resolve({ locale: 'en' }),
+      } as never),
+    ).rejects.toThrow('Unauthenticated social access');
+
+    expect(mocks.redirect).toHaveBeenCalledWith({
+      href: { pathname: '/sign-in', query: { callbackUrl: '/feed' } },
+      locale: 'en',
+    });
   });
 });

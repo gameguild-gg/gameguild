@@ -116,7 +116,7 @@ public static class AuthenticationEndpoint
             await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
             // Generate tokens
-            var tokens = GenerateTokens(user, configuration, request.RememberMe == true);
+            var tokens = GenerateTokens(user, configuration, request.RememberMe != false);
 
             logger.LogInformation("User signed in successfully: {UserId}", LogRedaction.RedactId(user.Id, "uid"));
 

@@ -16,7 +16,9 @@ public sealed class CentralAuthenticationAuditEventSink(
     public async Task RecordAsync(AuthenticationAuditEvent auditEvent, CancellationToken cancellationToken)
     {
         var requiresTransactionalPersistence = auditEvent.ActionType is "Authentication.MfaSignInRequired" or "Authentication.MfaSignInDenied" or
-            "Authentication.MfaSignInEnrollmentStarted" or "Authentication.MfaSignInVerified";
+            "Authentication.MfaSignInEnrollmentStarted" or "Authentication.MfaSignInVerified" or
+            "Authentication.MfaRecoveryRequested" or "Authentication.MfaRecoveryContinued" or
+            "Authentication.MfaRecoveryConfirmed" or "Authentication.MfaRecoveryCancelled";
         try
         {
             var request = new CreateAuditLogRequest

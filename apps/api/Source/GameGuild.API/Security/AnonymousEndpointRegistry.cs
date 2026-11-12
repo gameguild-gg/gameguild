@@ -86,7 +86,7 @@ public static class AnonymousEndpointRegistry
             ["AccountRecoveryController.BeginPasskeyApproval"] = "First half of the recovery passkey ceremony; returns only a challenge and issues no sign-in credentials (issue #209).",
             ["AccountRecoveryController.CompletePasskeyApproval"] = "Records one recovery approval after cryptographic assertion verification; replays and unknown requests fail closed (issue #209).",
             ["AccountRecoveryController.CompleteReset"] = "Consumes the single-use forced-reset token minted at the approval threshold; unknown, expired or consumed tokens fail closed (issue #209).",
-            ["MfaController.SendSmsChallenge"] = "Sends a throttled one-time code to the already-enrolled phone; the code itself is the credential and unknown users get a generic failure.",
+            ["MfaController.SendSmsChallenge"] = "Requires an active first-factor MFA continuation; derives the enrolled phone server-side and binds throttled SMS proof delivery to that continuation.",
             ["MfaController.SendEmailChallenge"] = "Sends a throttled one-time code to the already-enrolled email address; the code itself is the credential and unknown users get a generic failure (issue #1152).",
             ["MfaController.IssuePushChallenge"] = "Issues a short-lived approval challenge to the already-enrolled device; the challenge bearer is the credential.",
             ["MfaController.RespondPushChallenge"] = "Records the device's decision for a pending, unexpired challenge; unknown or expired challenges fail closed.",

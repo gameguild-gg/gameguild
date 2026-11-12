@@ -77,7 +77,9 @@ export function createProxy(config: ResolvedAuthConfig) {
         const url = new URL(request.url);
         const signInPage = config.pages.signIn || '/sign-in';
         const signInUrl = new URL(signInPage, url.origin);
-        signInUrl.searchParams.set('callbackUrl', url.pathname);
+        // Preserve the query string: bouncing back after sign-in must restore
+        // filtered/tabbbed views, not just the pathname.
+        signInUrl.searchParams.set('callbackUrl', `${url.pathname}${url.search}`);
         return applyResponseCookies(Response.redirect(signInUrl.toString()), responseCookies);
       }
 
