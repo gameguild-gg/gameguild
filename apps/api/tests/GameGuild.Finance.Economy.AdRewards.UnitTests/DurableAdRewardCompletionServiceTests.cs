@@ -44,7 +44,7 @@ public sealed class DurableAdRewardCompletionServiceTests
         issuance.Requests.Should().ContainSingle();
         issuance.Requests[0].SoftUnits.Should().Be(45);
         issuance.Requests[0].Network.Should().Be("network-a");
-        (await fixture.Context.Set<AdRewardTimelineRow>().CountAsync()).Should().Be(5);
+        (await fixture.Context.Set<AdRewardTimelineRow>().CountAsync(row => row.TimelineKind == AdRewardTimelineKind.PlaybackMilestone)).Should().Be(5);
         (await fixture.Context.Set<EconomyInboxRow>().CountAsync(row => row.InboxKind == EconomyInboxKind.AdRewardProviderProof)).Should().Be(1);
         (await fixture.Context.Set<AdRewardCapConsumptionRow>().CountAsync()).Should().Be(6);
         (await fixture.Context.Set<AdRewardBudgetConsumptionRow>().CountAsync()).Should().Be(1);
