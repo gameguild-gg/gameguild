@@ -2,7 +2,6 @@ using FluentAssertions;
 using GameGuild.Finance.Economy.Contracts;
 using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Finance.Economy.Risk;
-using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,13 +26,24 @@ public sealed class EconomyRiskIngestionCoverageTests
     [Fact]
     public async Task IngestionMapsEveryVerdictSuppressesSteadyStateAndContainsFaults()
     {
-        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("ts_risk_ingestion");
-        await using var context = CreateContext(database.ConnectionString);
-        await context.Database.EnsureCreatedAsync();
+        await using var context = CreateContext();
         var plane = new RecordingControlPlane(ComplianceEvidenceIngestionStatus.Published);
         var signer = new ScriptedSigner();
         var unavailableSigner = new ScriptedSigner(new EconomyCryptographyUnavailableException("no KMS key"));
         var logger = NullLogger<EconomyRiskDecisionTrustSafetyIngestion>.Instance;
+
+        // Constructor null guards reject every missing dependency.
+        var issuer = new FixedIssuer(Decision(EconomyProtectedOperationState.Ready));
+        ((Action)(() => new EconomyRiskDecisionTrustSafetyIngestion(null!, plane, signer, context, logger)))
+            .Should().Throw<ArgumentNullException>();
+        ((Action)(() => new EconomyRiskDecisionTrustSafetyIngestion(issuer, null!, signer, context, logger)))
+            .Should().Throw<ArgumentNullException>();
+        ((Action)(() => new EconomyRiskDecisionTrustSafetyIngestion(issuer, plane, null!, context, logger)))
+            .Should().Throw<ArgumentNullException>();
+        ((Action)(() => new EconomyRiskDecisionTrustSafetyIngestion(issuer, plane, signer, null!, logger)))
+            .Should().Throw<ArgumentNullException>();
+        ((Action)(() => new EconomyRiskDecisionTrustSafetyIngestion(issuer, plane, signer, context, null!)))
+            .Should().Throw<ArgumentNullException>();
 
         // Ready -> Approved, no prior state: version 1 event forwarded with the signature stamped.
         var ready = await IssueAsync(context, plane, signer, EconomyProtectedOperationState.Ready, "subject-ready");
@@ -64,8 +74,9 @@ public sealed class EconomyRiskIngestionCoverageTests
         await IssueAsync(context, plane, signer, EconomyProtectedOperationState.ComplianceStale, "subject-pipeline");
         await IssueAsync(context, plane, signer, EconomyProtectedOperationState.InvalidPolicy, "subject-pipeline");
         await IssueAsync(context, plane, signer, EconomyProtectedOperationState.ReserveInsufficient, "subject-pipeline");
-        // A blank subject reference cannot be attributed: nothing is forwarded.
+        // A blank (or absent) subject reference cannot be attributed: nothing is forwarded.
         await IssueAsync(context, plane, signer, EconomyProtectedOperationState.Ready, " ");
+        await IssueAsync(context, plane, signer, EconomyProtectedOperationState.Ready, null!);
         plane.Events.Should().HaveCount(5);
 
         // A differing recorded outcome re-forwards at the recorded version + 1...
@@ -111,9 +122,7 @@ public sealed class EconomyRiskIngestionCoverageTests
     [Fact]
     public async Task CompositionDecoratesEveryRegistrationShapeAndFailsClosedWithoutAnIssuer()
     {
-        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("ts_risk_composition");
-        await using var context = CreateContext(database.ConnectionString);
-        await context.Database.EnsureCreatedAsync();
+        await using var context = CreateContext();
 
         Action nullServices = () => EconomyRiskTrustSafetyIngestionComposition.AddEconomyRiskTrustSafetyIngestion(null!);
         nullServices.Should().Throw<ArgumentNullException>();
@@ -137,7 +146,8 @@ public sealed class EconomyRiskIngestionCoverageTests
         // Factory-registered issuer: decorated, inner created through the original factory.
         var factoryServices = new ServiceCollection();
         AddDecoratorDependencies(factoryServices, context);
-        factoryServices.AddSingleton(_ => new FixedIssuer(Decision(EconomyProtectedOperationState.Denied)));
+        factoryServices.AddSingleton<IEconomyProtectedOperationRiskDecisionIssuer>(
+            _ => new FixedIssuer(Decision(EconomyProtectedOperationState.Denied)));
         factoryServices.AddEconomyRiskTrustSafetyIngestion();
         using (var factoryProvider = factoryServices.BuildServiceProvider())
         {
@@ -201,15 +211,24 @@ public sealed class EconomyRiskIngestionCoverageTests
         new IdempotencyKey($"intent-{Guid.NewGuid():N}"),
         DateTimeOffset.UtcNow);
 
-    private static TestDbContext CreateContext(string connectionString) => new(
-        new DbContextOptionsBuilder<TestDbContext>().UseNpgsql(connectionString).Options);
+    private static TestDbContext CreateContext() => new(
+        new DbContextOptionsBuilder<TestDbContext>()
+            .UseInMemoryDatabase($"ts-risk-ingestion-{Guid.NewGuid():N}")
+            .Options);
 
-    private sealed class FixedIssuer(EconomyProtectedRiskDecision decision)
-        : IEconomyProtectedOperationRiskDecisionIssuer
+    private sealed class FixedIssuer : IEconomyProtectedOperationRiskDecisionIssuer
     {
+        private readonly EconomyProtectedRiskDecision? _decision;
+
+        public FixedIssuer()
+        {
+        }
+
+        public FixedIssuer(EconomyProtectedRiskDecision decision) => _decision = decision;
+
         public ValueTask<EconomyProtectedRiskDecision> IssueAsync(
             EconomyProtectedRiskDecisionRequest request, CancellationToken cancellationToken) =>
-            ValueTask.FromResult(decision);
+            ValueTask.FromResult(_decision ?? Decision(EconomyProtectedOperationState.Ready));
     }
 
     private sealed class ScriptedSigner(Exception? failure = null) : ICapabilityPolicySigner
