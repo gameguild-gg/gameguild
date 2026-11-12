@@ -110,6 +110,22 @@ public sealed class FinancialCrimeModelConfiguration : IModelConfiguration
     public void Configure(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
+        modelBuilder.Entity<FinancialCrimeSignalOutboxRow>(builder =>
+        {
+            builder.ToTable("compliance_financial_crime_signal_outbox", table =>
+                table.HasCheckConstraint("ck_financial_crime_signal_outbox_attempts", "\"Attempts\" >= 0"));
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.SubjectHash).HasMaxLength(128);
+            builder.Property(row => row.PayloadJson).HasMaxLength(8192);
+            builder.Property(row => row.PayloadHash).HasMaxLength(128);
+            builder.Property(row => row.ClaimedBy).HasMaxLength(256);
+            builder.Property(row => row.LastError).HasMaxLength(2048);
+            // Producers deduplicate on the canonical payload hash; the worker claims runnable rows.
+            builder.HasIndex(row => row.PayloadHash).IsUnique()
+                .HasDatabaseName("ux_financial_crime_signal_outbox_payload");
+            builder.HasIndex(row => new { row.Status, row.NextAttemptAt, row.CreatedAt })
+                .HasDatabaseName("ix_financial_crime_signal_outbox_claim");
+        });
         modelBuilder.Entity<FinancialCrimeScreeningRow>(builder =>
         {
             builder.ToTable("compliance_financial_crime_screenings", table =>
