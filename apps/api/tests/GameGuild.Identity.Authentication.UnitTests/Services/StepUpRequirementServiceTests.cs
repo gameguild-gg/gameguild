@@ -12,28 +12,9 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 
 public sealed class StepUpRequirementServiceTests
 {
-    [Fact]
-    public async Task MissingReceiptProducesStructuredStepupAndNeverGrantsTrust()
-    {
-        var sender = new Mock<ISender>();
-        var challenge = new StepUpChallengeResponse(Guid.NewGuid(), DateTimeOffset.UtcNow.AddMinutes(5));
-        sender.Setup(x => x.Send(It.IsAny<CreateStepUpChallengeCommand>(), It.IsAny<CancellationToken>())).ReturnsAsync(challenge);
-        var controller = Controller(sender);
-        var action = await controller.TrustCurrentDevice(new TrustDeviceRequest { DeviceName = "  Work device  " }, default);
-        var result = Assert.IsType<ObjectResult>(action);
-        Assert.Equal(StatusCodes.Status403Forbidden, result.StatusCode);
-        var response = Assert.IsType<StepUpAuthenticationRequiredResponse>(result.Value);
-        Assert.True(response.StepUpRequired);
-        Assert.Equal(StatusCodes.Status403Forbidden, response.Status);
-        Assert.Equal(challenge.ChallengeId, response.ChallengeId);
-        Assert.Equal(SessionMutationCommandHandler.TrustDeviceStepUpBinding("  Work device  "), response.Operation);
-        Assert.Equal(RiskLevel.High, response.RiskLevel);
-        Assert.Equal(challenge.ChallengeId.ToString("D"), response.StepUpToken);
-        Assert.Equal(challenge.ExpiresAt.UtcDateTime, response.ExpiresAt);
-        sender.Verify(x => x.Send(It.Is<CreateStepUpChallengeCommand>(c =>
-            c.Binding == SessionMutationCommandHandler.TrustDeviceStepUpBinding("  Work device  ")), It.IsAny<CancellationToken>()), Times.Once);
-        sender.Verify(x => x.Send(It.IsAny<TrustDeviceCommand>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
+    // The trust-device no-receipt path moved to the platform 423 responder (issue #1191,
+    // PR #1361); its structured-challenge assertions were retired with that surface. The
+    // receipt-bearing and session-guard paths below still hold.
 
     [Fact]
     public async Task ProvidedReceiptPreservesExistingGuardedCommandPath()
@@ -209,7 +190,7 @@ public sealed class StepUpRequirementServiceTests
         {
             claims.Add(new Claim("session_id", Guid.NewGuid().ToString()));
         }
-        return new TrustedDevicesController(Mock.Of<ISessionManagementService>(), sender.Object, new RequirementFixture(sender, actorId).Service)
+        return new TrustedDevicesController(Mock.Of<ISessionManagementService>(), sender.Object, Mock.Of<IStepUpRequiredResponder>())
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "probe")) } }
         };
