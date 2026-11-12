@@ -154,7 +154,7 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
             .Should().Be(10_000);
         (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_fragment_root_ranges WHERE \"CreditLotId\" = '{outputLot.Value}';"))
             .Should().Be(1);
-        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_outbox_messages WHERE \"PostingGroupId\" = '{posting.Value}';"))
+        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_outbox WHERE \"OutboxKind\" = 1 AND \"PostingGroupId\" = '{posting.Value}';"))
             .Should().Be(1);
     }
 

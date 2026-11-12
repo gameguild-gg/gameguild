@@ -61,13 +61,13 @@ public sealed class PostgreSqlRegisteredPostingGatewayTests
             .Should().Be(2);
         (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_risk_decision_consumptions;"))
             .Should().Be(1);
-        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox_messages;"))
+        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox WHERE \"OutboxKind\" = 1;"))
             .Should().Be(1);
 
         var replay = gateway.Post(request);
         replay.IsDuplicate.Should().BeTrue();
         replay.JournalSequence.Should().Be(receipt.JournalSequence);
-        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox_messages;"))
+        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox WHERE \"OutboxKind\" = 1;"))
             .Should().Be(1);
     }
 

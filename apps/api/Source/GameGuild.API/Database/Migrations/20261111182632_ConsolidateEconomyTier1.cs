@@ -403,8 +403,10 @@ namespace GameGuild.API.Database.Migrations
 
             // Retarget every SECURITY DEFINER posting writer from the legacy
             // core spool to the unified queue. The kind-1 inserts keep their
-            // column list; OutboxKind/AttemptCount fall back to their column
-            // defaults, and the enqueue stays inside the posting transaction.
+            // column list except the legacy discriminator column, which the
+            // unified queue renamed "Type" -> "MessageType"; OutboxKind and
+            // AttemptCount fall back to their column defaults, and the
+            // enqueue stays inside the posting transaction.
             migrationBuilder.Sql("""
                 DO $t11_writers$
                 DECLARE
@@ -418,8 +420,12 @@ namespace GameGuild.API.Database.Migrations
                         WHERE n.nspname = 'economy_private'
                           AND pg_get_functiondef(p.oid) LIKE '%public.economy_outbox_messages%'
                     LOOP
-                        EXECUTE replace(definition,
+                        definition := replace(definition,
                             'public.economy_outbox_messages', 'public.economy_outbox');
+                        definition := replace(definition,
+                            '"Id", "PostingGroupId", "Type", "Payload", "PayloadHash", "OccurredAt")',
+                            '"Id", "PostingGroupId", "MessageType", "Payload", "PayloadHash", "OccurredAt")');
+                        EXECUTE definition;
                     END LOOP;
 
                     FOR definition IN
@@ -439,7 +445,7 @@ namespace GameGuild.API.Database.Migrations
                         END IF;
                         definition := replace(definition,
                             'INSERT INTO public.economy_marketplace_outbox (',
-                            'INSERT INTO public.economy_outbox (');
+                            'INSERT INTO public.economy_outbox ("OutboxKind", ');
                         definition := replace(definition,
                             '''entitlement-grant-outbox''),',
                             '''entitlement-grant-outbox''), 2,');
@@ -458,6 +464,18 @@ namespace GameGuild.API.Database.Migrations
                           AND pg_get_functiondef(p.oid) ~ 'economy_(outbox_messages|marketplace_outbox)')
                     THEN
                         RAISE EXCEPTION 'an economy writer still references a legacy outbox table';
+                    END IF;
+
+                    IF EXISTS (
+                        SELECT 1
+                        FROM pg_proc p
+                        JOIN pg_namespace n ON n.oid = p.pronamespace
+                        AND p.prokind = 'f'
+                        WHERE n.nspname = 'economy_private'
+                          AND pg_get_functiondef(p.oid) LIKE '%public.economy_outbox%'
+                          AND pg_get_functiondef(p.oid) LIKE '%"Id", "PostingGroupId", "Type", "Payload", "PayloadHash", "OccurredAt")'
+                    ) THEN
+                        RAISE EXCEPTION 'an economy writer still enqueues with the legacy outbox column list';
                     END IF;
                 END
                 $t11_writers$;
@@ -1447,10 +1465,10 @@ namespace GameGuild.API.Database.Migrations
                                OR pg_get_functiondef(p.oid) LIKE '%public.economy_marketplace_value_legs%')
                     LOOP
                         definition := regexp_replace(definition,
-                            'INSERT INTO public\.economy_outbox \(\s*"Id", "PostingGroupId"',
-                            'INSERT INTO public.economy_outbox_messages ("Id", "PostingGroupId"');
+                            'INSERT INTO public\.economy_outbox \(\s*"Id", "PostingGroupId", "MessageType"',
+                            'INSERT INTO public.economy_outbox_messages ("Id", "PostingGroupId", "Type"');
                         definition := regexp_replace(definition,
-                            'INSERT INTO public\.economy_outbox \(\s*"Id", "TenantId", "SettlementId",',
+                            'INSERT INTO public\.economy_outbox \("OutboxKind",\s*"Id", "TenantId", "SettlementId",',
                             'INSERT INTO public.economy_marketplace_outbox ("Id", "TenantId", "SettlementId",');
                         definition := replace(definition,
                             '''entitlement-grant-outbox''), 2,',
