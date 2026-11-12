@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@game-guild/assets": "workspace:^",
-    "mathlive": "^0.111.4",
+    "mathlive": "^0.111.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

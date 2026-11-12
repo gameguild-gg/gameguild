@@ -22,10 +22,10 @@
     "@game-guild/quiz": "workspace:^",
     "@game-guild/quiz-content": "workspace:^",
     "@game-guild/ui": "workspace:^",
-    "lexical": "^0.53.0",
-    "lucide-react": "^1.66.0",
-    "mathlive": "^0.111.4",
-    "react-hook-form": "^7.91.0"
+    "lexical": "^0.52.0",
+    "lucide-react": "^1.59.0",
+    "mathlive": "^0.111.0",
+    "react-hook-form": "^7.90.0"
   },
   "peerDependencies": {
     "react": "^19.2.0",
