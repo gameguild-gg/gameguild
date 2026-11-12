@@ -363,7 +363,7 @@ class TypesGenerator extends BaseGenerator {
 
     // Handle additionalProperties
     if (schema.additionalProperties) {
-      if (schema.additionalProperties === true || Object.keys(schema.additionalProperties).length === 0) {
+      if (schema.additionalProperties === true) {
         zodSchema += '.catchall(z.unknown())';
       } else {
         const additionalSchema = this.zodMapper.map(schema.additionalProperties as OpenAPIV3.SchemaObject);

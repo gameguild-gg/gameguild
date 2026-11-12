@@ -1,12 +1,12 @@
 "use client";
 
-import { type FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { type FormEvent, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { QRCodeSVG } from "qrcode.react";
 import { Check, Copy } from "lucide-react";
 import { useAuth } from "@game-guild/client/react";
 import { recoverFromStaleServerAction } from "@/lib/auth/server-action-errors";
-import { completeMfaEnrollmentAction, sendMfaSmsChallengeAction } from "@/lib/auth/mfa-sign-in-actions";
+import { completeMfaEnrollmentAction } from "@/lib/auth/mfa-sign-in-actions";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@game-guild/ui/components/button";
 import {
@@ -25,8 +25,6 @@ import {
 import { Input } from "@game-guild/ui/components/input";
 
 const subscribeToHydration = () => () => undefined;
-const methodNames = ["Totp", "BackupCode", "Sms"] as const;
-type SignInMfaMethod = (typeof methodNames)[number];
 
 /**
  * MFA challenge form for the dedicated /sign-in/2fa route. The challenge
@@ -60,46 +58,6 @@ export function MfaChallengeForm({
 
   const enrollment = mfaChallenge?.mfaEnrollment;
   const isEnrollment = enrollment != null;
-  const availableMethods = [...new Set(
-    (mfaChallenge?.availableMethods ?? [])
-      .map((method) => methodNames.find((supported) => supported.toLowerCase() === method.toLowerCase()))
-      .filter((method): method is SignInMfaMethod => method !== undefined),
-  )];
-  const [selection, setSelection] = useState<{ token: string; method: SignInMfaMethod } | null>(null);
-  const selectedMethod = isEnrollment ? "Totp" :
-    selection !== null && selection.token === mfaChallenge?.mfaToken && availableMethods.includes(selection.method)
-      ? selection.method : availableMethods[0];
-  const [smsDelivery, setSmsDelivery] = useState<{
-    token: string;
-    status: "sending" | "sent" | "failed";
-  } | null>(null);
-  const currentToken = useRef(mfaChallenge?.mfaToken);
-  useEffect(() => {
-    currentToken.current = mfaChallenge?.mfaToken;
-    return () => { currentToken.current = undefined; };
-  }, [mfaChallenge?.mfaToken]);
-  const sendingToken = useRef<string | null>(null);
-  const smsStatus = smsDelivery !== null && smsDelivery.token === mfaChallenge?.mfaToken ? smsDelivery.status : undefined;
-
-  async function handleSendSms() {
-    if (!mfaChallenge || isEnrollment || selectedMethod !== "Sms") return;
-    const token = mfaChallenge.mfaToken;
-    if (sendingToken.current === token) return;
-    sendingToken.current = token;
-    setSmsDelivery({ token, status: "sending" });
-    try {
-      const result = await sendMfaSmsChallengeAction(token);
-      if (currentToken.current === token) {
-        setSmsDelivery({ token, status: result.success ? "sent" : "failed" });
-      }
-    } catch (sendError) {
-      if (currentToken.current !== token) return;
-      if (recoverFromStaleServerAction(sendError)) return;
-      if (currentToken.current === token) setSmsDelivery({ token, status: "failed" });
-    } finally {
-      if (sendingToken.current === token) sendingToken.current = null;
-    }
-  }
 
   async function copyText(text: string, kind: "secret" | "codes") {
     setCopied(null);
@@ -157,11 +115,10 @@ export function MfaChallengeForm({
       return;
     }
 
-    if (!selectedMethod) return;
     try {
       await signIn("credentials", {
         mfaToken: mfaChallenge.mfaToken,
-        method: selectedMethod,
+        method: data.get("method") || "Totp",
         code,
         redirectTo,
       });
@@ -321,39 +278,21 @@ export function MfaChallengeForm({
                   </div>
                 </Field>
               )}
-              {!isEnrollment && availableMethods.length > 1 && (
+              {!isEnrollment && mfaChallenge.availableMethods.includes("BackupCode") && (
                 <Field>
-                  <FieldLabel htmlFor="mfa-method">{t("methodLabel")}</FieldLabel>
+                  <FieldLabel htmlFor="mfa-method">
+                    {t("methodLabel")}
+                  </FieldLabel>
                   <select
                     id="mfa-method"
                     name="method"
-                    value={selectedMethod}
-                    onChange={(event) => {
-                      const method = availableMethods.find((value) => value === event.target.value);
-                      if (method) setSelection({ token: mfaChallenge.mfaToken, method });
-                    }}
+                    defaultValue="Totp"
                     disabled={isLoading}
                     className="h-10 rounded border border-white/10 bg-slate-900 px-3"
                   >
-                    {availableMethods.map((method) => (
-                      <option key={method} value={method}>{t(`method${method}`)}</option>
-                    ))}
+                    <option value="Totp">{t("methodTotp")}</option>
+                    <option value="BackupCode">{t("methodBackupCode")}</option>
                   </select>
-                </Field>
-              )}
-              {!isEnrollment && !selectedMethod && <FieldError>{t("noSupportedMethod")}</FieldError>}
-              {!isEnrollment && selectedMethod === "Sms" && (
-                <Field>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isLoading || smsStatus === "sending" || !isHydrated}
-                    onClick={() => { void handleSendSms(); }}
-                  >
-                    {smsStatus === "sending" ? t("smsSending") : smsStatus === "sent" ? t("smsResend") : t("smsSend")}
-                  </Button>
-                  {smsStatus === "sent" && <p role="status" className="text-sm text-slate-300">{t("smsSent")}</p>}
-                  {smsStatus === "failed" && <FieldError>{t("smsFailed")}</FieldError>}
                 </Field>
               )}
               <Field>
@@ -378,7 +317,7 @@ export function MfaChallengeForm({
                 !("type" in error && error.type === "MfaRequired") && (
                   <FieldError>{error.message}</FieldError>
                 )}
-              <Button type="submit" disabled={submitting || !isHydrated || (!isEnrollment && !selectedMethod)}>
+              <Button type="submit" disabled={submitting || !isHydrated}>
                 {isEnrollment ? t("enrollSubmit") : t("submit")}
               </Button>
               <Button

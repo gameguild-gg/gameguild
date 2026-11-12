@@ -129,9 +129,14 @@ export function buildEventJsonLd({
     eventAttendanceMode: inPerson
       ? 'https://schema.org/OfflineEventAttendanceMode'
       : 'https://schema.org/OnlineEventAttendanceMode',
-    location: inPerson
-      ? { '@type': 'Place', name: organizerName, url: joinUrl(url) }
-      : { '@type': 'VirtualLocation', url: joinUrl(url) },
+    ...(inPerson
+      ? {}
+      : {
+          location: {
+            '@type': 'VirtualLocation',
+            url: joinUrl(url),
+          },
+        }),
     organizer: { '@type': 'Organization', name: organizerName, url: SITE_BASE_URL },
   };
 }

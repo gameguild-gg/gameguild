@@ -7,7 +7,7 @@
 /**
  * Base API error
  */
-export interface ApiError extends Error {
+export interface ApiError {
   readonly name: 'ApiError';
   readonly message: string;
   readonly status: number;

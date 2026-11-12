@@ -125,7 +125,6 @@ export { hasRole, hasAllRoles, hasAnyRole, hasPermission, hasAllPermissions, has
 // Extended auth operations (MFA, password reset, email verification, session management)
 export {
   verifyMfa,
-  requestSmsMfaChallenge,
   setupTotpMfa,
   getMfaMethods,
   requestPasswordReset,
@@ -141,7 +140,6 @@ export {
 } from './runtime/auth/extended-operations';
 export type {
   MfaVerifyInput,
-  MfaSmsChallengeResult,
   MfaSetupResult,
   PasswordResetRequestInput,
   PasswordResetConfirmInput,
@@ -165,7 +163,7 @@ export type { RequestConfig, ApiResponse, Interceptor } from './runtime/transpor
 // ─── Next.js Integration ─────────────────────────────────────────
 export { GameGuildAuth } from './integrations/next/auth';
 export { parseCookieHeader, parseBackendAuthResponse } from './integrations/next/handlers';
-export { createMfaEnrollmentCompleteAction, createMfaSmsChallengeAction, type MfaEnrollmentCompleteResult } from './integrations/next/actions';
+export { createMfaEnrollmentCompleteAction, type MfaEnrollmentCompleteResult } from './integrations/next/actions';
 export type { OAuthProviderWithMethods } from './integrations/next/oauth-helpers';
 export {
   createNextClient,
