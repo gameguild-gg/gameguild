@@ -994,6 +994,33 @@ Table "compliance_financial_crime_cases" {
   }
 }
 
+Table "compliance_financial_crime_signal_outbox" {
+  "Id" uuid [not null]
+  "Kind" integer [not null]
+  "TenantId" uuid [not null]
+  "SubjectHash" "character varying(128)" [not null]
+  "PayloadJson" "character varying(8192)" [not null]
+  "PayloadHash" "character varying(128)" [not null]
+  "Status" integer [not null]
+  "Attempts" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "NextAttemptAt" timestamp
+  "ClaimedAt" timestamp
+  "ClaimedBy" "character varying(256)"
+  "CompletedAt" timestamp
+  "LastError" "character varying(2048)"
+
+  Checks {
+    `"Attempts" >= 0` [name: 'ck_financial_crime_signal_outbox_attempts']
+  }
+
+  Indexes {
+    Id [pk, name: "PK_compliance_financial_crime_signal_outbox"]
+    (Status, NextAttemptAt, CreatedAt) [name: "ix_financial_crime_signal_outbox_claim"]
+    PayloadHash [unique, name: "ux_financial_crime_signal_outbox_payload"]
+  }
+}
+
 Table "compliance_sumsub_applicant_bindings" {
   "Id" uuid [not null]
   "TenantId" uuid [not null]

@@ -25,7 +25,30 @@ public sealed record SumSubWebhookIngestionResult(
     KycEvidenceIngestionStatus Status,
     string ProviderEventId,
     KycAmlState State,
-    Guid? EvidenceId);
+    Guid? EvidenceId)
+{
+    /// <summary>
+    ///     The tenant of the applicant binding the event resolved to (issue #1291 KYC
+    ///     enrichment). Null on the rejected/deferred paths where no binding was found.
+    ///     Internal enrichment metadata: deliberately excluded from the provider-facing
+    ///     webhook response (and therefore from the OpenAPI surface) — the caller is SumSub,
+    ///     not the platform's own consumers.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public Guid? TenantId { get; init; }
+
+    /// <summary>The opaque subject hash of the resolved applicant binding, when known (internal).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? SubjectHash { get; init; }
+
+    /// <summary>The digest of the verified raw payload, when stored (internal).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? PayloadHash { get; init; }
+
+    /// <summary>The raw SumSub review answer (GREEN/RED/REVIEW) when the payload carried one (internal).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? ReviewAnswer { get; init; }
+}
 
 public interface IKycAmlOrchestrator
 {
@@ -174,7 +197,13 @@ public sealed class SumSubKycAmlOrchestrator : IKycAmlOrchestrator
                 KycEvidenceIngestionStatus.Duplicate,
                 providerEventId,
                 replayBinding?.State ?? KycAmlState.NeedsReview,
-                null);
+                null)
+            {
+                TenantId = replayBinding?.TenantId,
+                SubjectHash = replayBinding?.SubjectHash,
+                PayloadHash = stored.PayloadHash,
+                ReviewAnswer = ReviewAnswer(root)
+            };
         }
 
         var inbox = new SumSubWebhookInboxRow
@@ -194,14 +223,26 @@ public sealed class SumSubKycAmlOrchestrator : IKycAmlOrchestrator
             await _db.SaveChangesAsync(cancellationToken);
             return new SumSubWebhookIngestionResult(
                 KycEvidenceIngestionStatus.Rejected, providerEventId,
-                binding?.State ?? KycAmlState.NeedsReview, null);
+                binding?.State ?? KycAmlState.NeedsReview, null)
+            {
+                TenantId = binding?.TenantId,
+                SubjectHash = binding?.SubjectHash,
+                PayloadHash = stored.PayloadHash,
+                ReviewAnswer = ReviewAnswer(root)
+            };
         }
         if (binding.LastProviderIssuedAt is not null && issuedAt <= binding.LastProviderIssuedAt)
         {
             inbox.ProcessingError = "out-of-order-event";
             await _db.SaveChangesAsync(cancellationToken);
             return new SumSubWebhookIngestionResult(
-                KycEvidenceIngestionStatus.Deferred, providerEventId, binding.State, null);
+                KycEvidenceIngestionStatus.Deferred, providerEventId, binding.State, null)
+            {
+                TenantId = binding.TenantId,
+                SubjectHash = binding.SubjectHash,
+                PayloadHash = stored.PayloadHash,
+                ReviewAnswer = ReviewAnswer(root)
+            };
         }
 
         var state = MapWebhookState(root);
@@ -225,7 +266,13 @@ public sealed class SumSubKycAmlOrchestrator : IKycAmlOrchestrator
             inbox.ProcessingError = ingestion.Status.ToString().ToLowerInvariant();
         }
         await _db.SaveChangesAsync(cancellationToken);
-        return new SumSubWebhookIngestionResult(ingestion.Status, providerEventId, state, ingestion.EvidenceId);
+        return new SumSubWebhookIngestionResult(ingestion.Status, providerEventId, state, ingestion.EvidenceId)
+        {
+            TenantId = binding.TenantId,
+            SubjectHash = binding.SubjectHash,
+            PayloadHash = stored.PayloadHash,
+            ReviewAnswer = ReviewAnswer(root)
+        };
     }
 
     public async Task<KycEvidenceIngestionResult> ReconcileAsync(
@@ -371,11 +418,7 @@ public sealed class SumSubKycAmlOrchestrator : IKycAmlOrchestrator
 
     private static KycAmlState MapWebhookState(JsonElement root)
     {
-        var reviewStatus = root.TryGetProperty("reviewStatus", out var status) ? status.GetString() : null;
-        var answer = root.TryGetProperty("reviewResult", out var result) &&
-                     result.TryGetProperty("reviewAnswer", out var reviewAnswer)
-            ? reviewAnswer.GetString()
-            : null;
+        var answer = ReviewAnswer(root);
         if (string.Equals(answer, "GREEN", StringComparison.Ordinal))
         {
             return KycAmlState.Approved;
@@ -386,12 +429,20 @@ public sealed class SumSubKycAmlOrchestrator : IKycAmlOrchestrator
             return KycAmlState.Rejected;
         }
 
+        var reviewStatus = root.TryGetProperty("reviewStatus", out var status) ? status.GetString() : null;
         return string.Equals(reviewStatus, "pending", StringComparison.Ordinal)
             ? KycAmlState.ApplicantPending
             : string.Equals(reviewStatus, "completed", StringComparison.Ordinal)
                 ? KycAmlState.NeedsReview
                 : KycAmlState.InReview;
     }
+
+    private static string? ReviewAnswer(JsonElement root) =>
+        root.TryGetProperty("reviewResult", out var result) &&
+        result.TryGetProperty("reviewAnswer", out var reviewAnswer) &&
+        reviewAnswer.ValueKind == JsonValueKind.String
+            ? reviewAnswer.GetString()
+            : null;
 
     private static KycEvidenceResult MapResult(KycAmlState state) => state switch
     {

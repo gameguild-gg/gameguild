@@ -113,7 +113,6 @@ internal sealed class ApiProductComposition : IApiProductComposition
 
     public IReadOnlyList<string> DisabledModules { get; } =
     [
-        "Compliance.FinancialCrime",
         "TrustSafety"
     ];
 
@@ -144,6 +143,18 @@ internal sealed class ApiProductComposition : IApiProductComposition
         // Trust/Safety control plane (signed, versioned). Must run after the Economy core
         // composition that registers the issuer.
         builder.Services.AddEconomyRiskTrustSafetyIngestion();
+        // Issue #1291 option C (FC1): the FinancialCrime economy hook decorates the trusted
+        // protected operation authorizer registered above — order is load-bearing (the
+        // last-wins interface registration must be the adapter), hence this call sits after
+        // the core composition — and after the Trust/Safety ingestion above — so the FC
+        // adapter is the outermost last-wins registration, mirroring the evidence-reader
+        // registration rule.
+        builder.Services.AddFinancialCrimeEconomyIngestion();
+        // The module's own background services: the outbox drain (economy + KYC signals →
+        // screenings, cases, decision consumption) and the periodic rescreening sweep,
+        // following the ComplianceDeadlineExpiryWorker hosted-wrapper shape.
+        builder.Services.AddHostedService<global::GameGuild.API.Core.Compliance.FinancialCrimeSignalOutboxWorkerService>();
+        builder.Services.AddHostedService<global::GameGuild.API.Core.Compliance.FinancialCrimeRescreeningWorkerService>();
         builder.Services.AddScoped<global::GameGuild.Compliance.KYC.IKycEvidenceStore, global::GameGuild.API.Core.Integration.EconomyKycEvidenceStore>();
         // Sign-in compliance gate adapter (issue #267): composes the KYC module with the
         // economy compliance hold store behind the platform's ISignInCompliancePolicy
