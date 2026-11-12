@@ -296,26 +296,22 @@ public sealed class SignInMfaServiceTests
     [Fact]
     public async Task SuccessfulCompletionCancelsTheUsersLiveRecoveryRequest()
     {
-        var fixture = new FlowFixture();
-        fixture.LiveRecovery = new MfaRecoveryRequest { Id = Guid.NewGuid(), UserId = fixture.User.Id.ToString(),
-            TenantId = fixture.TenantId.ToString(), Status = MfaRecoveryRequestStatus.AwaitingConfirmation };
+        var fixture = new FlowFixture { LiveRecovery = new MfaRecoveryRequest { Id = Guid.NewGuid(), UserId = "recovery-user", Status = MfaRecoveryRequestStatus.AwaitingConfirmation } };
         var result = await fixture.CompleteAsync(method: MfaMethod.Totp);
         Assert.Same(fixture.Issued, result);
         Assert.Equal(MfaRecoveryRequestStatus.Cancelled, fixture.LiveRecovery.Status);
-        Assert.Equal(fixture.User.Id.ToString(), fixture.CancelledRecoveryUserId);
+        Assert.Equal("recovery-user", fixture.CancelledRecoveryUserId);
     }
 
     [Fact]
     public async Task SuccessfulTotpCompletionCancelsPendingLiveRecoveryRequest()
     {
         // Pending (pre-cooldown) is the other live state alongside AwaitingConfirmation covered above.
-        var fixture = new FlowFixture();
-        fixture.LiveRecovery = new MfaRecoveryRequest { Id = Guid.NewGuid(), UserId = fixture.User.Id.ToString(),
-            TenantId = fixture.TenantId.ToString(), Status = MfaRecoveryRequestStatus.Pending };
+        var fixture = new FlowFixture { LiveRecovery = new MfaRecoveryRequest { Id = Guid.NewGuid(), UserId = "recovery-user", Status = MfaRecoveryRequestStatus.Pending } };
         var result = await fixture.CompleteAsync(method: MfaMethod.Totp);
         Assert.Same(fixture.Issued, result);
         Assert.Equal(MfaRecoveryRequestStatus.Cancelled, fixture.LiveRecovery.Status);
-        Assert.Equal(fixture.User.Id.ToString(), fixture.CancelledRecoveryUserId);
+        Assert.Equal("recovery-user", fixture.CancelledRecoveryUserId);
     }
 
     [Fact]
@@ -690,14 +686,16 @@ public sealed class SignInMfaServiceTests
                 Audits.Add(auditEvent);
                 return Task.CompletedTask;
             });
-            RecoveryRequests.Setup(port => port.CancelLiveByUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((string userId, CancellationToken cancellationToken) =>
+            RecoveryRequests.Setup(port => port.FindLiveByUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((string userId, CancellationToken cancellationToken) =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (LiveRecovery is null || LiveRecovery.UserId != userId) { return null; }
-                LiveRecovery.Status = MfaRecoveryRequestStatus.Cancelled;
-                LiveRecovery.ConsumedAt = DateTimeOffset.UtcNow;
-                CancelledRecoveryUserId = LiveRecovery.UserId;
                 return LiveRecovery;
+            });
+            RecoveryRequests.Setup(port => port.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns((CancellationToken cancellationToken) =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                CancelledRecoveryUserId = LiveRecovery?.UserId;
+                return Task.CompletedTask;
             });
             SetupEnrollment(Guid.NewGuid(), Digest(), "default-enrollment-secret", "otpauth://totp/default-enrollment");
         }

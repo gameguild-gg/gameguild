@@ -446,7 +446,7 @@ public class LocalAuthService(
             var tokenVersion = authenticatedVersion;
 
             var refreshTokenExpiryDays = RefreshTokenLifetimeResolver.ResolveExpirationDays(
-                jwtOptions, configuration, request.RememberMe != false);
+                jwtOptions, configuration, request.RememberMe == true);
             var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
             var sessionId = Guid.NewGuid();
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(
@@ -941,11 +941,8 @@ public class LocalAuthService(
 
             var tenantAccessContext = await ResolveTenantAccessContextAsync(userId, request.TenantId, cancellationToken).ConfigureAwait(false);
 
-            // Remember-me defaults on: the sign-up request does not carry the flag, so a
-            // freshly registered session is persistent unless the caller opts out at the
-            // next sign-in.
             var refreshTokenExpiryDays = RefreshTokenLifetimeResolver.ResolveExpirationDays(
-                jwtOptions, configuration, persistent: true);
+                jwtOptions, configuration, persistent: false);
             var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
             var sessionId = Guid.NewGuid();
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(
@@ -1125,13 +1122,7 @@ public class LocalAuthService(
             userId, deviceInfo, authenticatedAt, refreshTokenExpiresAt, cancellationToken).ConfigureAwait(false);
         var slidingExpiration = jwtOptions?.Value.RefreshTokenSlidingExpiration
                                 ?? bool.Parse(configuration["Jwt:RefreshTokenSlidingExpiration"] ?? bool.TrueString);
-        // Non-sliding rotation preserves the predecessor's deadline — except in the final
-        // week: a client actively refreshing that close to expiration is clearly still
-        // using the session, so the replacement gets the full configured lifetime instead
-        // of dying with the predecessor.
-        if (!slidingExpiration
-            && refreshTokenExpiresAt > storedToken.ExpiresAt
-            && !RefreshTokenLifetimeResolver.IsWithinRenewalWindow(storedToken.ExpiresAt, now))
+        if (!slidingExpiration && refreshTokenExpiresAt > storedToken.ExpiresAt)
         {
             refreshTokenExpiresAt = storedToken.ExpiresAt;
         }

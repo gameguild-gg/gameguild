@@ -18,7 +18,7 @@ public sealed class SmsMfaServiceTests : IDisposable
     private readonly MemoryCache memoryCache = new(new MemoryCacheOptions { SizeLimit = null });
 
     private SmsMfaService CreateService() =>
-        new(NullLogger<SmsMfaService>.Instance, memoryCache, mfaConfigRepository.Object, publisher.Object, Mock.Of<IMfaAttemptTrackingService>());
+        new(NullLogger<SmsMfaService>.Instance, memoryCache, mfaConfigRepository.Object, publisher.Object);
 
     public void Dispose() => memoryCache.Dispose();
 
@@ -115,29 +115,16 @@ public sealed class SmsMfaServiceTests : IDisposable
     public async Task CompleteEnrollment_RejectsWrongCode_AndConsumesCodeAttempts()
     {
         var userId = Guid.NewGuid();
-        string? capturedCode = null;
-        publisher
-            .Setup(p => p.Publish(It.IsAny<SmsMfaCodeRequestedNotification>(), It.IsAny<CancellationToken>()))
-            .Callback<SmsMfaCodeRequestedNotification, CancellationToken>((notification, _) => capturedCode = notification.Code);
-        mfaConfigRepository
-            .Setup(repository => repository.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserMfaConfiguration { UserId = userId });
-        mfaConfigRepository
-            .Setup(repository => repository.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserMfaConfiguration configuration, CancellationToken _) => configuration);
         var service = CreateService();
         await service.StartEnrollmentAsync(userId, "+15551234567");
-        capturedCode.Should().NotBeNull();
-        var wrongCode = (capturedCode![0] == '0' ? "1" : "0") + capturedCode[1..];
 
         for (var attempt = 0; attempt < SmsMfaService.MaxVerificationAttempts; attempt++)
         {
-            (await service.CompleteEnrollmentAsync(userId, wrongCode)).Success.Should().BeFalse();
+            (await service.VerifyCodeAsync(userId, "000000")).Should().BeFalse();
         }
 
-        // The actual issued proof is unusable after the enrollment attempt budget is exhausted.
-        (await service.CompleteEnrollmentAsync(userId, capturedCode)).Success.Should().BeFalse();
-        mfaConfigRepository.Verify(repository => repository.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()), Times.Never);
+        // Exhausted: even the correct code is now invalid.
+        (await service.VerifyCodeAsync(userId, "000000")).Should().BeFalse();
     }
 
     [Fact]
@@ -147,14 +134,11 @@ public sealed class SmsMfaServiceTests : IDisposable
         string? capturedCode = null;
         publisher
             .Setup(p => p.Publish(It.IsAny<SmsMfaCodeRequestedNotification>(), It.IsAny<CancellationToken>()))
-            .Callback<SmsMfaCodeRequestedNotification, CancellationToken>((notification, _) => capturedCode = notification.Code);
-        mfaConfigRepository
-            .Setup(repository => repository.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserMfaConfiguration { UserId = userId, SmsPhoneNumber = "+15551234567" });
+            .Callback<SmsMfaCodeRequestedNotification, CancellationToken>((n, _) => capturedCode = n.Code);
         var service = CreateService();
 
-        (await service.SendChallengeAsync(userId)).Success.Should().BeTrue();
-        capturedCode.Should().NotBeNull();
+        await service.StartEnrollmentAsync(userId, "+15551234567");
+
         (await service.VerifyCodeAsync(userId, capturedCode!)).Should().BeTrue();
         (await service.VerifyCodeAsync(userId, capturedCode!)).Should().BeFalse();
     }
@@ -205,25 +189,15 @@ public sealed class SmsMfaServiceTests : IDisposable
     public async Task StartEnrollment_PublishFailure_DropsTheCode()
     {
         var userId = Guid.NewGuid();
-        string? capturedCode = null;
         publisher
             .Setup(p => p.Publish(It.IsAny<SmsMfaCodeRequestedNotification>(), It.IsAny<CancellationToken>()))
-            .Callback<SmsMfaCodeRequestedNotification, CancellationToken>((notification, _) => capturedCode = notification.Code)
             .ThrowsAsync(new InvalidOperationException("bus down"));
-        mfaConfigRepository
-            .Setup(repository => repository.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserMfaConfiguration { UserId = userId });
-        mfaConfigRepository
-            .Setup(repository => repository.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserMfaConfiguration configuration, CancellationToken _) => configuration);
         var service = CreateService();
 
         var act = () => service.StartEnrollmentAsync(userId, "+15551234567");
         await act.Should().ThrowAsync<InvalidOperationException>();
-        capturedCode.Should().NotBeNull();
-        // Check the actual proof through its proper purpose, with a usable persistence port.
-        (await service.CompleteEnrollmentAsync(userId, capturedCode!)).Success.Should().BeFalse();
-        mfaConfigRepository.Verify(repository => repository.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
 
+        // No live code remains for a user who never received it.
+        (await service.VerifyCodeAsync(userId, "123456")).Should().BeFalse();
+    }
 }

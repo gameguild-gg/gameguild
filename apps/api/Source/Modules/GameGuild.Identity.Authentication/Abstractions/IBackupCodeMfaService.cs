@@ -16,9 +16,6 @@ public interface IBackupCodeMfaService
     /// </summary>
     Task<bool> VerifyBackupCodeAsync(Guid userId, string backupCode, string? deviceId = null, CancellationToken cancellationToken = default);
 
-    /// <summary>Propagates operational failures so step-up transactions can roll back factor side effects.</summary>
-    Task<bool> VerifyBackupCodeForStepUpAsync(Guid userId, string backupCode, string? deviceId = null, CancellationToken cancellationToken = default);
-
     /// <summary>
     ///     Generates a random 8-character alphanumeric backup code.
     /// </summary>

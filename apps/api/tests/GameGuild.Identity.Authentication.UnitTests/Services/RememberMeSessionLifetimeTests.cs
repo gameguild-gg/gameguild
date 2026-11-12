@@ -164,12 +164,12 @@ public class RememberMeSessionLifetimeTests
     // ── RefreshTokenLifetimeResolver ─────────────────────────
 
     [Fact]
-    public void Resolver_WithoutOptionsOrConfig_UsesStandardDefaultOfThirtyDays()
+    public void Resolver_WithoutOptionsOrConfig_UsesStandardDefaultOfSevenDays()
     {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>()).Build();
 
         RefreshTokenLifetimeResolver.ResolveExpirationDays(null, configuration, persistent: false)
-            .Should().Be(30);
+            .Should().Be(7);
     }
 
     [Fact]
@@ -248,7 +248,7 @@ public class RememberMeSessionLifetimeTests
     // ── Local sign-in path (also covers polymorphic sign-in, which funnels into it) ─────────────────────────
 
     [Theory]
-    [InlineData(null, 30)]
+    [InlineData(null, 7)]
     [InlineData(false, 7)]
     [InlineData(true, 30)]
     public async Task LocalSignIn_RefreshDeadlineFollowsRememberMeFlag(bool? rememberMe, int expectedDays)
@@ -294,7 +294,7 @@ public class RememberMeSessionLifetimeTests
     // ── OAuth path ─────────────────────────
 
     [Theory]
-    [InlineData(null, 30)]
+    [InlineData(null, 7)]
     [InlineData(false, 7)]
     [InlineData(true, 30)]
     public async Task GoogleIdTokenSignIn_RefreshDeadlineFollowsRememberMeFlag(bool? rememberMe, int expectedDays)
@@ -324,7 +324,7 @@ public class RememberMeSessionLifetimeTests
     // ── Web3 path ─────────────────────────
 
     [Theory]
-    [InlineData(null, 30)]
+    [InlineData(null, 7)]
     [InlineData(false, 7)]
     [InlineData(true, 30)]
     public async Task Web3SignatureSignIn_RefreshDeadlineFollowsRememberMeFlag(bool? rememberMe, int expectedDays)
@@ -405,87 +405,6 @@ public class RememberMeSessionLifetimeTests
 
         response.Success.Should().BeTrue();
         response.RefreshTokenExpiresAt.Should().BeWithin(Tolerance).After(now.AddDays(7));
-    }
-
-    // ── Final-week renewal window (non-sliding rotation) ─────────────────────────
-
-    [Theory]
-    [InlineData(1)]
-    [InlineData(5)]
-    [InlineData(7)]
-    public void IsWithinRenewalWindow_TrueInsideTheFinalWeek(int daysRemaining)
-    {
-        var now = DateTime.UtcNow;
-
-        RefreshTokenLifetimeResolver.IsWithinRenewalWindow(now.AddDays(daysRemaining), now)
-            .Should().BeTrue();
-    }
-
-    [Theory]
-    [InlineData(8)]
-    [InlineData(30)]
-    public void IsWithinRenewalWindow_FalseOutsideTheFinalWeek(int daysRemaining)
-    {
-        var now = DateTime.UtcNow;
-
-        RefreshTokenLifetimeResolver.IsWithinRenewalWindow(now.AddDays(daysRemaining), now)
-            .Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task RefreshToken_LastWeekRenewalExtendsPastOriginalExpiryEvenWhenSlidingIsDisabled()
-    {
-        var harness = new LocalRememberMeHarness(slidingExpiration: false);
-        var user = User.Create("refresh-lastweek@example.test", "Refresh last-week user");
-        harness.ArrangeUser(user);
-        var now = SystemClock.UtcNow;
-        var storedToken = new RefreshToken
-        {
-            UserId = user.Id,
-            Token = "hashed-lastweek",
-            // A 30-day persistent session issued three days before its deadline: rotation
-            // inside the final week must mint the full configured lifetime even though
-            // sliding expiration is off.
-            CreatedAt = now.AddDays(-27),
-            ExpiresAt = now.AddDays(3),
-            IsRevoked = false,
-            CreatedByIp = "127.0.0.1"
-        };
-        harness.Tokens.Setup(x => x.GetByTokenAsync("hashed-lastweek", It.IsAny<CancellationToken>())).ReturnsAsync(storedToken);
-        harness.Hashes.Setup(x => x.HashToken("lastweek-token")).Returns("hashed-lastweek");
-
-        var response = await harness.Sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "lastweek-token" });
-
-        response.Success.Should().BeTrue();
-        response.RefreshTokenExpiresAt.Should().BeWithin(Tolerance).After(now.AddDays(30));
-        response.RefreshTokenExpiresAt.Should().BeAfter(storedToken.ExpiresAt);
-    }
-
-    [Fact]
-    public async Task RefreshToken_OutsideLastWeekNonSlidingKeepsPredecessorDeadline()
-    {
-        var harness = new LocalRememberMeHarness(slidingExpiration: false);
-        var user = User.Create("refresh-early@example.test", "Refresh early user");
-        harness.ArrangeUser(user);
-        var now = SystemClock.UtcNow;
-        var storedToken = new RefreshToken
-        {
-            UserId = user.Id,
-            Token = "hashed-early",
-            // Still far from expiration: non-sliding rotation must preserve the
-            // predecessor's deadline instead of extending it.
-            CreatedAt = now.AddDays(-1),
-            ExpiresAt = now.AddDays(29),
-            IsRevoked = false,
-            CreatedByIp = "127.0.0.1"
-        };
-        harness.Tokens.Setup(x => x.GetByTokenAsync("hashed-early", It.IsAny<CancellationToken>())).ReturnsAsync(storedToken);
-        harness.Hashes.Setup(x => x.HashToken("early-token")).Returns("hashed-early");
-
-        var response = await harness.Sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "early-token" });
-
-        response.Success.Should().BeTrue();
-        response.RefreshTokenExpiresAt.Should().BeWithin(Tolerance).After(storedToken.ExpiresAt);
     }
 
     // ── Logout revokes persistent sessions ─────────────────────────
@@ -577,20 +496,16 @@ public class RememberMeSessionLifetimeTests
         public readonly Mock<ISessionManagementService> Sessions = new();
         public readonly LocalAuthService Sut;
 
-        public LocalRememberMeHarness(bool? slidingExpiration = null)
+        public LocalRememberMeHarness()
         {
             PersistedAuthenticationSessions.Configure(Sessions);
-            var configurationEntries = new Dictionary<string, string?>
-            {
-                { "Jwt:RefreshTokenExpiryInDays", "7" },
-                { "Jwt:PersistentRefreshTokenExpirationDays", "30" }
-            };
-            if (slidingExpiration is { } sliding)
-            {
-                configurationEntries["Jwt:RefreshTokenSlidingExpiration"] = sliding.ToString();
-            }
-
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(configurationEntries).Build();
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    { "Jwt:RefreshTokenExpiryInDays", "7" },
+                    { "Jwt:PersistentRefreshTokenExpirationDays", "30" }
+                })
+                .Build();
             var passwordHasher = new PasswordHasher(NullLogger<PasswordHasher>.Instance, configuration);
 
             var httpContext = new DefaultHttpContext();

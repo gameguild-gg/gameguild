@@ -2564,23 +2564,9 @@ Those original criteria remain open until their separate evidence is accepted.
 
 `Jwt:RefreshTokenSlidingExpiration` defaults to `true`, retaining renewal on each
 successful refresh. With `false`, rotation preserves the predecessor's deadline
-or a shorter configured TTL — except inside the final-week renewal window
-(`RefreshTokenLifetimeResolver.RenewalWindowDays`, 7 days): a refresh occurring
-with seven days or less remaining mints the full configured lifetime even when
-sliding expiration is disabled, so an actively used session is not cut down to
-the predecessor's remaining deadline in its last week. Both modes retain
-`SessionOptions.AbsoluteTimeoutMinutes`
+or a shorter configured TTL. Both modes retain `SessionOptions.AbsoluteTimeoutMinutes`
 measured from the original session creation; rotation cannot reset that boundary.
 The existing idle timeout and active-session checks remain mandatory.
-
-Remember-me defaults ON across every issuing path (local, polymorphic, OAuth,
-OIDC/SAML, Web3, and the host sign-in endpoint): a null `RememberMe` flag is
-treated as persistent, and only an explicit `false` selects the standard
-lifetime. Sign-up issues a persistent session because the register request does
-not carry the flag. The standard refresh lifetime default is 30 days
-(`RefreshTokenLifetimeResolver.StandardDefaultDays`), matching the persistent
-default; typed `JwtOptions` and the raw-config fallbacks retain their configured
-values where present.
 
 Session binding and rotation cap the stored refresh credential at the actual
 persisted session deadline. Credential sign-in, sign-up, OAuth/Discord and Web3
@@ -2687,14 +2673,6 @@ configuration validation.
 [Scope and remaining acceptance](../../../../../docs/architecture/refresh-token-rotation-reconciliation.md).
 
 ### MFA Recovery State
-
-Authenticated TOTP setup returns the generated plaintext recovery-code set to its
-owner, while persistence contains only hashes. These codes cannot verify until
-TOTP enrollment has completed and each successful recovery consumes one code.
-Known MFA configuration denials use an internal typed exception and map to the
-existing unsuccessful setup / empty regeneration result (HTTP 400). Regeneration
-requires password re-verification before generation. Infrastructure, permission,
-cancellation and backup-storage exceptions are not converted into business denials.
 
 New recovery codes use salted, versioned PBKDF2-HMAC-SHA256 (600,000 iterations)
 and default to 12 characters. Legacy SHA-256 codes remain verifiable until used or
@@ -3125,159 +3103,6 @@ binding or challenge material. No new anonymous endpoint is introduced.
 
 [Flow and recovery contract](../../../../../docs/auth/flows/orchestrated-auth-flow.md).
 
-
-### Lost-device MFA recovery cancellation and audit (#1195)
-
-The authenticated `POST /v1/auth/mfa/recovery:cancel` operation accepts no account
-identifier. Its handler independently requires an authenticated `ActorKind.User`
-with a nonempty trusted subject GUID; service, system and anonymous identities
-cannot cancel an owner's request. Repeated cancellation with no live request is
-an idempotent acknowledgement and does not invent a state-transition audit.
-
-Continuation, confirmation and cancellation use conditional database updates over
-the expected live status and server-owned request/bearer binding. They require the
-owning relational command transaction. A cancellation committed before a competing
-confirmation update prevents that update from consuming the request or disabling
-the factor. Successful MFA sign-in uses the same atomic cancellation primitive.
-There is no read-then-unconditional-tracked-write path for these transitions.
-
-`Authentication.MfaRecoveryRequested`, `.MfaRecoveryContinued`,
-`.MfaRecoveryConfirmed` and `.MfaRecoveryCancelled` are required transactional
-security events. Recovery state, durable notifications, factor/token changes and
-the corresponding success audit share the command's transaction. Audit failures
-propagate and roll back that operation; a local spool acknowledgement cannot
-substitute for a persisted required audit. Metadata contains the request ID and
-transition reason, never the recovery or confirmation bearer. Confirmation is
-high risk; request, continuation and cancellation are medium risk.
-
-Contact routing, passwordless primary re-verification and safe alternative-channel
-sign-in remain separate unfinished requirements of #1195. These cancellation and
-audit changes do not establish that the whole recovery issue is complete.
-
-### SMS proof purpose separation (#1195)
-
-SMS enrollment and sign-in challenge entries retain their operation purpose.
-Enrollment completion accepts only enrollment proofs; ordinary SMS verification
-accepts only challenge proofs. A mismatched-purpose submission preserves the
-original proof and its attempt budget, while digest comparison remains constant
-time. Valid proofs remain single-use, and failed delivery removes the issued
-proof.
-
-SMS completion binds its own code-only request; no authenticator SecretKey is
-required or used by the SMS proof. TOTP enrollment keeps its existing contract.
-
-Verified SMS enrollment creates a missing MFA configuration directly; a prior
-unverified authenticator setup is not a prerequisite.
-
-Starting or replacing SMS enrollment requires re-verification of the authenticated
-account's current password before code issuance. Missing/wrong proof, missing
-verifier or verifier failure cannot reach the SMS provider. Diagnostics and durable
-operation payloads exclude that password and the requested phone. Passwordless
-accounts remain fail-closed until a secure alternative primary-proof flow exists.
-
-SMS sign-in delivery accepts only the opaque first-factor continuation. Its
-server-resolved active VerifyFactor challenge binds subject, tenant, token
-version, policy and current verified SMS enrollment; legacy user selectors cannot
-redirect delivery. The issued digest entry also binds the exact challenge ID.
-Enrollment, unbound verification and another continuation cannot consume it.
-Scoped provider instances share atomic cache issuance/consumption and an account
-resend budget. Cancelled or failed dispatch removes only its own issued entry.
-This in-memory budget is local to the shared cache, not a claimed distributed
-quota across separate hosts.
-
-SMS completion rechecks account/policy under the subject transaction lock, applies
-the configured account attempt/lockout policy, then atomically consumes the durable
-continuation before issuing MFA session evidence and credentials. A concurrent
-completion cannot consume the continuation or create another session. Successful SMS
-setup completes the verified enrollment and clears unverified authenticator
-provisioning. Existing verified additional factors and TOTP-only sign-in enrollment
-remain intact. Channel and proof binding are server-owned; memory-cache proof
-consumption is not undone by a later database rollback.
-
-Durable session evidence admits verified SMS alongside TOTP, backup codes and
-WebAuthn at the PostgreSQL method constraint. Email and push remain excluded.
-The schema upgrade preserves existing evidence. A downgrade with SMS evidence
-must fail transactionally, preserving the evidence and the upgraded constraint;
-it cannot silently relabel or delete an already verified factor.
-
-Email/push sign-in completion, protected device approval, contact recovery routing
-and secure passwordless disable remain separate unfinished work in #1195. SDK
-and web consumers must use the first-factor continuation for the SMS challenge.
-
-### WebAuthn ceremony binding for step-up (#1191)
-
-Step-up options issuance binds the SHA-256 digest of the provider's random WebAuthn
-challenge to the existing tenant, actor, session, operation and payload challenge
-row. A successful provider response without usable challenge options fails closed.
-Verification checks the assertion's signed client-data challenge against that
-binding before invoking the existing cryptographic verifier. Signature, origin,
-relying-party and credential-ownership checks remain the provider's responsibility;
-matching a nonce alone never authorizes an operation.
-
-Receipt persistence is selected from a private proof produced only by a successful
-factor verifier, rather than re-reading the request's method discriminator. The
-WebAuthn proof carries the server-bound nonce digest; TOTP and backup-code proofs
-carry their explicitly verified method and cannot substitute for a WebAuthn proof.
-The conditional receipt write also requires the same nonce digest. Reissuing
-options while cryptographic verification is pending invalidates the earlier
-ceremony, and an unrelated sign-in or another step-up challenge cannot produce a
-receipt for this operation. Existing WebAuthn receipts without a bound nonce are
-rejected on consumption; TOTP and backup-code receipts retain their existing scope
-and single-use behavior. Only digests are persisted, never assertions or raw nonces.
-A schema downgrade refuses existing bound challenge evidence instead of silently
-dropping the nonce digests.
-
-Platform-wide triggering remains a separate unfinished requirement of #1191.
-This binding change does not authorize passwordless MFA disable by itself.
-
-### Confirmed factors and trusted-device step-up requirements (#1191)
-
-Strict step-up TOTP and backup-code verification requires the persisted MFA
-configuration to be both enabled and setup-complete. It cannot confirm a pending
-enrollment, reactivate a disabled factor, or consume a recovery code from an
-incomplete setup. The check uses the same configuration read as verification and
-is repeated for each backup-code compare-and-swap retry. Legacy enrollment
-confirmation retains its separate activation behavior; strict operational failures
-continue to propagate to the enclosing transaction.
-
-The trusted-device grant returns a structured HTTP 403 when no receipt is supplied.
-Its typed response derives from ProblemDetails so the host's RFC 7807 result filter
-preserves the challenge fields at the document root and still applies problem
-customization. It is not a legacy error body nested under an untyped extension.
-Challenge creation normalizes the clock to the store's microsecond precision
-before deriving its expiry, so the response matches the persisted deadline exactly.
-The platform requirement service derives the operation from the requested device
-name and creates a persisted challenge bound to the authenticated actor, tenant,
-and session. The response exposes the challenge identifier, expiry, operation, and
-available supported factors. Availability reads the persisted enabled and
-setup-complete enrollment directly, respects global MFA enablement for TOTP and
-backup codes, and lists WebAuthn only when an active credential exists. It does
-not change the legacy MFA status used during sign-in. The identifier is not an authorization receipt.
-Clients verify the challenge and retry the same operation with its single-use
-receipt; the existing guarded command performs the trust mutation.
-
-### Step-up verification budget and expired challenge retention (#1191)
-
-Each challenge permits at most five factor evaluations. An atomic, subject-scoped
-database update reserves a slot before a supported factor is called; concurrent
-requests cannot each spend the same remaining slot. Reissuing WebAuthn options
-does not reset the budget, and the fifth valid proof can still issue a receipt.
-The database constrains the counter to the inclusive range zero through five.
-
-Ordinary invalid evidence returns a private recorded-denial command outcome so
-the reserved attempt commits even though the HTTP response is a denial. Provider
-or storage failures, request cancellation, and receipt compare-and-set failures
-escape that outcome and roll back the enclosing command transaction. Strict
-step-up factor ports preserve this distinction while existing authentication
-entry points retain their legacy result contracts. WebAuthn's existing
-best-effort telemetry remains best effort; required backup-code consumption and
-audit writes still participate in the command's failure handling.
-
-A scoped cleanup worker runs once per minute and removes at most 128 challenges
-per sweep, oldest expiry first. Only rows expired for at least 24 hours qualify;
-live challenges and recently expired evidence remain intact. A dedicated expiry
-index supports the sweep. Cleanup retries a failed sweep on the next interval,
-honors host cancellation, and does not replace durable audit/event retention.
 
 ## Conclusion
 

@@ -35,9 +35,4 @@ public interface ISmsMfaService
 
     /// <summary>Verifies a submitted SMS code (constant-time, single-use).</summary>
     Task<bool> VerifyCodeAsync(Guid userId, string code, CancellationToken cancellationToken = default);
-    /// <summary>Dispatches an SMS proof bound to a server-verified first-factor continuation.</summary>
-    Task<SmsMfaChallengeResult> SendSignInChallengeAsync(Guid userId, Guid signInChallengeId, CancellationToken cancellationToken);
-
-    /// <summary>Consumes only the SMS proof issued for this exact sign-in continuation.</summary>
-    Task<bool> VerifySignInCodeAsync(Guid userId, Guid signInChallengeId, string code, CancellationToken cancellationToken);
 }

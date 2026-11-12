@@ -7,8 +7,6 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public interface ISignInMfaService
 {
-    Task<SmsMfaChallengeResult> SendSmsChallengeAsync(string bearer, CancellationToken cancellationToken);
-
     Task<SignInMfaPreparation> PrepareAsync(Guid verifiedSubjectId, int verifiedTokenVersion, Guid? requestedTenantId,
         DeviceInfo deviceInfo, SignInFirstFactor firstFactor, bool requiresRiskStepUp, CancellationToken cancellationToken);
 

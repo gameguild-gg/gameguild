@@ -48,14 +48,7 @@ public sealed class MfaMutationCommandHandler(
             return [];
         }
 
-        try
-        {
-            return await mfaService.GenerateBackupCodesAsync(command.UserId, cancellationToken).ConfigureAwait(false);
-        }
-        catch (MfaConfigurationDeniedException)
-        {
-            return [];
-        }
+        return await mfaService.GenerateBackupCodesAsync(command.UserId, cancellationToken).ConfigureAwait(false);
     }
 
     public Task<bool> Handle(DisableMfaCommand command, CancellationToken cancellationToken) =>

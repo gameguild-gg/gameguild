@@ -8,5 +8,4 @@ public interface ISignInMfaSubjectReader
     Task<SignInMfaSubjectState?> ReadCurrentAsync(Guid subjectId, CancellationToken cancellationToken);
 }
 
-public sealed record SignInMfaSubjectState(User User, bool HasEnrolledMfa, DateTime? LockedOutUntil,
-    IReadOnlyList<MfaMethod>? EnrolledMethods = null);
+public sealed record SignInMfaSubjectState(User User, bool HasEnrolledMfa, DateTime? LockedOutUntil);

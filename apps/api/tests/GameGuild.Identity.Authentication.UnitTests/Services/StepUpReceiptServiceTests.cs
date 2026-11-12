@@ -56,7 +56,7 @@ public sealed class StepUpReceiptServiceTests
         var sessionId = Guid.NewGuid();
         var store = new RecordingStepUpChallengeStore();
         var mfa = new Mock<IMfaService>();
-        mfa.Setup(service => service.VerifyMfaForStepUpAsync(actorId, "123456", MfaMethod.Totp, It.IsAny<CancellationToken>()))
+        mfa.Setup(service => service.VerifyMfaAsync(actorId, "123456", MfaMethod.Totp, It.IsAny<CancellationToken>()))
             .ReturnsAsync(MfaVerificationResult.Successful("verified"));
         var service = CreateService(tenantId, actorId, sessionId, store, mfa.Object);
         var challenge = await service.CreateChallengeAsync(Binding);
@@ -83,7 +83,7 @@ public sealed class StepUpReceiptServiceTests
         var sessionId = Guid.NewGuid();
         var store = new RecordingStepUpChallengeStore();
         var webAuthn = new Mock<IWebAuthnAuthenticationService>();
-        webAuthn.Setup(service => service.CompleteAuthenticationForStepUpAsync(
+        webAuthn.Setup(service => service.CompleteAuthenticationAsync(
                 "assertion", null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new WebAuthnAuthenticationResult { Success = true, UserId = Guid.NewGuid() });
         var service = CreateService(tenantId, actorId, sessionId, store, webAuthn: webAuthn.Object);
@@ -106,7 +106,7 @@ public sealed class StepUpReceiptServiceTests
         var sessionId = Guid.NewGuid();
         var store = new RecordingStepUpChallengeStore();
         var mfa = new Mock<IMfaService>();
-        mfa.Setup(service => service.VerifyMfaForStepUpAsync(actorId, "123456", MfaMethod.Totp, It.IsAny<CancellationToken>()))
+        mfa.Setup(service => service.VerifyMfaAsync(actorId, "123456", MfaMethod.Totp, It.IsAny<CancellationToken>()))
             .ReturnsAsync(MfaVerificationResult.Successful("verified"));
         var service = CreateService(tenantId, actorId, sessionId, store, mfa.Object);
         var challenge = await service.CreateChallengeAsync(Binding);
@@ -130,7 +130,7 @@ public sealed class StepUpReceiptServiceTests
         var sessionId = Guid.NewGuid();
         var store = new RecordingStepUpChallengeStore();
         var mfa = new Mock<IMfaService>();
-        mfa.Setup(service => service.VerifyMfaForStepUpAsync(actorId, "123456", MfaMethod.Totp, It.IsAny<CancellationToken>()))
+        mfa.Setup(service => service.VerifyMfaAsync(actorId, "123456", MfaMethod.Totp, It.IsAny<CancellationToken>()))
             .ReturnsAsync(MfaVerificationResult.Successful("verified"));
         var service = CreateService(tenantId, actorId, sessionId, store, mfa.Object);
         var challenge = await service.CreateChallengeAsync(Binding);

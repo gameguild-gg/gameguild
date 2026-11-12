@@ -14,14 +14,6 @@ public sealed class PostgreSqlSignInMfaSubjectReader(IApplicationDbContext conte
         if (user is null) { return null; }
         var enrollment = await context.Set<UserMfaConfiguration>().AsNoTracking().SingleOrDefaultAsync(
             row => row.UserId == subjectId, cancellationToken).ConfigureAwait(false);
-        var enrolled = enrollment is { IsEnabled: true, IsSetupComplete: true };
-        var methods = new List<MfaMethod>();
-        if (enrolled && enrollment is not null)
-        {
-            if (!string.IsNullOrWhiteSpace(enrollment.TotpSecretKey)) { methods.Add(MfaMethod.Totp); }
-            if (BackupCodeSet.Read(enrollment.BackupCodes).Hashes.Count > 0) { methods.Add(MfaMethod.BackupCode); }
-            if (!string.IsNullOrWhiteSpace(enrollment.SmsPhoneNumber)) { methods.Add(MfaMethod.Sms); }
-        }
-        return new SignInMfaSubjectState(user, enrolled, enrollment?.LockedOutUntil, methods);
+        return new SignInMfaSubjectState(user, enrollment is { IsEnabled: true, IsSetupComplete: true }, enrollment?.LockedOutUntil);
     }
 }

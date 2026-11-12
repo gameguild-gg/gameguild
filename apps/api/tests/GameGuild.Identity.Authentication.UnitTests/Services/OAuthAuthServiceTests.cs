@@ -1021,7 +1021,7 @@ public class OAuthAuthServiceTests
     public async Task GitHubSignInAsync_ExpiresIn_ReportsAccessTokenLifetime()
     {
         var sut = CreateSutWithConfig(BuildConfig());
-        var result = await sut.GitHubSignInAsync(new OAuthSignInRequest { AccessToken = "gh-token", RememberMe = false });
+        var result = await sut.GitHubSignInAsync(new OAuthSignInRequest { AccessToken = "gh-token" });
 
         result.ExpiresIn.Should().Be(3600);
         result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(60), TimeSpan.FromSeconds(5));
@@ -1125,7 +1125,7 @@ public class OAuthAuthServiceTests
     public async Task GoogleSignInAsync_ExpiresIn_ReportsAccessTokenLifetime()
     {
         var sut = CreateSutWithConfig(BuildConfig());
-        var result = await sut.GoogleSignInAsync(new OAuthSignInRequest { AccessToken = "google-token", RememberMe = false });
+        var result = await sut.GoogleSignInAsync(new OAuthSignInRequest { AccessToken = "google-token" });
 
         result.ExpiresIn.Should().Be(3600);
         result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(60), TimeSpan.FromSeconds(5));
@@ -1143,7 +1143,7 @@ public class OAuthAuthServiceTests
             .ReturnsAsync((User?)null);
 
         var sut = CreateSutWithConfig(BuildConfig());
-        var result = await sut.GoogleIdTokenSignInAsync(new GoogleIdTokenRequest { IdToken = "google-id-token", RememberMe = false });
+        var result = await sut.GoogleIdTokenSignInAsync(Request());
 
         result.ExpiresIn.Should().Be(3600);
         result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(60), TimeSpan.FromSeconds(5));
@@ -1155,7 +1155,7 @@ public class OAuthAuthServiceTests
     public async Task GitHubSignInAsync_CustomAccessTokenMinutes_ExpiresInMatches()
     {
         var sut = CreateSutWithConfig(BuildConfig(accessTokenMinutes: "15"));
-        var result = await sut.GitHubSignInAsync(new OAuthSignInRequest { AccessToken = "gh-token", RememberMe = false });
+        var result = await sut.GitHubSignInAsync(new OAuthSignInRequest { AccessToken = "gh-token" });
 
         result.ExpiresIn.Should().Be(900);
         result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(15), TimeSpan.FromSeconds(5));
@@ -1165,7 +1165,7 @@ public class OAuthAuthServiceTests
     public async Task GoogleSignInAsync_CustomAccessTokenMinutes_ExpiresInMatches()
     {
         var sut = CreateSutWithConfig(BuildConfig(accessTokenMinutes: "15"));
-        var result = await sut.GoogleSignInAsync(new OAuthSignInRequest { AccessToken = "google-token", RememberMe = false });
+        var result = await sut.GoogleSignInAsync(new OAuthSignInRequest { AccessToken = "google-token" });
 
         result.ExpiresIn.Should().Be(900);
         result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(15), TimeSpan.FromSeconds(5));
@@ -1181,7 +1181,7 @@ public class OAuthAuthServiceTests
             .ReturnsAsync((User?)null);
 
         var sut = CreateSutWithConfig(BuildConfig(accessTokenMinutes: "15"));
-        var result = await sut.GoogleIdTokenSignInAsync(new GoogleIdTokenRequest { IdToken = "google-id-token", RememberMe = false });
+        var result = await sut.GoogleIdTokenSignInAsync(Request());
 
         result.ExpiresIn.Should().Be(900);
         result.AccessTokenExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddMinutes(15), TimeSpan.FromSeconds(5));

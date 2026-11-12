@@ -27,10 +27,9 @@ public class LocalSignInRequest
     public string? DeviceFingerprint { get; set; }
 
     /// <summary>
-    ///     Remember-me defaults ON: when null (omitted) or true, the session is persistent
-    ///     and the refresh token uses the configurable persistent lifetime
-    ///     (<c>Jwt:PersistentRefreshTokenExpirationDays</c>). Only an explicit false keeps
-    ///     the standard lifetime.
+    ///     When true, the session is persistent ("remember me"): the refresh token uses the
+    ///     configurable persistent lifetime (<c>Jwt:PersistentRefreshTokenExpirationDays</c>)
+    ///     instead of the standard one. Null or false keeps the standard lifetime.
     /// </summary>
     public bool? RememberMe { get; set; }
 

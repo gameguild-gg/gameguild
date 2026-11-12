@@ -44,13 +44,6 @@ public class WebAuthnService(
         CancellationToken cancellationToken = default) =>
         authentication.CompleteAuthenticationAsync(assertionResponse, ipAddress, userAgent, cancellationToken);
 
-    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationForStepUpAsync(
-        string assertionResponse,
-        string? ipAddress = null,
-        string? userAgent = null,
-        CancellationToken cancellationToken = default) =>
-        authentication.CompleteAuthenticationForStepUpAsync(assertionResponse, ipAddress, userAgent, cancellationToken);
-
     // ── Credential management ───────────────────────────────────────────
 
     public Task<List<WebAuthnCredentialInfo>> GetUserCredentialsAsync(
