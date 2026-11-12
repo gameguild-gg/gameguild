@@ -50,7 +50,8 @@ public class LocalAuthService(
     IOptions<IpBlocklistOptions>? ipBlocklistOptions = null,
     IAuthenticationAttemptRepository? attemptRepository = null,
     AuthenticationSecurityOptions? authenticationSecurityOptions = null,
-    IPublisher? eventPublisher = null
+    IPublisher? eventPublisher = null,
+    ITenantMaintenanceStateService? tenantMaintenanceState = null
 ) : ILocalAuthService
 {
     private const string ComplianceDeniedAuditAction = "Authentication.ComplianceDenied";
@@ -290,6 +291,11 @@ public class LocalAuthService(
             await DefaultTenantMembershipProvisioner.EnsureAsync(sender, authenticatedUserId, cancellationToken).ConfigureAwait(false);
             var tenantAccessContext = await ResolveTenantAccessContextAsync(authenticatedUserId, request.TenantId, cancellationToken).ConfigureAwait(false);
             RequireActiveTenantAccess(tenantAccessContext);
+            // Issue #1134: with the tenant resolved and the first factor verified, refuse
+            // non-admin sign-ins while the tenant holds an open maintenance window. Tenant
+            // admins (Owner/Admin) and platform SystemAdmins keep access so they can verify
+            // the tenant before reopening it.
+            await EnforceTenantMaintenanceAsync(tenantAccessContext, request.Email, authenticatedUserId, ipAddress, userAgent, stopwatch, cancellationToken).ConfigureAwait(false);
             // Evaluate server configuration using the resolved active tenant, never a caller-supplied policy.
             var localSignInPolicy = localSignInPolicyOptions?.Value ?? new LocalSignInPolicyOptions();
             if (localSignInPolicy.RequiresVerifiedEmail(tenantAccessContext.TenantId) && !authenticatedUser.IsEmailVerified)
@@ -556,6 +562,12 @@ public class LocalAuthService(
         }
         catch (UnauthorizedAccessException)
         {
+            throw;
+        }
+        catch (TenantMaintenanceException)
+        {
+            // Issue #1134: the 503 + Retry-After mapping lives in the controllers; never
+            // fold a maintenance refusal into the generic 401.
             throw;
         }
         catch (Exception ex)
@@ -1296,6 +1308,88 @@ public class LocalAuthService(
         }
 
         throw new AccessDeniedException("Authenticated user has no active tenant membership.");
+    }
+
+    /// <summary>
+    ///     Tenant maintenance gate (issue #1134), evaluated after tenant resolution with the
+    ///     first factor already verified — a closed tenant never reveals whether an account
+    ///     exists. Non-admin sign-ins are refused with <see cref="TenantMaintenanceException"/>
+    ///     (mapped by the controllers to 503 + Retry-After); tenant Owner/Admin members and
+    ///     platform SystemAdmins pass. The resolved roles are already scoped to the selected
+    ///     tenant (<see cref="TenantAccessContextResolver"/>), so an Admin role on a different
+    ///     tenant grants no bypass here. Without a configured maintenance store the gate is inert.
+    /// </summary>
+    private async Task EnforceTenantMaintenanceAsync(
+        TenantAccessContext tenantAccessContext,
+        string email,
+        Guid userId,
+        string? ipAddress,
+        string? userAgent,
+        Stopwatch stopwatch,
+        CancellationToken cancellationToken)
+    {
+        if (tenantMaintenanceState is null || tenantAccessContext.TenantId is not { } tenantId)
+        {
+            return;
+        }
+
+        TenantMaintenanceState? maintenance;
+        try
+        {
+            maintenance = await tenantMaintenanceState.FindAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            // Fail open (mirrors the IP-blocklist posture): the maintenance gate protects a
+            // tenant from new sessions during a window — an unavailable state store must
+            // never turn into a platform-wide sign-in outage.
+            logger.LogError(exception, "Tenant maintenance lookup failed for tenant {TenantId}: {ErrorType}",
+                tenantId, exception.GetType().FullName);
+            return;
+        }
+
+        if (maintenance is null)
+        {
+            return;
+        }
+
+        if (tenantAccessContext.Roles.Any(role =>
+                TenantMaintenanceBypassRoles.BypassRoles.Contains(role, StringComparer.OrdinalIgnoreCase)))
+        {
+            logger.LogInformation(
+                "Sign-in for user {UserId} allowed during maintenance on tenant {TenantId}: administrator bypass",
+                userId, tenantId);
+            return;
+        }
+
+        try
+        {
+            await authAttemptService.RecordFailedAttemptAsync(
+                email, userId, ipAddress ?? "unknown", userAgent, "TenantMaintenance", stopwatch.Elapsed).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not record tenant-maintenance attempt for user {UserId}: {ErrorType}",
+                userId, exception.GetType().FullName);
+        }
+
+        logger.LogInformation(
+            "Sign-in refused for user {UserId}: tenant {TenantId} is in maintenance",
+            userId, tenantId);
+
+        var retryAfterSeconds = maintenance.ResumesAt is { } resumesAt && resumesAt > SystemClock.UtcNow
+            ? Convert.ToInt32(Math.Ceiling((resumesAt - SystemClock.UtcNow).TotalSeconds))
+            : (int?)null;
+        throw new TenantMaintenanceException(tenantId, retryAfterSeconds);
+    }
+
+    private static class TenantMaintenanceBypassRoles
+    {
+        /// <summary>
+        ///     Tenant Owner/Admin (may always enter their own tenant during maintenance) plus the
+        ///     platform-global SystemAdmin role trusted from the default tenant.
+        /// </summary>
+        public static readonly string[] BypassRoles = ["Owner", "Admin", "SystemAdmin"];
     }
 
     /// <summary>

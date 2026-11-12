@@ -144,6 +144,14 @@ public static class DataDependencyInjection
             .ValidateOnStart();
         services.AddScoped<IIpBlocklistService, DistributedCacheIpBlocklistService>();
 
+        // Tenant maintenance windows (issue #1134): distributed-cache state per tenant, read
+        // after tenant resolution during password sign-in; non-admins get a 503 with a retry
+        // hint, tenant Owner/Admin and platform SystemAdmin bypass. Lookups fail open — the
+        // gate is never allowed to become a platform-wide sign-in outage. Windows are managed
+        // out-of-band (operator tooling or a host bridge calling SetMaintenanceAsync); there
+        // is deliberately no public endpoint on this module.
+        services.AddScoped<ITenantMaintenanceStateService, DistributedCacheTenantMaintenanceStateService>();
+
         // Register repositories
         // NOTE: IUserRepository is registered by the Users module - no need to register here
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
@@ -284,6 +292,10 @@ public static class DataDependencyInjection
 
         // MFA services - focused sub-services
         services.AddScoped<ITotpReplayStore, PostgreSqlTotpReplayStore>();
+        // Issue #1117: serializes settings-path MFA mutations per subject (setup, first-verify
+        // flip, disable) against concurrent enrollments; singleton so every scope shares the
+        // same per-subject claim.
+        services.TryAddSingleton<IMfaEnrollmentConcurrencyGuard, MfaEnrollmentConcurrencyGuard>();
         services.AddScoped<ITotpMfaService, TotpMfaService>();
         services.AddScoped<IBackupCodeMfaService, BackupCodeMfaService>();
         services.AddScoped<IMfaAttemptTrackingService, MfaAttemptTrackingService>();
