@@ -77,6 +77,7 @@ public sealed class PostgreSqlMarketplaceOutboxProcessorTests
     [InlineData("missing")]
     [InlineData("format")]
     [InlineData("mismatch")]
+    [InlineData("unbound")]
     public async Task InvalidSettlementBindingFailsClosed(string invalid)
     {
         await using var context = await SqliteOutboxDbContext.CreateAsync();
@@ -87,8 +88,16 @@ public sealed class PostgreSqlMarketplaceOutboxProcessorTests
             "array" => "[]",
             "missing" => "{}",
             "format" => "{\"settlementId\":\"invalid\"}",
+            // The unified queue makes the settlement binding nullable; a
+            // marketplace-kind row without one must fail closed too (the
+            // lifted payload comparison sees a null right-hand side).
+            "unbound" => JsonSerializer.Serialize(new { settlementId = settlement.Id }),
             _ => JsonSerializer.Serialize(new { settlementId = Guid.NewGuid() })
         };
+        if (invalid == "unbound")
+        {
+            outbox.SettlementId = null;
+        }
         outbox.PayloadHash = Hash(outbox.Payload);
         await context.SaveChangesAsync();
         var processor = new PostgreSqlMarketplaceOutboxProcessor(context, new StubHandler());
