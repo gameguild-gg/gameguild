@@ -18,7 +18,11 @@ concurrency:
   # Suffixed during PR #773 repair: synchronize events stopped creating runs for
   # this PR (dropped/stuck pending in the original group). Distinct group + manual
   # dispatch unblocks verification; revert together with the repair.
-  group: pr-verify-${{ github.event.pull_request.number }}-repair773
+  # Suffixed again 2026-11-12: runs queued against ARC pods that later scaled to
+  # zero stay zombie-queued forever, hold this per-PR group, and cannot be
+  # cancelled via the API. Bumping the suffix unsquats every affected PR; revert
+  # once no zombie queued runs remain in the old groups.
+  group: pr-verify-${{ github.event.pull_request.number }}-repair773b
   cancel-in-progress: true
 
 jobs:
@@ -59,7 +63,10 @@ jobs:
             total=$(jq '[.runners[] | select(any(.labels[]; .name == "gameguild"))] | length' <<<"$body")
             busy=$(jq '[.runners[] | select(any(.labels[]; .name == "gameguild")) | select(.busy == true)] | length' <<<"$body")
             echo "Self-hosted ARC runners: total=$total busy=$busy (max 9)."
-            if [[ "$busy" -ge 9 ]]; then
+            if [[ "$total" -eq 0 ]]; then
+              echo 'ARC pool reports zero registered runners; overflowing to GitHub-hosted so jobs are not pinned to labels with no runners.' >&2
+              pool='["ubuntu-latest"]'
+            elif [[ "$busy" -ge 9 ]]; then
               echo 'All 9 ARC runners busy; overflowing to GitHub-hosted.' >&2
               pool='["ubuntu-latest"]'
             fi
