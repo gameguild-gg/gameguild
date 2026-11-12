@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import { createHash, randomBytes } from "node:crypto";
-import { createServer } from "node:http";
-import { gzipSync } from "node:zlib";
+import { createServer, request as httpRequest } from "node:http";
+import { deflateSync, gzipSync } from "node:zlib";
 import { once } from "node:events";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -40,8 +40,8 @@ for (const workspace of ["apps/web", "demos/emception-ide-next"]) {
 for (const packageRoot of nextRoots) {
   test(`${packageRoot}: Next and its resolved image dependency use the reviewed security releases`, () => {
     const nextRequire = createRequire(join(packageRoot, "package.json"));
-    assert.equal(nextRequire("./package.json").version, "16.4.3");
-    assert.equal(nextRequire("@next/env/package.json").version, "16.4.3");
+    assert.equal(nextRequire("./package.json").version, "16.4.2");
+    assert.equal(nextRequire("@next/env/package.json").version, "16.4.2");
     assert.equal(nextRequire("sharp").versions.sharp, "0.35.5");
   });
 }
@@ -306,10 +306,17 @@ for (const packageRoot of installedConsumers("socks")) {
   });
 }
 
-// express-rate-limit and its ip-address grouping contract left the installed
-// graph when @modelcontextprotocol/sdk was superseded by the split
-// @modelcontextprotocol/server release; the ip-address release itself stays
-// covered above through the socks consumers.
+for (const packageRoot of installedConsumers("express-rate-limit")) {
+  test(`${packageRoot}: request-limit keys preserve IPv4 and IPv6 subnet grouping`, () => {
+    const consumerRequire = createRequire(join(packageRoot, "package.json"));
+    const { ipKeyGenerator } = require(packageRoot);
+    assert.equal(consumerRequire("ip-address/package.json").version, "10.7.4");
+    assert.equal(ipKeyGenerator("192.0.2.42"), "192.0.2.42");
+    assert.equal(ipKeyGenerator("::ffff:192.0.2.42"), "192.0.2.42");
+    assert.equal(ipKeyGenerator("2001:db8::1"), "2001:db8::/56");
+    assert.equal(ipKeyGenerator("2001:db8::1", false), "2001:db8::1");
+  });
+}
 
 test("local and CI package managers use the reviewed pnpm security release", () => {
   const manifest = JSON.parse(readFileSync(join(repositoryRoot, "package.json"), "utf8"));
@@ -555,6 +562,86 @@ for (const packageRoot of installedConsumers("follow-redirects")) {
   }
 }
 
+// GHSA-27r3-jxmh-p828: the decoder must be detached after its frame completes,
+// while the remaining HTTP body is still consumed. Exercise the installed graph.
+for (const packageRoot of installedConsumers("body-parser")) {
+  const consumerRequire = createRequire(join(packageRoot, "package.json"));
+  const bodyParser = consumerRequire("./index.js");
+  for (const encoding of ["identity", "gzip"]) {
+    test(`${packageRoot}: patched body parser preserves ordinary ${encoding} JSON requests`, async context => {
+      assert.equal(consumerRequire("./package.json").version, "2.4.0");
+      assert.equal(consumerRequire("qs/package.json").version, "6.16.1");
+      const parser = bodyParser.json();
+      const origin = await startHeaderServer(context, (request, response) => {
+        parser(request, response, error => {
+          response.statusCode = error ? 400 : 200;
+          response.setHeader("Content-Type", "application/json");
+          response.setHeader("X-Content-Type-Options", "nosniff");
+          response.end(JSON.stringify(error ? { rejected: true } : request.body));
+        });
+      });
+      const expected = { message: "ordinary compressed JSON", count: 3, markup: "<script>alert('fixture')</script>" };
+      const payload = Buffer.from(JSON.stringify(expected));
+      const response = await fetch(origin, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Content-Encoding": encoding },
+        body: encoding === "gzip" ? gzipSync(payload) : payload,
+        signal: AbortSignal.timeout(5000),
+      });
+      assert.equal(response.status, 200);
+      assert.equal(response.headers.get("content-type"), "application/json");
+      assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+      assert.deepEqual(await response.json(), expected);
+    });
+  }
+
+  test(`${packageRoot}: trailing compressed-body bytes finish without an uncaught decoder error`, { timeout: 10000 }, async context => {
+    const parser = bodyParser.json();
+    const payload = { message: "late request bytes" };
+    const first = Buffer.concat([deflateSync(JSON.stringify(payload)), Buffer.from([0])]);
+    const trailing = Buffer.alloc(1024);
+    let client;
+    context.after(() => client?.destroy());
+    const origin = await startHeaderServer(context, (request, response) => {
+      parser(request, response, error => {
+        if (error) {
+          response.statusCode = 400;
+          response.end("rejected");
+          client.end(trailing);
+          return;
+        }
+        // Deliver the rest only after parsing has finished, then require the HTTP
+        // request to finish too. Sending one combined buffer misses this lifecycle.
+        request.once("end", () => {
+          response.setHeader("Content-Type", "application/json");
+          response.setHeader("X-Content-Type-Options", "nosniff");
+          response.end(JSON.stringify(request.body));
+        });
+        client.end(trailing);
+      });
+    });
+    const result = await new Promise((resolveResponse, rejectResponse) => {
+      client = httpRequest(origin, {
+        method: "POST", agent: false,
+        headers: { "Content-Type": "application/json", "Content-Encoding": "deflate",
+          "Content-Length": first.length + trailing.length },
+      }, response => {
+        const chunks = [];
+        response.on("data", chunk => chunks.push(chunk));
+        response.on("error", rejectResponse);
+        response.on("end", () => resolveResponse({ status: response.statusCode, headers: response.headers, body: Buffer.concat(chunks).toString("utf8") }));
+      });
+      client.on("error", rejectResponse);
+      client.setTimeout(5000, () => client.destroy(new Error("Compressed request did not finish")));
+      client.write(first);
+    });
+    assert.equal(result.status, 200);
+    assert.equal(result.headers["content-type"], "application/json");
+    assert.equal(result.headers["x-content-type-options"], "nosniff");
+    assert.deepEqual(JSON.parse(result.body), payload);
+  });
+}
+
 for (const packageRoot of installedConsumers("sharp")) {
   const sharp = require(packageRoot);
   test(`${packageRoot}: fixed librsvg still renders ordinary SVG images`, async () => {
@@ -576,31 +663,37 @@ for (const packageRoot of installedConsumers("launch-editor")) {
   });
 }
 
-// The legacy @modelcontextprotocol/sdk 1.32.x OAuth issuer-binding test moved
-// to the split @modelcontextprotocol/server release. Its
-// buildOAuthProtectedResourceMetadata helper must still fail closed on an
-// untrustworthy Authorization Server issuer before the metadata document —
-// which advertises that issuer to every client — is produced.
-for (const packageRoot of installedConsumers("@modelcontextprotocol/server")) {
-  test(`${packageRoot}: protected-resource metadata refuses non-HTTPS authorization server issuers`, async () => {
-    const { buildOAuthProtectedResourceMetadata } = await import(
-      pathToFileURL(join(packageRoot, "dist/index.mjs")).href
+for (const packageRoot of installedConsumers("@modelcontextprotocol/sdk")) {
+  test(`${packageRoot}: saved OAuth credentials cannot be sent to a different issuer`, async () => {
+    const { fetchToken } = await import(pathToFileURL(join(packageRoot, "dist/esm/client/auth.js")).href);
+    let requests = 0;
+    const provider = {
+      clientMetadata: {},
+      clientInformation: () => ({
+        client_id: "disposable-test-client",
+        client_secret: randomBytes(32).toString("hex"),
+        issuer: "https://trusted-auth.example.invalid",
+      }),
+      prepareTokenRequest: () => new URLSearchParams({ grant_type: "client_credentials" }),
+    };
+    await assert.rejects(() => fetchToken(provider, "https://other-auth.example.invalid", {
+      metadata: {
+        issuer: "https://other-auth.example.invalid",
+        token_endpoint: "https://other-auth.example.invalid/token",
+        token_endpoint_auth_methods_supported: ["client_secret_post"],
+      },
+      fetchFn: async () => {
+        requests++;
+        throw new Error("Unexpected outbound token request");
+      },
+    }), /issuer/i);
+    assert.equal(requests, 0, "Issuer mismatch must fail before any credential-bearing request");
+    const sdkVersion = require(join(packageRoot, "package.json")).version;
+    const [sdkMajor, sdkMinor, sdkPatch] = sdkVersion.split("-")[0].split(".").map(Number);
+    assert.ok(
+      sdkMajor > 1 || (sdkMajor === 1 && (sdkMinor > 32 || (sdkMinor === 32 && sdkPatch >= 1))),
+      `MCP SDK ${sdkVersion} predates the reviewed OAuth issuer-binding fix in 1.32.1`,
     );
-    assert.equal(require(join(packageRoot, "package.json")).version, "2.4.0");
-    const resourceServerUrl = new URL("https://api.example.test/mcp");
-    const document = buildOAuthProtectedResourceMetadata({
-      resourceServerUrl,
-      oauthMetadata: { issuer: "https://auth.example.test/" },
-    });
-    assert.equal(document.resource, resourceServerUrl.href);
-    assert.deepEqual(document.authorization_servers, ["https://auth.example.test/"]);
-    for (const issuer of ["http://auth.example.test/", "javascript:fixture()", "https://auth.example.test/#fragment"]) {
-      assert.throws(
-        () => buildOAuthProtectedResourceMetadata({ resourceServerUrl, oauthMetadata: { issuer } }),
-        /issuer/i,
-        `Issuer ${issuer} must be rejected before any metadata document is produced`,
-      );
-    }
   });
 }
 

@@ -37,10 +37,7 @@ function packageVersion(entry, expectedName) {
 test('security overrides select the corrected packages used by Next, scripts and shadcn', () => {
   assert.equal(sharp.versions.sharp, '0.35.5');
   assert.equal(packageVersion(scriptsRequire.resolve('shell-quote'), 'shell-quote'), '1.11.0');
-  // shadcn moved from the legacy @modelcontextprotocol/sdk 1.32.x to the split
-  // @modelcontextprotocol/server 2.4.0 release (which the dependency-security
-  // suite separately pins for its fail-closed issuer validation).
-  assert.equal(packageVersion(shadcnRequire.resolve('@modelcontextprotocol/server'), '@modelcontextprotocol/server'), '2.4.0');
+  assert.equal(packageVersion(shadcnRequire.resolve('@modelcontextprotocol/sdk/client/auth.js'), '@modelcontextprotocol/sdk'), '1.32.1');
 });
 
 test('the updated native image dependency renders a benign SVG to PNG', async () => {
