@@ -139,14 +139,15 @@ public sealed class PostgreSqlDurablePayoutSettlementWorkflow(
                     operation.IdempotencyKey.Value + ":dispatch",
                     request.OccurredAt);
                 var payload = JsonSerializer.Serialize(command);
-                await dispatchOutbox.AddAsync(new PayoutDispatchOutboxRow
+                await dispatchOutbox.AddAsync(new EconomyOutboxRow
                 {
                     Id = DeterministicGuid(operation.Id, "dispatch-outbox"),
+                    OutboxKind = EconomyOutboxKind.PayoutDispatch,
                     OperationId = operation.Id,
                     IdempotencyKey = command.IdempotencyKey,
                     Payload = payload,
                     PayloadHash = Hash(payload),
-                    CreatedAt = request.OccurredAt,
+                    OccurredAt = request.OccurredAt,
                     AvailableAt = request.OccurredAt
                 }, operationToken).ConfigureAwait(false);
                 return persisted;

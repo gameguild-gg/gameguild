@@ -53,8 +53,8 @@ public sealed class PostgreSqlAdminWithdrawalProviderIntegrityTests
         store.FindProviderEvent(secondRun.TenantId, "event-1", "event-hash").Should().Be(secondRun.Id);
 
         await context.Database.ExecuteSqlInterpolatedAsync($"""
-            INSERT INTO public.economy_admin_withdrawal_provider_events ("TenantId", "EventId", "EventHash", "RunId", "RecordedAt")
-            VALUES ({run.TenantId}, {"invalid-time"}, {"invalid-time-hash"}, {run.Id}, {DateTimeOffset.MinValue});
+            INSERT INTO public.economy_provider_events ("ProviderEventKind", "TenantId", "EventId", "EventHash", "RunId", "RecordedAt")
+            VALUES (2, {run.TenantId}, {"invalid-time"}, {"invalid-time-hash"}, {run.Id}, {DateTimeOffset.MinValue});
             """);
         FluentActions.Invoking(() => store.FindProviderEvent("invalid-time", "invalid-time-hash"))
             .Should().Throw<AdminWithdrawalEvidenceException>();

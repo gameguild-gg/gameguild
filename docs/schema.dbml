@@ -2040,6 +2040,22 @@ Table "economy_admin_withdrawal_runs" {
   }
 }
 
+Table "economy_approvals" {
+  "Id" uuid [not null]
+  "ApprovalKind" integer [not null]
+  "SubjectId" uuid
+  "Generation" bigint
+  "ActorId" uuid [not null]
+  "ReauthenticationHash" "character varying(128)" [not null]
+  "ApprovedAt" timestamp [not null]
+
+  Indexes {
+    Id [pk, name: "PK_economy_approvals"]
+    (ApprovalKind, Generation, ActorId) [unique, name: "ux_economy_approvals_kind_generation_actor"]
+    (ApprovalKind, SubjectId, ActorId) [unique, name: "ux_economy_approvals_kind_subject_actor"]
+  }
+}
+
 Table "economy_bounties" {
   "Id" uuid [not null]
   "TenantId" uuid [not null]
@@ -2194,23 +2210,6 @@ Table "economy_compliance_holds" {
   }
 }
 
-Table "economy_compliance_inbox" {
-  "Id" uuid [not null]
-  "Provider" "character varying(100)" [not null]
-  "Environment" "character varying(50)" [not null]
-  "ProviderEventId" "character varying(256)" [not null]
-  "PayloadHash" "character varying(128)" [not null]
-  "RawObjectReference" "character varying(1000)" [not null]
-  "ReceivedAt" timestamp [not null]
-  "ProcessedAt" timestamp
-  "ProcessingError" "character varying(2000)"
-
-  Indexes {
-    Id [pk, name: "PK_economy_compliance_inbox"]
-    (Provider, Environment, ProviderEventId) [unique, name: "ux_economy_compliance_inbox_provider_event"]
-  }
-}
-
 Table "economy_custody_observations" {
   "Id" uuid [not null]
   "Provider" "character varying(100)" [not null]
@@ -2291,6 +2290,29 @@ Table "economy_external_anchors" {
   Indexes {
     Id [pk, name: "PK_economy_external_anchors"]
     JournalSequence [name: "ix_economy_external_anchors_chain_sequence"]
+  }
+}
+
+Table "economy_inbox" {
+  "Id" uuid [not null]
+  "InboxKind" integer [not null]
+  "TenantId" uuid
+  "SessionId" uuid
+  "Provider" "character varying(100)" [not null]
+  "Environment" "character varying(50)"
+  "ProviderEventId" "character varying(256)" [not null]
+  "PayloadHash" "character varying(128)" [not null]
+  "EvidenceHash" "character varying(128)"
+  "SignatureVerified" boolean
+  "RawObjectReference" "character varying(1000)"
+  "ReceivedAt" timestamp [not null]
+  "ProcessedAt" timestamp
+  "ProcessingError" "character varying(2000)"
+
+  Indexes {
+    Id [pk, name: "PK_economy_inbox"]
+    (Provider, Environment, ProviderEventId) [unique, name: "ux_economy_inbox_provider_event"]
+    (TenantId, Provider, ProviderEventId) [unique, name: "ux_economy_inbox_tenant_provider_event"]
   }
 }
 
@@ -7624,24 +7646,6 @@ Table "economy_ad_reward_pending_claims" {
   }
 }
 
-Table "economy_ad_reward_playback_milestones" {
-  "Id" uuid [not null]
-  "SessionId" uuid [not null]
-  "Sequence" integer [not null]
-  "Percentage" integer [not null]
-  "ObservedAt" timestamp [not null]
-  "EvidenceHash" "character varying(128)" [not null]
-
-  Checks {
-    `"Percentage" BETWEEN 0 AND 100 AND "Sequence" > 0` [name: 'ck_economy_ad_reward_playback_milestones_percentage']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_ad_reward_playback_milestones"]
-    (SessionId, Sequence) [unique, name: "IX_economy_ad_reward_playback_milestones_SessionId_Sequence"]
-  }
-}
-
 Table "economy_ad_reward_provider_batch_claims" {
   "Id" uuid [not null]
   "TenantId" uuid [not null]
@@ -7657,42 +7661,25 @@ Table "economy_ad_reward_provider_batch_claims" {
   }
 }
 
-Table "economy_ad_reward_provider_proof_inbox" {
+Table "economy_ad_reward_session_timeline" {
   "Id" uuid [not null]
-  "TenantId" uuid [not null]
-  "SessionId" uuid [not null]
-  "Network" "character varying(100)" [not null]
-  "ProviderEventId" "character varying(256)" [not null]
-  "PayloadHash" "character varying(128)" [not null]
-  "EvidenceHash" "character varying(128)" [not null]
-  "SignatureVerified" boolean [not null]
-  "ReceivedAt" timestamp [not null]
-  "ProcessedAt" timestamp
-  "ProcessingError" "character varying(256)"
-
-  Indexes {
-    Id [pk, name: "PK_economy_ad_reward_provider_proof_inbox"]
-    SessionId [name: "IX_economy_ad_reward_provider_proof_inbox_SessionId"]
-    (TenantId, Network, ProviderEventId) [unique, name: "IX_economy_ad_reward_provider_proof_inbox_TenantId_Network_Pro~"]
-  }
-}
-
-Table "economy_ad_reward_session_events" {
-  "Id" uuid [not null]
+  "TimelineKind" integer [not null]
   "SessionId" uuid [not null]
   "Sequence" bigint [not null]
-  "State" integer [not null]
+  "State" integer
+  "Percentage" integer
   "EvidenceHash" "character varying(128)" [not null]
   "OccurredAt" timestamp [not null]
 
   Checks {
-    `"Sequence" > 0` [name: 'ck_economy_ad_reward_session_events_sequence']
-    `"State" BETWEEN 1 AND 7` [name: 'ck_economy_ad_reward_session_events_state']
+    `("TimelineKind" = 1 AND "State" BETWEEN 1 AND 7 AND "Percentage" IS NULL) OR ("TimelineKind" = 2 AND "Percentage" BETWEEN 0 AND 100 AND "State" IS NULL)` [name: 'ck_economy_ad_reward_session_timeline_kind']
+    `"Sequence" > 0` [name: 'ck_economy_ad_reward_session_timeline_sequence']
   }
 
   Indexes {
-    Id [pk, name: "PK_economy_ad_reward_session_events"]
-    (SessionId, Sequence) [unique, name: "IX_economy_ad_reward_session_events_SessionId_Sequence"]
+    Id [pk, name: "PK_economy_ad_reward_session_timeline"]
+    SessionId [name: "IX_economy_ad_reward_session_timeline_SessionId"]
+    (TimelineKind, SessionId, Sequence) [unique, name: "ux_economy_ad_reward_session_timeline_kind_session_sequence"]
   }
 }
 
@@ -7714,46 +7701,6 @@ Table "economy_admin_withdrawal_audit_events" {
   Indexes {
     (RunId, Sequence) [pk, name: "PK_economy_admin_withdrawal_audit_events"]
     Hash [unique, name: "ux_economy_admin_withdrawal_audit_events_hash"]
-  }
-}
-
-Table "economy_admin_withdrawal_dispatch_outbox" {
-  "Id" uuid [not null]
-  "TenantId" uuid [not null]
-  "RunId" uuid [not null]
-  "IdempotencyKey" "character varying(256)" [not null]
-  "Payload" jsonb [not null]
-  "PayloadHash" "character varying(128)" [not null]
-  "CreatedAt" timestamp [not null]
-  "AvailableAt" timestamp [not null]
-  "LeaseExpiresAt" timestamp
-  "LeaseOwner" "character varying(200)"
-  "AttemptCount" integer [not null]
-  "CompletedAt" timestamp
-  "LastErrorCode" "character varying(100)"
-
-  Checks {
-    `"AttemptCount" >= 0` [name: 'ck_economy_admin_withdrawal_dispatch_outbox_attempts']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_admin_withdrawal_dispatch_outbox"]
-    (CompletedAt, AvailableAt, LeaseExpiresAt) [name: "IX_economy_admin_withdrawal_dispatch_outbox_CompletedAt_Availa~"]
-    RunId [unique, name: "IX_economy_admin_withdrawal_dispatch_outbox_RunId"]
-    (TenantId, RunId) [unique, name: "IX_economy_admin_withdrawal_dispatch_outbox_TenantId_RunId"]
-  }
-}
-
-Table "economy_admin_withdrawal_provider_events" {
-  "TenantId" uuid [not null]
-  "EventId" "character varying(256)" [not null]
-  "EventHash" "character varying(128)" [not null]
-  "RunId" uuid [not null]
-  "RecordedAt" timestamp [not null]
-
-  Indexes {
-    (TenantId, EventId) [pk, name: "PK_economy_admin_withdrawal_provider_events"]
-    (RunId, RecordedAt) [name: "ix_economy_admin_withdrawal_provider_events_run_recorded"]
   }
 }
 
@@ -7830,34 +7777,6 @@ Table "economy_bounty_terminal_events" {
   }
 }
 
-Table "economy_capability_policy_approvals" {
-  "Id" uuid [not null]
-  "PolicyId" uuid [not null]
-  "ActorId" uuid [not null]
-  "ReauthenticationHash" "character varying(128)" [not null]
-  "ApprovedAt" timestamp [not null]
-
-  Indexes {
-    Id [pk, name: "PK_economy_capability_policy_approvals"]
-    (PolicyId, ActorId) [unique, name: "ux_economy_capability_policy_approvals_policy_actor"]
-  }
-}
-
-Table "economy_compliance_outbox" {
-  "Id" uuid [not null]
-  "EvidenceId" uuid [not null]
-  "Type" "character varying(100)" [not null]
-  "Payload" jsonb [not null]
-  "PayloadHash" "character varying(128)" [not null]
-  "OccurredAt" timestamp [not null]
-  "DispatchedAt" timestamp
-
-  Indexes {
-    Id [pk, name: "PK_economy_compliance_outbox"]
-    EvidenceId [unique, name: "ux_economy_compliance_outbox_evidence"]
-  }
-}
-
 Table "economy_compliance_hold_events" {
   "Id" uuid [not null]
   "HoldId" uuid [not null]
@@ -7917,19 +7836,6 @@ Table "economy_anchor_verifications" {
   Indexes {
     Id [pk, name: "PK_economy_anchor_verifications"]
     (ExternalAnchorId, VerifiedAt) [name: "IX_economy_anchor_verifications_ExternalAnchorId_VerifiedAt"]
-  }
-}
-
-Table "economy_kill_switch_release_approvals" {
-  "Id" uuid [not null]
-  "KillSwitchId" uuid [not null]
-  "ActorId" uuid [not null]
-  "ReauthenticationHash" "character varying(128)" [not null]
-  "ApprovedAt" timestamp [not null]
-
-  Indexes {
-    Id [pk, name: "PK_economy_kill_switch_release_approvals"]
-    (KillSwitchId, ActorId) [unique, name: "ux_economy_kill_switch_release_approvals_switch_actor"]
   }
 }
 
@@ -8002,32 +7908,6 @@ Table "economy_marketplace_funding_fragments" {
   }
 }
 
-Table "economy_marketplace_outbox" {
-  "Id" uuid [not null]
-  "TenantId" uuid [not null]
-  "SettlementId" uuid [not null]
-  "MessageType" "character varying(150)" [not null]
-  "Payload" jsonb [not null]
-  "PayloadHash" "character varying(128)" [not null]
-  "OccurredAt" timestamp [not null]
-  "PublishedAt" timestamp
-  "AttemptCount" integer [not null]
-  "LeaseOwner" "character varying(256)"
-  "LeaseExpiresAt" timestamp
-  "LastError" "character varying(1000)"
-
-  Checks {
-    `"AttemptCount" >= 0` [name: 'ck_economy_marketplace_outbox_attempts']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_marketplace_outbox"]
-    (PublishedAt, LeaseExpiresAt, OccurredAt) [name: "IX_economy_marketplace_outbox_PublishedAt_LeaseExpiresAt_Occur~"]
-    (PublishedAt, OccurredAt) [name: "IX_economy_marketplace_outbox_PublishedAt_OccurredAt"]
-    SettlementId [name: "IX_economy_marketplace_outbox_SettlementId"]
-  }
-}
-
 Table "economy_marketplace_refunds" {
   "Id" uuid [not null]
   "TenantId" uuid [not null]
@@ -8095,24 +7975,6 @@ Table "economy_marketplace_settlement_credits" {
   }
 }
 
-Table "economy_marketplace_settlement_legs" {
-  "SettlementId" uuid [not null]
-  "Currency" integer [not null]
-  "Units" bigint [not null]
-  "SellerUnits" bigint [not null]
-  "PlatformFeeUnits" bigint [not null]
-  "RefundedUnits" bigint [not null]
-
-  Checks {
-    `"Units" > 0 AND "SellerUnits" >= 0 AND "PlatformFeeUnits" >= 0 AND "SellerUnits" + "PlatformFeeUnits" = "Units"` [name: 'ck_economy_marketplace_settlement_legs_conservation']
-    `"RefundedUnits" BETWEEN 0 AND "Units"` [name: 'ck_economy_marketplace_settlement_legs_refund']
-  }
-
-  Indexes {
-    (SettlementId, Currency) [pk, name: "PK_economy_marketplace_settlement_legs"]
-  }
-}
-
 Table "economy_payout_authorization_evidence" {
   "OperationId" uuid [not null]
   "Phase" integer [not null]
@@ -8136,54 +7998,23 @@ Table "economy_payout_authorization_evidence" {
   }
 }
 
-Table "economy_payout_dispatch_outbox" {
-  "Id" uuid [not null]
-  "OperationId" uuid [not null]
-  "IdempotencyKey" "character varying(256)" [not null]
-  "Payload" jsonb [not null]
-  "PayloadHash" "character varying(128)" [not null]
-  "CreatedAt" timestamp [not null]
-  "AvailableAt" timestamp [not null]
-  "LeaseExpiresAt" timestamp
-  "LeaseOwner" "character varying(200)"
-  "AttemptCount" integer [not null]
-  "CompletedAt" timestamp
-  "LastErrorCode" "character varying(100)"
-
-  Checks {
-    `"AttemptCount" >= 0` [name: 'ck_economy_payout_dispatch_outbox_attempts']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_payout_dispatch_outbox"]
-    (CompletedAt, AvailableAt, LeaseExpiresAt) [name: "IX_economy_payout_dispatch_outbox_CompletedAt_AvailableAt_Leas~"]
-    OperationId [unique, name: "IX_economy_payout_dispatch_outbox_OperationId"]
-  }
-}
-
-Table "economy_payout_provider_events" {
+Table "economy_provider_events" {
+  "Id" uuid [not null, default: `gen_random_uuid()`]
+  "ProviderEventKind" integer [not null]
+  "TenantId" uuid
   "EventId" "character varying(256)" [not null]
   "EventHash" "character varying(128)" [not null]
-  "OperationId" uuid [not null]
-  "ResultingState" integer [not null]
+  "OperationId" uuid
+  "RunId" uuid
+  "ResultingState" integer
   "RecordedAt" timestamp [not null]
 
   Indexes {
-    EventId [pk, name: "PK_economy_payout_provider_events"]
-    (OperationId, RecordedAt) [name: "ix_economy_payout_provider_events_operation_recorded"]
-  }
-}
-
-Table "economy_projection_generation_approvals" {
-  "Id" uuid [not null]
-  "Generation" bigint [not null]
-  "ActorId" uuid [not null]
-  "ReauthenticationHash" "character varying(128)" [not null]
-  "ApprovedAt" timestamp [not null]
-
-  Indexes {
-    Id [pk, name: "PK_economy_projection_generation_approvals"]
-    (Generation, ActorId) [unique, name: "IX_economy_projection_generation_approvals_Generation_ActorId"]
+    Id [pk, name: "PK_economy_provider_events"]
+    (OperationId, RecordedAt) [name: "ix_economy_provider_events_operation_recorded"]
+    (RunId, RecordedAt) [name: "ix_economy_provider_events_run_recorded"]
+    (TenantId, EventId) [unique, name: "ux_economy_provider_events_admin_tenant_event"]
+    EventId [unique, name: "ux_economy_provider_events_payout_event"]
   }
 }
 
@@ -10409,19 +10240,26 @@ Table "economy_marketplace_refund_debts" {
   }
 }
 
-Table "economy_marketplace_refund_legs" {
-  "RefundId" uuid [not null]
-  "Currency" integer [not null]
+Table "economy_marketplace_value_legs" {
+  "Id" uuid [not null, default: `gen_random_uuid()`]
+  "LegKind" integer [not null]
   "SettlementId" uuid [not null]
+  "RefundId" uuid
+  "Currency" integer [not null]
   "Units" bigint [not null]
+  "SellerUnits" bigint
+  "PlatformFeeUnits" bigint
+  "RefundedUnits" bigint
 
   Checks {
-    `"Units" > 0` [name: 'ck_economy_marketplace_refund_legs_amount']
+    `("LegKind" = 1 AND "Units" > 0 AND "SellerUnits" >= 0 AND "PlatformFeeUnits" >= 0 AND "SellerUnits" + "PlatformFeeUnits" = "Units" AND "RefundedUnits" BETWEEN 0 AND "Units" AND "RefundId" IS NULL) OR ("LegKind" = 2 AND "Units" > 0 AND "SellerUnits" IS NULL AND "PlatformFeeUnits" IS NULL AND "RefundedUnits" IS NULL AND "RefundId" IS NOT NULL)` [name: 'ck_economy_marketplace_value_legs_conservation']
   }
 
   Indexes {
-    (RefundId, Currency) [pk, name: "PK_economy_marketplace_refund_legs"]
-    (SettlementId, Currency) [name: "IX_economy_marketplace_refund_legs_SettlementId_Currency"]
+    Id [pk, name: "PK_economy_marketplace_value_legs"]
+    (SettlementId, Currency) [name: "ix_economy_marketplace_value_legs_refund_settlement"]
+    (RefundId, Currency) [unique, name: "ux_economy_marketplace_value_legs_refund_currency"]
+    (LegKind, SettlementId, Currency) [unique, name: "ux_economy_marketplace_value_legs_settlement_currency"]
   }
 }
 
@@ -10488,18 +10326,45 @@ Table "economy_journal_entries" {
   }
 }
 
-Table "economy_outbox_messages" {
+Table "economy_outbox" {
   "Id" uuid [not null]
-  "PostingGroupId" uuid [not null]
-  "Type" "character varying(200)" [not null]
+  "OutboxKind" integer [not null, default: 1]
+  "TenantId" uuid
+  "PostingGroupId" uuid
+  "SettlementId" uuid
+  "OperationId" uuid
+  "RunId" uuid
+  "EvidenceId" uuid
+  "MessageType" "character varying(200)"
+  "IdempotencyKey" "character varying(256)"
   "Payload" text [not null]
   "PayloadHash" "character varying(128)" [not null]
   "OccurredAt" timestamp [not null]
+  "AvailableAt" timestamp
+  "LeaseOwner" "character varying(256)"
+  "LeaseExpiresAt" timestamp
+  "AttemptCount" integer [not null, default: 0]
+  "PublishedAt" timestamp
+  "CompletedAt" timestamp
+  "DispatchedAt" timestamp
+  "LastError" "character varying(1000)"
+
+  Checks {
+    `"AttemptCount" >= 0` [name: 'ck_economy_outbox_attempts']
+  }
 
   Indexes {
-    Id [pk, name: "PK_economy_outbox_messages"]
-    PostingGroupId [name: "IX_economy_outbox_messages_PostingGroupId"]
-    PayloadHash [unique, name: "ux_economy_outbox_messages_payload_hash"]
+    Id [pk, name: "PK_economy_outbox"]
+    (CompletedAt, AvailableAt, LeaseExpiresAt) [name: "ix_economy_outbox_dispatch_queue"]
+    (PublishedAt, OccurredAt) [name: "ix_economy_outbox_marketplace_dispatch"]
+    (PublishedAt, LeaseExpiresAt, OccurredAt) [name: "ix_economy_outbox_marketplace_lease"]
+    PostingGroupId [name: "IX_economy_outbox_PostingGroupId"]
+    SettlementId [name: "IX_economy_outbox_SettlementId"]
+    RunId [unique, name: "ux_economy_outbox_admin_run"]
+    (TenantId, RunId) [unique, name: "ux_economy_outbox_admin_tenant_run"]
+    EvidenceId [unique, name: "ux_economy_outbox_evidence"]
+    PayloadHash [unique, name: "ux_economy_outbox_payload_hash"]
+    OperationId [unique, name: "ux_economy_outbox_payout_operation"]
   }
 }
 
@@ -13182,31 +13047,19 @@ Ref "FK_economy_ad_reward_pending_claims_economy_ad_provider_report~":"economy_a
 
 Ref "FK_economy_ad_reward_pending_claims_economy_ad_reward_sessions~":"economy_ad_reward_sessions"."Id" <? "economy_ad_reward_pending_claims"."SessionId" [delete: restrict]
 
-Ref "FK_economy_ad_reward_playback_milestones_economy_ad_reward_ses~":"economy_ad_reward_sessions"."Id" <? "economy_ad_reward_playback_milestones"."SessionId" [delete: restrict]
-
 Ref "FK_economy_ad_reward_provider_batch_claims_economy_ad_provider~":"economy_ad_provider_reports"."Id" <? "economy_ad_reward_provider_batch_claims"."ProviderReportId" [delete: restrict]
 
 Ref "FK_economy_ad_reward_provider_batch_claims_economy_ad_reward_s~":"economy_ad_reward_sessions"."Id" <? "economy_ad_reward_provider_batch_claims"."SessionId" [delete: restrict]
 
-Ref "FK_economy_ad_reward_provider_proof_inbox_economy_ad_reward_se~":"economy_ad_reward_sessions"."Id" <? "economy_ad_reward_provider_proof_inbox"."SessionId" [delete: restrict]
-
-Ref "FK_economy_ad_reward_session_events_economy_ad_reward_sessions~":"economy_ad_reward_sessions"."Id" <? "economy_ad_reward_session_events"."SessionId" [delete: restrict]
+Ref "FK_economy_ad_reward_session_timeline_economy_ad_reward_sessio~":"economy_ad_reward_sessions"."Id" <? "economy_ad_reward_session_timeline"."SessionId" [delete: restrict]
 
 Ref "FK_economy_admin_withdrawal_audit_events_economy_admin_withdra~":"economy_admin_withdrawal_runs"."Id" <? "economy_admin_withdrawal_audit_events"."RunId" [delete: restrict]
-
-Ref "FK_economy_admin_withdrawal_dispatch_outbox_economy_admin_with~":"economy_admin_withdrawal_runs"."Id" <? "economy_admin_withdrawal_dispatch_outbox"."RunId" [delete: restrict]
-
-Ref "FK_economy_admin_withdrawal_provider_events_economy_admin_with~":"economy_admin_withdrawal_runs"."Id" <? "economy_admin_withdrawal_provider_events"."RunId" [delete: restrict]
 
 Ref "FK_economy_bounty_escrow_fragments_economy_bounties_BountyId":"economy_bounties"."Id" <? "economy_bounty_escrow_fragments"."BountyId" [delete: restrict]
 
 Ref "FK_economy_bounty_expiration_events_economy_bounties_BountyId":"economy_bounties"."Id" <? "economy_bounty_expiration_events"."BountyId" [delete: restrict]
 
 Ref "FK_economy_bounty_terminal_events_economy_bounties_BountyId":"economy_bounties"."Id" <? "economy_bounty_terminal_events"."BountyId" [delete: restrict]
-
-Ref "FK_economy_capability_policy_approvals_economy_capability_poli~":"economy_capability_policies"."Id" <? "economy_capability_policy_approvals"."PolicyId" [delete: restrict]
-
-Ref "FK_economy_compliance_outbox_economy_compliance_evidence_Evide~":"economy_compliance_evidence"."Id" <? "economy_compliance_outbox"."EvidenceId" [delete: restrict]
 
 Ref "FK_economy_compliance_hold_events_economy_compliance_holds_Hol~":"economy_compliance_holds"."Id" <? "economy_compliance_hold_events"."HoldId" [delete: restrict]
 
@@ -13216,29 +13069,21 @@ Ref "FK_economy_entity_graph_edges_economy_entity_graph_nodes_Right~":"economy_e
 
 Ref "FK_economy_anchor_verifications_economy_external_anchors_Exter~":"economy_external_anchors"."Id" <? "economy_anchor_verifications"."ExternalAnchorId" [delete: restrict]
 
-Ref "FK_economy_kill_switch_release_approvals_economy_kill_switches~":"economy_kill_switches"."Id" <? "economy_kill_switch_release_approvals"."KillSwitchId" [delete: restrict]
-
 Ref "FK_economy_legacy_cutovers_economy_legacy_shadow_batches_Batch~":"economy_legacy_shadow_batches"."Id" <? "economy_legacy_cutovers"."BatchId" [delete: restrict]
 
 Ref "FK_economy_marketplace_events_economy_marketplace_settlements_~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_events"."SettlementId" [delete: restrict]
 
 Ref "FK_economy_marketplace_funding_fragments_economy_marketplace_s~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_funding_fragments"."SettlementId" [delete: restrict]
 
-Ref "FK_economy_marketplace_outbox_economy_marketplace_settlements_~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_outbox"."SettlementId" [delete: restrict]
-
 Ref "FK_economy_marketplace_refunds_economy_marketplace_settlements~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_refunds"."SettlementId" [delete: restrict]
 
 Ref "FK_economy_marketplace_settlement_credits_economy_marketplace_~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_settlement_credits"."SettlementId" [delete: restrict]
 
-Ref "FK_economy_marketplace_settlement_legs_economy_marketplace_set~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_settlement_legs"."SettlementId" [delete: restrict]
-
 Ref "FK_economy_payout_authorization_evidence_economy_payout_operat~":"economy_payout_operations"."Id" <? "economy_payout_authorization_evidence"."OperationId" [delete: restrict]
 
-Ref "FK_economy_payout_dispatch_outbox_economy_payout_operations_Op~":"economy_payout_operations"."Id" <? "economy_payout_dispatch_outbox"."OperationId" [delete: restrict]
+Ref "FK_economy_provider_events_economy_admin_withdrawal_runs_RunId":"economy_admin_withdrawal_runs"."Id" ?<? "economy_provider_events"."RunId" [delete: restrict]
 
-Ref "FK_economy_payout_provider_events_economy_payout_operations_Op~":"economy_payout_operations"."Id" <? "economy_payout_provider_events"."OperationId" [delete: restrict]
-
-Ref "FK_economy_projection_generation_approvals_economy_projection_~":"economy_projection_generations"."Generation" <? "economy_projection_generation_approvals"."Generation" [delete: restrict]
+Ref "FK_economy_provider_events_economy_payout_operations_Operation~":"economy_payout_operations"."Id" ?<? "economy_provider_events"."OperationId" [delete: restrict]
 
 Ref "FK_economy_reserve_asset_allocations_economy_reserve_heads_Res~":"economy_reserve_heads"."Version" <? "economy_reserve_asset_allocations"."ReserveVersion" [delete: restrict]
 
@@ -13500,9 +13345,9 @@ Ref "FK_economy_marketplace_refund_debts_economy_marketplace_refund~":"economy_m
 
 Ref "FK_economy_marketplace_refund_debts_economy_marketplace_settle~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_refund_debts"."SettlementId" [delete: restrict]
 
-Ref "FK_economy_marketplace_refund_legs_economy_marketplace_refunds~":"economy_marketplace_refunds"."Id" <? "economy_marketplace_refund_legs"."RefundId" [delete: restrict]
+Ref "FK_economy_marketplace_value_legs_economy_marketplace_refunds_~":"economy_marketplace_refunds"."Id" ?<? "economy_marketplace_value_legs"."RefundId" [delete: restrict]
 
-Ref "FK_economy_marketplace_refund_legs_economy_marketplace_settlem~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_refund_legs"."SettlementId" [delete: restrict]
+Ref "FK_economy_marketplace_value_legs_economy_marketplace_settleme~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_value_legs"."SettlementId" [delete: restrict]
 
 Ref "FK_economy_dispatch_snapshots_economy_posting_groups_PostingGr~":"economy_posting_groups"."Id" <? "economy_dispatch_snapshots"."PostingGroupId" [delete: restrict]
 
@@ -13510,7 +13355,15 @@ Ref "FK_economy_idempotency_records_economy_posting_groups_PostingG~":"economy_p
 
 Ref "FK_economy_journal_entries_economy_posting_groups_PostingGroup~":"economy_posting_groups"."Id" <? "economy_journal_entries"."PostingGroupId" [delete: restrict]
 
-Ref "FK_economy_outbox_messages_economy_posting_groups_PostingGroup~":"economy_posting_groups"."Id" <? "economy_outbox_messages"."PostingGroupId" [delete: restrict]
+Ref "FK_economy_outbox_economy_admin_withdrawal_runs_RunId":"economy_admin_withdrawal_runs"."Id" ?<? "economy_outbox"."RunId" [delete: restrict]
+
+Ref "FK_economy_outbox_economy_compliance_evidence_EvidenceId":"economy_compliance_evidence"."Id" ?<? "economy_outbox"."EvidenceId" [delete: restrict]
+
+Ref "FK_economy_outbox_economy_marketplace_settlements_SettlementId":"economy_marketplace_settlements"."Id" ?<? "economy_outbox"."SettlementId" [delete: restrict]
+
+Ref "FK_economy_outbox_economy_payout_operations_OperationId":"economy_payout_operations"."Id" ?<? "economy_outbox"."OperationId" [delete: restrict]
+
+Ref "FK_economy_outbox_economy_posting_groups_PostingGroupId":"economy_posting_groups"."Id" ?<? "economy_outbox"."PostingGroupId" [delete: restrict]
 
 Ref "FK_economy_top_up_intents_economy_posting_groups_PostingGroupId":"economy_posting_groups"."Id" ?<? "economy_top_up_intents"."PostingGroupId" [delete: restrict]
 

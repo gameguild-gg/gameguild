@@ -241,13 +241,14 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
         var sequence = 1;
         foreach (var percentage in playback.Milestones)
         {
-            _db.Set<AdRewardPlaybackMilestoneRow>().Add(new AdRewardPlaybackMilestoneRow
+            _db.Set<AdRewardTimelineRow>().Add(new AdRewardTimelineRow
             {
                 Id = Guid.NewGuid(),
+                TimelineKind = AdRewardTimelineKind.PlaybackMilestone,
                 SessionId = sessionId,
                 Sequence = sequence++,
                 Percentage = percentage,
-                ObservedAt = playback.StartedAt +
+                OccurredAt = playback.StartedAt +
                              TimeSpan.FromTicks(playback.PlaybackDuration.Ticks * percentage / 100),
                 EvidenceHash = evidenceHash
             });
@@ -260,12 +261,13 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
         AdRewardProviderProofVerification verification,
         DateTimeOffset receivedAt)
     {
-        _db.Set<AdRewardProviderProofInboxRow>().Add(new AdRewardProviderProofInboxRow
+        _db.Set<EconomyInboxRow>().Add(new EconomyInboxRow
         {
             Id = Guid.NewGuid(),
+            InboxKind = EconomyInboxKind.AdRewardProviderProof,
             TenantId = session.TenantId,
             SessionId = session.Id,
-            Network = session.Network,
+            Provider = session.Network,
             ProviderEventId = proof.ProviderEventId,
             PayloadHash = verification.PayloadHash,
             EvidenceHash = verification.EvidenceHash,
@@ -341,9 +343,10 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
             Version = 1
         };
         _db.Set<AdRewardCompletionRow>().Add(row);
-        _db.Set<AdRewardSessionEventRow>().Add(new AdRewardSessionEventRow
+        _db.Set<AdRewardTimelineRow>().Add(new AdRewardTimelineRow
         {
             Id = Guid.NewGuid(),
+            TimelineKind = AdRewardTimelineKind.SessionEvent,
             SessionId = session.Id,
             Sequence = 2,
             State = sessionState,

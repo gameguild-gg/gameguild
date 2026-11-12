@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.Finance.Economy.AdRewards.Persistence;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -68,14 +69,14 @@ public sealed class PostgreSqlAdRewardOperationalQueryReaderTests
         await context.Database.EnsureCreatedAsync();
         var session = Session(TenantId, 1);
         context.Set<AdRewardSessionRow>().Add(session);
-        context.Set<AdRewardPlaybackMilestoneRow>().Add(new AdRewardPlaybackMilestoneRow
+        context.Set<AdRewardTimelineRow>().Add(new AdRewardTimelineRow
         {
-            Id = Guid.NewGuid(), SessionId = session.Id, Sequence = 1, Percentage = 25,
-            ObservedAt = Now, EvidenceHash = "milestone-evidence"
+            Id = Guid.NewGuid(), TimelineKind = AdRewardTimelineKind.PlaybackMilestone, SessionId = session.Id, Sequence = 1, Percentage = 25,
+            OccurredAt = Now, EvidenceHash = "milestone-evidence"
         });
-        context.Set<AdRewardSessionEventRow>().Add(new AdRewardSessionEventRow
+        context.Set<AdRewardTimelineRow>().Add(new AdRewardTimelineRow
         {
-            Id = Guid.NewGuid(), SessionId = session.Id, Sequence = 1,
+            Id = Guid.NewGuid(), TimelineKind = AdRewardTimelineKind.SessionEvent, SessionId = session.Id, Sequence = 1,
             State = DurableAdRewardSessionState.Deferred, EvidenceHash = "event-evidence", OccurredAt = Now
         });
         context.Set<AdRewardCompletionRow>().Add(new AdRewardCompletionRow

@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.Finance.Economy.Contracts;
 using GameGuild.Finance.Economy.Marketplace.Persistence;
 using GameGuild.TestSupport.Finance.Economy;
+using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -25,7 +26,7 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReaderTests
         context.Set<MarketplaceRefundRow>().AddRange(
             Refund(TenantId, settlements[0], 1),
             Refund(Guid.NewGuid(), foreign, 2));
-        context.Set<MarketplaceOutboxRow>().AddRange(
+        context.Set<EconomyOutboxRow>().AddRange(
             Outbox(TenantId, settlements[0], 1),
             Outbox(Guid.NewGuid(), foreign, 2));
         await context.SaveChangesAsync();
@@ -62,13 +63,15 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReaderTests
         var refund = Refund(TenantId, settlement, 1);
         var outbox = Outbox(TenantId, settlement, 1);
         context.Set<MarketplaceSettlementRow>().Add(settlement);
-        context.Set<MarketplaceSettlementLegRow>().Add(new MarketplaceSettlementLegRow
+        context.Set<MarketplaceValueLegRow>().Add(new MarketplaceValueLegRow
         {
+            LegKind = MarketplaceValueLegKind.Settlement,
             SettlementId = settlement.Id,
             Currency = CurrencyCode.HardCoin,
             Units = 100,
             SellerUnits = 90,
-            PlatformFeeUnits = 10
+            PlatformFeeUnits = 10,
+            RefundedUnits = 0
         });
         context.Set<MarketplaceEventRow>().Add(new MarketplaceEventRow
         {
@@ -76,7 +79,7 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReaderTests
             Sequence = 1, EventKind = "Settled", EvidenceHash = "event-evidence", OccurredAt = Now
         });
         context.Set<MarketplaceRefundRow>().Add(refund);
-        context.Set<MarketplaceOutboxRow>().Add(outbox);
+        context.Set<EconomyOutboxRow>().Add(outbox);
         await context.SaveChangesAsync();
         var reader = new PostgreSqlMarketplaceOperationalQueryReader(context);
 
@@ -179,9 +182,9 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReaderTests
         KillSwitchEpoch = 1, JurisdictionCode = "BR", EvidenceHashes = "[]", RefundedAt = Now
     };
 
-    private static MarketplaceOutboxRow Outbox(Guid tenantId, MarketplaceSettlementRow settlement, int index) => new()
+    private static EconomyOutboxRow Outbox(Guid tenantId, MarketplaceSettlementRow settlement, int index) => new()
     {
-        Id = Guid.NewGuid(), TenantId = tenantId, SettlementId = settlement.Id,
+        Id = Guid.NewGuid(), OutboxKind = EconomyOutboxKind.Marketplace, TenantId = tenantId, SettlementId = settlement.Id,
         MessageType = "MarketplaceEntitlementGranted", Payload = "{}", PayloadHash = $"payload-hash-{index}",
         OccurredAt = Now.AddMinutes(-index), AttemptCount = 0
     };

@@ -87,7 +87,7 @@ public sealed class EconomyFifoTransferMigrationTests
             .Should().Be(5);
         (await ScalarAsync<long>(connection, $"SELECT \"PurchasedHard\" FROM public.economy_wallet_balance_projections WHERE \"WalletId\" = '{destinationWallet}';"))
             .Should().Be(15);
-        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox_messages;"))
+        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox WHERE \"OutboxKind\" = 1;"))
             .Should().Be(1);
         await ExecuteAsync(connection, "SET ROLE gameguild_economy_writer;");
 
@@ -95,7 +95,7 @@ public sealed class EconomyFifoTransferMigrationTests
         replay.Duplicate.Should().BeTrue();
         replay.Sequence.Should().Be(receipt.Sequence);
         await ExecuteAsync(connection, "RESET ROLE;");
-        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox_messages;"))
+        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox WHERE \"OutboxKind\" = 1;"))
             .Should().Be(1);
         await ExecuteAsync(connection, "SET ROLE gameguild_economy_writer;");
 

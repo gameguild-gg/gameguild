@@ -4,6 +4,7 @@ using System.Text.Json;
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -62,7 +63,7 @@ public sealed class PostgreSqlAdminWithdrawalDispatchOutboxTests
         var item = await fixture.AddAsync(AdminWithdrawalRunState.Dispatching);
         var provider = new CallbackProvider(async command =>
         {
-            var row = await fixture.Context.Set<AdminWithdrawalDispatchOutboxRow>()
+            var row = await fixture.Context.Set<EconomyOutboxRow>()
                 .SingleAsync(value => value.Id == item.Row.Id);
             row.CompletedAt = Now;
             await fixture.Context.SaveChangesAsync();
@@ -85,7 +86,7 @@ public sealed class PostgreSqlAdminWithdrawalDispatchOutboxTests
         var item = await fixture.AddAsync(AdminWithdrawalRunState.Dispatching);
         var provider = new CallbackProvider(async command =>
         {
-            var row = await fixture.Context.Set<AdminWithdrawalDispatchOutboxRow>()
+            var row = await fixture.Context.Set<EconomyOutboxRow>()
                 .SingleAsync(value => value.Id == item.Row.Id);
             if (stale == "owner")
             {
@@ -179,9 +180,9 @@ public sealed class PostgreSqlAdminWithdrawalDispatchOutboxTests
             await FluentActions.Awaiting(() => processor.ProcessNextAsync("worker", Now).AsTask())
                 .Should().ThrowAsync<Exception>();
             fixture.Context.ChangeTracker.Clear();
-            var persisted = await fixture.Context.Set<AdminWithdrawalDispatchOutboxRow>()
+            var persisted = await fixture.Context.Set<EconomyOutboxRow>()
                 .SingleAsync(row => row.Id == item.Row.Id);
-            persisted.LastErrorCode.Should().Be("provider-error");
+            persisted.LastError.Should().Be("provider-error");
             persisted.CompletedAt = Now;
             persisted.LeaseOwner = null;
             persisted.LeaseExpiresAt = null;
@@ -358,11 +359,11 @@ public sealed class PostgreSqlAdminWithdrawalDispatchOutboxTests
                 run.SourceAssetKey, run.DestinationHash, run.DispatchSnapshotHash ?? "dispatch-snapshot",
                 run.IdempotencyKey.Value, Now.AddMinutes(-1));
             var payload = JsonSerializer.Serialize(command, JsonOptions);
-            var row = new AdminWithdrawalDispatchOutboxRow
+            var row = new EconomyOutboxRow
             {
-                Id = Guid.NewGuid(), TenantId = run.TenantId, RunId = run.Id,
+                Id = Guid.NewGuid(), OutboxKind = EconomyOutboxKind.AdminWithdrawalDispatch, TenantId = run.TenantId, RunId = run.Id,
                 IdempotencyKey = command.IdempotencyKey, Payload = payload, PayloadHash = Hash(payload),
-                CreatedAt = Now.AddSeconds(_sequence), AvailableAt = Now.AddMinutes(-1), AttemptCount = 0
+                OccurredAt = Now.AddSeconds(_sequence), AvailableAt = Now.AddMinutes(-1), AttemptCount = 0
             };
             await Writer.AddAsync(row);
             return new OutboxItem(run, command, row);
@@ -388,7 +389,7 @@ public sealed class PostgreSqlAdminWithdrawalDispatchOutboxTests
     private sealed record OutboxItem(
         AdminWithdrawalRun Run,
         AdminWithdrawalDispatchCommand Command,
-        AdminWithdrawalDispatchOutboxRow Row);
+        EconomyOutboxRow Row);
 
     private sealed class CallbackProvider(
         Func<AdminWithdrawalDispatchCommand, ValueTask<AdminWithdrawalProviderReceipt>> dispatch)

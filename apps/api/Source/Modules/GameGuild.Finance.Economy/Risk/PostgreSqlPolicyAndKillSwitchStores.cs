@@ -282,9 +282,10 @@ public sealed class PostgreSqlEconomyCapabilityPolicyStore : IEconomyCapabilityP
             row.Signature = signed.Signature.Trim();
             row.ApprovedBy = actorId;
             row.ApprovedAt = approvedAt;
-            _db.Set<EconomyCapabilityPolicyApprovalRow>().Add(new EconomyCapabilityPolicyApprovalRow
+            _db.Set<EconomyApprovalRow>().Add(new EconomyApprovalRow
             {
-                Id = Guid.NewGuid(), PolicyId = row.Id, ActorId = actorId,
+                Id = Guid.NewGuid(), ApprovalKind = EconomyApprovalKind.CapabilityPolicy,
+                SubjectId = row.Id, ActorId = actorId,
                 ReauthenticationHash = reauthenticationHash.Trim(), ApprovedAt = approvedAt
             });
             await _db.SaveChangesAsync(token);
@@ -610,8 +611,9 @@ public sealed class PostgreSqlEconomyKillSwitchStore : IEconomyKillSwitchStore
                 throw new ArgumentException("Release approval cannot predate its proposal.", nameof(approvedAt));
             }
 
-            var approvals = await _db.Set<EconomyKillSwitchReleaseApprovalRow>()
-                .Where(item => item.KillSwitchId == killSwitchId)
+            var approvals = await _db.Set<EconomyApprovalRow>()
+                .Where(item => item.ApprovalKind == EconomyApprovalKind.KillSwitchRelease &&
+                               item.SubjectId == killSwitchId)
                 .ToArrayAsync(token);
             if (approvals.Any(item => item.ActorId == actorId))
             {
@@ -623,9 +625,10 @@ public sealed class PostgreSqlEconomyKillSwitchStore : IEconomyKillSwitchStore
                 throw new InvalidOperationException("Kill-switch release already has the required approvals.");
             }
 
-            _db.Set<EconomyKillSwitchReleaseApprovalRow>().Add(new EconomyKillSwitchReleaseApprovalRow
+            _db.Set<EconomyApprovalRow>().Add(new EconomyApprovalRow
             {
-                Id = Guid.NewGuid(), KillSwitchId = killSwitchId, ActorId = actorId,
+                Id = Guid.NewGuid(), ApprovalKind = EconomyApprovalKind.KillSwitchRelease,
+                SubjectId = killSwitchId, ActorId = actorId,
                 ReauthenticationHash = reauthenticationHash.Trim(), ApprovedAt = approvedAt
             });
             await _db.SaveChangesAsync(token);
@@ -652,8 +655,9 @@ public sealed class PostgreSqlEconomyKillSwitchStore : IEconomyKillSwitchStore
                 throw new InvalidOperationException("Kill-switch release has not been proposed.");
             }
 
-            var approvalCount = await _db.Set<EconomyKillSwitchReleaseApprovalRow>()
-                .CountAsync(item => item.KillSwitchId == killSwitchId, token);
+            var approvalCount = await _db.Set<EconomyApprovalRow>()
+                .CountAsync(item => item.ApprovalKind == EconomyApprovalKind.KillSwitchRelease &&
+                                    item.SubjectId == killSwitchId, token);
             if (approvalCount != 2)
             {
                 throw new InvalidOperationException("Kill-switch release requires exactly two independent approvals.");
@@ -685,8 +689,9 @@ public sealed class PostgreSqlEconomyKillSwitchStore : IEconomyKillSwitchStore
         EconomyKillSwitchRow row,
         CancellationToken cancellationToken)
     {
-        var approvers = await _db.Set<EconomyKillSwitchReleaseApprovalRow>().AsNoTracking()
-            .Where(item => item.KillSwitchId == row.Id)
+        var approvers = await _db.Set<EconomyApprovalRow>().AsNoTracking()
+            .Where(item => item.ApprovalKind == EconomyApprovalKind.KillSwitchRelease &&
+                           item.SubjectId == row.Id)
             .OrderBy(item => item.ApprovedAt)
             .Select(item => item.ActorId)
             .ToArrayAsync(cancellationToken);
