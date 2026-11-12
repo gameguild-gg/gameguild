@@ -31,34 +31,34 @@ A single Delaware C-Corp covers the whole plan: equity-weighted governance by co
 | BVI BC | $2,616 | ~$2,310+ | 0% | Good for token SPVs | ✅ budget alternative (~90% of Cayman mechanics, less banking prestige) |
 | Panama Foundation | $1,495–5,405 | ~$2,410 | territorial 0% | weak Web3 track record | ❌ |
 
-## Shareholder residency map (updated 2026-11-02)
+## Shareholder residency map (confirmed 2026-11-02)
 
 | Person | Residency | Key exposure |
 |---|---|---|
-| Tolsta | **US resident** | worldwide income; if ≥10% of foreign entity → Form 5471 + 8938 + FBAR annually ($10k+/yr penalties if missed); ETBUS risk if doing core revenue work for the foundation from US |
-| Matheus | TBD (possibly BR) | if BR: Lei 14.754 accrual tax 15% on pro-rata offshore profits + CBE |
-| Joel | TBD (possibly BR) | same as above |
+| Tolsta | **US resident** | worldwide income; US filings on all payouts; if ever ≥10% of a *foreign* entity → Form 5471 + 8938 + FBAR (avoided by holding only DevCo equity) |
+| Matheus | **Brazil** | Lei 14.754 accrual tax 15% on pro-rata *offshore* entity profits + CBE — mitigated because current structure has no offshore entity; DevCo dividends taxed per BR rules on receipt |
+| Joel | **Brazil** | same as Matheus |
 
-**Structural consequence — Tolsta holds NO direct stake in any foreign entity.** Economics via Delaware DevCo (equity + comp). This eliminates Tolsta's 5471 burden and ETBUS footprint. BR-resident holders: same logic — services income via BR entity or DevCo-equity rather than direct offshore profit claims.
+**Structural consequences:**
+
+- **Tolsta (US)**: holds only DevCo equity — no foreign-entity stakes, no 5471 burden, no ETBUS footprint (single US entity does everything).
+- **Matheus/Joel (BR)**: with a Delaware-only structure there is no Lei 14.754 *offshore accrual* problem (Delaware C-Corp is a foreign entity from BR's view — 14.754 DOES apply to profits of controlled foreign entities accrual-basis, Delaware included). ⚠️ This needs BR counsel modeling: each BR-resident governor is taxed annually on their pro-rata share of the DevCo's profits **whether or not distributed**, plus CBE. Mitigations to model with counsel:
+  1. BR service entity per BR-resident governor billing the DevCo for work (services income, deductible at DevCo level) — compensation-heavy, distribution-light personal economics
+  2. Accept the 15% accrual + R$22k exemption and budget annual BR filings
+  3. A future offshore layer changes this math — re-evaluate at seed
 
 ## Recommendation
 
-**Cayman Foundation Company** as DAO/treasury wrapper + domestic operating entities (DevCo) for the team:
+**Delaware C-Corp only, now.** The single DevCo carries ops, equity, treasury, payouts. The comparison table below is the research that supports the deferred offshore option — relevant when treasury scale or international structure justifies ~$7–15k/yr:
 
 ```
-Cayman Foundation (0% tax, memberless/founderless)
-  ├─ holds treasury + governance contracts + IP licensing
-  ├─ council majority NON-US residents (avoid ETBUS)
-  └─ signs contracts, banks, custody
-US DevCo (if VC raise demands Delaware)     ← investors' SAFE/equity lives here
-BR service entity (Tolsta)                  ← bills Cayman/DevCo for work (services income)
+IF offshore layer added later (seed/Series A):
+Cayman Foundation (0% tax, memberless)
+  ├─ holds treasury (deferred decision)
+  ├─ council majority NON-US residents
+US DevCo (Delaware)   ← ops, equity, investors
+BR service entities   ← Matheus/Joel bill for services
 ```
-
-This mirrors what funded crypto startups actually do: Uniswap (Delaware DevCo + foundation/DUNA), dYdX (Delaware DevCo + foundation), Maker (Cayman), 1inch/Powerloom (straight Cayman via Otonomos).
-
-**Budget alternative**: BVI company (~$4.9k/yr total vs ~$14.5k/yr Cayman) if cost matters pre-revenue. Re-domicile/upgrade to Cayman at seed round.
-
-Cayman caveats: Economic Substance rules (if fund-management/IP/HQ activities → need local presence) and VASP Act (if foundation issues/custodies/trades virtual assets → possible license). Structure foundation as grant/treasury vehicle; issue tokens via DevCo or SPV with counsel.
 
 ## Otonomous assessment
 
@@ -71,13 +71,13 @@ Cayman caveats: Economic Substance rules (if fund-management/IP/HQ activities �
 
 ⚠️ **Offshore deferral is dead for Brazilian residents.** Since FY2024:
 
-- Offshore entity profits (incl. Cayman foundations, DAO LLCs, trusts) taxed **annually on accrual** in Tolsta's PIT return — **whether or not distributed**.
+- Profits of controlled foreign entities (including a US Delaware C-Corp) taxed **annually on accrual** in the BR-resident governor's PIT return — **whether or not distributed**. Applies to Matheus and Joel.
 - Rate: 15% flat; first ~R$ 22.2k/yr of foreign profits exempt.
 - Anti-avoidance: profits routed into a Brazilian company to claim dividend exemption are recharacterized as taxed income.
 - Crypto payouts: taxed at FMV on receipt; later disposal = capital gains 15–22.5% (IN RFB 1888/2019).
-- **CBE**: annual Central Bank declaration of assets abroad (penalties up to R$250k). Deadlines: entities ≥US$1M → Mar 31; individuals → Dec 31.
+- **CBE**: annual Central Bank declaration of assets abroad (penalties up to R$250k). Individuals → Dec 31.
 
-**Design consequence**: Tolsta holding direct equity/profit-rights in the offshore vehicle creates annual Brazilian tax on *undistributed* profits. Strongly consider Tolsta operating via a **Brazilian service company billing the offshore entity** (deductible services income at entity level) rather than direct profit-share claims. Model both scenarios with BR tax counsel (Machado Meyer / Mattos Filho / KPMG BR) before deciding.
+**Design consequence**: BR-resident governors owe BR tax on the DevCo's annual profits pro-rata even in years with zero distribution. Model the mitigations in the residency map above with BR counsel (Machado Meyer / Mattos Filho / KPMG BR) before incorporation.
 
 ## US
 
