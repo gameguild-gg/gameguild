@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -13,38 +14,41 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 public sealed class Web3ServiceSiweTests
 {
     [Fact]
-    public async Task BoundedHostCacheStoresUsableWalletChallengeWithFiveMinuteLifetime()
+    public async Task DistributedStoreHoldsUsableWalletChallengeWithFiveMinuteLifetime()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions { SizeLimit = 10_000 });
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://wallet.example.test", "1");
         var key = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
         Assert.Equal(TimeSpan.FromMinutes(5), challenge.ExpiresAt - challenge.IssuedAt);
-        Assert.Same(challenge, cache.Get<Web3Challenge>("web3:challenge:" + challenge.Nonce));
-        Assert.Equal(challenge.Nonce, cache.Get<string>("web3:challenge:wallet:" + key.GetPublicAddress().ToLowerInvariant()));
+        // The nonce entry is retained as serialized state; the wallet pointer keeps the nonce.
+        Assert.Contains(challenge.WalletAddress, cache.GetString("web3:challenge:" + challenge.Nonce));
+        Assert.Equal(challenge.Nonce, cache.GetString("web3:challenge:wallet:" + key.GetPublicAddress().ToLowerInvariant()));
         Assert.True(await service.VerifySignatureAsync(key.GetPublicAddress(), Sign(challenge.Message, key), challenge.Message, "1", challenge.Nonce));
         Assert.False(await service.VerifySignatureAsync(key.GetPublicAddress(), Sign(challenge.Message, key), challenge.Message, "1", challenge.Nonce));
     }
 
     [Fact]
-    public async Task CacheCapacityCannotReturnAnUnstoredChallenge()
+    public async Task UnavailableStoreCannotReturnAnUnstoredChallenge()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions { SizeLimit = 1 });
+        // The read-back refusal survives the distributed migration (issue #1272): a store that
+        // silently drops writes must not mint a challenge whose ceremony can never be verified.
+        var cache = new DropWriteDistributedCache();
         var service = CreateService(cache, "https://wallet.example.test", "1");
         var key = CreateTestKey();
         var error = await Assert.ThrowsAsync<InvalidOperationException>(() => service.GenerateChallengeAsync(key.GetPublicAddress()));
         Assert.Equal("SIWE challenge storage is unavailable.", error.Message);
-        Assert.Null(cache.Get<string>("web3:challenge:wallet:" + key.GetPublicAddress().ToLowerInvariant()));
+        Assert.Null(cache.GetString("web3:challenge:wallet:" + key.GetPublicAddress().ToLowerInvariant()));
     }
 
     [Fact]
     public async Task EvictedChallengeRejectsAnOtherwiseValidRealSignature()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions { SizeLimit = 10_000 });
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://wallet.example.test", "1");
         var key = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
-        cache.Remove("web3:challenge:" + challenge.Nonce);
+        await cache.RemoveAsync("web3:challenge:" + challenge.Nonce);
         Assert.False(await service.VerifySignatureAsync(key.GetPublicAddress(), Sign(challenge.Message, key), challenge.Message, "1", challenge.Nonce));
     }
 
@@ -53,7 +57,7 @@ public sealed class Web3ServiceSiweTests
     [InlineData("chainId", "ChainId")]
     public async Task ChallengeHandlerMapsOnlyKnownInvalidInputsToRequestValidation(string parameter, string field)
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://wallet.example.test", "1");
         var command = new GenerateWeb3ChallengeCommand
         {
@@ -72,7 +76,7 @@ public sealed class Web3ServiceSiweTests
     [InlineData("0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAeg", false)]
     public void MixedCaseAddressesRequireTheEip55ChecksumAndUniformCaseRemainsCompatible(string address, bool expected)
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://wallet.example.test", "1");
         Assert.Equal(expected, service.IsValidWalletAddress(address));
     }
@@ -80,7 +84,7 @@ public sealed class Web3ServiceSiweTests
     [Fact]
     public async Task GenerateChallengeAsync_ShouldReturnCanonicalSiweMessageBoundToConfiguredOriginAndChain()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://gameguild.test", "1", "5");
         var key = CreateTestKey();
 
@@ -103,7 +107,7 @@ public sealed class Web3ServiceSiweTests
     [Fact]
     public async Task VerifySignatureAsync_ShouldAcceptValidEip191SignatureOnlyOnce()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://gameguild.test", "1");
         var key = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
@@ -119,7 +123,7 @@ public sealed class Web3ServiceSiweTests
     [Fact]
     public async Task VerifySignatureAsync_ShouldRejectSignatureFromAnotherWallet()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://gameguild.test", "1");
         var expectedKey = CreateTestKey();
         var otherKey = CreateTestKey();
@@ -138,7 +142,7 @@ public sealed class Web3ServiceSiweTests
     [Fact]
     public async Task VerifySignatureAsync_ShouldRejectMismatchedConfiguredOrigin()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var issuer = CreateService(cache, "https://gameguild.test", "1");
         var verifier = CreateService(cache, "https://attacker.test", "1");
         var key = CreateTestKey();
@@ -157,7 +161,7 @@ public sealed class Web3ServiceSiweTests
     [Fact]
     public async Task VerifySignatureAsync_ShouldAcceptExplicitHttpSchemeForConfiguredLocalhost()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "http://localhost:3000", "1");
         var key = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
@@ -176,7 +180,7 @@ public sealed class Web3ServiceSiweTests
     [Fact]
     public async Task VerifySignatureAsync_ShouldRejectRequestChainAndNonceThatDoNotMatchChallenge()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://gameguild.test", "1", "5");
         var key = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
@@ -194,7 +198,7 @@ public sealed class Web3ServiceSiweTests
     [Fact]
     public async Task VerifySignatureAsync_ShouldRejectIssuedAtDifferentFromStoredChallenge()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://gameguild.test", "1");
         var key = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
@@ -215,7 +219,7 @@ public sealed class Web3ServiceSiweTests
     [Fact]
     public async Task VerifySignatureAsync_ShouldRejectExpirationDifferentFromStoredChallenge()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://gameguild.test", "1");
         var key = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
@@ -236,7 +240,7 @@ public sealed class Web3ServiceSiweTests
     [Fact]
     public async Task GenerateWeb3ChallengeHandler_ShouldForwardChainAndReturnNonce()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://gameguild.test", "1", "5");
         var key = CreateTestKey();
         var handler = new GenerateWeb3ChallengeHandler(service);
@@ -254,7 +258,7 @@ public sealed class Web3ServiceSiweTests
     [Fact]
     public async Task GenerateChallengeAsync_ShouldRejectChainOutsideConfiguredAllowlist()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://gameguild.test", "1");
         var key = CreateTestKey();
 
@@ -266,7 +270,7 @@ public sealed class Web3ServiceSiweTests
     [Fact]
     public async Task GenerateChallengeAsync_ShouldUseHostConfiguredStatement()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var service = CreateService(cache, "https://tenant.example", ["1"], "Authenticate to tenant.example");
         var key = CreateTestKey();
 
@@ -280,7 +284,7 @@ public sealed class Web3ServiceSiweTests
     [Fact]
     public void Constructor_ShouldRequireHostConfiguredOrigin()
     {
-        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var cache = NewDistributedCache();
         var configuration = new ConfigurationBuilder().AddInMemoryCollection([]).Build();
 
         var act = () => new Web3Service(NullLogger<Web3Service>.Instance, cache, configuration);
@@ -288,10 +292,10 @@ public sealed class Web3ServiceSiweTests
         act.Should().Throw<InvalidOperationException>().WithMessage("*Origin must be configured*");
     }
 
-    private static Web3Service CreateService(IMemoryCache cache, string origin, params string[] chainIds) =>
+    private static Web3Service CreateService(IDistributedCache cache, string origin, params string[] chainIds) =>
         CreateService(cache, origin, chainIds, statement: null);
 
-    private static Web3Service CreateService(IMemoryCache cache, string origin, string[] chainIds, string? statement)
+    private static Web3Service CreateService(IDistributedCache cache, string origin, string[] chainIds, string? statement)
     {
         var settings = new Dictionary<string, string?>
         {
@@ -310,6 +314,35 @@ public sealed class Web3ServiceSiweTests
 
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
         return new Web3Service(NullLogger<Web3Service>.Instance, cache, configuration);
+    }
+
+    private static MemoryDistributedCache NewDistributedCache() =>
+        new(Microsoft.Extensions.Options.Options.Create(new MemoryDistributedCacheOptions()));
+
+    /// <summary>Simulates an unavailable store: writes are silently dropped, reads see nothing.</summary>
+    private sealed class DropWriteDistributedCache : IDistributedCache
+    {
+        public byte[]? Get(string key) => null;
+
+        public Task<byte[]?> GetAsync(string key, CancellationToken token = default) => Task.FromResult<byte[]?>(null);
+
+        public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
+        {
+        }
+
+        public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default) => Task.CompletedTask;
+
+        public void Remove(string key)
+        {
+        }
+
+        public Task RemoveAsync(string key, CancellationToken token = default) => Task.CompletedTask;
+
+        public void Refresh(string key)
+        {
+        }
+
+        public Task RefreshAsync(string key, CancellationToken token = default) => Task.CompletedTask;
     }
 
     private static string Sign(string message, EthECKey key)

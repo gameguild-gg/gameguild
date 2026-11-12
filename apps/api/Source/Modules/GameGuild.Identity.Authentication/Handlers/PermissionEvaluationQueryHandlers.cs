@@ -521,17 +521,17 @@ internal static class PermissionEvaluationQueryGuards
     {
         if (!actor.IsAuthenticated)
         {
-            throw new UnauthorizedAccessException("User not authenticated");
+            throw new AuthenticationRequiredException("User not authenticated");
         }
 
         if (tenantId == Guid.Empty)
         {
-            throw new InvalidOperationException("TenantId is required");
+            throw new RequestValidationException("TenantId is required");
         }
 
         if (!actor.IsSystemAdmin && actor.TenantId != tenantId)
         {
-            throw new UnauthorizedAccessException("Tenant permission data is restricted to the actor's tenant");
+            throw new CrossTenantAccessException(actor.SubjectIdAsGuid ?? Guid.Empty, tenantId, actor.TenantId);
         }
 
         var actorUserId = actor.SubjectIdAsGuid;
@@ -540,7 +540,7 @@ internal static class PermissionEvaluationQueryGuards
             && !actor.IsTenantAdmin
             && !actor.HasPermission(UsersPermission.Keys.Read))
         {
-            throw new UnauthorizedAccessException("Reading another user's permissions requires user-read access");
+            throw new AccessDeniedException("Reading another user's permissions requires user-read access");
         }
     }
 
@@ -560,7 +560,7 @@ internal static class PermissionEvaluationQueryGuards
             return actorTenant;
         }
 
-        throw new InvalidOperationException("TenantId is required to read permissions");
+        throw new RequestValidationException("TenantId is required to read permissions");
     }
 
     /// <summary>

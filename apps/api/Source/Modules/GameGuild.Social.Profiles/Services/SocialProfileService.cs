@@ -6,6 +6,8 @@ public interface ISocialProfileService
     Task<SocialProfileDto> GetOrCreateAsync(Guid userId, CancellationToken ct = default);
     Task<SocialProfileDto?> GetByUserAsync(Guid userId, CancellationToken ct = default);
     Task<SocialProfileDto?> GetByHandleAsync(string handle, CancellationToken ct = default);
+    Task<SocialProfileDto?> GetByHandleForViewerAsync(string handle, ProfileViewer viewer, CancellationToken ct = default);
+    Task<SocialProfileDto?> GetByUserForViewerAsync(Guid userId, ProfileViewer viewer, CancellationToken ct = default);
     Task<List<SocialProfileDto>> SearchAsync(string? query, int take, CancellationToken ct = default);
     Task<SocialProfileDto> UpdatePrivacyAsync(UpdateProfilePrivacyCommand command, CancellationToken ct = default);
     Task<SocialProfileDto> UpdateStatsAsync(UpdateProfileStatsCommand command, CancellationToken ct = default);
@@ -19,7 +21,8 @@ public interface ISocialProfileService
 public sealed class SocialProfileService(
     ISocialProfileRepository profileRepository,
     IProfileSkillRepository skillRepository,
-    IProfilePortfolioRepository portfolioRepository) : ISocialProfileService
+    IProfilePortfolioRepository portfolioRepository,
+    IProfileFollowerPort followerPort) : ISocialProfileService
 {
     public async Task<SocialProfileDto> UpsertProfileAsync(UpdateSocialProfileCommand command, CancellationToken ct = default)
     {
@@ -67,6 +70,71 @@ public sealed class SocialProfileService(
 
     public async Task<SocialProfileDto?> GetByHandleAsync(string handle, CancellationToken ct = default)
         => (await profileRepository.GetByHandleAsync(handle, ct).ConfigureAwait(false))?.ToDto();
+
+    /// <summary>
+    ///     Visibility-enforcing read by handle (issue #1315 SP1). Public profiles serve
+    ///     everyone (including anonymous callers); Private/Connections profiles serve only
+    ///     the owner, a system admin, or a viewer with an explicit follow relationship.
+    ///     Everyone else — anonymous included — gets <c>null</c> (the API surface maps it to
+    ///     404 so a Private profile is indistinguishable from a nonexistent one).
+    /// </summary>
+    public async Task<SocialProfileDto?> GetByHandleForViewerAsync(string handle, ProfileViewer viewer, CancellationToken ct = default)
+    {
+        if (viewer.IsSystemAdmin)
+        {
+            return (await profileRepository.GetByHandleAsync(handle, ct).ConfigureAwait(false))?.ToDto();
+        }
+
+        var profile = await profileRepository.GetVisibleByHandleAsync(handle, viewer.UserId, ct).ConfigureAwait(false);
+        if (profile is not null)
+        {
+            return profile.ToDto();
+        }
+
+        // Anonymous callers have no follow graph to consult — no unrestricted load happens.
+        var restrictedByHandle = viewer.UserId is null
+            ? null
+            : await profileRepository.GetByHandleAsync(handle, ct).ConfigureAwait(false);
+        return await LoadPrivateProfileForFollowerAsync(restrictedByHandle, viewer, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Visibility-enforcing read by user id — the same entitlement rules as the by-handle read.</summary>
+    public async Task<SocialProfileDto?> GetByUserForViewerAsync(Guid userId, ProfileViewer viewer, CancellationToken ct = default)
+    {
+        if (viewer.IsSystemAdmin)
+        {
+            return (await profileRepository.GetByUserAsync(userId, ct).ConfigureAwait(false))?.ToDto();
+        }
+
+        var profile = await profileRepository.GetVisibleByUserAsync(userId, viewer.UserId, ct).ConfigureAwait(false);
+        if (profile is not null)
+        {
+            return profile.ToDto();
+        }
+
+        var restrictedByUser = viewer.UserId is null
+            ? null
+            : await profileRepository.GetByUserAsync(userId, ct).ConfigureAwait(false);
+        return await LoadPrivateProfileForFollowerAsync(restrictedByUser, viewer, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Follower entitlement for a profile the visibility predicate already withheld:
+    ///     the unrestricted load is only ever surfaced to a viewer the follow graph confirms.
+    /// </summary>
+    private async Task<SocialProfileDto?> LoadPrivateProfileForFollowerAsync(SocialProfile? profile, ProfileViewer viewer, CancellationToken ct)
+    {
+        if (profile is null
+            || profile.Visibility == ProfileVisibility.Public
+            || viewer.UserId is not { } viewerId)
+        {
+            return null;
+        }
+
+        return await followerPort.IsFollowerAsync(viewerId, profile.UserId, ct).ConfigureAwait(false)
+            ? profile.ToDto()
+            : null;
+    }
 
     public async Task<List<SocialProfileDto>> SearchAsync(string? query, int take, CancellationToken ct = default)
         => (await profileRepository.SearchAsync(query, take, ct).ConfigureAwait(false)).Select(profile => profile.ToDto()).ToList();

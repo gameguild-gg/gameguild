@@ -15,7 +15,7 @@ namespace GameGuild.Identity.Authentication.UnitTests.Controllers;
 public sealed class ApiKeyControllerTests
 {
     [Fact]
-    public async Task CreateApiKey_WhenMediatorSucceeds_ReturnsOk()
+    public async Task CreateApiKey_WhenMediatorSucceeds_ReturnsCreated()
     {
         var mediator = new Mock<IMediator>();
         var command = new CreateApiKeyCommand { Name = "integration-key", Scopes = ["read"], StepUpReceipt = "verified-test-receipt" };
@@ -37,8 +37,10 @@ public sealed class ApiKeyControllerTests
 
         var result = await controller.CreateApiKey(command, CancellationToken.None);
 
-        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
-        ok.Value.Should().BeSameAs(response);
+        // Issue #1192: the endpoint's schema declares 201; the previous 200 was undocumented.
+        var created = result.Should().BeOfType<ObjectResult>().Subject;
+        created.StatusCode.Should().Be(StatusCodes.Status201Created);
+        created.Value.Should().BeSameAs(response);
     }
 
     [Fact]

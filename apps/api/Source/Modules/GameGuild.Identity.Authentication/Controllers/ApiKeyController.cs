@@ -63,7 +63,9 @@ public class ApiKeyController : BaseApiController
         }
 
         return result.IsSuccess
-            ? Ok(result.Value)
+            // Issue #1192: the endpoint declares 201; answer with the declared status (the
+            // previous 200 was an undocumented response for clients generated from the schema).
+            ? StatusCode(StatusCodes.Status201Created, result.Value)
             : BadRequest(new { error = result.Error });
     }
 

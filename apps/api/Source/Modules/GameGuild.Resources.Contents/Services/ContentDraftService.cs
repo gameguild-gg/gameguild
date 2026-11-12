@@ -26,7 +26,7 @@ public class ContentDraftService(
         CancellationToken ct = default)
     {
         var maxVersion = await db.Set<ContentVersion>()
-            .Where(v => v.EntityId == entityId && v.EntityType == entityType && !v.IsDeleted)
+            .Where(v => v.EntityId == entityId && v.EntityType == entityType && v.DeletedAt == null)
             .MaxAsync(v => (int?)v.VersionNumber, ct).ConfigureAwait(false) ?? 0;
 
         var version = ContentVersion.Create(
@@ -59,7 +59,7 @@ public class ContentDraftService(
         CancellationToken ct = default)
     {
         var version = await db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.Id == versionId && v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (version == null)
         {
@@ -82,7 +82,7 @@ public class ContentDraftService(
     public async Task<Result<ContentVersion>> GetDraftAsync(Guid entityId, string entityType, CancellationToken ct = default)
     {
         var draft = await db.Set<ContentVersion>()
-            .Where(v => v.EntityId == entityId && v.EntityType == entityType && !v.IsDeleted)
+            .Where(v => v.EntityId == entityId && v.EntityType == entityType && v.DeletedAt == null)
             .Where(v => v.Status == ContentVersionStatus.Draft)
             .OrderByDescending(v => v.VersionNumber)
             .FirstOrDefaultAsync(ct).ConfigureAwait(false);
@@ -107,7 +107,7 @@ public class ContentDraftService(
                 v.EntityId == entityId &&
                 v.EntityType == entityType &&
                 v.VersionNumber == targetVersionNumber &&
-                !v.IsDeleted, ct).ConfigureAwait(false);
+                v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (targetVersion == null)
         {
@@ -143,7 +143,7 @@ public class ContentDraftService(
         CancellationToken ct = default)
     {
         var versionsToArchive = await db.Set<ContentVersion>()
-            .Where(v => v.EntityId == entityId && v.EntityType == entityType && !v.IsDeleted)
+            .Where(v => v.EntityId == entityId && v.EntityType == entityType && v.DeletedAt == null)
             .Where(v => v.Status == ContentVersionStatus.Published || v.Status == ContentVersionStatus.Archived)
             .Where(v => !v.IsCurrentVersion)
             .OrderByDescending(v => v.VersionNumber)

@@ -114,7 +114,7 @@ public class WalletOperationsServiceTests : IDisposable
 
         var act = () => _service.DeductFundsAsync(userId, 5m, "missing wallet", currency: "EUR");
 
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*EUR*");
+        await act.Should().ThrowAsync<EntityNotFoundException>().WithMessage("*EUR*");
     }
 
     [Fact]

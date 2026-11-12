@@ -822,6 +822,15 @@ public sealed class AuthController(ISender sender) : BaseApiController
         try
         {
             SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
+            // Issue #1128: surface the "guest session expired mid-use" signal on the wire as
+            // a response header — the body contract is unchanged, clients that presented a
+            // guest credential learn their guest-held data was not carried into the new
+            // session instead of silently losing it.
+            if (result.GuestSessionExpired)
+            {
+                Response.Headers["X-Guest-Session-Expired"] = "true";
+            }
+
             return Ok(result);
         }
         catch (OAuthProviderUnavailableException ex)
@@ -829,6 +838,10 @@ public sealed class AuthController(ISender sender) : BaseApiController
             // Issue #1116: provider outage on the token-style OAuth endpoints — same 503 +
             // magic-link fallback advertisement as the authorization-code callbacks.
             return OAuthProviderUnavailable(ex);
+        }
+        catch (TenantMaintenanceException ex)
+        {
+            return TenantMaintenanceUnavailable(ex);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -839,6 +852,34 @@ public sealed class AuthController(ISender sender) : BaseApiController
                 Detail = ex.Message
             });
         }
+    }
+
+    /// <summary>
+    ///     Issue #1134: a tenant under maintenance answers non-admin sign-ins with a 503 that
+    ///     carries a machine-readable reason and a Retry-After hint (from the maintenance
+    ///     window when one is scheduled), so clients back off instead of hammering the
+    ///     endpoint. Deliberately not declared as a ProducesResponseType: the status is only
+    ///     reachable while an operator holds the maintenance flag, and adding it would change
+    ///     the generated OpenAPI client surface for a transient state.
+    /// </summary>
+    private ObjectResult TenantMaintenanceUnavailable(TenantMaintenanceException ex)
+    {
+        var problem = new ProblemDetails
+        {
+            Status = StatusCodes.Status503ServiceUnavailable,
+            Title = "Tenant under maintenance",
+            Detail = ex.Message
+        };
+        problem.Extensions["errorCode"] = "tenant_in_maintenance";
+        problem.Extensions["tenantId"] = ex.TenantId;
+
+        if (ex.RetryAfterSeconds is { } retryAfterSeconds)
+        {
+            problem.Extensions["retryAfterSeconds"] = retryAfterSeconds;
+            Response.Headers.RetryAfter = retryAfterSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        return new ObjectResult(problem) { StatusCode = StatusCodes.Status503ServiceUnavailable };
     }
 
     #endregion

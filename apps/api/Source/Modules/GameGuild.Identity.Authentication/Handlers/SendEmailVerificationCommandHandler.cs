@@ -35,6 +35,31 @@ public sealed class SendEmailVerificationCommandHandler(
 
         logger.LogInformation("Sending email verification for user {UserId}", LogRedaction.RedactId(user.Id, "uid"));
 
+        // Issue #1197: every verification-email dispatch must respect the shared per-(user, address)
+        // cooldown. Calling Generate/Send directly (as before) bypassed the two-minute window that
+        // ResendVerificationEmailAsync enforces, allowing unbounded verification-mail triggering.
+        // The cooldown-blocked response stays identical to the generic one so the gate is not an
+        // account-existence oracle either. A cooldown-store outage fails open here: the cooldown
+        // is a throttle, not a delivery dependency, and sign-up must not strand without its email.
+        bool cooldownAllows;
+        try
+        {
+            cooldownAllows = await emailVerificationService.CanResendVerificationEmailAsync(user.Id, user.Email).ConfigureAwait(false);
+        }
+        catch (Exception cooldownException)
+        {
+            logger.LogError("Could not read the verification-email cooldown for user {UserId}: {ErrorType}",
+                LogRedaction.RedactId(user.Id, "uid"), cooldownException.GetType().FullName);
+            cooldownAllows = true;
+        }
+
+        if (!cooldownAllows)
+        {
+            logger.LogInformation("Verification email for user {UserId} suppressed by the resend cooldown",
+                LogRedaction.RedactId(user.Id, "uid"));
+            return GenericResponse();
+        }
+
         // Recipient and token stay bound to the resolved account; an unknown account never
         // reaches token generation or delivery, so it cannot trigger observable side effects.
         var delivered = false;
@@ -55,7 +80,12 @@ public sealed class SendEmailVerificationCommandHandler(
             }
         }
 
-        if (!delivered)
+        if (delivered)
+        {
+            // Stamp the shared cooldown window only after a successful delivery.
+            await emailVerificationService.MarkVerificationEmailSentAsync(user.Id, user.Email).ConfigureAwait(false);
+        }
+        else
         {
             // The response boundary must not reveal that the account exists (unknown accounts cannot
             // fail delivery, so a propagated failure would be an existence oracle). The loss is still

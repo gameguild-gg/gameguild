@@ -313,7 +313,9 @@ public sealed class CredentialTimingCompensationRegressionTests
             });
         var sut = CreateSut();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        // Issue #1197: the duplicate-email conflict is now the typed UserAlreadyExistsException
+        // (mapped to 409 by the middleware) instead of a plain InvalidOperationException.
+        await Assert.ThrowsAsync<UserAlreadyExistsException>(() =>
             sut.LocalSignUpAsync(new LocalSignUpRequest { Email = "duplicate@example.test", Password = "Password1!", Username = "duplicate" }));
 
         _order.Should().Equal("origin", "exists-check", "compensate");

@@ -60,6 +60,46 @@ public class ApiKeyRepository(IApplicationDbContext context) : IApiKeyRepository
         return apiKey;
     }
 
+    /// <summary>
+    ///     Issue #1192: revokes every key minted (directly or transitively) by
+    ///     <paramref name="creatorKeyId"/>. Breadth-first over the creator linkage so a leaked
+    ///     <c>api_keys:manage</c> key cannot self-perpetuate: revoking the compromised key also
+    ///     kills every replacement it minted, recursively. Returns the revoked key ids (the
+    ///     creator itself is not included).
+    /// </summary>
+    public async Task<List<ApiKey>> RevokeCreatedByCascadeAsync(Guid creatorKeyId, string reason, CancellationToken cancellationToken = default)
+    {
+        var revoked = new List<ApiKey>();
+        var frontier = new List<Guid> { creatorKeyId };
+        var visited = new HashSet<Guid> { creatorKeyId };
+        while (frontier.Count > 0)
+        {
+            var currentFrontier = frontier;
+            frontier = [];
+            var children = await ApiKeys
+                .Where(key => key.CreatedByApiKeyId != null && currentFrontier.Contains(key.CreatedByApiKeyId.Value) && key.IsActive)
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
+            foreach (var child in children)
+            {
+                if (!visited.Add(child.Id))
+                {
+                    continue;
+                }
+
+                child.Revoke(reason);
+                revoked.Add(child);
+                frontier.Add(child.Id);
+            }
+        }
+
+        if (revoked.Count > 0)
+        {
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return revoked;
+    }
+
     public async Task RecordUsageAsync(ApiKey apiKey, CancellationToken cancellationToken = default)
     {
         apiKey.RecordUsage();

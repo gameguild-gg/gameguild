@@ -29,7 +29,7 @@ public class RatingQueryService(
         _logger.LogDebug("Querying ratings: EntityId={EntityId}, EntityType={EntityType}, SortOrder={SortOrder}", entityId, LogRedaction.Sanitize(entityType), sortOrder);
 
         var query = db.Set<Rating>()
-            .Where(r => r.EntityId == entityId && r.EntityType == entityType && !r.IsDeleted)
+            .Where(r => r.EntityId == entityId && r.EntityType == entityType && r.DeletedAt == null)
             .Where(r => r.ModerationStatus == RatingModerationStatus.Approved);
 
         if (minValue.HasValue)
@@ -60,7 +60,7 @@ public class RatingQueryService(
     public async Task<Result<RatingSummary>> GetSummaryAsync(Guid entityId, string entityType, CancellationToken ct = default)
     {
         var summary = await db.Set<RatingSummary>()
-            .FirstOrDefaultAsync(s => s.EntityId == entityId && s.EntityType == entityType && !s.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(s => s.EntityId == entityId && s.EntityType == entityType && s.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (summary == null)
         {
@@ -70,7 +70,7 @@ public class RatingQueryService(
 
             // Calculate from existing ratings
             var ratings = await db.Set<Rating>()
-                .Where(r => r.EntityId == entityId && r.EntityType == entityType && !r.IsDeleted)
+                .Where(r => r.EntityId == entityId && r.EntityType == entityType && r.DeletedAt == null)
                 .ToListAsync(ct).ConfigureAwait(false);
 
             summary.Recalculate(ratings);
@@ -89,7 +89,7 @@ public class RatingQueryService(
                 r.EntityId == entityId &&
                 r.EntityType == entityType &&
                 r.UserId == userId &&
-                !r.IsDeleted, ct).ConfigureAwait(false);
+                r.DeletedAt == null, ct).ConfigureAwait(false);
 
         return Result.Success(hasRated);
     }
@@ -102,7 +102,7 @@ public class RatingQueryService(
         CancellationToken ct = default)
     {
         var query = db.Set<Rating>()
-            .Where(r => r.UserId == userId && !r.IsDeleted)
+            .Where(r => r.UserId == userId && r.DeletedAt == null)
             .Where(r => r.ModerationStatus == RatingModerationStatus.Approved);
 
         if (!string.IsNullOrEmpty(entityType))
@@ -123,7 +123,7 @@ public class RatingQueryService(
             .CountAsync(r =>
                 r.EntityId == entityId &&
                 r.EntityType == entityType &&
-                !r.IsDeleted &&
+                r.DeletedAt == null &&
                 r.ModerationStatus == RatingModerationStatus.Approved, ct).ConfigureAwait(false);
 
         return Result.Success(count);
@@ -137,7 +137,7 @@ public class RatingQueryService(
         var ids = entityIds.ToList();
 
         var summaries = await db.Set<RatingSummary>()
-            .Where(s => ids.Contains(s.EntityId) && s.EntityType == entityType && !s.IsDeleted)
+            .Where(s => ids.Contains(s.EntityId) && s.EntityType == entityType && s.DeletedAt == null)
             .ToListAsync(ct).ConfigureAwait(false);
 
         var result = summaries.ToDictionary(s => s.EntityId, s => s);
@@ -164,7 +164,7 @@ public class RatingQueryService(
                 ids.Contains(r.EntityId) &&
                 r.EntityType == entityType &&
                 r.UserId == userId &&
-                !r.IsDeleted)
+                r.DeletedAt == null)
             .ToListAsync(ct).ConfigureAwait(false);
 
         var result = ratings.ToDictionary(r => r.EntityId, r => r);
@@ -174,7 +174,7 @@ public class RatingQueryService(
     public async Task<Result> RecalculateSummaryAsync(Guid entityId, string entityType, CancellationToken ct = default)
     {
         var summary = await db.Set<RatingSummary>()
-            .FirstOrDefaultAsync(s => s.EntityId == entityId && s.EntityType == entityType && !s.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(s => s.EntityId == entityId && s.EntityType == entityType && s.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (summary == null)
         {
@@ -183,7 +183,7 @@ public class RatingQueryService(
         }
 
         var ratings = await db.Set<Rating>()
-            .Where(r => r.EntityId == entityId && r.EntityType == entityType && !r.IsDeleted)
+            .Where(r => r.EntityId == entityId && r.EntityType == entityType && r.DeletedAt == null)
             .ToListAsync(ct).ConfigureAwait(false);
 
         summary.Recalculate(ratings);
@@ -199,7 +199,7 @@ public class RatingQueryService(
         CancellationToken ct = default)
     {
         var summaries = await db.Set<RatingSummary>()
-            .Where(s => s.EntityType == entityType && !s.IsDeleted)
+            .Where(s => s.EntityType == entityType && s.DeletedAt == null)
             .Where(s => s.TotalRatings >= minRatings)
             .OrderByDescending(s => s.AverageRating)
             .ThenByDescending(s => s.TotalRatings)
@@ -215,7 +215,7 @@ public class RatingQueryService(
         CancellationToken ct = default)
     {
         var query = db.Set<Rating>()
-            .Where(r => !r.IsDeleted)
+            .Where(r => r.DeletedAt == null)
             .Where(r => r.ModerationStatus == RatingModerationStatus.Approved)
             .Where(r => r.ReviewText != null && r.ReviewText != "");
 

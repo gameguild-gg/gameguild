@@ -13,7 +13,7 @@ public sealed class RevokeResourcePermissionByIdHandler(IApplicationDbContext co
     {
         var grant = await context.Set<GenericResourcePermission>()
             .FirstOrDefaultAsync(g => g.Id == request.GrantId && g.DeletedAt == null, cancellationToken)
-            ?? throw new InvalidOperationException($"Resource permission grant {request.GrantId} not found");
+            ?? throw new EntityNotFoundException("ResourcePermissionGrant", request.GrantId);
 
         // Soft delete preserves the permission history for compliance (#360); the
         // grant conveys nothing while deleted (deactivated + DeletedAt) and remains

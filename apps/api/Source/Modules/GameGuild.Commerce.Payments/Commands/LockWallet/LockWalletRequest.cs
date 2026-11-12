@@ -1,6 +1,6 @@
 namespace GameGuild.Commerce.Payments;
 
-public abstract record LockWalletRequest
+public sealed record LockWalletRequest
 {
     public required string Reason { get; init; }
 }

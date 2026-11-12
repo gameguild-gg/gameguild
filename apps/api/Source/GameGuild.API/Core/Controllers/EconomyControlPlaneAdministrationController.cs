@@ -64,8 +64,29 @@ public sealed class EconomyControlPlaneAdministrationController(
     IEconomyOperationsReader operations,
     IEconomyReserveCustodyControlPlane reserves,
     IActorContextAccessor actorContextAccessor,
-    TimeProvider timeProvider) : BaseApiController
+    TimeProvider timeProvider,
+    GameGuild.Identity.Authentication.IStepUpRequiredResponder stepUpRequiredResponder) : BaseApiController
 {
+    /// <summary>
+    ///     Wraps a step-up-gated control-plane action so a missing/invalid receipt answers with
+    ///     the structured 423 trigger (issue #1191) instead of an unhandled 500.
+    /// </summary>
+    private async Task<IActionResult> WithStepUpGuardAsync<TResult>(
+        Task<TResult> operation,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return Ok(await operation.ConfigureAwait(false));
+        }
+        catch (GameGuild.Identity.Authentication.StepUpRequiredException exception)
+        {
+            return await stepUpRequiredResponder
+                .StepUpRequiredAsync(actorContextAccessor, exception, cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+
     [HttpPost("policies")]
     [ProducesResponseType(typeof(EconomyCapabilityPolicy), StatusCodes.Status201Created)]
     public async Task<IActionResult> ProposePolicy(
@@ -111,12 +132,12 @@ public sealed class EconomyControlPlaneAdministrationController(
             "economy.policy.approve",
             $"policy:{policyId:N}",
             policyId.ToString("N"));
-        return Ok(await sender.Send(new ApproveEconomyPolicyEndpointCommand(
+        return await WithStepUpGuardAsync(sender.Send(new ApproveEconomyPolicyEndpointCommand(
             operation,
             request.StepUpReceipt,
             policyId,
             actorId),
-            cancellationToken).ConfigureAwait(false));
+            cancellationToken), cancellationToken).ConfigureAwait(false);
     }
 
     [HttpPost("capabilities/readiness")]
@@ -208,12 +229,12 @@ public sealed class EconomyControlPlaneAdministrationController(
             "economy.kill-switch.release.propose",
             $"kill-switch:{killSwitchId:N}",
             killSwitchId.ToString("N"));
-        return Ok(await sender.Send(new ProposeEconomyKillSwitchReleaseEndpointCommand(
+        return await WithStepUpGuardAsync(sender.Send(new ProposeEconomyKillSwitchReleaseEndpointCommand(
             operation,
             request.StepUpReceipt,
             killSwitchId,
             actorId),
-            cancellationToken).ConfigureAwait(false));
+            cancellationToken), cancellationToken).ConfigureAwait(false);
     }
 
     [HttpPost("kill-switches/{killSwitchId:guid}/release-approvals")]
@@ -232,12 +253,12 @@ public sealed class EconomyControlPlaneAdministrationController(
             "economy.kill-switch.release.approve",
             $"kill-switch:{killSwitchId:N}",
             killSwitchId.ToString("N"));
-        return Ok(await sender.Send(new ApproveEconomyKillSwitchReleaseEndpointCommand(
+        return await WithStepUpGuardAsync(sender.Send(new ApproveEconomyKillSwitchReleaseEndpointCommand(
             operation,
             request.StepUpReceipt,
             killSwitchId,
             actorId),
-            cancellationToken).ConfigureAwait(false));
+            cancellationToken), cancellationToken).ConfigureAwait(false);
     }
 
     [HttpPost("kill-switches/{killSwitchId:guid}/release")]
@@ -348,12 +369,12 @@ public sealed class EconomyControlPlaneAdministrationController(
             "economy.projection.approve",
             $"projection:{generation}",
             generation.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        return Ok(await sender.Send(new ApproveEconomyProjectionEndpointCommand(
+        return await WithStepUpGuardAsync(sender.Send(new ApproveEconomyProjectionEndpointCommand(
             operation,
             request.StepUpReceipt,
             generation,
             actorId),
-            cancellationToken).ConfigureAwait(false));
+            cancellationToken), cancellationToken).ConfigureAwait(false);
     }
 
     [HttpPost("custody/observations")]
@@ -428,12 +449,12 @@ public sealed class EconomyControlPlaneAdministrationController(
             "economy.reserve.approve",
             $"reserve:{proposalId:N}",
             proposalId.ToString("N"));
-        return Ok(await sender.Send(new ApproveEconomyReserveEndpointCommand(
+        return await WithStepUpGuardAsync(sender.Send(new ApproveEconomyReserveEndpointCommand(
             operation,
             request.StepUpReceipt,
             proposalId,
             actorId),
-            cancellationToken).ConfigureAwait(false));
+            cancellationToken), cancellationToken).ConfigureAwait(false);
     }
 
     private bool TryActor(string permission, out Guid tenantId, out Guid actorId)

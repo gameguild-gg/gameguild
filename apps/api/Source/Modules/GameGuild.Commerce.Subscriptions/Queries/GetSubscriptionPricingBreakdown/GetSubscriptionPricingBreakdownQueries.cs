@@ -39,7 +39,7 @@ public sealed class GetSubscriptionPricingBreakdownQueryHandler(
 
         var subscription = await subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException($"Subscription {request.SubscriptionId} not found.");
+            ?? throw new EntityNotFoundException("Subscription", request.SubscriptionId);
 
         return await pricingEngine.CalculateAsync(
             new PricingCalculationRequest(
@@ -95,7 +95,7 @@ public sealed class PreviewSubscriptionPlanChangeQueryHandler(
 
         var subscription = await subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken)
             .ConfigureAwait(false)
-            ?? throw new InvalidOperationException($"Subscription {request.SubscriptionId} not found.");
+            ?? throw new EntityNotFoundException("Subscription", request.SubscriptionId);
 
         return await pricingEngine.PreviewAsync(
             new PricingPreviewRequest(

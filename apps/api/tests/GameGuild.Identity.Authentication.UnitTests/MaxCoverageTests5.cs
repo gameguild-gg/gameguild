@@ -142,12 +142,12 @@ public sealed class EncryptionServiceErrorTests
 // ════════════════════════════════════════════════════════════════════════════
 public sealed class Web3ServiceVerificationTests
 {
-    private readonly MemoryCache _cache;
+    private readonly MemoryDistributedCache _cache;
     private readonly Web3Service _sut;
 
     public Web3ServiceVerificationTests()
     {
-        _cache = new MemoryCache(new MemoryCacheOptions());
+        _cache = new MemoryDistributedCache(Microsoft.Extensions.Options.Options.Create(new MemoryDistributedCacheOptions()));
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {

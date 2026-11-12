@@ -12,11 +12,11 @@ public sealed class ResolveSloViolationCommandHandler(ISloViolationRepository vi
     {
         var violation = await violationRepository.GetByIdAsync(request.ViolationId, cancellationToken).ConfigureAwait(false);
 
-        if (violation == null) { throw new InvalidOperationException($"Violation with ID '{request.ViolationId}' not found."); }
+        if (violation == null) { throw new EntityNotFoundException("SloViolation", request.ViolationId); }
 
-        if (violation.TenantId != request.TenantId) { throw new UnauthorizedAccessException("You do not have permission to resolve this violation."); }
+        if (violation.TenantId != request.TenantId) { throw new AccessDeniedException("You do not have permission to resolve this violation."); }
 
-        if (violation.EndedAt.HasValue) { throw new InvalidOperationException("Violation is already resolved."); }
+        if (violation.EndedAt.HasValue) { throw new BusinessRuleViolationException("SloViolation.AlreadyResolved", "Violation is already resolved."); }
 
         // Mark as resolved
         violation.Resolve();

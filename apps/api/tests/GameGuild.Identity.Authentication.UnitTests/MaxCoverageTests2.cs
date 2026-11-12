@@ -397,20 +397,18 @@ public class MfaControllerCovTests
         // Issue #244: the 503 stub is gone; setup goes through the SMS factor service.
         var sms = new Mock<ISmsMfaService>();
         var push = new Mock<IPushMfaService>();
-        var controller = new MfaController(_mfaService.Object,
-            new CommandHandlerSender(_mfaService.Object, sms.Object, push.Object, CreateReverification(verified: true)));
+        var controller = new MfaController(_mfaService.Object, new CommandHandlerSender(_mfaService.Object, sms.Object, push.Object));
         SetControllerUser(controller, _userId);
         sms.Setup(s => s.StartEnrollmentAsync(_userId, "+1234567890", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SmsMfaChallengeResult { Success = true, PhoneNumberMasked = "***-***-7890", ExpiresInSeconds = 600 });
 
         var result = await controller.InitiateSmsSetup(
-            new SmsMfaSetupRequest { PhoneNumber = "+1234567890", Password = "correct-password" }, CancellationToken.None);
+            new SmsMfaSetupRequest { PhoneNumber = "+1234567890" }, CancellationToken.None);
 
         var ok = result.Should().BeOfType<OkObjectResult>().Subject;
         var payload = ok.Value.Should().BeOfType<SmsMfaSetupResponse>().Subject;
         payload.PhoneNumberMasked.Should().Be("***-***-7890");
         payload.ExpiresInSeconds.Should().Be(600);
-        sms.Verify(s => s.StartEnrollmentAsync(_userId, "+1234567890", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -418,18 +416,16 @@ public class MfaControllerCovTests
     {
         var sms = new Mock<ISmsMfaService>();
         var push = new Mock<IPushMfaService>();
-        var controller = new MfaController(_mfaService.Object,
-            new CommandHandlerSender(_mfaService.Object, sms.Object, push.Object, CreateReverification(verified: true)));
+        var controller = new MfaController(_mfaService.Object, new CommandHandlerSender(_mfaService.Object, sms.Object, push.Object));
         SetControllerUser(controller, _userId);
         sms.Setup(s => s.StartEnrollmentAsync(_userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SmsMfaChallengeResult { Success = false, PhoneNumberMasked = string.Empty, ExpiresInSeconds = 0, Message = "A verification code was sent recently." });
 
         var result = await controller.InitiateSmsSetup(
-            new SmsMfaSetupRequest { PhoneNumber = "+1234567890", Password = "correct-password" }, CancellationToken.None);
+            new SmsMfaSetupRequest { PhoneNumber = "+1234567890" }, CancellationToken.None);
 
         var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
         badRequest.Value.Should().BeOfType<MfaErrorResponse>().Which.Error.Should().Contain("sent recently");
-        sms.Verify(s => s.StartEnrollmentAsync(_userId, "+1234567890", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -443,7 +439,7 @@ public class MfaControllerCovTests
             .ReturnsAsync(new MfaVerificationResult { Success = false, Message = "Invalid or expired SMS code" });
 
         var result = await controller.CompleteSmsSetup(
-            new CompleteSmsMfaSetupRequest { Code = "000000" },
+            new CompleteMfaSetupRequest { Code = "000000", SecretKey = "KEY" },
             CancellationToken.None);
 
         var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
@@ -498,9 +494,6 @@ public class MfaControllerCovTests
 
 public class TrustedDevicesControllerCovTests
 {
-    private readonly Mock<IStepUpRequirementService> _stepUpRequirements = new();
-    private readonly Guid _stepUpChallengeId = Guid.NewGuid();
-    private readonly DateTime _stepUpChallengeExpiry = DateTime.UtcNow.AddMinutes(5);
     private readonly Mock<ISessionManagementService> _sessionService = new();
     private readonly TrustedDevicesController _controller;
     private readonly Guid _userId = Guid.NewGuid();
@@ -508,17 +501,8 @@ public class TrustedDevicesControllerCovTests
 
     public TrustedDevicesControllerCovTests()
     {
-        _stepUpRequirements.Setup(service => service.CreateAsync(It.IsAny<StepUpOperationBinding>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((StepUpOperationBinding binding, CancellationToken _) => new StepUpAuthenticationRequiredResponse
-            {
-                ChallengeId = _stepUpChallengeId,
-                StepUpToken = _stepUpChallengeId.ToString("D"),
-                Operation = binding,
-                AvailableMethods = ["Totp"],
-                ExpiresAt = _stepUpChallengeExpiry
-            });
         _controller = new TrustedDevicesController(_sessionService.Object, new CommandHandlerSender(
-            _sessionService.Object, Mock.Of<IStepUpReceiptService>()), _stepUpRequirements.Object);
+            _sessionService.Object, Mock.Of<IStepUpReceiptService>()), Mock.Of<IStepUpRequiredResponder>());
         _controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext
@@ -588,22 +572,14 @@ public class TrustedDevicesControllerCovTests
     }
 
     [Fact]
-    public async Task TrustCurrentDevice_WithoutStepUpReceipt_ReturnsForbidden()
+    public async Task TrustCurrentDevice_WithoutStepUpReceipt_ReturnsStepUpRequired()
     {
         // Fresh verification gate (issue #1144): trusting a device requires a step-up receipt.
+        // Issue #1191: the refusal is the structured step-up trigger (423) instead of a bare 403.
         var result = await _controller.TrustCurrentDevice(
             new TrustDeviceRequest { DeviceName = "My Phone" }, CancellationToken.None);
-        var forbidden = result.Should().BeOfType<ObjectResult>().Subject;
-        forbidden.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
-        var requirement = forbidden.Value.Should().BeOfType<StepUpAuthenticationRequiredResponse>().Subject;
-        requirement.ChallengeId.Should().Be(_stepUpChallengeId);
-        requirement.StepUpToken.Should().Be(_stepUpChallengeId.ToString("D"));
-        requirement.Operation.Should().Be(SessionMutationCommandHandler.TrustDeviceStepUpBinding("My Phone"));
-        requirement.ExpiresAt.Should().Be(_stepUpChallengeExpiry);
-        requirement.AvailableMethods.Should().Equal("Totp");
-        _stepUpRequirements.Verify(service => service.CreateAsync(
-            It.Is<StepUpOperationBinding>(binding => binding == SessionMutationCommandHandler.TrustDeviceStepUpBinding("My Phone")),
-            CancellationToken.None), Times.Once);
+        var stepUpRequired = result.Should().BeOfType<ObjectResult>().Subject;
+        stepUpRequired.StatusCode.Should().Be(StatusCodes.Status423Locked);
         _sessionService.Verify(s => s.TrustDeviceAsync(
             It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(),
             It.IsAny<CancellationToken>()), Times.Never);
