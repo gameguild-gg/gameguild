@@ -53,6 +53,14 @@ public sealed record AssessmentCapabilityStateResult(
     string? Code = null,
     string? Message = null);
 
+public sealed record AssessmentAIReviewProviderStateResult(
+    string ProviderKey,
+    IReadOnlyList<string> PolicyVersions,
+    IReadOnlyList<ReviewExecutionContext> Contexts,
+    bool Available,
+    string? Code = null,
+    string? Message = null);
+
 public sealed record AssessmentAuthoringStateResult(
     Guid AssessmentId,
     int AssessmentVersion,
@@ -63,7 +71,8 @@ public sealed record AssessmentAuthoringStateResult(
     bool CandidateMatchesDraft,
     bool PublishedMatchesDraft,
     AssessmentCapabilityStateResult Prepare,
-    AssessmentCapabilityStateResult Publish);
+    AssessmentCapabilityStateResult Publish,
+    IReadOnlyList<AssessmentAIReviewProviderStateResult> AIReviewProviders);
 
 public sealed record PrepareAssessmentRevisionRequest(int ExpectedAssessmentVersion);
 
@@ -187,7 +196,14 @@ public sealed class AssessmentAuthoringService(
                 candidateMatchesDraft,
                 publishedMatchesDraft,
                 prepareCapability,
-                publishCapability));
+                publishCapability,
+                aiReviewProviders.Capabilities.Select(capability => new AssessmentAIReviewProviderStateResult(
+                    capability.ProviderKey,
+                    capability.PolicyVersions.OrderBy(value => value, StringComparer.Ordinal).ToArray(),
+                    capability.Contexts.OrderBy(value => value).ToArray(),
+                    capability.Readiness.Available,
+                    capability.Readiness.Code,
+                    capability.Readiness.Message)).ToArray()));
         }
         catch (Exception exception) when (exception is ArgumentException or JsonException or FormatException or InvalidOperationException)
         {

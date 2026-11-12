@@ -133,4 +133,3 @@ activates (`NEXT_PUBLIC_GTM_CONTAINER_ID` is unset in every environment).
   offending tags/triggers.
 - **Ownership:** container changes require approval from the infra lead. GTM
   stays disabled until the #1221 ownership handoff activates it.
-

@@ -1,7 +1,7 @@
 namespace GameGuild.AI;
 
 /// <summary>
-///     Platform-level configuration for AI providers and defaults.
+///     Platform-level configuration for AI backends and defaults.
 /// </summary>
 public sealed class AiOptions
 {
@@ -9,18 +9,20 @@ public sealed class AiOptions
 
     public bool Enabled { get; set; }
 
-    public string? DefaultProvider { get; set; }
+    public string? DefaultBackend { get; set; }
 
     public bool AllowTenantOverrides { get; set; } = true;
 
-    public Dictionary<string, AiProviderOptions> Providers { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, AiBackendOptions> Backends { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>
-///     Platform-level configuration for a specific AI provider.
+///     Platform-level configuration for a named AI backend.
 /// </summary>
-public sealed class AiProviderOptions
+public sealed class AiBackendOptions
 {
+    public string? Adapter { get; set; }
+
     public string? ApiKey { get; set; }
 
     public string? BaseUrl { get; set; }

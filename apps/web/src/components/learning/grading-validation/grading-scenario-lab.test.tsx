@@ -36,6 +36,7 @@ const model: GradingScenarioLabModel = {
               capability: "code-answer/v1",
               validationCaseId: "CODE-REVIEW-001",
               maxCheckpoint: "released",
+              reviewProvider: null,
             },
           ],
         },

@@ -3,36 +3,40 @@
  * Configure essay question settings
  */
 
-"use client"
+'use client';
 
-import { useCallback } from "react"
-import { useFormContext } from "react-hook-form"
-import type { SerializedEditorState } from "lexical"
-import { Label } from "@game-guild/ui/components/label"
-import { Input } from "@game-guild/ui/components/input"
-import { Switch } from "@game-guild/ui/components/switch"
-import type { EssayEntry } from "@game-guild/quiz"
-import { EssayLexicalEditor } from "./lexical-adapter"
+import { useCallback, useMemo } from 'react';
+import { useFormContext } from 'react-hook-form';
+import type { SerializedEditorState } from 'lexical';
+import { Label } from '@game-guild/ui/components/label';
+import { Input } from '@game-guild/ui/components/input';
+import { Switch } from '@game-guild/ui/components/switch';
+import type { EssayEntry } from '@game-guild/quiz';
+import { EssayLexicalEditor } from './lexical-adapter';
+import { serializedPlainTextState } from './serialized-plain-text-state';
 
 function optionalNumberInput(value: unknown): number | undefined {
-  return value === "" || value === null || value === undefined
-    ? undefined
-    : Number(value)
+  return value === '' || value === null || value === undefined ? undefined : Number(value);
 }
 
 export function EssayEditor() {
-  const { register, watch, setValue } = useFormContext<EssayEntry>()
-  const showWordCount = watch("showWordCount")
-  const correctAnswer = watch("correctAnswer")
-  const requireFormatting = watch("requireFormatting")
+  const { register, watch, setValue } = useFormContext<EssayEntry>();
+  const showWordCount = watch('showWordCount');
+  const correctAnswer = watch('correctAnswer');
+  const correctAnswerPlain = watch('correctAnswerPlain');
+  const requireFormatting = watch('requireFormatting');
+  const modelAnswerState = useMemo(
+    () => (correctAnswer as SerializedEditorState | null | undefined) ?? serializedPlainTextState(correctAnswerPlain),
+    [correctAnswer, correctAnswerPlain],
+  );
 
   const handleCorrectAnswerChange = useCallback(
     (state: SerializedEditorState, plainText: string) => {
-      setValue("correctAnswer", state as unknown as Record<string, unknown>)
-      setValue("correctAnswerPlain", plainText)
+      setValue('correctAnswer', state as unknown as Record<string, unknown>);
+      setValue('correctAnswerPlain', plainText);
     },
     [setValue],
-  )
+  );
 
   return (
     <div className="space-y-4">
@@ -41,14 +45,12 @@ export function EssayEditor() {
       </div>
 
       <div className="space-y-2">
-        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Correct / Model Answer
-        </Label>
+        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Correct / Model Answer</Label>
         <div className="text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-950/30 p-2 rounded border border-blue-200 dark:border-blue-800">
           Provide the expected answer. This will be used as a reference for grading.
         </div>
         <EssayLexicalEditor
-          initialState={correctAnswer as SerializedEditorState | null | undefined}
+          initialState={modelAnswerState}
           onChange={handleCorrectAnswerChange}
           placeholder="Write the correct/model answer..."
           minHeight="120px"
@@ -63,7 +65,7 @@ export function EssayEditor() {
             min={0}
             step={1}
             placeholder="Optional"
-            {...register("minWordCount", { setValueAs: optionalNumberInput })}
+            {...register('minWordCount', { setValueAs: optionalNumberInput })}
             autoComplete="off"
             className="bg-white dark:bg-gray-800"
           />
@@ -75,7 +77,7 @@ export function EssayEditor() {
             min={0}
             step={1}
             placeholder="Optional"
-            {...register("maxWordCount", { setValueAs: optionalNumberInput })}
+            {...register('maxWordCount', { setValueAs: optionalNumberInput })}
             autoComplete="off"
             className="bg-white dark:bg-gray-800"
           />
@@ -87,19 +89,13 @@ export function EssayEditor() {
           <Label className="text-sm">Require Formatting</Label>
           <p className="text-xs text-gray-500 dark:text-gray-400">Answer must match bold, italic, headings, lists, etc.</p>
         </div>
-        <Switch
-          checked={requireFormatting}
-          onCheckedChange={(checked) => setValue("requireFormatting", checked)}
-        />
+        <Switch checked={requireFormatting} onCheckedChange={(checked) => setValue('requireFormatting', checked)} />
       </div>
 
       <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border">
         <Label className="text-sm">Show Word Count</Label>
-        <Switch
-          checked={showWordCount}
-          onCheckedChange={(checked) => setValue("showWordCount", checked)}
-        />
+        <Switch checked={showWordCount} onCheckedChange={(checked) => setValue('showWordCount', checked)} />
       </div>
     </div>
-  )
+  );
 }

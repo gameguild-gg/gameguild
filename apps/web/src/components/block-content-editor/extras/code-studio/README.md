@@ -58,11 +58,11 @@ Utility functions for:
 - Path normalization and validation
 - File tree manipulation
 
-#### Monaco File System (`monaco-file-system.ts`)
-- Integrates with Monaco Editor's virtual file system
-- Syncs file changes between UI and editor
-- Manages file models and their lifecycle
-- Handles TypeScript type definitions
+#### Monaco Workspace Registry (`monaco-file-system.ts`)
+- Uses Monaco's public model and URI APIs without a VS Code filesystem overlay
+- Isolates files and path completions by Code Studio instance
+- Manages model, completion-provider, and extra-library lifecycles
+- Keeps TypeScript and JavaScript extra libraries synchronized
 
 ### 3. Layout System
 
@@ -599,7 +599,7 @@ code-studio/
 │   ├── esbuild-shared.ts        # esbuild utilities
 │   └── types.ts                 # Runner interfaces
 ├── monaco-code-editor.tsx       # Monaco integration
-├── monaco-file-system.ts        # Virtual FS sync
+├── monaco-file-system.ts        # Monaco model workspace registry
 ├── xterm-terminal.tsx           # Terminal component
 ├── display-manager.tsx          # Layout orchestration
 ├── grid-utils.ts                # Grid calculations

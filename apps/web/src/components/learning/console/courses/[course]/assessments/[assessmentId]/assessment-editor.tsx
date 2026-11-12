@@ -52,7 +52,9 @@ import {
   buildReviewWorkflow,
   isPrimaryReviewMethodAvailable,
   readReviewWorkflow,
+  resolveAIReviewConfiguration,
   REVIEW_METHOD_LABELS,
+  type AIReviewConfiguration,
   type AssessmentReviewMethod,
 } from "@/lib/learning/assessment-grading-methods";
 import type { CourseContentItemViewModel } from "@/lib/learning/queries/course";
@@ -109,6 +111,7 @@ function buildReviewConfiguration(
   primary: AssessmentReviewMethod,
   requiresInstructorReview: boolean,
   peerReviewsRequired: number,
+  aiReviewConfiguration: AIReviewConfiguration | null,
 ): string {
   let parsed: Record<string, unknown> = {};
   try {
@@ -136,7 +139,7 @@ function buildReviewConfiguration(
         : null,
     ai:
       primary === "AIReview"
-        ? (parsed.ai ?? { providerKey: "unconfigured", policyVersion: "1" })
+        ? aiReviewConfiguration
         : null,
     self:
       primary === "SelfReview"
@@ -146,6 +149,28 @@ function buildReviewConfiguration(
       ? (parsed.instructor ?? { requireOverrideReason: false })
       : null,
   });
+}
+
+function readAIReviewConfiguration(
+  configuration: string | null,
+): AIReviewConfiguration | null {
+  if (!configuration) return null;
+  try {
+    const parsed = JSON.parse(configuration) as {
+      ai?: { providerKey?: unknown; policyVersion?: unknown } | null;
+    };
+    return typeof parsed.ai?.providerKey === "string" &&
+      parsed.ai.providerKey.trim().length > 0 &&
+      typeof parsed.ai.policyVersion === "string" &&
+      parsed.ai.policyVersion.trim().length > 0
+      ? {
+          providerKey: parsed.ai.providerKey,
+          policyVersion: parsed.ai.policyVersion,
+        }
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 export interface GroupSetOption {
@@ -260,6 +285,16 @@ export function AssessmentEditor({
     assessment.availableUntil ? assessment.availableUntil.slice(0, 16) : "",
   );
   const initialReviewWorkflow = readReviewWorkflow(assessment.reviewMethods);
+  const aiReviewProviders = authoringState?.aiReviewProviders ?? [];
+  const availableAIReviewConfiguration = resolveAIReviewConfiguration(
+    aiReviewProviders,
+  );
+  const aiReviewConfiguration =
+    readAIReviewConfiguration(assessment.reviewConfigurationCanonicalJson) ??
+    availableAIReviewConfiguration;
+  const aiReviewDiagnostic = aiReviewProviders.find(
+    (provider) => !provider.available,
+  );
   const [primaryReviewMethod, setPrimaryReviewMethod] =
     useState<AssessmentReviewMethod>(
       initialReviewWorkflow.primary ?? "InstructorReview",
@@ -317,6 +352,13 @@ export function AssessmentEditor({
       setError("Title is required.");
       return;
     }
+    if (primaryReviewMethod === "AIReview" && !aiReviewConfiguration) {
+      setError(
+        aiReviewDiagnostic?.message ??
+          "AI review is not configured for author tests and official submissions.",
+      );
+      return;
+    }
     setError(null);
     setSaved(false);
 
@@ -359,6 +401,7 @@ export function AssessmentEditor({
           primaryReviewMethod,
           requiresInstructorReview,
           requiredPeerReviews,
+          aiReviewConfiguration,
         ),
         contentCompletionMode,
         resultReleaseMode,
@@ -1226,15 +1269,31 @@ export function AssessmentEditor({
                           <SelectItem
                             key={method}
                             value={method}
-                            disabled={!isPrimaryReviewMethodAvailable(method)}
+                            disabled={
+                              !isPrimaryReviewMethodAvailable(
+                                method,
+                                aiReviewProviders,
+                              )
+                            }
                           >
                             {REVIEW_METHOD_LABELS[method]}
-                            {method === "AIReview" && " (provider required)"}
+                            {method === "AIReview" &&
+                              (availableAIReviewConfiguration
+                                ? ` (${availableAIReviewConfiguration.providerKey})`
+                                : " (provider unavailable)")}
                           </SelectItem>
                         ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
+                  {primaryReviewMethod === "AIReview" && (
+                    <p className="text-muted-foreground text-xs" role="status">
+                      {availableAIReviewConfiguration
+                        ? `Provider ${availableAIReviewConfiguration.providerKey}, policy ${availableAIReviewConfiguration.policyVersion}.`
+                        : (aiReviewDiagnostic?.message ??
+                          "No AI review provider is ready for both execution contexts.")}
+                    </p>
+                  )}
                 </div>
 
                 {primaryReviewMethod !== "InstructorReview" && (

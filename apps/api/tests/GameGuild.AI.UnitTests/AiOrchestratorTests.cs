@@ -27,7 +27,7 @@ public class AiOrchestratorTests
                   "externalServices": {
                     "ai": {
                       "enabled": true,
-                      "defaultProvider": "OpenAi",
+                      "defaultBackend": "OpenAi",
                       "history": { "enabled": true }
                     }
                   }
@@ -37,7 +37,7 @@ public class AiOrchestratorTests
         var quotaEnforcer = CreateQuotaEnforcer();
         var historyRepository = CreateHistoryRepository();
         var openAiAdapter = CreateAdapter(
-            AiProvider.OpenAi,
+            AiAdapterKeys.OpenAi,
             expectedApiKey: "platform-openai-key",
             responseModel: "gpt-4.1-mini");
         var billingRecorder = new SpyAiExecutionBillingRecorder();
@@ -50,10 +50,10 @@ public class AiOrchestratorTests
             new AiOptions
             {
                 Enabled = true,
-                DefaultProvider = "OpenAi",
-                Providers = new Dictionary<string, AiProviderOptions>
+                DefaultBackend = "OpenAi",
+                Backends = new Dictionary<string, AiBackendOptions>
                 {
-                    ["OpenAi"] = new() { ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
+                    ["OpenAi"] = new() { Adapter = AiAdapterKeys.OpenAi, ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
                 }
             },
             billingRecorder);
@@ -88,7 +88,7 @@ public class AiOrchestratorTests
                   "externalServices": {
                     "ai": {
                       "enabled": true,
-                      "defaultProvider": "OpenAi",
+                      "defaultBackend": "OpenAi",
                       "moderation": { "enabled": true, "blockedTerms": ["forbidden"] },
                       "history": { "enabled": true }
                     }
@@ -102,14 +102,14 @@ public class AiOrchestratorTests
             tenantSettingsRepository.Object,
             CreateQuotaEnforcer().Object,
             CreateHistoryRepository().Object,
-            new[] { CreateAdapter(AiProvider.OpenAi, failIfCalled: true).Object },
+            new[] { CreateAdapter(AiAdapterKeys.OpenAi, failIfCalled: true).Object },
             new AiOptions
             {
                 Enabled = true,
-                DefaultProvider = "OpenAi",
-                Providers = new Dictionary<string, AiProviderOptions>
+                DefaultBackend = "OpenAi",
+                Backends = new Dictionary<string, AiBackendOptions>
                 {
-                    ["OpenAi"] = new() { ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
+                    ["OpenAi"] = new() { Adapter = AiAdapterKeys.OpenAi, ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
                 }
             },
             billingRecorder);
@@ -123,7 +123,7 @@ public class AiOrchestratorTests
     }
 
     [Fact]
-    public async Task GenerateAsync_UsesTenantDefaultProviderAndTenantApiKey_WhenAvailable()
+    public async Task GenerateAsync_UsesTenantDefaultBackendAndTenantApiKey_WhenAvailable()
     {
         var tenantId = Guid.NewGuid();
         var requestContextAccessor = CreateRequestContextAccessor(tenantId, Guid.NewGuid());
@@ -138,22 +138,22 @@ public class AiOrchestratorTests
                   "externalServices": {
                     "ai": {
                       "enabled": true,
-                      "defaultProvider": "Anthropic"
+                      "defaultBackend": "Anthropic"
                     }
                   },
                   "apiKeys": {
-                    "ai:anthropic": "tenant-claude-key"
+                    "ai:backend:Anthropic": "tenant-claude-key"
                   }
                 }
                 """
             });
 
-        var openAiAdapter = CreateAdapter(AiProvider.OpenAi, failIfCalled: true);
+        var openAiAdapter = CreateAdapter(AiAdapterKeys.OpenAi, failIfCalled: true);
         var anthropicAdapter = CreateAdapter(
-            AiProvider.Anthropic,
+            AiAdapterKeys.Anthropic,
             expectedApiKey: "tenant-claude-key",
             responseModel: "claude-3-5-sonnet-latest");
-        var googleAdapter = CreateAdapter(AiProvider.Google, failIfCalled: true);
+        var googleAdapter = CreateAdapter(AiAdapterKeys.Google, failIfCalled: true);
         var quotaEnforcer = CreateQuotaEnforcer();
         var historyRepository = CreateHistoryRepository();
 
@@ -166,13 +166,13 @@ public class AiOrchestratorTests
             new AiOptions
             {
                 Enabled = true,
-                DefaultProvider = "OpenAi",
+                DefaultBackend = "OpenAi",
                 AllowTenantOverrides = true,
-                Providers = new Dictionary<string, AiProviderOptions>
+                Backends = new Dictionary<string, AiBackendOptions>
                 {
-                    ["OpenAi"] = new() { ApiKey = "platform-openai", DefaultModel = "gpt-4.1-mini" },
-                    ["Anthropic"] = new() { ApiKey = "platform-claude", DefaultModel = "claude-3-5-sonnet-latest" },
-                    ["Google"] = new() { ApiKey = "platform-google", DefaultModel = "gemini-2.0-flash" },
+                    ["OpenAi"] = new() { Adapter = AiAdapterKeys.OpenAi, ApiKey = "platform-openai", DefaultModel = "gpt-4.1-mini" },
+                    ["Anthropic"] = new() { Adapter = AiAdapterKeys.Anthropic, ApiKey = "platform-claude", DefaultModel = "claude-3-5-sonnet-latest" },
+                    ["Google"] = new() { Adapter = AiAdapterKeys.Google, ApiKey = "platform-google", DefaultModel = "gemini-2.0-flash" },
                 }
             });
 
@@ -199,7 +199,7 @@ public class AiOrchestratorTests
                   "externalServices": {
                     "ai": {
                       "enabled": true,
-                      "defaultProvider": "OpenAi",
+                      "defaultBackend": "OpenAi",
                       "allowRequestOverride": false
                     }
                   }
@@ -207,7 +207,7 @@ public class AiOrchestratorTests
                 """
             });
 
-        var openAiAdapter = CreateAdapter(AiProvider.OpenAi, failIfCalled: true);
+        var openAiAdapter = CreateAdapter(AiAdapterKeys.OpenAi, failIfCalled: true);
         var quotaEnforcer = CreateQuotaEnforcer();
         var historyRepository = CreateHistoryRepository();
         var orchestrator = CreateOrchestrator(
@@ -219,18 +219,18 @@ public class AiOrchestratorTests
             new AiOptions
             {
                 Enabled = true,
-                DefaultProvider = "OpenAi",
+                DefaultBackend = "OpenAi",
                 AllowTenantOverrides = true,
-                Providers = new Dictionary<string, AiProviderOptions>
+                Backends = new Dictionary<string, AiBackendOptions>
                 {
-                    ["OpenAi"] = new() { ApiKey = "platform-openai", DefaultModel = "gpt-4.1-mini" },
+                    ["OpenAi"] = new() { Adapter = AiAdapterKeys.OpenAi, ApiKey = "platform-openai", DefaultModel = "gpt-4.1-mini" },
                 }
             });
 
         var result = await orchestrator.GenerateAsync(new AiGenerateRequest("Google", null, null, "Summarize this", null, null));
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("AI.ProviderOverrideForbidden");
+        result.Error.Code.Should().Be("AI.BackendOverrideForbidden");
         openAiAdapter.Verify(adapter => adapter.CompleteAsync(It.IsAny<AiResolvedRequest>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -250,8 +250,8 @@ public class AiOrchestratorTests
                   "externalServices": {
                     "ai": {
                       "enabled": true,
-                      "defaultProvider": "OpenAi",
-                      "providers": {
+                      "defaultBackend": "OpenAi",
+                      "backends": {
                         "OpenAi": {
                           "enabled": true,
                           "defaultModel": "gpt-4.1-mini"
@@ -264,7 +264,7 @@ public class AiOrchestratorTests
             });
 
         var openAiAdapter = CreateAdapter(
-            AiProvider.OpenAi,
+            AiAdapterKeys.OpenAi,
             expectedApiKey: "platform-openai-key",
             responseModel: "gpt-4.1-mini");
         var quotaEnforcer = CreateQuotaEnforcer();
@@ -279,11 +279,11 @@ public class AiOrchestratorTests
             new AiOptions
             {
                 Enabled = true,
-                DefaultProvider = "OpenAi",
+                DefaultBackend = "OpenAi",
                 AllowTenantOverrides = true,
-                Providers = new Dictionary<string, AiProviderOptions>
+                Backends = new Dictionary<string, AiBackendOptions>
                 {
-                    ["OpenAi"] = new() { ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
+                    ["OpenAi"] = new() { Adapter = AiAdapterKeys.OpenAi, ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
                 }
             });
 
@@ -310,7 +310,7 @@ public class AiOrchestratorTests
                   "externalServices": {
                     "ai": {
                       "enabled": true,
-                      "defaultProvider": "OpenAi",
+                      "defaultBackend": "OpenAi",
                       "moderation": {
                         "enabled": true,
                         "blockedTerms": ["forbidden phrase"]
@@ -321,7 +321,7 @@ public class AiOrchestratorTests
                 """
             });
 
-        var openAiAdapter = CreateAdapter(AiProvider.OpenAi, failIfCalled: true);
+        var openAiAdapter = CreateAdapter(AiAdapterKeys.OpenAi, failIfCalled: true);
         var historyRepository = CreateHistoryRepository();
 
         var orchestrator = CreateOrchestrator(
@@ -333,10 +333,10 @@ public class AiOrchestratorTests
             new AiOptions
             {
                 Enabled = true,
-                DefaultProvider = "OpenAi",
-                Providers = new Dictionary<string, AiProviderOptions>
+                DefaultBackend = "OpenAi",
+                Backends = new Dictionary<string, AiBackendOptions>
                 {
-                    ["OpenAi"] = new() { ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
+                    ["OpenAi"] = new() { Adapter = AiAdapterKeys.OpenAi, ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
                 }
             });
 
@@ -366,7 +366,7 @@ public class AiOrchestratorTests
                   "externalServices": {
                     "ai": {
                       "enabled": true,
-                      "defaultProvider": "OpenAi",
+                      "defaultBackend": "OpenAi",
                       "history": {
                         "enabled": true
                       }
@@ -379,7 +379,7 @@ public class AiOrchestratorTests
         var quotaEnforcer = CreateQuotaEnforcer();
         var historyRepository = CreateHistoryRepository();
         var openAiAdapter = CreateAdapter(
-            AiProvider.OpenAi,
+            AiAdapterKeys.OpenAi,
             expectedApiKey: "platform-openai-key",
             responseModel: "gpt-4.1-mini");
 
@@ -392,10 +392,10 @@ public class AiOrchestratorTests
             new AiOptions
             {
                 Enabled = true,
-                DefaultProvider = "OpenAi",
-                Providers = new Dictionary<string, AiProviderOptions>
+                DefaultBackend = "OpenAi",
+                Backends = new Dictionary<string, AiBackendOptions>
                 {
-                    ["OpenAi"] = new() { ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
+                    ["OpenAi"] = new() { Adapter = AiAdapterKeys.OpenAi, ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
                 }
             });
 
@@ -426,7 +426,7 @@ public class AiOrchestratorTests
                   "externalServices": {
                     "ai": {
                       "enabled": true,
-                      "defaultProvider": "OpenAi",
+                      "defaultBackend": "OpenAi",
                       "history": { "enabled": true }
                     }
                   }
@@ -436,7 +436,7 @@ public class AiOrchestratorTests
         var quotaEnforcer = CreateQuotaEnforcer();
         var historyRepository = CreateHistoryRepository();
         var openAiAdapter = CreateAdapter(
-            AiProvider.OpenAi,
+            AiAdapterKeys.OpenAi,
             expectedApiKey: "platform-openai-key",
             responseModel: "gpt-4.1-mini");
         var orchestrator = CreateOrchestrator(
@@ -448,10 +448,10 @@ public class AiOrchestratorTests
             new AiOptions
             {
                 Enabled = true,
-                DefaultProvider = "OpenAi",
-                Providers = new Dictionary<string, AiProviderOptions>
+                DefaultBackend = "OpenAi",
+                Backends = new Dictionary<string, AiBackendOptions>
                 {
-                    ["OpenAi"] = new() { ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
+                    ["OpenAi"] = new() { Adapter = AiAdapterKeys.OpenAi, ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
                 }
             });
 
@@ -482,12 +482,15 @@ public class AiOrchestratorTests
         ITenantSettingsRepository tenantSettingsRepository,
         IResourceQuotaEnforcer quotaEnforcer,
         IAiConversationHistoryRepository historyRepository,
-        IEnumerable<IAiProviderAdapter> adapters,
+        IEnumerable<IAiAdapter> adapters,
         AiOptions options,
         IAiExecutionBillingRecorder? billingRecorder = null)
     {
+        var registry = new AiAdapterRegistry(adapters);
+        var catalog = new AiBackendCatalog(Options.Create(options), registry);
         return new AiOrchestrator(
-            adapters,
+            registry,
+            catalog,
             requestContextAccessor,
             tenantSettingsRepository,
             quotaEnforcer,
@@ -551,20 +554,26 @@ public class AiOrchestratorTests
         return requestContextAccessor.Object;
     }
 
-    private static Mock<IAiProviderAdapter> CreateAdapter(
-        AiProvider provider,
+    private static Mock<IAiAdapter> CreateAdapter(
+        string adapterKey,
         string? expectedApiKey = null,
         string? responseModel = null,
         bool failIfCalled = false)
     {
-        var adapter = new Mock<IAiProviderAdapter>();
-        adapter.SetupGet(instance => instance.Provider).Returns(provider);
+        var adapter = new Mock<IAiAdapter>();
+        adapter.SetupGet(instance => instance.Key).Returns(adapterKey);
+        adapter.SetupGet(instance => instance.Descriptor).Returns(new AiAdapterDescriptor(
+            adapterKey,
+            RequiresExplicitBaseUrl: false,
+            AiCredentialPolicy.Required,
+            $"https://{adapterKey.ToLowerInvariant()}.test",
+            SupportsStreaming: true));
 
         if (failIfCalled)
         {
             adapter
                 .Setup(instance => instance.CompleteAsync(It.IsAny<AiResolvedRequest>(), It.IsAny<CancellationToken>()))
-                .Throws(new Xunit.Sdk.XunitException($"Provider {provider} should not be called."));
+                .Throws(new Xunit.Sdk.XunitException($"Adapter {adapterKey} should not be called."));
 
             return adapter;
         }
@@ -578,7 +587,7 @@ public class AiOrchestratorTests
                     request.ApiKey.Should().Be(expectedApiKey);
                 }
 
-                return Result.Success(new AiProviderExecutionResult(
+                return Result.Success(new AiAdapterExecutionResult(
                     responseModel ?? request.Model,
                     "ok",
                     "stop",
@@ -599,7 +608,7 @@ public class AiOrchestratorTests
                 }
 
                 await onDelta("ok", token);
-                return Result.Success(new AiProviderExecutionResult(
+                return Result.Success(new AiAdapterExecutionResult(
                     responseModel ?? request.Model,
                     "ok",
                     "stop",

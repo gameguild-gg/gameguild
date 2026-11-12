@@ -9,12 +9,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod';
 
+/** Data model for AI Ai Backend Status Dto. */
+export interface AIAiBackendStatusDto {
+  adapter?: string | null;
+  backend?: string | null;
+  baseUrl?: string | null;
+  configured?: boolean;
+  credentialPolicy?: string | null;
+  credentialsConfigured?: boolean;
+  defaultModel?: string | null;
+  readinessCode?: string | null;
+  ready?: boolean;
+}
+
 /** Canonical request shape for conversational completions. */
 export interface AIAiChatInput {
+  backend?: string | null;
   maxTokens?: number | null;
   messages?: AIAiChatMessage[] | null;
   model?: string | null;
-  provider?: string | null;
   systemPrompt?: string | null;
   temperature?: number | null;
 }
@@ -27,6 +40,7 @@ export interface AIAiChatMessage {
 
 /** Canonical completion response shape exposed by the GameGuild API. */
 export interface AIAiCompletionOutput {
+  backend?: string | null;
   finishReason?: string | null;
   model?: string | null;
   provider?: string | null;
@@ -55,10 +69,10 @@ export interface AIAiConversationHistoryEntryDto {
 /** Data model for AI Ai Generated Content Draft Request. */
 export interface AIAiGeneratedContentDraftInput {
   audience?: string | null;
+  backend?: string | null;
   context?: string | null;
   maxTokens?: number | null;
   model?: string | null;
-  provider?: string | null;
   subject?: string | null;
   tone?: string | null;
 }
@@ -66,11 +80,11 @@ export interface AIAiGeneratedContentDraftInput {
 /** Data model for AI Ai Generated Content Request. */
 export interface AIAiGeneratedContentInput {
   audience?: string | null;
+  backend?: string | null;
   context?: string | null;
   kind?: AIAiGeneratedContentKind;
   maxTokens?: number | null;
   model?: string | null;
-  provider?: string | null;
   subject?: string | null;
   tone?: string | null;
 }
@@ -80,10 +94,11 @@ export type AIAiGeneratedContentKind = 'Email' | 'Report' | 'ListingDescription'
 
 /** Canonical request shape for single-prompt generation. */
 export interface AIAiGenerateInput {
+  backend?: string | null;
   maxTokens?: number | null;
   model?: string | null;
   prompt?: string | null;
-  provider?: string | null;
+  reasoningEnabled?: boolean | null;
   systemPrompt?: string | null;
   temperature?: number | null;
 }
@@ -108,9 +123,9 @@ export interface AIAiPromptTemplateDto {
 
 /** Data model for AI Ai Prompt Template Generate Request. */
 export interface AIAiPromptTemplateGenerateInput {
+  backend?: string | null;
   maxTokens?: number | null;
   model?: string | null;
-  provider?: string | null;
   temperature?: number | null;
   variables?: Record<string, string | null> | null;
 }
@@ -127,15 +142,6 @@ export interface AIAiPromptTemplateRenderOutput {
   systemPrompt?: string | null;
   templateId?: string;
   variables?: Record<string, string | null> | null;
-}
-
-/** Data model for AI Ai Provider Status Dto. */
-export interface AIAiProviderStatusDto {
-  baseUrl?: string | null;
-  configured?: boolean;
-  credentialsConfigured?: boolean;
-  defaultModel?: string | null;
-  provider?: string | null;
 }
 
 /** Data model for AI Ai Quota Status Dto. */
@@ -162,9 +168,9 @@ export interface AIAiQuotaStatusOutput {
 /** Data model for AI Ai Status Response. */
 export interface AIAiStatusOutput {
   allowTenantOverrides?: boolean;
-  defaultProvider?: string | null;
+  backends?: AIAiBackendStatusDto[] | null;
+  defaultBackend?: string | null;
   enabled?: boolean;
-  providers?: AIAiProviderStatusDto[] | null;
 }
 
 /** Normalized token usage information returned by a provider. */
@@ -19129,8 +19135,19 @@ export interface LearningAssessmentsGradeResultReleaseOutput {
   releaseId?: string;
 }
 
+/** Data model for Learning Assessments Grading Authoring Assessment AIReview Provider State Result. */
+export interface LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResult {
+  available?: boolean;
+  code?: string | null;
+  contexts?: LearningAssessmentsGradingContractsReviewExecutionContext[] | null;
+  message?: string | null;
+  policyVersions?: string[] | null;
+  providerKey?: string | null;
+}
+
 /** Data model for Learning Assessments Grading Authoring Assessment Authoring State Result. */
 export interface LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResult {
+  aiReviewProviders?: LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResult[] | null;
   assessmentId?: string;
   assessmentVersion?: number;
   candidate?: LearningAssessmentsGradingAuthoringAssessmentRevisionStateResult;
@@ -27886,6 +27903,7 @@ export interface TrustSafetyTrustSafetyAppeal {
 export type TrustSafetyTrustSafetyAppealState = 'Submitted' | 'Assigned' | 'Upheld' | 'Overturned';
 
 // Zod Schema Declarations (to handle circular references)
+export let AIAiBackendStatusDtoSchema: z.ZodType<AIAiBackendStatusDto>;
 export let AIAiChatInputSchema: z.ZodType<AIAiChatInput>;
 export let AIAiChatMessageSchema: z.ZodType<AIAiChatMessage>;
 export let AIAiCompletionOutputSchema: z.ZodType<AIAiCompletionOutput>;
@@ -27898,7 +27916,6 @@ export let AIAiPromptTemplateDtoSchema: z.ZodType<AIAiPromptTemplateDto>;
 export let AIAiPromptTemplateGenerateInputSchema: z.ZodType<AIAiPromptTemplateGenerateInput>;
 export let AIAiPromptTemplateRenderInputSchema: z.ZodType<AIAiPromptTemplateRenderInput>;
 export let AIAiPromptTemplateRenderOutputSchema: z.ZodType<AIAiPromptTemplateRenderOutput>;
-export let AIAiProviderStatusDtoSchema: z.ZodType<AIAiProviderStatusDto>;
 export let AIAiQuotaStatusDtoSchema: z.ZodType<AIAiQuotaStatusDto>;
 export let AIAiQuotaStatusOutputSchema: z.ZodType<AIAiQuotaStatusOutput>;
 export let AIAiStatusOutputSchema: z.ZodType<AIAiStatusOutput>;
@@ -29506,6 +29523,7 @@ export let LearningAssessmentsCreateGroupInputSchema: z.ZodType<LearningAssessme
 export let LearningAssessmentsCreateGroupSetInputSchema: z.ZodType<LearningAssessmentsCreateGroupSetInput>;
 export let LearningAssessmentsExtendPeerReviewWindowInputSchema: z.ZodType<LearningAssessmentsExtendPeerReviewWindowInput>;
 export let LearningAssessmentsGradeResultReleaseOutputSchema: z.ZodType<LearningAssessmentsGradeResultReleaseOutput>;
+export let LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResultSchema: z.ZodType<LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResult>;
 export let LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResultSchema: z.ZodType<LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResult>;
 export let LearningAssessmentsGradingAuthoringAssessmentCapabilityStateResultSchema: z.ZodType<LearningAssessmentsGradingAuthoringAssessmentCapabilityStateResult>;
 export let LearningAssessmentsGradingAuthoringAssessmentDraftResultSchema: z.ZodType<LearningAssessmentsGradingAuthoringAssessmentDraftResult>;
@@ -30250,15 +30268,28 @@ export let TrustSafetyTrustSafetyAppealSchema: z.ZodType<TrustSafetyTrustSafetyA
 export let TrustSafetyTrustSafetyAppealStateSchema: z.ZodType<TrustSafetyTrustSafetyAppealState>;
 
 // Zod Schema Definitions
+/** Zod schema for AIAiBackendStatusDto. Data model for AI Ai Backend Status Dto. */
+AIAiBackendStatusDtoSchema = z.object({
+  adapter: z.string().nullable().optional(),
+  backend: z.string().nullable().optional(),
+  baseUrl: z.string().nullable().optional(),
+  configured: z.boolean().optional(),
+  credentialPolicy: z.string().nullable().optional(),
+  credentialsConfigured: z.boolean().optional(),
+  defaultModel: z.string().nullable().optional(),
+  readinessCode: z.string().nullable().optional(),
+  ready: z.boolean().optional(),
+});
+
 /** Zod schema for AIAiChatInput. Canonical request shape for conversational completions. */
 AIAiChatInputSchema = z.object({
+  backend: z.string().nullable().optional(),
   maxTokens: z.number().int().nullable().optional(),
   messages: z
     .array(z.lazy(() => AIAiChatMessageSchema))
     .nullable()
     .optional(),
   model: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
   systemPrompt: z.string().nullable().optional(),
   temperature: z.number().nullable().optional(),
 });
@@ -30271,6 +30302,7 @@ AIAiChatMessageSchema = z.object({
 
 /** Zod schema for AIAiCompletionOutput. Canonical completion response shape exposed by the GameGuild API. */
 AIAiCompletionOutputSchema = z.object({
+  backend: z.string().nullable().optional(),
   finishReason: z.string().nullable().optional(),
   model: z.string().nullable().optional(),
   provider: z.string().nullable().optional(),
@@ -30299,10 +30331,10 @@ AIAiConversationHistoryEntryDtoSchema = z.object({
 /** Zod schema for AIAiGeneratedContentDraftInput. Data model for AI Ai Generated Content Draft Request. */
 AIAiGeneratedContentDraftInputSchema = z.object({
   audience: z.string().nullable().optional(),
+  backend: z.string().nullable().optional(),
   context: z.string().nullable().optional(),
   maxTokens: z.number().int().nullable().optional(),
   model: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
   subject: z.string().nullable().optional(),
   tone: z.string().nullable().optional(),
 });
@@ -30310,11 +30342,11 @@ AIAiGeneratedContentDraftInputSchema = z.object({
 /** Zod schema for AIAiGeneratedContentInput. Data model for AI Ai Generated Content Request. */
 AIAiGeneratedContentInputSchema = z.object({
   audience: z.string().nullable().optional(),
+  backend: z.string().nullable().optional(),
   context: z.string().nullable().optional(),
   kind: z.lazy(() => AIAiGeneratedContentKindSchema).optional(),
   maxTokens: z.number().int().nullable().optional(),
   model: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
   subject: z.string().nullable().optional(),
   tone: z.string().nullable().optional(),
 });
@@ -30324,10 +30356,11 @@ AIAiGeneratedContentKindSchema = z.enum(['Email', 'Report', 'ListingDescription'
 
 /** Zod schema for AIAiGenerateInput. Canonical request shape for single-prompt generation. */
 AIAiGenerateInputSchema = z.object({
+  backend: z.string().nullable().optional(),
   maxTokens: z.number().int().nullable().optional(),
   model: z.string().nullable().optional(),
   prompt: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
+  reasoningEnabled: z.boolean().nullable().optional(),
   systemPrompt: z.string().nullable().optional(),
   temperature: z.number().nullable().optional(),
 });
@@ -30352,9 +30385,9 @@ AIAiPromptTemplateDtoSchema = z.object({
 
 /** Zod schema for AIAiPromptTemplateGenerateInput. Data model for AI Ai Prompt Template Generate Request. */
 AIAiPromptTemplateGenerateInputSchema = z.object({
+  backend: z.string().nullable().optional(),
   maxTokens: z.number().int().nullable().optional(),
   model: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
   temperature: z.number().nullable().optional(),
   variables: z.record(z.string(), z.string().nullable()).nullable().optional(),
 });
@@ -30371,15 +30404,6 @@ AIAiPromptTemplateRenderOutputSchema = z.object({
   systemPrompt: z.string().nullable().optional(),
   templateId: z.string().uuid().optional(),
   variables: z.record(z.string(), z.string().nullable()).nullable().optional(),
-});
-
-/** Zod schema for AIAiProviderStatusDto. Data model for AI Ai Provider Status Dto. */
-AIAiProviderStatusDtoSchema = z.object({
-  baseUrl: z.string().nullable().optional(),
-  configured: z.boolean().optional(),
-  credentialsConfigured: z.boolean().optional(),
-  defaultModel: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
 });
 
 /** Zod schema for AIAiQuotaStatusDto. Data model for AI Ai Quota Status Dto. */
@@ -30409,12 +30433,12 @@ AIAiQuotaStatusOutputSchema = z.object({
 /** Zod schema for AIAiStatusOutput. Data model for AI Ai Status Response. */
 AIAiStatusOutputSchema = z.object({
   allowTenantOverrides: z.boolean().optional(),
-  defaultProvider: z.string().nullable().optional(),
-  enabled: z.boolean().optional(),
-  providers: z
-    .array(z.lazy(() => AIAiProviderStatusDtoSchema))
+  backends: z
+    .array(z.lazy(() => AIAiBackendStatusDtoSchema))
     .nullable()
     .optional(),
+  defaultBackend: z.string().nullable().optional(),
+  enabled: z.boolean().optional(),
 });
 
 /** Zod schema for AIAiUsageDto. Normalized token usage information returned by a provider. */
@@ -47469,8 +47493,25 @@ LearningAssessmentsGradeResultReleaseOutputSchema = z.object({
   releaseId: z.string().uuid().optional(),
 });
 
+/** Zod schema for LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResult. Data model for Learning Assessments Grading Authoring Assessment AIReview Provider State Result. */
+LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResultSchema = z.object({
+  available: z.boolean().optional(),
+  code: z.string().nullable().optional(),
+  contexts: z
+    .array(z.lazy(() => LearningAssessmentsGradingContractsReviewExecutionContextSchema))
+    .nullable()
+    .optional(),
+  message: z.string().nullable().optional(),
+  policyVersions: z.array(z.string()).nullable().optional(),
+  providerKey: z.string().nullable().optional(),
+});
+
 /** Zod schema for LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResult. Data model for Learning Assessments Grading Authoring Assessment Authoring State Result. */
 LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResultSchema = z.object({
+  aiReviewProviders: z
+    .array(z.lazy(() => LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResultSchema))
+    .nullable()
+    .optional(),
   assessmentId: z.string().uuid().optional(),
   assessmentVersion: z.number().int().optional(),
   candidate: z.lazy(() => LearningAssessmentsGradingAuthoringAssessmentRevisionStateResultSchema).optional(),
@@ -56076,12 +56117,12 @@ TrustSafetyTrustSafetyAppealSchema = z.object({
 TrustSafetyTrustSafetyAppealStateSchema = z.enum(['Submitted', 'Assigned', 'Upheld', 'Overturned']);
 
 // Backwards-compatible aliases for names generated before DTO identity was preserved
+export interface AIAiBackendStatus extends AIAiBackendStatusDto {}
+export { AIAiBackendStatusDtoSchema as AIAiBackendStatusSchema };
 export interface AIAiConversationHistoryEntry extends AIAiConversationHistoryEntryDto {}
 export { AIAiConversationHistoryEntryDtoSchema as AIAiConversationHistoryEntrySchema };
 export interface AIAiPromptTemplate extends AIAiPromptTemplateDto {}
 export { AIAiPromptTemplateDtoSchema as AIAiPromptTemplateSchema };
-export interface AIAiProviderStatus extends AIAiProviderStatusDto {}
-export { AIAiProviderStatusDtoSchema as AIAiProviderStatusSchema };
 export interface AIAiQuotaStatus extends AIAiQuotaStatusDto {}
 export { AIAiQuotaStatusDtoSchema as AIAiQuotaStatusSchema };
 export interface AIAiUsage extends AIAiUsageDto {}
