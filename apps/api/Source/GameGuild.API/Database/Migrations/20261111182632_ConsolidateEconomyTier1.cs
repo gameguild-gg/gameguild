@@ -425,6 +425,12 @@ namespace GameGuild.API.Database.Migrations
                         definition := replace(definition,
                             '"Id", "PostingGroupId", "Type", "Payload", "PayloadHash", "OccurredAt")',
                             '"Id", "PostingGroupId", "MessageType", "Payload", "PayloadHash", "OccurredAt")');
+                        -- The ad-reward writer dedupes its enqueue against the
+                        -- payload-hash unique index, which is PARTIAL on the
+                        -- unified queue; inference needs the kind predicate.
+                        definition := replace(definition,
+                            'ON CONFLICT ("PayloadHash") DO NOTHING',
+                            'ON CONFLICT ("PayloadHash") WHERE "OutboxKind" = 1 DO NOTHING');
                         EXECUTE definition;
                     END LOOP;
 
@@ -446,12 +452,14 @@ namespace GameGuild.API.Database.Migrations
                         definition := replace(definition,
                             'INSERT INTO public.economy_marketplace_outbox (',
                             'INSERT INTO public.economy_outbox ("OutboxKind", ');
-                        definition := replace(definition,
-                            '''entitlement-grant-outbox''),',
-                            '''entitlement-grant-outbox''), 2,');
-                        definition := replace(definition,
-                            '''entitlement-revoke-outbox''),',
-                            '''entitlement-revoke-outbox''), 2,');
+                        -- The kind literal must LEAD the VALUES list: the
+                        -- entitlement derivation stays the "Id" value.
+                        definition := regexp_replace(definition,
+                            'VALUES \(economy_private\.derive_economy_uuid_v1\(\s*p_settlement_id, ''entitlement-grant-outbox''\),',
+                            'VALUES (2, economy_private.derive_economy_uuid_v1(p_settlement_id, ''entitlement-grant-outbox''),');
+                        definition := regexp_replace(definition,
+                            'VALUES \(economy_private\.derive_economy_uuid_v1\(\s*p_refund_id, ''entitlement-revoke-outbox''\),',
+                            'VALUES (2, economy_private.derive_economy_uuid_v1(p_refund_id, ''entitlement-revoke-outbox''),');
                         EXECUTE definition;
                     END LOOP;
 
@@ -1467,15 +1475,18 @@ namespace GameGuild.API.Database.Migrations
                         definition := regexp_replace(definition,
                             'INSERT INTO public\.economy_outbox \(\s*"Id", "PostingGroupId", "MessageType"',
                             'INSERT INTO public.economy_outbox_messages ("Id", "PostingGroupId", "Type"');
+                        definition := replace(definition,
+                            'ON CONFLICT ("PayloadHash") WHERE "OutboxKind" = 1 DO NOTHING',
+                            'ON CONFLICT ("PayloadHash") DO NOTHING');
                         definition := regexp_replace(definition,
                             'INSERT INTO public\.economy_outbox \("OutboxKind",\s*"Id", "TenantId", "SettlementId",',
                             'INSERT INTO public.economy_marketplace_outbox ("Id", "TenantId", "SettlementId",');
-                        definition := replace(definition,
-                            '''entitlement-grant-outbox''), 2,',
-                            '''entitlement-grant-outbox''),');
-                        definition := replace(definition,
-                            '''entitlement-revoke-outbox''), 2,',
-                            '''entitlement-revoke-outbox''),');
+                        definition := regexp_replace(definition,
+                            'VALUES \(2, economy_private\.derive_economy_uuid_v1\(\s*p_settlement_id, ''entitlement-grant-outbox''\),',
+                            'VALUES (economy_private.derive_economy_uuid_v1(p_settlement_id, ''entitlement-grant-outbox''),');
+                        definition := regexp_replace(definition,
+                            'VALUES \(2, economy_private\.derive_economy_uuid_v1\(\s*p_refund_id, ''entitlement-revoke-outbox''\),',
+                            'VALUES (economy_private.derive_economy_uuid_v1(p_refund_id, ''entitlement-revoke-outbox''),');
                         definition := regexp_replace(definition,
                             'INSERT INTO public\.economy_provider_events \("ProviderEventKind",\s*"EventId", "EventHash", "OperationId",',
                             'INSERT INTO public.economy_payout_provider_events ("EventId", "EventHash", "OperationId",');
