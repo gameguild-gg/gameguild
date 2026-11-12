@@ -114,6 +114,39 @@ public sealed class KycCoverageCompletionTests
     }
 
     [Fact]
+    public void KycVerificationModelConfiguration_ShouldMaterialize_EntityIntoCompiledModel()
+    {
+        // Issue #1184 G2: KycVerificationModelConfiguration applies the previously dead
+        // KYC verification configuration into the EF model — assert it actually maps the
+        // entity, its table, property lengths, indexes and the User foreign key.
+        var configuration = new KycVerificationModelConfiguration();
+        var act = () => configuration.Configure(null!);
+        act.Should().Throw<ArgumentNullException>();
+
+        var modelBuilder = new ModelBuilder();
+        modelBuilder.Entity<User>();
+        configuration.Configure(modelBuilder);
+
+        var entity = modelBuilder.Model.FindEntityType(typeof(UserKycVerification));
+        entity.Should().NotBeNull("the #1184 G2 materialization must register UserKycVerification into the model");
+        var entityType = entity!;
+        entityType.GetTableName().Should().Be("user_kyc_verifications");
+
+        entityType.FindProperty(nameof(UserKycVerification.ExternalVerificationId))!.GetMaxLength().Should().Be(255);
+        entityType.FindProperty(nameof(UserKycVerification.VerificationLevel))!.GetMaxLength().Should().Be(50);
+        entityType.FindProperty(nameof(UserKycVerification.DocumentTypes))!.GetMaxLength().Should().Be(500);
+        entityType.FindProperty(nameof(UserKycVerification.DocumentCountry))!.GetMaxLength().Should().Be(2);
+
+        entityType.FindIndex(entityType.FindProperty(nameof(UserKycVerification.UserId))!).Should().NotBeNull();
+        entityType.FindIndex(entityType.FindProperty(nameof(UserKycVerification.Provider))!).Should().NotBeNull();
+        entityType.FindIndex(entityType.FindProperty(nameof(UserKycVerification.Status))!).Should().NotBeNull();
+        entityType.FindIndex(entityType.FindProperty(nameof(UserKycVerification.SubmittedAt))!).Should().NotBeNull();
+        entityType.FindIndex(entityType.FindProperty(nameof(UserKycVerification.ExternalVerificationId))!).Should().NotBeNull();
+
+        entityType.GetForeignKeys().Should().Contain(key => key.PrincipalEntityType.ClrType == typeof(User));
+    }
+
+    [Fact]
     public async Task KycService_ShouldCover_RemainingSuccessBranches()
     {
         var repository = new Mock<IKycRepository>();

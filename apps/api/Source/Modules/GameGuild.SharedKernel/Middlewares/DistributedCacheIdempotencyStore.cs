@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild;
 
@@ -113,7 +114,12 @@ public static class DistributedIdempotencyStoreExtensions
     public static IServiceCollection AddDistributedIdempotencyStore(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.TryAddSingleton<IDistributedCache, MemoryDistributedCache>();
+        // Factory registration with default options keeps the fallback self-sufficient in
+        // minimal containers: type-activating MemoryDistributedCache silently requires the
+        // options infrastructure (IOptions<MemoryDistributedCacheOptions>) that a bare
+        // ServiceCollection does not carry.
+        services.TryAddSingleton<IDistributedCache>(_ =>
+            new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions())));
         services.TryAddSingleton<IIdempotencyStore, DistributedCacheIdempotencyStore>();
         return services;
     }

@@ -288,7 +288,7 @@ public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILog
         }
 
         await publisher.Publish(
-            new GameGuild.Learning.SearchResultClickedEvent(searchHistory.UserId, searchHistory.Query, clickedCourseId, 0, searchHistory.TenantId),
+            new SearchResultClickedEvent(searchHistory.UserId, searchHistory.Query, clickedCourseId, 0, searchHistory.TenantId),
             cancellationToken).ConfigureAwait(false);
     }
 

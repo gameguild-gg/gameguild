@@ -318,7 +318,7 @@ public sealed class LearningPathCommandHandlers(IApplicationDbContext context, I
             return;
         }
 
-        await publisher.Publish(new GameGuild.Learning.LearningPathEnrolledEvent(
+        await publisher.Publish(new LearningPathEnrolledEvent(
             userId, pathId, null, totalCourses), cancellationToken).ConfigureAwait(false);
     }
 
@@ -398,7 +398,7 @@ public sealed class LearningPathCommandHandlers(IApplicationDbContext context, I
             return;
         }
 
-        await publisher.Publish(new GameGuild.Learning.LearningPathCompletedEvent(
+        await publisher.Publish(new LearningPathCompletedEvent(
             userId, pathId, null, coursesCompleted, 0), cancellationToken).ConfigureAwait(false);
     }
 

@@ -134,7 +134,7 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
     if (publisher is not null)
     {
         await publisher.Publish(
-            new GameGuild.Learning.SearchPerformedEvent(
+            new SearchPerformedEvent(
                 requestContextAccessor?.CurrentUserId,
                 request.SearchTerm,
                 programs.Count,

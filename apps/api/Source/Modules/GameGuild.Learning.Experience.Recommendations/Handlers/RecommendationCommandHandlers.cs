@@ -81,7 +81,7 @@ public sealed class AddSkillToProfileCommandHandler(
             return;
         }
 
-        await publisher.Publish(new GameGuild.Learning.UserSkillUpdatedEvent(
+        await publisher.Publish(new UserSkillUpdatedEvent(
             userId, skill, null, null, null), cancellationToken).ConfigureAwait(false);
     }
 }
@@ -209,7 +209,7 @@ public sealed class MarkRecommendationViewedCommandHandler(
             return;
         }
 
-        await publisher.Publish(new GameGuild.Learning.RecommendationViewedEvent(
+        await publisher.Publish(new RecommendationViewedEvent(
             userId,
             recommendation.Id,
             recommendation.CourseId,
@@ -246,7 +246,7 @@ public sealed class RecordRecommendationClickCommandHandler(
 
         // Issue #1184 G4: RecommendationClickedEvent was declared but never raised; this
         // command (mirroring MarkRecommendationViewed) is its producing site.
-        await publisher.Publish(new GameGuild.Learning.RecommendationClickedEvent(
+        await publisher.Publish(new RecommendationClickedEvent(
             request.UserId,
             recommendation.Id,
             recommendation.CourseId,
@@ -262,7 +262,7 @@ public sealed class RecordRecommendationClickCommandHandler(
             .ConfigureAwait(false);
         if (enrolled)
         {
-            await publisher.Publish(new GameGuild.Learning.RecommendationConvertedEvent(
+            await publisher.Publish(new RecommendationConvertedEvent(
                 request.UserId,
                 recommendation.Id,
                 recommendation.CourseId,
