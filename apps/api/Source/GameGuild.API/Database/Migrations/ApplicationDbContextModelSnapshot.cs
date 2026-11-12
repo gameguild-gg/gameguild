@@ -2785,11 +2785,11 @@ namespace GameGuild.API.Database.Migrations
 
                     b.ToTable("financial_ledger_entries", t =>
                         {
-                            t.HasCheckConstraint("CK_FinancialLedgerEntry_Amount_Positive", "amount > 0");
+                            t.HasCheckConstraint("CK_FinancialLedgerEntry_Amount_Positive", "\"Amount\" > 0");
 
-                            t.HasCheckConstraint("CK_FinancialLedgerEntry_CreditAccount_NotEmpty", "LENGTH(credit_account) > 0");
+                            t.HasCheckConstraint("CK_FinancialLedgerEntry_CreditAccount_NotEmpty", "LENGTH(\"CreditAccount\") > 0");
 
-                            t.HasCheckConstraint("CK_FinancialLedgerEntry_DebitAccount_NotEmpty", "LENGTH(debit_account) > 0");
+                            t.HasCheckConstraint("CK_FinancialLedgerEntry_DebitAccount_NotEmpty", "LENGTH(\"DebitAccount\") > 0");
                         });
                 });
 

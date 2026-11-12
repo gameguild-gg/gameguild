@@ -41,9 +41,9 @@ namespace GameGuild.API.Database.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_financial_ledger_entries", x => x.Id);
-                    table.CheckConstraint("CK_FinancialLedgerEntry_Amount_Positive", "amount > 0");
-                    table.CheckConstraint("CK_FinancialLedgerEntry_CreditAccount_NotEmpty", "LENGTH(credit_account) > 0");
-                    table.CheckConstraint("CK_FinancialLedgerEntry_DebitAccount_NotEmpty", "LENGTH(debit_account) > 0");
+                    table.CheckConstraint("CK_FinancialLedgerEntry_Amount_Positive", "\"Amount\" > 0");
+                    table.CheckConstraint("CK_FinancialLedgerEntry_CreditAccount_NotEmpty", "LENGTH(\"CreditAccount\") > 0");
+                    table.CheckConstraint("CK_FinancialLedgerEntry_DebitAccount_NotEmpty", "LENGTH(\"DebitAccount\") > 0");
                     table.ForeignKey(
                         name: "FK_financial_ledger_entries_revenue_events_RevenueEventId",
                         column: x => x.RevenueEventId,
