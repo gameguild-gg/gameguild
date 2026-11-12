@@ -18,7 +18,11 @@ concurrency:
   # Suffixed during PR #773 repair: synchronize events stopped creating runs for
   # this PR (dropped/stuck pending in the original group). Distinct group + manual
   # dispatch unblocks verification; revert together with the repair.
-  group: pr-verify-${{ github.event.pull_request.number }}-repair773
+  # Suffixed again 2026-11-12: runs queued against ARC pods that later scaled to
+  # zero stay zombie-queued forever, hold this per-PR group, and cannot be
+  # cancelled via the API. Bumping the suffix unsquats every affected PR; revert
+  # once no zombie queued runs remain in the old groups.
+  group: pr-verify-${{ github.event.pull_request.number }}-repair773b
   cancel-in-progress: true
 
 jobs:
@@ -35,6 +39,8 @@ jobs:
       - name: Choose self-hosted pool or GitHub-hosted overflow
         id: select
         env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
           FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
         run: |
           set -eu
@@ -46,13 +52,29 @@ jobs:
             echo 'pool=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # The runner-count probe against /actions/runners was removed: that
-          # endpoint is admin-only and GITHUB_TOKEN always gets HTTP 403, which
-          # made every run silently overflow to ubuntu-latest — the ARC scale
-          # set sat idle forever. ARC autoscales 0..9 on demand, so the
-          # self-hosted pool is the default and GitHub queues jobs until a
-          # runner registers.
-          echo 'pool=["self-hosted","gameguild"]' >> "$GITHUB_OUTPUT"
+          pool='["self-hosted","gameguild"]'
+          response=$(curl -s -w '\n%{http_code}' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$REPOSITORY/actions/runners" || echo $'\n000')
+          status=$(tail -n1 <<<"$response")
+          body=$(sed '$d' <<<"$response")
+          if [[ "$status" == '200' ]]; then
+            total=$(jq '[.runners[] | select(any(.labels[]; .name == "gameguild"))] | length' <<<"$body")
+            busy=$(jq '[.runners[] | select(any(.labels[]; .name == "gameguild")) | select(.busy == true)] | length' <<<"$body")
+            echo "Self-hosted ARC runners: total=$total busy=$busy (max 9)."
+            if [[ "$total" -eq 0 ]]; then
+              echo 'ARC pool reports zero registered runners; overflowing to GitHub-hosted so jobs are not pinned to labels with no runners.' >&2
+              pool='["ubuntu-latest"]'
+            elif [[ "$busy" -ge 9 ]]; then
+              echo 'All 9 ARC runners busy; overflowing to GitHub-hosted.' >&2
+              pool='["ubuntu-latest"]'
+            fi
+          else
+            echo "Runner list unavailable (HTTP $status); using GitHub-hosted overflow." >&2
+            pool='["ubuntu-latest"]'
+          fi
+          echo "pool=$pool" >> "$GITHUB_OUTPUT"
 
   classify:
     name: Classify release surfaces
@@ -78,7 +100,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           version: 10.34.6
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
