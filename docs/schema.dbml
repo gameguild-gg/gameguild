@@ -8879,6 +8879,50 @@ Table "team_invitations" {
   }
 }
 
+Table "financial_ledger_entries" {
+  "Id" uuid [not null]
+  "EntryType" text [not null]
+  "DebitAccount" "character varying(100)" [not null]
+  "CreditAccount" "character varying(100)" [not null]
+  "DebitLedgerAccount" integer
+  "CreditLedgerAccount" integer
+  "Amount" numeric(18,2) [not null]
+  "Currency" "character varying(3)" [not null]
+  "Description" "character varying(500)" [not null]
+  "RevenueEventId" uuid
+  "ReferenceNumber" "character varying(100)"
+  "IsReconciled" boolean [not null]
+  "ReconciledAt" timestamp
+  "ReconciledBy" uuid
+  "Notes" "character varying(1000)"
+  "FiscalYear" integer [not null]
+  "FiscalPeriod" integer [not null]
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Checks {
+    `"Amount" > 0` [name: 'CK_FinancialLedgerEntry_Amount_Positive']
+    `LENGTH("CreditAccount") > 0` [name: 'CK_FinancialLedgerEntry_CreditAccount_NotEmpty']
+    `LENGTH("DebitAccount") > 0` [name: 'CK_FinancialLedgerEntry_DebitAccount_NotEmpty']
+  }
+
+  Indexes {
+    Id [pk, name: "PK_financial_ledger_entries"]
+    CreatedAt [name: "IX_financial_ledger_entries_CreatedAt"]
+    CreditAccount [name: "IX_financial_ledger_entries_CreditAccount"]
+    DebitAccount [name: "IX_financial_ledger_entries_DebitAccount"]
+    EntryType [name: "IX_financial_ledger_entries_EntryType"]
+    FiscalPeriod [name: "IX_financial_ledger_entries_FiscalPeriod"]
+    FiscalYear [name: "IX_financial_ledger_entries_FiscalYear"]
+    IsReconciled [name: "IX_financial_ledger_entries_IsReconciled"]
+    ReferenceNumber [name: "IX_financial_ledger_entries_ReferenceNumber"]
+    RevenueEventId [name: "IX_financial_ledger_entries_RevenueEventId"]
+  }
+}
+
 Table "revenue_reconciliation_discrepancies" {
   "Id" uuid [not null]
   "RunId" uuid [not null]
@@ -9851,6 +9895,36 @@ Table "testing_events" {
     (TenantId, StartsAt) [name: "ix_testing_events_tenant_starts_live"]
     TenantId [name: "IX_testing_events_TenantId"]
     (TenantId, Status, StartsAt) [name: "IX_testing_events_TenantId_Status_StartsAt"]
+  }
+}
+
+Table "user_kyc_verifications" {
+  "Id" uuid [not null]
+  "UserId" uuid [not null]
+  "Provider" integer [not null]
+  "Status" integer [not null]
+  "ExternalVerificationId" "character varying(255)"
+  "VerificationLevel" "character varying(50)"
+  "DocumentTypes" "character varying(500)"
+  "DocumentCountry" "character varying(2)"
+  "SubmittedAt" timestamp [not null]
+  "CompletedAt" timestamp
+  "ExpiresAt" timestamp
+  "Notes" "character varying(1000)"
+  "ProviderData" jsonb
+  "Version" integer [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "DeletedAt" timestamp
+  "TenantId" uuid
+
+  Indexes {
+    Id [pk, name: "PK_user_kyc_verifications"]
+    ExternalVerificationId [name: "IX_user_kyc_verifications_ExternalVerificationId"]
+    Provider [name: "IX_user_kyc_verifications_Provider"]
+    Status [name: "IX_user_kyc_verifications_Status"]
+    SubmittedAt [name: "IX_user_kyc_verifications_SubmittedAt"]
+    UserId [name: "IX_user_kyc_verifications_UserId"]
   }
 }
 
@@ -13109,6 +13183,8 @@ Ref "FK_team_invitations_project_collaboration_teams_TeamId":"project_collaborat
 
 Ref "FK_sla_impact_analyses_resource_quotas_ResourceQuotaId":"resources"."resource_quotas"."Id" <? "gameguild.resources"."sla_impact_analyses"."ResourceQuotaId" [delete: restrict]
 
+Ref "FK_financial_ledger_entries_revenue_events_RevenueEventId":"revenue_events"."Id" ?<? "financial_ledger_entries"."RevenueEventId"
+
 Ref "FK_revenue_reconciliation_discrepancies_revenue_reconciliation~":"revenue_reconciliation_runs"."Id" <? "revenue_reconciliation_discrepancies"."RunId" [delete: cascade]
 
 Ref "FK_AuditExportHistories_ScheduledAuditExports_ScheduledExportId":"ScheduledAuditExports"."Id" <? "AuditExportHistories"."ScheduledExportId" [delete: cascade]
@@ -13216,6 +13292,8 @@ Ref "FK_testing_event_template_revisions_testing_event_templates_Te~":"testing_e
 Ref "FK_testing_events_Users_ManagerUserId":"Users"."Id" <? "testing_events"."ManagerUserId" [delete: restrict]
 
 Ref "FK_trusteddevice_Users_UserId":"Users"."Id" <? "gameguild.authentication"."trusteddevice"."UserId" [delete: restrict]
+
+Ref "FK_user_kyc_verifications_Users_UserId":"Users"."Id" <? "user_kyc_verifications"."UserId" [delete: cascade]
 
 Ref "FK_user_mfa_configuration_Users_user_id":"Users"."Id" <? "gameguild.authentication"."user_mfa_configuration"."user_id" [delete: restrict]
 

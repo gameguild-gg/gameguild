@@ -3,6 +3,7 @@ using GameGuild.Commerce.Subscriptions;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Features;
@@ -97,6 +98,27 @@ public class UsageEnforcementMiddleware
                         currentCalls,
                         subscriptionPlan.MaxApiCallsPerMonth.Value);
 
+                    // Issue #1184 G4: the limit-exceeded moment is the producing site for the
+                    // usage-limit domain events (they were declared but never raised). Fail-safe:
+                    // publishing problems must not change the 429 outcome.
+                    var limit = subscriptionPlan.MaxApiCallsPerMonth.Value;
+                    var utilization = limit > 0 ? Math.Round(currentCalls * 100.0 / limit, 2) : 100.0;
+                    try
+                    {
+                        var publisher = httpContext.RequestServices.GetService<GameGuild.CQRS.IPublisher>();
+                        if (publisher is not null)
+                        {
+                            await publisher.Publish(new UsageLimitExceededEvent(
+                                tenantId, "api_calls", currentCalls, limit, utilization), httpContext.RequestAborted).ConfigureAwait(false);
+                            await publisher.Publish(new SubscriptionUsageLimitExceededEvent(
+                                subscription.Id, tenantId, "api_calls", currentCalls, limit), httpContext.RequestAborted).ConfigureAwait(false);
+                        }
+                    }
+                    catch (Exception publishException)
+                    {
+                        _logger.LogWarning(publishException, "Failed to publish usage-limit events for tenant {TenantId}", tenantId);
+                    }
+
                     httpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
                     httpContext.Response.ContentType = "application/json";
                     await httpContext.Response.WriteAsync(
@@ -109,6 +131,29 @@ public class UsageEnforcementMiddleware
                             resetDate = new DateTime(SystemClock.UtcNow.Year, SystemClock.UtcNow.Month, 1).AddMonths(1)
                         }));
                     return;
+                }
+
+                // Issue #1184 G4: SubscriptionUsageWarningEvent was declared but never raised;
+                // crossing 80% of the monthly API-call allowance is its producing site.
+                var apiCallLimit = subscriptionPlan.MaxApiCallsPerMonth.Value;
+                var utilizationPercentage = apiCallLimit > 0
+                    ? Math.Round((currentCalls + 1) * 100.0M / apiCallLimit, 2)
+                    : 100M;
+                if (utilizationPercentage >= 80M)
+                {
+                    try
+                    {
+                        var publisher = httpContext.RequestServices.GetService<GameGuild.CQRS.IPublisher>();
+                        if (publisher is not null)
+                        {
+                            await publisher.Publish(new SubscriptionUsageWarningEvent(
+                                subscription.Id, tenantId, "api_calls", currentCalls + 1, apiCallLimit, utilizationPercentage), httpContext.RequestAborted).ConfigureAwait(false);
+                        }
+                    }
+                    catch (Exception publishException)
+                    {
+                        _logger.LogWarning(publishException, "Failed to publish usage-warning event for tenant {TenantId}", tenantId);
+                    }
                 }
 
                 // Increment counter

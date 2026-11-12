@@ -19,7 +19,7 @@ public static class OpenApiOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Configured OpenApiOptions</returns>
-    public static OpenApiOptions Create(IConfiguration configuration, string sectionName = "OpenApi")
+    public static OpenApiOptions Create(IConfiguration configuration, string sectionName = OpenApiOptions.SectionName)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -62,7 +62,7 @@ public static class OpenApiOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Validated OpenApiOptions</returns>
-    public static OpenApiOptions Build(IConfiguration configuration, string sectionName = "OpenApi")
+    public static OpenApiOptions Build(IConfiguration configuration, string sectionName = OpenApiOptions.SectionName)
     {
         var options = Create(configuration, sectionName);
         Validate(options);

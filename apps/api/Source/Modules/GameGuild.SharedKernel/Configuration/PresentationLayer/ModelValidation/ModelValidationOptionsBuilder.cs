@@ -19,7 +19,7 @@ public static class ModelValidationOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Configured model validation options</returns>
-    public static ModelValidationOptions Create(IConfiguration configuration, string sectionName = "ModelValidation")
+    public static ModelValidationOptions Create(IConfiguration configuration, string sectionName = ModelValidationOptions.SectionName)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -60,7 +60,7 @@ public static class ModelValidationOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Validated model validation options</returns>
-    public static ModelValidationOptions Build(IConfiguration configuration, string sectionName = "ModelValidation")
+    public static ModelValidationOptions Build(IConfiguration configuration, string sectionName = ModelValidationOptions.SectionName)
     {
         var options = Create(configuration, sectionName);
         Validate(options);

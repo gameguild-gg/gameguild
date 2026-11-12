@@ -25,7 +25,7 @@ public static class SignalROptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Configured SignalR options</returns>
-    public static SignalROptions Create(IConfiguration configuration, string sectionName = "SignalR") { return OptionBuilderUtilities.CreateAndBind(configuration, sectionName, Create); }
+    public static SignalROptions Create(IConfiguration configuration, string sectionName = SignalROptions.SectionName) { return OptionBuilderUtilities.CreateAndBind(configuration, sectionName, Create); }
 
     /// <summary>
     ///     Validates the provided SignalR options.
@@ -71,7 +71,7 @@ public static class SignalROptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Validated SignalR options</returns>
-    public static SignalROptions Build(IConfiguration configuration, string sectionName = "SignalR")
+    public static SignalROptions Build(IConfiguration configuration, string sectionName = SignalROptions.SectionName)
     {
         var options = Create(configuration, sectionName);
         Validate(options);

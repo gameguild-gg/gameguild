@@ -107,8 +107,10 @@ public static class MiddlewareOrderValidator
 
     private static List<string> GetMiddlewarePipeline(IApplicationBuilder app)
     {
-        // Use reflection to get the middleware pipeline
-        var applicationBuilder = app as ApplicationBuilder;
+        // Use reflection to get the middleware pipeline. WebApplication does not extend
+        // ApplicationBuilder — it wraps one in a private field (its IApplicationBuilder
+        // surface delegates there) — so unwrap first (issue #1248 N3).
+        var applicationBuilder = ResolveApplicationBuilder(app);
         if (applicationBuilder == null)
         {
             throw new InvalidOperationException(
@@ -125,11 +127,75 @@ public static class MiddlewareOrderValidator
         var middlewareTypes = new List<string>();
         foreach (var component in components)
         {
-            var componentTypeName = component.Target?.GetType().Name ?? "Unknown";
+            var target = component.Target;
+            var componentTypeName = target?.GetType().Name ?? "Unknown";
             middlewareTypes.Add(componentTypeName);
+
+            // Components registered through UseMiddleware<T>() arrive as compiler-generated
+            // closures whose target type name is opaque (e.g. <>c__DisplayClass...). The
+            // middleware identity is recoverable from the closure's captured state: the
+            // middleware System.Type (and for interface middleware, sometimes an instance).
+            // Without this, a real pipeline reports no middleware at all and validation
+            // silently degrades to a no-op (issue #1248 N3).
+            if (target is not null && componentTypeName.StartsWith("<", StringComparison.Ordinal))
+            {
+                middlewareTypes.AddRange(ExtractClosureMiddlewareNames(target));
+            }
         }
 
         return middlewareTypes;
+    }
+
+    /// <summary>
+    ///     Resolves the <see cref="ApplicationBuilder"/> backing an <see cref="IApplicationBuilder"/>.
+    ///     A bare builder casts directly; a <c>WebApplication</c> delegates its builder surface to a
+    ///     privately-held builder instance, found by scanning its instance fields (the field name
+    ///     is an implementation detail that has changed across ASP.NET Core versions).
+    /// </summary>
+    private static ApplicationBuilder? ResolveApplicationBuilder(IApplicationBuilder app)
+    {
+        if (app is ApplicationBuilder direct)
+        {
+            return direct;
+        }
+
+        var fields = app.GetType().GetFields(
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        foreach (var field in fields)
+        {
+            if (field.GetValue(app) is ApplicationBuilder wrapped)
+            {
+                return wrapped;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    ///     Collects middleware-looking names captured by a compiler-generated UseMiddleware
+    ///     closure: captured <see cref="Type"/> values and captured object instances whose
+    ///     type names end with "Middleware".
+    /// </summary>
+    private static IEnumerable<string> ExtractClosureMiddlewareNames(object closure)
+    {
+        const string Suffix = "Middleware";
+        var fields = closure.GetType().GetFields(
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        foreach (var field in fields)
+        {
+            var value = field.GetValue(closure);
+            switch (value)
+            {
+                case Type capturedType when capturedType.Name.EndsWith(Suffix, StringComparison.Ordinal):
+                    yield return capturedType.Name;
+                    break;
+                case { } captured when captured.GetType().Name.EndsWith(Suffix, StringComparison.Ordinal)
+                                      && captured is not Type:
+                    yield return captured.GetType().Name;
+                    break;
+            }
+        }
     }
 
     private static int FindMiddlewareIndex(List<string> pipeline, string middlewareName)

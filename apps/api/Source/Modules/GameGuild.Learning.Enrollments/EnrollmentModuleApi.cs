@@ -127,7 +127,8 @@ public sealed class EnrollmentService(
     IApplicationDbContext context,
     ILearningAuditEventSink auditSink,
     IRequestContextAccessor? requestContextAccessor = null,
-    ICohortEnrollmentGuard? cohortEnrollmentGuard = null) : IEnrollmentService
+    ICohortEnrollmentGuard? cohortEnrollmentGuard = null,
+    IPublisher? publisher = null) : IEnrollmentService
 {
     private Guid? ActingUserId => requestContextAccessor?.CurrentUserId;
 
@@ -206,9 +207,20 @@ public sealed class EnrollmentService(
             return null;
         }
 
+        var oldProgress = enrollment.Progress;
         enrollment.UpdateProgress(progress);
         await SaveWithAuditAsync(enrollment, "Learning.Enrollments.ProgressUpdated",
             $"Enrollment progress updated to {progress}%", new { Progress = progress }, cancellationToken).ConfigureAwait(false);
+
+        // Issue #1184 G4: LearningProgressUpdatedEvent was declared but never raised; the
+        // progress mutation is its producing site (old/new percentages feed the
+        // milestone-crossed recommendation refresh consumer).
+        if (publisher is not null && oldProgress != progress)
+        {
+            await publisher.Publish(new LearningProgressUpdatedEvent(
+                enrollment.UserId, enrollment.CourseId, null, null, oldProgress, progress), cancellationToken).ConfigureAwait(false);
+        }
+
         return ToDto(enrollment);
     }
 
@@ -264,6 +276,16 @@ public sealed class EnrollmentService(
             cancellationToken,
             completionActionType: status == EnrollmentStatus.Completed ? "Learning.Enrollments.EnrollmentCompleted" : null,
             completionDescription: $"Enrollment completed for course {enrollment.CourseId}").ConfigureAwait(false);
+
+        // Issue #1184 G4: CourseCompletedEvent was declared but never raised; the completion
+        // status transition is its producing site (time/content totals are not tracked on the
+        // enrollment row — zeros here; the learning-profile consumer counts completions).
+        if (publisher is not null && status == EnrollmentStatus.Completed && previousStatus != EnrollmentStatus.Completed)
+        {
+            await publisher.Publish(new CourseCompletedEvent(
+                enrollment.UserId, enrollment.CourseId, null, 0, 0), cancellationToken).ConfigureAwait(false);
+        }
+
         return ToDto(enrollment);
     }
 

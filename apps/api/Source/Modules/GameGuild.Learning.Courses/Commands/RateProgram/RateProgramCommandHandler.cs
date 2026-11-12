@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Learning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -7,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for RateProgramCommand
 /// </summary>
-public sealed class RateProgramCommandHandler(IApplicationDbContext context, ILogger<RateProgramCommandHandler> logger)
+public sealed class RateProgramCommandHandler(IApplicationDbContext context, ILogger<RateProgramCommandHandler> logger, IPublisher? publisher = null)
     : ICommandHandler<RateProgramCommand, ProgramRating>
 {
     public async Task<ProgramRating> Handle(RateProgramCommand request, CancellationToken cancellationToken) {
@@ -42,6 +43,23 @@ public sealed class RateProgramCommandHandler(IApplicationDbContext context, ILo
 
     logger.LogInformation("Added rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 
+    await PublishRatedAsync(userGuid, request, cancellationToken).ConfigureAwait(false);
+
     return rating;
   }
+
+    /// <summary>
+    ///     Issue #1184 G4: CourseRatedEvent was declared but never raised; program ratings are
+    ///     its producing site (first-time ratings only — re-ratings are rejected above).
+    ///     Separate method so the publish stays outside the persistence method (GGARCH003).
+    /// </summary>
+    private async Task PublishRatedAsync(Guid userGuid, RateProgramCommand request, CancellationToken cancellationToken)
+    {
+        if (publisher is null || userGuid == Guid.Empty)
+        {
+            return;
+        }
+
+        await publisher.Publish(new CourseRatedEvent(userGuid, request.ProgramId, null, request.Rating, request.Review), cancellationToken).ConfigureAwait(false);
+    }
 }

@@ -15,12 +15,12 @@ public static class HttpLoggingOptionsBuilder
     /// <summary>
     ///     Creates HTTP logging options from configuration
     /// </summary>
-    public static HttpLoggingOptions Create(IConfiguration configuration, string sectionName = "HttpLogging") { return OptionBuilderUtilities.CreateAndBind(configuration, sectionName, CreateDefault); }
+    public static HttpLoggingOptions Create(IConfiguration configuration, string sectionName = HttpLoggingOptions.SectionName) { return OptionBuilderUtilities.CreateAndBind(configuration, sectionName, CreateDefault); }
 
     /// <summary>
     ///     Creates HTTP logging options with validation
     /// </summary>
-    public static HttpLoggingOptions CreateWithValidation(IConfiguration configuration, string sectionName = "HttpLogging")
+    public static HttpLoggingOptions CreateWithValidation(IConfiguration configuration, string sectionName = HttpLoggingOptions.SectionName)
     {
         return OptionBuilderUtilities.CreateBindAndValidate(configuration, sectionName, CreateDefault, options => options.Validate());
     }

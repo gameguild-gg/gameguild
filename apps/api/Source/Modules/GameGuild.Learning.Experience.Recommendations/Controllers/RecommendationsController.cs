@@ -78,6 +78,19 @@ public class RecommendationsController(
     }
 
     /// <summary>
+    /// Record a click on a recommendation (issue #1184 G4: the click half of the
+    /// viewed/clicked/converted recommendation funnel — mirrors the viewed endpoint).
+    /// </summary>
+    [HttpPost("{id}/clicked")]
+    [Authorize]
+    public async Task<ActionResult> RecordRecommendationClick(Guid id)
+    {
+        var userId = GetRequiredUserId();
+        await sender.Send(new RecordRecommendationClickCommand(id, userId)).ConfigureAwait(false);
+        return NoContent();
+    }
+
+    /// <summary>
     /// Dismiss a recommendation
     /// </summary>
     [HttpPost("{id}/dismiss")]

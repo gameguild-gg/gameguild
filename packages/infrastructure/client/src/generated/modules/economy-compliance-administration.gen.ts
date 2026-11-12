@@ -149,6 +149,34 @@ export class EconomyComplianceAdministrationModule {
   }
 
   /**
+   * Submit a new Trust/Safety appeal (issue #1319 T1): the entry point that lets the
+   * appeals console actually create rows — assign/decide manage an appeal after it exists.
+   */
+  async postAdminEconomyComplianceTrustSafetyAppeals(
+    body: Types.APIControllersSubmitTrustSafetyAppealInput,
+  ): Promise<Result<Types.TrustSafetyTrustSafetyAppeal, ApiError>> {
+    const url = '/api/v1/admin/economy/compliance/trust-safety/appeals';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.APIControllersSubmitTrustSafetyAppealInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.TrustSafetyTrustSafetyAppealSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    */
   async postAdminEconomyComplianceTrustSafetyAppealsAssignment(
     appealId: string,

@@ -31,6 +31,10 @@ public sealed record AssignTrustSafetyAppealEndpointCommand(
 public sealed record DecideTrustSafetyAppealEndpointCommand(
     Guid TenantId, Guid AppealId, Guid ActorId, long ExpectedVersion, bool Overturn, string ReasonCode, string EvidenceHash, DateTimeOffset Now)
     : ICommand<TrustSafetyAppeal>;
+public sealed record SubmitTrustSafetyAppealEndpointCommand(
+    Guid TenantId, Guid ActorId, string SubjectHash, string RestrictionReferenceHash,
+    string SubmissionEvidenceHash, DateTimeOffset Now)
+    : ICommand<TrustSafetyAppeal>;
 
 public sealed record ProposeComplianceHoldReleaseEndpointCommand(
     EconomyStepUpOperation Operation, string StepUpReceipt, Guid TenantId, Guid HoldId, Guid ActorId, DateTimeOffset Now)
@@ -68,6 +72,7 @@ public sealed class EconomyComplianceEndpointCommandHandler(
     ICommandHandler<RecordRegulatoryReferenceEndpointCommand>,
     ICommandHandler<AssignTrustSafetyAppealEndpointCommand, TrustSafetyAppeal>,
     ICommandHandler<DecideTrustSafetyAppealEndpointCommand, TrustSafetyAppeal>,
+    ICommandHandler<SubmitTrustSafetyAppealEndpointCommand, TrustSafetyAppeal>,
     ICommandHandler<ProposeComplianceHoldReleaseEndpointCommand, ComplianceHoldAdministrationState>,
     ICommandHandler<ApproveComplianceHoldReleaseEndpointCommand, ComplianceHoldAdministrationState>,
     ICommandHandler<ApproveEconomyRiskReviewEndpointCommand, RiskReviewCase>,
@@ -94,6 +99,29 @@ public sealed class EconomyComplianceEndpointCommandHandler(
     public async Task<TrustSafetyAppeal> Handle(AssignTrustSafetyAppealEndpointCommand request, CancellationToken ct) =>
         await trustSafety.AssignAppealAsync(
             request.TenantId, request.AppealId, request.ActorId, request.ExpectedVersion, request.Now, ct).ConfigureAwait(false);
+
+    public async Task<TrustSafetyAppeal> Handle(SubmitTrustSafetyAppealEndpointCommand request, CancellationToken ct)
+    {
+        // Issue #1319 T1: SubmitAppealAsync was caller-less — the appeals console managed an
+        // eternally-empty table. New appeals enter the workflow through this command (state
+        // Submitted, version 1, unassigned); idempotent replays return the persisted row.
+        var appeal = new TrustSafetyAppeal(
+            Id: Guid.NewGuid(),
+            TenantId: request.TenantId,
+            SubjectHash: request.SubjectHash.Trim(),
+            RestrictionReferenceHash: request.RestrictionReferenceHash.Trim(),
+            State: TrustSafetyAppealState.Submitted,
+            SubmittedBy: request.ActorId,
+            AssignedTo: null,
+            DecidedBy: null,
+            SubmissionEvidenceHash: request.SubmissionEvidenceHash.Trim(),
+            DecisionEvidenceHash: null,
+            ReasonCode: null,
+            SubmittedAt: request.Now,
+            DecidedAt: null,
+            Version: 1);
+        return await trustSafety.SubmitAppealAsync(appeal, ct).ConfigureAwait(false);
+    }
 
     public async Task<TrustSafetyAppeal> Handle(DecideTrustSafetyAppealEndpointCommand request, CancellationToken ct) =>
         await trustSafety.DecideAppealAsync(

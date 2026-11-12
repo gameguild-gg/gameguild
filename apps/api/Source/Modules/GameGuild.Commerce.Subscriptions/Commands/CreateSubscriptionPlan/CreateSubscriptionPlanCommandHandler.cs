@@ -16,7 +16,8 @@ public sealed class CreateSubscriptionPlanCommandHandler(
     ISubscriptionPlanRepository subscriptionPlanRepository,
     ISubscriptionPlanSlugGenerator slugGenerator,
     ISubscriptionPlanListCache planListCache,
-    ILogger<CreateSubscriptionPlanCommandHandler> logger) : ICommandHandler<CreateSubscriptionPlanCommand, Guid>
+    ILogger<CreateSubscriptionPlanCommandHandler> logger,
+    GameGuild.CQRS.IPublisher? publisher = null) : ICommandHandler<CreateSubscriptionPlanCommand, Guid>
 {
     public async Task<Guid> Handle(CreateSubscriptionPlanCommand request, CancellationToken cancellationToken)
     {
@@ -66,6 +67,13 @@ public sealed class CreateSubscriptionPlanCommandHandler(
         logger.LogInformation(
             "Created subscription plan {PlanId} with name {PlanName} and slug {PlanSlug}",
             plan.Id, plan.Name, plan.Slug);
+
+        // Issue #1184 G4: PlanCreatedEvent was declared but never raised; plan creation is
+        // its producing site.
+        if (publisher is not null)
+        {
+            await publisher.Publish(new PlanCreatedEvent(plan.Id, plan.Name, request.MonthlyPriceInCents), cancellationToken).ConfigureAwait(false);
+        }
 
         return plan.Id;
     }

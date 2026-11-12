@@ -16,7 +16,7 @@ namespace GameGuild.Learning.Courses;
 /// (issue #1277: this class previously registered verbatim duplicates of those three,
 /// which resolved last-wins-silently in DI).
 /// </summary>
-public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILogger<ProgramBasicQueryHandlers> logger) : IRequestHandler<GetAllProgramsQuery, IEnumerable<Program>>,
+public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILogger<ProgramBasicQueryHandlers> logger, IRequestContextAccessor? requestContextAccessor = null, IPublisher? publisher = null) : IRequestHandler<GetAllProgramsQuery, IEnumerable<Program>>,
                                                                                                                     IRequestHandler<SearchProgramsQuery, IEnumerable<Program>>,
                                                                                                                     IRequestHandler<GetProgramsByCategoryQuery, IEnumerable<Program>>,
                                                                                                                     IRequestHandler<GetProgramsByDifficultyQuery, IEnumerable<Program>>,
@@ -127,6 +127,20 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
     var programs = await query.Skip(request.Skip).Take(request.Take).ToListAsync(cancellationToken).ConfigureAwait(false);
 
     logger.LogInformation("Found {Count} programs matching search", programs.Count);
+
+    // Issue #1184 G4: SearchPerformedEvent was declared but never raised; the public search
+    // query is its producing site (result count feeds the search-history analytics consumer;
+    // anonymous searches carry a null user by design).
+    if (publisher is not null)
+    {
+        await publisher.Publish(
+            new SearchPerformedEvent(
+                requestContextAccessor?.CurrentUserId,
+                request.SearchTerm,
+                programs.Count,
+                requestContextAccessor?.CurrentTenantId),
+            cancellationToken).ConfigureAwait(false);
+    }
 
     return programs;
   }

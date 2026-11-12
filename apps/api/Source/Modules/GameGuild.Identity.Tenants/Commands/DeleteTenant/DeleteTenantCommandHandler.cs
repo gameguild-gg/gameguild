@@ -7,7 +7,8 @@ namespace GameGuild.Identity.Tenants;
 /// </summary>
 public sealed class DeleteTenantCommandHandler(
     ITenantRepository tenantRepository,
-    ITenantAdministrationGuard administrationGuard) : ICommandHandler<DeleteTenantCommand>
+    ITenantAdministrationGuard administrationGuard,
+    GameGuild.CQRS.IPublisher? publisher = null) : ICommandHandler<DeleteTenantCommand>
 {
     public async Task<Unit> Handle(DeleteTenantCommand request, CancellationToken cancellationToken)
     {
@@ -36,6 +37,13 @@ public sealed class DeleteTenantCommandHandler(
         }
 
         await tenantRepository.DeleteAsync(tenant, cancellationToken).ConfigureAwait(false);
+
+        // Issue #1184 G4: TenantDeletedEvent was declared but never raised; tenant deletion
+        // is its producing site (cleanup consumers react to the removed tenant).
+        if (publisher is not null)
+        {
+            await publisher.Publish(new TenantDeletedEvent(tenant.Id, tenant.Name), cancellationToken).ConfigureAwait(false);
+        }
 
         return Unit.Value;
     }

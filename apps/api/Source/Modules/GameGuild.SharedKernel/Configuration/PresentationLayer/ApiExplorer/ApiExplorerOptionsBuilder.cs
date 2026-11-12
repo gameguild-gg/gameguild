@@ -19,7 +19,7 @@ public static class ApiExplorerOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Configured API explorer options</returns>
-    public static ApiExplorerOptions Create(IConfiguration configuration, string sectionName = "ApiExplorer")
+    public static ApiExplorerOptions Create(IConfiguration configuration, string sectionName = ApiExplorerOptions.SectionName)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -65,7 +65,7 @@ public static class ApiExplorerOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Validated API explorer options</returns>
-    public static ApiExplorerOptions Build(IConfiguration configuration, string sectionName = "ApiExplorer")
+    public static ApiExplorerOptions Build(IConfiguration configuration, string sectionName = ApiExplorerOptions.SectionName)
     {
         var options = Create(configuration, sectionName);
         Validate(options);

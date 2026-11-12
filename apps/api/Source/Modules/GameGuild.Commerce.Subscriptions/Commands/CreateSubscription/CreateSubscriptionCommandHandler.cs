@@ -21,7 +21,8 @@ public sealed class CreateSubscriptionCommandHandler(
     ILogger<CreateSubscriptionCommandHandler> logger,
     GameGuild.Commerce.ISubscriptionPromoCoordinator? promoCoordinator = null,
     GameGuild.Commerce.Payments.IFraudDetectionService? fraudDetectionService = null,
-    ISubscriptionIntervalPricingService? intervalPricingService = null) : ICommandHandler<CreateSubscriptionCommand, Guid>
+    ISubscriptionIntervalPricingService? intervalPricingService = null,
+    IPublisher? publisher = null) : ICommandHandler<CreateSubscriptionCommand, Guid>
 {
     private const int MaxFraudMetadataLength = 2000;
 
@@ -195,6 +196,13 @@ public sealed class CreateSubscriptionCommandHandler(
                 promoQuote.OriginalAmount,
                 effectiveAmount,
                 promoQuote.Currency);
+        }
+
+        // Issue #1184 G4: SubscriptionCreatedEvent was declared but never raised; subscription
+        // creation is its producing site.
+        if (publisher is not null)
+        {
+            await publisher.Publish(new SubscriptionCreatedEvent(subscription.Id, request.TenantId, request.PlanId), cancellationToken).ConfigureAwait(false);
         }
 
         return subscription.Id;

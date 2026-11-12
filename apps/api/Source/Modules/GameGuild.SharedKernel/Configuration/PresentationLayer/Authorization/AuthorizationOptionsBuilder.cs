@@ -14,12 +14,20 @@ public static class AuthorizationOptionsBuilder
     public static AuthorizationOptions Create() { return new AuthorizationOptions { DefaultPolicy = "Default", RequireAuthenticatedUser = true }; }
 
     /// <summary>
-    ///     Creates authorization options from a specific configuration section.
+    ///     Creates authorization options from a specific configuration section. The nested
+    ///     <see cref="AuthorizationOptions.OwnerOverride"/> sub-section is bound explicitly via
+    ///     <see cref="OwnerOverrideOptions.SectionName"/> so the sub-section key cannot drift
+    ///     from its declared contract.
     /// </summary>
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Configured authorization options</returns>
-    public static AuthorizationOptions Create(IConfiguration configuration, string sectionName = "Authorization") { return OptionBuilderUtilities.CreateAndBind(configuration, sectionName, Create); }
+    public static AuthorizationOptions Create(IConfiguration configuration, string sectionName = "Authorization")
+    {
+        var options = OptionBuilderUtilities.CreateAndBind(configuration, sectionName, Create);
+        configuration.GetSection(sectionName)?.GetSection(OwnerOverrideOptions.SectionName)?.Bind(options.OwnerOverride);
+        return options;
+    }
 
     /// <summary>
     ///     Validates the provided authorization options.
