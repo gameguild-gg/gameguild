@@ -859,6 +859,28 @@ public class OAuthAuthService(
             throw new UnauthorizedAccessException($"Email is not verified by {CultureInfo.InvariantCulture.TextInfo.ToTitleCase(provider)}");
         }
 
+        if (existingByEmail != null)
+        {
+            // Issue #1121: the identity resolves by (provider, providerKey) — that lookup
+            // above already missed. When the email-matched account is itself owned by a
+            // different external provider, linking here would silently merge two federated
+            // identities on the strength of a shared email address; whoever controls the
+            // address at one provider would inherit the account minted at the other. Only a
+            // local (password) account may still be auto-linked by a verified email below —
+            // a federated account must go through the explicit, authenticated linking flow.
+            var existingProviderLinks = await externalLoginRepository
+                .GetByUserIdAsync(existingByEmail.Id, cancellationToken).ConfigureAwait(false);
+            if (existingProviderLinks is { Count: > 0 } links && links.Any(link =>
+                    !string.Equals(link.Provider, provider, StringComparison.OrdinalIgnoreCase) ||
+                    !string.Equals(link.ProviderKey, providerKey, StringComparison.Ordinal)))
+            {
+                var existingProvider = links
+                    .Select(link => link.Provider)
+                    .FirstOrDefault(other => !string.Equals(other, provider, StringComparison.OrdinalIgnoreCase));
+                throw new FederatedAccountLinkRequiredException(provider, existingProvider, email);
+            }
+        }
+
         var user = existingByEmail;
         var createdNewUser = false;
         if (user == null)
@@ -871,6 +893,19 @@ public class OAuthAuthService(
         {
             if (createdNewUser)
             {
+                // Issue #1182: provider-provisioned accounts raise the same creation event as
+                // local sign-up (UserCreatedEvent carries the welcome email), so OAuth-first
+                // users are onboarded identically instead of silently skipping the welcome flow.
+                user.AddIntegrationEvent(new UserCreatedEvent(user.Id)
+                {
+                    TenantId = DurableIntegrationEventTenants.Platform,
+                    ActorId = user.Id,
+                    AggregateType = nameof(User),
+                    AggregateId = user.Id.ToString(),
+                    CorrelationId = Guid.NewGuid(),
+                    OccurredAt = DateTime.UtcNow
+                });
+
                 await userRepository.AddAsync(user, cancellationToken).ConfigureAwait(false);
                 await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -913,6 +948,21 @@ public class OAuthAuthService(
             // ExternalLogin row was rolled back but a User collision (email uniqueness) won.
             user = await userRepository.GetByEmailAsync(email, cancellationToken).ConfigureAwait(false)
                 ?? throw new UnauthorizedAccessException("User not found after race");
+
+            // Issue #1121 applies to the race-recovery path too: when the winning account is
+            // owned by a different provider, the same explicit-linking requirement holds — a
+            // concurrent duplicate sign-in must not silently graft this provider onto it.
+            var raceWinnerLinks = await externalLoginRepository
+                .GetByUserIdAsync(user.Id, cancellationToken).ConfigureAwait(false);
+            if (raceWinnerLinks is { Count: > 0 } winnerLinks && winnerLinks.Any(link =>
+                    !string.Equals(link.Provider, provider, StringComparison.OrdinalIgnoreCase) ||
+                    !string.Equals(link.ProviderKey, providerKey, StringComparison.Ordinal)))
+            {
+                var winnerProvider = winnerLinks
+                    .Select(link => link.Provider)
+                    .FirstOrDefault(other => !string.Equals(other, provider, StringComparison.OrdinalIgnoreCase));
+                throw new FederatedAccountLinkRequiredException(provider, winnerProvider, email);
+            }
 
             await externalLoginRepository.UpsertAsync(
                 new ExternalLogin

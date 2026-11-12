@@ -14,7 +14,7 @@ public sealed class PatchSubscriptionHandler(IApplicationDbContext context)
     {
         var subscription = await context.Set<Subscription>()
             .FirstOrDefaultAsync(s => s.Id == request.SubscriptionId, cancellationToken)
-            ?? throw new InvalidOperationException($"Subscription {request.SubscriptionId} not found");
+            ?? throw new EntityNotFoundException("Subscription", request.SubscriptionId);
 
         // Apply only provided fields using entity methods
         

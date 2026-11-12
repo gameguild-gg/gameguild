@@ -83,6 +83,140 @@ public class CreateChildLedgerHandler(ILedgerHierarchyService hierarchyService)
     }
 }
 
+public class CreateVirtualLedgerHandler(IVirtualLedgerService virtualLedgerService)
+    : IRequestHandler<CreateVirtualLedgerCommand, LedgerDto>
+{
+    public async Task<LedgerDto> Handle(CreateVirtualLedgerCommand request, CancellationToken ct)
+    {
+        var ledger = await virtualLedgerService.CreateVirtualLedgerAsync(
+            request.TenantId,
+            request.Code,
+            request.Name,
+            request.Filter,
+            request.CreatedByUserId,
+            request.Description,
+            ct);
+
+        return LedgerMapper.MapToDto(ledger);
+    }
+}
+
+public class UpdateLedgerHandler(ILedgerRepository repository)
+    : IRequestHandler<UpdateLedgerCommand, LedgerDto>
+{
+    public async Task<LedgerDto> Handle(UpdateLedgerCommand request, CancellationToken ct)
+    {
+        var ledger = await repository.GetByIdAsync(request.LedgerId, ct)
+            ?? throw new InvalidOperationException($"Ledger '{request.LedgerId}' not found.");
+
+        ledger.Update(request.Name, request.Description, request.UpdatedByUserId);
+
+        if (request.Tags is not null)
+        {
+            ledger.Tags.Clear();
+            ledger.Tags.AddRange(request.Tags);
+        }
+
+        await repository.UpdateAsync(ledger, ct);
+
+        return LedgerMapper.MapToDto(ledger);
+    }
+}
+
+public class ChangeLedgerStatusHandler(ILedgerRepository repository)
+    : IRequestHandler<ChangeLedgerStatusCommand, LedgerDto>
+{
+    public async Task<LedgerDto> Handle(ChangeLedgerStatusCommand request, CancellationToken ct)
+    {
+        var ledger = await repository.GetByIdAsync(request.LedgerId, ct)
+            ?? throw new InvalidOperationException($"Ledger '{request.LedgerId}' not found.");
+
+        ledger.ChangeStatus(request.NewStatus, request.UpdatedByUserId);
+        await repository.UpdateAsync(ledger, ct);
+
+        return LedgerMapper.MapToDto(ledger);
+    }
+}
+
+public class MoveLedgerHandler(ILedgerHierarchyService hierarchyService, ILedgerRepository repository)
+    : IRequestHandler<MoveLedgerCommand, LedgerDto>
+{
+    public async Task<LedgerDto> Handle(MoveLedgerCommand request, CancellationToken ct)
+    {
+        await hierarchyService.MoveLedgerAsync(request.LedgerId, request.NewParentLedgerId, request.MovedByUserId, ct);
+
+        var ledger = await repository.GetByIdAsync(request.LedgerId, ct)
+            ?? throw new InvalidOperationException($"Ledger '{request.LedgerId}' not found.");
+
+        return LedgerMapper.MapToDto(ledger);
+    }
+}
+
+public class SetLedgerBudgetHandler(ILedgerRepository repository)
+    : IRequestHandler<SetLedgerBudgetCommand, LedgerDto>
+{
+    public async Task<LedgerDto> Handle(SetLedgerBudgetCommand request, CancellationToken ct)
+    {
+        var ledger = await repository.GetByIdAsync(request.LedgerId, ct)
+            ?? throw new InvalidOperationException($"Ledger '{request.LedgerId}' not found.");
+
+        ledger.SetBudgetLimit(request.BudgetLimit, request.UpdatedByUserId);
+        await repository.UpdateAsync(ledger, ct);
+
+        return LedgerMapper.MapToDto(ledger);
+    }
+}
+
+public class DeleteLedgerHandler(ILedgerRepository repository)
+    : IRequestHandler<DeleteLedgerCommand, bool>
+{
+    public async Task<bool> Handle(DeleteLedgerCommand request, CancellationToken ct)
+    {
+        var ledger = await repository.GetByIdAsync(request.LedgerId, ct)
+            ?? throw new InvalidOperationException($"Ledger '{request.LedgerId}' not found.");
+
+        ledger.SoftDelete(request.DeletedByUserId);
+        await repository.UpdateAsync(ledger, ct);
+
+        return true;
+    }
+}
+
+public class UpdateVirtualLedgerFilterHandler(IVirtualLedgerService virtualLedgerService)
+    : IRequestHandler<UpdateVirtualLedgerFilterCommand, bool>
+{
+    public async Task<bool> Handle(UpdateVirtualLedgerFilterCommand request, CancellationToken ct)
+    {
+        await virtualLedgerService.UpdateFilterAsync(
+            request.VirtualLedgerId,
+            request.Filter,
+            request.UpdatedByUserId,
+            ct);
+
+        return true;
+    }
+}
+
+public class DeleteVirtualLedgerHandler(ILedgerRepository repository)
+    : IRequestHandler<DeleteVirtualLedgerCommand, bool>
+{
+    public async Task<bool> Handle(DeleteVirtualLedgerCommand request, CancellationToken ct)
+    {
+        var ledger = await repository.GetByIdAsync(request.VirtualLedgerId, ct)
+            ?? throw new InvalidOperationException($"Virtual ledger '{request.VirtualLedgerId}' not found.");
+
+        if (ledger.Type != Enums.LedgerType.Virtual)
+        {
+            throw new InvalidOperationException("Only virtual ledgers can be deleted through this command.");
+        }
+
+        ledger.SoftDelete(request.DeletedByUserId);
+        await repository.UpdateAsync(ledger, ct);
+
+        return true;
+    }
+}
+
 // ============================================================================
 // Ledger Query Handlers
 // ============================================================================
@@ -184,5 +318,67 @@ public class GetVirtualLedgersHandler(ILedgerRepository repository)
     {
         var ledgers = await repository.GetVirtualLedgersAsync(request.TenantId, ct);
         return ledgers.Select(l => LedgerMapper.MapToDto(l)).ToList();
+    }
+}
+
+public class SearchLedgersHandler(ILedgerRepository repository)
+    : IRequestHandler<SearchLedgersQuery, PagedResult<LedgerSummary>>
+{
+    public async Task<PagedResult<LedgerSummary>> Handle(SearchLedgersQuery request, CancellationToken ct)
+    {
+        var candidates = (await repository.GetByTenantAsync(request.TenantId, ct))
+            .AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var term = request.SearchTerm.Trim();
+            candidates = candidates.Where(l =>
+                l.Code.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || l.Name.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || (l.Description?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        if (request.Type.HasValue)
+        {
+            candidates = candidates.Where(l => l.Type == request.Type.Value);
+        }
+
+        if (request.Status.HasValue)
+        {
+            candidates = candidates.Where(l => l.Status == request.Status.Value);
+        }
+
+        if (request.Tags is not null)
+        {
+            var tags = request.Tags.ToList();
+            candidates = candidates.Where(l => tags.Any(tag => l.Tags.Contains(tag)));
+        }
+
+        var matched = candidates
+            .OrderBy(l => l.HierarchyPath)
+            .ThenBy(l => l.Code)
+            .ToList();
+
+        var items = matched
+            .Skip(request.Skip)
+            .Take(request.Take)
+            .Select(l => new LedgerSummary(
+                Id: l.Id,
+                Code: l.Code,
+                Name: l.Name,
+                Type: l.Type,
+                Status: l.Status,
+                CurrencyCode: l.CurrencyCode,
+                HierarchyPath: l.HierarchyPath,
+                HierarchyDepth: l.HierarchyDepth,
+                ParentLedgerId: l.ParentLedgerId,
+                NetBalance: l.CachedNetBalance,
+                EntryCount: l.CachedEntryCount,
+                ChildCount: l.Children.Count,
+                CreatedAt: l.CreatedAt,
+                UpdatedAt: l.UpdatedAt))
+            .ToList();
+
+        return new PagedResult<LedgerSummary>(items, matched.Count, request.Skip, request.Take);
     }
 }

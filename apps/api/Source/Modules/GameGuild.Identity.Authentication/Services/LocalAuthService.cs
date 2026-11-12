@@ -7,6 +7,7 @@ using GameGuild.CQRS;
 using GameGuild.Email;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -49,7 +50,8 @@ public class LocalAuthService(
     IOptions<IpBlocklistOptions>? ipBlocklistOptions = null,
     IAuthenticationAttemptRepository? attemptRepository = null,
     AuthenticationSecurityOptions? authenticationSecurityOptions = null,
-    IPublisher? eventPublisher = null
+    IPublisher? eventPublisher = null,
+    ITenantMaintenanceStateService? tenantMaintenanceState = null
 ) : ILocalAuthService
 {
     private const string ComplianceDeniedAuditAction = "Authentication.ComplianceDenied";
@@ -289,6 +291,11 @@ public class LocalAuthService(
             await DefaultTenantMembershipProvisioner.EnsureAsync(sender, authenticatedUserId, cancellationToken).ConfigureAwait(false);
             var tenantAccessContext = await ResolveTenantAccessContextAsync(authenticatedUserId, request.TenantId, cancellationToken).ConfigureAwait(false);
             RequireActiveTenantAccess(tenantAccessContext);
+            // Issue #1134: with the tenant resolved and the first factor verified, refuse
+            // non-admin sign-ins while the tenant holds an open maintenance window. Tenant
+            // admins (Owner/Admin) and platform SystemAdmins keep access so they can verify
+            // the tenant before reopening it.
+            await EnforceTenantMaintenanceAsync(tenantAccessContext, request.Email, authenticatedUserId, ipAddress, userAgent, stopwatch, cancellationToken).ConfigureAwait(false);
             // Evaluate server configuration using the resolved active tenant, never a caller-supplied policy.
             var localSignInPolicy = localSignInPolicyOptions?.Value ?? new LocalSignInPolicyOptions();
             if (localSignInPolicy.RequiresVerifiedEmail(tenantAccessContext.TenantId) && !authenticatedUser.IsEmailVerified)
@@ -555,6 +562,12 @@ public class LocalAuthService(
         }
         catch (UnauthorizedAccessException)
         {
+            throw;
+        }
+        catch (TenantMaintenanceException)
+        {
+            // Issue #1134: the 503 + Retry-After mapping lives in the controllers; never
+            // fold a maintenance refusal into the generic 401.
             throw;
         }
         catch (Exception ex)
@@ -858,21 +871,24 @@ public class LocalAuthService(
             }
 
             // Check for existing user
-            var emailExists = await userRepository.ExistsByEmailAsync(request.Email.ToLowerInvariant(), cancellationToken).ConfigureAwait(false);
+            var normalizedEmail = request.Email.ToLowerInvariant();
+            var emailExists = await userRepository.ExistsByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false);
 
             if (emailExists)
             {
                 await CompleteAuthenticationTimingAsync(timingOrigin, false, cancellationToken).ConfigureAwait(false);
                 logger.LogWarning("Sign-up attempted for an existing account");
 
-                throw new InvalidOperationException("User already exists");
+                // Issue #1197: typed conflict (409 via the exception-handling middleware)
+                // instead of an InvalidOperationException that fell into the 500 bucket.
+                throw new UserAlreadyExistsException(normalizedEmail);
             }
 
             var passwordHash = passwordHasher.HashPassword(request.Password);
 
             // Create new user using the unified User entity
             var newUser = User.CreateWithPassword(
-                request.Email.ToLowerInvariant(),
+                normalizedEmail,
                 request.Username ?? request.Email.Split('@')[0],
                 passwordHash,
                 username);
@@ -886,9 +902,34 @@ public class LocalAuthService(
                 OccurredAt = DateTime.UtcNow
             });
 
-            // Save to database
-            await userRepository.AddAsync(newUser, cancellationToken).ConfigureAwait(false);
-            await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            // Save to database. The pre-check above is advisory only: two concurrent
+            // sign-ups with the same email (or username) race through it and the loser
+            // is rejected by the DB unique indexes as a DbUpdateException (issue #1197
+            // TOCTOU). Re-check the constraints and surface a typed 409 conflict
+            // instead of a raw 500, mirroring the external-login link path.
+            try
+            {
+                await userRepository.AddAsync(newUser, cancellationToken).ConfigureAwait(false);
+                await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateException ex)
+            {
+                await CompleteAuthenticationTimingAsync(timingOrigin, false, cancellationToken).ConfigureAwait(false);
+                logger.LogWarning("Sign-up insert lost a uniqueness race: {ErrorType}", ex.GetType().FullName);
+
+                if (await userRepository.ExistsByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false))
+                {
+                    throw new UserAlreadyExistsException($"User with email {normalizedEmail} already exists.", ex);
+                }
+
+                if (await userRepository.ExistsByUsernameAsync(username, cancellationToken).ConfigureAwait(false))
+                {
+                    throw new UserAlreadyExistsException("Username already exists.", ex);
+                }
+
+                throw;
+            }
+
             var userId = newUser.Id;
 
             logger.LogInformation("Created new user with ID: {UserId}", userId);
@@ -1225,6 +1266,9 @@ public class LocalAuthService(
                 .ConfigureAwait(false);
             if (familySessionId.HasValue)
             {
+                // The session termination also writes the family's in-flight access-token JTI
+                // to the deny-list (issue #1179), so containment kills the paired access token
+                // immediately instead of at its natural expiry.
                 await sessionManagementService.TerminateSessionAsync(familySessionId.Value, SessionTerminationReason.SecurityViolation, cancellationToken)
                     .ConfigureAwait(false);
                 await AuthenticationEventDispatch.PublishAsync(
@@ -1273,6 +1317,88 @@ public class LocalAuthService(
         }
 
         throw new AccessDeniedException("Authenticated user has no active tenant membership.");
+    }
+
+    /// <summary>
+    ///     Tenant maintenance gate (issue #1134), evaluated after tenant resolution with the
+    ///     first factor already verified — a closed tenant never reveals whether an account
+    ///     exists. Non-admin sign-ins are refused with <see cref="TenantMaintenanceException"/>
+    ///     (mapped by the controllers to 503 + Retry-After); tenant Owner/Admin members and
+    ///     platform SystemAdmins pass. The resolved roles are already scoped to the selected
+    ///     tenant (<see cref="TenantAccessContextResolver"/>), so an Admin role on a different
+    ///     tenant grants no bypass here. Without a configured maintenance store the gate is inert.
+    /// </summary>
+    private async Task EnforceTenantMaintenanceAsync(
+        TenantAccessContext tenantAccessContext,
+        string email,
+        Guid userId,
+        string? ipAddress,
+        string? userAgent,
+        Stopwatch stopwatch,
+        CancellationToken cancellationToken)
+    {
+        if (tenantMaintenanceState is null || tenantAccessContext.TenantId is not { } tenantId)
+        {
+            return;
+        }
+
+        TenantMaintenanceState? maintenance;
+        try
+        {
+            maintenance = await tenantMaintenanceState.FindAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            // Fail open (mirrors the IP-blocklist posture): the maintenance gate protects a
+            // tenant from new sessions during a window — an unavailable state store must
+            // never turn into a platform-wide sign-in outage.
+            logger.LogError(exception, "Tenant maintenance lookup failed for tenant {TenantId}: {ErrorType}",
+                tenantId, exception.GetType().FullName);
+            return;
+        }
+
+        if (maintenance is null)
+        {
+            return;
+        }
+
+        if (tenantAccessContext.Roles.Any(role =>
+                TenantMaintenanceBypassRoles.BypassRoles.Contains(role, StringComparer.OrdinalIgnoreCase)))
+        {
+            logger.LogInformation(
+                "Sign-in for user {UserId} allowed during maintenance on tenant {TenantId}: administrator bypass",
+                userId, tenantId);
+            return;
+        }
+
+        try
+        {
+            await authAttemptService.RecordFailedAttemptAsync(
+                email, userId, ipAddress ?? "unknown", userAgent, "TenantMaintenance", stopwatch.Elapsed).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not record tenant-maintenance attempt for user {UserId}: {ErrorType}",
+                userId, exception.GetType().FullName);
+        }
+
+        logger.LogInformation(
+            "Sign-in refused for user {UserId}: tenant {TenantId} is in maintenance",
+            userId, tenantId);
+
+        var retryAfterSeconds = maintenance.ResumesAt is { } resumesAt && resumesAt > SystemClock.UtcNow
+            ? Convert.ToInt32(Math.Ceiling((resumesAt - SystemClock.UtcNow).TotalSeconds))
+            : (int?)null;
+        throw new TenantMaintenanceException(tenantId, retryAfterSeconds);
+    }
+
+    private static class TenantMaintenanceBypassRoles
+    {
+        /// <summary>
+        ///     Tenant Owner/Admin (may always enter their own tenant during maintenance) plus the
+        ///     platform-global SystemAdmin role trusted from the default tenant.
+        /// </summary>
+        public static readonly string[] BypassRoles = ["Owner", "Admin", "SystemAdmin"];
     }
 
     /// <summary>

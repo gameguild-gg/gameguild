@@ -26,7 +26,8 @@ Canonical record. Append-only. Date format YYYY-MM-DD.
 | 2026-11-02 | **Deadlock**: Tolsta tie-breaks product decisions only; treasury/structural have no tie-breaker | decision session |
 | 2026-11-02 | **Transfers**: revenue shares freely transferable; governance shares ROFR (existing governance holders may buy at same terms before outsiders) | decision session |
 | 2026-11-02 | **Exit for cause** = unvested reclaimed + harsher clause (defined with counsel) | decision session |
-| 2026-11-02 | **Treasury vote rule**: anything outside the approved quarterly plan needs supermajority (≥70%) | decision session |
+| 2026-11-02 | **Treasury vote rule**: anything outside the approved quarterly plan needs qualified majority (≥70%) |
+| 2026-11-02 | **Voting thresholds are qualified majority, never simple majority**: product + quarterly cycle votes ≥66⅔%, treasury ≥70%, structural 100%. Rationale: 30+30=60% must never override the 40% holder — all passing thresholds sit above any two-holder coalition | decision session |
 | 2026-11-02 | **Runway floor: 6 months**; **sweep cadence: quarterly** | decision session |
 | 2026-11-02 | **Founder loans: cash or convert at discount** (election at round) | decision session |
 | 2026-11-02 | **Incorporate Delaware ASAP** (before any paid sale); Matheus + Joel both Brazil-resident | decision session |

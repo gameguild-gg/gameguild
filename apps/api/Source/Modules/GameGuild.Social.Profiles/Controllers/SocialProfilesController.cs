@@ -1,6 +1,7 @@
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Social.Profiles;
@@ -17,8 +18,15 @@ public sealed class SocialProfilesController(
     IProfilePortfolioRepository portfolio) : ControllerBase
 {
     [HttpGet("users/{userId:guid}")]
+    [ProducesResponseType<SocialProfileDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<SocialProfileDto?>> GetByUser(Guid userId, CancellationToken ct)
-        => Ok(await sender.Send(new GetSocialProfileByUserQuery(userId), ct).ConfigureAwait(false));
+    {
+        // Issue #1315 SP1: a Private/Connections profile is only served to its owner, a
+        // system admin, or an explicit follower; every other caller gets 404.
+        var profile = await sender.Send(new GetSocialProfileByUserQuery(userId), ct).ConfigureAwait(false);
+        return profile is null ? NotFound() : Ok(profile);
+    }
 
     [HttpGet("users/{userId:guid}/or-create")]
     public async Task<ActionResult<SocialProfileDto>> GetOrCreate(Guid userId, CancellationToken ct)
@@ -33,8 +41,16 @@ public sealed class SocialProfilesController(
 
     [AllowAnonymous]
     [HttpGet("@{handle}")]
+    [ProducesResponseType<SocialProfileDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<SocialProfileDto?>> GetByHandle(string handle, CancellationToken ct)
-        => Ok(await sender.Send(new GetSocialProfileByHandleQuery(handle), ct).ConfigureAwait(false));
+    {
+        // Issue #1315 SP1: anonymous and non-entitled callers must not read Private profile
+        // details (Location, WebsiteUrl, SocialLinksJson) — the visibility-enforcing query
+        // returns null and this surface answers 404, indistinguishable from an unknown handle.
+        var profile = await sender.Send(new GetSocialProfileByHandleQuery(handle), ct).ConfigureAwait(false);
+        return profile is null ? NotFound() : Ok(profile);
+    }
 
     [AllowAnonymous]
     [HttpGet("search")]

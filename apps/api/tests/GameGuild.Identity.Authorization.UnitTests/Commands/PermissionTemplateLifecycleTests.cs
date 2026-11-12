@@ -179,7 +179,7 @@ public class PermissionTemplateLifecycleTests
             Name = "x", Description = "d", Permissions = ["read"]
         }, CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await act.Should().ThrowAsync<AuthenticationRequiredException>();
         _templates.Should().BeEmpty();
     }
 
@@ -194,7 +194,7 @@ public class PermissionTemplateLifecycleTests
             Name = "sys", Description = "d", Permissions = ["read"], IsSystemTemplate = true
         }, CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await act.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]
@@ -263,7 +263,7 @@ public class PermissionTemplateLifecycleTests
             Permissions = ["read", "write", "delete"]
         }, CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await act.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]
@@ -311,7 +311,7 @@ public class PermissionTemplateLifecycleTests
 
         var act = () => DeleteSut().Handle(new DeletePermissionTemplateCommand { TemplateId = template.Id }, CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await act.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]
@@ -361,7 +361,7 @@ public class PermissionTemplateLifecycleTests
             TargetUserIds = [_targetUserId]
         }, CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await act.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]
@@ -445,7 +445,7 @@ public class PermissionTemplateLifecycleTests
             TemplateId = template.Id, ToVersion = 2
         }, CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await act.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]

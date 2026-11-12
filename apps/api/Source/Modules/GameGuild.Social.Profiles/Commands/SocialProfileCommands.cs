@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Social.Profiles;
 
@@ -112,10 +113,11 @@ public sealed class RemoveProfilePortfolioItemCommandHandler(ISocialProfileServi
         => service.RemovePortfolioItemAsync(request.ItemId, cancellationToken);
 }
 
-public sealed class GetSocialProfileByUserQueryHandler(ISocialProfileService service) : IQueryHandler<GetSocialProfileByUserQuery, SocialProfileDto?>
+public sealed class GetSocialProfileByUserQueryHandler(ISocialProfileService service, IActorContextAccessor actorContextAccessor)
+    : IQueryHandler<GetSocialProfileByUserQuery, SocialProfileDto?>
 {
     public Task<SocialProfileDto?> Handle(GetSocialProfileByUserQuery request, CancellationToken cancellationToken)
-        => service.GetByUserAsync(request.UserId, cancellationToken);
+        => service.GetByUserForViewerAsync(request.UserId, actorContextAccessor.ActorContext.ToProfileViewer(), cancellationToken);
 }
 
 public sealed class GetOrCreateSocialProfileQueryHandler(ISocialProfileService service) : IQueryHandler<GetOrCreateSocialProfileQuery, SocialProfileDto>
@@ -124,10 +126,11 @@ public sealed class GetOrCreateSocialProfileQueryHandler(ISocialProfileService s
         => service.GetOrCreateAsync(request.UserId, cancellationToken);
 }
 
-public sealed class GetSocialProfileByHandleQueryHandler(ISocialProfileService service) : IQueryHandler<GetSocialProfileByHandleQuery, SocialProfileDto?>
+public sealed class GetSocialProfileByHandleQueryHandler(ISocialProfileService service, IActorContextAccessor actorContextAccessor)
+    : IQueryHandler<GetSocialProfileByHandleQuery, SocialProfileDto?>
 {
     public Task<SocialProfileDto?> Handle(GetSocialProfileByHandleQuery request, CancellationToken cancellationToken)
-        => service.GetByHandleAsync(request.Handle, cancellationToken);
+        => service.GetByHandleForViewerAsync(request.Handle, actorContextAccessor.ActorContext.ToProfileViewer(), cancellationToken);
 }
 
 public sealed class SearchSocialProfilesQueryHandler(ISocialProfileService service) : IQueryHandler<SearchSocialProfilesQuery, List<SocialProfileDto>>

@@ -19,7 +19,7 @@ public static class EconomyCapabilityCompositionExtensions
         ArgumentNullException.ThrowIfNull(configuration);
         services.TryAddSingleton(configuration);
         services.AddEconomyRiskComposition(configuration);
-        services.AddFinancialCrimeComposition();
+        services.AddFinancialCrimeComposition(configuration);
         services.AddTrustSafetyComposition();
         services.TryAddSingleton<IEconomyProviderCapabilityReadiness, EconomyProviderCapabilityReadiness>();
         return services;
