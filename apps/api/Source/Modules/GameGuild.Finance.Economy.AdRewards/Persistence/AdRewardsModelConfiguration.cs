@@ -1,3 +1,4 @@
+using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Finance.Economy.AdRewards.Persistence;
@@ -315,7 +316,30 @@ public sealed class AdRewardsModelConfiguration : IModelConfiguration
         // the shared FK-free economy_inbox table (InboxKind = 2 =
         // AdRewardProviderProof). The provider column carries the network; the
         // session link stays as plain data (no FK) so provider events keep
-        // being accepted while sessions are rebuilt (#1092 §3.3).
+        // being accepted while sessions are rebuilt (#1092 §3.3). The module
+        // contributes the AdRewardProviderProof binding (mirroring the
+        // Marketplace/Treasury outbox contributions) so contexts composing
+        // only this configuration can persist proof rows.
+        modelBuilder.Entity<EconomyInboxRow>(builder =>
+        {
+            builder.ToTable("economy_inbox");
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Provider).HasMaxLength(100);
+            builder.Property(row => row.Environment).HasMaxLength(50);
+            builder.Property(row => row.ProviderEventId).HasMaxLength(256);
+            builder.Property(row => row.PayloadHash).HasMaxLength(128);
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.Property(row => row.RawObjectReference).HasMaxLength(1000);
+            builder.Property(row => row.ProcessingError).HasMaxLength(2000);
+            builder.HasIndex(row => new { row.Provider, row.Environment, row.ProviderEventId })
+                .IsUnique()
+                .HasFilter("\"InboxKind\" = 1")
+                .HasDatabaseName("ux_economy_inbox_provider_event");
+            builder.HasIndex(row => new { row.TenantId, row.Provider, row.ProviderEventId })
+                .IsUnique()
+                .HasFilter("\"InboxKind\" = 2")
+                .HasDatabaseName("ux_economy_inbox_tenant_provider_event");
+        });
 
         modelBuilder.Entity<AdRewardPendingClaimRow>(builder =>
         {

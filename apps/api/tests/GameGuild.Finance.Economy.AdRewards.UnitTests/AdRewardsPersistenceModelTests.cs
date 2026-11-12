@@ -18,6 +18,7 @@ public sealed class AdRewardsPersistenceModelTests
             "economy_ad_network_policy_versions",
             "economy_ad_reward_sessions",
             "economy_ad_reward_session_timeline",
+            "economy_inbox",
             "economy_ad_reward_pending_claims",
             "economy_ad_reward_cap_consumptions",
             "economy_ad_reward_completions",
