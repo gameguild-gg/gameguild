@@ -28,16 +28,16 @@
     "@lexical/table": "^0.53.0",
     "@lexical/utils": "^0.53.0",
     "@monaco-editor/react": "^4.7.0",
-    "@shikijs/monaco": "^4.5.0",
-    "d3-dsv": "^3.0.1",
+    "@shikijs/monaco": "^4.6.0",
+    "d3-dsv": "^3.0.2",
     "dompurify": "3.4.17",
     "katex": "^0.19.1",
     "lexical": "^0.53.0",
     "lucide-react": "^1.66.0",
     "mathlive": "^0.111.4",
-    "mermaid": "^12.2.0",
+    "mermaid": "^12.3.0",
     "monaco-editor": "^0.57.0",
-    "shiki": "^4.5.0",
+    "shiki": "^4.6.0",
     "vega": "^6.2.0",
     "vega-lite": "^6.5.0",
     "vega-themes": "^3.0.0"
@@ -56,6 +56,6 @@
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "typescript": "^6.0.3",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   }
 }
