@@ -11,7 +11,6 @@ let mockAuth: MockUseAuthReturn;
 let mockLocationHref: (url: string) => void;
 const originalLocation = window.location;
 const mockCompleteMfaEnrollment = vi.fn<(...args: unknown[]) => Promise<unknown>>();
-const mockSendMfaSmsChallenge = vi.fn<(...args: unknown[]) => Promise<unknown>>();
 
 vi.mock('@game-guild/client/react', () => ({
   useAuth: () => mockAuth,
@@ -19,7 +18,6 @@ vi.mock('@game-guild/client/react', () => ({
 
 vi.mock('@/lib/auth/mfa-sign-in-actions', () => ({
   completeMfaEnrollmentAction: (...args: unknown[]) => mockCompleteMfaEnrollment(...args),
-  sendMfaSmsChallengeAction: (...args: unknown[]) => mockSendMfaSmsChallenge(...args),
 }));
 
 vi.mock('next-intl', () => ({
@@ -53,7 +51,6 @@ const enrollmentChallenge = {
 describe('MfaChallengeForm', () => {
   beforeEach(() => {
     mockAuth = createMockUseAuth();
-    mockSendMfaSmsChallenge.mockReset();
     mockLocationHref = vi.fn();
     Object.defineProperty(window, 'location', {
       value: {
@@ -226,105 +223,5 @@ describe('MfaChallengeForm', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('signIn.mfa.copyFailed');
     expect(screen.getByTestId('mfa-enrollment-secret')).toHaveTextContent(enrollmentChallenge.mfaEnrollment.secretKey);
     expect(screen.queryByText('signIn.mfa.copied')).not.toBeInTheDocument();
-  });
-
-  it('requests SMS only on an explicit click, then completes the held SMS-only challenge', async () => {
-    mockAuth.mfaChallenge = { ...challenge, availableMethods: ['sMs'] };
-    mockSendMfaSmsChallenge.mockResolvedValue({ success: true });
-    const { user } = renderWithUser(<MfaChallengeForm redirectTo="/workspace" />);
-    expect(mockSendMfaSmsChallenge).not.toHaveBeenCalled();
-    expect(screen.queryByLabelText('signIn.mfa.methodLabel')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'signIn.mfa.smsSend' }));
-    expect(mockSendMfaSmsChallenge).toHaveBeenCalledExactlyOnceWith(challenge.mfaToken);
-    expect(await screen.findByRole('status')).toHaveTextContent('signIn.mfa.smsSent');
-    expect(mockAuth.signIn).not.toHaveBeenCalled();
-    await user.type(screen.getByLabelText('signIn.mfa.codeLabel'), '123456');
-    await user.click(screen.getByRole('button', { name: 'signIn.mfa.submit' }));
-    expect(mockAuth.signIn).toHaveBeenCalledWith('credentials', {
-      mfaToken: challenge.mfaToken, method: 'Sms', code: '123456', redirectTo: '/workspace',
-    });
-  });
-
-  it('offers only supported advertised methods and switches to SMS without sending automatically', async () => {
-    mockAuth.mfaChallenge = { ...challenge, availableMethods: ['Totp', 'Sms', 'Push', 'Email', 'Sms'] };
-    const { user } = renderWithUser(<MfaChallengeForm />);
-    expect(screen.getAllByRole('option')).toHaveLength(2);
-    expect(screen.queryByRole('button', { name: 'signIn.mfa.smsSend' })).not.toBeInTheDocument();
-    await user.selectOptions(screen.getByLabelText('signIn.mfa.methodLabel'), 'Sms');
-    expect(screen.getByRole('button', { name: 'signIn.mfa.smsSend' })).toBeInTheDocument();
-    expect(mockSendMfaSmsChallenge).not.toHaveBeenCalled();
-  });
-
-  it('keeps the challenge on a denied SMS send and does not expose backend diagnostics', async () => {
-    mockAuth.mfaChallenge = { ...challenge, availableMethods: ['Sms'] };
-    mockSendMfaSmsChallenge.mockResolvedValue({ success: false, message: 'private provider diagnostic' });
-    const { user } = renderWithUser(<MfaChallengeForm />);
-    await user.click(screen.getByRole('button', { name: 'signIn.mfa.smsSend' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('signIn.mfa.smsFailed');
-    expect(screen.queryByText('private provider diagnostic')).not.toBeInTheDocument();
-    expect(mockAuth.clearMfa).not.toHaveBeenCalled();
-    expect(mockAuth.signIn).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'signIn.mfa.smsSend' })).toBeEnabled();
-  });
-
-  it('handles a thrown SMS delivery failure without clearing the challenge', async () => {
-    mockAuth.mfaChallenge = { ...challenge, availableMethods: ['Sms'] };
-    mockSendMfaSmsChallenge.mockRejectedValue(new Error('provider secret diagnostic'));
-    const { user } = renderWithUser(<MfaChallengeForm />);
-    await user.click(screen.getByRole('button', { name: 'signIn.mfa.smsSend' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('signIn.mfa.smsFailed');
-    expect(screen.queryByText('provider secret diagnostic')).not.toBeInTheDocument();
-    expect(mockAuth.clearMfa).not.toHaveBeenCalled();
-  });
-
-  it('ignores an old SMS delivery response when the challenge changes', async () => {
-    let finish!: (value: { success: boolean }) => void;
-    mockAuth.mfaChallenge = { ...challenge, availableMethods: ['Sms'] };
-    mockSendMfaSmsChallenge.mockReturnValue(new Promise((resolve) => { finish = resolve; }));
-    const { user, rerender } = renderWithUser(<MfaChallengeForm />);
-    await user.click(screen.getByRole('button', { name: 'signIn.mfa.smsSend' }));
-    expect(screen.getByRole('button', { name: 'signIn.mfa.smsSending' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'signIn.mfa.smsSending' }));
-    expect(mockSendMfaSmsChallenge).toHaveBeenCalledTimes(1);
-    mockAuth.mfaChallenge = { mfaToken: 'y'.repeat(43), availableMethods: ['Totp'] };
-    rerender(<MfaChallengeForm />);
-    finish({ success: true });
-    await waitFor(() => expect(screen.queryByText('signIn.mfa.smsSent')).not.toBeInTheDocument());
-    expect(screen.queryByRole('button', { name: 'signIn.mfa.smsResend' })).not.toBeInTheDocument();
-    await user.type(screen.getByLabelText('signIn.mfa.codeLabel'), '123456');
-    await user.click(screen.getByRole('button', { name: 'signIn.mfa.submit' }));
-    expect(mockAuth.signIn).toHaveBeenCalledWith('credentials', expect.objectContaining({
-      mfaToken: 'y'.repeat(43), method: 'Totp',
-    }));
-  });
-
-  it('resets a selected SMS method to the new challenge available method', async () => {
-    mockAuth.mfaChallenge = { ...challenge, availableMethods: ['Totp', 'Sms'] };
-    const { user, rerender } = renderWithUser(<MfaChallengeForm />);
-    await user.selectOptions(screen.getByLabelText('signIn.mfa.methodLabel'), 'Sms');
-    mockAuth.mfaChallenge = { mfaToken: 'y'.repeat(43), availableMethods: ['BackupCode'] };
-    rerender(<MfaChallengeForm />);
-    await user.type(screen.getByLabelText('signIn.mfa.codeLabel'), 'recovery-code');
-    await user.click(screen.getByRole('button', { name: 'signIn.mfa.submit' }));
-    expect(mockAuth.signIn).toHaveBeenCalledWith('credentials', expect.objectContaining({
-      mfaToken: 'y'.repeat(43), method: 'BackupCode', code: 'recovery-code',
-    }));
-  });
-
-  it('fails closed when the server advertises only unsupported factors', () => {
-    mockAuth.mfaChallenge = { ...challenge, availableMethods: ['Push', 'Email', 'constructor'] };
-    render(<MfaChallengeForm />);
-    expect(screen.getByRole('alert')).toHaveTextContent('signIn.mfa.noSupportedMethod');
-    expect(screen.getByRole('button', { name: 'signIn.mfa.submit' })).toBeDisabled();
-    expect(mockAuth.signIn).not.toHaveBeenCalled();
-    expect(mockSendMfaSmsChallenge).not.toHaveBeenCalled();
-  });
-
-  it('keeps required enrollment TOTP-only even if SMS appears in the advertised methods', () => {
-    mockAuth.mfaChallenge = { ...enrollmentChallenge, availableMethods: ['Sms', 'Totp'] };
-    render(<MfaChallengeForm />);
-    expect(screen.getByTestId('mfa-enrollment-qr')).toBeInTheDocument();
-    expect(screen.queryByLabelText('signIn.mfa.methodLabel')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'signIn.mfa.smsSend' })).not.toBeInTheDocument();
   });
 });

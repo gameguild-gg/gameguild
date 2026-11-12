@@ -147,17 +147,12 @@ describe('MfaMethodsManager (settings/security, issue #244)', () => {
 
     await user.click(screen.getByTestId('mfa-sms-start'));
     await user.type(screen.getByLabelText('settings.security.mfa.sms.phoneLabel'), '+15551234567');
-    const password = crypto.randomUUID();
-    const send = screen.getByRole('button', { name: 'settings.security.mfa.sms.send' });
-    expect(send).toBeDisabled();
-    await user.type(screen.getByLabelText('settings.security.mfa.sms.passwordLabel'), password);
     await user.click(screen.getByRole('button', { name: 'settings.security.mfa.sms.send' }));
 
     await waitFor(() => {
-      expect(mocks.startSmsEnrollment).toHaveBeenCalledWith('+15551234567', password);
+      expect(mocks.startSmsEnrollment).toHaveBeenCalledWith('+15551234567');
     });
 
-    expect(screen.getByLabelText('settings.security.mfa.sms.passwordLabel')).toHaveValue('');
     await user.type(screen.getByLabelText('settings.security.mfa.sms.codeLabel'), '654321');
     await user.click(screen.getByRole('button', { name: 'settings.security.mfa.sms.complete' }));
 
@@ -227,24 +222,5 @@ describe('MfaMethodsManager (settings/security, issue #244)', () => {
     await waitFor(() => {
       expect(mocks.toastError).toHaveBeenCalledWith('Password verification failed');
     });
-  });
-
-  it('requires a fresh password for SMS and clears a denied password without offering completion', async () => {
-    mocks.startSmsEnrollment.mockClear();
-    mocks.startSmsEnrollment.mockResolvedValue({ success: false, status: 'error', message: 'Password verification failed' });
-    const user = userEvent.setup();
-    render(<MfaMethodsManager data={makeData({ smsAvailable: true })} />);
-    await user.click(screen.getByTestId('mfa-sms-start'));
-    await user.type(screen.getByLabelText('settings.security.mfa.sms.phoneLabel'), '+15551234567');
-    const send = screen.getByRole('button', { name: 'settings.security.mfa.sms.send' });
-    expect(send).toBeDisabled();
-    await user.click(send);
-    expect(mocks.startSmsEnrollment).not.toHaveBeenCalled();
-    await user.type(screen.getByLabelText('settings.security.mfa.sms.passwordLabel'), crypto.randomUUID());
-    await user.click(send);
-    await waitFor(() => expect(mocks.startSmsEnrollment).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(screen.getByLabelText('settings.security.mfa.sms.passwordLabel')).toHaveValue(''));
-    expect(screen.queryByLabelText('settings.security.mfa.sms.codeLabel')).not.toBeInTheDocument();
-    expect(send).toBeDisabled();
   });
 });

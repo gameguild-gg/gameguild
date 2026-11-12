@@ -6,7 +6,7 @@
  *
  * Mounted from `AnalyticsConsent`. Collects LCP/INP/CLS/TTFB/FCP via the
  * `web-vitals` library and a Navigation Timing 2 `page_load_timing` event
- * (once per document), dispatches an explicit consent-gated
+ * (re-sent on SPA route changes), dispatches an explicit consent-gated
  * `page_view` on every SPA route change (GA4 gtag.js transport is
  * configured with `send_page_view: false`, so this is the single source —
  * issue #1221), and forwards everything to GA4 (through the consent-mode

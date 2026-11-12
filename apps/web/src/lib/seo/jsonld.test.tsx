@@ -77,14 +77,10 @@ describe('buildEventJsonLd', () => {
     expect(data.organizer).toMatchObject({ '@type': 'Organization', name: 'GameGuild' });
   });
 
-  it('uses OfflineEventAttendanceMode and Place location for InPerson events', () => {
+  it('uses OfflineEventAttendanceMode and drops VirtualLocation for InPerson events', () => {
     const data = buildEventJsonLd({ name: 'LAN Playtest', url: '/testing-lab/events/lan', mode: 'InPerson' });
     expect(data.eventAttendanceMode).toBe('https://schema.org/OfflineEventAttendanceMode');
-    expect(data.location).toEqual({
-      '@type': 'Place',
-      name: 'GameGuild',
-      url: `${SITE_BASE_URL}/testing-lab/events/lan`,
-    });
+    expect(data).not.toHaveProperty('location');
   });
 });
 

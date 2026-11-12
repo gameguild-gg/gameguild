@@ -53,7 +53,6 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
   const [methodState, setMethodState] = React.useState<MethodState>({ kind: 'idle' });
   const [code, setCode] = React.useState('');
   const [phone, setPhone] = React.useState('');
-  const [smsPassword, setSmsPassword] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [disableOpen, setDisableOpen] = React.useState(false);
   const [regenerateOpen, setRegenerateOpen] = React.useState(false);
@@ -111,7 +110,7 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
   async function handleStartSms() {
     setBusy(true);
     try {
-      const result = await startSmsEnrollmentAction(phone, smsPassword);
+      const result = await startSmsEnrollmentAction(phone);
       if (result.success && result.smsSetup) {
         setMethodState({ kind: 'sms-active', maskedPhone: result.smsSetup.phoneNumberMasked ?? phone });
         setCode('');
@@ -120,7 +119,6 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
         reportFailure(result.message);
       }
     } finally {
-      setSmsPassword('');
       setBusy(false);
     }
   }
@@ -286,24 +284,11 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
                   placeholder="+15551234567"
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="mfa-sms-password">{t('sms.passwordLabel')}</Label>
-                <Input
-                  id="mfa-sms-password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={smsPassword}
-                  onChange={(event) => setSmsPassword(event.target.value)}
-                  disabled={busy}
-                  aria-describedby="mfa-sms-password-description"
-                />
-                <p id="mfa-sms-password-description" className="text-muted-foreground text-sm">{t('sms.passwordDescription')}</p>
-              </div>
               <div className="flex gap-2">
-                <Button onClick={() => void handleStartSms()} disabled={busy || phone.trim().length < 9 || !smsPassword}>
+                <Button onClick={() => void handleStartSms()} disabled={busy || phone.trim().length < 9}>
                   {t('sms.send')}
                 </Button>
-                <Button variant="ghost" onClick={() => { setSmsPassword(''); setMethodState({ kind: 'idle' }); }} disabled={busy}>
+                <Button variant="ghost" onClick={() => setMethodState({ kind: 'idle' })} disabled={busy}>
                   {t('methods.cancel')}
                 </Button>
               </div>
