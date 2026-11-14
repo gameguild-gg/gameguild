@@ -10,17 +10,23 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public interface ITokenRevocationPostCommitCoordinator
 {
+
+    Task RevokeSessionAccessTokenAsync(Guid sessionId, string reason)
+        => RevokeSessionAccessTokenAsync(sessionId, reason, default);
     /// <summary>
     ///     Writes (or defers) the session access-token deny-list entry for a terminated session.
     /// </summary>
-    Task RevokeSessionAccessTokenAsync(Guid sessionId, string reason, CancellationToken cancellationToken = default);
+    Task RevokeSessionAccessTokenAsync(Guid sessionId, string reason, CancellationToken cancellationToken);
+
+    Task FlushCommittedAsync()
+        => FlushCommittedAsync(default);
 
     /// <summary>
     ///     Writes every deferred entry. Called by the command pipeline after its transaction
     ///     commits; best-effort — a failed write is logged and dropped (the session row's
     ///     terminated state remains the primary revocation signal).
     /// </summary>
-    Task FlushCommittedAsync(CancellationToken cancellationToken = default);
+    Task FlushCommittedAsync(CancellationToken cancellationToken);
 
     /// <summary>Discards every deferred entry (rollback path).</summary>
     void DiscardPending();

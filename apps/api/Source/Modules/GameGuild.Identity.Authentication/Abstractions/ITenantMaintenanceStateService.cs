@@ -37,13 +37,19 @@ public sealed record TenantMaintenanceState
 /// </summary>
 public interface ITenantMaintenanceStateService
 {
+
+    Task<TenantMaintenanceState?> FindAsync(Guid tenantId)
+        => FindAsync(tenantId, default);
     /// <summary>
     ///     Returns the tenant's active maintenance window, or null when the tenant is not in
     ///     maintenance (including when the stored window has no scheduled resume that has
     ///     passed — an open-ended window only ends when cleared).
     /// </summary>
-    Task<TenantMaintenanceState?> FindAsync(Guid tenantId, CancellationToken cancellationToken = default);
+    Task<TenantMaintenanceState?> FindAsync(Guid tenantId, CancellationToken cancellationToken);
+
+    Task SetMaintenanceAsync(Guid tenantId, TenantMaintenanceState? state)
+        => SetMaintenanceAsync(tenantId, state, default);
 
     /// <summary>Opens (or replaces) the maintenance window for a tenant; null clears it.</summary>
-    Task SetMaintenanceAsync(Guid tenantId, TenantMaintenanceState? state, CancellationToken cancellationToken = default);
+    Task SetMaintenanceAsync(Guid tenantId, TenantMaintenanceState? state, CancellationToken cancellationToken);
 }

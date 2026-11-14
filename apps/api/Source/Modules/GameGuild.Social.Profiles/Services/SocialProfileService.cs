@@ -6,8 +6,14 @@ public interface ISocialProfileService
     Task<SocialProfileDto> GetOrCreateAsync(Guid userId, CancellationToken ct = default);
     Task<SocialProfileDto?> GetByUserAsync(Guid userId, CancellationToken ct = default);
     Task<SocialProfileDto?> GetByHandleAsync(string handle, CancellationToken ct = default);
-    Task<SocialProfileDto?> GetByHandleForViewerAsync(string handle, ProfileViewer viewer, CancellationToken ct = default);
-    Task<SocialProfileDto?> GetByUserForViewerAsync(Guid userId, ProfileViewer viewer, CancellationToken ct = default);
+
+    Task<SocialProfileDto?> GetByHandleForViewerAsync(string handle, ProfileViewer viewer)
+        => GetByHandleForViewerAsync(handle, viewer, default);
+    Task<SocialProfileDto?> GetByHandleForViewerAsync(string handle, ProfileViewer viewer, CancellationToken ct);
+
+    Task<SocialProfileDto?> GetByUserForViewerAsync(Guid userId, ProfileViewer viewer)
+        => GetByUserForViewerAsync(userId, viewer, default);
+    Task<SocialProfileDto?> GetByUserForViewerAsync(Guid userId, ProfileViewer viewer, CancellationToken ct);
     Task<List<SocialProfileDto>> SearchAsync(string? query, int take, CancellationToken ct = default);
     Task<SocialProfileDto> UpdatePrivacyAsync(UpdateProfilePrivacyCommand command, CancellationToken ct = default);
     Task<SocialProfileDto> UpdateStatsAsync(UpdateProfileStatsCommand command, CancellationToken ct = default);

@@ -62,12 +62,24 @@ public sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand, R
     private readonly IApiKeyAuditEventSink? _apiKeyAuditSink;
     private readonly IHttpContextAccessor? _httpContextAccessor;
 
+    public CreateApiKeyHandler(IApiKeyRepository apiKeyRepository, IActorContextAccessor actorContext, ILogger<CreateApiKeyHandler> logger) : this(apiKeyRepository, actorContext, logger, null, null)
+    {
+    }
+
+    public CreateApiKeyHandler(IApiKeyRepository apiKeyRepository, IActorContextAccessor actorContext, ILogger<CreateApiKeyHandler> logger, IApiKeyAuditEventSink? apiKeyAuditSink) : this(apiKeyRepository, actorContext, logger, apiKeyAuditSink, null)
+    {
+    }
+
+    public CreateApiKeyHandler(IApiKeyRepository apiKeyRepository, IActorContextAccessor actorContext, ILogger<CreateApiKeyHandler> logger, IHttpContextAccessor? httpContextAccessor) : this(apiKeyRepository, actorContext, logger, null, httpContextAccessor)
+    {
+    }
+
     public CreateApiKeyHandler(
         IApiKeyRepository apiKeyRepository,
         IActorContextAccessor actorContext,
         ILogger<CreateApiKeyHandler> logger,
-        IApiKeyAuditEventSink? apiKeyAuditSink = null,
-        IHttpContextAccessor? httpContextAccessor = null)
+        IApiKeyAuditEventSink? apiKeyAuditSink,
+        IHttpContextAccessor? httpContextAccessor)
     {
         _apiKeyRepository = apiKeyRepository;
         _actorContext = actorContext;

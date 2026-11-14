@@ -12,7 +12,10 @@ namespace GameGuild.Social.Profiles;
 /// </summary>
 public interface IProfileFollowerPort
 {
-    Task<bool> IsFollowerAsync(Guid followerUserId, Guid profileUserId, CancellationToken ct = default);
+
+    Task<bool> IsFollowerAsync(Guid followerUserId, Guid profileUserId)
+        => IsFollowerAsync(followerUserId, profileUserId, default);
+    Task<bool> IsFollowerAsync(Guid followerUserId, Guid profileUserId, CancellationToken ct);
 }
 
 /// <summary>

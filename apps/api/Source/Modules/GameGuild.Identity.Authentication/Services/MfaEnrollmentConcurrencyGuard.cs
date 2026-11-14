@@ -26,15 +26,21 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public interface IMfaEnrollmentConcurrencyGuard
 {
+
+    Task<T> ExecuteEnrollmentOperationAsync<T>(Guid userId, Func<Task<T>> operation)
+        => ExecuteEnrollmentOperationAsync<T>(userId, operation, default);
     /// <summary>
     ///     Executes <paramref name="operation" /> while holding the subject's MFA enrollment
     ///     claim. Callers must not await unrelated work inside the claim beyond the MFA
     ///     mutation itself.
     /// </summary>
-    Task<T> ExecuteEnrollmentOperationAsync<T>(Guid userId, Func<Task<T>> operation, CancellationToken cancellationToken = default);
+    Task<T> ExecuteEnrollmentOperationAsync<T>(Guid userId, Func<Task<T>> operation, CancellationToken cancellationToken);
+
+    Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation)
+        => ExecuteEnrollmentOperationAsync(userId, operation, default);
 
     /// <summary>Value-less variant of <see cref="ExecuteEnrollmentOperationAsync{T}" />.</summary>
-    Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation, CancellationToken cancellationToken = default);
+    Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation, CancellationToken cancellationToken);
 }
 
 /// <summary>

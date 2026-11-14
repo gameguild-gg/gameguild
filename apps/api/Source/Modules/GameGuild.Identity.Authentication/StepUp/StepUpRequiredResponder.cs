@@ -11,6 +11,9 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public interface IStepUpRequiredResponder
 {
+
+    Task<StepUpAuthenticationRequiredResponse> BuildAsync(Guid userId, string operationType, string targetReference, string reason)
+        => BuildAsync(userId, operationType, targetReference, reason, default);
     /// <summary>
     ///     Builds the step-up-required response for an account and operation binding.
     /// </summary>
@@ -24,7 +27,7 @@ public interface IStepUpRequiredResponder
         string operationType,
         string targetReference,
         string reason,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
     /// <summary>
     ///     Builds the step-up-required response from a thrown

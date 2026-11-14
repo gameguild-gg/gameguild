@@ -60,6 +60,9 @@ public class ApiKeyRepository(IApplicationDbContext context) : IApiKeyRepository
         return apiKey;
     }
 
+    public Task<List<ApiKey>> RevokeCreatedByCascadeAsync(Guid creatorKeyId, string reason)
+        => RevokeCreatedByCascadeAsync(creatorKeyId, reason, default);
+
     /// <summary>
     ///     Issue #1192: revokes every key minted (directly or transitively) by
     ///     <paramref name="creatorKeyId"/>. Breadth-first over the creator linkage so a leaked
@@ -67,7 +70,7 @@ public class ApiKeyRepository(IApplicationDbContext context) : IApiKeyRepository
     ///     kills every replacement it minted, recursively. Returns the revoked key ids (the
     ///     creator itself is not included).
     /// </summary>
-    public async Task<List<ApiKey>> RevokeCreatedByCascadeAsync(Guid creatorKeyId, string reason, CancellationToken cancellationToken = default)
+    public async Task<List<ApiKey>> RevokeCreatedByCascadeAsync(Guid creatorKeyId, string reason, CancellationToken cancellationToken)
     {
         var revoked = new List<ApiKey>();
         var frontier = new List<Guid> { creatorKeyId };

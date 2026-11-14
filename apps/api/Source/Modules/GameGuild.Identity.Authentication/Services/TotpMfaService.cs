@@ -36,10 +36,13 @@ public sealed class TotpMfaService(
             : await _enrollmentGuard.ExecuteEnrollmentOperationAsync(userId, operation, cancellationToken).ConfigureAwait(false);
     }
 
+    public Task<(string QrCodeUri, string SecretKey, DateTimeOffset ExpiresAt)> SetupTotpAsync(Guid userId, string userEmail)
+        => SetupTotpAsync(userId, userEmail, default);
+
     /// <summary>
     ///     Sets up TOTP-based MFA for a user. Returns QR code URI, secret key, and setup expiry.
     /// </summary>
-    public Task<(string QrCodeUri, string SecretKey, DateTimeOffset ExpiresAt)> SetupTotpAsync(Guid userId, string userEmail, CancellationToken cancellationToken = default)
+    public Task<(string QrCodeUri, string SecretKey, DateTimeOffset ExpiresAt)> SetupTotpAsync(Guid userId, string userEmail, CancellationToken cancellationToken)
     {
         if (!_mfaOptions.Enabled)
         {

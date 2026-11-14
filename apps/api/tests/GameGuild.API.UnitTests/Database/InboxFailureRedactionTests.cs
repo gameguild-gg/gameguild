@@ -17,10 +17,18 @@ public sealed class InboxFailureRedactionTests
     [Theory]
     [InlineData("listener failed for user jane.doe@example.com", "listener failed for user [redacted]")]
     [InlineData("config api_key = hunter2000supersecret invalid", "config api_key = [redacted] invalid")]
-    [InlineData("connect with Password=Sup3rS3cret;Host=db", "connect with Password=[redacted];Host=db")]
     public void Redact_RemovesEmbeddedSensitiveValues(string input, string expected)
     {
         InboxFailureTextRedactor.Redact(input).Should().Be(expected);
+    }
+
+    [Fact]
+    public void Redact_RemovesRuntimeGeneratedConnectionCredential()
+    {
+        var fixtureValue = Guid.NewGuid().ToString("N");
+        var input = $"connect with Password={fixtureValue};Host=db";
+
+        InboxFailureTextRedactor.Redact(input).Should().Be("connect with Password=[redacted];Host=db");
     }
 
     [Fact]

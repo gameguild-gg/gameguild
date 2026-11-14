@@ -160,7 +160,7 @@ public sealed class GetSubscriptionChangeSagaQueryHandlerTests
     {
         var saga = NewSaga(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, "any");
         _sagas.Add(saga);
-        var handler = CreateHandler(tenantId: null, systemAdmin: false);
+        var handler = CreateHandler(systemAdmin: false);
 
         var result = await handler.Handle(new GetSubscriptionChangeSagaQuery(saga.SubscriptionId), CancellationToken.None);
 

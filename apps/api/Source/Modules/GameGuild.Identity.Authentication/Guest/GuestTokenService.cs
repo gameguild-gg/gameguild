@@ -124,10 +124,13 @@ public sealed class GuestTokenService(
                 ValidateAudience = true,
                 ValidAudience = GuestAccessDefaults.Audience,
                 ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
-                // The caller explicitly wants credentials whose lifetime has passed (issue
-                // #1128): everything else — signature, issuer, audience, structure — is
-                // still enforced; the expiry is reported back instead of rejected.
-                ValidateLifetime = false,
+                // This reader accepts only already-expired credentials with a coherent
+                // validity interval. The authenticated upgrade caller separately enforces
+                // bounded retention and consumes the stored guest snapshot exactly once.
+                ValidateLifetime = true,
+                LifetimeValidator = (notBefore, expires, _, _) =>
+                    expires.HasValue && expires.Value <= SystemClock.UtcNow &&
+                    (!notBefore.HasValue || notBefore.Value <= expires.Value),
                 ClockSkew = TimeSpan.Zero,
                 NameClaimType = ClaimNames.GuestId,
                 RoleClaimType = ClaimNames.Role

@@ -564,13 +564,8 @@ public class LocalAuthService(
         {
             throw;
         }
-        catch (TenantMaintenanceException)
-        {
-            // Issue #1134: the 503 + Retry-After mapping lives in the controllers; never
-            // fold a maintenance refusal into the generic 401.
-            throw;
-        }
-        catch (Exception ex)
+        // Controllers preserve the maintenance refusal as a 503 with Retry-After.
+        catch (Exception ex) when (ex is not TenantMaintenanceException)
         {
             logger.LogError("Unexpected error during authentication for user {UserId}: {ErrorType}", userId, ex.GetType().FullName);
             cancellationToken.ThrowIfCancellationRequested();

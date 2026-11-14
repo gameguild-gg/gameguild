@@ -26,12 +26,15 @@ public interface IWebAuthnSessionStore
     /// <summary>Returns the pending assertion session for the user, or null when none/expired.</summary>
     Task<WebAuthnSession?> FindAssertionSessionAsync(Guid userId, CancellationToken cancellationToken = default);
 
+    Task<WebAuthnSession?> FindGuestAssertionSessionAsync(string challengeToken)
+        => FindGuestAssertionSessionAsync(challengeToken, default);
+
     /// <summary>
     ///     Returns the pending guest assertion session issued with the given challenge token
     ///     (the base64url <c>challenge</c> string of the assertion's client data), or null when
     ///     none/expired.
     /// </summary>
-    Task<WebAuthnSession?> FindGuestAssertionSessionAsync(string challengeToken, CancellationToken cancellationToken = default);
+    Task<WebAuthnSession?> FindGuestAssertionSessionAsync(string challengeToken, CancellationToken cancellationToken);
 
     /// <summary>Removes the pending registration session for the user.</summary>
     Task RemoveRegistrationSessionAsync(Guid userId, CancellationToken cancellationToken = default);
@@ -39,8 +42,11 @@ public interface IWebAuthnSessionStore
     /// <summary>Removes the pending assertion session for the user.</summary>
     Task RemoveAssertionSessionAsync(Guid userId, CancellationToken cancellationToken = default);
 
+    Task RemoveGuestAssertionSessionAsync(string challengeToken)
+        => RemoveGuestAssertionSessionAsync(challengeToken, default);
+
     /// <summary>Removes the pending guest assertion session issued with the given challenge token.</summary>
-    Task RemoveGuestAssertionSessionAsync(string challengeToken, CancellationToken cancellationToken = default);
+    Task RemoveGuestAssertionSessionAsync(string challengeToken, CancellationToken cancellationToken);
 }
 
 /// <summary>A pending WebAuthn ceremony: the issued challenge and its options.</summary>

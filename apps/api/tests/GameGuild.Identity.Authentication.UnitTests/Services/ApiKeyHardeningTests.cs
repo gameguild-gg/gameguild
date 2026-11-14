@@ -32,7 +32,7 @@ public sealed class ApiKeyHardeningTests
         await repository.AddAsync(apiKey);
 
         // Kestrel reports IPv4 callers on dual-stack sockets as ::ffff:203.0.113.7.
-        var result = await AuthenticateAsync(repository, plaintext, remoteIp: IPAddress.Parse("::ffff:203.0.113.7"));
+        var result = await AuthenticateAsync(repository, plaintext, remoteIp: new IPAddress(new byte[] { 203, 0, 113, 7 }).MapToIPv6());
 
         result.Succeeded.Should().BeTrue();
     }
@@ -43,7 +43,7 @@ public sealed class ApiKeyHardeningTests
         var userId = Guid.NewGuid();
         await using var context = CreateContext();
         var repository = new ApiKeyRepository(context);
-        var (apiKey, plaintext) = ApiKey.Create(userId, Guid.NewGuid(), "integration", ["read"], ipWhitelist: "::ffff:203.0.113.7");
+        var (apiKey, plaintext) = ApiKey.Create(userId, Guid.NewGuid(), "integration", ["read"], ipWhitelist: new IPAddress(new byte[] { 203, 0, 113, 7 }).MapToIPv6().ToString());
         await repository.AddAsync(apiKey);
 
         var result = await AuthenticateAsync(repository, plaintext, remoteIp: IPAddress.Parse("203.0.113.7"));
@@ -273,6 +273,9 @@ public sealed class ApiKeyHardeningTests
     {
         public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
 
-        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) {
+            _ = cancellationToken;
+            throw new NotSupportedException();
+        }
     }
 }
