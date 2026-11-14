@@ -74,7 +74,10 @@ public sealed class SocialProfileRepository(IApplicationDbContext context) : ISo
             .ConfigureAwait(false);
     }
 
-    public async Task<SocialProfile?> GetVisibleByHandleAsync(string handle, Guid? viewerUserId, CancellationToken ct = default)
+    public Task<SocialProfile?> GetVisibleByHandleAsync(string handle, Guid? viewerUserId)
+        => GetVisibleByHandleAsync(handle, viewerUserId, default);
+
+    public async Task<SocialProfile?> GetVisibleByHandleAsync(string handle, Guid? viewerUserId, CancellationToken ct)
     {
         var normalized = SocialProfile.NormalizeHandle(handle);
         return await IncludeProfileData(context.Set<SocialProfile>())
@@ -85,7 +88,10 @@ public sealed class SocialProfileRepository(IApplicationDbContext context) : ISo
             .ConfigureAwait(false);
     }
 
-    public async Task<SocialProfile?> GetVisibleByUserAsync(Guid userId, Guid? viewerUserId, CancellationToken ct = default)
+    public Task<SocialProfile?> GetVisibleByUserAsync(Guid userId, Guid? viewerUserId)
+        => GetVisibleByUserAsync(userId, viewerUserId, default);
+
+    public async Task<SocialProfile?> GetVisibleByUserAsync(Guid userId, Guid? viewerUserId, CancellationToken ct)
         => await IncludeProfileData(context.Set<SocialProfile>())
             .FirstOrDefaultAsync(profile => profile.UserId == userId
                 && profile.DeletedAt == null

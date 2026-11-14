@@ -29,6 +29,9 @@ public interface IStepUpRequiredResponder
         string reason,
         CancellationToken cancellationToken);
 
+    Task<StepUpAuthenticationRequiredResponse> BuildAsync(Guid userId, StepUpRequiredException requirement)
+        => BuildAsync(userId, requirement, default);
+
     /// <summary>
     ///     Builds the step-up-required response from a thrown
     ///     <see cref="StepUpRequiredException"/> (preferred when the exception carries the
@@ -37,7 +40,7 @@ public interface IStepUpRequiredResponder
     Task<StepUpAuthenticationRequiredResponse> BuildAsync(
         Guid userId,
         StepUpRequiredException requirement,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 }
 
 public sealed class StepUpRequiredResponder(
@@ -51,21 +54,27 @@ public sealed class StepUpRequiredResponder(
     /// </summary>
     private static readonly TimeSpan ChallengeWindow = TimeSpan.FromMinutes(5);
 
+    public Task<StepUpAuthenticationRequiredResponse> BuildAsync(Guid userId, StepUpRequiredException requirement)
+        => BuildAsync(userId, requirement, default);
+
     public Task<StepUpAuthenticationRequiredResponse> BuildAsync(
         Guid userId,
         StepUpRequiredException requirement,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(requirement);
         return BuildAsync(userId, requirement.OperationType, requirement.TargetReference, requirement.Message, cancellationToken);
     }
+
+    public Task<StepUpAuthenticationRequiredResponse> BuildAsync(Guid userId, string operationType, string targetReference, string reason)
+        => BuildAsync(userId, operationType, targetReference, reason, default);
 
     public async Task<StepUpAuthenticationRequiredResponse> BuildAsync(
         Guid userId,
         string operationType,
         string targetReference,
         string reason,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(operationType);
         ArgumentException.ThrowIfNullOrWhiteSpace(targetReference);

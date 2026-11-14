@@ -53,7 +53,10 @@ public sealed class MfaEnrollmentConcurrencyGuard : IMfaEnrollmentConcurrencyGua
     private readonly ConcurrentDictionary<Guid, SemaphoreSlim> _subjectLocks = new();
     private bool _disposed;
 
-    public async Task<T> ExecuteEnrollmentOperationAsync<T>(Guid userId, Func<Task<T>> operation, CancellationToken cancellationToken = default)
+    public Task<T> ExecuteEnrollmentOperationAsync<T>(Guid userId, Func<Task<T>> operation)
+        => ExecuteEnrollmentOperationAsync<T>(userId, operation, default);
+
+    public async Task<T> ExecuteEnrollmentOperationAsync<T>(Guid userId, Func<Task<T>> operation, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(operation);
         cancellationToken.ThrowIfCancellationRequested();
@@ -70,7 +73,10 @@ public sealed class MfaEnrollmentConcurrencyGuard : IMfaEnrollmentConcurrencyGua
         }
     }
 
-    public async Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation, CancellationToken cancellationToken = default)
+    public Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation)
+        => ExecuteEnrollmentOperationAsync(userId, operation, default);
+
+    public async Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(operation);
         cancellationToken.ThrowIfCancellationRequested();

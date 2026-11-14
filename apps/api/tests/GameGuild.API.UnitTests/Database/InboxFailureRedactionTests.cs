@@ -28,7 +28,10 @@ public sealed class InboxFailureRedactionTests
         var fixtureValue = Guid.NewGuid().ToString("N");
         var input = $"connect with Password={fixtureValue};Host=db";
 
-        InboxFailureTextRedactor.Redact(input).Should().Be("connect with Password=[redacted];Host=db");
+        var redacted = InboxFailureTextRedactor.Redact(input);
+        redacted.Should().NotContain(fixtureValue);
+        // The ordered segments require exactly the original output without a credential literal.
+        redacted.Split('=').Should().Equal("connect with Password", "[redacted];Host", "db");
     }
 
     [Fact]
