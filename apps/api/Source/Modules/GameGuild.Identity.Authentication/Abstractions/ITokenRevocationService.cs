@@ -69,7 +69,7 @@ public interface ITokenRevocationService
     ///     <para>
     ///         Called by the token issuer whenever a session-bound access token is minted
     ///         (sign-in, refresh, MFA completion). The index enables
-    ///         <see cref="RevokeSessionAccessTokenAsync"/> — when a session is terminated or a
+    ///         <see cref="RevokeSessionAccessTokenAsync(Guid, string, CancellationToken)"/> — when a session is terminated or a
     ///         refresh-token family is revoked, the paired access token's JTI can be written to
     ///         the per-token deny-list so it dies immediately instead of at natural expiry.
     ///     </para>

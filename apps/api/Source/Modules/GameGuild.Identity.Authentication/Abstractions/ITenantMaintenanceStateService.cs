@@ -32,7 +32,7 @@ public sealed record TenantMaintenanceState
 ///     every API instance observes the same window). Reads fail OPEN: an unavailable cache
 ///     reports "no maintenance" — the gate protects in-flight tenants from new sessions, it
 ///     must never become a total sign-in outage on its own. Windows are managed out-of-band
-///     (operator tooling or a host bridge calling <see cref="SetMaintenanceAsync" />);
+///     (operator tooling or a host bridge calling <see cref="SetMaintenanceAsync(Guid, TenantMaintenanceState, CancellationToken)" />);
 ///     there is deliberately no public endpoint in this module.
 /// </summary>
 public interface ITenantMaintenanceStateService

@@ -39,7 +39,7 @@ public interface IMfaEnrollmentConcurrencyGuard
     Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation)
         => ExecuteEnrollmentOperationAsync(userId, operation, default);
 
-    /// <summary>Value-less variant of <see cref="ExecuteEnrollmentOperationAsync{T}" />.</summary>
+    /// <summary>Value-less variant of <see cref="ExecuteEnrollmentOperationAsync{T}(Guid, Func{Task{T}}, CancellationToken)" />.</summary>
     Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation, CancellationToken cancellationToken);
 }
 

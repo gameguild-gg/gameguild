@@ -119,7 +119,7 @@ public sealed class DistributedCacheTokenRevocationService : ITokenRevocationSer
     /// <inheritdoc />
     /// <remarks>
     ///     Issue #1179: the session index entry carries the access token's natural expiry so the
-    ///     deny-list write performed by <see cref="RevokeSessionAccessTokenAsync"/> can size its
+    ///     deny-list write performed by <see cref="RevokeSessionAccessTokenAsync(Guid, string, CancellationToken)"/> can size its
     ///     own TTL. Both keys expire with the token, so an abandoned index never lingers.
     /// </remarks>
     public async Task TrackSessionAccessTokenAsync(Guid sessionId, string jti, DateTime expiresAt, CancellationToken cancellationToken)
