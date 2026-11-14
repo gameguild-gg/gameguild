@@ -14,7 +14,7 @@ public sealed class ArchiveSubscriptionPlanHandler(IApplicationDbContext context
     {
         var plan = await context.Set<SubscriptionPlan>()
             .FirstOrDefaultAsync(p => p.Id == request.PlanId, cancellationToken)
-            ?? throw new InvalidOperationException($"Subscription plan {request.PlanId} not found");
+            ?? throw new EntityNotFoundException("SubscriptionPlan", request.PlanId);
 
         // Use Deactivate() which sets IsActive = false and raises PlanDiscontinuedEvent
         plan.Deactivate();

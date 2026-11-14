@@ -13,7 +13,7 @@ public sealed class DeleteSubscriptionHandler(IApplicationDbContext context)
     {
         var subscription = await context.Set<Subscription>()
             .FirstOrDefaultAsync(s => s.Id == request.SubscriptionId, cancellationToken)
-            ?? throw new InvalidOperationException($"Subscription {request.SubscriptionId} not found");
+            ?? throw new EntityNotFoundException("Subscription", request.SubscriptionId);
 
         context.Set<Subscription>().Remove(subscription);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

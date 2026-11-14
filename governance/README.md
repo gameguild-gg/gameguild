@@ -22,7 +22,7 @@ Constraints agreed (see decisions log):
 - Governors: Tolsta 40%, Matheus 30%, Joel 30% in both share classes; vesting 0% at 1y → 100% at 5y
 - Two share classes: governance (vote) and revenue (money, freely transferable, ROFR on governance only)
 - Quarterly governors' meeting: distribution %, next-quarter plan, compensation votes
-- Treasury rule: anything outside the approved quarterly plan needs supermajority; 6-month runway floor
+- Treasury rule: anything outside the approved quarterly plan needs qualified majority ≥70% (no 2-of-3 coalition can pass); 6-month runway floor; no simple-majority voting on money — minimum is ≥66⅔%
 - Marketplace: creator-first split, GameGuild merchant of record, 14-day refunds w/ clawback
 - HardCoin = fiat credits; SoftCoin = earned/HardCoin-bought, never converts back
 - Payouts in crypto (stablecoins); Delaware entity ASAP; Matheus/Joel BR-resident

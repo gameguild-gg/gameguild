@@ -93,6 +93,63 @@ public interface ILedgerEntryRepository
 
     Task<LedgerEntry?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<LedgerEntry?> GetByExternalIdAsync(string externalId, CancellationToken ct = default);
+
+    Task<LedgerEntry?> GetByReferenceAsync(Guid tenantId, string referenceNumber)
+        => GetByReferenceAsync(tenantId, referenceNumber, default);
+
+    /// <summary>
+    /// Gets an entry by its human-readable reference number (TXN-…) within a tenant.
+    /// </summary>
+    Task<LedgerEntry?> GetByReferenceAsync(Guid tenantId, string referenceNumber, CancellationToken ct);
+
+    Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds)
+        => SearchAsync(tenantId, ledgerIds, null, null, null, null, null, null, null, null, default);
+
+    Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, null, null, null, null, null, null, null, default);
+
+    Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, null, null, null, null, null, null, default);
+
+    Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type, EntryCategory? category)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, category, null, null, null, null, null, default);
+
+    Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type, EntryCategory? category, EntryStatus? status)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, category, status, null, null, null, null, default);
+
+    Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type, EntryCategory? category, EntryStatus? status, decimal? minAmount)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, category, status, minAmount, null, null, null, default);
+
+    Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type, EntryCategory? category, EntryStatus? status, decimal? minAmount, decimal? maxAmount)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, category, status, minAmount, maxAmount, null, null, default);
+
+    Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type, EntryCategory? category, EntryStatus? status, decimal? minAmount, decimal? maxAmount, DateOnly? fromDate)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, category, status, minAmount, maxAmount, fromDate, null, default);
+
+    Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type, EntryCategory? category, EntryStatus? status, decimal? minAmount, decimal? maxAmount, DateOnly? fromDate, DateOnly? toDate)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, category, status, minAmount, maxAmount, fromDate, toDate, default);
+
+    Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, CancellationToken ct)
+        => SearchAsync(tenantId, ledgerIds, null, null, null, null, null, null, null, null, ct);
+
+    /// <summary>
+    /// Searches entries across a tenant with optional ledger/type/category/status/amount/date filters.
+    /// When <paramref name="ledgerIds" /> is non-empty only entries of those ledgers are returned.
+    /// Tag filtering is intentionally left to the caller (list translation varies by provider).
+    /// </summary>
+    Task<IReadOnlyList<LedgerEntry>> SearchAsync(
+        Guid tenantId,
+        IReadOnlyList<Guid> ledgerIds,
+        string? searchTerm,
+        EntryType? type,
+        EntryCategory? category,
+        EntryStatus? status,
+        decimal? minAmount,
+        decimal? maxAmount,
+        DateOnly? fromDate,
+        DateOnly? toDate,
+        CancellationToken ct);
+
     Task AddAsync(LedgerEntry entry, CancellationToken ct = default);
     Task AddRangeAsync(IEnumerable<LedgerEntry> entries, CancellationToken ct = default);
     Task UpdateAsync(LedgerEntry entry, CancellationToken ct = default);

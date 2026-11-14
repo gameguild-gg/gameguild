@@ -2237,6 +2237,28 @@ public class DisputeServicePersistenceTests
         updatedMerchant.DueDate.Should().Be(merchantDueDate);
     }
 
+    /// <summary>
+    ///     Issue #1280 R-P1: terminal dispute statuses (Won/Lost/Resolved/Cancelled) and
+    ///     Submitted are NOT settable through the respond surface — they belong to gateway
+    ///     reconciliation, ResolveDisputeAsync and CancelDisputeAsync.
+    /// </summary>
+    [Fact]
+    public async Task UpdateDisputeStatusAsync_RejectsTerminalAndNonReviewTransitions()
+    {
+        await using var context = WalletRepositoryPersistenceTests_CreatePersistenceDbContext();
+        var service = CreateDisputeService(context);
+        var dispute = await service.CreateDisputeAsync(Guid.NewGuid(), Guid.NewGuid(), DisputeType.Fraudulent, 40m, "fraud");
+
+        foreach (var illegal in new[] { DisputeStatus.Won, DisputeStatus.Lost, DisputeStatus.Resolved, DisputeStatus.Cancelled, DisputeStatus.Submitted })
+        {
+            await service.Invoking(current => current.UpdateDisputeStatusAsync(dispute.Id, illegal))
+                .Should().ThrowAsync<InvalidOperationException>().WithMessage("*cannot move to*");
+        }
+
+        var unchanged = await service.GetDisputeByIdAsync(dispute.Id);
+        unchanged!.Status.Should().Be(DisputeStatus.Submitted);
+    }
+
     [Fact]
     public async Task ResolveCancelAddEvidenceAndGetEvidence_WorkAsExpected()
     {

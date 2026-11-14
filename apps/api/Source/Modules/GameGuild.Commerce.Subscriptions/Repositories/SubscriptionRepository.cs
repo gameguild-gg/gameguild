@@ -116,7 +116,14 @@ public class SubscriptionRepository(IApplicationDbContext context)
 
     public async Task<Dictionary<SubscriptionStatus, int>> GetCountByStatusAsync(CancellationToken cancellationToken = default)
     {
-        return await Query.GroupBy(s => s.Status).ToDictionaryAsync(g => g.Key, g => g.Count(), cancellationToken).ConfigureAwait(false);
+        // Group into a narrow projection so the query translates; build the dictionary in memory.
+        var projections = await Query
+            .GroupBy(s => s.Status)
+            .Select(group => new { Status = group.Key, Count = group.Count() })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return projections.ToDictionary(p => p.Status, p => p.Count);
     }
 
     public async Task<IReadOnlyList<SubscriptionIntervalBreakdown>> GetIntervalBreakdownAsync(CancellationToken cancellationToken = default)

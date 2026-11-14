@@ -35,7 +35,7 @@ public sealed class PricingExperimentServiceTests
         var service = CreateService(db);
 
         var missing = () => service.AssignAsync(Guid.NewGuid(), "user-1");
-        await missing.Should().ThrowAsync<InvalidOperationException>();
+        await missing.Should().ThrowAsync<EntityNotFoundException>();
 
         var draft = await AddExperimentAsync(db, status: PricingExperimentStatus.Draft);
         var notEnrolling = () => service.AssignAsync(draft.Id, "user-1");

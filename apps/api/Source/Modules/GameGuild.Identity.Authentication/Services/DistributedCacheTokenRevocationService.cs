@@ -12,6 +12,7 @@ public sealed class DistributedCacheTokenRevocationService : ITokenRevocationSer
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private const string TokenKeyPrefix = "auth:revoked-token:";
     private const string UserKeyPrefix = "auth:user-token-revoked-at:";
+    private const string SessionJtiCacheNamespace = "auth:session-access-jti:";
     private static readonly TimeSpan UserRevocationRetention = TimeSpan.FromDays(30);
 
     private readonly IDistributedCache _cache;
@@ -112,7 +113,77 @@ public sealed class DistributedCacheTokenRevocationService : ITokenRevocationSer
         return Task.FromResult(0);
     }
 
+    public Task TrackSessionAccessTokenAsync(Guid sessionId, string jti, DateTime expiresAt)
+        => TrackSessionAccessTokenAsync(sessionId, jti, expiresAt, default);
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///     Issue #1179: the session index entry carries the access token's natural expiry so the
+    ///     deny-list write performed by <see cref="RevokeSessionAccessTokenAsync(Guid, string, CancellationToken)"/> can size its
+    ///     own TTL. Both keys expire with the token, so an abandoned index never lingers.
+    /// </remarks>
+    public async Task TrackSessionAccessTokenAsync(Guid sessionId, string jti, DateTime expiresAt, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(jti);
+
+        var ttl = expiresAt.ToUniversalTime() - SystemClock.UtcNow;
+        if (ttl <= TimeSpan.Zero)
+        {
+            return;
+        }
+
+        var tracked = new SessionAccessToken(jti.Trim(), expiresAt.ToUniversalTime());
+        await _cache.SetStringAsync(
+            SessionJtiCacheNamespace + sessionId.ToString("N"),
+            JsonSerializer.Serialize(tracked, JsonOptions),
+            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl },
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task RevokeSessionAccessTokenAsync(Guid sessionId)
+        => RevokeSessionAccessTokenAsync(sessionId, null, default);
+
+    public Task RevokeSessionAccessTokenAsync(Guid sessionId, string? reason)
+        => RevokeSessionAccessTokenAsync(sessionId, reason, default);
+
+    public Task RevokeSessionAccessTokenAsync(Guid sessionId, CancellationToken cancellationToken)
+        => RevokeSessionAccessTokenAsync(sessionId, null, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task RevokeSessionAccessTokenAsync(Guid sessionId, string? reason, CancellationToken cancellationToken)
+    {
+        var indexKey = SessionJtiCacheNamespace + sessionId.ToString("N");
+        var payload = await _cache.GetStringAsync(indexKey, cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            return;
+        }
+
+        SessionAccessToken? tracked;
+        try
+        {
+            tracked = JsonSerializer.Deserialize<SessionAccessToken>(payload, JsonOptions);
+        }
+        catch (JsonException)
+        {
+            // A corrupt index entry must never block the revocation path itself.
+            tracked = null;
+        }
+
+        if (tracked is not null && !string.IsNullOrWhiteSpace(tracked.Jti))
+        {
+            var alreadyDenied = await _cache.GetStringAsync(TokenKeyPrefix + tracked.Jti, cancellationToken).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(alreadyDenied))
+            {
+                await RevokeTokenAsync(tracked.Jti, tracked.ExpiresAt, reason, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        await _cache.RemoveAsync(indexKey, cancellationToken).ConfigureAwait(false);
+    }
+
     private sealed record RevokedToken(string Jti, DateTime ExpiresAt, DateTime RevokedAt, string? Reason);
+    private sealed record SessionAccessToken(string Jti, DateTime ExpiresAt);
     private sealed record UserTokenRevocation(Guid UserId, DateTime RevokedAt, string? Reason,
         [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
         int? MinimumTokenVersion = null);

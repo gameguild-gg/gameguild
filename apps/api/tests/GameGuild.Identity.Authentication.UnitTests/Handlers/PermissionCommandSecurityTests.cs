@@ -547,7 +547,7 @@ public sealed class PermissionCommandSecurityTests
 
         var act = () => handler.Handle(new RevokeTenantPermissionByIdCommand { GrantId = grantId }, CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await act.Should().ThrowAsync<AccessDeniedException>();
         db.TenantPermissions.Single(grant => grant.Id == grantId).DeletedAt.Should().BeNull();
         _versionStore.Verify(store => store.IncrementVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _auditService.Verify(audit => audit.LogPermissionChangeAsync(

@@ -65,13 +65,28 @@ public sealed class EconomyStepUpExecutor(
             IsolationLevel.Serializable,
             async token =>
             {
-                await stepUpReceiptService.ConsumeAsync(
-                    new StepUpOperationBinding(
+                try
+                {
+                    await stepUpReceiptService.ConsumeAsync(
+                        new StepUpOperationBinding(
+                            operation.OperationType,
+                            operation.TargetReference,
+                            operation.PayloadHash),
+                        receipt,
+                        token).ConfigureAwait(false);
+                }
+                catch (StepUpReceiptInvalidException exception)
+                {
+                    // Issue #1191: surface the structured step-up trigger (423 with the
+                    // challenge instructions) instead of a bare receipt-invalid error.
+                    throw new StepUpRequiredException(
+                        exception.Message,
                         operation.OperationType,
                         operation.TargetReference,
-                        operation.PayloadHash),
-                    receipt,
-                    token).ConfigureAwait(false);
+                        operation.PayloadHash,
+                        exception);
+                }
+
                 var evidenceHash = Convert.ToHexStringLower(
                     SHA256.HashData(Encoding.UTF8.GetBytes(receipt)));
                 return await protectedAction(evidenceHash, token).ConfigureAwait(false);

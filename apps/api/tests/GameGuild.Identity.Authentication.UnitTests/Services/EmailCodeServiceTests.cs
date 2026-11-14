@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -12,7 +14,7 @@ public sealed class EmailCodeServiceTests : IDisposable
     private const string Email = "code-owner@example.test";
 
     private readonly MutableTimeProvider _clock = new();
-    private readonly MemoryCache _cache = new(new MemoryCacheOptions());
+    private readonly MemoryDistributedCache _cache = new(Microsoft.Extensions.Options.Options.Create(new MemoryDistributedCacheOptions()));
     private readonly EmailCodeService _service;
 
     public EmailCodeServiceTests()
@@ -24,7 +26,6 @@ public sealed class EmailCodeServiceTests : IDisposable
     public void Dispose()
     {
         SystemClock.Reset();
-        _cache.Dispose();
     }
 
     [Fact]
@@ -35,15 +36,21 @@ public sealed class EmailCodeServiceTests : IDisposable
 
         code.Should().NotBeNull().And.MatchRegex("^[0-9]{6}$");
 
-        var entry = _cache.Keys.OfType<string>()
-            .Single(key => key.StartsWith("emailcode:entry:", StringComparison.Ordinal));
-        _cache.TryGetValue(entry, out var value).Should().BeTrue();
-        var info = (EmailCodeInfo)value!;
+        // The entry key is the SHA-256 digest of the normalized address (no plaintext email),
+        // and the stored JSON state carries only the code's digest (issue #1272: the state is
+        // JSON in IDistributedCache, still digest-only at rest).
+        var entryKey = "emailcode:entry:" + Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(Email.Trim().ToLowerInvariant())));
+        var payload = _cache.GetString(entryKey);
+        payload.Should().NotBeNull();
+        entryKey.Should().NotContain(Email);
+        payload.Should().NotContain(code!, "the plaintext code is never stored");
 
-        entry.Should().NotContain(Email);
-        info.CodeDigest.Should().Equal(SHA256.HashData(Encoding.UTF8.GetBytes(code!)));
-        info.UserId.Should().Be(userId);
-        info.Email.Should().Be(Email);
+        var state = JsonSerializer.Deserialize<EmailCodeService.EmailCodeState>(payload!, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        state.Should().NotBeNull();
+        state!.CodeDigest.Should().Be(Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(code!))));
+        state.UserId.Should().Be(userId);
+        state.Email.Should().Be(Email);
     }
 
     [Fact]

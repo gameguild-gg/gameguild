@@ -21,4 +21,14 @@ public interface IGuestTokenService
     ///     malformed input.
     /// </summary>
     ClaimsPrincipal? Validate(string? guestToken);
+
+    /// <summary>
+    ///     Reads a guest token whose signature, issuer and guest audience are valid but whose
+    ///     lifetime has PASSED (issue #1128): the guest session expired mid-use and the caller
+    ///     wants to know which session it named and when it expired, so the upgrade path can
+    ///     decide whether the still-retained snapshot qualifies for continuity migration.
+    ///     Returns false for malformed, badly signed or non-guest tokens; a structurally valid
+    ///     token that has not expired yet is reported with its actual expiry.
+    /// </summary>
+    bool TryReadExpired(string? guestToken, out Guid guestSessionId, out DateTime expiresAt);
 }

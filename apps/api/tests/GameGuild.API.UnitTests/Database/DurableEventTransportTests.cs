@@ -676,6 +676,62 @@ public sealed class DurableEventTransportTests
             .Should().Be(1);
     }
 
+    /// <summary>
+    ///     Issue #1313 S2-a: a dead-lettered outbox event keeps CompletedAtUtc NULL — the
+    ///     per-aggregate FIFO exclusion must exempt dead-lettered siblings, or one poison
+    ///     message durably blocks EVERY later event of the same aggregate.
+    /// </summary>
+    [Fact]
+    public async Task DispatchPendingAsync_WhenEarlierSiblingIsDeadLettered_StillDispatchesLaterEventsOfSameAggregate()
+    {
+        // Given
+        var databaseName = Guid.NewGuid().ToString();
+        var clock = new MutableTimeProvider(new DateTimeOffset(2026, 8, 26, 12, 0, 0, TimeSpan.Zero));
+        var successful = new SuccessfulHandler();
+        var services = NewDispatcherServices(databaseName, clock, successful);
+        await using var provider = services.BuildServiceProvider();
+        await using (var arrangeScope = provider.CreateAsyncScope())
+        {
+            var context = arrangeScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var tenant = NewTenant();
+            tenant.AddIntegrationEvent(NewEvent(tenant.Id) with
+            {
+                OccurredAt = clock.GetUtcNow().AddMinutes(-2).UtcDateTime
+            });
+            tenant.AddIntegrationEvent(NewEvent(tenant.Id) with
+            {
+                OccurredAt = clock.GetUtcNow().UtcDateTime
+            });
+            context.Add(tenant);
+            await context.SaveChangesAsync();
+            var messages = await context.Set<OutboxMessage>()
+                .OrderBy(message => message.OccurredAtUtc)
+                .ToListAsync();
+            messages[0].DeadLetteredAtUtc = clock.GetUtcNow(); // poison sibling, CompletedAtUtc stays NULL
+            await context.SaveChangesAsync();
+        }
+
+        // When
+        await using (var dispatchScope = provider.CreateAsyncScope())
+        {
+            await dispatchScope.ServiceProvider.GetRequiredService<IOutboxDispatcher>()
+                .DispatchPendingAsync(CancellationToken.None);
+        }
+
+        // Then
+        successful.Calls.Should().Be(1);
+        await using var assertScope = provider.CreateAsyncScope();
+        var assertContext = assertScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var later = await assertContext.Set<OutboxMessage>()
+            .OrderBy(message => message.OccurredAtUtc)
+            .ToListAsync();
+        later.Should().HaveCount(2);
+        later[0].DeadLetteredAtUtc.Should().NotBeNull();
+        later[0].CompletedAtUtc.Should().BeNull();
+        later[1].DeadLetteredAtUtc.Should().BeNull();
+        later[1].CompletedAtUtc.Should().NotBeNull();
+    }
+
     [Fact]
     public async Task RetiredDelivery_IsNotProducedAgainAndCannotCommitDuplicateBusinessMutation()
     {

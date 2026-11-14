@@ -84,6 +84,7 @@ public sealed class OutboxDispatcher(
                       AND earlier."AggregateType" = message."AggregateType"
                       AND earlier."AggregateId" = message."AggregateId"
                       AND earlier."CompletedAtUtc" IS NULL
+                      AND earlier."DeadLetteredAtUtc" IS NULL
                       AND (earlier."OccurredAtUtc", earlier."EventId") < (message."OccurredAtUtc", message."EventId"))
                 ORDER BY message."OccurredAtUtc", message."EventId"
                 LIMIT {{BatchSize}}
@@ -103,7 +104,7 @@ public sealed class OutboxDispatcher(
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
                 var blockers = await db.Set<OutboxMessage>().AsNoTracking()
-                    .Where(message => message.CompletedAtUtc == null)
+                    .Where(message => message.CompletedAtUtc == null && message.DeadLetteredAtUtc == null)
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
                 messages = candidates

@@ -555,13 +555,10 @@ public class ResolveSloViolationCommandValidatorTests
 {
     private readonly ResolveSloViolationCommandValidator _validator = new();
 
-    private sealed record ConcreteResolveSloViolationCommand(Guid ViolationId, Guid TenantId, string? ResolutionNotes = null)
-        : ResolveSloViolationCommand(ViolationId, TenantId, ResolutionNotes);
-
     [Fact]
     public void ValidCommand_ShouldPass()
     {
-        var command = new ConcreteResolveSloViolationCommand(Guid.NewGuid(), Guid.NewGuid(), "Fixed");
+        var command = new ResolveSloViolationCommand(Guid.NewGuid(), Guid.NewGuid(), "Fixed");
 
         _validator.TestValidate(command).ShouldNotHaveAnyValidationErrors();
     }
@@ -569,7 +566,7 @@ public class ResolveSloViolationCommandValidatorTests
     [Fact]
     public void EmptyViolationId_ShouldFail()
     {
-        var command = new ConcreteResolveSloViolationCommand(Guid.Empty, Guid.NewGuid());
+        var command = new ResolveSloViolationCommand(Guid.Empty, Guid.NewGuid());
 
         _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ViolationId);
     }
@@ -577,7 +574,7 @@ public class ResolveSloViolationCommandValidatorTests
     [Fact]
     public void EmptyTenantId_ShouldFail()
     {
-        var command = new ConcreteResolveSloViolationCommand(Guid.NewGuid(), Guid.Empty);
+        var command = new ResolveSloViolationCommand(Guid.NewGuid(), Guid.Empty);
 
         _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.TenantId);
     }
@@ -585,7 +582,7 @@ public class ResolveSloViolationCommandValidatorTests
     [Fact]
     public void NotesTooLong_ShouldFail()
     {
-        var command = new ConcreteResolveSloViolationCommand(Guid.NewGuid(), Guid.NewGuid(), new string('X', 2001));
+        var command = new ResolveSloViolationCommand(Guid.NewGuid(), Guid.NewGuid(), new string('X', 2001));
 
         _validator.TestValidate(command).ShouldHaveValidationErrorFor(x => x.ResolutionNotes);
     }

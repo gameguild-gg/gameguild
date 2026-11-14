@@ -257,7 +257,7 @@ public sealed class StepUpVerificationTransactionPostgreSqlTests(ApiPostgreSqlFi
             var verifier = (IUseCaseEventVerifier)Activator.CreateInstance(verifierType,
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, [Context], null)!;
             var behavior = Activator.CreateInstance(type, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-                binder: null, args: [Context, actor, operations, registry, verifier, null], culture: null)!;
+                binder: null, args: [Context, actor, operations, registry, verifier, null, null], culture: null)!;
             try
             {
                 return await (Task<StepUpVerificationOutcome>)type.GetMethod("Handle")!.Invoke(behavior, [command, next, cancellationToken])!;

@@ -21,7 +21,7 @@ public sealed class FullUpdateSubscriptionPlanHandler(
     {
         var plan = await context.Set<SubscriptionPlan>()
             .FirstOrDefaultAsync(p => p.Id == request.PlanId, cancellationToken)
-            ?? throw new InvalidOperationException($"Subscription plan {request.PlanId} not found");
+            ?? throw new EntityNotFoundException("SubscriptionPlan", request.PlanId);
 
         var slug = request.Slug;
         if (string.IsNullOrWhiteSpace(slug))

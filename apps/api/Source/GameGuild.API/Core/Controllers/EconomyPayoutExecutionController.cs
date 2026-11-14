@@ -144,7 +144,8 @@ public sealed class EconomyPayoutExecutionAdministrationController(
     ISender sender,
     IDurablePayoutApplicationService payouts,
     IActorContextAccessor actorContextAccessor,
-    TimeProvider timeProvider) : BaseApiController
+    TimeProvider timeProvider,
+    GameGuild.Identity.Authentication.IStepUpRequiredResponder stepUpRequiredResponder) : BaseApiController
 {
     [HttpPost("{requestId:guid}/reserve")]
     [EndpointSummary("Reserve FIFO funds for a fully approved payout request")]
@@ -273,7 +274,7 @@ public sealed class EconomyPayoutExecutionAdministrationController(
         }
     }
 
-    private static async Task<IActionResult> ExecuteAsync(Task<PayoutOperation> operation)
+    private async Task<IActionResult> ExecuteAsync(Task<PayoutOperation> operation)
     {
         try
         {
@@ -294,6 +295,13 @@ public sealed class EconomyPayoutExecutionAdministrationController(
             };
             return new ObjectResult(new PayoutProtectedOperationFailureResponse(
                 exception.State, exception.ReviewId, exception.Diagnostics)) { StatusCode = status };
+        }
+        catch (GameGuild.Identity.Authentication.StepUpRequiredException exception)
+        {
+            // Issue #1191: the structured step-up trigger — 423 with the challenge
+            // instructions (operation binding + available MFA methods) instead of a
+            // generic 409 string.
+            return await stepUpRequiredResponder.StepUpRequiredAsync(actorContextAccessor, exception).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is PayoutEligibilityException or
                                           PayoutExecutionDisabledException or

@@ -19,12 +19,12 @@ public sealed class RevokeTenantPermissionByIdHandler(
     {
         var grant = await context.Set<TenantPermission>()
             .FirstOrDefaultAsync(g => g.Id == request.GrantId, cancellationToken)
-            ?? throw new InvalidOperationException($"Tenant permission grant {request.GrantId} not found");
+            ?? throw new EntityNotFoundException("TenantPermissionGrant", request.GrantId);
 
         var actor = actorContextAccessor.ActorContext;
         if (!actor.IsAuthenticated)
         {
-            throw new UnauthorizedAccessException("Authenticated actor required to revoke tenant permissions");
+            throw new AuthenticationRequiredException("Authenticated actor required to revoke tenant permissions");
         }
 
         var isGlobalDefault = !grant.TenantId.HasValue || grant.TenantId == Guid.Empty;
@@ -32,13 +32,13 @@ public sealed class RevokeTenantPermissionByIdHandler(
         {
             if (!actor.IsSystemAdmin && !actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults))
             {
-                throw new UnauthorizedAccessException(
+                throw new AccessDeniedException(
                     "Revoking global default permissions requires 'system:manage-global-defaults' permission");
             }
         }
         else if (!actor.IsSystemAdmin && (!actor.IsTenantAdmin || actor.TenantId != grant.TenantId))
         {
-            throw new UnauthorizedAccessException("Only administrators in the permission's tenant can revoke it");
+            throw new AccessDeniedException("Only administrators in the permission's tenant can revoke it");
         }
 
         var oldPermissions = grant.Permissions.ToArray();

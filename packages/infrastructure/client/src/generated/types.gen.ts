@@ -13406,6 +13406,14 @@ export interface IdentityAuthenticationEvmCertificateRegistryState {
   revokeSigner?: string | null;
 }
 
+/** Response for the provider-parameterized link-authorize endpoint. */
+export interface IdentityAuthenticationExternalLoginLinkAuthorizeOutput {
+  /** Provider OAuth authorization URL (state embedded). */
+  authUrl: string | null;
+  /** Per-request state parameter, recorded server-side and validated at the callback. */
+  state: string | null;
+}
+
 /** Authorization-time consent preview: the exact scopes a link flow will request from
 the provider, shown to the user before they continue (issue #250). */
 export interface IdentityAuthenticationExternalLoginLinkPreviewOutput {
@@ -29092,6 +29100,7 @@ export let IdentityAuthenticationEvmCertificateProofResultSchema: z.ZodType<Iden
 export let IdentityAuthenticationEvmCertificateProofStatusSchema: z.ZodType<IdentityAuthenticationEvmCertificateProofStatus>;
 export let IdentityAuthenticationEvmCertificatePublicationStatusSchema: z.ZodType<IdentityAuthenticationEvmCertificatePublicationStatus>;
 export let IdentityAuthenticationEvmCertificateRegistryStateSchema: z.ZodType<IdentityAuthenticationEvmCertificateRegistryState>;
+export let IdentityAuthenticationExternalLoginLinkAuthorizeOutputSchema: z.ZodType<IdentityAuthenticationExternalLoginLinkAuthorizeOutput>;
 export let IdentityAuthenticationExternalLoginLinkPreviewOutputSchema: z.ZodType<IdentityAuthenticationExternalLoginLinkPreviewOutput>;
 export let IdentityAuthenticationGitHubCallbackRequestDtoSchema: z.ZodType<IdentityAuthenticationGitHubCallbackRequestDto>;
 export let IdentityAuthenticationGitHubSignInOutputSchema: z.ZodType<IdentityAuthenticationGitHubSignInOutput>;
@@ -42842,6 +42851,12 @@ IdentityAuthenticationEvmCertificateRegistryStateSchema = z.object({
   anchorSigner: z.string().nullable().optional(),
   revokedAtBlock: z.number().int().optional(),
   revokeSigner: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationExternalLoginLinkAuthorizeOutput. Response for the provider-parameterized link-authorize endpoint. */
+IdentityAuthenticationExternalLoginLinkAuthorizeOutputSchema = z.object({
+  authUrl: z.string().nullable(),
+  state: z.string().nullable(),
 });
 
 /** Zod schema for IdentityAuthenticationExternalLoginLinkPreviewOutput. Authorization-time consent preview: the exact scopes a link flow will request from

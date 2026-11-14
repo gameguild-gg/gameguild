@@ -4,6 +4,7 @@ using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -383,14 +384,15 @@ public class Web3ServiceTests
 
     public Web3ServiceTests()
     {
-        IMemoryCache memoryCache = new MemoryCache(new MemoryCacheOptions());
+        IDistributedCache cache = new MemoryDistributedCache(
+            Microsoft.Extensions.Options.Options.Create(new MemoryDistributedCacheOptions()));
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Authentication:Web3:Siwe:Origin"] = "https://localhost"
             })
             .Build();
-        _service = new Web3Service(NullLogger<Web3Service>.Instance, memoryCache, configuration);
+        _service = new Web3Service(NullLogger<Web3Service>.Instance, cache, configuration);
     }
 
     [Theory]

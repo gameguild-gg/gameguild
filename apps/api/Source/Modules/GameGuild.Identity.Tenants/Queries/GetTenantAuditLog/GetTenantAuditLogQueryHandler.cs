@@ -17,7 +17,7 @@ public sealed class GetTenantAuditLogQueryHandler(ITenantRepository tenantReposi
         var tenant = await tenantRepository.GetByIdAsync(request.TenantId, cancellationToken).ConfigureAwait(false);
         if (tenant == null)
         {
-            throw new KeyNotFoundException($"Tenant with ID '{request.TenantId}' not found");
+            throw new EntityNotFoundException("Tenant", request.TenantId);
         }
 
         // Get audit log entries from repository

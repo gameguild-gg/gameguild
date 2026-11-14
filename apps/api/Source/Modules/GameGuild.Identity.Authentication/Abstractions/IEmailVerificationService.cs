@@ -91,6 +91,24 @@ public interface IEmailVerificationService
     Task<bool> ResendVerificationEmailAsync(Guid userId, string email);
 
     /// <summary>
+    ///     Checks the shared per-(user, address) resend cooldown without sending anything.
+    ///     Every verification-email dispatch path must consult this gate so the cooldown
+    ///     cannot be bypassed (issue #1197). Fails open when the cooldown store is unavailable.
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <param name="email">The email address</param>
+    /// <returns>True when a verification email may be sent now, false while the cooldown window is active</returns>
+    Task<bool> CanResendVerificationEmailAsync(Guid userId, string email);
+
+    /// <summary>
+    ///     Stamps the shared per-(user, address) resend cooldown after a successful
+    ///     verification-email delivery (issue #1197). Best-effort; must not throw.
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <param name="email">The email address</param>
+    Task MarkVerificationEmailSentAsync(Guid userId, string email);
+
+    /// <summary>
     ///     Checks if a verification token is still valid (not expired).
     /// </summary>
     /// <param name="token">The verification token</param>

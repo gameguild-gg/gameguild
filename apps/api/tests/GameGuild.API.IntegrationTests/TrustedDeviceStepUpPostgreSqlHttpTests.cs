@@ -60,12 +60,12 @@ public sealed class TrustedDeviceStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture 
             Assert.Empty(await db.Set<TrustedDevice>().Where(row => row.UserId == account.UserId).ToListAsync());
         }
         using var fabricated = await client.PostAsJsonAsync(Route, new TrustDeviceRequest { DeviceName = DeviceName, StepUpReceipt = demand.StepUpToken });
-        Assert.Equal(HttpStatusCode.BadRequest, fabricated.StatusCode);
+        await AssertRenewedDemandAsync(factory, fabricated, account, account.SessionId, DeviceName);
         var receipt = await VerifyAsync(client, demand.ChallengeId, account.BackupCode);
         using var granted = await client.PostAsJsonAsync(Route, new TrustDeviceRequest { DeviceName = DeviceName, StepUpReceipt = receipt.Receipt });
         Assert.Equal(HttpStatusCode.OK, granted.StatusCode);
         using var replay = await client.PostAsJsonAsync(Route, new TrustDeviceRequest { DeviceName = DeviceName, StepUpReceipt = receipt.Receipt });
-        Assert.Equal(HttpStatusCode.BadRequest, replay.StatusCode);
+        await AssertRenewedDemandAsync(factory, replay, account, account.SessionId, DeviceName);
         await using var final = factory.Services.CreateAsyncScope();
         var context = final.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var trusted = Assert.Single(await context.Set<TrustedDevice>().Where(row => row.UserId == account.UserId).ToListAsync());
@@ -94,7 +94,9 @@ public sealed class TrustedDeviceStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture 
         using var attacker = await ClientAsync(factory, other, substitution == "different-session" ? account.OtherSessionId : other.SessionId);
         using var denied = await attacker.PostAsJsonAsync(Route, new TrustDeviceRequest
         { DeviceName = substitution == "different-payload" ? "Different synthetic payload" : DeviceName, StepUpReceipt = receipt.Receipt });
-        Assert.Equal(HttpStatusCode.BadRequest, denied.StatusCode);
+        await AssertRenewedDemandAsync(factory, denied, other,
+            substitution == "different-session" ? account.OtherSessionId : other.SessionId,
+            substitution == "different-payload" ? "Different synthetic payload" : DeviceName);
         await using (var read = factory.Services.CreateAsyncScope())
         {
             var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -318,6 +320,34 @@ public sealed class TrustedDeviceStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture 
         var code = Convert.ToHexString(RandomNumberGenerator.GetBytes(12));
         await provider.GetRequiredService<IBackupCodeMfaService>().StoreBackupCodesForSetupAsync(user.Id, [code]);
         return new(user.Id, user.Email, tenant.Id, user.TokenVersion, session.Id, other.Id, fingerprint, code);
+    }
+
+    private static async Task AssertRenewedDemandAsync(WebApplicationFactory<Program> factory,
+        HttpResponseMessage response, Account account, Guid sessionId, string deviceName)
+    {
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var demand = await response.Content.ReadFromJsonAsync<StepUpAuthenticationRequiredResponse>(JsonOptions);
+        Assert.NotNull(demand);
+        Assert.Equal(403, demand.Status);
+        Assert.True(demand.StepUpRequired);
+        Assert.False(demand.Extensions.ContainsKey("legacy"));
+        Assert.NotEqual(Guid.Empty, demand.ChallengeId);
+        Assert.Equal(demand.ChallengeId.ToString("D"), demand.StepUpToken);
+        var binding = SessionMutationCommandHandler.TrustDeviceStepUpBinding(deviceName);
+        Assert.Equal(binding, demand.Operation);
+        await using var read = factory.Services.CreateAsyncScope();
+        var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var challenge = await db.Set<StepUpChallenge>().AsNoTracking().SingleAsync(row => row.Id == demand.ChallengeId);
+        Assert.Equal(account.UserId, challenge.ActorId);
+        Assert.Equal(account.TenantId, challenge.TenantId);
+        Assert.Equal(sessionId, challenge.SessionId);
+        Assert.Equal(binding.OperationType, challenge.OperationType);
+        Assert.Equal(binding.TargetReference, challenge.TargetReference);
+        Assert.Equal(binding.PayloadHash, challenge.PayloadHash);
+        Assert.Equal(demand.ExpiresAt, challenge.ExpiresAt.UtcDateTime);
+        Assert.Null(challenge.VerifiedAt);
+        Assert.Null(challenge.ConsumedAt);
+        Assert.Null(challenge.ReceiptHash);
     }
 
     private static async Task<StepUpAuthenticationRequiredResponse> DemandAsync(HttpClient client)

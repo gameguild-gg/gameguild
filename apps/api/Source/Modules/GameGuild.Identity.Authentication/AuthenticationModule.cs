@@ -40,8 +40,10 @@ public static class AuthenticationModule
         // unregistered — both were header-writing stubs with no behavior (see
         // docs/authorization/gaps.md §C). Permission caching lives in the permission
         // services; access-review compliance tracking lives in the access-review services.
-        // AbacPolicyMiddleware (issue #1180) remains pending that issue's resolution.
-        app.UseMiddleware<Authorization.AbacPolicyMiddleware>();
+        // NOTE (issue #1180): AbacPolicyMiddleware was likewise unregistered and deleted.
+        // It only wrote an X-ABAC-Policies header; actual ABAC evaluation happens at
+        // permission-resolution time via ConditionalPolicyEvaluationExtension (#1230),
+        // so no per-request middleware is needed.
 
         return app;
     }

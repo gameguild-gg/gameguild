@@ -62,4 +62,22 @@ public interface IGuestSessionStore
         Guid authenticatedSessionId,
         DateTime upgradedAt,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Continuity variant of <see cref="TryMarkUpgradedAsync" /> for a session whose
+    ///     token expired mid-use (issue #1128): the snapshot's own expiry may already have
+    ///     passed, but the record is still retained by the store (the cache TTL keeps it for
+    ///     the eviction slack after logical expiry) and has not been upgraded. Binding such a
+    ///     session to a just-authenticated user is a one-time data-continuity migration, not
+    ///     a session extension: the guest credential stays expired and the record can never
+    ///     be marked upgraded twice. The caller is responsible for bounding the grace (token
+    ///     expiry + retention slack). Returns false when the record is unknown, already
+    ///     upgraded, or already evicted.
+    /// </summary>
+    Task<bool> TryMarkUpgradedForContinuityAsync(
+        Guid guestSessionId,
+        Guid userId,
+        Guid authenticatedSessionId,
+        DateTime upgradedAt,
+        CancellationToken cancellationToken = default);
 }

@@ -6,9 +6,11 @@ namespace GameGuild.Commerce.Products;
 
 /// <summary>
 /// Thrown when a promo campaign is not found by id (issue #418).
+/// Derives from <see cref="EntityNotFoundException"/> so the exception middleware
+/// answers 404 instead of 500 (issue #1278 not-found→500 class).
 /// </summary>
 public sealed class PromoCampaignNotFoundException(Guid campaignId)
-    : Exception($"Promo campaign with ID '{campaignId}' was not found.")
+    : EntityNotFoundException("PromoCampaign", campaignId, $"Promo campaign with ID '{campaignId}' was not found.")
 {
     /// <summary>The missing campaign id.</summary>
     public Guid CampaignId { get; } = campaignId;
@@ -404,7 +406,8 @@ public sealed class DeletePromoCampaignCommandHandler(
             .ConfigureAwait(false);
         if (referencingCodes > 0)
         {
-            throw new InvalidOperationException(
+            throw new BusinessRuleViolationException(
+                "PromoCampaign.HasReferencingCodes",
                 $"Promo campaign '{campaign.Key}' still groups {referencingCodes} promo code(s); delete or re-scope the codes before deleting the campaign.");
         }
 

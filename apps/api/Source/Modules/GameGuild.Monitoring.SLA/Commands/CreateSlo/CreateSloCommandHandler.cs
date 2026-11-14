@@ -13,7 +13,7 @@ public sealed class CreateSloCommandHandler(IServiceLevelObjectiveRepository rep
         // Check if SLO with same name exists for this tenant
         var exists = await repository.ExistsByNameAsync(request.Name, request.TenantId, cancellationToken).ConfigureAwait(false);
 
-        if (exists) { throw new InvalidOperationException($"SLO with name '{request.Name}' already exists for this tenant."); }
+        if (exists) { throw new BusinessRuleViolationException("Slo.DuplicateName", $"SLO with name '{request.Name}' already exists for this tenant."); }
 
         var slo = new ServiceLevelObjective
         {

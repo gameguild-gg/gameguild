@@ -21,7 +21,8 @@ public sealed class SessionManagementService(
     IGeolocationProvider? geolocationProvider = null,
     ISessionEvictionAlertPublisher? sessionEvictionAlerts = null,
     IUserDeviceFingerprintRepository? fingerprintRepository = null,
-    INewDeviceSignInAlertPublisher? newDeviceAlerts = null) : ISessionManagementService
+    INewDeviceSignInAlertPublisher? newDeviceAlerts = null,
+    ITokenRevocationPostCommitCoordinator? sessionTokenRevocation = null) : ISessionManagementService
 {
     private readonly SessionOptions _sessionOptions = sessionOptions ?? new SessionOptions();
     private readonly IUserAgentParser _userAgentParser = userAgentParser ?? UserAgentParser.Shared;
@@ -370,6 +371,13 @@ public sealed class SessionManagementService(
             SessionAnalyticsMetrics.RecordTerminated(reason);
         }
 
+        // Issue #1179: terminate the in-flight access token as well. The session-row check in
+        // TokenRevocationMiddleware covers tokens that carry the session claim, but the deny-list
+        // write also kills session-bound tokens observed by hosts with stale session reads and any
+        // token the caller minted without the claim. Transaction-aware: inside the command
+        // pipeline the write defers until commit (no deny-list residue on rollback).
+        await RevokeSessionAccessTokenAsync(session.Id, reason.ToString(), cancellationToken).ConfigureAwait(false);
+
         await ForwardSessionAuditEventAsync(session, "Authentication.SessionTerminated", cancellationToken, reason.ToString()).ConfigureAwait(false);
 
         logger.LogInformation("Session {SessionId} terminated. Reason: {Reason}", sessionId, reason);
@@ -396,6 +404,9 @@ public sealed class SessionManagementService(
             session.TerminationReason = reason.ToString();
             session.TerminatedAt = SystemClock.UtcNow;
             await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
+            // Issue #1179: deny-list each terminated session's in-flight access token
+            // (deferred until commit when a command transaction is ambient).
+            await RevokeSessionAccessTokenAsync(session.Id, reason.ToString(), cancellationToken).ConfigureAwait(false);
             await ForwardSessionAuditEventAsync(session, "Authentication.SessionTerminated", cancellationToken, session.TerminationReason).ConfigureAwait(false);
         }
 
@@ -408,6 +419,14 @@ public sealed class SessionManagementService(
 
         return activeSessions.Count;
     }
+
+    /// <summary>
+    ///     Null-tolerant pass-through to the deny-list coordinator (issue #1179). The
+    ///     coordinator itself is best-effort and transaction-aware; no-op when the optional
+    ///     dependency is absent (manual constructions).
+    /// </summary>
+    private Task RevokeSessionAccessTokenAsync(Guid sessionId, string reason, CancellationToken cancellationToken) =>
+        sessionTokenRevocation?.RevokeSessionAccessTokenAsync(sessionId, reason, cancellationToken) ?? Task.CompletedTask;
 
     private async Task ForwardSessionAuditEventAsync(
         UserSession session,

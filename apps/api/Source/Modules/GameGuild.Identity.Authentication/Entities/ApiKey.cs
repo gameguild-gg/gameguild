@@ -14,6 +14,7 @@ namespace GameGuild.Identity.Authentication;
 [Index(nameof(TenantId))]
 [Index(nameof(IsActive))]
 [Index(nameof(ExpiresAt))]
+[Index(nameof(CreatedByApiKeyId))]
 public class ApiKey : EntityBase
 {
     /// <summary>
@@ -21,6 +22,14 @@ public class ApiKey : EntityBase
     /// </summary>
     [Required]
     public Guid UserId { get; set; }
+
+    /// <summary>
+    ///     The API-key credential that minted this key (issue #1192). Null when the key was
+    ///     created by an interactive user. Revoking a key cascades to every key it created
+    ///     (directly or transitively), so a leaked <c>api_keys:manage</c> key cannot
+    ///     self-perpetuate by minting replacements.
+    /// </summary>
+    public Guid? CreatedByApiKeyId { get; set; }
 
     /// <summary>
     ///     Display name for the key

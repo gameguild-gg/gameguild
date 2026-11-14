@@ -35,6 +35,15 @@ public static class GuestSessionUpgradeIntegration
         {
             response.UpgradedFromGuestSessionId = upgrade.GuestSessionId;
         }
+        else
+        {
+            // Issue #1128: the guest credential was presented but its data could not come
+            // along (expired past the retention grace, unreadable, or already consumed).
+            // The sign-in stands — only continuity was lost. Flag it so the caller is told
+            // instead of silently observing a missing UpgradedFromGuestSessionId; hosts
+            // surface the flag through the X-Guest-Session-Expired response header.
+            response.GuestSessionExpired = true;
+        }
 
         return response;
     }

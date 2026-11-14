@@ -99,7 +99,16 @@ public sealed class PricingEngineTests
 
         var act = () => CreateEngine().CalculateAsync(request);
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        // A missing referenced plan returns the standard not-found response.
+        // An absent plan without a custom amount remains a validation failure.
+        if (planIdEmpty)
+        {
+            await act.Should().ThrowAsync<InvalidOperationException>();
+        }
+        else
+        {
+            await act.Should().ThrowAsync<EntityNotFoundException>();
+        }
     }
 
     [Fact]
@@ -111,7 +120,7 @@ public sealed class PricingEngineTests
 
         var act = () => CreateEngine().CalculateAsync(new PricingCalculationRequest(PlanId: Guid.NewGuid(), IncludeTax: false, RecordDecision: false));
 
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*not found*");
+        await act.Should().ThrowAsync<EntityNotFoundException>().WithMessage("*not found*");
     }
 
     // ---------- Add-ons ----------

@@ -88,29 +88,57 @@ afterEach(() => {
 });
 
 describe.each<Mode>(['route', 'action'])('authenticated logout through the %s entry point', (mode) => {
-  it('revokes the owned refresh token using the session bearer and generated operation', async () => {
+  it('signs out through the generated sign-out operation with the session bearer (issue #1196)', async () => {
+    const configuration = config();
+    const sessionCookies = await seedSession(configuration);
+    const fetcher = vi.fn<typeof fetch>().mockImplementation((_url, init) => {
+      if (new Headers(init?.headers).get('Authorization') !== `Bearer ${accessToken}`) return Promise.resolve(Response.json({}, { status: 401 }));
+      return Promise.resolve(Response.json({ success: true, sessionsInvalidated: 1, message: null }, { status: 200 }));
+    });
+    vi.stubGlobal('fetch', fetcher);
+    const signOutOperation = vi.spyOn(AuthModule.prototype, 'postAuthSignOut');
+    const revokeOperation = vi.spyOn(AuthModule.prototype, 'postAuthTokensRevoke');
+
+    const result = await signOut(mode, configuration);
+
+    expect(result.status).toBe(200);
+    expect(signOutOperation).toHaveBeenCalledExactlyOnceWith({ logoutEverywhere: false });
+    // The dedicated sign-out endpoint succeeded: no direct revocation is needed —
+    // the endpoint deny-lists the access token's jti server-side.
+    expect(revokeOperation).not.toHaveBeenCalled();
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(fetcher.mock.calls[0]?.[0]).toBe('https://api.example.test/v1/auth/sign-out');
+    const request = fetcher.mock.calls[0]?.[1];
+    expect(request?.method).toBe('POST');
+    expect(new Headers(request?.headers).get('Content-Type')).toBe('application/json');
+    expect(JSON.parse(request?.body as string)).toEqual({ logoutEverywhere: false });
+    expect(result.deletions).toEqual(expect.arrayContaining(sessionCookies));
+  });
+
+  it('falls back to the owned refresh-token revocation when the sign-out endpoint answers with an HTTP failure', async () => {
     const configuration = config();
     const sessionCookies = await seedSession(configuration);
     let revoked = false;
-    const fetcher = vi.fn<typeof fetch>().mockImplementation((_url, init) => {
+    const fetcher = vi.fn<typeof fetch>().mockImplementation((url, init) => {
       if (new Headers(init?.headers).get('Authorization') !== `Bearer ${accessToken}`) return Promise.resolve(Response.json({}, { status: 401 }));
+      if (String(url).endsWith('/v1/auth/sign-out')) return Promise.resolve(Response.json({}, { status: 503 }));
       const body = JSON.parse(init?.body as string) as Record<string, unknown>;
       revoked = body.token === refreshToken;
       return Promise.resolve(new Response(null, { status: 204 }));
     });
     vi.stubGlobal('fetch', fetcher);
-    const operation = vi.spyOn(AuthModule.prototype, 'postAuthTokensRevoke');
+    const revokeOperation = vi.spyOn(AuthModule.prototype, 'postAuthTokensRevoke');
 
     const result = await signOut(mode, configuration);
 
     expect(result.status).toBe(200);
     expect(revoked).toBe(true);
-    expect(operation).toHaveBeenCalledExactlyOnceWith({ token: refreshToken });
-    expect(fetcher).toHaveBeenCalledOnce();
-    expect(fetcher.mock.calls[0]?.[0]).toBe('https://api.example.test/v1/auth/tokens:revoke');
-    const request = fetcher.mock.calls[0]?.[1];
+    expect(revokeOperation).toHaveBeenCalledExactlyOnceWith({ token: refreshToken });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetcher.mock.calls[1]?.[0]).toBe('https://api.example.test/v1/auth/tokens:revoke');
+    const request = fetcher.mock.calls[1]?.[1];
     expect(request?.method).toBe('POST');
-    expect(new Headers(request?.headers).get('Content-Type')).toBe('application/json');
+    expect(new Headers(request?.headers).get('Authorization')).toBe(`Bearer ${accessToken}`);
     expect(JSON.parse(request?.body as string)).toEqual({ token: refreshToken });
     expect(result.deletions).toEqual(expect.arrayContaining(sessionCookies));
   });
@@ -132,20 +160,26 @@ describe.each<Mode>(['route', 'action'])('authenticated logout through the %s en
       const sessionCookies = await seedSession(configuration, { refreshToken: invalid });
       const fetcher = respond();
       const result = await signOut(mode, configuration);
-      expect(fetcher).not.toHaveBeenCalled();
+      // The sign-out attempt still happens (the access token alone can kill the
+      // jti), but no revocation request is ever built from the bad credential.
+      expect(fetcher).toHaveBeenCalledOnce();
+      expect(fetcher.mock.calls[0]?.[0]).toBe('https://api.example.test/v1/auth/sign-out');
       expect(result.status).toBe(200);
       expect(result.deletions).toEqual(expect.arrayContaining(sessionCookies));
     },
   );
 
-  it.each([401, 403, 503, 'network'] as const)('clears local cookies when revocation fails: %s', async (failure) => {
+  it.each([401, 403, 503, 'network'] as const)('clears local cookies when server-side sign-out fails: %s', async (failure) => {
     const configuration = config();
     const sessionCookies = await seedSession(configuration);
     const fetcher = failure === 'network' ? vi.fn<typeof fetch>().mockRejectedValue(new TypeError('synthetic offline')) : respond(failure);
     vi.stubGlobal('fetch', fetcher);
     const result = await signOut(mode, configuration);
     expect(result.status).toBe(200);
-    expect(fetcher).toHaveBeenCalledOnce();
+    // HTTP failure: sign-out failed with a response, so the refresh-token
+    // revocation fallback also runs. Transport failure (network): the API is
+    // unreachable — the fallback is skipped to keep the logout bound at 5s.
+    expect(fetcher).toHaveBeenCalledTimes(failure === 'network' ? 1 : 2);
     expect(result.deletions).toEqual(expect.arrayContaining(sessionCookies));
   });
 
@@ -154,8 +188,13 @@ describe.each<Mode>(['route', 'action'])('authenticated logout through the %s en
     const sessionCookies = await seedSession(configuration, { accessTokenExpires: Date.now() - 60_000 });
     const fetcher = respond(401);
     const result = await signOut(mode, configuration);
-    expect(fetcher).toHaveBeenCalledOnce();
-    expect(fetcher.mock.calls[0]?.[0]).toBe('https://api.example.test/v1/auth/tokens:revoke');
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    const requestedUrls = fetcher.mock.calls.map(([url]) => String(url));
+    expect(requestedUrls.every((url) => !/refresh/i.test(url))).toBe(true);
+    expect(requestedUrls).toEqual([
+      'https://api.example.test/v1/auth/sign-out',
+      'https://api.example.test/v1/auth/tokens:revoke',
+    ]);
     expect(result.deletions).toEqual(expect.arrayContaining(sessionCookies));
   });
 
@@ -234,9 +273,13 @@ it('ignores caller-supplied tokens and actor fields on the logout route', async 
     userId: 'another-user',
     ipAddress: '203.0.113.1',
   });
+  // respond() yields 204 No Content, whose empty body fails LogoutOutput parsing,
+  // so exactly one server call happens: the sign-out attempt itself.
+  expect(fetcher).toHaveBeenCalledOnce();
+  expect(fetcher.mock.calls[0]?.[0]).toBe('https://api.example.test/v1/auth/sign-out');
   const request = fetcher.mock.calls[0]?.[1];
   expect(new Headers(request?.headers).get('Authorization')).toBe(`Bearer ${accessToken}`);
-  expect(JSON.parse(request?.body as string)).toEqual({ token: refreshToken });
+  expect(JSON.parse(request?.body as string)).toEqual({ logoutEverywhere: false });
 });
 
 it('rejects invalid CSRF before attempting revocation or deleting the session', async () => {

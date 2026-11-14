@@ -98,7 +98,7 @@ public sealed class ResendSubscriptionNotificationCommandHandler(
 
         if (source is null)
         {
-            throw new InvalidOperationException($"Subscription notification {request.NotificationId} was not found.");
+            throw new EntityNotFoundException("SubscriptionNotification", request.NotificationId);
         }
 
         var result = await notificationService.SendAsync(
@@ -119,7 +119,7 @@ public sealed class ResendSubscriptionNotificationCommandHandler(
 
         if (!result.IsSuccess)
         {
-            throw new InvalidOperationException(result.Error.Description);
+            throw new BusinessRuleViolationException("SubscriptionNotification.ResendFailed", result.Error.Description);
         }
 
         return SubscriptionNotificationMapper.ToDto(result.Value);

@@ -102,6 +102,7 @@ public sealed class BillingChargesController(ISender sender, IActorContextAccess
     [HttpPost("{chargeId:guid}:refund")]
     [EndpointSummary("Refund billing charge")]
     [ProducesResponseType<ProcessRefundResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RefundCharge(Guid chargeId, [FromBody] RefundBillingChargeRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
@@ -111,7 +112,17 @@ public sealed class BillingChargesController(ISender sender, IActorContextAccess
         var validationError = ValidateTenantAccess(payment.TenantId, "refund billing charge");
         if (validationError != null) return validationError;
 
-        var result = await sender.Send(new ProcessRefundCommand(chargeId, body.Amount ?? 0, body.Reason ?? "No reason provided"), ct).ConfigureAwait(false);
+        // Issue #1280 R-P3: an omitted amount means "refund everything that is left" (the
+        // same contract as the payments refund route), never a 0-amount refund. The query
+        // result carries the net (not yet refunded) amount.
+        var remainingAmount = payment.Amount?.Amount ?? 0m;
+        var refundAmount = body.Amount ?? remainingAmount;
+        if (refundAmount <= 0)
+        {
+            return BadRequest(new { error = "Amount must be positive; the payment has no remaining refundable amount." });
+        }
+
+        var result = await sender.Send(new ProcessRefundCommand(chargeId, refundAmount, body.Reason ?? "No reason provided"), ct).ConfigureAwait(false);
         return Ok(result);
     }
 

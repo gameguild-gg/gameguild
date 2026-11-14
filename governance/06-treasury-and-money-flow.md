@@ -56,7 +56,7 @@ Treasury (Safe multisig)
 
 ## Money-flow rules
 
-1. **Anything not in the approved quarterly plan requires a supermajority vote** (≥70%). Planned spend flows freely under CEO discretion.
+1. **Anything not in the approved quarterly plan requires a qualified-majority vote** (≥70% — no two governors alone can pass; see coalition table in 05). Planned spend flows freely under CEO discretion.
 2. Every distribution pool movement is on-chain (auditable by all holders).
 3. Fiat/crypto conversion policy: defined per entity for tax reasons (see 03-legal-structure).
 4. **Runway floor: 6 months** — distribution votes may not drain below it.

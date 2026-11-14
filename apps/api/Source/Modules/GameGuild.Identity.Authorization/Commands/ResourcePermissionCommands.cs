@@ -262,12 +262,12 @@ public sealed class AcceptResourceInvitationCommandHandler(
 
     public async Task<InvitationActionResult> Handle(AcceptResourceInvitationCommand request, CancellationToken cancellationToken)
     {
-        var userId = Actor.SubjectIdAsGuid ?? throw new UnauthorizedAccessException("User not authenticated");
+        var userId = Actor.SubjectIdAsGuid ?? throw new AuthenticationRequiredException("User not authenticated");
         var email = Actor.TypedAttributes.Email;
 
         if (string.IsNullOrWhiteSpace(email))
         {
-            throw new UnauthorizedAccessException("Authenticated user must have an email address to accept an invitation");
+            throw new AuthenticationRequiredException("Authenticated user must have an email address to accept an invitation");
         }
 
         var invitation = await dbContext.Set<ResourceInvitation>()
@@ -286,7 +286,7 @@ public sealed class AcceptResourceInvitationCommandHandler(
                 userId,
                 request.InvitationId);
 
-            throw new UnauthorizedAccessException("This invitation is not addressed to the current user");
+            throw new AccessDeniedException("This invitation is not addressed to the current user");
         }
 
         var accepted = await resourcePermissionService
@@ -329,7 +329,7 @@ public sealed class DeclineResourceInvitationCommandHandler(
 
         if (string.IsNullOrWhiteSpace(email))
         {
-            throw new UnauthorizedAccessException("Authenticated user must have an email address to decline an invitation");
+            throw new AuthenticationRequiredException("Authenticated user must have an email address to decline an invitation");
         }
 
         var invitation = await dbContext.Set<ResourceInvitation>()
@@ -349,7 +349,7 @@ public sealed class DeclineResourceInvitationCommandHandler(
                 LogRedaction.MaskEmail(email),
                 request.InvitationId);
 
-            throw new UnauthorizedAccessException("This invitation is not addressed to the current user");
+            throw new AccessDeniedException("This invitation is not addressed to the current user");
         }
 
         var declined = await resourcePermissionService

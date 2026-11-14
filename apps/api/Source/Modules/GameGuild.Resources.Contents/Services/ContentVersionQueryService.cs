@@ -16,7 +16,7 @@ public class ContentVersionQueryService(
         CancellationToken ct = default)
     {
         var versions = await db.Set<ContentVersion>()
-            .Where(v => v.EntityId == entityId && v.EntityType == entityType && !v.IsDeleted)
+            .Where(v => v.EntityId == entityId && v.EntityType == entityType && v.DeletedAt == null)
             .OrderByDescending(v => v.VersionNumber)
             .ToListAsync(ct).ConfigureAwait(false);
 
@@ -26,7 +26,7 @@ public class ContentVersionQueryService(
     public async Task<Result<ContentVersion>> GetVersionAsync(Guid versionId, CancellationToken ct = default)
     {
         var version = await db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.Id == versionId && v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (version == null)
         {
@@ -47,7 +47,7 @@ public class ContentVersionQueryService(
                 v.EntityId == entityId &&
                 v.EntityType == entityType &&
                 v.VersionNumber == versionNumber &&
-                !v.IsDeleted, ct).ConfigureAwait(false);
+                v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (version == null)
         {
@@ -64,7 +64,7 @@ public class ContentVersionQueryService(
                 v.EntityId == entityId &&
                 v.EntityType == entityType &&
                 v.IsCurrentVersion &&
-                !v.IsDeleted, ct).ConfigureAwait(false);
+                v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (version == null)
         {
@@ -80,9 +80,9 @@ public class ContentVersionQueryService(
         CancellationToken ct = default)
     {
         var v1 = await db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId1 && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.Id == versionId1 && v.DeletedAt == null, ct).ConfigureAwait(false);
         var v2 = await db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId2 && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.Id == versionId2 && v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (v1 == null || v2 == null)
         {

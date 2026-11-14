@@ -283,6 +283,84 @@ public sealed class SamlFederationServiceTests : IDisposable
         identity.ProviderKey.Should().Be("jane@corp.example.test");
     }
 
+    // ── Certificate rollover window (issue #1133) ─────────────────────────────────────
+    //
+    // The IdP renewed its signing certificate and both certificates are listed while their
+    // X.509 validity windows overlap. Enterprise lockout prevention: during the overlap BOTH
+    // keys' assertions must validate (the IdP may sign with either while it drains), and
+    // once the old certificate's window closes, only the new key's assertions pass.
+
+    [Fact]
+    public async Task ConsumeAssertionAsync_RolloverWindowOverlap_BothOldAndNewKeyAssertionsValidate()
+    {
+        // Overlap: the old certificate is STILL within its X.509 validity while the new one
+        // is already active — the classic rotation cutover window.
+        var options = ProviderOptions(certificates:
+        [
+            CertificateBase64(_idpKey, DateTimeOffset.UtcNow.AddDays(-30), DateTimeOffset.UtcNow.AddDays(30)), // old, still valid
+            CertificateBase64(_rotationKey, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(1)) // new, active
+        ]);
+        var sut = CreateSut(AuthOptionsWith(options));
+
+        // IdP still signing with the OLD key during the overlap: existing SP flows continue.
+        var oldKeyRequestId = await IssuePendingRequestIdAsync(sut);
+        var oldKeyIdentity = await Consume(sut, BuildResponse(o => o with { InResponseTo = oldKeyRequestId, SigningKey = _idpKey }));
+        oldKeyIdentity.ProviderKey.Should().Be("jane@corp.example.test", "old-certificate assertions stay valid during the rollover overlap");
+
+        // IdP already signing with the NEW key during the overlap: cutover needs no outage.
+        var newKeyRequestId = await IssuePendingRequestIdAsync(sut);
+        var newKeyIdentity = await Consume(sut, BuildResponse(o => o with { InResponseTo = newKeyRequestId, SigningKey = _rotationKey }));
+        newKeyIdentity.ProviderKey.Should().Be("jane@corp.example.test", "new-certificate assertions validate during the rollover overlap");
+    }
+
+    [Fact]
+    public async Task ConsumeAssertionAsync_AfterRolloverWindow_OldKeyRejectedWhileNewKeyListed()
+    {
+        // The window has closed: the old certificate's X.509 validity has lapsed; the new
+        // certificate is listed and active.
+        var options = ProviderOptions(certificates:
+        [
+            CertificateBase64(_idpKey, DateTimeOffset.UtcNow.AddDays(-30), DateTimeOffset.UtcNow.AddDays(-1)), // old, expired
+            CertificateBase64(_rotationKey, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(1)) // new, active
+        ]);
+        var sut = CreateSut(AuthOptionsWith(options));
+
+        // A stale (or forged-with-old-key) assertion no longer validates even though the
+        // old certificate is still listed: expired trust anchors are filtered out before
+        // signature verification, so only the new key can sign.
+        var oldKeyRequestId = await IssuePendingRequestIdAsync(sut);
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = oldKeyRequestId, SigningKey = _idpKey }));
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("*failed verification*",
+                "once the rollover window closes, the old certificate is no longer a valid trust anchor");
+
+        // The new key's assertions continue to pass after the cutover.
+        var newKeyRequestId = await IssuePendingRequestIdAsync(sut);
+        var newKeyIdentity = await Consume(sut, BuildResponse(o => o with { InResponseTo = newKeyRequestId, SigningKey = _rotationKey }));
+        newKeyIdentity.ProviderKey.Should().Be("jane@corp.example.test");
+    }
+
+    [Fact]
+    public async Task ConsumeAssertionAsync_AllCertificatesExpired_FailsClosedWithClearError()
+    {
+        // Graceful error (issue #1133's lockout scenario inverted): when every configured
+        // certificate has lapsed, the failure is an explicit expired-trust error, not a
+        // generic signature rejection — operators can tell rotation debt from forgery.
+        var options = ProviderOptions(certificates:
+        [
+            CertificateBase64(_idpKey, DateTimeOffset.UtcNow.AddDays(-60), DateTimeOffset.UtcNow.AddDays(-2)),
+            CertificateBase64(_rotationKey, DateTimeOffset.UtcNow.AddDays(-59), DateTimeOffset.UtcNow.AddDays(-1))
+        ]);
+        var sut = CreateSut(AuthOptionsWith(options));
+        var requestId = await IssuePendingRequestIdAsync(sut);
+
+        var act = () => Consume(sut, BuildResponse(o => o with { InResponseTo = requestId }));
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("*signing certificates*expired*");
+    }
+
     [Fact]
     public async Task ConsumeAssertionAsync_WrappedReferenceUri_Rejected()
     {

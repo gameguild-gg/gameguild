@@ -19,7 +19,7 @@ public class PatchSubscriptionHandlerTests
 
         Func<Task> act = async () => await handler.Handle(command, CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
+        await act.Should().ThrowAsync<EntityNotFoundException>()
             .WithMessage($"*{command.SubscriptionId}*not found*");
     }
 

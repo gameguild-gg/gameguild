@@ -14,7 +14,7 @@ public sealed class ResumeSubscriptionHandler(IApplicationDbContext context)
     {
         var subscription = await context.Set<Subscription>()
             .FirstOrDefaultAsync(s => s.Id == request.SubscriptionId, cancellationToken)
-            ?? throw new InvalidOperationException($"Subscription {request.SubscriptionId} not found");
+            ?? throw new EntityNotFoundException("Subscription", request.SubscriptionId);
 
         // Use Reactivate() which sets status back to Active and clears metadata
         subscription.Reactivate();
