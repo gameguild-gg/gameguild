@@ -145,12 +145,12 @@ public sealed class TrustedDeviceSessionPostgreSqlHttpTests(ApiPostgreSqlFixture
     public async Task TrustWithoutAStepUpReceiptIsForbiddenAndCreatesNothing()
     {
         // Fresh verification gate (issue #1144): a valid session alone must not grant device trust.
-        // Issue #1191: the refusal is the structured step-up trigger (423 with challenge
-        // instructions) instead of a bare 403.
+        // The published route contract is HTTP 403 with a persisted, operation-bound
+        // challenge; no device trust is created before fresh verification.
         var account = await SeedAsync();
         using var client = await SignedClientAsync(account, account.CurrentSessionId);
         using var response = await client.PostAsJsonAsync(TrustRoute, new { deviceName = "Unverified request" });
-        Assert.Equal(HttpStatusCode.Locked, response.StatusCode);
+        await AssertStructuredDemandAsync(account, response, "Unverified request");
         await AssertNoTrustAsync(account);
         await AssertSessionsUnchangedAsync(account);
     }
@@ -172,8 +172,8 @@ public sealed class TrustedDeviceSessionPostgreSqlHttpTests(ApiPostgreSqlFixture
 
         using var client = await SignedClientAsync(account, account.CurrentSessionId);
         using var response = await client.PostAsJsonAsync(TrustRoute, new { deviceName, stepUpReceipt = receipt });
-        // Issue #1191: a spent receipt is also the structured step-up trigger (423), not a 400.
-        Assert.Equal(HttpStatusCode.Locked, response.StatusCode);
+        // A spent receipt must return the documented structured demand and cannot grant trust.
+        await AssertStructuredDemandAsync(account, response, deviceName);
         await AssertNoTrustAsync(account);
     }
 
@@ -409,6 +409,36 @@ public sealed class TrustedDeviceSessionPostgreSqlHttpTests(ApiPostgreSqlFixture
         });
         await db.SaveChangesAsync();
         return receipt;
+    }
+
+    private async Task AssertStructuredDemandAsync(Account account, HttpResponseMessage response, string deviceName)
+    {
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var body = document.RootElement;
+        Assert.Equal(403, body.GetProperty("status").GetInt32());
+        Assert.True(body.GetProperty("stepUpRequired").GetBoolean());
+        var challengeId = body.GetProperty("challengeId").GetGuid();
+        Assert.NotEqual(Guid.Empty, challengeId);
+        Assert.Equal(challengeId.ToString("D"), body.GetProperty("stepUpToken").GetString());
+        Assert.Equal(JsonValueKind.Array, body.GetProperty("availableMethods").ValueKind);
+        var binding = SessionMutationCommandHandler.TrustDeviceStepUpBinding(deviceName);
+        var operation = body.GetProperty("operation");
+        Assert.Equal(binding.OperationType, operation.GetProperty("operationType").GetString());
+        Assert.Equal(binding.TargetReference, operation.GetProperty("targetReference").GetString());
+        Assert.Equal(binding.PayloadHash, operation.GetProperty("payloadHash").GetString());
+        await using var read = fixture.RealAuthenticationFactory.Services.CreateAsyncScope();
+        var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var challenge = await db.Set<StepUpChallenge>().AsNoTracking().SingleAsync(row => row.Id == challengeId);
+        Assert.Equal(account.UserId, challenge.ActorId);
+        Assert.Equal(account.TenantId, challenge.TenantId);
+        Assert.Equal(account.CurrentSessionId, challenge.SessionId);
+        Assert.Equal(binding.OperationType, challenge.OperationType);
+        Assert.Equal(binding.TargetReference, challenge.TargetReference);
+        Assert.Equal(binding.PayloadHash, challenge.PayloadHash);
+        Assert.Null(challenge.VerifiedAt);
+        Assert.Null(challenge.ConsumedAt);
+        Assert.Null(challenge.ReceiptHash);
     }
 
     private async Task AssertNoTrustAsync(Account account)
