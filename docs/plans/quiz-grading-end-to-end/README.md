@@ -9,7 +9,7 @@ integração.
 
 Data: 2026-08-21.
 
-Atualizado: 2026-10-17.
+Atualizado: 2026-10-28.
 
 ## Objetivo
 
@@ -37,6 +37,26 @@ inverte a dependência entre aplicação e scripts de teste e preserva Playwrigh
 apenas como runner automatizado. Ele também formaliza o núcleo genérico e os
 adapters específicos para que quiz não seja incorporado ao grading e futuros
 tipos, como code, possam ser registrados sem condicionais na UI.
+
+O plano de integração
+[`12-ai-review-provider-integration-and-validation.md`](./12-ai-review-provider-integration-and-validation.md)
+define como tornar `AIReview` executável usando `GameGuild.AI` por uma ponte no
+host, sem acoplar assessments a fornecedor ou quiz. Ele cobre configuração
+segura, contexto server-derived, saída estruturada, idempotência, capability
+dinâmica e testes determinísticos, mantendo chamadas reais como smoke opt-in.
+
+O plano de infraestrutura
+[`13-standard-ai-adapter-and-generic-backends.md`](./13-standard-ai-adapter-and-generic-backends.md)
+separa backend, adapter, modelo e credencial no módulo de IA. Ele preserva o
+adapter oficial da OpenAI, introduz `StandardAiAdapter` para servidores próprios
+compatíveis e mantém grading independente do modelo e do protocolo executados.
+
+Os planos 12 e 13 formam uma única entrega para `develop`. Antes desse PR, a
+dependência legada da Codingame usada pelo Code Studio será removida em um PR
+preparatório separado, sem alterar AIReview. Com esse desbloqueio integrado, a
+branch de AIReview será reconciliada com `develop`, passará pelos testes
+determinísticos, browser e smoke real, e então seguirá pelo gate `SAI-09` do
+plano 13. O roadmap de coding assessment 01–06 não entra nesse PR.
 
 O documento anterior
 [`quiz-assessment-end-to-end-grading-flow.md`](../quiz-assessment-end-to-end-grading-flow.md)

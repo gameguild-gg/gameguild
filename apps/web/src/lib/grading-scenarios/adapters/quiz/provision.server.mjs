@@ -10,6 +10,7 @@ import {
   assertApplicableCheckpoint,
   checkpointIndex,
   getScenarioDefinition,
+  hasAIReview,
   hasInstructorReview,
   hasPeerReview,
   hasSelfReview,
@@ -453,6 +454,7 @@ async function ensureQuizAuthoring(manifest, definition, quiz, sessions) {
 function buildReviewConfiguration(quiz) {
   if (
     !hasPeerReview(quiz) &&
+    !hasAIReview(quiz) &&
     !hasSelfReview(quiz) &&
     !hasInstructorReview(quiz)
   ) {
@@ -471,7 +473,17 @@ function buildReviewConfiguration(quiz) {
           onInsufficientEvidence: "await-instructor-resolution",
         }
       : null,
-    ai: null,
+    ai: hasAIReview(quiz)
+      ? {
+          providerKey:
+            process.env.GRADING_AI_LIVE_TEST === "1"
+              ? "gameguild-ai"
+              : process.env.GRADING_VALIDATION_E2E === "1"
+              ? "controlled-ai"
+              : "gameguild-ai",
+          policyVersion: "v1",
+        }
+      : null,
     self: hasSelfReview(quiz)
       ? {
           instructions:
@@ -644,6 +656,7 @@ async function ensureEnrollment(manifest, sessions, personaKey) {
   const resources = manifest.resources;
   const persona = manifest.personas[personaKey];
   const instructor = sessions.instructor;
+  const learner = sessions[personaKey];
   const enrolled = unwrap(
     await instructor.modules.courses.getCoursesUsers(resources.courseId, {
       take: 500,
@@ -663,7 +676,7 @@ async function ensureEnrollment(manifest, sessions, personaKey) {
     throw new Error(`Enrollment for ${personaKey} returned no enrollmentId.`);
   }
   const canonical = unwrap(
-    await instructor.modules.enrollments.postApiLearningEnrollments({
+    await learner.modules.enrollments.postApiLearningEnrollments({
       courseId: resources.courseId,
       userId: persona.userId,
       cohortId: null,
@@ -810,7 +823,7 @@ async function ensurePersonaSubmission(
     submission.execution?.submittedResponse == null
   ) {
     const draftIntent = {
-      response: quiz.correctAnswer,
+      response: quiz.learnerResponse,
       expectedVersion: submission.draftVersion,
     };
     const key = await commandKey(
@@ -831,7 +844,7 @@ async function ensurePersonaSubmission(
 
   if (normalizeStatus(submission.status) === "inprogress") {
     const submitIntent = {
-      response: quiz.correctAnswer,
+      response: quiz.learnerResponse,
       expectedDraftVersion:
         quiz.subject === "collective" ? submission.draftVersion : null,
     };
@@ -881,6 +894,13 @@ async function ensurePersonaSubmission(
         expectedDraftVersion: null,
       },
     });
+  }
+  if (hasAIReview(quiz)) {
+    submission = await waitForAIReviewSubmission(
+      learner,
+      submissionResources.submissionId,
+      hasInstructorReview(quiz),
+    );
   }
   captureExecution(submissionResources, submission);
   await persist(manifest);
@@ -1073,6 +1093,37 @@ function readRuntimeSubmission(session, submissionId) {
     method: "GET",
     path: `/v1/assessments/runtime-submissions/${submissionId}`,
   });
+}
+
+async function waitForAIReviewSubmission(
+  session,
+  submissionId,
+  requiresInstructor,
+) {
+  const deadline = Date.now() + 30_000;
+  let submission = await readRuntimeSubmission(session, submissionId);
+  while (!hasSettledAIReview(submission, requiresInstructor)) {
+    if (Date.now() >= deadline) {
+      throw new Error(
+        `AI review for submission ${submissionId} did not settle within 30 seconds.`,
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    submission = await readRuntimeSubmission(session, submissionId);
+  }
+  return submission;
+}
+
+export function hasSettledAIReview(submission, requiresInstructor) {
+  const execution = submission.execution;
+  if (!execution) return false;
+  if (requiresInstructor) {
+    return execution.requiresInstructorReview === true;
+  }
+  return (
+    normalizeStatus(submission.status) === "graded" ||
+    execution.instructorVisibleResult?.state === "final"
+  );
 }
 
 function setQuizCheckpoint(manifest, quizKey, next) {

@@ -49,6 +49,17 @@ pnpm grading:validation:smoke
 pnpm grading:validation:full
 ```
 
+The `ai-review` and `ai-instructor-review` targets each provision one
+three-item quiz: an essay with a private official answer, a semantically
+equivalent short answer, and a matching question. The controlled-provider
+profile validates the workflow deterministically; the opt-in live profile
+validates semantic comparison against the configured AI backend:
+
+```bash
+pnpm grading:validation:ai
+pnpm grading:validation:ai:live
+```
+
 When Playwright owns the stack, it uses the lean `dev:fast` bootstrap with no
 SDK watchers or API hot reload. It builds the API once with one MSBuild worker,
 starts that build without another compilation, uses an isolated

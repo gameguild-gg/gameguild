@@ -6,16 +6,23 @@ using System.Text.Json.Serialization;
 
 namespace GameGuild.AI;
 
-internal sealed class AnthropicAdapter(IHttpClientFactory httpClientFactory, ILogger<AnthropicAdapter> logger) : IAiProviderAdapter
+internal sealed class AnthropicAdapter(IHttpClientFactory httpClientFactory, ILogger<AnthropicAdapter> logger) : IAiAdapter
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    public AiProvider Provider => AiProvider.Anthropic;
+    public string Key => AiAdapterKeys.Anthropic;
 
-    public async Task<Result<AiProviderExecutionResult>> CompleteStreamingAsync(
+    public AiAdapterDescriptor Descriptor { get; } = new(
+        AiAdapterKeys.Anthropic,
+        RequiresExplicitBaseUrl: false,
+        AiCredentialPolicy.Required,
+        "https://api.anthropic.com",
+        SupportsStreaming: true);
+
+    public async Task<Result<AiAdapterExecutionResult>> CompleteStreamingAsync(
         AiResolvedRequest request,
         Func<string, CancellationToken, ValueTask> onDelta,
         CancellationToken cancellationToken = default)
@@ -38,7 +45,7 @@ internal sealed class AnthropicAdapter(IHttpClientFactory httpClientFactory, ILo
             };
 
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{request.BaseUrl.TrimEnd('/')}/v1/messages");
-            httpRequest.Headers.Add("x-api-key", request.ApiKey);
+            httpRequest.Headers.Add("x-api-key", request.ApiKey!);
             httpRequest.Headers.Add("anthropic-version", "2023-06-01");
             httpRequest.Headers.Accept.ParseAdd("text/event-stream");
             httpRequest.Content = new StringContent(JsonSerializer.Serialize(payload, SerializerOptions), Encoding.UTF8, "application/json");
@@ -47,8 +54,7 @@ internal sealed class AnthropicAdapter(IHttpClientFactory httpClientFactory, ILo
             using var response = await client.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
-                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                return Result.Failure<AiProviderExecutionResult>(AiProviderErrorMapper.Map("Anthropic", response.StatusCode, errorBody));
+                return Result.Failure<AiAdapterExecutionResult>(AiAdapterErrorMapper.Map("Anthropic", response.StatusCode));
             }
 
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
@@ -124,26 +130,26 @@ internal sealed class AnthropicAdapter(IHttpClientFactory httpClientFactory, ILo
 
             if (text.Length == 0)
             {
-                return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.AnthropicEmptyResponse", "Anthropic returned an empty response."));
+                return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.AnthropicEmptyResponse", "Anthropic returned an empty response."));
             }
 
             var totalTokens = inputTokens.HasValue || outputTokens.HasValue
                 ? (int?)((inputTokens ?? 0) + (outputTokens ?? 0))
                 : null;
-            return Result.Success(new AiProviderExecutionResult(model, text.ToString(), finishReason, inputTokens, outputTokens, totalTokens));
+            return Result.Success(new AiAdapterExecutionResult(model, text.ToString(), finishReason, inputTokens, outputTokens, totalTokens));
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.AnthropicTimeout", "Anthropic did not respond in time."));
+            return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.AnthropicTimeout", "Anthropic did not respond in time."));
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "Anthropic streaming request failed for tenant {TenantId}", request.TenantId);
-            return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.AnthropicRequestFailed", "Failed to execute the Anthropic streaming request."));
+            return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.AnthropicRequestFailed", "Failed to execute the Anthropic streaming request."));
         }
     }
 
-    public async Task<Result<AiProviderExecutionResult>> CompleteAsync(AiResolvedRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<AiAdapterExecutionResult>> CompleteAsync(AiResolvedRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -161,7 +167,7 @@ internal sealed class AnthropicAdapter(IHttpClientFactory httpClientFactory, ILo
             };
 
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{request.BaseUrl.TrimEnd('/')}/v1/messages");
-            httpRequest.Headers.Add("x-api-key", request.ApiKey);
+            httpRequest.Headers.Add("x-api-key", request.ApiKey!);
             httpRequest.Headers.Add("anthropic-version", "2023-06-01");
             httpRequest.Content = new StringContent(JsonSerializer.Serialize(payload, SerializerOptions), Encoding.UTF8, "application/json");
 
@@ -171,7 +177,7 @@ internal sealed class AnthropicAdapter(IHttpClientFactory httpClientFactory, ILo
 
             if (!response.IsSuccessStatusCode)
             {
-                return Result.Failure<AiProviderExecutionResult>(AiProviderErrorMapper.Map("Anthropic", response.StatusCode, responseBody));
+                return Result.Failure<AiAdapterExecutionResult>(AiAdapterErrorMapper.Map("Anthropic", response.StatusCode));
             }
 
             using var document = JsonDocument.Parse(responseBody);
@@ -195,12 +201,12 @@ internal sealed class AnthropicAdapter(IHttpClientFactory httpClientFactory, ILo
 
             if (string.IsNullOrWhiteSpace(text))
             {
-                return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.AnthropicEmptyResponse", "Anthropic returned an empty response."));
+                return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.AnthropicEmptyResponse", "Anthropic returned an empty response."));
             }
 
             var usage = root.TryGetProperty("usage", out var usageElement) ? usageElement : default;
 
-            return Result.Success(new AiProviderExecutionResult(
+            return Result.Success(new AiAdapterExecutionResult(
                 root.TryGetProperty("model", out var modelElement) ? modelElement.GetString() ?? request.Model : request.Model,
                 text,
                 root.TryGetProperty("stop_reason", out var finishReasonElement) ? finishReasonElement.GetString() : null,
@@ -210,12 +216,12 @@ internal sealed class AnthropicAdapter(IHttpClientFactory httpClientFactory, ILo
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.AnthropicTimeout", "Anthropic did not respond in time."));
+            return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.AnthropicTimeout", "Anthropic did not respond in time."));
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "Anthropic request failed for tenant {TenantId}", request.TenantId);
-            return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.AnthropicRequestFailed", "Failed to execute the Anthropic request."));
+            return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.AnthropicRequestFailed", "Failed to execute the Anthropic request."));
         }
     }
 

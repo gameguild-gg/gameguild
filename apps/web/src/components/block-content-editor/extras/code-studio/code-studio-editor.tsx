@@ -124,8 +124,11 @@ export function CodeStudioEditor({
   //      some browser/layout conditions).
   // The shell already handles both scroll and click isolation correctly.
 
-  // Initialize runner and Monaco file system
+  // Initialize the runner and the instance-scoped Monaco workspace.
   useEffect(() => {
+    const instanceId = localData.id
+    let disposed = false
+
     // Setup download notification callback
     setDownloadNotificationCallback((message: string, isDownloading: boolean) => {
       // Mostrar no terminal
@@ -173,18 +176,20 @@ export function CodeStudioEditor({
       }
     })
     
-    // Inicializar sistema de arquivos virtual do Monaco
-    initializeMonacoFileSystem().then(() => {
+    // Initialize the Monaco workspace registry.
+    initializeMonacoFileSystem(instanceId).then(() => {
+      if (disposed) return
       // Sincronizar arquivos iniciais com instanceId único
       if (localData.files.length > 0) {
-        syncFilesToMonacoFS(localData.files, localData.id)
+        syncFilesToMonacoFS(localData.files, instanceId)
       }
     })
     
     return () => {
+      disposed = true
       codeRunnerRef.current?.dispose()
       codeRunnerRef.current = null
-      disposeMonacoFileSystem()
+      disposeMonacoFileSystem(instanceId)
     }
   }, [])
   

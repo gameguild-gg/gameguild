@@ -79,22 +79,62 @@ const REVIEW_CASES = Object.freeze([
   },
   validationCase({
     id: "QG-REVIEW-AI-001",
+    key: "ai-review",
+    quizKey: "ai-review",
     suite: "review",
     capability: "AIReview provider execution",
-    personas: ["instructor", "learnerA"],
+    personas: ["instructor", "learnerA", "outsider"],
     preconditions: ["An approved AIReview provider is registered."],
-    actions: ["Submit an answer requiring the AIReview stage."],
+    actions: [
+      "Submit one semantic essay answer, one semantic short answer, and one matching answer through the AIReview stage.",
+    ],
     expected: {
       grading: [
+        "The essay is judged against its private official answer without requiring verbatim wording.",
+        "The short answer and matching response are evaluated in the same immutable execution.",
         "The provider result is persisted with its handler version and evidence.",
       ],
     },
-    automation: "manual",
+    automation: "browser",
     requirement: "exploratory",
     baseline: {
       status: "external-blocker",
       reason:
-        "The durable port exists, but no approved AIReview provider is registered.",
+        "Provider-backed execution is implemented; canonical acceptance still requires reviewed browser evidence.",
+      tracking: "decision:QG-AI-PROVIDER",
+      owner: "learning-assessments",
+    },
+  }),
+  validationCase({
+    id: "QG-REVIEW-AI-INSTRUCTOR-001",
+    key: "ai-instructor-review",
+    quizKey: "ai-instructor-review",
+    suite: "review",
+    capability:
+      "InstructorReview can replace the AIReview proposal before release.",
+    personas: ["instructor", "learnerA", "outsider"],
+    preconditions: ["An approved AIReview provider is registered."],
+    actions: [
+      "Submit an essay, short answer, and matching response requiring AIReview followed by InstructorReview.",
+      "Resolve the final instructor stage and release the result.",
+    ],
+    expected: {
+      grading: [
+        "The AI result remains provisional until the instructor completes the final stage.",
+      ],
+      learner: [
+        "The learner sees only the instructor-approved released result.",
+      ],
+      audit: [
+        "AI evidence and the final instructor actor remain attributable.",
+      ],
+    },
+    automation: "browser",
+    requirement: "exploratory",
+    baseline: {
+      status: "external-blocker",
+      reason:
+        "Provider-backed AIReview evidence still requires human acceptance.",
       tracking: "decision:QG-AI-PROVIDER",
       owner: "learning-assessments",
     },

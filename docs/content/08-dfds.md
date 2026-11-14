@@ -56,7 +56,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     subgraph INTERNET["TB1 anonymous"]
-        VIS["Visitor"] 
+        VIS["Visitor"]
         BOT["Crawler"]
     end
     VIS -->|"GET by-slug"| C1["PageController anon allowlist"]

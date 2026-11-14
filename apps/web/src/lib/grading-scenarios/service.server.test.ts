@@ -23,6 +23,11 @@ describe("grading scenario service", () => {
         (entry) => entry.id === "QG-REVIEW-AUTOMATED-INSTRUCTOR-001",
       ),
     ).toBe(true);
+    const aiProvider = adapter?.scenarios.find(
+      (scenario) => scenario.key === "ai-review",
+    )?.targets[0]?.reviewProvider;
+    expect(aiProvider?.key).toBeTruthy();
+    expect(aiProvider?.policyVersion).toBeTruthy();
     expect(model.states.some((state) => state.adapterKey === "quiz")).toBe(
       true,
     );

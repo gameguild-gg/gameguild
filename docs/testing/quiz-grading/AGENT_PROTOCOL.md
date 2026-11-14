@@ -33,6 +33,25 @@ QUIZ_GRADING_CASES=QG-ITEM-MATCHING-PARTIAL-001 \
 pnpm exec playwright test --config=playwright.grading.config.mjs
 ```
 
+For deterministic `AIReview` coverage, use the controlled provider owned by
+the validation stack:
+
+```bash
+pnpm grading:validation:ai
+```
+
+The real-provider smoke is opt-in and never belongs to the default CI gate. It
+requires the server-only `AI__*` and `Grading__AIReview__*` settings described
+in `.env.example` and performs one official AI review:
+
+```bash
+pnpm grading:validation:ai:live
+```
+
+Neither command prints credentials or promotes canonical capability status.
+`QG-REVIEW-AI-001` and `QG-REVIEW-AI-INSTRUCTOR-001` remain external blockers
+until their generated evidence is reviewed by a human.
+
 The Playwright setup prepares the scenario through the protected web lab. Its
 teardown verifies the recorded browser evidence and resets only resources
 owned by the scenario manifest. Set `QUIZ_GRADING_KEEP_SCENARIO=1` only when a

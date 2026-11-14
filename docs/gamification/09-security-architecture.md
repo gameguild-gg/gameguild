@@ -7,7 +7,7 @@
 ```mermaid
 flowchart TD
     subgraph API[API host]
-        C[AchievementsController 10 routes] 
+        C[AchievementsController 10 routes]
         H[5 command handlers]
         S[AchievementService one service 14 methods]
     end

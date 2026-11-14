@@ -171,6 +171,7 @@ describe("AssessmentEditor", () => {
           authoringSourceHash: "a".repeat(64), executionSnapshotHash: "b".repeat(64), createdAt: "2026-10-06T00:00:00Z" },
         published: null, candidateMatchesDraft: true, publishedMatchesDraft: false,
         prepare: { available: true, code: null, message: null }, publish: { available: true, code: null, message: null },
+        aiReviewProviders: [],
       }} canManage />);
     expect(screen.getByTestId("assessment-publication-state")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Prepare" }));
@@ -447,6 +448,63 @@ describe("AssessmentEditor", () => {
     );
     expect(configuration.peer.reviewsRequiredPerSubmission).toBe(3);
     expect(configuration.instructor).toEqual({ requireOverrideReason: false });
+  });
+
+  it("enables AI review from readiness and freezes provider policy in the draft", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+        authoringState={{
+          assessmentId: assessment.id,
+          assessmentVersion: 1,
+          lifecycle: "draft",
+          currentAuthoringSourceHash: "a".repeat(64),
+          candidate: null,
+          published: null,
+          candidateMatchesDraft: false,
+          publishedMatchesDraft: false,
+          prepare: { available: true, code: null, message: null },
+          publish: {
+            available: false,
+            code: "AssessmentRevision.CandidateRequired",
+            message: "Prepare a candidate revision before publishing.",
+          },
+          aiReviewProviders: [{
+            providerKey: "gameguild-ai",
+            policyVersions: ["v1"],
+            contexts: ["author-test", "official-submission"],
+            available: true,
+            code: null,
+            message: null,
+          }],
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: /primary review/i }));
+    await user.click(
+      await screen.findByRole("option", { name: /AI review.*gameguild-ai/i }),
+    );
+    expect(screen.getByText(/Provider gameguild-ai, policy v1/i)).toBeVisible();
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith(
+        expect.objectContaining({ reviewMethods: 2 }),
+      );
+    });
+    const configuration = JSON.parse(
+      vi.mocked(updateAssessment).mock.calls.at(-1)![0]
+        .reviewConfigurationCanonicalJson!,
+    );
+    expect(configuration.ai).toEqual({
+      providerKey: "gameguild-ai",
+      policyVersion: "v1",
+    });
   });
 
   it("removes final instructor review while preserving the primary review", async () => {
