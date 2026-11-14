@@ -701,7 +701,7 @@ describe('Handlers — signOut with session token', () => {
   });
 
   it('should revoke token on signout when session exists', async () => {
-    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response('{}', { status: 200 }));
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response('{}', { status: 200 }));
 
     const config = makeConfig();
     const { POST } = createHandlers(config);
@@ -717,7 +717,44 @@ describe('Handlers — signOut with session token', () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    // Check that token revocation was attempted
+    // Issue #1196: the signout handler must call the dedicated sign-out endpoint
+    // (jti deny-list) instead of fire-and-forgetting tokens:revoke — through the
+    // generated client (the bearer rides the client's auth interceptor).
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/auth/sign-out'),
+      expect.objectContaining({
+        body: JSON.stringify({ logoutEverywhere: false }),
+        method: 'POST',
+      }),
+    );
+    const headers = new Headers(fetchSpy.mock.calls[0]?.[1]?.headers);
+    expect(headers.get('Content-Type')).toBe('application/json');
+    expect(headers.get('Authorization')).toBe('Bearer access-token');
+    expect(fetchSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('tokens:revoke'),
+      expect.anything(),
+    );
+  });
+
+  it('should fall back to tokens:revoke when the sign-out endpoint is unreachable', async () => {
+    fetchSpy = vi.spyOn(global, 'fetch')
+      .mockResolvedValueOnce(new Response('boom', { status: 503 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    const config = makeConfig();
+    const { POST } = createHandlers(config);
+
+    const request = buildRequest('/api/auth/signout', {
+      method: 'POST',
+      body: JSON.stringify({ csrfToken: 'csrf-token-value' }),
+      cookies: {
+        '__me.csrf-token': 'csrf-cookie-value',
+        '__me.session-token': 'valid-encrypted-token',
+      },
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringContaining('tokens:revoke'),
       expect.objectContaining({

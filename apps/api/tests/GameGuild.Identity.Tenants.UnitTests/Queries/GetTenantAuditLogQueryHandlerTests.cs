@@ -18,7 +18,7 @@ public class GetTenantAuditLogQueryHandlerTests
 
         var act = () => handler.Handle(new GetTenantAuditLogQuery(Guid.NewGuid(), null, null, null, null, 1, 10), CancellationToken.None);
 
-        await act.Should().ThrowAsync<KeyNotFoundException>();
+        await act.Should().ThrowAsync<EntityNotFoundException>();
     }
 
     [Fact]

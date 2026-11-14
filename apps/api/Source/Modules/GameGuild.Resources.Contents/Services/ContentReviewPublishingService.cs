@@ -17,7 +17,7 @@ public class ContentReviewPublishingService(
     public async Task<Result<ContentVersion>> SubmitForReviewAsync(Guid versionId, CancellationToken ct = default)
     {
         var version = await db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.Id == versionId && v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (version == null)
         {
@@ -41,7 +41,7 @@ public class ContentReviewPublishingService(
     public async Task<Result<ContentVersion>> ApproveAsync(Guid versionId, string? reviewNotes = null, CancellationToken ct = default)
     {
         var version = await db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.Id == versionId && v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (version == null)
         {
@@ -65,7 +65,7 @@ public class ContentReviewPublishingService(
     public async Task<Result<ContentVersion>> RejectAsync(Guid versionId, string? reviewNotes = null, CancellationToken ct = default)
     {
         var version = await db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.Id == versionId && v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (version == null)
         {
@@ -93,7 +93,7 @@ public class ContentReviewPublishingService(
         CancellationToken ct = default)
     {
         var query = db.Set<ContentVersion>()
-            .Where(v => !v.IsDeleted)
+            .Where(v => v.DeletedAt == null)
             .Where(v => v.Status == ContentVersionStatus.PendingReview);
 
         if (!string.IsNullOrEmpty(entityType))
@@ -118,7 +118,7 @@ public class ContentReviewPublishingService(
         CancellationToken ct = default)
     {
         var version = await db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.Id == versionId && v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (version == null)
         {
@@ -141,7 +141,7 @@ public class ContentReviewPublishingService(
     public async Task<Result<ContentVersion>> PublishAsync(Guid versionId, CancellationToken ct = default)
     {
         var version = await db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.Id == versionId && v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (version == null)
         {
@@ -151,7 +151,7 @@ public class ContentReviewPublishingService(
         try
         {
             var currentVersions = await db.Set<ContentVersion>()
-                .Where(v => v.EntityId == version.EntityId && v.EntityType == version.EntityType && !v.IsDeleted)
+                .Where(v => v.EntityId == version.EntityId && v.EntityType == version.EntityType && v.DeletedAt == null)
                 .Where(v => v.IsCurrentVersion)
                 .ToListAsync(ct).ConfigureAwait(false);
 
@@ -177,7 +177,7 @@ public class ContentReviewPublishingService(
     public async Task<Result<ContentVersion>> SchedulePublishAsync(Guid versionId, DateTime scheduledAt, CancellationToken ct = default)
     {
         var version = await db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.Id == versionId && v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (version == null)
         {
@@ -207,7 +207,7 @@ public class ContentReviewPublishingService(
     public async Task<Result<ContentVersion>> CancelScheduledPublishAsync(Guid versionId, CancellationToken ct = default)
     {
         var version = await db.Set<ContentVersion>()
-            .FirstOrDefaultAsync(v => v.Id == versionId && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.Id == versionId && v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (version == null)
         {
@@ -232,7 +232,7 @@ public class ContentReviewPublishingService(
         var now = SystemClock.UtcNow;
 
         var scheduledVersions = await db.Set<ContentVersion>()
-            .Where(v => !v.IsDeleted)
+            .Where(v => v.DeletedAt == null)
             .Where(v => v.Status == ContentVersionStatus.Scheduled)
             .Where(v => v.ScheduledPublishAt <= now)
             .ToListAsync(ct).ConfigureAwait(false);
@@ -244,7 +244,7 @@ public class ContentReviewPublishingService(
             try
             {
                 var currentVersions = await db.Set<ContentVersion>()
-                    .Where(v => v.EntityId == version.EntityId && v.EntityType == version.EntityType && !v.IsDeleted)
+                    .Where(v => v.EntityId == version.EntityId && v.EntityType == version.EntityType && v.DeletedAt == null)
                     .Where(v => v.IsCurrentVersion)
                     .ToListAsync(ct).ConfigureAwait(false);
 

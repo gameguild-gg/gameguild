@@ -40,12 +40,6 @@ public record GetRootLedgersQuery(
 /// <summary>
 /// Gets direct children of a ledger.
 /// </summary>
-public record GetChildLedgersQuery(
-    Guid ParentLedgerId) : IRequest<IReadOnlyList<LedgerSummary>>;
-
-/// <summary>
-/// Gets direct children of a ledger (alternative name).
-/// </summary>
 public record GetLedgerChildrenQuery(
     Guid ParentLedgerId) : IRequest<IReadOnlyList<LedgerDto>>;
 
@@ -105,34 +99,12 @@ public record GetEntryByReferenceQuery(
     string ReferenceNumber) : IRequest<LedgerEntryDto?>;
 
 /// <summary>
-/// Gets entries for a ledger (direct only).
-/// </summary>
-public record GetLedgerEntriesQuery(
-    Guid LedgerId,
-    EntryStatus? Status = null,
-    DateOnly? FromDate = null,
-    DateOnly? ToDate = null,
-    int Skip = 0,
-    int Take = 50) : IRequest<PagedResult<LedgerEntryDto>>;
-
-/// <summary>
 /// Gets entries for a ledger (direct only) - returns list.
 /// </summary>
 public record GetEntriesByLedgerQuery(
     Guid LedgerId,
     DateTimeOffset? FromDate = null,
     DateTimeOffset? ToDate = null) : IRequest<IReadOnlyList<LedgerEntryDto>>;
-
-/// <summary>
-/// Gets entries for a ledger including descendants.
-/// </summary>
-public record GetLedgerEntriesWithDescendantsQuery(
-    Guid LedgerId,
-    EntryStatus? Status = null,
-    DateOnly? FromDate = null,
-    DateOnly? ToDate = null,
-    int Skip = 0,
-    int Take = 50) : IRequest<PagedResult<LedgerEntryDto>>;
 
 /// <summary>
 /// Gets entries for a ledger including descendants - returns list.

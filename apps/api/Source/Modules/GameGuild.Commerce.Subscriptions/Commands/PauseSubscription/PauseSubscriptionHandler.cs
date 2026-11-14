@@ -15,7 +15,7 @@ public sealed class PauseSubscriptionHandler(IApplicationDbContext context)
     {
         var subscription = await context.Set<Subscription>()
             .FirstOrDefaultAsync(s => s.Id == request.SubscriptionId, cancellationToken)
-            ?? throw new InvalidOperationException($"Subscription {request.SubscriptionId} not found");
+            ?? throw new EntityNotFoundException("Subscription", request.SubscriptionId);
 
         // Use Suspend() which sets status to Suspended and stores reason in metadata
         subscription.Suspend(request.Reason);

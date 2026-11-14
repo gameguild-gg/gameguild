@@ -4637,6 +4637,40 @@ Table "PiiTokenVaultEntries" {
   }
 }
 
+Table "PolicyBundles" {
+  "Id" uuid [not null]
+  "TenantId" uuid
+  "Name" "character varying(200)" [not null]
+  "Description" "character varying(2000)"
+  "Version" "character varying(50)" [not null]
+  "BundleType" integer [not null]
+  "ContentHash" "character varying(256)" [not null]
+  "DigitalSignature" text
+  "SignedBy" "character varying(256)"
+  "SignedAt" timestamp
+  "Status" integer [not null]
+  "PolicyData" text [not null]
+  "Metadata" text
+  "IsGlobal" boolean [not null]
+  "EffectiveFrom" timestamp
+  "EffectiveUntil" timestamp
+  "PreviousVersionId" uuid
+  "CreatedBy" uuid [not null]
+  "ApprovedBy" uuid
+  "ApprovedAt" timestamp
+  "DeploymentCount" integer [not null]
+  "LastDeployedAt" timestamp
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp
+
+  Indexes {
+    Id [pk, name: "PK_PolicyBundles"]
+    Name [name: "IX_PolicyBundles_Name"]
+    PreviousVersionId [name: "IX_PolicyBundles_PreviousVersion"]
+    (TenantId, Status) [name: "IX_PolicyBundles_Tenant_Status"]
+  }
+}
+
 Table "PolicyDefinitions" {
   "Id" uuid [not null]
   "PolicyName" "character varying(100)" [not null]
@@ -4662,6 +4696,25 @@ Table "PolicyDefinitions" {
   Indexes {
     Id [pk, name: "PK_PolicyDefinitions"]
     (PolicyName, TenantId) [unique, name: "IX_PolicyDefinitions_PolicyName_TenantId"]
+  }
+}
+
+Table "PolicyRegistryAuditLogs" {
+  "Id" uuid [not null]
+  "BundleId" uuid
+  "Action" integer [not null]
+  "PerformedBy" uuid [not null]
+  "PerformedAt" timestamp [not null]
+  "Details" "character varying(4000)"
+  "IpAddress" "character varying(64)"
+  "UserAgent" "character varying(512)"
+  "Success" boolean [not null]
+  "ErrorMessage" "character varying(2000)"
+
+  Indexes {
+    Id [pk, name: "PK_PolicyRegistryAuditLogs"]
+    BundleId [name: "IX_PolicyRegistryAuditLogs_Bundle"]
+    PerformedAt [name: "IX_PolicyRegistryAuditLogs_Time"]
   }
 }
 
@@ -8807,6 +8860,29 @@ Table "PermissionApprovalStages" {
   Indexes {
     Id [pk, name: "PK_PermissionApprovalStages"]
     (WorkflowId, StageIndex) [unique, name: "IX_PermissionApprovalStages_Workflow_Index"]
+  }
+}
+
+Table "PolicyBundleDeployments" {
+  "Id" uuid [not null]
+  "BundleId" uuid [not null]
+  "TenantId" uuid
+  "Environment" "character varying(64)" [not null]
+  "Status" integer [not null]
+  "DeployedAt" timestamp [not null]
+  "DeployedBy" uuid [not null]
+  "ActivatedAt" timestamp
+  "RolledBackAt" timestamp
+  "RolledBackBy" uuid
+  "RollbackReason" "character varying(2000)"
+  "VerificationPassed" boolean [not null]
+  "VerificationDetails" "character varying(2000)"
+  "DeploymentNotes" "character varying(2000)"
+
+  Indexes {
+    Id [pk, name: "PK_PolicyBundleDeployments"]
+    (BundleId, DeployedAt) [name: "IX_PolicyBundleDeployments_Bundle_Time"]
+    (TenantId, Status) [name: "IX_PolicyBundleDeployments_Tenant_Status"]
   }
 }
 
@@ -13143,6 +13219,8 @@ Ref "FK_refunds_payments_PaymentId":"payments"."Id" <? "refunds"."PaymentId" [de
 
 Ref "FK_PermissionApprovalStages_PermissionApprovalWorkflows_Workfl~":"PermissionApprovalWorkflows"."Id" <? "PermissionApprovalStages"."WorkflowId" [delete: cascade]
 
+Ref "FK_PolicyBundleDeployments_PolicyBundles_BundleId":"PolicyBundles"."Id" <? "PolicyBundleDeployments"."BundleId" [delete: restrict]
+
 Ref "FK_pricing_experiment_variants_pricing_experiments_ExperimentId":"pricing_experiments"."Id" <? "pricing_experiment_variants"."ExperimentId" [delete: cascade]
 
 Ref "FK_pricing_rule_tiers_pricing_rules_PricingRuleId":"pricing_rules"."Id" <? "pricing_rule_tiers"."PricingRuleId" [delete: cascade]
@@ -14286,6 +14364,7 @@ Table "gameguild.authentication"."userdevicefingerprint" {
 Table "gameguild.authentication"."api_keys" {
   "id" uuid [not null]
   "user_id" uuid [not null]
+  "created_by_api_key_id" uuid
   "name" "character varying(100)" [not null]
   "key_hash" "character varying(64)" [not null]
   "key_prefix" "character varying(20)" [not null]
@@ -14307,6 +14386,7 @@ Table "gameguild.authentication"."api_keys" {
 
   Indexes {
     id [pk, name: "PK_api_keys"]
+    created_by_api_key_id [name: "ix_api_keys_created_by_api_key_id"]
     expires_at [name: "ix_api_keys_expires_at"]
     is_active [name: "ix_api_keys_is_active"]
     key_hash [unique, name: "ix_api_keys_key_hash"]

@@ -101,4 +101,60 @@ public sealed class GuestTokenService(
             return null;
         }
     }
+
+    /// <inheritdoc />
+    public bool TryReadExpired(string? guestToken, out Guid guestSessionId, out DateTime expiresAt)
+    {
+        guestSessionId = Guid.Empty;
+        expiresAt = DateTime.MinValue;
+        if (string.IsNullOrWhiteSpace(guestToken))
+        {
+            return false;
+        }
+
+        try
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)) { KeyId = "GameGuild-jwt-key" };
+            var parameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ValidateIssuer = true,
+                ValidIssuer = _jwtOptions.Issuer,
+                ValidateAudience = true,
+                ValidAudience = GuestAccessDefaults.Audience,
+                ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+                // The caller explicitly wants credentials whose lifetime has passed (issue
+                // #1128): everything else — signature, issuer, audience, structure — is
+                // still enforced; the expiry is reported back instead of rejected.
+                ValidateLifetime = false,
+                ClockSkew = TimeSpan.Zero,
+                NameClaimType = ClaimNames.GuestId,
+                RoleClaimType = ClaimNames.Role
+            };
+
+            var handler = new JwtSecurityTokenHandler { MapInboundClaims = false };
+            var principal = handler.ValidateToken(guestToken, parameters, out var validatedToken);
+            if (!principal.IsGuest())
+            {
+                return false;
+            }
+
+            if (!Guid.TryParse(principal.FindFirst(ClaimNames.GuestId)?.Value, out guestSessionId))
+            {
+                guestSessionId = Guid.Empty;
+                return false;
+            }
+
+            expiresAt = validatedToken.ValidTo == DateTime.MinValue ? DateTime.MinValue : DateTime.SpecifyKind(validatedToken.ValidTo, DateTimeKind.Utc);
+            return guestSessionId != Guid.Empty && expiresAt != DateTime.MinValue;
+        }
+        catch (Exception exception) when (exception is SecurityTokenException or ArgumentException)
+        {
+            logger.LogInformation("Expired-guest-token read rejected a credential: {FailureType}", exception.GetType().Name);
+            guestSessionId = Guid.Empty;
+            expiresAt = DateTime.MinValue;
+            return false;
+        }
+    }
 }

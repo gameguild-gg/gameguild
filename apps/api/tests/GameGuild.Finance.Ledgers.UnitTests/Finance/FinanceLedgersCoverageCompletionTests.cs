@@ -682,6 +682,360 @@ public sealed class FinanceLedgersCoverageCompletionTests
     }
 
     [Fact]
+    public async Task SenderDispatch_CoversFormerlyDeadLedgerCommandAndQueryPaths()
+    {
+        // Issue #1277 batch 1: the 13 ledger commands + 4 queries that had no handler
+        // (docs/finance-ledgers/02-cqrs-wiring-matrix.md D1-D13, D15, D16, D19, D20)
+        // are dispatched here through the real handler classes via ISender.
+        var root = Root("DEAD-CMD");
+        var child = Ledger.CreateChild(root, LedgerType.Department, "DEAD-CHILD", "Child", UserId);
+        var virtualLedger = Ledger.CreateVirtual(TenantId, "DEAD-VIRT", "Virtual", "{}", [root.Id], UserId);
+        var pendingEntry = LedgerEntry.Create(root, [], EntryType.Debit, EntryCategory.Expense, 10m, BusinessDate, "Pending", UserId);
+        var postedEntry = PostedEntry(root);
+        Set(postedEntry, nameof(LedgerEntry.TenantId), TenantId);
+
+        var ledgerRepository = new FakeLedgerRepository(root, child, virtualLedger);
+        var closureRepository = new FakeLedgerClosureRepository();
+        closureRepository.AncestorIdsByDescendant[root.Id] = [root.Id];
+        closureRepository.DescendantIdsByAncestor[root.Id] = [root.Id];
+        var entryRepository = new FakeLedgerEntryRepository();
+        entryRepository.Seed(postedEntry, pendingEntry);
+
+        var sender = new LedgerWiringSender(
+            ledgerRepository,
+            closureRepository,
+            entryRepository,
+            new FakeLedgerHierarchyService(ledgerRepository),
+            new FakeLedgerEntryService(entryRepository, ledgerRepository),
+            new FakeLedgerRollupService(ledgerRepository, entryRepository, closureRepository),
+            new FakeVirtualLedgerService(ledgerRepository, entryRepository));
+
+        // D1 — create virtual ledger
+        (await sender.Send(new CreateVirtualLedgerCommand(TenantId, "VIRT2", "Virtual 2", new VirtualLedgerFilter([root.Id]), UserId)))
+            .Type.Should().Be(LedgerType.Virtual);
+
+        // D2 — update ledger metadata (+ tags)
+        var updated = await sender.Send(new UpdateLedgerCommand(root.Id, "Renamed", UserId, "new desc", ["ops"]));
+        updated.Name.Should().Be("Renamed");
+        updated.Tags.Should().Equal("ops");
+
+        // D3 — status transition through the guarded state machine
+        (await sender.Send(new ChangeLedgerStatusCommand(root.Id, LedgerStatus.Inactive, UserId)))
+            .Status.Should().Be(LedgerStatus.Inactive);
+        (await sender.Send(new ChangeLedgerStatusCommand(root.Id, LedgerStatus.Active, UserId)))
+            .Status.Should().Be(LedgerStatus.Active);
+
+        // D4 — move subtree
+        var moved = await sender.Send(new MoveLedgerCommand(child.Id, root.Id, UserId));
+        moved.Id.Should().Be(child.Id);
+
+        // D5 — budget
+        (await sender.Send(new SetLedgerBudgetCommand(root.Id, 500m, UserId)))
+            .BudgetLimit.Should().Be(500m);
+
+        // D6 — soft delete guarded by active children; unknown ledger throws
+        Func<Task> deleteWithChildren = () => sender.Send(new DeleteLedgerCommand(root.Id, UserId));
+        await deleteWithChildren.Should().ThrowAsync<InvalidOperationException>().WithMessage("*active children*");
+        Func<Task> deleteUnknown = () => sender.Send(new DeleteLedgerCommand(Guid.NewGuid(), UserId));
+        await deleteUnknown.Should().ThrowAsync<InvalidOperationException>().WithMessage("*not found*");
+
+        // D7 — batch post
+        (await sender.Send(new PostBatchEntriesCommand([new CreateEntryRequest(root.Id, EntryType.Credit, EntryCategory.Revenue, 25m, BusinessDate, "Batch")], UserId)))
+            .Should().ContainSingle();
+
+        // D8 — reconcile
+        (await sender.Send(new ReconcileEntryCommand(postedEntry.Id, UserId, "bank-1")))
+            .Status.Should().Be(EntryStatus.Reconciled);
+
+        // D9/D10 — stats refresh
+        (await sender.Send(new RefreshLedgerStatsCommand(root.Id))).Should().BeTrue();
+        (await sender.Send(new RefreshSubtreeStatsCommand(root.Id))).Should().BeTrue();
+
+        // D11 — generic status setter (pending → posted; invalid transition throws)
+        (await sender.Send(new ChangeEntryStatusCommand(pendingEntry.Id, EntryStatus.Posted, UserId)))
+            .Status.Should().Be(EntryStatus.Posted);
+        Func<Task> badTransition = () => sender.Send(new ChangeEntryStatusCommand(postedEntry.Id, EntryStatus.Pending, UserId));
+        await badTransition.Should().ThrowAsync<InvalidOperationException>().WithMessage("*Cannot change entry status*");
+
+        // D12/D13 — virtual ledger maintenance
+        (await sender.Send(new UpdateVirtualLedgerFilterCommand(virtualLedger.Id, new VirtualLedgerFilter([root.Id, child.Id]), UserId)))
+            .Should().BeTrue();
+        Func<Task> deleteWrongType = () => sender.Send(new DeleteVirtualLedgerCommand(root.Id, UserId));
+        await deleteWrongType.Should().ThrowAsync<InvalidOperationException>().WithMessage("*Only virtual ledgers*");
+        (await sender.Send(new DeleteVirtualLedgerCommand(virtualLedger.Id, UserId))).Should().BeTrue();
+        virtualLedger.DeletedAt.Should().NotBeNull();
+
+        // D15 — ledger search
+        var ledgers = await sender.Send(new SearchLedgersQuery(TenantId, SearchTerm: "child"));
+        ledgers.TotalCount.Should().Be(1);
+        ledgers.Items.Single().Code.Should().Be("DEAD-CHILD");
+
+        // D16 — entry by reference
+        (await sender.Send(new GetEntryByReferenceQuery(TenantId, postedEntry.ReferenceNumber)))!.Id
+            .Should().Be(postedEntry.Id);
+        (await sender.Send(new GetEntryByReferenceQuery(TenantId, "TXN-00000000-MISSING"))).Should().BeNull();
+
+        // D19 — entry search with filters
+        var entries = await sender.Send(new SearchEntriesQuery(TenantId, MinAmount: 5m, Type: EntryType.Credit));
+        entries.Items.Should().OnlyContain(e => e.Amount >= 5m && e.Type == EntryType.Credit);
+
+        // D20 — virtual ledger balance (filter sources the virtual ledger aggregates)
+        var aggregate = Ledger.CreateVirtual(TenantId, "AGG", "Aggregate", "{}", [root.Id], UserId);
+        ledgerRepository.Seed(aggregate);
+        var balance = await sender.Send(new GetVirtualLedgerBalanceQuery(aggregate.Id));
+        balance.EntryCount.Should().BeGreaterThan(0);
+    }
+
+    /// <summary>
+    /// Dispatches requests to the REAL handler class resolved from the Finance.Ledgers
+    /// assembly (same dispatch contract the host mediator uses), with fake dependencies.
+    /// </summary>
+    private sealed class LedgerWiringSender(params object[] dependencies) : ISender
+    {
+        public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+        {
+            var services = new ServiceCollection();
+            foreach (var dependency in dependencies)
+            {
+                foreach (var contract in dependency.GetType().GetInterfaces())
+                {
+                    services.AddSingleton(contract, dependency);
+                }
+            }
+
+            using var provider = services.BuildServiceProvider();
+            var handlerContract = typeof(IRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResponse));
+            var handlerType = typeof(CreateRootLedgerCommand).Assembly.GetTypes().Single(type =>
+                type.IsClass && !type.IsAbstract && !type.ContainsGenericParameters && handlerContract.IsAssignableFrom(type));
+            var handler = ActivatorUtilities.CreateInstance(provider, handlerType);
+            try
+            {
+                return await (Task<TResponse>)handlerContract.GetMethod("Handle")!.Invoke(handler, [request, cancellationToken])!;
+            }
+            catch (TargetInvocationException exception) when (exception.InnerException is not null)
+            {
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(exception.InnerException).Throw();
+                throw;
+            }
+        }
+
+        public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest
+            => Send<Unit>(request, cancellationToken);
+
+        public Task<object?> Send(object request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    }
+
+    private sealed class FakeLedgerHierarchyService(
+        FakeLedgerRepository ledgerRepository) : ILedgerHierarchyService
+    {
+        public Task<Ledger> CreateRootLedgerAsync(
+            Guid tenantId, string code, string name, string currencyCode, Guid createdByUserId,
+            string? description = null, CancellationToken ct = default)
+        {
+            var ledger = Ledger.CreateRoot(tenantId, code, name, currencyCode, createdByUserId, description);
+            return Task.FromResult(ledger);
+        }
+
+        public Task<Ledger> CreateChildLedgerAsync(
+            Guid parentLedgerId, LedgerType type, string code, string name, Guid createdByUserId,
+            string? description = null, string? currencyCode = null, CancellationToken ct = default)
+        {
+            var parent = ledgerRepository.GetByIdAsync(parentLedgerId, ct).Result!;
+            return Task.FromResult(Ledger.CreateChild(parent, type, code, name, createdByUserId, description, currencyCode));
+        }
+
+        public Task MoveLedgerAsync(Guid ledgerId, Guid newParentLedgerId, Guid movedByUserId, CancellationToken ct = default) =>
+            Task.CompletedTask; // closure rebuild is covered by the service-level tests
+
+        public Task<LedgerTreeNode> GetHierarchyTreeAsync(Guid rootLedgerId, int? maxDepth = null, CancellationToken ct = default) =>
+            Task.FromResult(new LedgerTreeNode
+            {
+                Id = rootLedgerId,
+                Code = "ROOT",
+                Name = "Root",
+                Type = LedgerType.Root,
+                Status = LedgerStatus.Active,
+                CurrencyCode = "USD",
+                Depth = 0
+            });
+
+        public Task<IReadOnlyList<Ledger>> GetAncestorPathAsync(Guid ledgerId, CancellationToken ct = default) =>
+            Task.FromResult<IReadOnlyList<Ledger>>([]);
+
+        public Task<bool> CanMoveToParentAsync(Guid ledgerId, Guid newParentLedgerId, CancellationToken ct = default) =>
+            Task.FromResult(ledgerId != newParentLedgerId);
+    }
+
+    private sealed class FakeLedgerEntryService(
+        FakeLedgerEntryRepository entryRepository,
+        FakeLedgerRepository ledgerRepository) : ILedgerEntryService
+    {
+        public Task<LedgerEntry> PostEntryAsync(
+            Guid ledgerId, EntryType type, EntryCategory category, decimal amount, DateOnly transactionDate,
+            string description, Guid createdByUserId, string? externalReferenceId = null, CancellationToken ct = default)
+        {
+            var ledger = ledgerRepository.GetByIdAsync(ledgerId, ct).Result!;
+            var entry = LedgerEntry.Create(ledger, [], type, category, amount, transactionDate, description, createdByUserId, externalReferenceId);
+            entry.Post(createdByUserId);
+            entryRepository.Seed(entry);
+            return Task.FromResult(entry);
+        }
+
+        public Task<(LedgerEntry Source, LedgerEntry Destination)> PostTransferAsync(
+            Guid sourceLedgerId, Guid destinationLedgerId, decimal amount, DateOnly transactionDate,
+            string description, Guid createdByUserId, CancellationToken ct = default)
+        {
+            var source = PostEntryAsync(sourceLedgerId, EntryType.Debit, EntryCategory.Transfer, amount, transactionDate, description, createdByUserId, ct: ct).Result;
+            var destination = PostEntryAsync(destinationLedgerId, EntryType.Credit, EntryCategory.Transfer, amount, transactionDate, description, createdByUserId, ct: ct).Result;
+            return Task.FromResult((source, destination));
+        }
+
+        public Task<LedgerEntry> ReverseEntryAsync(Guid entryId, string reason, Guid reversedByUserId, CancellationToken ct = default)
+        {
+            var entry = entryRepository.GetByIdAsync(entryId, ct).Result!;
+            var reversal = entry.CreateReversal(reversedByUserId, reason);
+            reversal.Post(reversedByUserId);
+            entryRepository.Seed(reversal);
+            return Task.FromResult(reversal);
+        }
+
+        public Task<LedgerEntry> UpdateEntryAsync(Guid entryId, string description, string? notes, Guid updatedByUserId, CancellationToken ct = default)
+        {
+            var entry = entryRepository.GetByIdAsync(entryId, ct).Result!;
+            entry.UpdateDescription(description, notes, updatedByUserId);
+            return Task.FromResult(entry);
+        }
+
+        public Task DeleteEntryAsync(Guid entryId, Guid deletedByUserId, CancellationToken ct = default)
+        {
+            var entry = entryRepository.GetByIdAsync(entryId, ct).Result!;
+            entry.EnsureCanDelete();
+            return Task.CompletedTask;
+        }
+
+        public async Task<IReadOnlyList<LedgerEntry>> PostBatchAsync(
+            IEnumerable<CreateEntryRequest> requests, Guid createdByUserId, CancellationToken ct = default)
+        {
+            var posted = new List<LedgerEntry>();
+            foreach (var request in requests)
+            {
+                posted.Add(await PostEntryAsync(
+                    request.LedgerId, request.Type, request.Category, request.Amount,
+                    request.TransactionDate, request.Description, createdByUserId, request.ExternalReferenceId, ct));
+            }
+
+            return posted;
+        }
+
+        public async Task ReconcileEntryAsync(Guid entryId, Guid reconciledByUserId, string? externalReferenceId = null, CancellationToken ct = default)
+        {
+            var entry = await entryRepository.GetByIdAsync(entryId, ct);
+            entry!.Reconcile(reconciledByUserId, externalReferenceId);
+        }
+    }
+
+    private sealed class FakeLedgerRollupService(
+        FakeLedgerRepository ledgerRepository,
+        FakeLedgerEntryRepository entryRepository,
+        FakeLedgerClosureRepository closureRepository) : ILedgerRollupService
+    {
+        public async Task<LedgerBalance> GetBalanceAsync(Guid ledgerId, DateOnly? asOfDate = null, CancellationToken ct = default)
+        {
+            var ledger = await ledgerRepository.GetByIdAsync(ledgerId, ct);
+            var entries = await entryRepository.GetByLedgerAsync(ledgerId, ct: ct);
+            return Summarize(ledger!, entries);
+        }
+
+        public async Task<LedgerBalance> GetConsolidatedBalanceAsync(Guid ledgerId, DateOnly? asOfDate = null, CancellationToken ct = default)
+        {
+            var ledger = await ledgerRepository.GetByIdAsync(ledgerId, ct);
+            var entries = await entryRepository.GetByLedgerIncludingDescendantsAsync(ledgerId, ct: ct);
+            return Summarize(ledger!, entries);
+        }
+
+        public Task<LedgerRollupNode> GetHierarchicalRollupAsync(Guid rootLedgerId, DateOnly? fromDate = null, DateOnly? toDate = null, CancellationToken ct = default) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyList<CategoryRollup>> GetCategoryRollupAsync(Guid ledgerId, bool includeDescendants, DateOnly? fromDate = null, DateOnly? toDate = null, CancellationToken ct = default) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyList<PeriodRollup>> GetPeriodRollupAsync(Guid ledgerId, bool includeDescendants, DateOnly fromDate, DateOnly toDate, PeriodGranularity granularity, CancellationToken ct = default) =>
+            throw new NotSupportedException();
+
+        public async Task RefreshLedgerStatsAsync(Guid ledgerId, CancellationToken ct = default)
+        {
+            var ledger = await ledgerRepository.GetByIdAsync(ledgerId, ct)
+                ?? throw new InvalidOperationException($"Ledger '{ledgerId}' not found.");
+            var entries = await entryRepository.GetByLedgerAsync(ledgerId, ct: ct);
+            var posted = entries.Where(e => e.Status == EntryStatus.Posted && e.ReversedByEntryId is null).ToList();
+            ledger.UpdateCachedStats(
+                posted.Where(e => e.Type == EntryType.Debit).Sum(e => e.Amount),
+                posted.Where(e => e.Type == EntryType.Credit).Sum(e => e.Amount),
+                posted.Count);
+        }
+
+        public async Task RefreshSubtreeStatsAsync(Guid rootLedgerId, CancellationToken ct = default)
+        {
+            var descendantIds = await closureRepository.GetDescendantIdsAsync(rootLedgerId, ct: ct);
+            foreach (var ledgerId in descendantIds)
+            {
+                await RefreshLedgerStatsAsync(ledgerId, ct);
+            }
+        }
+
+        private static LedgerBalance Summarize(Ledger ledger, IReadOnlyList<LedgerEntry> entries)
+        {
+            var posted = entries.Where(e => e.Status == EntryStatus.Posted && e.ReversedByEntryId is null).ToList();
+            var totalDebit = posted.Where(e => e.Type == EntryType.Debit).Sum(e => e.Amount);
+            var totalCredit = posted.Where(e => e.Type == EntryType.Credit).Sum(e => e.Amount);
+            return new LedgerBalance(ledger.Id, ledger.Code, ledger.Name, totalDebit, totalCredit, totalCredit - totalDebit, posted.Count, ledger.CurrencyCode, DateTime.UtcNow);
+        }
+    }
+
+    private sealed class FakeVirtualLedgerService(
+        FakeLedgerRepository ledgerRepository,
+        FakeLedgerEntryRepository entryRepository) : IVirtualLedgerService
+    {
+        public async Task<Ledger> CreateVirtualLedgerAsync(
+            Guid tenantId, string code, string name, VirtualLedgerFilter filter, Guid createdByUserId,
+            string? description = null, CancellationToken ct = default)
+        {
+            var ledger = Ledger.CreateVirtual(tenantId, code, name, "{}", filter.SourceLedgerIds?.ToList() ?? [], createdByUserId, description);
+            await ledgerRepository.AddAsync(ledger, ct);
+            return ledger;
+        }
+
+        public Task UpdateFilterAsync(Guid virtualLedgerId, VirtualLedgerFilter filter, Guid updatedByUserId, CancellationToken ct = default) =>
+            Task.CompletedTask;
+
+        public async Task<IReadOnlyList<LedgerEntry>> GetVirtualEntriesAsync(
+            Guid virtualLedgerId, DateOnly? fromDate = null, DateOnly? toDate = null, int skip = 0, int take = 50, CancellationToken ct = default)
+        {
+            var ledger = await ledgerRepository.GetByIdAsync(virtualLedgerId, ct)
+                ?? throw new InvalidOperationException($"Virtual ledger '{virtualLedgerId}' not found.");
+
+            var entries = new List<LedgerEntry>();
+            foreach (var sourceId in ledger.VirtualSourceLedgerIds ?? [])
+            {
+                entries.AddRange(await entryRepository.GetByLedgerIncludingDescendantsAsync(sourceId, ct: ct));
+            }
+
+            return entries.OrderByDescending(e => e.TransactionDate).Skip(skip).Take(take).ToList();
+        }
+
+        public async Task<LedgerBalance> GetVirtualBalanceAsync(Guid virtualLedgerId, DateOnly? asOfDate = null, CancellationToken ct = default)
+        {
+            var ledger = await ledgerRepository.GetByIdAsync(virtualLedgerId, ct)
+                ?? throw new InvalidOperationException($"Virtual ledger '{virtualLedgerId}' not found.");
+
+            var entries = await GetVirtualEntriesAsync(virtualLedgerId, null, asOfDate, 0, int.MaxValue, ct);
+            var totalDebit = entries.Where(e => e.Type == EntryType.Debit).Sum(e => e.Amount);
+            var totalCredit = entries.Where(e => e.Type == EntryType.Credit).Sum(e => e.Amount);
+            return new LedgerBalance(virtualLedgerId, ledger.Code, ledger.Name, totalDebit, totalCredit, totalCredit - totalDebit, entries.Count, ledger.CurrencyCode, DateTime.UtcNow, true);
+        }
+    }
+
+    [Fact]
     public async Task Controllers_CoverCQRSRoutesAndResultBranches()
     {
         var ledger = LedgerDto();
@@ -895,7 +1249,6 @@ public sealed class FinanceLedgersCoverageCompletionTests
             new GetLedgerByCodeQuery(TenantId, "ROOT"),
             new GetLedgersByTenantQuery(TenantId, LedgerStatus.Active, LedgerType.Root, 1, 10),
             new GetRootLedgersQuery(TenantId),
-            new GetChildLedgersQuery(ledgerId),
             new GetLedgerChildrenQuery(ledgerId),
             new GetLedgerHierarchyQuery(ledgerId, 2),
             new GetLedgerAncestorsQuery(ledgerId),
@@ -904,9 +1257,7 @@ public sealed class FinanceLedgersCoverageCompletionTests
             new SearchLedgersQuery(TenantId, "root", LedgerType.Root, LedgerStatus.Active, ["tag"], 1, 10),
             new GetEntryByIdQuery(entryId),
             new GetEntryByReferenceQuery(TenantId, "TXN"),
-            new GetLedgerEntriesQuery(ledgerId, EntryStatus.Posted, BusinessDate, BusinessDate, 1, 10),
             new GetEntriesByLedgerQuery(ledgerId, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow),
-            new GetLedgerEntriesWithDescendantsQuery(ledgerId, EntryStatus.Posted, BusinessDate, BusinessDate, 1, 10),
             new GetEntriesIncludingDescendantsQuery(ledgerId, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow),
             new GetVirtualLedgerEntriesQuery(ledgerId, BusinessDate, BusinessDate, 1, 10),
             new SearchEntriesQuery(TenantId, "entry", ledgerId, true, EntryType.Debit, EntryCategory.Expense, EntryStatus.Posted, 1m, 100m, BusinessDate, BusinessDate, ["tag"], 1, 10),
@@ -1226,6 +1577,76 @@ public sealed class FinanceLedgersCoverageCompletionTests
 
         public Task<LedgerEntry?> GetByExternalIdAsync(string externalId, CancellationToken ct = default) =>
             Task.FromResult(Entries.FirstOrDefault(e => e.ExternalReferenceId == externalId));
+
+        public Task<LedgerEntry?> GetByReferenceAsync(Guid tenantId, string referenceNumber, CancellationToken ct = default) =>
+            Task.FromResult(Entries.FirstOrDefault(e => e.TenantId == tenantId && e.ReferenceNumber == referenceNumber));
+
+        public Task<IReadOnlyList<LedgerEntry>> SearchAsync(
+            Guid tenantId,
+            IReadOnlyList<Guid> ledgerIds,
+            string? searchTerm = null,
+            EntryType? type = null,
+            EntryCategory? category = null,
+            EntryStatus? status = null,
+            decimal? minAmount = null,
+            decimal? maxAmount = null,
+            DateOnly? fromDate = null,
+            DateOnly? toDate = null,
+            CancellationToken ct = default)
+        {
+            IEnumerable<LedgerEntry> filtered = Entries.Where(e => e.TenantId == tenantId);
+
+            if (ledgerIds.Count > 0)
+            {
+                filtered = filtered.Where(e => ledgerIds.Contains(e.LedgerId));
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim();
+                filtered = filtered.Where(e =>
+                    e.Description.Contains(term, StringComparison.OrdinalIgnoreCase)
+                    || e.ReferenceNumber.Contains(term, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (type.HasValue)
+            {
+                filtered = filtered.Where(e => e.Type == type.Value);
+            }
+
+            if (category.HasValue)
+            {
+                filtered = filtered.Where(e => e.Category == category.Value);
+            }
+
+            if (status.HasValue)
+            {
+                filtered = filtered.Where(e => e.Status == status.Value);
+            }
+
+            if (minAmount.HasValue)
+            {
+                filtered = filtered.Where(e => e.Amount >= minAmount.Value);
+            }
+
+            if (maxAmount.HasValue)
+            {
+                filtered = filtered.Where(e => e.Amount <= maxAmount.Value);
+            }
+
+            if (fromDate.HasValue)
+            {
+                filtered = filtered.Where(e => e.TransactionDate >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                filtered = filtered.Where(e => e.TransactionDate <= toDate.Value);
+            }
+
+            return Task.FromResult<IReadOnlyList<LedgerEntry>>(
+                filtered.OrderByDescending(e => e.TransactionDate).ThenBy(e => e.ReferenceNumber).ToList());
+        }
 
         public Task AddAsync(LedgerEntry entry, CancellationToken ct = default)
         {

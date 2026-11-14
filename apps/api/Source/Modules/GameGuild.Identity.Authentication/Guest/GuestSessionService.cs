@@ -109,6 +109,41 @@ public sealed class GuestSessionService(
         var principal = guestTokenService.Validate(guestToken);
         if (principal is null || !principal.TryGetGuestId(out var guestSessionId))
         {
+            // Issue #1128: a guest credential that expired mid-use may still carry its data
+            // forward. When the token is structurally valid (right signature, issuer and
+            // audience) and expired only recently — within the store's retention slack past
+            // the token's own expiry — bind the retained snapshot to the just-authenticated
+            // user so cart/progress continuity survives the expiry. This is a one-time
+            // migration of an already-dead session, never an extension: the guest token
+            // stays expired and the record can only be upgraded once.
+            if (guestTokenService.TryReadExpired(guestToken, out var expiredSessionId, out var expiredAt))
+            {
+                var graceEnd = expiredAt + TimeSpan.FromMinutes(Math.Max(0, _options.StoreEvictionSlackMinutes));
+                if (expiredSessionId != Guid.Empty && SystemClock.UtcNow <= graceEnd &&
+                    await guestSessionStore.TryMarkUpgradedForContinuityAsync(
+                        expiredSessionId, userId, authenticatedSessionId, SystemClock.UtcNow, cancellationToken).ConfigureAwait(false))
+                {
+                    await RecordAuditAsync(
+                        "Authentication.GuestSessionUpgraded",
+                        success: true,
+                        sessionId: authenticatedSessionId,
+                        userId: userId,
+                        metadata: new { GuestSessionId = expiredSessionId, UpgradedAt = SystemClock.UtcNow, ContinuityAfterExpiry = true },
+                        errorMessage: null,
+                        cancellationToken).ConfigureAwait(false);
+
+                    logger?.LogInformation(
+                        "Expired guest session {GuestSessionId} bound to authenticated session {AuthenticatedSessionId} for user {UserId} within the retention grace",
+                        expiredSessionId, authenticatedSessionId, userId);
+
+                    return new GuestSessionUpgradeResult { Success = true, GuestSessionId = expiredSessionId };
+                }
+
+                await RecordUpgradeRejectionAsync(expiredSessionId == Guid.Empty ? null : expiredSessionId, userId,
+                    nameof(GuestSessionFailureReason.GuestSessionExpired), cancellationToken).ConfigureAwait(false);
+                return DeniedUpgrade(GuestSessionFailureReason.GuestSessionExpired);
+            }
+
             await RecordUpgradeRejectionAsync(guestSessionId: null, userId, nameof(GuestSessionFailureReason.InvalidGuestToken), cancellationToken).ConfigureAwait(false);
             return DeniedUpgrade(GuestSessionFailureReason.InvalidGuestToken);
         }

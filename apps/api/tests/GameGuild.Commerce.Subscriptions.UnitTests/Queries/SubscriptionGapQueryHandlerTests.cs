@@ -293,6 +293,92 @@ public class ValidateSubscriptionPlanLimitsHandlerTests
     }
 }
 
+/// <summary>
+///     Issue #1277 batch 1: the three subscription queries left dead after #1229's
+///     five (G7 round-2 findings).
+/// </summary>
+public class GetAllSubscriptionPlansQueryHandlerTests
+{
+    [Fact]
+    public async Task Handle_ReturnsEveryPlan_ActiveAndInactive()
+    {
+        var active = new SubscriptionPlan("Pro", "pro", 2999, "USD");
+        var inactive = new SubscriptionPlan("Legacy", "legacy", 999, "USD");
+        inactive.Deactivate();
+
+        var repository = new Mock<ISubscriptionPlanRepository>();
+        repository
+            .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync([active, inactive]);
+
+        var handler = new GetAllSubscriptionPlansQueryHandler(repository.Object);
+
+        var result = (await handler.Handle(new GetAllSubscriptionPlansQuery(), CancellationToken.None)).ToList();
+
+        result.Should().HaveCount(2);
+        result.Should().Contain(p => p.Slug == "pro");
+        result.Should().Contain(p => p.Slug == "legacy");
+    }
+}
+
+public class GetSubscriptionByExternalIdQueryHandlerTests
+{
+    [Fact]
+    public async Task Handle_ShouldReturnNull_ForBlankExternalId()
+    {
+        var repository = new Mock<ISubscriptionRepository>();
+        var handler = new GetSubscriptionByExternalIdQueryHandler(repository.Object);
+
+        var result = await handler.Handle(new GetSubscriptionByExternalIdQuery("  "), CancellationToken.None);
+
+        result.Should().BeNull();
+        repository.Verify(r => r.GetByExternalIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldResolveSubscription_FromProviderExternalId()
+    {
+        var subscription = new Subscription(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            BillingCycle.Monthly, new Money(29.99m, "USD"), DateTime.UtcNow);
+
+        var repository = new Mock<ISubscriptionRepository>();
+        repository
+            .Setup(r => r.GetByExternalIdAsync("sub_ext_1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(subscription);
+
+        var handler = new GetSubscriptionByExternalIdQueryHandler(repository.Object);
+
+        var result = await handler.Handle(new GetSubscriptionByExternalIdQuery("sub_ext_1"), CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(subscription.Id);
+    }
+}
+
+public class GetSubscriptionsByPlanQueryHandlerTests
+{
+    [Fact]
+    public async Task Handle_ShouldDelegateToRepository_ByPlanId()
+    {
+        var planId = Guid.NewGuid();
+        var subscription = new Subscription(
+            Guid.NewGuid(), planId, Guid.NewGuid(),
+            BillingCycle.Monthly, new Money(9.99m, "USD"), DateTime.UtcNow);
+
+        var repository = new Mock<ISubscriptionRepository>();
+        repository
+            .Setup(r => r.GetByPlanIdAsync(planId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([subscription]);
+
+        var handler = new GetSubscriptionsByPlanQueryHandler(repository.Object);
+
+        var result = (await handler.Handle(new GetSubscriptionsByPlanQuery(planId), CancellationToken.None)).ToList();
+
+        result.Should().ContainSingle().Which.PlanId.Should().Be(planId);
+    }
+}
+
 internal static class BillingHistoryAssertionExtensions
 {
     /// <summary>BillingHistoryDto has no invoice-number property; recover it from Description.</summary>

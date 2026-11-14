@@ -29,7 +29,7 @@ public class CreateSloCommandHandlerTests
 
         var action = () => _sut.Handle(command, CancellationToken.None);
 
-        await action.Should().ThrowAsync<InvalidOperationException>();
+        await action.Should().ThrowAsync<BusinessRuleViolationException>();
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public class UpdateSloCommandHandlerTests
 
         var action = () => _sut.Handle(new UpdateSloCommand(Guid.NewGuid(), Guid.NewGuid(), "Name", null, "svc", 99.9, 30, 0.1, 50, true), CancellationToken.None);
 
-        await action.Should().ThrowAsync<InvalidOperationException>();
+        await action.Should().ThrowAsync<EntityNotFoundException>();
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class UpdateSloCommandHandlerTests
 
         var action = () => _sut.Handle(command, CancellationToken.None);
 
-        await action.Should().ThrowAsync<UnauthorizedAccessException>();
+        await action.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]
@@ -154,7 +154,7 @@ public class DeleteSloCommandHandlerTests
 
         var action = () => _sut.Handle(new DeleteSloCommand(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None);
 
-        await action.Should().ThrowAsync<InvalidOperationException>();
+        await action.Should().ThrowAsync<EntityNotFoundException>();
     }
 
     [Fact]
@@ -166,7 +166,7 @@ public class DeleteSloCommandHandlerTests
 
         var action = () => _sut.Handle(command, CancellationToken.None);
 
-        await action.Should().ThrowAsync<UnauthorizedAccessException>();
+        await action.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]
@@ -271,9 +271,6 @@ public class ResolveSloViolationCommandHandlerTests
     private readonly Mock<ISloViolationRepository> _repository = new();
     private readonly ResolveSloViolationCommandHandler _sut;
 
-    private sealed record ConcreteResolveSloViolationCommand(Guid ViolationId, Guid TenantId, string? ResolutionNotes = null)
-        : ResolveSloViolationCommand(ViolationId, TenantId, ResolutionNotes);
-
     public ResolveSloViolationCommandHandlerTests()
     {
         _sut = new ResolveSloViolationCommandHandler(_repository.Object);
@@ -285,21 +282,21 @@ public class ResolveSloViolationCommandHandlerTests
         _repository.Setup(repository => repository.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((SloViolation?) null);
 
-        var action = () => _sut.Handle(new ConcreteResolveSloViolationCommand(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None);
+        var action = () => _sut.Handle(new ResolveSloViolationCommand(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None);
 
-        await action.Should().ThrowAsync<InvalidOperationException>();
+        await action.Should().ThrowAsync<EntityNotFoundException>();
     }
 
     [Fact]
     public async Task Handle_WhenTenantMismatch_ShouldThrowUnauthorizedAccessException()
     {
         var violation = CreateViolation(Guid.NewGuid());
-        var command = new ConcreteResolveSloViolationCommand(violation.Id, Guid.NewGuid());
+        var command = new ResolveSloViolationCommand(violation.Id, Guid.NewGuid());
         _repository.Setup(repository => repository.GetByIdAsync(violation.Id, It.IsAny<CancellationToken>())).ReturnsAsync(violation);
 
         var action = () => _sut.Handle(command, CancellationToken.None);
 
-        await action.Should().ThrowAsync<UnauthorizedAccessException>();
+        await action.Should().ThrowAsync<AccessDeniedException>();
     }
 
     [Fact]
@@ -307,12 +304,12 @@ public class ResolveSloViolationCommandHandlerTests
     {
         var tenantId = Guid.NewGuid();
         var violation = CreateViolation(tenantId, resolved: true);
-        var command = new ConcreteResolveSloViolationCommand(violation.Id, tenantId);
+        var command = new ResolveSloViolationCommand(violation.Id, tenantId);
         _repository.Setup(repository => repository.GetByIdAsync(violation.Id, It.IsAny<CancellationToken>())).ReturnsAsync(violation);
 
         var action = () => _sut.Handle(command, CancellationToken.None);
 
-        await action.Should().ThrowAsync<InvalidOperationException>();
+        await action.Should().ThrowAsync<BusinessRuleViolationException>();
     }
 
     [Fact]
@@ -320,7 +317,7 @@ public class ResolveSloViolationCommandHandlerTests
     {
         var tenantId = Guid.NewGuid();
         var violation = CreateViolation(tenantId);
-        var command = new ConcreteResolveSloViolationCommand(violation.Id, tenantId, "resolved");
+        var command = new ResolveSloViolationCommand(violation.Id, tenantId, "resolved");
         _repository.Setup(repository => repository.GetByIdAsync(violation.Id, It.IsAny<CancellationToken>())).ReturnsAsync(violation);
 
         var result = await _sut.Handle(command, CancellationToken.None);
@@ -336,7 +333,7 @@ public class ResolveSloViolationCommandHandlerTests
     {
         var tenantId = Guid.NewGuid();
         var violation = CreateViolation(tenantId);
-        var command = new ConcreteResolveSloViolationCommand(violation.Id, tenantId, "   ");
+        var command = new ResolveSloViolationCommand(violation.Id, tenantId, "   ");
         _repository.Setup(repository => repository.GetByIdAsync(violation.Id, It.IsAny<CancellationToken>())).ReturnsAsync(violation);
 
         await _sut.Handle(command, CancellationToken.None);

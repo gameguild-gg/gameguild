@@ -89,8 +89,25 @@ public sealed class TrustedDevicesController(ISessionManagementService sessionSe
             }
         }
 
-        var success = await sender.Send(
-            new TrustDeviceCommand(userId, sessionId, body.DeviceName, body.StepUpReceipt), ct).ConfigureAwait(false);
+        bool success;
+        try
+        {
+            success = await sender.Send(
+                new TrustDeviceCommand(userId, sessionId, body.DeviceName, body.StepUpReceipt), ct).ConfigureAwait(false);
+        }
+        catch (StepUpRequiredException)
+        {
+            try
+            {
+                var requirement = await stepUpRequirements.CreateAsync(
+                    SessionMutationCommandHandler.TrustDeviceStepUpBinding(body.DeviceName ?? string.Empty), ct).ConfigureAwait(false);
+                return StatusCode(StatusCodes.Status403Forbidden, requirement);
+            }
+            catch (StepUpContextUnavailableException)
+            {
+                return Unauthorized(new SessionErrorResponse { Error = "An authenticated tenant and session context is required" });
+            }
+        }
 
         if (!success)
         {
