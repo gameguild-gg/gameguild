@@ -19,14 +19,16 @@ export default async function Image({ params }: { params: Promise<{ course: stri
   const result = await getCachedPublicCourseBySlug(slug).catch(() => undefined);
   const course = result?.success ? result.data : undefined;
   const title = course?.title ?? 'Course';
-  const thumbnail = typeof course?.thumbnail === 'string' && course.thumbnail.length > 0 ? course.thumbnail : null;
+  // Satori only resolves absolute http(s) image sources.
+  const raw = typeof course?.thumbnail === 'string' ? course.thumbnail.trim() : '';
+  const thumbnail = /^https?:\/\//i.test(raw) ? raw : null;
 
   if (thumbnail) {
     return new ImageResponse(
       (
-        <div style={{ width: '100%', height: '100%', display: 'flex', backgroundColor: '#070a12' }}>
+        <picture style={{ width: '100%', height: '100%', display: 'flex', backgroundColor: '#070a12' }}>
           <img src={thumbnail} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
+        </picture>
       ),
       { ...OG_IMAGE_SIZE },
     );

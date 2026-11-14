@@ -319,9 +319,9 @@ public static class DataDependencyInjection
         services.AddScoped<ISignInMfaService, SignInMfaService>();
         services.AddScoped<IStepUpChallengeStore, PostgreSqlStepUpChallengeStore>();
         services.AddScoped<IStepUpReceiptService, StepUpReceiptService>();
-        // Issue #1191: builds the structured 423 body sensitive actions return when the caller
-        // has no valid step-up receipt (the platform trigger the response DTO previously lacked).
         services.AddScoped<IStepUpRequiredResponder, StepUpRequiredResponder>();
+        services.AddScoped<IStepUpRequirementService, StepUpRequirementService>();
+        services.AddHostedService<StepUpChallengeCleanupBackgroundService>();
         services.AddScoped<IMfaRecoveryRequestStore, PostgreSqlMfaRecoveryRequestStore>();
         // Delegated account recovery with trusted contacts / passkeys (issue #209)
         RegisterAccountRecoveryServices(services, configuration);
@@ -586,6 +586,7 @@ public static class DataDependencyInjection
         services.AddScoped<IRequestHandler<RequestMfaRecoveryCommand, MfaRecoveryRequestResult>, RequestMfaRecoveryCommandHandler>();
         services.AddScoped<IRequestHandler<ContinueMfaRecoveryCommand, MfaRecoveryContinueResult>, ContinueMfaRecoveryCommandHandler>();
         services.AddScoped<IRequestHandler<ConfirmMfaRecoveryCommand, MfaRecoveryConfirmResult>, ConfirmMfaRecoveryCommandHandler>();
+        services.AddScoped<IRequestHandler<CancelMfaRecoveryCommand, MfaRecoveryCancelResult>, CancelMfaRecoveryCommandHandler>();
         services.AddScoped<IRequestHandler<AdminResetUserMfaCommand, AdminResetUserMfaResult>, AdminResetUserMfaCommandHandler>();
         services.AddScoped<IRequestHandler<AddTrustedContactCommand, TrustedContactActionResult>, AddTrustedContactCommandHandler>();
         services.AddScoped<IRequestHandler<RemoveTrustedContactCommand, TrustedContactActionResult>, RemoveTrustedContactCommandHandler>();

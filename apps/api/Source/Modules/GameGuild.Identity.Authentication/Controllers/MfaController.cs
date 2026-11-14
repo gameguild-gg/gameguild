@@ -184,11 +184,11 @@ public sealed class MfaController(
         var userId = GetCurrentUserId();
         var backupCodes = await sender.Send(new RegenerateMfaBackupCodesCommand(userId, body.Password), ct).ConfigureAwait(false);
 
-        // Empty set = the password re-verification refused the mutation (issued
-        // backup-code sets are never legitimately empty).
+        // Empty set means re-verification or the current MFA configuration
+        // refused generation. Issued backup-code sets are never empty.
         if (backupCodes.Length == 0)
         {
-            return BadRequest(new MfaErrorResponse { Error = "Password verification failed. Backup codes were not regenerated." });
+            return BadRequest(new MfaErrorResponse { Error = "Backup codes were not regenerated. Verify your password and ensure MFA is enabled." });
         }
 
         return Ok(new BackupCodesResponse
@@ -210,7 +210,7 @@ public sealed class MfaController(
     /// <returns>Setup initiation result</returns>
     [HttpPost("v{version:apiVersion}/auth/mfa/sms:setup")]
     [EndpointSummary("Setup SMS MFA")]
-    [EndpointDescription("Initiates SMS-based MFA setup by sending a verification code to the provided phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.")]
+    [EndpointDescription("Re-verifies the authenticated account password before sending an SMS enrollment proof to the requested phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.")]
     [ProducesResponseType<SmsMfaSetupResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<MfaErrorResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -218,7 +218,7 @@ public sealed class MfaController(
     {
         ArgumentNullException.ThrowIfNull(body);
         var userId = GetCurrentUserId();
-        var result = await sender.Send(new StartSmsMfaEnrollmentCommand(userId, body.PhoneNumber), ct).ConfigureAwait(false);
+        var result = await sender.Send(new StartSmsMfaEnrollmentCommand(userId, body.PhoneNumber, body.Password), ct).ConfigureAwait(false);
 
         if (!result.Success)
         {
@@ -245,7 +245,7 @@ public sealed class MfaController(
     [ProducesResponseType<MfaSuccessResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<MfaErrorResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> CompleteSmsSetup([FromBody] CompleteMfaSetupRequest body, CancellationToken ct)
+    public async Task<IActionResult> CompleteSmsSetup([FromBody] CompleteSmsMfaSetupRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
         var userId = GetCurrentUserId();
@@ -262,19 +262,19 @@ public sealed class MfaController(
     /// <summary>
     ///     Send a fresh SMS sign-in code to the enrolled phone
     /// </summary>
-    /// <param name="body">Identifier of the user requesting the challenge</param>
+    /// <param name="body">Opaque continuation issued after successful first-factor verification</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Challenge initiation result</returns>
     [AllowAnonymous]
     [HttpPost("v{version:apiVersion}/auth/mfa/sms:challenge")]
     [EndpointSummary("Send SMS MFA challenge")]
-    [EndpointDescription("Sends a fresh verification code to the enrolled phone before MFA verification. Generic failure payload; throttled to one code per minute per user.")]
+    [EndpointDescription("Sends a code to the server-resolved enrolled phone using an active first-factor MFA continuation. Codes are bound to that continuation and throttled per account.")]
     [ProducesResponseType<SmsMfaSetupResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SendSmsChallenge([FromBody] SmsMfaChallengeRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var result = await sender.Send(new SendSmsMfaChallengeCommand(body.UserId), ct).ConfigureAwait(false);
+        var result = await sender.Send(new SendSmsMfaChallengeCommand(body.MfaToken), ct).ConfigureAwait(false);
 
         if (!result.Success)
         {
@@ -640,6 +640,10 @@ public sealed record SmsMfaSetupRequest
     ///     Phone number to receive SMS codes
     /// </summary>
     public required string PhoneNumber { get; init; }
+
+    /// <summary>Current account password re-verification before changing MFA delivery.</summary>
+    [AuditSensitive]
+    public string Password { get; init; } = string.Empty;
 }
 
 /// <summary>
@@ -648,9 +652,9 @@ public sealed record SmsMfaSetupRequest
 public sealed record SmsMfaChallengeRequest
 {
     /// <summary>
-    ///     User identifier whose enrolled phone receives the code
+    ///     Opaque continuation returned after successful first-factor verification
     /// </summary>
-    public required Guid UserId { get; init; }
+    public string MfaToken { get; init; } = string.Empty;
 }
 
 /// <summary>

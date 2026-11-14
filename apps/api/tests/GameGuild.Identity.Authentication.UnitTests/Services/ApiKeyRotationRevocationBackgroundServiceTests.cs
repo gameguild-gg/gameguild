@@ -7,6 +7,7 @@ using Xunit;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Services;
 
+[Collection("API-key rotation worker lifecycle")]
 public sealed class ApiKeyRotationRevocationBackgroundServiceTests
 {
     [Fact]
@@ -170,3 +171,8 @@ public sealed class ApiKeyRotationRevocationBackgroundServiceTests
         }
     }
 }
+
+// Keep the worker's background dispatch isolated from other test collections
+// while checking startup, cancellation and asynchronous scope disposal.
+[CollectionDefinition("API-key rotation worker lifecycle", DisableParallelization = true)]
+public sealed class ApiKeyRotationWorkerLifecycleCollection;

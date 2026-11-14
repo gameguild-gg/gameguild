@@ -52,17 +52,72 @@ public sealed class PostgreSqlMfaRecoveryRequestStore(IApplicationDbContext cont
 
     public async Task<MfaRecoveryRequest?> CancelLiveByUserAsync(string userId, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
-        var request = await FindLiveByUserAsync(userId, cancellationToken).ConfigureAwait(false);
-        if (request is null)
-        {
-            return null;
-        }
-
+        RequireOwningTransaction();
+        var request = await Requests.AsNoTracking().SingleOrDefaultAsync(row => row.UserId == userId &&
+            (row.Status == MfaRecoveryRequestStatus.Pending || row.Status == MfaRecoveryRequestStatus.AwaitingConfirmation),
+            cancellationToken).ConfigureAwait(false);
+        if (request is null) { return null; }
+        DateTimeOffset now = SystemClock.UtcNow;
+        var changed = await Requests.Where(row => row.Id == request.Id && row.UserId == userId &&
+                (row.Status == MfaRecoveryRequestStatus.Pending || row.Status == MfaRecoveryRequestStatus.AwaitingConfirmation))
+            .ExecuteUpdateAsync(setters => setters.SetProperty(row => row.Status, MfaRecoveryRequestStatus.Cancelled)
+                .SetProperty(row => row.ConsumedAt, now), cancellationToken).ConfigureAwait(false);
+        if (changed != 1) { return null; }
+        // The detached snapshot describes the successful update without a later stale tracked write.
         request.Status = MfaRecoveryRequestStatus.Cancelled;
-        request.ConsumedAt = SystemClock.UtcNow;
-        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        request.ConsumedAt = now;
         return request;
+    }
+
+    public async Task<bool> TryIssueConfirmationAsync(Guid requestId, string requestTokenHash, string confirmationTokenHash,
+        DateTimeOffset now, DateTimeOffset expiresAt, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        RequireDigest(requestTokenHash);
+        RequireDigest(confirmationTokenHash);
+        RequireOwningTransaction();
+        if (requestId == Guid.Empty || expiresAt <= now) { throw new ArgumentException("A valid recovery transition is required."); }
+        var cutoff = now.Subtract(MfaRecoveryTokens.RequestRetention);
+        var changed = await Requests.Where(row => row.Id == requestId && row.RequestTokenHash == requestTokenHash &&
+                (row.Status == MfaRecoveryRequestStatus.Pending || row.Status == MfaRecoveryRequestStatus.AwaitingConfirmation) &&
+                row.ConsumedAt == null && row.RequestedAt >= cutoff && row.CooldownEndsAt <= now)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(row => row.Status, MfaRecoveryRequestStatus.AwaitingConfirmation)
+                .SetProperty(row => row.ConfirmationTokenHash, confirmationTokenHash)
+                .SetProperty(row => row.ConfirmationTokenExpiresAt, expiresAt), cancellationToken).ConfigureAwait(false);
+        return changed == 1;
+    }
+
+    public async Task<bool> TryConfirmAsync(Guid requestId, string confirmationTokenHash, DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        RequireDigest(confirmationTokenHash);
+        RequireOwningTransaction();
+        if (requestId == Guid.Empty) { throw new ArgumentException("A recovery request is required.", nameof(requestId)); }
+        var changed = await Requests.Where(row => row.Id == requestId && row.Status == MfaRecoveryRequestStatus.AwaitingConfirmation &&
+                row.ConfirmationTokenHash == confirmationTokenHash && row.ConfirmationTokenExpiresAt != null &&
+                row.ConfirmationTokenExpiresAt >= now && row.CooldownEndsAt <= now && row.ConsumedAt == null)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(row => row.Status, MfaRecoveryRequestStatus.Completed)
+                .SetProperty(row => row.ConsumedAt, now), cancellationToken).ConfigureAwait(false);
+        return changed == 1;
+    }
+
+    private void RequireOwningTransaction()
+    {
+        // Non-relational hosts (the in-memory architecture-test composition used by the E9
+        // route-smoke guard) never open an ambient transaction — UseCaseOperationBehavior
+        // deliberately runs flush-after-handling there — so the owning-transaction contract
+        // is enforced only where it can actually be honored.
+        if (context is not DbContext database)
+        {
+            return;
+        }
+        if (database.Database.IsRelational() && database.Database.CurrentTransaction is null)
+        {
+            throw new InvalidOperationException("MFA recovery transitions require the owning relational command transaction.");
+        }
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)

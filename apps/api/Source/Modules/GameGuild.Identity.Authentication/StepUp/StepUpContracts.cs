@@ -55,6 +55,10 @@ public sealed record StepUpReceiptResponse(string Receipt, DateTimeOffset Expire
 
 public sealed class StepUpChallenge
 {
+    public const int MaximumVerificationAttempts = 5;
+
+    public int VerificationAttempts { get; set; }
+
     public Guid Id { get; set; }
     public Guid TenantId { get; set; }
     public Guid ActorId { get; set; }
@@ -71,6 +75,10 @@ public sealed class StepUpChallenge
 
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
+
+    [MaxLength(64)]
+    public string? WebAuthnChallengeHash { get; set; }
+
     public DateTimeOffset? VerifiedAt { get; set; }
     public MfaMethod? VerificationMethod { get; set; }
 
@@ -84,7 +92,15 @@ public interface IStepUpChallengeStore
 {
     Task AddAsync(StepUpChallenge challenge, CancellationToken cancellationToken);
 
+    Task<int> PruneExpiredAsync(DateTimeOffset now, int batchSize, CancellationToken cancellationToken);
+
     Task<StepUpChallenge?> FindActiveAsync(
+        Guid challengeId,
+        StepUpSubject subject,
+        DateTimeOffset now,
+        CancellationToken cancellationToken);
+
+    Task<bool> TryReserveVerificationAttemptAsync(
         Guid challengeId,
         StepUpSubject subject,
         DateTimeOffset now,
@@ -95,6 +111,21 @@ public interface IStepUpChallengeStore
         StepUpSubject subject,
         string receiptHash,
         MfaMethod method,
+        DateTimeOffset verifiedAt,
+        CancellationToken cancellationToken);
+
+    Task<bool> BindWebAuthnChallengeAsync(
+        Guid challengeId,
+        StepUpSubject subject,
+        string challengeHash,
+        DateTimeOffset now,
+        CancellationToken cancellationToken);
+
+    Task<bool> MarkWebAuthnVerifiedAsync(
+        Guid challengeId,
+        StepUpSubject subject,
+        string challengeHash,
+        string receiptHash,
         DateTimeOffset verifiedAt,
         CancellationToken cancellationToken);
 

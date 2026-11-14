@@ -39,6 +39,7 @@ describe('limited-challenge MFA completion through the public SDK helper', () =>
   it.each([
     { method: 'totp' as const, wireMethod: 'Totp', code: '123456' },
     { method: 'backup_code' as const, wireMethod: 'BackupCode', code: 'backup-code' },
+    { method: 'sms' as const, wireMethod: 'Sms', code: '123456' },
   ])('completes $method through the generated sign-in operation without sending an ordinary bearer', async ({ method, wireMethod, code }) => {
     const generated = vi.spyOn(AuthModule.prototype, 'postAuthMfaSignInComplete');
     fetchMock.mockImplementation((url, options) => {
@@ -108,7 +109,7 @@ describe('limited-challenge MFA completion through the public SDK helper', () =>
     { mfaToken: '', method: 'totp', code: '123456' },
     { mfaToken: 'x'.repeat(42), method: 'totp', code: '123456' },
     { mfaToken: '/'.repeat(43), method: 'totp', code: '123456' },
-    { mfaToken: MFA_TOKEN, method: 'sms', code: '123456' },
+    { mfaToken: MFA_TOKEN, method: 'push', code: '123456' },
     { mfaToken: MFA_TOKEN, method: 'totp', code: '' },
     { mfaToken: MFA_TOKEN, method: 'totp', code: '   ' },
     { mfaToken: MFA_TOKEN, method: 'totp', code: 'x'.repeat(65) },

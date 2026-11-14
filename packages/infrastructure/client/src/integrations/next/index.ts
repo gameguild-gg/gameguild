@@ -21,7 +21,7 @@
 
 // ─── GameGuildAuth Factory ───────────────────────────────────────
 export { GameGuildAuth } from './auth';
-export { createMfaEnrollmentCompleteAction, type MfaEnrollmentCompleteResult } from './actions';
+export { createMfaEnrollmentCompleteAction, createMfaSmsChallengeAction, type MfaEnrollmentCompleteResult } from './actions';
 
 // ─── Provider Factories (re-exported for convenience) ────────────
 export { CredentialsProvider, GoogleProvider, GitHubProvider, DiscordProvider } from '../../runtime/auth/providers/index';
@@ -93,6 +93,7 @@ export function createNextAuthTokenProvider(getSession: NonNullable<NextClientCo
       // In server context, we typically let the proxy handle redirects
       // This callback is for notification purposes
       console.warn('[client] Authentication required but no session available');
+      return Promise.resolve();
     },
   };
 }
@@ -105,6 +106,7 @@ export function createNextTenantProvider(getTenantId: NonNullable<NextClientConf
     getTenantId,
     onTenantRequired: async () => {
       console.warn('[client] Tenant ID required but not available');
+      return Promise.resolve();
     },
   };
 }
@@ -174,13 +176,13 @@ export async function createClientFromCookies(
     getSession: async () => {
       const token = cookies.get(accessTokenCookieName);
       /* v8 ignore start */
-      return token ? { accessToken: token.value } : null;
+      return Promise.resolve(token ? { accessToken: token.value } : null);
       /* v8 ignore stop */
     },
     getTenantId: async () => {
       const tenant = cookies.get(tenantCookieName);
       /* v8 ignore start */
-      return tenant?.value ?? null;
+      return Promise.resolve(tenant?.value ?? null);
       /* v8 ignore stop */
     },
   });
@@ -203,7 +205,7 @@ export function createRouteClient(
       const authHeader = config.headers.get('Authorization');
       if (authHeader?.startsWith('Bearer ')) {
         const token = authHeader.slice(7);
-        effectiveConfig.getSession = async () => ({ accessToken: token });
+        effectiveConfig.getSession = async () => Promise.resolve({ accessToken: token });
       }
     }
 
@@ -212,7 +214,7 @@ export function createRouteClient(
       const tenantHeader = config.tenantHeader || 'X-Tenant-Id';
       const tenantId = config.headers.get(tenantHeader);
       if (tenantId) {
-        effectiveConfig.getTenantId = async () => tenantId;
+        effectiveConfig.getTenantId = async () => Promise.resolve(tenantId);
       }
     }
   }
