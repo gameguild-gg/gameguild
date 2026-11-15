@@ -85,7 +85,7 @@ test('selected Economy gates still require success', () => {
 
 test('mandatory API security is a required selected gate', () => {
   assert.match(requiredGate, /API_SECURITY: \$\{\{ needs\.api-security\.result \}\}/);
-  assert.match(requiredGate, /        api-security,/);
+  assert.match(requiredGate, / {8}api-security,/);
 });
 
 for (const selected of ['true', 'false', '', 'unknown']) {
