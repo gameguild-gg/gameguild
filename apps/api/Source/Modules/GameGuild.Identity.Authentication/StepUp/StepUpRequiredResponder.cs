@@ -73,7 +73,7 @@ public sealed class StepUpRequiredResponder(
 
         // Enrolled methods only: the verify path accepts factors the account actually has.
         // Best-effort — an MFA-configuration read failure must not turn a 423 into a 500.
-        var availableMethods = Array.Empty<string>();
+        string[] availableMethods;
         try
         {
             var configuration = mfaOptions.Enabled
@@ -99,6 +99,7 @@ public sealed class StepUpRequiredResponder(
         }
         catch (Exception exception)
         {
+            availableMethods = Array.Empty<string>();
             logger.LogWarning(exception,
                 "Could not read the MFA configuration while building a step-up-required response: {ErrorType}",
                 exception.GetType().FullName);

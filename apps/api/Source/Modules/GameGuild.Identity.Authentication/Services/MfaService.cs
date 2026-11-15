@@ -124,10 +124,22 @@ public sealed class MfaService(
     }
 
     /// <inheritdoc />
-    public Task<MfaVerificationResult> VerifyMfaAsync(Guid userId, string code, MfaMethod method = MfaMethod.Totp, CancellationToken cancellationToken = default)
+    public Task<MfaVerificationResult> VerifyMfaAsync(Guid userId, string code)
+        => VerifyMfaAsync(userId, code, MfaMethod.Totp, CancellationToken.None);
+
+    public Task<MfaVerificationResult> VerifyMfaAsync(Guid userId, string code, CancellationToken cancellationToken)
+        => VerifyMfaAsync(userId, code, MfaMethod.Totp, cancellationToken);
+
+    public Task<MfaVerificationResult> VerifyMfaAsync(Guid userId, string code, MfaMethod method)
+        => VerifyMfaAsync(userId, code, method, CancellationToken.None);
+
+    public Task<MfaVerificationResult> VerifyMfaAsync(Guid userId, string code, MfaMethod method, CancellationToken cancellationToken)
         => VerifyMfaCoreAsync(userId, code, method, false, cancellationToken);
 
-    public Task<MfaVerificationResult> VerifyMfaForStepUpAsync(Guid userId, string code, MfaMethod method, CancellationToken cancellationToken = default)
+    public Task<MfaVerificationResult> VerifyMfaForStepUpAsync(Guid userId, string code, MfaMethod method)
+        => VerifyMfaForStepUpAsync(userId, code, method, CancellationToken.None);
+
+    public Task<MfaVerificationResult> VerifyMfaForStepUpAsync(Guid userId, string code, MfaMethod method, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (method is not (MfaMethod.Totp or MfaMethod.BackupCode))

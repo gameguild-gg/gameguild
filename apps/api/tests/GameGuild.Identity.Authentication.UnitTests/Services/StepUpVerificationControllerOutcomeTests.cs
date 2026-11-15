@@ -68,7 +68,7 @@ public sealed class StepUpVerificationControllerOutcomeTests
     {
         public StepUpVerificationOutcome? ReturnedOutcome { get; private set; }
 
-        public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
+        public Task Send<TRequest>(TRequest _, CancellationToken cancellationToken = default)
             where TRequest : IRequest => throw new NotSupportedException("Void command is outside this test.");
 
         public async Task<object?> Send(object request, CancellationToken cancellationToken = default)

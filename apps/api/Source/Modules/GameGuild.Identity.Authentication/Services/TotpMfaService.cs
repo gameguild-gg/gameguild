@@ -105,7 +105,16 @@ public sealed class TotpMfaService(
     public Task<bool> VerifyTotpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default)
         => GuardedAsync(userId, () => VerifyTotpCoreAsync(userId, totpCode, deviceId, false, cancellationToken), cancellationToken);
 
-    public Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default)
+    public Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode)
+        => VerifyTotpForStepUpAsync(userId, totpCode, null, CancellationToken.None);
+
+    public Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode, string? deviceId)
+        => VerifyTotpForStepUpAsync(userId, totpCode, deviceId, CancellationToken.None);
+
+    public Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode, CancellationToken cancellationToken)
+        => VerifyTotpForStepUpAsync(userId, totpCode, null, cancellationToken);
+
+    public Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode, string? deviceId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return VerifyTotpCoreAsync(userId, totpCode, deviceId, true, cancellationToken);

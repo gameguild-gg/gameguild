@@ -15,7 +15,10 @@ public interface IMfaService
     Task<MfaVerificationResult> VerifyMfaAsync(Guid userId, string code, MfaMethod method = MfaMethod.Totp, CancellationToken cancellationToken = default);
 
     /// <summary>Propagates operational failures so step-up transactions can roll back factor side effects.</summary>
-    Task<MfaVerificationResult> VerifyMfaForStepUpAsync(Guid userId, string code, MfaMethod method, CancellationToken cancellationToken = default);
+    Task<MfaVerificationResult> VerifyMfaForStepUpAsync(Guid userId, string code, MfaMethod method)
+        => VerifyMfaForStepUpAsync(userId, code, method, CancellationToken.None);
+
+    Task<MfaVerificationResult> VerifyMfaForStepUpAsync(Guid userId, string code, MfaMethod method, CancellationToken cancellationToken);
 
     /// <summary>Issues SMS only for the server-resolved first-factor continuation.</summary>
     Task<SmsMfaChallengeResult> SendSmsSignInChallengeAsync(Guid userId, Guid signInChallengeId, CancellationToken cancellationToken);
