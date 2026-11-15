@@ -59,6 +59,24 @@ public sealed class StepUpVerificationControllerOutcomeTests
         Assert.Null(sender.ReturnedOutcome);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task UnsupportedVoidCommandsFailWithoutRenderingTheirPayload(bool cancelled)
+    {
+        var service = new Mock<IStepUpReceiptService>(MockBehavior.Strict);
+        var sender = new ActualHandlerSender(service.Object);
+        var payload = Guid.NewGuid().ToString("N");
+        var error = await Assert.ThrowsAsync<NotSupportedException>(() => ((ISender)sender).Send(
+            new UnsupportedVoidCommand(payload), new CancellationToken(cancelled)));
+        Assert.Contains(nameof(UnsupportedVoidCommand), error.Message);
+        Assert.DoesNotContain(payload, error.Message);
+        Assert.Null(sender.ReturnedOutcome);
+        service.VerifyNoOtherCalls();
+    }
+
+    private sealed record UnsupportedVoidCommand(string SensitiveValue) : IRequest;
+
     private static StepUpController Controller(ISender sender) => new(sender)
     {
         ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
@@ -69,7 +87,9 @@ public sealed class StepUpVerificationControllerOutcomeTests
         public StepUpVerificationOutcome? ReturnedOutcome { get; private set; }
 
         Task ISender.Send<TRequest>(TRequest request, CancellationToken cancellationToken)
-            => throw new NotSupportedException("Void command is outside this test.");
+            => throw new NotSupportedException(
+                $"Void command {(request is null ? "<null>" : request.GetType().Name)} is outside this test " +
+                $"(cancellation requested: {cancellationToken.IsCancellationRequested}).");
 
         public async Task<object?> Send(object request, CancellationToken cancellationToken = default)
         {
