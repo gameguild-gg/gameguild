@@ -206,6 +206,32 @@ jobs:
         run: pnpm --filter @game-guild/client exec vitest run tests/plugins/metrics-full.test.ts --maxWorkers=1
       - name: Typecheck client metrics correlation contracts
         run: pnpm --filter @game-guild/client exec tsc --noEmit --project tests/plugins/tsconfig.metrics.json
+      - name: Test Lexical surface regressions
+        id: lexical-surface-tests
+        env:
+          CANDIDATE_HEAD: ${{ needs.classify.outputs.headSha }}
+        run: |
+          set -euo pipefail
+          test -n "$CANDIDATE_HEAD"
+          mkdir -p artifacts/test-results/lexical-surface
+          printf '%s\n' "$CANDIDATE_HEAD" > artifacts/test-results/lexical-surface/head.txt
+          git rev-parse HEAD > artifacts/test-results/lexical-surface/checkout.txt
+          git rev-parse 'HEAD^{tree}' > artifacts/test-results/lexical-surface/tree.txt
+          git --no-optional-locks diff --quiet HEAD --
+          git ls-files -z -- packages/features/lexical-surface package.json pnpm-lock.yaml pnpm-workspace.yaml .pnpmfile.cjs | \
+            xargs -0 sha256sum > artifacts/test-results/lexical-surface/source-before.sha256
+          pnpm --filter @game-guild/lexical-surface exec vitest run --maxWorkers=1 --reporter=json \
+            --outputFile="$GITHUB_WORKSPACE/artifacts/test-results/lexical-surface/vitest.json" \
+            2>&1 | tee artifacts/test-results/lexical-surface/test.log
+          sha256sum --check artifacts/test-results/lexical-surface/source-before.sha256 > artifacts/test-results/lexical-surface/source-after.txt
+          git --no-optional-locks diff --quiet HEAD --
+      - name: Upload Lexical surface regression evidence
+        if: ${{ always() && steps.lexical-surface-tests.outcome != 'skipped' && steps.lexical-surface-tests.outcome != '' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: lexical-surface-${{ needs.classify.outputs.headSha }}
+          path: artifacts/test-results/lexical-surface
+          if-no-files-found: error
       - name: Test delivered WalletConnect runtime
         run: pnpm --filter @game-guild/web3 exec vitest run src/adapters/walletconnect.runtime.test.ts src/adapters/walletconnect.test.ts --maxWorkers=1
       - name: Acquire verified Toolchain release for Web
@@ -303,15 +329,6 @@ jobs:
           bash scripts/ci/run-affected-dotnet-tests.sh
           --base "${{ needs.classify.outputs.baseSha }}"
           --head "${{ needs.classify.outputs.headSha }}"
-      - name: Verify mandatory identity and host security suites
-        shell: bash
-        run: |
-          for TEST_PROJECT in GameGuild.Identity.Authentication.UnitTests GameGuild.Identity.Authorization.UnitTests GameGuild.API.UnitTests; do
-            dotnet test "apps/api/tests/${TEST_PROJECT}/${TEST_PROJECT}.csproj" \
-              -c Release --nologo -p:TreatWarningsAsErrors=true \
-              --blame-hang-timeout 5m --logger "trx;LogFileName=${TEST_PROJECT}.trx" \
-              --results-directory "artifacts/test-results/affected-api/mandatory-security/${TEST_PROJECT}"
-          done
       - name: Upload affected API test evidence
         if: always()
         uses: ./.github/actions/upload-required-artifact
@@ -342,14 +359,44 @@ jobs:
           name: full-application-openapi-${{ github.event.pull_request.head.sha }}
           path: artifacts/test-results/full-application-openapi
 
+  api-security:
+    name: API mandatory security
+    needs: [runner-pool, classify]
+    if: needs.classify.outputs.api == 'true'
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
+    # Keep the complete mandatory repeat independent of the broad API suite so
+    # both finish within the existing per-job bound, without dropping coverage.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-dotnet
+      - name: Verify mandatory identity and host security suites
+        shell: bash
+        run: |
+          for TEST_PROJECT in GameGuild.Identity.Authentication.UnitTests GameGuild.Identity.Authorization.UnitTests GameGuild.API.UnitTests; do
+            dotnet test "apps/api/tests/${TEST_PROJECT}/${TEST_PROJECT}.csproj" \
+              -c Release --nologo -p:TreatWarningsAsErrors=true \
+              --blame-hang-timeout 5m --logger "trx;LogFileName=${TEST_PROJECT}.trx" \
+              --results-directory "artifacts/test-results/affected-api/mandatory-security/${TEST_PROJECT}"
+          done
+      - name: Upload mandatory API security evidence
+        if: always()
+        uses: ./.github/actions/upload-required-artifact
+        with:
+          name: mandatory-api-security-${{ github.event.pull_request.head.sha }}
+          path: artifacts/test-results/affected-api/mandatory-security
+
   testing-lab:
     name: Testing Lab critical flow
-    needs: [runner-pool, classify, web, api]
+    needs: [runner-pool, classify, web, api, api-security]
     if: >-
       always() &&
       needs.classify.outputs.testingLab == 'true' &&
       (needs.web.result == 'success' || needs.web.result == 'skipped') &&
-      (needs.api.result == 'success' || needs.api.result == 'skipped')
+      (needs.api.result == 'success' || needs.api.result == 'skipped') &&
+      (needs.api-security.result == 'success' || needs.api-security.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -672,6 +719,7 @@ jobs:
         repository-policy,
         web,
         api,
+        api-security,
         testing-lab,
         openapi,
         migration,
@@ -694,6 +742,7 @@ jobs:
           WEB: ${{ needs.web.result }}
           WEB_SELECTED: ${{ needs.classify.outputs.web }}
           API: ${{ needs.api.result }}
+          API_SECURITY: ${{ needs.api-security.result }}
           API_SELECTED: ${{ needs.classify.outputs.api }}
           TESTING_LAB: ${{ needs.testing-lab.result }}
           OPENAPI: ${{ needs.openapi.result }}
@@ -712,6 +761,7 @@ jobs:
             'repository-policy': process.env.REPOSITORY_POLICY,
             web: process.env.WEB,
             api: process.env.API,
+            'api-security': process.env.API_SECURITY,
             'testing-lab': process.env.TESTING_LAB,
             openapi: process.env.OPENAPI,
             migration: process.env.MIGRATION,
@@ -739,6 +789,14 @@ jobs:
           }
           if (gates.api === 'skipped' && process.env.API_SELECTED !== 'false') {
             failed.push('api=skipped');
+          }
+          // The separate mandatory security repeat cannot disappear or report
+          // an unknown conclusion. It is skippable only when API was deselected.
+          const apiSecurity = gates['api-security'];
+          if (apiSecurity !== 'success' && !(apiSecurity === 'skipped' && process.env.API_SELECTED === 'false')) {
+            if (!failed.some(item => item.startsWith('api-security='))) {
+              failed.push(`api-security=${apiSecurity}`);
+            }
           }
           if (gates['secret-scan'] !== 'success' && !failed.some(item => item.startsWith('secret-scan='))) {
             failed.push(`secret-scan=${gates['secret-scan']}`);
