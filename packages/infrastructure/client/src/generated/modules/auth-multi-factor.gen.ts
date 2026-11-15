@@ -443,7 +443,7 @@ export class AuthMultiFactorModule {
   /**
    * Send a fresh SMS sign-in code to the enrolled phone
    *
-   * Sends a code to the server-resolved enrolled phone using an active first-factor MFA continuation. Codes are bound to that continuation and throttled per account.
+   * Sends a fresh verification code to the enrolled phone before MFA verification. Generic failure payload; throttled to one code per minute per user.
    */
   async postAuthMfaSmsChallenge(
     body: Types.IdentityAuthenticationSmsMfaChallengeInput,
@@ -501,7 +501,7 @@ export class AuthMultiFactorModule {
   /**
    * Initiate SMS-based MFA setup
    *
-   * Re-verifies the authenticated account password before sending an SMS enrollment proof to the requested phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.
+   * Initiates SMS-based MFA setup by sending a verification code to the provided phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.
    */
   async postAuthMfaSmsSetup(body: Types.IdentityAuthenticationSmsMfaSetupInput): Promise<Result<Types.IdentityAuthenticationSmsMfaSetupOutput, ApiError>> {
     const url = '/v1/auth/mfa/sms:setup';

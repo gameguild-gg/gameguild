@@ -6695,7 +6695,7 @@ export const getAdminEconomyComplianceTrustSafetyAppealsEndpoint = {
  * appeals console actually create rows — assign/decide manage an appeal after it exists.
  */
 export interface PostAdminEconomyComplianceTrustSafetyAppealsInput {
-  body?: Types.APIControllersSubmitTrustSafetyAppealInput;
+  body: Types.APIControllersSubmitTrustSafetyAppealInput;
 }
 export type PostAdminEconomyComplianceTrustSafetyAppealsOutput = Types.TrustSafetyTrustSafetyAppeal;
 export const postAdminEconomyComplianceTrustSafetyAppealsEndpoint = {
@@ -20219,7 +20219,7 @@ export const deleteAuthExternalLoginsEndpoint = {
  */
 export interface PostAuthExternalLoginsLinkAuthorizeInput {
   provider: string;
-  body?: Types.IdentityAuthenticationDiscordLinkAuthorizeInput;
+  body: Types.IdentityAuthenticationDiscordLinkAuthorizeInput;
 }
 export type PostAuthExternalLoginsLinkAuthorizeOutput = Types.IdentityAuthenticationExternalLoginLinkAuthorizeOutput;
 export const postAuthExternalLoginsLinkAuthorizeEndpoint = {
@@ -20237,7 +20237,7 @@ export const postAuthExternalLoginsLinkAuthorizeEndpoint = {
  */
 export interface PostAuthExternalLoginsLinkCallbackInput {
   provider: string;
-  body?: Types.IdentityAuthenticationDiscordLinkCallbackInput;
+  body: Types.IdentityAuthenticationDiscordLinkCallbackInput;
 }
 export type PostAuthExternalLoginsLinkCallbackOutput = void;
 export const postAuthExternalLoginsLinkCallbackEndpoint = {
@@ -20772,7 +20772,7 @@ export const postAuthMfaSignInCompleteEndpoint = {
 /**
  * Send a fresh SMS sign-in code to the enrolled phone
  *
- * Sends a code to the server-resolved enrolled phone using an active first-factor MFA continuation. Codes are bound to that continuation and throttled per account.
+ * Sends a fresh verification code to the enrolled phone before MFA verification. Generic failure payload; throttled to one code per minute per user.
  */
 export interface PostAuthMfaSmsChallengeInput {
   body: Types.IdentityAuthenticationSmsMfaChallengeInput;
@@ -20806,7 +20806,7 @@ export const postAuthMfaSmsCompleteEndpoint = {
 /**
  * Initiate SMS-based MFA setup
  *
- * Re-verifies the authenticated account password before sending an SMS enrollment proof to the requested phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.
+ * Initiates SMS-based MFA setup by sending a verification code to the provided phone number. Delivery rides the SMS notification channel; codes are six digits, single-use, and expire in ten minutes.
  */
 export interface PostAuthMfaSmsSetupInput {
   body: Types.IdentityAuthenticationSmsMfaSetupInput;
@@ -21871,10 +21871,10 @@ export const getAuthTrustedDevicesEndpoint = {
  * Trust the current device
  *
  * Trusting a device is a security-sensitive grant, so it requires fresh verification
- * (issues #1144 and #1191). A request without a receipt returns HTTP 403 with a persisted
- * challenge, its server-derived operation binding, expiry, and available supported factors.
- * Verify the challenge with an enrolled TOTP, backup code, or active WebAuthn credential,
- * then retry the same device name with the returned receipt as `stepUpReceipt`.
+ * (issue #1144): create a step-up challenge (POST /v1/auth/step-up/challenges) with
+ * operation type "trust-device", target reference "current-session", and payload hash
+ * SHA-256 of the trimmed device name; verify it with any MFA method and pass the
+ * returned receipt as `stepUpReceipt`.
  */
 export interface PostAuthTrustedDevicesInput {
   body: Types.IdentityAuthenticationTrustDeviceInput;
