@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild;
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Finance.Economy.Ledger;
 using GameGuild.Finance.Economy.Risk;
 using Microsoft.EntityFrameworkCore;
@@ -911,10 +912,10 @@ public sealed class DurableAdminWithdrawalWorkflowTests
 
     private sealed class RecordingDispatchOutbox : IAdminWithdrawalDispatchOutboxWriter
     {
-        public List<AdminWithdrawalDispatchOutboxRow> Rows { get; } = [];
+        public List<EconomyOutboxRow> Rows { get; } = [];
 
         public Task AddAsync(
-            AdminWithdrawalDispatchOutboxRow row,
+            EconomyOutboxRow row,
             CancellationToken cancellationToken = default)
         {
             Rows.Add(row);

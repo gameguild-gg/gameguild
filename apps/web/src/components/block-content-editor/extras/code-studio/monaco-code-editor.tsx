@@ -11,7 +11,6 @@ import { getTypeScriptSupport, type MonacoRuntime } from "./monaco-runtime"
 import { LinkConfirmDialog } from "../dialogs/link-confirm-dialog"
 import type { MonacoOptionsPreferences } from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
 
-let pathCompletionRegistered = false
 let styleInjected = false
 
 // Re-export so existing imports under `monaco-code-editor` keep working.
@@ -125,10 +124,7 @@ export function MonacoCodeEditor({
       })
     }
 
-    if (!pathCompletionRegistered) {
-      registerPathCompletionProvider(monaco)
-      pathCompletionRegistered = true
-    }
+    registerPathCompletionProvider(monaco)
   }, [])
 
   const handleMount = (ed: editor.IStandaloneCodeEditor) => {

@@ -9,12 +9,15 @@ namespace GameGuild.Identity.Authorization;
 public sealed class PolicyDefinitionSeeder
 {
     /// <summary>
-    ///     Version 6 (issue #1287 U5): the three Users self policies' SelfOrPermission
-    ///     rules no longer require a granted <c>users:*:self</c> permission for
-    ///     self-actions — the evaluator treats an authenticated caller acting on their
-    ///     own resource as authorized. Descriptions updated to state the actual contract.
+    ///     Version 7 (issue #1319 G2): the <c>achievements:*</c> permission keys became typed,
+    ///     registry-discovered permissions granted to administrative tenant roles by the
+    ///     role-permission providers — existing policy definitions refresh to the current
+    ///     canonical shape. Version 6 (issue #1287 U5): the three Users self policies'
+    ///     SelfOrPermission rules no longer require a granted <c>users:*:self</c> permission
+    ///     for self-actions — the evaluator treats an authenticated caller acting on their
+    ///     own resource as authorized.
     /// </summary>
-    public const long CurrentPolicyVersion = 6;
+    public const long CurrentPolicyVersion = 7;
 
     private readonly IPolicyDefinitionRepository _repository;
     private readonly ILogger<PolicyDefinitionSeeder> _logger;

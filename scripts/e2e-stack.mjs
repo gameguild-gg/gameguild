@@ -112,6 +112,7 @@ export async function startStackSupervisor() {
         DEV_FAST_WEB_BUNDLER: "turbopack",
         DEV_FAST_WEB_MAX_OLD_SPACE_SIZE_MB: E2E_WEB_HEAP_MB,
         GRADING_VALIDATION_E2E: "1",
+        Grading__AIReview__ControlledProviderEnabled: "true",
         NEXT_TELEMETRY_DISABLED: "1",
       },
     });

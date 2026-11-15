@@ -140,6 +140,13 @@ public sealed class PaymentsModelConfiguration : IModelConfiguration
         modelBuilder.ApplyConfiguration(new BankAccountVerificationConfiguration());
         modelBuilder.ApplyConfiguration(new RefundConfiguration());
 
+        // Financial ledger entries (issue #1184 G2): the configuration was complete but was
+        // never applied, so no table existed while the registered FinancialLedgerRepository
+        // and its command/query handlers kept being written against it. Materializing the
+        // entity gives that surface durable storage (the RevenueEvent.LedgerEntry navigation
+        // stays ignored below — the link remains the LedgerEntryId column).
+        modelBuilder.ApplyConfiguration(new FinancialLedgerEntryConfiguration());
+
         // Dispute persistence (issue #419): register the existing dispute entities into the
         // production model so the dispute HTTP surface and gateway webhook reconciliation have
         // durable storage. Enum-to-string conversions keep the columns auditable.

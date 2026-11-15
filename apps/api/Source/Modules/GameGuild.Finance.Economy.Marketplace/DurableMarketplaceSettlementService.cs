@@ -231,12 +231,13 @@ public sealed class DurableMarketplaceSettlementService : IDurableMarketplaceSet
         bool duplicate,
         CancellationToken cancellationToken)
     {
-        var legs = await _db.Set<MarketplaceSettlementLegRow>()
+        var legs = await _db.Set<MarketplaceValueLegRow>()
             .AsNoTracking()
-            .Where(leg => leg.SettlementId == row.Id)
+            .Where(leg => leg.LegKind == MarketplaceValueLegKind.Settlement &&
+                          leg.SettlementId == row.Id)
             .OrderBy(leg => leg.Currency)
             .Select(leg => new MarketplacePriceLegSnapshot(
-                leg.Currency, leg.Units, leg.SellerUnits, leg.PlatformFeeUnits))
+                leg.Currency, leg.Units, leg.SellerUnits!.Value, leg.PlatformFeeUnits!.Value))
             .ToArrayAsync(cancellationToken);
         return new DurableMarketplaceSettlementResult(
             row.Id,

@@ -146,8 +146,9 @@ public sealed class PostgreSqlEconomyLedgerQueryReader : IEconomyLedgerQueryRead
             throw new ArgumentOutOfRangeException(nameof(generation));
         }
 
-        var rows = await _db.Set<EconomyProjectionGenerationApprovalRow>().AsNoTracking()
-            .Where(item => item.Generation == generation)
+        var rows = await _db.Set<EconomyApprovalRow>().AsNoTracking()
+            .Where(item => item.ApprovalKind == EconomyApprovalKind.ProjectionGeneration &&
+                           item.Generation == generation)
             .OrderBy(item => item.ApprovedAt)
             .ThenBy(item => item.Id)
             .ToArrayAsync(cancellationToken);

@@ -66,7 +66,7 @@ flowchart TD
         P3 -->|"ready"| P5(["1.5 CreatePostEndpointCommand - raw content L155-161"])
         P2 -->|"no"| P5
         P5 --> P6(["1.6 RebindAssetParentCommand L166-173"])
-        P7(["1.7 Visibility check on read - own or Public or Followers-and-following"]) 
+        P7(["1.7 Visibility check on read - own or Public or Followers-and-following"])
         P8(["1.8 Soft delete - DeletedAt L204"])
     end
     subgraph STORES["TB3 stores"]

@@ -25,7 +25,7 @@ public static class InfrastructureLayerOptionsBuilder
     /// </summary>
     public static InfrastructureLayerOptions Create(IConfiguration configuration)
     {
-        return OptionBuilderUtilities.CreateAndBind(configuration, "InfrastructureLayer", CreateDefault);
+        return OptionBuilderUtilities.CreateAndBind(configuration, InfrastructureLayerOptions.SectionName, CreateDefault);
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public static class InfrastructureLayerOptionsBuilder
     {
         return OptionBuilderUtilities.CreateBindAndValidate(
             configuration,
-            "InfrastructureLayer",
+            InfrastructureLayerOptions.SectionName,
             CreateDefault,
             options => options.Validate());
     }

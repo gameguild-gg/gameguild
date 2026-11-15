@@ -13,9 +13,9 @@ public class FinancialLedgerEntryConfiguration : IEntityTypeConfiguration<Financ
         // Configure table with constraints for EF Core 9.0
         builder.ToTable(tb =>
             {
-                tb.HasCheckConstraint("CK_FinancialLedgerEntry_DebitAccount_NotEmpty", "LENGTH(debit_account) > 0");  
-                tb.HasCheckConstraint("CK_FinancialLedgerEntry_CreditAccount_NotEmpty", "LENGTH(credit_account) > 0");
-                tb.HasCheckConstraint("CK_FinancialLedgerEntry_Amount_Positive", "amount > 0");
+                tb.HasCheckConstraint("CK_FinancialLedgerEntry_DebitAccount_NotEmpty", "LENGTH(\"DebitAccount\") > 0");
+                tb.HasCheckConstraint("CK_FinancialLedgerEntry_CreditAccount_NotEmpty", "LENGTH(\"CreditAccount\") > 0");
+                tb.HasCheckConstraint("CK_FinancialLedgerEntry_Amount_Positive", "\"Amount\" > 0");
             }
         );
 

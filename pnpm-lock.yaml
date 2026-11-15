@@ -132,9 +132,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@codingame/monaco-vscode-files-service-override':
-        specifier: 38.0.4
-        version: 38.0.4
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -513,9 +510,6 @@ importers:
       vega-themes:
         specifier: ^3.0.0
         version: 3.0.0(vega-lite@6.5.0(vega@6.4.0))(vega@6.4.0)
-      vscode-uri:
-        specifier: ^3.2.0
-        version: 3.2.0
       wasmoon:
         specifier: ^1.16.0
         version: 1.16.0
@@ -3624,30 +3618,6 @@ packages:
   '@clack/prompts@1.7.0':
     resolution: {integrity: sha512-y7/yvZ2TPAnR9+jnc00klvNNLkJiXFFrQA/hlLCcxA9a2A4zQIOimyFQ9XfwYKiGD1fb5GY8vbKIIgO8d5Tb2A==}
     engines: {node: '>= 20.12.0'}
-
-  '@codingame/monaco-vscode-api@38.0.4':
-    resolution: {integrity: sha512-RUkk2707MrDIQjQ3W2dny2u+X2kWumfb1rflXrtv5C5gcToKj28yX+lqZn1/vtUWVgaV4TgobW915xnYHRJDqQ==}
-
-  '@codingame/monaco-vscode-base-service-override@38.0.4':
-    resolution: {integrity: sha512-BQm+M1fULrakWQPKbV1cVT1s1UMzh29MD+bRzsWAN7JfuKZVD2R/Nb9PBOD/Ilr/qVmZE6q3m8yu+wWkAFmdXQ==}
-
-  '@codingame/monaco-vscode-environment-service-override@38.0.4':
-    resolution: {integrity: sha512-uDzjNDmcnC4Bay9KfH4B2OaRixzJk1KwQbs6gk9XYJDOs75HyGtqvj4QK53EbllAHJ0jGc/Ajw07979q8w2MQQ==}
-
-  '@codingame/monaco-vscode-extensions-service-override@38.0.4':
-    resolution: {integrity: sha512-P1bYDpFYZtRae2RigwGFYJtuT/J1vE6DUa56UdGM45rLJacRLIB0MhHPjXN9PXEmKiFCxbG0qN59nQi30hBDbQ==}
-
-  '@codingame/monaco-vscode-files-service-override@38.0.4':
-    resolution: {integrity: sha512-USnvOAVmkFCWpSHhXx/ctY4XNywXijO6imJe4HXuDI9iUArKmbr37dcW63Gn2f3G1t9k3vy0kVyhYhbZnjg5Mw==}
-
-  '@codingame/monaco-vscode-host-service-override@38.0.4':
-    resolution: {integrity: sha512-/qYMesybOKzy9qsXM/fEEUw9ltlFYjcm2Dr3yS966WQCo5rm6Nwen7H+1rVVbnrySDAR2XJj7tAJQVoFoAV/wg==}
-
-  '@codingame/monaco-vscode-layout-service-override@38.0.4':
-    resolution: {integrity: sha512-gaQGPIINCHYAREStQ3Q62CiG2pOxdoqRRYxozZI/UnSFiruW/HVy228mHIs0yusN5miRgEwQl4ZVsH3lqdnNCA==}
-
-  '@codingame/monaco-vscode-quickaccess-service-override@38.0.4':
-    resolution: {integrity: sha512-cmNWzYTVOtZFavGPGBQIruLV1hI6PdwWFwS8P0WgX9Ej5IWhMSHVHdpJKbThTxTUPq3eHtnJwVsTKEzNoTlXDA==}
 
   '@coinbase/cdp-sdk@1.60.0':
     resolution: {integrity: sha512-cW0KbfcFUJb0oedDiUfxC6kjPBsWxHds2vNFfgDfNYv/MFtbaJBvDqRxkXCUi0Np+9p5W/o6BLfL1yXuWNnQqg==}
@@ -8434,12 +8404,6 @@ packages:
   '@vitest/spy@5.0.5':
     resolution: {integrity: sha512-lwJRExuH417257Q5wv9QYugN9IMJkoxcrKrYxGPQkBzl7wlNpTUxD/5yNX4ESKVUIShKPgkGchYPFMWOOk0wzw==}
 
-  '@vscode/diff@0.0.2-7':
-    resolution: {integrity: sha512-zGPIPeUAmQs79u7g6FTLmhlXFIocUTtuHYmCV5lRZf6vlDk7SWEOpBlYY6SsShC3TB/lm2KxXMj9tP32YOPrhg==}
-
-  '@vscode/iconv-lite-umd@0.7.1':
-    resolution: {integrity: sha512-tK6k0DXFHW7q5+GGuGZO+phpAqpxO4WXl+BLc/8/uOk3RsM2ssAL3CQUQDb1TGfwltjsauhN6S4ghYZzs4sPFw==}
-
   '@wallet-standard/base@1.1.1':
     resolution: {integrity: sha512-gggIHTtxicF9XFMQ12DkfS6NAG92Ak795JeSA7f2whAQ6Y3AkMWWuCMxSZXG2NIPN42kEaZSNVjqMsJRaJRxMQ==}
     engines: {node: '>=22'}
@@ -11640,10 +11604,6 @@ packages:
   js-yaml@4.3.2:
     resolution: {integrity: sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TIRejdH3rhR4EZMGoNx3/TP3O+wzWuiTFl4sqbltzA==}
     hasBin: true
-
-  jschardet@3.1.4:
-    resolution: {integrity: sha512-/kmVISmrwVwtyYU40iQUOp3SUPk2dhNCMsZBQX0R1/jZ8maaXJ/oZIzUOiyOqcgtLnETFKYChbJ5iDC/eWmFHg==}
-    engines: {node: '>=0.1.90'}
 
   jsdom@20.0.3:
     resolution: {integrity: sha512-SYhBvTh89tTfCD/CRdSOm13mOBa42iTaTyfyEWBdKcGdPxPtLFBXuHR8XHb33YNYaP+lLbmSvBTsnoesCNJEsQ==}
@@ -15084,9 +15044,6 @@ packages:
   vscode-uri@3.0.8:
     resolution: {integrity: sha512-AyFQ0EVmsOZOlAnxoFOGOq1SQDWAB7C6aqMGS23svWAllfOaxbuFvcT8D1i8z3Gyn8fraVeZNNmN6e9bxxXkKw==}
 
-  vscode-uri@3.2.0:
-    resolution: {integrity: sha512-m2gXo3bn0G1kT9InzMf07fTbqMbGtyckj3bH5ktLO+1Ssv+yiATZ4dhwaQv9UZWxJh6E9IFGnQyjgWVDWVBDrg==}
-
   w3c-xmlserializer@4.0.0:
     resolution: {integrity: sha512-d+BFHzbiCx6zGfz0HyQ6Rg69w9k19nviJspaj4yNscGjrHu94sVP+aRm75yEbCh+r2/yR+7q6hux9LVtbuTGBw==}
     engines: {node: '>=14'}
@@ -17678,50 +17635,6 @@ snapshots:
       fast-string-width: 3.0.2
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
-
-  '@codingame/monaco-vscode-api@38.0.4':
-    dependencies:
-      '@codingame/monaco-vscode-base-service-override': 38.0.4
-      '@codingame/monaco-vscode-environment-service-override': 38.0.4
-      '@codingame/monaco-vscode-extensions-service-override': 38.0.4
-      '@codingame/monaco-vscode-files-service-override': 38.0.4
-      '@codingame/monaco-vscode-host-service-override': 38.0.4
-      '@codingame/monaco-vscode-layout-service-override': 38.0.4
-      '@codingame/monaco-vscode-quickaccess-service-override': 38.0.4
-      '@vscode/diff': 0.0.2-7
-      '@vscode/iconv-lite-umd': 0.7.1
-      dompurify: 3.4.17
-      jschardet: 3.1.4
-      marked: 14.0.0
-
-  '@codingame/monaco-vscode-base-service-override@38.0.4':
-    dependencies:
-      '@codingame/monaco-vscode-api': 38.0.4
-
-  '@codingame/monaco-vscode-environment-service-override@38.0.4':
-    dependencies:
-      '@codingame/monaco-vscode-api': 38.0.4
-
-  '@codingame/monaco-vscode-extensions-service-override@38.0.4':
-    dependencies:
-      '@codingame/monaco-vscode-api': 38.0.4
-      '@codingame/monaco-vscode-files-service-override': 38.0.4
-
-  '@codingame/monaco-vscode-files-service-override@38.0.4':
-    dependencies:
-      '@codingame/monaco-vscode-api': 38.0.4
-
-  '@codingame/monaco-vscode-host-service-override@38.0.4':
-    dependencies:
-      '@codingame/monaco-vscode-api': 38.0.4
-
-  '@codingame/monaco-vscode-layout-service-override@38.0.4':
-    dependencies:
-      '@codingame/monaco-vscode-api': 38.0.4
-
-  '@codingame/monaco-vscode-quickaccess-service-override@38.0.4':
-    dependencies:
-      '@codingame/monaco-vscode-api': 38.0.4
 
   '@coinbase/cdp-sdk@1.60.0(typescript@6.0.3)':
     dependencies:
@@ -22792,10 +22705,6 @@ snapshots:
 
   '@vitest/spy@5.0.5': {}
 
-  '@vscode/diff@0.0.2-7': {}
-
-  '@vscode/iconv-lite-umd@0.7.1': {}
-
   '@wallet-standard/base@1.1.1': {}
 
   '@wallet-standard/wallet@1.1.0':
@@ -27348,8 +27257,6 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  jschardet@3.1.4: {}
-
   jsdom@20.0.3:
     dependencies:
       abab: 2.0.6
@@ -31601,8 +31508,6 @@ snapshots:
       vscode-languageserver-protocol: 3.17.5
 
   vscode-uri@3.0.8: {}
-
-  vscode-uri@3.2.0: {}
 
   w3c-xmlserializer@4.0.0:
     dependencies:

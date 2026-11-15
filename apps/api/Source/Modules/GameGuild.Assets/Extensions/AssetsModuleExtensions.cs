@@ -34,6 +34,15 @@ public static class AssetsModuleExtensions
             configuration.GetSection(AssetAccessOptions.SectionName));
         services.Configure<AssetTextExtractionOptions>(
             configuration.GetSection(AssetTextExtractionOptions.SectionName));
+        // Issue #1184 G5: DeduplicationOptions/TransformationOptions declared SectionName
+        // constants but nothing bound them, so DeduplicationService and TransformationValidator
+        // read permanent defaults through IOptions<T>. Bind the declared sections (absent
+        // sections keep the defaults; TransformationLimitsOptions remains bound separately as
+        // the backward-compatible alias).
+        services.Configure<global::GameGuild.Assets.Deduplication.DeduplicationOptions>(
+            configuration.GetSection(global::GameGuild.Assets.Deduplication.DeduplicationOptions.SectionName));
+        services.Configure<global::GameGuild.Assets.Transformation.TransformationOptions>(
+            configuration.GetSection(global::GameGuild.Assets.Transformation.TransformationOptions.SectionName));
 
         // Security Options (Threat Mitigations)
         services.Configure<AssetRateLimitOptions>(

@@ -398,6 +398,17 @@ jobs:
       - uses: ./.github/actions/setup-dotnet
       - name: Verify generated OpenAPI client
         run: bash scripts/ci/verify-openapi-surface.sh
+      - name: Upload compact OpenAPI contract and generated source
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: openapi-contract-${{ github.event.pull_request.head.sha }}
+          path: |
+            artifacts/test-results/openapi/openapi.raw.json
+            artifacts/test-results/openapi/openapi.json
+            artifacts/test-results/openapi/source-identity.txt
+            artifacts/test-results/openapi/client-source
+          if-no-files-found: error
       - name: Upload OpenAPI evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

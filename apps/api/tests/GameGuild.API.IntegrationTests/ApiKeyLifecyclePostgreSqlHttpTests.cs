@@ -1,14 +1,24 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using GameGuild.API.Database;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Compliance.Audit;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.API.IntegrationTests;
 
@@ -53,6 +63,29 @@ public sealed partial class ApiKeyPolicyPostgreSqlHttpTests
     }
 
     [Fact]
+    public async Task ApiKeyAloneCannotMintAnotherCredentialWithoutAUserSessionAndVerification()
+    {
+        using var factory = CreateFactory();
+        var owner = await Seed(factory.Services, "valid", ApiKeyScopes.ManageApiKeys);
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-API-Key", owner.Plaintext);
+        client.DefaultRequestHeaders.Add("X-Tenant-Id", owner.TenantId.ToString());
+        using var response = await client.PostAsJsonAsync(Route, new
+        {
+            name = "Synthetic key-only mint refusal",
+            scopes = new[] { ApiKeyScopes.ManageApiKeys },
+            userId = owner.OwnerId,
+            tenantId = owner.TenantId
+        });
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        await using var read = factory.Services.CreateAsyncScope();
+        var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(1, await db.Set<ApiKey>().CountAsync(row => row.UserId == owner.OwnerId));
+        Assert.False(await db.Set<AuditLog>().AnyAsync(row =>
+            row.UserId == owner.OwnerId && row.ActionType == ApiKeyAuditActions.Created));
+    }
+
+    [Fact]
     public async Task ActualHttpLifecyclePreservesOwnershipHashingRevocationAndSafeAudit()
     {
         using var factory = CreateFactory();
@@ -60,12 +93,46 @@ public sealed partial class ApiKeyPolicyPostgreSqlHttpTests
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-API-Key", owner.Plaintext);
         client.DefaultRequestHeaders.Add("X-Tenant-Id", owner.TenantId.ToString());
-        using var creation = await client.PostAsJsonAsync(Route, new
+
+        // Credential issuance requires a real user/session and a receipt bound to this intent.
+        // The configured ApiKey policy remains responsible for the management operations below.
+        using var ownerFactory = CreateCredentialOwnerFactory();
+        var (accessToken, backupCode) = await EnrollCredentialOwnerAsync(ownerFactory, owner);
+        using var ownerClient = ownerFactory.CreateClient();
+        ownerClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        ownerClient.DefaultRequestHeaders.Add("X-Tenant-Id", owner.TenantId.ToString());
+        var intent = new
         {
             name = "Synthetic HTTP lifecycle",
             scopes = new[] { ApiKeyScopes.ManageApiKeys },
             userId = Guid.NewGuid(),
             tenantId = Guid.NewGuid()
+        };
+        using var demandResponse = await ownerClient.PostAsJsonAsync(Route, intent);
+        Assert.Equal(HttpStatusCode.Forbidden, demandResponse.StatusCode);
+        var demand = await demandResponse.Content.ReadFromJsonAsync<StepUpAuthenticationRequiredResponse>(CredentialOwnerJsonOptions);
+        Assert.NotNull(demand);
+        Assert.True(demand.StepUpRequired);
+        Assert.NotEqual(Guid.Empty, demand.ChallengeId);
+        await using (var beforeVerification = ownerFactory.Services.CreateAsyncScope())
+        {
+            var pendingDb = beforeVerification.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            Assert.Equal(1, await pendingDb.Set<ApiKey>().CountAsync(row => row.UserId == owner.OwnerId));
+        }
+        using var verification = await ownerClient.PostAsJsonAsync(
+            $"/v1/auth/step-up/challenges/{demand.ChallengeId}:verify",
+            new VerifyStepUpChallengeRequest(MfaMethod.BackupCode, backupCode), CredentialOwnerJsonOptions);
+        Assert.Equal(HttpStatusCode.OK, verification.StatusCode);
+        var receipt = await verification.Content.ReadFromJsonAsync<StepUpReceiptResponse>(CredentialOwnerJsonOptions);
+        Assert.NotNull(receipt);
+        Assert.False(string.IsNullOrWhiteSpace(receipt.Receipt));
+        using var creation = await ownerClient.PostAsJsonAsync(Route, new
+        {
+            intent.name,
+            intent.scopes,
+            intent.userId,
+            intent.tenantId,
+            stepUpReceipt = receipt.Receipt
         });
         Assert.Equal(HttpStatusCode.Created, creation.StatusCode);
         var created = (await creation.Content.ReadFromJsonAsync<CreateApiKeyResponse>())!;
@@ -154,5 +221,68 @@ public sealed partial class ApiKeyPolicyPostgreSqlHttpTests
         Assert.Null(key.RevokedAt);
         Assert.Null(key.RotationGraceEndsAt);
         Assert.False(await db.Set<ApiKey>().AnyAsync(row => row.ReplacesKeyId == foreign.KeyId));
+    }
+
+    private static readonly JsonSerializerOptions CredentialOwnerJsonOptions = new(JsonSerializerDefaults.Web)
+    { Converters = { new JsonStringEnumConverter() } };
+
+    private WebApplicationFactory<Program> CreateCredentialOwnerFactory() =>
+        fixture.CreateFactory(builder => builder.ConfigureTestServices(services =>
+        {
+            services.PostConfigure<AuthenticationOptions>(options =>
+            {
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            });
+            services.PostConfigure<MfaOptions>(options =>
+            {
+                options.Enabled = true;
+                options.RequireMfaByDefault = false;
+            });
+            services.RemoveAll<MfaOptions>();
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<MfaOptions>>().Value);
+        }));
+
+    private static async Task<(string AccessToken, string BackupCode)> EnrollCredentialOwnerAsync(
+        WebApplicationFactory<Program> factory, SeededKey owner)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var provider = scope.ServiceProvider;
+        var schemes = provider.GetRequiredService<IAuthenticationSchemeProvider>();
+        Assert.Equal(typeof(JwtBearerHandler),
+            (await schemes.GetSchemeAsync(JwtBearerDefaults.AuthenticationScheme))!.HandlerType);
+        Assert.Equal(JwtBearerDefaults.AuthenticationScheme,
+            (await schemes.GetDefaultAuthenticateSchemeAsync())!.Name);
+        var db = provider.GetRequiredService<ApplicationDbContext>();
+        var user = await db.Set<User>().SingleAsync(row => row.Id == owner.OwnerId);
+        var now = DateTime.UtcNow;
+        var fingerprint = Guid.NewGuid().ToString("N");
+        var session = new UserSession
+        {
+            Id = Guid.NewGuid(), UserId = user.Id, DeviceFingerprint = fingerprint, DeviceInfo = "{}",
+            RefreshToken = new RefreshTokenHasher().HashToken(Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))),
+            IpAddress = "127.0.0.1", UserAgent = "Synthetic API-key owner verification", IsActive = true,
+            CreatedAt = now.AddMinutes(-1), UpdatedAt = now, LastUsedAt = now, ExpiresAt = now.AddHours(1)
+        };
+        db.AddRange(session,
+            new TrustedDevice
+            {
+                Id = Guid.NewGuid(), UserId = user.Id, DeviceFingerprint = fingerprint,
+                DeviceName = "Synthetic previously trusted device", DeviceInfo = "{}", IsActive = true,
+                CreatedAt = now, UpdatedAt = now, TrustedAt = now, LastUsedAt = now, ExpiresAt = now.AddDays(1)
+            },
+            new UserMfaConfiguration
+            {
+                Id = Guid.NewGuid(), UserId = user.Id, IsEnabled = true, IsSetupComplete = true,
+                CreatedAt = now, UpdatedAt = now
+            });
+        await db.SaveChangesAsync();
+        var backupCode = Convert.ToHexString(RandomNumberGenerator.GetBytes(12));
+        await provider.GetRequiredService<IBackupCodeMfaService>()
+            .StoreBackupCodesForSetupAsync(user.Id, [backupCode]);
+        var accessToken = await provider.GetRequiredService<IJwtTokenService>().GenerateAccessTokenAsync(
+            user.Id, user.Email, [], owner.TenantId, user.TokenVersion, DateTimeOffset.UtcNow, session.Id);
+        return (accessToken, backupCode);
     }
 }

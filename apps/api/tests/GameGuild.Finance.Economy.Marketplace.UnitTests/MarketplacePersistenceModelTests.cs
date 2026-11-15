@@ -17,14 +17,13 @@ public sealed class MarketplacePersistenceModelTests
         entities.Select(entity => entity.GetTableName()).Should().BeEquivalentTo(
             "economy_marketplace_currency_policy_versions",
             "economy_marketplace_settlements",
-            "economy_marketplace_settlement_legs",
+            "economy_marketplace_value_legs",
             "economy_marketplace_funding_fragments",
             "economy_marketplace_settlement_credits",
             "economy_marketplace_refunds",
-            "economy_marketplace_refund_legs",
             "economy_marketplace_refund_debts",
             "economy_marketplace_events",
-            "economy_marketplace_outbox");
+            "economy_outbox");
 
         Entity(entities, "economy_marketplace_settlements").GetIndexes()
             .Should().Contain(index => index.IsUnique &&
@@ -32,10 +31,18 @@ public sealed class MarketplacePersistenceModelTests
         Entity(entities, "economy_marketplace_refunds").GetIndexes()
             .Should().Contain(index => index.IsUnique &&
                 index.Properties.Select(property => property.Name).SequenceEqual(new[] { "TenantId", "IdempotencyKey" }));
-        Entity(entities, "economy_marketplace_settlement_legs").GetCheckConstraints()
-            .Should().Contain(constraint => constraint.Name == "ck_economy_marketplace_settlement_legs_conservation");
-        Entity(entities, "economy_marketplace_refund_legs").GetIndexes()
-            .Should().Contain(index => !index.IsUnique &&
+        // #1092 Tier 1.6: settlement legs and refund legs merged behind LegKind.
+        Entity(entities, "economy_marketplace_value_legs").GetCheckConstraints()
+            .Should().Contain(constraint => constraint.Name == "ck_economy_marketplace_value_legs_conservation");
+        Entity(entities, "economy_marketplace_value_legs").GetIndexes()
+            .Should().Contain(index => index.IsUnique && index.GetFilter() == "\"LegKind\" = 1" &&
+                index.Properties.Select(property => property.Name)
+                    .SequenceEqual(new[] { "LegKind", "SettlementId", "Currency" }));
+        Entity(entities, "economy_marketplace_value_legs").GetIndexes()
+            .Should().Contain(index => index.IsUnique && index.GetFilter() == "\"LegKind\" = 2" &&
+                index.Properties.Select(property => property.Name).SequenceEqual(new[] { "RefundId", "Currency" }));
+        Entity(entities, "economy_marketplace_value_legs").GetIndexes()
+            .Should().Contain(index => !index.IsUnique && index.GetFilter() == "\"LegKind\" = 2" &&
                 index.Properties.Select(property => property.Name).SequenceEqual(new[] { "SettlementId", "Currency" }));
         Entity(entities, "economy_marketplace_refunds").GetCheckConstraints()
             .Should().Contain(constraint => constraint.Name == "ck_economy_marketplace_refunds_quantity");

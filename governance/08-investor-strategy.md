@@ -7,23 +7,23 @@
 | Angels | SAFE | equity (converts at next round) |
 | Pre-seed/Seed | SAFE or priced round | equity + pro-rata rights |
 
-Payouts to investors follow the quarterly profit-share cycle + annual mandate (see 07) — same rules as founders, pro-rata to economic rights from entry.
+Payouts to investors follow the quarterly profit-share cycle (see 07) — same rules as governors, pro-rata to economic rights from entry.
 
 ## Investor terms
 
-- Governance: full voting per share; consider vote-weight cap if any single investor > 20% of outstanding
+- Governance: voting per deal — **no standing cap; reviewed case-by-case per round** (flag for review if a single investor would exceed 20% of governance outstanding)
 - Economic: same quarterly payout rights as everyone, pro-rata from entry snapshot
 - Pro-rata rights to maintain % in subsequent rounds
 
 ## Reserve math (from 04)
 
-Investor pool 20% of total, released in tranches per round; unraised reserve returns to founders' unvested balance or treasury by vote — decide at incorporation.
+Investor pool 20% of total, released in tranches per round; unraised reserve returns to the company (treasury or cancelled) by vote — never to individual governors' balances.
 
 ## Dilution hygiene
 
 - Anti-dilution / pro-rata: standard legal docs
-- Founder vesting protects against dead equity
-- Keep option pool sized at raise time (10–15%), not inflated early
+- Governor vesting protects against dead equity
+- Option pool sized at raise time (10% baseline per 04), not inflated early
 
 ## Open questions
 

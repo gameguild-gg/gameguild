@@ -218,7 +218,7 @@ public sealed class MfaController(
     {
         ArgumentNullException.ThrowIfNull(body);
         var userId = GetCurrentUserId();
-        var result = await sender.Send(new StartSmsMfaEnrollmentCommand(userId, body.PhoneNumber), ct).ConfigureAwait(false);
+        var result = await sender.Send(new StartSmsMfaEnrollmentCommand(userId, body.PhoneNumber, body.Password), ct).ConfigureAwait(false);
 
         if (!result.Success)
         {
@@ -262,7 +262,7 @@ public sealed class MfaController(
     /// <summary>
     ///     Send a fresh SMS sign-in code to the enrolled phone
     /// </summary>
-    /// <param name="body">Identifier of the user requesting the challenge</param>
+    /// <param name="body">Opaque continuation from successful first-factor verification</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Challenge initiation result</returns>
     [AllowAnonymous]
@@ -274,7 +274,7 @@ public sealed class MfaController(
     public async Task<IActionResult> SendSmsChallenge([FromBody] SmsMfaChallengeRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
-        var result = await sender.Send(new SendSmsMfaChallengeCommand(body.UserId), ct).ConfigureAwait(false);
+        var result = await sender.Send(new SendSmsMfaChallengeCommand(body.MfaToken), ct).ConfigureAwait(false);
 
         if (!result.Success)
         {
@@ -639,7 +639,14 @@ public sealed record SmsMfaSetupRequest
     /// <summary>
     ///     Phone number to receive SMS codes
     /// </summary>
+    [AuditSensitive]
     public required string PhoneNumber { get; init; }
+
+    /// <summary>Current account password re-verification before changing MFA delivery.</summary>
+    [AuditSensitive]
+    public string Password { get; init; } = string.Empty;
+
+    public override string ToString() => nameof(SmsMfaSetupRequest);
 }
 
 /// <summary>
@@ -648,9 +655,12 @@ public sealed record SmsMfaSetupRequest
 public sealed record SmsMfaChallengeRequest
 {
     /// <summary>
-    ///     User identifier whose enrolled phone receives the code
+    ///     Opaque continuation returned after successful first-factor verification
     /// </summary>
-    public required Guid UserId { get; init; }
+    [AuditSensitive]
+    public string MfaToken { get; init; } = string.Empty;
+
+    public override string ToString() => nameof(SmsMfaChallengeRequest);
 }
 
 /// <summary>

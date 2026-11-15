@@ -56,7 +56,7 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
         Assert.Equal(HttpStatusCode.BadRequest, fabricated.StatusCode);
         var receipt = await VerifyAsync(client, demand.ChallengeId, account.BackupCode);
         using var created = await client.PostAsJsonAsync(Route, Intent(receipt.Receipt));
-        Assert.Equal(HttpStatusCode.OK, created.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         var result = await created.Content.ReadFromJsonAsync<CreateApiKeyResponse>();
         Assert.NotNull(result);
         Assert.False(string.IsNullOrWhiteSpace(result.ApiKey));
@@ -104,7 +104,7 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
             Assert.Empty(await db.Set<ApiKey>().Where(x => x.UserId == account.UserId || x.UserId == other.UserId).ToListAsync());
         }
         using var legitimate = await original.PostAsJsonAsync(Route, Intent(receipt.Receipt));
-        Assert.Equal(HttpStatusCode.OK, legitimate.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, legitimate.StatusCode);
     }
 
     [Theory]
@@ -188,7 +188,7 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
         }
         boundary.ActorId = null;
         using var retry = await client.PostAsJsonAsync(Route, Intent(receipt.Receipt));
-        Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, retry.StatusCode);
     }
 
     [Fact]
@@ -203,7 +203,7 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
             client.PostAsJsonAsync(Route, Intent(receipt.Receipt)));
         try
         {
-            Assert.Equal(1, responses.Count(x => x.StatusCode == HttpStatusCode.OK));
+            Assert.Equal(1, responses.Count(x => x.StatusCode == HttpStatusCode.Created));
             Assert.Equal(1, responses.Count(x => x.StatusCode == HttpStatusCode.BadRequest));
             await using var read = factory.Services.CreateAsyncScope();
             Assert.Single(await read.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<ApiKey>().Where(x => x.UserId == actor.UserId).ToListAsync());
@@ -228,7 +228,7 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
         using var document = JsonDocument.Parse(raw);
         var post = document.RootElement.GetProperty("paths").GetProperty(Route).GetProperty("post");
         Assert.True(post.GetProperty("requestBody").GetProperty("required").GetBoolean());
-        Assert.True(post.GetProperty("responses").TryGetProperty("200", out _));
+        Assert.True(post.GetProperty("responses").TryGetProperty("201", out _));
         foreach (var requiredRoute in new[] { "/api/v1/payments", "/api/v1/wallets:transfer", "/v1/users", "/v1/auth/trusted-devices" })
         {
             var requiredPost = document.RootElement.GetProperty("paths").GetProperty(requiredRoute).GetProperty("post");
@@ -252,15 +252,6 @@ public sealed class ApiKeyCreationStepUpPostgreSqlHttpTests(ApiPostgreSqlFixture
         if (!string.IsNullOrWhiteSpace(capture))
         {
             await File.WriteAllTextAsync(capture, raw);
-        }
-
-        // The trust-device step-up surface moved to the platform 423 responder (#1361) and its
-        // dedicated capture suite was retired; this same full-host capture also serves as the
-        // trusted-device surface evidence (identical host, identical swagger document).
-        var trustedCapture = Environment.GetEnvironmentVariable("GAMEGUILD_STEPUP_OPENAPI_CAPTURE");
-        if (!string.IsNullOrWhiteSpace(trustedCapture))
-        {
-            await File.WriteAllTextAsync(trustedCapture, raw);
         }
     }
 

@@ -203,6 +203,28 @@ public sealed record AIReviewProviderResponseV1(
     string ModelVersion,
     GradeResultV1 Result);
 
+public sealed record AIReviewProviderInvocationV1(
+    int SchemaVersion,
+    Guid TenantId,
+    Guid ActorId,
+    AIReviewProviderRequestV1 Request);
+
+public sealed record AIReviewProviderReadinessV1(
+    bool Available,
+    string? Code = null,
+    string? Message = null);
+
+public sealed record AIReviewProviderCapabilityV1(
+    string ProviderKey,
+    IReadOnlySet<string> PolicyVersions,
+    IReadOnlySet<ReviewExecutionContext> Contexts,
+    AIReviewProviderReadinessV1 Readiness);
+
+public interface IAIReviewProviderReadiness
+{
+    AIReviewProviderReadinessV1 GetReadiness();
+}
+
 /// <summary>
 /// Durable AI-review boundary. Implementations must treat RequestId as an
 /// idempotency key and return the same semantic response when it is retried.
@@ -215,12 +237,14 @@ public interface IAIReviewProvider
     IReadOnlySet<ReviewExecutionContext> Contexts { get; }
 
     ValueTask<AIReviewProviderResponseV1> ReviewAsync(
-        AIReviewProviderRequestV1 request,
+        AIReviewProviderInvocationV1 invocation,
         CancellationToken cancellationToken);
 }
 
 public interface IAIReviewProviderRegistry
 {
+    IReadOnlyList<AIReviewProviderCapabilityV1> Capabilities { get; }
+
     IAIReviewProvider Resolve(
         string providerKey,
         string policyVersion,

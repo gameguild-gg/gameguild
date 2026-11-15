@@ -24,6 +24,7 @@ import {
   type ReviewMethods,
 } from "@game-guild/grading";
 import { cache } from "react";
+import type { AIReviewProviderCapability } from "../assessment-grading-methods";
 import { resolveCourseId } from "./course";
 
 function isGuid(value: string): boolean {
@@ -120,6 +121,7 @@ export interface AssessmentAuthoringState {
   publishedMatchesDraft: boolean;
   prepare: AssessmentCapabilityState;
   publish: AssessmentCapabilityState;
+  aiReviewProviders: AIReviewProviderCapability[];
 }
 
 export interface CourseAssessments {

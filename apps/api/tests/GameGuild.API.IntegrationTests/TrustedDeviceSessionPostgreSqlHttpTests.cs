@@ -151,6 +151,9 @@ public sealed class TrustedDeviceSessionPostgreSqlHttpTests(ApiPostgreSqlFixture
         using var client = await SignedClientAsync(account, account.CurrentSessionId);
         using var response = await client.PostAsJsonAsync(TrustRoute, new { deviceName = "Unverified request" });
         Assert.Equal(HttpStatusCode.Locked, response.StatusCode);
+        using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal((int)HttpStatusCode.Locked, problem.RootElement.GetProperty("status").GetInt32());
+        Assert.True(problem.RootElement.GetProperty("stepUpRequired").GetBoolean());
         await AssertNoTrustAsync(account);
         await AssertSessionsUnchangedAsync(account);
     }
@@ -174,6 +177,9 @@ public sealed class TrustedDeviceSessionPostgreSqlHttpTests(ApiPostgreSqlFixture
         using var response = await client.PostAsJsonAsync(TrustRoute, new { deviceName, stepUpReceipt = receipt });
         // Issue #1191: a spent receipt is also the structured step-up trigger (423), not a 400.
         Assert.Equal(HttpStatusCode.Locked, response.StatusCode);
+        using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal((int)HttpStatusCode.Locked, problem.RootElement.GetProperty("status").GetInt32());
+        Assert.True(problem.RootElement.GetProperty("stepUpRequired").GetBoolean());
         await AssertNoTrustAsync(account);
     }
 

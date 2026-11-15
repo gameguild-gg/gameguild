@@ -224,13 +224,9 @@ public class LearningEventHandlerTests
         sut.Should().NotBeNull();
     }
 
-    [Fact]
-    public void SearchResultClickedHandler_CanBeInstantiated()
-    {
-        var sut = new SearchResultClickedHandler(
-            _mockContext, NullLogger<SearchResultClickedHandler>.Instance);
-        sut.Should().NotBeNull();
-    }
+    // SearchResultClickedHandler was removed in the #1184 G4 pass: the Discovery module's
+    // RecordSearchClickCommandHandler already persists the click on the search-history row,
+    // so the handler double-wrote the same update.
 
     [Fact]
     public void LearningProgressRecommendationRefreshHandler_CanBeInstantiated()

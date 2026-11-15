@@ -5,13 +5,20 @@ namespace GameGuild.Identity.Authentication;
 // ── SMS OTP factor (issue #244) ──────────────────────────────────────────────
 
 /// <summary>Starts SMS MFA enrollment by sending a verification code to the given phone.</summary>
-public sealed record StartSmsMfaEnrollmentCommand(Guid UserId, string PhoneNumber) : ICommand<SmsMfaChallengeResult>;
+public sealed record StartSmsMfaEnrollmentCommand(Guid UserId, [property: AuditSensitive] string PhoneNumber,
+    [property: AuditSensitive] string Password) : ICommand<SmsMfaChallengeResult>
+{
+    public override string ToString() => nameof(StartSmsMfaEnrollmentCommand);
+}
 
 /// <summary>Completes SMS MFA enrollment by verifying the code sent to the pending phone.</summary>
 public sealed record CompleteSmsMfaEnrollmentCommand(Guid UserId, string Code) : ICommand<MfaVerificationResult>;
 
 /// <summary>Sends a fresh SMS sign-in challenge to the user's enrolled phone (throttled).</summary>
-public sealed record SendSmsMfaChallengeCommand(Guid UserId) : ICommand<SmsMfaChallengeResult>;
+public sealed record SendSmsMfaChallengeCommand([property: AuditSensitive] string MfaToken) : ICommand<SmsMfaChallengeResult>
+{
+    public override string ToString() => nameof(SendSmsMfaChallengeCommand);
+}
 
 // ── Push approval factor, v1 contract (issue #259) ───────────────────────────
 
@@ -35,19 +42,24 @@ public sealed class SmsPushMfaCommandHandler(
     IMfaReverificationService? mfaReverification = null) :
     ICommandHandler<StartSmsMfaEnrollmentCommand, SmsMfaChallengeResult>,
     ICommandHandler<CompleteSmsMfaEnrollmentCommand, MfaVerificationResult>,
-    ICommandHandler<SendSmsMfaChallengeCommand, SmsMfaChallengeResult>,
     ICommandHandler<RegisterPushMfaDeviceCommand, bool>,
     ICommandHandler<IssuePushMfaChallengeCommand, PushMfaChallengeResult>,
     ICommandHandler<RespondPushMfaChallengeCommand, MfaVerificationResult>
 {
-    public Task<SmsMfaChallengeResult> Handle(StartSmsMfaEnrollmentCommand command, CancellationToken cancellationToken) =>
-        smsMfaService.StartEnrollmentAsync(command.UserId, command.PhoneNumber, cancellationToken);
+    public async Task<SmsMfaChallengeResult> Handle(StartSmsMfaEnrollmentCommand command, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (mfaReverification is null || !await mfaReverification.VerifyPasswordAsync(command.UserId, command.Password,
+                "sms-enrollment", cancellationToken).ConfigureAwait(false))
+        {
+            return new SmsMfaChallengeResult { Success = false, PhoneNumberMasked = string.Empty,
+                ExpiresInSeconds = 0, Message = "Password verification failed" };
+        }
+        return await smsMfaService.StartEnrollmentAsync(command.UserId, command.PhoneNumber, cancellationToken).ConfigureAwait(false);
+    }
 
     public Task<MfaVerificationResult> Handle(CompleteSmsMfaEnrollmentCommand command, CancellationToken cancellationToken) =>
         smsMfaService.CompleteEnrollmentAsync(command.UserId, command.Code, cancellationToken);
-
-    public Task<SmsMfaChallengeResult> Handle(SendSmsMfaChallengeCommand command, CancellationToken cancellationToken) =>
-        smsMfaService.SendChallengeAsync(command.UserId, cancellationToken);
 
     public async Task<bool> Handle(RegisterPushMfaDeviceCommand command, CancellationToken cancellationToken)
     {

@@ -107,12 +107,12 @@ public sealed class PostgreSqlFifoTransferGatewayTests
             .Should().Be(5);
         (await ScalarAsync<long>(connection, $"SELECT \"PurchasedHard\" FROM public.economy_wallet_balance_projections WHERE \"WalletId\" = '{destinationWallet}';"))
             .Should().Be(15);
-        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox_messages;"))
+        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox WHERE \"OutboxKind\" = 1;"))
             .Should().Be(1);
         var replay = gateway.Transfer(new PersistedFifoTransferRequest(command, authority));
         replay.IsDuplicate.Should().BeTrue();
         replay.JournalSequence.Should().Be(receipt.JournalSequence);
-        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox_messages;"))
+        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox WHERE \"OutboxKind\" = 1;"))
             .Should().Be(1);
         await ExecuteAsync(connection, "SET ROLE gameguild_economy_writer;");
 

@@ -28,7 +28,7 @@ public static class ResponseCachingOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Configured response caching options</returns>
-    public static ResponseCachingOptions Create(IConfiguration configuration, string sectionName = "ResponseCaching")
+    public static ResponseCachingOptions Create(IConfiguration configuration, string sectionName = ResponseCachingOptions.SectionName)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -74,7 +74,7 @@ public static class ResponseCachingOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Validated response caching options</returns>
-    public static ResponseCachingOptions Build(IConfiguration configuration, string sectionName = "ResponseCaching")
+    public static ResponseCachingOptions Build(IConfiguration configuration, string sectionName = ResponseCachingOptions.SectionName)
     {
         var options = Create(configuration, sectionName);
         Validate(options);

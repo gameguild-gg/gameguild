@@ -34,7 +34,7 @@ public sealed class DurableAdRewardReportServiceTests
         (await fixture.Context.Set<AdRewardSessionRow>().SingleAsync()).State
             .Should().Be(DurableAdRewardSessionState.Verified);
         (await fixture.Context.Set<AdRewardProviderBatchClaimRow>().CountAsync()).Should().Be(1);
-        (await fixture.Context.Set<AdRewardSessionEventRow>().SingleAsync()).State
+        (await fixture.Context.Set<AdRewardTimelineRow>().SingleAsync()).State
             .Should().Be(DurableAdRewardSessionState.Verified);
 
         fixture.Context.ChangeTracker.Clear();

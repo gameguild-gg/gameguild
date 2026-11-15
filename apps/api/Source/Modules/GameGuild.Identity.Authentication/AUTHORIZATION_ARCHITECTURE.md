@@ -3351,7 +3351,7 @@ inside the same command transaction as key persistence. Expired, mismatched or
 reused receipts cannot issue a key. Receipt-store and persistence failures
 propagate to the transaction owner; they cannot become a successful key response.
 
-The creation body is required, and successful creation returns HTTP 200. OpenAPI
+The creation body is required, and successful creation returns HTTP 201. OpenAPI
 preserves MVC body-binding and model-validation requirements so generated clients
 retain mandatory mutation payloads. Explicitly optional bodies, including the
 service-secret challenge request below, remain optional.
@@ -3364,3 +3364,39 @@ global account. The receipt binds `rotate-service-account-secret` to
 only after the account and caller pass these checks. Receipt consumption and
 secret persistence share the command transaction. Storage failures propagate to
 the transaction owner; they are not translated into an account-not-found result.
+
+
+### Platform step-up-required response and enrolled-factor discovery
+
+The metadata-only platform trigger returns HTTP 423 with a matching ProblemDetails
+status. It does not persist a challenge or issue a receipt. Clients create a
+challenge explicitly using the operation, target and payload binding, verify an
+enrolled factor, and retry the sensitive action with the resulting one-use receipt.
+Operation-bound credential-creation demands continue to use their distinct HTTP 403
+flow and persisted challenge.
+
+Advertised methods follow the strict step-up verifier: TOTP and remaining backup
+codes require enabled, complete MFA enrollment; WebAuthn requires an active
+credential. SMS and email proofs cannot be advertised for this verifier. This
+does not change the legacy MFA configuration/status API. A discovery failure
+still returns the required 423 demand with no advertised methods and never grants
+the action. Independent full-host Swagger captures belong to their own HTTP
+tests; one response must not be copied into another surface's evidence file.
+
+
+### SMS enrollment and first-factor continuation boundaries
+
+Starting SMS enrollment requires the current authenticated owner's password to
+be re-verified before sending an enrollment code or changing pending delivery.
+The settings form forwards that password only for the enrollment request and
+clears its separate password state after submission or cancellation.
+
+The anonymous SMS challenge endpoint accepts an opaque MFA continuation from
+successful first-factor verification, never a caller-selected account identifier.
+The dedicated command handler delegates to the existing sign-in MFA service,
+which validates the active continuation, current account and policy, enrolled
+SMS method and lockout budget under the subject lock before delivery. The old
+unbound handler is removed from the command mapping. Passwords and continuation
+bearers are audit-sensitive and are not included in command or SMS transport
+string rendering. Raw phone numbers are also omitted from those representations.
+The complete native SMS regression suites remain part of the existing gate.

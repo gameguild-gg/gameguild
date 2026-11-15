@@ -33,6 +33,11 @@ def trx(outcome="Passed", entry="execution", passed="1", total="1"):
 
 
 class EvidenceTests(unittest.TestCase):
+    def test_native_filter_includes_every_required_postgresql_suite(self):
+        script = (Path(__file__).parents[1] / "credential-stepup-evidence.sh").read_text(encoding="utf-8")
+        body = script.split("pg_classes=(\n", 1)[1].split("\n)", 1)[0]
+        self.assertEqual(tuple(body.split()), evidence.PG_CLASSES)
+
     def test_complete_passing_run_retains_case_identity(self):
         result = evidence.read_trx(trx())
         self.assertEqual(result["counts"], {"Passed": 1})

@@ -148,9 +148,10 @@ public sealed class DurableAdRewardSessionService : IDurableAdRewardSessionServi
             UpdatedAt = claims.IssuedAt,
             Version = 1
         });
-        _db.Set<AdRewardSessionEventRow>().Add(new AdRewardSessionEventRow
+        _db.Set<AdRewardTimelineRow>().Add(new AdRewardTimelineRow
         {
             Id = Guid.NewGuid(),
+            TimelineKind = AdRewardTimelineKind.SessionEvent,
             SessionId = claims.SessionId,
             Sequence = 1,
             State = DurableAdRewardSessionState.Issued,

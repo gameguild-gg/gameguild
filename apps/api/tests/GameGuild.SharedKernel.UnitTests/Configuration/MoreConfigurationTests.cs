@@ -184,39 +184,9 @@ public class EndpointsOptionsTests
     }
 }
 
-public class HealthCheckOptionsTests
-{
-    [Fact]
-    public void Constructor_ShouldPopulateTags()
-    {
-        var options = new HealthCheckOptions();
-        options.Tags.Should().NotBeEmpty();
-    }
-
-    [Fact]
-    public void Defaults_ShouldEnable()
-    {
-        var options = new HealthCheckOptions();
-        options.EnableDatabaseCheck.Should().BeTrue();
-        options.EnableApiHealthCheck.Should().BeTrue();
-    }
-
-    [Fact]
-    public void Validate_WithValidTimeout_ShouldNotThrow()
-    {
-        var options = new HealthCheckOptions();
-        var act = () => options.Validate();
-        act.Should().NotThrow();
-    }
-
-    [Fact]
-    public void Validate_WithZeroTimeout_ShouldThrow()
-    {
-        var options = new HealthCheckOptions { Timeout = TimeSpan.Zero };
-        var act = () => options.Validate();
-        act.Should().Throw<Exception>();
-    }
-}
+// HealthCheckOptionsTests was removed with the dead duplicate HealthCheckOptions type
+// (singular); the live twin HealthChecksOptions is covered by
+// BuildersFiltersAndRegistryTests / PresentationAndInfrastructureOptionsTests.
 
 public class OpenApiServerOptionsTests
 {
