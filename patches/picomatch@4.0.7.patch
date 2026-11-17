@@ -1,0 +1,24 @@
+diff --git a/lib/parse.js b/lib/parse.js
+index 29207512c60183b4bb9bf5112be3b9b5f4a9a9fd..d7ef41b4bf483708f24efaa48bb651a0bb602fd3 100644
+--- a/lib/parse.js
++++ b/lib/parse.js
+@@ -306,6 +306,19 @@ const analyzeRepeatedExtglob = (body, options) => {
+     }
+   }
+ 
++  // A lone branch that itself contains an unbounded `*` (e.g. `*`, `*a`, `a*b`)
++  // nests an unbounded quantifier inside the outer `+(...)`/`*(...)` — the
++  // catastrophic-backtracking shape from GHSA-fc5q-39xc-vjpf that the branch
++  // loop below otherwise leaves unclassified. Collapse it; when the branch
++  // reduces to star-extglob sequences we can still emit the flat char-class
++  // output instead of the escaped-literal fallback.
++  if (branches.length === 1 && branches[0].includes('*')) {
++    const chars = getStarExtglobSequenceChars(branches[0]);
++    return chars
++      ? { risky: true, safeOutput: buildCharClassStar([...new Set(chars)]) }
++      : { risky: true };
++  }
++
+   // A repeated extglob is "risky" (prone to catastrophic backtracking) when a
+   // branch is itself a `*(...)` sequence, since that nests an unbounded quantifier
+   // inside the outer `+(...)`/`*(...)`. When *every* branch reduces to single
