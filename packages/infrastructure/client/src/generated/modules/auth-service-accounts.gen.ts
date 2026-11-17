@@ -195,12 +195,19 @@ export class AuthServiceAccountsModule {
    * The new client secret is only returned once. Store it securely.
    * The old secret is immediately invalidated.
    */
-  async postAuthServiceAccountsRotateSecret(serviceAccountId: string): Promise<Result<Types.IdentityAuthenticationSecretRotationOutput, ApiError>> {
+  async postAuthServiceAccountsRotateSecret(
+    serviceAccountId: string,
+    body?: Types.IdentityAuthenticationRotateServiceAccountSecretInput,
+  ): Promise<Result<Types.IdentityAuthenticationSecretRotationOutput, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}:rotate-secret`;
+
+    // Validate request body
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRotateServiceAccountSecretInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
       path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 

@@ -31,7 +31,7 @@ public sealed class PostgreSqlComplianceEvidenceStoreTests
         replay.EvidenceId.Should().Be(first.EvidenceId);
         (await context.Set<EconomyInboxRow>().CountAsync(row => row.InboxKind == EconomyInboxKind.Compliance)).Should().Be(1);
         (await context.Set<EconomyComplianceEvidenceRow>().CountAsync()).Should().Be(1);
-        
+
         var persisted = await context.Set<EconomyComplianceEvidenceRow>().AsNoTracking().SingleAsync();
         persisted.RawObjectReference.Should().Be("s3://encrypted/raw-event");
         persisted.EvidenceHash.Should().Be(envelope.EvidenceHash);
@@ -81,7 +81,7 @@ public sealed class PostgreSqlComplianceEvidenceStoreTests
             ComplianceEvidenceIngestionStatus.Duplicate, null));
         (await context.Set<EconomyInboxRow>().CountAsync(row => row.InboxKind == EconomyInboxKind.Compliance)).Should().Be(3);
         (await context.Set<EconomyComplianceEvidenceRow>().CountAsync()).Should().Be(0);
-        
+
     }
 
     [Fact]

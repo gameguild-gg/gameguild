@@ -22,6 +22,7 @@ trap cleanup EXIT INT TERM
 
 mkdir -p "$publish_directory"
 cd "$repository_root"
+git rev-parse HEAD 'HEAD^{tree}' > "$artifact_root/source-identity.txt"
 
 dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj \
   -c Release \

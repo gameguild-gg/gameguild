@@ -234,7 +234,7 @@ public static class AuditQueryDslEvaluator
         value.ValueKind == JsonValueKind.String ? value.GetString()! : value.GetRawText();
 
     private static DateTime ParseTimestamp(JsonElement value) =>
-        DateTime.Parse(ResolveRawText(value), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+        DateTime.Parse(ResolveRawText(value), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
 
     private static Guid ParseGuid(JsonElement value) => Guid.Parse(ResolveRawText(value));
 

@@ -147,18 +147,61 @@ describe('MfaMethodsManager (settings/security, issue #244)', () => {
 
     await user.click(screen.getByTestId('mfa-sms-start'));
     await user.type(screen.getByLabelText('settings.security.mfa.sms.phoneLabel'), '+15551234567');
+    const send = screen.getByRole('button', { name: 'settings.security.mfa.sms.send' });
+    expect(send).toBeDisabled();
+    const password = crypto.randomUUID();
+    await user.type(screen.getByTestId('mfa-sms-password'), password);
     await user.click(screen.getByRole('button', { name: 'settings.security.mfa.sms.send' }));
 
     await waitFor(() => {
-      expect(mocks.startSmsEnrollment).toHaveBeenCalledWith('+15551234567');
+      expect(mocks.startSmsEnrollment).toHaveBeenCalledWith('+15551234567', password);
     });
 
+    expect(screen.getByTestId('mfa-sms-password')).toHaveValue('');
     await user.type(screen.getByLabelText('settings.security.mfa.sms.codeLabel'), '654321');
     await user.click(screen.getByRole('button', { name: 'settings.security.mfa.sms.complete' }));
 
     await waitFor(() => {
       expect(mocks.completeSmsEnrollment).toHaveBeenCalledWith('654321');
     });
+  });
+
+
+  it('requires a fresh password for SMS enrollment and clears it after refusal', async () => {
+    const user = userEvent.setup();
+    mocks.startSmsEnrollment.mockReset();
+    mocks.startSmsEnrollment.mockResolvedValue({
+      success: false, status: 'error', message: 'Password verification failed',
+    });
+    render(<MfaMethodsManager data={makeData({ smsAvailable: true })} />);
+    await user.click(screen.getByTestId('mfa-sms-start'));
+    await user.type(screen.getByLabelText('settings.security.mfa.sms.phoneLabel'), '+15551234567');
+    const send = screen.getByRole('button', { name: 'settings.security.mfa.sms.send' });
+    expect(send).toBeDisabled();
+    await user.click(send);
+    expect(mocks.startSmsEnrollment).not.toHaveBeenCalled();
+
+    const password = crypto.randomUUID();
+    await user.type(screen.getByTestId('mfa-sms-password'), password);
+    await user.click(send);
+    await waitFor(() => {
+      expect(mocks.startSmsEnrollment).toHaveBeenCalledWith('+15551234567', password);
+      expect(mocks.toastError).toHaveBeenCalledWith('Password verification failed');
+      expect(screen.getByTestId('mfa-sms-password')).toHaveValue('');
+      expect(send).toBeDisabled();
+    });
+  });
+
+  it('does not retain the SMS password when enrollment is cancelled', async () => {
+    const user = userEvent.setup();
+    mocks.startSmsEnrollment.mockReset();
+    render(<MfaMethodsManager data={makeData({ smsAvailable: true })} />);
+    await user.click(screen.getByTestId('mfa-sms-start'));
+    await user.type(screen.getByTestId('mfa-sms-password'), crypto.randomUUID());
+    await user.click(screen.getByRole('button', { name: 'settings.security.mfa.methods.cancel' }));
+    await user.click(screen.getByTestId('mfa-sms-start'));
+    expect(screen.getByTestId('mfa-sms-password')).toHaveValue('');
+    expect(mocks.startSmsEnrollment).not.toHaveBeenCalled();
   });
 
   it('does not offer SMS enrollment when the platform has no SMS provider', () => {

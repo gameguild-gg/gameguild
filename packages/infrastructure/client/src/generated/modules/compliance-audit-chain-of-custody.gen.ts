@@ -428,12 +428,12 @@ export class ComplianceAuditChainOfCustodyModule {
    */
   async postApiAuditChainOfCustodyTransfersAcknowledge(
     transferId: string,
-    body: Types.ComplianceAuditAcknowledgeTransferInput,
+    body?: Types.ComplianceAuditAcknowledgeTransferInput,
   ): Promise<Result<Types.ComplianceAuditEvidenceTransferOutput, ApiError>> {
     const url = `/api/audit/chain-of-custody/transfers/${transferId}:acknowledge`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAcknowledgeTransferInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAcknowledgeTransferInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -864,12 +864,12 @@ export class ComplianceAuditChainOfCustodyModule {
    */
   async postAuditChainOfCustodyTransfersAcknowledge(
     transferId: string,
-    body: Types.ComplianceAuditAcknowledgeTransferInput,
+    body?: Types.ComplianceAuditAcknowledgeTransferInput,
   ): Promise<Result<Types.ComplianceAuditEvidenceTransferOutput, ApiError>> {
     const url = `/v1/audit/chain-of-custody/transfers/${transferId}:acknowledge`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAcknowledgeTransferInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAcknowledgeTransferInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

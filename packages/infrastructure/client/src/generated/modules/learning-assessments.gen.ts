@@ -991,12 +991,12 @@ export class LearningAssessmentsModule {
    */
   async postAssessmentsSubmissionsSubmit(
     submissionId: string,
-    body: Types.LearningAssessmentsSubmitAssessmentInput,
+    body?: Types.LearningAssessmentsSubmitAssessmentInput,
   ): Promise<Result<Types.LearningAssessmentsLearnerAssessmentSubmissionDto, ApiError>> {
     const url = `/v1/assessments/submissions/${submissionId}/submit`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsSubmitAssessmentInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.LearningAssessmentsSubmitAssessmentInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

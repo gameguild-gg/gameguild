@@ -423,6 +423,7 @@ export function PagesPlugin({
     // Which children overflow beyond the page height.
     const $getOverflowingChildren = (
       node: PageNode,
+      reconcileAttempts = 0,
     ): ReturnType<PageContentNode["getChildren"]> => {
       const rootElement = editor.getRootElement();
       if (!rootElement) return [];
@@ -442,9 +443,16 @@ export function PagesPlugin({
         if (typeof reconcilable.reconcileObservedMutation !== "function") {
           return [];
         }
+        // Lexical 0.53's reconcileObservedMutation restores the committed
+        // children's DOM. When a same-update reflow moved blocks between two
+        // overflowing pages, the destination page's DOM can keep disagreeing
+        // with the pending children, so retrying is bounded: after a failed
+        // attempt the mismatch is reported to the next measurement cycle
+        // (the page stays flagged) instead of recursing without a limit.
+        if (reconcileAttempts >= 1) return [];
         childNodes.forEach((childNode) => (childNode as ChildNode).remove());
         reconcilable.reconcileObservedMutation(contentElement, editor);
-        return $getOverflowingChildren(node);
+        return $getOverflowingChildren(node, reconcileAttempts + 1);
       }
       let overflowAfterIndex = children.length - 1;
       withNaturalPageHeight(pageElement, () => {

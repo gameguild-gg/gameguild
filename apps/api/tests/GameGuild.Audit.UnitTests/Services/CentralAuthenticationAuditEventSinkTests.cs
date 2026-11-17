@@ -36,6 +36,14 @@ public sealed class CentralAuthenticationAuditEventSinkTests
     [InlineData("Authentication.MfaSignInDenied", SecurityEventCaptureOutcome.SpoolingDisabled)]
     [InlineData("Authentication.MfaSignInEnrollmentStarted", SecurityEventCaptureOutcome.SpoolingDisabled)]
     [InlineData("Authentication.MfaSignInVerified", SecurityEventCaptureOutcome.SpoolingDisabled)]
+    [InlineData("Authentication.MfaRecoveryRequested", SecurityEventCaptureOutcome.SpooledLocally)]
+    [InlineData("Authentication.MfaRecoveryContinued", SecurityEventCaptureOutcome.SpooledLocally)]
+    [InlineData("Authentication.MfaRecoveryConfirmed", SecurityEventCaptureOutcome.SpooledLocally)]
+    [InlineData("Authentication.MfaRecoveryCancelled", SecurityEventCaptureOutcome.SpooledLocally)]
+    [InlineData("Authentication.MfaRecoveryRequested", SecurityEventCaptureOutcome.SpoolingDisabled)]
+    [InlineData("Authentication.MfaRecoveryContinued", SecurityEventCaptureOutcome.SpoolingDisabled)]
+    [InlineData("Authentication.MfaRecoveryConfirmed", SecurityEventCaptureOutcome.SpoolingDisabled)]
+    [InlineData("Authentication.MfaRecoveryCancelled", SecurityEventCaptureOutcome.SpoolingDisabled)]
     public async Task RequiredMfaAuditCannotCommitFromNonTransactionalCapture(string action, SecurityEventCaptureOutcome outcome)
     {
         var audit = new Mock<ISecurityEventLogger>(MockBehavior.Strict);
@@ -45,6 +53,25 @@ public sealed class CentralAuthenticationAuditEventSinkTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => sink.RecordAsync(
             new AuthenticationAuditEvent(action, Guid.NewGuid(), true, "Totp"), CancellationToken.None));
         audit.Verify(port => port.RecordInCommandAsync(_context, It.IsAny<CreateAuditLogRequest>(), CancellationToken.None), Times.Once);
+    }
+
+    [Theory]
+    [InlineData("Authentication.MfaRecoveryRequested")]
+    [InlineData("Authentication.MfaRecoveryContinued")]
+    [InlineData("Authentication.MfaRecoveryConfirmed")]
+    [InlineData("Authentication.MfaRecoveryCancelled")]
+    public async Task RecoveryStageAuditUsesTheOwningCommandTransaction(string action)
+    {
+        var events = new Mock<ISecurityEventLogger>(MockBehavior.Strict);
+        events.Setup(value => value.RecordInCommandAsync(_context, It.IsAny<CreateAuditLogRequest>(), CancellationToken.None))
+            .ReturnsAsync((IApplicationDbContext _, CreateAuditLogRequest request, CancellationToken _) => Capture(request));
+        var sink = new CentralAuthenticationAuditEventSink(events.Object, NullLogger<CentralAuthenticationAuditEventSink>.Instance, _context);
+        var userId = Guid.NewGuid();
+        await sink.RecordAsync(new AuthenticationAuditEvent(action, userId, true, "MfaRecovery"), CancellationToken.None);
+        events.Verify(value => value.RecordInCommandAsync(_context,
+            It.Is<CreateAuditLogRequest>(request => request.ActionType == action && request.UserId == userId && request.Success),
+            CancellationToken.None), Times.Once);
+        events.VerifyNoOtherCalls();
     }
 
     private readonly Mock<ISecurityEventLogger> _securityEvents = new();

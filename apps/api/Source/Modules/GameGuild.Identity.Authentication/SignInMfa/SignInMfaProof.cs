@@ -17,7 +17,7 @@ public sealed class SignInMfaProof
         Method = method;
         if (challengeId == Guid.Empty || subjectId == Guid.Empty || tenantId == Guid.Empty || tokenVersion < 1 ||
             !SignInMfaChallengeToken.IsDigest(policyFingerprint) || !Enum.IsDefined(firstFactor) ||
-            method is not (MfaMethod.Totp or MfaMethod.BackupCode or MfaMethod.WebAuthn) ||
+            method is not (MfaMethod.Totp or MfaMethod.BackupCode or MfaMethod.WebAuthn or MfaMethod.Sms) ||
             firstFactorVerifiedAt == default || firstFactorVerifiedAt.Offset != TimeSpan.Zero || verifiedAt.Offset != TimeSpan.Zero ||
             verifiedAt < firstFactorVerifiedAt || verifiedAt - firstFactorVerifiedAt > TimeSpan.FromMinutes(5))
         {

@@ -12,7 +12,7 @@ public sealed class SessionMfaEvidenceConfiguration : IEntityTypeConfiguration<S
             table.HasCheckConstraint("ck_session_mfa_version", "token_version > 0");
             table.HasCheckConstraint("ck_session_mfa_policy", "policy_fingerprint ~ '^[a-f0-9]{64}$'");
             table.HasCheckConstraint("ck_session_mfa_time", "verified_at >= first_factor_verified_at AND verified_at <= first_factor_verified_at + INTERVAL '5 minutes'");
-            table.HasCheckConstraint("ck_session_mfa_method", "method IN ('Totp', 'BackupCode', 'WebAuthn')");
+            table.HasCheckConstraint("ck_session_mfa_method", "method IN ('Totp', 'BackupCode', 'WebAuthn', 'Sms')");
         });
         builder.HasKey(row => row.SessionId);
         builder.Property(row => row.SessionId).HasColumnName("session_id").ValueGeneratedNever();
