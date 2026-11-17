@@ -235,41 +235,49 @@ export interface MyBlogPostRow {
  * The acting user's posts for hub management. The handle is resolved with a
  * read-only profile fetch (no or-create mutation on a listing surface); null
  * means the row links to the blogs index instead of the editor.
+ *
+ * A failing authoring fetch (e.g. a stale session whose access token is
+ * rejected with 401, or a response-contract drift) degrades to an empty
+ * listing: this runs inside the Server Components render of the blog page,
+ * and throwing there surfaces as React error #441 for logged-in visitors.
  */
 export async function listMyBlogPosts(): Promise<MyBlogPostRow[]> {
   let authoringApi: InstanceType<typeof GeneratedApi.SocialBlogAuthoringModule>;
   let profilesApi: InstanceType<typeof GeneratedApi.SocialProfilesModule>;
   try {
     ({ authoringApi, profilesApi } = await createAuthoringBlogModules());
+    const mine = await authoringApi.getApiSocialBlogPostsMine();
+    if (!mine.ok) {
+      return [];
+    }
+
+    const posts = mine.data ?? [];
+    if (posts.length === 0) return [];
+
+    const primaryAuthorId = posts[0]?.primaryAuthorId;
+    let handle: string | null = null;
+    try {
+      if (primaryAuthorId) {
+        const profile = await profilesApi.getApiSocialProfilesUsers(primaryAuthorId);
+        if (profile.ok && typeof profile.data.handle === 'string' && profile.data.handle) {
+          handle = profile.data.handle;
+        }
+      }
+    } catch {
+      // Profile resolution is decorative (row link target); never fail the listing.
+    }
+
+    return posts.map((post) => ({
+      id: post.id ?? '',
+      slug: post.slug ?? '',
+      title: post.title ?? 'Untitled',
+      status: (post.status ?? 'Draft') as 'Draft' | 'Published',
+      format: (post.format ?? 'Markdown') as 'Markdown' | 'Lexical',
+      publishedAt: post.publishedAt ?? null,
+      updatedAt: post.updatedAt,
+      primaryAuthorHandle: handle,
+    }));
   } catch {
     return [];
   }
-
-  const mine = await authoringApi.getApiSocialBlogPostsMine();
-  if (!mine.ok) {
-    throw new Error(`Failed to load your blog posts: ${mine.error?.message ?? 'unknown error'}`);
-  }
-
-  const posts = mine.data ?? [];
-  if (posts.length === 0) return [];
-
-  const primaryAuthorId = posts[0]?.primaryAuthorId;
-  let handle: string | null = null;
-  if (primaryAuthorId) {
-    const profile = await profilesApi.getApiSocialProfilesUsers(primaryAuthorId);
-    if (profile.ok && typeof profile.data.handle === 'string' && profile.data.handle) {
-      handle = profile.data.handle;
-    }
-  }
-
-  return posts.map((post) => ({
-    id: post.id ?? '',
-    slug: post.slug ?? '',
-    title: post.title ?? 'Untitled',
-    status: (post.status ?? 'Draft') as 'Draft' | 'Published',
-    format: (post.format ?? 'Markdown') as 'Markdown' | 'Lexical',
-    publishedAt: post.publishedAt ?? null,
-    updatedAt: post.updatedAt,
-    primaryAuthorHandle: handle,
-  }));
 }
