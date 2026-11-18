@@ -1,4 +1,5 @@
 import { Link } from '@/i18n/navigation';
+import { Container } from '@/components/app/container';
 import { listMyBlogPosts, type MyBlogPostRow } from '@/lib/blogs/queries';
 import { getWorkspaceMyTeamInvitations, getWorkspaceProjects, getWorkspaceTeams } from '@/lib/workspaces';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -40,7 +41,7 @@ export async function WorkspaceHub(): Promise<React.JSX.Element> {
   const { available: blogPostsAvailable, posts: blogPosts } = blogResult;
 
   return (
-    <div className="space-y-6">
+    <Container className="space-y-6 py-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <Badge variant="outline">Workspace</Badge>
@@ -139,7 +140,7 @@ export async function WorkspaceHub(): Promise<React.JSX.Element> {
         </CardHeader>
         <CardContent><Link href="/workspace/work" className={buttonVariants({ variant: 'outline' })}>Open assigned work</Link></CardContent>
       </Card>
-    </div>
+    </Container>
   );
 }
 
