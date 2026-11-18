@@ -69,15 +69,14 @@ public sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand, R
     private readonly IStepUpReceiptService _stepUpReceipts;
     private readonly IHttpContextAccessor? _httpContextAccessor;
 
-    public CreateApiKeyHandler(IApiKeyRepository apiKeyRepository, IActorContextAccessor actorContext, ILogger<CreateApiKeyHandler> logger) : this(apiKeyRepository, actorContext, logger, null, null)
+    // Convenience constructors carry the post-step-up shape (#1349/#1348): the
+    // IStepUpReceiptService is required — ConsumeAsync runs on the create path —
+    // so test callers pass a mock/fake receipt service explicitly.
+    public CreateApiKeyHandler(IApiKeyRepository apiKeyRepository, IActorContextAccessor actorContext, IStepUpReceiptService stepUpReceipts, ILogger<CreateApiKeyHandler> logger) : this(apiKeyRepository, actorContext, stepUpReceipts, logger, null, null)
     {
     }
 
-    public CreateApiKeyHandler(IApiKeyRepository apiKeyRepository, IActorContextAccessor actorContext, ILogger<CreateApiKeyHandler> logger, IApiKeyAuditEventSink? apiKeyAuditSink) : this(apiKeyRepository, actorContext, logger, apiKeyAuditSink, null)
-    {
-    }
-
-    public CreateApiKeyHandler(IApiKeyRepository apiKeyRepository, IActorContextAccessor actorContext, ILogger<CreateApiKeyHandler> logger, IHttpContextAccessor? httpContextAccessor) : this(apiKeyRepository, actorContext, logger, null, httpContextAccessor)
+    public CreateApiKeyHandler(IApiKeyRepository apiKeyRepository, IActorContextAccessor actorContext, IStepUpReceiptService stepUpReceipts, ILogger<CreateApiKeyHandler> logger, IApiKeyAuditEventSink? apiKeyAuditSink) : this(apiKeyRepository, actorContext, stepUpReceipts, logger, apiKeyAuditSink, null)
     {
     }
 
@@ -86,8 +85,8 @@ public sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand, R
         IActorContextAccessor actorContext,
         IStepUpReceiptService stepUpReceipts,
         ILogger<CreateApiKeyHandler> logger,
-        IApiKeyAuditEventSink? apiKeyAuditSink,
-        IHttpContextAccessor? httpContextAccessor)
+        IApiKeyAuditEventSink? apiKeyAuditSink = null,
+        IHttpContextAccessor? httpContextAccessor = null)
     {
         _apiKeyRepository = apiKeyRepository;
         _actorContext = actorContext;
